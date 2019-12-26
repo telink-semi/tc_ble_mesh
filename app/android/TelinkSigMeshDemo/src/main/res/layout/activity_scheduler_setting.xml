@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBg"
+    android:orientation="vertical">
+
+    <include layout="@layout/title" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/tv_scheduler_index"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Index: "
+                android:textSize="16sp"
+                android:textStyle="bold" />
+            <!-- year -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Year"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/rg_year"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rb_year_any"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Any"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_year_custom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Custom"
+                    android:theme="@style/CommonTheme" />
+
+                <EditText
+                    android:id="@+id/et_year"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="24dp"
+                    android:digits="0123456789"
+                    android:enabled="false"
+                    android:hint="year(2000-2099)"
+                    android:inputType="number"
+                    android:theme="@style/CommonTheme" />
+
+            </RadioGroup>
+
+            <!--month-->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Month"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <CheckBox
+                android:id="@+id/cb_month_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SelectAll"
+                android:theme="@style/CommonTheme" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_months"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            </android.support.v7.widget.RecyclerView>
+
+            <!--day-->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Day"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/rg_day"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rb_day_any"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Any day"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_day_custom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Custom"
+                    android:theme="@style/CommonTheme" />
+
+                <EditText
+                    android:id="@+id/et_day"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="24dp"
+                    android:digits="0123456789"
+                    android:enabled="false"
+                    android:hint="day(1-31)"
+                    android:inputType="number"
+                    android:theme="@style/CommonTheme" />
+            </RadioGroup>
+
+            <!--hour-->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hour"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/rg_hour"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rb_hour_any"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Any hour"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_hour_random"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Once a day (at a random hour)"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_hour_custom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Custom"
+                    android:theme="@style/CommonTheme" />
+
+                <EditText
+                    android:id="@+id/et_hour"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="24dp"
+                    android:digits="0123456789"
+                    android:enabled="false"
+                    android:hint="hour(0-23)"
+                    android:inputType="number"
+                    android:theme="@style/CommonTheme" />
+            </RadioGroup>
+
+
+            <!--minute-->
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Minute"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/rg_minute"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rb_minute_any"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Any minute"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_minute_cycle_15"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Every 15 minutes(0, 15, 30, 45)"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_minute_cycle_20"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Every 20 minutes(0, 20, 40)"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_minute_random"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Once a hour (at a random minute)"
+                    android:theme="@style/CommonTheme" />
+
+
+                <RadioButton
+                    android:id="@+id/rb_minute_custom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Custom"
+                    android:theme="@style/CommonTheme" />
+
+                <EditText
+                    android:id="@+id/et_minute"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="24dp"
+                    android:digits="0123456789"
+                    android:enabled="false"
+                    android:hint="minute(0-59)"
+                    android:inputType="number"
+                    android:theme="@style/CommonTheme" />
+            </RadioGroup>
+
+
+            <!--second-->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Second"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/rg_second"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rb_second_any"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Any second"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_second_cycle_15"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Every 15 seconds(0, 15, 30, 45)"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_second_cycle_20"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Every 20 seconds(0, 20, 40)"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_second_random"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Once a minute (at a random second)"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_second_custom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Custom"
+                    android:theme="@style/CommonTheme" />
+
+                <EditText
+                    android:id="@+id/et_second"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="24dp"
+                    android:digits="0123456789"
+                    android:enabled="false"
+                    android:hint="second(0-59)"
+                    android:inputType="number"
+                    android:theme="@style/CommonTheme" />
+
+            </RadioGroup>
+
+            <!--week-->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Week"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <CheckBox
+                android:id="@+id/cb_week_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select All"
+                android:theme="@style/CommonTheme" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_weeks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            </android.support.v7.widget.RecyclerView>
+
+
+            <!--action-->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Action"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/rg_action"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rb_action_off"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Off"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_action_on"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="On"
+                    android:theme="@style/CommonTheme" />
+
+                <RadioButton
+                    android:id="@+id/rb_action_no"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No action"
+                    android:theme="@style/CommonTheme" />
+
+
+                <RadioButton
+                    android:id="@+id/rb_action_scene"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Scene recall"
+                    android:theme="@style/CommonTheme" />
+
+                <EditText
+                    android:id="@+id/et_scene"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="24dp"
+                    android:digits="0123456789"
+                    android:enabled="false"
+                    android:hint="scene id"
+                    android:inputType="number"
+                    android:theme="@style/CommonTheme" />
+
+            </RadioGroup>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!--<Button
+        android:id="@+id/btn_set_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="set time" />-->
+
+    <!--<Button
+        android:id="@+id/btn_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="save" />-->
+</LinearLayout>
