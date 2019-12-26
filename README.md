@@ -1,0 +1,3 @@
+# telink_sig_mesh_sdk
+
+for 8269/kite/vulture...
