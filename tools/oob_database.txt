@@ -1,0 +1,2 @@
+// default sample: device uuid + oob(sample MAC: 29 e4 10 3a cd ab)
+1d4d89b32765103d8a0b29e4103acdab ff000000000000000000000000000000
