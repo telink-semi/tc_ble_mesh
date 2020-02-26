@@ -34,42 +34,6 @@
 #define DEV_NAME                        "tModule"
 #endif
 
-
-
-
-/////////////////// Flash  Address Config ////////////////////////////
-#if FLASH_1M_ENABLE
-#define		CUST_CAP_INFO_ADDR			    0xFE000
-#define		CFG_ADR_MAC					    0xFF000
-#endif
-
-#ifndef		CFG_ADR_MAC
-#define		CFG_ADR_MAC						0x76000
-#endif
-
-#ifndef		CUST_CAP_INFO_ADDR
-#define		CUST_CAP_INFO_ADDR				0x77000
-#endif
-
-#ifndef		CUST_FIRMWARE_SIGNKEY_ADDR
-#define		CUST_FIRMWARE_SIGNKEY_ADDR		0x77180
-#endif
-
-
-
-
-//master
-#ifndef		CFG_ADR_PEER
-#define		CFG_ADR_PEER					0x78000
-#endif
-
-
-
-
-
-
-
-
 /*
  * only 1 can be set
  */
@@ -88,7 +52,7 @@ static inline void blc_app_loadCustomizedParameters(void)
 	 if(!blt_miscParam.ext_cap_en)
 	 {
 		 //customize freq_offset adjust cap value, if not customized, default ana_81 is 0xd0
-		 u8 cap_frqoft = *(unsigned char*) CUST_CAP_INFO_ADDR;
+		 u8 cap_frqoft = *(unsigned char*) (flash_sector_calibration + CALIB_OFFSET_CAP_INFO);
 		 if( cap_frqoft != 0xff ){
 			 analog_write(0x8A, cap_frqoft );
 		 }

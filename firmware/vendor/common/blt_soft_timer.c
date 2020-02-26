@@ -140,7 +140,6 @@ int 	blt_soft_timer_delete(blt_timer_callback_t func)
 void  	blt_soft_timer_process(int type)
 {
 	if(type == CALLBACK_ENTRY){ //callback trigger
-
 	}
 
 	u32 now = clock_time();

@@ -277,9 +277,11 @@ int mesh_cmd_sig_g_level_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     int err = 0;
     int light_idx = get_light_idx_from_level_md_idx(cb_par->model_idx);
     int trans_type = get_trans_type_from_level_md_idx(cb_par->model_idx);
+#if CMD_LINEAR_EN
 	if(trans_type == ST_TRANS_LIGHTNESS){
 		clear_light_linear_flag(cb_par->model_idx);
 	}
+#endif
     u8 *par_set = par;
     st_pub_list_t pub_list = {{0}};
 	err = g_level_set_and_update_last(par_set, par_len, cb_par->op, light_idx, cb_par->retransaction, trans_type, 0, &pub_list);
@@ -983,10 +985,12 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
     {LIGHTNESS_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_set, LIGHTNESS_STATUS},
     {LIGHTNESS_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_set, STATUS_NONE},
 	{LIGHTNESS_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_status, STATUS_NONE},
+	#if CMD_LINEAR_EN
 	{LIGHTNESS_LINEAR_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_linear_get, LIGHTNESS_LINEAR_STATUS},
 	{LIGHTNESS_LINEAR_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_linear_set, LIGHTNESS_LINEAR_STATUS},
 	{LIGHTNESS_LINEAR_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_linear_set, STATUS_NONE},
 	{LIGHTNESS_LINEAR_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_linear_status, STATUS_NONE},
+	#endif
 	{LIGHTNESS_LAST_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_last_get, LIGHTNESS_LAST_STATUS},
 	{LIGHTNESS_LAST_STATUS, 1, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_C, mesh_cmd_sig_lightness_last_status, STATUS_NONE},
 	{LIGHTNESS_DEFULT_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_def_get, LIGHTNESS_DEFULT_STATUS},
@@ -1349,7 +1353,7 @@ u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, int sig_model, u8
                 CASE_BREAK_find_ele_resource(p_model,SIG_MD_REMOTE_PROV_SERVER,model_remote_prov.srv);
                 #endif
                 #if MD_CLIENT_EN
-                CASE_BREAK_find_ele_resource(p_model,SIG_MD_REMOTE_PROV_CLIENT,model_remote_prov.srv);
+                CASE_BREAK_find_ele_resource(p_model,SIG_MD_REMOTE_PROV_CLIENT,model_remote_prov.client);
                 #endif
             #endif
 			#if MD_SERVER_EN
@@ -1541,9 +1545,11 @@ u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, int sig_model, u8
         }
         #endif
     #else
+        #if MD_SERVER_EN
         u32 model_vd_id_srv = VENDOR_MD_LIGHT_S;
-        #if MD_CLIENT_VENDOR_EN
+            #if MD_VENDOR_2ND_EN
         u32 model_vd_id_srv2 = VENDOR_MD_LIGHT_S2;
+            #endif
         #endif
         #if MD_CLIENT_VENDOR_EN
         u32 model_vd_id_clnt = VENDOR_MD_LIGHT_C;

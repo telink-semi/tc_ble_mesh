@@ -107,10 +107,6 @@ typedef enum{
 }OOB_INFO_FIELD;
 extern beacon_str  beaconData;
 
-extern u8 uri_hash[4];
-extern u8 uri_dat[0x40];
-extern u8 uri_dat_len ;
-
 u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info);
 u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash);
 u8  beacon_secure_init(beacon_str *p_str,u8 flags,u8 * p_netId,u8* p_ivIdx,u8* p_auth);

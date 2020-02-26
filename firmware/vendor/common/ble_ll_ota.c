@@ -127,8 +127,11 @@ _attribute_ram_code_ void start_reboot(void)
 	}
 #endif
 	irq_disable ();
-	//REG_ADDR8(0x6f) = 0x20;  //reboot
+#if SLEEP_FUNCTION_DISABLE
+	REG_ADDR8(0x6f) = 0x20;  //reboot
+#else
 	cpu_sleep_wakeup(1, PM_WAKEUP_TIMER, clock_time() + 1*1000*sys_tick_per_us);//reboot
+#endif
 	while (1);
 }
 
@@ -175,6 +178,10 @@ void set_ota_reboot_flag(u8 flag)
 
 int otaWrite(void * p)
 {
+#if 0 // DUAL_VENDOR_EN	// comfirm later
+    return 0;
+#endif
+
 	rf_packet_att_data_t *req = (rf_packet_att_data_t*)p;
 	static u32 fw_check_val = 0;
 	static u8 need_check_type = 0;//=1:crc val sum
@@ -426,9 +433,13 @@ void blt_slave_ota_finish_handle()
 }
 
 #if(AIS_ENABLE)
+#define MAIN_VERSION		1
+#define SUB_VERSION			3
+#define MODIFY_VERSION		4
+
 const ais_fw_info_t  ais_fw_info = { 
 	.device_type = (u8)MESH_PID_SEL, // device type
-    .fw_version = MESH_VID, 
+    .fw_version = (MAIN_VERSION<<16) | (SUB_VERSION<<8) | MODIFY_VERSION, 
 };
 
 int ais_ota_version_get()
@@ -455,7 +466,7 @@ int ais_ota_req(u8 *p)
 	ais_msg_rsp.msg_type = AIS_OTA_RSP;
 	ais_msg_rsp.length = ais_gatt_auth.auth_ok?AES_BLOCKLEN:sizeof(ais_ota_rsp_t);
 	ais_msg_rsp.ais_ota_rsp.one_round_pkts = 0;//must set to 0 now.
-#if 0 // set 0 always allow ota to test.
+#if 0 // set 0 always allow ota.
 	if((ota_req_p->device_type == ais_fw_info.device_type) && (ota_req_p->fw_version > ais_fw_info.fw_version)&&(ota_req_p->ota_flag == 0))
 #endif
 	{
@@ -464,7 +475,7 @@ int ais_ota_req(u8 *p)
 		ota_adr_index = -1;
 		blcOta.ota_start_flag = ais_gatt_auth.auth_ok;   //set flag
 		blt_ota_start_tick = clock_time()|1;  //mark time
-		if(otaStartCb){
+		if(otaStartCb&&ais_gatt_auth.auth_ok){
 			otaStartCb();
 		}
 	}

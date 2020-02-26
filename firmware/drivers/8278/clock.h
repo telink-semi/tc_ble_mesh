@@ -47,12 +47,7 @@
 #define		CLOCK_DLY_9_CYC    _ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_
 #define		CLOCK_DLY_10_CYC   _ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_;_ASM_NOP_
 
-/**
- * @brief select RC as system clock
- */
-#ifndef SYSCLK_RC_CLOCK_EN
-#define SYSCLK_RC_CLOCK_EN			0
-#endif
+
 
 extern unsigned char system_clk_type;
 
@@ -66,15 +61,19 @@ extern unsigned char system_clk_type;
 /**
  * @brief 	Power type for different application
  */
-enum{
-	LDO_1P4_LDO_1P8 	=0x40,	//LDO mode
-	DCDC_1P4_DCDC_1P8	=0x43,	//DCDC mode (16pin is not suported this mode.)
-	DCDC_1P4_LDO_1P8	=0x45,	//DCDC_LDO mode (synchronize mode,Use the asynchronize 
+typedef enum{
+	LDO_MODE 		=0x40,	//LDO mode
+	DCDC_MODE		=0x43,	//DCDC mode (16pin is not suported this mode.)
+	DCDC_LDO_MODE	=0x45,	//DCDC_LDO mode (synchronize mode,Use the asynchronize 
 								//mode with DCDC_LDO may cause the current abnormal(A0 version))
-};
-
-#define  PWR_DCDC_EN				0
-
+}POWER_MODE_TypeDef;
+/**
+ * @brief 	crystal for different application
+ */
+typedef enum{
+	EXTERNAL_XTAL_24M	= 0,
+	EXTERNAL_XTAL_48M	= 1,
+}XTAL_TypeDef;
 /**
  * @brief system clock type.
  */
@@ -88,8 +87,8 @@ typedef enum{
 	SYS_CLK_RC_THRES = 0x10,
 
 	SYS_CLK_24M_RC 	 = 0x00,
-	SYS_CLK_32M_RC 	 = 0x01,
-	SYS_CLK_48M_RC 	 = 0x02,
+//	SYS_CLK_32M_RC 	 = 0x01,
+//	SYS_CLK_48M_RC 	 = 0x02,
 }SYS_CLK_TypeDef;
 
 /**

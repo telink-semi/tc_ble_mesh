@@ -611,6 +611,7 @@ u8 telink_record_clean_cpy()
 	}
 	flash_erase_sector(FLASH_ADR_MI_RECORD);
 	cpy_cnt = record_adr_cpy - FLASH_ADR_MI_RECORD_TMP;
+	flash_idx_adr = FLASH_ADR_MI_RECORD + cpy_cnt;// update the write adr part 
 	u32 idx =0;
 	while(cpy_cnt){
 		if(cpy_cnt > sizeof(telink_record_t)){
@@ -629,6 +630,7 @@ u8 telink_record_clean_cpy()
 
 mible_status_t telink_record_create(uint16_t record_id, uint8_t len)
 {
+/*
 	uint8_t total_len = len;
 	uint8_t buf_idx =0;
 	uint8_t *p_buf = (u8 *)(&telink_record);
@@ -638,6 +640,11 @@ mible_status_t telink_record_create(uint16_t record_id, uint8_t len)
 	mible_status_t err_sts = MI_SUCCESS;
 	// if find the record part ,clear the id part ,else return mi_suc;
 	u32 record_adr =0;
+	if(flash_idx_adr + (len+3)+RECORD_RESERVE_SPACE > FLASH_ADR_MI_RECORD_TMP){
+		// need to clean the flash first .
+		telink_record_clean_cpy();
+		err_sts = MI_ERR_NO_MEM;
+	}
 	if(find_record_adr(record_id,&record_adr) == TRUE){
 		return MI_SUCCESS;
 	}else{
@@ -646,11 +653,6 @@ mible_status_t telink_record_create(uint16_t record_id, uint8_t len)
 	memset(p_buf,0,sizeof(telink_record_t));
 	telink_record.rec_id = record_id;
 	telink_record.len = total_len;
-	if(flash_idx_adr + (len+3)-RECORD_RESERVE_SPACE > FLASH_ADR_MI_RECORD_TMP){
-		// need to clean the flash first .
-		telink_record_clean_cpy();
-		err_sts = MI_ERR_NO_MEM;
-	}
 	//write the header part 
 	if(total_len > sizeof(telink_record.dat)){
 		telink_write_flash(&flash_idx_adr,p_buf,sizeof(telink_record_t));
@@ -674,6 +676,8 @@ mible_status_t telink_record_create(uint16_t record_id, uint8_t len)
 		}
 	}
 	return err_sts;
+*/
+	return MI_SUCCESS;
 }
 
 
@@ -718,16 +722,18 @@ mible_status_t telink_record_read(uint16_t record_id, uint8_t* p_data,uint8_t le
 	}
 	if(len<=sizeof(telink_record.dat)){
 		memcpy(p_data,telink_record.dat,len);
+		/*
 		if(buf_is_empty_or_not(p_data,len)){
 			return MIBLE_ERR_UNKNOWN;
-		}
+		}*/
 		return MI_SUCCESS;
 	}else{
 		// directly read all the buf part 
 		flash_read_page(record_adr+3,len ,p_data);
+		/*
 		if(buf_is_empty_or_not(p_data,len)){
 			return MIBLE_ERR_UNKNOWN;
-		}
+		}*/
 		return MI_SUCCESS;
 	}
 }
@@ -753,14 +759,14 @@ mible_status_t telink_record_write(uint16_t record_id, uint8_t* p_data,uint8_t l
 	}
 	// check the first record 
 	telink_record_delete(record_id);
+	if(flash_idx_adr + (len+3)+RECORD_RESERVE_SPACE > FLASH_ADR_MI_RECORD_TMP){
+		// need to clean the flash first .
+		telink_record_clean_cpy();
+	}
 	// write part 
 	memset(p_buf,0,sizeof(telink_record_t));
 	telink_record.rec_id = record_id;
 	telink_record.len = total_len;
-	if(flash_idx_adr + (len+3)-RECORD_RESERVE_SPACE > FLASH_ADR_MI_RECORD_TMP){
-		// need to clean the flash first .
-		telink_record_clean_cpy();
-	}
 	// write the header part 
 	if(total_len > sizeof(telink_record.dat)){
 		memcpy(telink_record.dat,p_data,sizeof(telink_record.dat));

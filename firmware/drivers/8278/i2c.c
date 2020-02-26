@@ -36,40 +36,37 @@
  *	B6:5b7[2] set 1 as spi input,set 0 not as spi input ;5b7[6] set 1 as i2c input ,set 0 not as i4c input
  *	D7:5b7[3] set 1 as spi input,set 0 not as spi input ;5b7[7] set 1 as i2c input ,set 0 not as i5c input
  */
-void i2c_gpio_set(I2C_GPIO_GroupTypeDef i2c_pin_group)
+void i2c_gpio_set(I2C_GPIO_SdaTypeDef sda_pin,I2C_GPIO_SclTypeDef scl_pin)
 {
-	GPIO_PinTypeDef sda, scl;
+	if(sda_pin == I2C_GPIO_SDA_A3)
+	{
+		reg_pin_i2c_spi_en |= (FLD_PIN_PA3_I2C_EN );
+		reg_pin_i2c_spi_en &= ~(FLD_PIN_PA3_SPI_EN );
+	}
+	else if(sda_pin == I2C_GPIO_SDA_B6)
+	{
+		reg_pin_i2c_spi_en |= (FLD_PIN_PB6_I2C_EN );
+		reg_pin_i2c_spi_en &= ~(FLD_PIN_PB6_SPI_EN);
+	}
 
-	if(i2c_pin_group == I2C_GPIO_GROUP_A3A4){
-		sda = GPIO_PA3;
-		scl = GPIO_PA4;
-		reg_pin_i2c_spi_en |= (FLD_PIN_PA3_I2C_EN | FLD_PIN_PA4_I2C_EN);
-		reg_pin_i2c_spi_en &= ~(FLD_PIN_PA3_SPI_EN | FLD_PIN_PA4_SPI_EN);
+
+	if(scl_pin == I2C_GPIO_SCL_A4)
+	{
+		reg_pin_i2c_spi_en |= (FLD_PIN_PA4_I2C_EN );
+		reg_pin_i2c_spi_en &= ~(FLD_PIN_PA4_SPI_EN );
 	}
-	else if(i2c_pin_group == I2C_GPIO_GROUP_B6D7){
-		sda = GPIO_PB6;
-		scl = GPIO_PD7;
-		reg_pin_i2c_spi_en |= (FLD_PIN_PB6_I2C_EN | FLD_PIN_PD7_I2C_EN);
-		reg_pin_i2c_spi_en &= ~(FLD_PIN_PB6_SPI_EN | FLD_PIN_PD7_SPI_EN);
+	else if(scl_pin == I2C_GPIO_SCL_D7)
+	{
+		reg_pin_i2c_spi_en |= (FLD_PIN_PD7_I2C_EN );
+		reg_pin_i2c_spi_en &= ~(FLD_PIN_PD7_SPI_EN);
 	}
-	else if(i2c_pin_group == I2C_GPIO_GROUP_C0C1){
-		sda = GPIO_PC0;
-		scl = GPIO_PC1;
-	}
-	else if(i2c_pin_group == I2C_GPIO_GROUP_C2C3){
-		sda = GPIO_PC2;
-		scl = GPIO_PC3;
-	}
-	else{ //ERR
-		sda = 0;
-		scl = 0;
-	}
-	gpio_setup_up_down_resistor(sda, PM_PIN_PULLUP_10K);
-	gpio_setup_up_down_resistor(scl, PM_PIN_PULLUP_10K);
-	gpio_set_func(sda, AS_I2C);
-	gpio_set_func(scl, AS_I2C);
-	gpio_set_input_en(sda, 1);//enable sda input
-	gpio_set_input_en(scl, 1);//enable scl input
+
+	gpio_setup_up_down_resistor(sda_pin, PM_PIN_PULLUP_10K);
+	gpio_setup_up_down_resistor(scl_pin, PM_PIN_PULLUP_10K);
+	gpio_set_func(sda_pin, AS_I2C);
+	gpio_set_func(scl_pin, AS_I2C);
+	gpio_set_input_en(sda_pin, 1);//enable sda input
+	gpio_set_input_en(scl_pin, 1);//enable scl input
 
 }
 

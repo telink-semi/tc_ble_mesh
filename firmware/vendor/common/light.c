@@ -363,12 +363,14 @@ void light_par_save_proc()
 #if (MD_SCENE_EN)
 void scene_status_change_check_all()
 {
+    #if MD_SERVER_EN
 	foreach_arr(i,light_res_sw){
 		foreach_arr(trans_type,light_res_sw[i].trans){
 			st_transition_t *p_trans = P_ST_TRANS(i, trans_type);
         	scene_status_change_check(i, p_trans->present, trans_type);
 	    }
 	}
+    #endif
 }
 #endif
 
@@ -919,6 +921,7 @@ void light_onoff_all(u8 on){
     }
 }
 
+#if CMD_LINEAR_EN
 int set_light_linear_flag(int idx,u16 linear)
 {
 	if(idx < LIGHT_CNT){
@@ -949,6 +952,7 @@ int is_linear_flag(int idx)
 	}
 	return 0;
 }
+#endif
 
 void app_led_en (int id, int en)
 {

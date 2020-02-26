@@ -31,7 +31,8 @@
 #include "gpio_8258.h"
 #define RF_CHN_TABLE 		0x8000
 
-
+#define FRE_OFFSET 	0
+#define MAX_RF_CHANNEL  16
 
 /**
  *  @brief  Define RF mode

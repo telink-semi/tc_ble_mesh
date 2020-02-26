@@ -44,6 +44,7 @@
 #include "app.h"
 #include "../../stack/ble/gap/gap.h"
 #include "vendor/common/blt_soft_timer.h"
+#include "proj/drivers/rf_pa.h"
 
 #if MI_API_ENABLE
 #include "../../vendor/common/mi_api/telink_sdk_mible_api.h"
@@ -58,8 +59,8 @@ MYFIFO_INIT(blt_txfifo, 40, 32);
 
 
 
-u8		peer_type;
-u8		peer_mac[12];
+//u8		peer_type;
+//u8		peer_mac[12];
 
 u8 mode_config = 0;
 extern u8 gatt_adv_send_flag;
@@ -126,10 +127,10 @@ int app_event_handler (u32 h, u8 *p, int n)
 			event_connection_complete_t *pc = (event_connection_complete_t *)p;
 			if (!pc->status)							// status OK
 			{
-				app_led_en (pc->handle, 1);
+				//app_led_en (pc->handle, 1);
 
-				peer_type = pc->peer_adr_type;
-				memcpy (peer_mac, pc->mac, 6);
+				//peer_type = pc->peer_adr_type;
+				//memcpy (peer_mac, pc->mac, 6);
 			}
 			#if DEBUG_BLE_EVENT_ENABLE
 			rf_link_light_event_callback(LGT_CMD_BLE_CONN);
@@ -139,18 +140,12 @@ int app_event_handler (u32 h, u8 *p, int n)
 			debug_mesh_report_BLE_st2usb(1);
 			#endif
 			proxy_cfg_list_init_upon_connection();
-			#if FEATURE_FRIEND_EN
-			fn_update_RecWin(get_RecWin_connected());
-			#endif
 			mesh_service_change_report();
 		}
 
 	//------------ connection update complete -------------------------------
 		else if (subcode == HCI_SUB_EVT_LE_CONNECTION_UPDATE_COMPLETE)	// connection update
 		{
-			#if FEATURE_FRIEND_EN
-			fn_update_RecWin(get_RecWin_connected());
-			#endif
 		}
 	}
 
@@ -159,7 +154,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 	{
 
 		event_disconnection_t	*pd = (event_disconnection_t *)p;
-		app_led_en (pd->handle, 0);
+		//app_led_en (pd->handle, 0);
 		#if MI_API_ENABLE
 		telink_ble_mi_app_event(HCI_EVT_DISCONNECTION_COMPLETE,p,n);
 		#endif 
@@ -182,9 +177,6 @@ int app_event_handler (u32 h, u8 *p, int n)
 		#endif
 
 		mesh_ble_disconnect_cb();
-		#if FEATURE_FRIEND_EN
-        fn_update_RecWin(FRI_REC_WIN_MS);   // restore
-        #endif
 	}
 
 	if (send_to_hci)
@@ -204,23 +196,6 @@ void proc_ui()
 	}
 	tick = clock_time();
 
-//switch to gatt mode and enter suspend to ota
-	static u8 st = 0;
-	u8 s = !gpio_read (SW1_GPIO);
-	if ((!st) & s)
-	{
-		if(mode_config){
-			mode_config = 0;
-		   	gatt_adv_send_flag = 0;
-		  	bls_pm_setSuspendMask(SUSPEND_DISABLE);
-		}
-		else{		
-			mode_config = 1;
-		   	gatt_adv_send_flag = 1;
-		   	bls_pm_setSuspendMask (SUSPEND_ADV | SUSPEND_CONN); 
-		}
-	}
-	st = s;	
 	#if 0
 	static u8 st_sw1_last,st_sw2_last;	
 	u8 st_sw1 = !gpio_read(SW1_GPIO);
@@ -289,29 +264,77 @@ void test_sig_mesh_cmd_fun()
 }
 #endif
 
-void proc_suspend_low_power()
+int get_mesh_adv_interval()
 {
-	if(mode_config){// gatt mode, return
+	u8 *p_buf = my_fifo_get(&mesh_adv_cmd_fifo);
+	mesh_cmd_bear_unseg_t *p_bear = (mesh_cmd_bear_unseg_t *)p_buf;
+    mesh_transmit_t *p_trans_par = (mesh_transmit_t *)&p_bear->trans_par_val;
+	u32 interval_step = 0;
+	if(p_bear->type & RSP_DELAY_FLAG){
+		extern u8 mesh_rsp_random_delay_step;
+		interval_step = mesh_rsp_random_delay_step;
+	}
+	else{
+		interval_step = p_trans_par->invl_steps+1;
+	}
+	return interval_step*10000;
+}
+
+extern void blt_adv_expect_time_refresh(u8 en);
+int soft_timer_send_mesh_adv()
+{	
+	
+	blt_adv_expect_time_refresh(0);
+	mesh_sleep_time.soft_timer_send_flag = 1;
+	blt_send_adv2scan_mode(1);
+	mesh_sleep_time.soft_timer_send_flag = 0;
+	blt_adv_expect_time_refresh(1);
+
+	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
+		return get_mesh_adv_interval();
+	}
+	mesh_sleep_time.soft_timer_pending = 0;
+	return -1;
+}
+
+void soft_timer_mesh_adv_proc()
+{
+	if(mesh_sleep_time.soft_timer_pending){
 		return;
 	}
 	
+	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){	
+		mesh_sleep_time.soft_timer_pending = 1;
+		blt_soft_timer_add(&soft_timer_send_mesh_adv, get_mesh_adv_interval());
+	}
+	return;
+}
+
+void proc_suspend_low_power()
+{
 	if(!lpn_provision_ok){
 	    if(is_provision_success() && node_binding_tick 
 	    && clock_time_exceed(node_binding_tick, 3*1000*1000)){
 	        start_reboot();//lpn_provision_ok = 1;
+	        while(1);
 	    }
-	    return ;
-	}
-	if(lpn_provision_ok){
-	 	if(mesh_indication_retry.busy){
-			// not enter suspend to receive confirm ack	
+
+		if(is_provision_success()){
+			return; // don't enter suspend until appkey bind ok.
 		}
-		else{
-			if(clock_time()- mesh_sleep_time.last_sleep_tick > mesh_sleep_time.loop_interval*sys_tick_per_us && !mesh_indication_retry.busy){
-				mesh_sleep_time.last_sleep_tick = clock_time();			
-				my_fifo_reset(&blt_rxfifo);
-				cpu_sleep_wakeup(DEEPSLEEP_MODE_RET_SRAM_LOW32K, PM_WAKEUP_PAD|PM_WAKEUP_TIMER, clock_time()+mesh_sleep_time.sleep_interval*sys_tick_per_us);
+	}
+	
+	if(blt_state == BLS_LINK_STATE_CONN){ 
+		bls_pm_setSuspendMask (SUSPEND_DISABLE);
+		blt_soft_timer_delete(&soft_timer_send_mesh_adv);
+	}else if (blt_state == BLS_LINK_STATE_ADV){
+		if((!mesh_sleep_time.appWakeup_flg) && clock_time_exceed(mesh_sleep_time.last_tick, mesh_sleep_time.run_time_us)){
+			mesh_sleep_time.appWakeup_flg = 0;
+			#if BLE_REMOTE_PM_ENABLE
+			if(!is_provision_working() ){
+				bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
 			}
+			#endif			
 		}
 	}
 }
@@ -322,12 +345,21 @@ void main_loop ()
 
 	tick_loop ++;
 #if (BLT_SOFTWARE_TIMER_ENABLE)
+	soft_timer_mesh_adv_proc();
 	blt_soft_timer_process(MAINLOOP_ENTRY);
 #endif	
 	////////////////////////////////////// BLE entry /////////////////////////////////
 	blt_sdk_main_loop ();
-
-	mesh_tx_indication_proc();
+	if(mesh_sleep_time.appWakeup_flg){
+		return;//save running time in early wakeup.
+	}
+	else{
+		if(blt_state == BLS_LINK_STATE_ADV){
+			extern void bls_phy_scan_mode (int set_chn);
+			bls_phy_scan_mode (0); // switch scan channel
+		}
+	}
+	mesh_tx_indication_proc();	
 	#if 0 // for indication test
 	static u8 A_send_indication=0;
 	if(A_send_indication){
@@ -368,8 +400,16 @@ void main_loop ()
 	proc_suspend_low_power();
 }
 
-void spirit_lpn_node_io_init()
+void spirit_lpn_wakeup_init(u8 e, u8 *p, int n)
 {
+	mesh_sleep_time.appWakeup_flg = bltPm.appWakeup_flg;
+	if(!mesh_sleep_time.appWakeup_flg){
+		mesh_sleep_time.last_tick = clock_time()|1;
+		bls_pm_setSuspendMask (SUSPEND_DISABLE);
+	}
+}
+
+void spirit_lpn_ui_init(){
 	cpu_set_gpio_wakeup(SW1_GPIO, 0, 1);// SW1 switch gatt_mode
 	gpio_set_wakeup(SW1_GPIO, 0, 1);
 
@@ -395,6 +435,7 @@ void user_init()
 	mesh_global_var_init();
 	proc_telink_mesh_to_sig_mesh();		// must at first
 	set_blc_hci_flag_fun(0);// disable the hci part of for the lib .
+
 	blc_app_loadCustomizedParameters();  //load customized freq_offset cap value and tp value
 
 	usb_id_init();
@@ -414,7 +455,21 @@ void user_init()
 #endif
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
+#if BLT_SOFTWARE_TIMER_ENABLE
 	blc_ll_initPowerManagement_module();        //pm module:      	 optional
+#endif
+
+#if(BLE_REMOTE_PM_ENABLE)	
+	#if SPIRIT_PRIVATE_LPN_EN
+	bls_pm_setSuspendMask (SUSPEND_DISABLE);
+	#else
+	bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
+	#endif
+	blc_pm_setDeepsleepRetentionThreshold(50, 30);
+	blc_pm_setDeepsleepRetentionEarlyWakeupTiming(400);
+#else
+	bls_pm_setSuspendMask (SUSPEND_DISABLE);//(SUSPEND_ADV | SUSPEND_CONN)
+#endif
 
 	//l2cap initialization
 	//blc_l2cap_register_handler (blc_l2cap_packet_receive);
@@ -438,19 +493,18 @@ void user_init()
 	bls_ll_setAdvEnable(1);  //adv enable
 
 	rf_set_power_level_index (MY_RF_POWER_INDEX);
-	bls_pm_setSuspendMask (SUSPEND_DISABLE);//(SUSPEND_ADV | SUSPEND_CONN)
     blc_hci_le_setEventMask_cmd(HCI_LE_EVT_MASK_ADVERTISING_REPORT|
 								HCI_LE_EVT_MASK_CONNECTION_COMPLETE|
 								HCI_LE_EVT_MASK_CONNECTION_UPDATE_COMPLETE);
 
 	////////////////// SPP initialization ///////////////////////////////////
-#if (HCI_ACCESS != HCI_NONE)
+#if (HCI_ACCESS != HCI_USE_NONE)
 	#if (HCI_ACCESS==HCI_USE_USB)
 	//blt_set_bluetooth_version (BLUETOOTH_VER_4_2);
 	//bls_ll_setAdvChannelMap (BLT_ENABLE_ADV_ALL);
 	usb_bulk_drv_init (0);
 	blc_register_hci_handler (app_hci_cmd_from_usb, blc_hci_tx_to_usb);
-	#else	//uart
+	#elif (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();
 	blc_register_hci_handler (blc_rx_from_uart, blc_hci_tx_to_uart);		//default handler
 	//blc_register_hci_handler(rx_from_uart_cb,tx_to_uart_cb);				//customized uart handler
@@ -461,6 +515,7 @@ void user_init()
 	#endif
 	rf_pa_init();
 	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);
+	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_EXIT, &spirit_lpn_wakeup_init);
 	blc_hci_registerControllerEventHandler(app_event_handler);		//register event callback
 	//bls_hci_mod_setEventMask_cmd(0xffff);			//enable all 15 events,event list see ble_ll.h
 	bls_set_advertise_prepare (app_advertise_prepare_handler);
@@ -486,8 +541,8 @@ void user_init()
 	//mi_mesh_otp_program_simulation();
 	blc_att_setServerDataPendingTime_upon_ClientCmd(1);
 	telink_record_part_init();
-	#if XIAOMI_MODULE_ENABLE
-	test_mi_api_part();
+	#if 0 // XIAOMI_MODULE_ENABLE
+	test_mi_api_part(); // just for test
 	#endif
 	blc_l2cap_register_pre_handler(telink_ble_mi_event_cb_att);// for telink event callback
 	advertise_init();
@@ -500,10 +555,7 @@ void user_init()
 	memset(&model_sig_cfg_s.hb_sub, 0x00, sizeof(mesh_heartbeat_sub_str)); // init para for test
 #endif
 
-	if(lpn_provision_ok){
-		gatt_adv_send_flag = 0; //close gatt adv
-	}
-	spirit_lpn_node_io_init();
+	spirit_lpn_ui_init();
 #if (BLT_SOFTWARE_TIMER_ENABLE)
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 1*1000*1000);
@@ -515,10 +567,11 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 {
     blc_app_loadCustomizedParameters();
 	blc_ll_initBasicMCU();   //mandatory
+	spirit_lpn_wakeup_init(0, 0, 0); //bltPm.appWakeup_flg is clear in blc_ll_recoverDeepRetention
 	rf_set_power_level_index (MY_RF_POWER_INDEX);
 	
 	blc_ll_recoverDeepRetention();
 
-	spirit_lpn_node_io_init();
+	spirit_lpn_ui_init();
 }
 #endif

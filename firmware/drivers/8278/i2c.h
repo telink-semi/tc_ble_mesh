@@ -36,12 +36,19 @@
 /**
  *  @brief  select pin as SDA and SCL of i2c
  */
-typedef enum {
-	I2C_GPIO_GROUP_A3A4,
-	I2C_GPIO_GROUP_B6D7,
-	I2C_GPIO_GROUP_C0C1,
-	I2C_GPIO_GROUP_C2C3,
-}I2C_GPIO_GroupTypeDef;
+typedef enum{
+	I2C_GPIO_SDA_A3		= GPIO_PA3,
+	I2C_GPIO_SDA_B6		= GPIO_PB6,
+	I2C_GPIO_SDA_C0		= GPIO_PC0,
+	I2C_GPIO_SDA_C2		= GPIO_PC2,
+}I2C_GPIO_SdaTypeDef;
+
+typedef enum{
+	I2C_GPIO_SCL_A4		= GPIO_PA4,
+	I2C_GPIO_SCL_D7		= GPIO_PD7,
+	I2C_GPIO_SCL_C1	 	= GPIO_PC1,
+	I2C_GPIO_SCL_C3		= GPIO_PC3,
+}I2C_GPIO_SclTypeDef;
 
 
 /**
@@ -110,7 +117,7 @@ static inline void i2c_slave_mapping_mode_data_buffer_config(unsigned char * pMa
  * @param[in]  i2c_pin_group - the pin port selected as I2C interface pin port.
  * @return     none
  */
-void i2c_gpio_set(I2C_GPIO_GroupTypeDef i2c_pin_group);
+void i2c_gpio_set(I2C_GPIO_SdaTypeDef sda_pin,I2C_GPIO_SclTypeDef scl_pin);
 
 /**
  * @brief      This function serves to set the id of slave device and the speed of I2C interface

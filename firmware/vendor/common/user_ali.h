@@ -47,6 +47,7 @@ int ais_write_pipe(void *p);
 void ais_gatt_auth_init();
 void caculate_sha256_node_oob(u8 *p_oob);
 void mesh_ais_global_var_set();
+void calculate_auth_value();
 
 #endif
 

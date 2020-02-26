@@ -38,14 +38,20 @@ extern "C" {
 #define	__LOG_RT_ENABLE__		0
 //#define	__DEBUG_PRINT__			0
 
-#if DUAL_VENDOR_EN
-#define FLASH_1M_ENABLE         1   // must
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define FLASH_1M_ENABLE         1
+#elif DUAL_VENDOR_EN
+#define FLASH_1M_ENABLE         0
 #else
 #define FLASH_1M_ENABLE         0
 #endif
 
 #if FLASH_1M_ENABLE
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define PINGPONG_OTA_DISABLE    1 // it can disable only when 1M flash.
+#else
 #define PINGPONG_OTA_DISABLE    0 // it can disable only when 1M flash.
+#endif
 #if	PINGPONG_OTA_DISABLE
 #define SWITCH_FW_ENABLE		0 // set to 0, just for particular customer 
 #endif
@@ -94,7 +100,11 @@ extern "C" {
 
 #define ONLINE_STATUS_EN        0
 
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define DUAL_MODE_ADAPT_EN 			1   // dual mode as master with Zigbee
+#else
 #define DUAL_MODE_ADAPT_EN 			0   // dual mode as master with Zigbee
+#endif
 #if (0 == DUAL_MODE_ADAPT_EN)
 #define DUAL_MODE_WITH_TLK_MESH_EN  0   // dual mode as slave with Telink mesh
 #endif
@@ -149,6 +159,10 @@ extern "C" {
 //
 
 //----------------------- GPIO for UI --------------------------------
+#if ((0 == PM_DEEPSLEEP_RETENTION_ENABLE) && DUAL_VENDOR_EN)
+#define SLEEP_FUNCTION_DISABLE          1
+#endif
+
 //---------------  Button 
 #if (PCBA_8258_SEL == PCBA_8258_DONGLE_48PIN)
 #define PULL_WAKEUP_SRC_PD6     PM_PIN_PULLUP_1M	//btn

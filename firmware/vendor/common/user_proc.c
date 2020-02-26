@@ -56,7 +56,7 @@ void caculate_aes_to_create_static_oob()
 	memset(aes_in,0,sizeof(aes_in));
 	memcpy(aes_in,tbl_mac,6);
 	tn_aes_128(magic_aes_nums,aes_in,aes_out);
-	set_static_oob_for_auth((u8 *)aes_out,16);
+	mesh_set_dev_auth(aes_out, 16);
 	#endif
 }
 #endif
@@ -71,11 +71,26 @@ void user_sha256_data_proc()
 void user_node_oob_set()
 {
     if(AIS_ENABLE || (mesh_user_define_mode == MESH_AES_ENABLE)){
-            set_node_prov_para_no_pubkey_static_oob();
-        }else {
-            set_node_prov_capa_oob_init();
-            //set_node_prov_para_no_pubkey_output_oob();//debug for the bluez 
+        set_node_prov_para_no_pubkey_static_oob();
+    }else {
+        #if 0 // output oob test
+        //set_node_prov_para_no_pubkey_output_oob();//debug for the bluez 
+        #else
+        if(0){ // oob test // read from flash later
+            set_node_prov_para_no_pubkey_static_oob();  // set static oob type
+            u8 oob[16] = {0xff};
+			mesh_set_dev_auth(oob,sizeof(oob));
+        }else{
+			u8 oob[16] = {0};
+			if(memcmp(dev_auth, oob, 16)){
+				set_node_prov_para_no_pubkey_static_oob();// static oob
+			}
+			else{
+            	set_node_prov_capa_oob_init(); // no oob
+			}
         }
+        #endif
+    }
 }
 
 u8 user_mac_proc()
@@ -87,12 +102,14 @@ u8 user_mac_proc()
 	}
 }
 
+#if MD_SERVER_EN
 void user_power_on_proc()
 {
 #if ((MESH_USER_DEFINE_MODE != MESH_SPIRIT_ENABLE)&&!MI_API_ENABLE)
        mesh_tx_cmd_lightness_st(0, ele_adr_primary, 0xffff, LIGHTNESS_STATUS, 0, 0);
 #endif
 }
+#endif
 
 void user_mesh_cps_init()
 {
@@ -164,32 +181,18 @@ void mesh_provision_para_init()
 	prov_random_proc();
 	#if !WIN32
 	user_prov_multi_device_uuid();// use the mac address part to create the device uuid part
+	#if (!AIS_ENABLE)
 	u8 oob_data[16];//get_flash_data_is_valid
 	flash_read_page(FLASH_ADR_STATIC_OOB,16,oob_data);
-	if(get_flash_data_is_valid(oob_data,sizeof(oob_data))){// data is valid 
-		//update device uuid from the mac setor part 
-		#if(AIS_ENABLE)
-		// need to do the static oob restore,because the power is not stable ,it may have very low chance the data is err 
-		if(!is_provision_success() ){
-			u8 oob_calc[32];
-			caculate_sha256_node_oob(oob_calc);
-			if(memcmp(oob_calc,oob_data,sizeof(oob_data))){// the oob is err 
-				// need to recover the data part 
-				erase_ecdh_sector_restore_info(FLASH_ADR_STATIC_OOB,oob_calc,16);
-				memcpy(provision_mag.static_oob,oob_data,16);
-				provision_mag_cfg_s_store();
-				start_reboot();
-			}
-		}
-		#endif
-		memcpy(provision_mag.static_oob,oob_data,16);
-		memcpy(prov_oob_info_use,provision_mag.static_oob,16);
-		provision_mag_cfg_s_store();
-		restore_static_oob_info_for_auth();
-	}else{// need to recreate the data part 
+	if(get_flash_data_is_valid(oob_data,sizeof(oob_data))){//oob was burned in flash
+		mesh_set_dev_auth(oob_data,sizeof(oob_data));
+	}else
+	#endif
+	{
 		user_prov_multi_oob();	
 	}
-	#endif 
+	#endif
+	user_node_oob_set();
 }
 
 void user_prov_multi_oob()
@@ -197,10 +200,8 @@ void user_prov_multi_oob()
 #if !WIN32
     #if (AIS_ENABLE)
         caculate_sha256_to_create_static_oob();
-        flash_write_page(FLASH_ADR_STATIC_OOB,16,provision_mag.static_oob);
     #elif (MESH_USER_DEFINE_MODE == MESH_AES_ENABLE)
         caculate_aes_to_create_static_oob();
-        flash_write_page(FLASH_ADR_STATIC_OOB,16,provision_mag.static_oob);
     #else 
         // use static oob mode 
     #endif
@@ -242,7 +243,7 @@ void user_prov_multi_device_uuid()
         uuid_create_by_mac(tbl_mac,prov_para.device_uuid);
     #elif (MESH_USER_DEFINE_MODE == MESH_GN_ENABLE)
         set_dev_uuid_for_simple_flow(prov_para.device_uuid);
-    #elif (MESH_USER_DEFINE_MODE == MESH_NORMAL_MODE)
+    #elif (MESH_USER_DEFINE_MODE == MESH_NORMAL_MODE || MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
         if(PROVISION_FLOW_SIMPLE_EN){
 		    set_dev_uuid_for_simple_flow(prov_para.device_uuid);
 	    }else{

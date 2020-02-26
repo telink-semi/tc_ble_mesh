@@ -339,7 +339,7 @@ s16 get_val_with_check_range(s32 level_target, s16 min, s16 max, int st_trans_ty
     }
 #endif
     if(level_target < min){
-        // lightness would be set to 0
+        // lightness would be set to 0 for PTS, whicd is like to OFF command, and 0 will not permit to set to lightness->last.
         if(!((ST_TRANS_LIGHTNESS == st_trans_type) && (LEVEL_OFF == level_target))){
             level_target = min;
         }
@@ -392,7 +392,8 @@ int mesh_tx_cmd_lightness_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *u
 {
 	mesh_cmd_lightness_st_t rsp = {0};
 	mesh_level_u16_st_rsp_par_fill(&rsp, idx, ST_TRANS_LIGHTNESS);
-	 				 
+
+#if CMD_LINEAR_EN	 				 
 	if(LIGHTNESS_LINEAR_STATUS == op_rsp){
 		if(is_linear_flag(idx)){
 			u16 linear_present = lightness_to_linear(rsp.present);
@@ -407,7 +408,7 @@ int mesh_tx_cmd_lightness_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *u
 	 		rsp.target = lightness_to_linear(rsp.target);
 		}
 	}
-	
+#endif	
 	u32 len = sizeof(rsp);
 	if(0 == rsp.remain_t){
 		len -= 3;
@@ -481,13 +482,15 @@ int lightness_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx,
 		err = level_u16_set(p_set, par_len, op, idx, retransaction, ST_TRANS_LIGHTNESS, pub_list);
 	}
 
+#if CMD_LINEAR_EN
 	if(0 == err){
         if(!((LIGHTNESS_LINEAR_SET == op) || (LIGHTNESS_LINEAR_SET_NOACK == op))){
             // need to clear the flag and the linear para part 
             clear_light_linear_flag(idx);
         }
 	}
-	
+#endif
+
 	return err;
 }
 

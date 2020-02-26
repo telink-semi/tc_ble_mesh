@@ -27,7 +27,7 @@
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/blt_config.h"
 
-#if (FLASH_1M_ENABLE && PINGPONG_OTA_DISABLE)
+#if (FLASH_1M_ENABLE && PINGPONG_OTA_DISABLE && (0 == FW_START_BY_BOOTLOADER_EN))
 static inline void ota_reboot(void){
 #if 0
     static volatile u32 reboot_0key;

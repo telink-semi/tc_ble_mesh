@@ -46,6 +46,9 @@ void mesh_gatt_adv_beacon_enable(u8 enable){
 
 int mesh_reset_network(u8 provision_enable)
 {
+	if(!is_provision_success()){
+		return 1;
+	}
 	u8 r = irq_disable ();
 	factory_test_mode_en = 1;
 	provision_mag.gatt_mode = GATT_PROVISION_MODE;
@@ -75,7 +78,7 @@ int mesh_reset_network(u8 provision_enable)
 	factory_test_key_bind(1);
 	mesh_init_flag = 0;
 //provision random
-	provision_random_data_init();
+//	provision_random_data_init(); // will init in provisioning
 
 // spirit mode init
 	#if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)
@@ -94,7 +97,7 @@ void mesh_revert_network()
 	if(provision_mag.gatt_mode == GATT_PROVISION_MODE){		
 		#if FAST_PROVISION_ENABLE
 		if((!fast_prov.not_need_prov)&&(mesh_fast_prov_sts_get() == FAST_PROV_COMPLETE)){
-			mesh_provision_par_set((u8 *)&fast_prov.net_info.pro_data);
+			mesh_provision_par_handle((u8 *)&fast_prov.net_info.pro_data);
 			//set app_key
 			mesh_appkey_set_t *p_set = (mesh_appkey_set_t *)&fast_prov.net_info.appkey_set;
 			mesh_app_key_set(APPKEY_ADD, p_set->appkey, GET_APPKEY_INDEX(p_set->net_app_idx), GET_NETKEY_INDEX(p_set->net_app_idx), 1);
@@ -365,7 +368,7 @@ void mesh_fast_provision_timeout()
 	if(fast_prov.start_tick && clock_time_exceed(fast_prov.start_tick,FAST_PROVISION_TIMEOUT)){
 		LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0,"FAST_PROV_TIME_OUT",0);
 		mesh_fast_prov_sts_set(FAST_PROV_TIME_OUT);
-		LOG_MSG_INFO(TL_LOG_NODE_SDK, 0, 0,"time out",0);
+		LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"time out",0);
 		fast_prov.start_tick = 0;
 	}
 }
@@ -476,7 +479,7 @@ void mesh_fast_prov_proc()
 			if(fast_prov.cur_sts == FAST_PROV_IDLE){
 				mesh_adv_txrx_to_self_en(1);
 				mesh_fast_prov_sts_set(FAST_PROV_RESET_NETWORK);
-				LOG_MSG_INFO(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_RESET_NETWORK",0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_RESET_NETWORK",0);
 			}
 			break;
 		case VD_MESH_ADDR_GET:
@@ -484,32 +487,32 @@ void mesh_fast_prov_proc()
 				mesh_adv_txrx_to_self_en(1);
 				mesh_fast_prov_sts_set(FAST_PROV_GET_ADDR);
 				mesh_gatt_adv_beacon_enable(0);
-				LOG_MSG_INFO(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_ADDR_GET",0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_ADDR_GET",0);
 			}
 			break;
 		case VD_MESH_ADDR_SET:
 			if(fast_prov.cur_sts == FAST_PROV_GET_ADDR){
 				cache_init(ADR_ALL_NODES);
 				mesh_fast_prov_sts_set(FAST_PROV_SET_ADDR);
-				LOG_MSG_INFO(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_ADDR_SET",0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_ADDR_SET",0);
 			}
 			break;
 		case VD_MESH_PROV_DATA_SET:
 			if(fast_prov.cur_sts == FAST_PROV_SET_ADDR){				
 				mesh_fast_prov_sts_set(FAST_PROV_NET_INFO);
-				LOG_MSG_INFO(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_PROV_DATA_SET",0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_PROV_DATA_SET",0);
 			}
 			break;
 		case VD_MESH_PROV_CONFIRM:
 			if(fast_prov.cur_sts == FAST_PROV_NET_INFO){
 				mesh_fast_prov_sts_set(FAST_PROV_CONFIRM);
-				LOG_MSG_INFO(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_PROV_CONFIRM",0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_PROV_CONFIRM",0);
 			}
 			break;
 		case VD_MESH_PROV_COMPLETE:
 			if(fast_prov.cur_sts == FAST_PROV_CONFIRM){
 				mesh_fast_prov_sts_set(FAST_PROV_COMPLETE);
-				LOG_MSG_INFO(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_PROV_COMPLETE, delay:%x",fast_prov.delay);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_PROV_COMPLETE, delay:%x",fast_prov.delay);
 			}
 			break;
 		default:

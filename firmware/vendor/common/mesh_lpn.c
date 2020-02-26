@@ -52,7 +52,6 @@ const u32 mesh_lpn_key_map[] = {SW1_GPIO, SW2_GPIO};
 u32 mesh_lpn_wakeup_key = 0;
 u8 key_not_release = 0;
 u32 active_time;
-u8 friend_subsc_tx_later = 0;
 
 #if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
 u8 lpn_provision_ok = 0;
@@ -61,6 +60,7 @@ u8 lpn_provision_ok = 0;
 #if FEATURE_LOWPOWER_EN
 mesh_lpn_sleep_t  lpn_sleep;
 u16 lpn_establish_win_ms = FRI_ESTABLISH_WIN_MS;
+u32 lpn_wakeup_tick = 0;
 
 STATIC_ASSERT(LPN_ADV_INTERVAL_MS > (FRI_ESTABLISH_REC_DELAY_MS + FRI_ESTABLISH_WIN_MS + 10));//FRI_ESTABLISH_PERIOD_MS
 STATIC_ASSERT(FRI_REQ_TIMEOUT_MS > 1100);
@@ -197,7 +197,6 @@ void subsc_add_rmv_test(int add)
 
 void lpn_subsc_list_update_by_sub_set_cmd(u16 op, u16 sub_adr)
 {
-    friend_subsc_tx_later = 1;  // can't send at once, why? confirm later.
     if((CFG_MODEL_SUB_ADD == op)||(CFG_MODEL_SUB_VIRTUAL_ADR_ADD == op)){
         friend_subsc_add(&sub_adr, 1);
     }else if((CFG_MODEL_SUB_DEL == op)||(CFG_MODEL_SUB_VIRTUAL_ADR_DEL == op)){
@@ -205,7 +204,6 @@ void lpn_subsc_list_update_by_sub_set_cmd(u16 op, u16 sub_adr)
     }else if(((CFG_MODEL_SUB_OVER_WRITE == op)||(CFG_MODEL_SUB_VIRTUAL_ADR_OVER_WRITE == op))
     	   ||(CFG_MODEL_SUB_DEL_ALL == op)){
     }
-    friend_subsc_tx_later = 0;
 }
 
 void friend_send_current_subsc_list()
@@ -225,9 +223,7 @@ void friend_send_current_subsc_list()
     }
     
     if(j){
-        friend_subsc_tx_later = 1;      // can't send at once, why? confirm later.
         friend_subsc_add(adr_list, j);
-        friend_subsc_tx_later = 0;
     }
 #endif
 }
@@ -312,6 +308,7 @@ void suspend_enter(u32 sleep_ms, int deep_retention_flag)
 		pm_wakeup_type |= PM_WAKEUP_PAD;  
 	}
     cpu_sleep_wakeup(sleep_mode, pm_wakeup_type, clock_time() + sleep_ms*CLOCK_SYS_CLOCK_1MS);
+	lpn_wakeup_tick = clock_time();
 #endif
 }
 
@@ -655,6 +652,11 @@ void mesh_lpn_proc_suspend ()
         if(blt_state == BLS_LINK_STATE_CONN){
             return ;
         }
+		#if (!DEBUG_SUSPEND)
+		if(clock_time_exceed(lpn_wakeup_tick, LPN_WORKING_TIMEOUT_MS*1000)){
+			mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);// prevent abnormal working time.
+		}
+		#endif
 	}else{
 	    if(!is_provision_success()){
 	        if(!is_provision_working()){   // not being provision

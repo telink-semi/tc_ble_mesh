@@ -10,6 +10,8 @@ SECTIONS
         *(.vectors)
         *(.vectors.*)	/* MUST as follows, when compile with -ffunction-sections -fdata-sections, session name may changed */
         }
+        
+    . = (. * (1 - __BOOT_LOADER_EN)) + (__FW_RAMCODE_SIZE_MAX * __BOOT_LOADER_EN);
         .ram_code :
         {
         *main.o(.ram_code)
@@ -22,17 +24,19 @@ SECTIONS
         *(.ram_code.*)
         }
         
-    . = (((. + 3) / 4)*4);
+    . = (((. + 15) / 16)*16);       /* must 16 byte align if use "AT" for ".text" */
         PROVIDE(_rstored_ = . );
         
         
     PROVIDE(_ramcode_size_ = . );
 	PROVIDE(_ramcode_size_div_16_ = (. + 15 ) / 16);
-	PROVIDE(_ramcode_size_div_256_ = (. + 255) / 256);
+	PROVIDE(_ramcode_size_div_256_compile_ = (. + 255) / 256);
 	PROVIDE(_ramcode_size_div_16_align_256_ = ( (. + 255) / 256) * 16);
 	PROVIDE(_ramcode_size_align_256_ = ( _ramcode_size_div_16_align_256_)* 16);
 
+        . = (_rstored_ + __FW_OFFSET);
         .text :
+          AT(_rstored_)  
         {
         *(.text)
         *(.text.*)
@@ -44,12 +48,14 @@ SECTIONS
         }
 
     . = (((. + 3) / 4)*4);
-        PROVIDE(_dstored_ = .);
-        PROVIDE(_code_size_ = .);
-          
+        PROVIDE(_dstored_ = .);                     /*location in flash*/
+        PROVIDE(_code_size_div_256_ = (. + 255) / 256);
+        PROVIDE(_dstored_bin_ = . - __FW_OFFSET);   /*location in bin*/
+        PROVIDE(_code_size_ = . - __FW_OFFSET);
+        PROVIDE(_ramcode_size_div_256_ = (_ramcode_size_div_256_compile_ * (1 - __MCU_RUN_SRAM_EN)) + (_code_size_div_256_ * __MCU_RUN_SRAM_EN));
 	. = __RAM_START_ADDR + 0x900 + (_ramcode_size_div_256_ * 0x100);	/* 0x100 alighned, must greater than or equal to:0x808000 + ram_code_size +  irq_vector(0x100) + IC_tag(0x100) + IC_cache(0x800) == 0x808a00 + ram_code_size */
         .data :	 /*is retention for 825x. is 'data' for others. must use name 'data'.*/
-          AT ( _dstored_ )
+          AT ( _dstored_bin_ )
         {
         . = (((. + 3) / 4)*4);
          PROVIDE(_start_data_ = . );
@@ -76,7 +82,7 @@ SECTIONS
     PROVIDE(_end_bss_ = .); /*_end_bss_ must outside of {}, if not it will not correct*/
           
         .retention_data : /*no retention data. only for 825x, use 'retention_data', because tdebug can't know private name*/
-          AT (_dstored_ + (_end_data_ -  _start_data_))
+          AT (_dstored_bin_ + (_end_data_ -  _start_data_))
         {
         . = (((. + 3) / 4)*4);
         PROVIDE(_no_retention_data_start_ = . );
@@ -87,7 +93,7 @@ SECTIONS
         }
         
         .retention_bss(NOLOAD) : /*no retention data. only for 825x, use 'retention_bss', because tdebug can't know private name*/
-          AT (_dstored_ + (_end_data_ -  _start_data_) + (_no_retention_data_end_ - _no_retention_data_start_))
+          AT (_dstored_bin_ + (_end_data_ -  _start_data_) + (_no_retention_data_end_ - _no_retention_data_start_))
         {
         . = (((. + 3) / 4)*4);
         PROVIDE(_no_retention_bss_start_ = . );
@@ -104,4 +110,5 @@ SECTIONS
     
 	/*PROVIDE(_ram_use_size_div_16_ = (_retention_data_end_ - 0x840000  + 15 ) / 16); only for 825x*/
     ASSERT((_end_bss_ - 0x840000) * __PM_DEEPSLEEP_RETENTION_ENABLE <= 0x8000, "**Retention Area Overflow, Check your data/bss usages**")
+    ASSERT((_bin_size_ + 16) * __FLASH_512K_ENABLE <= 0x30000, "**Error:firmware size Overflow!!!**")
 }

@@ -38,7 +38,7 @@ extern "C" {
 //#define	__DEBUG_PRINT__			0
 
 #if DUAL_VENDOR_EN
-#define FLASH_1M_ENABLE         1   // must
+#define FLASH_1M_ENABLE         0
 #else
 #define FLASH_1M_ENABLE         0
 #endif

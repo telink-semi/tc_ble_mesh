@@ -30,8 +30,6 @@
 #include "dfifo.h"
 #include "timer.h"
 
-// ADC input channel: Only ADC_MISC_CHN
-
 _attribute_data_retention_
 adc_vref_ctr_t adc_vref_cfg = {
 	.adc_vref 		= 1175, //default ADC ref voltage (unit:mV)
@@ -78,6 +76,7 @@ void adc_vbat_pin_init(GPIO_PinTypeDef pin)
 
 /**
  * @brief This function serves to set the channel reference voltage.
+ * @param[in]  ch_n - enum variable of ADC input channel.
  * @param[in]  v_ref - enum variable of ADC reference voltage.
  * @return none
  */
@@ -102,6 +101,7 @@ void adc_set_ref_voltage(ADC_RefVolTypeDef v_ref)
 
 /**
  * @brief This function serves to set resolution.
+ * @param[in]  ch_n - enum variable of ADC input channel.
  * @param[in]  v_res - enum variable of ADC resolution.
  * @return none
  */
@@ -112,6 +112,7 @@ void adc_set_resolution(ADC_ResTypeDef v_res)
 
 /**
  * @brief This function serves to set sample_cycle.
+ * @param[in]  ch_n - enum variable of ADC input channel.
  * @param[in]  adcST - enum variable of ADC Sampling cycles.
  * @return none
  */
@@ -122,6 +123,7 @@ void adc_set_tsample_cycle(ADC_SampCycTypeDef adcST)
 
 /**
  * @brief This function serves to set input_mode.
+ * @param[in]  ch_n - enum variable of ADC input channel.
  * @param[in]  m_input - enum variable of ADC channel input mode.
  * @return none
  */
@@ -132,6 +134,7 @@ void adc_set_input_mode(ADC_InputModeTypeDef m_input)
 
 /**
  * @brief This function serves to set input channel in differential_mode.
+ * @param[in]  ch_n - enum variable of ADC input channel.
  * @param[in]  InPCH - enum variable of ADC analog positive input channel.
  * @param[in]  InNCH - enum variable of ADC analog negative input channel.
  * @return none
@@ -207,6 +210,7 @@ void adc_base_init(GPIO_PinTypeDef pin)
 	adc_set_vref_vbat_divider(ADC_VBAT_DIVIDER_OFF);//set Vbat divider select,
 
 	adc_base_pin_init(pin);		//ADC GPIO Init
+
 	for(i=0;i<10;i++)
 	{
 		if(pin == ADC_GPIO_tab[i])
@@ -335,6 +339,7 @@ void adc_vbat_channel_init(void)
 
 
 #define ADC_SAMPLE_NUM		8 //8 /4
+
 /**
  * @brief This function serves to set adc sampling and get results.
  * @param[in]  none.

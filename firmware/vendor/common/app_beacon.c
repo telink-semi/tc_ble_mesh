@@ -30,8 +30,6 @@
 #include "../../proj/common/types.h"
 
 
-beacon_str  beaconData;// used to be as a send buff 
-
 u8  provision_In_ccc[2]={0x01,0x00};// set it can work enable 
 u8  provision_Out_ccc[2]={0x00,0x00}; 
 extern u8 proxy_Out_ccc[2];
@@ -123,26 +121,25 @@ u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash){
 
 u8 beacon_test_case(u8*p_tc,u8 len )
 {
+    beacon_str  beaconData = {0};
 	beaconData.trans_par_val = TRANSMIT_DEF_PAR_BEACON;
 	beaconData.bea_testcase_id.header.len = 10;
 	beaconData.bea_testcase_id.header.type = MESH_ADV_TYPE_TESTCASE_ID;
 	beaconData.bea_testcase_id.beacon_type = UNPROVISION_BEACON;
 	memcpy(beaconData.bea_testcase_id.case_id,p_tc,len);
-	p_pro_adv_pkt =(mesh_cmd_bear_unseg_t*)(&beaconData);
-	mesh_tx_cmd_add_packet((u8 *)(p_pro_adv_pkt));
+	mesh_tx_cmd_add_packet((u8 *)(&beaconData));
 	return 1;
 }
 
 // mode =1; with uri , mode =0 means without uri 
-u8 uri_hash[4]={0xD9,0x74,0x78,0xb3};
-u8 uri_dat[0x40]={	 0x17,0x2f,0x2f,0x77,0x77,0x77,0x2e,0x65,
-					 0x78,0x61,0x6d,0x70,0x6c,0x65,0x2e,0x63,
-					 0x6f,0x6d,0x2f,0x6d,0x65,0x73,0x68,0x2f,
-					 0x70,0x72,0x6f,0x64,0x75,0x63,0x74,0x73,
-					 0x2f,0x6c,0x69,0x67,0x68,0x74,0x2d,0x73,
-					 0x77,0x69,0x74,0x63,0x68,0x2d,0x76,0x33
-					};
-u8 uri_dat_len =0x30;
+#define URI_DATA    {0x17,0x2f,0x2f,0x77,0x77,0x77,0x2e,0x65,\
+					 0x78,0x61,0x6d,0x70,0x6c,0x65,0x2e,0x63,\
+					 0x6f,0x6d,0x2f,0x6d,0x65,0x73,0x68,0x2f,\
+					 0x70,0x72,0x6f,0x64,0x75,0x63,0x74,0x73,\
+					 0x2f,0x6c,0x69,0x67,0x68,0x74,0x2d,0x73,\
+					 0x77,0x69,0x74,0x63,0x68,0x2d,0x76,0x33\
+					}
+// URI_HASH             {0xD9,0x74,0x78,0xb3};  // sample data for URI_DATA
 
 u8 unprov_beacon_send(u8 mode ,u8 blt_sts)
 {
@@ -156,11 +153,13 @@ u8 unprov_beacon_send(u8 mode ,u8 blt_sts)
 	URI Hash : d97478b3667f4839487469c72b8e5e9e
 	Beacon : 0070cf7c9732a345b691494810d2e9cbf44020d97478b3
 */
+    beacon_str  beaconData = {0};
+
 	if(mode == MESH_UNPROVISION_BEACON_WITH_URI){
 		u8 hash_tmp[16];
-		mesh_sec_func_s1 (hash_tmp, uri_dat, uri_dat_len);
-		memcpy(uri_hash,hash_tmp,4);
-		beacon_data_init_uri(&beaconData ,prov_para.device_uuid,prov_para.oob_info,uri_hash);
+		u8 uri_dat[] = URI_DATA;
+		mesh_sec_func_s1 (hash_tmp, uri_dat, sizeof(uri_dat));
+		beacon_data_init_uri(&beaconData ,prov_para.device_uuid,prov_para.oob_info,hash_tmp);
 	}else if(mode == MESH_UNPROVISION_BEACON_WITHOUT_URI){
 		beacon_data_init_without_uri(&beaconData ,prov_para.device_uuid,prov_para.oob_info);
 	}else{}
@@ -169,8 +168,7 @@ u8 unprov_beacon_send(u8 mode ,u8 blt_sts)
 		notify_pkts((u8 *)(&(beaconData.bea_data)),sizeof(beacon_data_pk),PROVISION_ATT_HANDLE,MSG_MESH_BEACON);
 		#endif
 	}else{
-		p_pro_adv_pkt =(mesh_cmd_bear_unseg_t*)(&beaconData);
-		mesh_tx_cmd_add_packet((u8 *)(p_pro_adv_pkt));
+		mesh_tx_cmd_add_packet((u8 *)(&beaconData));
 	}
 	return 1;
 }	
@@ -196,7 +194,7 @@ void mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
     #if (HCI_ACCESS == HCI_USE_USB)
 	SET_TC_FIFO(TSCRIPT_MESH_TX, (u8 *)&bc_bear.len, bc_bear.len+1);
     #else
-    LOG_MSG_INFO(TL_LOG_FRIEND,&bc_bear.len, bc_bear.len+1,"xxx TX beacon,nk arr idx:%d, new:%d, ",GetNKArrayIdxByPointer(p_nk_base),(KEY_REFRESH_PHASE2 == key_phase));
+    LOG_MSG_LIB(TL_LOG_NODE_SDK,&bc_bear.len, bc_bear.len+1,"xxx TX beacon,nk arr idx:%d, new:%d, ",GetNKArrayIdxByPointer(p_nk_base),(KEY_REFRESH_PHASE2 == key_phase));
 	#endif
 	#endif
     mesh_sec_beacon_auth(p_netkey->bk, (u8 *)&p_bc_sec->flag, 0);
@@ -209,7 +207,7 @@ void mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 		notify_pkts((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
 		#endif
 	}else{
-		static u32 iv_idx_st_A1;iv_idx_st_A1++;
+		// static u32 iv_idx_st_A1;iv_idx_st_A1++;
     	mesh_bear_tx2mesh_and_gatt((u8 *)&bc_bear, MESH_ADV_TYPE_BEACON, TRANSMIT_DEF_PAR_BEACON);
 	}
 }

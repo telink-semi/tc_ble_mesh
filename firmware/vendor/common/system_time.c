@@ -69,6 +69,9 @@ void system_timer_handle_100ms()
 #if ALI_MD_TIME_EN
 	user_ali_time_proc();
 #endif
+#if !WIN32 && SENSOR_LIGHTING_CTRL_EN
+    sensor_lighting_ctrl_proc();
+#endif
 }
 
 #if FEATURE_LOWPOWER_EN
@@ -138,6 +141,7 @@ void system_time_run(){
         online_st_proc();
         #endif
 
+        #if MD_SERVER_EN
 	    if(publish_powerup_random_ms && clock_time_exceed_ms(0, publish_powerup_random_ms)){
 	        publish_powerup_random_ms = 0;
 			#if STEP_PUB_MODE_EN
@@ -148,6 +152,7 @@ void system_time_run(){
 			publish_when_powerup();
 			#endif
 	    }
+	    #endif
     #endif
     }
 

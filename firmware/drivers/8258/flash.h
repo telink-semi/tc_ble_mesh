@@ -61,6 +61,16 @@ typedef enum{
 	FLASH_TYPE_PUYA
 }Flash_TypeDef;
 
+typedef enum {
+	FLASH_SIZE_64K 	= 0x10,
+	FLASH_SIZE_128K = 0x11,
+	FLASH_SIZE_256K = 0x12,
+	FLASH_SIZE_512K = 0x13,
+	FLASH_SIZE_1M 	= 0x14,
+	FLASH_SIZE_2M 	= 0x15,
+	FLASH_SIZE_4M 	= 0x16,
+	FLASH_SIZE_8M 	= 0x17,
+} Flash_CapacityDef;
 
 /**
  * @brief This function serves to erase a sector.
@@ -96,6 +106,13 @@ unsigned long 	flash_read_long_val(unsigned long adr, unsigned long flag_invalid
 unsigned long flash_subregion_write_val (unsigned long adr, unsigned long flag_invalid, unsigned long dat, unsigned long num);
 unsigned long flash_subregion_read_val (unsigned long adr, unsigned long flag_invalid, unsigned long num);
 #endif
+
+/***********************************
+ * @brief	  This function serves to read MID of flash
+ * @param[in] buf - store MID of flash
+ * @return    none.
+ */
+void flash_read_mid(unsigned char *buf);
 
 /* according to your appliaction */
 #if 0
@@ -166,13 +183,6 @@ void flash_deep_powerdown(void);
  */
 void flash_release_deep_powerdown(void);
 
-/***********************************
- * @brief	  This function serves to read MID of flash
- * @param[in] buf - store MID of flash
- * @return    none.
- */
-void flash_read_mid(unsigned char *buf);
-
 /**
  * @brief	  This function serves to read UID of flash
  * @param[in] idcmd - different flash vendor have different read-uid command
@@ -204,3 +214,7 @@ void flash_lock(Flash_TypeDef type , unsigned short data);
  */
 void flash_unlock(Flash_TypeDef type);
 #endif
+void flash_set_capacity(Flash_CapacityDef flash_cap);
+
+Flash_CapacityDef flash_get_capacity(void);
+

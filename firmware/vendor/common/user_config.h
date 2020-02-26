@@ -71,6 +71,14 @@
 	#elif(MCU_CORE_TYPE == MCU_CORE_8278)
 	#include "../spirit_lpn/app_config_8278.h"
 	#endif
+#elif (__PROJECT_BOOTLOADER__)
+	#if(MCU_CORE_TYPE == MCU_CORE_8269)
+	#include "../boot_loader/app_config_8269.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8258)
+	#include "../boot_loader/app_config_8258.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+	#include "../boot_loader/app_config_8278.h"
+	#endif
 #else
 	#include "../common/default_config.h"
 #endif

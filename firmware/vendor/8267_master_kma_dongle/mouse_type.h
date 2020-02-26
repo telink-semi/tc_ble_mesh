@@ -22,7 +22,7 @@
 
 #ifndef MOUSE_TYPE_H_
 #define MOUSE_TYPE_H_
-#include "..\..\proj\common\types.h"
+#include "../../proj/common/types.h"
 
 #define MOUSE_FRAME_DATA_NUM   4
 

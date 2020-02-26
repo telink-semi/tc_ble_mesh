@@ -45,6 +45,14 @@
 // ------ SPIRIT_LPN ------
 #define PID_SPIRIT_LPN          (0x0401)
 
+/*
+MESH_PID_SEL : PID is product ID,
+MESH_VID: VID is software version ID,
+
+PID and VID are used in composition data: model_sig_cfg_s_cps.
+format: please refer to spec "4.2.1.1 Composition Data Page 0"
+*/
+
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
     #if ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 #define MESH_PID_SEL		(PID_GATEWAY)
@@ -76,6 +84,9 @@
 #elif (__PROJECT_MESH_GW_NODE_HK__)   // light
 #define MESH_PID_SEL		(LIGHT_TYPE_SEL)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
+#elif (__PROJECT_BOOTLOADER__)   // light
+#define MESH_PID_SEL		(LIGHT_TYPE_SEL)
+#define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 #elif (WIN32)
 #define MESH_PID_SEL		(LIGHT_TYPE_SEL)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
@@ -88,5 +99,11 @@
 // -- 
 #define RUN_254K_IN_20000_EN 0 // enable to run 254K in 0x20000(default is 124k), disable to save RAM	
 
+#if __PROJECT_BOOTLOADER__
+#define MCU_RUN_SRAM_WITH_CACHE_EN      1   // must with cache, because read flash by pointer 
+#else
+#define MCU_RUN_SRAM_WITH_CACHE_EN      0   // must with cache, because read flash by pointer 
+#endif
+#define MCU_RUN_SRAM_EN                 0   // manual set data address in boot.link.can't read flash by pointer 
 
 

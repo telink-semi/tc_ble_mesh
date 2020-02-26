@@ -29,12 +29,13 @@
 #include "irq.h"
 #include "analog.h"
 #include "timer.h"
+#include "pm.h"
 
 extern _attribute_data_retention_ unsigned char tl_24mrc_cal;
 
 _attribute_data_retention_	unsigned char system_clk_type;
 
-
+#if 0
 /**
  * @brief       This function to set RC for the system clock.
  * @param[in]   SYS_CLK - the clock source of the system clock.
@@ -59,6 +60,7 @@ void clock_rc_set(SYS_CLK_TypeDef SYS_CLK)
 		rc_48m_cal();
 	}
 }
+#endif
 /**
  * @brief       This function to select the system clock source.
  * @param[in]   SYS_CLK - the clock source of the system clock.
@@ -72,30 +74,25 @@ void clock_init(SYS_CLK_TypeDef SYS_CLK)
 	reg_clk_sel = (unsigned char)SYS_CLK;
 	system_clk_type = (unsigned char)SYS_CLK;
 
-#if (SYSCLK_RC_CLOCK_EN)
-	if(SYS_CLK == SYS_CLK_48M_Crystal || SYS_CLK == SYS_CLK_48M_RC)
-#else
+#if 0 //vulture is normal
 	if(SYS_CLK == SYS_CLK_48M_Crystal)
-#endif
 	{
 		/*default c4: dcdc 1.8V  -> GD flash£º 48M clock may error £¬ need higher DCDC voltage
 		          c6: dcdc 1.9V
 		*/
 		analog_write(0x0c, 0xc6);
 	}
-#if (SYSCLK_RC_CLOCK_EN)
-	if(SYS_CLK<SYS_CLK_RC_THRES)
-	{
-		clock_rc_set(SYS_CLK);
-	}
 #endif
 
+	if(!(pm_is_MCU_deepRetentionWakeup())){
+		rc_24m_cal();
+	}
+	
 #if (MODULE_WATCHDOG_ENABLE)
 	reg_tmr_ctrl = MASK_VAL(
 		FLD_TMR_WD_CAPT, (MODULE_WATCHDOG_ENABLE ? (WATCHDOG_INIT_TIMEOUT * CLOCK_SYS_CLOCK_1MS >> WATCHDOG_TIMEOUT_COEFF):0)
 		, FLD_TMR_WD_EN, (MODULE_WATCHDOG_ENABLE?1:0));
 #endif
-
 }
 
 /**
@@ -257,4 +254,18 @@ void dmic_prob_32k(unsigned char src)
 	write_reg8(0x5a8,read_reg8(0x5a8)&0xf3);
 }
 
-
+/**
+ * @brief     This function performs to select 24M/2 RC as source of DMIC.
+ * @param[in] source clock to provide DMIC.
+ * @return    none.
+ */
+void dmic_prob_24M_rc()
+{
+	//probe 24M/2 RC
+	//PD[5] select dmic clk
+	write_reg8(0x586,0x1f);
+	write_reg8(0x794,0x01);
+	write_reg8(0x796,0x02);
+	write_reg8(0x781,0x01);
+	write_reg8(0x59e,0x5b);
+}

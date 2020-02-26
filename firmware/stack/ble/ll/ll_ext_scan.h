@@ -24,7 +24,7 @@
 #define LL_SCAN_EXT_H_
 
 #include <stack/ble/ble_common.h>
-#include <stack/ble/blt_config.h>
+#include "proj_lib/ble/blt_config.h"
 #include <stack/ble/hci/hci_const.h>
 #include <stack/ble/hci/hci_event.h>
 #include <stack/ble/hci/hci_cmd.h>

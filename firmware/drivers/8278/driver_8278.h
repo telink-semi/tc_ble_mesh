@@ -53,7 +53,3 @@
 #include "drivers/8278/qdec.h"
 #include "drivers/8278/lpc.h"
 
-
-#include "proj/drivers/rf_pa.h"
-
-

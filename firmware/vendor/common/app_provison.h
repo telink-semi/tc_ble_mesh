@@ -26,7 +26,6 @@
 #include "../../proj_lib/sig_mesh/app_mesh.h"
 #include "../../proj_lib/sig_mesh/Test_case.h"
 #define PROVISION_GATT_ENABLE 1
-#define PROVISION_GATT_MAX_LEN 255
 
 extern u8 blt_state;
 #define PROVISION_ELE_ADR 	0x7F00
@@ -498,7 +497,7 @@ typedef struct{
 	u8 	gatt_mode; 
 	u8  pro_stop_flag;
 	provison_net_info_str pro_net_info;
-	u8 static_oob[16];
+	u8  unused_oob[16];
 	u16 unicast_adr_last;
 }pro_para_mag;
 extern u8 prov_link_cls_code;
@@ -639,6 +638,9 @@ extern fast_prov_par_t fast_prov;
 
 #define MAX_RETRY_INTERVAL	1000*1000
 extern VC_node_info_t VC_node_info[MESH_NODE_MAX_NUM];
+extern pro_PB_ADV rcv_pb;
+#define PROVISION_GATT_MAX_LEN      (sizeof(rcv_pb.pb_pdu)) // 0x50
+
 extern mesh_cmd_bear_unseg_t		pro_adv_pkt;
 extern mesh_pro_data_structer		pro_data_str;
 extern pro_para_mag  provision_mag;
@@ -646,8 +648,7 @@ extern u8 para_pro[PROVISION_GATT_MAX_LEN];
 extern u8 para_len ;
 extern u8 prov_net_key[16];
 
-
-extern u8 dev_dsk[32];
+extern u8 dev_auth[];
 extern u8 dev_edch[32];
 extern u8 dev_input[0x91];
 
@@ -656,8 +657,6 @@ void set_provisionee_para(u8 *p_net_key,u16 key_index,u8 flags,u8 *p_ivi,u16 uni
 u8 get_ele_offset_by_model_VC_node_info(u16 obj_adr, u32 model_id, int sig_model);
 VC_node_info_t * get_VC_node_info(u16 obj_adr, int is_must_primary);
 void erase_vc_node_info();
-
-extern mesh_cmd_bear_unseg_t		*p_pro_adv_pkt;
 
 extern void set_pb_gatt_adv(u8 *p,u8 flags);
 extern void set_adv_provision(rf_packet_adv_t * p);
@@ -693,6 +692,7 @@ extern int mesh_provison_process(u8 ini_role,u8 *p_rcv);
 extern void mesh_adv_provision_retry();
 
 extern void dispatch_pb_gatt(u8 *p ,u8 len );
+extern u8 get_provision_state();
 extern u8 is_provision_success();
 extern u8 is_provision_working();
 
@@ -703,8 +703,14 @@ extern u8 mesh_provision_cmd_process();
 extern u8 pkt_pb_gatt_data(rf_packet_att_data_t *p, u8 l2cap_type,u8 *p_rcv,u8 *p_rcv_len);
 extern void mesh_proxy_sar_timeout_terminate();
 extern void provision_mag_cfg_s_store();
-extern void set_dev_psk_ppk();
-extern void get_dsk_dpk_para();
+#if !WIN32
+void get_private_key(u8 *p_private_key);
+void get_public_key( u8 *p_public_key);
+#else //just for compile,win32 use gatt_pro_psk and gatt_pro_ppk
+#define get_private_key(a)		
+#define get_public_key(a)	
+#endif
+void cal_private_and_public_key();
 extern u8 dispatch_start_cmd_reliable(mesh_pro_data_structer *p_rcv_str);
 
 
@@ -718,9 +724,6 @@ extern int	mesh_prov_sec_msg_dec (unsigned char key[16], unsigned char nonce[13]
 extern void enable_mesh_adv_filter();
 extern void disable_mesh_adv_filter();
 extern void set_pro_init_role(u8 role);
-
-extern void set_pro_psk_ppk_cp(u8 * random,u8 random_len );
-void get_pro_pubkey_xy();
 
 extern void set_provisioner_para(u8 *p_net_key,u16 key_index,u8 flags,u8 *p_ivi,u16 unicast);
 
@@ -755,7 +758,6 @@ void set_node_prov_para_pubkey_static_oob();
 void set_node_prov_para_pubkey_input_oob();
 void set_node_prov_para_pubkey_output_oob();
 void check_mesh_node_out_oob_pub_key_send_time();
-int is_mesh_provisioning();
 u8  mesh_loop_provision_end_process();
 void mesh_prov_link_close_terminate();
 void prov_set_link_close_code(u8 code);
@@ -764,13 +766,13 @@ extern int App_key_bind_end_callback(u8 event);
 u8 mesh_cfg_keybind_end_event(u8 eve,u16 unicast);
 
 void mesh_set_oob_type(u8 type, u8 *p_oob ,u8 len );
-void set_static_oob_for_auth(u8 *p_data,u8 len );
+void mesh_set_pro_auth(u8 *p_auth, u8 len);
+void mesh_set_dev_auth(u8 *p_auth, u8 len);
 void set_node_prov_start_oob(mesh_pro_data_structer *p_rcv,mesh_prov_oob_str *p_oob);
 
 u8 get_pubkey_oob_info_by_capa(mesh_prov_oob_str *p_prov_oob);
 u8 set_start_para_by_capa(mesh_prov_oob_str *p_prov_oob);
 u32 mesh_check_pubkey_valid(u8 *rcv_ppk);
-void set_static_oob_for_auth(u8 *p_data,u8 len );
 void pro_random_init();
 u8 win32_create_rand();
 void dev_random_init();
@@ -778,7 +780,6 @@ void provision_random_data_init();
 int upload_sig_mesh_para(u8 *buf,int *len);
 int download_sig_mesh_para(u8 *buf,int len );
 void reset_uuid_create_flag();
-void restore_static_oob_info_for_auth();
 void check_inputoob_proc();
 
 //gateway 
@@ -817,6 +818,7 @@ void mesh_prov_end_set_tick();
 void mesh_rp_server_set_link_sts(u8 sts);
 void del_vc_node_info_by_unicast(u16 unicast);
 u8 win32_proved_state();
+void mesh_rp_adv_prov_complete_rsp(pro_PB_ADV *p_adv);
 
 #endif 
 

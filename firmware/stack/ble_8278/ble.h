@@ -24,7 +24,7 @@
 #define BLE_H_
 
 
-#include "blt_config.h"
+#include "proj_lib/ble/blt_config.h"
 #include "ble_common.h"
 
 

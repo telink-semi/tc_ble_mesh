@@ -46,40 +46,49 @@
  */
 
 
-void spi_master_gpio_set(SPI_GPIO_GroupTypeDef PinGrp)
+void spi_master_gpio_set(SPI_GPIO_SclkTypeDef sclk_pin,SPI_GPIO_CsTypeDef cs_pin,SPI_GPIO_SdoTypeDef sdo_pin, SPI_GPIO_SdiTypeDef sdi_pin )
 {
-	GPIO_PinTypeDef sclk=GPIO_PA4;
-	GPIO_PinTypeDef cs=GPIO_PD6;
-	GPIO_PinTypeDef sdo=GPIO_PA2;
-	GPIO_PinTypeDef sdi=GPIO_PA3;
 
-	 if (PinGrp == SPI_GPIO_GROUP_A2A3A4D6){
+	if(sclk_pin == SPI_GPIO_SCL_A4 ||sdi_pin == SPI_GPIO_SDI_A3 ||sdo_pin == SPI_GPIO_SDO_A2){
 
-		 sclk = GPIO_PA4;
-		 cs   = GPIO_PD6;
-		 sdo  = GPIO_PA2;
-		 sdi  = GPIO_PA3;
+		reg_pin_i2c_spi_out_en |= (FLD_PIN_PAGROUP_SPI_EN);
+		if(sclk_pin == SPI_GPIO_SCL_A4){
 
-		 reg_pin_i2c_spi_out_en |= (FLD_PIN_PAGROUP_SPI_EN|FLD_PIN_PDGROUP_SPI_EN);
-		 reg_pin_i2c_spi_en |= (FLD_PIN_PA3_SPI_EN | FLD_PIN_PA4_SPI_EN);
-		 reg_pin_i2c_spi_en &= ~(FLD_PIN_PA3_I2C_EN | FLD_PIN_PA4_I2C_EN);
-	 }
-	 else if (PinGrp ==SPI_GPIO_GROUP_B6B7D2D7){
+			reg_pin_i2c_spi_en |= (FLD_PIN_PA4_SPI_EN);
+			reg_pin_i2c_spi_en &= ~(FLD_PIN_PA4_I2C_EN);
+		}
+		if (sdi_pin == SPI_GPIO_SDI_A3){
 
-		 sclk = GPIO_PD7;
-		 cs   = GPIO_PD2;
-		 sdo  = GPIO_PB7;
-		 sdi  = GPIO_PB6;
-		 reg_pin_i2c_spi_out_en |= (FLD_PIN_PBGROUP_SPI_EN|FLD_PIN_PDGROUP_SPI_EN);
-		 reg_pin_i2c_spi_en |= (FLD_PIN_PB6_SPI_EN | FLD_PIN_PD7_SPI_EN);
-		 reg_pin_i2c_spi_en &= ~(FLD_PIN_PB6_I2C_EN | FLD_PIN_PD7_I2C_EN);
-	 }
-	 gpio_set_func(sclk ,AS_SPI);
-	 gpio_set_func(sdo  ,AS_SPI);
-	 gpio_set_func(sdi  ,AS_SPI);
-	 gpio_set_input_en(sdi, 1);
+			reg_pin_i2c_spi_en |= (FLD_PIN_PA3_SPI_EN);
+			reg_pin_i2c_spi_en &= ~(FLD_PIN_PA3_I2C_EN);
+		}
+	}
 
-	 spi_masterCSpin_select(cs);
+   if(sdo_pin == SPI_GPIO_SDO_B7 || sdi_pin == SPI_GPIO_SDI_B6){
+
+		reg_pin_i2c_spi_out_en |= (FLD_PIN_PBGROUP_SPI_EN);
+
+		if(sdi_pin == SPI_GPIO_SDI_B6){
+
+			reg_pin_i2c_spi_en |= (FLD_PIN_PB6_SPI_EN);
+			reg_pin_i2c_spi_en &= ~(FLD_PIN_PB6_I2C_EN);
+		}
+	}
+
+   reg_pin_i2c_spi_out_en |= (FLD_PIN_PDGROUP_SPI_EN);
+
+   if(sclk_pin == SPI_GPIO_SCL_D7){
+
+	  reg_pin_i2c_spi_en |= (FLD_PIN_PD7_SPI_EN);
+	  reg_pin_i2c_spi_en &= ~(FLD_PIN_PD7_I2C_EN);
+   }
+
+   gpio_set_func(sclk_pin ,AS_SPI);
+   gpio_set_func(sdo_pin  ,AS_SPI);
+   gpio_set_func(sdi_pin  ,AS_SPI);
+   gpio_set_input_en(sdi_pin, 1);
+
+   spi_masterCSpin_select(cs_pin);
 }
 
 //SPI related registers definitions
@@ -240,42 +249,49 @@ void spi_slave_init(unsigned char DivClock, SPI_ModeTypeDef Mode)
  *	step4:set 5b7[7:0] to sel spi or i2c input;
  *	step5 if use pd[6]as spi slave csn,need to open pd[2] gpio func,because pd[2]have high priority than pd[6]
  */
-
-void spi_slave_gpio_set(SPI_GPIO_GroupTypeDef PinGrp)
+void spi_slave_gpio_set(SPI_GPIO_SclkTypeDef sclk_pin,SPI_GPIO_CsTypeDef cs_pin,SPI_GPIO_SdoTypeDef sdo_pin, SPI_GPIO_SdiTypeDef sdi_pin)
 {
-	GPIO_PinTypeDef sclk=GPIO_PA4;
-	GPIO_PinTypeDef cs=GPIO_PD6;
-	GPIO_PinTypeDef sdo=GPIO_PA2;
-	GPIO_PinTypeDef sdi=GPIO_PA3;
+	if(sclk_pin == SPI_GPIO_SCL_A4 ||sdi_pin == SPI_GPIO_SDI_A3 ||sdo_pin == SPI_GPIO_SDO_A2){
 
-    if (PinGrp == SPI_GPIO_GROUP_A2A3A4D6)
-    {
-		 sclk = GPIO_PA4;
-		 cs   = GPIO_PD6;
-		 sdo  = GPIO_PA2;
-		 sdi  = GPIO_PA3;
+			reg_pin_i2c_spi_out_en |= (FLD_PIN_PAGROUP_SPI_EN);
+			if(sclk_pin == SPI_GPIO_SCL_A4){
 
-		 reg_pin_i2c_spi_out_en |= (FLD_PIN_PAGROUP_SPI_EN|FLD_PIN_PDGROUP_SPI_EN);
-		 reg_pin_i2c_spi_en |= (FLD_PIN_PA3_SPI_EN | FLD_PIN_PA4_SPI_EN);
-		 reg_pin_i2c_spi_en &= ~(FLD_PIN_PA3_I2C_EN | FLD_PIN_PA4_I2C_EN);
-    }
-    else if (PinGrp ==SPI_GPIO_GROUP_B6B7D2D7)
-    {
-		 sclk = GPIO_PD7;
-		 cs   = GPIO_PD2;
-		 sdo  = GPIO_PB7;
-		 sdi  = GPIO_PB6;
-		 reg_pin_i2c_spi_out_en |= (FLD_PIN_PBGROUP_SPI_EN|FLD_PIN_PDGROUP_SPI_EN);
-		 reg_pin_i2c_spi_en |= (FLD_PIN_PB6_SPI_EN | FLD_PIN_PD7_SPI_EN);
-		 reg_pin_i2c_spi_en &= ~(FLD_PIN_PB6_I2C_EN | FLD_PIN_PD7_I2C_EN);
-    }
-	gpio_set_func(sclk ,AS_SPI);
-	gpio_set_func(cs   ,AS_SPI);
-	gpio_set_func(sdo  ,AS_SPI);
-	gpio_set_func(sdi  ,AS_SPI);
-	gpio_set_input_en(sclk, 1);
-	gpio_set_input_en(cs, 1);
-	gpio_set_input_en(sdi, 1);
+				reg_pin_i2c_spi_en |= (FLD_PIN_PA4_SPI_EN);
+				reg_pin_i2c_spi_en &= ~(FLD_PIN_PA4_I2C_EN);
+			}
+			if (sdi_pin == SPI_GPIO_SDI_A3){
+
+				reg_pin_i2c_spi_en |= (FLD_PIN_PA3_SPI_EN);
+				reg_pin_i2c_spi_en &= ~(FLD_PIN_PA3_I2C_EN);
+			}
+		}
+
+	   if(sdo_pin == SPI_GPIO_SDO_B7 || sdi_pin == SPI_GPIO_SDI_B6){
+
+			reg_pin_i2c_spi_out_en |= (FLD_PIN_PBGROUP_SPI_EN);
+
+			if(sdi_pin == SPI_GPIO_SDI_B6){
+
+				reg_pin_i2c_spi_en |= (FLD_PIN_PB6_SPI_EN);
+				reg_pin_i2c_spi_en &= ~(FLD_PIN_PB6_I2C_EN);
+			}
+		}
+
+	   reg_pin_i2c_spi_out_en |= (FLD_PIN_PDGROUP_SPI_EN);
+
+	   if(sclk_pin == SPI_GPIO_SCL_D7){
+
+		  reg_pin_i2c_spi_en |= (FLD_PIN_PD7_SPI_EN);
+		  reg_pin_i2c_spi_en &= ~(FLD_PIN_PD7_I2C_EN);
+	   }
+	   gpio_set_func(sclk_pin ,AS_SPI);
+	   gpio_set_func(cs_pin   ,AS_SPI);
+	   gpio_set_func(sdo_pin  ,AS_SPI);
+	   gpio_set_func(sdi_pin  ,AS_SPI);
+	   gpio_set_input_en(sclk_pin, 1);
+	   gpio_set_input_en(cs_pin, 1);
+	   gpio_set_input_en(sdi_pin, 1);
+
 }
 
 

@@ -37,7 +37,12 @@
 #define HCI_LOG_FW_EN   0
 #endif
 
+#if SPIRIT_PRIVATE_LPN_EN
+#define MESH_RSP_BASE_DELAY_STEP			120  //unit:ADV_INTERVAL_MIN(10ms)
+#else
 #define MESH_RSP_BASE_DELAY_STEP			18  //unit:ADV_INTERVAL_MIN(10ms)
+#endif
+
 #define MESH_POWERUP_BASE_TIME				200
 
 typedef struct{
@@ -96,6 +101,7 @@ void entry_ota_mode(void);
 void set_mesh_ota_type();
 void set_firmware_type_init();
 void set_firmware_type_SIG_mesh();
+void set_firmware_type_zb_with_factory_reset();
 void set_ota_firmwaresize(int adr);
 void ota_set_flag();
 void mesh_ota_reboot_set(u8 type);
@@ -118,7 +124,6 @@ void adc_drv_init();
 int blc_rx_from_uart (void);
 int blc_hci_tx_to_uart ();
 void mesh_scan_rsp_init();
-void mesh_scan_rsp_update_adr_primary(u16 adr);
 int SendOpParaDebug(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len);
 int SendOpParaDebug_vendor(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len, u8 rsp_op, u8 tid);
 void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_adr, u16 dst_adr,u8 *uuid, u32 model_id, int sig_model);
@@ -139,9 +144,8 @@ extern u32 g_vendor_md_light_vc_c;
 extern u16 publish_powerup_random_ms;
 
 extern u32 fw_id_local;
-extern u8 prov_oob_info_use[16];
 extern u16 sub_adr_onoff ;
-void set_unprov_beacon_para(u8 *p_uuid ,u8 *p_info,u8 *p_hash,u8 *uri_para,u8 uri_len);
+void set_unprov_beacon_para(u8 *p_uuid ,u8 *p_info);
 void set_provision_adv_data(u8 *p_uuid,u8 *oob_info);
 void set_proxy_adv_data(u8 *p_hash,u8 *p_random);
 void bls_set_adv_delay(u8 delay);	// unit : 625us
@@ -167,7 +171,6 @@ void erase_ecdh_sector_restore_info(u32 adr,u8 *p_data,u16 len);
 int SendOpParaDebug_VC(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len);  // only for SIG command now
 #endif
 extern u8  mesh_user_define_mode ;
-extern u8  provision_flow_simple_en ;
 
 extern u8 PROVISION_ATT_HANDLE; // may use in library
 extern u8 GATT_PROXY_HANDLE;    // may use in library

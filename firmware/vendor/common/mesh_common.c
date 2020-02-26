@@ -75,6 +75,44 @@ asm(".equ __PM_DEEPSLEEP_RETENTION_ENABLE,    1");
 asm(".equ __PM_DEEPSLEEP_RETENTION_ENABLE,    0");
 #endif
 asm(".global     __PM_DEEPSLEEP_RETENTION_ENABLE");
+
+#if FLASH_1M_ENABLE && (0 == FW_START_BY_BOOTLOADER_EN)
+asm(".equ __FLASH_512K_ENABLE,    0");
+#else
+asm(".equ __FLASH_512K_ENABLE,    1");
+#endif
+asm(".global     __FLASH_512K_ENABLE");
+
+#if __PROJECT_BOOTLOADER__
+asm(".equ __FW_OFFSET,      0"); // must be 0
+#elif (FW_START_BY_BOOTLOADER_EN)
+    #if (DUAL_MODE_FW_ADDR_SIGMESH == 0x20000)
+asm(".equ __FW_OFFSET,      0x20000");  // must be equal to DUAL_MODE_FW_ADDR_SIGMESH
+    #endif
+#else
+asm(".equ __FW_OFFSET,      0");
+#endif
+asm(".global     __FW_OFFSET");
+
+#if __PROJECT_BOOTLOADER__
+asm(".equ __BOOT_LOADER_EN,         1");
+#else
+asm(".equ __BOOT_LOADER_EN,         0");
+#endif
+asm(".global     __BOOT_LOADER_EN");
+
+#if (FW_RAMCODE_SIZE_MAX == 0x4000)
+asm(".equ __FW_RAMCODE_SIZE_MAX,    0x4000");   // must be equal to FW_RAMCODE_SIZE_MAX
+#endif
+asm(".global     __FW_RAMCODE_SIZE_MAX");
+
+#if (MCU_RUN_SRAM_WITH_CACHE_EN || MCU_RUN_SRAM_EN)
+asm(".equ __MCU_RUN_SRAM_EN,         1");
+#else
+asm(".equ __MCU_RUN_SRAM_EN,         0");
+#endif
+asm(".global     __MCU_RUN_SRAM_EN");
+
 #endif
 
 
@@ -84,12 +122,14 @@ STATIC_ASSERT(sizeof(mesh_scan_rsp_t) <= 31);
 #if (CHIP_TYPE == CHIP_TYPE_8269)
 STATIC_ASSERT((0 == FLASH_1M_ENABLE) && (0 == PINGPONG_OTA_DISABLE));
 #endif
-#if (PINGPONG_OTA_DISABLE || DUAL_VENDOR_EN)
+#if (PINGPONG_OTA_DISABLE)
 STATIC_ASSERT(1 == FLASH_1M_ENABLE);
 #else
 STATIC_ASSERT(FLASH_ADR_AREA_FIRMWARE_END <= 0x3F000);
 #endif
+#ifdef FLASH_ADR_AREA_FIRMWARE_END
 STATIC_ASSERT(FLASH_ADR_AREA_FIRMWARE_END%0x1000 == 0);
+#endif
 
 #if((HCI_ACCESS==HCI_USE_UART)&&(MCU_CORE_TYPE == MCU_CORE_8269))
 #if (UART_GPIO_SEL == UART_GPIO_8267_PC2_PC3)
@@ -137,10 +177,15 @@ typedef char assert_PWM_IO_is_conflicted_with_UART_IO_Please_redefine_PWM_IO[(!!
 #if(HCI_ACCESS != HCI_USE_NONE)
 MYFIFO_INIT(hci_tx_fifo, HCI_TX_FIFO_SIZE, HCI_TX_FIFO_NUM); // include adv pkt and other event
 
+
 #if (IS_VC_PROJECT)
 MYFIFO_INIT(hci_rx_fifo, 512, 4);   // max play load 382
 #else
-MYFIFO_INIT(hci_rx_fifo, 72, 4);
+#define UART_DATA_SIZE              (72)    // increase or decrease 16bytes for each step.
+#define HCI_RX_FIFO_SIZE            (UART_DATA_SIZE + 4 + 4)    // 4: sizeof DMA len;  4: margin reserve
+STATIC_ASSERT(HCI_RX_FIFO_SIZE % 16 == 0);
+
+MYFIFO_INIT(hci_rx_fifo, HCI_RX_FIFO_SIZE, 4);
 #endif
 #endif
 
@@ -156,9 +201,7 @@ u32 g_vendor_md_light_vc_s2 = VENDOR_MD_LIGHT_S2;
     #endif
 #endif
 u8  mesh_user_define_mode = MESH_USER_DEFINE_MODE;  // for libary use
-u8  provision_flow_simple_en = PROVISION_FLOW_SIMPLE_EN;  // for libary use
 u16	current_connHandle = BLE_INVALID_CONNECTION_HANDLE;	 //	handle of  connection
-mesh_scan_rsp_t tbl_scanRsp = {0};
 
 u8 mesh_rsp_random_delay_step = 0;// 10ms unit 
 u32 mesh_rsp_random_delay_tick =0;
@@ -200,21 +243,6 @@ u8 get_flash_data_is_valid(u8 *p_data,u16 len)
 }
 
 #if !WIN32
-#if !__PROJECT_MESH_PRO__
-extern u8 dev_dsk[32];
-extern u8 dev_dpk[64];
-
-void set_dev_psk_ppk()
-{
-	tn_p256_keypair_mac(dev_dsk,dev_dpk,dev_dpk+32,tbl_mac,6);
-}
-
-void use_ecdh_refresh_key_part(mesh_ecdh_key_str *p_key)
-{
-	memcpy(dev_dsk,p_key->dsk,sizeof(p_key->dsk));
-	memcpy(dev_dpk,p_key->dpk,sizeof(p_key->dpk));
-}
-
 u8 check_ecdh_crc(mesh_ecdh_key_str *p_key)
 {
 	u32 crc = crc16(p_key->dsk,sizeof(p_key->dsk)+sizeof(p_key->dpk));
@@ -256,6 +284,13 @@ u8 get_ecdh_key_sts(mesh_ecdh_key_str *p_key)
 
 u8 cal_dsk_dpk_is_valid_or_not(mesh_ecdh_key_str *p_key)
 {
+	
+	u8 dev_dsk[32]={ 0x52,0x9a,0xa0,0x67,0x0d,0x72,0xcd,0x64, 0x97,0x50,0x2e,0xd4,0x73,0x50,0x2b,0x03,
+					 0x7e,0x88,0x03,0xb5,0xc6,0x08,0x29,0xa5, 0xa3,0xca,0xa2,0x19,0x50,0x55,0x30,0xba};
+	u8 dev_dpk[64]={ 0xf4,0x65,0xe4,0x3f,0xf2,0x3d,0x3f,0x1b, 0x9d,0xc7,0xdf,0xc0,0x4d,0xa8,0x75,0x81,
+					 0x84,0xdb,0xc9,0x66,0x20,0x47,0x96,0xec, 0xcf,0x0d,0x6c,0xf5,0xe1,0x65,0x00,0xcc,
+					 0x02,0x01,0xd0,0x48,0xbc,0xbb,0xd8,0x99, 0xee,0xef,0xc4,0x24,0x16,0x4e,0x33,0xc2,
+					 0x01,0xc2,0xb0,0x10,0xca,0x6b,0x4d,0x43, 0xa8,0xa1,0x55,0xca,0xd8,0xec,0xb2,0x79};
 	u8 k0[32],k1[32];
 	tn_p256_dhkey (k0, dev_dsk, p_key->dpk, p_key->dpk+0x20);
 	tn_p256_dhkey (k1, p_key->dsk, dev_dpk, dev_dpk+0x20);
@@ -265,7 +300,22 @@ u8 cal_dsk_dpk_is_valid_or_not(mesh_ecdh_key_str *p_key)
 		return 0;
 	}
 }
-void get_dsk_dpk_para()
+
+void get_private_key(u8 *p_private_key)
+{
+	mesh_ecdh_key_str key_str;
+	flash_read_page(FLASH_ADR_EDCH_PARA,sizeof(key_str),(u8*)&key_str);
+	memcpy(p_private_key, key_str.dsk, 32);
+}
+
+void get_public_key(u8 *p_public_key)
+{
+	mesh_ecdh_key_str key_str;
+	flash_read_page(FLASH_ADR_EDCH_PARA,sizeof(key_str),(u8*)&key_str);
+	memcpy(p_public_key, key_str.dpk, 64);
+}
+
+void cal_private_and_public_key()
 {
 	// first need to change the format to key(32+64),flag,crc(use crc16) 
 	// get all the para data first 
@@ -273,7 +323,6 @@ void get_dsk_dpk_para()
 	flash_read_page(FLASH_ADR_EDCH_PARA,sizeof(key_str),(u8*)&key_str);
 	if(key_str.valid == ECDH_KEY_VALID_FLAG){
 		if(check_ecdh_crc(&key_str)){// crc is valid
-			use_ecdh_refresh_key_part(&key_str);
 			return ;
 		}else{
 			erase_ecdh_sector_restore_info(FLASH_ADR_EDCH_PARA,0,0);
@@ -284,10 +333,8 @@ void get_dsk_dpk_para()
 		if(key_sts == ECDH_KEY_STS_NONE_VALID){
 			// create the key flag crc and valid 
 			u8 irq_res = irq_disable();
-			set_dev_psk_ppk();// create the key part 
+			tn_p256_keypair_mac(key_str.dsk,key_str.dpk,key_str.dpk+32,tbl_mac,6);// create the key part 
 			irq_restore(irq_res); 
-			memcpy(key_str.dsk,dev_dsk,sizeof(dev_dsk));
-			memcpy(key_str.dpk,dev_dpk,sizeof(dev_dpk));
 			key_str.valid = ECDH_KEY_VALID_FLAG;
 			key_str.crc = crc16(key_str.dsk,sizeof(key_str.dsk)+sizeof(key_str.dpk));
 			flash_write_page(FLASH_ADR_EDCH_PARA,sizeof(key_str),(u8*)&key_str);
@@ -298,7 +345,6 @@ void get_dsk_dpk_para()
 				key_str.valid = ECDH_KEY_VALID_FLAG;
 				key_str.crc = crc16(key_str.dsk,sizeof(key_str.dsk)+sizeof(key_str.dpk));
 				flash_write_page(FLASH_ADR_EDCH_PARA+96,8,(u8*)&(key_str.valid));
-				use_ecdh_refresh_key_part(&key_str);
 			}else{
 				erase_ecdh_sector_restore_info(FLASH_ADR_EDCH_PARA,0,0);
 				start_reboot();
@@ -313,9 +359,7 @@ void get_dsk_dpk_para()
 	}
 	
 }
-
 #endif 
-#endif
 
 int mesh_get_proxy_hci_type()
 {
@@ -339,6 +383,39 @@ void mesh_tid_save(int ele_idx)
 }
 
 #if !WIN32
+u8 adv_filter = 1;
+u8 adv_mesh_en_flag = 0;
+u8 mesh_kr_filter_flag =0;
+u8 mesh_provisioner_buf_enable =0;
+void enable_mesh_adv_filter()
+{
+	adv_mesh_en_flag = 1;
+}
+
+void disable_mesh_adv_filter()
+{
+	adv_mesh_en_flag = 0;
+}
+
+void enable_mesh_kr_cfg_filter()
+{
+	mesh_kr_filter_flag = 1;
+}
+
+void disable_mesh_kr_cfg_filter()
+{
+	mesh_kr_filter_flag = 0;
+}
+
+void  enable_mesh_provision_buf()
+{
+	mesh_provisioner_buf_enable =1;
+}
+void  disable_mesh_provision_buf()
+{
+	mesh_provisioner_buf_enable =0;
+}
+
 extern attribute_t* gAttributes;
 u8 get_att_permission(u8 handle)
 {
@@ -379,6 +456,24 @@ _attribute_ram_code_ void adv_homekit_filter(u8 *raw_pkt)
 	}
 }
 #endif
+
+#define USER_ADV_FILTER_EN		0
+#if (USER_ADV_FILTER_EN)
+_attribute_ram_code_ u8 user_adv_filter_proc(rf_packet_adv_t * p_adv)
+{
+	#if 0 // demo
+	PB_GATT_ADV_DAT *p_pb_adv = (PB_GATT_ADV_DAT *)p_adv->data;
+	u8 temp_uuid[2]=SIG_MESH_PROVISION_SERVICE;
+	if(!memcmp(temp_uuid, p_pb_adv->uuid_pb_uuid, sizeof(temp_uuid))){
+		static u32 A_pb_adv_cnt = 0;
+		A_pb_adv_cnt++;
+		return 1;
+	}
+	#endif
+	return 0;
+}
+#endif
+
 _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
 {
 #define BLE_RCV_FIFO_MAX_CNT 	6
@@ -392,15 +487,18 @@ _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
 	if(!adv_filter){
 		return next_buffer;
 	}
+
+	u8 fifo_free_cnt = blt_rxfifo.num - ((u8)(blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1));
 	if(blt_sts == BLS_LINK_STATE_CONN){
 		if(ble_state == BLE_STATE_BRX_E){
-			if(adv_type != LL_TYPE_ADV_NONCONN_IND || 
-				((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1))> blt_rxfifo.num-BLE_RCV_FIFO_MAX_CNT-2){
+			if(fifo_free_cnt < BLE_RCV_FIFO_MAX_CNT+2){
 				return 0;
-			}else{
-				if( ((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1)) > blt_rxfifo.num-BLE_RCV_FIFO_MAX_CNT-2 ){
-					return 0;
-				}
+			}
+			else if(adv_type != LL_TYPE_ADV_NONCONN_IND){
+				next_buffer = 0;
+				#if (USER_ADV_FILTER_EN)
+				next_buffer = user_adv_filter_proc(pAdv);
+				#endif
 			}
 		}
 		#if(HOMEKIT_EN)
@@ -410,27 +508,30 @@ _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
 		#endif
 	}else{
 		if(adv_type != LL_TYPE_ADV_NONCONN_IND){
-			return 0;
+			next_buffer = 0;
+			#if (USER_ADV_FILTER_EN)
+			next_buffer = user_adv_filter_proc(pAdv);
+			#endif
 		}else{
 			// add the filter part last 
 			if(adv_mesh_en_flag){
-				if( pAdv->data[1] != MESH_ADV_TYPE_PRO || 
-					((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1))>blt_rxfifo.num-4 ){	
+				if( pAdv->data[1] != MESH_ADV_TYPE_PRO || (fifo_free_cnt < 4)){	
 					// not need to reserve fifo for the ble part 
 					return 0;
 				}
+			#if __PROJECT_MESH_PRO__
 			}else if(mesh_kr_filter_flag){
 				// keybind filter flag ,to improve the envirnment of the gateway part
-				if( pAdv->data[1] != MESH_ADV_TYPE_MESSAGE ||
-					((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1))>blt_rxfifo.num-4 ){
+				if( pAdv->data[1] != MESH_ADV_TYPE_MESSAGE || (fifo_free_cnt < 4)){
 					return 0;
 				}
 			}else if (mesh_provisioner_buf_enable){
-				if(((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1))>blt_rxfifo.num-2){
+				if(fifo_free_cnt < 2){
 					// special dispatch for the provision only 
 					return 0;
 				}
-			}else if (((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1))>blt_rxfifo.num-4){
+			#endif
+			}else if (fifo_free_cnt < 4){
 					// can not make the fifo overflow 
 				return 0;
 			}else{}
@@ -472,31 +573,31 @@ typedef struct{
 }sub_share_mode_t;
 
 #if (MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_CT_LIGHT)	
-sub_share_mode_t share_mode[5] = {
+const sub_share_mode_t share_mode[5] = {
 		{SIG_MD_G_ONOFF_S,0},{SIG_MD_LIGHTNESS_S,0},{MIOT_SEPC_VENDOR_MODEL_SER,0},
 		{MIOT_VENDOR_MD_SER,0},{SIG_MD_LIGHT_CTL_TEMP_S,1}
 };
 #elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_LAMP)
-sub_share_mode_t share_mode[4] = {
+const sub_share_mode_t share_mode[4] = {
 		{SIG_MD_G_ONOFF_S,0},{SIG_MD_LIGHTNESS_S,0},{MIOT_SEPC_VENDOR_MODEL_SER,0},
 		{MIOT_VENDOR_MD_SER,0}
 };
 #elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_ONE_ONOFF)
-sub_share_mode_t share_mode[3] = {
+const sub_share_mode_t share_mode[3] = {
 		{SIG_MD_G_ONOFF_S,0},{MIOT_SEPC_VENDOR_MODEL_SER,0},{MIOT_VENDOR_MD_SER,0}
 };
 #elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_TWO_ONOFF)
-sub_share_mode_t share_mode[4] = {
+const sub_share_mode_t share_mode[4] = {
 		{SIG_MD_G_ONOFF_S,0},{MIOT_SEPC_VENDOR_MODEL_SER,0},{MIOT_VENDOR_MD_SER,0},
 		{SIG_MD_G_ONOFF_S,1}	
 };
 #elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_THREE_ONOFF)
-sub_share_mode_t share_mode[5] = {
+const sub_share_mode_t share_mode[5] = {
 		{SIG_MD_G_ONOFF_S,0},{MIOT_SEPC_VENDOR_MODEL_SER,0},{MIOT_VENDOR_MD_SER,0},
 		{SIG_MD_G_ONOFF_S,1},{SIG_MD_G_ONOFF_S,2}	
 };
 #elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_PLUG)
-sub_share_mode_t share_mode[3] = {
+const sub_share_mode_t share_mode[3] = {
 		{SIG_MD_G_ONOFF_S,0},{MIOT_SEPC_VENDOR_MODEL_SER,0},{MIOT_VENDOR_MD_SER,0}
 };
 #endif
@@ -515,7 +616,7 @@ u8 mi_is_sig_model(u32 model_id)
 void mi_share_mode_sub_proc(u8 ele_idx,u16 sub_adr_primary,u16 op,u8*uuid)
 {
 	foreach_arr(i,share_mode){
-		sub_share_mode_t *p_share = &(share_mode[i]);
+		const sub_share_mode_t *p_share = &(share_mode[i]);
 		mesh_sub_search_and_set(op, ele_adr_primary+p_share->ele_idx, sub_adr_primary+p_share->ele_idx, 
 								uuid, p_share->mode_id, mi_is_sig_model(p_share->mode_id));
 	}
@@ -589,7 +690,7 @@ u16 sub_adr_onoff =0;
 void mi_share_model_add_sub_adr(u8*uuid)
 {
 	foreach_arr(i,share_mode){
-		sub_share_mode_t *p_share = &(share_mode[i]);
+		const sub_share_mode_t *p_share = &(share_mode[i]);
 		mesh_sub_search_and_set(CFG_MODEL_SUB_ADD, ele_adr_primary+p_share->ele_idx, MI_MESH_SUB_ADR, 
 								uuid, p_share->mode_id, mi_is_sig_model(p_share->mode_id));
 	}
@@ -695,47 +796,34 @@ void mesh_node_prov_event_callback(u8 evt_code)
 {
 #if WIN32
 #else
-    static u8 gatt_start_flag ;
-    static u8 adv_start_flag;
     if( evt_code == EVENT_MESH_NODE_RC_LINK_START ||
         evt_code == EVENT_MESH_PRO_RC_LINK_START ){
         if(blt_state == BLS_LINK_STATE_CONN){
             blc_ll_setScanEnable (0, 0);
 			blc_att_setServerDataPendingTime_upon_ClientCmd(1);
 			set_prov_timeout_tick(clock_time()|1); 
-			gatt_start_flag =1;
         }else{
              // disable the mesh provision filter part 
 		    enable_mesh_adv_filter();
 		    set_prov_timeout_tick(clock_time()|1); 
-		    adv_start_flag =1;
         }
+		#if SPIRIT_PRIVATE_LPN_EN
+		bls_pm_setSuspendMask (SUSPEND_DISABLE);
+		#endif
     }else{
-        if(gatt_start_flag){
-            gatt_start_flag = 0;
-            blc_ll_setScanEnable (BLS_FLAG_SCAN_ENABLE | BLS_FLAG_ADV_IN_SLAVE_MODE, 0);
-			blc_att_setServerDataPendingTime_upon_ClientCmd(10);
-			set_prov_timeout_tick(0);
-			if( evt_code == EVENT_MESH_NODE_RC_LINK_TIMEOUT ||
-		        evt_code == EVENT_MESH_NODE_RC_CONFIRM_FAILED||
-		        evt_code == EVENT_MESH_NODE_DISCONNECT||
-		        evt_code == EVENT_MESH_NODE_RC_LINK_SUC||
-		        evt_code == EVENT_MESH_NODE_CONNECT){
-                mesh_provision_para_reset();
-		    } 
-        }else if(adv_start_flag){
-            adv_start_flag =0;
-            disable_mesh_adv_filter();
-            if (	evt_code == EVENT_MESH_NODE_RC_LINK_TIMEOUT||
-		            evt_code == EVENT_MESH_NODE_RC_LINK_CLOSE||
-					evt_code == EVENT_MESH_NODE_RC_LINK_FAIL_CODE||
-					evt_code == EVENT_MESH_NODE_RC_LINK_SUC||
-					evt_code == EVENT_MESH_NODE_DISCONNECT||
-		            evt_code == EVENT_MESH_NODE_CONNECT){
-                mesh_provision_para_reset();
-		    }
-        }else{}
+		blc_ll_setScanEnable (BLS_FLAG_SCAN_ENABLE | BLS_FLAG_ADV_IN_SLAVE_MODE, 0);
+		blc_att_setServerDataPendingTime_upon_ClientCmd(10);
+		set_prov_timeout_tick(0);
+		disable_mesh_adv_filter();
+		mesh_provision_para_reset();
+		if( evt_code == EVENT_MESH_NODE_RC_LINK_TIMEOUT ||
+	        evt_code == EVENT_MESH_NODE_RC_CONFIRM_FAILED||
+	        evt_code == EVENT_MESH_NODE_DISCONNECT||
+	        evt_code == EVENT_MESH_NODE_RC_LINK_SUC||
+	        evt_code == EVENT_MESH_NODE_CONNECT){
+	    }
     }
+
 	#if (AIS_ENABLE)
 	beacon_send.start_time_s = system_time_s;
 	#endif
@@ -781,6 +869,13 @@ void set_firmware_type_SIG_mesh()
     set_firmware_type(TYPE_SIG_MESH);
 }
 
+#if FW_START_BY_BOOTLOADER_EN
+void set_firmware_type_zb_with_factory_reset()
+{
+    set_firmware_type(TYPE_DUAL_MODE_ZIGBEE_RESET);
+}
+#endif
+
 #if DUAL_MODE_WITH_TLK_MESH_EN
 void set_firmware_type_recover()
 {
@@ -795,20 +890,24 @@ void set_firmware_type_init()
 
 u8 proc_telink_mesh_to_sig_mesh(void)
 {
+    #if (DUAL_VENDOR_EN)
+    return 1;
+    #endif
+    
 	u32 mesh_type = *(u32 *) FLASH_ADR_MESH_TYPE_FLAG;
 
 	#if DUAL_MODE_ADAPT_EN
-    LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"sdk type 0x73000:0x%x",mesh_type);
+    LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"sdk type 0x%x:0x%x", FLASH_ADR_MESH_TYPE_FLAG, mesh_type);
 	if(TYPE_DUAL_MODE_STANDBY == mesh_type){
 		return 0;
 	}if(0xffffffff == mesh_type){
         set_firmware_type(TYPE_DUAL_MODE_STANDBY);
-        LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"sdk type: Factory status", 0);
+        LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"sdk type: Factory status", 0);
 		return 0;
 	}else if(TYPE_DUAL_MODE_RECOVER == mesh_type){
         factory_reset();
         set_firmware_type(TYPE_DUAL_MODE_STANDBY);
-        LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"sdk type: Recover from Zigbee", 0);
+        LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"sdk type: Recover from Zigbee", 0);
         return 0;
 	}
 	#endif
@@ -945,12 +1044,12 @@ u8 send_vc_fifo(u8 cmd,u8 *pfifo,u8 cmd_len)
 }
 #endif
 
-u8		dev_mac[12] = {0x00, 0xff, 0xff, 0xff, 0xff, 0xff,  0xc4,0xe1,0xe2,0x63, 0xe4,0xc7};
-s8		dev_rssi_th = 0x7f;
+//u8		dev_mac[12] = {0x00, 0xff, 0xff, 0xff, 0xff, 0xff,  0xc4,0xe1,0xe2,0x63, 0xe4,0xc7};
+//s8		dev_rssi_th = 0x7f;
 void app_enable_scan_all_device ()
 {
-	memset (dev_mac, 0, 12);
-	dev_rssi_th = 0x80;
+	//memset (dev_mac, 0, 12);
+	//dev_rssi_th = 0x80;
 	blc_ll_setScanEnable (BLS_FLAG_SCAN_ENABLE | BLS_FLAG_ADV_IN_SLAVE_MODE, 0);
 }
 
@@ -993,6 +1092,7 @@ void bls_ota_set_fwSize_and_fwBootAddr(int firmware_size_k, int boot_addr)
 }
 #endif
 
+#if 0
 void set_ota_firmwaresize(int adr)  // if needed, must be called before cpu_wakeup_init()
 {
 	int firmware_size_k =0;
@@ -1007,6 +1107,7 @@ void set_ota_firmwaresize(int adr)  // if needed, must be called before cpu_wake
 	    #endif
 	#endif
 }
+#endif
 
 int mesh_adv_tx_test()
 {
@@ -1057,8 +1158,8 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
         static u32 gatt_adv_tick = 0;
         static u32 gatt_adv_inv_us = 0;// send adv for the first time
         static u32 gatt_adv_cnt = 0;
-        if(clock_time_exceed(gatt_adv_tick, gatt_adv_inv_us)||MI_SWITCH_LPN_EN){
-			#if !MI_SWITCH_LPN_EN
+        if(clock_time_exceed(gatt_adv_tick, gatt_adv_inv_us)||MI_SWITCH_LPN_EN || SPIRIT_PRIVATE_LPN_EN){
+			#if ((!MI_SWITCH_LPN_EN) && (!SPIRIT_PRIVATE_LPN_EN))
             if(gatt_adv_inv_us){
                 if(rand_flag){
                     set_random_adv_delay(1);    // random 10~20ms
@@ -1188,7 +1289,11 @@ int app_advertise_prepare_handler (rf_packet_adv_t * p)
     p_buf = 0;
     if(0 == mesh_tx_cmd_busy_cnt){
         p_buf = my_fifo_get(p_fifo);
-        if(!p_buf){
+        if(!p_buf
+		#if	SPIRIT_PRIVATE_LPN_EN
+		&& !mesh_sleep_time.soft_timer_send_flag
+		#endif
+		){
             if(gatt_adv_prepare_handler(p, 1)){
                 return 1;
             }
@@ -1223,7 +1328,7 @@ int app_advertise_prepare_handler (rf_packet_adv_t * p)
                             
         if(!adv_retry_flag){
 			#if (!MESH_RX_TEST)   // because is 10ms interval for TEST mode: mesh_conn_param_update_req()
-        	if(BLS_LINK_STATE_CONN == blt_state ||MI_SWITCH_LPN_EN){
+        	if(BLS_LINK_STATE_CONN == blt_state ||MI_SWITCH_LPN_EN || SPIRIT_PRIVATE_LPN_EN){
         	    mesh_tx_cmd_busy_cnt = 0;
             }else
             #endif
@@ -1352,30 +1457,48 @@ void ble_mac_init()
     if(user_mac_proc()){
         return ;
     }
-	u32 *pmac = (u32 *) CFG_ADR_MAC;
-	if (*pmac != 0xffffffff){
-	    memcpy (tbl_mac, pmac, 6);
-	}else{
-        //TODO : should write mac to flash after pair OK
-        #if MI_API_ENABLE
+
+	if(flash_sector_mac_address == 0){
+		return;
+	}
+
+	u8 mac_read[8];
+	flash_read_page(flash_sector_mac_address, 8, mac_read);
+
+	u8 ff_six_byte[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+	if ( memcmp(mac_read, ff_six_byte, 6) ) {
+		memcpy(tbl_mac, mac_read, 6);  //copy public address from flash
+	}
+	else{  //no public address on flash
+		#if MI_API_ENABLE
         extern void set_mi_mac_address(unsigned char *p_mac);
         set_mi_mac_address(tbl_mac);
         #else
-        u32 mac = 0;
-		mac = rand();
-		sleep_us(mac & (BIT(13)-1));	// random delay 0--8ms
-		mac = rand();
-		sleep_us(mac & (BIT(13)-1));	// random delay 0--8ms
-		mac = (mac << 16) | (rand() & 0xffff);
+        u8 value_rand[5];
+        generateRandomNum(5, value_rand);
+		tbl_mac[0] = value_rand[0];
+		tbl_mac[1] = value_rand[1];
+		tbl_mac[2] = value_rand[2];
 
-		memcpy(tbl_mac, &mac, 4);
+		#if(MCU_CORE_TYPE == MCU_CORE_8258)
+			tbl_mac[3] = 0x38;             //company id: 0xA4C138
+			tbl_mac[4] = 0xC1;
+			tbl_mac[5] = 0xA4;
+		#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+			tbl_mac[3] = 0xD1;             //company id: 0xC119D1
+			tbl_mac[4] = 0x19;
+			tbl_mac[5] = 0xC4;
 		#endif
-        flash_write_page (CFG_ADR_MAC, 6, tbl_mac);
-    }
+		#endif
+
+		flash_write_page (flash_sector_mac_address, 6, tbl_mac);
+	}
 }
 
 void mesh_scan_rsp_init()
 {
+	mesh_scan_rsp_t tbl_scanRsp={0};
+	tbl_scanRsp.adr_primary = ele_adr_primary;
 	memcpy(tbl_scanRsp.mac_adr, tbl_mac, sizeof(tbl_scanRsp.mac_adr));
 	foreach(i,sizeof(tbl_scanRsp.rsv_user)){
 		tbl_scanRsp.rsv_user[i] = 1 + i;
@@ -1389,12 +1512,6 @@ void mesh_scan_rsp_init()
 	#endif
 	bls_ll_setScanRspData((u8 *)&tbl_scanRsp, rsp_len);
 }
-
-void mesh_scan_rsp_update_adr_primary(u16 adr)
-{
-	tbl_scanRsp.adr_primary = ele_adr_primary;
-	mesh_scan_rsp_init();
-}
 #else
 void mesh_ota_reboot_set(u8 type){}
 void mesh_ota_reboot_check_refresh(){}
@@ -1407,6 +1524,7 @@ void set_random_enable(u8 en)
 	return;
 }
 
+#if MD_SERVER_EN
 void publish_when_powerup()
 {
 #if SEND_STATUS_WHEN_POWER_ON
@@ -1423,14 +1541,10 @@ void publish_when_powerup()
 	mesh_publish_all_manual(&pub_list, SIG_MD_LIGHT_CTL_TEMP_S, 1);
 	#endif
 }
+#endif
 
 void mesh_vd_init()
 {
-	// add the dev random dispatch 
-	if(random_enable){
-		provision_random_data_init();
-	}
-
 #if MD_SERVER_EN
 	light_res_sw_load();
 	light_pwm_init();
@@ -1479,8 +1593,13 @@ mesh_global_var_init(): run in mesh_init_all() and before read parameters in fla
 void mesh_global_var_init()
 {
     get_fw_id();    // must first
+#if !WIN32
+	blc_readFlashSize_autoConfigCustomFlashSector();
+#endif
     mesh_factory_test_mode_en(FACTORY_TEST_MODE_ENABLE);
     user_mesh_cps_init();
+    u8 dev_key_def[16] = DEVKEY_DEF;
+    memcpy(mesh_key.dev_key, dev_key_def, sizeof(mesh_key.dev_key));
 #if (FEATURE_LOWPOWER_EN)
 	model_sig_cfg_s.sec_nw_beacon = NW_BEACON_NOT_BROADCASTING;
 #else
@@ -1535,16 +1654,6 @@ void mesh_global_var_init()
 #endif
 }
 /****************************************************
-the initial data para is as this 
-u8 mesh_beacon_hash[4]={0xD9,0x74,0x78,0xb3};
-u8 uri_dat[0x40]={	 0x17,0x2f,0x2f,0x77,0x77,0x77,0x2e,0x65,
-					 0x78,0x61,0x6d,0x70,0x6c,0x65,0x2e,0x63,
-					 0x6f,0x6d,0x2f,0x6d,0x65,0x73,0x68,0x2f,
-					 0x70,0x72,0x6f,0x64,0x75,0x63,0x74,0x73,
-					 0x2f,0x6c,0x69,0x67,0x68,0x74,0x2d,0x73,
-					 0x77,0x69,0x74,0x63,0x68,0x2d,0x76,0x33
-					};
-u8 uri_dat_len =0x30;
 struct of the unprovisioned beacon 
 typedef struct {
 	mesh_beacon_header header;
@@ -1554,24 +1663,20 @@ typedef struct {
 	u8 uri_hash[4];
 }beacon_data_pk;
 *******************************************************/
-void set_unprov_beacon_para(u8 *p_uuid ,u8 *p_info,u8 *p_hash,u8 *uri_para,u8 uri_len)
+void set_unprov_beacon_para(u8 *p_uuid ,u8 *p_info)
 {
-	if(uri_len>sizeof(uri_dat)){
-		return;
-	}
 	if(p_uuid!=0){
 		memcpy(prov_para.device_uuid,p_uuid,16);
 	}
 	if(p_info !=0){
 		memcpy(prov_para.oob_info,p_info,2);
 	}
-	if(p_hash !=0){
-		memcpy(uri_hash,p_hash,sizeof(uri_hash));
-	}
+
+	#if 0   // please modify URI_DATA directly.
 	if(uri_para !=0){
 		memcpy(uri_dat,uri_para,uri_len);
 	}
-	return;
+	#endif
 }
 /**************************************************
 typedef struct {
@@ -1715,7 +1820,7 @@ int SendOpParaDebug(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len)
 	#if WIN32
 	return SendOpParaDebug_VC(adr_dst, rsp_max, op, par, len);
 	#else
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,par, len,"send access cmd %04x code\r\n",op);
+	LOG_MSG_LIB(TL_LOG_NODE_SDK,par, len,"send access cmd %04x code\r\n",op);
 	return mesh_tx_cmd2normal_primary(op, par, len, adr_dst, rsp_max);
 	#endif
 }
@@ -1731,7 +1836,7 @@ int SendOpParaDebug_vendor(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len, u8
 	memcpy(par_tmp+4, par, len);
 	return SendOpParaDebug_VC(adr_dst, rsp_max, op, par_tmp, len+4);
 #else
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,par, len,"send access cmd %04x code\r\n",op);
+	LOG_MSG_LIB(TL_LOG_NODE_SDK,par, len,"send access cmd %04x code\r\n",op);
 	return mesh_tx_cmd2normal_primary(op, par, len, adr_dst, rsp_max);
 #endif
 }
@@ -1761,6 +1866,22 @@ int is_need_response_to_self(u16 adr_dst, u16 op)
 }
 //-------------------------------- end
 
+void mesh_rsp_delay_set(u32 delay_step, u8 is_seg_ack)
+{	
+#if!WIN32
+#if SPIRIT_PRIVATE_LPN_EN
+	if(lpn_provision_ok){ 
+		delay_step = MESH_RSP_BASE_DELAY_STEP + (rand() %10);
+	}
+#endif
+	if(delay_step == 0 || (blt_state == BLS_LINK_STATE_CONN)){
+		return;
+	}
+	mesh_need_random_delay = 1;
+	mesh_rsp_random_delay_step = delay_step;
+	mesh_rsp_random_delay_tick = clock_time();
+#endif
+}
 /**
 * when receive a message, this function would be called if op supported and address match.
 * @params: pointer to access layer which exclude op code.
@@ -1768,7 +1889,7 @@ int is_need_response_to_self(u16 adr_dst, u16 op)
 */
 int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-    LOG_MSG_INFO(TL_LOG_NODE_SDK,params, par_len,"rcv access layer,retransaction:%d,src:0x%x op:0x%04x, par:",cb_par->retransaction,cb_par->adr_src, cb_par->op);
+    LOG_MSG_LIB(TL_LOG_NODE_SDK,params, par_len,"rcv access layer,retransaction:%d,src:0x%x op:0x%04x, par:",cb_par->retransaction,cb_par->adr_src, cb_par->op);
     mesh_op_resource_t *p_res = (mesh_op_resource_t *)cb_par->res;
     if(!is_cfg_model(p_res->id, p_res->sig)){ // user should not handle config model op code
         #if (VENDOR_MD_NORMAL_EN)
@@ -1784,26 +1905,23 @@ int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_
         #if (!WIN32 && !FEATURE_LOWPOWER_EN)
         if(0 == mesh_rsp_random_delay_step){
             if((blt_state == BLS_LINK_STATE_ADV) && (cb_par->op_rsp != STATUS_NONE)){
+				u32 random_delay_step = 0;
 				if(is_group_adr(cb_par->adr_dst)){
 					#if MI_API_ENABLE
 						#if MI_SWITCH_LPN_EN
-					mesh_rsp_random_delay_step = 120 + (rand() %80);    // random delay between 1200~2000ms
+					random_delay_step = 120 + (rand() %80);    // random delay between 1200~2000ms
 						#else
-					mesh_rsp_random_delay_step = 80 + (rand() %120);    // random delay between 800~2000ms
+					random_delay_step = 80 + (rand() %120);    // random delay between 800~2000ms
 						#endif
 					#else
-					mesh_rsp_random_delay_step = MESH_RSP_BASE_DELAY_STEP + (rand() & 0x1f);    // unit : ADV_INTERVAL_MIN(10ms)
+					random_delay_step = MESH_RSP_BASE_DELAY_STEP + (rand() & 0x1f);    // unit : ADV_INTERVAL_MIN(10ms)
 					#endif
-					mesh_need_random_delay = 1;
-					mesh_rsp_random_delay_tick = clock_time();
 				}else if (is_unicast_adr(cb_par->adr_dst)){
 					#if MI_SWITCH_LPN_EN
-					mesh_rsp_random_delay_step = 120 + (rand() %10);    // random delay between 1200~1300ms
-					mesh_rsp_random_delay_tick = clock_time();
-					mesh_need_random_delay = 1;
+					random_delay_step = 120 + (rand() %10);    // random delay between 1200~1300ms
 					#endif
 				}
-				
+				mesh_rsp_delay_set(random_delay_step, 0);
             }
         }
         #endif
@@ -2210,18 +2328,30 @@ int mesh_send_cl_proxy_bv07(u16 node_adr)
 // MESH/CL/PROXY/BV-09-C [Send Secure Network Beacon When IV Index Updated]
 
 // MESH/CL/PROX/BI-01-C [Ignore Invalid Message Type] ,ignore the invalid msg 
-const char tl_log_module_mesh[TL_LOG_MAX][MAX_MODULE_STRING_CNT] ={
-	"(mesh)","(provision)","(lowpower)","(friend)",
-	"(proxy)","(gatt_provision)","(log_win32)","(GATEWAY)",
-	"(KEYBIND)","(sdk)","(Basic)","(remote_prov)","(cmd_rsp)",
-	"(common)","(cmd_name)","(sdk_nw_ut)","(iv_update)","(USER)"
+
+/*************** log *************/
+const char  TL_LOG_STRING[TL_LOG_LEVEL_MAX][MAX_LEVEL_STRING_CNT] = {
+    {"[USER]:"},
+    {"[LIB]:"},    // library and important log
+    {"[ERR]:"},
+    {"[WARN]:"},
+    {"[INFO]:"},
+    {"[DEBUG]:"},
 };
 
-STATIC_ASSERT(TL_LOG_MAX < 32);
+const char tl_log_module_mesh[TL_LOG_MAX][MAX_MODULE_STRING_CNT] ={
+	"(mesh)","(provision)","(lowpower)","(friend)",
+	"(proxy)","(GattProv)","(log_win32)","(GATEWAY)",
+	"(KEYBIND)","(sdk)","(Basic)","(RemotePro)","(cmd_rsp)",
+	"(common)","(cmd_name)","(sdk_nw_ut)","(iv_update)","(gw_vc_log)","(USER)"
+};
 
-u8 tl_log_msg_valid(char *pstr,u32 len,u32 module)
+STATIC_ASSERT(TL_LOG_LEVEL_MAX < 8); // because only 3bit, please refer to LOG_GET_LEVEL_MODULE
+STATIC_ASSERT(TL_LOG_MAX < 32); // because 32bit, and LOG_GET_LEVEL_MODULE
+
+int tl_log_msg_valid(char *pstr,u32 len_max,u32 module)
 {
-	u8 ret =1;
+	int ret =1;
 	if (module >= TL_LOG_MAX){
 		ret =0;
 	}else if (!(BIT(module)& TL_LOG_SEL_VAL)){
@@ -2230,17 +2360,47 @@ u8 tl_log_msg_valid(char *pstr,u32 len,u32 module)
 	if(ret){
 		#if WIN32
 			#if VC_APP_ENABLE
-			strcat_s(pstr,len,tl_log_module_mesh[module]);
+			strcat_s(pstr,len_max,tl_log_module_mesh[module]);
 			#else 
 			strcat(pstr,tl_log_module_mesh[module]);
 			#endif 
 		#else
-		    int str_len = strlen(pstr);
-			memcpy(pstr+str_len,tl_log_module_mesh[module],MAX_MODULE_STRING_CNT);
+		    u32 str_len = strlen(pstr);
+		    str_len = min(str_len, MAX_LEVEL_STRING_CNT);
+		    if((str_len + MAX_MODULE_STRING_CNT) <= len_max ){
+			    memcpy(pstr+str_len,tl_log_module_mesh[module],MAX_MODULE_STRING_CNT);
+			}
 		#endif
 	}
 	return ret;
 }
+
+void tl_log_msg(u32 level_module,u8 *pbuf,int len,char  *format,...)
+{
+#if (WIN32 || HCI_LOG_FW_EN)
+	char tl_log_str[MAX_STRCAT_BUF] = {0};
+	u32 module = LOG_GET_MODULE(level_module);
+	u32 log_level = LOG_GET_LEVEL(level_module);
+	
+	if((0 == log_level) || (log_level > TL_LOG_LEVEL_MAX)){
+	    return ;
+	}else{
+        memcpy(tl_log_str,TL_LOG_STRING[log_level - 1],MAX_LEVEL_STRING_CNT);
+	}
+	
+	if(!tl_log_msg_valid(tl_log_str,sizeof(tl_log_str), module)){
+	    if(log_level != TL_LOG_LEVEL_ERROR){
+		    return ;
+		}
+	}
+	
+	va_list list;
+	va_start( list, format );
+	LogMsgModuleDlg_and_buf(pbuf,len,tl_log_str,format,list);	
+#endif
+}
+
+#if 0
 void tl_log_msg_err(u16 module,u8 *pbuf,int len,char  *format,...)
 {
 #if (WIN32 || HCI_LOG_FW_EN)
@@ -2303,6 +2463,7 @@ void tl_log_msg_dbg(u16 module,u8 *pbuf,int len,char  *format,...)
 	LogMsgModuleDlg_and_buf(pbuf,len,tl_log_str,format,list);	
 #endif
 }
+#endif
 
 #if !WIN32
 #if HCI_LOG_FW_EN

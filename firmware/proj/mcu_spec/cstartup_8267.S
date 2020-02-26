@@ -1,5 +1,5 @@
 
-#ifdef MCU_CORE_8267
+#ifdef MCU_STARTUP_8267
 
 #ifndef __LOAD_RAM_SIZE__
 #define	__LOAD_RAM_SIZE__		0xc
@@ -44,6 +44,8 @@ __start:					@ MUST,  referenced by boot.link
 	.extern  _ramcode_size_div_16_align_256_
 	.extern  _ictag_start_
 	.extern  _ictag_end_
+	.extern  _code_size_div_256_
+	.extern  _ramcode_size_div_256_compile_
 
 	.org 0x0
 	tj	__reset
@@ -170,6 +172,11 @@ DAT0:
 @	.word	(0x80058c)                  @36		gpio
 @	.word	(0x800620)                  @40		watchdog
 @	.word	(0x802c01)                  @44		watchdog
+
+BOOT_LINK_NEED: 
+	.word   _code_size_div_256_                 @ exclude data
+	.word   _ramcode_size_div_256_compile_
+    
 DATA_I:	
 	.word	_dstored_
 	.word	_start_data_

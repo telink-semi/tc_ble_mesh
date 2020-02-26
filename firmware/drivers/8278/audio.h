@@ -195,6 +195,7 @@ void audio_set_i2s_output(AudioInput_Typedef InType,AudioRate_Typedef Audio_Rate
  * 	@return    none.
  */
 
-void audio_set_codec(I2C_GPIO_GroupTypeDef i2c_pin_group, CodecMode_Typedef CodecMode,unsigned sysclk);
+void audio_set_codec(I2C_GPIO_SdaTypeDef sda_pin,I2C_GPIO_SclTypeDef scl_pin, CodecMode_Typedef CodecMode,unsigned sysclk);
+
 
 #endif

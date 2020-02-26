@@ -259,6 +259,11 @@ u8 my_fifo_data_cnt_get (my_fifo_t *f)
 	return (f->wptr - f->rptr);
 }
 
+u8 my_fifo_free_cnt_get(my_fifo_t *f)
+{
+	return (f->num - my_fifo_data_cnt_get(f));
+}
+
 void my_fifo_reset(my_fifo_t *f)
 {
 	f->rptr = f->wptr;

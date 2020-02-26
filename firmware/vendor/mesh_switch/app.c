@@ -44,6 +44,7 @@
 #include "app.h"
 #include "../../stack/ble/gap/gap.h"
 #include "vendor/common/blt_soft_timer.h"
+#include "proj/drivers/rf_pa.h"
 
 #if (HCI_ACCESS==HCI_USE_UART)
 #include "../../proj/drivers/uart.h"
@@ -57,8 +58,8 @@
 MYFIFO_INIT(blt_rxfifo, 64, BLT_RX_BUF_NUM);
 MYFIFO_INIT(blt_txfifo, 40, 16);
 
-u8		peer_type;
-u8		peer_mac[12];
+//u8		peer_type;
+//u8		peer_mac[12];
 
 //////////////////////////////////////////////////////////////////////////////
 //	Initialization: MAC address, Adv Packet, Response Packet
@@ -113,10 +114,10 @@ int app_event_handler (u32 h, u8 *p, int n)
 			event_connection_complete_t *pc = (event_connection_complete_t *)p;
 			if (!pc->status)							// status OK
 			{
-				app_led_en (pc->handle, 1);
+				//app_led_en (pc->handle, 1);
 
-				peer_type = pc->peer_adr_type;
-				memcpy (peer_mac, pc->mac, 6);
+				//peer_type = pc->peer_adr_type;
+				//memcpy (peer_mac, pc->mac, 6);
 			}
 			#if DEBUG_BLE_EVENT_ENABLE
 			rf_link_light_event_callback(LGT_CMD_BLE_CONN);
@@ -140,7 +141,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 	{
 
 		event_disconnection_t	*pd = (event_disconnection_t *)p;
-		app_led_en (pd->handle, 0);
+		//app_led_en (pd->handle, 0);
 		//terminate reason
 		if(pd->reason == HCI_ERR_CONN_TIMEOUT){
 
@@ -503,7 +504,9 @@ void user_init()
 #endif
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
+#if BLT_SOFTWARE_TIMER_ENABLE
 	blc_ll_initPowerManagement_module();        //pm module:      	 optional
+#endif
 
 	//l2cap initialization
 	//blc_l2cap_register_handler (blc_l2cap_packet_receive);
@@ -532,13 +535,13 @@ void user_init()
     blc_hci_le_setEventMask_cmd(HCI_LE_EVT_MASK_ADVERTISING_REPORT|HCI_LE_EVT_MASK_CONNECTION_COMPLETE);
 
 	////////////////// SPP initialization ///////////////////////////////////
-#if (HCI_ACCESS != HCI_NONE)
+#if (HCI_ACCESS != HCI_USE_NONE)
 	#if (HCI_ACCESS==HCI_USE_USB)
 	//blt_set_bluetooth_version (BLUETOOTH_VER_4_2);
 	//bls_ll_setAdvChannelMap (BLT_ENABLE_ADV_ALL);
 	usb_bulk_drv_init (0);
 	blc_register_hci_handler (app_hci_cmd_from_usb, blc_hci_tx_to_usb);
-	#else	//uart
+	#elif (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();
 	blc_register_hci_handler (blc_rx_from_uart, blc_hci_tx_to_uart);		//default handler
 	//blc_register_hci_handler(rx_from_uart_cb,tx_to_uart_cb);				//customized uart handler

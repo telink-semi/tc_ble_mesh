@@ -58,10 +58,7 @@ mesh_iv_idx_st_t iv_idx_st = {
     /*.cur = */IV_IDX_CUR,    // store in big endianness
 };
 
-mesh_key_t mesh_key = {
-	// dev key
-	{0x9d,0x6d,0xd0,0xe9,0x6e,0xb2,0x5d,0xc1, 0x9a,0x40,0xed,0x99,0x14,0xf8,0xf0,0x3f},
-};
+mesh_key_t mesh_key = {{0}};  // not init here to decrease firmware size.
 
 #if FEATURE_LOWPOWER_EN
 friend_key_t mesh_fri_key_lpn[NET_KEY_MAX][2];
@@ -440,7 +437,9 @@ STATIC_ASSERT(ARRAY_SIZE(md_id_sig_fourth) == ARRAY_SIZE(md_id_sig_second));
     #endif
 #else
 const u16 md_id_sig_second[] =      {MD_ID_ARRAY_COMMON};
+    #if MD_SERVER_EN
 const u32 md_id_vendor_second[] =   {MD_ID_ARRAY_VENDOR_SERVER};
+    #endif
 #endif
 
 typedef struct{
@@ -482,6 +481,7 @@ typedef struct{
     {MD_ID_ARRAY_VENDOR_SERVER},\
 }
 
+/*please refer to spec "4.2.1 Composition Data"*/
 mesh_composition_data_local_t model_sig_cfg_s_cps = {   // can't extern, must static
     {
         // head =
@@ -1691,29 +1691,29 @@ u8 mesh_app_key_set(u16 op, const u8 *ak, u16 app_key_idx, u16 net_key_idx, int 
 					mesh_app_key_t * p_ak_empty = mesh_app_key_empty_search(p_netkey);
 					if(p_ak_empty){
 						app_key_set2(p_ak_empty, ak, app_key_idx, save);
-						#if PROVISION_FLOW_SIMPLE_EN
+					#if PROVISION_FLOW_SIMPLE_EN
 						#if DUAL_VENDOR_EN
 						if(DUAL_VENDOR_ST_ALI == provision_mag.dual_vendor_st)
 						#endif
 						{
-						if(!mesh_init_flag){
-						    if(get_all_appkey_cnt() == 1){
-                                #if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
-                                if(!lpn_provision_ok)
-                                #endif
-						        {
-						            node_binding_tick = clock_time() | 1;
-						        }
-						        
-                                ev_handle_traversal_cps(EV_TRAVERSAL_BIND_APPKEY, (u8 *)&app_key_idx);
-                                #if MD_SERVER_EN
-                                // bind share model 
-                                user_set_def_sub_adr();
-                                #endif
-						    }                                         
+    						if(!mesh_init_flag){
+    						    if(get_all_appkey_cnt() == 1){
+                                    #if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
+                                    if(!lpn_provision_ok)
+                                    #endif
+    						        {
+    						            node_binding_tick = clock_time() | 1;
+    						        }
+    						        
+                                    ev_handle_traversal_cps(EV_TRAVERSAL_BIND_APPKEY, (u8 *)&app_key_idx);
+                                    #if MD_SERVER_EN
+                                    // bind share model 
+                                    user_set_def_sub_adr();
+                                    #endif
+    						    }                                         
+    						}
 						}
-						}
-						#endif
+					#endif
 						st = ST_SUCCESS;
 					}else{
 						st = ST_INSUFFICIENT_RES;
@@ -1906,15 +1906,16 @@ int mesh_provision_par_set_dir(u8 *prov_par)
 void mesh_provision_par_handle(u8 *net_info)
 {
 // if open the switch att tab ,should switch the att part 
+#if DEBUG_MESH_DONGLE_IN_VC_EN
+	debug_mesh_report_provision_par2usb(net_info);
+#else
+	mesh_provision_par_set(net_info);  // must at first in this function, because provision_mag.gatt_mode is use later.
+#endif
+
 #if ATT_TAB_SWITCH_ENABLE&&!WIN32
 	extern void my_att_init(u8 mode);
 	my_att_init (provision_mag.gatt_mode);
 #endif 
-#if DEBUG_MESH_DONGLE_IN_VC_EN
-	debug_mesh_report_provision_par2usb(net_info);
-#else
-	mesh_provision_par_set(net_info);
-#endif
 }
 
 u8 mesh_provision_and_bind_self(u8 *p_prov_data, u8 *p_dev_key, u16 appkey_idx, u8 *p_app_key){
@@ -1946,7 +1947,7 @@ void mesh_set_ele_adr_ll(u16 adr, int save)
     ele_adr_primary = adr;    // for test, should be provisioned later
     mesh_set_all_model_ele_adr();
     #if (!(IS_VC_PROJECT || AIS_ENABLE))
-	mesh_scan_rsp_update_adr_primary(adr);
+	mesh_scan_rsp_init();// update ele_adr_primary
 	#endif
 
     if(save){
@@ -2039,6 +2040,18 @@ int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *
         return 0;
     }
     
+    #if 0 // (WIN32 && MD_SERVER_EN)
+    #if VC_APP_ENABLE
+    unsigned char ble_moudle_id_is_kmadongle();
+    if(ble_moudle_id_is_kmadongle()) // there is only client in gateway 
+    #endif
+    {
+        if(!is_own_ele(adr_dst)){
+            return 0;
+        }
+    }
+    #endif
+    
 	material_tx_cmd_t mat;
 	u8 ak_array_idx;
 	if(pub_md){
@@ -2047,7 +2060,7 @@ int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *
 		ak_array_idx = mesh_key.appkey_sel_dec; // use the same key with RX command. 
 	}
 	
-//	LOG_MSG_INFO(TL_LOG_NODE_SDK,par,par_len,"cmd data rsp: adr_src0x%04x,dst adr 0x%04x ",adr_src,adr_dst);
+//	LOG_MSG_LIB(TL_LOG_NODE_SDK,par,par_len,"cmd data rsp: adr_src0x%04x,dst adr 0x%04x ",adr_src,adr_dst);
 	
 	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, 0, uuid, mesh_key.netkey_sel_dec, ak_array_idx, pub_md);
 	return mesh_tx_cmd_unreliable(&mat);
@@ -2492,10 +2505,11 @@ void mesh_common_reset_all()
 	if(0xff == reset){
 		mesh_misc_addr = FLASH_ADR_MISC;
 	}
-
-	mesh_set_ele_adr_ll(ele_adr_primary, 0);
-	mesh_par_retrieve((u8 *)&provision_mag, &mesh_provision_mag_addr, FLASH_ADR_PROVISION_CFG_S, sizeof(provision_mag));//retrive oob
+	
 	mesh_global_var_init();
+	mesh_set_ele_adr_ll(ele_adr_primary, 0);
+	mesh_par_retrieve((u8 *)&light_res_sw_save, &mesh_sw_level_addr, FLASH_ADR_SW_LEVEL, sizeof(light_res_sw_save));//retrive light_res_sw_save
+	mesh_par_retrieve((u8 *)&provision_mag, &mesh_provision_mag_addr, FLASH_ADR_PROVISION_CFG_S, sizeof(provision_mag));//retrive oob
 }
 
 STATIC_ASSERT((sizeof(misc_save_t)+SIZE_SAVE_FLAG)% 16 == 0);
@@ -2882,9 +2896,12 @@ int mesh_proxy_adv2gatt(u8 *bear, u8 adv_type)	// from 8269 proxy node to adv fr
 		}else{
 			err = mesh_nw_pdu_report_to_gatt((u8 *)&p_br->nw, p_br->len - 1, adv_type);
 		}
-	}else{
+	}
+	#if (DEBUG_MESH_DONGLE_IN_VC_EN || MESH_MONITOR_EN)
+	else{
 		err = mesh_dongle_adv_report2vc(&p_br->len, MESH_ADV_PAYLOAD);
 	}
+	#endif
 	
 	if(err){
 		static u8 proxy_adv2gatt_err;proxy_adv2gatt_err++;
@@ -3058,23 +3075,30 @@ const u8  my_fwRevision_value [FW_REVISION_VALUE_LEN] = {
 // service change request
 void mesh_service_change_report()
 {
-    // force to do the service changes 
-#if !WIN32
-    u8 service_data[4]={0x01,0x00,0xff,0x00};
-    // should keep the service change in the last 
-    bls_att_pushIndicateData(SERVICE_CHANGE_ATT_HANDLE_SLAVE,service_data,sizeof(service_data));
-
-    #if DUAL_MODE_WITH_TLK_MESH_EN
-    // dual_mode_TLK_service_change
-    if(DUAL_MODE_SUPPORT_ENABLE == dual_mode_state){
-        rf_packet_att_data_t pkt_srv = {13, 2, 11, 7, 4, ATT_OP_HANDLE_VALUE_IND};
-        pkt_srv.hl = 0x28; // hanle of service change in telink mesh SDK 
-        if(sizeof(pkt_srv.dat) >= sizeof(service_data)){
-            memcpy(pkt_srv.dat, service_data, sizeof(service_data));
-        }
-        bls_ll_pushTxFifo(BLS_CONN_HANDLE, (u8 *)&pkt_srv.type);    // no need to check indication comfirm
-    }
+#if (!MI_API_ENABLE || DUAL_VENDOR_EN)
+    #if DUAL_VENDOR_EN
+    if(DUAL_VENDOR_ST_MI != provision_mag.dual_vendor_st)
     #endif
+    {
+        // force to do the service changes 
+        #if !WIN32
+        u8 service_data[4]={0x01,0x00,0xff,0x00};
+        // should keep the service change in the last 
+        bls_att_pushIndicateData(SERVICE_CHANGE_ATT_HANDLE_SLAVE,service_data,sizeof(service_data));
+
+        #if DUAL_MODE_WITH_TLK_MESH_EN
+        // dual_mode_TLK_service_change
+        if(DUAL_MODE_SUPPORT_ENABLE == dual_mode_state){
+            rf_packet_att_data_t pkt_srv = {13, 2, 11, 7, 4, ATT_OP_HANDLE_VALUE_IND};
+            pkt_srv.hl = 0x28; // hanle of service change in telink mesh SDK 
+            if(sizeof(pkt_srv.dat) >= sizeof(service_data)){
+                memcpy(pkt_srv.dat, service_data, sizeof(service_data));
+            }
+            bls_ll_pushTxFifo(BLS_CONN_HANDLE, (u8 *)&pkt_srv.type);    // no need to check indication comfirm
+        }
+        #endif
+        #endif
+    }
 #endif
 }
 
@@ -3213,7 +3237,6 @@ void rssi_online_status_pkt_cb(mesh_node_st_t *p_node_st, u8 rssi, int online_ag
     #endif
 }
 #else
-void online_st_rc_mesh_pkt(u8 *p_payload){}
 void online_st_force_notify_check(mesh_cmd_bear_unseg_t *p_bear, u8 *ut_dec, int src_type){}
 #endif
 
@@ -3248,8 +3271,10 @@ void mesh_loop_proc_prior()
 
 void mesh_loop_process()
 {
+    #if MD_REMOTE_PROV
     // remote prov proc
     mesh_cmd_sig_rp_loop_proc();
+    #endif
     // provision loop proc
 	mesh_prov_proc_loop();
 	// mesh beacon proc 
@@ -3347,7 +3372,6 @@ void mesh_init_all()
     // read parameters
     mesh_flash_retrieve();	// should be first, get unicast addr from config modle.
 	mesh_provision_para_init();
-	user_node_oob_set();
 	//unprovision beacon send part 
 	beacon_str_init();
 	mesh_node_init();
@@ -3391,15 +3415,17 @@ int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_p
 	}
 	else if((adv_type == MESH_ADV_TYPE_PRO)
 		|| ((adv_type == MESH_ADV_TYPE_BEACON)&&(p_br->beacon.type == UNPROVISION_BEACON))){
-	#if DEBUG_VC_FUNCTION && (!WIN32)
+	    #if DEBUG_VC_FUNCTION && (!WIN32)
 		send_vc_fifo(TSCRIPT_CMD_VC_DEBUG,(u8 *)p_payload, mesh_adv_payload_len_get(p_br));
-	#else
+	    #else
 		u8 irq_rev = irq_disable();
 		mesh_provision_rcv_process(p_payload,0);
 		irq_restore(irq_rev);
-	#endif
+	    #endif
+	#if ONLINE_STATUS_EN
 	}else{
 	    online_st_rc_mesh_pkt(p_payload);
+	#endif
 	}
 	return err;
 }
@@ -3710,11 +3736,14 @@ void mesh_kr_cfgcl_status_update(mesh_rc_rsp_t *rsp)
         #if WIN32
 		App_key_bind_end_callback(MESH_APP_KEY_BIND_EVENT_SUC); 
 		#endif
+	#if MD_REMOTE_PROV
 	}else if (mesh_rsp_opcode_is_rp(op)){
         #if WIN32
         mesh_rp_client_rx_cb(rsp->data,rsp->src);
         #endif
+    #endif
 	}
+	
 	switch(p->st){
 		case KR_CFGCL_GET_CPS:
 			if(COMPOSITION_DATA_STATUS == op){
@@ -3778,4 +3807,35 @@ void mesh_kr_cfgcl_status_update(mesh_rc_rsp_t *rsp)
 #endif
 #endif
 //--------------------app key bind flow end------------------------------//
+
+#if (SLEEP_FUNCTION_DISABLE && ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)))
+/*
+@ This function should not be called anytime
+*/
+int  cpu_sleep_wakeup_none(SleepMode_TypeDef sleep_mode,  SleepWakeupSrc_TypeDef wakeup_src, unsigned int  wakeup_tick)
+{
+    while(1){
+        wd_clear();
+    }
+}
+
+/*
+@ This function should not be called anytime
+*/
+unsigned int pm_tim_recover_none(unsigned int now_tick_32k)
+{
+    while(1){
+        wd_clear();
+    }
+    return 0;
+}
+
+void blc_pm_select_none()
+{
+	cpu_sleep_wakeup 	 	= cpu_sleep_wakeup_none;
+	pm_tim_recover  	 	= pm_tim_recover_none;
+
+	blt_miscParam.pm_enter_en 	= 1; // allow enter pm, 32k rc does not need to wait for 32k clk to be stable
+}
+#endif
 

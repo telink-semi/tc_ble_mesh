@@ -29,6 +29,7 @@
 #if TESTCASE_FLAG_ENABLE
 #define VENDOR_MD_LIGHT_S               ((0x0000<<16) | (0))
 #define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (0))
+#define VENDOR_MD_LIGHT_S2              ((0x0002<<16) | (0))
 #else
     #if AIS_ENABLE
 #define TEMP_VD_ID_MODEL                (SHA256_BLE_MESH_PID)   // TEMP_VD_ID_MODEL is just use in this file.
@@ -211,9 +212,12 @@ typedef struct{
 }mesh_tx_indication_t;
 
 typedef struct{
-    u32 last_sleep_tick;
-	u32 loop_interval;
-	u32 sleep_interval;
+    u32 last_tick;
+	u32 run_time_us;
+	u32 sleep_time_us;
+	u8  appWakeup_flg;
+	u8  soft_timer_pending;
+	u8  soft_timer_send_flag;
 }mesh_sleep_pre_t;
 
 extern mesh_tx_indication_t mesh_indication_retry;

@@ -48,14 +48,20 @@ __start:					@ MUST,  referenced by boot.link
 	.extern  _ramcode_size_align_256_
 	.extern  _ictag_start_
 	.extern  _ictag_end_
+	.extern  _code_size_div_256_
+	.extern  _ramcode_size_div_256_compile_
 
 	.org 0x0
 	tj	__reset
 	.word	(BUILD_VERSION)
 	.org 0x8
 	.word	(0x544c4e4b)
+#if (MCU_RUN_SRAM_EN || MCU_RUN_SRAM_WITH_CACHE_EN)
+	.word	(0x00880000 + _bin_size_div_16_)
+#else
 	.word	(0x00880000 + _ramcode_size_div_16_align_256_)	@must align 256, because of ic tag is 256 aligned
 @	.word	(0x00880000 + 0x400)
+#endif
 
 	.org 0x10
 	tj		__irq
@@ -163,6 +169,11 @@ FLL_STK_END:
 
 SETIC:
 	tloadr     	r1, DAT0 + 24
+#if (MCU_RUN_SRAM_EN)
+	tmov		r0, #255;
+	tstorerb	r0, [r1, #0]
+	tstorerb	r0, [r1, #1]
+#else
 	tloadr      r0, DAT0 + 36					@ IC tag start
 	tstorerb	r0, [r1, #0]
 	tadd    	r0, #1							@ IC tag end
@@ -181,6 +192,7 @@ ZERO_TAG:    @no need init tag when wake up from deep retention, because tag is 
     tadd        r1, #4
     tj          ZERO_TAG
 ZERO_TAG_END:
+#endif
 
 SET_BOOT: @because no load ramcode when boot from retention, so must set boot area manually.
 	tmov        r2, #4
@@ -289,10 +301,14 @@ DAT0:
 	.word	(0x840100 + __RETENTION_SIZE_DIV_256*0x100)     @32
 	.word	(__RETENTION_SIZE_DIV_256)                      @36
 #else
-	.word	_ictag_start_               @28		@ IC tag start
-	.word	_ictag_end_	            	@32		@ IC tag end
-	.word	_ramcode_size_div_256_
+	.word	_ictag_start_               @28
+	.word	_ictag_end_	            	@32
+	.word	_ramcode_size_div_256_      @36     @ IC tag u8 value
 #endif
+
+BOOT_LINK_NEED: 
+	.word   _code_size_div_256_                 @ exclude data
+	.word   _ramcode_size_div_256_compile_
 
 DATA_I:	
 	.word	_dstored_					@0

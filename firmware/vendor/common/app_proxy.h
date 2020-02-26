@@ -112,7 +112,6 @@ typedef struct{
 }mesh_proxy_protocol_sar_t;
 extern mesh_proxy_protocol_sar_t  proxy_sar;
 
-extern proxy_msg_str  proxy_msg;
 extern void proxy_cfg_list_init();
 extern u8 proxy_config_dispatch(u8 *p,u8 len );
 extern u8 proxy_filter_change_by_mesh_net(u16 unicast_adr);

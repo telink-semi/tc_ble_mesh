@@ -88,6 +88,7 @@ void mesh_feature_set_fn(){
 }
 
 #if (FEATURE_FRIEND_EN)
+#if 0
 void fn_update_RecWin(u8 RecWin)
 {
 #if 0   // no stop friend ship should be better.
@@ -111,6 +112,7 @@ u32 get_RecWin_connected()
 {
     return ((get_blt_conn_interval_us()+999)/1000 + 10);
 }
+#endif
 
 u8 mesh_get_fn_cache_size_log_cnt()
 {

@@ -46,6 +46,7 @@
 #include "../../stack/ble/gap/gap.h"
 #include "../../proj_lib/ble/l2cap.h"
 #include "vendor/common/blt_soft_timer.h"
+#include "proj/drivers/rf_pa.h"
 
 #if MI_API_ENABLE
 #include "../../vendor/common/mi_api/telink_sdk_mible_api.h"
@@ -60,8 +61,8 @@ MYFIFO_INIT(blt_txfifo, 40, 32);
 
 
 
-u8		peer_type;
-u8		peer_mac[12];
+// u8		peer_type;
+// u8		peer_mac[12];
 
 //////////////////////////////////////////////////////////////////////////////
 //	Initialization: MAC address, Adv Packet, Response Packet
@@ -95,6 +96,57 @@ void mi_mesh_switch_sys_mode(u32 clk)
 }
 
 #endif
+
+#define TEST_FORWARD_ADDR_FILTER_EN     0
+#if TEST_FORWARD_ADDR_FILTER_EN
+#define FILTER_TYPE_F2	1
+#define FILTER_TYPE_F4	2
+#define FILTER_TYPE_F6	3
+#define FILTER_TYPE_F8	4
+#define FILTER_TYPE_FA	5
+#define FILTER_TYPE_FC	6
+
+#define FILTER_NODE_MAC_F1 	{0xf1,0x22,0x33,0x44,0xff,0xff}
+#define FILTER_NODE_MAC_F2 	{0xf2,0x22,0x33,0x44,0xff,0xff}
+#define FILTER_NODE_MAC_F4	{0xf4,0x22,0x33,0x44,0xff,0xff}
+#define FILTER_NODE_MAC_F6	{0xf6,0x22,0x33,0x44,0xff,0xff}
+#define FILTER_NODE_MAC_F8	{0xf8,0x22,0x33,0x44,0xff,0xff}
+#define FILTER_NODE_MAC_FA	{0xfa,0x22,0x33,0x44,0xff,0xff}
+#define FILTER_NODE_MAC_FC	{0xfc,0x22,0x33,0x44,0xff,0xff}
+
+
+typedef struct{
+	u8 mac[6];
+}filter_mac_str;
+
+#define FORWARD_FILTER_TYPE		FILTER_TYPE_FA
+	#if (FORWARD_FILTER_TYPE == FILTER_TYPE_F2)
+	filter_mac_str forward_mac[1]={FILTER_NODE_MAC_F4};
+	#elif(FORWARD_FILTER_TYPE == FILTER_TYPE_F4)
+	filter_mac_str forward_mac[2]={FILTER_NODE_MAC_F2,FILTER_NODE_MAC_F6};
+	#elif(FORWARD_FILTER_TYPE == FILTER_TYPE_F6)
+	filter_mac_str forward_mac[2]={FILTER_NODE_MAC_F4,FILTER_NODE_MAC_F8};
+	#elif(FORWARD_FILTER_TYPE == FILTER_TYPE_F8)
+	filter_mac_str forward_mac[2]={FILTER_NODE_MAC_F6,FILTER_NODE_MAC_FA};
+	#elif(FORWARD_FILTER_TYPE == FILTER_TYPE_FA)
+	filter_mac_str forward_mac[2]={FILTER_NODE_MAC_F8,FILTER_NODE_MAC_FC};
+	#elif(FORWARD_FILTER_TYPE == FILTER_TYPE_FC)
+	filter_mac_str forward_mac[1]=FILTER_NODE_MAC_FA;
+	#endif
+
+u8 find_mac_in_filter_list(u8 *p_mac)
+{
+	foreach_arr(i,forward_mac){
+		u8 *p_mac_filter = (u8 *)(forward_mac+i);
+		if(!memcmp(p_mac_filter,p_mac,sizeof(filter_mac_str))){
+			return 1;
+		}
+	}
+	return 0;
+}
+#endif
+
+
 //----------------------- handle BLE event ---------------------------------------------
 int app_event_handler (u32 h, u8 *p, int n)
 {
@@ -115,7 +167,11 @@ int app_event_handler (u32 h, u8 *p, int n)
 			if(LL_TYPE_ADV_NONCONN_IND != (pa->event_type & 0x0F)){
 				return 0;
 			}
-
+			#if TEST_FORWARD_ADDR_FILTER_EN
+			if(!find_mac_in_filter_list(pa->mac)){
+				return 0;
+			}
+			#endif
 			#if 0 // TESTCASE_FLAG_ENABLE
 			u8 mac_pts[] = {0xDA,0xE2,0x08,0xDC,0x1B,0x00};	// 0x001BDC08E2DA
 			u8 mac_pts2[] = {0xDB,0xE2,0x08,0xDC,0x1B,0x00};	// 0x001BDC08E2DA
@@ -144,10 +200,10 @@ int app_event_handler (u32 h, u8 *p, int n)
 			event_connection_complete_t *pc = (event_connection_complete_t *)p;
 			if (!pc->status)							// status OK
 			{
-				app_led_en (pc->handle, 1);
+				//app_led_en (pc->handle, 1);
 
-				peer_type = pc->peer_adr_type;
-				memcpy (peer_mac, pc->mac, 6);
+				//peer_type = pc->peer_adr_type;
+				//memcpy (peer_mac, pc->mac, 6);
 			}
 			#if DEBUG_BLE_EVENT_ENABLE
 			rf_link_light_event_callback(LGT_CMD_BLE_CONN);
@@ -157,18 +213,16 @@ int app_event_handler (u32 h, u8 *p, int n)
 			debug_mesh_report_BLE_st2usb(1);
 			#endif
 			proxy_cfg_list_init_upon_connection();
-			#if FEATURE_FRIEND_EN
+			#if 0 // FEATURE_FRIEND_EN
 			fn_update_RecWin(get_RecWin_connected());
 			#endif
-			#if !MI_API_ENABLE
 			mesh_service_change_report();
-			#endif
 		}
 
 	//------------ connection update complete -------------------------------
 		else if (subcode == HCI_SUB_EVT_LE_CONNECTION_UPDATE_COMPLETE)	// connection update
 		{
-			#if FEATURE_FRIEND_EN
+			#if 0 // FEATURE_FRIEND_EN
 			fn_update_RecWin(get_RecWin_connected());
 			#endif
 		}
@@ -181,7 +235,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		mi_mesh_switch_sys_mode(16000000);
 		#endif
 		event_disconnection_t	*pd = (event_disconnection_t *)p;
-		app_led_en (pd->handle, 0);
+		//app_led_en (pd->handle, 0);
 		#if MI_API_ENABLE
 		telink_ble_mi_app_event(HCI_EVT_DISCONNECTION_COMPLETE,p,n);
 		#endif 
@@ -204,7 +258,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		#endif
 
 		mesh_ble_disconnect_cb();
-		#if FEATURE_FRIEND_EN
+		#if 0 // FEATURE_FRIEND_EN
         fn_update_RecWin(FRI_REC_WIN_MS);   // restore
         #endif
 	}
@@ -406,6 +460,7 @@ void user_init()
 	#if (DUAL_MODE_ADAPT_EN)
 	dual_mode_en_init();    // must before factory_reset_handle, because "dual_mode_state" is used in it.
 	#endif
+	
 	blc_app_loadCustomizedParameters();  //load customized freq_offset cap value and tp value
 
 	usb_id_init();
@@ -430,7 +485,9 @@ void user_init()
 #endif
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
+#if BLT_SOFTWARE_TIMER_ENABLE
 	blc_ll_initPowerManagement_module();        //pm module:      	 optional
+#endif
 #if(BLE_REMOTE_PM_ENABLE)	
 	#if MI_SWITCH_LPN_EN
 	bls_pm_setSuspendMask (SUSPEND_DISABLE);
@@ -455,10 +512,14 @@ void user_init()
 			 	 	 	 	 	     ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, \
 			 	 	 	 	 	     0,  NULL,  BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
 
+#if (DUAL_VENDOR_EN)
+    status = status;    // it will be optimized
+#else
 	if(status != BLE_SUCCESS){  //adv setting err
 		write_reg8(0x8000, 0x11);  //debug
 		while(1);
 	}
+#endif
 	
 	// normally use this settings 
 	blc_ll_setAdvCustomedChannel (37, 38, 39);
@@ -471,13 +532,13 @@ void user_init()
 								HCI_LE_EVT_MASK_CONNECTION_UPDATE_COMPLETE);
 
 	////////////////// SPP initialization ///////////////////////////////////
-#if (HCI_ACCESS != HCI_NONE)
+#if (HCI_ACCESS != HCI_USE_NONE)
 	#if (HCI_ACCESS==HCI_USE_USB)
 	//blt_set_bluetooth_version (BLUETOOTH_VER_4_2);
 	//bls_ll_setAdvChannelMap (BLT_ENABLE_ADV_ALL);
 	usb_bulk_drv_init (0);
 	blc_register_hci_handler (app_hci_cmd_from_usb, blc_hci_tx_to_usb);
-	#else	//uart
+	#elif (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();
 	blc_register_hci_handler (blc_rx_from_uart, blc_hci_tx_to_uart);		//default handler
 	//blc_register_hci_handler(rx_from_uart_cb,tx_to_uart_cb);				//customized uart handler
@@ -502,7 +563,7 @@ void user_init()
 	mesh_init_all();
 
 	// OTA init
-	#if (DUAL_MODE_ADAPT_EN || DUAL_MODE_WITH_TLK_MESH_EN)
+	#if (DUAL_MODE_ADAPT_EN && (0 == FW_START_BY_BOOTLOADER_EN) || DUAL_MODE_WITH_TLK_MESH_EN)
 	if(DUAL_MODE_NOT_SUPPORT == dual_mode_state)
 	#endif
 	{bls_ota_clearNewFwDataArea();	 //must
@@ -524,8 +585,8 @@ void user_init()
 	//mi_mesh_otp_program_simulation();
 	blc_att_setServerDataPendingTime_upon_ClientCmd(1);
 	telink_record_part_init();
-	#if XIAOMI_MODULE_ENABLE
-	test_mi_api_part();
+	#if 0 // XIAOMI_MODULE_ENABLE
+	test_mi_api_part(); // just for test
 	#endif
 	#if MI_SWITCH_LPN_EN
 	mi_mesh_switch_sys_mode(16000000);

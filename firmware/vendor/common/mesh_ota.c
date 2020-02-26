@@ -36,15 +36,21 @@ u32 	ota_firmware_size_k = FW_SIZE_MAX_K;	// same with pm_8269.c
 #endif
 
 STATIC_ASSERT(FW_SIZE_MAX_K % 4 == 0);  // because ota_firmware_size_k is must 4k aligned.
+STATIC_ASSERT(ACCESS_WITH_MIC_LEN_MAX >= (MESH_OTA_CHUNK_SIZE + 1 + SZMIC_TRNS_SEG64 + 7)); // 1: op code, 7:margin
+
 
 u32 fw_id_local = 0;
 
 void get_fw_id()
 {
-    #if !WIN32
+#if !WIN32
+    #if FW_START_BY_BOOTLOADER_EN
+    u32 fw_adr = DUAL_MODE_FW_ADDR_SIGMESH;
+    #else
     u32 fw_adr = ota_program_offset ? 0 : 0x40000;
-    flash_read_page(fw_adr+2, sizeof(fw_id_local), (u8 *)&fw_id_local);
     #endif
+    flash_read_page(fw_adr+2, sizeof(fw_id_local), (u8 *)&fw_id_local); // == BUILD_VERSION
+#endif
 }
 
 void mesh_ota_read_data(u32 adr, u32 len, u8 * buf){
@@ -1223,7 +1229,7 @@ u32 soft_crc32_ota_flash(u32 addr, u32 len, u32 crc_init,u32 *out_crc_type1_blk)
         }
         crc_init = soft_crc32_telink(buf, len_read, crc_init);
 		if(out_crc_type1_blk){
-        	crc_type1_blk += get_blk_crc_tlk_type1(buf, len_read, addr);
+        	crc_type1_blk += get_blk_crc_tlk_type1(buf, len_read, addr);	// use to get total crc of total firmware.
 		}
         
         len -= len_read;

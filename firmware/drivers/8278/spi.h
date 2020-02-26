@@ -39,9 +39,24 @@
  */
 
 typedef enum {
-	SPI_GPIO_GROUP_A2A3A4D6=0,
-	SPI_GPIO_GROUP_B6B7D2D7,
-}SPI_GPIO_GroupTypeDef;
+	SPI_GPIO_SCL_A4=GPIO_PA4,
+	SPI_GPIO_SCL_D7=GPIO_PD7,
+}SPI_GPIO_SclkTypeDef;
+
+typedef enum {
+	SPI_GPIO_SDO_A2=GPIO_PA2,
+	SPI_GPIO_SDO_B7=GPIO_PB7,
+}SPI_GPIO_SdoTypeDef;
+
+typedef enum {
+	SPI_GPIO_SDI_A3=GPIO_PA3,
+	SPI_GPIO_SDI_B6=GPIO_PB6,
+}SPI_GPIO_SdiTypeDef;
+
+typedef enum {
+	SPI_GPIO_CS_D2=GPIO_PD2,
+	SPI_GPIO_CS_D6=GPIO_PD6,
+}SPI_GPIO_CsTypeDef;
 
 
 /**
@@ -97,7 +112,7 @@ static inline void reset_spi_moudle(void)
  */
 
 
-extern void spi_master_gpio_set(SPI_GPIO_GroupTypeDef PinGrp);
+extern void spi_master_gpio_set(SPI_GPIO_SclkTypeDef sclk_pin,SPI_GPIO_CsTypeDef cs_pin,SPI_GPIO_SdoTypeDef sdo_pin, SPI_GPIO_SdiTypeDef sdi_pin );
 
 /**
  * @brief     This function selects a pin port for the SPI interface (slave mode)
@@ -118,7 +133,8 @@ extern void spi_master_gpio_set(SPI_GPIO_GroupTypeDef PinGrp);
 
 
 
-extern void spi_slave_gpio_set(SPI_GPIO_GroupTypeDef PinGrp);
+extern void spi_slave_gpio_set(SPI_GPIO_SclkTypeDef sclk_pin,SPI_GPIO_CsTypeDef cs_pin,SPI_GPIO_SdoTypeDef sdo_pin, SPI_GPIO_SdiTypeDef sdi_pin);
+
 
 /**
  * @brief     This function selects a GPIO pin as CS of SPI function.

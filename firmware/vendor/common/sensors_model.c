@@ -24,6 +24,11 @@
 u32 mesh_md_sensor_addr = FLASH_ADR_MD_SENSOR;
 model_sensor_t			model_sig_sensor;
 
+#if SENSOR_LIGHTING_CTRL_EN
+// MD_CLIENT_EN, SENSOR_GPIO_PIN and MD_SENSOR_EN are must be opened.
+STATIC_ASSERT(MD_CLIENT_EN && MD_SENSOR_EN && SENSOR_GPIO_PIN && SENSOR_LIGHTING_CTRL_ON_MS);
+#endif
+
 #if(MD_SENSOR_EN)
 #if MD_SERVER_EN
 STATIC_ASSERT((MD_LOCATION_EN == 0) || (MD_PROPERTY_EN == 0));   // because use same flash sector to save
@@ -68,11 +73,11 @@ void mesh_global_var_init_sensor_descrip()
 		model_sig_sensor.sensor_states[i].prop_id = sensor_descrip[i].prop_id;
 		model_sig_sensor.sensor_states[i].cadence.fast_period_div = 2;
 		model_sig_sensor.sensor_states[i].cadence.trig_type = 1;
-		model_sig_sensor.sensor_states[i].cadence.cadence_unit.delta_down= 0x20;
-		model_sig_sensor.sensor_states[i].cadence.cadence_unit.delta_up= 0x10;
-		model_sig_sensor.sensor_states[i].cadence.cadence_unit.min_interval = 0x02;
-		model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_low = 0x10;
-		model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_hight = 0x20;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.delta_down= 0x00;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.delta_up= 0x00;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.min_interval = 0x04;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_low = 0x00;
+        model_sig_sensor.sensor_states[i].cadence.cadence_unit.cadence_hight = 0x01;
 		for(u8 j=0; j<SENSOR_SETTINGS_NUMS; j++){
 			model_sig_sensor.sensor_states[i].setting[j].setting_id = i+1;// 0:prohibited
 			model_sig_sensor.sensor_states[i].setting[j].setting_access = READ_WRITE;
@@ -529,6 +534,12 @@ u32 sensor_measure_proc()
 		sensor_measure_ms = clock_time_ms();
 		u8 pub_flag = 0;
 		//update sensure_measure_quantity here
+#if !WIN32 && SENSOR_LIGHTING_CTRL_EN
+        gpio_set_input_en(SENSOR_GPIO_PIN, 1);
+        gpio_set_output_en(SENSOR_GPIO_PIN, 0);
+        sleep_us(100);
+        sensure_measure_quantity = gpio_read(SENSOR_GPIO_PIN) ? 0 : 1;
+#endif
 		
 		if(sensure_measure_quantity < model_sig_sensor.sensor_states[0].sensor_data){
 			if((model_sig_sensor.sensor_states[0].sensor_data - sensure_measure_quantity) > model_sig_sensor.sensor_states[0].cadence.cadence_unit.delta_down){
@@ -551,6 +562,57 @@ u32 sensor_measure_proc()
 }
 #endif
 
+#if SENSOR_LIGHTING_CTRL_EN
+
+static u32 keep_on_timer = 0;
+static volatile bool sensor_set_light_on = false;
+
+void sensor_lighting_ctrl_set_light_on()
+{
+    keep_on_timer = clock_time();
+    sensor_set_light_on = true;
+}
+
+void sensor_lighting_ctrl_proc()
+{
+    static mesh_cmd_g_level_st_t level_st;
+    light_g_level_get((u8 *)&level_st, 0, ST_TRANS_LIGHTNESS);
+
+    //u8 target_onoff = get_onoff_from_level(level_st.target_level);
+    u8 target_onoff = get_onoff_from_level(level_st.present_level);
+
+    if (sensor_set_light_on) {
+        if (!target_onoff) {
+            u8 buf[sizeof(u16) + sizeof(mesh_cmd_g_onoff_set_t)];
+            buf[0] = G_ONOFF_SET & 0xFF;
+            buf[1] = (G_ONOFF_SET >> 8) & 0xFF;
+            mesh_cmd_g_onoff_set_t *set = (mesh_cmd_g_onoff_set_t *)&buf[2];
+            set->tid = 0;
+            set->onoff = 1;
+            set->transit_t = 10;
+            set->delay = 10;
+            mesh_tx_cmd2self_primary(buf, sizeof(buf));
+        }else{
+            if (clock_time_exceed(keep_on_timer, SENSOR_LIGHTING_CTRL_ON_MS*1000)) {
+                u8 buf[sizeof(u16) + sizeof(mesh_cmd_g_onoff_set_t)];
+                buf[0] = G_ONOFF_SET & 0xFF;
+                buf[1] = (G_ONOFF_SET >> 8) & 0xFF;
+                mesh_cmd_g_onoff_set_t *set = (mesh_cmd_g_onoff_set_t *)&buf[2];
+                set->tid = 0;
+                set->onoff = 0;
+                set->transit_t = 10;
+                set->delay = 10;
+                mesh_tx_cmd2self_primary(buf, sizeof(buf));
+
+                sensor_set_light_on = false;
+            }
+        }
+    }else{
+        keep_on_timer = clock_time();
+    }
+}
+#endif
+
 #if MD_CLIENT_EN
 int mesh_cmd_sig_sensor_descript_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
@@ -563,6 +625,13 @@ int mesh_cmd_sig_sensor_descript_status(u8 *par, int par_len, mesh_cb_fun_par_t 
 
 int mesh_cmd_sig_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
+#if SENSOR_LIGHTING_CTRL_EN
+    sensor_mpid_b_t *sts = (sensor_mpid_b_t *)par;
+
+    if (sts->raw_value[0]) {
+        sensor_lighting_ctrl_set_light_on();
+    }
+#endif
 	return 0;
 }
 

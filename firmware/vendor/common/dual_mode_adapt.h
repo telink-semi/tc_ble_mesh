@@ -24,16 +24,30 @@
 
 #include "../../proj/tl_common.h"
 
+#define FW_RAMCODE_SIZE_MAX         (0x4000)    // no limit for bootloader.
+
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define DUAL_MODE_ZB_FW_SIZE_MAX_K  (256)
+#define DUAL_MODE_FW_ADDR_SIGMESH   (0x20000)
+#define DUAL_MODE_FW_ADDR_ZIGBEE    (0x60000)
+#define FLASH_ADR_UPDATE_NEW_FW     (0xa0000)
+#else
+#define DUAL_MODE_FW_ADDR_SIGMESH   (0x00000)
+#define DUAL_MODE_FW_ADDR_ZIGBEE    (0x40000)
+#endif
+
 enum{
 	RF_MODE_BLE			= 0,
 	RF_MODE_ZIGBEE,
 };
 
+#if (0 == FW_START_BY_BOOTLOADER_EN)
 enum{
     DUAL_MODE_SAVE_ENABLE       = 0x5A,    // dual mode state should be define both 73000 and 76080
     DUAL_MODE_SAVE_DISABLE      = 0x00,
     // all other is disable exclude 0xff
 };
+#endif
 
 enum{
     DUAL_MODE_NOT_SUPPORT       = 0x00,

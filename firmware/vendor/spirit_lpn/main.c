@@ -73,7 +73,11 @@ FLASH_ADDRESS_DEFINE;
 #if(MCU_CORE_TYPE == MCU_CORE_8269)
 int main (void) {
 	FLASH_ADDRESS_CONFIG;
+#if(MCU_CORE_TYPE == MCU_CORE_8258)
 	cpu_wakeup_init();
+#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+	cpu_wakeup_init(LDO_MODE,EXTERNAL_XTAL_24M);
+#endif
 
 	clock_init();
 	set_tick_per_us(CLOCK_SYS_CLOCK_HZ/1000000);

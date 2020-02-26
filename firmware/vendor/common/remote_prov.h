@@ -214,7 +214,7 @@ typedef struct{
 #define REMOTE_PROV_SERVER_CMD_FLAG         0x80
 #define REMOTE_PROV_SERVER_OUTBOUND_FLAG    0x40
 
-#define REMOTE_PROV_SERVER_RETRY_INTER  2000*1000
+#define REMOTE_PROV_SERVER_RETRY_INTER  3000*1000
 typedef struct{
     u8 retry_flag;
     u32 tick;
@@ -269,6 +269,7 @@ typedef enum{
     PR_SER_DATA_SEND,
     PR_SER_DATA_SEND_ACK,
     PR_SER_COMPLETE_RSP,
+    PR_SER_COMPLETE_SUC,
 }REMOTE_PROV_SERVER_ENUM;
 
 
@@ -297,6 +298,7 @@ void mesh_cmd_sig_rp_loop_proc();
 u8 mesh_pr_sts_work_or_not();
 int mesh_cmd_sig_send_rp_pdu_send(u8 *par,int par_len);
 void mesh_rp_client_para_reset();
+void mesh_prov_pdu_send_retry_clear();
 
 
 
@@ -334,7 +336,7 @@ typedef enum{
     RP_PROV_COMPLETE_RSP,
 }RP_PROV_CMD_ENUM;
 
-#define REMOTE_PROV_PDU_SEND_INTER  2000*1000
+#define REMOTE_PROV_PDU_CLI_INTER  6000*1000
 
 int mesh_cmd_sig_rp_cli_send_capa(u16 node_adr);
 int mesh_cmd_sig_rp_cli_send_scan_get(u16 node_adr);

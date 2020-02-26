@@ -231,6 +231,9 @@ int mesh_cmd_sig_sensor_series_status(u8 *par, int par_len, mesh_cb_fun_par_t *c
 #endif
 
 u32 sensor_measure_proc();
+#if SENSOR_LIGHTING_CTRL_EN
+void sensor_lighting_ctrl_proc();
+#endif
 
 extern model_sensor_t			model_sig_sensor;
 extern u32 sensure_measure_quantity;

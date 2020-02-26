@@ -99,7 +99,7 @@ typedef struct{
 extern telink_record_t telink_record;
 #define RECORD_MAX_LEN 	250
 #define RAND_NUM_MAX_LEN 	RECORD_MAX_LEN
-my_fifo_t mi_task_api_func_t;
+extern my_fifo_t mi_task_api_func_t;
 typedef struct{
 	mible_handler_t cb;
 	void *arg;

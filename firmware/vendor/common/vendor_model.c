@@ -84,6 +84,9 @@ int vd_light_onoff_st_rsp(mesh_cb_fun_par_t *cb_par)
 
 int vd_light_onoff_st_publish(u8 idx)
 {
+#if DUAL_VENDOR_EN
+    return 0;   // not use now.
+#else
 	model_common_t *p_com_md = &model_vd_light.srv[idx].com;
 	u16 ele_adr = p_com_md->ele_adr;
 	u16 pub_adr = p_com_md->pub_adr;
@@ -92,6 +95,7 @@ int vd_light_onoff_st_publish(u8 idx)
 	}
 	u8 *uuid = get_virtual_adr_uuid(pub_adr, p_com_md);
     return vd_light_tx_cmd_onoff_st(idx, ele_adr, pub_adr, uuid, p_com_md);
+#endif
 }
 
 int cb_vd_light_onoff_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -132,12 +136,13 @@ vd_msg_attr_t vd_msg_attr[ATTR_TYPE_MAX_NUM]={
 	{ATTR_CURRENT_TEMP},
 };
 
-#define SLEEP_INTERVAL 		1000*1000
-#define LISTEN_INTERVAL		60*1000  	
+//note:there is 1.2s response delay after receive reliable command, refer to MESH_RSP_BASE_DELAY_STEP
+#define SLEEP_TIME_US 		ADV_INTERVAL_MIN 
+#define RUN_TIME_US			60*1000   	
 #define INDICATE_RETRY_CNT 	6
 
 mesh_tx_indication_t mesh_indication_retry;
-mesh_sleep_pre_t		mesh_sleep_time={0, SLEEP_INTERVAL+LISTEN_INTERVAL,SLEEP_INTERVAL};
+mesh_sleep_pre_t		mesh_sleep_time={0, RUN_TIME_US, SLEEP_TIME_US};
 
 void vd_msg_attr_indica_retry_start(u16 interval_ms)
 {
@@ -203,10 +208,7 @@ int access_cmd_attr_indication(u16 op, u16 adr_dst, u16 attr_type, u8 *attr_par,
 	memcpy(&par.attr_par, attr_par, par_len);
 	par_len += OFFSETOF(vd_msg_attr_set_t,attr_par);
 	
-	u8 network_transmit = model_sig_cfg_s.nw_transmit.val;
-	model_sig_cfg_s.nw_transmit.val = 0x07;
 	ret = mesh_tx_cmd_indica_retry(op, (u8 *)&par, par_len, ele_adr_primary, adr_dst, 1);
-	model_sig_cfg_s.nw_transmit.val = network_transmit;
 	return ret;
 
 }
@@ -326,7 +328,7 @@ int cb_vd_msg_attr_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	
 	if(!cb_par->retransaction){
 		if(ATTR_TYPE_NOT_EXIST != attr_index){
-			LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"attr_type exist",0);
+			LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"attr_type exist",0);
 			if(attr_type) // for err_code test
 			memcpy(vd_msg_attr[attr_index].attr_par, p_set->attr_par,attr_len);
 		}

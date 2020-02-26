@@ -40,7 +40,7 @@ void rf_setTxModeNew(void);
 int is_zigbee_found();
 
 #if (DUAL_MODE_ADAPT_EN || DUAL_MODE_WITH_TLK_MESH_EN)
-u8 dual_mode_state = DUAL_MODE_NOT_SUPPORT;
+u8 dual_mode_state = (FW_START_BY_BOOTLOADER_EN) ? DUAL_MODE_SUPPORT_DISABLE : DUAL_MODE_NOT_SUPPORT;
 u8 rf_mode = RF_MODE_BLE;
 
 #if (DUAL_MODE_WITH_TLK_MESH_EN)
@@ -156,20 +156,23 @@ int UI_resotre_TLK_4K_with_check()
 
 void dual_mode_en_init()		// call in mesh_init_all();
 {
+#if (0 == FW_START_BY_BOOTLOADER_EN)
 	u8 en = 0;
 	flash_read_page(CFG_ADR_DUAL_MODE_EN, 1, (u8 *)&en);
-    LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"dual mode enable flag 0x76080:0x%x",en);
+    LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"dual mode enable flag 0x76080:0x%x",en);
 	if(0xff == en){
 	    en = DUAL_MODE_SAVE_ENABLE;
 	    flash_write_page(CFG_ADR_DUAL_MODE_EN, 1, (u8 *)&en);
 	}
-	
-	if(DUAL_MODE_SAVE_ENABLE == en){
+
+	if(DUAL_MODE_SAVE_ENABLE == en)
+#endif
+	{
 		u32 startup_flag1 = 0;
 		u32 startup_flag2 = 0;
-		flash_read_page(0x00008, 4, (u8 *)&startup_flag1);
+		flash_read_page(DUAL_MODE_FW_ADDR_SIGMESH + 8, 4, (u8 *)&startup_flag1);
 		startup_flag1 |= 0x4b;  // recover.
-		flash_read_page(0x40008, 4, (u8 *)&startup_flag2);
+		flash_read_page(DUAL_MODE_FW_ADDR_ZIGBEE + 8, 4, (u8 *)&startup_flag2);
 		if((START_UP_FLAG == startup_flag1) && (START_UP_FLAG == startup_flag2)){
             u32 mesh_type = 0;
             flash_read_page(FLASH_ADR_MESH_TYPE_FLAG, sizeof(mesh_type), (u8 *)&mesh_type);
@@ -184,29 +187,33 @@ void dual_mode_en_init()		// call in mesh_init_all();
                 start_reboot();
             }else if(TYPE_DUAL_MODE_STANDBY == mesh_type){
 			    dual_mode_state = DUAL_MODE_SUPPORT_ENABLE;
-                LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"Dual mode support enable",0);
+                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support enable",0);
 			}else{  // only TYPE_SIG_MESH
 			    dual_mode_state = DUAL_MODE_SUPPORT_DISABLE;
-                LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable",0);
+                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable",0);
 			}
             #else
 		    if(TYPE_DUAL_MODE_STANDBY == mesh_type){
 			    dual_mode_state = DUAL_MODE_SUPPORT_ENABLE;
-                LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"Dual mode support enable",0);
+                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support enable",0);
 		    }else{
 			    dual_mode_state = DUAL_MODE_SUPPORT_DISABLE;
-                LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable",0);
+                LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable",0);
 			}
 			#endif
 		}else{
+		    #if (0 == FW_START_BY_BOOTLOADER_EN)
             en = 0;
+            #endif
 		}
 	}
 
+#if (0 == FW_START_BY_BOOTLOADER_EN)
 	if(en && (DUAL_MODE_SAVE_ENABLE != en)){
 	    en = 0;
 	    flash_write_page(CFG_ADR_DUAL_MODE_EN, 1, (u8 *)&en);
 	}
+#endif
 
 	if(DUAL_MODE_SUPPORT_ENABLE == dual_mode_state){
 		rf_link_light_event_callback(LGT_CMD_DUAL_MODE_MESH);
@@ -215,12 +222,16 @@ void dual_mode_en_init()		// call in mesh_init_all();
 
 void dual_mode_disable()
 {
+#if (FW_START_BY_BOOTLOADER_EN)
+    // enable forever
+#else
 	if(DUAL_MODE_NOT_SUPPORT != dual_mode_state){
 		dual_mode_state = DUAL_MODE_NOT_SUPPORT;
 		u8 zero = 0;
 		flash_write_page(CFG_ADR_DUAL_MODE_EN, 1, (u8 *)&zero);
-        LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"Dual mode not support",0);
+        LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode not support",0);
 	}
+#endif
 }
 
 void dual_mode_select()    // 
@@ -229,15 +240,19 @@ void dual_mode_select()    //
 		dual_mode_state = DUAL_MODE_SUPPORT_DISABLE;
 		#if DUAL_MODE_WITH_TLK_MESH_EN
         set_firmware_type_SIG_mesh();
-        LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable: select SIG MESH",0);
+        LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable: select SIG MESH",0);
 		#else
 		if(rf_mode == RF_MODE_BLE){
             set_firmware_type_SIG_mesh();
-            LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable: select BLE",0);
+            LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"Dual mode support disable: select BLE",0);
 		}else{
+		    #if (FW_START_BY_BOOTLOADER_EN)
+            set_firmware_type_zb_with_factory_reset();
+		    #else
             u8 zero = 0;
 			u32 adr_boot_disable = ota_program_offset ? 0 : 0x40000;
             flash_write_page(adr_boot_disable + 8, 1, (u8 *)&zero);
+            #endif
             start_reboot();
 		}
 		#endif
@@ -312,45 +327,45 @@ const TBLCMDSET  setting_rf_250k[] = {
 #define		ZB_RF_PACKET_CRC_OK(p)			((p[p[0]+3] & 0x51) == 0x10)
 
 const TBLCMDSET setting_rf_250k_init[] = {
-    {0x12d2, 0x9b,  TCMD_UNDER_BOTH | TCMD_WRITE}, //DCOC_DBG0
-    {0x12d3, 0x19,  TCMD_UNDER_BOTH | TCMD_WRITE}, //DCOC_DBG1
-    {0x127b, 0x0e,  TCMD_UNDER_BOTH | TCMD_WRITE}, //BYPASS_FILT_1
-    {0x1276, 0x50,  TCMD_UNDER_BOTH | TCMD_WRITE}, //FREQ_CORR_CFG2_0
-    {0x1277, 0x73,  TCMD_UNDER_BOTH | TCMD_WRITE}, //FREQ_CORR_CFG2_1
+    {{0x12d2}, {0x9b},  {TCMD_UNDER_BOTH | TCMD_WRITE}}, //DCOC_DBG0
+    {{0x12d3}, {0x19},  {TCMD_UNDER_BOTH | TCMD_WRITE}}, //DCOC_DBG1
+    {{0x127b}, {0x0e},  {TCMD_UNDER_BOTH | TCMD_WRITE}}, //BYPASS_FILT_1
+    {{0x1276}, {0x50},  {TCMD_UNDER_BOTH | TCMD_WRITE}}, //FREQ_CORR_CFG2_0
+    {{0x1277}, {0x73},  {TCMD_UNDER_BOTH | TCMD_WRITE}}, //FREQ_CORR_CFG2_1
 };
 
 const TBLCMDSET  setting_rf_250k[] =
 {
-    {0x1220, 0x04, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x1221, 0x2b, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x1222, 0x43, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x1223, 0x86, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x122a, 0x90, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x1254, 0x0e,  TCMD_UNDER_BOTH | TCMD_WRITE}, //AGC_THRSHLD1_2M_0
-    {0x1255, 0x09,  TCMD_UNDER_BOTH | TCMD_WRITE}, //AGC_THRSHLD1_2M_1
-    {0x1256, 0x0c,  TCMD_UNDER_BOTH | TCMD_WRITE}, //AGC_THRSHLD2_2M_0
-    {0x1257, 0x08,  TCMD_UNDER_BOTH | TCMD_WRITE}, //AGC_THRSHLD2_2M_1
-    {0x1258, 0x09,  TCMD_UNDER_BOTH | TCMD_WRITE}, //AGC_THRSHLD3_2M_0
-    {0x1259, 0x0f,  TCMD_UNDER_BOTH | TCMD_WRITE}, //AGC_THRSHLD3_2M_1
+    {{0x1220}, {0x04}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x1221}, {0x2b}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x1222}, {0x43}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x1223}, {0x86}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x122a}, {0x90}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x1254}, {0x0e}, {TCMD_UNDER_BOTH | TCMD_WRITE}}, //AGC_THRSHLD1_2M_0
+    {{0x1255}, {0x09}, {TCMD_UNDER_BOTH | TCMD_WRITE}}, //AGC_THRSHLD1_2M_1
+    {{0x1256}, {0x0c}, {TCMD_UNDER_BOTH | TCMD_WRITE}}, //AGC_THRSHLD2_2M_0
+    {{0x1257}, {0x08}, {TCMD_UNDER_BOTH | TCMD_WRITE}}, //AGC_THRSHLD2_2M_1
+    {{0x1258}, {0x09}, {TCMD_UNDER_BOTH | TCMD_WRITE}}, //AGC_THRSHLD3_2M_0
+    {{0x1259}, {0x0f}, {TCMD_UNDER_BOTH | TCMD_WRITE}}, //AGC_THRSHLD3_2M_1
 
-    {0x400, 0x13, TCMD_UNDER_BOTH | TCMD_WRITE},//{0x400, 0x0a,	TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x401, 0x00, TCMD_UNDER_BOTH | TCMD_WRITE},//zigBee must set
-    {0x420, 0x18, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x404, 0xc0, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x405, 0x04, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x421, 0x23, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x422, 0x04, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x408, 0xa7, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x409, 0x00, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x40a, 0x00, TCMD_UNDER_BOTH | TCMD_WRITE},
-    {0x40b, 0x00, TCMD_UNDER_BOTH | TCMD_WRITE},
+    {{0x400}, {0x13}, {TCMD_UNDER_BOTH | TCMD_WRITE}},//{{0x400}, {0x0a},	{TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x401}, {0x00}, {TCMD_UNDER_BOTH | TCMD_WRITE}},//zigBee must set
+    {{0x420}, {0x18}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x404}, {0xc0}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x405}, {0x04}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x421}, {0x23}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x422}, {0x04}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x408}, {0xa7}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x409}, {0x00}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x40a}, {0x00}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
+    {{0x40b}, {0x00}, {TCMD_UNDER_BOTH | TCMD_WRITE}},
     //AGC table 2M
-    {0x460, 0x36, TCMD_UNDER_BOTH | TCMD_WRITE},//grx_0
-    {0x461, 0x46, TCMD_UNDER_BOTH | TCMD_WRITE},//grx_1
-    {0x462, 0x51, TCMD_UNDER_BOTH | TCMD_WRITE},//grx_2
-    {0x463, 0x61, TCMD_UNDER_BOTH | TCMD_WRITE},//grx_3
-    {0x464, 0x6d, TCMD_UNDER_BOTH | TCMD_WRITE},//grx_4
-    {0x465, 0x78, TCMD_UNDER_BOTH | TCMD_WRITE},//grx_5
+    {{0x460}, {0x36}, {TCMD_UNDER_BOTH | TCMD_WRITE}},//grx_0
+    {{0x461}, {0x46}, {TCMD_UNDER_BOTH | TCMD_WRITE}},//grx_1
+    {{0x462}, {0x51}, {TCMD_UNDER_BOTH | TCMD_WRITE}},//grx_2
+    {{0x463}, {0x61}, {TCMD_UNDER_BOTH | TCMD_WRITE}},//grx_3
+    {{0x464}, {0x6d}, {TCMD_UNDER_BOTH | TCMD_WRITE}},//grx_4
+    {{0x465}, {0x78}, {TCMD_UNDER_BOTH | TCMD_WRITE}},//grx_5
 };
 
 /* set Rx mode, maxium receiver buffer size, enable Rx/Tx interrupt */
@@ -615,7 +630,8 @@ _attribute_ram_code_ /*__attribute__((optimize("-Os")))*/ void zb_rf_rx_irq_hand
 	if ( (!ZB_RF_PACKET_CRC_OK(raw_pkt)) || (!ZB_RF_PACKET_LENGTH_OK(raw_pkt)) ) {
 		//raw_pkt[12] = 0;
 		//*((u32*)raw_pkt) = 0;
-		//return;
+		reg_rf_irq_status = FLD_RF_IRQ_RX;
+		return;
 	}
 
 	blt_rxfifo.wptr++;
@@ -674,7 +690,7 @@ void zigbee_recv_data_poll(void){
 			T_zbRfRxCnt[1]++;
 			zb_mac_pld_t macPld;
 			memcpy(&macPld, &raw_pkt[ZB_RF_ACTUAL_PAYLOAD_POST+sizeof(zb_mac_hdr_t)], sizeof(zb_mac_pld_t));
-			if(macPld.gts == 0 && (macPld.sfSpecification & 0x8000) && macPld.pendAddr == 0 &&
+			if(macPld.gts == 0 && ((macPld.sfSpecification & 0xbfff) == 0x8fff) && macPld.pendAddr == 0 &&
 				macPld.beaconInfo.protocolId == 0 &&
 				macPld.beaconInfo.stackProfile == 0x02 &&
 				macPld.beaconInfo.nwkProtocolVer == 0x02 &&
@@ -716,7 +732,7 @@ void dual_mode_zigbee_init(void){
 // ---------------------dual mode switch check
 int is_ble_found()
 {
-	return ((BLS_LINK_STATE_ADV != blt_state) || is_mesh_provisioning());
+	return ((BLS_LINK_STATE_ADV != blt_state) || (get_provision_state() != STATE_DEV_UNPROV));
 }
 
 int is_zigbee_found()

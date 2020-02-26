@@ -37,7 +37,7 @@ extern "C" {
 #define _USER_CONFIG_DEFINED_	1	// must define this macro to make others known
 #define	__LOG_RT_ENABLE__		0
 
-#define FLASH_1M_ENABLE         1
+#define FLASH_1M_ENABLE         1   // must
 #if FLASH_1M_ENABLE
 #define PINGPONG_OTA_DISABLE    1 // it can disable only when 1M flash.
 #endif

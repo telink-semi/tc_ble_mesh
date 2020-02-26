@@ -180,6 +180,8 @@ void my_fifo_pop (my_fifo_t *f);
 extern u8 * my_fifo_get (my_fifo_t *f);
 void my_fifo_reset(my_fifo_t *f);
 extern u8 my_fifo_data_cnt_get (my_fifo_t *f);
+u8 my_fifo_free_cnt_get(my_fifo_t *f);
+
 u8 * my_fifo_get_offset (my_fifo_t *f, u8 offset);
 
 #define		MYFIFO_INIT(name,size,n)		u8 name##_b[(size) * (n)]={0};my_fifo_t name = {size,n,0,0,name##_b};  \

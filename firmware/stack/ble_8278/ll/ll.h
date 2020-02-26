@@ -24,7 +24,7 @@
 
 
 #include "../ble_common.h"
-#include "../blt_config.h"
+#include "proj_lib/ble/blt_config.h"
 #include "../hci/hci_const.h"
 //#include "../hci/hci_event.h"
 #include "../hci/hci_cmd.h"

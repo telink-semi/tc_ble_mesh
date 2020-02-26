@@ -90,8 +90,8 @@ void audio_amic_init(AudioRate_Typedef Audio_Rate)
 			                        FLD_AUD_MIC_LEFT_CHN_SELECT, 	1, \
 			                        FLD_AUD_MIC_RIGHT_CHN_SELECT,	1 );
 
-    //open for user to config the mic vol. default:MIC_VOL_CONTROL_m24DB
-	reg_mic_ctrl =    MASK_VAL( FLD_AUD_MIC_VOL_CONTROL,      	MIC_VOL_CONTROL_m18DB,\
+    //open for user to config the mic vol.
+	reg_mic_ctrl =    MASK_VAL( FLD_AUD_MIC_VOL_CONTROL,      	MIC_VOL_CONTROL_m16DB,\
 			                    FLD_AUD_MIC_MONO_EN, 	        1, \
 			                    FLD_AUD_AMIC_DMIC_SELECT,    	0 );
 
@@ -122,13 +122,13 @@ void audio_amic_init(AudioRate_Typedef Audio_Rate)
 	audio_set_codec_clk(0x81,0x02);
 
 	//this value is fixed
-	reg_set_filter_para = 0x05;// [0]:hpf_en
+	reg_set_filter_para = 0x07;// [0]:hpf_en, codec digital clock switch
 }
 
 /**
  * @brief     This function servers to close PGA input and CODEC clock.After calling the Audio module,
- *            you need to call this API to close Audio,to get the current back to the call.
- *            when use this API to close Audio module,you should reinitialize Audio.
+ *            you need to call this API to close Audio to get the current back to the call.
+ *            when use this API to close Audio module,you should turn on PGA_Audio_Enable to open Audio module again!(example: turn ana_0x34<2>:1 to ana_0x34<2>:0)
  * @param[in] none.
  * @return    none.
  */
@@ -136,7 +136,6 @@ void audio_codec_and_pga_disable(void)
 {
 	analog_write(codec_ana_cfg3,analog_read(codec_ana_cfg3) | 0x1f);
 	reg_codec_clk_step = 0x00;
-//	analog_write(pga_audio_enable,analog_read(pga_audio_enable) | 0x04);// Don't need
 }
 
 /**
@@ -217,7 +216,7 @@ void audio_dmic_init(AudioRate_Typedef Audio_Rate)
 	audio_set_codec_clk(0x81,0x02);
 
 	//this value is fixed
-	reg_set_filter_para = 0x05;
+	reg_set_filter_para = 0x07;// [0]:hpf_en, codec digital clock switch
 
 }
 
@@ -251,7 +250,7 @@ void audio_usb_init(AudioRate_Typedef Audio_Rate)
 	audio_set_codec_clk(0x81,0x02);
 
 	//this value is fixed
-	reg_set_filter_para = 0x05;
+	reg_set_filter_para = 0x07;// [0]:hpf_en, codec digital clock switch
 
 }
 
@@ -408,12 +407,12 @@ unsigned char I2S_To_HPout_CMD_TAB[9][2] ={	{WM8731_RESET_CTRL, 				0x00},
  * @param[in] sysclk - system clock.
  * @return    none.
  */
-void audio_set_codec( I2C_GPIO_GroupTypeDef i2c_pin_group , CodecMode_Typedef CodecMode,unsigned sysclk)
+void audio_set_codec(I2C_GPIO_SdaTypeDef sda_pin,I2C_GPIO_SclTypeDef scl_pin, CodecMode_Typedef CodecMode,unsigned sysclk)
 {
 
 	unsigned char i = 0;
 	//I2C pin set
-	i2c_gpio_set(i2c_pin_group);  	//SDA/CK : A3/A4
+	i2c_gpio_set(sda_pin,scl_pin);//SDA/CK : A3/A4
 	i2c_master_init(0x34, (unsigned char)(sysclk/(4*200000)) );		//i2c clock 200K, only master need set i2c clock
 
 	if(CodecMode == CODEC_MODE_LINE_TO_HEADPHONE_LINEOUT_I2S)
@@ -463,7 +462,7 @@ void audio_i2s_init(void)
 	/*******1.I2S setting for audio input**************************/
 	reg_audio_ctrl = AUDIO_OUTPUT_OFF;
 
-	//if system clock=24M_Crystal. PWM0 2 frequency division output£, for 12Mhz to offer the MCLK of CORDEC. select pd5 as PWM0 output.
+	//if system clock=24M_Crystal. PWM0 2 frequency division output, for 12Mhz to offer the MCLK of CORDEC. select pd5 as PWM0 output.
 	sub_wr(0x5af, 0x0, 3, 2); //PD5=0
 	sub_wr(0x59e, 0x0, 5, 5); //PD5=0
 	write_reg16(0x796,0x02);//TMAX0 continue mode
@@ -509,7 +508,7 @@ void audio_set_i2s_output(AudioInput_Typedef InType,AudioRate_Typedef Audio_Rate
 {
 
 //	volatile unsigned int i;
-	//if system clock=24M_Crystal. PWM0 2 frequency division output£¬for 12Mhz to offer the MCLK of CORDEC. select pd5 as PWM0 output.
+	//if system clock=24M_Crystal. PWM0 2 frequency division output, for 12Mhz to offer the MCLK of CORDEC. select pd5 as PWM0 output.
 	sub_wr(0x5af, 0x0, 3, 2); //PD5=0
 	sub_wr(0x59e, 0x0, 5, 5); //PD5=0
 	write_reg16(0x796,0x02);//TMAX0 continue mode

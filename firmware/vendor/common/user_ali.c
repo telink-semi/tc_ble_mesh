@@ -185,7 +185,7 @@ void caculate_sha256_to_create_static_oob()
 	#if !WIN32		// comfirm later
 	u8 sha256_out[32];
 	caculate_sha256_node_oob(sha256_out);
-	set_static_oob_for_auth((u8 *)sha256_out,16);
+	mesh_set_dev_auth(sha256_out, 16);
 	#endif
 }
 
@@ -281,5 +281,52 @@ void create_sha256_input_string(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret)
 	}
 #endif
 }
+
+#define TEST_ALI_AUTH_ENABLE 0
+#if TEST_ALI_AUTH_ENABLE
+u32 ali_pid = 0x293e2;
+u8 ali_mac[6]={0xab,0xcd,0xf0,0xf1,0xf2,0xf3};
+u8 ali_secret[16]={	0x53,0xda,0xed,0x80,0x5b,0xc5,0x34,0xa4,
+					0xa9,0x3c,0x82,0x5e,0xd2,0x0a,0x70,0x63};
+u8 ali_random_dev[16]={	0x78,0x89,0xb0,0xaf,0x41,0x7b,0x96,0x7b,
+						0xdc,0xd7,0xb8,0x14,0xd2,0xbb,0xff,0xaf};
+u8 ali_random_pro[16]={	0xaa,0x48,0x4b,0x09,0x9a,0xe4,0xc7,0x76,
+						0x2f,0xcb,0x1b,0x71,0x96,0x8b,0xa7,0xdf};
+
+void ali_new_create_sha256_input_string(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret,u8 *p_random)
+{
+	u8 idx =0;
+	u8 con_product_id_rev[4];
+	swap32(con_product_id_rev,pid);
+	for(int i=0;i<4;i++){
+		p_input[idx++] = num2char [(con_product_id_rev[i]>>4) & 15];
+		p_input[idx++] = num2char [con_product_id_rev[i] & 15];
+	}
+	p_input[idx++]=',';
+	for(int i=0;i<6;i++){
+		p_input[idx++] = num2char [(p_mac[i]>>4) & 15];
+		p_input[idx++] = num2char [p_mac[i] & 15];
+	}
+	p_input[idx++]=',';
+	for(int i=0;i<16;i++){// need to change to string .
+		p_input[idx++] = num2char [(p_secret[i]>>4) & 15];
+		p_input[idx++] = num2char [p_secret[i] & 15];
+	}
+	p_input[idx++]=',';
+	for(int i=0;i<16;i++){// need to change to string .
+		p_input[idx++] = num2char [(p_random[i]>>4) & 15];
+		p_input[idx++] = num2char [p_random[i] & 15];
+	}
+}
+
+void calculate_auth_value()
+{
+	static u8 ali_input_string[87];
+	static u8 ali_output_sha[32];
+	ali_new_create_sha256_input_string(ali_input_string,(u8*)(&ali_pid),ali_mac,ali_secret,ali_random_pro);
+	mbedtls_sha256(ali_input_string,sizeof(ali_input_string),ali_output_sha,0);
+}
+#endif
+
 
 

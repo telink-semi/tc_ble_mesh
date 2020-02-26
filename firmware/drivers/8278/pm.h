@@ -36,18 +36,37 @@
 #endif
 
 
+#define XTAL_READY_CHECK_TIMING_OPTIMIZE	1
 
-#define PM_XTAL_DELAY_DURATION      		500
-#define EARLYWAKEUP_TIME_US_DEEP    		1100
-#define EARLYWAKEUP_TIME_US_SUSPEND 		1250
-#define EMPTYRUN_TIME_US       	    		1500
 
-#define PM_DCDC_DELAY_DURATION      		1000
+
+//when timer wakeup,the DCDC delay time is accurate,but other wake-up sources wake up,
+//this time is ((PM_DCDC_DELAY_CYCLE+1)*2-1)*32us ~ (PM_DCDC_DELAY_CYCLE+1)*2*32us
+#define PM_DCDC_DELAY_DURATION     					62   // delay_time_us = (PM_DCDC_DELAY_CYCLE+1)*2*32us
+												  // 2 * 1/16k = 125 uS, 3 * 1/16k = 187.5 uS  4*1/16k = 250 uS
+
+#define PM_XTAL_MANUAL_MODE_DELAY		    200  //150  200
+
+#if(PM_DCDC_DELAY_DURATION == 62)
+#define PM_DCDC_DELAY_CYCLE		0
+#elif(PM_DCDC_DELAY_DURATION == 125)
+#define PM_DCDC_DELAY_CYCLE		1
+#elif(PM_DCDC_DELAY_DURATION == 187)
+#define PM_DCDC_DELAY_CYCLE		2
+#elif(PM_DCDC_DELAY_DURATION == 250)
+#define PM_DCDC_DELAY_CYCLE		3
+#endif
+
+
+#define EARLYWAKEUP_TIME_US_SUSPEND 		(PM_DCDC_DELAY_DURATION + PM_XTAL_MANUAL_MODE_DELAY + 175)  //100: code running time margin
+#define EARLYWAKEUP_TIME_US_DEEP    		(PM_DCDC_DELAY_DURATION  + 32)
+#define EMPTYRUN_TIME_US       	    		(EARLYWAKEUP_TIME_US_SUSPEND + 200)
+
+
 
 
 
 #define PM_LONG_SLEEP_WAKEUP_EN			    0 //if user need to make MCU sleep for a long time that is more than 268s, this macro need to be enabled and use "pm_long_sleep_wakeup" function
-#define SYS_CLK_48MRC_EN				    0 //if user take 48M RC as system clock, this macro need to be enabled
 
 /**
  * @brief analog register below can store infomation when MCU in deepsleep mode
@@ -272,10 +291,11 @@ extern unsigned int pm_get_32k_tick(void);
 
 /**
  * @brief   This function serves to initialize MCU
- * @param   none
+ * @param   power mode- set the power mode(LOD mode, DCDC mode, DCDC_LDO mode)
+ * @param   xtal- set this parameter based on external crystal
  * @return  none
  */
-void cpu_wakeup_init(void);
+void cpu_wakeup_init(POWER_MODE_TypeDef power_mode,XTAL_TypeDef xtal) ;
 
 /**
  * @brief   This function serves to recover system timer from tick of internal 32k RC.

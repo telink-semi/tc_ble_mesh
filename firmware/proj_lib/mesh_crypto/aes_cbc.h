@@ -49,6 +49,11 @@
 #else
     #define AES_KEYLEN 16   // Key length in bytes
     #define AES_keyExpSize 176
+	#define AES_128_HW_MODE 1 // use hardware aes128
+#endif
+
+#ifndef AES_128_HW_MODE
+#define AES_128_HW_MODE		0
 #endif
 
 typedef struct
@@ -65,6 +70,8 @@ void AES_init_ctx(AES_ctx* ctx, const uint8_t* key);
 
 //note:padding_buf must AES_BLOCKLEN(16) larger than src_buf.
 void AES128_pkcs7_padding(u8 *src_buf, u32 len, u8 *padding_buf);
+void tn_aes_128(unsigned char *key, unsigned char *plaintext, unsigned char *result);
+int aes_decrypt(unsigned char *Key, unsigned char *Data, unsigned char *Result);
 
 #if (defined(CBC) && (CBC == 1)) || (defined(CTR) && (CTR == 1))
 void AES_init_ctx_iv(AES_ctx* ctx, const uint8_t* key, const uint8_t* iv);

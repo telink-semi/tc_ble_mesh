@@ -93,7 +93,7 @@ extern "C" {
 #define AUDIO_SDM_ENBALE		0//if using sdm playback, should better disable USB MIC
 
 ////////////////////////////////////////////////////
-#define HCI_NONE		0    //ble host on app.c
+#define HCI_USE_NONE    0    //ble host on app.c
 #define HCI_USE_UART	1    //ble host on windows/android/linux through uart  115200
 #define HCI_USE_USB		2    //ble host on windows/android/linux through usb bulk in out
 #define HCI_ACCESS		HCI_USE_USB

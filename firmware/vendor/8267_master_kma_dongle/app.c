@@ -42,6 +42,20 @@
 asm(".equ __PM_DEEPSLEEP_RETENTION_ENABLE,    0");
 asm(".global     __PM_DEEPSLEEP_RETENTION_ENABLE");
 
+asm(".equ __FLASH_512K_ENABLE,    1");
+asm(".global     __FLASH_512K_ENABLE");
+
+asm(".equ __FW_OFFSET,      0");
+asm(".global     __FW_OFFSET");
+
+asm(".equ __BOOT_LOADER_EN,         0");
+asm(".global     __BOOT_LOADER_EN");
+
+asm(".equ __FW_RAMCODE_SIZE_MAX,    0x4000");   // FW_RAMCODE_SIZE_MAX
+asm(".global     __FW_RAMCODE_SIZE_MAX");
+
+asm(".equ __MCU_RUN_SRAM_EN,         0");
+asm(".global     __MCU_RUN_SRAM_EN");
 
 #if (HCI_ACCESS==HCI_USE_UART || HCI_ACCESS==HCI_USE_USB)
 	
@@ -96,63 +110,9 @@ u8 proxy_out_handle =0;
 u8 kma_online_st_handle =0;
 
 #if !WIN32
-#define MESH_ADV_TYPE_PRO	    (0x29)
-#define MESH_ADV_TYPE_MESSAGE   (0x2A)
-#define MESH_ADV_TYPE_BEACON 	(0x2B)
-
 _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
 {
-#define BLE_RCV_FIFO_MAX_CNT 	6
-	u8 next_buffer =1;
-	#if ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
-	rf_packet_adv_t * pAdv = (rf_packet_adv_t *) (raw_pkt + 0);
-	#elif (MCU_CORE_TYPE == MCU_CORE_8269)
-	rf_packet_adv_t * pAdv = (rf_packet_adv_t *) (raw_pkt + 8);
-	#endif
-	u8 adv_type = pAdv->header.type;
-	if(!adv_filter){
-		return next_buffer;
-	}
-	if(blt_sts == BLS_LINK_STATE_CONN){
-		if(ble_state == BLE_STATE_BRX_E){
-			if(adv_type != LL_TYPE_ADV_NONCONN_IND || 
-				((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1))> blt_rxfifo.num-BLE_RCV_FIFO_MAX_CNT-2){
-				return 0;
-			}else{
-				if( ((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1)) > blt_rxfifo.num-BLE_RCV_FIFO_MAX_CNT-2 ){
-					return 0;
-				}
-			}
-		}
-	}else{
-		if(adv_type != LL_TYPE_ADV_NONCONN_IND){
-			return 0;
-		}else{
-			// add the filter part last 
-			if(adv_mesh_en_flag){
-				if( pAdv->data[1] != MESH_ADV_TYPE_PRO || 
-					((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1))>blt_rxfifo.num-4 ){	
-					// not need to reserve fifo for the ble part 
-					return 0;
-				}
-			}else if(mesh_kr_filter_flag){
-				// keybind filter flag ,to improve the envirnment of the gateway part
-				if( pAdv->data[1] != MESH_ADV_TYPE_MESSAGE ||
-					((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1))>blt_rxfifo.num-4 ){
-					return 0;
-				}
-			}else if (mesh_provisioner_buf_enable){
-				if(((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1))>blt_rxfifo.num-2){
-					// special dispatch for the provision only 
-					return 0;
-				}
-			}else if (((blt_rxfifo.wptr - blt_rxfifo.rptr)&(blt_rxfifo.num-1))>blt_rxfifo.num-4){
-					// can not make the fifo overflow 
-				return 0;
-			}else{}
-		}
-	}
-	return next_buffer;
+	return 1;
 }
 #endif
 
@@ -806,17 +766,13 @@ int app_hci_cmd_from_usb (void)
 	return 0;
 }
 
-#ifdef CFG_ADR_MAC
-#undef CFG_ADR_MAC
-#define CFG_ADR_MAC         (0x7f000)   // because new firmware wait for OTA is from  0x20000-0x7a000
-#endif
-
 #define MCU_USB_ID_8267		0x5326
 #define MCU_USB_ID_8269		0x5327
 
 u16 dongle_usb_id =0;
 void user_init()
 {
+	blc_readFlashSize_autoConfigCustomFlashSector();
 	blc_app_loadCustomizedParameters();  //load customized freq_offset cap value and tp value
 
 	//set USB ID
@@ -886,7 +842,7 @@ void user_init()
 
 	// blm part dispatch 
 	extern int host_att_register_idle_func (void *p);
-#if (HCI_ACCESS == HCI_NONE)
+#if (HCI_ACCESS == HCI_USE_NONE)
 	#if (BLE_HOST_SMP_ENABLE)
 		blm_host_smp_init(FLASH_ADR_PARING);
 		blm_smp_registerSmpFinishCb(app_host_smp_finish);
@@ -917,7 +873,7 @@ void user_init()
 		reg_dma_rx_rdy0 = FLD_DMA_CHN_UART_RX | FLD_DMA_CHN_UART_TX; //clear uart rx/tx status
 		uart_BuffInit(hci_rx_fifo_b, hci_rx_fifo.size, hci_tx_fifo_b);
 		blc_register_hci_handler (blc_rx_from_uart, blc_hci_tx_to_uart);
-	#else
+	#elif (HCI_ACCESS == HCI_USE_USB)
 		extern void usb_bulk_drv_init (void *p);
 		usb_bulk_drv_init (0);
 		blc_register_hci_handler (app_hci_cmd_from_usb, blc_hci_tx_to_usb);

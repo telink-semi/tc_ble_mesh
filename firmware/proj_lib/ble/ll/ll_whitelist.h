@@ -186,8 +186,8 @@ u8 * ll_searchAddr_in_WhiteList_and_ResolvingList(u8 type, u8 *addr);
 
 
 #ifndef WIN32
-ll_whiteListTbl_t	ll_whiteList_tbl;
-ll_ResolvingListTbl_t	ll_resolvingList_tbl;
+extern ll_whiteListTbl_t	ll_whiteList_tbl;
+extern ll_ResolvingListTbl_t	ll_resolvingList_tbl;
 #endif
 
 

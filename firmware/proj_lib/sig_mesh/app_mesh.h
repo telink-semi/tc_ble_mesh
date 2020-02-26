@@ -267,6 +267,9 @@ extern const u8	const_tbl_scanRsp [9] ;
 #if MI_SWITCH_LPN_EN
 #define ADV_INTERVAL_MIN		(ADV_INTERVAL_1_2_S)
 #define ADV_INTERVAL_MAX		(ADV_INTERVAL_1_2_S)
+#elif SPIRIT_PRIVATE_LPN_EN
+#define ADV_INTERVAL_MIN		(ADV_INTERVAL_1S)
+#define ADV_INTERVAL_MAX		(ADV_INTERVAL_1S)
 #else
 #define ADV_INTERVAL_MIN		(ADV_INTERVAL_UNIT)
 #define ADV_INTERVAL_MAX		(ADV_INTERVAL_UNIT)
@@ -301,6 +304,9 @@ extern const u8	const_tbl_scanRsp [9] ;
 		#define AIS_TRANSMIT_CNT_DEF		(5)
 		#define AIS_TRANSMIT_INVL_STEPS_DEF	(2)	
 		#endif
+	#elif SPIRIT_PRIVATE_LPN_EN
+#define TRANSMIT_CNT_DEF		(7)
+#define TRANSMIT_INVL_STEPS_DEF	(1)
 	#else
 #define TRANSMIT_CNT_DEF		(5)
 #define TRANSMIT_INVL_STEPS_DEF	(2)
@@ -543,8 +549,8 @@ typedef struct{
 #if IV_UPDATE_SKIP_96HOUR_EN
 #define SEC_NW_BC_INV_DEF_100MS       	(20)	// security network beacon interval default
 #else
-	#if MI_API_ENABLE
-#define SEC_NW_BC_INV_DEF_100MS       	(200)   // set the mi secure beacon to 20s
+	#if (MI_API_ENABLE || SPIRIT_PRIVATE_LPN_EN)
+#define SEC_NW_BC_INV_DEF_100MS       	(200)   // set the mi secure beacon to 20s	
 	#else
 #define SEC_NW_BC_INV_DEF_100MS       	(100)	// security network beacon interval default
 	#endif
@@ -822,6 +828,7 @@ extern mesh_rx_seg_par_t mesh_rx_seg_par;
 #define FRI_REQ_RETRY_IDLE_MS       (FRI_REQ_TIMEOUT_MS - FRI_ESTABLISH_PERIOD_MS)	// auto trigger next FRI_REQ_RETRY_MAX request interval 
 
 #define LPN_SCAN_PROVISION_START_TIMEOUT_MS   (60*1000)   // from power up to this time, if didn't receive provision start command, LPN will auto enter sleep.
+#define LPN_WORKING_TIMEOUT_MS   	(60*1000) // Prevent abnormal working time.
 
 #define LPN_ADV_EN                  0
 #define LPN_ADV_INTERVAL_MS         (2000)
@@ -1399,6 +1406,7 @@ int debug_mesh_report_BLE_st2usb(u8 connect);
 int debug_mesh_report_one_pkt_completed();
 int mesh_get_netkey_idx_appkey_idx(mesh_bulk_cmd_par_t *p_cmd);
 int mesh_tx_cmd_unreliable(material_tx_cmd_t *p);
+void mesh_rsp_delay_set(u32 delay_step, u8 is_seg_ack);
 
 //
 u32 get_transition_100ms(trans_time_t *p_trans_time);
@@ -1447,6 +1455,7 @@ int OnAppendLog_vs(unsigned char *p, int len);
 #endif
 // level part 
 
+void tl_log_msg(u32 level_module,u8 *pbuf,int len,char  *format,...);
 void tl_log_msg_err(u16 module,u8 *pbuf,int len,char *format,...);
 void tl_log_msg_warn(u16 module,u8 *pbuf,int len,char  *format,...);
 void tl_log_msg_info(u16 module,u8 *pbuf,int len,char  *format,...);
@@ -1487,10 +1496,14 @@ void user_log_info(u8 *pbuf,int len,char  *format,...);
 #endif 
 
 #define TL_LOG_LEVEL_DISABLE	  0
-#define TL_LOG_LEVEL_ERROR        1U
-#define TL_LOG_LEVEL_WARNING      2U
-#define TL_LOG_LEVEL_INFO         3U
-#define TL_LOG_LEVEL_DEBUG        4U
+#define TL_LOG_LEVEL_USER         1U    // never use in library.
+#define TL_LOG_LEVEL_LIB          2U    // it will not be optimized in library; some important log.
+#define TL_LOG_LEVEL_ERROR        3U
+#define TL_LOG_LEVEL_WARNING      4U
+#define TL_LOG_LEVEL_INFO         5U
+#define TL_LOG_LEVEL_DEBUG        6U
+#define TL_LOG_LEVEL_MAX          TL_LOG_LEVEL_DEBUG
+
 #if WIN32
 	#if DEBUG_PROXY_FRIEND_SHIP
 #define TL_LOG_LEVEL              TL_LOG_LEVEL_INFO // TL_LOG_LEVEL_WARNING
@@ -1498,15 +1511,9 @@ void user_log_info(u8 *pbuf,int len,char  *format,...);
 #define TL_LOG_LEVEL              TL_LOG_LEVEL_DEBUG
 	#endif
 #else
-#define TL_LOG_LEVEL              TL_LOG_LEVEL_INFO
+#define TL_LOG_LEVEL              TL_LOG_LEVEL_ERROR // TL_LOG_LEVEL_INFO	// Note firmware size
 #endif
 #define MESH_KR_CFG_RETRY_MAX_CNT 	10// or it will wait until keybind timeout 
-
-#define TL_LOG_ERROR_STRING		"[ERR]:"
-#define TL_LOG_WARNING_STRING	"[WARN]:"
-#define TL_LOG_INFO_STRING 		"[INFO]:"
-#define TL_LOG_DEBUG_STRING 	"[DEBUG]:"
-
 
 typedef enum{
 	TL_LOG_MESH         = 0,
@@ -1526,10 +1533,13 @@ typedef enum{
 	TL_LOG_CMD_NAME		,
 	TL_LOG_NODE_SDK_NW_UT   ,
     TL_LOG_IV_UPDATE    ,
+    TL_LOG_GW_VC_LOG	,
     TL_LOG_USER         ,	// never use in library.
 	TL_LOG_MAX,
 }printf_module_enum;
-#define MAX_MODULE_STRING_CNT	20
+
+#define MAX_MODULE_STRING_CNT	16  // don't set too large to save firmware size
+#define MAX_LEVEL_STRING_CNT	12  // don't set too large to save firmware size
 
 #if WIN32
 #define MAX_STRCAT_BUF		1024
@@ -1538,11 +1548,11 @@ typedef enum{
 	#else
 #define TL_LOG_SEL_VAL	(BIT(TL_LOG_PROVISION)|BIT(TL_LOG_GATT_PROVISION)|BIT(TL_LOG_GATEWAY)   \
                         |BIT(TL_LOG_COMMON)|BIT(TL_LOG_KEY_BIND)|BIT(TL_LOG_CMD_RSP)|BIT(TL_LOG_CMD_NAME)|\
-                        BIT(TL_LOG_WIN32)|BIT(TL_LOG_IV_UPDATE)|BIT(TL_LOG_NODE_BASIC)|BIT(TL_LOG_REMOTE_PROV))
+                        BIT(TL_LOG_WIN32)|BIT(TL_LOG_IV_UPDATE)|BIT(TL_LOG_NODE_BASIC)|BIT(TL_LOG_REMOTE_PROV)|BIT(TL_LOG_GW_VC_LOG))
 	#endif
 #else
 // just for node part 
-#define MAX_STRCAT_BUF		48
+#define MAX_STRCAT_BUF		(MAX_MODULE_STRING_CNT + MAX_LEVEL_STRING_CNT + 4)  //
 	#if 1
 #define TL_LOG_SEL_VAL	(BIT(TL_LOG_USER))//(BIT(TL_LOG_NODE_SDK)|BIT(TL_LOG_FRIEND)|BIT(TL_LOG_IV_UPDATE)) // |BIT(TL_LOG_NODE_SDK_NW_UT)
 	#else
@@ -1550,35 +1560,45 @@ typedef enum{
 	#endif
 #endif
 
+#define LOG_GET_LEVEL_MODULE(level, module)     ((level << 5) | module) // use 8bit to decrease firmware size
+#define LOG_GET_MODULE(level_module)            (level_module & 0x1F)
+#define LOG_GET_LEVEL(level_module)             ((level_module >> 5) & 0x07)
+
+#if HCI_LOG_FW_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_USER)
+#define LOG_USER_MSG_INFO(pbuf,len,format,...)  tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_USER,TL_LOG_USER),pbuf,len,format,__VA_ARGS__)
+#else
+#define LOG_USER_MSG_INFO(pbuf,len,format,...)
+#endif
+
+#if (TL_LOG_LEVEL >= TL_LOG_LEVEL_LIB)
+#define LOG_MSG_LIB(module,pbuf,len,format,...)  tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_LIB,module),pbuf,len,format,__VA_ARGS__)
+#else
+#define LOG_MSG_LIB(module,pbuf,len,format,...) 
+#endif 
+
 #if (TL_LOG_LEVEL >= TL_LOG_LEVEL_ERROR)
-#define LOG_MSG_ERR(module,pbuf,len,format,...)  tl_log_msg_err(module,pbuf,len,format,__VA_ARGS__)
+#define LOG_MSG_ERR(module,pbuf,len,format,...)  tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_ERROR,module),pbuf,len,format,__VA_ARGS__)
 #else
 #define LOG_MSG_ERR(module,pbuf,len,format,...) 
 #endif 
 
 #if (TL_LOG_LEVEL >= TL_LOG_LEVEL_WARNING)
-#define LOG_MSG_WARN(module,pbuf,len,format,...) tl_log_msg_warn(module,pbuf,len,format,__VA_ARGS__)
+#define LOG_MSG_WARN(module,pbuf,len,format,...) tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_WARNING,module),pbuf,len,format,__VA_ARGS__)
 #else
 #define LOG_MSG_WARN(module,pbuf,len,format,...) 
 #endif 
 
 #if (TL_LOG_LEVEL >= TL_LOG_LEVEL_INFO)
-#define LOG_MSG_INFO(module,pbuf,len,format,...) tl_log_msg_info(module,pbuf,len,format,__VA_ARGS__)
+#define LOG_MSG_INFO(module,pbuf,len,format,...) tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_INFO,module),pbuf,len,format,__VA_ARGS__)
 #else
 #define LOG_MSG_INFO(module,pbuf,len,format,...) 
 #endif
 
 #if (TL_LOG_LEVEL >= TL_LOG_LEVEL_DEBUG)
-#define LOG_MSG_DBG(module,pbuf,len,format,...)	tl_log_msg_dbg(module,pbuf,len,format,__VA_ARGS__)
+#define LOG_MSG_DBG(module,pbuf,len,format,...)	tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_DEBUG,module),pbuf,len,format,__VA_ARGS__)
 #else
 #define LOG_MSG_DBG(module,pbuf,len,format,...) 
 #endif 
-
-#if HCI_LOG_FW_EN
-#define LOG_USER_MSG_INFO(pbuf,len,format,...)  user_log_info(pbuf,len,format,__VA_ARGS__)
-#else
-#define LOG_USER_MSG_INFO(pbuf,len,format,...)
-#endif
 
 
 #define LOG_MSG_FUNC_NAME()     do{LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "%s", __FUNCTION__);}while(0)

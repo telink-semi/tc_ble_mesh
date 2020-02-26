@@ -87,7 +87,7 @@ void encode_password_ll(u8 *sk_user, u8 *pd, u32 pd_len, int mic_len); // pd_len
 int decode_password_ll(u8 *sk_user, u8 *pd, u32 pd_len, int mic_len); // pd_len include mic
 
 
-extern u8 security_enable;
+#define SECURITY_ENABLE     (1) // use in library, if 0, it must be provisioned before.  //extern u8 security_enable;
 
 //------------------ define----
 #define NONCE_TYPE_NETWORK      0x00

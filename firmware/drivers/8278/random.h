@@ -23,12 +23,12 @@
 #pragma once
 
 
-/**
- * @brief     This function performs to initials random generator post.
- * @param[in] none.
- * @return    none.
- */
-void random_generator_init(void);
+
+#define  RANDOM_OLD_MODE          0 //This macro definition is only turned on when using the random number module of the ADC.
+#define  RANDOM_NEW_MODE          1 //This is the random number of the TRNG module
+
+
+
 
 /**
  * @brief     This function performs to get one random number.
@@ -37,13 +37,38 @@ void random_generator_init(void);
  * @param[in] none.
  * @return    the value of one random number.
  */
-unsigned int rand(void);
+void random_generator_init(void);
 
 /**
- * @brief     This function performs to get a serial of random number.
+ * @brief     This function performs to get one random number
+ * @param[in] none.
+ * @return    the value of one random number.
+ */
+unsigned int rand(void);
+
+
+
+/**
+ * @brief This function serves to set adc sampling and get results.
+ * @param[in]  none.
+ * @return the result of sampling.
+ */
+unsigned short adc_rng_result(void);
+
+
+/**
+ * @brief This function is used for ADC configuration of ADC supply voltage sampling.
+ * @return none
+ */
+void rng_init(void);
+
+
+
+/**
+ * @brief      This function performs to get a serial of random number.
  * @param[in]  len- the length of random number
  * @param[in]  data - the first address of buffer store random number in
- * @return    the result of a serial of random number.
+ * @return     the result of a serial of random number..
  */
 void generateRandomNum(int len, unsigned char *data);
 

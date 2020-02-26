@@ -31,6 +31,39 @@
 #include "proj/mcu/watchdog_i.h"
 #include "proj_lib/ble/blt_config.h"
 
+_attribute_aligned_(4)	Flash_CapacityDef	flash_capacity;
+#if FLASH_1M_ENABLE
+u32 flash_sector_mac_address = CFG_ADR_MAC_1M_FLASH;
+u32 flash_sector_calibration = CFG_ADR_CALIBRATION_1M_FLASH;
+#else
+u32 flash_sector_mac_address = CFG_ADR_MAC_512K_FLASH;			//default flash is 512k
+u32 flash_sector_calibration = CFG_ADR_CALIBRATION_512K_FLASH;	//default flash is 512k
+#endif
+
+void blc_readFlashSize_autoConfigCustomFlashSector(void)
+{
+	u8 temp_buf[4];
+	flash_read_mid(temp_buf);
+	u8	flash_cap = temp_buf[2];
+
+	if(flash_cap == FLASH_SIZE_512K){
+		flash_sector_mac_address = CFG_ADR_MAC_512K_FLASH;
+		flash_sector_calibration = CFG_ADR_CALIBRATION_512K_FLASH;
+	}
+	else if(flash_cap == FLASH_SIZE_1M){
+		flash_sector_mac_address = CFG_ADR_MAC_1M_FLASH;
+		flash_sector_calibration = CFG_ADR_CALIBRATION_1M_FLASH;
+	}
+	else{
+		//This SDK do not support flash size other than 512K/1M
+		//If code stop here, please check your Flash
+		while(1);
+	}
+
+
+	flash_set_capacity(flash_cap);
+}
+
 static inline int flash_is_busy(){
 	return mspi_read() & 0x01;				//  the busy bit, pls check flash spec
 }
@@ -390,6 +423,32 @@ unsigned long flash_subregion_read_val (unsigned long adr, unsigned long flag_in
 }
 #endif
 
+/**
+ * @brief	  MAC id. Before reading UID of flash, you must read MID of flash. and then you can
+ *            look up the related table to select the idcmd and read UID of flash
+ * @param[in] buf - store MID of flash
+ * @return    none.
+ */
+#if (!__PROJECT_BOOTLOADER__)
+_attribute_ram_code_ void flash_read_mid(unsigned char *buf){
+	unsigned char j = 0;
+	unsigned char r = irq_disable();
+	flash_send_cmd(FLASH_GET_JEDEC_ID);
+	mspi_write(0x00);		/* dummy,  to issue clock */
+	mspi_wait();
+	mspi_ctrl_write(0x0a);	/* auto mode */
+	mspi_wait();
+
+	for(j = 0; j < 3; ++j){
+		*buf++ = mspi_get();
+		mspi_wait();
+	}
+	mspi_high();
+
+	irq_restore(r);
+}
+#endif
+
 /* according to your appliaction */
 #if 0
 #if 0   // function in ram code will be compiled into flash, even though it has never been called.
@@ -560,29 +619,6 @@ _attribute_ram_code_ void flash_release_deep_powerdown(void)
 #endif
 
 /**
- * @brief	  MAC id. Before reading UID of flash, you must read MID of flash. and then you can
- *            look up the related table to select the idcmd and read UID of flash
- * @param[in] buf - store MID of flash
- * @return    none.
- */
-_attribute_ram_code_ void flash_read_mid(unsigned char *buf){
-	unsigned char j = 0;
-	unsigned char r = irq_disable();
-	flash_send_cmd(FLASH_GET_JEDEC_ID);
-	mspi_write(0x00);		/* dummy,  to issue clock */
-	mspi_wait();
-	mspi_ctrl_write(0x0a);	/* auto mode */
-	mspi_wait();
-
-	for(j = 0; j < 3; ++j){
-		*buf++ = mspi_get();
-		mspi_wait();
-	}
-	mspi_high();
-
-	irq_restore(r);
-}
-/**
  * @brief	  UID. Before reading UID of flash, you must read MID of flash. and then you can
  *            look up the related table to select the idcmd and read UID of flash
  * @param[in] idcmd - get this value to look up the table based on MID of flash
@@ -716,3 +752,13 @@ _attribute_ram_code_ void flash_unlock(Flash_TypeDef type)
 #endif
 #endif
 
+
+void flash_set_capacity(Flash_CapacityDef flash_cap)
+{
+	flash_capacity = flash_cap;
+}
+
+Flash_CapacityDef flash_get_capacity(void)
+{
+	return flash_capacity;
+}

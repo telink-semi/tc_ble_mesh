@@ -29,6 +29,9 @@
 #include "common.h"
 #include "proj_lib/ble/blt_config.h"
 
+#define 		FLASH_ADR_DC                	CUST_CAP_INFO_ADDR  // 0xFE000
+#define 		FLASH_ADR_MAC               	CFG_ADR_MAC         // 0xFF000
+
 /* ------------------------------------
     Macro Definitions
    ------------------------------------ */

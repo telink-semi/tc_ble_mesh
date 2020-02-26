@@ -193,7 +193,7 @@ static u8 my_OtaProp		= CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP;
 const u8  my_OtaName[] = {'O', 'T', 'A'};
 u8	 	my_OtaData 		= 0x00;
 // pb-gatt 
-const u8 my_pb_gattUUID[2]=SIG_MESH_PROVISION_SERVICE;
+u8 my_pb_gattUUID[2]=SIG_MESH_PROVISION_SERVICE;
 
 const u8 my_pb_gatt_out_UUID[2]= SIG_MESH_PROVSIION_DATA_OUT;
 //static u8 my_pb_gatt_out_prop = CHAR_PROP_NOTIFY;
@@ -209,8 +209,7 @@ u8 	my_pb_gattInData[2] =MESH_PROVISON_DATA;
 extern u8  provision_In_ccc[2];
 extern u8  provision_Out_ccc[2];
 
-const u8 my_unused_gattUUID[2] = SIG_MESH_ATT_UNUSED;
-const u8 my_proxy_gattUUID[2]= SIG_MESH_PROXY_SERVICE;
+u8 my_proxy_gattUUID[2]= SIG_MESH_PROXY_SERVICE;
 
 const u8 my_proxy_out_UUID[2]= SIG_MESH_PROXY_DATA_OUT;
 static u8 my_proxy_out_prop = CHAR_PROP_NOTIFY;
@@ -592,74 +591,6 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 	{0,&att_perm_auth_read, 2,sizeof (online_st_service_desc),(u8*)(&userdesc_UUID), (u8*)(online_st_service_desc), 0},
 #endif      
 
-#if ATT_TAB_SWITCH_ENABLE
-// TM : to modify
-const attribute_t my_Attributes_provision[] = {
-	MY_ATTRIBUTE_BASE0
-	
-    /* 0011 - 0019      PB-GATT*/
-    {9,&att_perm_auth_read, 2,2,(u8*)(&my_primaryServiceUUID),  (u8*)(&my_pb_gattUUID), 0},
-    MY_ATTRIBUTE_PB_GATT_CHAR
-    
-    /* 001a - 0022  PROXY_GATT PART*/
-    {9,&att_perm_auth_read, 2,2,(u8*)(&my_primaryServiceUUID),  (u8*)(&my_unused_gattUUID), 0},
-    MY_ATTRIBUTE_PROXY_GATT_CHAR
-
-#if USER_DEFINE_SET_CCC_ENABLE
-	// 0023 - 0026	userdefine 
-	MY_ATTRIBUTE_USER_DEFINE_SET_CCC
-#endif
-
-#if MI_API_ENABLE
-    MY_ATTRIBUTE_MI_API
-#endif
-
-    MY_ATTRIBUTE_SERVICE_CHANGE
-    
-#if (AIS_ENABLE)
-	// 002c - 0037
-	MY_ATTRIBUTE_AIS
-#endif
-
-#if (ONLINE_STATUS_EN)
-    MY_ATTRIBUTE_ONLINE_STATUS
-#endif      
-};
-
-// TM : to modify
-const attribute_t my_Attributes_proxy[] = {
-	MY_ATTRIBUTE_BASE0
-	
-    /* 0011 - 0019      PB-GATT*/
-    {9,&att_perm_auth_read, 2,2,(u8*)(&my_primaryServiceUUID),  (u8*)(&my_unused_gattUUID), 0},
-    MY_ATTRIBUTE_PB_GATT_CHAR
-    
-    /* 001a - 0022  PROXY_GATT PART*/
-    {9,&att_perm_auth_read, 2,2,(u8*)(&my_primaryServiceUUID),  (u8*)(&my_proxy_gattUUID), 0},
-    MY_ATTRIBUTE_PROXY_GATT_CHAR
-
-#if USER_DEFINE_SET_CCC_ENABLE
-	// 0023 - 0026	userdefine 
-	MY_ATTRIBUTE_USER_DEFINE_SET_CCC
-#endif
-
-#if MI_API_ENABLE
-    MY_ATTRIBUTE_MI_API
-#endif
-
-    MY_ATTRIBUTE_SERVICE_CHANGE
-    
-#if (AIS_ENABLE)
-	// 002c - 0037
-	MY_ATTRIBUTE_AIS
-#endif
-
-#if (ONLINE_STATUS_EN)
-    MY_ATTRIBUTE_ONLINE_STATUS
-#endif      
-};
-
-#else
 const attribute_t my_Attributes[] = {
 	MY_ATTRIBUTE_BASE0
 	
@@ -692,21 +623,22 @@ const attribute_t my_Attributes[] = {
 #endif      
 };
 
-#endif 
-
-
 void my_att_init(u8 mode)
 {
 	u8 device_name[] = DEV_NAME;
 	bls_att_setDeviceName(device_name, sizeof(DEV_NAME));
-#if ATT_TAB_SWITCH_ENABLE
-	if(mode == GATT_PROVISION_MODE){
-		bls_att_setAttributeTable ((u8 *)my_Attributes_provision);
-	}else if(mode == GATT_PROXY_MODE){
-		bls_att_setAttributeTable ((u8 *)my_Attributes_proxy);
-	}
-#else
 	bls_att_setAttributeTable ((u8 *)my_Attributes);
+#if ATT_TAB_SWITCH_ENABLE
+    u8 unused_gattUUID[2] = SIG_MESH_ATT_UNUSED;
+	if(mode == GATT_PROVISION_MODE){
+        u8 pb_gattUUID[2]=SIG_MESH_PROVISION_SERVICE;
+		memcpy(my_pb_gattUUID, pb_gattUUID, sizeof(my_pb_gattUUID));
+		memcpy(my_proxy_gattUUID, unused_gattUUID, sizeof(my_proxy_gattUUID));
+	}else if(mode == GATT_PROXY_MODE){
+        u8 proxy_gattUUID[2]= SIG_MESH_PROXY_SERVICE;
+		memcpy(my_pb_gattUUID, unused_gattUUID, sizeof(my_pb_gattUUID));
+		memcpy(my_proxy_gattUUID, proxy_gattUUID, sizeof(my_proxy_gattUUID));
+	}
 #endif 
 }
 

@@ -998,6 +998,7 @@ enum{
 	MIC_VOL_CONTROL_m30DB = 		0x0c,
 	MIC_VOL_CONTROL_m24DB = 		0x10,
 	MIC_VOL_CONTROL_m18DB = 		0x14,
+	MIC_VOL_CONTROL_m16DB = 		0x15,
 	MIC_VOL_CONTROL_m12DB = 		0x18,
 	MIC_VOL_CONTROL_m6DB  = 	   	0x1c,
 	MIC_VOL_CONTROL_0DB   = 	    0x20,
@@ -1281,6 +1282,27 @@ enum{
 
 
 /*******************************      analog registers(1v8): 0x80      ***************************/
+#define areg_auto_pd_ctrl_0				0x2B
+enum{
+	FLD_AUTO_PD_PL_ALL			  = BIT(0),
+	FLD_AUTO_PD_PL_DCDC 		  = BIT(1),
+
+};
+
+#define areg_auto_pd_ctrl_1				0x2C
+enum{
+	FLD_AUTO_PD_RC_32K			  = BIT(0),
+	FLD_AUTO_PD_XTAL_32K 		  = BIT(1),
+	FLD_AUTO_PD_XTAL_24M		  = BIT(2),
+	FLD_AUTO_PD_LC_COMP		  	  = BIT(3),
+	FLD_AUTO_PD_MISC			  = BIT(4),
+	FLD_AUTO_PD_XTAL_QUICK_RST 	  = BIT(5),
+	FLD_AUTO_PD_OTP			      = BIT(6),
+    // <7> rsvd
+};
+
+
+
 #define areg_clk_setting				0x82
 enum{
 	FLD_DCCC_DOUBLER_POWER_DOWN	  = BIT(3),
@@ -1298,6 +1320,7 @@ enum{
 };
 
 /*******************************        analog registers(PGA)        ***************************/
+#define codec_ana_cfg2				   0xe6
 #define codec_ana_cfg3                 0xe7
 #define codec_ana_cfg4                 0xe8
 #define pga_audio_enable               0x34

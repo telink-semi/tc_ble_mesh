@@ -81,8 +81,8 @@ typedef struct {
 
 extern lpn_deep_handle_t lpn_deep_handle;
 extern u8 mesh_lpn_rx_master_key;
-extern u8 friend_subsc_tx_later;
 extern u8 send_gatt_adv_now_flag;
 extern u8 fri_request_retry_max;
 extern u8 lpn_deep_retention_en;
 extern u16 lpn_establish_win_ms;
+extern u32 lpn_wakeup_tick;

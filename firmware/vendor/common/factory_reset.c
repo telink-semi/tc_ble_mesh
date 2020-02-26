@@ -33,6 +33,7 @@ void show_ota_result(int result);
 void show_factory_reset();
 int factory_reset();
 void set_firmware_type_init();
+int mesh_reset_network(u8 provision_enable);
 
 extern u8 manual_factory_reset;
 
@@ -317,6 +318,10 @@ int factory_reset() // 1M flash
 	}
 
 	// no area2
+	
+    #if (DUAL_MODE_ADAPT_EN && FLASH_ADR_MESH_TYPE_FLAG > FLASH_ADR_AREA_1_END)
+    flash_erase_sector(FLASH_ADR_MESH_TYPE_FLAG);
+    #endif
 
 	#if HOMEKIT_EN
         #if 1

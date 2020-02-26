@@ -47,5 +47,6 @@ u8 gateway_upload_prov_cmd(u8 *p_cmd,u8 cmd);
 u8 gateway_upload_prov_rsp_cmd(u8 *p_rsp,u8 cmd);
 u8 gateway_upload_prov_link_cls(u8 *p_rsp,u8 len);
 u8 gateway_upload_prov_link_open(u8 *p_cmd,u8 len);
+u8 gateway_upload_log_info(u8 *p_buf,u8 len ,char *format,...); //gateway upload the print info to the vc
 
 

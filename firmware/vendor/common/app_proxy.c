@@ -25,7 +25,7 @@
 #include "app_beacon.h"
 #include "app_proxy.h"
 #include "../../proj_lib/sig_mesh/app_mesh.h"
-proxy_msg_str  proxy_msg;
+
 proxy_config_mag_str proxy_mag;
 mesh_proxy_protocol_sar_t  proxy_sar;
 u8 proxy_filter_initial_mode = FILTER_WHITE_LIST;
@@ -265,7 +265,7 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 	switch(p_str->opcode & 0x3f){
 		case PROXY_FILTER_SET_TYPE:
 			// switch the list part ,and if switch ,it should clear the certain list 
-			LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"set filter type %d ",p_str->para[0]);
+			LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"set filter type %d ",p_str->para[0]);
 			proxy_mag.filter_type = p_str->para[0];
 			p_list_dst = get_filter_pointer(proxy_mag.filter_type);
 			memset(p_list_dst,0,sizeof(list_mag_str));
@@ -276,7 +276,7 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 			// we suppose the num is 2
 			// 18 means nid(1)ttl(1) sno(3) src(2) dst(2) opcode(1) encpryt(8)
 			para_len = len-18;
-			LOG_MSG_INFO(TL_LOG_NODE_SDK,p_addr,para_len,"add filter adr part ",0);
+			LOG_MSG_LIB(TL_LOG_NODE_SDK,p_addr,para_len,"add filter adr part ",0);
 			for(i=0;i<para_len/2;i++){
 				// swap the endiness part 
 				endianness_swap_u16(p_addr+2*i);
