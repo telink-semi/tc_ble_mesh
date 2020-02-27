@@ -25,6 +25,16 @@
 #include "../../proj/tl_common.h"
 #include "../../vendor/common/mesh_node.h"
 
+/** @addtogroup Mesh_Common
+  * @{
+  */
+  
+/** @defgroup Light
+  * @brief Light Code.
+  * @{
+  */
+
+
 #define LED_INDICATE_VAL    (rgb_lumen_map[100])
 #define LED_INDICATE_LUM_VAL LED_INDICATE_VAL
 
@@ -129,7 +139,7 @@
 
 #define POWER_MODEL_EN			1
 
-enum{
+enum ST_TRANS_TYPE{
 	ST_TRANS_LIGHTNESS  	= 0,	// share with power level
 	#if (LIGHT_TYPE_CT_EN)
 	ST_TRANS_CTL_TEMP,
@@ -376,4 +386,12 @@ void increase_rx_onoff_cnt();
 u16 get_rx_cnts();
 void light_transition_onoff_manual(u8 onoff, u8 transit_t, u8 light_idx);
 
+
+/**
+  * @}
+  */
+    
+/**
+  * @}
+  */
 

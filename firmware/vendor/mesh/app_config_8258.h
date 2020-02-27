@@ -88,7 +88,11 @@ extern "C" {
 
 #define HCI_LOG_FW_EN   0
 #if HCI_LOG_FW_EN
+	#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define DEBUG_INFO_TX_PIN           		GPIO_PD7
+	#else
 #define DEBUG_INFO_TX_PIN           		GPIO_PB2
+	#endif
 #define PRINT_DEBUG_INFO                    1
 #endif
 

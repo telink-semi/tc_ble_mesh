@@ -12,7 +12,7 @@
 //#include "../../../proj_lib/mesh_crypto/ecc_dsa.h"
 #include "../mesh_common.h"
 #include "../ev.h"
-#include "./certi/third_party/micro-ecc/uEcc.h"
+#include "./certi/third_party/micro-ecc/uECC.h"
 #include "./certi/third_party/micro-ecc/types.h"
 
 #if MI_API_ENABLE

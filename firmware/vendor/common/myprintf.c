@@ -30,8 +30,13 @@
 _attribute_ram_code_ static void uart_put_char(u8 byte){
 	u8 j = 0;
 	u32 t1 = 0,t2 = 0;
-	
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+	gpio_set_func(DEBUG_INFO_TX_PIN, AS_GPIO);
+	gpio_set_output_en(DEBUG_INFO_TX_PIN, 1);
+	gpio_set_input_en(DEBUG_INFO_TX_PIN, 0);
+#else
 	REG_ADDR8(0x582+((DEBUG_INFO_TX_PIN>>8)<<3)) &= ~(DEBUG_INFO_TX_PIN & 0xff) ;//Enable output
+#endif
 	u32 pcTxReg = (0x583+((DEBUG_INFO_TX_PIN>>8)<<3));//register GPIO output
 	u8 tmp_bit0 = read_reg8(pcTxReg) & (~(DEBUG_INFO_TX_PIN & 0xff));
 	u8 tmp_bit1 = read_reg8(pcTxReg) | (DEBUG_INFO_TX_PIN & 0xff);

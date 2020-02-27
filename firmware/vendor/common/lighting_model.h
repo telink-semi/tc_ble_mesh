@@ -25,6 +25,17 @@
 #include "../../proj/tl_common.h"
 #include "../../proj_lib/sig_mesh/app_mesh.h"
 
+
+/** @addtogroup Mesh_Common
+  * @{
+  */
+
+/** @defgroup Lighting_Model
+  * @brief Lighting Models Code.
+  * @{
+  */
+
+
 //----------------------------------- op code
 // op cmd 0xxxxxxx (SIG)
 
@@ -281,5 +292,13 @@ int mesh_range_st_rsp(u8 st, mesh_cb_fun_par_t *cb_par, int st_trans_type);
 // access_cmd
 int access_cmd_get_lightness(u16 adr,u32 rsp_max);
 int access_cmd_set_lightness(u16 adr, u8 rsp_max, u16 lightness, int ack, transition_par_t *trs_par);
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 

@@ -317,11 +317,10 @@ int factory_reset() // 1M flash
 		}
 	}
 
+	if((FLASH_ADR_MESH_TYPE_FLAG < FLASH_ADR_AREA_1_START) || (FLASH_ADR_MESH_TYPE_FLAG >= FLASH_ADR_AREA_1_END)){
+        flash_erase_sector(FLASH_ADR_MESH_TYPE_FLAG);
+    }
 	// no area2
-	
-    #if (DUAL_MODE_ADAPT_EN && FLASH_ADR_MESH_TYPE_FLAG > FLASH_ADR_AREA_1_END)
-    flash_erase_sector(FLASH_ADR_MESH_TYPE_FLAG);
-    #endif
 
 	#if HOMEKIT_EN
         #if 1

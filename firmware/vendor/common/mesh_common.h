@@ -33,6 +33,16 @@
 #include "scheduler.h"
 #include "mesh_property.h"
 
+/** @addtogroup Mesh_Common
+  * @{
+  */
+  
+/** @defgroup Mesh_Common
+  * @brief Mesh Common Code.
+  * @{
+  */
+
+
 #ifndef HCI_LOG_FW_EN
 #define HCI_LOG_FW_EN   0
 #endif
@@ -257,4 +267,14 @@ void blc_l2cap_register_pre_handler(void *p);
 uint32_t soft_crc32_telink(const void *buf, size_t size, uint32_t crc);
 #endif
 void vendor_md_cb_pub_st_set2ali();
+
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
 

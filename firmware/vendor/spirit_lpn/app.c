@@ -416,6 +416,8 @@ void spirit_lpn_ui_init(){
 	cpu_set_gpio_wakeup(SW2_GPIO, 0, 1);
 	gpio_set_wakeup(SW2_GPIO, 0, 1);
 	gpio_core_wakeup_enable_all(1);
+
+	bls_pm_setWakeupSource(PM_WAKEUP_PAD);  //gpio pad wakeup suspend/deepsleep
 }
 
 void user_init()

@@ -72,6 +72,44 @@ enum{
 };
 
 
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+/*** static sector information ***/
+
+/* macro for the offset of the data element
+ *
+ * note: make sure you update the new element when you add to dev_info_t!
+ * 
+ */
+
+
+/* * All the data are aligned 16 bytes for ease of use and read * */
+typedef struct {
+    // 0x00
+	u8 mac_mesh[6];
+	u8 rsv1[10];
+    // 0x10
+	u8 mac_zigbee[8];
+	u8 rsv2[8];
+    // 0x20
+	u8 freq_offset; // for both mesh and zigbee
+	u8 rsv3[15];
+    // 0x30
+	u8 mesh_static_oob[16];
+    // 0x40
+	u8 zb_pre_install_code[17];
+	u8 rsv4[15];
+} static_dev_info_t;
+
+#define STATIC_ADDR_MAC_MESH	    OFFSETOF(static_dev_info_t, mac_mesh)
+#define STATIC_ADDR_MAC_ZB		    OFFSETOF(static_dev_info_t, mac_zigbee)
+#define STATIC_ADDR_FREQ_OFFSET		OFFSETOF(static_dev_info_t, freq_offset)
+#define STATIC_ADDR_MESH_STATIC_OOB OFFSETOF(static_dev_info_t, mesh_static_oob)
+#define STATIC_ZB_PRE_INSTALL_CODE  OFFSETOF(static_dev_info_t, zb_pre_install_code)
+
+#define CHECKSUM_ADDR			    0xFC0 /* TBD: temporary use the last 64 bytes */
+/* end of static sector information */
+#endif
+
 /////////////////// Flash  Address Config ////////////////////////////
 #define	FLASH_SECTOR_SIZE       (4096)
 
@@ -168,38 +206,39 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_PAR_USER_MAX		0x80000
 #else // 1M flash
 #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-#define			FLASH_ADR_AREA_1_START		0xE0000
+#define         FLASH_ADR_EDCH_PARA_SECTOR	0x23000
+#define			FLASH_ADR_MESH_TYPE_FLAG	0x24000	// don't change, must same with zigbee mesh SDK
+#define			FLASH_ADR_RESET_CNT			0x25000
+
+#define			FLASH_ADR_AREA_1_START		0x26000
 #define			FLASH_ADR_MESH_KEY			FLASH_ADR_AREA_1_START
-#define			FLASH_ADR_MD_CFG_S			0xE1000
-#define			FLASH_ADR_MD_HEALTH			0xE2000
-#define			FLASH_ADR_MD_G_ONOFF_LEVEL	0xE3000
-#define			FLASH_ADR_MD_TIME_SCHEDULE	0xE4000
-#define			FLASH_ADR_MD_LIGHTNESS		0xE5000	// share with power level
-#define			FLASH_ADR_MD_LIGHT_CTL		0xE6000
-#define			FLASH_ADR_MD_LIGHT_LC		0xE7000
-#define			FLASH_ADR_SW_LEVEL			0xE8000
-#define   		FLASH_ADR_MD_SENSOR			0xE9000
-#define 		FLASH_ADR_PROVISION_CFG_S	0xEA000
-#define			FLASH_ADR_MD_LIGHT_HSL		0xEB000 // cps before V23
-#define			FLASH_ADR_FRIEND_SHIP		0xEC000
-#define			FLASH_ADR_MISC				0xED000
-#define			FLASH_ADR_RESET_CNT			0xEE000
-#define			FLASH_ADR_MD_PROPERTY		0xEF000 // just test
-#define			FLASH_ADR_MD_VD_LIGHT		0xF0000
-#define			FLASH_ADR_MD_G_POWER_ONOFF	0xF1000
-#define			FLASH_ADR_MD_SCENE			0xF2000
-#define			FLASH_ADR_MD_MESH_OTA		0xF3000
-#define         FLASH_ADR_MD_REMOTE_PROV    0xF4000 // remote provision part 
-#define 		FLASH_ADR_VC_NODE_INFO		0xF5000		//
-#define			FLASH_ADR_AREA_1_END		0xF6000
+#define			FLASH_ADR_MD_CFG_S			0x27000
+#define			FLASH_ADR_MD_HEALTH			0x28000
+#define			FLASH_ADR_MD_G_ONOFF_LEVEL	0x29000
+#define			FLASH_ADR_MD_TIME_SCHEDULE	0x2A000
+#define			FLASH_ADR_MD_LIGHTNESS		0x2B000	// share with power level
+#define			FLASH_ADR_MD_LIGHT_CTL		0x2C000
+#define			FLASH_ADR_MD_LIGHT_LC		0x2D000
+#define			FLASH_ADR_SW_LEVEL			0x2E000
+#define   		FLASH_ADR_MD_SENSOR			0x2F000
+#define 		FLASH_ADR_PROVISION_CFG_S	0x30000
+#define			FLASH_ADR_MD_LIGHT_HSL		0x31000 // cps before V23
+#define			FLASH_ADR_FRIEND_SHIP		0x32000
+#define			FLASH_ADR_MISC				0x33000
+#define			FLASH_ADR_MD_PROPERTY		0x34000 // just test
+#define			FLASH_ADR_MD_VD_LIGHT		0x35000
+#define			FLASH_ADR_MD_G_POWER_ONOFF	0x36000
+#define			FLASH_ADR_MD_SCENE			0x37000
+#define			FLASH_ADR_MD_MESH_OTA		0x38000
+#define         FLASH_ADR_MD_REMOTE_PROV    0x39000 // remote provision part 
+#define 		FLASH_ADR_VC_NODE_INFO		0x3A000		//
+#define			FLASH_ADR_AREA_1_END		0x3B000
 // FLASH_ADR_AREA_1_END to start of user is reserve for telink
 /*******SIG mesh vendor define here, from FLASH_ADR_USER_MESH_END ~ FLASH_ADR_USER_MESH_START, vendor define from behined to head should be better, .*/
-#define			FLASH_ADR_USER_MESH_START	0xF9000
+//#define			FLASH_ADR_USER_MESH_START	0x3E000
 
-#define			FLASH_ADR_USER_MESH_END	    0xFC000
+//#define			FLASH_ADR_USER_MESH_END	    0x40000
 
-#define         FLASH_ADR_STATIC_OOB	    0xFC001 // 0xFC000 is type of pre-install key
-#define			FLASH_ADR_MESH_TYPE_FLAG	0xFD000	// don't change, must same with zigbee mesh SDK
 // 0xFE000: CUST_CAP_INFO_ADDR;  0xFF000: CFG_ADR_MAC (with FLASH_ADR_EDCH_PARA);  
 /*MESH_IRONMAN_MENLO_ENABLE end*/
 #elif(0 ==SWITCH_FW_ENABLE) // normal mode
@@ -355,6 +394,12 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #endif
 		
 #define		CFG_ADR_MAC					flash_sector_mac_address
+#if ((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE) && (!__PROJECT_8267_MASTER_KMA_DONGLE__))
+//#define		    CUST_CAP_INFO_ADDR			flash_sector_calibration // == (CFG_ADR_MAC + STATIC_ADDR_FREQ_OFFSET)
+#define         FLASH_ADR_STATIC_OOB	    (CFG_ADR_MAC + STATIC_ADDR_MESH_STATIC_OOB)
+#define         FLASH_ADR_EDCH_PARA		    (FLASH_ADR_EDCH_PARA_SECTOR) // size = 0x68 = sizeof(mesh_ecdh_key_str)
+#define 		SECTOR_PAR_SIZE_MAX			        0x100
+#else
 #if (0 == FW_START_BY_BOOTLOADER_EN)
 #define			CFG_ADR_DUAL_MODE_EN		(flash_sector_mac_address + 0x80)
 #endif
@@ -371,8 +416,9 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			CUST_TP_INFO_ADDR			(flash_sector_calibration + 0x40)
 #define			CUST_RC32K_CAP_INFO_ADDR	(flash_sector_calibration + 0x80)
 // 0x100 ~ 0x7ff reserve for sihui
-#if ((!AIS_ENABLE) && (MESH_USER_DEFINE_MODE != MESH_IRONMAN_MENLO_ENABLE))
+    #if (!AIS_ENABLE)
 #define         FLASH_ADR_STATIC_OOB	    (flash_sector_calibration + 0x800)
+    #endif
 #endif
 #endif
 
@@ -490,6 +536,10 @@ enum{
 #endif
 
 /**************************** 1 M Flash *******************************/
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define		CFG_ADR_MAC_1M_FLASH		   						0x8000
+#define		CFG_ADR_CALIBRATION_1M_FLASH						(CFG_ADR_MAC_1M_FLASH +  STATIC_ADDR_FREQ_OFFSET)
+#else
 #ifndef		CFG_ADR_MAC_1M_FLASH
 #define		CFG_ADR_MAC_1M_FLASH		   						0xFF000
 #endif
@@ -497,6 +547,7 @@ enum{
 
 #ifndef		CFG_ADR_CALIBRATION_1M_FLASH
 #define		CFG_ADR_CALIBRATION_1M_FLASH						0xFE000
+#endif
 #endif
 
 

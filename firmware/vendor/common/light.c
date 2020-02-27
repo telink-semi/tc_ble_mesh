@@ -40,6 +40,17 @@
 #include "../../proj_lib/pm.h"
 #endif
 
+
+/** @addtogroup Mesh_Common
+  * @{
+  */
+  
+/** @defgroup Light
+  * @brief Light Code.
+  * @{
+  */
+
+
 typedef struct{
     u32 gpio;
     u8 id;
@@ -142,6 +153,16 @@ void set_ct_mode(u8 mode)
 }
 
 #if MD_SERVER_EN
+
+/**
+ * @brief  Save Generic OnOff States for next power-on.
+ * @param  idx: Element index.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @param  onoff: OnOff States.
+ *     @arg G_OFF: Off state.
+ *     @arg G_ON: On state.
+ * @retval None
+ */
 void set_on_power_up_onoff(int idx, int st_trans_type, u8 onoff)
 {
 	sw_level_save_t *p_save = P_SW_LEVEL_SAVE(idx, st_trans_type);
@@ -397,11 +418,15 @@ u32 get_pwm_cmp(u8 val, u8 lum){
     return ((u32)val * val_lumen_map) / 255;
 }
 
-/*
-func: light_dim_set_hw
-idx: 1st index of light_res_hw array, also means index of LIGHT_CNT
-idx2: the 2nd index of light_res_hw array.
-*/
+
+/**
+ * @brief  Control lights on hardware.
+ * @param  idx: 1st index of light_res_hw array, also means index 
+ *   of LIGHT_CNT.
+ * @param  idx2: The 2nd index of light_res_hw array.
+ * @param  val: Value.
+ * @retval None
+ */
 void light_dim_set_hw(int idx, int idx2, u16 val)
 {
     if((idx < ARRAY_SIZE(light_res_hw)) && (idx2 < ARRAY_SIZE(light_res_hw[0]))){
@@ -479,6 +504,16 @@ void light_res_sw_g_level_last_set(int idx, int st_trans_type)
 }
 #endif
 
+/**
+ * @brief  Set Generic Level parameters(Global variables) for light.
+ * @param  idx: Light index.
+ * @param  level: General Level value.
+ * @param  init_time_flag: Reset transition parameter flag.
+ *     @arg 0: Don't reset transition parameter.
+ *     @arg 1: Reset transition parameter.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @retval None
+ */
 void light_res_sw_g_level_set(int idx, s16 level, int init_time_flag, int st_trans_type)
 {
 	set_level_current_type(idx, st_trans_type);
@@ -501,6 +536,12 @@ void light_res_sw_g_level_target_set(int idx, s16 level, int st_trans_type)	// o
 }
 
 // --------------------------------
+/**
+ * @brief  Refresh the light status through the global variables 
+ *   that have been set.
+ * @param  idx: Light index.
+ * @retval None
+ */
 void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
 {
 	st_transition_t *p_trans = P_ST_TRANS(idx, ST_TRANS_LIGHTNESS);
@@ -590,6 +631,18 @@ void get_light_pub_list(int st_trans_type, s16 present_level, s16 target_level, 
     }
 }
 
+/**
+ * @brief  Set Generic Level for light.
+ * @param  idx: Light index.
+ * @param  level: General Level value.
+ * @param  init_time_flag: Reset transition parameter flag.
+ *     @arg 0: Don't reset transition parameter.
+ *     @arg 1: Reset transition parameter.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @param  pub_list: list of publication.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int light_g_level_set(int idx, s16 level, int init_time_flag, int st_trans_type, st_pub_list_t *pub_list)
 {
 	st_transition_t *p_trans = P_ST_TRANS(idx, st_trans_type);
@@ -636,6 +689,12 @@ int light_g_level_get(u8 *rsp, int idx, int st_trans_type)
 	return -1;
 }
 
+/**
+ * @brief  Get Light CTL Default Value.
+ * @param  idx: Element(Light) index.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @retval Light CTL Default Value.
+ */
 s16 light_g_level_def_get(int idx, int st_trans_type)
 {
 	if(idx < LIGHT_CNT){
@@ -645,11 +704,25 @@ s16 light_g_level_def_get(int idx, int st_trans_type)
 	return 0;
 }
 
+/**
+ * @brief  Get Light CTL Default Value.
+ * @param  idx: Element(Light) index.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @retval Light CTL Default Value.
+ */
 u16 light_g_level_def_get_u16(int idx, int st_trans_type)
 {
 	return s16_to_u16(light_g_level_def_get(idx, st_trans_type));
 }
 
+/**
+ * @brief  Set Light CTL Default Value.
+ * @param  val: Light CTL Default Value.
+ * @param  idx: Element(Light) index.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int light_g_level_def_set(s16 val, int idx, int st_trans_type)
 {
 	if(idx < LIGHT_CNT){
@@ -662,11 +735,27 @@ int light_g_level_def_set(s16 val, int idx, int st_trans_type)
 	return -1;
 }
 
+/**
+ * @brief  Set Light CTL Default Value.
+ * @param  val: Light CTL Default Value.
+ * @param  idx: Element(Light) index.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int light_g_level_def_set_u16(u16 val, int idx, int st_trans_type)
 {
 	return light_g_level_def_set(u16_to_s16(val), idx, st_trans_type);
 }
 
+/**
+ * @brief  Get level range value.
+ * @param  p_range: Point to Light Range value.
+ * @param  idx: Element(Light) index.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int light_g_level_range_get(light_range_s16_t *p_range, int idx, int st_trans_type)
 {
 	if(idx < LIGHT_CNT){
@@ -681,6 +770,14 @@ int light_g_level_range_get(light_range_s16_t *p_range, int idx, int st_trans_ty
 	}
 }
 
+/**
+ * @brief  Get Light CTL Temperature Range value.
+ * @param  p_range: Point to Light CTL Temperature Range value.
+ * @param  idx: Element(Light) index.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int light_g_level_range_get_u16(light_range_u16_t *p_range, int idx, int st_trans_type)
 {
 	light_range_s16_t range_s16 = {0};
@@ -690,6 +787,16 @@ int light_g_level_range_get_u16(light_range_u16_t *p_range, int idx, int st_tran
 	return err;
 }
 
+
+/**
+ * @brief  Set Light (Lightness/CTL Temperature/HSL/xyL) Range value.
+ * @param  min: Range Min.
+ * @param  max: Range Max.
+ * @param  idx: Element index.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int light_g_level_range_set(u16 min, u16 max, int idx, int st_trans_type)
 {
 	if(idx < LIGHT_CNT){
@@ -703,6 +810,12 @@ int light_g_level_range_set(u16 min, u16 max, int idx, int st_trans_type)
 	return -1;
 }
 
+/**
+ * @brief  Get light target level value.
+ * @param  idx: Element(Light) index.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @retval light target level value.
+ */
 s16 light_g_level_target_get(int idx, int st_trans_type)
 {
 	if(idx < LIGHT_CNT){
@@ -713,6 +826,12 @@ s16 light_g_level_target_get(int idx, int st_trans_type)
 	return 0;
 }
 
+/**
+ * @brief  Get light present level value.
+ * @param  idx: Element(Light) index.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @retval light present level value.
+ */
 s16 light_g_level_present_get(int idx, int st_trans_type)
 {
 	if(idx < LIGHT_CNT){
@@ -865,6 +984,18 @@ int light_onoff_idx(int idx, int on, int init_time_flag){
 }
 #endif
 
+/**
+ * @brief  Set Generic Level for light by index.
+ * @param  idx: Light index.
+ * @param  level: General Level value.
+ * @param  init_time_flag: Reset transition parameter flag.
+ *     @arg 0: Don't reset transition parameter.
+ *     @arg 1: Reset transition parameter.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @param  pub_list: list of publication.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int light_g_level_set_idx(int idx, s16 level, int init_time_flag, int st_trans_type, st_pub_list_t *pub_list)
 {
     if(idx < LIGHT_CNT){
@@ -1326,4 +1457,13 @@ void show_factory_reset()
 	light_ev_with_sleep(8, 500*1000);	//1Hz shine for  8 second
 }
 #endif
+
+/**
+  * @}
+  */
+    
+/**
+  * @}
+  */
+
 

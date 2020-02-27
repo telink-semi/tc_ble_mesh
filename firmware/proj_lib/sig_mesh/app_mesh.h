@@ -1002,16 +1002,21 @@ typedef struct{
     u16 adr_cnt;
 }mesh_adr_list_t;
 
+/**
+ * @brief  mesh callback function parameter structure definition
+ */
 typedef struct{
-	u8 *model;
-	u8 *res;                // mesh_op_resource_t
-	mesh_cmd_nw_t *p_nw;    // it may be NULL, must check not NULL before used.
-	u32 op_rsp;
-	u16 op;
-	u16 adr_src;
-	u16 adr_dst;
-	u8 retransaction;
-	u8 model_idx;
+	u8 *model;              /*!< Point to the model in the message */
+	u8 *res;                /*!< Mesh_op_resource_t */ 
+	mesh_cmd_nw_t *p_nw;    /*!< It may be NULL, must check not NULL 
+	                             before used. */
+	u32 op_rsp;             /*!< Opcode to reply if needed */
+	u16 op;                 /*!< Opcode of the current message */
+	u16 adr_src;            /*!< Source address */
+	u16 adr_dst;            /*!< Destination address */
+	u8 retransaction;       /*!< Flag indicating whether this command 
+	                             is a retransmission */
+	u8 model_idx;           /*!< Model index */
 }mesh_cb_fun_par_t;
 
 typedef struct{
@@ -1554,7 +1559,11 @@ typedef enum{
 // just for node part 
 #define MAX_STRCAT_BUF		(MAX_MODULE_STRING_CNT + MAX_LEVEL_STRING_CNT + 4)  //
 	#if 1
-#define TL_LOG_SEL_VAL	(BIT(TL_LOG_USER))//(BIT(TL_LOG_NODE_SDK)|BIT(TL_LOG_FRIEND)|BIT(TL_LOG_IV_UPDATE)) // |BIT(TL_LOG_NODE_SDK_NW_UT)
+		#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define TL_LOG_SEL_VAL  ((BIT(TL_LOG_USER))|(BIT(TL_LOG_NODE_SDK)))//|BIT(TL_LOG_FRIEND)|BIT(TL_LOG_IV_UPDATE)) // |BIT(TL_LOG_NODE_SDK_NW_UT)
+		#else
+#define TL_LOG_SEL_VAL  (BIT(TL_LOG_USER))//(BIT(TL_LOG_NODE_SDK)|BIT(TL_LOG_FRIEND)|BIT(TL_LOG_IV_UPDATE)) // |BIT(TL_LOG_NODE_SDK_NW_UT)
+		#endif
 	#else
 #define TL_LOG_SEL_VAL  (BIT(TL_LOG_USER)|BIT(TL_LOG_PROVISION)|BIT(TL_LOG_FRIEND)|BIT(TL_LOG_NODE_SDK)|BIT(TL_LOG_NODE_BASIC))
 	#endif

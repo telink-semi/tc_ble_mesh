@@ -42,6 +42,17 @@
 #include "../../vendor/common/mesh_property.h"
 #include "generic_model.h"
 
+/** @addtogroup Mesh_Common
+  * @{
+  */
+
+
+/** @defgroup General_Model
+  * @brief General Models Code.
+  * @{
+  */
+
+
 model_g_onoff_level_t	model_sig_g_onoff_level;
 model_g_power_onoff_trans_time_t   model_sig_g_power_onoff;
 u32 mesh_md_g_power_onoff_addr = FLASH_ADR_MD_G_POWER_ONOFF;	// share with default transition time model
@@ -55,6 +66,12 @@ int is_valid_transition_step(u8 transit_t)
 	return (GET_TRANSITION_STEP(transit_t) <= TRANSITION_STEP_MAX);
 }
 
+/**
+ * @brief  Fill in the parameters of the structure mesh_cmd_g_onoff_st_t.
+ * @param  rsp: Pointer to structure mesh_cmd_g_onoff_st_t.
+ * @param  idx: Element index.
+ * @retval None
+ */
 void mesh_g_onoff_st_rsp_par_fill(mesh_cmd_g_onoff_st_t *rsp, u8 idx)
 {
 	mesh_cmd_g_level_st_t level_st; 
@@ -70,6 +87,20 @@ mesh_rcv_t mesh_rcv_cmd;
 mesh_rcv_t mesh_rcv_ack;
 u16 mesh_rsp_rec_addr;
 #endif
+
+/**
+ * @brief  Send General Onoff Status message.
+ * @param  idx: Element index.
+ * @param  ele_adr: Element address.
+ * @param  dst_adr: Destination address.
+ * @param  uuid: When publishing, and the destination address is a virtual 
+ *   address, uuid needs to be passed in, otherwise fill in 0.
+ * @param  pub_md: When publishing, you need to pass in parameters. 
+ *   For non-publish, pass in 0.
+ * @param  op_rsp: The opcode to response
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_tx_cmd_g_onoff_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md, u16 op_rsp)
 {
     mesh_cmd_g_onoff_st_t rsp = {0};
@@ -92,6 +123,12 @@ int mesh_tx_cmd_g_onoff_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_com
     return mesh_tx_cmd_rsp(op_rsp, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
 }
 
+/**
+ * @brief  Send Generic OnOff Status message.
+ * @param  cb_par  Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_g_onoff_st_rsp(mesh_cb_fun_par_t *cb_par)
 {
     model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
@@ -117,21 +154,60 @@ int mesh_g_onoff_st_publish_ll(u8 idx, u16 op_rsp)
     return mesh_tx_cmd_g_onoff_st(idx, ele_adr, pub_adr, uuid, p_com_md, op_rsp);
 }
 
+/**
+ * @brief  Publish Generic OnOff Status.
+ * @param  idx: Element index.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_g_onoff_st_publish(u8 idx)
 {
 	return mesh_g_onoff_st_publish_ll(idx, G_ONOFF_STATUS);
 }
 
+/**
+ * @brief  Publish Light LC Light OnOff Status.
+ * @param  idx: Element index.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_lc_onoff_st_publish(u8 idx)
 {
 	return mesh_g_onoff_st_publish_ll(idx, LIGHT_LC_ONOFF_STATUS);
 }
 
+/**
+ * @brief  When the Generic OnOff Get message is received, this function 
+ *   will be called
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_g_onoff_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     return mesh_g_onoff_st_rsp(cb_par);
 }
 
+
+/**
+ * @brief  Set Generic OnOff States.
+ * @param  p_set: Pointer to the set parameter structure.
+ * @param  par_len: The length of the parameter p_set.
+ * @param  force_last: When getting the current onoff state, whether 
+ *   to force the last one.
+ *     @arg 0: from last state when light on or from Non-volatile storage 
+ *             when light off.
+ *     @arg 1: Force from last state.
+ * @param  idx: Element index.
+ * @param  retransaction: Retransmission flag.
+ *     @arg 0: Non-retransmission.
+ *     @arg 1: Retransmission.
+ * @param  pub_list: list of publication.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int g_onoff_set(mesh_cmd_g_onoff_set_t *p_set, int par_len, int force_last, int idx, u8 retransaction, st_pub_list_t *pub_list)
 {
 	int err = -1;
@@ -154,6 +230,15 @@ int g_onoff_set(mesh_cmd_g_onoff_set_t *p_set, int par_len, int force_last, int 
 u8 lc_onoff_flag = 0;   // comfirm later
 #endif
 
+/**
+ * @brief  When the Generic OnOff Set or Generic OnOff Set Unacknowledged 
+ *   message is received, this function will be called.
+ * @param  par     Pointer to message data (excluding Opcode).
+ * @param  par_len The length of the message data.
+ * @param  cb_par  Some information about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
@@ -197,6 +282,12 @@ int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 }
 
 //----generic level
+/**
+ * @brief  Fill in the parameters of the structure mesh_cmd_g_level_st_t.
+ * @param  rsp: Pointer to structure mesh_cmd_g_level_st_t.
+ * @param  model_idx: Element index.
+ * @retval None
+ */
 void mesh_g_level_st_rsp_par_fill(mesh_cmd_g_level_st_t *rsp, u8 model_idx)
 {
     int light_idx = get_light_idx_from_level_md_idx(model_idx);
@@ -204,6 +295,18 @@ void mesh_g_level_st_rsp_par_fill(mesh_cmd_g_level_st_t *rsp, u8 model_idx)
     light_g_level_get((u8 *)rsp, light_idx, trans_type);
 }
 
+/**
+ * @brief  Send General Level Status message.
+ * @param  idx: Element index.
+ * @param  ele_adr: Element address.
+ * @param  dst_adr: Destination address.
+ * @param  uuid: When publishing, and the destination address is a virtual 
+ *   address, uuid needs to be passed in, otherwise fill in 0.
+ * @param  pub_md: When publishing, you need to pass in parameters. 
+ *   For non-publish, pass in 0.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_tx_cmd_g_level_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md)
 {
     mesh_cmd_g_level_st_t rsp = {0};
@@ -257,17 +360,41 @@ int mesh_g_level_st_publish(u8 idx)
 }
 #endif
 
+/**
+ * @brief  Send Generic Level Status message.
+ * @param  cb_par  Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_g_level_st_rsp(mesh_cb_fun_par_t *cb_par)
 {
     model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	return mesh_tx_cmd_g_level_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
 
+/**
+ * @brief  When the Generic Level Get message is received, 
+ *   this function will be called.
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_g_level_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     return mesh_g_level_st_rsp(cb_par);
 }
 
+/**
+ * @brief  When the Generic Level Set or Generic Level Set Unacknowledged 
+ * message is received, this function will be called.
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_g_level_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 #if MESH_RX_TEST
@@ -1928,6 +2055,14 @@ void model_pub_check_set(int level_set_st, u8 *model, int priority)
 }
 #endif
 //---------
+
+/**
+  * @}
+  */
+    
+/**
+  * @}
+  */
 
 
 //--model command interface-------------------

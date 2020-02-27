@@ -443,6 +443,28 @@ void light_hw_timer1_config(void){
     reg_tmr_ctrl |= FLD_TMR1_EN;
 }
 #endif
+#if 0 // ecc verify 
+void test_ecdsa_sig_verify2()
+{
+	// test for the part of the 
+	micro_ecc_init(NULL);
+	u8 ecdsa_sk[32];
+	u8 ecdsa_pk[64];
+	micro_ecc_keypair_gen(NULL, ecdsa_sk, ecdsa_pk);
+	static u32 A_debug_sk_calc = 0;
+	unsigned char hash_dat[32]={0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7, 
+								0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7};
+	unsigned char sign_dat[64];
+	micro_ecc_sign(NULL, ecdsa_sk, hash_dat, sign_dat);
+	if(micro_ecc_verify(NULL, ecdsa_pk, hash_dat, sign_dat)==0){
+		A_debug_sk_calc =2;
+	}else{
+		A_debug_sk_calc =0x55;
+	}
+
+}
+#endif
+
 
 void user_init()
 {

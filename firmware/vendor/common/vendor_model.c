@@ -137,6 +137,7 @@ vd_msg_attr_t vd_msg_attr[ATTR_TYPE_MAX_NUM]={
 };
 
 //note:there is 1.2s response delay after receive reliable command, refer to MESH_RSP_BASE_DELAY_STEP
+//user should use bls_ll_setAdvParam(...) to set lseep time(adv interval) in soft timer mode, SLEEP_TIME_US is useless.
 #define SLEEP_TIME_US 		ADV_INTERVAL_MIN 
 #define RUN_TIME_US			60*1000   	
 #define INDICATE_RETRY_CNT 	6

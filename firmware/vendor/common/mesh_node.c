@@ -38,6 +38,15 @@
 #define MESH_CMD_SNO_SAVE_DELTA             (0x80)
 #endif
 
+/** @addtogroup Mesh_Common
+  * @{
+  */
+  
+/** @defgroup Mesh_Node
+  * @brief Mesh Node Code.
+  * @{
+  */
+
 void app_key_del2(mesh_app_key_t *p_appkey);
 void mesh_ota_master_proc();
 void check_prov_timeout();
@@ -2034,6 +2043,20 @@ int is_tx_status_cmd2self(u16 op, u16 adr_dst)
     return 0;
 }
 
+/**
+ * @brief  Called after receiving the command, and when it is published
+ * @param  op: Opcode.
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  adr_src: Source address.
+ * @param  adr_dst: Destination address.
+ * @param  uuid: When publishing, and the destination address is a virtual 
+ *   address, uuid needs to be passed in, otherwise fill in 0.
+ * @param  pub_md: When publishing, you need to pass in parameters.
+ *   For non-publish, pass in 0.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *uuid, model_common_t *pub_md)
 {
     if(is_tx_status_cmd2self(op, adr_dst)){
@@ -3838,4 +3861,12 @@ void blc_pm_select_none()
 	blt_miscParam.pm_enter_en 	= 1; // allow enter pm, 32k rc does not need to wait for 32k clk to be stable
 }
 #endif
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 

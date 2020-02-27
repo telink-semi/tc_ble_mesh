@@ -26,6 +26,7 @@
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 
 extern void user_init();
 extern void main_loop ();
@@ -221,6 +222,9 @@ _attribute_ram_code_ int main (void)    //must run in ramcode
 
 
     irq_enable();
+	#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+	LOG_USER_MSG_INFO(0, 0,"[mesh] Start from SIG Mesh", 0);
+	#endif
 
 	while (1) {
 #if (MODULE_WATCHDOG_ENABLE)

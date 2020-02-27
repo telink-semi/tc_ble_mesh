@@ -86,8 +86,8 @@ asm(".global     __FLASH_512K_ENABLE");
 #if __PROJECT_BOOTLOADER__
 asm(".equ __FW_OFFSET,      0"); // must be 0
 #elif (FW_START_BY_BOOTLOADER_EN)
-    #if (DUAL_MODE_FW_ADDR_SIGMESH == 0x20000)
-asm(".equ __FW_OFFSET,      0x20000");  // must be equal to DUAL_MODE_FW_ADDR_SIGMESH
+    #if (DUAL_MODE_FW_ADDR_SIGMESH == 0x80000)
+asm(".equ __FW_OFFSET,      0x80000");  // must be equal to DUAL_MODE_FW_ADDR_SIGMESH
     #endif
 #else
 asm(".equ __FW_OFFSET,      0");
@@ -1887,6 +1887,25 @@ void mesh_rsp_delay_set(u32 delay_step, u8 is_seg_ack)
 * @params: pointer to access layer which exclude op code.
 * @p_res->cb: callback function define in mesh_cmd_sig_func[] or mesh_cmd_vd_func[]
 */
+
+/** @addtogroup Mesh_Common
+  * @{
+  */
+  
+/** @defgroup Mesh_Common
+  * @brief Mesh Common Code.
+  * @{
+  */
+
+/**
+ * @brief  when received a message, this function would be called 
+ *   if opcode supported and address matched.
+ * @param  params: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some information about function callbacks.
+ * @retval Whether the message was processed
+ *   (0 Message processed or -1 Message not processed)
+ */
 int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     LOG_MSG_LIB(TL_LOG_NODE_SDK,params, par_len,"rcv access layer,retransaction:%d,src:0x%x op:0x%04x, par:",cb_par->retransaction,cb_par->adr_src, cb_par->op);
@@ -1930,6 +1949,8 @@ int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_
     }
 
     int err = 0;
+    /*! p_res->cb: callback function define in mesh_cmd_sig_func[] 
+     or mesh_cmd_vd_func[] */
     if(p_res->cb){ // have been check in library, check again.
         p_res->cb(params, par_len, cb_par);   // use mesh_need_random_delay in this function in library.
     }
@@ -2542,5 +2563,12 @@ int LogMsgModuleDlg_and_buf(u8 *pbuf,int len,char *log_str,char *format, va_list
 #endif	
 
 
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 

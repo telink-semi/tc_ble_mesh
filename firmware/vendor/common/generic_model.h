@@ -25,6 +25,17 @@
 #include "../../proj/tl_common.h"
 #include "../../proj_lib/sig_mesh/app_mesh.h"
 
+/** @addtogroup Mesh_Common
+  * @{
+  */
+
+
+/** @addtogroup General_Model
+  * @brief General Models Code.
+  * @{
+  */
+
+
 //----------------------------------- op code
 // op cmd 0xxxxxxx (SIG)
 
@@ -36,6 +47,16 @@ extern u16 size_page0;
 
 
 int g_onoff_set(mesh_cmd_g_onoff_set_t *p_set, int par_len, int force_last, int idx, u8 retransaction, st_pub_list_t *pub_list);
+
+
+/**
+  * @}
+  */
+    
+/**
+  * @}
+  */
+
 
 #if (!MD_SERVER_EN)
 //----generic onoff

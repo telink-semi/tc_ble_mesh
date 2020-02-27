@@ -816,17 +816,7 @@ uint8_t find_record_adr(uint16_t record_id,u32 *p_adr)
 	return FALSE;
 }
 
-// user function ,and will call by the mi part 
-mible_status_t telink_ble_mi_rand_num_generator(uint8_t* p_buf, uint8_t len)
-{
-	if(len > RAND_NUM_MAX_LEN){
-		return MI_ERR_NO_MEM;
-	}
-	for(int i=0;i<len;i++){
-		p_buf[i]=rand()&0xff;
-	}
-	return MI_SUCCESS;
-}
+
 
 // user function ,and will call by the mi part 
 mible_status_t telink_ble_mi_aes128_encrypt(const uint8_t* key,
@@ -1230,4 +1220,16 @@ void mi_schd_event_handler(schd_evt_t* p_evt_id)
     }
 }
 #endif 
+// user function ,and will call by the mi part 
+mible_status_t telink_ble_mi_rand_num_generator(uint8_t* p_buf, uint8_t len)
+{
+	if(len > RAND_NUM_MAX_LEN){
+		return MI_ERR_NO_MEM;
+	}
+	for(int i=0;i<len;i++){
+		p_buf[i]=rand()&0xff;
+	}
+	return MI_SUCCESS;
+}
+
 

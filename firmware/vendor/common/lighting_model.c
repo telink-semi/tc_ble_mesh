@@ -32,6 +32,16 @@
 #include "lighting_model_LC.h"
 #include "lighting_model.h"
 
+/** @addtogroup Mesh_Common
+  * @{
+  */
+
+/** @defgroup Lighting_Model
+  * @brief Lighting Models Code.
+  * @{
+  */
+
+
 
 model_lightness_t       model_sig_lightness;
 #if (LIGHT_TYPE_CT_EN)
@@ -224,6 +234,24 @@ void model_pub_check_set_bind_all(st_pub_list_t *pub_list, mesh_cb_fun_par_t *cb
 #endif
 }
 
+/**
+ * @brief  Set Generic Level States.
+ * @param  par: Pointer to the set parameter structure
+ *   (mesh_cmd_g_level_delta_t or mesh_cmd_g_level_set_t).
+ * @param  par_len: The length of the parameter p_set.
+ * @param  op: Opcode.
+ * @param  idx: Element index.
+ * @param  retransaction: Retransmission flag.
+ *     @arg 0: Non-retransmission.
+ *     @arg 1: Retransmission.
+ * @param  force: Only for G_LEVEL_SET_NOACK opcode. Force to set the 
+ *   gerneral level.
+ *     @arg 0: Set the gerneral level if needed.
+ *     @arg 1: Force to set the gerneral level.
+ * @param  pub_list: list of publication.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int g_level_set(u8 *par, int par_len, u16 op, int idx, u8 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list)
 {
     //model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
@@ -349,6 +377,23 @@ s16 get_val_with_check_range(s32 level_target, s16 min, s16 max, int st_trans_ty
     return (s16)level_target;
 }
 #define MMDL_SR_MLTEL_BV_02_C 0
+
+/**
+ * @brief  Set Generic Level States.
+ * @param  par: Pointer to the set parameter structure.
+ * @param  par_len: The length of the parameter p_set.
+ * @param  op: Opcode.
+ * @param  idx: Element index.
+ * @param  retransaction: Retransmission flag.
+ *     @arg 0: Non-retransmission.
+ *     @arg 1: Retransmission.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
+ * @param  force: Only for G_LEVEL_SET_NOACK opcode. Force to set the 
+ *   gerneral level.
+ * @param  pub_list: list of publication.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int g_level_set_and_update_last(u8 *par, int par_len, u16 op, int idx, u8 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list)
 {
 	mesh_cmd_g_level_delta_t set = {0};
@@ -456,6 +501,15 @@ int mesh_lightness_st_rsp(mesh_cb_fun_par_t *cb_par)
 	return mesh_tx_cmd_lightness_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, cb_par->op_rsp, 0, 0);
 }
 
+/**
+ * @brief  When the Light Lightness Get message is received, this function 
+ *   will be called
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_lightness_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_lightness_st_rsp(cb_par);
@@ -475,6 +529,20 @@ int level_u16_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx,
 	return g_level_set_and_update_last((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, idx, retransaction, st_trans_type, 0, pub_list);
 }
 
+/**
+ * @brief  Set the lightness of the light.
+ * @param  p_set: Pointer to the set parameter structure
+ *   (mesh_cmd_lightness_set_t).
+ * @param  par_len: The length of the parameter p_set.
+ * @param  op: Opcodes.
+ * @param  idx: Element index.
+ * @param  retransaction: Retransmission flag.
+ *     @arg 0: Non-retransmission.
+ *     @arg 1: Retransmission.
+ * @param  pub_list: list of publication.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int lightness_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list)
 {
 	int err = -1;
@@ -494,6 +562,15 @@ int lightness_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx,
 	return err;
 }
 
+/**
+ * @brief  When the Light Lightness Set or Light Lightness Set Unacknowledged
+ * message is received, this function will be called.
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_lightness_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
@@ -560,6 +637,13 @@ int mesh_cmd_sig_lightness_def_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 }
 
 // ----------- lightness range -------------
+/**
+ * @brief  Send Light (Lightness/CTL Temperature) Range Status message.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE. 
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_range_st_rsp(u8 st, mesh_cb_fun_par_t *cb_par, int st_trans_type)
 {
     model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
@@ -569,11 +653,29 @@ int mesh_range_st_rsp(u8 st, mesh_cb_fun_par_t *cb_par, int st_trans_type)
     return mesh_tx_cmd_rsp(cb_par->op_rsp, (u8 *)&rsp, sizeof(rsp), p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
 
+/**
+ * @brief  When the Light Lightness Range Get message is received, 
+ *   this function will be called.
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_lightness_range_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_range_st_rsp(RANGE_SET_SUCCESS, cb_par, ST_TRANS_LIGHTNESS);
 }
 
+/**
+ * @brief  When the Light Lightness Range Set or Light Lightness Range Set 
+ * Unacknowledged message is received, this function will be called.
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some information about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_lightness_range_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
@@ -614,6 +716,12 @@ int mesh_cmd_sig_lightness_last_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 // ----------- light CTL model-------------
 #if (LIGHT_TYPE_CT_EN)
 
+/**
+ * @brief  Fill in the parameters of the structure mesh_cmd_light_ctl_st_t.
+ * @param  rsp: Pointer to structure mesh_cmd_light_ctl_st_t.
+ * @param  idx: Element(Light) index.
+ * @retval None
+ */
 void mesh_light_ctl_st_rsp_par_fill(mesh_cmd_light_ctl_st_t *rsp, u8 idx)
 {
 	mesh_cmd_g_level_st_t level_st; 
@@ -630,6 +738,18 @@ void mesh_light_ctl_st_rsp_par_fill(mesh_cmd_light_ctl_st_t *rsp, u8 idx)
 	}
 }
 
+/**
+ * @brief  Send Light CTL Status message.
+ * @param  idx: Element index.
+ * @param  ele_adr: Element address.
+ * @param  dst_adr: Destination address.
+ * @param  uuid: When publishing, and the destination address is a virtual 
+ *   address, uuid needs to be passed in, otherwise fill in 0.
+ * @param  pub_md: When publishing, you need to pass in parameters. 
+ *   For non-publish, pass in 0.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_tx_cmd_light_ctl_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md)
 {
 	mesh_cmd_light_ctl_st_t rsp = {0};
@@ -643,6 +763,12 @@ int mesh_tx_cmd_light_ctl_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_c
 	return mesh_tx_cmd_rsp(LIGHT_CTL_STATUS, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
 }
 
+/**
+ * @brief  Publish Light CTL Status.
+ * @param  idx: Element(Light) index.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_light_ctl_st_publish(u8 idx)
 {
 	model_common_t *p_com_md = &model_sig_light_ctl.srv[idx].com;
@@ -655,12 +781,27 @@ int mesh_light_ctl_st_publish(u8 idx)
 	return mesh_tx_cmd_light_ctl_st(idx, ele_adr, pub_adr, uuid, p_com_md);
 }
 
+/**
+ * @brief  Send Light CTL Status message.
+ * @param  cb_par  Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_light_ctl_st_rsp(mesh_cb_fun_par_t *cb_par)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	return mesh_tx_cmd_light_ctl_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
 
+/**
+ * @brief  When the Light CTL Get message is received, this function 
+ *   will be called
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_light_ctl_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_light_ctl_st_rsp(cb_par);
@@ -693,6 +834,21 @@ s16 get_level_from_ctl_temp_light_idx(u16 temp, int light_idx)
     return level;
 }
 
+
+/**
+ * @brief  Set the color temperature of the light.
+ * @param  p_set: Pointer to the set parameter structure
+ *   (mesh_cmd_light_ctl_set_t).
+ * @param  par_len: The length of the parameter p_set.
+ * @param  op: Opcodes.
+ * @param  idx: Element index.
+ * @param  retransaction: Retransmission flag.
+ *     @arg 0: Non-retransmission.
+ *     @arg 1: Retransmission.
+ * @param  pub_list: list of publication.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int light_ctl_temp_set(mesh_cmd_light_ctl_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list)
 {
 	int err = -1;
@@ -714,6 +870,15 @@ int light_ctl_temp_set(mesh_cmd_light_ctl_set_t *p_set, int par_len, u16 op, int
 	return err;
 }
 
+/**
+ * @brief  When the Light CTL Set or Light CTL Set Unacknowledged 
+ *   message is received, this function will be called.
+ * @param  par     Pointer to message data (excluding Opcode).
+ * @param  par_len The length of the message data.
+ * @param  cb_par  Some information about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_light_ctl_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	set_ct_mode(1);
@@ -749,6 +914,12 @@ int mesh_cmd_sig_light_ctl_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 }
 
 // ----------- light ctl default-------------
+/**
+ * @brief  Send Light CTL Default Status message.
+ * @param  cb_par  Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_light_ctl_def_st_rsp(mesh_cb_fun_par_t *cb_par)
 {
     model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
@@ -760,11 +931,29 @@ int mesh_light_ctl_def_st_rsp(mesh_cb_fun_par_t *cb_par)
     return mesh_tx_cmd_rsp(LIGHT_CTL_DEFULT_STATUS, (u8 *)&rsp, sizeof(rsp), p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
 
+/**
+ * @brief  When the Light CTL Default Get message is received, this function 
+ *   will be called
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_light_ctl_def_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_light_ctl_def_st_rsp(cb_par);
 }
 
+/**
+ * @brief  When the Light CTL Default Set or Light CTL Default Set
+ *   Unacknowledged message is received, this function will be called.
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some information about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_light_ctl_def_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
@@ -784,11 +973,29 @@ int mesh_cmd_sig_light_ctl_def_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 	return err;
 }
 
+/**
+ * @brief  When the Light CTL Temperature Range Get message is received, 
+ * this function will be called.
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_light_ctl_temp_range_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_range_st_rsp(RANGE_SET_SUCCESS, cb_par, ST_TRANS_CTL_TEMP);
 }
 
+/**
+ * @brief  When the Light CTL Temperature Range Set or Light CTL Temperature 
+ *   Range Set Unacknowledged message is received, this function will be called.
+ * @param  par     Pointer to message data (excluding Opcode).
+ * @param  par_len The length of the message data.
+ * @param  cb_par  Some information about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_light_ctl_temp_range_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
@@ -813,6 +1020,12 @@ int mesh_cmd_sig_light_ctl_temp_range_set(u8 *par, int par_len, mesh_cb_fun_par_
 }
 
 // ----------- light CTL temp model-------------
+/**
+ * @brief  Fill in the parameters of the structure mesh_cmd_light_ctl_temp_st_t.
+ * @param  rsp: Pointer to structure mesh_cmd_light_ctl_temp_st_t.
+ * @param  idx: Element(Light) index.
+ * @retval None
+ */
 void mesh_light_ctl_temp_st_rsp_par_fill(mesh_cmd_light_ctl_temp_st_t *rsp, u8 idx)
 {
 	mesh_cmd_g_level_st_t level_st = {0}; 
@@ -826,6 +1039,18 @@ void mesh_light_ctl_temp_st_rsp_par_fill(mesh_cmd_light_ctl_temp_st_t *rsp, u8 i
 	rsp->target_delta_uv = level_st.target_level;
 }
 
+/**
+ * @brief  Send Light CTL Temperature Status message.
+ * @param  idx: Element index.
+ * @param  ele_adr: Element address.
+ * @param  dst_adr: Destination address.
+ * @param  uuid: When publishing, and the destination address is a virtual 
+ *   address, uuid needs to be passed in, otherwise fill in 0.
+ * @param  pub_md: When publishing, you need to pass in parameters. 
+ *   For non-publish, pass in 0.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_tx_cmd_light_ctl_temp_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md)
 {
 	mesh_cmd_light_ctl_temp_st_t rsp = {0};
@@ -851,17 +1076,42 @@ int mesh_light_ctl_temp_st_publish(u8 idx)
 	return mesh_tx_cmd_light_ctl_temp_st(idx, ele_adr, pub_adr, uuid, p_com_md);
 }
 
+/**
+ * @brief  Send Light CTL Temperature Status message.
+ * @param  cb_par  Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_light_ctl_temp_st_rsp(mesh_cb_fun_par_t *cb_par)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	return mesh_tx_cmd_light_ctl_temp_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
 
+/**
+ * @brief  When the Light CTL Temperature Get message is received, 
+ *   this function will be called.
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_light_ctl_temp_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	return mesh_light_ctl_temp_st_rsp(cb_par);
 }
 
+/**
+ * @brief  When the Light CTL Temperature Set or Light CTL Temperature 
+ *   Set Unacknowledged message is received, 
+ * this function will be called.
+ * @param  par: Pointer to message data (excluding Opcode).
+ * @param  par_len: The length of the message data.
+ * @param  cb_par: Some parameters about function callbacks.
+ * @retval Whether the function executed successfully
+ *   (0: success; others: error)
+ */
 int mesh_cmd_sig_light_ctl_temp_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	set_ct_mode(1);
@@ -1143,6 +1393,12 @@ int access_cmd_set_light_ctl_temp_100(u16 adr, u8 rsp_max, u8 temp100, int ack)
 #endif
 //--lighting model command interface end----------------
 
+/**
+  * @}
+  */
 
+/**
+  * @}
+  */
 
 
