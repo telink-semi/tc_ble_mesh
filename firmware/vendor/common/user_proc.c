@@ -33,7 +33,7 @@ u8 ais_pri_data_set(u8 *p)
 	pri_data->ota_support = 1;
 	pri_data->authen_en = 1;
 	pri_data->secret_type = 1;
-	pri_data->adv_mode = 0;
+	pri_data->prov_flag = is_provision_success();
 	pri_data->rfu = 0;
 	extern u32 con_product_id;
 	pri_data->pid = con_product_id;

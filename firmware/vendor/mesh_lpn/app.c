@@ -310,10 +310,6 @@ void user_init()
 	//blc_l2cap_register_handler (blc_l2cap_packet_receive);
 	blc_l2cap_register_handler (app_l2cap_packet_receive);
 	///////////////////// USER application initialization ///////////////////
-
-	mesh_scan_rsp_init();
-
-
 	u8 status = bls_ll_setAdvParam( ADV_INTERVAL_MIN, ADV_INTERVAL_MAX, \
 			 	 	 	 	 	     ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, \
 			 	 	 	 	 	     0,  NULL,  BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
@@ -364,6 +360,8 @@ void user_init()
 	#if((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 	blc_gap_peripheral_init();    //gap initialization
 	#endif
+	
+	mesh_scan_rsp_init();
 	my_att_init (provision_mag.gatt_mode);
 	blc_att_setServerDataPendingTime_upon_ClientCmd(10);
 	extern u32 system_time_tick;

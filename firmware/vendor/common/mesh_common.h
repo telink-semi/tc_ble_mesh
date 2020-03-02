@@ -76,7 +76,7 @@ typedef struct ais_pri_data{
 			u8 ota_support:1;
 			u8 authen_en:1;
 			u8 secret_type:1;// 0:one device type on key, 1:one device one key
-			u8 adv_mode:1;
+			u8 prov_flag:1;
 			u8 rfu:2;
 		};
 	};

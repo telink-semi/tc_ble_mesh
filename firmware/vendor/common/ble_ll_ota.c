@@ -433,9 +433,9 @@ void blt_slave_ota_finish_handle()
 }
 
 #if(AIS_ENABLE)
-#define MAIN_VERSION		1
-#define SUB_VERSION			3
-#define MODIFY_VERSION		4
+#define MAIN_VERSION		0
+#define SUB_VERSION			0
+#define MODIFY_VERSION		0
 
 const ais_fw_info_t  ais_fw_info = { 
 	.device_type = (u8)MESH_PID_SEL, // device type
@@ -475,7 +475,7 @@ int ais_ota_req(u8 *p)
 		ota_adr_index = -1;
 		blcOta.ota_start_flag = ais_gatt_auth.auth_ok;   //set flag
 		blt_ota_start_tick = clock_time()|1;  //mark time
-		if(otaStartCb&&ais_gatt_auth.auth_ok){
+		if(otaStartCb && ais_gatt_auth.auth_ok){
 			otaStartCb();
 		}
 	}

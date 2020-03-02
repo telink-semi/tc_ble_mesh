@@ -527,9 +527,6 @@ void user_init()
 	blc_l2cap_register_handler (app_l2cap_packet_receive); // define the l2cap part 
 	///////////////////// USER application initialization ///////////////////
 
-	mesh_scan_rsp_init();
-
-
 	u8 status = bls_ll_setAdvParam( ADV_INTERVAL_MIN, ADV_INTERVAL_MAX, \
 			 	 	 	 	 	     ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, \
 			 	 	 	 	 	     0,  NULL,  BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
@@ -594,7 +591,9 @@ void user_init()
 	//gatt initialization
 	#if((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 	blc_gap_peripheral_init();    //gap initialization
-	#endif
+	#endif	
+	
+	mesh_scan_rsp_init();
 	my_att_init (provision_mag.gatt_mode);
 	blc_att_setServerDataPendingTime_upon_ClientCmd(10);
 #if MI_API_ENABLE

@@ -584,6 +584,11 @@ static inline void blc_app_setExternalCrystalCapEnable(u8  en)
 	blt_miscParam.ext_crystal_en = en;
 }
 
+#ifndef CUST_CAP_INFO_ADDR
+#define		CUST_CAP_INFO_ADDR			flash_sector_calibration
+#define			CUST_TP_INFO_ADDR			(flash_sector_calibration + 0x40)
+#define			CUST_RC32K_CAP_INFO_ADDR	(flash_sector_calibration + 0x80)
+#endif
 static inline void blc_app_loadCustomizedParameters(void)
 {
 	 if(!blt_miscParam.ext_crystal_en)

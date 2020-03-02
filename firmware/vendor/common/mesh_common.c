@@ -821,6 +821,11 @@ void mesh_node_prov_event_callback(u8 evt_code)
 	        evt_code == EVENT_MESH_NODE_DISCONNECT||
 	        evt_code == EVENT_MESH_NODE_RC_LINK_SUC||
 	        evt_code == EVENT_MESH_NODE_CONNECT){
+#if (AIS_ENABLE)
+			if(evt_code == EVENT_MESH_NODE_RC_LINK_SUC){
+				mesh_scan_rsp_init(); // set prov_flag				
+			}
+#endif
 	    }
     }
 

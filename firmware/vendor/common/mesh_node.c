@@ -2478,7 +2478,10 @@ void mesh_common_retrieve_all()
 	foreach_arr(i,mesh_save_map){
 		mesh_common_retrieve_by_index(i);
 	}
-
+	
+	#if (DUAL_VENDOR_EN)
+    vendor_id_check_and_update();
+	#endif
 	// should be after retrieve all model to make sure cover the val read from flash. 
 	mesh_set_ele_adr_ll(ele_adr_primary, 0);  // for test, should be provisioned later
 }
@@ -2823,9 +2826,7 @@ void mesh_flash_retrieve()
 	mesh_model_cb_pub_st_register();	// must after mesh_common_retrieve_all
 	#endif
 
-#if (DUAL_VENDOR_EN)
-    vendor_id_check_and_update();
-#endif
+
 }
 
 #endif
