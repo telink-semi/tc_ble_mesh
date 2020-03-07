@@ -110,6 +110,59 @@ typedef struct {
 /* end of static sector information */
 #endif
 
+/** Calibration Information FLash Address Offset of  CFG_ADR_CALIBRATION_xx_FLASH ***/
+#define		CALIB_OFFSET_CAP_INFO								(0x0)
+#define		CALIB_OFFSET_TP_INFO								(0x40)
+#define		OFFSET_CUST_RC32K_CAP_INFO                          (0x80)
+    #if 0 // no use in mesh
+#define		CALIB_OFFSET_ADC_VREF								(0xC0)
+#define		CALIB_OFFSET_FIRMWARE_SIGNKEY						(0x180)
+    #endif
+/** Calibration Information end ***/
+
+/**************************** 128 K Flash *****************************/
+#if 0
+#ifndef		CFG_ADR_MAC_128K_FLASH
+#define		CFG_ADR_MAC_128K_FLASH								0x1F000
+#endif
+
+#ifndef		CFG_ADR_CALIBRATION_128K_FLASH
+#define		CFG_ADR_CALIBRATION_128K_FLASH						0x1E000
+#endif
+#endif
+/**************************** 512 K Flash *****************************/
+#ifndef		CFG_ADR_MAC_512K_FLASH
+#define		CFG_ADR_MAC_512K_FLASH								0x76000
+#endif
+
+#ifndef		CFG_ADR_CALIBRATION_512K_FLASH
+#define		CFG_ADR_CALIBRATION_512K_FLASH						0x77000
+#endif
+
+/**************************** 1 M Flash *******************************/
+#ifndef		CFG_ADR_MAC_1M_FLASH
+#define		CFG_ADR_MAC_1M_FLASH		   						0xFF000
+#endif
+
+#ifndef		CFG_ADR_CALIBRATION_1M_FLASH
+#define		CFG_ADR_CALIBRATION_1M_FLASH						0xFE000
+#endif
+
+#if FLASH_1M_ENABLE
+    #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define		CFG_SECTOR_ADR_MAC_CODE		        (0x8000)
+#define		CFG_SECTOR_ADR_CALIBRATION_CODE     (CFG_SECTOR_ADR_MAC_CODE +  STATIC_ADDR_FREQ_OFFSET)
+    #else
+#define		CFG_SECTOR_ADR_MAC_CODE		        CFG_ADR_MAC_1M_FLASH
+#define		CFG_SECTOR_ADR_CALIBRATION_CODE     CFG_ADR_CALIBRATION_1M_FLASH
+    #endif
+#else
+#define		CFG_SECTOR_ADR_MAC_CODE		        CFG_ADR_MAC_512K_FLASH
+#define		CFG_SECTOR_ADR_CALIBRATION_CODE     CFG_ADR_CALIBRATION_512K_FLASH
+#endif
+
+#define AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN    (CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_512K_FLASH)
+
 /////////////////// Flash  Address Config ////////////////////////////
 #define	FLASH_SECTOR_SIZE       (4096)
 
@@ -282,6 +335,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define 		FLASH_ADR_MI_RECORD		    0xD2000
 #define 		FLASH_ADR_MI_RECORD_TMP	    0xD3000
 #define 		FLASH_ADR_MI_RECORD_MAX	    0xD4000
+//#define         MI_BLE_MESH_CER_ADR 	    0xFC000
     #if (ALI_MD_TIME_EN)
 #define 		FLASH_ADR_VD_TIME_INFO	    FLASH_ADR_MI_RECORD_MAX  // 0xD4000
     #endif
@@ -388,11 +442,6 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #endif /*end of (1 == FLASH_1M_ENABLE)*/
 
 #if 1// common
-#if WIN32
-#define			flash_sector_mac_address	0x76000
-#define			flash_sector_calibration	0x77000
-#endif
-		
 #define		CFG_ADR_MAC					flash_sector_mac_address
 #if ((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE) && (!__PROJECT_8267_MASTER_KMA_DONGLE__))
 //#define		    CUST_CAP_INFO_ADDR			flash_sector_calibration // == (CFG_ADR_MAC + STATIC_ADDR_FREQ_OFFSET)
@@ -401,10 +450,10 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define 		SECTOR_PAR_SIZE_MAX			        0x100
 #else
 #if (0 == FW_START_BY_BOOTLOADER_EN)
-#define			CFG_ADR_DUAL_MODE_EN		(flash_sector_mac_address + 0x80)
+#define			CFG_ADR_DUAL_MODE_EN		(CFG_SECTOR_ADR_MAC_CODE + 0x80) // use fixed addr
 #endif
-#define			CFG_ADR_DUAL_CALI_VAL_FLAG	(flash_sector_mac_address + 0x84) // use for DUAL_MODE_WITH_TLK_MESH_EN
-#define			CFG_ADR_DUAL_CALI_VAL		(flash_sector_mac_address + 0x88) // use for DUAL_MODE_WITH_TLK_MESH_EN
+#define			CFG_ADR_DUAL_CALI_VAL_FLAG	(CFG_SECTOR_ADR_MAC_CODE + 0x84) // use for DUAL_MODE_WITH_TLK_MESH_EN
+#define			CFG_ADR_DUAL_CALI_VAL		(CFG_SECTOR_ADR_MAC_CODE + 0x88) // use for DUAL_MODE_WITH_TLK_MESH_EN
 #if AIS_ENABLE  // FLASH_ADR_THREE_PARA_ADR_0x100_0xF00
 #define         FLASH_ADR_EDCH_PARA	 	    (FLASH_ADR_THREE_PARA_ADR + 0x100)
 #else           // CFG_ADR_MAC_0x100_0xF00
@@ -412,9 +461,11 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #endif
 #define 		SECTOR_PAR_SIZE_MAX			        0x200
 		
-#define		CUST_CAP_INFO_ADDR			flash_sector_calibration
-#define			CUST_TP_INFO_ADDR			(flash_sector_calibration + 0x40)
-#define			CUST_RC32K_CAP_INFO_ADDR	(flash_sector_calibration + 0x80)
+	#if((MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269))
+#define		CUST_CAP_INFO_ADDR			(flash_sector_calibration + CALIB_OFFSET_CAP_INFO)
+#define			CUST_TP_INFO_ADDR			(flash_sector_calibration + CALIB_OFFSET_TP_INFO)
+#define			CUST_RC32K_CAP_INFO_ADDR	(flash_sector_calibration + OFFSET_CUST_RC32K_CAP_INFO)
+	#endif
 // 0x100 ~ 0x7ff reserve for sihui
     #if (!AIS_ENABLE)
 #define         FLASH_ADR_STATIC_OOB	    (flash_sector_calibration + 0x800)
@@ -516,54 +567,9 @@ enum{
     OTA_REBOOT_FLAG                   	= 0,
 };
 
-//////////////////////////// Flash  Address Configuration ///////////////////////////////
-/**************************** 128 K Flash *****************************/
-#ifndef		CFG_ADR_MAC_128K_FLASH
-#define		CFG_ADR_MAC_128K_FLASH								0x1F000
-#endif
 
-#ifndef		CFG_ADR_CALIBRATION_128K_FLASH
-#define		CFG_ADR_CALIBRATION_128K_FLASH						0x1E000
-#endif
-
-/**************************** 512 K Flash *****************************/
-#ifndef		CFG_ADR_MAC_512K_FLASH
-#define		CFG_ADR_MAC_512K_FLASH								0x76000
-#endif
-
-#ifndef		CFG_ADR_CALIBRATION_512K_FLASH
-#define		CFG_ADR_CALIBRATION_512K_FLASH						0x77000
-#endif
-
-/**************************** 1 M Flash *******************************/
-#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-#define		CFG_ADR_MAC_1M_FLASH		   						0x8000
-#define		CFG_ADR_CALIBRATION_1M_FLASH						(CFG_ADR_MAC_1M_FLASH +  STATIC_ADDR_FREQ_OFFSET)
-#else
-#ifndef		CFG_ADR_MAC_1M_FLASH
-#define		CFG_ADR_MAC_1M_FLASH		   						0xFF000
-#endif
-
-
-#ifndef		CFG_ADR_CALIBRATION_1M_FLASH
-#define		CFG_ADR_CALIBRATION_1M_FLASH						0xFE000
-#endif
-#endif
-
-
-
-/** Calibration Information FLash Address Offset of  CFG_ADR_CALIBRATION_xx_FLASH ***/
-#define		CALIB_OFFSET_CAP_INFO								0x0
-#define		CALIB_OFFSET_TP_INFO								0x40
-
-#define		CALIB_OFFSET_ADC_VREF								0xC0
-
-#define		CALIB_OFFSET_FIRMWARE_SIGNKEY						0x180
-
-#if !WIN32
 extern u32 flash_sector_mac_address;
 extern u32 flash_sector_calibration;
-#endif
 
 void blc_readFlashSize_autoConfigCustomFlashSector(void);
 
@@ -584,11 +590,6 @@ static inline void blc_app_setExternalCrystalCapEnable(u8  en)
 	blt_miscParam.ext_crystal_en = en;
 }
 
-#ifndef CUST_CAP_INFO_ADDR
-#define		CUST_CAP_INFO_ADDR			flash_sector_calibration
-#define			CUST_TP_INFO_ADDR			(flash_sector_calibration + 0x40)
-#define			CUST_RC32K_CAP_INFO_ADDR	(flash_sector_calibration + 0x80)
-#endif
 static inline void blc_app_loadCustomizedParameters(void)
 {
 	 if(!blt_miscParam.ext_crystal_en)
@@ -597,7 +598,7 @@ static inline void blc_app_loadCustomizedParameters(void)
 		 if( (*(unsigned char*) (CUST_CAP_INFO_ADDR)) != 0xff ){
 			 //ana_81<4:0> is cap value(0x00 - 0x1f)
 			 analog_write(0x81, (analog_read(0x81)&0xe0) | ((*(unsigned char*) (CUST_CAP_INFO_ADDR))&0x1f) );
-		 }else if( (*(unsigned char*) (0x76010)) != 0xff ){
+		 }else if( (*(unsigned char*) (0x76010)) != 0xff ){ // no 1M flash for 8269
 			 analog_write(0x81, (analog_read(0x81)&0xe0) | ((*(unsigned char*) (0x76010))&0x1f) );
 		 }
 	 }
@@ -607,7 +608,7 @@ static inline void blc_app_loadCustomizedParameters(void)
 	 if( ((*(unsigned char*) (CUST_TP_INFO_ADDR)) != 0xff) && ((*(unsigned char*) (CUST_TP_INFO_ADDR+1)) != 0xff) ){
 		 rf_update_tp_value(*(unsigned char*) (CUST_TP_INFO_ADDR), *(unsigned char*) (CUST_TP_INFO_ADDR+1));
 	 }else if( ((*(unsigned char*) (0x76011)) != 0xff) && ((*(unsigned char*) (0x76011+1)) != 0xff) ){
-		 rf_update_tp_value(*(unsigned char*) (0x76011), *(unsigned char*) (0x76011+1));
+		 rf_update_tp_value(*(unsigned char*) (0x76011), *(unsigned char*) (0x76011+1)); // no 1M flash for 8269
 	 }
 
 	  //customize 32k RC cap, if not customized, default ana_32 is 0x80

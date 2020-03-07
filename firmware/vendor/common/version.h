@@ -102,7 +102,7 @@ format: please refer to spec "4.2.1.1 Composition Data Page 0"
 #if __PROJECT_BOOTLOADER__
 #define MCU_RUN_SRAM_WITH_CACHE_EN      1   // must with cache, because read flash by pointer 
 #else
-#define MCU_RUN_SRAM_WITH_CACHE_EN      0   // must with cache, because read flash by pointer 
+#define MCU_RUN_SRAM_WITH_CACHE_EN      0   // 
 #endif
 #define MCU_RUN_SRAM_EN                 0   // manual set data address in boot.link.can't read flash by pointer 
 

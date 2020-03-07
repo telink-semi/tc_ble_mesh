@@ -28,7 +28,7 @@
 
 #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 #define DUAL_MODE_ZB_FW_SIZE_MAX_K  (256)
-#define DUAL_MODE_FW_ADDR_SIGMESH   (0x80000)
+#define DUAL_MODE_FW_ADDR_SIGMESH   (0x80000)   // if modify, must modify __FW_OFFSET to the same,
 #define DUAL_MODE_FW_ADDR_ZIGBEE    (0xC0000)
 #define FLASH_ADR_UPDATE_NEW_FW     (0x40000)
 #else

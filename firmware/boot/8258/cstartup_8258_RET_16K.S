@@ -142,7 +142,21 @@ TNOP:
 	tstorerb    r1,[r0,#1]
 FLASH_WAKEUP_END:
 
-
+#if __PROJECT_BOOTLOADER__
+    @ bootloader copy code mode
+	tloadr      r1, COPY_CODE_I
+	tloadr      r2, COPY_CODE_I+4
+	tloadr      r3, COPY_CODE_I+8
+COPY_CODE:
+	tcmp        r2, r3
+	tjge        COPY_CODE_END
+	tloadr      r0, [r1, #0]
+	tstorer     r0, [r2, #0]
+	tadd        r1, #4
+	tadd        r2, #4
+	tj          COPY_CODE
+COPY_CODE_END:
+#endif
 
 
 	tloadr	r0, FLL_D
@@ -311,7 +325,11 @@ BOOT_LINK_NEED:
 	.word   _ramcode_size_div_256_compile_
 
 DATA_I:	
+#if __PROJECT_BOOTLOADER__
+	.word   _dstored_bin_				@0
+#else
 	.word	_dstored_					@0
+#endif
 	.word	_start_data_				@4
 	.word	_end_data_					@8
 	
@@ -322,6 +340,13 @@ NO_RET_DATA_I:
 NO_RET_BSS_I: 
 	.word   (_no_retention_bss_start_)  @0
 	.word   (_no_retention_bss_end_)    @4
+
+#if __PROJECT_BOOTLOADER__
+COPY_CODE_I:
+    .word   (__RAM_START_ADDR + _vector_end_)
+    .word   (__RAM_START_ADDR + _ram_code_start_)
+    .word   (__RAM_START_ADDR + _bootloader_ram_code_end_)
+#endif
 
 FLL_D:
 	.word	0xffffffff
@@ -345,6 +370,7 @@ BOOT_SEL_D:
 
 FLASH_RECOVER:
 	.word	(0x80000c)                  @0
+	.word   _ram_code_start_    @ without this, compile would be error:"nonconstant expression for load base" when there is not text section.
 
 	.align 4
 __irq:

@@ -409,13 +409,14 @@ void spirit_lpn_wakeup_init(u8 e, u8 *p, int n)
 	}
 }
 
+
+void spirit_lpn_suspend_enter(u8 e, u8 *p, int n){
+	bls_pm_setWakeupSource(PM_WAKEUP_PAD);
+}
+
 void spirit_lpn_ui_init(){
 	cpu_set_gpio_wakeup(SW1_GPIO, 0, 1);// SW1 switch gatt_mode
-	gpio_set_wakeup(SW1_GPIO, 0, 1);
-
 	cpu_set_gpio_wakeup(SW2_GPIO, 0, 1);
-	gpio_set_wakeup(SW2_GPIO, 0, 1);
-	gpio_core_wakeup_enable_all(1);
 
 	bls_pm_setWakeupSource(PM_WAKEUP_PAD);  //gpio pad wakeup suspend/deepsleep
 }
@@ -515,6 +516,7 @@ void user_init()
 	rf_pa_init();
 	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);
 	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_EXIT, &spirit_lpn_wakeup_init);
+	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_ENTER, &spirit_lpn_suspend_enter);
 	blc_hci_registerControllerEventHandler(app_event_handler);		//register event callback
 	//bls_hci_mod_setEventMask_cmd(0xffff);			//enable all 15 events,event list see ble_ll.h
 	bls_set_advertise_prepare (app_advertise_prepare_handler);

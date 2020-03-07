@@ -11,8 +11,13 @@ SECTIONS
         *(.vectors.*)	/* MUST as follows, when compile with -ffunction-sections -fdata-sections, session name may changed */
         }
         
+    . = (((. + 15) / 16)*16);       /* must 16 byte align if use "AT" for ".text" */
+        PROVIDE(_vector_end_ = . );
+            
     . = (. * (1 - __BOOT_LOADER_EN)) + (__FW_RAMCODE_SIZE_MAX * __BOOT_LOADER_EN);
+        PROVIDE(_ram_code_start_ = . );
         .ram_code :
+        AT(_vector_end_)
         {
         *main.o(.ram_code)
         *main.o(.ram_code.*)
@@ -36,7 +41,7 @@ SECTIONS
 
         . = (_rstored_ + __FW_OFFSET);
         .text :
-          AT(_rstored_)  
+          AT((_rstored_ * (1 - __BOOT_LOADER_EN)) + ((_vector_end_ + (_rstored_ - _ram_code_start_)) * __BOOT_LOADER_EN))  
         {
         *(.text)
         *(.text.*)
@@ -50,8 +55,8 @@ SECTIONS
     . = (((. + 3) / 4)*4);
         PROVIDE(_dstored_ = .);                     /*location in flash*/
         PROVIDE(_code_size_div_256_ = (. + 255) / 256);
-        PROVIDE(_dstored_bin_ = . - __FW_OFFSET);   /*location in bin*/
-        PROVIDE(_code_size_ = . - __FW_OFFSET);
+        PROVIDE(_dstored_bin_ = (((. - __FW_OFFSET) * (1 - __BOOT_LOADER_EN)) + ((_vector_end_ + (_dstored_ - _ram_code_start_)) * __BOOT_LOADER_EN)));   /*location in bin*/
+        PROVIDE(_code_size_ = _dstored_bin_);
         PROVIDE(_ramcode_size_div_256_ = (_ramcode_size_div_256_compile_ * (1 - __MCU_RUN_SRAM_EN)) + (_code_size_div_256_ * __MCU_RUN_SRAM_EN));
 	. = __RAM_START_ADDR + 0x900 + (_ramcode_size_div_256_ * 0x100);	/* 0x100 alighned, must greater than or equal to:0x808000 + ram_code_size +  irq_vector(0x100) + IC_tag(0x100) + IC_cache(0x800) == 0x808a00 + ram_code_size */
         .data :	 /*is retention for 825x. is 'data' for others. must use name 'data'.*/
@@ -107,8 +112,10 @@ SECTIONS
     PROVIDE(_bin_size_div_16_ = (_bin_size_ + 15 ) / 16);
     PROVIDE(_ictag_start_ = __RAM_START_ADDR + (_ramcode_size_div_256_) * 0x100);		/*not for retention*/
     PROVIDE(_ictag_end_ = __RAM_START_ADDR + (_ramcode_size_div_256_ + 1) * 0x100);	/*not for retention*/
+    PROVIDE(_bootloader_ram_code_end_ = (_ram_code_start_ + _code_size_ - _vector_end_));
     
 	/*PROVIDE(_ram_use_size_div_16_ = (_retention_data_end_ - 0x840000  + 15 ) / 16); only for 825x*/
     ASSERT((_end_bss_ - 0x840000) * __PM_DEEPSLEEP_RETENTION_ENABLE <= 0x8000, "**Retention Area Overflow, Check your data/bss usages**")
     ASSERT((_bin_size_ + 16) * __FLASH_512K_ENABLE <= 0x30000, "**Error:firmware size Overflow!!!**")
+    ASSERT((_ramcode_size_div_16_align_256_ * 16 * __FW_START_BY_BOOTLOADER_EN) <= __FW_RAMCODE_SIZE_MAX, "**Error:ramcode size Overflow!!!**")
 }

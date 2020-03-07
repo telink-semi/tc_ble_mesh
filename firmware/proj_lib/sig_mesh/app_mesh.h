@@ -363,7 +363,7 @@ extern const u8	const_tbl_scanRsp [9] ;
 #if MI_API_ENABLE
 #define TTL_DEFAULT             (5)
 #else
-#define TTL_DEFAULT             (5)         // max relay count = TTL_DEFAULT - 1
+#define TTL_DEFAULT             (10)         // max relay count = TTL_DEFAULT - 1
 #endif
 #define TTL_MAX                 (0x7F)
 #define TTL_PUB_USE_DEFAULT     (0xFF)

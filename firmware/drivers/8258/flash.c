@@ -31,21 +31,31 @@
 #include "proj/mcu/watchdog_i.h"
 #include "proj_lib/ble/blt_config.h"
 
+
+#if AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN
 _attribute_aligned_(4)	Flash_CapacityDef	flash_capacity;
-#if FLASH_1M_ENABLE
-u32 flash_sector_mac_address = CFG_ADR_MAC_1M_FLASH;
-u32 flash_sector_calibration = CFG_ADR_CALIBRATION_1M_FLASH;
-#else
-u32 flash_sector_mac_address = CFG_ADR_MAC_512K_FLASH;			//default flash is 512k
-u32 flash_sector_calibration = CFG_ADR_CALIBRATION_512K_FLASH;	//default flash is 512k
 #endif
+u32 flash_sector_mac_address = CFG_SECTOR_ADR_MAC_CODE;
+u32 flash_sector_calibration = CFG_SECTOR_ADR_CALIBRATION_CODE;
 
 void blc_readFlashSize_autoConfigCustomFlashSector(void)
 {
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+    // always use fixed customized address
+#else
 	u8 temp_buf[4];
 	flash_read_mid(temp_buf);
 	u8	flash_cap = temp_buf[2];
-
+    #if (FLASH_1M_ENABLE)
+	if(flash_cap != FLASH_SIZE_1M){ // 
+        while(1){
+            #if(MODULE_WATCHDOG_ENABLE)
+            wd_clear();
+            #endif
+        }; 
+    }
+    #else // 512K
+        #if (AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN)
 	if(flash_cap == FLASH_SIZE_512K){
 		flash_sector_mac_address = CFG_ADR_MAC_512K_FLASH;
 		flash_sector_calibration = CFG_ADR_CALIBRATION_512K_FLASH;
@@ -59,9 +69,15 @@ void blc_readFlashSize_autoConfigCustomFlashSector(void)
 		//If code stop here, please check your Flash
 		while(1);
 	}
+	    #else
+	flash_cap = flash_cap;
+	    #endif
+    #endif
 
-
+    #if AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN
 	flash_set_capacity(flash_cap);
+    #endif
+#endif
 }
 
 static inline int flash_is_busy(){
@@ -121,7 +137,8 @@ static inline int is_valid_sector_addr(u32 addr)
     #if FLASH_1M_ENABLE
 	if(((addr & 0xFFFFF000) == MI_BLE_MESH_CER_ADR) || (addr >= 0x100000))
     #else
-	if(addr >= MI_BLE_MESH_CER_ADR)
+	if((addr >= MI_BLE_MESH_CER_ADR)&&
+	    (!(((flash_sector_mac_address == CFG_ADR_MAC_1M_FLASH) && (addr == FLASH_ADR_EDCH_PARA)))))
     #endif
 	{
 		return 0;
@@ -752,7 +769,7 @@ _attribute_ram_code_ void flash_unlock(Flash_TypeDef type)
 #endif
 #endif
 
-
+#if AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN
 void flash_set_capacity(Flash_CapacityDef flash_cap)
 {
 	flash_capacity = flash_cap;
@@ -762,3 +779,5 @@ Flash_CapacityDef flash_get_capacity(void)
 {
 	return flash_capacity;
 }
+#endif
+

@@ -44,6 +44,11 @@
 #define __PROJECT_MESH_SWITCH__     0
 #endif
 
+#if WIN32 // just for compile
+u32 flash_sector_mac_address = 0x76000;
+u32 flash_sector_calibration = 0x77000;
+#endif
+
 u32 system_time_ms = 0;
 u32 system_time_100ms = 0;
 u32 system_time_s = 0;

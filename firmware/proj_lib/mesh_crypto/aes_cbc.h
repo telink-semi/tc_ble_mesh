@@ -72,6 +72,7 @@ void AES_init_ctx(AES_ctx* ctx, const uint8_t* key);
 void AES128_pkcs7_padding(u8 *src_buf, u32 len, u8 *padding_buf);
 void tn_aes_128(unsigned char *key, unsigned char *plaintext, unsigned char *result);
 int aes_decrypt(unsigned char *Key, unsigned char *Data, unsigned char *Result);
+void aes_ll_decryption(unsigned char *Key, unsigned char *Data, unsigned char *Result);
 
 #if (defined(CBC) && (CBC == 1)) || (defined(CTR) && (CTR == 1))
 void AES_init_ctx_iv(AES_ctx* ctx, const uint8_t* key, const uint8_t* iv);

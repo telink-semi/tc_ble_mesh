@@ -37,6 +37,8 @@ int mesh_reset_network(u8 provision_enable);
 
 extern u8 manual_factory_reset;
 
+#define FACTORY_RESET_LOG_EN        0
+
 #if !WIN32
 static int adr_reset_cnt_idx = 0;
 
@@ -250,6 +252,9 @@ void increase_reset_cnt ()
 	
 	reset_cnt++;
 	write_reset_cnt(reset_cnt);
+	#if FACTORY_RESET_LOG_EN
+    LOG_USER_MSG_INFO(0,0,"cnt %d\r\n",reset_cnt);
+    #endif
 }
 
 int factory_reset_handle ()
@@ -263,6 +268,9 @@ int factory_reset_handle ()
         factory_reset();
             #if DUAL_MODE_WITH_TLK_MESH_EN
         UI_resotre_TLK_4K_with_check();
+            #endif
+            #if FACTORY_RESET_LOG_EN
+        LOG_USER_MSG_INFO(0,0,"factory reset success\r\n",0);
             #endif
         show_ota_result(OTA_SUCCESS);
 	    start_reboot();
@@ -298,6 +306,9 @@ int factory_reset_cnt_check ()
 	if((1 == clear_st) && clock_time_exceed(0, reset_check_time*1000*1000)){
 	    clear_st = 0;
         clear_reset_cnt();
+        #if FACTORY_RESET_LOG_EN
+        LOG_USER_MSG_INFO(0,0,"cnt clear\r\n",0);
+        #endif
 	}
 	
 	return 0;
@@ -368,11 +379,10 @@ int factory_reset(){
 		}
 	}
 	
-	for(int i = 1; i < (FLASH_ADR_PAR_USER_MAX - (CUST_CAP_INFO_ADDR)) / 4096; ++i){
-		//flash_erase_sector(CUST_CAP_INFO_ADDR + i*0x1000);
+	for(int i = 1; i < (FLASH_ADR_PAR_USER_MAX - (CFG_SECTOR_ADR_CALIBRATION_CODE)) / 4096; ++i){
 		#if XIAOMI_MODULE_ENABLE
-		if(i < (((FLASH_ADR_PAR_USER_MAX - (CUST_CAP_INFO_ADDR)) / 4096) - 1)){ // the last sector is FLASH_ADR_MI_AUTH
-            u32 adr = (CUST_CAP_INFO_ADDR + i*0x1000);
+		if(i < (((FLASH_ADR_PAR_USER_MAX - (CFG_SECTOR_ADR_CALIBRATION_CODE)) / 4096) - 1)){ // the last sector is FLASH_ADR_MI_AUTH
+            u32 adr = (CFG_SECTOR_ADR_CALIBRATION_CODE + i*0x1000);
 		    #if DUAL_VENDOR_EN
 		    if(adr != FLASH_ADR_THREE_PARA_ADR)
 		    #endif
@@ -380,6 +390,8 @@ int factory_reset(){
 			    flash_erase_sector(adr);
 			}
 		}
+		#else
+		//flash_erase_sector(CFG_SECTOR_ADR_CALIBRATION_CODE + i*0x1000);
 		#endif
 	}
 

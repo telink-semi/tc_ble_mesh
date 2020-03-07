@@ -94,6 +94,13 @@ asm(".equ __FW_OFFSET,      0");
 #endif
 asm(".global     __FW_OFFSET");
 
+#if (FW_START_BY_BOOTLOADER_EN)
+asm(".equ __FW_START_BY_BOOTLOADER_EN,  1");
+#else
+asm(".equ __FW_START_BY_BOOTLOADER_EN,  0");
+#endif
+asm(".global     __FW_START_BY_BOOTLOADER_EN");
+
 #if __PROJECT_BOOTLOADER__
 asm(".equ __BOOT_LOADER_EN,         1");
 #else
@@ -924,6 +931,7 @@ u8 proc_telink_mesh_to_sig_mesh(void)
 	u8 ret = 0;
 	#if (0 == FLASH_1M_ENABLE)
 	u32 sig_cust_cap_flag = 0;
+	// 0x77004 is fixed address of telink mesh, not depend on flash size.
 	flash_read_page(0x77004, 4, (u8 *)&sig_cust_cap_flag);	// reserve 3 byte for CUST_CAP_INFO
     #endif
     
@@ -935,18 +943,20 @@ u8 proc_telink_mesh_to_sig_mesh(void)
 	#endif
 	){
 	    #if (0 == FLASH_1M_ENABLE)
-		flash_erase_sector(CUST_CAP_INFO_ADDR);
+		flash_erase_sector(flash_sector_calibration);
 
 		u8 flash_data = 0;
-		flash_read_page(0x76010, 1, &flash_data);
-		flash_write_page(CUST_CAP_INFO_ADDR, 1, &flash_data);
+		flash_read_page(flash_sector_mac_address + 0x10, 1, &flash_data);
+		flash_write_page(flash_sector_calibration + CALIB_OFFSET_CAP_INFO, 1, &flash_data);
 
-		flash_read_page(0x76011, 1, &flash_data);
-		flash_write_page(CUST_TP_INFO_ADDR, 1, &flash_data);
+        #if ((MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269))
+		flash_read_page(flash_sector_mac_address + 0x11, 1, &flash_data);
+		flash_write_page(flash_sector_calibration + CALIB_OFFSET_TP_INFO, 1, &flash_data);
 
-		flash_read_page(0x76012, 1, &flash_data);
-		flash_write_page(CUST_TP_INFO_ADDR+1, 1, &flash_data);
+		flash_read_page(flash_sector_mac_address + 0x12, 1, &flash_data);
+		flash_write_page(flash_sector_calibration + CALIB_OFFSET_TP_INFO + 1, 1, &flash_data);
 		// no RC32K_CAP_INFO
+		#endif
 		#endif
 		
 		ret = 1;

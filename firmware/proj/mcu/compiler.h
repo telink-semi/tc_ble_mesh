@@ -52,7 +52,9 @@
 #if (BLC_PM_DEEP_RETENTION_MODE_EN)
 //#define _attribute_data_retention_   __attribute__((section(".retention_data")))
 // #define _attribute_bss_retention_    __attribute__((section(".retention_bss")))          // not use now, always take a space in firmware for private section.
+#if (!__PROJECT_BOOTLOADER__) // if bootloader use this section, it need to fix AT(no_ret_data) and copy position from flash in cstartup.
 #define _attribute_no_retention_data_   __attribute__((section(".no_ret_data")))
+#endif
 #define _attribute_no_retention_bss_   __attribute__((section(".no_ret_bss")))
 #endif
 #endif

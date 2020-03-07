@@ -138,7 +138,7 @@
  */
 void generateRandomNum(int len, u8 *data);
 
-//void swapX(const u8 *src, u8 *dst, u8 len);
+void swapX(const u8 *src, u8 *dst, int len);
 
 void swap24(u8 dst[3], const u8 src[3]);
 void swap32(u8 dst[4], const u8 src[4]);
