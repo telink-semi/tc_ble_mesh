@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/title_bar"
+        android:layout_width="fill_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/FileMenuStyle"
+        app:navigationIcon="@drawable/ic_file_select_left">
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:singleLine="true"
+            android:textColor="@color/file_white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </androidx.appcompat.widget.Toolbar>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/tv_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:background="?attr/selectableItemBackground"
+            android:src="@drawable/ic_file_dots"
+            android:tint="@color/file_color_primary" />
+
+        <TextView
+            android:id="@+id/tv_cur_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="10dp"
+            android:text="name"
+            android:gravity="right"
+            android:textColor="@color/file_color_primary" />
+
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/lv_file"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>

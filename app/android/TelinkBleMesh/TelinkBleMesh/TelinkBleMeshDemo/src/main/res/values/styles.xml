@@ -1,0 +1,91 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <!--<style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">-->
+    <!--<style name="AppTheme" parent="@android:style/Theme.Holo.Light">
+
+    &lt;!&ndash; Customize your theme here. &ndash;&gt;
+        &lt;!&ndash;<item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>&ndash;&gt;
+    </style>-->
+
+
+    <style name="AppBaseTheme"  parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorControlHighlight">@color/colorPrimaryDark</item>
+        <item name="colorButtonNormal">@color/colorPrimary</item>
+        <item name="colorControlNormal">@color/grey</item>
+
+        <item name="colorControlActivated">@color/colorPrimary</item>
+        <item name="android:buttonStyle">@style/ButtonStyle</item>
+
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <item name="alertDialogTheme">@style/AlertDialogTheme</item>
+    </style>
+
+    <style name="AppTheme" parent="AppBaseTheme" />
+
+    <style name="AlertDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+
+    <style name="WaitingDialogStyle" parent="android:style/Theme.Dialog">
+        <item name="android:windowBackground">@drawable/white_radius_bg</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <style name="CommonTheme" parent="Theme.AppCompat.Light">
+        <item name="colorControlNormal">@color/grey</item>
+        <item name="colorControlActivated">@color/colorPrimary</item>
+    </style>
+
+    <style name="ButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:textColor">@color/white</item>"
+    </style>
+
+    <style name="MultiStateButton" parent="ThemeOverlay.AppCompat.Dark">
+        <!-- customize colorAccent for the enabled color -->
+        <item name="colorAccent">@color/white</item>
+        <!-- customize colorControlHighlight for the enabled/pressed color -->
+        <!-- customize colorButtonNormal for the disabled color -->
+        <item name="android:buttonStyle">@style/Widget.AppCompat.Button.Colored</item>
+    </style>
+
+
+    <style name="WarnButton" parent="Theme.AppCompat.Light">
+        <item name="android:textColor">@color/white</item>"
+        <item name="colorControlHighlight">@color/colorPrimaryDark</item>
+        <item name="colorButtonNormal">@color/red</item>
+    </style>
+
+    <style name="AccentButton" parent="ThemeOverlay.AppCompat.Dark">
+        <!-- customize colorButtonNormal for the disable color -->
+        <item name="colorButtonNormal">@color/grey</item>
+        <item name="colorAccent">@color/colorPrimary</item>
+        <!-- customize colorAccent for the enabled color -->
+    </style>
+
+
+    <style name="TabLayoutStyle" parent="Widget.Design.TabLayout">
+        <item name="tabIndicatorColor">@color/red</item>
+        <item name="tabIndicatorHeight">2dp</item>
+        <item name="tabPaddingStart">8dp</item>
+        <item name="tabPaddingEnd">8dp</item>
+        <item name="tabBackground">@color/colorPrimary</item>
+        <item name="tabTextAppearance">@style/TabTextAppearance</item>
+        <item name="tabSelectedTextColor">@android:color/white</item>
+    </style>
+
+    <style name="TabTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="textAllCaps">true</item>
+    </style>
+
+</resources>

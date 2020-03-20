@@ -1,0 +1,14 @@
+// mesh demo app
+include ':TelinkBleMeshDemo'
+
+// mesh library
+include ':TelinkBleMeshLib'
+
+// file selector
+include ':TelinkFileSelector'
+
+// bluetooth library
+// include ':TelinkBleLib'
+
+// ble lib test
+// include ':TelinkBleTest'

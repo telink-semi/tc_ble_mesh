@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tv_filter_init"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/main_bg_click"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="FilterInit"
+        android:textColor="#fff" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/gray"
+        android:layout_marginTop="8dp" />
+
+
+    <TextView
+        android:id="@+id/tv_bv03"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/main_bg_click"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="bv03"
+        android:textColor="#fff" />
+
+
+    <TextView
+        android:id="@+id/tv_bv04"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/main_bg_click"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="bv04"
+        android:textColor="#fff" />
+
+
+    <TextView
+        android:id="@+id/tv_bv05"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/main_bg_click"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="bv05"
+        android:textColor="#fff" />
+
+
+    <TextView
+        android:id="@+id/tv_bv06"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/main_bg_click"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="bv06"
+        android:textColor="#fff" />
+
+
+    <TextView
+        android:id="@+id/tv_bv07"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/main_bg_click"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="bv07"
+        android:textColor="#fff" />
+
+
+</LinearLayout>

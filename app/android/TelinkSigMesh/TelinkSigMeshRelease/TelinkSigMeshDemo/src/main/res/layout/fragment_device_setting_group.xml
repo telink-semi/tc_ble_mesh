@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBg"
+    android:orientation="vertical">
+
+    <include layout="@layout/title" />
+
+    <LinearLayout
+        android:id="@+id/ll_offline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="device offline"
+            android:textColor="#e69544"
+            android:textSize="12sp" />
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_warn" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@null">
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_group"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fadingEdge="none"
+                android:listSelector="@android:color/transparent"
+                android:verticalSpacing="10dp" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/et_pub_addr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="pub address" />
+
+
+            <TextView
+                android:id="@+id/tv_get"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/main_bg_click"
+                android:gravity="center"
+                android:paddingBottom="8dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="8dp"
+                android:singleLine="true"
+                android:text="get addr"
+                android:textColor="#fff"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tv_set"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:background="@drawable/main_bg_click"
+                android:gravity="center"
+                android:paddingBottom="8dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="8dp"
+                android:singleLine="true"
+                android:text="set addr"
+                android:textColor="#fff"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tv_lum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="70dp"
+            android:text="@string/lum_progress" />
+
+        <SeekBar
+            android:id="@+id/sb_brightness"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:max="99"
+            android:padding="5dp"
+            android:progress="9"
+            android:theme="@style/CommonTheme" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tv_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="70dp"
+            android:text="@string/temp_progress" />
+
+        <SeekBar
+            android:id="@+id/sb_temp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:padding="5dp"
+            android:progress="10" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_scheduler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="Scheduler Setting" />
+
+    <Button
+        android:id="@+id/btn_color"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="Color panel" />
+
+    <Button
+        android:id="@+id/btn_ota"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="OTA" />
+    <!--<TextView
+        android:id="@+id/tv_color"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="@drawable/main_bg_click"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="Color Panel"
+        android:textColor="#fff" />-->
+
+    <!--<TextView
+        android:id="@+id/tv_ota"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="@drawable/main_bg_click"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="OTA"
+        android:textColor="#fff" />-->
+
+    <!--<TextView
+        android:id="@+id/tv_kick_out"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:background="@drawable/warn_click"
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:text="Kick Out"
+        android:textColor="#fff" />-->
+</LinearLayout>

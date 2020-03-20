@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include layout="@layout/title"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/tv_vendor_on"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:singleLine="true"
+                android:text="VD-On" />
+
+            <Button
+                android:id="@+id/tv_vendor_off"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:singleLine="true"
+                android:text="VD-Off" />
+
+            <Button
+                android:id="@+id/tv_get"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:singleLine="true"
+                android:text="On/Off Get" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/tv_vendor_on_na"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8dp"
+                android:layout_weight="1"
+                android:singleLine="true"
+                android:text="VD-On-N.A"
+                android:textColor="#fff" />
+
+            <Button
+                android:id="@+id/tv_vendor_off_na"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:singleLine="true"
+                android:text="VD-Off-N.A"
+                android:textColor="#fff" />
+
+            <Button
+                android:id="@+id/tv_generic_on"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:singleLine="true"
+                android:text="G-On" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Params(HEX): " />
+
+        <EditText
+            android:id="@+id/et_cmd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:digits="1234567890ABCDEFabcdef"
+            android:gravity="top"
+            android:minLines="2" />
+
+
+        <Button
+            android:id="@+id/tv_send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:text="Send CMD"
+            android:textColor="#fff" />
+
+        <ScrollView
+            android:id="@+id/sv_log"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/tv_log"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+        </ScrollView>
+    </LinearLayout>
+
+</LinearLayout>

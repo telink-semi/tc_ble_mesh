@@ -1,0 +1,135 @@
+.. fw_distribution_start_all
+<0000>17:11:44:248 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00 01 00 b6 0a 11 02 21 00 00 ff 00 c0
+<0001>17:11:44:250 [INFO]:(Basic)the mesh access tx cmd is 0x0ab6 : 11 02 21 00 00 ff 00 c0 06 00 
+<0002>17:11:44:260 [INFO]:(cmd_name)connected addr 0x0006
+<0003>17:11:44:263 [INFO]:(Basic)the mesh access tx cmd is 0x0cb6 : 01 11 02 21 00 00 ff 
+<0004>17:11:44:265 [INFO]:(cmd_rsp)Status Rsp_______________: 01 00 01 00 b6 0c 01 11 02 21 00 00 ff 
+<0005>17:11:44:271 [INFO]:(cmd_name)OTA,block total: 0,cur: 0,chunk total: 0,cur: 0, Progress:0%
+<0006>17:11:44:274 [INFO]:(cmd_name)cfg_cmd_sub_set
+<0007>17:11:44:276 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 80 1b 06 00 00 c0 00 ff 
+<0008>17:11:44:279 [INFO]:(Basic)the mesh access tx cmd is 0x1b80 : 06 00 00 c0 00 ff 
+<0009>17:11:44:469 [ERR]:decryption: device key not found
+<0010>17:11:44:473 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0x1f80 : 80 1f 00 06 00 00 c0 00 ff 
+<0011>17:11:44:477 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 80 1f 00 06 00 00 c0 00 ff 
+<0012>17:11:44:484 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x1b80 rsp_max 1, rsp_cnt 1
+<0013>17:11:44:489 [INFO]:(cmd_name)access_cmd_fw_info_get
+<0014>17:11:44:493 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 b6 01 
+<0015>17:11:44:498 [INFO]:(Basic)the mesh access tx cmd is 0x01b6 NULL
+<0016>17:11:44:590 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0x2b6 : b6 02 11 02 01 00 33 30 
+<0017>17:11:44:594 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 b6 02 11 02 01 00 33 30 
+<0018>17:11:44:601 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x01b6 rsp_max 1, rsp_cnt 1
+<0019>17:11:44:607 [INFO]:(cmd_name)access_cmd_obj_info_get
+<0020>17:11:44:613 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 b7 0a 
+<0021>17:11:44:618 [INFO]:(Basic)the mesh access tx cmd is 0x0ab7 NULL
+<0022>17:11:44:749 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0xbb7 : b7 0b 0c 0c 10 00 
+<0023>17:11:44:754 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 b7 0b 0c 0c 10 00 
+<0024>17:11:44:763 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x0ab7 rsp_max 1, rsp_cnt 1
+<0025>17:11:44:770 [INFO]:(cmd_name)access_cmd_fw_update_prepare
+<0026>17:11:44:776 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 b6 04 11 02 21 00 00 ff 11 22 33 44 55 66 77 88 
+<0027>17:11:44:782 [INFO]:(Basic)the mesh access tx cmd is 0x04b6 : 11 02 21 00 00 ff 11 22 33 44 55 66 77 88 
+<0028>17:11:45:149 [INFO]:(Basic)rc data layer upper:segment tx success, map in ACK is: 03 00 00 00 
+<0029>17:11:45:156 [INFO]:(Basic)rx segment all packetes received
+<0030>17:11:45:163 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0x8b6 : b6 08 00 01 11 02 21 00 00 ff 11 22 33 44 55 66 77 88 
+<0031>17:11:45:172 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 b6 08 00 01 11 02 21 00 00 ff 11 22 33 44 55 66 77 88 
+<0032>17:11:45:182 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x04b6 rsp_max 1, rsp_cnt 1
+<0033>17:11:45:192 [INFO]:(cmd_name)access_cmd_fw_update_start
+<0034>17:11:45:200 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 b6 05 00 11 02 21 00 00 ff 
+<0035>17:11:45:219 [INFO]:(Basic)the mesh access tx cmd is 0x05b6 : 00 11 02 21 00 00 ff 
+<0036>17:11:45:350 [INFO]:(Basic)rx segment all packetes received
+<0037>17:11:45:361 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0x8b6 : b6 08 00 02 11 02 21 00 00 ff 11 22 33 44 55 66 77 88 
+<0038>17:11:45:372 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 b6 08 00 02 11 02 21 00 00 ff 11 22 33 44 55 66 77 88 
+<0039>17:11:45:386 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x05b6 rsp_max 1, rsp_cnt 1
+<0040>17:11:45:408 [INFO]:(cmd_name)access_cmd_obj_transfer_start
+<0041>17:11:45:419 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 b7 02 11 22 33 44 55 66 77 88 54 12 00 00 0c 
+<0042>17:11:45:430 [INFO]:(Basic)the mesh access tx cmd is 0x02b7 : 11 22 33 44 55 66 77 88 54 12 00 00 0c 
+<0043>17:11:45:789 [INFO]:(Basic)rc data layer upper:segment tx success, map in ACK is: 03 00 00 00 
+<0044>17:11:45:800 [INFO]:(Basic)rx segment all packetes received
+<0045>17:11:45:811 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0x4b7 : b7 04 01 11 22 33 44 55 66 77 88 54 12 00 00 0c 
+<0046>17:11:45:825 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 b7 04 01 11 22 33 44 55 66 77 88 54 12 00 00 0c 
+<0047>17:11:45:844 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x02b7 rsp_max 1, rsp_cnt 1
+<0048>17:11:45:870 [INFO]:(cmd_name)access_cmd_obj_block_transfer_start
+<0049>17:11:45:882 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 b7 05 11 22 33 44 55 66 77 88 00 00 00 01 00 1f d5 50 bb 00 10 
+<0050>17:11:45:893 [INFO]:(Basic)the mesh access tx cmd is 0x05b7 : 11 22 33 44 55 66 77 88 00 00 00 01 00 1f d5 50 bb 00 10 
+<0051>17:11:46:509 [INFO]:(Basic)rc data layer upper:segment tx success, map in ACK is: 07 00 00 00 
+<0052>17:11:46:520 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0x6b7 : b7 06 00 
+<0053>17:11:46:531 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 b7 06 00 
+<0054>17:11:46:545 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x05b7 rsp_max 1, rsp_cnt 1
+<0055>17:11:46:558 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur: 0, Progress:6%
+<0056>17:11:46:570 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 00 00 0e
+<0057>17:11:52:081 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur: 1, Progress:11%
+<0058>17:11:52:093 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 01 00 00
+<0059>17:11:57:606 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur: 2, Progress:17%
+<0060>17:11:57:616 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 02 00 09
+<0061>17:12:03:127 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur: 3, Progress:22%
+<0062>17:12:03:139 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 03 00 0d
+<0063>17:12:08:650 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur: 4, Progress:27%
+<0064>17:12:08:662 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 04 00 02
+<0065>17:12:14:175 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur: 5, Progress:33%
+<0066>17:12:14:186 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 05 00 1a
+<0067>17:12:19:698 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur: 6, Progress:38%
+<0068>17:12:19:708 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 06 00 eb
+<0069>17:12:25:220 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur: 7, Progress:43%
+<0070>17:12:25:231 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 07 00 70
+<0071>17:12:30:744 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur: 8, Progress:49%
+<0072>17:12:30:756 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 08 00 1f
+<0073>17:12:36:268 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur: 9, Progress:54%
+<0074>17:12:36:280 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 09 00 fc
+<0075>17:12:41:792 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur:10, Progress:59%
+<0076>17:12:41:803 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 0a 00 92
+<0077>17:12:47:315 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur:11, Progress:65%
+<0078>17:12:47:325 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 0b 00 00
+<0079>17:12:52:836 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur:12, Progress:70%
+<0080>17:12:52:847 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 0c 00 70
+<0081>17:12:58:359 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur:13, Progress:75%
+<0082>17:12:58:370 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 0d 00 7b
+<0083>17:13:03:886 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur:14, Progress:81%
+<0084>17:13:03:897 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 0e 00 e4
+<0085>17:13:09:409 [INFO]:(cmd_name)OTA,block total: 2,cur: 0,chunk total:16,cur:15, Progress:86%
+<0086>17:13:09:420 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 0f 00 25
+<0087>17:13:14:932 [INFO]:(cmd_name)access_cmd_obj_block_get
+<0088>17:13:14:943 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 7e 11 22 33 44 55 66 77 88 00 00 
+<0089>17:13:14:954 [INFO]:(Basic)the mesh access tx cmd is 0x007e : 11 22 33 44 55 66 77 88 00 00 
+<0090>17:13:15:068 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0x9b7 : b7 09 00 
+<0091>17:13:15:078 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 b7 09 00 
+<0092>17:13:15:092 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x007e rsp_max 1, rsp_cnt 1
+<0093>17:13:15:104 [INFO]:(cmd_name)access_cmd_obj_block_transfer_start
+<0094>17:13:15:121 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 b7 05 11 22 33 44 55 66 77 88 01 00 00 01 00 37 dc 4e 55 54 02 
+<0095>17:13:15:138 [INFO]:(Basic)the mesh access tx cmd is 0x05b7 : 11 22 33 44 55 66 77 88 01 00 00 01 00 37 dc 4e 55 54 02 
+<0096>17:13:15:788 [INFO]:(Basic)rc data layer upper:segment tx success, map in ACK is: 07 00 00 00 
+<0097>17:13:15:799 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0x6b7 : b7 06 00 
+<0098>17:13:15:810 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 b7 06 00 
+<0099>17:13:15:826 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x05b7 rsp_max 1, rsp_cnt 1
+<0100>17:13:15:838 [INFO]:(cmd_name)OTA,block total: 2,cur: 1,chunk total: 3,cur: 0, Progress:91%
+<0101>17:13:15:849 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 00 00 00
+<0102>17:13:21:362 [INFO]:(cmd_name)OTA,block total: 2,cur: 1,chunk total: 3,cur: 1, Progress:97%
+<0103>17:13:21:373 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 01 00 38
+<0104>17:13:26:887 [INFO]:(cmd_name)OTA,block total: 2,cur: 1,chunk total: 3,cur: 2, Progress:99%
+<0105>17:13:26:900 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 00  00 c0 7d 02 00 0a
+<0106>17:13:28:911 [INFO]:(cmd_name)access_cmd_obj_block_get
+<0107>17:13:28:922 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 7e 11 22 33 44 55 66 77 88 01 00 
+<0108>17:13:28:933 [INFO]:(Basic)the mesh access tx cmd is 0x007e : 11 22 33 44 55 66 77 88 01 00 
+<0109>17:13:29:028 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0x9b7 : b7 09 00 
+<0110>17:13:29:039 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 b7 09 00 
+<0111>17:13:29:053 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x007e rsp_max 1, rsp_cnt 1
+<0112>17:13:29:064 [INFO]:(cmd_name)access_cmd_fw_update_get
+<0113>17:13:29:075 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 b6 03 11 02 21 00 00 ff 
+<0114>17:13:29:087 [INFO]:(Basic)the mesh access tx cmd is 0x03b6 : 11 02 21 00 00 ff 
+<0115>17:13:29:189 [INFO]:(Basic)rx segment all packetes received
+<0116>17:13:29:203 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0x8b6 : b6 08 00 03 11 02 21 00 00 ff 11 22 33 44 55 66 77 88 
+<0117>17:13:29:216 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 b6 08 00 03 11 02 21 00 00 ff 11 22 33 44 55 66 77 88 
+<0118>17:13:29:229 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x03b6 rsp_max 1, rsp_cnt 1
+<0119>17:13:29:250 [INFO]:(cmd_name)access_cmd_fw_update_apply 
+<0120>17:13:29:261 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 06 00 b6 07 11 02 21 00 00 ff 
+<0121>17:13:29:272 [INFO]:(Basic)the mesh access tx cmd is 0x07b6 : 11 02 21 00 00 ff 
+<0122>17:13:29:350 [INFO]:(Basic)rx segment all packetes received
+<0123>17:13:29:361 [INFO]:(Basic)adr_src:0x0006,adr_dst:0x0001,access rx cmd is 0x8b6 : b6 08 00 00 11 02 21 00 00 ff 11 22 33 44 55 66 77 88 
+<0124>17:13:29:372 [INFO]:(cmd_rsp)Status Rsp_______________: 06 00 01 00 b6 08 00 00 11 02 21 00 00 ff 11 22 33 44 55 66 77 88 
+<0125>17:13:29:386 [INFO]:(log_win32)mesh_tx_reliable_stop: op 0x07b6 rsp_max 1, rsp_cnt 1
+<0126>17:13:29:408 [INFO]:(cmd_name)connected addr 0x0006
+<0127>17:13:29:421 [INFO]:(cmd_name)access_cmd_fw_distribut_stop
+<0128>17:13:29:432 [INFO]:(common)ExecCmd: a3 ff 00 00 00 00 02 01 01 00 b6 0b 11 02 21 00 00 ff 
+<0129>17:13:29:442 [INFO]:(cmd_name)OTA,block total: 0,cur: 0,chunk total: 0,cur: 0, Progress:100%
+<0130>17:13:29:452 [INFO]:(Basic)the mesh access tx cmd is 0x0bb6 : 11 02 21 00 00 ff 
+<0131>17:13:29:463 [INFO]:(Basic)the mesh access tx cmd is 0x0cb6 : 00 11 02 21 00 00 ff 
+<0132>17:13:29:473 [INFO]:(cmd_rsp)Status Rsp_______________: 01 00 01 00 b6 0c 00 11 02 21 00 00 ff 
+<0133>17:13:29:484 [INFO]:(cmd_name)mesh OTA completed!
