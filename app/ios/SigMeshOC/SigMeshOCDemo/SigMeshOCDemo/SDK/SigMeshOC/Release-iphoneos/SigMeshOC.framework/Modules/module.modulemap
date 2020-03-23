@@ -1,0 +1,6 @@
+framework module SigMeshOC {
+  umbrella header "SigMeshOC.h"
+
+  export *
+  module * { export * }
+}
