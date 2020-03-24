@@ -7,10 +7,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.model.LogInfo;
+import com.telink.ble.mesh.util.LogInfo;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.Locale;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,17 +23,10 @@ import androidx.recyclerview.widget.RecyclerView;
 public class LogInfoAdapter extends BaseRecyclerViewAdapter<LogInfoAdapter.ViewHolder> {
 
     private Context mContext;
-    private List<LogInfo> mLogs;
     private SimpleDateFormat mDateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.getDefault());
 
-    public LogInfoAdapter(Context context, List<LogInfo> logs) {
+    public LogInfoAdapter(Context context) {
         this.mContext = context;
-        this.mLogs = logs;
-    }
-
-    public void refreshLogs(List<LogInfo> logs) {
-        this.mLogs = logs;
-        this.notifyDataSetChanged();
     }
 
     @Override
@@ -46,23 +39,42 @@ public class LogInfoAdapter extends BaseRecyclerViewAdapter<LogInfoAdapter.ViewH
 
     @Override
     public int getItemCount() {
-        return mLogs == null ? 0 : mLogs.size();
+        return MeshLogger.logInfoList.size();
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
-        LogInfo logInfo = mLogs.get(position);
-        String info = mDateFormat.format(logInfo.datetime) + "/" + logInfo.tag + " : " + logInfo.log;
+        LogInfo logInfo = MeshLogger.logInfoList.get(position);
+        String info = mDateFormat.format(logInfo.millis) + "/" + logInfo.tag + " : " + logInfo.logMessage;
+        holder.tv_name.setTextColor(mContext.getResources().getColor(getColorResId(logInfo.level)));
         holder.tv_name.setText(info);
     }
 
 
     class ViewHolder extends RecyclerView.ViewHolder {
         TextView tv_name;
-
         public ViewHolder(View itemView) {
             super(itemView);
         }
+    }
+
+
+    private int getColorResId(int level) {
+        switch (level) {
+            case MeshLogger.LEVEL_VERBOSE:
+                return R.color.log_v;
+            case MeshLogger.LEVEL_INFO:
+                return R.color.log_i;
+            case MeshLogger.LEVEL_WARN:
+                return R.color.log_w;
+            case MeshLogger.LEVEL_ERROR:
+                return R.color.log_e;
+            case MeshLogger.LEVEL_DEBUG:
+            default:
+                return R.color.log_d;
+
+        }
+
     }
 }

@@ -28,7 +28,8 @@ import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.ui.adapter.SwitchListAdapter;
 import com.telink.ble.mesh.ui.widget.ColorPanel;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import java.util.List;
 
@@ -196,7 +197,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
                 preTime = currentTime;
                 sendHslSetMessage(hslValue);
             } else {
-                TelinkLog.w("CMD reject : color set");
+                MeshLogger.w("CMD reject : color set");
             }
         }
     };
@@ -345,7 +346,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
 
     @Override
     public void onClick(View v) {
-        TelinkLog.d("delta: " + delta);
+        MeshLogger.log("delta: " + delta);
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         int appKeyIndex = meshInfo.getDefaultAppKeyIndex();
         switch (v.getId()) {

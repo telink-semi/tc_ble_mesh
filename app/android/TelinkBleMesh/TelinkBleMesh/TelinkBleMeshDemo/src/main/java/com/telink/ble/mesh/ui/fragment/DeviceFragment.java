@@ -25,10 +25,10 @@ import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.ui.CmdActivity;
 import com.telink.ble.mesh.ui.DeviceProvisionActivity;
 import com.telink.ble.mesh.ui.DeviceSettingActivity;
+import com.telink.ble.mesh.ui.FastProvisionActivity;
 import com.telink.ble.mesh.ui.KeyBindActivity;
 import com.telink.ble.mesh.ui.LogActivity;
 import com.telink.ble.mesh.ui.MainActivity;
-import com.telink.ble.mesh.ui.MeshTestActivity;
 import com.telink.ble.mesh.ui.RemoteProvisionActivity;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.OnlineDeviceListAdapter;
@@ -40,7 +40,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 设备控制fragment
+ * devices fragment
  * Created by kee on 2017/8/18.
  */
 
@@ -90,8 +90,11 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
             public boolean onMenuItemClick(MenuItem item) {
                 if (item.getItemId() == R.id.item_add) {
 //                    startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
+
                     if (SharedPreferenceHelper.isRemoteProvisionEnable(getActivity())) {
                         startActivity(new Intent(getActivity(), RemoteProvisionActivity.class));
+                    } else if (SharedPreferenceHelper.isFastProvisionEnable(getActivity())) {
+                        startActivity(new Intent(getActivity(), FastProvisionActivity.class));
                     } else {
                         startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
                     }
@@ -104,7 +107,6 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         view.findViewById(R.id.tv_off).setOnClickListener(this);
         view.findViewById(R.id.tv_cmd).setOnClickListener(this);
         view.findViewById(R.id.tv_log).setOnClickListener(this);
-        view.findViewById(R.id.tv_mesh_test).setOnClickListener(this);
         view.findViewById(R.id.tv_cycle).setOnClickListener(this);
 
         RecyclerView gv_devices = view.findViewById(R.id.rv_online_devices);
@@ -192,8 +194,10 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
     private Runnable cycleTask = new Runnable() {
         @Override
         public void run() {
-            // todo mesh interface
-//            MeshService.getInstance().setOnOff(index % 2 == 0 ? 3 : 4, (byte) ((index / 2) % 2), true, 1, 0, (byte) 0, null);
+            int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+            OnOffSetMessage onOffSetMessage = OnOffSetMessage.getSimple(0xFFFF, appKeyIndex,
+                    index % 2, true, 0);
+            MeshService.getInstance().sendMeshMessage(onOffSetMessage);
             index++;
             mCycleHandler.postDelayed(this, 2 * 1000);
         }
@@ -234,60 +238,25 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
 
             case R.id.tv_cmd:
 //                byte[] config = TelinkMeshApplication.getInstance().getMeshLib().getConfigInfo();
-//                TelinkLog.d("config: " + Arrays.bytesToHexString(config, ":"));
+//                MeshLogger.log("config: " + Arrays.bytesToHexString(config, ":"));
                 startActivity(new Intent(getActivity(), CmdActivity.class));
                 break;
 
             case R.id.tv_log:
                 startActivity(new Intent(getActivity(), LogActivity.class));
                 break;
-
-            case R.id.tv_mesh_test:
-                startActivity(new Intent(getActivity(), MeshTestActivity.class));
-                break;
         }
-    }
-
-    private void saveLog(String action) {
-        TelinkMeshApplication.getInstance().saveLog(" --test-- " + action);
     }
 
 
     @Override
     public void performed(Event<String> event) {
-        // todo mesh interface
         String eventType = event.getType();
         if (eventType.equals(MeshEvent.EVENT_TYPE_DISCONNECTED)
                 || eventType.equals(MeshEvent.EVENT_TYPE_MESH_RESET)
                 || eventType.equals(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED)) {
             refreshUI();
         }
-
-        /* if (event.getType().equals(CommandEvent.EVENT_TYPE_CMD_COMPLETE)) {
-            CommandEvent commandEvent = (CommandEvent) event;
-            long during = System.currentTimeMillis() - startTime;
-            if (TAG_ALL_ON.equals(commandEvent.getMeshCommand().tag)) {
-                saveLog("All On during:" + during + "ms");
-            } else if (TAG_ALL_OFF.equals(commandEvent.getMeshCommand().tag)) {
-                saveLog("All Off during:" + during + "ms");
-            }
-        } else {
-            if (event instanceof NotificationEvent) {
-                if (((NotificationEvent) event).isStatusChanged()) {
-                    refreshUI();
-                }
-            } else if (event instanceof OnlineStatusEvent) {
-                refreshUI();
-            }
-        }*/
-
-        /*if (event.getType().equals(NotificationEvent.EVENT_TYPE_DEVICE_ON_OFF_STATUS)) {
-            refreshUI();
-        } else if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
-            refreshUI();
-        } else if (event.getType().equals(NotificationEvent.EVENT_TYPE_CTL_STATUS_NOTIFY)) {
-            refreshUI();
-        }*/
     }
 
 

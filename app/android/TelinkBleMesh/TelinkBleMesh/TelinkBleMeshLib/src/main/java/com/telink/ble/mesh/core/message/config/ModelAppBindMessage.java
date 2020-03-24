@@ -74,6 +74,11 @@ public class ModelAppBindMessage extends ConfigMessage {
     }
 
     @Override
+    public int getResponseOpcode() {
+        return Opcode.MODE_APP_STATUS.value;
+    }
+
+    @Override
     public byte[] getParams() {
         // check if sig model or vendor model
 //        boolean isSigModel = isSigModel(this.modelIdentifier);

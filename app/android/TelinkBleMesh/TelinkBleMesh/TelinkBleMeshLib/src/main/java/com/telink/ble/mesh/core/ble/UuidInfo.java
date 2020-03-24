@@ -6,7 +6,7 @@ import java.util.UUID;
  * Created by kee on 2018/7/19.
  */
 
-public class UuidInfo {
+public class UUIDInfo {
 
     public static final UUID SERVICE_UUID_OTA = UUID.fromString("00010203-0405-0607-0809-0a0b0c0d1912");
     public static final UUID CHARACTERISTIC_UUID_OTA = UUID.fromString("00010203-0405-0607-0809-0a0b0c0d2b12");

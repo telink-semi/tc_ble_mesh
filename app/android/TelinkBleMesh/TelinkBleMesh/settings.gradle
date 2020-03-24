@@ -5,10 +5,9 @@ include ':TelinkBleMeshDemo'
 include ':TelinkBleMeshLib'
 
 // file selector
-include ':TelinkFileSelector'
+//include ':TelinkFileSelector'
 
 // bluetooth library
-// include ':TelinkBleLib'
+//include ':TelinkBleLib'
 
-// ble lib test
-// include ':TelinkBleTest'
+//include ':TelinkBleTest'

@@ -29,7 +29,8 @@ import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.ui.DeviceOtaActivity;
 import com.telink.ble.mesh.ui.ModelSettingActivity;
 import com.telink.ble.mesh.ui.SchedulerListActivity;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import androidx.appcompat.app.AlertDialog;
 
@@ -214,7 +215,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                 });
 
             } else {
-                TelinkLog.d("publication err: " + statusMessage.getStatus());
+                MeshLogger.log("publication err: " + statusMessage.getStatus());
             }
 
 
@@ -283,9 +284,9 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
 
                 int pubAdr = 0;
                 if (cb_pub.isChecked()) {
-                    TelinkLog.d("cancel publication");
+                    MeshLogger.log("cancel publication");
                 } else {
-                    TelinkLog.d("set publication");
+                    MeshLogger.log("set publication");
                     pubAdr = pubModel.address;
                 }
                 int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();

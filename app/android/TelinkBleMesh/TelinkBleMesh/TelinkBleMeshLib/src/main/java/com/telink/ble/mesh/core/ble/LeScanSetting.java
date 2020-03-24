@@ -14,12 +14,12 @@ public class LeScanSetting {
     /**
      * time of scanning
      */
-    public long during;
+    public long timeout;
 
     public static LeScanSetting getDefault() {
         LeScanSetting setting = new LeScanSetting();
         setting.spacing = 5 * 1000;
-        setting.during = 10 * 1000;
+        setting.timeout = 10 * 1000;
         return setting;
     }
 
@@ -28,6 +28,6 @@ public class LeScanSetting {
 
     public LeScanSetting(long spacing, long during) {
         this.spacing = spacing;
-        this.during = during;
+        this.timeout = during;
     }
 }

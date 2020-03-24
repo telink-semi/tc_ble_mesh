@@ -48,7 +48,8 @@ public class Parameters {
 
     public static final String ACTION_BINDING_TARGET = "com.telink.ble.mesh.light.ACTION_BINDING_TARGET";
 
-
+    // fast provision
+    public static final String ACTION_FAST_PROVISION_CONFIG = "com.telink.ble.mesh.light.ACTION_FAST_PROVISION_CONFIG";
     // auto connect
 
     public static final String ACTION_AUTO_CONNECT_FILTER_TYPE = "com.telink.ble.mesh.light.ACTION_AUTO_CONNECT_FILTER_TYPE";
@@ -91,33 +92,18 @@ public class Parameters {
      */
     public static final String ACTION_MESH_OTA_FIRMWARE = "com.telink.ble.mesh.light.ACTION_MESH_OTA_FIRMWARE";
 
-    // key bind action
-    public static final String ACTION_BIND_FAST_BIND = "com.telink.ble.mesh.light.ACTION_BIND_FAST_BIND";
-
-    public static final String ACTION_BIND_APP_KEY = "com.telink.ble.mesh.light.ACTION_BIND_APP_KEY";
-
-    public static final String ACTION_BIND_APP_KEY_INDEX = "com.telink.ble.mesh.light.ACTION_BIND_APP_KEY_INDEX";
-
-    public static final String ACTION_BIND_NET_KEY_INDEX = "com.telink.ble.mesh.light.ACTION_BIND_NET_KEY_INDEX";
-
-    public static final String ACTION_BIND_DEVICE_INFO = "com.telink.ble.mesh.light.ACTION_BIND_DEVICE_INFO";
-
-    public static final String ACTION_BIND_MODEL_LIST = "com.telink.ble.mesh.light.ACTION_BIND_MODEL_LIST";
-
-    public static final String ACTION_REMOTE_PROVISION_DEVICE = "com.telink.ble.mesh.light.ACTION_REMOTE_PROVISION_DEVICE";
-
-    public static final String ACTION_REMOTE_BIND_DEVICE = "com.telink.ble.mesh.light.ACTION_REMOTE_PROVISION_DEVICE";
 
 
     protected Map<String, Object> mParams;
 
     protected Parameters() {
         mParams = new LinkedHashMap<>();
-        if (ContextUtil.versionAboveN()) {
+        /*if (ContextUtil.versionAboveN()) {
             this.setScanMinSpacing(DEFAULT_SCAN_SPACING_ABOVE_N);
         } else {
             this.setScanMinSpacing(0);
-        }
+        }*/
+        this.setScanMinSpacing(0);
         this.setScanTimeout(DEFAULT_SCAN_TIMEOUT);
         this.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
         this.setConnectRetry(DEFAULT_CONNECT_RETRY);

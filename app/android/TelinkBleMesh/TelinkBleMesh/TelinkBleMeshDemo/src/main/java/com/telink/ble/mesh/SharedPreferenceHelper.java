@@ -32,6 +32,8 @@ public class SharedPreferenceHelper {
 
     private static final String KEY_REMOTE_PROVISION = "com.telink.bluetooth.light.KEY_REMOTE_PROVISION";
 
+    private static final String KEY_FAST_PROVISION = "com.telink.bluetooth.light.KEY_FAST_PROVISION";
+
     public static boolean isFirstLoad(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(KEY_FIRST_LOAD, true);
@@ -107,4 +109,13 @@ public class SharedPreferenceHelper {
     }
 
 
+    public static boolean isFastProvisionEnable(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KEY_FAST_PROVISION, false);
+    }
+
+    public static void setFastProvisionEnable(Context context, boolean enable) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putBoolean(KEY_FAST_PROVISION, enable).apply();
+    }
 }

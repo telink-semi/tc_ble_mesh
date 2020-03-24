@@ -10,7 +10,7 @@ import android.widget.Button;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.ble.MeshScanRecord;
-import com.telink.ble.mesh.core.ble.UuidInfo;
+import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.AdvertisingDevice;
 import com.telink.ble.mesh.entity.BindingDevice;
@@ -29,7 +29,7 @@ import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
 import com.telink.ble.mesh.ui.adapter.DeviceProvisionListAdapter;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -125,7 +125,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     private void onDeviceFound(AdvertisingDevice advertisingDevice) {
         int address = mesh.provisionIndex;
 
-        TelinkLog.d("alloc address: " + address);
+        MeshLogger.d("alloc address: " + address);
         if (address == -1) {
             enableUI(true);
             return;
@@ -243,12 +243,12 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         if (privateMode && remote.getAdvertisingDevice().scanRecord != null) {
             PrivateDevice device = getPrivateDevice(remote.getAdvertisingDevice().scanRecord);
             if (device != null) {
-                TelinkLog.d("private device");
+                MeshLogger.d("private device");
                 final byte[] cpsData = device.getCpsData();
                 nodeInfo.compositionData = CompositionData.from(cpsData);
                 defaultBound = true;
             } else {
-                TelinkLog.d("private device null");
+                MeshLogger.d("private device null");
             }
         }
 
@@ -265,7 +265,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     private PrivateDevice getPrivateDevice(byte[] scanRecord) {
         if (scanRecord == null) return null;
         MeshScanRecord sr = MeshScanRecord.parseFromBytes(scanRecord);
-        byte[] serviceData = sr.getServiceData(ParcelUuid.fromString(UuidInfo.PROVISION_SERVICE_UUID.toString()));
+        byte[] serviceData = sr.getServiceData(ParcelUuid.fromString(UUIDInfo.PROVISION_SERVICE_UUID.toString()));
         if (serviceData == null) return null;
         return PrivateDevice.filter(serviceData);
     }

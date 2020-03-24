@@ -1,7 +1,8 @@
 package com.telink.ble.mesh.core;
 
 import com.telink.ble.mesh.util.Arrays;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import org.spongycastle.crypto.BlockCipher;
 import org.spongycastle.crypto.CipherParameters;
@@ -80,7 +81,7 @@ public final class Encipher {
             generator.initialize(ecParamSpec);
             return generator.generateKeyPair();
         } catch (Exception e) {
-            TelinkLog.d("generate key pair err!");
+            MeshLogger.log("generate key pair err!");
             return null;
         }
     }

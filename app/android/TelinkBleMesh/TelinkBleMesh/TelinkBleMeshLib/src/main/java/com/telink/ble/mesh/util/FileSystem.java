@@ -70,7 +70,7 @@ public abstract class FileSystem {
 
             result = ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            TelinkLog.w("read object error : ", e);
+            MeshLogger.w("read object error : " + e.toString());
         } finally {
             try {
                 if (ois != null)

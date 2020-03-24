@@ -23,5 +23,8 @@ public class NodeResetMessage extends ConfigMessage {
         return null;
     }
 
-
+    @Override
+    public int getResponseOpcode() {
+        return Opcode.NODE_RESET_STATUS.value;
+    }
 }

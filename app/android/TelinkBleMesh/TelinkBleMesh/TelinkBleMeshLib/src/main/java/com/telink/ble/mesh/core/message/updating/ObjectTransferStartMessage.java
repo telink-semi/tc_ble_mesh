@@ -20,7 +20,7 @@ public class ObjectTransferStartMessage extends UpdatingMessage {
     private int objectSize;
 
     /**
-     * Size of the block during this transfer
+     * Size of the block timeout this transfer
      */
     private byte blockSizeLog;
 

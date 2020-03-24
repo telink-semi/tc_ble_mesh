@@ -2,7 +2,7 @@ package com.telink.ble.mesh.foundation.parameter;
 
 
 import com.telink.ble.mesh.core.ble.LeScanFilter;
-import com.telink.ble.mesh.core.ble.UuidInfo;
+import com.telink.ble.mesh.core.ble.UUIDInfo;
 
 import java.util.UUID;
 
@@ -22,9 +22,9 @@ public class ScanParameters extends Parameters {
         ScanParameters parameters = new ScanParameters();
 
         if (provisioned) {
-            parameters.filter.uuidInclude = new UUID[]{UuidInfo.PROXY_SERVICE_UUID};
+            parameters.filter.uuidInclude = new UUID[]{UUIDInfo.PROXY_SERVICE_UUID};
         } else {
-            parameters.filter.uuidInclude = new UUID[]{UuidInfo.PROVISION_SERVICE_UUID};
+            parameters.filter.uuidInclude = new UUID[]{UUIDInfo.PROVISION_SERVICE_UUID};
         }
         parameters.setScanFilter(parameters.filter);
         parameters.singleMode(single);

@@ -60,6 +60,10 @@ public class ModelSubscriptionSetMessage extends ConfigMessage {
         return mode == MODE_ADD ? Opcode.CFG_MODEL_SUB_ADD.value : Opcode.CFG_MODEL_SUB_DEL.value ;
     }
 
+    @Override
+    public int getResponseOpcode() {
+        return Opcode.CFG_MODEL_SUB_STATUS.value;
+    }
 
     @Override
     public byte[] getParams() {

@@ -134,12 +134,4 @@
         android:visibility="gone" />
 
 
-    <Button
-        android:id="@+id/tv_mesh_test"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:visibility="gone"
-        android:text="MeshTest" />
-
 </LinearLayout>

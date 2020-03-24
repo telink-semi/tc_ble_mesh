@@ -15,7 +15,8 @@ import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshConfiguration;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.util.Arrays;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -43,7 +44,6 @@ public class SplashActivity extends BaseActivity {
 
         MeshService.getInstance().init(this, TelinkMeshApplication.getInstance());
         MeshConfiguration meshConfiguration = TelinkMeshApplication.getInstance().getMeshInfo().convertToConfiguration();
-        TelinkLog.d("net info: " + TelinkMeshApplication.getInstance().getMeshInfo().toString());
         MeshService.getInstance().setupMeshNetwork(meshConfiguration);
     }
 
@@ -74,7 +74,7 @@ public class SplashActivity extends BaseActivity {
     }
 
     private void onPermissionChecked() {
-        TelinkLog.d("permission check pass");
+        MeshLogger.log("permission check pass");
         delayHandler.removeCallbacksAndMessages(null);
         delayHandler.postDelayed(new Runnable() {
             @Override

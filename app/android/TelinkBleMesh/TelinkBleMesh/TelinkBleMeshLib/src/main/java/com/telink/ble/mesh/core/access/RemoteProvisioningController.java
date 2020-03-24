@@ -17,7 +17,9 @@ import com.telink.ble.mesh.core.provisioning.ProvisioningController;
 import com.telink.ble.mesh.core.proxy.ProxyPDU;
 import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
 import com.telink.ble.mesh.util.Arrays;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
+import java.util.logging.Level;
 
 /**
  * todo
@@ -28,7 +30,7 @@ import com.telink.ble.mesh.util.TelinkLog;
  */
 
 public class RemoteProvisioningController implements ProvisioningBridge {
-    private final String TAG = "RemotePv -- ";
+    private final String LOG_TAG = "RemotePv";
 
     public static final int STATE_INIT = 0x00;
 
@@ -211,7 +213,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
             this.state = provisionSuccess ? STATE_PROVISION_SUCCESS : STATE_PROVISION_FAIL;
             onRemoteProvisioningComplete();
         } else if (opcode == Opcode.REMOTE_PROV_PDU_SEND.value) {
-            log("provisioning pdu send err");
+            log("provisioning pdu send timeout");
         }
     }
 
@@ -266,7 +268,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
         public void run() {
             if (outboundReportWaiting && transmittingPdu != null) {
                 outboundReportWaiting = false;
-                log("provisioning pdu timeout: " + Arrays.bytesToHexString(transmittingPdu));
+                logMessage("provisioning pdu timeout: " + Arrays.bytesToHexString(transmittingPdu));
                 onCommandPrepared(ProxyPDU.TYPE_PROVISIONING_PDU, transmittingPdu);
             }
         }
@@ -303,7 +305,12 @@ public class RemoteProvisioningController implements ProvisioningBridge {
         onMeshMessagePrepared(provisioningPduSendMessage);
     }
 
-    private void log(String log) {
-        TelinkLog.d(TAG + log);
+
+    private void log(String logMessage) {
+        log(logMessage, MeshLogger.LEVEL_DEBUG);
+    }
+
+    private void log(String logMessage, int level) {
+        MeshLogger.log(logMessage, LOG_TAG, level);
     }
 }

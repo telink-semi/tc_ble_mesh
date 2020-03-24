@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="file_color_primary_dark">#8b97de</color>
-    <color name="file_color_primary">#4A87EE</color>
-    <color name="file_color_accent">#907acf</color>
-
-    <color name="file_white">#FFFFFF</color>
-</resources>

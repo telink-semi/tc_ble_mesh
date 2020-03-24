@@ -7,10 +7,11 @@ import android.widget.TextView;
 import com.telink.ble.mesh.demo.R;
 
 /**
- * share tips
+ * tips
  */
 public class ShareTipActivity extends BaseActivity {
     public static final String INTENT_KEY_TIP_RES_ID = "ShareTipActivity.TIP_RES_ID";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

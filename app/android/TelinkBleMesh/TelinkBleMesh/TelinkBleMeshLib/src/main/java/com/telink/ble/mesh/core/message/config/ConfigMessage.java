@@ -9,6 +9,7 @@ import com.telink.ble.mesh.core.networking.AccessType;
  */
 public abstract class ConfigMessage extends MeshMessage {
 
+
     public static final byte STATUS_SUCCESS = 0x00;
 
     /**
@@ -51,6 +52,8 @@ public abstract class ConfigMessage extends MeshMessage {
 
     public ConfigMessage(int destinationAddress) {
         this.destinationAddress = destinationAddress;
+        // default rsp max
+        this.responseMax = 1;
     }
 
     /**

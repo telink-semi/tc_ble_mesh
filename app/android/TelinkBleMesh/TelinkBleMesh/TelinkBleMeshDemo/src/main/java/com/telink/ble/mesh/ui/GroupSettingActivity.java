@@ -24,7 +24,8 @@ import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.OnlineDeviceListAdapter;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -89,7 +90,7 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
                     tv_temp.setText(getString(R.string.temp_progress, progress, Integer.toHexString(group.address)));
                 }
             } else {
-                TelinkLog.w("CMD reject: " + progress);
+                MeshLogger.w("CMD reject: " + progress);
             }
         }
     };

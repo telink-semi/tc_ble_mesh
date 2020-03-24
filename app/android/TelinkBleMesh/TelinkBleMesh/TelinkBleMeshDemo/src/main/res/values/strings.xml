@@ -53,6 +53,8 @@
 
     <string name="enable_remote_provision">Remote Provision</string>
 
+    <string name="enable_fast_provision">Fast Provision</string>
+
     <string name="hex_input">0123456789abcdefABCDEF</string>
 
     <string name="number_input">0123456789</string>

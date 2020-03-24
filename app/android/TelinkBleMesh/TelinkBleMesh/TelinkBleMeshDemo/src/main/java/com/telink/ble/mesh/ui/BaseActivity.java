@@ -9,7 +9,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,7 +37,7 @@ public class BaseActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
 
         }
-        TelinkLog.w(TAG + " onCreate");
+        MeshLogger.w(TAG + " onCreate");
         this.toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
 
     }
@@ -45,7 +46,7 @@ public class BaseActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        TelinkLog.w(TAG + " onDestroy");
+        MeshLogger.w(TAG + " onDestroy");
         this.toast.cancel();
         this.toast = null;
     }
@@ -53,13 +54,13 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     public void finish() {
         super.finish();
-        TelinkLog.w(TAG + " finish");
+        MeshLogger.w(TAG + " finish");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        TelinkLog.w(TAG + " onResume");
+        MeshLogger.w(TAG + " onResume");
     }
 
     public void toastMsg(CharSequence s) {
@@ -76,7 +77,7 @@ public class BaseActivity extends AppCompatActivity {
         if (confirmDialogBuilder == null) {
             confirmDialogBuilder = new AlertDialog.Builder(this);
             confirmDialogBuilder.setCancelable(true);
-            confirmDialogBuilder.setTitle("Warn");
+            confirmDialogBuilder.setTitle("Warning");
 //            confirmDialogBuilder.setMessage(msg);
             confirmDialogBuilder.setPositiveButton("Confirm", confirmClick);
 

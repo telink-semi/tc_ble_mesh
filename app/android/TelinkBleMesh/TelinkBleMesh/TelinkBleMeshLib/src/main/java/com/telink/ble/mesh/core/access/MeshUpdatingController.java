@@ -30,13 +30,13 @@ import com.telink.ble.mesh.core.message.updating.ObjectTransferStartMessage;
 import com.telink.ble.mesh.core.message.updating.ObjectTransferStatusMessage;
 import com.telink.ble.mesh.entity.MeshUpdatingConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
-import androidx.collection.ArraySet;
 
 
 /**
@@ -46,7 +46,7 @@ import androidx.collection.ArraySet;
  */
 public class MeshUpdatingController {
 
-    private final String TAG = "MeshUpdating -- ";
+    private final String LOG_TAG = "MeshUpdating";
 
     /**
      * all complete, fail or success
@@ -185,7 +185,7 @@ public class MeshUpdatingController {
     /**
      * received missing chunk number
      */
-    private ArraySet<Integer> missingChunks = new ArraySet<>();
+    private ArrayList<Integer> missingChunks = new ArrayList<>();
 
     private int missingChunkIndex = 0;
 
@@ -215,7 +215,7 @@ public class MeshUpdatingController {
             return;
         }
         firmwareParser.reset(configuration.getFirmwareData());
-        TelinkLog.d(TAG + " config -- " + configuration.toString());
+        log(" config -- " + configuration.toString());
         this.appKeyIndex = configuration.getAppKeyIndex();
         this.groupAddress = configuration.getGroupAddress();
         this.nodes = configuration.getUpdatingDevices();
@@ -240,7 +240,7 @@ public class MeshUpdatingController {
 
     public void stop() {
         if (step == STEP_INITIAL) {
-            TelinkLog.w("mesh updating not running");
+            log("mesh updating not running");
         } else {
             delayHandler.removeCallbacksAndMessages(null);
             delayHandler.postDelayed(stoppingCheckTask, 5 * 1000);
@@ -266,13 +266,13 @@ public class MeshUpdatingController {
             int chunkNumber = firmwareParser.currentChunkIndex();
             ObjectChunkTransferMessage objectChunkTransferMessage = generateChunkTransferMessage(chunkNumber, chunkData);
 
-            TelinkLog.d(TAG + "next chunk transfer msg: " + objectChunkTransferMessage.toString());
+            log("next chunk transfer msg: " + objectChunkTransferMessage.toString());
 
             onMeshMessagePrepared(objectChunkTransferMessage);
 
             delayHandler.postDelayed(chunkSendingTask, getChunkSendingInterval());
         } else {
-            TelinkLog.d(TAG + "chunks sent complete at: block -- " + firmwareParser.currentBlockIndex()
+            log("chunks sent complete at: block -- " + firmwareParser.currentBlockIndex()
                     + " chunk -- " + firmwareParser.currentChunkIndex());
             checkMissingChunks();
         }
@@ -280,7 +280,7 @@ public class MeshUpdatingController {
 
 
     private void checkMissingChunks() {
-        TelinkLog.d(TAG + "check missing chunks");
+        log("check missing chunks");
         missingChunks.clear();
         step = STEP_GET_OBJECT_BLOCK;
         nodeIndex = 0;
@@ -291,10 +291,10 @@ public class MeshUpdatingController {
     private void resendMissingChunks() {
         if (missingChunkIndex >= missingChunks.size()) {
             // all missing chunk sent
-            TelinkLog.d(TAG + "all missing chunks sent complete: " + missingChunkIndex);
+            log("all missing chunks sent complete: " + missingChunkIndex);
             checkMissingChunks();
         } else {
-            int chunkNumber = missingChunks.valueAt(missingChunkIndex);
+            int chunkNumber = missingChunks.get(missingChunkIndex);
             byte[] chunkData = firmwareParser.chunkAt(chunkNumber);
             ObjectChunkTransferMessage objectChunkTransferMessage = generateChunkTransferMessage(chunkNumber, chunkData);
             onMeshMessagePrepared(objectChunkTransferMessage);
@@ -307,7 +307,7 @@ public class MeshUpdatingController {
         int interval = firmwareParser.getChunkSize() / 12 * 320;
         final int min = 5 * 1000;
         interval = (interval < min ? min : interval);
-        TelinkLog.d(TAG + "resending interval: " + interval);
+        log("resending interval: " + interval);
         return interval;
     }
 
@@ -337,11 +337,11 @@ public class MeshUpdatingController {
      * if all devices executed, then next step
      */
     private void executeUpdatingAction() {
-        TelinkLog.d(TAG + "action: " + getStepDesc(step) + " -- node index -- " + nodeIndex);
+        log("action: " + getStepDesc(step) + " -- node index -- " + nodeIndex);
         if (nodeIndex >= nodes.size()) {
             // all nodes executed
 
-            TelinkLog.d(TAG + "current step complete: " + getStepDesc(step));
+            log("current step complete: " + getStepDesc(step));
 
             removeFailedDevices();
 
@@ -361,7 +361,7 @@ public class MeshUpdatingController {
                         resendMissingChunks();
                     }
                 } else {
-                    TelinkLog.d(TAG + "next step: " + getStepDesc(step + 1));
+                    log("next step: " + getStepDesc(step + 1));
                     step++;
                     executeUpdatingAction();
                 }
@@ -370,7 +370,7 @@ public class MeshUpdatingController {
             }
         } else {
             int meshAddress = nodes.get(nodeIndex).getMeshAddress();
-            TelinkLog.d(TAG + String.format("action executing: " + getStepDesc(step) + " -- %04X", meshAddress));
+            log(String.format("action executing: " + getStepDesc(step) + " -- %04X", meshAddress));
             switch (this.step) {
                 case STEP_GET_FIRMWARE_INFO:
                     onMeshMessagePrepared(FirmwareInfoGetMessage.getSimple(meshAddress, appKeyIndex, 1));
@@ -412,7 +412,7 @@ public class MeshUpdatingController {
                         if (firmwareParser.hasNextBlock()) {
                             firmwareParser.nextBlock();
                         } else {
-                            TelinkLog.d(TAG + "all blocks sent complete at: block -- " + firmwareParser.currentBlockIndex());
+                            log("all blocks sent complete at: block -- " + firmwareParser.currentBlockIndex());
                             step = STEP_UPDATE_GET;
                             executeUpdatingAction();
                             return;
@@ -479,7 +479,7 @@ public class MeshUpdatingController {
     }
 
     private void onMeshMessagePrepared(MeshMessage meshMessage) {
-        TelinkLog.d(TAG + "mesh message prepared: " + meshMessage.getClass().getSimpleName()
+        log("mesh message prepared: " + meshMessage.getClass().getSimpleName()
                 + String.format(" opcode: 0x%04X -- dst: 0x%04X", meshMessage.getOpcode(), meshMessage.getDestinationAddress()));
         if (accessBridge != null) {
             boolean isMessageSent = accessBridge.onAccessMessagePrepared(meshMessage, AccessBridge.MODE_FIRMWARE_UPDATING);
@@ -491,9 +491,9 @@ public class MeshUpdatingController {
 
     public void onMessageNotification(NotificationMessage message) {
         Opcode opcode = Opcode.valueOf(message.getOpcode());
-        TelinkLog.d(TAG + "message notification: " + opcode);
+        log("message notification: " + opcode);
         if (step == STEP_INITIAL) {
-            TelinkLog.w(TAG + "notification when idle");
+            log("notification when idle");
             return;
         }
         if (opcode == null) return;
@@ -532,7 +532,7 @@ public class MeshUpdatingController {
 
     private void onFirmwareInfoStatus(FirmwareInfoStatusMessage firmwareInfoStatusMessage) {
         // todo, ignore company id / firmware id checking
-        TelinkLog.d(TAG + "firmware info status: " + firmwareInfoStatusMessage.toString());
+        log("firmware info status: " + firmwareInfoStatusMessage.toString());
         int firmwareId = firmwareInfoStatusMessage.getFirmwareId();
         int companyId = firmwareInfoStatusMessage.getCompanyId();
         nodeIndex++;
@@ -540,7 +540,7 @@ public class MeshUpdatingController {
     }
 
     private void onSubscriptionStatus(ModelSubscriptionStatusMessage subscriptionStatusMessage) {
-        TelinkLog.d(TAG + "subscription status: " + subscriptionStatusMessage.toString());
+        log("subscription status: " + subscriptionStatusMessage.toString());
         if (subscriptionStatusMessage.getStatus() != ConfigMessage.STATUS_SUCCESS) {
             onDeviceFail(nodes.get(nodeIndex), "grouping status err " + subscriptionStatusMessage.getStatus());
         }
@@ -553,7 +553,7 @@ public class MeshUpdatingController {
      * response of {@link ObjectInfoGetMessage}
      */
     private void onObjectInfoStatus(ObjectInfoStatusMessage objectInfoStatusMessage) {
-        TelinkLog.d(TAG + "object info status: " + objectInfoStatusMessage.toString());
+        log("object info status: " + objectInfoStatusMessage.toString());
         // todo ignore at present
         nodeIndex++;
         executeUpdatingAction();
@@ -565,7 +565,7 @@ public class MeshUpdatingController {
      */
     private void onFirmwareUpdateStatus(FirmwareUpdateStatusMessage firmwareUpdateStatusMessage) {
 
-        TelinkLog.d(TAG + "firmware update status: " + " at: " + getStepDesc(step)
+        log("firmware update status: " + " at: " + getStepDesc(step)
                 + " -- " + firmwareUpdateStatusMessage.toString());
         byte status = firmwareUpdateStatusMessage.getStatus();
         if (status != FirmwareUpdateStatusMessage.STATUS_SUCCESS) {
@@ -595,7 +595,7 @@ public class MeshUpdatingController {
      * response of {@link ObjectTransferStartMessage}
      */
     private void onTransferStatus(ObjectTransferStatusMessage transferStatusMessage) {
-        TelinkLog.d(TAG + "object transfer status: " + transferStatusMessage.toString());
+        log("object transfer status: " + transferStatusMessage.toString());
         byte status = transferStatusMessage.getStatus();
         if (status != ObjectTransferStatusMessage.STATUS_READY
                 && status != ObjectTransferStatusMessage.STATUS_BUSY_ACTIVE) {
@@ -609,7 +609,7 @@ public class MeshUpdatingController {
      * response of {@link ObjectBlockTransferStartMessage} before start chunks sending
      */
     private void onBlockTransferStatus(ObjectBlockTransferStatusMessage blockTransferStatusMessage) {
-        TelinkLog.d(TAG + "block transfer status: " + blockTransferStatusMessage.toString());
+        log("block transfer status: " + blockTransferStatusMessage.toString());
         byte status = blockTransferStatusMessage.getStatus();
         if (status != ObjectBlockTransferStatusMessage.STATUS_ACCEPTED) {
             onDeviceFail(nodes.get(nodeIndex), "object block transfer status err");
@@ -624,12 +624,12 @@ public class MeshUpdatingController {
      */
     private void onBlockStatus(NotificationMessage message) {
         ObjectBlockStatusMessage objectBlockStatusMessage = (ObjectBlockStatusMessage) message.getStatusMessage();
-        TelinkLog.d(TAG + "block status: " + objectBlockStatusMessage.toString());
+        log("block status: " + objectBlockStatusMessage.toString());
         int srcAddress = message.getSrc();
         switch (objectBlockStatusMessage.getStatus()) {
             case ObjectBlockStatusMessage.STATUS_ALL_CHUNKS_RECEIVED:
                 // all chunks data received
-                TelinkLog.d(TAG + "no chunks missing");
+                log("no chunks missing");
                 nodeIndex++;
                 executeUpdatingAction();
                 break;
@@ -644,7 +644,7 @@ public class MeshUpdatingController {
                     nodeIndex++;
                     executeUpdatingAction();
                 } else {
-                    TelinkLog.e(TAG + "missing chunk data not found at status: " + objectBlockStatusMessage.getStatus());
+                    log("missing chunk data not found at status: " + objectBlockStatusMessage.getStatus());
                 }
                 break;
 
@@ -656,7 +656,7 @@ public class MeshUpdatingController {
                 if (device != null) {
                     onDeviceFail(device, "block status err");
                 } else {
-                    TelinkLog.w(String.format("device not found , mesh address: %04X", srcAddress));
+                    log(String.format("device not found , mesh address: %04X", srcAddress));
                 }
                 break;
 
@@ -668,7 +668,7 @@ public class MeshUpdatingController {
      * reliable command complete
      */
     public void onUpdatingCommandComplete(boolean success, int opcode, int rspMax, int rspCount) {
-        TelinkLog.d(TAG + String.format("updating command complete: opcode-%04X success?" + success, opcode));
+        log(String.format("updating command complete: opcode-%04X success?" + success, opcode));
         if (!success) {
             // command timeout
             final boolean deviceFailed = (opcode == Opcode.FW_INFO_GET.value && step == STEP_GET_FIRMWARE_INFO)
@@ -705,7 +705,7 @@ public class MeshUpdatingController {
 
 
     private void onDeviceFail(MeshUpdatingDevice device, String desc) {
-        TelinkLog.d(TAG + String.format("node updating fail: %04X -- " + desc, device.getMeshAddress()));
+        log(String.format("node updating fail: %04X -- " + desc, device.getMeshAddress()));
         device.setState(MeshUpdatingDevice.STATE_FAIL);
         onStateUpdate(STATE_DEVICE_FAIL,
                 String.format("node updating fail: %04X -- ", device.getMeshAddress()),
@@ -713,7 +713,7 @@ public class MeshUpdatingController {
     }
 
     private void onDeviceSuccess(MeshUpdatingDevice device) {
-        TelinkLog.d(TAG + String.format("node updating success: %04X -- ", device.getMeshAddress()));
+        log(String.format("node updating success: %04X -- ", device.getMeshAddress()));
         device.setState(MeshUpdatingDevice.STATE_SUCCESS);
         onStateUpdate(STATE_DEVICE_SUCCESS,
                 String.format("node updating success: %04X -- ", device.getMeshAddress()),
@@ -724,7 +724,7 @@ public class MeshUpdatingController {
      * at least one device success
      */
     private void onUpdatingSuccess() {
-        TelinkLog.d(TAG + "updating complete");
+        log("updating complete");
         this.step = STEP_INITIAL;
         onStateUpdate(STATE_SUCCESS, "updating success", null);
     }
@@ -733,14 +733,14 @@ public class MeshUpdatingController {
      * no device success
      */
     private void onUpdatingFail(int state, String desc) {
-        TelinkLog.d(TAG + "updating failed: " + state + " -- " + desc);
+        log("updating failed: " + state + " -- " + desc);
         this.step = STEP_INITIAL;
         onStateUpdate(state, desc, null);
     }
 
 
     public void onUpdatingStopped() {
-        TelinkLog.d(TAG + "updating stopped");
+        log("updating stopped");
         this.step = STEP_INITIAL;
         onStateUpdate(STATE_STOPPED, "updating stopped", null);
     }
@@ -799,4 +799,14 @@ public class MeshUpdatingController {
         }
         return "unknown";
     }
+
+    private void log(String logMessage) {
+        log(logMessage, MeshLogger.LEVEL_DEBUG);
+    }
+
+    private void log(String logMessage, int level) {
+        MeshLogger.log(logMessage, LOG_TAG, level);
+    }
+
+
 }

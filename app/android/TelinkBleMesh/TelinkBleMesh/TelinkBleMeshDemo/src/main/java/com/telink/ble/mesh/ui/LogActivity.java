@@ -1,11 +1,8 @@
 package com.telink.ble.mesh.ui;
 
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.view.View;
@@ -13,12 +10,13 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.model.LogInfo;
 import com.telink.ble.mesh.ui.adapter.LogInfoAdapter;
+import com.telink.ble.mesh.util.FileSystem;
+import com.telink.ble.mesh.util.LogInfo;
+import com.telink.ble.mesh.util.MeshLogger;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.Locale;
 
 import androidx.appcompat.app.AlertDialog;
@@ -31,18 +29,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class LogActivity extends BaseActivity {
     private AlertDialog dialog;
-    private List<LogInfo> logs;
     private LogInfoAdapter adapter;
     private Handler mHandler = new Handler();
-
+    private static final String LOG_FILE_PATH = "TelinkBleMesh";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_info);
         RecyclerView recyclerView = findViewById(R.id.rv_log);
-        logs = TelinkMeshApplication.getInstance().getLogInfo();
-        adapter = new LogInfoAdapter(this, logs);
+        adapter = new LogInfoAdapter(this);
         enableBackNav(true);
         setTitle("Log");
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -50,14 +46,12 @@ public class LogActivity extends BaseActivity {
     }
 
     public void clear(View view) {
-        TelinkMeshApplication.getInstance().clearLogInfo();
-        logs = TelinkMeshApplication.getInstance().getLogInfo();
-        adapter.refreshLogs(logs);
+        MeshLogger.logInfoList.clear();
+        adapter.notifyDataSetChanged();
     }
 
     public void refresh(View view) {
-        logs = TelinkMeshApplication.getInstance().getLogInfo();
-        adapter.refreshLogs(logs);
+        adapter.notifyDataSetChanged();
     }
 
 
@@ -65,7 +59,7 @@ public class LogActivity extends BaseActivity {
         if (dialog == null) {
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             final EditText editText = new EditText(this);
-            dialogBuilder.setTitle("Pls input filename(sdcard/TelinkSigMeshSetting/[filename].text)");
+            dialogBuilder.setTitle("Pls input filename(sdcard/" + LOG_FILE_PATH + "/[filename].text)");
             dialogBuilder.setView(editText);
             dialogBuilder.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
                 @Override
@@ -96,11 +90,11 @@ public class LogActivity extends BaseActivity {
                 SimpleDateFormat mDateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.getDefault());
                 final StringBuilder sb = new StringBuilder("TelinkLog\n");
                 for (LogInfo logInfo :
-                        logs) {
-                    sb.append(mDateFormat.format(logInfo.datetime)).append("/").append(logInfo.tag).append(":")
-                            .append(logInfo.log).append("\n");
+                        MeshLogger.logInfoList) {
+                    sb.append(mDateFormat.format(logInfo.millis)).append("/").append(logInfo.tag).append(":")
+                            .append(logInfo.logMessage).append("\n");
                 }
-                TelinkMeshApplication.getInstance().saveLogInFile(fileName, sb.toString());
+                saveLogInFile(fileName, sb.toString());
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -112,10 +106,10 @@ public class LogActivity extends BaseActivity {
         }).start();
     }
 
-    public void checkConnectDevices(View view) {
+    /*public void checkConnectDevices(View view) {
         BluetoothManager manager = (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
         List<BluetoothDevice> devices = manager.getConnectedDevices(BluetoothProfile.GATT);
-//        Toast.makeText(this, "当前连接设备个数" + devices.size(), Toast.LENGTH_SHORT).showToast();
+//        Toast.makeText(this, "current connect" + devices.size(), Toast.LENGTH_SHORT).showToast();
         TelinkMeshApplication.getInstance().saveLog("The connected device count: " + devices.size());
         for (BluetoothDevice device : devices) {
             TelinkMeshApplication.getInstance().saveLog("\tThe connected device: " + device.getName() + "--" + device.getAddress());
@@ -123,7 +117,14 @@ public class LogActivity extends BaseActivity {
 
 //        String info = TelinkMeshApplication.getInstance().getLogInfo();
 //        tv_info.setText(info);
-    }
+    }*/
 
+    public void saveLogInFile(String fileName, String logInfo) {
+        File root = Environment.getExternalStorageDirectory();
+        File dir = new File(root.getAbsolutePath() + File.separator + LOG_FILE_PATH);
+        if (FileSystem.writeString(dir, fileName + ".txt", logInfo) != null) {
+            MeshLogger.d("logMessage saved in: " + fileName);
+        }
+    }
 
 }

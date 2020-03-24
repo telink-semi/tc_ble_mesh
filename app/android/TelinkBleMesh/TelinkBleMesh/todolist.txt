@@ -1,0 +1,83 @@
+import
+1. TelinkMeshApplication and MeshService
+2. start service
+3. MeshService#setupMeshNetwork
+
+
+
+//todo list
+1. ivUpdate flow
+    在收到iv update mesh beacon( updating ) 时 updating 1
+    在收到iv update mesh beacon( normal ) 时, 如果 iv index > local ivIndex ( + 0 -- 42), 则更新本地的iv index， 将sequence number置为0
+
+    在连接成功时， 判断本地的 sequence number >= 0xC00000， 则发送ivUpdate beacon, updating 1
+    否则 updating 0
+
+2. remote provision
+3. logMessage
+
+
+
+Mesh Node 中存放节点信息， 在组网后重连时会获取node信息， 包括 mesh address, seqNo, 在接收到新的seqNo， 且大于本地数据时， 需刷新本地数据
+
+createMessage
+
+connect-> enableCCC -> get cps data -> add app key -> bind key at modelId -> on off
+
+
+source 地址在networking controller中配置， 不添加到mesh message中
+
+发送 segmented message  时， 如果目标地址是unicast， 预期是能收到 segment ack
+    如果目标地址是 group 或者 virtual ， 则不会收到任何 segment ack, 建议发送多次
+
+问题：
+1. 手机发送的 segmented 包， 需要等到 segment ack message 吗？ 如果要等， 等多久？
+
+2. 手机收到的 segmented 包， 如果没有丢包， 需要发送 block ack 吗？
+    如果有丢包， 超时多久发送 block ack， 发送的block ack如果仍然没有收到回复， 或者遗漏， 如何处理？
+
+3. 指令buffer和busy状态处理
+
+
+问题 0902：
+1. 指令response max 校验， 在每次重发时如何缓存数据的回复状态
+上一次获取到的状态信息需要缓存到下一次重发时获取的状态吗
+
+
+lib中mesh的数据（sequence number， ivIndex， deviceKey）发生变化时， lib会在同步数据后把数据上传到app层；
+app层只需要在初始化网络时传入mesh信息， 即调用setupMesh
+
+
+需要测试 netKeyIndex, appKeyIndex, ivIndex等值在非0情况下的大小端问题
+
+
+Demo 的 UI 界面中有部分接口未实现， 会以
+// todo mesh interface
+标注， 后续搜索该注释进行完善
+
+
+必须: StatusMessage 需要一个空的构造函数
+
+完善 FilterSet 后再试试 publish 到 0xFFFF, 和 setLevel
+
+
+目前状态： 非直连节点指令发送失败 -> 指令发送成功， chunk数据发送失败
+
+
+1. provision 过程中 一直 133 会一直重试
+
+autoconnect 在nodeList为空时不自动重连
+
+2. 离线设备上电 发送的0xFFFF目标地址指令响应
+
+
+3. 240ms 间隔发送一次network
+
+
+4. 剔除离线的设备告知lib
+
+
+ivUpdate:
+normal  ivIndex n
+in-progress inIndex m(n+1)
+normal  

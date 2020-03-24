@@ -16,7 +16,7 @@ import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.model.Scene;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.FileSystem;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -27,35 +27,15 @@ public class MeshStorageService {
 
     public static final String JSON_FILE = "mesh.json";
 
-    private static final byte[] LOCAL_CPS = new byte[]{
-            (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x01, (byte) 0x32, (byte) 0x38, (byte) 0xE8, (byte) 0x03, (byte) 0x06, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x32, (byte) 0x02, (byte) 0x00,
-            (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x02, (byte) 0x00, (byte) 0x03, (byte) 0x00, (byte) 0x04, (byte) 0x00, (byte) 0x05, (byte) 0x00, (byte) 0x00, (byte) 0xFE, (byte) 0x01, (byte) 0xFE,
-            (byte) 0x02, (byte) 0xFE, (byte) 0x03, (byte) 0xFE, (byte) 0x00, (byte) 0xFF, (byte) 0x01, (byte) 0xFF, (byte) 0x00, (byte) 0x12, (byte) 0x01, (byte) 0x12, (byte) 0x02, (byte) 0x12, (byte) 0x00,
-            (byte) 0x10, (byte) 0x01, (byte) 0x10, (byte) 0x02, (byte) 0x10, (byte) 0x03, (byte) 0x10, (byte) 0x04, (byte) 0x10, (byte) 0x05, (byte) 0x10, (byte) 0x06, (byte) 0x10, (byte) 0x07, (byte) 0x10,
-            (byte) 0x08, (byte) 0x10, (byte) 0x03, (byte) 0x12, (byte) 0x04, (byte) 0x12, (byte) 0x05, (byte) 0x12, (byte) 0x06, (byte) 0x12, (byte) 0x07, (byte) 0x12, (byte) 0x08, (byte) 0x12, (byte) 0x00,
-            (byte) 0x13, (byte) 0x01, (byte) 0x13, (byte) 0x02, (byte) 0x13, (byte) 0x03, (byte) 0x13, (byte) 0x04, (byte) 0x13, (byte) 0x06, (byte) 0x13, (byte) 0x05, (byte) 0x13, (byte) 0x07, (byte) 0x13,
-            (byte) 0x08, (byte) 0x13, (byte) 0x0A, (byte) 0x13, (byte) 0x0B, (byte) 0x13, (byte) 0x09, (byte) 0x13, (byte) 0x0F, (byte) 0x13, (byte) 0x10, (byte) 0x13, (byte) 0x11, (byte) 0x13, (byte) 0x11,
-            (byte) 0x10, (byte) 0x12, (byte) 0x10, (byte) 0x13, (byte) 0x10, (byte) 0x14, (byte) 0x10, (byte) 0x15, (byte) 0x10, (byte) 0x11, (byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x11, (byte) 0x02,
-            (byte) 0x01, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x60, (byte) 0x03, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x11, (byte) 0x02, (byte) 0x00,
-            (byte) 0x00, (byte) 0x11, (byte) 0x02, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x02, (byte) 0x00, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0x00,
-            (byte) 0x00, (byte) 0x07, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-            (byte) 0xFF, (byte) 0x00, (byte) 0x10, (byte) 0x03, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x03, (byte) 0x00,
-            (byte) 0x00, (byte) 0x00, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0x00, (byte) 0x20, (byte) 0x03, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x10, (byte) 0x00, (byte) 0x00,
-            (byte) 0x01, (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0x02, (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0x03, (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0x00, (byte) 0x30, (byte) 0x03, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x12,
-            (byte) 0x00, (byte) 0x00, (byte) 0x02, (byte) 0x12, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x12, (byte) 0x00, (byte) 0x00, (byte) 0x06, (byte) 0x12, (byte) 0x00, (byte) 0x00, (byte) 0x08,
-            (byte) 0x12, (byte) 0x00, (byte) 0x00, (byte) 0x07, (byte) 0x12, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x40, (byte) 0x03, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-            (byte) 0x03, (byte) 0x12, (byte) 0x00, (byte) 0x00, (byte) 0x05, (byte) 0x12, (byte) 0x00, (byte) 0x00, (byte) 0x04, (byte) 0x12, (byte) 0x00, (byte) 0x00, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0x00, (byte) 0x20, (byte) 0x07, (byte) 0x00, (byte) 0x01, (byte) 0x00,
-            (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xFE, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0xFE, (byte) 0x00, (byte) 0x00, (byte) 0x02, (byte) 0xFE, (byte) 0x00, (byte) 0x00, (byte) 0x03,
-            (byte) 0xFE, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0xFF, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0xFF, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x40, (byte) 0x07, (byte) 0x00,
-            (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x06, (byte) 0x10,
-            (byte) 0x00, (byte) 0x00, (byte) 0x08, (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0x07, (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0x04,
-            (byte) 0x10, (byte) 0x00, (byte) 0x00, (byte) 0x05, (byte) 0x10, (byte) 0x00, (byte) 0x00,
-            (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0x00, (byte) 0x10, (byte) 0x07, (byte) 0x00
+    private static final byte[] VC_TOOL_CPS = new byte[]{
+            (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x01, (byte) 0x33, (byte) 0x31, (byte) 0xE8, (byte) 0x03,
+            (byte) 0x04, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x17, (byte) 0x01, (byte) 0x00, (byte) 0x00,
+            (byte) 0x01, (byte) 0x00, (byte) 0x02, (byte) 0x00, (byte) 0x03, (byte) 0x00, (byte) 0x05, (byte) 0x00,
+            (byte) 0x00, (byte) 0xFE, (byte) 0x01, (byte) 0xFE, (byte) 0x02, (byte) 0xFE, (byte) 0x03, (byte) 0xFE,
+            (byte) 0x00, (byte) 0xFF, (byte) 0x01, (byte) 0xFF, (byte) 0x02, (byte) 0x12, (byte) 0x01, (byte) 0x10,
+            (byte) 0x03, (byte) 0x10, (byte) 0x05, (byte) 0x10, (byte) 0x08, (byte) 0x10, (byte) 0x05, (byte) 0x12,
+            (byte) 0x08, (byte) 0x12, (byte) 0x02, (byte) 0x13, (byte) 0x05, (byte) 0x13, (byte) 0x09, (byte) 0x13,
+            (byte) 0x11, (byte) 0x13, (byte) 0x15, (byte) 0x10, (byte) 0x11, (byte) 0x02, (byte) 0x01, (byte) 0x00
     };
 
     private Gson mGson;
@@ -72,27 +52,20 @@ public class MeshStorageService {
     /**
      * import external data
      *
-     * @param filepath data file path
-     * @param mesh     check if outer mesh#uuid equals inner mesh#uuid
+     * @param mesh check if outer mesh#uuid equals inner mesh#uuid
      * @return import success
      */
-    public MeshInfo importExternal(String filepath, MeshInfo mesh) {
+    public MeshInfo importExternal(String jsonStr, MeshInfo mesh) {
 
-        File file = new File(filepath);
-        if (!file.exists()) {
-            return mesh;
-        }
-
-        String fileAsStr = FileSystem.readString(file);
         MeshStorage tempStorage = null;
         try {
-            tempStorage = mGson.fromJson(fileAsStr, MeshStorage.class);
+            tempStorage = mGson.fromJson(jsonStr, MeshStorage.class);
         } catch (JsonSyntaxException e) {
-            TelinkLog.e("json import error" + e.getMessage());
+            MeshLogger.e("json import error" + e.getMessage());
         }
 
         if (!validStorageData(tempStorage)) {
-            return mesh;
+            return null;
         }
         MeshInfo tmpMesh = null;
         try {
@@ -102,6 +75,7 @@ public class MeshStorageService {
             }
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
+            return null;
         }
 
 
@@ -125,7 +99,7 @@ public class MeshStorageService {
             mesh.pvIndex = tempMesh.pvIndex;
             mesh.sno = tempMesh.sno;
         }*/
-        return mesh;
+        return null;
     }
 
     private boolean validStorageData(MeshStorage meshStorage) {
@@ -142,6 +116,11 @@ public class MeshStorageService {
         MeshStorage meshStorage = meshToJson(mesh);
         String jsonData = mGson.toJson(meshStorage);
         return FileSystem.writeString(dir, filename, jsonData);
+    }
+
+    public String meshToJsonString(MeshInfo meshInfo) {
+        MeshStorage meshStorage = meshToJson(meshInfo);
+        return mGson.toJson(meshStorage);
     }
 
     /**
@@ -218,7 +197,7 @@ public class MeshStorageService {
         localNode.UUID = provisioner.UUID;
         localNode.sno = String.format("%08X", mesh.sequenceNumber);
         localNode.unicastAddress = String.format("%04X", mesh.localAddress);
-        TelinkLog.d("alloc address: " + localNode.unicastAddress);
+        MeshLogger.log("alloc address: " + localNode.unicastAddress);
         localNode.name = "Provisioner Node";
 
         // 添加默认的netKey到node
@@ -583,7 +562,7 @@ public class MeshStorageService {
     private void getLocalElements(MeshStorage.Node node, int appKeyIndex) {
 
         node.elements = new ArrayList<>();
-        CompositionData compositionData = convertLocal(LOCAL_CPS);
+        CompositionData compositionData = CompositionData.from(VC_TOOL_CPS);
 
         List<CompositionData.Element> elements = compositionData.elements;
         MeshStorage.Element element;
@@ -622,43 +601,6 @@ public class MeshStorageService {
             node.elements.add(element);
         }
     }
-
-
-    public CompositionData convertLocal(byte[] data) {
-        int index = 0;
-        CompositionData cpsData = new CompositionData();
-        cpsData.cid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
-        cpsData.pid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
-        cpsData.vid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
-        cpsData.crpl = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
-        cpsData.features = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
-
-        cpsData.elements = new ArrayList<>();
-        while (index < data.length) {
-            CompositionData.Element element = new CompositionData.Element();
-            element.location = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
-            element.sigNum = (data[index++] & 0xFF);
-            element.vendorNum = (data[index++] & 0xFF);
-
-            element.sigModels = new ArrayList<>();
-            for (int i = 0; i < element.sigNum; i++) {
-                element.sigModels.add((data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8));
-            }
-
-            element.vendorModels = new ArrayList<>();
-            for (int j = 0; j < element.vendorNum; j++) {
-                //sample 11 02 01 00 cid: 11 02 modelId: 01 00 -> 0x00010211
-                element.vendorModels.add(((data[index++] & 0xFF)) | ((data[index++] & 0xFF) << 8) |
-                        ((data[index++] & 0xFF) << 16) | ((data[index++] & 0xFF) << 24));
-            }
-
-            cpsData.elements.add(element);
-            break;
-        }
-
-        return cpsData;
-    }
-
 
     //
     private boolean inDefaultSubModel(int modelId) {

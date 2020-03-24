@@ -97,7 +97,7 @@ public class LpnSettingActivity extends BaseActivity implements EventListener<St
         // todo mesh interface
         /*if (event.getType().equals(NotificationEvent.EVENT_TYPE_VENDOR_RESPONSE)) {
             NotificationInfo info = ((NotificationEvent) event).getNotificationInfo();
-            TelinkLog.d("vendor response: " + info.toString());
+            MeshLogger.log("vendor response: " + info.toString());
             if (info.srcAdr == eleAdr && info.opcode == OP_VENDOR_STATUS) {
                 byte[] params = info.params;
                 if (params.length == 4) {

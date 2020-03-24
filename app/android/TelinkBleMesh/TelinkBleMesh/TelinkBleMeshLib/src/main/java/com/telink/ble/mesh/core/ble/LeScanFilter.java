@@ -19,5 +19,5 @@ public class LeScanFilter {
 
 //    public int[] companyIdInclude = null;
 
-//    private String[] nameInclude = null;
+    public String[] nameInclude = null;
 }

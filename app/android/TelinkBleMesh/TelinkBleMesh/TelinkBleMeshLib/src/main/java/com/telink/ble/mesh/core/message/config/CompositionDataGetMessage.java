@@ -18,6 +18,10 @@ public class CompositionDataGetMessage extends ConfigMessage {
         return Opcode.COMPOSITION_DATA_GET.value;
     }
 
+    @Override
+    public int getResponseOpcode() {
+        return Opcode.COMPOSITION_DATA_STATUS.value;
+    }
 
     @Override
     public byte[] getParams() {

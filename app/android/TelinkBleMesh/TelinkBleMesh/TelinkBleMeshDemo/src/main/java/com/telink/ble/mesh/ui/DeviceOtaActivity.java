@@ -16,8 +16,9 @@ import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.GattOtaEvent;
 import com.telink.ble.mesh.foundation.parameter.GattOtaParameters;
-import com.telink.ble.mesh.util.TelinkLog;
-import com.telink.file.selector.FileSelectActivity;
+
+import com.telink.ble.mesh.util.MeshLogger;
+import com.telink.ble.mesh.ui.file.FileSelectActivity;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -189,7 +190,7 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
             return;
 
         String mPath = data.getStringExtra(FileSelectActivity.KEY_RESULT);
-        TelinkLog.d("select: " + mPath);
+        MeshLogger.log("select: " + mPath);
 //        File f = new File(mPath);
         readFirmware(mPath);
     }

@@ -10,11 +10,17 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <!--QRCode-->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!--  download/upload  -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name="com.telink.ble.mesh.TelinkMeshApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
@@ -44,10 +50,7 @@
             android:name="com.telink.ble.mesh.ui.LogActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden" />
-        <activity
-            android:name="com.telink.ble.mesh.ui.MeshTestActivity"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateAlwaysHidden" />
+
         <activity
             android:name="com.telink.ble.mesh.ui.KeyBindActivity"
             android:screenOrientation="portrait"
@@ -129,7 +132,20 @@
             </intent-filter>
         </activity>
         <activity android:name="com.telink.ble.mesh.ui.RPActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.FastProvisionActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.qrcode.QRCodeShareActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.qrcode.QRCodeScanActivity">
 
+
+        </activity>
+
+        <activity
+            android:name="com.telink.ble.mesh.ui.file.FileSelectActivity"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+
+        <activity
+            android:name="com.telink.ble.mesh.ui.file.FileSearchActivity"
+            android:windowSoftInputMode="stateAlwaysHidden" />
     </application>
 
 

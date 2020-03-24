@@ -3,6 +3,7 @@ package com.telink.ble.mesh.ui;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -14,16 +15,18 @@ import android.widget.TextView;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.MeshLogger;
 
 /**
  * Created by kee on 2018/9/18.
  */
 public class SettingsActivity extends BaseActivity implements View.OnClickListener {
 
-    private Switch switch_log, switch_private, switch_remote_prov;
+    private Switch switch_log, switch_private, switch_remote_prov, switch_fast_prov;
     private EditText et_net_key, et_app_key;
     private MeshInfo mesh;
     private TextView tv_online_status;
@@ -39,8 +42,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 SharedPreferenceHelper.setLogEnable(SettingsActivity.this, isChecked);
-//                TelinkMeshApplication.getInstance().setLogEnable(isChecked);
-
+                MeshLogger.enableRecord(isChecked);
             }
         });
 
@@ -59,25 +61,47 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 SharedPreferenceHelper.setRemoteProvisionEnable(SettingsActivity.this, isChecked);
+                if (isChecked && SharedPreferenceHelper.isRemoteProvisionEnable(SettingsActivity.this)) {
+                    switch_fast_prov.setChecked(false);
+                }
             }
         });
 
+        switch_fast_prov = findViewById(R.id.switch_fast_prov);
+        switch_fast_prov.setChecked(SharedPreferenceHelper.isFastProvisionEnable(this));
+        switch_fast_prov.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SharedPreferenceHelper.setFastProvisionEnable(SettingsActivity.this, isChecked);
+                if (isChecked && SharedPreferenceHelper.isFastProvisionEnable(SettingsActivity.this)) {
+                    switch_remote_prov.setChecked(false);
+                }
+            }
+        });
+
+
         enableBackNav(true);
-        mesh = TelinkMeshApplication.getInstance().getMeshInfo();
+
 
         findViewById(R.id.iv_copy_net_key).setOnClickListener(this);
         findViewById(R.id.iv_copy_app_key).setOnClickListener(this);
         findViewById(R.id.iv_edit_net_key).setOnClickListener(this);
         findViewById(R.id.iv_edit_app_key).setOnClickListener(this);
+        findViewById(R.id.btn_reset_mesh).setOnClickListener(this);
 
         findViewById(R.id.iv_tip_remote_prov).setOnClickListener(this);
         et_net_key = findViewById(R.id.et_net_key);
         et_app_key = findViewById(R.id.et_app_key);
+        showMeshInfo();
+        tv_online_status = findViewById(R.id.tv_online_status);
+        tv_online_status.setText(AppSettings.ONLINE_STATUS_ENABLE ? R.string.online_status_enabled : R.string.online_status_disabled);
+    }
+
+    private void showMeshInfo(){
+        mesh = TelinkMeshApplication.getInstance().getMeshInfo();
         et_net_key.setText(Arrays.bytesToHexString(mesh.networkKey, ""));
         et_app_key.setText(Arrays.bytesToHexString(mesh.appKeyList.get(0).key, ""));
 
-        tv_online_status = findViewById(R.id.tv_online_status);
-        tv_online_status.setText(AppSettings.ONLINE_STATUS_ENABLE ? R.string.online_status_enabled : R.string.online_status_disabled);
     }
 
     @Override
@@ -110,6 +134,22 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                         new Intent(this, ShareTipActivity.class)
                                 .putExtra(ShareTipActivity.INTENT_KEY_TIP_RES_ID, R.string.remote_prov_tip)
                 );
+                break;
+
+            case R.id.btn_reset_mesh:
+                showConfirmDialog("Wipe all mesh info? ", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        MeshService.getInstance().idle(true);
+                        MeshInfo meshInfo = MeshInfo.createNewMesh(SettingsActivity.this);
+                        TelinkMeshApplication.getInstance().setupMesh(meshInfo);
+                        MeshService.getInstance().setupMeshNetwork(meshInfo.convertToConfiguration());
+                        toastMsg("Wipe mesh info success");
+                        showMeshInfo();
+                    }
+                });
+
+
                 break;
         }
     }

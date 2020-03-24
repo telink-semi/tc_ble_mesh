@@ -7,7 +7,8 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.Scheduler;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -19,6 +20,9 @@ import java.util.List;
 
 public class NodeInfo implements Serializable {
 
+    /**
+     * networking state
+     */
     public static final int STATE_PROVISION_FAIL = -1;
 
     public static final int STATE_PROVISIONING = 0;
@@ -30,13 +34,17 @@ public class NodeInfo implements Serializable {
 
     public static final int STATE_BIND_FAIL = -2;
 
+    public int state;
+
+    /**
+     * on/off state
+     */
     public static final int ON_OFF_STATE_ON = 1;
 
     public static final int ON_OFF_STATE_OFF = 0;
 
     public static final int ON_OFF_STATE_OFFLINE = -1;
 
-    public int state;
 
     /**
      * state description
@@ -111,7 +119,7 @@ public class NodeInfo implements Serializable {
         @Override
         public void run() {
             onOff = -1;
-            TelinkLog.d("offline check task running");
+            MeshLogger.log("offline check task running");
             TelinkMeshApplication.getInstance().dispatchEvent(new NodeStatusChangedEvent(TelinkMeshApplication.getInstance(), NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, NodeInfo.this));
         }
     };

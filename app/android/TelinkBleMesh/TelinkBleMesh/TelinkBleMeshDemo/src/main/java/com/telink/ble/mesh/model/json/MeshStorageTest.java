@@ -23,7 +23,7 @@
 package com.telink.ble.mesh.model.json;
 
 import com.google.gson.Gson;
-import com.telink.ble.mesh.util.TelinkLog;
+
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -596,13 +596,13 @@ public class MeshStorageTest {
         Calendar cal = Calendar.getInstance();
         cal.setTime(sdf.parse("2000-1-1 00:00:00"));
         long time1 = cal.getTimeInMillis();
-        TelinkLog.d("2000-1-1 00:00:00 time: " + time1 / 1000);
+        MeshLogger.log("2000-1-1 00:00:00 time: " + time1 / 1000);
         cal.setTime(sdf.parse("1970-1-1 00:00:00"));
         long time2 = cal.getTimeInMillis();
-        TelinkLog.d("1970-1-1 00:00:00 time: " + time2 / 1000);
-        TelinkLog.d("period: " + (time1 - time2) / 1000);
+        MeshLogger.log("1970-1-1 00:00:00 time: " + time2 / 1000);
+        MeshLogger.log("period: " + (time1 - time2) / 1000);
 
-        TelinkLog.d("current time: " + System.currentTimeMillis() / 1000 + "zone: " + cal.get(Calendar.ZONE_OFFSET) / 60 / 60 / 1000);
+        MeshLogger.log("current time: " + System.currentTimeMillis() / 1000 + "zone: " + cal.get(Calendar.ZONE_OFFSET) / 60 / 60 / 1000);
     }
 
     private static void testJson() {

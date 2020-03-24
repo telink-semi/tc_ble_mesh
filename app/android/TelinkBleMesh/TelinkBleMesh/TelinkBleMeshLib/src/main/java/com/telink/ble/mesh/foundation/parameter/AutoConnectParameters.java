@@ -1,6 +1,6 @@
 package com.telink.ble.mesh.foundation.parameter;
 
-import com.telink.ble.mesh.core.ble.UuidInfo;
+import com.telink.ble.mesh.core.ble.UUIDInfo;
 
 /**
  * Created by kee on 2019/9/5.
@@ -9,7 +9,7 @@ import com.telink.ble.mesh.core.ble.UuidInfo;
 public class AutoConnectParameters extends Parameters {
 
     public AutoConnectParameters(AutoConnectFilterType filterType) {
-        this.setScanFilter(createScanFilter(UuidInfo.PROXY_SERVICE_UUID));
+        this.setScanFilter(createScanFilter(UUIDInfo.PROXY_SERVICE_UUID));
         this.set(ACTION_AUTO_CONNECT_FILTER_TYPE, filterType);
     }
 

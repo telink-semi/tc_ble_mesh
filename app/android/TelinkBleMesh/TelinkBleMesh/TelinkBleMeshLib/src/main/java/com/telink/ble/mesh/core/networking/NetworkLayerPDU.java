@@ -3,7 +3,8 @@ package com.telink.ble.mesh.core.networking;
 
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -95,13 +96,13 @@ public class NetworkLayerPDU {
         final byte ctlTTL = (byte) ((ctl << 7) | ttl);
 
         final byte[] encryptedPayload = encryptNetworkPduPayload(transportPDU);
-//        TelinkLog.d("encryptedPayload: " + Arrays.bytesToHexString(encryptedPayload, ""));
+//        MeshLogger.log("encryptedPayload: " + Arrays.bytesToHexString(encryptedPayload, ""));
         final byte[] privacyRandom = createPrivacyRandom(encryptedPayload);
         final byte[] pecb = createPECB(privacyRandom);
-//        TelinkLog.d("pecb: " + Arrays.bytesToHexString(pecb, ""));
+//        MeshLogger.log("pecb: " + Arrays.bytesToHexString(pecb, ""));
 
         final byte[] header = createObfuscatedNetworkHeader(ctlTTL, seq, src, pecb);
-//        TelinkLog.d("obfuscateNetworkHeader: " + Arrays.bytesToHexString(header, ""));
+//        MeshLogger.log("obfuscateNetworkHeader: " + Arrays.bytesToHexString(header, ""));
 
         return ByteBuffer.allocate(1 + header.length + encryptedPayload.length).order(ByteOrder.BIG_ENDIAN)
                 .put(iviNid)
@@ -120,7 +121,7 @@ public class NetworkLayerPDU {
 
         final byte[] headerBuffer = buffer.array();
 
-//        TelinkLog.d("NetworkHeader: " + Arrays.bytesToHexString(headerBuffer, ""));
+//        MeshLogger.log("NetworkHeader: " + Arrays.bytesToHexString(headerBuffer, ""));
 
         final ByteBuffer bufferPECB = ByteBuffer.allocate(6);
         bufferPECB.put(pecb, 0, 6);
@@ -155,7 +156,7 @@ public class NetworkLayerPDU {
 //        byte[] seqNo = MeshUtils.integer2Bytes(seq, 3, ByteOrder.BIG_ENDIAN);
 //        final byte[] networkNonce = NonceGenerator.generateNetworkNonce(ctlTTL, seqNo, src, this.encryptionSuite.ivIndex);
         byte[] networkNonce = generateNonce();
-//        TelinkLog.d("networkNonce: " + Arrays.bytesToHexString(networkNonce, ""));
+//        MeshLogger.log("networkNonce: " + Arrays.bytesToHexString(networkNonce, ""));
         final byte[] unencryptedNetworkPayload = ByteBuffer.allocate(2 + lowerPDU.length).order(ByteOrder.BIG_ENDIAN).putShort((short) dst).put(lowerPDU).array();
         return Encipher.ccm(unencryptedNetworkPayload, this.encryptionSuite.encryptionKey, networkNonce, getMicLen(), true);
     }
@@ -199,7 +200,7 @@ public class NetworkLayerPDU {
         int ivi = iviNid >> 7;
         int nid = iviNid & 0x7F;
         if (!validateNetworkPdu(ivi, nid)) {
-            TelinkLog.i("ivi or nid invalid: ivi -- " + ivi + " nid -- " + nid +
+            MeshLogger.i("ivi or nid invalid: ivi -- " + ivi + " nid -- " + nid +
                     " encryptSuit : ivi -- " + encryptionSuite.ivIndex + " nid -- " + encryptionSuite.nid);
             return false;
         }
@@ -230,7 +231,7 @@ public class NetworkLayerPDU {
         final byte[] decDstTransportPayload = Encipher.ccm(dstTransportPayload, this.encryptionSuite.encryptionKey, networkNonce, getMicLen(), false);
 
         if (decDstTransportPayload == null) {
-            TelinkLog.i("network layer decrypt err");
+            MeshLogger.i("network layer decrypt err");
             return false;
         }
 

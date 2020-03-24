@@ -31,7 +31,8 @@ import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.util.Arrays;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -155,18 +156,18 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
 
         boolean re = MeshService.getInstance().sendMeshMessage(timeSetMessage);
         if (re) {
-            TelinkLog.d("setTime time: " + time + " zone " + offset);
+            MeshLogger.d("setTime time: " + time + " zone " + offset);
         } else {
-            TelinkLog.d("setTime fail");
+            MeshLogger.d("setTime fail");
         }
 
         // mesh interface
         /*boolean re = MeshService.getInstance().setTime(eleAdr, 1, time, offset, null);
         if (re) {
-            TelinkLog.d("setTime time: " + time + " zone " + offset);
+            MeshLogger.log("setTime time: " + time + " zone " + offset);
 
         } else {
-            TelinkLog.d("setTime fail");
+            MeshLogger.log("setTime fail");
         }*/
     }
 
@@ -341,7 +342,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
                 return;
         }
 
-        TelinkLog.d("scheduler params year: " + year + " month: " + month + " day: " + day + " hour: " + hour +
+        MeshLogger.log("scheduler params year: " + year + " month: " + month + " day: " + day + " hour: " + hour +
                 " minute: " + minute + " second: " + second + " week: " + week + " action: " + action);
 
         int transitionTime = 0;
@@ -360,7 +361,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
                 .setSceneId((short) sceneId).build();
 //        long register = scheduler.getRegisterParam0();
         byte[] schedulerData = scheduler.toBytes();
-        TelinkLog.d("scheduler data: " + Arrays.bytesToHexString(schedulerData, ""));
+        MeshLogger.log("scheduler data: " + Arrays.bytesToHexString(schedulerData, ""));
 //        int scene = scheduler.getRegisterParam1();
         int eleAdr = mDevice.getTargetEleAdr(MeshSigModel.SIG_MD_SCHED_S.modelId);
         if (eleAdr == -1) {
@@ -548,10 +549,13 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
     public void performed(Event<String> event) {
         String eventType = event.getType();
         if (eventType.equals(TimeStatusMessage.class.getName())) {
+            TimeStatusMessage timeStatusMessage = (TimeStatusMessage) ((StatusNotificationEvent)event).getNotificationMessage().getStatusMessage();
+
+            MeshLogger.d("time status: " + timeStatusMessage.taiSeconds);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    TelinkLog.d("set time success");
+                    MeshLogger.log("set time success");
                     toastMsg("set time success");
                 }
             });

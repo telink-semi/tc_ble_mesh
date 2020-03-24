@@ -18,8 +18,10 @@ public interface AccessBridge {
      */
     int MODE_FIRMWARE_UPDATING = 2;
 
-    // remote provision todo
+    // remote provision
     int MODE_REMOTE_PROVISIONING = 3;
+
+    int MODE_FAST_PROVISION = 4;
 
     /**
      * prepared to send mesh message

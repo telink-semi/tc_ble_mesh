@@ -22,7 +22,8 @@ import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import java.util.List;
 
@@ -187,7 +188,7 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
                 deleteNextDevice();
             } else {
                 dismissWaitingDialog();
-                TelinkLog.e("scene setting err!");
+                MeshLogger.e("scene setting err!");
             }
         }
         switch (event.getType()) {
@@ -207,7 +208,7 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
                     deleteNextDevice();
                 } else {
                     dismissWaitingDialog();
-                    TelinkLog.e("scene setting err!");
+                    MeshLogger.e("scene setting err!");
                 }
 
                 break;*/

@@ -8,7 +8,8 @@ import com.telink.ble.mesh.core.networking.AccessType;
 import com.telink.ble.mesh.core.networking.NonceGenerator;
 import com.telink.ble.mesh.core.networking.transport.lower.SegmentedAccessMessagePDU;
 import com.telink.ble.mesh.core.networking.transport.lower.UnsegmentedAccessMessagePDU;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import java.nio.ByteOrder;
 import java.util.List;
@@ -61,7 +62,7 @@ public class UpperTransportAccessPDU {
             idx += tmpLen;
         }
 
-//        TelinkLog.d("upper pdu raw: " + Arrays.bytesToHexString(upperTransportPdu, ""));
+//        MeshLogger.log("upper pdu raw: " + Arrays.bytesToHexString(upperTransportPdu, ""));
         this.encryptedPayload = upperTransportPdu;
 
         SegmentedAccessMessagePDU message0 = messageBuffer.get(0);
@@ -88,7 +89,7 @@ public class UpperTransportAccessPDU {
             key = this.mEncryptionSuite.deviceKey;
         }
         if (key == null) {
-            TelinkLog.e("upper transport encryption err: key null");
+            MeshLogger.e("upper transport encryption err: key null");
             return false;
         }
         this.encryptedPayload = Encipher.ccm(this.decryptedPayload, key, nonce, mic, true);
@@ -111,7 +112,7 @@ public class UpperTransportAccessPDU {
             nonce = NonceGenerator.generateAccessNonce((byte) aszmic, seqNo, src, dst, this.mEncryptionSuite.ivIndex, AccessType.DEVICE);
             key = this.mEncryptionSuite.deviceKey;
             if (key == null) {
-                TelinkLog.e("decrypt err: device key null");
+                MeshLogger.e("decrypt err: device key null");
                 return null;
             }
             return decryptPayload(this.encryptedPayload, key, nonce, aszmic);

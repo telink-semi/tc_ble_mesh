@@ -76,7 +76,7 @@ public class OtaPacketParser {
         this.fillIndex(packet, index);
         int crc = this.crc16(packet);
         this.fillCrc(packet, crc);
-        TelinkLog.d("ota packet ---> index : " + index + " total : " + this.total + " crc : " + crc + " content : " + Arrays.bytesToHexString(packet, ":"));
+        MeshLogger.log("ota packet ---> index : " + index + " total : " + this.total + " crc : " + crc + " content : " + Arrays.bytesToHexString(packet, ":"));
         return packet;
     }
 
@@ -90,7 +90,7 @@ public class OtaPacketParser {
         this.fillIndex(packet, index);
         int crc = this.crc16(packet);
         this.fillCrc(packet, crc);
-        TelinkLog.d("ota check packet ---> index : " + index + " crc : " + crc + " content : " + Arrays.bytesToHexString(packet, ":"));
+        MeshLogger.log("ota check packet ---> index : " + index + " crc : " + crc + " content : " + Arrays.bytesToHexString(packet, ":"));
         return packet;
     }
 
@@ -132,7 +132,7 @@ public class OtaPacketParser {
         float b = this.total;
 
         int progress = (int) Math.floor((a / b * 100));
-//        TelinkLog.d("ota_progress: a:"+ a + " b:"+ b +" progress:"+ progress);
+//        MeshLogger.log("ota_progress: a:"+ a + " b:"+ b +" progress:"+ progress);
         if (progress == this.progress)
             return false;
 

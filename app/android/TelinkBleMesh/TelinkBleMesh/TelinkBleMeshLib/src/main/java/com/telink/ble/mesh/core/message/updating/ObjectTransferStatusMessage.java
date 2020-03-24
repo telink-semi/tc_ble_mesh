@@ -48,7 +48,7 @@ public class ObjectTransferStatusMessage extends StatusMessage implements Parcel
 
 
     /**
-     * Size of the block during this transfer
+     * Size of the block timeout this transfer
      * size: 1 byte
      */
     private int blockSizeLog;

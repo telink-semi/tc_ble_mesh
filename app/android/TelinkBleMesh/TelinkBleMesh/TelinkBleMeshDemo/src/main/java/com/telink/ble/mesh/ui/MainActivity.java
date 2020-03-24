@@ -15,12 +15,13 @@ import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.parameter.AutoConnectFilterType;
 import com.telink.ble.mesh.foundation.parameter.AutoConnectParameters;
+import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.fragment.DeviceFragment;
 import com.telink.ble.mesh.ui.fragment.GroupFragment;
 import com.telink.ble.mesh.ui.fragment.SettingFragment;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -64,12 +65,10 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
             }
         }
 
-
         TelinkMeshApplication.getInstance().addEventListener(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
 
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_EMPTY, this);
-
     }
 
     @Override
@@ -99,7 +98,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
 
     private void autoConnect() {
-        TelinkLog.d("main auto connect");
+        MeshLogger.log("main auto connect");
 //        MeshService.getInstance().autoConnect(new AutoConnectParameters(AutoConnectFilterType.NODE_IDENTITY));
         MeshService.getInstance().autoConnect(new AutoConnectParameters(AutoConnectFilterType.AUTO));
     }
@@ -108,18 +107,19 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     @Override
     public void performed(Event<String> event) {
         if (event.getType().equals(MeshEvent.EVENT_TYPE_MESH_EMPTY)) {
-            TelinkLog.d(TAG + "#EVENT_TYPE_MESH_EMPTY");
+            MeshLogger.log(TAG + "#EVENT_TYPE_MESH_EMPTY");
         } else if (event.getType().equals(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN)) {
             // get all device on off status when auto connect success
-
-//            AppSettings.ONLINE_STATUS_ENABLE = MeshService.getInstance().getOnlineStatus();
-//            if (!AppSettings.ONLINE_STATUS_ENABLE) {
-            int rspMax = TelinkMeshApplication.getInstance().getMeshInfo().getOnlineCountInAll();
-            int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
-            OnOffGetMessage message = OnOffGetMessage.getSimple(0xFFFF, appKeyIndex, rspMax);
-            MeshService.getInstance().sendMeshMessage(message);
+            AppSettings.ONLINE_STATUS_ENABLE = MeshService.getInstance().getOnlineStatus();
+            if (!AppSettings.ONLINE_STATUS_ENABLE) {
+                MeshService.getInstance().getOnlineStatus();
+                int rspMax = TelinkMeshApplication.getInstance().getMeshInfo().getOnlineCountInAll();
+                int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+                OnOffGetMessage message = OnOffGetMessage.getSimple(0xFFFF, appKeyIndex, rspMax);
+                MeshService.getInstance().sendMeshMessage(message);
+            }
 //            } else {
-//                TelinkLog.d("online status enabled");
+//                MeshLogger.log("online status enabled");
 //            }
         }
     }

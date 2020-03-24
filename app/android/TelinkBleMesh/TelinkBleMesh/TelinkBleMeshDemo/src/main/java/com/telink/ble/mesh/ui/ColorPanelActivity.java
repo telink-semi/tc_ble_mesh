@@ -12,7 +12,8 @@ import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.ui.widget.ColorPanel;
 import com.telink.ble.mesh.core.message.lighting.HslSetMessage;
 import com.telink.ble.mesh.foundation.MeshService;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import androidx.core.graphics.ColorUtils;
 
@@ -82,7 +83,7 @@ public class ColorPanelActivity extends BaseActivity {
                 preTime = currentTime;
                 sendHslSetMessage(hslValue);
             } else {
-                TelinkLog.w("CMD reject : color set");
+                MeshLogger.log("CMD reject : color set", MeshLogger.LEVEL_INFO);
             }
         }
     };

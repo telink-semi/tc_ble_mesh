@@ -4,7 +4,10 @@ package com.telink.ble.mesh.model;
 import android.content.Context;
 import android.util.SparseArray;
 
+import com.telink.ble.mesh.SharedPreferenceHelper;
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.networking.NetworkLayerPDU;
+import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshConfiguration;
 import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.model.json.AddressRange;
@@ -229,7 +232,6 @@ public class MeshInfo implements Serializable, Cloneable {
 
 
     public void saveOrUpdate(Context context) {
-//        MeshStorageService.getInstance().saveFromLocalMesh(this, context);
         FileSystem.writeAsObject(context, FILE_NAME, this);
     }
 
@@ -295,7 +297,47 @@ public class MeshInfo implements Serializable, Cloneable {
         meshConfiguration.localAddress = localAddress;
 
         return meshConfiguration;
+    }
 
+
+    public static MeshInfo createNewMesh(Context context) {
+        // 0x7FFF
+        final int DEFAULT_LOCAL_ADDRESS = 0x0001;
+        MeshInfo meshInfo = new MeshInfo();
+
+        // for test
+//        final byte[] NET_KEY = Arrays.hexToBytes("26E8D2DBD4363AF398FEDE049BAD0086");
+
+        // for test
+//        final byte[] APP_KEY = Arrays.hexToBytes("7759F48730A4F1B2259B1B0681BE7C01");
+
+//        final int IV_INDEX = 0x20345678;
+
+//        meshInfo.networkKey = NET_KEY;
+        meshInfo.networkKey = MeshUtils.generateRandom(16);
+        meshInfo.netKeyIndex = 0x00;
+        meshInfo.appKeyList = new ArrayList<>();
+//        meshInfo.appKeyList.add(new MeshInfo.AppKey(0x00, APP_KEY));
+        meshInfo.appKeyList.add(new MeshInfo.AppKey(0x00, MeshUtils.generateRandom(16)));
+        meshInfo.ivIndex = 0;
+        meshInfo.sequenceNumber = 0;
+        meshInfo.nodes = new ArrayList<>();
+        meshInfo.localAddress = DEFAULT_LOCAL_ADDRESS;
+        meshInfo.provisionIndex = DEFAULT_LOCAL_ADDRESS + 1; // 0x0002
+
+        meshInfo.provisionerUUID = SharedPreferenceHelper.getLocalUUID(context);;
+        meshInfo.groups = new ArrayList<>();
+        meshInfo.unicastRange = new AddressRange(0x01, 0xFF);
+        String[] groupNames = context.getResources().getStringArray(R.array.group_name);
+        GroupInfo group;
+        for (int i = 0; i < 8; i++) {
+            group = new GroupInfo();
+            group.address = i | 0xC000;
+            group.name = groupNames[i];
+            meshInfo.groups.add(group);
+        }
+
+        return meshInfo;
     }
 }
 

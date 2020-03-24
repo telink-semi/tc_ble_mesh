@@ -1,8 +1,20 @@
 目前状态： remote provision app端重发
 动作切换时停止其他的动作
 
+
 1. 在keyBind过程中有小概率连接断开（timeout）
-2. remote provision 三个节点测试，
+2. remote provision 三个节点测试， 通过非直连节点加灯会失败
+    remote 过程有可能收不到 outbound report， 伟雄修改后， 有几率成功，
+    -> 0309 海文更新后连续测试5次， 均正常
+
+3. fast provision:
+    1. 连接unprovisioned节点
+    2. 发送reset network, 本地delay 500 + [command delay]
+    3. get address
+4. fast provision 功能完成后， 移除params， 临时参数存放在controller中， 另外提供单独的filterInit接口
+
+Parameters#COMMON_PROXY_FILTER_INIT_NEEDED 改为 MeshConfiguration#isFilterInitNeeded
+
 
 包含的文档：
 1. app操作手册

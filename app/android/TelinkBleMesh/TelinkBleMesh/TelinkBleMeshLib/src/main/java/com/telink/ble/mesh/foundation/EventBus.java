@@ -5,7 +5,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.List;
 import java.util.Map;
@@ -93,11 +93,11 @@ public class EventBus<T> {
     }
 
     public void dispatchEvent(final Event<T> event) {
-//        TelinkLog.d("event looper : " + event.getThreadMode());
+//        MeshLogger.log("event looper : " + event.getThreadMode());
 
         this.mEventQueue.add(event);
 
-        TelinkLog.d("post event : " + event.getType() + "--" + event.getClass().getSimpleName());
+        MeshLogger.log("post event : " + event.getType() + "--" + event.getClass().getSimpleName());
 
         synchronized (this.mLock) {
             if (!this.processing)
@@ -130,7 +130,7 @@ public class EventBus<T> {
     }
 
     private void processEvent() {
-//        TelinkLog.d("process on thread : " + Thread.currentThread().getName());
+//        MeshLogger.log("process on thread : " + Thread.currentThread().getName());
 
         final Event<T> event;
 
@@ -140,7 +140,7 @@ public class EventBus<T> {
                 return;
         }
 
-//        TelinkLog.d("process event : " + event.getType() + "--" + event.getClass().getName());
+//        MeshLogger.log("process event : " + event.getType() + "--" + event.getClass().getName());
 
         T eventType = event.getType();
         List<EventListener<T>> listeners = null;

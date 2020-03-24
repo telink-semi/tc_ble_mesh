@@ -27,7 +27,7 @@ import com.telink.ble.mesh.core.proxy.ProxyPDU;
 import com.telink.ble.mesh.core.proxy.ProxySetFilterTypeMessage;
 import com.telink.ble.mesh.foundation.MeshConfiguration;
 import com.telink.ble.mesh.util.Arrays;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class NetworkingController {
 
-    private final String TAG = "Networking -- ";
+    private final String LOG_TAG = "Networking";
     // include mic(4)
     private static final int UNSEGMENTED_TRANSPORT_PAYLOAD_MAX_LENGTH = 15;
 
@@ -193,7 +193,7 @@ public class NetworkingController {
 
     private AtomicBoolean reliableBusy = new AtomicBoolean(false);
 
-    private static final int RELIABLE_MESSAGE_TIMEOUT = 2 * 1000;
+    private static final int RELIABLE_MESSAGE_TIMEOUT = 960; // 2 * 1000
 
     private Set<Integer> mResponseMessageBuffer = new LinkedHashSet<>();
 
@@ -216,6 +216,7 @@ public class NetworkingController {
 
     private boolean networkingBusy = false;
 
+
     public NetworkingController(HandlerThread handlerThread) {
         this.mDelayHandler = new Handler(handlerThread.getLooper());
         this.appKeyMap = new SparseArray<>();
@@ -227,6 +228,7 @@ public class NetworkingController {
     }
 
     public void setup(MeshConfiguration configuration) {
+        this.clear();
         this.initIvIndex = configuration.ivIndex;
         this.ivIndex = initIvIndex & MeshUtils.UNSIGNED_INTEGER_MAX;
         int seqNo = configuration.sequenceNumber;
@@ -243,6 +245,7 @@ public class NetworkingController {
         this.localAddress = configuration.localAddress;
     }
 
+
     public void clear() {
         if (mDelayHandler != null) {
             mDelayHandler.removeCallbacksAndMessages(null);
@@ -251,7 +254,8 @@ public class NetworkingController {
         this.networkingBusy = false;
         this.segmentedBusy.set(false);
         this.reliableBusy.set(false);
-        mNetworkingQueue.clear();
+        this.mNetworkingQueue.clear();
+        this.deviceSequenceNumberMap.clear();
         if (receivedSegmentedMessageBuffer != null) {
             receivedSegmentedMessageBuffer.clear();
         }
@@ -259,6 +263,11 @@ public class NetworkingController {
 
     public void addDeviceKey(int unicastAddress, byte[] deviceKey) {
         this.deviceKeyMap.put(unicastAddress, deviceKey);
+    }
+
+
+    public void removeDeviceKey(int unicastAddress) {
+        this.deviceKeyMap.remove(unicastAddress);
     }
 
 
@@ -339,7 +348,7 @@ public class NetworkingController {
 
             this.onIvUpdated(updating ? remoteIvIndex - 1 : remoteIvIndex);
         } else {
-            TelinkLog.w(TAG + " smaller iv index received");
+            log(" smaller iv index received", MeshLogger.LEVEL_WARN);
         }
     }
 
@@ -347,6 +356,7 @@ public class NetworkingController {
         if (mSnoUpdateStep == 0 || mSnoUpdateStep == 1) return sequenceNumber;
         int initSno = (sequenceNumber / mSnoUpdateStep + 1) * mSnoUpdateStep;
         onSequenceNumberUpdate(initSno);
+        log("init sno: " + initSno);
         return initSno;
     }
 
@@ -361,7 +371,7 @@ public class NetworkingController {
 
         int dst = meshMessage.getDestinationAddress();
         if (!validateDestinationAddress(dst)) {
-            TelinkLog.w(TAG + "invalid dst address: " + String.format("%04X", dst));
+            log("invalid dst address: " + String.format("%04X", dst), MeshLogger.LEVEL_WARN);
             return false;
         }
 
@@ -378,7 +388,7 @@ public class NetworkingController {
         }
 
         if (encryptionKey == null) {
-            TelinkLog.w(TAG + "access key not found : " + accessType);
+            log("access key not found : " + accessType, MeshLogger.LEVEL_WARN);
             return false;
         }
         meshMessage.setAccessKey(encryptionKey);
@@ -426,7 +436,7 @@ public class NetworkingController {
                 sequenceNumber, src, dst);
 
         if (upperPDU == null) {
-            TelinkLog.w(TAG + "create upper transport pdu err: encrypt err");
+            log("create upper transport pdu err: encrypt err", MeshLogger.LEVEL_WARN);
             return false;
         }
         log("upper transport pdu: " + Arrays.bytesToHexString(upperPDU.getEncryptedPayload(), ""));
@@ -435,7 +445,7 @@ public class NetworkingController {
         boolean reliable = meshMessage.isReliable();
         if (reliable) {
             if (reliableBusy.get() && !meshMessage.equals(mSendingReliableMessage)) {
-                TelinkLog.w(TAG + "reliable message send err: busy");
+                log("reliable message send err: busy", MeshLogger.LEVEL_WARN);
                 return false;
             } else {
                 reliableBusy.set(true);
@@ -637,7 +647,7 @@ public class NetworkingController {
             mNetworkingQueue.add(payload);
         }
         synchronized (mNetworkBusyLock) {
-            if (!networkingBusy){
+            if (!networkingBusy) {
                 networkingBusy = true;
                 pollNetworkingQueue();
             }
@@ -712,14 +722,14 @@ public class NetworkingController {
      * @return ivIndex
      */
     private int getAcceptedIvIndex(int ivi) {
-        TelinkLog.d(String.format("getAcceptedIvIndex : %08X", ivIndex) + " ivi: " + ivi);
+        MeshLogger.log(String.format("getAcceptedIvIndex : %08X", ivIndex) + " ivi: " + ivi);
         boolean ivChecked = (ivIndex & 0b01) == ivi;
         return ivChecked ? (int) ivIndex : (int) (ivIndex - 1);
     }
 
     private int getTransmitIvIndex() {
         int re = (int) (!isIvUpdating ? ivIndex : ivIndex - 1);
-        TelinkLog.d(String.format("getTransmitIvIndex : %08X", re));
+        MeshLogger.log(String.format("getTransmitIvIndex : %08X", re));
         return re;
     }
 
@@ -741,7 +751,7 @@ public class NetworkingController {
         );
         if (networkLayerPDU.parse(payload)) {
             if (!validateSequenceNumber(networkLayerPDU)) {
-                TelinkLog.w(TAG + "sequence number check err");
+                log("sequence number check err", MeshLogger.LEVEL_WARN);
                 return;
             }
             if (networkLayerPDU.getCtl() == MeshMessage.CTL_ACCESS) {
@@ -751,7 +761,7 @@ public class NetworkingController {
             }
 
         } else {
-            TelinkLog.i(TAG + "network layer parse err");
+            log("network layer parse err", MeshLogger.LEVEL_WARN);
         }
     }
 
@@ -763,10 +773,11 @@ public class NetworkingController {
         );
         if (proxyNetworkPdu.parse(payload)) {
             if (!validateSequenceNumber(proxyNetworkPdu)) {
-                TelinkLog.w(TAG + "sequence number check err");
+                log("sequence number check err", MeshLogger.LEVEL_WARN);
                 return;
             }
-            TelinkLog.w(TAG + String.format("proxy network pdu src: %04X dst: %04X", proxyNetworkPdu.getSrc(), proxyNetworkPdu.getDst()));
+            log(String.format("proxy network pdu src: %04X dst: %04X", proxyNetworkPdu.getSrc(), proxyNetworkPdu.getDst()),
+                    MeshLogger.LEVEL_WARN);
             onProxyConfigurationNotify(proxyNetworkPdu.getTransportPDU(), proxyNetworkPdu.getSrc());
         }
 
@@ -781,7 +792,7 @@ public class NetworkingController {
             // target Filter type is whitelist
             if (proxyFilterStatusMessage.getFilterType() == ProxyFilterType.WhiteList.value) {
                 if (proxyFilterInitStep < 0) {
-                    TelinkLog.w(TAG + "filter init action not started!");
+                    log("filter init action not started!", MeshLogger.LEVEL_WARN);
                     return;
                 }
                 this.directAddress = src;
@@ -866,7 +877,7 @@ public class NetworkingController {
         if (segmentedBusy.get()) {
             resendSegmentedMessages(segmentAckMessage.getSeqZero(), segmentAckMessage.getBlockAck());
         } else {
-            TelinkLog.w(TAG + "Segment Acknowledgment Message err: segmented messages not sending");
+            log("Segment Acknowledgment Message err: segmented messages not sending", MeshLogger.LEVEL_WARN);
         }
     }
 
@@ -877,7 +888,7 @@ public class NetworkingController {
      */
     private synchronized void resendSegmentedMessages(int seqZero, int blockAck) {
         final SparseArray<SegmentedAccessMessagePDU> messageBuffer = sentSegmentedMessageBuffer.clone();
-        TelinkLog.w(TAG + "resendSegmentedMessages: seqZero: " + seqZero
+        log("resendSegmentedMessages: seqZero: " + seqZero
                 + " block ack: " + blockAck
                 + " buffer size: " + messageBuffer.size());
         if (messageBuffer.size() != 0) {
@@ -1008,7 +1019,7 @@ public class NetworkingController {
         int opcode = mSendingReliableMessage.getOpcode();
         int rspMax = mSendingReliableMessage.getResponseMax();
         int rspCount = mResponseMessageBuffer.size();
-        log(String.format("Reliable Message Complete: %06X success?: %B", opcode, success));
+        log(String.format("Reliable Message Complete: %06X success?: %b", opcode, success));
         mResponseMessageBuffer.clear();
         reliableBusy.set(false);
 
@@ -1070,7 +1081,7 @@ public class NetworkingController {
             if (decRe) {
                 return AccessLayerPDU.parse(upperTransportAccessPDU.getDecryptedPayload());
             } else {
-                TelinkLog.w("unsegmented access message parse err");
+                log("unsegmented access message parse err", MeshLogger.LEVEL_WARN);
             }
         }
         return null;
@@ -1220,7 +1231,7 @@ public class NetworkingController {
                     } else {
                         byte[] deviceKey = getDeviceKey(src);
                         if (deviceKey == null) {
-                            TelinkLog.w(TAG + "Device key not found when decrypt segmented access message");
+                            log("Device key not found when decrypt segmented access message", MeshLogger.LEVEL_WARN);
                             return null;
                         }
                         encryptionSuite = new UpperTransportAccessPDU.UpperTransportEncryptionSuite(deviceKey, ivIndex);
@@ -1393,7 +1404,11 @@ public class NetworkingController {
     }
 
 
-    private void log(String logInfo) {
-        TelinkLog.d(TAG + logInfo);
+    private void log(String logMessage) {
+        log(logMessage, MeshLogger.LEVEL_DEBUG);
+    }
+
+    private void log(String logMessage, int level) {
+        MeshLogger.log(logMessage, LOG_TAG, level);
     }
 }

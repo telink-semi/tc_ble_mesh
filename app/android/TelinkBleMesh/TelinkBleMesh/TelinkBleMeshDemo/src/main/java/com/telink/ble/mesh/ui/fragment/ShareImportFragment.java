@@ -15,8 +15,11 @@ import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.JsonPreviewActivity;
-import com.telink.ble.mesh.util.TelinkLog;
-import com.telink.file.selector.FileSelectActivity;
+import com.telink.ble.mesh.ui.file.FileSelectActivity;
+import com.telink.ble.mesh.util.FileSystem;
+import com.telink.ble.mesh.util.MeshLogger;
+
+import java.io.File;
 
 /**
  * share import fragment
@@ -64,7 +67,13 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
                     toastMsg("Pls select target file");
                     return;
                 }
-                MeshInfo newMesh = MeshStorageService.getInstance().importExternal(mPath, TelinkMeshApplication.getInstance().getMeshInfo());
+                File file = new File(mPath);
+                if (!file.exists()) {
+                    toastMsg("file not exist");
+                    return;
+                }
+                String jsonData = FileSystem.readString(file);
+                MeshInfo newMesh = MeshStorageService.getInstance().importExternal(jsonData, TelinkMeshApplication.getInstance().getMeshInfo());
                 newMesh.saveOrUpdate(getActivity());
                 MeshService.getInstance().idle(true);
                 MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());
@@ -87,7 +96,7 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
         tv_file_select.setText(mPath);
 
         tv_log.append("File selected: " + mPath + "\n");
-        TelinkLog.d("select: " + mPath);
+        MeshLogger.log("select: " + mPath);
     }
 
 }

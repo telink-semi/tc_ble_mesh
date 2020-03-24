@@ -58,6 +58,10 @@ public class AppKeyAddMessage extends ConfigMessage {
         return Opcode.APPKEY_ADD.value;
     }
 
+    @Override
+    public int getResponseOpcode() {
+        return Opcode.APPKEY_STATUS.value;
+    }
 
     @Override
     public byte[] getParams() {

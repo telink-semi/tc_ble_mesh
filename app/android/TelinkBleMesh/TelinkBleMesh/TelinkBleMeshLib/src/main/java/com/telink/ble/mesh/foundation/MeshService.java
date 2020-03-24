@@ -6,11 +6,12 @@ import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
 import com.telink.ble.mesh.foundation.parameter.AutoConnectParameters;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
+import com.telink.ble.mesh.foundation.parameter.FastProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.GattOtaParameters;
 import com.telink.ble.mesh.foundation.parameter.MeshOtaParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.security.Security;
 
@@ -20,7 +21,7 @@ import androidx.annotation.NonNull;
  * Created by kee on 2019/8/26.
  */
 
-public class MeshService implements MeshController.Callback {
+public class MeshService implements MeshController.EventCallback {
 
     // mesh encipher
     static {
@@ -38,17 +39,17 @@ public class MeshService implements MeshController.Callback {
     private EventHandler mEventHandler;
 
     public void init(@NonNull Context context, EventHandler eventHandler) {
-        TelinkLog.d("MeshService#init");
+        MeshLogger.log("MeshService#init");
         if (mController == null) {
             mController = new MeshController();
         }
-        mController.setCallback(this);
+        mController.setEventCallback(this);
         mController.start(context);
         this.mEventHandler = eventHandler;
     }
 
     public void clear() {
-        TelinkLog.d("MeshService#clear");
+        MeshLogger.log("MeshService#clear");
         if (this.mController != null) {
             this.mController.stop();
         }
@@ -138,6 +139,9 @@ public class MeshService implements MeshController.Callback {
         mController.startRemoteProvision(remoteProvisioningDevice);
     }
 
+    public void startFastProvision(FastProvisioningParameters fastProvisioningConfiguration) {
+        mController.startFastProvision(fastProvisioningConfiguration);
+    }
 
     public void idle(boolean disconnect) {
         mController.idle(disconnect);
@@ -182,6 +186,9 @@ public class MeshService implements MeshController.Callback {
         mController.enableBluetooth();
     }
 
+    /**
+     * get current connected device macAddress
+     */
     public String getCurDeviceMac() {
         return mController.getCurDeviceMac();
     }

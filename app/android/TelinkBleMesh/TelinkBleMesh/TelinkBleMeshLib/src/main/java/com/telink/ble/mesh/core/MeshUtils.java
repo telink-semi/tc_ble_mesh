@@ -13,6 +13,8 @@ public final class MeshUtils {
 
     public static final String CHARS = "123456789aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ+-*/<>/?!@#$%^&;'[]{}|,.";
 
+    public static final int ADDRESS_BROADCAST = 0xFFFF;
+
     // 1970 -- 2000 offset second
     public static final long TAI_OFFSET_SECOND = 946684800;
 
@@ -178,10 +180,10 @@ public final class MeshUtils {
         return (a & UNSIGNED_INTEGER_MAX) - (b & UNSIGNED_INTEGER_MAX);
     }
 
-    final static String FORMAT_1_BYTES = "%02X";
-    final static String FORMAT_2_BYTES = "%04X";
-    final static String FORMAT_3_BYTES = "%06X";
-    final static String FORMAT_4_BYTES = "%08X";
+    static final String FORMAT_1_BYTES = "%02X";
+    static final String FORMAT_2_BYTES = "%04X";
+    static final String FORMAT_3_BYTES = "%06X";
+    static final String FORMAT_4_BYTES = "%08X";
 
     public static String formatIntegerByHex(int value) {
         if (value <= -1) {

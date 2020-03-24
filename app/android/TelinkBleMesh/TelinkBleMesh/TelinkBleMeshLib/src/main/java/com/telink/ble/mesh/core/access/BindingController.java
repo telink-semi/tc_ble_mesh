@@ -15,7 +15,7 @@ import com.telink.ble.mesh.core.message.config.ModelAppBindMessage;
 import com.telink.ble.mesh.core.message.config.ModelAppStatusMessage;
 import com.telink.ble.mesh.entity.BindingDevice;
 import com.telink.ble.mesh.entity.CompositionData;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ import java.util.List;
 
 public class BindingController {
 
-    private final String TAG = "Binding -- ";
+    private final String LOG_TAG = "Binding";
 
     public static final int STATE_FAIL = 0;
 
@@ -71,7 +71,7 @@ public class BindingController {
         delayHandler.removeCallbacks(bindingTimeoutTask);
         delayHandler.postDelayed(bindingTimeoutTask, BINDING_TIMEOUT);
 
-        TelinkLog.d(TAG + "binding begin: defaultBound? " + device.isDefaultBound());
+        log("binding begin: defaultBound? " + device.isDefaultBound());
         if (bindingDevice.isDefaultBound()) {
             addAppKey();
         } else {
@@ -90,7 +90,7 @@ public class BindingController {
     }
 
     private void addAppKey() {
-        TelinkLog.d(TAG + "add app key");
+        log("add app key");
         AppKeyAddMessage command = new AppKeyAddMessage(this.bindingDevice.getMeshAddress());
         command.setNetKeyIndex(this.netKeyIndex);
         command.setAppKeyIndex(this.bindingDevice.getAppKeyIndex());
@@ -119,7 +119,7 @@ public class BindingController {
             command.setAppKeyIndex(bindingDevice.getAppKeyIndex());
             command.setSigModel(bindingModel.sig);
             command.setModelIdentifier(modelId);
-            TelinkLog.d(TAG + "bind next model: " + Integer.toHexString(modelId) + " at: " + Integer.toHexString(eleAdr));
+            log("bind next model: " + Integer.toHexString(modelId) + " at: " + Integer.toHexString(eleAdr));
             onMeshMessagePrepared(command);
 
         } else {
@@ -155,10 +155,10 @@ public class BindingController {
             onBindFail("no target models found");
         } else {
 
-            TelinkLog.d(TAG + "models prepared: " + this.bindingModels.size());
+            log("models prepared: " + this.bindingModels.size());
             /*for (BindingModel bindingModel :
                     bindingModels) {
-                TelinkLog.d(TAG + "model - " + bindingModel.modelId);
+                logMessage( "model - " + bindingModel.modelId);
             }*/
             bindingDevice.setCompositionData(compositionData);
             addAppKey();
@@ -203,9 +203,9 @@ public class BindingController {
             case APPKEY_STATUS:
                 AppKeyStatusMessage appKeyStatusMessage = ((AppKeyStatusMessage) message.getStatusMessage());
                 if (appKeyStatusMessage.getStatus() == 0) {
-                    TelinkLog.d(TAG + "app key add success");
+                    log("app key add success");
                     if (bindingDevice.isDefaultBound()) {
-                        TelinkLog.d(TAG + "default bound complete");
+                        log("default bound complete");
                         onBindSuccess();
                     } else {
                         bindNextModel();
@@ -229,7 +229,7 @@ public class BindingController {
     }
 
     private void onBindFail(String desc) {
-        TelinkLog.d(TAG + "binding fail: " + desc);
+        log("binding fail: " + desc);
         onBindState(STATE_FAIL, desc);
     }
 
@@ -262,4 +262,12 @@ public class BindingController {
             onBindFail("binding timeout");
         }
     };
+
+    private void log(String logInfo) {
+        log(logInfo, MeshLogger.LEVEL_DEBUG);
+    }
+
+    private void log(String logMessage, int level) {
+        MeshLogger.log(logMessage, LOG_TAG, level);
+    }
 }

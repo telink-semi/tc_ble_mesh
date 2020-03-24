@@ -28,6 +28,11 @@ public class ModelPublicationSetMessage extends ConfigMessage {
     }
 
     @Override
+    public int getResponseOpcode() {
+        return Opcode.CFG_MODEL_PUB_STATUS.value;
+    }
+
+    @Override
     public byte[] getParams() {
         return modelPublication.toBytes();
     }

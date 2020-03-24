@@ -22,4 +22,15 @@
     <color name="warn_normal">#de2b2b</color>
     <color name="warn_click">#782828</color>
 
+    <color name="log_v">#777777</color>
+    <color name="log_d">#4A87EE</color>
+    <color name="log_i">#76AC76</color>
+    <color name="log_w">#814747</color>
+    <color name="log_e">#E71D1D</color>
+
+    <color name="file_color_primary_dark">#8b97de</color>
+    <color name="file_color_primary">#4A87EE</color>
+    <color name="file_color_accent">#907acf</color>
+
+    <color name="file_white">#FFFFFF</color>
 </resources>

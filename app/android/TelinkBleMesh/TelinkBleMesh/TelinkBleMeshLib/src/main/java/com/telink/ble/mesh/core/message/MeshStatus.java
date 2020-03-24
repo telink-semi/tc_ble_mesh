@@ -8,6 +8,7 @@ import com.telink.ble.mesh.core.message.config.ModelAppStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelSubscriptionStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
+import com.telink.ble.mesh.core.message.fastpv.MeshAddressStatusMessage;
 import com.telink.ble.mesh.core.message.generic.LevelStatusMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlStatusMessage;
@@ -126,6 +127,9 @@ public class MeshStatus {
             register(new MeshStatus(Opcode.REMOTE_PROV_PDU_REPORT.value, ProvisioningPDUReportMessage.class));
             register(new MeshStatus(Opcode.REMOTE_PROV_PDU_OUTBOUND_REPORT.value, ProvisioningPDUOutboundReportMessage.class));
 //            register(new MeshStatus(Opcode.REMOTE_PROV_SCAN_CAPA_STS.value, ObjectTransferStatusMessage.class));
+
+            // fast provision [vendor]
+            register(new MeshStatus(Opcode.VD_MESH_ADDR_GET_STS.value, MeshAddressStatusMessage.class));
         }
 
         public static void register(MeshStatus status) {

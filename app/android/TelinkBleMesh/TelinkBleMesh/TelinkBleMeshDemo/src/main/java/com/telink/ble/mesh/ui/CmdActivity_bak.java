@@ -121,7 +121,7 @@ public class CmdActivity_bak extends BaseActivity implements View.OnClickListene
         switch (v.getId()) {
             case R.id.tv_send:
                 String cmdInput = et_cmd.getText().toString().trim();
-//                TelinkLog.d("cmd input -- " + Arrays.bytesToHexString(getInputBytes(cmdInput), ":"));
+//                MeshLogger.log("cmd input -- " + Arrays.bytesToHexString(getInputBytes(cmdInput), ":"));
                 byte[] input = getInputBytes(cmdInput);
 //                MeshService.getInstance().sendOpByINI(input);
                 String rspInfo = "sendCmd: " + Arrays.bytesToHexString(input, ":");

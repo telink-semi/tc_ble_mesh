@@ -294,7 +294,19 @@ public enum Opcode {
     OBJ_BLOCK_GET(0x7E),
     OBJ_BLOCK_STATUS(0x09B7),
     OBJ_INFO_GET(0x0AB7),
-    OBJ_INFO_STATUS(0x0BB7),;
+    OBJ_INFO_STATUS(0x0BB7),
+
+
+    // fast provision [vendor command]
+    VD_MESH_RESET_NETWORK(0x0211C5),
+    VD_MESH_ADDR_GET(0x0211C6),
+    VD_MESH_ADDR_GET_STS(0x0211C7),
+    VD_MESH_ADDR_SET(0x0211C8),
+    VD_MESH_ADDR_SET_STS(0x0211C9),
+    VD_MESH_PROV_DATA_SET(0x0211CA),
+    VD_MESH_PROV_CONFIRM(0x0211CB),
+    VD_MESH_PROV_CONFIRM_STS(0x0211CC),
+    VD_MESH_PROV_COMPLETE(0x0211CD);
 
     public final int value;
     public final String info;

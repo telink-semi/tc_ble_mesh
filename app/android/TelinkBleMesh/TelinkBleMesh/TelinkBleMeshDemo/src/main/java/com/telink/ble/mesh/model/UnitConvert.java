@@ -1,6 +1,8 @@
 package com.telink.ble.mesh.model;
 
-import com.telink.ble.mesh.util.TelinkLog;
+
+
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.Calendar;
 
@@ -19,7 +21,7 @@ public final class UnitConvert {
     public static int level2lum(short level) {
 
         int re = (((level + 32768) * 100) / 65535);
-        TelinkLog.d("level2lum: " + level + " re: " + re);
+        MeshLogger.log("level2lum: " + level + " re: " + re);
         return re;
     }
 

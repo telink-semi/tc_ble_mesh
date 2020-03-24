@@ -16,12 +16,14 @@ import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningStatePDU;
 import com.telink.ble.mesh.core.proxy.ProxyPDU;
 import com.telink.ble.mesh.entity.ProvisioningDevice;
 import com.telink.ble.mesh.util.Arrays;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.LogInfo;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
+import java.util.logging.Level;
 
 import androidx.annotation.NonNull;
 
@@ -33,7 +35,7 @@ import androidx.annotation.NonNull;
  */
 
 public class ProvisioningController {
-    private final String TAG = "Provisioning -- ";
+    private final String LOG_TAG = "Provisioning";
 
     /**
      * provisioning state
@@ -126,7 +128,7 @@ public class ProvisioningController {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
 
-    private static final long TIMEOUT_PROVISIONING = 30 * 1000;
+    private static final long TIMEOUT_PROVISIONING = 60 * 1000;
 
     private Handler delayHandler;
 
@@ -175,7 +177,7 @@ public class ProvisioningController {
     }
 
     public void begin(@NonNull ProvisioningDevice device) {
-        TelinkLog.w(TAG + "begin -- " + device.getMac());
+        log("begin -- " + device.getMac());
         this.mProvisioningDevice = device;
 
         delayHandler.removeCallbacks(provisioningTimeoutTask);
@@ -199,7 +201,7 @@ public class ProvisioningController {
 
     public void pushNotification(byte[] provisioningPdu) {
         if (state == STATE_IDLE) {
-            TelinkLog.w(TAG + "received notification when idle");
+            log("received notification when idle", MeshLogger.LEVEL_WARN);
             return;
         }
         int provisioningPduType = provisioningPdu[0];
@@ -251,7 +253,7 @@ public class ProvisioningController {
     }
 
     private void updateProvisioningState(int state, String desc) {
-        TelinkLog.d(TAG + "provisioning state update: state -- " + " desc -- " + desc);
+        log("provisioning state update: state -- " + " desc -- " + desc);
         this.state = state;
         if (mProvisioningBridge != null) {
             mProvisioningBridge.onProvisionStateChanged(state, desc);
@@ -283,7 +285,7 @@ public class ProvisioningController {
 
     public void onCapabilityReceived(byte[] capData) {
         if (this.state != STATE_INVITE) {
-            TelinkLog.w(TAG + " capability received when not inviting");
+            log(" capability received when not inviting", MeshLogger.LEVEL_WARN);
             return;
         }
         updateProvisioningState(STATE_CAPABILITY, "Capability Received");
@@ -299,15 +301,15 @@ public class ProvisioningController {
 
     private void onPubKeyReceived(byte[] pubKeyData) {
         if (this.state != STATE_PUB_KEY_SENT) {
-            TelinkLog.w(TAG + " pub key received when not pub key sent");
+            log(" pub key received when not pub key sent", MeshLogger.LEVEL_WARN);
             return;
         }
 
         updateProvisioningState(STATE_PUB_KEY_RECEIVED, "Public Key received");
-        TelinkLog.d(TAG + "on pub key fetch: " + Arrays.bytesToHexString(pubKeyData, ":"));
+        log("on pub key fetch: " + Arrays.bytesToHexString(pubKeyData, ":"));
         devicePubKeyPDU = ProvisioningPubKeyPDU.fromBytes(pubKeyData);
         deviceECDHSecret = Encipher.generateSharedECDHSecret(pubKeyData, provisionerKeyPair.getPrivate());
-        TelinkLog.d(TAG + "get secret: " + Arrays.bytesToHexString(deviceECDHSecret, ":"));
+        log("get secret: " + Arrays.bytesToHexString(deviceECDHSecret, ":"));
         sendConfirm();
     }
 
@@ -337,7 +339,7 @@ public class ProvisioningController {
 
     private void onConfirmReceived(byte[] confirm) {
         if (this.state != STATE_CONFIRM_SENT) {
-            TelinkLog.w(TAG + " confirm received when not confirm sent");
+            log(" confirm received when not confirm sent", MeshLogger.LEVEL_WARN);
             return;
         }
 
@@ -349,7 +351,7 @@ public class ProvisioningController {
 
     private void onRandomReceived(byte[] random) {
         if (this.state != STATE_RANDOM_SENT) {
-            TelinkLog.w(TAG + " random received when not random sent");
+            log(" random received when not random sent", MeshLogger.LEVEL_WARN);
             return;
         }
 
@@ -392,8 +394,8 @@ public class ProvisioningController {
             provisionerPubKeyPDU = new ProvisioningPubKeyPDU();
             provisionerPubKeyPDU.x = x;
             provisionerPubKeyPDU.y = y;
-            TelinkLog.d(TAG + "get key x: " + Arrays.bytesToHexString(x, ":"));
-            TelinkLog.d(TAG + "get key y: " + Arrays.bytesToHexString(y, ":"));
+            log("get key x: " + Arrays.bytesToHexString(x, ":"));
+            log("get key y: " + Arrays.bytesToHexString(y, ":"));
             return provisionerPubKeyPDU;
         } else {
             throw new RuntimeException("key pair generate err");
@@ -441,10 +443,10 @@ public class ProvisioningController {
         final byte[] confirmationValue = Encipher.aesCmac(confirmationData, confirmationKey);
 
         if (java.util.Arrays.equals(confirmationValue, deviceConfirm)) {
-            TelinkLog.d(TAG + "Confirmation values check pass");
+            log("Confirmation values check pass");
             return true;
         } else {
-            TelinkLog.e(TAG + "Confirmation values check err");
+            log("Confirmation values check err", MeshLogger.LEVEL_WARN);
         }
 
         return false;
@@ -472,13 +474,13 @@ public class ProvisioningController {
         byte[] sessionNonce = nonceBuffer.array();
 
         mProvisioningDevice.setDeviceKey(Encipher.aesCmac(Encipher.PRDK, t));
-        TelinkLog.d(TAG + "device key: " + Arrays.bytesToHexString(mProvisioningDevice.getDeviceKey(), ":"));
+        log("device key: " + Arrays.bytesToHexString(mProvisioningDevice.getDeviceKey(), ":"));
 
         byte[] provisioningData = mProvisioningDevice.generateProvisioningData();
 
-        TelinkLog.d(TAG + "unencrypted provision data: " + Arrays.bytesToHexString(provisioningData, ":"));
+        log("unencrypted provision data: " + Arrays.bytesToHexString(provisioningData, ":"));
         byte[] enData = Encipher.ccm(provisioningData, sessionKey, sessionNonce, 8, true);
-        TelinkLog.d(TAG + "encrypted provision data: " + Arrays.bytesToHexString(enData, ":"));
+        log("encrypted provision data: " + Arrays.bytesToHexString(enData, ":"));
         return enData;
     }
 
@@ -504,4 +506,12 @@ public class ProvisioningController {
             onProvisionFail("provisioning timeout");
         }
     };
+
+    private void log(String logMessage) {
+        log(logMessage, MeshLogger.LEVEL_DEBUG);
+    }
+
+    private void log(String logMessage, int level) {
+        MeshLogger.log(logMessage, LOG_TAG, level);
+    }
 }

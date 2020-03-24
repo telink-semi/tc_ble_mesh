@@ -45,9 +45,12 @@ public class MeshConfiguration {
      */
     public SparseArray<byte[]> deviceKeyMap;
 
-
     public int getDefaultAppKeyIndex() {
         return appKeyMap.size() > 0 ? appKeyMap.keyAt(0) : 0;
+    }
+
+    public byte[] getDefaultAppKey() {
+        return appKeyMap.size() > 0 ? appKeyMap.valueAt(0) : null;
     }
 
 }

@@ -25,7 +25,8 @@ import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
-import com.telink.ble.mesh.util.TelinkLog;
+import com.telink.ble.mesh.util.MeshLogger;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -148,7 +149,7 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
         }
         SettingModel model = selectedAdrList.get(settingIndex);
 
-        TelinkLog.d("set next address: " + model.address);
+        MeshLogger.log("set next address: " + model.address);
 
         // F0:0D:02:00:01:00:82:45:00:01:00:01:00:37:00
         delayHandler.removeCallbacks(cmdTimeoutCheckTask);
@@ -189,7 +190,7 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
 
                 adr = deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_SCENE_S.modelId);
                 if (adr == -1) {
-                    TelinkLog.d("scene save: device check fail");
+                    MeshLogger.log("scene save: device check fail");
                     continue;
                 }
 

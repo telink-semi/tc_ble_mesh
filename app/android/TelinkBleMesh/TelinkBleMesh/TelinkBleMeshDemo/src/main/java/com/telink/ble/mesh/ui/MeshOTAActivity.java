@@ -33,8 +33,9 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.ui.adapter.BaseSelectableListAdapter;
 import com.telink.ble.mesh.ui.adapter.MeshOTADeviceSelectAdapter;
-import com.telink.ble.mesh.util.TelinkLog;
-import com.telink.file.selector.FileSelectActivity;
+
+import com.telink.ble.mesh.ui.file.FileSelectActivity;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -340,7 +341,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
         if (resultCode != Activity.RESULT_OK || requestCode != REQUEST_CODE_GET_FILE)
             return;
         String mPath = data.getStringExtra(FileSelectActivity.KEY_RESULT);
-        TelinkLog.d("select: " + mPath);
+        MeshLogger.log("select: " + mPath);
         readFirmware(mPath);
     }
 

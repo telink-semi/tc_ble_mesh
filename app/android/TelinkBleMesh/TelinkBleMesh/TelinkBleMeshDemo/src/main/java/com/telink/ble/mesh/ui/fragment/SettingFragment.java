@@ -1,6 +1,5 @@
 package com.telink.ble.mesh.ui.fragment;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -10,9 +9,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.SharedPreferenceHelper;
-import com.telink.ble.mesh.ui.BaseActivity;
+import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.ui.DebugActivity;
 import com.telink.ble.mesh.ui.MeshOTAActivity;
 import com.telink.ble.mesh.ui.ModelListActivity;
@@ -50,7 +48,6 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
         view.findViewById(R.id.view_debug).setOnClickListener(this);
         view.findViewById(R.id.view_share).setOnClickListener(this);
         view.findViewById(R.id.view_mesh_ota).setOnClickListener(this);
-        view.findViewById(R.id.btn_reset_mesh).setOnClickListener(this);
         ll_location_setting = view.findViewById(R.id.ll_location_setting);
         view.findViewById(R.id.btn_location_setting).setOnClickListener(this);
         view.findViewById(R.id.btn_location_ignore).setOnClickListener(this);
@@ -89,30 +86,6 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
             case R.id.view_mesh_ota:
                 startActivity(new Intent(getActivity(), MeshOTAActivity.class));
                 break;
-            case R.id.btn_reset_mesh:
-                ((BaseActivity) getActivity()).showConfirmDialog("Wipe all mesh info? ", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                        /*MeshStorageService.getInstance().clearAndRecreate(getActivity());
-                        MeshStorageService.getInstance().save(getActivity());
-                        Mesh newMesh = MeshStorageService.getInstance().toLocalMesh();
-                        TelinkMeshApplication.getInstance().setupMesh(newMesh);
-
-//                        byte[] pvData = ProvisionDataGenerator.getProvisionData(newMesh.networkKey, newMesh.localAddress);
-                        byte[] pvData = ProvisionDataGenerator.getProvisionData(newMesh.networkKey, newMesh.netKeyIndex, newMesh.ivUpdateFlag, newMesh.ivIndex, newMesh.localAddress);
-                        MeshService.getInstance().meshProvisionParSetDir(pvData, pvData.length);
-                        MeshService.getInstance().setLocalAddress(newMesh.localAddress);
-                        MeshService.getInstance().reattachNodes(null);*/
-
-                        toastMsg("Wipe mesh info success");
-//                        mMesh.saveOrUpdate(getApplicationContext());
-
-
-                    }
-                });
-                break;
-
             case R.id.btn_location_setting:
                 Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivityForResult(enableLocationIntent, 1);
