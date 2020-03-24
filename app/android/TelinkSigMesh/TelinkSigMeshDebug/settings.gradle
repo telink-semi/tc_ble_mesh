@@ -1,0 +1,3 @@
+include ':MeshStaticLib'
+include 'TelinkSigMeshDemo', 'TelinkSigMeshLib'
+// ':app',

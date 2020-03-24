@@ -1,0 +1,105 @@
+<resources>
+    <string name="app_name">TelinkSigMesh</string>
+
+    <string name="app_copyright">©2019 Telink Semiconductor</string>
+
+    <string name="menu_scan">scan</string>
+    <string name="menu_stop">stop</string>
+    <string name="menu_connect">connect</string>
+    <string name="menu_disconnect">disconnect</string>
+
+    <string name="state_connected">connected</string>
+    <string name="state_connecting">connecting</string>
+    <string name="state_disconnected">disconnected</string>
+    <string name="state_disconnecting">disconnecting</string>
+
+    <string name="listen_enable">Listen for notifications</string>
+    <string name="listen_disable">Stop listen</string>
+
+
+    <string name="device_scan_header">Network Scanning</string>
+    <string name="device_scan_scan">Scan Device</string>
+    <string name="device_scan_add">Add Device</string>
+
+
+    <string name="version">bin pid: %s vid: %s</string>
+
+    <string name="node_version">node pid: %s vid: %s</string>
+
+    <string name="lum_progress">Lum(%d) (at ele adr: 0x%s): </string>
+
+    <string name="lum_level">Lum Level(at ele adr: 0x%s): </string>
+
+    <string name="temp_progress">Temp(%d) (at ele adr: 0x%s): </string>
+
+    <string name="temp_level">Temp Level(at ele adr: 0x%s): </string>
+
+    <!--<string name="device_state_desc">adr: 0x%s\non/off:%s lum:%d temp:%d</string>-->
+
+    <string name="device_state_desc">adr: 0x%s\non/off:%s</string>
+
+    <string name="device_state_desc_scene">adr: 0x%s\non/off:%s</string>
+
+    <string name="device_state_desc_mesh_ota">Adr: 0x%s\nPid:%s</string>
+
+    <string name="device_prov_desc">adr: 0x%s\nmac:%s</string>
+
+
+    <string name="publication_setting">Publication (ele : %s model: %s)</string>
+
+
+    <string name="enable_log">Enable LOG</string>
+
+    <string name="private_mode">Private Mode(Default Bound)</string>
+
+
+    <string name="enable_remote_provision">Remote Provision</string>
+
+    <string name="enable_fast_provision">Fast Provision</string>
+
+    <string name="hex_input">0123456789abcdefABCDEF</string>
+
+
+    <string-array name="group_name">
+        <item>Living room</item>
+        <item>Kitchen</item>
+        <item>Master bedroom</item>
+        <item>Secondary bedroom</item>
+        <item>Balcony</item>
+        <item>Bathroom</item>
+        <item>Hallway</item>
+        <item>others</item>
+    </string-array>
+
+    <string name="share_tip">
+        1. On phone[1] click [EXPORT] to  export storage as json file to sdcard/TelinkSigMeshSetting directory\n\n
+        2. Copy json file to phone[2]\'s sdcard\n\n
+        3. Click [select file] to select json file , then click [IMPORT] to load json file and sync storage\n\n
+        4. Back to home page, and waiting for mesh reconnect\n\n
+    </string>
+
+    <string-array name="share_flow">
+        <item>1. On phone[1] click [EXPORT] to  export storage as json file to sdcard/TelinkSigMeshSetting directory </item>
+        <item>2. Copy json file to phone[2]\'s sdcard</item>
+        <item>3. Click [select file] to select json file , then click [IMPORT] to load json file and sync storage</item>
+        <item>4. Back to home page, and waiting for mesh reconnect </item>
+    </string-array>
+
+
+    <string name="remote_prov_tip">
+        If remote provision enabled, provision process will be:\n\n
+        1. Scan for an unprovisioned device, connect and provision;\n\n
+        2. Keep the connection state, send scan command to the device;\n\n
+        3. Some remote devices info will be upload;\n\n
+        4. Check and do provision one by one;\n\n
+    </string>
+
+    <string name="fast_prov_tip">
+        If fast provision enabled, provision process will be:\n\n
+        1. Scan for an unprovisioned device, connect;\n\n
+        2. With the connection, get all unprovisioned devices; Device info with mac address will be in response message;\n\n
+        3. Set device address by mac address one by one;\n\n
+        4. Set provisioning data;\n\n
+    </string>
+
+</resources>
