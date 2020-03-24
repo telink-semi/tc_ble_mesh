@@ -1,0 +1,1356 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		25151BFA2362F2AC00967668 /* SigMessageHandle.h in Headers */ = {isa = PBXBuildFile; fileRef = 25151BF82362F2AC00967668 /* SigMessageHandle.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25151BFB2362F2AC00967668 /* SigMessageHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 25151BF92362F2AC00967668 /* SigMessageHandle.m */; };
+		2516D405236815A0000004FF /* SigModelDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 2516D404236815A0000004FF /* SigModelDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251B2BAA2397A8290024A48D /* SigAutoConnectManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 251B2BA82397A8290024A48D /* SigAutoConnectManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251B2BAB2397A8290024A48D /* SigAutoConnectManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 251B2BA92397A8290024A48D /* SigAutoConnectManager.m */; };
+		252ABF62236057A70096563F /* SigMeshMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 252ABF5E236057A60096563F /* SigMeshMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		252ABF63236057A70096563F /* SigMeshMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 252ABF5F236057A60096563F /* SigMeshMessage.m */; };
+		252ABF64236057A70096563F /* SigConfigMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 252ABF60236057A60096563F /* SigConfigMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		252ABF65236057A70096563F /* SigConfigMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 252ABF61236057A70096563F /* SigConfigMessage.m */; };
+		252ABF6823605B330096563F /* SigMeshLib.h in Headers */ = {isa = PBXBuildFile; fileRef = 252ABF6623605B330096563F /* SigMeshLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		252ABF6923605B330096563F /* SigMeshLib.m in Sources */ = {isa = PBXBuildFile; fileRef = 252ABF6723605B330096563F /* SigMeshLib.m */; };
+		252ABF6C23605C170096563F /* SigTransitionTime.h in Headers */ = {isa = PBXBuildFile; fileRef = 252ABF6A23605C160096563F /* SigTransitionTime.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		252ABF6D23605C170096563F /* SigTransitionTime.m in Sources */ = {isa = PBXBuildFile; fileRef = 252ABF6B23605C170096563F /* SigTransitionTime.m */; };
+		252ABF7023605C650096563F /* SigPublish.m in Sources */ = {isa = PBXBuildFile; fileRef = 252ABF6E23605C640096563F /* SigPublish.m */; };
+		252ABF7123605C650096563F /* SigPublish.h in Headers */ = {isa = PBXBuildFile; fileRef = 252ABF6F23605C650096563F /* SigPublish.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335C6E235EB046006C79C1 /* TelinkSigMeshLib-PrefixHeader.pch in Headers */ = {isa = PBXBuildFile; fileRef = 25335C6D235EB046006C79C1 /* TelinkSigMeshLib-PrefixHeader.pch */; };
+		25335E95235ED9F1006C79C1 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 25335D5B235ED9EF006C79C1 /* libcrypto.a */; };
+		25335E96235ED9F1006C79C1 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 25335D5C235ED9EF006C79C1 /* libssl.a */; };
+		25335E97235ED9F1006C79C1 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 25335D5D235ED9EF006C79C1 /* README.md */; };
+		25335E98235ED9F1006C79C1 /* pem2.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D60235ED9EF006C79C1 /* pem2.h */; };
+		25335E99235ED9F1006C79C1 /* pem.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D61235ED9EF006C79C1 /* pem.h */; };
+		25335E9A235ED9F1006C79C1 /* ssl3.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D62235ED9EF006C79C1 /* ssl3.h */; };
+		25335E9B235ED9F1006C79C1 /* ossl_typ.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D63235ED9EF006C79C1 /* ossl_typ.h */; };
+		25335E9C235ED9F1006C79C1 /* dtls1.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D64235ED9EF006C79C1 /* dtls1.h */; };
+		25335E9D235ED9F1006C79C1 /* err.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D65235ED9EF006C79C1 /* err.h */; };
+		25335E9E235ED9F1006C79C1 /* bn.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D66235ED9EF006C79C1 /* bn.h */; };
+		25335E9F235ED9F1006C79C1 /* blowfish.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D67235ED9EF006C79C1 /* blowfish.h */; };
+		25335EA0235ED9F1006C79C1 /* cms.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D68235ED9EF006C79C1 /* cms.h */; };
+		25335EA1235ED9F1006C79C1 /* engine.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D69235ED9EF006C79C1 /* engine.h */; };
+		25335EA2235ED9F1006C79C1 /* conf_api.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D6A235ED9EF006C79C1 /* conf_api.h */; };
+		25335EA3235ED9F1006C79C1 /* x509.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D6B235ED9EF006C79C1 /* x509.h */; };
+		25335EA4235ED9F1006C79C1 /* asn1_mac.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D6C235ED9EF006C79C1 /* asn1_mac.h */; };
+		25335EA5235ED9F1006C79C1 /* ui.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D6D235ED9EF006C79C1 /* ui.h */; };
+		25335EA6235ED9F1006C79C1 /* kssl.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D6E235ED9EF006C79C1 /* kssl.h */; };
+		25335EA7235ED9F1006C79C1 /* sha.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D6F235ED9EF006C79C1 /* sha.h */; };
+		25335EA8235ED9F1006C79C1 /* symhacks.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D70235ED9EF006C79C1 /* symhacks.h */; };
+		25335EA9235ED9F1006C79C1 /* asn1.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D71235ED9EF006C79C1 /* asn1.h */; };
+		25335EAA235ED9F1006C79C1 /* opensslconf.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D72235ED9EF006C79C1 /* opensslconf.h */; };
+		25335EAB235ED9F1006C79C1 /* bio.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D73235ED9EF006C79C1 /* bio.h */; };
+		25335EAC235ED9F1006C79C1 /* rc2.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D74235ED9EF006C79C1 /* rc2.h */; };
+		25335EAD235ED9F1006C79C1 /* dh.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D75235ED9EF006C79C1 /* dh.h */; };
+		25335EAE235ED9F1006C79C1 /* ui_compat.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D76235ED9EF006C79C1 /* ui_compat.h */; };
+		25335EAF235ED9F1006C79C1 /* x509v3.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D77235ED9EF006C79C1 /* x509v3.h */; };
+		25335EB0235ED9F1006C79C1 /* ssl23.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D78235ED9EF006C79C1 /* ssl23.h */; };
+		25335EB1235ED9F1006C79C1 /* conf.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D79235ED9EF006C79C1 /* conf.h */; };
+		25335EB2235ED9F1006C79C1 /* md5.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D7A235ED9EF006C79C1 /* md5.h */; };
+		25335EB3235ED9F1006C79C1 /* x509_vfy.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D7B235ED9EF006C79C1 /* x509_vfy.h */; };
+		25335EB4235ED9F1006C79C1 /* txt_db.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D7C235ED9EF006C79C1 /* txt_db.h */; };
+		25335EB5235ED9F1006C79C1 /* safestack.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D7D235ED9EF006C79C1 /* safestack.h */; };
+		25335EB6235ED9F1006C79C1 /* ecdsa.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D7E235ED9EF006C79C1 /* ecdsa.h */; };
+		25335EB7235ED9F1006C79C1 /* objects.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D7F235ED9EF006C79C1 /* objects.h */; };
+		25335EB8235ED9F1006C79C1 /* pkcs12.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D80235ED9EF006C79C1 /* pkcs12.h */; };
+		25335EB9235ED9F1006C79C1 /* crypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D81235ED9EF006C79C1 /* crypto.h */; };
+		25335EBA235ED9F1006C79C1 /* opensslv.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D82235ED9EF006C79C1 /* opensslv.h */; };
+		25335EBB235ED9F1006C79C1 /* pkcs7.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D83235ED9EF006C79C1 /* pkcs7.h */; };
+		25335EBC235ED9F1006C79C1 /* obj_mac.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D84235ED9EF006C79C1 /* obj_mac.h */; };
+		25335EBD235ED9F1006C79C1 /* buffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D85235ED9EF006C79C1 /* buffer.h */; };
+		25335EBE235ED9F1006C79C1 /* ssl.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D86235ED9EF006C79C1 /* ssl.h */; };
+		25335EBF235ED9F1006C79C1 /* srp.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D87235ED9EF006C79C1 /* srp.h */; };
+		25335EC0235ED9F1006C79C1 /* camellia.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D88235ED9EF006C79C1 /* camellia.h */; };
+		25335EC1235ED9F1006C79C1 /* evp.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D89235ED9EF006C79C1 /* evp.h */; };
+		25335EC2235ED9F1006C79C1 /* e_os2.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D8A235ED9EF006C79C1 /* e_os2.h */; };
+		25335EC3235ED9F1006C79C1 /* md4.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D8B235ED9EF006C79C1 /* md4.h */; };
+		25335EC4235ED9F1006C79C1 /* hmac.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D8C235ED9EF006C79C1 /* hmac.h */; };
+		25335EC5235ED9F1006C79C1 /* aes.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D8D235ED9EF006C79C1 /* aes.h */; };
+		25335EC6235ED9F1006C79C1 /* comp.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D8E235ED9EF006C79C1 /* comp.h */; };
+		25335EC7235ED9F1006C79C1 /* cast.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D8F235ED9EF006C79C1 /* cast.h */; };
+		25335EC8235ED9F1006C79C1 /* rc4.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D90235ED9EF006C79C1 /* rc4.h */; };
+		25335EC9235ED9F1006C79C1 /* stack.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D91235ED9EF006C79C1 /* stack.h */; };
+		25335ECA235ED9F1006C79C1 /* des.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D92235ED9EF006C79C1 /* des.h */; };
+		25335ECB235ED9F1006C79C1 /* ocsp.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D93235ED9EF006C79C1 /* ocsp.h */; };
+		25335ECC235ED9F1006C79C1 /* ec.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D94235ED9EF006C79C1 /* ec.h */; };
+		25335ECD235ED9F1006C79C1 /* ecdh.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D95235ED9EF006C79C1 /* ecdh.h */; };
+		25335ECE235ED9F1006C79C1 /* rand.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D96235ED9EF006C79C1 /* rand.h */; };
+		25335ECF235ED9F1006C79C1 /* ts.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D97235ED9EF006C79C1 /* ts.h */; };
+		25335ED0235ED9F1006C79C1 /* pqueue.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D98235ED9EF006C79C1 /* pqueue.h */; };
+		25335ED1235ED9F1006C79C1 /* dso.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D99235ED9EF006C79C1 /* dso.h */; };
+		25335ED2235ED9F1006C79C1 /* seed.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D9A235ED9EF006C79C1 /* seed.h */; };
+		25335ED3235ED9F1006C79C1 /* modes.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D9B235ED9EF006C79C1 /* modes.h */; };
+		25335ED4235ED9F1006C79C1 /* ssl2.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D9C235ED9EF006C79C1 /* ssl2.h */; };
+		25335ED5235ED9F1006C79C1 /* rsa.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D9D235ED9EF006C79C1 /* rsa.h */; };
+		25335ED6235ED9F1006C79C1 /* krb5_asn.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D9E235ED9EF006C79C1 /* krb5_asn.h */; };
+		25335ED7235ED9F1006C79C1 /* des_old.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335D9F235ED9EF006C79C1 /* des_old.h */; };
+		25335ED8235ED9F1006C79C1 /* ripemd.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DA0235ED9EF006C79C1 /* ripemd.h */; };
+		25335ED9235ED9F1006C79C1 /* whrlpool.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DA1235ED9EF006C79C1 /* whrlpool.h */; };
+		25335EDA235ED9F1006C79C1 /* tls1.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DA2235ED9EF006C79C1 /* tls1.h */; };
+		25335EDB235ED9F1006C79C1 /* mdc2.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DA3235ED9EF006C79C1 /* mdc2.h */; };
+		25335EDC235ED9F1006C79C1 /* dsa.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DA4235ED9EF006C79C1 /* dsa.h */; };
+		25335EDD235ED9F1006C79C1 /* srtp.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DA5235ED9EF006C79C1 /* srtp.h */; };
+		25335EDE235ED9F1006C79C1 /* asn1t.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DA6235ED9EF006C79C1 /* asn1t.h */; };
+		25335EDF235ED9F1006C79C1 /* cmac.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DA7235ED9EF006C79C1 /* cmac.h */; };
+		25335EE0235ED9F2006C79C1 /* ebcdic.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DA8235ED9EF006C79C1 /* ebcdic.h */; };
+		25335EE1235ED9F2006C79C1 /* idea.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DA9235ED9EF006C79C1 /* idea.h */; };
+		25335EE2235ED9F2006C79C1 /* lhash.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DAA235ED9EF006C79C1 /* lhash.h */; };
+		25335EE3235ED9F2006C79C1 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 25335DAB235ED9EF006C79C1 /* LICENSE.txt */; };
+		25335F0B235ED9F2006C79C1 /* SigEncryptionHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335DD6235ED9F0006C79C1 /* SigEncryptionHelper.m */; };
+		25335F0C235ED9F2006C79C1 /* SigLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DD7235ED9F0006C79C1 /* SigLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F0D235ED9F2006C79C1 /* SigBluetooth.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335DD8235ED9F0006C79C1 /* SigBluetooth.m */; };
+		25335F0E235ED9F2006C79C1 /* PublicHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DD9235ED9F0006C79C1 /* PublicHeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F11235ED9F2006C79C1 /* OpenSSLHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335DDC235ED9F0006C79C1 /* OpenSSLHelper.m */; };
+		25335F13235ED9F2006C79C1 /* SigEncryptionHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DDE235ED9F0006C79C1 /* SigEncryptionHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F14235ED9F2006C79C1 /* SigBluetooth.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DDF235ED9F0006C79C1 /* SigBluetooth.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F15235ED9F2006C79C1 /* SigLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335DE0235ED9F0006C79C1 /* SigLogger.m */; };
+		25335F16235ED9F2006C79C1 /* OpenSSLHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335DE1235ED9F0006C79C1 /* OpenSSLHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F36235EE2A7006C79C1 /* Model.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F34235EE2A6006C79C1 /* Model.m */; };
+		25335F37235EE2A7006C79C1 /* Model.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F35235EE2A7006C79C1 /* Model.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F3A235EE873006C79C1 /* SigDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F38235EE873006C79C1 /* SigDataSource.m */; };
+		25335F3B235EE873006C79C1 /* SigDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F39235EE873006C79C1 /* SigDataSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F3E235EE8D1006C79C1 /* SigIvIndex.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F3C235EE8D1006C79C1 /* SigIvIndex.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F3F235EE8D1006C79C1 /* SigIvIndex.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F3D235EE8D1006C79C1 /* SigIvIndex.m */; };
+		25335F42235EE94C006C79C1 /* LibTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F40235EE94C006C79C1 /* LibTools.m */; };
+		25335F43235EE94C006C79C1 /* LibTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F41235EE94C006C79C1 /* LibTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F46235EEB35006C79C1 /* SigDataHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F44235EEB35006C79C1 /* SigDataHandler.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F47235EEB35006C79C1 /* SigDataHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F45235EEB35006C79C1 /* SigDataHandler.m */; };
+		25335F4A235EEB93006C79C1 /* SigPdu.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F48235EEB92006C79C1 /* SigPdu.m */; };
+		25335F4B235EEB93006C79C1 /* SigPdu.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F49235EEB92006C79C1 /* SigPdu.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F50235EEBEE006C79C1 /* SigBearer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F4C235EEBED006C79C1 /* SigBearer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F51235EEBEE006C79C1 /* ProxyProtocolHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F4D235EEBED006C79C1 /* ProxyProtocolHandler.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F52235EEBEE006C79C1 /* SigBearer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F4E235EEBED006C79C1 /* SigBearer.m */; };
+		25335F53235EEBEE006C79C1 /* ProxyProtocolHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F4F235EEBED006C79C1 /* ProxyProtocolHandler.m */; };
+		25335F56235EEC61006C79C1 /* SigStruct.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F54235EEC61006C79C1 /* SigStruct.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F57235EEC61006C79C1 /* SigEnumeration.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F55235EEC61006C79C1 /* SigEnumeration.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F6C235EF339006C79C1 /* SigAuthenticationModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F5F235EF339006C79C1 /* SigAuthenticationModel.m */; };
+		25335F6D235EF339006C79C1 /* SigProvisionigState.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F60235EF339006C79C1 /* SigProvisionigState.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F6E235EF339006C79C1 /* SigProvisioningManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F61235EF339006C79C1 /* SigProvisioningManager.m */; };
+		25335F6F235EF339006C79C1 /* SigProvisioningData.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F62235EF339006C79C1 /* SigProvisioningData.m */; };
+		25335F70235EF339006C79C1 /* SigAuthenticationModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F63235EF339006C79C1 /* SigAuthenticationModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F71235EF339006C79C1 /* SigProvisioningManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F64235EF339006C79C1 /* SigProvisioningManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F72235EF339006C79C1 /* SigProvisionigState.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F65235EF339006C79C1 /* SigProvisionigState.m */; };
+		25335F73235EF339006C79C1 /* SigProvisioningData.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F66235EF339006C79C1 /* SigProvisioningData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F74235EF339006C79C1 /* SigAddDeviceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F67235EF339006C79C1 /* SigAddDeviceManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F75235EF339006C79C1 /* SigKeyBindManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F69235EF339006C79C1 /* SigKeyBindManager.m */; };
+		25335F76235EF339006C79C1 /* SigKeyBindManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F6A235EF339006C79C1 /* SigKeyBindManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25335F77235EF339006C79C1 /* SigAddDeviceManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F6B235EF339006C79C1 /* SigAddDeviceManager.m */; };
+		25335F90235F06D3006C79C1 /* SDKLibCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F8E235F06D3006C79C1 /* SDKLibCommand.m */; };
+		25335F91235F06D3006C79C1 /* SDKLibCommand.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F8F235F06D3006C79C1 /* SDKLibCommand.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		253401E1238BC25D00FEF43E /* SigSensorDescriptorModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 253401DF238BC25D00FEF43E /* SigSensorDescriptorModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		253401E2238BC25D00FEF43E /* SigSensorDescriptorModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 253401E0238BC25D00FEF43E /* SigSensorDescriptorModel.m */; };
+		2572C8A823852DD1005B64F3 /* SigTimeModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 2572C8A623852DD1005B64F3 /* SigTimeModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2572C8A923852DD1005B64F3 /* SigTimeModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 2572C8A723852DD1005B64F3 /* SigTimeModel.m */; };
+		258A004023A8BA5A003D2148 /* OTAManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 258A003E23A8BA5A003D2148 /* OTAManager.m */; };
+		258A004123A8BA5A003D2148 /* OTAManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 258A003F23A8BA5A003D2148 /* OTAManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		259020902369390E005649DE /* SigProxyConfigurationMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 2590208E2369390E005649DE /* SigProxyConfigurationMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		259020912369390E005649DE /* SigProxyConfigurationMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2590208F2369390E005649DE /* SigProxyConfigurationMessage.m */; };
+		25957ECA237AC6C100816137 /* SigGenericMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25957EC8237AC6C100816137 /* SigGenericMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25957ECB237AC6C100816137 /* SigGenericMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25957EC9237AC6C100816137 /* SigGenericMessage.m */; };
+		25B95FEA238E4DBD00244D14 /* BackgroundTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B95FE8238E4DBD00244D14 /* BackgroundTimer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25B95FEB238E4DBD00244D14 /* BackgroundTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B95FE9238E4DBD00244D14 /* BackgroundTimer.m */; };
+		25B95FEE238E595600244D14 /* SigConst.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B95FEC238E595600244D14 /* SigConst.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25B95FEF238E595600244D14 /* SigConst.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B95FED238E595600244D14 /* SigConst.m */; };
+		25C0AFDE235D597400846CFB /* TelinkSigMeshLib.h in Headers */ = {isa = PBXBuildFile; fileRef = 25C0AFDC235D597400846CFB /* TelinkSigMeshLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88BCD2361392100D4F0F7 /* SigKeySet.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BC92361392100D4F0F7 /* SigKeySet.m */; };
+		25D88BCE2361392100D4F0F7 /* SigKeySet.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BCA2361392100D4F0F7 /* SigKeySet.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88BCF2361392100D4F0F7 /* SigNetworkManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BCB2361392100D4F0F7 /* SigNetworkManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88BD02361392100D4F0F7 /* SigNetworkManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BCC2361392100D4F0F7 /* SigNetworkManager.m */; };
+		25D88BD323613D4900D4F0F7 /* SigStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BD123613D4900D4F0F7 /* SigStorage.m */; };
+		25D88BD423613D4900D4F0F7 /* SigStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BD223613D4900D4F0F7 /* SigStorage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88BDB2361443000D4F0F7 /* SigHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BD92361443000D4F0F7 /* SigHelper.m */; };
+		25D88BDC2361443000D4F0F7 /* SigHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BDA2361443000D4F0F7 /* SigHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88BEB2361455C00D4F0F7 /* SigNetworkLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BE92361455C00D4F0F7 /* SigNetworkLayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88BEC2361455C00D4F0F7 /* SigNetworkLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BEA2361455C00D4F0F7 /* SigNetworkLayer.m */; };
+		25D88BF12361456C00D4F0F7 /* SigAccessPdu.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BED2361456C00D4F0F7 /* SigAccessPdu.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88BF22361456C00D4F0F7 /* SigAccessLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BEE2361456C00D4F0F7 /* SigAccessLayer.m */; };
+		25D88BF32361456C00D4F0F7 /* SigAccessLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BEF2361456C00D4F0F7 /* SigAccessLayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88BF42361456C00D4F0F7 /* SigAccessPdu.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BF02361456C00D4F0F7 /* SigAccessPdu.m */; };
+		25D88C092361458500D4F0F7 /* SigLowerTransportPdu.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BF92361458300D4F0F7 /* SigLowerTransportPdu.m */; };
+		25D88C0A2361458500D4F0F7 /* SigAccessMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BFA2361458400D4F0F7 /* SigAccessMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C0B2361458500D4F0F7 /* SigSegmentedControlMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BFB2361458400D4F0F7 /* SigSegmentedControlMessage.m */; };
+		25D88C0C2361458500D4F0F7 /* SigControlMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BFC2361458400D4F0F7 /* SigControlMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C0D2361458500D4F0F7 /* SigSegmentedMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BFD2361458400D4F0F7 /* SigSegmentedMessage.m */; };
+		25D88C0E2361458500D4F0F7 /* SigSegmentedAccessMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BFE2361458400D4F0F7 /* SigSegmentedAccessMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C0F2361458500D4F0F7 /* SigSegmentAcknowledgmentMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BFF2361458400D4F0F7 /* SigSegmentAcknowledgmentMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C102361458500D4F0F7 /* SigSegmentedControlMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C002361458400D4F0F7 /* SigSegmentedControlMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C112361458500D4F0F7 /* SigControlMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C012361458400D4F0F7 /* SigControlMessage.m */; };
+		25D88C122361458500D4F0F7 /* SigSegmentedAccessMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C022361458400D4F0F7 /* SigSegmentedAccessMessage.m */; };
+		25D88C132361458500D4F0F7 /* SigLowerTransportLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C032361458400D4F0F7 /* SigLowerTransportLayer.m */; };
+		25D88C142361458500D4F0F7 /* SigLowerTransportLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C042361458400D4F0F7 /* SigLowerTransportLayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C152361458500D4F0F7 /* SigSegmentedMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C052361458400D4F0F7 /* SigSegmentedMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C162361458500D4F0F7 /* SigSegmentAcknowledgmentMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C062361458400D4F0F7 /* SigSegmentAcknowledgmentMessage.m */; };
+		25D88C172361458500D4F0F7 /* SigLowerTransportPdu.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C072361458500D4F0F7 /* SigLowerTransportPdu.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C182361458500D4F0F7 /* SigAccessMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C082361458500D4F0F7 /* SigAccessMessage.m */; };
+		25D88C1F2361459100D4F0F7 /* SigUpperTransportPdu.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C192361459100D4F0F7 /* SigUpperTransportPdu.m */; };
+		25D88C202361459100D4F0F7 /* SigHearbeatMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C1A2361459100D4F0F7 /* SigHearbeatMessage.m */; };
+		25D88C212361459100D4F0F7 /* SigUpperTransportLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C1B2361459100D4F0F7 /* SigUpperTransportLayer.m */; };
+		25D88C222361459100D4F0F7 /* SigHearbeatMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C1C2361459100D4F0F7 /* SigHearbeatMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C232361459100D4F0F7 /* SigUpperTransportPdu.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C1D2361459100D4F0F7 /* SigUpperTransportPdu.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C242361459100D4F0F7 /* SigUpperTransportLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C1E2361459100D4F0F7 /* SigUpperTransportLayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C29236145FA00D4F0F7 /* SigMeshAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C25236145FA00D4F0F7 /* SigMeshAddress.m */; };
+		25D88C2C236145FA00D4F0F7 /* SigMeshAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C28236145FA00D4F0F7 /* SigMeshAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C2F236148FF00D4F0F7 /* CBUUID+Hex.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88C2D236148FF00D4F0F7 /* CBUUID+Hex.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D88C30236148FF00D4F0F7 /* CBUUID+Hex.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88C2E236148FF00D4F0F7 /* CBUUID+Hex.m */; };
+		25D9E67623AC5901001E4747 /* TransmitJsonManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D9E67423AC5900001E4747 /* TransmitJsonManager.m */; };
+		25D9E67723AC5901001E4747 /* TransmitJsonManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D9E67523AC5900001E4747 /* TransmitJsonManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D9E67E23ACD9B6001E4747 /* SigPublishManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D9E67C23ACD9B6001E4747 /* SigPublishManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25D9E67F23ACD9B6001E4747 /* SigPublishManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D9E67D23ACD9B6001E4747 /* SigPublishManager.m */; };
+		25DD1F00240F854300D9A1B8 /* MeshOTAManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25DD1EFE240F854300D9A1B8 /* MeshOTAManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25DD1F01240F854300D9A1B8 /* MeshOTAManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25DD1EFF240F854300D9A1B8 /* MeshOTAManager.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		25151BF82362F2AC00967668 /* SigMessageHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigMessageHandle.h; sourceTree = "<group>"; };
+		25151BF92362F2AC00967668 /* SigMessageHandle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigMessageHandle.m; sourceTree = "<group>"; };
+		2516D404236815A0000004FF /* SigModelDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigModelDelegate.h; sourceTree = "<group>"; };
+		251B2BA82397A8290024A48D /* SigAutoConnectManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigAutoConnectManager.h; sourceTree = "<group>"; };
+		251B2BA92397A8290024A48D /* SigAutoConnectManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigAutoConnectManager.m; sourceTree = "<group>"; };
+		252ABF5E236057A60096563F /* SigMeshMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigMeshMessage.h; sourceTree = "<group>"; };
+		252ABF5F236057A60096563F /* SigMeshMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigMeshMessage.m; sourceTree = "<group>"; };
+		252ABF60236057A60096563F /* SigConfigMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigConfigMessage.h; sourceTree = "<group>"; };
+		252ABF61236057A70096563F /* SigConfigMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigConfigMessage.m; sourceTree = "<group>"; };
+		252ABF6623605B330096563F /* SigMeshLib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigMeshLib.h; sourceTree = "<group>"; };
+		252ABF6723605B330096563F /* SigMeshLib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigMeshLib.m; sourceTree = "<group>"; };
+		252ABF6A23605C160096563F /* SigTransitionTime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigTransitionTime.h; sourceTree = "<group>"; };
+		252ABF6B23605C170096563F /* SigTransitionTime.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigTransitionTime.m; sourceTree = "<group>"; };
+		252ABF6E23605C640096563F /* SigPublish.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigPublish.m; sourceTree = "<group>"; };
+		252ABF6F23605C650096563F /* SigPublish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigPublish.h; sourceTree = "<group>"; };
+		25335C6D235EB046006C79C1 /* TelinkSigMeshLib-PrefixHeader.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TelinkSigMeshLib-PrefixHeader.pch"; sourceTree = "<group>"; };
+		25335D5B235ED9EF006C79C1 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
+		25335D5C235ED9EF006C79C1 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libssl.a; sourceTree = "<group>"; };
+		25335D5D235ED9EF006C79C1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		25335D60235ED9EF006C79C1 /* pem2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem2.h; sourceTree = "<group>"; };
+		25335D61235ED9EF006C79C1 /* pem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem.h; sourceTree = "<group>"; };
+		25335D62235ED9EF006C79C1 /* ssl3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssl3.h; sourceTree = "<group>"; };
+		25335D63235ED9EF006C79C1 /* ossl_typ.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ossl_typ.h; sourceTree = "<group>"; };
+		25335D64235ED9EF006C79C1 /* dtls1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dtls1.h; sourceTree = "<group>"; };
+		25335D65235ED9EF006C79C1 /* err.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = err.h; sourceTree = "<group>"; };
+		25335D66235ED9EF006C79C1 /* bn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bn.h; sourceTree = "<group>"; };
+		25335D67235ED9EF006C79C1 /* blowfish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blowfish.h; sourceTree = "<group>"; };
+		25335D68235ED9EF006C79C1 /* cms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cms.h; sourceTree = "<group>"; };
+		25335D69235ED9EF006C79C1 /* engine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = engine.h; sourceTree = "<group>"; };
+		25335D6A235ED9EF006C79C1 /* conf_api.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = conf_api.h; sourceTree = "<group>"; };
+		25335D6B235ED9EF006C79C1 /* x509.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x509.h; sourceTree = "<group>"; };
+		25335D6C235ED9EF006C79C1 /* asn1_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1_mac.h; sourceTree = "<group>"; };
+		25335D6D235ED9EF006C79C1 /* ui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ui.h; sourceTree = "<group>"; };
+		25335D6E235ED9EF006C79C1 /* kssl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = kssl.h; sourceTree = "<group>"; };
+		25335D6F235ED9EF006C79C1 /* sha.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha.h; sourceTree = "<group>"; };
+		25335D70235ED9EF006C79C1 /* symhacks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = symhacks.h; sourceTree = "<group>"; };
+		25335D71235ED9EF006C79C1 /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
+		25335D72235ED9EF006C79C1 /* opensslconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opensslconf.h; sourceTree = "<group>"; };
+		25335D73235ED9EF006C79C1 /* bio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bio.h; sourceTree = "<group>"; };
+		25335D74235ED9EF006C79C1 /* rc2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rc2.h; sourceTree = "<group>"; };
+		25335D75235ED9EF006C79C1 /* dh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dh.h; sourceTree = "<group>"; };
+		25335D76235ED9EF006C79C1 /* ui_compat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ui_compat.h; sourceTree = "<group>"; };
+		25335D77235ED9EF006C79C1 /* x509v3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x509v3.h; sourceTree = "<group>"; };
+		25335D78235ED9EF006C79C1 /* ssl23.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssl23.h; sourceTree = "<group>"; };
+		25335D79235ED9EF006C79C1 /* conf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = conf.h; sourceTree = "<group>"; };
+		25335D7A235ED9EF006C79C1 /* md5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = md5.h; sourceTree = "<group>"; };
+		25335D7B235ED9EF006C79C1 /* x509_vfy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x509_vfy.h; sourceTree = "<group>"; };
+		25335D7C235ED9EF006C79C1 /* txt_db.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = txt_db.h; sourceTree = "<group>"; };
+		25335D7D235ED9EF006C79C1 /* safestack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = safestack.h; sourceTree = "<group>"; };
+		25335D7E235ED9EF006C79C1 /* ecdsa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ecdsa.h; sourceTree = "<group>"; };
+		25335D7F235ED9EF006C79C1 /* objects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = objects.h; sourceTree = "<group>"; };
+		25335D80235ED9EF006C79C1 /* pkcs12.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pkcs12.h; sourceTree = "<group>"; };
+		25335D81235ED9EF006C79C1 /* crypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crypto.h; sourceTree = "<group>"; };
+		25335D82235ED9EF006C79C1 /* opensslv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opensslv.h; sourceTree = "<group>"; };
+		25335D83235ED9EF006C79C1 /* pkcs7.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pkcs7.h; sourceTree = "<group>"; };
+		25335D84235ED9EF006C79C1 /* obj_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = obj_mac.h; sourceTree = "<group>"; };
+		25335D85235ED9EF006C79C1 /* buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = buffer.h; sourceTree = "<group>"; };
+		25335D86235ED9EF006C79C1 /* ssl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssl.h; sourceTree = "<group>"; };
+		25335D87235ED9EF006C79C1 /* srp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = srp.h; sourceTree = "<group>"; };
+		25335D88235ED9EF006C79C1 /* camellia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = camellia.h; sourceTree = "<group>"; };
+		25335D89235ED9EF006C79C1 /* evp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = evp.h; sourceTree = "<group>"; };
+		25335D8A235ED9EF006C79C1 /* e_os2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = e_os2.h; sourceTree = "<group>"; };
+		25335D8B235ED9EF006C79C1 /* md4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = md4.h; sourceTree = "<group>"; };
+		25335D8C235ED9EF006C79C1 /* hmac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hmac.h; sourceTree = "<group>"; };
+		25335D8D235ED9EF006C79C1 /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
+		25335D8E235ED9EF006C79C1 /* comp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = comp.h; sourceTree = "<group>"; };
+		25335D8F235ED9EF006C79C1 /* cast.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cast.h; sourceTree = "<group>"; };
+		25335D90235ED9EF006C79C1 /* rc4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rc4.h; sourceTree = "<group>"; };
+		25335D91235ED9EF006C79C1 /* stack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stack.h; sourceTree = "<group>"; };
+		25335D92235ED9EF006C79C1 /* des.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = des.h; sourceTree = "<group>"; };
+		25335D93235ED9EF006C79C1 /* ocsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ocsp.h; sourceTree = "<group>"; };
+		25335D94235ED9EF006C79C1 /* ec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ec.h; sourceTree = "<group>"; };
+		25335D95235ED9EF006C79C1 /* ecdh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ecdh.h; sourceTree = "<group>"; };
+		25335D96235ED9EF006C79C1 /* rand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rand.h; sourceTree = "<group>"; };
+		25335D97235ED9EF006C79C1 /* ts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ts.h; sourceTree = "<group>"; };
+		25335D98235ED9EF006C79C1 /* pqueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pqueue.h; sourceTree = "<group>"; };
+		25335D99235ED9EF006C79C1 /* dso.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dso.h; sourceTree = "<group>"; };
+		25335D9A235ED9EF006C79C1 /* seed.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = seed.h; sourceTree = "<group>"; };
+		25335D9B235ED9EF006C79C1 /* modes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = modes.h; sourceTree = "<group>"; };
+		25335D9C235ED9EF006C79C1 /* ssl2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssl2.h; sourceTree = "<group>"; };
+		25335D9D235ED9EF006C79C1 /* rsa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rsa.h; sourceTree = "<group>"; };
+		25335D9E235ED9EF006C79C1 /* krb5_asn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = krb5_asn.h; sourceTree = "<group>"; };
+		25335D9F235ED9EF006C79C1 /* des_old.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = des_old.h; sourceTree = "<group>"; };
+		25335DA0235ED9EF006C79C1 /* ripemd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ripemd.h; sourceTree = "<group>"; };
+		25335DA1235ED9EF006C79C1 /* whrlpool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = whrlpool.h; sourceTree = "<group>"; };
+		25335DA2235ED9EF006C79C1 /* tls1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tls1.h; sourceTree = "<group>"; };
+		25335DA3235ED9EF006C79C1 /* mdc2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mdc2.h; sourceTree = "<group>"; };
+		25335DA4235ED9EF006C79C1 /* dsa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dsa.h; sourceTree = "<group>"; };
+		25335DA5235ED9EF006C79C1 /* srtp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = srtp.h; sourceTree = "<group>"; };
+		25335DA6235ED9EF006C79C1 /* asn1t.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1t.h; sourceTree = "<group>"; };
+		25335DA7235ED9EF006C79C1 /* cmac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cmac.h; sourceTree = "<group>"; };
+		25335DA8235ED9EF006C79C1 /* ebcdic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ebcdic.h; sourceTree = "<group>"; };
+		25335DA9235ED9EF006C79C1 /* idea.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = idea.h; sourceTree = "<group>"; };
+		25335DAA235ED9EF006C79C1 /* lhash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lhash.h; sourceTree = "<group>"; };
+		25335DAB235ED9EF006C79C1 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		25335DD6235ED9F0006C79C1 /* SigEncryptionHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigEncryptionHelper.m; sourceTree = "<group>"; };
+		25335DD7235ED9F0006C79C1 /* SigLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigLogger.h; sourceTree = "<group>"; };
+		25335DD8235ED9F0006C79C1 /* SigBluetooth.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigBluetooth.m; sourceTree = "<group>"; };
+		25335DD9235ED9F0006C79C1 /* PublicHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PublicHeader.h; sourceTree = "<group>"; };
+		25335DDC235ED9F0006C79C1 /* OpenSSLHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenSSLHelper.m; sourceTree = "<group>"; };
+		25335DDE235ED9F0006C79C1 /* SigEncryptionHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigEncryptionHelper.h; sourceTree = "<group>"; };
+		25335DDF235ED9F0006C79C1 /* SigBluetooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigBluetooth.h; sourceTree = "<group>"; };
+		25335DE0235ED9F0006C79C1 /* SigLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigLogger.m; sourceTree = "<group>"; };
+		25335DE1235ED9F0006C79C1 /* OpenSSLHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenSSLHelper.h; sourceTree = "<group>"; };
+		25335F34235EE2A6006C79C1 /* Model.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Model.m; sourceTree = "<group>"; };
+		25335F35235EE2A7006C79C1 /* Model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Model.h; sourceTree = "<group>"; };
+		25335F38235EE873006C79C1 /* SigDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigDataSource.m; sourceTree = "<group>"; };
+		25335F39235EE873006C79C1 /* SigDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigDataSource.h; sourceTree = "<group>"; };
+		25335F3C235EE8D1006C79C1 /* SigIvIndex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigIvIndex.h; sourceTree = "<group>"; };
+		25335F3D235EE8D1006C79C1 /* SigIvIndex.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigIvIndex.m; sourceTree = "<group>"; };
+		25335F40235EE94C006C79C1 /* LibTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LibTools.m; sourceTree = "<group>"; };
+		25335F41235EE94C006C79C1 /* LibTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LibTools.h; sourceTree = "<group>"; };
+		25335F44235EEB35006C79C1 /* SigDataHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigDataHandler.h; sourceTree = "<group>"; };
+		25335F45235EEB35006C79C1 /* SigDataHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigDataHandler.m; sourceTree = "<group>"; };
+		25335F48235EEB92006C79C1 /* SigPdu.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigPdu.m; sourceTree = "<group>"; };
+		25335F49235EEB92006C79C1 /* SigPdu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigPdu.h; sourceTree = "<group>"; };
+		25335F4C235EEBED006C79C1 /* SigBearer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigBearer.h; sourceTree = "<group>"; };
+		25335F4D235EEBED006C79C1 /* ProxyProtocolHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProxyProtocolHandler.h; sourceTree = "<group>"; };
+		25335F4E235EEBED006C79C1 /* SigBearer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigBearer.m; sourceTree = "<group>"; };
+		25335F4F235EEBED006C79C1 /* ProxyProtocolHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ProxyProtocolHandler.m; sourceTree = "<group>"; };
+		25335F54235EEC61006C79C1 /* SigStruct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigStruct.h; sourceTree = "<group>"; };
+		25335F55235EEC61006C79C1 /* SigEnumeration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigEnumeration.h; sourceTree = "<group>"; };
+		25335F5F235EF339006C79C1 /* SigAuthenticationModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigAuthenticationModel.m; sourceTree = "<group>"; };
+		25335F60235EF339006C79C1 /* SigProvisionigState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigProvisionigState.h; sourceTree = "<group>"; };
+		25335F61235EF339006C79C1 /* SigProvisioningManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigProvisioningManager.m; sourceTree = "<group>"; };
+		25335F62235EF339006C79C1 /* SigProvisioningData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigProvisioningData.m; sourceTree = "<group>"; };
+		25335F63235EF339006C79C1 /* SigAuthenticationModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigAuthenticationModel.h; sourceTree = "<group>"; };
+		25335F64235EF339006C79C1 /* SigProvisioningManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigProvisioningManager.h; sourceTree = "<group>"; };
+		25335F65235EF339006C79C1 /* SigProvisionigState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigProvisionigState.m; sourceTree = "<group>"; };
+		25335F66235EF339006C79C1 /* SigProvisioningData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigProvisioningData.h; sourceTree = "<group>"; };
+		25335F67235EF339006C79C1 /* SigAddDeviceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigAddDeviceManager.h; sourceTree = "<group>"; };
+		25335F69235EF339006C79C1 /* SigKeyBindManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigKeyBindManager.m; sourceTree = "<group>"; };
+		25335F6A235EF339006C79C1 /* SigKeyBindManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigKeyBindManager.h; sourceTree = "<group>"; };
+		25335F6B235EF339006C79C1 /* SigAddDeviceManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigAddDeviceManager.m; sourceTree = "<group>"; };
+		25335F8E235F06D3006C79C1 /* SDKLibCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDKLibCommand.m; sourceTree = "<group>"; };
+		25335F8F235F06D3006C79C1 /* SDKLibCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDKLibCommand.h; sourceTree = "<group>"; };
+		253401DF238BC25D00FEF43E /* SigSensorDescriptorModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigSensorDescriptorModel.h; sourceTree = "<group>"; };
+		253401E0238BC25D00FEF43E /* SigSensorDescriptorModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigSensorDescriptorModel.m; sourceTree = "<group>"; };
+		2572C8A623852DD1005B64F3 /* SigTimeModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigTimeModel.h; sourceTree = "<group>"; };
+		2572C8A723852DD1005B64F3 /* SigTimeModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigTimeModel.m; sourceTree = "<group>"; };
+		258A003E23A8BA5A003D2148 /* OTAManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OTAManager.m; sourceTree = "<group>"; };
+		258A003F23A8BA5A003D2148 /* OTAManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OTAManager.h; sourceTree = "<group>"; };
+		2590208E2369390E005649DE /* SigProxyConfigurationMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigProxyConfigurationMessage.h; sourceTree = "<group>"; };
+		2590208F2369390E005649DE /* SigProxyConfigurationMessage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigProxyConfigurationMessage.m; sourceTree = "<group>"; };
+		25957EC8237AC6C100816137 /* SigGenericMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigGenericMessage.h; sourceTree = "<group>"; };
+		25957EC9237AC6C100816137 /* SigGenericMessage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigGenericMessage.m; sourceTree = "<group>"; };
+		25B95FE8238E4DBD00244D14 /* BackgroundTimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BackgroundTimer.h; sourceTree = "<group>"; };
+		25B95FE9238E4DBD00244D14 /* BackgroundTimer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BackgroundTimer.m; sourceTree = "<group>"; };
+		25B95FEC238E595600244D14 /* SigConst.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigConst.h; sourceTree = "<group>"; };
+		25B95FED238E595600244D14 /* SigConst.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigConst.m; sourceTree = "<group>"; };
+		25C0AFD9235D597400846CFB /* TelinkSigMeshLib.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TelinkSigMeshLib.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		25C0AFDC235D597400846CFB /* TelinkSigMeshLib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TelinkSigMeshLib.h; sourceTree = "<group>"; };
+		25C0AFDD235D597400846CFB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		25D88BC92361392100D4F0F7 /* SigKeySet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigKeySet.m; sourceTree = "<group>"; };
+		25D88BCA2361392100D4F0F7 /* SigKeySet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigKeySet.h; sourceTree = "<group>"; };
+		25D88BCB2361392100D4F0F7 /* SigNetworkManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigNetworkManager.h; sourceTree = "<group>"; };
+		25D88BCC2361392100D4F0F7 /* SigNetworkManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigNetworkManager.m; sourceTree = "<group>"; };
+		25D88BD123613D4900D4F0F7 /* SigStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigStorage.m; sourceTree = "<group>"; };
+		25D88BD223613D4900D4F0F7 /* SigStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigStorage.h; sourceTree = "<group>"; };
+		25D88BD92361443000D4F0F7 /* SigHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigHelper.m; sourceTree = "<group>"; };
+		25D88BDA2361443000D4F0F7 /* SigHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigHelper.h; sourceTree = "<group>"; };
+		25D88BE92361455C00D4F0F7 /* SigNetworkLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigNetworkLayer.h; sourceTree = "<group>"; };
+		25D88BEA2361455C00D4F0F7 /* SigNetworkLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigNetworkLayer.m; sourceTree = "<group>"; };
+		25D88BED2361456C00D4F0F7 /* SigAccessPdu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigAccessPdu.h; sourceTree = "<group>"; };
+		25D88BEE2361456C00D4F0F7 /* SigAccessLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigAccessLayer.m; sourceTree = "<group>"; };
+		25D88BEF2361456C00D4F0F7 /* SigAccessLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigAccessLayer.h; sourceTree = "<group>"; };
+		25D88BF02361456C00D4F0F7 /* SigAccessPdu.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigAccessPdu.m; sourceTree = "<group>"; };
+		25D88BF92361458300D4F0F7 /* SigLowerTransportPdu.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigLowerTransportPdu.m; sourceTree = "<group>"; };
+		25D88BFA2361458400D4F0F7 /* SigAccessMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigAccessMessage.h; sourceTree = "<group>"; };
+		25D88BFB2361458400D4F0F7 /* SigSegmentedControlMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigSegmentedControlMessage.m; sourceTree = "<group>"; };
+		25D88BFC2361458400D4F0F7 /* SigControlMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigControlMessage.h; sourceTree = "<group>"; };
+		25D88BFD2361458400D4F0F7 /* SigSegmentedMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigSegmentedMessage.m; sourceTree = "<group>"; };
+		25D88BFE2361458400D4F0F7 /* SigSegmentedAccessMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigSegmentedAccessMessage.h; sourceTree = "<group>"; };
+		25D88BFF2361458400D4F0F7 /* SigSegmentAcknowledgmentMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigSegmentAcknowledgmentMessage.h; sourceTree = "<group>"; };
+		25D88C002361458400D4F0F7 /* SigSegmentedControlMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigSegmentedControlMessage.h; sourceTree = "<group>"; };
+		25D88C012361458400D4F0F7 /* SigControlMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigControlMessage.m; sourceTree = "<group>"; };
+		25D88C022361458400D4F0F7 /* SigSegmentedAccessMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigSegmentedAccessMessage.m; sourceTree = "<group>"; };
+		25D88C032361458400D4F0F7 /* SigLowerTransportLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigLowerTransportLayer.m; sourceTree = "<group>"; };
+		25D88C042361458400D4F0F7 /* SigLowerTransportLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigLowerTransportLayer.h; sourceTree = "<group>"; };
+		25D88C052361458400D4F0F7 /* SigSegmentedMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigSegmentedMessage.h; sourceTree = "<group>"; };
+		25D88C062361458400D4F0F7 /* SigSegmentAcknowledgmentMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigSegmentAcknowledgmentMessage.m; sourceTree = "<group>"; };
+		25D88C072361458500D4F0F7 /* SigLowerTransportPdu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigLowerTransportPdu.h; sourceTree = "<group>"; };
+		25D88C082361458500D4F0F7 /* SigAccessMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigAccessMessage.m; sourceTree = "<group>"; };
+		25D88C192361459100D4F0F7 /* SigUpperTransportPdu.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigUpperTransportPdu.m; sourceTree = "<group>"; };
+		25D88C1A2361459100D4F0F7 /* SigHearbeatMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigHearbeatMessage.m; sourceTree = "<group>"; };
+		25D88C1B2361459100D4F0F7 /* SigUpperTransportLayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigUpperTransportLayer.m; sourceTree = "<group>"; };
+		25D88C1C2361459100D4F0F7 /* SigHearbeatMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigHearbeatMessage.h; sourceTree = "<group>"; };
+		25D88C1D2361459100D4F0F7 /* SigUpperTransportPdu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigUpperTransportPdu.h; sourceTree = "<group>"; };
+		25D88C1E2361459100D4F0F7 /* SigUpperTransportLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigUpperTransportLayer.h; sourceTree = "<group>"; };
+		25D88C25236145FA00D4F0F7 /* SigMeshAddress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigMeshAddress.m; sourceTree = "<group>"; };
+		25D88C28236145FA00D4F0F7 /* SigMeshAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigMeshAddress.h; sourceTree = "<group>"; };
+		25D88C2D236148FF00D4F0F7 /* CBUUID+Hex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBUUID+Hex.h"; sourceTree = "<group>"; };
+		25D88C2E236148FF00D4F0F7 /* CBUUID+Hex.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBUUID+Hex.m"; sourceTree = "<group>"; };
+		25D9E67423AC5900001E4747 /* TransmitJsonManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TransmitJsonManager.m; sourceTree = "<group>"; };
+		25D9E67523AC5900001E4747 /* TransmitJsonManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransmitJsonManager.h; sourceTree = "<group>"; };
+		25D9E67C23ACD9B6001E4747 /* SigPublishManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigPublishManager.h; sourceTree = "<group>"; };
+		25D9E67D23ACD9B6001E4747 /* SigPublishManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigPublishManager.m; sourceTree = "<group>"; };
+		25DD1EFE240F854300D9A1B8 /* MeshOTAManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MeshOTAManager.h; sourceTree = "<group>"; };
+		25DD1EFF240F854300D9A1B8 /* MeshOTAManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeshOTAManager.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		25C0AFD6235D597400846CFB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				25335E96235ED9F1006C79C1 /* libssl.a in Frameworks */,
+				25335E95235ED9F1006C79C1 /* libcrypto.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		25335CB3235ED9EE006C79C1 /* Layers */ = {
+			isa = PBXGroup;
+			children = (
+				25D88BCA2361392100D4F0F7 /* SigKeySet.h */,
+				25D88BC92361392100D4F0F7 /* SigKeySet.m */,
+				25D88BCB2361392100D4F0F7 /* SigNetworkManager.h */,
+				25D88BCC2361392100D4F0F7 /* SigNetworkManager.m */,
+				25151BF82362F2AC00967668 /* SigMessageHandle.h */,
+				25151BF92362F2AC00967668 /* SigMessageHandle.m */,
+				25335CB4235ED9EE006C79C1 /* Access Layer */,
+				25335CBA235ED9EE006C79C1 /* Foundation Layer */,
+				25335CBD235ED9EE006C79C1 /* Network Layer */,
+				25335CC3235ED9EE006C79C1 /* Lower Transport Layer */,
+				25335CCE235ED9EE006C79C1 /* Upper Transport Layer */,
+			);
+			path = Layers;
+			sourceTree = "<group>";
+		};
+		25335CB4235ED9EE006C79C1 /* Access Layer */ = {
+			isa = PBXGroup;
+			children = (
+				25D88BEF2361456C00D4F0F7 /* SigAccessLayer.h */,
+				25D88BEE2361456C00D4F0F7 /* SigAccessLayer.m */,
+				25D88BED2361456C00D4F0F7 /* SigAccessPdu.h */,
+				25D88BF02361456C00D4F0F7 /* SigAccessPdu.m */,
+			);
+			path = "Access Layer";
+			sourceTree = "<group>";
+		};
+		25335CBA235ED9EE006C79C1 /* Foundation Layer */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Foundation Layer";
+			sourceTree = "<group>";
+		};
+		25335CBD235ED9EE006C79C1 /* Network Layer */ = {
+			isa = PBXGroup;
+			children = (
+				25D88BE92361455C00D4F0F7 /* SigNetworkLayer.h */,
+				25D88BEA2361455C00D4F0F7 /* SigNetworkLayer.m */,
+			);
+			path = "Network Layer";
+			sourceTree = "<group>";
+		};
+		25335CC3235ED9EE006C79C1 /* Lower Transport Layer */ = {
+			isa = PBXGroup;
+			children = (
+				25D88BFA2361458400D4F0F7 /* SigAccessMessage.h */,
+				25D88C082361458500D4F0F7 /* SigAccessMessage.m */,
+				25D88BFC2361458400D4F0F7 /* SigControlMessage.h */,
+				25D88C012361458400D4F0F7 /* SigControlMessage.m */,
+				25D88C042361458400D4F0F7 /* SigLowerTransportLayer.h */,
+				25D88C032361458400D4F0F7 /* SigLowerTransportLayer.m */,
+				25D88C072361458500D4F0F7 /* SigLowerTransportPdu.h */,
+				25D88BF92361458300D4F0F7 /* SigLowerTransportPdu.m */,
+				25D88BFF2361458400D4F0F7 /* SigSegmentAcknowledgmentMessage.h */,
+				25D88C062361458400D4F0F7 /* SigSegmentAcknowledgmentMessage.m */,
+				25D88BFE2361458400D4F0F7 /* SigSegmentedAccessMessage.h */,
+				25D88C022361458400D4F0F7 /* SigSegmentedAccessMessage.m */,
+				25D88C002361458400D4F0F7 /* SigSegmentedControlMessage.h */,
+				25D88BFB2361458400D4F0F7 /* SigSegmentedControlMessage.m */,
+				25D88C052361458400D4F0F7 /* SigSegmentedMessage.h */,
+				25D88BFD2361458400D4F0F7 /* SigSegmentedMessage.m */,
+			);
+			path = "Lower Transport Layer";
+			sourceTree = "<group>";
+		};
+		25335CCE235ED9EE006C79C1 /* Upper Transport Layer */ = {
+			isa = PBXGroup;
+			children = (
+				25D88C1C2361459100D4F0F7 /* SigHearbeatMessage.h */,
+				25D88C1A2361459100D4F0F7 /* SigHearbeatMessage.m */,
+				25D88C1E2361459100D4F0F7 /* SigUpperTransportLayer.h */,
+				25D88C1B2361459100D4F0F7 /* SigUpperTransportLayer.m */,
+				25D88C1D2361459100D4F0F7 /* SigUpperTransportPdu.h */,
+				25D88C192361459100D4F0F7 /* SigUpperTransportPdu.m */,
+			);
+			path = "Upper Transport Layer";
+			sourceTree = "<group>";
+		};
+		25335CD3235ED9EE006C79C1 /* Mesh Errors */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Mesh Errors";
+			sourceTree = "<group>";
+		};
+		25335CD5235ED9EE006C79C1 /* Mesh Messages */ = {
+			isa = PBXGroup;
+			children = (
+				25335CD6235ED9EE006C79C1 /* Foundation Messages */,
+				25335D14235ED9EF006C79C1 /* Proxy Configuration */,
+				25335D1A235ED9EF006C79C1 /* Generic Messages */,
+				252ABF5E236057A60096563F /* SigMeshMessage.h */,
+				252ABF5F236057A60096563F /* SigMeshMessage.m */,
+				252ABF60236057A60096563F /* SigConfigMessage.h */,
+				252ABF61236057A70096563F /* SigConfigMessage.m */,
+				25957EC8237AC6C100816137 /* SigGenericMessage.h */,
+				25957EC9237AC6C100816137 /* SigGenericMessage.m */,
+			);
+			path = "Mesh Messages";
+			sourceTree = "<group>";
+		};
+		25335CD6235ED9EE006C79C1 /* Foundation Messages */ = {
+			isa = PBXGroup;
+			children = (
+				25335CD7235ED9EE006C79C1 /* Configuration Messages */,
+			);
+			path = "Foundation Messages";
+			sourceTree = "<group>";
+		};
+		25335CD7235ED9EE006C79C1 /* Configuration Messages */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Configuration Messages";
+			sourceTree = "<group>";
+		};
+		25335D14235ED9EF006C79C1 /* Proxy Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				2590208E2369390E005649DE /* SigProxyConfigurationMessage.h */,
+				2590208F2369390E005649DE /* SigProxyConfigurationMessage.m */,
+			);
+			path = "Proxy Configuration";
+			sourceTree = "<group>";
+		};
+		25335D1A235ED9EF006C79C1 /* Generic Messages */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Generic Messages";
+			sourceTree = "<group>";
+		};
+		25335D42235ED9EF006C79C1 /* Bearer */ = {
+			isa = PBXGroup;
+			children = (
+				25335D43235ED9EF006C79C1 /* GATT */,
+				25335DDF235ED9F0006C79C1 /* SigBluetooth.h */,
+				25335DD8235ED9F0006C79C1 /* SigBluetooth.m */,
+				25335F44235EEB35006C79C1 /* SigDataHandler.h */,
+				25335F45235EEB35006C79C1 /* SigDataHandler.m */,
+				25335F4D235EEBED006C79C1 /* ProxyProtocolHandler.h */,
+				25335F4F235EEBED006C79C1 /* ProxyProtocolHandler.m */,
+				25335F4C235EEBED006C79C1 /* SigBearer.h */,
+				25335F4E235EEBED006C79C1 /* SigBearer.m */,
+				251B2BA82397A8290024A48D /* SigAutoConnectManager.h */,
+				251B2BA92397A8290024A48D /* SigAutoConnectManager.m */,
+			);
+			path = Bearer;
+			sourceTree = "<group>";
+		};
+		25335D43235ED9EF006C79C1 /* GATT */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = GATT;
+			sourceTree = "<group>";
+		};
+		25335D4E235ED9EF006C79C1 /* Provisioning */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Provisioning;
+			sourceTree = "<group>";
+		};
+		25335D58235ED9EF006C79C1 /* Third Library */ = {
+			isa = PBXGroup;
+			children = (
+				25335D59235ED9EF006C79C1 /* OpenSSL-Universal */,
+			);
+			path = "Third Library";
+			sourceTree = "<group>";
+		};
+		25335D59235ED9EF006C79C1 /* OpenSSL-Universal */ = {
+			isa = PBXGroup;
+			children = (
+				25335D5A235ED9EF006C79C1 /* lib-ios */,
+				25335D5D235ED9EF006C79C1 /* README.md */,
+				25335D5E235ED9EF006C79C1 /* include-ios */,
+				25335DAB235ED9EF006C79C1 /* LICENSE.txt */,
+			);
+			path = "OpenSSL-Universal";
+			sourceTree = "<group>";
+		};
+		25335D5A235ED9EF006C79C1 /* lib-ios */ = {
+			isa = PBXGroup;
+			children = (
+				25335D5B235ED9EF006C79C1 /* libcrypto.a */,
+				25335D5C235ED9EF006C79C1 /* libssl.a */,
+			);
+			path = "lib-ios";
+			sourceTree = "<group>";
+		};
+		25335D5E235ED9EF006C79C1 /* include-ios */ = {
+			isa = PBXGroup;
+			children = (
+				25335D5F235ED9EF006C79C1 /* openssl */,
+			);
+			path = "include-ios";
+			sourceTree = "<group>";
+		};
+		25335D5F235ED9EF006C79C1 /* openssl */ = {
+			isa = PBXGroup;
+			children = (
+				25335D60235ED9EF006C79C1 /* pem2.h */,
+				25335D61235ED9EF006C79C1 /* pem.h */,
+				25335D62235ED9EF006C79C1 /* ssl3.h */,
+				25335D63235ED9EF006C79C1 /* ossl_typ.h */,
+				25335D64235ED9EF006C79C1 /* dtls1.h */,
+				25335D65235ED9EF006C79C1 /* err.h */,
+				25335D66235ED9EF006C79C1 /* bn.h */,
+				25335D67235ED9EF006C79C1 /* blowfish.h */,
+				25335D68235ED9EF006C79C1 /* cms.h */,
+				25335D69235ED9EF006C79C1 /* engine.h */,
+				25335D6A235ED9EF006C79C1 /* conf_api.h */,
+				25335D6B235ED9EF006C79C1 /* x509.h */,
+				25335D6C235ED9EF006C79C1 /* asn1_mac.h */,
+				25335D6D235ED9EF006C79C1 /* ui.h */,
+				25335D6E235ED9EF006C79C1 /* kssl.h */,
+				25335D6F235ED9EF006C79C1 /* sha.h */,
+				25335D70235ED9EF006C79C1 /* symhacks.h */,
+				25335D71235ED9EF006C79C1 /* asn1.h */,
+				25335D72235ED9EF006C79C1 /* opensslconf.h */,
+				25335D73235ED9EF006C79C1 /* bio.h */,
+				25335D74235ED9EF006C79C1 /* rc2.h */,
+				25335D75235ED9EF006C79C1 /* dh.h */,
+				25335D76235ED9EF006C79C1 /* ui_compat.h */,
+				25335D77235ED9EF006C79C1 /* x509v3.h */,
+				25335D78235ED9EF006C79C1 /* ssl23.h */,
+				25335D79235ED9EF006C79C1 /* conf.h */,
+				25335D7A235ED9EF006C79C1 /* md5.h */,
+				25335D7B235ED9EF006C79C1 /* x509_vfy.h */,
+				25335D7C235ED9EF006C79C1 /* txt_db.h */,
+				25335D7D235ED9EF006C79C1 /* safestack.h */,
+				25335D7E235ED9EF006C79C1 /* ecdsa.h */,
+				25335D7F235ED9EF006C79C1 /* objects.h */,
+				25335D80235ED9EF006C79C1 /* pkcs12.h */,
+				25335D81235ED9EF006C79C1 /* crypto.h */,
+				25335D82235ED9EF006C79C1 /* opensslv.h */,
+				25335D83235ED9EF006C79C1 /* pkcs7.h */,
+				25335D84235ED9EF006C79C1 /* obj_mac.h */,
+				25335D85235ED9EF006C79C1 /* buffer.h */,
+				25335D86235ED9EF006C79C1 /* ssl.h */,
+				25335D87235ED9EF006C79C1 /* srp.h */,
+				25335D88235ED9EF006C79C1 /* camellia.h */,
+				25335D89235ED9EF006C79C1 /* evp.h */,
+				25335D8A235ED9EF006C79C1 /* e_os2.h */,
+				25335D8B235ED9EF006C79C1 /* md4.h */,
+				25335D8C235ED9EF006C79C1 /* hmac.h */,
+				25335D8D235ED9EF006C79C1 /* aes.h */,
+				25335D8E235ED9EF006C79C1 /* comp.h */,
+				25335D8F235ED9EF006C79C1 /* cast.h */,
+				25335D90235ED9EF006C79C1 /* rc4.h */,
+				25335D91235ED9EF006C79C1 /* stack.h */,
+				25335D92235ED9EF006C79C1 /* des.h */,
+				25335D93235ED9EF006C79C1 /* ocsp.h */,
+				25335D94235ED9EF006C79C1 /* ec.h */,
+				25335D95235ED9EF006C79C1 /* ecdh.h */,
+				25335D96235ED9EF006C79C1 /* rand.h */,
+				25335D97235ED9EF006C79C1 /* ts.h */,
+				25335D98235ED9EF006C79C1 /* pqueue.h */,
+				25335D99235ED9EF006C79C1 /* dso.h */,
+				25335D9A235ED9EF006C79C1 /* seed.h */,
+				25335D9B235ED9EF006C79C1 /* modes.h */,
+				25335D9C235ED9EF006C79C1 /* ssl2.h */,
+				25335D9D235ED9EF006C79C1 /* rsa.h */,
+				25335D9E235ED9EF006C79C1 /* krb5_asn.h */,
+				25335D9F235ED9EF006C79C1 /* des_old.h */,
+				25335DA0235ED9EF006C79C1 /* ripemd.h */,
+				25335DA1235ED9EF006C79C1 /* whrlpool.h */,
+				25335DA2235ED9EF006C79C1 /* tls1.h */,
+				25335DA3235ED9EF006C79C1 /* mdc2.h */,
+				25335DA4235ED9EF006C79C1 /* dsa.h */,
+				25335DA5235ED9EF006C79C1 /* srtp.h */,
+				25335DA6235ED9EF006C79C1 /* asn1t.h */,
+				25335DA7235ED9EF006C79C1 /* cmac.h */,
+				25335DA8235ED9EF006C79C1 /* ebcdic.h */,
+				25335DA9235ED9EF006C79C1 /* idea.h */,
+				25335DAA235ED9EF006C79C1 /* lhash.h */,
+			);
+			path = openssl;
+			sourceTree = "<group>";
+		};
+		25335DAC235ED9EF006C79C1 /* Type Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				25D88C2D236148FF00D4F0F7 /* CBUUID+Hex.h */,
+				25D88C2E236148FF00D4F0F7 /* CBUUID+Hex.m */,
+			);
+			path = "Type Extensions";
+			sourceTree = "<group>";
+		};
+		25335DB5235ED9F0006C79C1 /* Mesh Model */ = {
+			isa = PBXGroup;
+			children = (
+				25335F35235EE2A7006C79C1 /* Model.h */,
+				25335F34235EE2A6006C79C1 /* Model.m */,
+				25335F3C235EE8D1006C79C1 /* SigIvIndex.h */,
+				25335F3D235EE8D1006C79C1 /* SigIvIndex.m */,
+				25335F49235EEB92006C79C1 /* SigPdu.h */,
+				25335F48235EEB92006C79C1 /* SigPdu.m */,
+				252ABF6A23605C160096563F /* SigTransitionTime.h */,
+				252ABF6B23605C170096563F /* SigTransitionTime.m */,
+				252ABF6F23605C650096563F /* SigPublish.h */,
+				252ABF6E23605C640096563F /* SigPublish.m */,
+				25D88C28236145FA00D4F0F7 /* SigMeshAddress.h */,
+				25D88C25236145FA00D4F0F7 /* SigMeshAddress.m */,
+				2572C8A623852DD1005B64F3 /* SigTimeModel.h */,
+				2572C8A723852DD1005B64F3 /* SigTimeModel.m */,
+				253401DF238BC25D00FEF43E /* SigSensorDescriptorModel.h */,
+				253401E0238BC25D00FEF43E /* SigSensorDescriptorModel.m */,
+			);
+			path = "Mesh Model";
+			sourceTree = "<group>";
+		};
+		25335DD4235ED9F0006C79C1 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				25335DD9235ED9F0006C79C1 /* PublicHeader.h */,
+				25335DD7235ED9F0006C79C1 /* SigLogger.h */,
+				25335DE0235ED9F0006C79C1 /* SigLogger.m */,
+				25335F39235EE873006C79C1 /* SigDataSource.h */,
+				25335F38235EE873006C79C1 /* SigDataSource.m */,
+				25335DE1235ED9F0006C79C1 /* OpenSSLHelper.h */,
+				25335DDC235ED9F0006C79C1 /* OpenSSLHelper.m */,
+				25335DDE235ED9F0006C79C1 /* SigEncryptionHelper.h */,
+				25335DD6235ED9F0006C79C1 /* SigEncryptionHelper.m */,
+				25335F41235EE94C006C79C1 /* LibTools.h */,
+				25335F40235EE94C006C79C1 /* LibTools.m */,
+				25D88BDA2361443000D4F0F7 /* SigHelper.h */,
+				25D88BD92361443000D4F0F7 /* SigHelper.m */,
+				25335F8F235F06D3006C79C1 /* SDKLibCommand.h */,
+				25335F8E235F06D3006C79C1 /* SDKLibCommand.m */,
+				258A003F23A8BA5A003D2148 /* OTAManager.h */,
+				258A003E23A8BA5A003D2148 /* OTAManager.m */,
+				25DD1EFE240F854300D9A1B8 /* MeshOTAManager.h */,
+				25DD1EFF240F854300D9A1B8 /* MeshOTAManager.m */,
+				25D88BD223613D4900D4F0F7 /* SigStorage.h */,
+				25D88BD123613D4900D4F0F7 /* SigStorage.m */,
+				2516D404236815A0000004FF /* SigModelDelegate.h */,
+				25B95FE8238E4DBD00244D14 /* BackgroundTimer.h */,
+				25B95FE9238E4DBD00244D14 /* BackgroundTimer.m */,
+				25D9E67523AC5900001E4747 /* TransmitJsonManager.h */,
+				25D9E67423AC5900001E4747 /* TransmitJsonManager.m */,
+				25D9E67C23ACD9B6001E4747 /* SigPublishManager.h */,
+				25D9E67D23ACD9B6001E4747 /* SigPublishManager.m */,
+				25B95FEC238E595600244D14 /* SigConst.h */,
+				25B95FED238E595600244D14 /* SigConst.m */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		25335DE4235ED9F1006C79C1 /* Mesh API */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Mesh API";
+			sourceTree = "<group>";
+		};
+		25335F5D235EF339006C79C1 /* Add devices Module */ = {
+			isa = PBXGroup;
+			children = (
+				25335F67235EF339006C79C1 /* SigAddDeviceManager.h */,
+				25335F6B235EF339006C79C1 /* SigAddDeviceManager.m */,
+				25335F5E235EF339006C79C1 /* Provisioning */,
+				25335F68235EF339006C79C1 /* KeyBind */,
+			);
+			path = "Add devices Module";
+			sourceTree = "<group>";
+		};
+		25335F5E235EF339006C79C1 /* Provisioning */ = {
+			isa = PBXGroup;
+			children = (
+				25335F64235EF339006C79C1 /* SigProvisioningManager.h */,
+				25335F61235EF339006C79C1 /* SigProvisioningManager.m */,
+				25335F66235EF339006C79C1 /* SigProvisioningData.h */,
+				25335F62235EF339006C79C1 /* SigProvisioningData.m */,
+				25335F63235EF339006C79C1 /* SigAuthenticationModel.h */,
+				25335F5F235EF339006C79C1 /* SigAuthenticationModel.m */,
+				25335F60235EF339006C79C1 /* SigProvisionigState.h */,
+				25335F65235EF339006C79C1 /* SigProvisionigState.m */,
+			);
+			path = Provisioning;
+			sourceTree = "<group>";
+		};
+		25335F68235EF339006C79C1 /* KeyBind */ = {
+			isa = PBXGroup;
+			children = (
+				25335F6A235EF339006C79C1 /* SigKeyBindManager.h */,
+				25335F69235EF339006C79C1 /* SigKeyBindManager.m */,
+			);
+			path = KeyBind;
+			sourceTree = "<group>";
+		};
+		25C0AFCF235D597400846CFB = {
+			isa = PBXGroup;
+			children = (
+				25C0AFDB235D597400846CFB /* TelinkSigMeshLib */,
+				25C0AFDA235D597400846CFB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		25C0AFDA235D597400846CFB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				25C0AFD9235D597400846CFB /* TelinkSigMeshLib.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		25C0AFDB235D597400846CFB /* TelinkSigMeshLib */ = {
+			isa = PBXGroup;
+			children = (
+				25C0AFDC235D597400846CFB /* TelinkSigMeshLib.h */,
+				25335F55235EEC61006C79C1 /* SigEnumeration.h */,
+				25335F54235EEC61006C79C1 /* SigStruct.h */,
+				252ABF6623605B330096563F /* SigMeshLib.h */,
+				252ABF6723605B330096563F /* SigMeshLib.m */,
+				25335F5D235EF339006C79C1 /* Add devices Module */,
+				25335D42235ED9EF006C79C1 /* Bearer */,
+				25335CB3235ED9EE006C79C1 /* Layers */,
+				25335DE4235ED9F1006C79C1 /* Mesh API */,
+				25335CD3235ED9EE006C79C1 /* Mesh Errors */,
+				25335CD5235ED9EE006C79C1 /* Mesh Messages */,
+				25335DB5235ED9F0006C79C1 /* Mesh Model */,
+				25335D4E235ED9EF006C79C1 /* Provisioning */,
+				25335D58235ED9EF006C79C1 /* Third Library */,
+				25335DAC235ED9EF006C79C1 /* Type Extensions */,
+				25335DD4235ED9F0006C79C1 /* Utils */,
+				25C0AFDD235D597400846CFB /* Info.plist */,
+				25335C6D235EB046006C79C1 /* TelinkSigMeshLib-PrefixHeader.pch */,
+			);
+			path = TelinkSigMeshLib;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		25C0AFD4235D597400846CFB /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				25335EDA235ED9F1006C79C1 /* tls1.h in Headers */,
+				25335EC8235ED9F1006C79C1 /* rc4.h in Headers */,
+				25335F13235ED9F2006C79C1 /* SigEncryptionHelper.h in Headers */,
+				25335F0E235ED9F2006C79C1 /* PublicHeader.h in Headers */,
+				25335F0C235ED9F2006C79C1 /* SigLogger.h in Headers */,
+				25335F14235ED9F2006C79C1 /* SigBluetooth.h in Headers */,
+				25D88BD423613D4900D4F0F7 /* SigStorage.h in Headers */,
+				25335F16235ED9F2006C79C1 /* OpenSSLHelper.h in Headers */,
+				25335F37235EE2A7006C79C1 /* Model.h in Headers */,
+				25335F50235EEBEE006C79C1 /* SigBearer.h in Headers */,
+				25335F73235EF339006C79C1 /* SigProvisioningData.h in Headers */,
+				25335F56235EEC61006C79C1 /* SigStruct.h in Headers */,
+				25335F4B235EEB93006C79C1 /* SigPdu.h in Headers */,
+				25335F3E235EE8D1006C79C1 /* SigIvIndex.h in Headers */,
+				25335F74235EF339006C79C1 /* SigAddDeviceManager.h in Headers */,
+				25335F43235EE94C006C79C1 /* LibTools.h in Headers */,
+				25335F51235EEBEE006C79C1 /* ProxyProtocolHandler.h in Headers */,
+				25335F3B235EE873006C79C1 /* SigDataSource.h in Headers */,
+				25335F71235EF339006C79C1 /* SigProvisioningManager.h in Headers */,
+				25335F70235EF339006C79C1 /* SigAuthenticationModel.h in Headers */,
+				25335F57235EEC61006C79C1 /* SigEnumeration.h in Headers */,
+				25335F46235EEB35006C79C1 /* SigDataHandler.h in Headers */,
+				25335F76235EF339006C79C1 /* SigKeyBindManager.h in Headers */,
+				25335F91235F06D3006C79C1 /* SDKLibCommand.h in Headers */,
+				252ABF6823605B330096563F /* SigMeshLib.h in Headers */,
+				252ABF64236057A70096563F /* SigConfigMessage.h in Headers */,
+				252ABF62236057A70096563F /* SigMeshMessage.h in Headers */,
+				252ABF7123605C650096563F /* SigPublish.h in Headers */,
+				252ABF6C23605C170096563F /* SigTransitionTime.h in Headers */,
+				25D88BCF2361392100D4F0F7 /* SigNetworkManager.h in Headers */,
+				25D88BEB2361455C00D4F0F7 /* SigNetworkLayer.h in Headers */,
+				25D88C242361459100D4F0F7 /* SigUpperTransportLayer.h in Headers */,
+				25D88C2C236145FA00D4F0F7 /* SigMeshAddress.h in Headers */,
+				25D88C222361459100D4F0F7 /* SigHearbeatMessage.h in Headers */,
+				25D88C172361458500D4F0F7 /* SigLowerTransportPdu.h in Headers */,
+				25D88C142361458500D4F0F7 /* SigLowerTransportLayer.h in Headers */,
+				25D88C0C2361458500D4F0F7 /* SigControlMessage.h in Headers */,
+				25D88C0F2361458500D4F0F7 /* SigSegmentAcknowledgmentMessage.h in Headers */,
+				25D88C152361458500D4F0F7 /* SigSegmentedMessage.h in Headers */,
+				25D88C0A2361458500D4F0F7 /* SigAccessMessage.h in Headers */,
+				25D88C102361458500D4F0F7 /* SigSegmentedControlMessage.h in Headers */,
+				25D88BF12361456C00D4F0F7 /* SigAccessPdu.h in Headers */,
+				25D88C232361459100D4F0F7 /* SigUpperTransportPdu.h in Headers */,
+				25D88C0E2361458500D4F0F7 /* SigSegmentedAccessMessage.h in Headers */,
+				25D88BF32361456C00D4F0F7 /* SigAccessLayer.h in Headers */,
+				25D88BCE2361392100D4F0F7 /* SigKeySet.h in Headers */,
+				25D88BDC2361443000D4F0F7 /* SigHelper.h in Headers */,
+				25D88C2F236148FF00D4F0F7 /* CBUUID+Hex.h in Headers */,
+				25957ECA237AC6C100816137 /* SigGenericMessage.h in Headers */,
+				25151BFA2362F2AC00967668 /* SigMessageHandle.h in Headers */,
+				2516D405236815A0000004FF /* SigModelDelegate.h in Headers */,
+				259020902369390E005649DE /* SigProxyConfigurationMessage.h in Headers */,
+				253401E1238BC25D00FEF43E /* SigSensorDescriptorModel.h in Headers */,
+				25B95FEA238E4DBD00244D14 /* BackgroundTimer.h in Headers */,
+				258A004123A8BA5A003D2148 /* OTAManager.h in Headers */,
+				2572C8A823852DD1005B64F3 /* SigTimeModel.h in Headers */,
+				251B2BAA2397A8290024A48D /* SigAutoConnectManager.h in Headers */,
+				25D9E67723AC5901001E4747 /* TransmitJsonManager.h in Headers */,
+				25B95FEE238E595600244D14 /* SigConst.h in Headers */,
+				25D9E67E23ACD9B6001E4747 /* SigPublishManager.h in Headers */,
+				25DD1F00240F854300D9A1B8 /* MeshOTAManager.h in Headers */,
+				25335F6D235EF339006C79C1 /* SigProvisionigState.h in Headers */,
+				25335EA5235ED9F1006C79C1 /* ui.h in Headers */,
+				25335EDC235ED9F1006C79C1 /* dsa.h in Headers */,
+				25335EA3235ED9F1006C79C1 /* x509.h in Headers */,
+				25335EB8235ED9F1006C79C1 /* pkcs12.h in Headers */,
+				25335ECF235ED9F1006C79C1 /* ts.h in Headers */,
+				25335EAE235ED9F1006C79C1 /* ui_compat.h in Headers */,
+				25335ECB235ED9F1006C79C1 /* ocsp.h in Headers */,
+				25335EB4235ED9F1006C79C1 /* txt_db.h in Headers */,
+				25335ECE235ED9F1006C79C1 /* rand.h in Headers */,
+				25335EB5235ED9F1006C79C1 /* safestack.h in Headers */,
+				25335EA1235ED9F1006C79C1 /* engine.h in Headers */,
+				25335EDB235ED9F1006C79C1 /* mdc2.h in Headers */,
+				25335E9E235ED9F1006C79C1 /* bn.h in Headers */,
+				25335EA4235ED9F1006C79C1 /* asn1_mac.h in Headers */,
+				25335E9D235ED9F1006C79C1 /* err.h in Headers */,
+				25335EB3235ED9F1006C79C1 /* x509_vfy.h in Headers */,
+				25335ED3235ED9F1006C79C1 /* modes.h in Headers */,
+				25335EAF235ED9F1006C79C1 /* x509v3.h in Headers */,
+				25335EC7235ED9F1006C79C1 /* cast.h in Headers */,
+				25335EBD235ED9F1006C79C1 /* buffer.h in Headers */,
+				25335ED5235ED9F1006C79C1 /* rsa.h in Headers */,
+				25335ECA235ED9F1006C79C1 /* des.h in Headers */,
+				25335ED2235ED9F1006C79C1 /* seed.h in Headers */,
+				25335EC9235ED9F1006C79C1 /* stack.h in Headers */,
+				25335EC2235ED9F1006C79C1 /* e_os2.h in Headers */,
+				25335EA2235ED9F1006C79C1 /* conf_api.h in Headers */,
+				25335ED1235ED9F1006C79C1 /* dso.h in Headers */,
+				25335EA8235ED9F1006C79C1 /* symhacks.h in Headers */,
+				25335E9B235ED9F1006C79C1 /* ossl_typ.h in Headers */,
+				25335EDD235ED9F1006C79C1 /* srtp.h in Headers */,
+				25335EC0235ED9F1006C79C1 /* camellia.h in Headers */,
+				25335EE2235ED9F2006C79C1 /* lhash.h in Headers */,
+				25335E98235ED9F1006C79C1 /* pem2.h in Headers */,
+				25335EB6235ED9F1006C79C1 /* ecdsa.h in Headers */,
+				25335EC5235ED9F1006C79C1 /* aes.h in Headers */,
+				25335ED9235ED9F1006C79C1 /* whrlpool.h in Headers */,
+				25335E99235ED9F1006C79C1 /* pem.h in Headers */,
+				25335ED4235ED9F1006C79C1 /* ssl2.h in Headers */,
+				25335EA0235ED9F1006C79C1 /* cms.h in Headers */,
+				25335EB9235ED9F1006C79C1 /* crypto.h in Headers */,
+				25335EC6235ED9F1006C79C1 /* comp.h in Headers */,
+				25335EB7235ED9F1006C79C1 /* objects.h in Headers */,
+				25335E9F235ED9F1006C79C1 /* blowfish.h in Headers */,
+				25335EC3235ED9F1006C79C1 /* md4.h in Headers */,
+				25335EAD235ED9F1006C79C1 /* dh.h in Headers */,
+				25335EA6235ED9F1006C79C1 /* kssl.h in Headers */,
+				25335EC1235ED9F1006C79C1 /* evp.h in Headers */,
+				25335EAA235ED9F1006C79C1 /* opensslconf.h in Headers */,
+				25335EDF235ED9F1006C79C1 /* cmac.h in Headers */,
+				25335EBC235ED9F1006C79C1 /* obj_mac.h in Headers */,
+				25335EE0235ED9F2006C79C1 /* ebcdic.h in Headers */,
+				25335EB1235ED9F1006C79C1 /* conf.h in Headers */,
+				25335EAB235ED9F1006C79C1 /* bio.h in Headers */,
+				25335EE1235ED9F2006C79C1 /* idea.h in Headers */,
+				25335EB2235ED9F1006C79C1 /* md5.h in Headers */,
+				25335EB0235ED9F1006C79C1 /* ssl23.h in Headers */,
+				25335EA9235ED9F1006C79C1 /* asn1.h in Headers */,
+				25335EC4235ED9F1006C79C1 /* hmac.h in Headers */,
+				25335ED7235ED9F1006C79C1 /* des_old.h in Headers */,
+				25335ECD235ED9F1006C79C1 /* ecdh.h in Headers */,
+				25335EAC235ED9F1006C79C1 /* rc2.h in Headers */,
+				25335EBF235ED9F1006C79C1 /* srp.h in Headers */,
+				25335ED6235ED9F1006C79C1 /* krb5_asn.h in Headers */,
+				25335EBA235ED9F1006C79C1 /* opensslv.h in Headers */,
+				25C0AFDE235D597400846CFB /* TelinkSigMeshLib.h in Headers */,
+				25335EDE235ED9F1006C79C1 /* asn1t.h in Headers */,
+				25335ED8235ED9F1006C79C1 /* ripemd.h in Headers */,
+				25335E9C235ED9F1006C79C1 /* dtls1.h in Headers */,
+				25335ECC235ED9F1006C79C1 /* ec.h in Headers */,
+				25335C6E235EB046006C79C1 /* TelinkSigMeshLib-PrefixHeader.pch in Headers */,
+				25335ED0235ED9F1006C79C1 /* pqueue.h in Headers */,
+				25335EBB235ED9F1006C79C1 /* pkcs7.h in Headers */,
+				25335EBE235ED9F1006C79C1 /* ssl.h in Headers */,
+				25335E9A235ED9F1006C79C1 /* ssl3.h in Headers */,
+				25335EA7235ED9F1006C79C1 /* sha.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		25C0AFD8235D597400846CFB /* TelinkSigMeshLib */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 25C0AFE1235D597400846CFB /* Build configuration list for PBXNativeTarget "TelinkSigMeshLib" */;
+			buildPhases = (
+				25C0AFD4235D597400846CFB /* Headers */,
+				25C0AFD5235D597400846CFB /* Sources */,
+				25C0AFD6235D597400846CFB /* Frameworks */,
+				25C0AFD7235D597400846CFB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TelinkSigMeshLib;
+			productName = TelinkSigMeshLib;
+			productReference = 25C0AFD9235D597400846CFB /* TelinkSigMeshLib.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		25C0AFD0235D597400846CFB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1110;
+				ORGANIZATIONNAME = "梁家誌";
+				TargetAttributes = {
+					25C0AFD8235D597400846CFB = {
+						CreatedOnToolsVersion = 11.1;
+						LastSwiftMigration = 1110;
+					};
+				};
+			};
+			buildConfigurationList = 25C0AFD3235D597400846CFB /* Build configuration list for PBXProject "TelinkSigMeshLib" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 25C0AFCF235D597400846CFB;
+			productRefGroup = 25C0AFDA235D597400846CFB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				25C0AFD8235D597400846CFB /* TelinkSigMeshLib */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		25C0AFD7235D597400846CFB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				25335EE3235ED9F2006C79C1 /* LICENSE.txt in Resources */,
+				25335E97235ED9F1006C79C1 /* README.md in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		25C0AFD5235D597400846CFB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				25D88C092361458500D4F0F7 /* SigLowerTransportPdu.m in Sources */,
+				25335F6C235EF339006C79C1 /* SigAuthenticationModel.m in Sources */,
+				259020912369390E005649DE /* SigProxyConfigurationMessage.m in Sources */,
+				25D88C122361458500D4F0F7 /* SigSegmentedAccessMessage.m in Sources */,
+				25D88BDB2361443000D4F0F7 /* SigHelper.m in Sources */,
+				258A004023A8BA5A003D2148 /* OTAManager.m in Sources */,
+				25335F4A235EEB93006C79C1 /* SigPdu.m in Sources */,
+				252ABF65236057A70096563F /* SigConfigMessage.m in Sources */,
+				25D88BCD2361392100D4F0F7 /* SigKeySet.m in Sources */,
+				25D88BD323613D4900D4F0F7 /* SigStorage.m in Sources */,
+				25335F72235EF339006C79C1 /* SigProvisionigState.m in Sources */,
+				25335F36235EE2A7006C79C1 /* Model.m in Sources */,
+				25D9E67F23ACD9B6001E4747 /* SigPublishManager.m in Sources */,
+				25335F52235EEBEE006C79C1 /* SigBearer.m in Sources */,
+				25335F90235F06D3006C79C1 /* SDKLibCommand.m in Sources */,
+				25D88C29236145FA00D4F0F7 /* SigMeshAddress.m in Sources */,
+				25D88BF22361456C00D4F0F7 /* SigAccessLayer.m in Sources */,
+				25D88C112361458500D4F0F7 /* SigControlMessage.m in Sources */,
+				25335F3A235EE873006C79C1 /* SigDataSource.m in Sources */,
+				25B95FEF238E595600244D14 /* SigConst.m in Sources */,
+				25D88C182361458500D4F0F7 /* SigAccessMessage.m in Sources */,
+				25335F3F235EE8D1006C79C1 /* SigIvIndex.m in Sources */,
+				25335F47235EEB35006C79C1 /* SigDataHandler.m in Sources */,
+				25D88BD02361392100D4F0F7 /* SigNetworkManager.m in Sources */,
+				25D88C0D2361458500D4F0F7 /* SigSegmentedMessage.m in Sources */,
+				25D88BF42361456C00D4F0F7 /* SigAccessPdu.m in Sources */,
+				25335F11235ED9F2006C79C1 /* OpenSSLHelper.m in Sources */,
+				25335F77235EF339006C79C1 /* SigAddDeviceManager.m in Sources */,
+				2572C8A923852DD1005B64F3 /* SigTimeModel.m in Sources */,
+				25D88C202361459100D4F0F7 /* SigHearbeatMessage.m in Sources */,
+				25151BFB2362F2AC00967668 /* SigMessageHandle.m in Sources */,
+				25B95FEB238E4DBD00244D14 /* BackgroundTimer.m in Sources */,
+				25957ECB237AC6C100816137 /* SigGenericMessage.m in Sources */,
+				25D88C132361458500D4F0F7 /* SigLowerTransportLayer.m in Sources */,
+				252ABF63236057A70096563F /* SigMeshMessage.m in Sources */,
+				25D88C0B2361458500D4F0F7 /* SigSegmentedControlMessage.m in Sources */,
+				25D88BEC2361455C00D4F0F7 /* SigNetworkLayer.m in Sources */,
+				25335F0D235ED9F2006C79C1 /* SigBluetooth.m in Sources */,
+				25335F42235EE94C006C79C1 /* LibTools.m in Sources */,
+				25D88C212361459100D4F0F7 /* SigUpperTransportLayer.m in Sources */,
+				25335F75235EF339006C79C1 /* SigKeyBindManager.m in Sources */,
+				252ABF6923605B330096563F /* SigMeshLib.m in Sources */,
+				252ABF7023605C650096563F /* SigPublish.m in Sources */,
+				252ABF6D23605C170096563F /* SigTransitionTime.m in Sources */,
+				25335F15235ED9F2006C79C1 /* SigLogger.m in Sources */,
+				25D88C30236148FF00D4F0F7 /* CBUUID+Hex.m in Sources */,
+				25D9E67623AC5901001E4747 /* TransmitJsonManager.m in Sources */,
+				25335F0B235ED9F2006C79C1 /* SigEncryptionHelper.m in Sources */,
+				25335F53235EEBEE006C79C1 /* ProxyProtocolHandler.m in Sources */,
+				25D88C162361458500D4F0F7 /* SigSegmentAcknowledgmentMessage.m in Sources */,
+				253401E2238BC25D00FEF43E /* SigSensorDescriptorModel.m in Sources */,
+				25D88C1F2361459100D4F0F7 /* SigUpperTransportPdu.m in Sources */,
+				25335F6E235EF339006C79C1 /* SigProvisioningManager.m in Sources */,
+				25335F6F235EF339006C79C1 /* SigProvisioningData.m in Sources */,
+				251B2BAB2397A8290024A48D /* SigAutoConnectManager.m in Sources */,
+				25DD1F01240F854300D9A1B8 /* MeshOTAManager.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		25C0AFDF235D597400846CFB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		25C0AFE0235D597400846CFB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		25C0AFE2235D597400846CFB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = J3AJAYU5N6;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SRCROOT)/TelinkSigMeshLib/TelinkSigMeshLib-PrefixHeader.pch";
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL-Universal/include-ios\"";
+				INFOPLIST_FILE = TelinkSigMeshLib/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/lib-ios",
+					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/lib-ios",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		25C0AFE3235D597400846CFB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = J3AJAYU5N6;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SRCROOT)/TelinkSigMeshLib/TelinkSigMeshLib-PrefixHeader.pch";
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL-Universal/include-ios\"";
+				INFOPLIST_FILE = TelinkSigMeshLib/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/lib-ios",
+					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/lib-ios",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		25C0AFD3235D597400846CFB /* Build configuration list for PBXProject "TelinkSigMeshLib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				25C0AFDF235D597400846CFB /* Debug */,
+				25C0AFE0235D597400846CFB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		25C0AFE1235D597400846CFB /* Build configuration list for PBXNativeTarget "TelinkSigMeshLib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				25C0AFE2235D597400846CFB /* Debug */,
+				25C0AFE3235D597400846CFB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 25C0AFD0235D597400846CFB /* Project object */;
+}

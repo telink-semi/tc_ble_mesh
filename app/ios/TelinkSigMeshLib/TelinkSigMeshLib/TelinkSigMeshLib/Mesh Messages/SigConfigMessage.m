@@ -1,0 +1,3938 @@
+/********************************************************************************************************
+ * @file     SigConfigMessage.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author     telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *
+ *             The information contained herein is confidential and proprietary property of Telink
+ *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
+ *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
+ *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
+ *           This heading MUST NOT be removed from this file.
+ *
+ *              Licensees are granted free, non-transferable use of the information in this
+ *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *
+ *******************************************************************************************************/
+//
+//  SigConfigMessage.m
+//  SigMeshLib
+//
+//  Created by Liangjiazhi on 2019/8/15.
+//  Copyright © 2019年 Telink. All rights reserved.
+//
+
+#import "SigConfigMessage.h"
+
+@implementation SigConfigMessage
+
+- (Class)responseType {
+    return nil;
+}
+
+- (UInt32)responseOpCode {
+    return 0;
+}
+
+- (NSData *)encodeLimit:(int)limit indexes:(NSArray <NSNumber *>*)indexes {
+    if (limit == 0 || indexes == nil || indexes.count == 0) {
+        return [NSData data];
+    }
+    if (limit == 1 || indexes.count == 1) {
+        // Encode a sigle Key Index into 2 bytes.
+        NSNumber *indexNumber = indexes.firstObject;
+        UInt16 index = indexNumber.intValue;
+        UInt16 tem = CFSwapInt16HostToLittle(index);
+        NSData *temData = [NSData dataWithBytes:&tem length:2];
+        return temData;
+    }else{
+        // Encode a pair of Key Indexes into 3 bytes.
+        NSNumber *firstIndexNumber = indexes.firstObject;
+        NSNumber *secondIndexNumber = indexes[1];
+        UInt32 index1 = firstIndexNumber.intValue;
+        UInt32 index2 = secondIndexNumber.intValue;
+        UInt32 pair = index1 << 12 | index2;
+        NSData *temData = [NSData dataWithBytes:&pair length:4];
+        NSMutableData *mData = [NSMutableData dataWithData:[temData subdataWithRange:NSMakeRange(0, temData.length-1)]];
+        if (indexes.count > 2) {
+            temData = [self encodeLimit:limit-2 indexes:[indexes subarrayWithRange:NSMakeRange(2, indexes.count-2)]];
+        } else {
+            temData = [self encodeLimit:limit-2 indexes:[NSArray array]];
+        }
+        [mData appendData:temData];
+        return mData;
+    }
+}
+
+- (NSData *)encodeIndexes:(NSArray <NSNumber *>*)indexes {
+    return [self encodeLimit:10000 indexes:indexes];
+}
+
++ (NSArray <NSNumber *>*)decodeLimit:(int)limit indexesFromData:(NSData *)data atOffset:(int)offset {
+    NSInteger size = data.length - offset;
+    if (limit == 0 || size < 2) {
+        TeLogDebug(@"limit is 0, or data.length is short.");
+        return [NSArray array];
+    }
+    if (limit == 1 || size == 2) {
+        // Decode a sigle Key Index from 2 bytes.
+        UInt16 index = 0;
+        Byte *dataByte = (Byte *)data.bytes;
+        memcpy(&index, dataByte+offset, 2);
+        return [NSArray arrayWithObject:@(index)];
+    } else {
+        // Decode a pair of Key Indexes from 3 bytes.
+        UInt16 first = 0,second=0;
+        UInt8 tem1=0,tem2=0,tem3=0;
+        Byte *dataByte = (Byte *)data.bytes;
+        memcpy(&tem1, dataByte+offset, 1);
+        memcpy(&tem2, dataByte+offset+1, 1);
+        memcpy(&tem3, dataByte+offset+2, 1);
+        first = tem3 << 4 | tem2 >> 4;
+        second = (tem2 & 0x0F) << 8 | tem1;
+        NSMutableArray *rArray = [NSMutableArray arrayWithArray:@[@(first),@(second)]];
+        [rArray addObjectsFromArray:[self decodeLimit:limit-2 indexesFromData:data atOffset:offset+3]];
+        return rArray;
+    }
+}
+
++ (NSArray <NSNumber *>*)decodeIndexesFromData:(NSData *)data atOffset:(int)offset {
+    return [self decodeLimit:10000 indexesFromData:data atOffset:offset];
+}
+
+- (BOOL)isSegmented {
+    return YES;
+}
+
+@end
+
+
+@implementation SigConfigStatusMessage
+- (BOOL)isSuccess {
+    return _status == SigConfigMessageStatus_success;
+}
+- (NSString *)message {
+    UInt8 tem = 0;
+    tem = (UInt8)_status;
+    switch (tem) {
+        case SigConfigMessageStatus_success:
+            return @"Success";
+            break;
+        case SigConfigMessageStatus_invalidAddress:
+            return @"Invalid Address";
+            break;
+        case SigConfigMessageStatus_invalidModel:
+            return @"Invalid Model";
+            break;
+        case SigConfigMessageStatus_invalidAppKeyIndex:
+            return @"Invalid Application Key Index";
+            break;
+        case SigConfigMessageStatus_invalidNetKeyIndex:
+            return @"Invalid Network Key Index";
+            break;
+        case SigConfigMessageStatus_insufficientResources:
+            return @"Insufficient resources";
+            break;
+        case SigConfigMessageStatus_keyIndexAlreadyStored:
+            return @"Key Index already stored";
+            break;
+        case SigConfigMessageStatus_invalidPublishParameters:
+            return @"Invalid publish parameters";
+            break;
+        case SigConfigMessageStatus_notASubscribeModel:
+            return @"Not a Subscribe Model";
+            break;
+        case SigConfigMessageStatus_storageFailure:
+            return @"Storage failure";
+            break;
+        case SigConfigMessageStatus_featureNotSupported:
+            return @"Feature not supported";
+            break;
+        case SigConfigMessageStatus_cannotUpdate:
+            return @"Cannot update";
+            break;
+        case SigConfigMessageStatus_cannotRemove:
+            return @"Cannot remove";
+            break;
+        case SigConfigMessageStatus_cannotBind:
+            return @"Cannot bind";
+            break;
+        case SigConfigMessageStatus_temporarilyUnableToChangeState:
+            return @"Temporarily unable to change state";
+            break;
+        case SigConfigMessageStatus_cannotSet:
+            return @"Cannot set";
+            break;
+        case SigConfigMessageStatus_unspecifiedError:
+            return @"Unspecified error";
+            break;
+        case SigConfigMessageStatus_invalidBinding:
+            return @"Invalid binding";
+            break;
+        default:
+            return @"unknown status";
+            break;
+    }
+}
+@end
+
+
+@implementation SigAcknowledgedConfigMessage
+@end
+
+
+@implementation SigConfigNetKeyMessage
+
+- (NSData *)encodeNetKeyIndex {
+    return [self encodeIndexes:@[@(_networkKeyIndex)]];
+}
+
++ (UInt16)decodeNetKeyIndexFromData:(NSData *)data atOffset:(int)offset {
+    return (UInt16)[self decodeLimit:1 indexesFromData:data atOffset:offset].firstObject.integerValue;
+}
+
+@end
+
+
+@implementation SigConfigAppKeyMessage
+@end
+
+
+@implementation SigConfigNetAndAppKeyMessage
+
+- (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex applicationKeyIndex:(UInt16)applicationKeyIndex {
+    if (self = [super init]) {
+        _networkKeyIndex = networkKeyIndex;
+        _applicationKeyIndex = applicationKeyIndex;
+    }
+    return self;
+}
+
+- (NSData *)encodeNetAndAppKeyIndex {
+    return [self encodeIndexes:@[@(_applicationKeyIndex),@(_networkKeyIndex)]];
+}
+
++ (SigConfigNetAndAppKeyMessage *)decodeNetAndAppKeyIndexFromData:(NSData *)data atOffset:(int)offset {
+    NSArray *array = [self decodeIndexesFromData:data atOffset:offset];
+    if (array && array.count >= 2) {
+        UInt16 tem1 = (UInt16)[array[0] integerValue];
+        UInt16 tem2 = (UInt16)[array[1] integerValue];
+        SigConfigNetAndAppKeyMessage *msg = [[SigConfigNetAndAppKeyMessage alloc] initWithNetworkKeyIndex:tem2 applicationKeyIndex:tem1];
+        return msg;
+    }else{
+        return nil;
+    }
+}
+
+@end
+
+
+@implementation SigConfigElementMessage
+@end
+
+
+@implementation SigConfigModelMessage
+
+- (UInt32)modelId {
+    return (UInt32)_modelIdentifier;
+}
+
+@end
+
+
+@implementation SigConfigAnyModelMessage
+
+/// Returns `true` for Models with identifiers assigned by Bluetooth SIG,
+/// `false` otherwise.
+- (BOOL)isBluetoothSIGAssigned {
+    return _companyIdentifier == 0;
+}
+
+- (UInt32)modelId {
+    if (_companyIdentifier != 0) {
+        return ((UInt32)_companyIdentifier << 16) | (UInt32)self.modelIdentifier;
+    } else {
+        return (UInt32)self.modelIdentifier;
+    }
+}
+
+@end
+
+
+@implementation SigConfigVendorModelMessage
+
+- (UInt32)modelId {
+    return ((UInt32)_companyIdentifier << 16) | (UInt32)self.modelIdentifier;
+}
+
+@end
+
+
+@implementation SigConfigAddressMessage
+@end
+
+
+@implementation SigConfigVirtualLabelMessage
+@end
+
+
+@implementation SigConfigModelAppList
+@end
+
+
+@implementation SigConfigModelSubscriptionList
+@end
+
+
+@implementation SigCompositionDataPage
+@end
+
+@implementation SigPage0
+
+- (NSData *)parameters {
+    UInt8 tem = self.page;
+    NSMutableData *mData = [NSMutableData dataWithBytes:&tem length:1];
+    UInt16 tem2 = self.companyIdentifier;
+    [mData appendData:[NSData dataWithBytes:&tem2 length:2]];
+    tem2 = self.productIdentifier;
+    [mData appendData:[NSData dataWithBytes:&tem2 length:2]];
+    tem2 = self.versionIdentifier;
+    [mData appendData:[NSData dataWithBytes:&tem2 length:2]];
+    tem2 = self.minimumNumberOfReplayProtectionList;
+    [mData appendData:[NSData dataWithBytes:&tem2 length:2]];
+    tem2 = self.features.rawValue;
+    [mData appendData:[NSData dataWithBytes:&tem2 length:2]];
+    for (SigElementModel *elementModel in self.elements) {
+        [mData appendData:elementModel.getElementData];
+    }
+    return mData;
+}
+
+- (BOOL)isSegmented {
+    return YES;
+}
+
+- (instancetype)initWithNode:(SigNodeModel *)node {
+    if (self = [super init]) {
+        self.page = 0;
+        _companyIdentifier = [LibTools uint16From16String:node.cid];
+        _productIdentifier = [LibTools uint16From16String:node.pid];
+        _versionIdentifier = [LibTools uint16From16String:node.vid];
+        _minimumNumberOfReplayProtectionList = [LibTools uint16From16String:node.crpl];
+        if (node.features) {
+            _features = node.features;
+        } else {
+            _features = [[SigNodeFeatures alloc] init];
+        }
+        _elements = [NSMutableArray arrayWithArray:node.elements];
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (parameters && parameters.length > 0) {
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        if (parameters.length < 11 || tem != 0) {
+            return nil;
+        }
+    }
+    if (self = [super init]) {
+        self.page = 0;
+        UInt16 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte+1, 2);
+        _companyIdentifier = tem;
+        memcpy(&tem, dataByte+3, 2);
+        _productIdentifier = tem;
+        memcpy(&tem, dataByte+5, 2);
+        _versionIdentifier = tem;
+        memcpy(&tem, dataByte+7, 2);
+        _minimumNumberOfReplayProtectionList = tem;
+        memcpy(&tem, dataByte+9, 2);
+        _features = [[SigNodeFeatures alloc] initWithRawValue:tem];
+        
+        NSMutableArray *readElements = [NSMutableArray array];
+        int offset = 11;
+        while (offset < parameters.length) {
+            SigElementModel *element = [[SigElementModel alloc] initWithCompositionData:parameters offset:&offset];
+            element.index = (UInt8)readElements.count;
+            [readElements addObject:element];
+        }
+        _elements = readElements;
+    }
+    return self;
+}
+@end
+
+#pragma mark - detail message
+
+@implementation SigConfigAppKeyAdd
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyAdd;
+    }
+    return self;
+}
+
+- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyAdd;
+        self.applicationKeyIndex = applicationKey.index;
+        self.networkKeyIndex = applicationKey.boundNetKey;
+        _key = [LibTools nsstringToHex:applicationKey.key];
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyAdd;
+        if (parameters == nil || parameters.length != 19) {
+            return nil;
+        }
+        SigConfigNetAndAppKeyMessage *message = [SigConfigAppKeyAdd decodeNetAndAppKeyIndexFromData:parameters atOffset:0];
+        self.networkKeyIndex = message.networkKeyIndex;
+        self.applicationKeyIndex = message.applicationKeyIndex;
+        _key = [parameters subdataWithRange:NSMakeRange(3, 16)];
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData dataWithData:[self encodeNetAndAppKeyIndex]];
+    [mData appendData:_key];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigAppKeyStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigAppKeyUpdate
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyUpdate;
+    }
+    return self;
+}
+
+- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyUpdate;
+        self.applicationKeyIndex = applicationKey.index;
+        self.networkKeyIndex = applicationKey.boundNetKey;
+        _key = [LibTools nsstringToHex:applicationKey.key];
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyUpdate;
+        if (parameters == nil || parameters.length != 19) {
+            return nil;
+        }
+        SigConfigNetAndAppKeyMessage *message = [SigConfigAppKeyAdd decodeNetAndAppKeyIndexFromData:parameters atOffset:0];
+        self.networkKeyIndex = message.networkKeyIndex;
+        self.applicationKeyIndex = message.applicationKeyIndex;
+        _key = [parameters subdataWithRange:NSMakeRange(3, 16)];
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData dataWithData:[self encodeNetAndAppKeyIndex]];
+    [mData appendData:_key];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigAppKeyStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigCompositionDataStatus
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configCompositionDataStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithReportPage:(SigCompositionDataPage *)page {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configCompositionDataStatus;
+        _page = page;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configCompositionDataStatus;
+        if (parameters == nil || parameters.length == 0) {
+            return nil;
+        } else {
+            UInt8 tem = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem, dataByte, 1);
+            if (tem == 0) {
+                SigPage0 *page0 = [[SigPage0 alloc] initWithParameters:parameters];//001102010033306900070000001101000002000300040000FE01FE00FF01FF001002100410061007100013011303130413110200000000020002100613
+                if (page0) {
+                    _page = page0;
+                } else {
+                    TeLogError(@"init page0 fail.");
+                    return nil;
+                }
+            } else {
+                TeLogError(@"Other Pages are not supoprted.");
+                return nil;
+            }
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return _page.parameters;
+}
+
+@end
+
+
+@implementation SigConfigModelPublicationSet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationSet;
+    }
+    return self;
+}
+
+- (instancetype)initWithPublish:(SigPublish *)publish toModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationSet;
+        if ([SigHelper.share isVirtualAddress:[LibTools uint16From16String:publish.address]]) {
+            // ConfigModelPublicationVirtualAddressSet should be used instead.
+            return nil;
+        }
+        _publish = publish;
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithDisablePublicationForModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationSet;
+        _publish = [[SigPublish alloc] init];
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationSet;
+        if (parameters == nil || (parameters.length != 11 && parameters.length != 13)) {
+            return nil;
+        }
+        UInt16 tem1=0,tem2=0,tem3=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        memcpy(&tem2, dataByte+2, 2);
+        memcpy(&tem3, dataByte+4, 2);
+        self.elementAddress = tem1;
+//        UInt16 address = tem2;
+        UInt16 index = tem3 & 0x0FFF;
+        UInt8 tem = 0;
+        memcpy(&tem, dataByte+5, 1);
+        int flag = (int)((tem & 0x10) >> 4);
+        memcpy(&tem, dataByte+6, 1);
+        UInt8 ttl = tem;
+        memcpy(&tem, dataByte+7, 1);
+        UInt8 periodSteps = tem & 0x3F;
+        SigStepResolution periodResolution = tem >> 6;
+        memcpy(&tem, dataByte+8, 1);
+        UInt8 count = tem & 0x07;
+        UInt8 interval = tem >> 3;
+        SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:count intervalSteps:interval];
+        self.publish = [[SigPublish alloc] initWithDestination:tem2 withKeyIndex:index friendshipCredentialsFlag:flag ttl:ttl periodSteps:periodSteps periodResolution:periodResolution retransmit:retransmit];
+        if (parameters.length == 13) {
+            memcpy(&tem3, dataByte+11, 2);
+            self.modelIdentifier = tem3;
+            memcpy(&tem3, dataByte+9, 2);
+            self.companyIdentifier = tem3;
+        }else{
+            memcpy(&tem3, dataByte+9, 2);
+            self.modelIdentifier = tem3;
+            self.companyIdentifier = 0;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = [LibTools uint16From16String:_publish.address];
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    UInt8 tem8 = 0;
+    tem8 = _publish.index & 0xFF;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = (UInt8)(_publish.index >> 8) | (UInt8)(_publish.credentials << 4);
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _publish.ttl;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = (_publish.periodSteps & 0x3F) | (_publish.periodResolution << 6);
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = (_publish.retransmit.count & 0x07) | (_publish.retransmit.steps << 3);
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelPublicationStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigAppKeyDelete
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyDelete;
+    }
+    return self;
+}
+
+- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyDelete;
+        self.applicationKeyIndex = applicationKey.index;
+        self.networkKeyIndex = applicationKey.boundNetKey;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyDelete;
+        if (parameters == nil || parameters.length != 3) {
+            return nil;
+        }
+        SigConfigNetAndAppKeyMessage *message = [SigConfigAppKeyAdd decodeNetAndAppKeyIndexFromData:parameters atOffset:0];
+        self.networkKeyIndex = message.networkKeyIndex;
+        self.applicationKeyIndex = message.applicationKeyIndex;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData dataWithData:[self encodeNetAndAppKeyIndex]];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigAppKeyStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigAppKeyGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyGet;
+        self.networkKeyIndex = networkKeyIndex;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyGet;
+        if (parameters == nil || parameters.length != 2) {
+            return nil;
+        }
+        self.networkKeyIndex = [SigConfigNetKeyMessage decodeNetKeyIndexFromData:parameters atOffset:0];
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData dataWithData:[self encodeNetKeyIndex]];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigAppKeyList class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigAppKeyList
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyList;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetWorkKey:(SigNetkeyModel *)networkKey applicationKeys:(NSArray <SigAppkeyModel *>*)applicationKeys status:(SigConfigMessageStatus)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyList;
+        self.networkKeyIndex = networkKey.index;
+        _applicationKeyIndexes = [NSMutableArray array];
+        for (SigAppkeyModel *model in applicationKeys) {
+            [_applicationKeyIndexes addObject:@(model.index)];
+        }
+        _status = status;
+    }
+    return self;
+}
+
+- (instancetype)initWithStatus:(SigConfigMessageStatus)status forMessage:(SigConfigAppKeyGet *)message {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyList;
+        self.networkKeyIndex = message.networkKeyIndex;
+        _applicationKeyIndexes = [NSMutableArray array];
+        _status = status;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyList;
+        if (parameters == nil || parameters.length < 3) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _status = tem;
+        self.networkKeyIndex = [SigConfigNetKeyMessage decodeNetKeyIndexFromData:parameters atOffset:1];
+        self.applicationKeyIndexes = [NSMutableArray arrayWithArray:[SigConfigNetKeyMessage decodeIndexesFromData:parameters atOffset:3]];
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    data = [self encodeNetKeyIndex];
+    [mData appendData:data];
+    data = [self encodeIndexes:_applicationKeyIndexes];
+    [mData appendData:data];
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigAppKeyStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyStatus;
+        self.applicationKeyIndex = applicationKey.index;
+        self.networkKeyIndex = applicationKey.boundNetKey;
+        _status = SigConfigMessageStatus_success;
+    }
+    return self;
+}
+
+- (instancetype)initWithStatus:(SigConfigMessageStatus)status forMessage:(SigConfigNetAndAppKeyMessage *)message {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyStatus;
+        self.applicationKeyIndex = message.applicationKeyIndex;
+        self.networkKeyIndex = message.networkKeyIndex;
+        _status = status;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configAppKeyStatus;
+        if (parameters == nil || parameters.length != 4) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _status = tem;
+        SigConfigNetAndAppKeyMessage *message = [SigConfigAppKeyAdd decodeNetAndAppKeyIndexFromData:parameters atOffset:1];
+        self.networkKeyIndex = message.networkKeyIndex;
+        self.applicationKeyIndex = message.applicationKeyIndex;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    data = [self encodeNetAndAppKeyIndex];
+    [mData appendData:data];
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigCompositionDataGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configCompositionDataGet;
+        _page = 0;
+    }
+    return self;
+}
+
+- (instancetype)initWithPage:(UInt8)page {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configCompositionDataGet;
+        _page = page;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configCompositionDataGet;
+        _page = 0;
+        if (parameters.length == 1) {
+            UInt8 tem = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem, dataByte, 1);
+            _page = tem;
+        } else {
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    UInt8 tem = _page;
+    NSData *temData = [NSData dataWithBytes:&tem length:1];
+    return temData;
+}
+
+- (Class)responseType {
+    return [SigConfigCompositionDataStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+
+@end
+
+
+@implementation SigConfigBeaconGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configBeaconGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configBeaconGet;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigConfigBeaconStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigBeaconSet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configBeaconSet;
+    }
+    return self;
+}
+
+- (instancetype)initWithEnable:(BOOL)enable {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configBeaconSet;
+        _state = enable;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configBeaconSet;
+        if (parameters == nil || parameters.length != 1) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        if (tem > 1) {
+            return nil;
+        }
+        _state = tem == 0x01;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    UInt8 tem = [self state]?0x01:0x00;
+    return [NSData dataWithBytes:&tem length:1];
+}
+
+- (Class)responseType {
+    return [SigConfigBeaconStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigBeaconStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configBeaconStatus;
+        _page = 0;
+    }
+    return self;
+}
+
+- (instancetype)initWithEnable:(BOOL)enable {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configBeaconStatus;
+        _page = 0;
+        _isEnabled = enable;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configBeaconStatus;
+        _page = 0;
+        if (parameters == nil || parameters.length == 0) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        if (tem > 1) {
+            return nil;
+        }
+        _isEnabled = tem == 0x01;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    UInt8 tem = [self isEnabled]?0x01:0x00;
+    return [NSData dataWithBytes:&tem length:1];
+}
+
+@end
+
+
+@implementation SigConfigDefaultTtlGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configDefaultTtlGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configDefaultTtlGet;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigConfigDefaultTtlStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigDefaultTtlSet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configDefaultTtlSet;
+    }
+    return self;
+}
+
+- (instancetype)initWithTtl:(UInt8)ttl {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configDefaultTtlSet;
+        _ttl = ttl;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configDefaultTtlSet;
+        if (parameters == nil || parameters.length != 1) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _ttl = tem;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem = _ttl;
+    NSData *temData = [NSData dataWithBytes:&tem length:1];
+    [mData appendData:temData];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigDefaultTtlStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigDefaultTtlStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configDefaultTtlStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithTtl:(UInt8)ttl {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configDefaultTtlStatus;
+        _ttl = ttl;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configDefaultTtlStatus;
+        if (parameters == nil || parameters.length != 1) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _ttl = tem;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem = _ttl;
+    NSData *temData = [NSData dataWithBytes:&tem length:1];
+    [mData appendData:temData];
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigFriendGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configFriendGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configFriendGet;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigConfigFriendStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigFriendSet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configFriendSet;
+    }
+    return self;
+}
+
+- (instancetype)initWithEnable:(BOOL)enable {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configFriendSet;
+        self.state = enable ? SigNodeFeaturesState_enabled : SigNodeFeaturesState_notEnabled;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configFriendSet;
+        if (parameters == nil || parameters.length != 1) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _state = tem;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    UInt8 tem = _state;
+    return [NSData dataWithBytes:&tem length:1];
+}
+
+- (Class)responseType {
+    return [SigConfigFriendStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigFriendStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configFriendStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithState:(SigNodeFeaturesState)state {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configFriendStatus;
+        self.state = state;
+    }
+    return self;
+}
+
+- (instancetype)initWithNode:(SigNodeModel *)node {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configFriendStatus;
+        self.state = node.features.proxyFeature <= 2 ? node.features.proxyFeature : SigNodeFeaturesState_notSupported;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configFriendStatus;
+        if (parameters == nil || parameters.length != 1) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _state = tem;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    UInt8 tem = _state;
+    return [NSData dataWithBytes:&tem length:1];
+}
+
+@end
+
+
+@implementation SigConfigGATTProxyGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configGATTProxyGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configGATTProxyGet;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigConfigGATTProxyStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigGATTProxySet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configGATTProxySet;
+    }
+    return self;
+}
+
+- (instancetype)initWithEnable:(BOOL)enable {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configGATTProxySet;
+        self.state = enable ? SigNodeFeaturesState_enabled : SigNodeFeaturesState_notEnabled;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configGATTProxySet;
+        if (parameters == nil || parameters.length != 1) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _state = tem;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    UInt8 tem = _state;
+    return [NSData dataWithBytes:&tem length:1];
+}
+
+- (Class)responseType {
+    return [SigConfigGATTProxyStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigGATTProxyStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configGATTProxyStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithState:(SigNodeFeaturesState)state {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configGATTProxyStatus;
+        self.state = state;
+    }
+    return self;
+}
+
+- (instancetype)initWithNode:(SigNodeModel *)node {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configGATTProxyStatus;
+        self.state = node.features.proxyFeature <= 2 ? node.features.proxyFeature : SigNodeFeaturesState_notSupported;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configGATTProxyStatus;
+        if (parameters == nil || parameters.length != 1) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _state = tem;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    UInt8 tem = _state;
+    return [NSData dataWithBytes:&tem length:1];
+}
+
+@end
+
+
+@implementation SigConfigModelPublicationGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationGet;
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationGet;
+        if (parameters == nil || (parameters.length != 4 && parameters.length != 6)) {
+            return nil;
+        }
+        UInt16 tem1=0,tem2=0,tem3=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        memcpy(&tem2, dataByte+2, 2);
+        self.elementAddress = tem1;
+        if (parameters.length == 6) {
+            memcpy(&tem3, dataByte+4, 2);
+            self.modelIdentifier = tem3;
+            self.companyIdentifier = tem2;
+        }else{
+            self.modelIdentifier = tem2;
+            self.companyIdentifier = 0;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    tem = self.modelIdentifier;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelPublicationStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigModelPublicationStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationStatus;
+    }
+    return self;
+}
+
+- (instancetype)initResponseToSigConfigAnyModelMessage:(SigConfigAnyModelMessage *)request {
+    return [self initResponseToSigConfigAnyModelMessage:request withPublish:[[SigPublish class] init]];
+}
+
+- (instancetype)initResponseToSigConfigAnyModelMessage:(SigConfigAnyModelMessage *)request withPublish:(SigPublish *)publish {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationStatus;
+        _publish = publish;
+        self.elementAddress = request.elementAddress;
+        self.modelIdentifier = request.modelIdentifier;
+        self.companyIdentifier = request.companyIdentifier;
+        _status = SigConfigMessageStatus_success;
+    }
+    return self;
+}
+
+- (instancetype)initResponseToSigConfigAnyModelMessage:(SigConfigAnyModelMessage *)request withStatus:(SigConfigMessageStatus)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationStatus;
+        _publish = [[SigPublish class] init];
+        self.elementAddress = request.elementAddress;
+        self.modelIdentifier = request.modelIdentifier;
+        self.companyIdentifier = request.companyIdentifier;
+        _status = status;
+    }
+    return self;
+}
+
+- (instancetype)initWithConfirmSigConfigModelPublicationSet:(SigConfigModelPublicationSet *)request {
+    return [self initResponseToSigConfigAnyModelMessage:request withPublish:request.publish];
+}
+
+- (instancetype)initWithConfirmSigConfigModelPublicationVirtualAddressSet:(SigConfigModelPublicationVirtualAddressSet *)request {
+    return [self initResponseToSigConfigAnyModelMessage:request withPublish:request.publish];
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationStatus;
+        if (parameters == nil || (parameters.length != 12 && parameters.length != 14)) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _status = tem;
+        
+        UInt16 tem1=0,tem2=0,tem3=0;
+        memcpy(&tem1, dataByte+1, 2);
+        memcpy(&tem2, dataByte+3, 2);
+        memcpy(&tem3, dataByte+5, 2);
+        self.elementAddress = tem1;
+        UInt16 address = tem2;
+        UInt16 index = tem3 & 0x0FFF;
+        memcpy(&tem, dataByte+6, 1);
+        int flag = (int)((tem & 0x10) >> 4);
+        memcpy(&tem, dataByte+7, 1);
+        UInt8 ttl = tem;
+        memcpy(&tem, dataByte+8, 1);
+        UInt8 periodSteps = tem & 0x3F;
+        SigStepResolution periodResolution = tem >> 6;
+        memcpy(&tem, dataByte+9, 1);
+        UInt8 count = tem & 0x07;
+        UInt8 interval = tem >> 3;
+        SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:count intervalSteps:interval];
+        self.publish = [[SigPublish alloc] initWithDestination:address withKeyIndex:index friendshipCredentialsFlag:flag ttl:ttl periodSteps:periodSteps periodResolution:periodResolution retransmit:retransmit];
+        
+        if (parameters.length == 14) {
+            memcpy(&tem3, dataByte+12, 2);
+            self.modelIdentifier = tem3;
+            memcpy(&tem3, dataByte+10, 2);
+            self.companyIdentifier = tem3;
+        }else{
+            memcpy(&tem3, dataByte+10, 2);
+            self.modelIdentifier = tem3;
+            self.companyIdentifier = 0;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    UInt16 tem = self.elementAddress;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = [LibTools uint16From16String:_publish.address];
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem8 = _publish.index & 0xFF;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = (UInt8)(_publish.index >> 8) | (UInt8)(_publish.credentials << 4);
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _publish.ttl;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = (_publish.periodSteps & 0x3F) | (_publish.periodResolution >> 6);
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = (_publish.retransmit.count & 0x07) | (_publish.retransmit.steps << 3);
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigModelPublicationVirtualAddressSet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationVirtualAddressSet;
+    }
+    return self;
+}
+
+- (instancetype)initWithPublish:(SigPublish *)publish toModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationVirtualAddressSet;
+        if ([SigHelper.share isVirtualAddress:[LibTools uint16From16String:_publish.address]]) {
+            // ConfigModelPublicationVirtualAddressSet should be used instead.
+            return nil;
+        }
+        _publish = publish;
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationVirtualAddressSet;
+        if (parameters == nil || (parameters.length != 25 && parameters.length != 27)) {
+            return nil;
+        }
+        UInt16 tem1=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        self.elementAddress = tem1;
+        NSString *label = [LibTools convertDataToHexStr:[parameters subdataWithRange:NSMakeRange(2, 16)]];
+        memcpy(&tem1, dataByte+18, 2);
+        UInt16 index = tem1 & 0x0FFF;
+        UInt8 tem = 0;
+        memcpy(&tem, dataByte+19, 1);
+        int flag = (int)((tem & 0x10) >> 4);
+        memcpy(&tem, dataByte+20, 1);
+        UInt8 ttl = tem;
+        memcpy(&tem, dataByte+21, 1);
+        UInt8 periodSteps = tem & 0x3F;
+        SigStepResolution periodResolution = tem >> 6;
+        memcpy(&tem, dataByte+22, 1);
+        UInt8 count = tem & 0x07;
+        UInt8 interval = tem >> 3;
+        SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:count intervalSteps:interval];
+        self.publish = [[SigPublish alloc] initWithStringDestination:label withKeyIndex:index friendshipCredentialsFlag:flag ttl:ttl periodSteps:periodSteps periodResolution:periodResolution retransmit:retransmit];
+
+        
+        if (parameters.length == 27) {
+            memcpy(&tem1, dataByte+25, 2);
+            self.modelIdentifier = tem1;
+            memcpy(&tem1, dataByte+23, 2);
+            self.companyIdentifier = tem1;
+        }else{
+            memcpy(&tem1, dataByte+23, 2);
+            self.modelIdentifier = tem1;
+            self.companyIdentifier = 0;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = 0;
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    [mData appendData:_publish.publicationAddress.virtualLabel.getData];
+    tem8 = _publish.index & 0xFF;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = (UInt8)(_publish.index >> 8) | (UInt8)(_publish.credentials << 4);
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _publish.ttl;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = (_publish.periodSteps & 0x3F) | (_publish.periodResolution << 6);
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = (_publish.retransmit.count & 0x07) | (_publish.retransmit.steps << 3);
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelPublicationStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigModelSubscriptionAdd
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionAdd;
+    }
+    return self;
+}
+
+- (instancetype)initWithGroupAddress:(UInt16)groupAddress toNodeElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionAdd;
+        if (![SigHelper.share isGroupAddress:groupAddress]) {
+            // ConfigModelSubscriptionVirtualAddressAdd should be used instead.
+            return nil;
+        }
+        _address = groupAddress;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+        self.companyIdentifier = companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionAdd;
+        if (![SigHelper.share isGroupAddress:group.intAddress]) {
+            // ConfigModelSubscriptionVirtualAddressAdd should be used instead.
+            return nil;
+        }
+        _address = [LibTools uint16From16String:group.address];
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionAdd;
+        if (parameters == nil || (parameters.length != 6 && parameters.length != 8)) {
+            return nil;
+        }
+        UInt16 tem1=0,tem2=0,tem3=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        memcpy(&tem2, dataByte+2, 2);
+        self.elementAddress = tem1;
+        _address = tem2;
+        if (parameters.length == 8) {
+            memcpy(&tem3, dataByte+4, 2);
+            self.companyIdentifier = tem3;
+            memcpy(&tem3, dataByte+6, 2);
+            self.modelIdentifier = tem3;
+        } else {
+            memcpy(&tem3, dataByte+4, 2);
+            self.modelIdentifier = tem3;
+            self.companyIdentifier = 0;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = _address;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelSubscriptionStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigModelSubscriptionDelete
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionDelete;
+    }
+    return self;
+}
+
+- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionDelete;
+        if (![SigHelper.share isGroupAddress:group.intAddress]) {
+            // ConfigModelSubscriptionVirtualAddressAdd should be used instead.
+            return nil;
+        }
+        _address = [LibTools uint16From16String:group.address];
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionDelete;
+        if (parameters == nil || (parameters.length != 6 && parameters.length != 8)) {
+            return nil;
+        }
+        UInt16 tem1=0,tem2=0,tem3=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        memcpy(&tem2, dataByte+2, 2);
+        self.elementAddress = tem1;
+        _address = tem2;
+        if (parameters.length == 8) {
+            memcpy(&tem3, dataByte+4, 2);
+            self.companyIdentifier = tem3;
+            memcpy(&tem3, dataByte+6, 2);
+            self.modelIdentifier = tem3;
+        } else {
+            memcpy(&tem3, dataByte+4, 2);
+            self.modelIdentifier = tem3;
+            self.companyIdentifier = 0;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = _address;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelSubscriptionStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigModelSubscriptionDeleteAll
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionDeleteAll;
+    }
+    return self;
+}
+
+- (instancetype)initFromModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionDeleteAll;
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionDeleteAll;
+        if (parameters == nil || (parameters.length != 4 && parameters.length != 6)) {
+            return nil;
+        }
+        UInt16 tem1=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        self.elementAddress = tem1;
+        if (parameters.length == 6) {
+            memcpy(&tem1, dataByte+2, 2);
+            self.companyIdentifier = tem1;
+            memcpy(&tem1, dataByte+4, 2);
+            self.modelIdentifier = tem1;
+        } else {
+            memcpy(&tem1, dataByte+2, 2);
+            self.modelIdentifier = tem1;
+            self.companyIdentifier = 0;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelSubscriptionStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigModelSubscriptionOverwrite
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionOverwrite;
+    }
+    return self;
+}
+
+- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionOverwrite;
+        if (![SigHelper.share isGroupAddress:group.intAddress]) {
+            // ConfigModelSubscriptionVirtualAddressAdd should be used instead.
+            return nil;
+        }
+        _address = [LibTools uint16From16String:group.address];
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionOverwrite;
+        if (parameters == nil || (parameters.length != 6 && parameters.length != 8)) {
+            return nil;
+        }
+        UInt16 tem1=0,tem2=0,tem3=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        memcpy(&tem2, dataByte+2, 2);
+        self.elementAddress = tem1;
+        _address = tem2;
+        if (parameters.length == 8) {
+            memcpy(&tem3, dataByte+4, 2);
+            self.companyIdentifier = tem3;
+            memcpy(&tem3, dataByte+6, 2);
+            self.modelIdentifier = tem3;
+        } else {
+            memcpy(&tem3, dataByte+4, 2);
+            self.modelIdentifier = tem3;
+            self.companyIdentifier = 0;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = _address;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelSubscriptionStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigModelSubscriptionStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionStatus;
+    }
+    return self;
+}
+
+- (instancetype)initResponseToSigConfigModelPublicationStatus:(SigConfigModelPublicationStatus *)request withStatus:(SigConfigMessageStatus *)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionStatus;
+        //SigConfigModelSubscriptionAdd|SigConfigModelSubscriptionDelete|SigConfigModelSubscriptionOverwrite|SigConfigModelSubscriptionStatus
+        if ([request isMemberOfClass:[SigConfigModelSubscriptionAdd class]]) {
+            _address = ((SigConfigModelSubscriptionAdd *)request).address;
+        }else if ([request isMemberOfClass:[SigConfigModelSubscriptionDelete class]]) {
+            _address = ((SigConfigModelSubscriptionDelete *)request).address;
+        }else if ([request isMemberOfClass:[SigConfigModelSubscriptionOverwrite class]]) {
+            _address = ((SigConfigModelSubscriptionOverwrite *)request).address;
+        }else if ([request isMemberOfClass:[SigConfigModelSubscriptionStatus class]]) {
+            _address = ((SigConfigModelSubscriptionStatus *)request).address;
+        }else{
+            TeLogError(@"Unknown request class.");
+            return nil;
+        }
+        self.elementAddress = request.elementAddress;
+        self.modelIdentifier = request.modelIdentifier;
+        self.companyIdentifier = request.companyIdentifier;
+        _status = request.status;
+        }
+    return self;
+}
+
+- (instancetype)initResponseToSigConfigAnyModelMessage:(SigConfigAnyModelMessage *)request withStatus:(SigConfigMessageStatus)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionStatus;
+        //SigConfigModelSubscriptionVirtualAddressAdd|SigConfigModelSubscriptionVirtualAddressDelete|SigConfigModelSubscriptionVirtualAddressOverwrite
+        if ([request isMemberOfClass:[SigConfigModelSubscriptionVirtualAddressAdd class]]) {
+            _address = [[SigMeshAddress alloc] initWithVirtualLabel:((SigConfigModelSubscriptionVirtualAddressAdd *)request).virtualLabel].address;
+        }else if ([request isMemberOfClass:[SigConfigModelSubscriptionVirtualAddressDelete class]]) {
+            _address = [[SigMeshAddress alloc] initWithVirtualLabel:((SigConfigModelSubscriptionVirtualAddressDelete *)request).virtualLabel].address;
+        }else if ([request isMemberOfClass:[SigConfigModelSubscriptionVirtualAddressDelete class]]) {
+            _address = [[SigMeshAddress alloc] initWithVirtualLabel:((SigConfigModelSubscriptionVirtualAddressDelete *)request).virtualLabel].address;
+        }else{
+            TeLogError(@"Unknown request class.");
+            return nil;
+        }
+        self.elementAddress = request.elementAddress;
+        self.modelIdentifier = request.modelIdentifier;
+        self.companyIdentifier = request.companyIdentifier;
+        _status = status;
+        }
+    return self;
+}
+
+- (instancetype)initResponseToSigConfigModelSubscriptionDeleteAll:(SigConfigModelSubscriptionDeleteAll *)request withStatus:(SigConfigMessageStatus)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionStatus;
+        _address = MeshAddress_unassignedAddress;
+        self.elementAddress = request.elementAddress;
+        self.modelIdentifier = request.modelIdentifier;
+        self.companyIdentifier = request.companyIdentifier;
+        _status = status;
+    }
+    return self;
+}
+
+- (instancetype)initWithConfirmAddingGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model withStatus:(SigConfigMessageStatus)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionStatus;
+        _status = status;
+        _address = [LibTools uint16From16String:group.address];
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithConfirmDeletingAddress:(UInt16)address fromModel:(SigModelIDModel *)model withStatus:(SigConfigMessageStatus)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionStatus;
+        _status = status;
+        _address = address;
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithConfirmDeletingAllFromModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionStatus;
+        _status = SigConfigMessageStatus_success;
+        _address = MeshAddress_unassignedAddress;
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionStatus;
+        if (parameters == nil || (parameters.length != 7 && parameters.length != 9)) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _status = tem;
+        
+        UInt16 tem1=0,tem2=0;
+        memcpy(&tem1, dataByte+1, 2);
+        memcpy(&tem2, dataByte+3, 2);
+        self.elementAddress = tem1;
+        _address = tem2;
+        if (parameters.length == 9) {
+            memcpy(&tem1, dataByte+5, 2);
+            self.companyIdentifier = tem1;
+            memcpy(&tem1, dataByte+7, 2);
+            self.modelIdentifier = tem1;
+        } else {
+            self.companyIdentifier = 0;
+            memcpy(&tem1, dataByte+5, 2);
+            self.modelIdentifier = tem1;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 temState = _status;
+    NSData *data = [NSData dataWithBytes:&temState length:1];
+    [mData appendData:data];
+    UInt16 tem = self.elementAddress;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = _address;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigModelSubscriptionVirtualAddressAdd
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressAdd;
+    }
+    return self;
+}
+
+- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressAdd;
+        if (!group.meshAddress.virtualLabel) {
+            // ConfigModelSubscriptionAdd should be used instead.
+            return nil;
+        }
+        _virtualLabel = group.meshAddress.virtualLabel;
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressAdd;
+        if (parameters == nil || (parameters.length != 20 && parameters.length != 24)) {
+            return nil;
+        }
+        UInt16 tem1=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        self.elementAddress = tem1;
+        _virtualLabel = [CBUUID UUIDWithData:[parameters subdataWithRange:NSMakeRange(2, 16)]];
+        if (parameters.length == 24) {
+            memcpy(&tem1, dataByte+18, 2);
+            self.companyIdentifier = tem1;
+            memcpy(&tem1, dataByte+20, 2);
+            self.modelIdentifier = tem1;
+        } else {
+            memcpy(&tem1, dataByte+18, 2);
+            self.modelIdentifier = tem1;
+            self.companyIdentifier = 0;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    data = _virtualLabel.data;
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelSubscriptionStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigModelSubscriptionVirtualAddressDelete
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressDelete;
+    }
+    return self;
+}
+
+- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressDelete;
+        if (!group.meshAddress.virtualLabel) {
+            // ConfigModelSubscriptionAdd should be used instead.
+            return nil;
+        }
+        _virtualLabel = group.meshAddress.virtualLabel;
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressDelete;
+        if (parameters == nil || (parameters.length != 20 && parameters.length != 24)) {
+            return nil;
+        }
+        UInt16 tem1=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        self.elementAddress = tem1;
+        _virtualLabel = [CBUUID UUIDWithData:[parameters subdataWithRange:NSMakeRange(2, 16)]];
+        if (parameters.length == 24) {
+            memcpy(&tem1, dataByte+18, 2);
+            self.companyIdentifier = tem1;
+            memcpy(&tem1, dataByte+20, 2);
+            self.modelIdentifier = tem1;
+        } else {
+            memcpy(&tem1, dataByte+18, 2);
+            self.modelIdentifier = tem1;
+            self.companyIdentifier = 0;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    data = _virtualLabel.data;
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelSubscriptionStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigModelSubscriptionVirtualAddressOverwrite
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressOverwrite;
+    }
+    return self;
+}
+
+- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressOverwrite;
+        if (!group.meshAddress.virtualLabel) {
+            // ConfigModelSubscriptionAdd should be used instead.
+            return nil;
+        }
+        _virtualLabel = group.meshAddress.virtualLabel;
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressOverwrite;
+        if (parameters == nil || (parameters.length != 20 && parameters.length != 24)) {
+            return nil;
+        }
+        UInt16 tem1=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        self.elementAddress = tem1;
+        _virtualLabel = [CBUUID UUIDWithData:[parameters subdataWithRange:NSMakeRange(2, 16)]];
+        if (parameters.length == 24) {
+            memcpy(&tem1, dataByte+18, 2);
+            self.companyIdentifier = tem1;
+            memcpy(&tem1, dataByte+20, 2);
+            self.modelIdentifier = tem1;
+        } else {
+            memcpy(&tem1, dataByte+18, 2);
+            self.modelIdentifier = tem1;
+            self.companyIdentifier = 0;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    data = _virtualLabel.data;
+    [mData appendData:data];
+    if (self.companyIdentifier) {
+        tem = self.companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = self.modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelSubscriptionStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigNetworkTransmitGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetworkTransmitGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetworkTransmitGet;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigConfigNetworkTransmitStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigNetworkTransmitSet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetworkTransmitSet;
+        _count = 0;
+        _steps = 0;
+    }
+    return self;
+}
+
+- (instancetype)initWithCount:(UInt8)count steps:(UInt8)steps {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetworkTransmitSet;
+        _count = MIN(7, count);
+        _steps = MIN(63, steps);
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetworkTransmitSet;
+        if (parameters == nil || parameters.length != 1) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        
+        _count = tem & 0x07;
+        _steps = tem >> 3;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    UInt8 tem = (_count & 0x07) | _steps << 3;
+    return [NSData dataWithBytes:&tem length:1];
+}
+
+- (NSTimeInterval)interval {
+    return (NSTimeInterval)(_steps+1)/100;
+}
+
+- (Class)responseType {
+    return [SigConfigNetworkTransmitStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigNetworkTransmitStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetworkTransmitStatus;
+        _count = 0;
+        _steps = 0;
+    }
+    return self;
+}
+
+- (instancetype)initWithCount:(UInt8)count steps:(UInt8)steps {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetworkTransmitSet;
+        _count = MIN(7, count);
+        _steps = MIN(63, steps);
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetworkTransmitStatus;
+        if (parameters == nil || parameters.length != 1) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        
+        _count = tem & 0x07;
+        _steps = tem >> 3;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    UInt8 tem = (_count & 0x07) | _steps << 3;
+    return [NSData dataWithBytes:&tem length:1];
+}
+
+- (NSTimeInterval)interval {
+    return (NSTimeInterval)(_steps+1)/100;
+}
+
+- (instancetype)initWithNode:(SigNodeModel *)node {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetworkTransmitStatus;
+        SigNetworktransmitModel *transmit = node.networkTransmit;
+        if (!transmit) {
+            _count = 0;
+            _steps = 0;
+        }else{
+            _count = transmit.count;
+            _steps = transmit.septs;
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigConfigRelayGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configRelayGet;
+        _page = 0;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configRelayGet;
+        _page = 0;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigConfigRelayStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigRelaySet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configRelaySet;
+        _state = SigNodeRelayState_notEnabled;
+        _count = 0;
+        _steps = 0;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configRelaySet;
+        if (parameters == nil || parameters.length != 2) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte+1, 1);
+        _count = tem & 0x07;
+        _steps = tem >> 3;
+        memcpy(&tem, dataByte, 1);
+        _state = tem;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    UInt8 tem[2] = {};
+    tem[0] = _state;
+    tem[1] = (_count & 0x07) | _steps << 3;
+    return [NSData dataWithBytes:tem length:2];
+}
+
+- (NSTimeInterval)interval {
+    return (NSTimeInterval)(_steps+1)/100;
+}
+
+- (instancetype)initWithCount:(UInt8)count steps:(UInt8)steps {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configRelaySet;
+        _state = SigNodeRelayState_enabled;
+        _count = MIN(7, count);
+        _steps = MIN(63, steps);
+    }
+    return self;
+}
+
+- (Class)responseType {
+    return [SigConfigRelayStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigRelayStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configRelayStatus;
+        _count = 0;
+        _steps = 0;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configRelayStatus;
+        if (parameters == nil || parameters.length != 2) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte+1, 1);
+        _count = tem & 0x07;
+        _steps = tem >> 3;
+        memcpy(&tem, dataByte, 1);
+        _state = tem;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    UInt8 tem[2] = {};
+    tem[0] = _state;
+    tem[1] = (_count & 0x07) | _steps << 3;
+    return [NSData dataWithBytes:tem length:2];
+}
+
+- (NSTimeInterval)interval {
+    return (NSTimeInterval)(_steps+1)/100;
+}
+
+- (instancetype)initWithState:(SigNodeFeaturesState)state count:(UInt8)count steps:(UInt8)steps {
+    if (self = [super init]) {
+        _state = state;
+        _count = MIN(7, count);
+        _steps = MIN(63, steps);
+    }
+    return self;
+}
+
+- (instancetype)initWithNode:(SigNodeModel *)node {
+    if (self = [super init]) {
+        _state = node.features.relayFeature <= 2 ? node.features.relayFeature : SigNodeFeaturesState_notSupported;
+        _count = (node.relayRetransmit.count < 1 ? 1 : node.relayRetransmit.count) - 1;
+        _steps = node.relayRetransmit.steps < 1 ? 0 : node.relayRetransmit.steps;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigConfigSIGModelSubscriptionGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelSubscriptionGet;
+    }
+    return self;
+}
+
+- (instancetype)initOfModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelSubscriptionGet;
+        if (model.companyIdentifier != 0) {
+            // Use ConfigVendorModelSubscriptionGet instead.
+            return nil;
+        }
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelSubscriptionGet;
+        if (parameters == nil || parameters.length != 4) {
+            return nil;
+        }
+        UInt16 tem1=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        self.elementAddress = tem1;
+        memcpy(&tem1, dataByte+2, 2);
+        self.modelIdentifier = tem1;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.modelIdentifier;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigSIGModelSubscriptionList class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigSIGModelSubscriptionList
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelSubscriptionList;
+    }
+    return self;
+}
+
+- (instancetype)initForModel:(SigModelIDModel *)model addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelSubscriptionList;
+        if (model.companyIdentifier != 0) {
+            // Use ConfigVendorModelSubscriptionList instead.
+            return nil;
+        }
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.addresses = [NSMutableArray arrayWithArray:addresses];
+        self.status = status;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelSubscriptionList;
+        if (parameters == nil || parameters.length < 5) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        self.status = tem;
+        UInt16 tem1=0;
+        memcpy(&tem1, dataByte+1, 2);
+        self.elementAddress = tem1;
+        memcpy(&tem1, dataByte+3, 2);
+        self.modelIdentifier = tem1;
+        // Read list of addresses.
+        NSMutableArray *array = [NSMutableArray array];
+        
+        for (int i=5; (i+1)<parameters.length; i += 2) {
+            memcpy(&tem1, dataByte+i, 2);
+            [array addObject:@(tem1)];
+        }
+        self.addresses = array;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 temStatus = self.status;
+    NSData *statusData = [NSData dataWithBytes:&temStatus length:1];
+    [mData appendData:statusData];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.modelIdentifier;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    for (NSNumber *addressNumber in self.addresses) {
+        UInt16 address = addressNumber.intValue;
+        data = [NSData dataWithBytes:&address length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigVendorModelSubscriptionGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelSubscriptionGet;
+    }
+    return self;
+}
+
+- (instancetype)initOfModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelSubscriptionGet;
+        if (model.companyIdentifier == 0) {
+            // Use ConfigSIGModelSubscriptionGet instead.
+            return nil;
+        }
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelSubscriptionGet;
+        if (parameters == nil || parameters.length != 6) {
+            return nil;
+        }
+        UInt16 tem1=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        self.elementAddress = tem1;
+        memcpy(&tem1, dataByte+2, 2);
+        self.companyIdentifier = tem1;
+        memcpy(&tem1, dataByte+4, 2);
+        self.modelIdentifier = tem1;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.companyIdentifier;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.modelIdentifier;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigVendorModelSubscriptionList class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigVendorModelSubscriptionList
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelSubscriptionList;
+    }
+    return self;
+}
+
+- (instancetype)initForModel:(SigModelIDModel *)model addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelSubscriptionList;
+        if (model.companyIdentifier == 0) {
+            // Use ConfigSIGModelSubscriptionList instead.
+            return nil;
+        }
+        self.elementAddress = model.parentElement.unicastAddress;
+        self.modelIdentifier = model.modelIdentifier;
+        self.companyIdentifier = model.companyIdentifier;
+        self.addresses = [NSMutableArray arrayWithArray:addresses];
+        self.status = status;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelSubscriptionList;
+        if (parameters == nil || parameters.length < 7) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        self.status = tem;
+        UInt16 tem1=0;
+        memcpy(&tem1, dataByte+1, 2);
+        self.elementAddress = tem1;
+        memcpy(&tem1, dataByte+3, 2);
+        self.modelIdentifier = tem1;
+        memcpy(&tem1, dataByte+5, 2);
+        self.companyIdentifier = tem1;
+        // Read list of addresses.
+        NSMutableArray *array = [NSMutableArray array];
+        
+        for (int i=7; (i+1)<parameters.length; i += 2) {
+            memcpy(&tem1, dataByte+i, 2);
+            [array addObject:@(tem1)];
+        }
+        self.addresses = array;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 temStatus = self.status;
+    NSData *statusData = [NSData dataWithBytes:&temStatus length:1];
+    [mData appendData:statusData];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.companyIdentifier;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.modelIdentifier;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    for (NSNumber *addressNumber in self.addresses) {
+        UInt16 address = addressNumber.intValue;
+        data = [NSData dataWithBytes:&address length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigModelAppBind
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppBind;
+    }
+    return self;
+}
+
+- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppBind;
+        self.applicationKeyIndex = applicationKey.index;
+        _elementAddress = model.parentElement.unicastAddress;
+        _modelIdentifier = model.modelIdentifier;
+        _companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppBind;
+        if (parameters == nil || (parameters.length != 6 && parameters.length != 8)) {
+            return nil;
+        }
+        UInt16 tem1=0,tem2=0,tem3=0,tem4=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        memcpy(&tem2, dataByte+2, 2);
+        _elementAddress = tem1;
+        self.applicationKeyIndex = tem2;
+        if (parameters.length == 8) {
+            memcpy(&tem3, dataByte+4, 2);
+            memcpy(&tem4, dataByte+6, 2);
+            _companyIdentifier = tem3;
+            _modelIdentifier = tem4;
+        }else{
+            memcpy(&tem3, dataByte+4, 2);
+            _companyIdentifier = 0;
+            _modelIdentifier = tem3;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = _elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.applicationKeyIndex;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    if (_companyIdentifier) {
+        tem = _companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = _modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = _modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelAppStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigModelAppStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithConfirmBindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model status:(SigConfigMessageStatus)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppStatus;
+        self.applicationKeyIndex = applicationKey.index;
+        _elementAddress = model.parentElement.unicastAddress;
+        _modelIdentifier = model.modelIdentifier;
+        _companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithConfirmUnbindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model status:(SigConfigMessageStatus)status {
+    return [self initWithConfirmBindingApplicationKey:applicationKey toModel:model status:status];
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppStatus;
+        if (parameters == nil || (parameters.length != 7 && parameters.length != 9)) {
+            return nil;
+        }
+        UInt8 status=0;
+        UInt16 tem1=0,tem2=0,tem3=0,tem4=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&status, dataByte, 1);
+        memcpy(&tem1, dataByte+1, 2);
+        memcpy(&tem2, dataByte+3, 2);
+        _status = status;
+        _elementAddress = tem1;
+        self.applicationKeyIndex = tem2;
+        if (parameters.length == 9) {
+            memcpy(&tem3, dataByte+5, 2);
+            memcpy(&tem4, dataByte+7, 2);
+            _companyIdentifier = tem3;
+            _modelIdentifier = tem4;
+        }else{
+            memcpy(&tem3, dataByte+5, 2);
+            _companyIdentifier = 0;
+            _modelIdentifier = tem3;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = _elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.applicationKeyIndex;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    if (_companyIdentifier) {
+        tem = _companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = _modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = _modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigModelAppUnbind
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppUnbind;
+    }
+    return self;
+}
+
+- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppUnbind;
+        self.applicationKeyIndex = applicationKey.index;
+        _elementAddress = model.parentElement.unicastAddress;
+        _modelIdentifier = model.modelIdentifier;
+        _companyIdentifier = model.companyIdentifier;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppUnbind;
+        if (parameters == nil || (parameters.length != 6 && parameters.length != 8)) {
+            return nil;
+        }
+        UInt16 tem1=0,tem2=0,tem3=0,tem4=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        memcpy(&tem2, dataByte+2, 2);
+        _elementAddress = tem1;
+        self.applicationKeyIndex = tem2;
+        if (parameters.length == 8) {
+            memcpy(&tem3, dataByte+4, 2);
+            memcpy(&tem4, dataByte+6, 2);
+            _companyIdentifier = tem3;
+            _modelIdentifier = tem4;
+        }else{
+            memcpy(&tem3, dataByte+4, 2);
+            _companyIdentifier = 0;
+            _modelIdentifier = tem3;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = _elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.applicationKeyIndex;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    if (_companyIdentifier) {
+        tem = _companyIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+        tem = _modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    } else {
+        tem = _modelIdentifier;
+        data = [NSData dataWithBytes:&tem length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigModelAppStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigNetKeyAdd
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyAdd;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyAdd;
+        self.networkKeyIndex = networkKey.index;
+        _key = [LibTools nsstringToHex:networkKey.key];
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyAdd;
+        if (parameters == nil || parameters.length != 18) {
+            return nil;
+        }
+        self.networkKeyIndex = [SigConfigNetKeyMessage decodeNetKeyIndexFromData:parameters atOffset:0];
+        _key = [parameters subdataWithRange:NSMakeRange(2, 16)];
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    NSData *data = [self encodeNetKeyIndex];
+    [mData appendData:data];
+    [mData appendData:_key];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigNetKeyStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigNetKeyDelete
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyDelete;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyDelete;
+        self.networkKeyIndex = networkKey.index;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyDelete;
+        if (parameters == nil || parameters.length != 18) {
+            return nil;
+        }
+        self.networkKeyIndex = [SigConfigNetKeyMessage decodeNetKeyIndexFromData:parameters atOffset:0];
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData dataWithData:[self encodeNetKeyIndex]];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigNetKeyStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigNetKeyGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyGet;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigConfigNetKeyList class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigNetKeyList
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyList;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetworkKeys:(NSArray <SigNetkeyModel *>*)networkKeys {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyList;
+        _networkKeyIndexs = [NSMutableArray array];
+        for (SigNetkeyModel *model in networkKeys) {
+            [_networkKeyIndexs addObject:@(model.index)];
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyList;
+        if (parameters == nil || parameters.length == 0) {
+            return nil;
+        }
+        _networkKeyIndexs = [NSMutableArray arrayWithArray:[SigConfigNetKeyMessage decodeIndexesFromData:parameters atOffset:0]];
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return [self encodeIndexes:_networkKeyIndexs];
+}
+
+@end
+
+
+@implementation SigConfigNetKeyStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyStatus;
+        self.networkKeyIndex = networkKey.index;
+        _status = SigConfigMessageStatus_success;
+
+    }
+    return self;
+}
+
+- (instancetype)initWithStatus:(SigConfigMessageStatus)status forMessage:(SigConfigNetKeyMessage *)message {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyStatus;
+        self.networkKeyIndex = message.networkKeyIndex;
+        _status = status;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyStatus;
+        if (parameters == nil || parameters.length != 3) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _status = tem;
+        self.networkKeyIndex = [SigConfigNetKeyMessage decodeNetKeyIndexFromData:parameters atOffset:1];
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    data = [self encodeNetKeyIndex];
+    [mData appendData:data];
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigNetKeyUpdate
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyUpdate;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyUpdate;
+        self.networkKeyIndex = networkKey.index;
+        _key = [LibTools nsstringToHex:networkKey.key];
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyUpdate;
+        if (parameters == nil || parameters.length != 18) {
+            return nil;
+        }
+        self.networkKeyIndex = [SigConfigNetKeyMessage decodeNetKeyIndexFromData:parameters atOffset:0];
+        _key = [parameters subdataWithRange:NSMakeRange(2, 16)];
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    NSData *data = [self encodeNetKeyIndex];
+    [mData appendData:data];
+    [mData appendData:_key];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigNetKeyStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigNodeReset
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeReset;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeReset;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigConfigNodeResetStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigNodeResetStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeResetStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeResetStatus;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+@end
+
+
+@implementation SigConfigSIGModelAppGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelAppGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelAppGet;
+        if (model.companyIdentifier == 0) {
+            self.elementAddress = model.parentElement.unicastAddress;
+            self.modelIdentifier = model.modelIdentifier;
+        } else {
+            // Use ConfigVendorModelAppGet instead.
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelAppGet;
+        if (parameters == nil || parameters.length != 4) {
+            return nil;
+        }
+        UInt16 tem1=0,tem2=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        memcpy(&tem2, dataByte+2, 2);
+        self.elementAddress = tem1;
+        self.modelIdentifier = tem2;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.modelIdentifier;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigSIGModelAppList class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigSIGModelAppList
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelAppList;
+    }
+    return self;
+}
+
+- (instancetype)initResponseToSigConfigSIGModelAppGet:(SigConfigSIGModelAppGet *)request withApplicationKeys:(NSArray <SigAppkeyModel *>*)applicationKeys {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelAppList;
+        _elementAddress = request.elementAddress;
+        self.modelIdentifier = request.modelIdentifier;
+        self.applicationKeyIndexes = [NSMutableArray array];
+        for (SigAppkeyModel *model in applicationKeys) {
+            [self.applicationKeyIndexes addObject:@(model.index)];
+        }
+        self.status = SigConfigMessageStatus_success;
+    }
+    return self;
+}
+
+- (instancetype)initResponseToSigConfigSIGModelAppGet:(SigConfigSIGModelAppGet *)request withStatus:(SigConfigMessageStatus)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelAppList;
+        _elementAddress = request.elementAddress;
+        self.modelIdentifier = request.modelIdentifier;
+        self.applicationKeyIndexes = [NSMutableArray array];
+        self.status = status;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelAppList;
+        if (parameters == nil || parameters.length < 5) {
+            return nil;
+        }
+        UInt8 status=0;
+        UInt16 tem1=0,tem2=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&status, dataByte, 1);
+        memcpy(&tem1, dataByte+1, 2);
+        memcpy(&tem2, dataByte+3, 2);
+        self.status = status;
+        _elementAddress = tem1;
+        self.modelIdentifier = tem2;
+        self.applicationKeyIndexes = [NSMutableArray arrayWithArray:[SigConfigNetKeyMessage decodeIndexesFromData:parameters atOffset:5]];
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = self.status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    UInt16 tem16 = _elementAddress;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem16 = self.modelIdentifier;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    data = [self encodeIndexes:self.applicationKeyIndexes];
+    [mData appendData:data];
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigVendorModelAppGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelAppGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithModel:(SigModelIDModel *)model {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelAppGet;
+        if (model.companyIdentifier == 0) {
+            self.elementAddress = model.parentElement.unicastAddress;
+            self.modelIdentifier = model.modelIdentifier;
+            self.companyIdentifier = model.companyIdentifier;
+
+        } else {
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelAppGet;
+        if (parameters == nil || parameters.length != 6) {
+            return nil;
+        }
+        UInt16 tem1=0,tem2=0,tem3=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem1, dataByte, 2);
+        memcpy(&tem2, dataByte+2, 2);
+        memcpy(&tem3, dataByte+4, 2);
+        self.elementAddress = tem1;
+        self.modelIdentifier = tem2;
+        self.companyIdentifier = tem3;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem = self.elementAddress;
+    NSData *data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.companyIdentifier;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    tem = self.modelIdentifier;
+    data = [NSData dataWithBytes:&tem length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigVendorModelAppList class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigVendorModelAppList
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelAppList;
+    }
+    return self;
+}
+
+- (instancetype)initWithModel:(SigModelIDModel *)model applicationKeys:(NSArray <SigAppkeyModel *>*)applicationKeys status:(SigConfigMessageStatus)status {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelAppList;
+        if (model.companyIdentifier == 0) {
+            _elementAddress = model.parentElement.unicastAddress;
+            self.modelIdentifier = model.modelIdentifier;
+            self.companyIdentifier = model.companyIdentifier;
+            self.status = status;
+            self.applicationKeyIndexes = [NSMutableArray array];
+            for (SigAppkeyModel *model in applicationKeys) {
+                [self.applicationKeyIndexes addObject:@(model.index)];
+            }
+        } else {
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelAppList;
+        if (parameters == nil || parameters.length < 7) {
+            return nil;
+        }
+        UInt8 status=0;
+        UInt16 tem1=0,tem2=0,tem3=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&status, dataByte, 1);
+        memcpy(&tem1, dataByte+1, 2);
+        memcpy(&tem2, dataByte+3, 2);
+        memcpy(&tem3, dataByte+5, 2);
+        self.status = status;
+        _elementAddress = tem1;
+        self.companyIdentifier = tem2;
+        self.modelIdentifier = tem3;
+        self.applicationKeyIndexes = [NSMutableArray arrayWithArray:[SigConfigNetKeyMessage decodeIndexesFromData:parameters atOffset:7]];
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = self.status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    UInt16 tem16 = _elementAddress;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem16 = self.companyIdentifier;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem16 = self.modelIdentifier;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    data = [self encodeIndexes:self.applicationKeyIndexes];
+    [mData appendData:data];
+    return mData;
+}
+
+@end

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14460.20"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MeshOTAVC">
+            <connections>
+                <outlet property="startButton" destination="78h-DF-vyg" id="iBn-wh-cwS"/>
+                <outlet property="tableView" destination="6Kk-Am-xxz" id="KNG-tN-ijY"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="6Kk-Am-xxz">
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="565"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <connections>
+                        <outlet property="dataSource" destination="-1" id="MSN-6R-43d"/>
+                        <outlet property="delegate" destination="-1" id="gVs-aO-9Sh"/>
+                    </connections>
+                </tableView>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="78h-DF-vyg">
+                    <rect key="frame" x="0.0" y="617" width="375" height="50"/>
+                    <color key="backgroundColor" red="0.2901960784" green="0.52941176469999995" blue="0.93333333330000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="gcR-Ik-gAd"/>
+                    </constraints>
+                    <state key="normal" title="start"/>
+                    <connections>
+                        <action selector="clickStartMeshOTA:" destination="-1" eventType="touchUpInside" id="SeO-zT-O1W"/>
+                    </connections>
+                </button>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="REB-9M-2Oa">
+                    <rect key="frame" x="0.0" y="566" width="375" height="50"/>
+                    <color key="backgroundColor" red="0.2901960784" green="0.52941176469999995" blue="0.93333333330000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="hIh-IE-Srz"/>
+                    </constraints>
+                    <state key="normal" title="get fw info"/>
+                    <connections>
+                        <action selector="clickGetFwInfo:" destination="-1" eventType="touchUpInside" id="tRC-Bi-Hue"/>
+                    </connections>
+                </button>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstItem="78h-DF-vyg" firstAttribute="top" secondItem="REB-9M-2Oa" secondAttribute="bottom" constant="1" id="CtB-oL-Bgj"/>
+                <constraint firstItem="6Kk-Am-xxz" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="H7U-4N-2d4"/>
+                <constraint firstAttribute="trailing" secondItem="6Kk-Am-xxz" secondAttribute="trailing" id="I2D-BR-Y8c"/>
+                <constraint firstItem="REB-9M-2Oa" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="LlQ-c3-tBc"/>
+                <constraint firstItem="78h-DF-vyg" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="cXY-Wf-yyd"/>
+                <constraint firstItem="6Kk-Am-xxz" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="dG7-2x-NDI"/>
+                <constraint firstItem="REB-9M-2Oa" firstAttribute="top" secondItem="6Kk-Am-xxz" secondAttribute="bottom" constant="1" id="fIb-f7-9gJ"/>
+                <constraint firstAttribute="bottom" secondItem="78h-DF-vyg" secondAttribute="bottom" id="kYM-SU-zzZ"/>
+                <constraint firstAttribute="trailing" secondItem="78h-DF-vyg" secondAttribute="trailing" id="xJf-ju-DX4"/>
+                <constraint firstAttribute="trailing" secondItem="REB-9M-2Oa" secondAttribute="trailing" id="xKs-Sw-rCX"/>
+            </constraints>
+            <point key="canvasLocation" x="34.399999999999999" y="88.605697151424295"/>
+        </view>
+    </objects>
+</document>
