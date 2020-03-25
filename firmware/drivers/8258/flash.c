@@ -31,54 +31,59 @@
 #include "proj/mcu/watchdog_i.h"
 #include "proj_lib/ble/blt_config.h"
 
-
-#if AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN
-_attribute_aligned_(4)	Flash_CapacityDef	flash_capacity;
-#endif
 u32 flash_sector_mac_address = CFG_SECTOR_ADR_MAC_CODE;
 u32 flash_sector_calibration = CFG_SECTOR_ADR_CALIBRATION_CODE;
 
+#if AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN
+_attribute_aligned_(4)	Flash_CapacityDef	flash_capacity;
+
+void flash_set_capacity(Flash_CapacityDef flash_cap)
+{
+	flash_capacity = flash_cap;
+}
+
+Flash_CapacityDef flash_get_capacity(void)
+{
+	return flash_capacity;
+}
+
 void blc_readFlashSize_autoConfigCustomFlashSector(void)
 {
-#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#if (((MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269)) \
+    || (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE))
     // always use fixed customized address
 #else
 	u8 temp_buf[4];
 	flash_read_mid(temp_buf);
 	u8	flash_cap = temp_buf[2];
-    #if (FLASH_1M_ENABLE)
-	if(flash_cap != FLASH_SIZE_1M){ // 
-        while(1){
-            #if(MODULE_WATCHDOG_ENABLE)
-            wd_clear();
-            #endif
-        }; 
-    }
-    #else // 512K
-        #if (AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN)
-	if(flash_cap == FLASH_SIZE_512K){
-		flash_sector_mac_address = CFG_ADR_MAC_512K_FLASH;
-		flash_sector_calibration = CFG_ADR_CALIBRATION_512K_FLASH;
-	}
-	else if(flash_cap == FLASH_SIZE_1M){
-		flash_sector_mac_address = CFG_ADR_MAC_1M_FLASH;
-		flash_sector_calibration = CFG_ADR_CALIBRATION_1M_FLASH;
-	}
-	else{
-		//This SDK do not support flash size other than 512K/1M
-		//If code stop here, please check your Flash
-		while(1);
-	}
-	    #else
-	flash_cap = flash_cap;
-	    #endif
-    #endif
 
-    #if AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN
+    if(CFG_ADR_MAC_512K_FLASH == CFG_SECTOR_ADR_MAC_CODE){
+    	if(flash_cap == FLASH_SIZE_1M){
+    	    #define MAC_SIZE_CHECK      (6)
+    	    u8 mac_null[MAC_SIZE_CHECK] = {0xff,0xff,0xff,0xff,0xff,0xff};
+    	    u8 mac_512[MAC_SIZE_CHECK], mac_1M[MAC_SIZE_CHECK];
+    	    flash_read_page(CFG_ADR_MAC_512K_FLASH, MAC_SIZE_CHECK, mac_512);
+    	    flash_read_page(CFG_ADR_MAC_1M_FLASH, MAC_SIZE_CHECK, mac_1M);
+    	    if((0 == memcmp(mac_512,mac_null, MAC_SIZE_CHECK))
+    	     &&(0 != memcmp(mac_1M,mac_null, MAC_SIZE_CHECK))){
+        		flash_sector_mac_address = CFG_ADR_MAC_1M_FLASH;
+        		flash_sector_calibration = CFG_ADR_CALIBRATION_1M_FLASH;
+    		}
+    	}
+	}else if(CFG_ADR_MAC_1M_FLASH == CFG_SECTOR_ADR_MAC_CODE){
+	    if(flash_cap != FLASH_SIZE_1M){
+            while(1){ // please check your Flash size
+                #if(MODULE_WATCHDOG_ENABLE)
+                wd_clear();
+                #endif
+            }
+		}
+	}
+
 	flash_set_capacity(flash_cap);
-    #endif
 #endif
 }
+#endif
 
 static inline int flash_is_busy(){
 	return mspi_read() & 0x01;				//  the busy bit, pls check flash spec
@@ -446,7 +451,7 @@ unsigned long flash_subregion_read_val (unsigned long adr, unsigned long flag_in
  * @param[in] buf - store MID of flash
  * @return    none.
  */
-#if (!__PROJECT_BOOTLOADER__)
+#if ((!__PROJECT_BOOTLOADER__) && AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN)
 _attribute_ram_code_ void flash_read_mid(unsigned char *buf){
 	unsigned char j = 0;
 	unsigned char r = irq_disable();
@@ -767,17 +772,5 @@ _attribute_ram_code_ void flash_unlock(Flash_TypeDef type)
 	irq_restore(r);
 }
 #endif
-#endif
-
-#if AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN
-void flash_set_capacity(Flash_CapacityDef flash_cap)
-{
-	flash_capacity = flash_cap;
-}
-
-Flash_CapacityDef flash_get_capacity(void)
-{
-	return flash_capacity;
-}
 #endif
 

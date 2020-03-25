@@ -290,7 +290,7 @@ __WEAK void mbedtls_sha256_finish( mbedtls_sha256_context *ctx, unsigned char ou
     unsigned char msglen[8];
 
     high = ( ctx->total[0] >> 29 )
-         | ( ctx->total[1] <<  3 );
+    high |= ( ctx->total[1] <<  3 );
     low  = ( ctx->total[0] <<  3 );
 
     PUT_UINT32_BE( high, msglen, 0 );

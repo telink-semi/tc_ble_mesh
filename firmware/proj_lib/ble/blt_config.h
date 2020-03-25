@@ -47,7 +47,11 @@
 #if(MCU_CORE_TYPE == MCU_CORE_8269)
 #define		MY_RF_POWER_INDEX		RF_POWER_8dBm
 #elif(MCU_CORE_TYPE == MCU_CORE_8258)
+    #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define		MY_RF_POWER_INDEX		RF_POWER_P10p46dBm
+    #else
 #define		MY_RF_POWER_INDEX		RF_POWER_P3p01dBm
+    #endif
 #elif(MCU_CORE_TYPE == MCU_CORE_8278)
 #define		MY_RF_POWER_INDEX		RF_POWER_P3p50dBm
 #endif
@@ -84,29 +88,35 @@ enum{
 
 /* * All the data are aligned 16 bytes for ease of use and read * */
 typedef struct {
-    // 0x00
-	u8 mac_mesh[6];
-	u8 rsv1[10];
-    // 0x10
+	u8 version;                     // 0x00
+	u32 checksum;
+	u32 block_len;
+	u8 mac_mesh[6];                 // 0x09
 	u8 mac_zigbee[8];
-	u8 rsv2[8];
-    // 0x20
-	u8 freq_offset; // for both mesh and zigbee
-	u8 rsv3[15];
-    // 0x30
-	u8 mesh_static_oob[16];
-    // 0x40
+	u8 mesh_static_oob[16];         // 0x17
 	u8 zb_pre_install_code[17];
-	u8 rsv4[15];
+	u8 device_serial_number[16];
+	u8 build_info[32];
+	u16 min_color_k;
+	u16 max_color_k;
+	u32 cal_data_1;
+	u32 cal_data_2;
+	u32 cal_data_3;
+	u32 cal_data_4;
 } static_dev_info_t;
 
-#define STATIC_ADDR_MAC_MESH	    OFFSETOF(static_dev_info_t, mac_mesh)
-#define STATIC_ADDR_MAC_ZB		    OFFSETOF(static_dev_info_t, mac_zigbee)
-#define STATIC_ADDR_FREQ_OFFSET		OFFSETOF(static_dev_info_t, freq_offset)
-#define STATIC_ADDR_MESH_STATIC_OOB OFFSETOF(static_dev_info_t, mesh_static_oob)
-#define STATIC_ZB_PRE_INSTALL_CODE  OFFSETOF(static_dev_info_t, zb_pre_install_code)
+#define STATIC_DEV_INFO_ADR         (0x6000)
 
-#define CHECKSUM_ADDR			    0xFC0 /* TBD: temporary use the last 64 bytes */
+#define STATIC_ADDR_MAC_MESH	    (STATIC_DEV_INFO_ADR + OFFSETOF(static_dev_info_t, mac_mesh))
+#define STATIC_ADDR_MAC_ZB		    (STATIC_DEV_INFO_ADR + OFFSETOF(static_dev_info_t, mac_zigbee))
+#define STATIC_ADDR_MESH_STATIC_OOB (STATIC_DEV_INFO_ADR + OFFSETOF(static_dev_info_t, mesh_static_oob))
+#define STATIC_ZB_PRE_INSTALL_CODE  (STATIC_DEV_INFO_ADR + OFFSETOF(static_dev_info_t, zb_pre_install_code))
+
+/*!! TO BE DEFINED - OFFSETOF(static_dev_info_t, tx_cal_power) !!*/
+//----------------------------     0x7000   // DC (CFG_SECTOR_ADR_CALIBRATION_CODE)
+#define STATIC_ADDR_TX_PWR_OFFSET	0x7001
+
+
 /* end of static sector information */
 #endif
 
@@ -122,36 +132,21 @@ typedef struct {
 
 /**************************** 128 K Flash *****************************/
 #if 0
-#ifndef		CFG_ADR_MAC_128K_FLASH
-#define		CFG_ADR_MAC_128K_FLASH								0x1F000
-#endif
-
-#ifndef		CFG_ADR_CALIBRATION_128K_FLASH
-#define		CFG_ADR_CALIBRATION_128K_FLASH						0x1E000
-#endif
+#define		CFG_ADR_MAC_128K_FLASH								0x1F000 // don't change
+#define		CFG_ADR_CALIBRATION_128K_FLASH						0x1E000 // don't change
 #endif
 /**************************** 512 K Flash *****************************/
-#ifndef		CFG_ADR_MAC_512K_FLASH
-#define		CFG_ADR_MAC_512K_FLASH								0x76000
-#endif
-
-#ifndef		CFG_ADR_CALIBRATION_512K_FLASH
-#define		CFG_ADR_CALIBRATION_512K_FLASH						0x77000
-#endif
+#define		CFG_ADR_MAC_512K_FLASH								0x76000 // don't change
+#define		CFG_ADR_CALIBRATION_512K_FLASH						0x77000 // don't change
 
 /**************************** 1 M Flash *******************************/
-#ifndef		CFG_ADR_MAC_1M_FLASH
-#define		CFG_ADR_MAC_1M_FLASH		   						0xFF000
-#endif
-
-#ifndef		CFG_ADR_CALIBRATION_1M_FLASH
-#define		CFG_ADR_CALIBRATION_1M_FLASH						0xFE000
-#endif
+#define		CFG_ADR_MAC_1M_FLASH		   						0xFF000 // don't change
+#define		CFG_ADR_CALIBRATION_1M_FLASH						0xFE000 // don't change
 
 #if FLASH_1M_ENABLE
     #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-#define		CFG_SECTOR_ADR_MAC_CODE		        (0x8000)
-#define		CFG_SECTOR_ADR_CALIBRATION_CODE     (CFG_SECTOR_ADR_MAC_CODE +  STATIC_ADDR_FREQ_OFFSET)
+#define		CFG_SECTOR_ADR_MAC_CODE		        (STATIC_ADDR_MAC_MESH)
+#define		CFG_SECTOR_ADR_CALIBRATION_CODE     (0x7000)
     #else
 #define		CFG_SECTOR_ADR_MAC_CODE		        CFG_ADR_MAC_1M_FLASH
 #define		CFG_SECTOR_ADR_CALIBRATION_CODE     CFG_ADR_CALIBRATION_1M_FLASH
@@ -161,7 +156,11 @@ typedef struct {
 #define		CFG_SECTOR_ADR_CALIBRATION_CODE     CFG_ADR_CALIBRATION_512K_FLASH
 #endif
 
-#define AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN    (CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_512K_FLASH)
+#if ((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)||(MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269))
+#define AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN    (0) // must 0
+#else
+#define AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN    ((CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_512K_FLASH)||(CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_1M_FLASH))
+#endif
 
 /////////////////// Flash  Address Config ////////////////////////////
 #define	FLASH_SECTOR_SIZE       (4096)
@@ -259,9 +258,9 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_PAR_USER_MAX		0x80000
 #else // 1M flash
 #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-#define         FLASH_ADR_EDCH_PARA_SECTOR	0x23000
+#define			FLASH_ADR_RESET_CNT			0x23000
 #define			FLASH_ADR_MESH_TYPE_FLAG	0x24000	// don't change, must same with zigbee mesh SDK
-#define			FLASH_ADR_RESET_CNT			0x25000
+#define         FLASH_ADR_EDCH_PARA_SECTOR	0x25000
 
 #define			FLASH_ADR_AREA_1_START		0x26000
 #define			FLASH_ADR_MESH_KEY			FLASH_ADR_AREA_1_START
@@ -292,7 +291,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 
 //#define			FLASH_ADR_USER_MESH_END	    0x40000
 
-// 0xFE000: CUST_CAP_INFO_ADDR;  0xFF000: CFG_ADR_MAC (with FLASH_ADR_EDCH_PARA);  
+// 0x40000 ~ 0xFFFFF for firmware
 /*MESH_IRONMAN_MENLO_ENABLE end*/
 #elif(0 ==SWITCH_FW_ENABLE) // normal mode
     #if PINGPONG_OTA_DISABLE
@@ -323,7 +322,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_MD_VD_LIGHT		0xC5000
 #define			FLASH_ADR_MD_G_POWER_ONOFF	0xC6000
 #define			FLASH_ADR_MD_SCENE			0xC7000
-#define			FLASH_ADR_MESH_TYPE_FLAG	0xC8000	// don't change, must same with telink mesh SDK
+// 				                                            0xC8000 // reserve now
 #define			FLASH_ADR_MD_MESH_OTA		0xC9000
 #define         FLASH_ADR_MD_REMOTE_PROV    0xCA000 // remote provision part 
 #define 		FLASH_ADR_VC_NODE_INFO		0xCB000		//
@@ -386,16 +385,16 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 /**
 0xFA000--0xFBFFF is reserve for telink
 **/
-#if(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
-#define         MI_BLE_MESH_CER_ADR 	        0xFC000
+#if (MI_API_ENABLE)
+#define         MI_BLE_MESH_CER_ADR 	        0xFB000
 #endif
     
 #if(AIS_ENABLE)
-#define 		FLASH_ADR_THREE_PARA_ADR		0xFD000
+#define 		FLASH_ADR_THREE_PARA_ADR		0xFC000
 #define         FLASH_ADR_THREE_PARA_ADR_0x100_0xF00    //please refer to "FLASH_ADR_EDCH_PARA"
 #endif
 
-// 0xFE000: CUST_CAP_INFO_ADDR;  0xFF000: CFG_ADR_MAC (with FLASH_ADR_EDCH_PARA);  
+// 0xFD000: FLASH_ADR_MESH_TYPE_FLAG; 0xFE000: CUST_CAP_INFO_ADDR;  0xFF000: CFG_ADR_MAC (with FLASH_ADR_EDCH_PARA);  
 
 #else//SWITCH_FW_ENABLE == 1
 #define 		FLASH_ADR_AREA_FIRMWARE_END		0x40000 // 256K
@@ -422,7 +421,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_MD_VD_LIGHT		0x50000
 #define			FLASH_ADR_MD_G_POWER_ONOFF	0x51000
 #define			FLASH_ADR_MD_SCENE			0x52000
-#define			FLASH_ADR_MESH_TYPE_FLAG	0x53000	// don't change, must same with telink mesh SDK
+// 				                                            0x53000 // reserve now
 #define			FLASH_ADR_MD_MESH_OTA		0x54000
 #define         FLASH_ADR_MD_REMOTE_PROV    0x55000 // remote provision part 
 #define 		FLASH_ADR_VC_NODE_INFO		0x56000		//
@@ -436,16 +435,20 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 /*SIG mesh END*/
 
 // ----
-// 0xFE000: CUST_CAP_INFO_ADDR;  0xFF000: CFG_ADR_MAC (with FLASH_ADR_EDCH_PARA);  
+// 0xFD000: FLASH_ADR_MESH_TYPE_FLAG; 0xFE000: CUST_CAP_INFO_ADDR;  0xFF000: CFG_ADR_MAC (with FLASH_ADR_EDCH_PARA);  
 #endif /*end of (1 ==SWITCH_FW_ENABLE)*/
 
 #endif /*end of (1 == FLASH_1M_ENABLE)*/
 
 #if 1// common
+#if FLASH_1M_ENABLE && (MESH_USER_DEFINE_MODE != MESH_IRONMAN_MENLO_ENABLE)
+#define			FLASH_ADR_MESH_TYPE_FLAG	0xFD000	// don't change, must same with telink mesh SDK
+#endif
+
 #define		CFG_ADR_MAC					flash_sector_mac_address
 #if ((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE) && (!__PROJECT_8267_MASTER_KMA_DONGLE__))
 //#define		    CUST_CAP_INFO_ADDR			flash_sector_calibration // == (CFG_ADR_MAC + STATIC_ADDR_FREQ_OFFSET)
-#define         FLASH_ADR_STATIC_OOB	    (CFG_ADR_MAC + STATIC_ADDR_MESH_STATIC_OOB)
+#define         FLASH_ADR_STATIC_OOB	    (STATIC_ADDR_MESH_STATIC_OOB)
 #define         FLASH_ADR_EDCH_PARA		    (FLASH_ADR_EDCH_PARA_SECTOR) // size = 0x68 = sizeof(mesh_ecdh_key_str)
 #define 		SECTOR_PAR_SIZE_MAX			        0x100
 #else
@@ -469,6 +472,9 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 // 0x100 ~ 0x7ff reserve for sihui
     #if (!AIS_ENABLE)
 #define         FLASH_ADR_STATIC_OOB	    (flash_sector_calibration + 0x800)
+        #if (!PROVISION_FLOW_SIMPLE_EN)
+#define         FLASH_ADR_DEV_UUID	    	(flash_sector_calibration + 0x810)
+        #endif
     #endif
 #endif
 #endif
@@ -571,7 +577,11 @@ enum{
 extern u32 flash_sector_mac_address;
 extern u32 flash_sector_calibration;
 
+#if AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN
 void blc_readFlashSize_autoConfigCustomFlashSector(void);
+#else
+#define blc_readFlashSize_autoConfigCustomFlashSector()     // null
+#endif
 
 #ifndef WIN32
 #if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258))

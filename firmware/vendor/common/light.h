@@ -168,6 +168,7 @@ enum{
 
 typedef struct{
 	u8 st[ST_TRANS_MAX + 1];  // + 1: for onoff publish flag
+	u8 no_dim_refresh_flag;
 }st_pub_list_t;  // st_level_set_pub_list_t
 
 typedef struct{

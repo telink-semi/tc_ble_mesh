@@ -42,10 +42,11 @@ void set_dev_uuid_for_sha256();
 void create_sha256_input_string(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret);
 void create_sha256_input_string_node(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret);
 void caculate_sha256_to_create_static_oob();
+void caculate_sha256_to_create_pro_oob(u8 *pro_auth,u8 *random);
 void caculate_sha256_node_auth_value(u8 *auth_value);
 int ais_write_pipe(void *p);
 void ais_gatt_auth_init();
-void caculate_sha256_node_oob(u8 *p_oob);
+void caculate_sha256_node_oob(u8 *p_oob ,u8 *p_random);
 void mesh_ais_global_var_set();
 void calculate_auth_value();
 

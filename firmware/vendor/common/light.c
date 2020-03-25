@@ -656,7 +656,9 @@ int light_g_level_set(int idx, s16 level, int init_time_flag, int st_trans_type,
         light_power_actual_set_par(idx, power, init_time_flag);
         #endif
         
-        light_dim_refresh(idx);
+        if((NULL == pub_list) || (0 == pub_list->no_dim_refresh_flag)){
+            light_dim_refresh(idx);
+        }
     //}
     return 0;
 }
@@ -1138,6 +1140,7 @@ void light_transition_proc()
 {
     int all_trans_ok = 1;   // include no transition
 	foreach_arr(i,light_res_sw){
+	    int dim_refresh_flag = 0;
 		foreach_arr(trans_type,light_res_sw[i].trans){
 			st_transition_t *p_trans = P_ST_TRANS(i, trans_type);
 			int complete_level = 0;
@@ -1154,6 +1157,8 @@ void light_transition_proc()
 						if(0 == (p_trans->remain_t_ms % LIGHT_ADJUST_INTERVAL)){
                             s16 next_val = light_get_next_level(i, trans_type);
                             st_pub_list_t pub_list = {{0}};
+                            pub_list.no_dim_refresh_flag = 1;
+                            dim_refresh_flag = 1;
 							light_g_level_set_idx(i, next_val, 0, trans_type, &pub_list);
 							light_transition_log(trans_type, p_trans->present);
 						}
@@ -1169,6 +1174,8 @@ void light_transition_proc()
 
 			if(complete_level){
                 st_pub_list_t pub_list = {{0}};
+                pub_list.no_dim_refresh_flag = 1;
+                dim_refresh_flag = 1;
 				light_g_level_set_idx(i, p_trans->target, 0, trans_type, &pub_list);
 				light_transition_log(trans_type, p_trans->present);
 
@@ -1176,6 +1183,10 @@ void light_transition_proc()
 				scene_target_complete_check(i);
 				#endif
 			}
+		}
+		
+		if(dim_refresh_flag){
+            light_dim_refresh(i);   // dim refresh only when all level set ok
 		}
 	}
 

@@ -165,7 +165,7 @@ static inline void delay(int us){						// use no register counter to delay
 #endif
 #endif
 
-#else
+#else // WIN32
 
 #define CLOCK_SYS_CLOCK_HZ  	32000000
 

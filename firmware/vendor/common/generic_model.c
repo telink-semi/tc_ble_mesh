@@ -1107,7 +1107,7 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 #endif
     
 	// lighting model
-#if ((MD_LIGHTNESS_EN) & (LIGHT_TYPE_SEL != LIGHT_TYPE_POWER))
+#if ((MD_LIGHTNESS_EN) && (LIGHT_TYPE_SEL != LIGHT_TYPE_POWER))
     {LIGHTNESS_GET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_get, LIGHTNESS_STATUS},
     {LIGHTNESS_SET, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_set, LIGHTNESS_STATUS},
     {LIGHTNESS_SET_NOACK, 0, SIG_MD_LIGHTNESS_C, SIG_MD_LIGHTNESS_S, mesh_cmd_sig_lightness_set, STATUS_NONE},

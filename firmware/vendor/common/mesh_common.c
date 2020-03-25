@@ -812,7 +812,7 @@ void mesh_node_prov_event_callback(u8 evt_code)
         }else{
              // disable the mesh provision filter part 
 		    enable_mesh_adv_filter();
-		    set_prov_timeout_tick(clock_time()|1); 
+		    //set_prov_timeout_tick(clock_time()|1); // disable the prov timeout proc ,only enable in gatt mode 
         }
 		#if SPIRIT_PRIVATE_LPN_EN
 		bls_pm_setSuspendMask (SUSPEND_DISABLE);
@@ -900,6 +900,12 @@ void set_firmware_type_init()
     flash_erase_sector(FLASH_ADR_MESH_TYPE_FLAG);
 }
 
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define TLK_MESH_NO_TYPE_CHECK_EN   0 // must 0
+#else
+#define TLK_MESH_NO_TYPE_CHECK_EN   ((0 == FLASH_1M_ENABLE) && (CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_512K_FLASH))
+#endif
+
 u8 proc_telink_mesh_to_sig_mesh(void)
 {
     #if (DUAL_VENDOR_EN)
@@ -929,7 +935,7 @@ u8 proc_telink_mesh_to_sig_mesh(void)
 	}
 	
 	u8 ret = 0;
-	#if (0 == FLASH_1M_ENABLE)
+	#if (TLK_MESH_NO_TYPE_CHECK_EN)
 	u32 sig_cust_cap_flag = 0;
 	// 0x77004 is fixed address of telink mesh, not depend on flash size.
 	flash_read_page(0x77004, 4, (u8 *)&sig_cust_cap_flag);	// reserve 3 byte for CUST_CAP_INFO
@@ -938,25 +944,27 @@ u8 proc_telink_mesh_to_sig_mesh(void)
 	if((TYPE_TLK_BLE_SDK == mesh_type) || (TYPE_TLK_ZIGBEE == mesh_type)){
 		ret = 1;
 	}else if((TYPE_TLK_MESH == mesh_type)
-	#if (0 == FLASH_1M_ENABLE)
+	#if (TLK_MESH_NO_TYPE_CHECK_EN)
 	||(-1 != sig_cust_cap_flag)
 	#endif
 	){
-	    #if (0 == FLASH_1M_ENABLE)
-		flash_erase_sector(flash_sector_calibration);
+	    #if (TLK_MESH_NO_TYPE_CHECK_EN)
+	    if(CFG_ADR_MAC_512K_FLASH == flash_sector_mac_address){ // DC and TP is in the same address when 1M flash.
+    		flash_erase_sector(flash_sector_calibration);
 
-		u8 flash_data = 0;
-		flash_read_page(flash_sector_mac_address + 0x10, 1, &flash_data);
-		flash_write_page(flash_sector_calibration + CALIB_OFFSET_CAP_INFO, 1, &flash_data);
+    		u8 flash_data = 0;
+    		flash_read_page(flash_sector_mac_address + 0x10, 1, &flash_data);
+    		flash_write_page(flash_sector_calibration + CALIB_OFFSET_CAP_INFO, 1, &flash_data);
 
-        #if ((MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269))
-		flash_read_page(flash_sector_mac_address + 0x11, 1, &flash_data);
-		flash_write_page(flash_sector_calibration + CALIB_OFFSET_TP_INFO, 1, &flash_data);
+            #if ((MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269))
+    		flash_read_page(flash_sector_mac_address + 0x11, 1, &flash_data);
+    		flash_write_page(flash_sector_calibration + CALIB_OFFSET_TP_INFO, 1, &flash_data);
 
-		flash_read_page(flash_sector_mac_address + 0x12, 1, &flash_data);
-		flash_write_page(flash_sector_calibration + CALIB_OFFSET_TP_INFO + 1, 1, &flash_data);
-		// no RC32K_CAP_INFO
-		#endif
+    		flash_read_page(flash_sector_mac_address + 0x12, 1, &flash_data);
+    		flash_write_page(flash_sector_calibration + CALIB_OFFSET_TP_INFO + 1, 1, &flash_data);
+    		// no RC32K_CAP_INFO
+    		#endif
+		}
 		#endif
 		
 		ret = 1;
@@ -1601,6 +1609,30 @@ void vendor_id_check_and_update() //confirm cps and vendor model
 }
 #endif
 
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+//STATIC_ASSERT(STATIC_ADDR_MAC_MESH == (STATIC_DEV_INFO_ADR + 0x09));        // just for comfirm, make sure not change
+//STATIC_ASSERT(STATIC_ADDR_MESH_STATIC_OOB == (STATIC_DEV_INFO_ADR + 0x17)); // just for comfirm, make sure not change
+
+/**
+ * this update the tx power by reading from flash offset
+ *
+ */
+void app_txPowerCal()
+{
+    u8 tx_cal_power;
+    flash_read_page(STATIC_ADDR_TX_PWR_OFFSET, 1, &tx_cal_power);
+
+    /* this range will need to be reviewed */
+    if (tx_cal_power >= RF_POWER_P3p23dBm &&
+        tx_cal_power <= RF_POWER_P10p46dBm){
+        my_rf_power_index = tx_cal_power;
+    }else{
+        /* default value is set in mesh_node.c */
+        // my_rf_power_index = MY_RF_POWER_INDEX;
+    }
+}
+#endif
+
 /*
 mesh_global_var_init(): run in mesh_init_all() and before read parameters in flash.
                                   it's used to set default vaule for compilation.
@@ -1666,6 +1698,11 @@ void mesh_global_var_init()
     #if (MD_LIGHT_CONTROL_EN)
     light_LC_global_init();
     #endif
+#endif
+
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+    /* apply tx power calibration value */
+    app_txPowerCal();
 #endif
 }
 /****************************************************

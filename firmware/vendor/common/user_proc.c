@@ -182,7 +182,7 @@ void mesh_provision_para_init()
 	#if !WIN32
 	user_prov_multi_device_uuid();// use the mac address part to create the device uuid part
 	#if (!AIS_ENABLE)
-	u8 oob_data[16];//get_flash_data_is_valid
+	u8 oob_data[16];
 	flash_read_page(FLASH_ADR_STATIC_OOB,16,oob_data);
 	if(get_flash_data_is_valid(oob_data,sizeof(oob_data))){//oob was burned in flash
 		mesh_set_dev_auth(oob_data,sizeof(oob_data));
@@ -234,6 +234,8 @@ void uuid_create_by_mac(u8 *mac,u8 *uuid)
     #endif
 }
 
+#define NORMAL_MODE_DEV_UUID_CUSTOMIZE_EN       (0)
+
 void user_prov_multi_device_uuid()
 {
 #if !WIN32
@@ -243,11 +245,22 @@ void user_prov_multi_device_uuid()
         uuid_create_by_mac(tbl_mac,prov_para.device_uuid);
     #elif (MESH_USER_DEFINE_MODE == MESH_GN_ENABLE)
         set_dev_uuid_for_simple_flow(prov_para.device_uuid);
-    #elif (MESH_USER_DEFINE_MODE == MESH_NORMAL_MODE || MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+    #elif (MESH_USER_DEFINE_MODE == MESH_MI_ENABLE)
+        // NO NEED DEV UUID
+    #else // (MESH_USER_DEFINE_MODE == MESH_NORMAL_MODE || MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
         if(PROVISION_FLOW_SIMPLE_EN){
 		    set_dev_uuid_for_simple_flow(prov_para.device_uuid);
 	    }else{
-			uuid_create_by_mac(tbl_mac,prov_para.device_uuid);
+	        #if NORMAL_MODE_DEV_UUID_CUSTOMIZE_EN   // TBD
+            u8 uuid_read[16];
+            flash_read_page(FLASH_ADR_DEV_UUID,16,uuid_read);
+            if(get_flash_data_is_valid(uuid_read,sizeof(uuid_read))){//device uuid was burned in flash
+                memcpy(prov_para.device_uuid, uuid_read, sizeof(prov_para.device_uuid));
+            }else
+            #endif
+            {
+			    uuid_create_by_mac(tbl_mac,prov_para.device_uuid);
+			}
 		}
     #endif
 #endif

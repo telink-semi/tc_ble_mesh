@@ -31,7 +31,13 @@ extern "C" {
 #define PCBA_8258_DONGLE_48PIN          1
 #define PCBA_8258_C1T139A30_V1_0        2
 #define PCBA_8258_C1T139A30_V1_2        3
+#define PCBA_8258_C1T140A3_V1_1         4   // 32pin
+
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define PCBA_8258_SEL			PCBA_8258_C1T140A3_V1_1  // PCBA_8258_DONGLE_48PIN // 
+#else
 #define PCBA_8258_SEL			PCBA_8258_DONGLE_48PIN
+#endif
 
 
 #define _USER_CONFIG_DEFINED_	1	// must define this macro to make others known
@@ -72,11 +78,11 @@ extern "C" {
 
 #define HCI_LOG_FW_EN   0
 #if HCI_LOG_FW_EN
-#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-#define DEBUG_INFO_TX_PIN           		GPIO_PD7
-#else
+	#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define DEBUG_INFO_TX_PIN           		(PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1 ? GPIO_PB6 : GPIO_PD7)
+	#else
 #define DEBUG_INFO_TX_PIN           		GPIO_PB2
-#endif
+	#endif
 #define PRINT_DEBUG_INFO                    1
 #endif
 
@@ -155,6 +161,13 @@ extern "C" {
 #define PD5_INPUT_ENABLE		1
 #define	SW1_GPIO				GPIO_PD6
 #define	SW2_GPIO				GPIO_PD5
+#elif (PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1)
+#define PULL_WAKEUP_SRC_PD7     PM_PIN_PULLUP_1M	//btn
+#define PULL_WAKEUP_SRC_PA1     PM_PIN_PULLUP_1M	//btn
+#define PD7_INPUT_ENABLE		1
+#define PA1_INPUT_ENABLE		1
+#define	SW1_GPIO				GPIO_PD7
+#define	SW2_GPIO				GPIO_PA1
 #elif(PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_2)
 #define PULL_WAKEUP_SRC_PB2     PM_PIN_PULLUP_1M	//btn
 #define PULL_WAKEUP_SRC_PB3     PM_PIN_PULLUP_1M	//btn
@@ -186,6 +199,11 @@ extern "C" {
 #define PWM_G       GPIO_PWM0A2		//green
 #define PWM_B       GPIO_PWM3B0		//blue
 #define PWM_W       GPIO_PWM4B1		//white
+#elif(PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1)
+#define PWM_R       GPIO_PWM2ND4    //red
+#define PWM_G       GPIO_PWM0NA0    //green
+#define PWM_B       GPIO_PWM1ND3    //blue
+#define PWM_W       GPIO_PWM3D2		//yellow as white
 #elif(PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_0)   // PCBA_8258_DEVELOPMENT_BOARD
 #define PWM_R       GPIO_PWM1ND3	//red
 #define PWM_G       GPIO_PWM2ND4	//green
@@ -228,21 +246,13 @@ extern "C" {
 #define	USE_SYS_TICK_PER_US
 #define CLOCK_SYS_TYPE  		CLOCK_TYPE_PLL	//  one of the following:  CLOCK_TYPE_PLL, CLOCK_TYPE_OSC, CLOCK_TYPE_PAD, CLOCK_TYPE_ADC
 
-#if (MI_API_ENABLE)
 #define CLOCK_SYS_CLOCK_HZ  	48000000
-#else
-#define CLOCK_SYS_CLOCK_HZ  	24000000
-#endif
 //////////////////Extern Crystal Type///////////////////////
 #define CRYSTAL_TYPE			XTAL_12M		//  extern 12M crystal
 
 /////////////////// watchdog  //////////////////////////////
 #define MODULE_WATCHDOG_ENABLE		0
-#if (MI_API_ENABLE)
-#define WATCHDOG_INIT_TIMEOUT		20000  //in mi mode the watchdog timeout is 20s
-#else
 #define WATCHDOG_INIT_TIMEOUT		2000  //in mi mode the watchdog timeout is 20s
-#endif
 
 
 

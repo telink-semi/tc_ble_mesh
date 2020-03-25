@@ -858,6 +858,7 @@ int light_ctl_temp_set(mesh_cmd_light_ctl_set_t *p_set, int par_len, u16 op, int
 		int len_tmp = GET_LEVEL_PAR_LEN(par_len >= sizeof(mesh_cmd_light_ctl_set_t));
 
 		// temp
+        pub_list->no_dim_refresh_flag = 1;
 		level_set_tmp.level = get_level_from_ctl_temp_light_idx(p_set->temp, idx);
 		err = g_level_set_and_update_last((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, idx, retransaction, ST_TRANS_CTL_TEMP, 0, pub_list);
 		if(err){
@@ -865,6 +866,7 @@ int light_ctl_temp_set(mesh_cmd_light_ctl_set_t *p_set, int par_len, u16 op, int
 		}
 		// delta uv
 		level_set_tmp.level = p_set->delta_uv;
+        pub_list->no_dim_refresh_flag = 0;   // dim refresh only when all level set ok
 		err = g_level_set_and_update_last((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, idx, retransaction, ST_TRANS_CTL_D_UV, 0, pub_list);
 	}
 	return err;
@@ -889,6 +891,7 @@ int mesh_cmd_sig_light_ctl_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	}
 	
     st_pub_list_t pub_list = {{0}};
+    pub_list.no_dim_refresh_flag = 1;
 	mesh_cmd_lightness_set_t lightness_set_tmp = {0};
 	lightness_set_tmp.lightness = p_set->lightness;
 	int len_tmp = (par_len >= sizeof(mesh_cmd_light_ctl_set_t)) ? sizeof(mesh_cmd_lightness_set_t) : 2;
@@ -897,6 +900,7 @@ int mesh_cmd_sig_light_ctl_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     if(err){
         return err;
     }
+    pub_list.no_dim_refresh_flag = 0;   // dim refresh only when all level set ok
 	err = light_ctl_temp_set(p_set, par_len, cb_par->op, cb_par->model_idx, cb_par->retransaction, &pub_list);
     if(err){
         return err;

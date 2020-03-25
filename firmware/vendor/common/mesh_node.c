@@ -77,9 +77,9 @@ friend_key_t mesh_fri_key_fn[MAX_LPN_NUM][2];
 mesh_tid_t mesh_tid;
 u8 switch_project_flag = 0;
 
-#if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
+//#if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 u8 my_rf_power_index = MY_RF_POWER_INDEX;   // use in library
-#endif
+//#endif
 
 /*PTS test*/
 u8 pts_test_en = PTS_TEST_EN;
@@ -3395,6 +3395,7 @@ void mesh_init_all()
 	init_heartbeat_str();
     // read parameters
     mesh_flash_retrieve();	// should be first, get unicast addr from config modle.
+    provision_random_data_init();
 	mesh_provision_para_init();
 	//unprovision beacon send part 
 	beacon_str_init();
