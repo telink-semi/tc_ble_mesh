@@ -152,6 +152,7 @@ mible_status_t mible_dfu_upgrade(void)
     } else {
         mible_timer_delete(dfu_config.timer_id);
         dfu_config.timer_id = NULL;
+		mible_upgrade_firmware_fail();
         if (ota_downloading) {
             MI_LOG_WARNING("no valid firmware\n");
             for (index = 0; index < MIBLE_DFU_CALLBACK_MAX; ++index) {

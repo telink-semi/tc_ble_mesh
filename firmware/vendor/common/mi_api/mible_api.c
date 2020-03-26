@@ -903,4 +903,10 @@ __WEAK mible_status_t mible_upgrade_firmware(void)
 	telink_mible_upgrade_firmware();
 	return MI_SUCCESS;
 }
+__WEAK mible_status_t mible_upgrade_firmware_fail(void)
+{
+	start_reboot();
+	return MI_SUCCESS;
+}
+
 

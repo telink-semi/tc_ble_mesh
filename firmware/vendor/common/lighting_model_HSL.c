@@ -111,6 +111,7 @@ int mesh_cmd_sig_light_hsl_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	mesh_cmd_light_hsl_set_t *p_set = (mesh_cmd_light_hsl_set_t *)par;
 	
     st_pub_list_t pub_list = {{0}};
+    pub_list.no_dim_refresh_flag = 1;
 	mesh_cmd_lightness_set_t lightness_set_tmp = {0};
 	lightness_set_tmp.lightness = p_set->lightness;
 	int len_tmp = (par_len >= sizeof(mesh_cmd_light_hsl_set_t)) ? sizeof(mesh_cmd_lightness_set_t) : 2;
@@ -129,6 +130,7 @@ int mesh_cmd_sig_light_hsl_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 	mesh_cmd_light_sat_set_t *p_sat_set_tmp = (mesh_cmd_light_sat_set_t *)&lightness_set_tmp;
 	p_sat_set_tmp->sat = p_set->sat;
+    pub_list.no_dim_refresh_flag = 0;   // dim refresh only when all level set ok
 	err = light_sat_set(p_sat_set_tmp, len_tmp, cb_par->op, cb_par->model_idx, cb_par->retransaction, &pub_list);
     if(err){
         return err;

@@ -1420,7 +1420,6 @@ void dispatch_pb_gatt(u8 *p ,u8 len )
 				memcpy(dev_pro_comfirm,p_comfirm->comfirm,16);
 				get_private_key(dev_private_key);
 				tn_p256_dhkey (dev_edch, dev_private_key, dev_input+0x11, dev_input+0x11+0x20);
-				provision_random_data_init();
 				
 				#if(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
 				u8 node_auth[16];
@@ -2070,7 +2069,6 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 					memcpy(dev_pro_comfirm,p_comfirm->comfirm,16);
 					get_private_key(dev_private_key);
 					tn_p256_dhkey (dev_edch, dev_private_key, dev_input+0x11, dev_input+0x11+0x20);
-					provision_random_data_init();
 					
 					#if(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
 					u8 node_auth[16];
@@ -2105,7 +2103,13 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 				
 				// use the provision random to caculate the provision comfirm 
 				u8 pro_comfirm_tmp[16];
+				#if ALI_NEW_PROTO_EN
+				u8 ali_tmp_auth[16];
+				caculate_sha256_to_create_pro_oob(ali_tmp_auth,pro_random);
+				mesh_sec_prov_confirmation (pro_comfirm_tmp, dev_input, 145, dev_edch, pro_random, ali_tmp_auth);
+				#else
 				mesh_sec_prov_confirmation (pro_comfirm_tmp, dev_input, 145, dev_edch, pro_random, dev_auth);
+				#endif
 				if(memcmp(pro_comfirm_tmp,dev_pro_comfirm,16)){
 				    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"provision confirm fail",0);
 					set_rsp_ack_transnum(p_adv);
@@ -2116,6 +2120,7 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 					send_rcv_retry_set(PRO_FAIL,0,1);
 					prov_para.trans_num_last = prov_para.trans_num;
 					prov_para.provison_rcv_state = STATE_PRO_FAILED_ACK;
+					LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0 ,"comfirm fail",0);
 					mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_CONFIRM_FAILED);
 					return;
 				}
@@ -2344,7 +2349,7 @@ u8  mesh_loop_provision_end_process()
 	
 	#if MD_REMOTE_PROV
 	if(mesh_pr_sts_work_or_not()){
-		prov_retry_time = 4000*1000;
+		prov_retry_time = 6500*1000;
 	}
 	#endif
 	
@@ -2702,7 +2707,6 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 					mesh_adv_prov_pubkey_rsp(p_adv);
 					memcpy(pro_input+0x11,prov_public_key,sizeof(prov_public_key));
 					memcpy(pro_input+0x11+64,p_rcv_str->pubkey.pubKeyX,64);
-					provision_random_data_init();
 					if(prov_oob.start.authMeth == MESH_OUTPUT_OOB)	{
 						prov_oob.oob_out_tick = clock_time()|1;
 						mesh_send_provison_data(TRANS_ACK,0,0,0);

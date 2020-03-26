@@ -78,7 +78,7 @@ int mesh_reset_network(u8 provision_enable)
 	factory_test_key_bind(1);
 	mesh_init_flag = 0;
 //provision random
-//	provision_random_data_init(); // will init in provisioning
+	provision_random_data_init(); // will init in provisioning
 
 // spirit mode init
 	#if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)
@@ -94,39 +94,38 @@ int mesh_reset_network(u8 provision_enable)
 void mesh_revert_network()
 {
 	node_need_store_misc = 1;
-	if(provision_mag.gatt_mode == GATT_PROVISION_MODE){		
-		#if FAST_PROVISION_ENABLE
-		if((!fast_prov.not_need_prov)&&(mesh_fast_prov_sts_get() == FAST_PROV_COMPLETE)){
-			mesh_provision_par_handle((u8 *)&fast_prov.net_info.pro_data);
-			//set app_key
-			mesh_appkey_set_t *p_set = (mesh_appkey_set_t *)&fast_prov.net_info.appkey_set;
-			mesh_app_key_set(APPKEY_ADD, p_set->appkey, GET_APPKEY_INDEX(p_set->net_app_idx), GET_NETKEY_INDEX(p_set->net_app_idx), 1);
+	
+	#if FAST_PROVISION_ENABLE
+	if((!fast_prov.not_need_prov)&&(mesh_fast_prov_sts_get() == FAST_PROV_COMPLETE)){
+		mesh_provision_par_handle((u8 *)&fast_prov.net_info.pro_data);
+		//set app_key
+		mesh_appkey_set_t *p_set = (mesh_appkey_set_t *)&fast_prov.net_info.appkey_set;
+		mesh_app_key_set(APPKEY_ADD, p_set->appkey, GET_APPKEY_INDEX(p_set->net_app_idx), GET_NETKEY_INDEX(p_set->net_app_idx), 1);
 
-			if(get_all_appkey_cnt() == 1){
-			u16 app_key_idx = GET_NETKEY_INDEX(p_set->net_app_idx);
-			 ev_handle_traversal_cps(EV_TRAVERSAL_BIND_APPKEY, (u8 *)&app_key_idx);
-			}
-
-			rf_link_light_event_callback(LGT_CMD_SET_MESH_INFO);
-		}
-		else
-		#endif
-		{
-			memset(mesh_key.net_key, 0, sizeof(mesh_key_t)-OFFSETOF(mesh_key_t,net_key));
-			mesh_flash_retrieve();	
-			mesh_provision_para_init();
+		if(get_all_appkey_cnt() == 1){
+		u16 app_key_idx = GET_NETKEY_INDEX(p_set->net_app_idx);
+		 ev_handle_traversal_cps(EV_TRAVERSAL_BIND_APPKEY, (u8 *)&app_key_idx);
 		}
 
-		#if WIN32
-		App_key_bind_end_callback(MESH_APP_KEY_BIND_EVENT_SUC); 
-		#endif
-		mesh_gatt_adv_beacon_enable(1);
-		mesh_node_init();
-		
-		#if FAST_PROVISION_ENABLE
-		mesh_fast_prov_val_init();
-		#endif
+		rf_link_light_event_callback(LGT_CMD_SET_MESH_INFO);
 	}
+	else
+	#endif
+	{
+		memset(mesh_key.net_key, 0, sizeof(mesh_key_t)-OFFSETOF(mesh_key_t,net_key));
+		mesh_flash_retrieve();	
+		mesh_provision_para_init();
+	}
+
+	#if WIN32
+	App_key_bind_end_callback(MESH_APP_KEY_BIND_EVENT_SUC); 
+	#endif
+	mesh_gatt_adv_beacon_enable(1);
+	mesh_node_init();
+	
+	#if FAST_PROVISION_ENABLE
+	mesh_fast_prov_val_init();
+	#endif
 }
 
 #if !(ANDROID_APP_ENABLE || IOS_APP_ENABLE)
@@ -370,6 +369,7 @@ void mesh_fast_provision_timeout()
 		mesh_fast_prov_sts_set(FAST_PROV_TIME_OUT);
 		LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"time out",0);
 		fast_prov.start_tick = 0;
+		mesh_revert_network();
 	}
 }
 

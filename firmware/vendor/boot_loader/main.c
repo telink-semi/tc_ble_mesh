@@ -7,7 +7,7 @@
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
-#define DEBUG_PIN                GPIO_PA3
+#define DEBUG_PIN                (PWM_R)
 
 // user define
 

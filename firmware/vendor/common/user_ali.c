@@ -14,8 +14,14 @@ const char num2char[] = "0123456789abcdef";
 STATIC_ASSERT(sizeof(sha256_dev_uuid_str) <= 16);   // because sizeof dev uuid is 16
 
 // sha256 init for three parameters 
+#if ALI_NEW_PROTO_EN
+	u32 con_product_id = 9873;
+	//u8 con_mac_address[6]={0xf8,0xa7,0x63,0x6e,0x46,0x49};// in the flash ,is big endiness 
+	u8 con_mac_address[6]={0x49,0x46,0x6e,0x63,0xa7,0xf8};// in the demo ,switch to small endiness .
+	u8 con_sec_data[16]={0xc5,0xa2,0x78,0xcf, 0x21,0x4b,0x84,0x63, 0xc7,0xb4,0x70,0xe2, 0x83,0x7d,0x55,0xb5};
+	#define SIZE_CON_SEC_DATA   (sizeof(con_sec_data))
+	#else
 #if(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
-
 u32 con_product_id=192941;// little endiness 
 #if(MESH_USER_DEFINE_MODE != MESH_MI_SPIRIT_ENABLE)
 const
@@ -49,6 +55,7 @@ u8 con_mac_address[6]= {0xa8, 0x1c, 0xc1, 0x07, 0xda, 0x78};
 u8 con_sec_data[16] = {0x15, 0x65, 0xd0, 0x49, 0x74, 0x00, 0xc9, 0x99, 0xe9, 0x84, 0xcf, 0xfa, 0x4d, 0xa4, 0xfd, 0xf9};
 #endif
 #define SIZE_CON_SEC_DATA   (sizeof(con_sec_data))
+	#endif
 #endif
 
 #if(DUAL_VENDOR_EN)
@@ -152,10 +159,42 @@ void create_sha256_input_string_node(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secre
 	}
 }
 #endif
-
-void caculate_sha256_node_oob(u8 *p_oob)
+#if ALI_NEW_PROTO_EN
+void ali_new_create_sha256_input_string(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret,u8 *p_random)
 {
+	u8 idx =0;
+	u8 con_product_id_rev[4];
+	swap32(con_product_id_rev,pid);
+	for(int i=0;i<4;i++){
+		p_input[idx++] = num2char [(con_product_id_rev[i]>>4) & 15];
+		p_input[idx++] = num2char [con_product_id_rev[i] & 15];
+	}
+	p_input[idx++]=',';
+	for(int i=0;i<6;i++){
+		p_input[idx++] = num2char [(p_mac[i]>>4) & 15];
+		p_input[idx++] = num2char [p_mac[i] & 15];
+	}
+	p_input[idx++]=',';
+	for(int i=0;i<16;i++){// need to change to string .
+		p_input[idx++] = num2char [(p_secret[i]>>4) & 15];
+		p_input[idx++] = num2char [p_secret[i] & 15];
+	}
+	p_input[idx++]=',';
+	for(int i=0;i<16;i++){// need to change to string .
+		p_input[idx++] = num2char [(p_random[i]>>4) & 15];
+		p_input[idx++] = num2char [p_random[i] & 15];
+	}
+}
+#endif
+
+
+void caculate_sha256_node_oob(u8 *p_oob ,u8 *p_random)
+{
+	#if ALI_NEW_PROTO_EN
+	char sha256_in[87];
+	#else
 	char sha256_in[54];
+	#endif
 	// caculate the tbl_mac address part ,use big endian
 	u8 mac_address_sha256[6];
 	#if(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
@@ -163,10 +202,15 @@ void caculate_sha256_node_oob(u8 *p_oob)
 	#else
 	swap48(mac_address_sha256,tbl_mac);
 	#endif
+	
 	#if(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
 	create_sha256_input_string_node(sha256_in,(u8 *)&con_product_id,mac_address_sha256,(u8 *)con_sec_data);
 	#else
+		#if ALI_NEW_PROTO_EN
+	ali_new_create_sha256_input_string(sha256_in,(u8 *)&con_product_id,mac_address_sha256,con_sec_data,p_random);
+		#else
 	create_sha256_input_string(sha256_in,(u8 *)&con_product_id,mac_address_sha256,(u8 *)con_sec_data);
+		#endif
 	#endif
 	mbedtls_sha256((u8 *)sha256_in,sizeof(sha256_in),p_oob,0);
 }
@@ -175,16 +219,26 @@ void caculate_sha256_node_auth_value(u8 *auth_value)
 {
 	#ifndef WIN32		// comfirm later
 	u8 sha256_out[32];
-	caculate_sha256_node_oob(sha256_out);
+	caculate_sha256_node_oob(sha256_out,0);
 	memcpy(auth_value, sha256_out, 16);
+	#endif
+}
+
+void caculate_sha256_to_create_pro_oob(u8 *pro_auth,u8 *random)
+{
+	#ifndef WIN32 
+	u8 sha256_out[32];
+	caculate_sha256_node_oob(sha256_out,random);
+	memcpy(pro_auth,sha256_out,16);
 	#endif
 }
 
 void caculate_sha256_to_create_static_oob()
 {
 	#if !WIN32		// comfirm later
+	extern u8 dev_random[16];
 	u8 sha256_out[32];
-	caculate_sha256_node_oob(sha256_out);
+	caculate_sha256_node_oob(sha256_out,dev_random);
 	mesh_set_dev_auth(sha256_out, 16);
 	#endif
 }

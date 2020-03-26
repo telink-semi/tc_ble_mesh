@@ -1483,6 +1483,7 @@ extern u8 factory_test_cache_not_equal_mode_en;
 extern u8 mesh_adv_txrx_self_en;
 extern mesh_tid_t mesh_tid;
 extern u8 switch_project_flag;
+extern u8 my_rf_power_index;
 
 //------------model
 extern /*const */mesh_page0_t * const gp_page0;
