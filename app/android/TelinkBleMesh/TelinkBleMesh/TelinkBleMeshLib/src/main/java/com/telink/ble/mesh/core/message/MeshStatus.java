@@ -35,7 +35,6 @@ import com.telink.ble.mesh.core.message.updating.ObjectInfoStatusMessage;
 import com.telink.ble.mesh.core.message.updating.ObjectTransferStatusMessage;
 
 /**
- * changed from enum to class for outer importing
  * All registered StatusMessage should have empty constructor for [Creating Instance]
  * {@link StatusMessage#createByAccessMessage(int, byte[])}
  * Created by kee on 2019/9/3.
@@ -80,60 +79,64 @@ public class MeshStatus {
         private static SparseArray<Class> statusMap = new SparseArray<>();
 
         static {
-            register(new MeshStatus(Opcode.COMPOSITION_DATA_STATUS.value, CompositionDataStatusMessage.class));
-            register(new MeshStatus(Opcode.MODE_APP_STATUS.value, ModelAppStatusMessage.class));
-            register(new MeshStatus(Opcode.APPKEY_STATUS.value, AppKeyStatusMessage.class));
-            register(new MeshStatus(Opcode.NODE_RESET_STATUS.value, NodeResetStatusMessage.class));
-            register(new MeshStatus(Opcode.CFG_MODEL_SUB_STATUS.value, ModelSubscriptionStatusMessage.class));
-            register(new MeshStatus(Opcode.CFG_MODEL_PUB_STATUS.value, ModelPublicationStatusMessage.class));
+            register(Opcode.COMPOSITION_DATA_STATUS.value, CompositionDataStatusMessage.class);
+            register(Opcode.MODE_APP_STATUS.value, ModelAppStatusMessage.class);
+            register(Opcode.APPKEY_STATUS.value, AppKeyStatusMessage.class);
+            register(Opcode.NODE_RESET_STATUS.value, NodeResetStatusMessage.class);
+            register(Opcode.CFG_MODEL_SUB_STATUS.value, ModelSubscriptionStatusMessage.class);
+            register(Opcode.CFG_MODEL_PUB_STATUS.value, ModelPublicationStatusMessage.class);
 
             // generic
-            register(new MeshStatus(Opcode.G_ONOFF_STATUS.value, OnOffStatusMessage.class));
-            register(new MeshStatus(Opcode.G_LEVEL_STATUS.value, LevelStatusMessage.class));
+            register(Opcode.G_ONOFF_STATUS.value, OnOffStatusMessage.class);
+            register(Opcode.G_LEVEL_STATUS.value, LevelStatusMessage.class);
 
             // lighting
-            register(new MeshStatus(Opcode.LIGHTNESS_STATUS.value, LightnessStatusMessage.class));
-            register(new MeshStatus(Opcode.LIGHT_CTL_TEMP_STATUS.value, CtlTemperatureStatusMessage.class));
-            register(new MeshStatus(Opcode.LIGHT_CTL_STATUS.value, CtlStatusMessage.class));
+            register(Opcode.LIGHTNESS_STATUS.value, LightnessStatusMessage.class);
+            register(Opcode.LIGHT_CTL_TEMP_STATUS.value, CtlTemperatureStatusMessage.class);
+            register(Opcode.LIGHT_CTL_STATUS.value, CtlStatusMessage.class);
 
-            register(new MeshStatus(Opcode.LIGHT_HSL_STATUS.value, HslStatusMessage.class));
-            register(new MeshStatus(Opcode.LIGHT_HSL_TARGET_STATUS.value, HslTargetStatusMessage.class));
+            register(Opcode.LIGHT_HSL_STATUS.value, HslStatusMessage.class);
+            register(Opcode.LIGHT_HSL_TARGET_STATUS.value, HslTargetStatusMessage.class);
 
             // time
-            register(new MeshStatus(Opcode.TIME_STATUS.value, TimeStatusMessage.class));
+            register(Opcode.TIME_STATUS.value, TimeStatusMessage.class);
 
             // scene
-            register(new MeshStatus(Opcode.SCENE_STATUS.value, SceneStatusMessage.class));
-            register(new MeshStatus(Opcode.SCENE_REG_STATUS.value, SceneRegisterStatusMessage.class));
+            register(Opcode.SCENE_STATUS.value, SceneStatusMessage.class);
+            register(Opcode.SCENE_REG_STATUS.value, SceneRegisterStatusMessage.class);
 
             // scheduler status
-            register(new MeshStatus(Opcode.SCHD_STATUS.value, SchedulerStatusMessage.class));
-            register(new MeshStatus(Opcode.SCHD_ACTION_STATUS.value, SchedulerActionStatusMessage.class));
+            register(Opcode.SCHD_STATUS.value, SchedulerStatusMessage.class);
+            register(Opcode.SCHD_ACTION_STATUS.value, SchedulerActionStatusMessage.class);
 
 
             // mesh firmware update
-            register(new MeshStatus(Opcode.FW_INFO_STATUS.value, FirmwareInfoStatusMessage.class));
-            register(new MeshStatus(Opcode.FW_DISTRIBUT_STATUS.value, FirmwareDistributionStatusMessage.class));
-            register(new MeshStatus(Opcode.FW_UPDATE_STATUS.value, FirmwareUpdateStatusMessage.class));
-            register(new MeshStatus(Opcode.OBJ_BLOCK_STATUS.value, ObjectBlockStatusMessage.class));
-            register(new MeshStatus(Opcode.OBJ_BLOCK_TRANSFER_STATUS.value, ObjectBlockTransferStatusMessage.class));
-            register(new MeshStatus(Opcode.OBJ_INFO_STATUS.value, ObjectInfoStatusMessage.class));
-            register(new MeshStatus(Opcode.OBJ_TRANSFER_STATUS.value, ObjectTransferStatusMessage.class));
+            register(Opcode.FW_INFO_STATUS.value, FirmwareInfoStatusMessage.class);
+            register(Opcode.FW_DISTRIBUT_STATUS.value, FirmwareDistributionStatusMessage.class);
+            register(Opcode.FW_UPDATE_STATUS.value, FirmwareUpdateStatusMessage.class);
+            register(Opcode.OBJ_BLOCK_STATUS.value, ObjectBlockStatusMessage.class);
+            register(Opcode.OBJ_BLOCK_TRANSFER_STATUS.value, ObjectBlockTransferStatusMessage.class);
+            register(Opcode.OBJ_INFO_STATUS.value, ObjectInfoStatusMessage.class);
+            register(Opcode.OBJ_TRANSFER_STATUS.value, ObjectTransferStatusMessage.class);
 
             // remote provision
-            register(new MeshStatus(Opcode.REMOTE_PROV_SCAN_STS.value, ScanStatusMessage.class));
-            register(new MeshStatus(Opcode.REMOTE_PROV_SCAN_REPORT.value, ScanReportStatusMessage.class));
-            register(new MeshStatus(Opcode.REMOTE_PROV_LINK_STS.value, LinkStatusMessage.class));
-            register(new MeshStatus(Opcode.REMOTE_PROV_PDU_REPORT.value, ProvisioningPDUReportMessage.class));
-            register(new MeshStatus(Opcode.REMOTE_PROV_PDU_OUTBOUND_REPORT.value, ProvisioningPDUOutboundReportMessage.class));
-//            register(new MeshStatus(Opcode.REMOTE_PROV_SCAN_CAPA_STS.value, ObjectTransferStatusMessage.class));
+            register(Opcode.REMOTE_PROV_SCAN_STS.value, ScanStatusMessage.class);
+            register(Opcode.REMOTE_PROV_SCAN_REPORT.value, ScanReportStatusMessage.class);
+            register(Opcode.REMOTE_PROV_LINK_STS.value, LinkStatusMessage.class);
+            register(Opcode.REMOTE_PROV_PDU_REPORT.value, ProvisioningPDUReportMessage.class);
+            register(Opcode.REMOTE_PROV_PDU_OUTBOUND_REPORT.value, ProvisioningPDUOutboundReportMessage.class);
+//            register(Opcode.REMOTE_PROV_SCAN_CAPA_STS.value, ObjectTransferStatusMessage.class);
 
             // fast provision [vendor]
-            register(new MeshStatus(Opcode.VD_MESH_ADDR_GET_STS.value, MeshAddressStatusMessage.class));
+            register(Opcode.VD_MESH_ADDR_GET_STS.value, MeshAddressStatusMessage.class);
         }
 
         public static void register(MeshStatus status) {
             statusMap.put(status.opcode, status.statusMessageCls);
+        }
+
+        public static void register(int opcode, Class statusMessageCls) {
+            statusMap.put(opcode, statusMessageCls);
         }
 
         public static Class getMessageClass(int opcode) {

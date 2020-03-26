@@ -48,7 +48,7 @@ public class ConfigModelStorage implements MeshStorageBridge {
     public CommonModelStorage commonModel;
     public byte[] rfu1 = new byte[8];
     public byte secNwBeacon = 1;
-    public byte ttlDef = 1;
+    public byte ttlDef = 10;
     public byte gattProxy = 1;
     public byte frid = 1;
     public byte relay = 1;

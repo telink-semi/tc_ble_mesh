@@ -199,8 +199,13 @@ public class BleScanner {
      */
     public synchronized void startScan(@Nullable LeScanFilter leScanFilter, @Nullable LeScanSetting leScanSetting) {
 
-        if (isScanning) {
+        mDelayHandler.removeCallbacksAndMessages(null);
+        if (!isEnabled()) {
             return;
+        }
+
+        if (isScanning) {
+            stopScan();
         }
         isScanning = true;
         this.mLeScanFilter = leScanFilter;

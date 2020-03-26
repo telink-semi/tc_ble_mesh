@@ -34,6 +34,8 @@ public class MeshMessage {
      */
     public static final int OPCODE_INVALID = -1;
 
+    public static final int DEFAULT_TTL = 10;
+
     /**
      * message opcode
      * {@link AccessLayerPDU#opcode}
@@ -76,7 +78,7 @@ public class MeshMessage {
 
     protected int ctl = CTL_ACCESS;
 
-    protected int ttl = 5;
+    protected int ttl = DEFAULT_TTL;
 
     protected int retryCnt = DEFAULT_RETRY_CNT;
 
