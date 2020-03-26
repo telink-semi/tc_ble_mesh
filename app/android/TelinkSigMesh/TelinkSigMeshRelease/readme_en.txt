@@ -1,5 +1,10 @@
 tip: update ninja if "too many path components" error occurs on windows
 
+V3.1.6
+1. change ttl from 1 to 10;
+
+==================================================================
+
 
 V3.1.3
 1. Fix crash error when entering remote provisioning page;

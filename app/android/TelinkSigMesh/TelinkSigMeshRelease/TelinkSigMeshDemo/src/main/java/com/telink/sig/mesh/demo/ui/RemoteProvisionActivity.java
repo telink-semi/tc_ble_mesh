@@ -153,6 +153,9 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     private void actionStart() {
         TelinkLog.d("remote provision action start");
+        for (DeviceInfo nodeInfo : mesh.devices) {
+            nodeInfo.selected = false;
+        }
         if (MeshService.getInstance().isOffline()) {
             startScan();
         } else {
@@ -394,7 +397,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         final int SCAN_LIMIT = 2;
 
         // second
-        final int SCAN_TIMEOUT = 3;
+        final int SCAN_TIMEOUT = 4;
         // directDevice.meshAddress
         int address = getAvailableServerAddress();
         if (address == -1) {

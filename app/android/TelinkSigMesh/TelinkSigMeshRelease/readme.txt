@@ -5,6 +5,10 @@ tip: 1. 在windows上导入并编译项目时， 如果有 too many path compone
 
 version info
 
+V3.1.6
+1. TTL 由 1 改为 10;
+
+==================================================================
 
 V3.1.3
 1. 修复进入remote provision页面是概率性闪退问题;
