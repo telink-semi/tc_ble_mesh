@@ -10,6 +10,7 @@ import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
+import com.telink.ble.mesh.foundation.MeshConfiguration;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
@@ -44,6 +45,11 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)){
+            return;
+        }
+        startMeshService();
+
         setContentView(R.layout.activity_main);
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
@@ -69,6 +75,12 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
 
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_EMPTY, this);
+    }
+
+
+
+    private void startMeshService(){
+
     }
 
     @Override

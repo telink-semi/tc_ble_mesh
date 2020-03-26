@@ -2,6 +2,7 @@ package com.telink.ble.mesh.ui;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +11,6 @@ import android.widget.Toast;
 
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.util.MeshLogger;
-
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,13 +33,20 @@ public class BaseActivity extends AppCompatActivity {
     @SuppressLint("ShowToast")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (savedInstanceState != null) {
-
-        }
         MeshLogger.w(TAG + " onCreate");
         this.toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+    }
 
+    protected boolean validateNormalStart(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            MeshLogger.w(TAG + " application recreate");
+            Intent intent = new Intent(this, SplashActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -134,5 +141,4 @@ public class BaseActivity extends AppCompatActivity {
         }
 
     }
-
 }

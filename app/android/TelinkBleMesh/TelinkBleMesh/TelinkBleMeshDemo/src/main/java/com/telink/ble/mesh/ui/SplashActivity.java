@@ -41,7 +41,6 @@ public class SplashActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
-
         MeshService.getInstance().init(this, TelinkMeshApplication.getInstance());
         MeshConfiguration meshConfiguration = TelinkMeshApplication.getInstance().getMeshInfo().convertToConfiguration();
         MeshService.getInstance().setupMeshNetwork(meshConfiguration);

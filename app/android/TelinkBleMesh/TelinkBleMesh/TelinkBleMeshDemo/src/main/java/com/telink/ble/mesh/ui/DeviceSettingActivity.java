@@ -37,6 +37,9 @@ public class DeviceSettingActivity extends BaseActivity implements EventListener
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_device_setting);
         setTitle("Device Setting");
         enableBackNav(true);

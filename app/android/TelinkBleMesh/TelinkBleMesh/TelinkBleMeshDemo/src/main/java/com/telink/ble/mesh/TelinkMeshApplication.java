@@ -13,6 +13,8 @@ import com.telink.ble.mesh.core.message.lighting.CtlStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
 import com.telink.ble.mesh.entity.OnlineStatusInfo;
 import com.telink.ble.mesh.foundation.MeshApplication;
+import com.telink.ble.mesh.foundation.MeshConfiguration;
+import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.foundation.event.OnlineStatusEvent;
@@ -47,6 +49,8 @@ public class TelinkMeshApplication extends MeshApplication {
         super.onCreate();
         mThis = this;
 
+        MeshLogger.d("app start");
+
         HandlerThread offlineCheckThread = new HandlerThread("offline check thread");
         offlineCheckThread.start();
         mOfflineCheckHandler = new Handler(offlineCheckThread.getLooper());
@@ -54,6 +58,16 @@ public class TelinkMeshApplication extends MeshApplication {
         MeshLogger.enableRecord(SharedPreferenceHelper.isLogEnable(this));
         MeshLogger.d(meshInfo.toString());
         closePErrorDialog();
+    }
+
+    private final String TAG = "Telink-APP";
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        MeshLogger.d(TAG + "on trim mem -- " + level);
+        if (level == TRIM_MEMORY_RUNNING_LOW) {
+            MeshLogger.d(TAG + "on trim mem -- finish self" );
+        }
     }
 
     private void closePErrorDialog() {
