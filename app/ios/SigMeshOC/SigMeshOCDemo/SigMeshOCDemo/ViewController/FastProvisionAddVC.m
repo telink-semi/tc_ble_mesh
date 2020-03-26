@@ -54,6 +54,8 @@
 }
 
 #pragma mark - Event
+
+/// step one of start remote provision.
 - (void)startAddDevice{
     UInt16 provisionAddress = [SigDataSource.share provisionAddress];
     if (provisionAddress == 0) {

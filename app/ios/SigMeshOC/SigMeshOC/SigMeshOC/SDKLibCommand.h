@@ -240,7 +240,7 @@ typedef void(^discoverDeviceBlock)(CBPeripheral *peripheral,SigScanRspModel *mod
 - (void)getFwInfoWithAddress:(u16)address Completation:(responseModelCallBack)complete;
 
 
-#pragma mark - new api since v3.2.0
+#pragma mark - new api since v3.1.4
 
 
 /// start scan with timeout

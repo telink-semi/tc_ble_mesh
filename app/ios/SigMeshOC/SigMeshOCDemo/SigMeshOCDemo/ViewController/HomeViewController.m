@@ -382,15 +382,15 @@
         if (indexPath != nil) {
             SigNodeModel *model = self.source[indexPath.item];
             if (model.isKeyBindSuccess) {
-                if (model.isSensor) {
-                    SensorVC *vc = (SensorVC *)[UIStoryboard initVC:ViewControllerIdentifiers_SensorVCID storybroad:@"Main"];
-                    vc.model = model;
-                    [self.navigationController pushViewController:vc animated:YES];
-                } else {
+//                if (model.isSensor) {
+//                    SensorVC *vc = (SensorVC *)[UIStoryboard initVC:ViewControllerIdentifiers_SensorVCID storybroad:@"Main"];
+//                    vc.model = model;
+//                    [self.navigationController pushViewController:vc animated:YES];
+//                } else {
                     SingleDeviceViewController *vc = (SingleDeviceViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SingleDeviceViewControllerID storybroad:@"DeviceSetting"];
                     vc.model = model;
                     [self.navigationController pushViewController:vc animated:YES];
-                }
+//                }
             } else {
                 ReKeyBindViewController *vc = (ReKeyBindViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ReKeyBindViewControllerID];
                 vc.model = model;

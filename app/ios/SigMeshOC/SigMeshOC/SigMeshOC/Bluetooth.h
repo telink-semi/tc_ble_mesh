@@ -203,7 +203,7 @@
 #pragma mark - private api
 - (void)checkAndSendNextCommandsInCache;
 
-#pragma mark - new api since v3.2.0
+#pragma mark - new api since v3.1.4
 
 ///set filter
 - (void)setFilterWithLocationAddress:(UInt16)locationAddress timeout:(NSTimeInterval)timeout complete:(bleSetFilterResponseCallBack)complete fail:(bleSetFilterFailCallBack)fail;
