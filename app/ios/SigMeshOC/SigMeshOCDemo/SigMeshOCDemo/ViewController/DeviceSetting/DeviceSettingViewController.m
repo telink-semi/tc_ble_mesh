@@ -33,6 +33,7 @@
 #import "SingleOTAViewController.h"
 #import "DeviceSubscriptionListViewController.h"
 #import "UIViewController+Message.h"
+#import "SensorVC.h"
 
 @interface DeviceSettingViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UILabel *macLabel;
@@ -109,7 +110,11 @@
 
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return 4;
+    if (self.model.isSensor) {
+        return 5;
+    } else {
+        return 4;
+    }
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -168,6 +173,12 @@
             }];
         }
             break;
+        case 4:
+        {
+            cell.nameLabel.text = @"LPN";
+            cell.iconImageView.image = [UIImage imageNamed:@"ic_battery-20-bluetooth"];
+        }
+            break;
         default:
             break;
     }
@@ -205,6 +216,11 @@
             }
         }
             break;
+        case 4:
+        {
+            [self pushToSensorVC];
+        }
+            break;
         default:
             break;
     }
@@ -225,6 +241,12 @@
 
 - (void)pushToDeviceOTA{
     SingleOTAViewController *vc = (SingleOTAViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SingleOTAViewControllerID];
+    vc.model = self.model;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)pushToSensorVC {
+    SensorVC *vc = (SensorVC *)[UIStoryboard initVC:ViewControllerIdentifiers_SensorVCID storybroad:@"Main"];
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }

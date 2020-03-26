@@ -976,8 +976,10 @@ static NSTimeInterval commentTime;
 
 - (void)scanForProvisionDeviceTimeOut{
     TeLog(@"clean block");
-    [self stopScan];
-    [self cancelAllConnecttionWithComplete:nil];
+    if (!self.isRemoteAdd) {
+        [self stopScan];
+        [self cancelAllConnecttionWithComplete:nil];
+    }
 
     self.state = StateNormal;
     if (self.prvisionFinishCallBack) {
@@ -1189,28 +1191,35 @@ static NSTimeInterval commentTime;
 
 - (void)cancelAllConnecttionWithComplete:(bleCancelConnectCallBack)complete{
 //    TeLog(@"");
-    for (CBPeripheral *p in self.store.scanedPeripherals) {
-        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-        [self cancelConnection:p complete:^{
-            dispatch_semaphore_signal(semaphore);
-        }];
-        //Most provide 4 seconds to disconnect bluetooth connection
-        dispatch_semaphore_wait(semaphore, 4);
-    }
-    if (self.store.peripheral) {
-        __weak typeof(self) weakSelf = self;
-        [self cancelConnection:self.store.peripheral complete:^{
-            [weakSelf.store ressetParameters];
-            weakSelf.store.peripheral = nil;
+    __weak typeof(self) weakSelf = self;
+    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
+    [oprationQueue addOperationWithBlock:^{
+        //这个block语句块在子线程中执行
+        NSLog(@"oprationQueue");
+        for (CBPeripheral *p in weakSelf.store.scanedPeripherals) {
+            if (p.state == CBPeripheralStateConnected || p.state == CBPeripheralStateConnecting) {
+                dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+                [weakSelf cancelConnection:p complete:^{
+                    dispatch_semaphore_signal(semaphore);
+                }];
+                //Most provide 4 seconds to disconnect bluetooth connection
+                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
+            }
+        }
+        if (weakSelf.store.peripheral) {
+            [weakSelf cancelConnection:weakSelf.store.peripheral complete:^{
+                [weakSelf.store ressetParameters];
+                weakSelf.store.peripheral = nil;
+                if (complete) {
+                    complete();
+                }
+            }];
+        }else{
             if (complete) {
                 complete();
             }
-        }];
-    }else{
-        if (complete) {
-            complete();
         }
-    }
+    }];
 }
 
 - (CBPeripheral *)getPeripheralWithUUID:(NSString *)uuidString{

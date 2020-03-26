@@ -359,7 +359,8 @@
     //init defoult data
     node.UUID = provisioner.UUID;
     node.secureNetworkBeacon = YES;
-    node.defaultTTL = TTL_DEFAULT;
+//    node.defaultTTL = TTL_DEFAULT;
+    node.defaultTTL = 10;
     node.features.proxy = 2;
     node.features.friend = 0;
     node.features.relay = 2;

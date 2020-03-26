@@ -700,7 +700,7 @@ response data like :
     access_cmd_fw_info_get(address);
 }
 
-#pragma mark - new api since v3.2.0
+#pragma mark - new api since v3.1.4
 
 /// start scan with timeout
 /// @param provisionAble YES means scan device for provision, NO means scan device for normal/keyBind/OTA.
