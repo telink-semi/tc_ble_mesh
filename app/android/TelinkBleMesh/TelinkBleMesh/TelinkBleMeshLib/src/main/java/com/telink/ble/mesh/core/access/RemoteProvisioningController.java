@@ -80,7 +80,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
     }
 
     /**
-     * 在发送provisioning data pdu 后， 需要等待 Provisioning PDU Outbound Report 状态
+     * after provisioningDataPdu sent， waiting for ProvisioningPDUOutboundReport status
      */
     public void register(AccessBridge accessBridge) {
         this.accessBridge = accessBridge;

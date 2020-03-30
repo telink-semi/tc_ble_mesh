@@ -27,7 +27,6 @@ import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.util.Arrays;
 
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -56,9 +55,9 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             "[Custom]"};
     // add new
 
-    private final String[] TIDS = {
+    /*private final String[] TIDS = {
             "FALSE",
-            "TRUE"};
+            "TRUE"};*/
 
     private final int MSG_DST_ADR = 0xFFFF;
 
@@ -71,7 +70,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             et_rsp_opcode, et_rsp_max, et_retry_cnt, et_params, et_ttl, et_tid, et_name;
     private TextView tv_params_preview;
     private ImageView iv_toggle;
-    private AlertDialog mShowPresetDialog, mShowTidSelectDialog;
+    private AlertDialog mShowPresetDialog;
 
     private static final int MSG_APPEND_LOG = 0x202;
 
@@ -98,6 +97,9 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_message_assemble);
         initTitle();
 
@@ -115,7 +117,6 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         et_params.addTextChangedListener(new FormatTextWatcher(et_params));
         et_actions = findViewById(R.id.et_actions);
         et_actions.setOnClickListener(this);
-        findViewById(R.id.et_tid).setOnClickListener(this);
 
         tv_log = findViewById(R.id.tv_log);
         sv_log = findViewById(R.id.sv_log);
@@ -167,9 +168,6 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         switch (v.getId()) {
             case R.id.et_actions:
                 showActionDialog();
-                break;
-            case R.id.et_tid:
-                showTidDialog();
                 break;
             case R.id.iv_toggle:
                 layoutToggle();
@@ -241,7 +239,13 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
 
         final int ttl = Integer.valueOf(ttlInput, 10);
 
-        final boolean containsTid = Boolean.valueOf(et_tid.getText().toString().trim());
+
+        String tidInput = et_tid.getText().toString().trim();
+        if (TextUtils.isEmpty(tidInput)) {
+            toastMsg("input tid position!");
+            return null;
+        }
+        final int tidPosition = Integer.valueOf(tidInput);
 
         MeshMessage meshMessage = new MeshMessage();
         meshMessage.setDestinationAddress(dstAdr);
@@ -251,7 +255,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         meshMessage.setResponseMax(rspMax);
         meshMessage.setRetryCnt(retryCnt);
         meshMessage.setTtl(ttl);
-        meshMessage.setContainsTid(containsTid);
+        meshMessage.setTidPosition(tidPosition);
         return meshMessage;
     }
 
@@ -266,7 +270,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         final int rspMax = meshMessage.getResponseMax();
         final int retryCnt = meshMessage.getRetryCnt();
         final int ttl = meshMessage.getTtl();
-        final boolean containsTid = meshMessage.isContainsTid();
+        final int tidPosition = meshMessage.getTidPosition();
 
         et_dst_adr.setText(String.format("%04X", dstAdr));
 
@@ -277,7 +281,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         et_rsp_max.setText(String.valueOf(rspMax));
         et_retry_cnt.setText(String.valueOf(retryCnt));
         et_ttl.setText(String.valueOf(ttl));
-        et_tid.setText(containsTid ? TIDS[1] : TIDS[0]);
+        et_tid.setText(tidPosition < 0 ? "" : String.valueOf(tidPosition));
     }
 
     private void onActionSelect(int position) {
@@ -295,25 +299,26 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             "Generic Off",
             "[Custom]"
          */
+        final int onOffTidPosition = 1;
         switch (position) {
             case 0: // Vendor On
-                meshMessage = createVendorMessage(0x0211C2, 0x0211C4, new byte[]{0x01, 0x00}, true);
+                meshMessage = createVendorMessage(0x0211C2, 0x0211C4, new byte[]{0x01, 0x00}, onOffTidPosition);
                 break;
 
             case 1: // Vendor Off
-                meshMessage = createVendorMessage(0x0211C2, 0x0211C4, new byte[]{0x00, 0x00}, true);
+                meshMessage = createVendorMessage(0x0211C2, 0x0211C4, new byte[]{0x00, 0x00}, onOffTidPosition);
                 break;
 
             case 2: // vendor on/off get
-                meshMessage = createVendorMessage(0x0211C1, 0x0211C4, null, false);
+                meshMessage = createVendorMessage(0x0211C1, 0x0211C4, null, onOffTidPosition);
                 break;
 
             case 3: // Vendor On NO-ACK
-                meshMessage = createVendorMessage(0x0211C3, MeshMessage.OPCODE_INVALID, new byte[]{0x01, 0x00}, true);
+                meshMessage = createVendorMessage(0x0211C3, MeshMessage.OPCODE_INVALID, new byte[]{0x01, 0x00}, onOffTidPosition);
                 break;
 
             case 4: // Vendor Off NO-ACK
-                meshMessage = createVendorMessage(0x0211C3, MeshMessage.OPCODE_INVALID, new byte[]{0x00, 0x00}, true);
+                meshMessage = createVendorMessage(0x0211C3, MeshMessage.OPCODE_INVALID, new byte[]{0x00, 0x00}, onOffTidPosition);
                 break;
 
             case 5: // Generic On
@@ -338,12 +343,12 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         et_rsp_opcode.setText("");
 
         et_rsp_max.setText("0");
-        et_retry_cnt.setText("2");
-        et_ttl.setText("5");
-        et_tid.setText(TIDS[1]);
+        et_retry_cnt.setText(String.valueOf(MeshMessage.DEFAULT_RETRY_CNT));
+        et_ttl.setText(String.valueOf(MeshMessage.DEFAULT_TTL));
+        et_tid.setText("");
     }
 
-    private MeshMessage createVendorMessage(int opcode, int rspOpcode, byte[] params, boolean containsTid) {
+    private MeshMessage createVendorMessage(int opcode, int rspOpcode, byte[] params, int tidPosition) {
         MeshMessage meshMessage = new MeshMessage();
         meshMessage.setDestinationAddress(MSG_DST_ADR);
         meshMessage.setOpcode(opcode);
@@ -352,7 +357,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
 //        meshMessage.setResponseMax(0);
 //        meshMessage.setRetryCnt(2);
 //        meshMessage.setTtl(5);
-        meshMessage.setContainsTid(containsTid);
+        meshMessage.setTidPosition(tidPosition);
         return meshMessage;
     }
 
@@ -370,21 +375,6 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             mShowPresetDialog = builder.create();
         }
         mShowPresetDialog.show();
-    }
-
-    private void showTidDialog() {
-        if (mShowTidSelectDialog == null) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setItems(TIDS, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    et_tid.setText(TIDS[which]);
-                }
-            });
-            builder.setTitle("Contains Tid?");
-            mShowTidSelectDialog = builder.create();
-        }
-        mShowTidSelectDialog.show();
     }
 
 

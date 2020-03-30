@@ -24,7 +24,6 @@ public class DeltaSetMessage extends GenericMessage {
     public static DeltaSetMessage getSimple(int destinationAddress, int appKeyIndex, int deltaLevel, boolean ack, int rspMax) {
         DeltaSetMessage deltaSetMessage = new DeltaSetMessage(destinationAddress, appKeyIndex);
         deltaSetMessage.deltaLevel = deltaLevel;
-        deltaSetMessage.containsTid = true;
         deltaSetMessage.transitionTime = 0;
         deltaSetMessage.delay = 0;
 
@@ -37,6 +36,7 @@ public class DeltaSetMessage extends GenericMessage {
 
     public DeltaSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(4);
     }
 
 
@@ -49,10 +49,5 @@ public class DeltaSetMessage extends GenericMessage {
     public byte[] getParams() {
         return ByteBuffer.allocate(7).order(ByteOrder.LITTLE_ENDIAN).putInt(deltaLevel)
                 .put(tid).put(transitionTime).put(delay).array();
-    }
-
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
     }
 }

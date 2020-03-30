@@ -33,6 +33,9 @@ public class ShareActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_share);
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.share_tip);

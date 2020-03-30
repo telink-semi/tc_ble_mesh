@@ -16,7 +16,7 @@ import java.nio.ByteOrder;
  * This implies that the maximum number of octets is 384 including the TransMIC
  * <p>
  * 12 * 32
- * 包长 * 包数
+ * packet-len * packet-cnt
  * <p>
  * transMIC 4 bytes
  * at least 1 byte opcode

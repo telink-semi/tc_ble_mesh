@@ -34,13 +34,13 @@ public class CtlSetMessage extends GenericMessage {
         message.temperature = temperature;
         message.deltaUV = deltaUV;
         message.ack = ack;
-        message.setContainsTid(true);
         message.setResponseMax(rspMax);
         return message;
     }
 
     public CtlSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(6);
     }
 
     @Override
@@ -62,10 +62,5 @@ public class CtlSetMessage extends GenericMessage {
                 .put(tid)
                 .put(transitionTime)
                 .put(delay).array();
-    }
-
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
     }
 }

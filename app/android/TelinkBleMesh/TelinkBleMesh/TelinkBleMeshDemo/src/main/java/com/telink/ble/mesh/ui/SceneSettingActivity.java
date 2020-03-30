@@ -60,6 +60,9 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_scene_setting);
         mesh = TelinkMeshApplication.getInstance().getMeshInfo();
 

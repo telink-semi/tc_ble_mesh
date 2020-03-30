@@ -34,13 +34,13 @@ public class HslSetMessage extends GenericMessage {
         message.hue = hue;
         message.saturation = saturation;
         message.ack = ack;
-        message.setContainsTid(true);
         message.setResponseMax(rspMax);
         return message;
     }
 
     public HslSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(3);
     }
 
     @Override
@@ -62,10 +62,5 @@ public class HslSetMessage extends GenericMessage {
                 .put(tid)
                 .put(transitionTime)
                 .put(delay).array();
-    }
-
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
     }
 }

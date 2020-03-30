@@ -39,6 +39,9 @@ public class RPActivity extends BaseActivity implements EventListener<String> {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         tvInfo = new TextView(this);
         tvInfo.setText("init");
         setContentView(tvInfo);

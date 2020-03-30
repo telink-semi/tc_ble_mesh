@@ -39,7 +39,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 配置闹钟
+ * set scheduler
  * Created by kee on 2018/9/18.
  */
 
@@ -84,6 +84,9 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         int address = getIntent().getIntExtra("address", -1);
         mDevice = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(address);
         scheduler = (Scheduler) getIntent().getSerializableExtra("scheduler");

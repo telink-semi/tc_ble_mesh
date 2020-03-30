@@ -375,10 +375,6 @@ public class NetworkingController {
             return false;
         }
 
-        if (meshMessage.isContainsTid()) {
-            meshMessage.setTid((byte) this.tid.getAndIncrement());
-        }
-
         AccessType accessType = meshMessage.getAccessType();
         byte[] encryptionKey;
         if (accessType == AccessType.APPLICATION) {
@@ -394,7 +390,6 @@ public class NetworkingController {
         meshMessage.setAccessKey(encryptionKey);
         return postMeshMessage(meshMessage);
     }
-
 
     /**
      * @return if message will be sent
@@ -412,7 +407,14 @@ public class NetworkingController {
         }
 
         int sequenceNumber = mSequenceNumber.get();
-        AccessLayerPDU accessPDU = new AccessLayerPDU(meshMessage.getOpcode(), meshMessage.getParams());
+
+        final byte[] params = meshMessage.getParams();
+        final int tidPos = meshMessage.getTidPosition();
+        if (params != null && tidPos > 0 && params.length > tidPos) {
+            params[tidPos] = (byte) this.tid.getAndIncrement();
+        }
+
+        AccessLayerPDU accessPDU = new AccessLayerPDU(meshMessage.getOpcode(), params);
 
         byte[] accessPduData = accessPDU.toByteArray();
 

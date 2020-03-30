@@ -56,6 +56,9 @@ public class FastProvisionActivity extends BaseActivity implements View.OnClickL
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_device_provision);
         initTitle();
         RecyclerView rv_devices = findViewById(R.id.rv_devices);

@@ -67,6 +67,9 @@ public class LpnSettingActivity extends BaseActivity implements EventListener<St
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_lpn_setting);
         setTitle("LPN Setting");
         enableBackNav(true);

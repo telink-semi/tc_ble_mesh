@@ -45,7 +45,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!validateNormalStart(savedInstanceState)){
+        if (!validateNormalStart(savedInstanceState)) {
             return;
         }
         startMeshService();
@@ -78,9 +78,10 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     }
 
 
-
-    private void startMeshService(){
-
+    private void startMeshService() {
+        MeshService.getInstance().init(this, TelinkMeshApplication.getInstance());
+        MeshConfiguration meshConfiguration = TelinkMeshApplication.getInstance().getMeshInfo().convertToConfiguration();
+        MeshService.getInstance().setupMeshNetwork(meshConfiguration);
     }
 
     @Override

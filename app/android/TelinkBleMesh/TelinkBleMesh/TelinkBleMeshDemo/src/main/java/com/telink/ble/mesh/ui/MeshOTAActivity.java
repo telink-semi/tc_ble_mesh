@@ -100,6 +100,9 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_mesh_ota);
         mesh = TelinkMeshApplication.getInstance().getMeshInfo();
         setTitle("Mesh OTA");

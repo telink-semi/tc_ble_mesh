@@ -58,6 +58,9 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_device_ota);
         setTitle("OTA");
         enableBackNav(true);

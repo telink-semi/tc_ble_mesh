@@ -22,14 +22,4 @@ public class LevelGetMessage extends GenericMessage {
     public byte[] getParams() {
         return null;
     }
-
-    @Override
-    public boolean isContainsTid() {
-        return false;
-    }
-
-    @Override
-    public void setTid(byte tid) {
-        
-    }
 }

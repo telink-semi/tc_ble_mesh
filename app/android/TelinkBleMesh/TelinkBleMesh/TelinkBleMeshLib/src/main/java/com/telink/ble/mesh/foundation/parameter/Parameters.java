@@ -26,7 +26,7 @@ public class Parameters {
 
     private static final int DEFAULT_CONNECT_RETRY = 2;
 
-    // 最小扫描间隔
+    // min scan space milliseconds
     public static final String COMMON_SCAN_MIN_SPACING = "com.telink.ble.mesh.light.COMMON_SCAN_MIN_SPACING";
 
     // scan timeout default 10s
@@ -54,17 +54,15 @@ public class Parameters {
 
     public static final String ACTION_AUTO_CONNECT_FILTER_TYPE = "com.telink.ble.mesh.light.ACTION_AUTO_CONNECT_FILTER_TYPE";
 
-    // 最长扫描周期 default 10s
-//    public static final String ACTION_AUTO_CONNECT_SCAN_MAX_PERIOD = "";
 
-    // 最短扫描周期 default 3s 针对RSSI过滤
+    // min scan period: default 3s for RSSI filter
     public static final String ACTION_AUTO_CONNECT_SCAN_MIN_PERIOD = "com.telink.ble.mesh.light.ACTION_AUTO_CONNECT_SCAN_MIN_PERIOD";
 
-    // 未扫到时 扫描休息时间 default 3s
+    // scan rest: default 3s
     public static final String ACTION_AUTO_CONNECT_SCAN_REST = "com.telink.ble.mesh.light.ACTION_AUTO_CONNECT_SCAN_REST";
 
 
-    // 目标设备列表 mac
+    // target mac list, deprecated
     public static final String ACTION_AUTO_CONNECT_TARGET_LIST = "com.telink.ble.mesh.light.ACTION_AUTO_CONNECT_TARGET_LIST";
 
     // sparseArray<byte[]>: unicast and node identity key map
@@ -168,7 +166,7 @@ public class Parameters {
     }
 
     /**
-     * 设置扫描超时 millisecond
+     * set scanning timeout
      *
      * @param timeout millisecond
      */

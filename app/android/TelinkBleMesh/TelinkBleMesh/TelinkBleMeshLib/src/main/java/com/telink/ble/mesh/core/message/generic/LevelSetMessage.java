@@ -22,6 +22,7 @@ public class LevelSetMessage extends GenericMessage {
 
     public LevelSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(2);
     }
 
 
@@ -41,8 +42,5 @@ public class LevelSetMessage extends GenericMessage {
         };
     }
 
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
-    }
+
 }

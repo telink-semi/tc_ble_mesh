@@ -29,7 +29,7 @@ public class OnOffSetMessage extends GenericMessage {
         OnOffSetMessage message = new OnOffSetMessage(address, appKeyIndex);
         message.onOff = (byte) onOff;
         message.ack = ack;
-        message.setContainsTid(true);
+        message.setTidPosition(1);
         message.setResponseMax(rspMax);
         return message;
     }
@@ -56,10 +56,5 @@ public class OnOffSetMessage extends GenericMessage {
                 this.transitionTime,
                 this.delay
         };
-    }
-
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
     }
 }

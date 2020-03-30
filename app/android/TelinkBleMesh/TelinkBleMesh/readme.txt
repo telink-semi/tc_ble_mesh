@@ -1,3 +1,6 @@
+update: tid 由 判断 containsTid 改为 tidPosition
+
+
 目前状态： remote provision app端重发
 动作切换时停止其他的动作
 

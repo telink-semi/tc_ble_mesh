@@ -20,7 +20,7 @@ public final class ModelPublication implements Serializable, Parcelable {
     public static final int RFU_DEFAULT = 0x00;
 
 
-    // 采用固件端的默认配置
+    // use default ttl in firmware
     public static final int TTL_DEFAULT = 0xFF;
 
     /**

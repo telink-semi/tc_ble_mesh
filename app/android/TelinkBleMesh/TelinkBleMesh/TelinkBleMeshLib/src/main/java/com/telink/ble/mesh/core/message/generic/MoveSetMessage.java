@@ -23,6 +23,7 @@ public class MoveSetMessage extends GenericMessage {
 
     public MoveSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(2);
     }
 
 
@@ -37,10 +38,5 @@ public class MoveSetMessage extends GenericMessage {
                 .order(ByteOrder.LITTLE_ENDIAN)
                 .putShort((short) deltaLevel)
                 .put(tid).put(transitionTime).put(delay).array();
-    }
-
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
     }
 }

@@ -10,7 +10,7 @@ import com.telink.ble.mesh.util.FileSystem;
 import java.io.File;
 
 /**
- * 预览Json文件
+ * json preview
  * Created by kee on 2018/9/18.
  */
 public class JsonPreviewActivity extends BaseActivity {
@@ -19,6 +19,9 @@ public class JsonPreviewActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_json_preview);
         setTitle("JsonPreview");
         enableBackNav(true);

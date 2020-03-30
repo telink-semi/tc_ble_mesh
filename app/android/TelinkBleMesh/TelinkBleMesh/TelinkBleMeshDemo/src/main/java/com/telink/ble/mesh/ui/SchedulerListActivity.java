@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 本地缓存闹钟列表
+ * schedulers in node
  * Created by kee on 2018/9/18.
  */
 public class SchedulerListActivity extends BaseActivity implements View.OnClickListener {
@@ -26,6 +26,9 @@ public class SchedulerListActivity extends BaseActivity implements View.OnClickL
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_common_list);
         ll_empty = findViewById(R.id.ll_empty);
         findViewById(R.id.btn_add).setOnClickListener(this);

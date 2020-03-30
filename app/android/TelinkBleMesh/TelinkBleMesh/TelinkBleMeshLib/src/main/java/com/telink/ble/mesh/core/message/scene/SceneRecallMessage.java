@@ -28,13 +28,13 @@ public class SceneRecallMessage extends GenericMessage {
         SceneRecallMessage message = new SceneRecallMessage(address, appKeyIndex);
         message.sceneNumber = sceneNumber;
         message.ack = ack;
-        message.setContainsTid(true);
         message.setResponseMax(rspMax);
         return message;
     }
 
     public SceneRecallMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(2);
     }
 
     @Override
@@ -56,8 +56,4 @@ public class SceneRecallMessage extends GenericMessage {
                 .put(delay).array();
     }
 
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
-    }
 }
