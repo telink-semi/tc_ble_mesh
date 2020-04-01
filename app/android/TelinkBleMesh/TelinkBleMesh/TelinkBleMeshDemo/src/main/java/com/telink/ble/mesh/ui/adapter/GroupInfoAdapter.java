@@ -15,7 +15,7 @@ import java.util.List;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 指定设备的分组信息
+ * groups
  * Created by kee on 2017/8/18.
  */
 

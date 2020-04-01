@@ -11,15 +11,15 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.io.UnsupportedEncodingException;
 
 /**
- * 二维码生成器
+ * QRCode generator
  * Created by kee on 2016/9/14.
  */
 public class QRCodeGenerator extends AsyncTask<Void, Void, Bitmap> {
     private QREncoder mEncoder;
     private Bitmap mResult;
-    // 任务执行成功
+    // qr-code generate success
     public final static int QRCode_Generator_Success = 1;
-    // 任务执行失败
+    // generate fail
     public final static int QRCode_Generator_Fail = 2;
     private Handler mHandler;
     private int size;

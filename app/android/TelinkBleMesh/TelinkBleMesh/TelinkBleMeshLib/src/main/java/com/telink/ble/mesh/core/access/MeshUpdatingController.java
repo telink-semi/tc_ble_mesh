@@ -28,6 +28,7 @@ import com.telink.ble.mesh.core.message.updating.ObjectInfoGetMessage;
 import com.telink.ble.mesh.core.message.updating.ObjectInfoStatusMessage;
 import com.telink.ble.mesh.core.message.updating.ObjectTransferStartMessage;
 import com.telink.ble.mesh.core.message.updating.ObjectTransferStatusMessage;
+import com.telink.ble.mesh.core.networking.NetworkingController;
 import com.telink.ble.mesh.entity.MeshUpdatingConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -36,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-
 
 
 /**
@@ -78,6 +78,12 @@ public class MeshUpdatingController {
      * params check err
      */
     public static final int STATE_STOPPED = 0x05;
+
+
+    /**
+     * prepare complete when  STEP_OBJECT_TRANSFER_START sent success
+     */
+    public static final int STATE_PREPARED = 0x06;
 
     /**
      * get firmware info err
@@ -302,12 +308,13 @@ public class MeshUpdatingController {
         }
     }
 
-    private int getChunkSendingInterval() {
+    private long getChunkSendingInterval() {
         // relay 320 ms
-        int interval = firmwareParser.getChunkSize() / 12 * 320;
-        final int min = 5 * 1000;
-        interval = (interval < min ? min : interval);
-        log("resending interval: " + interval);
+
+        long interval = firmwareParser.getChunkSize() / 12 * NetworkingController.NETWORKING_INTERVAL + NetworkingController.NETWORKING_INTERVAL;
+        final long min = 5 * 1000;
+        interval = Math.max(min, interval);
+        log("chunk sending interval: " + interval);
         return interval;
     }
 
@@ -361,6 +368,11 @@ public class MeshUpdatingController {
                         resendMissingChunks();
                     }
                 } else {
+
+                    if (step == STEP_OBJECT_TRANSFER_START) {
+                        onStateUpdate(STATE_PREPARED, "updating prepare complete", null);
+                    }
+
                     log("next step: " + getStepDesc(step + 1));
                     step++;
                     executeUpdatingAction();
@@ -484,11 +496,20 @@ public class MeshUpdatingController {
         if (accessBridge != null) {
             boolean isMessageSent = accessBridge.onAccessMessagePrepared(meshMessage, AccessBridge.MODE_FIRMWARE_UPDATING);
             if (!isMessageSent) {
-                onUpdatingFail(-1, "updating message sent error");
+
+                if (meshMessage instanceof ObjectChunkTransferMessage) {
+                    onUpdatingFail(-1, "chunk transfer message sent error");
+                } else {
+                    if (nodes.size() > nodeIndex) {
+                        onDeviceFail(nodes.get(nodeIndex), String.format("mesh message sent error -- opcode: 0x%04X", meshMessage.getOpcode()));
+                    }
+                }
+
             }
         }
     }
 
+    //  在 发包过程中 retry导致的收多次
     public void onMessageNotification(NotificationMessage message) {
         Opcode opcode = Opcode.valueOf(message.getOpcode());
         log("message notification: " + opcode);
@@ -497,6 +518,18 @@ public class MeshUpdatingController {
             return;
         }
         if (opcode == null) return;
+        final int src = message.getSrc();
+
+        if (nodes.size() <= nodeIndex) {
+            log("node index overflow", MeshLogger.LEVEL_WARN);
+            return;
+        }
+
+        if (nodes.get(nodeIndex).getMeshAddress() != src) {
+            log("unexpected notification src", MeshLogger.LEVEL_WARN);
+            return;
+        }
+
         switch (opcode) {
 
             case FW_INFO_STATUS:
@@ -531,10 +564,12 @@ public class MeshUpdatingController {
     }
 
     private void onFirmwareInfoStatus(FirmwareInfoStatusMessage firmwareInfoStatusMessage) {
+
         // todo, ignore company id / firmware id checking
         log("firmware info status: " + firmwareInfoStatusMessage.toString());
         int firmwareId = firmwareInfoStatusMessage.getFirmwareId();
         int companyId = firmwareInfoStatusMessage.getCompanyId();
+
         nodeIndex++;
         executeUpdatingAction();
     }
@@ -554,7 +589,6 @@ public class MeshUpdatingController {
      */
     private void onObjectInfoStatus(ObjectInfoStatusMessage objectInfoStatusMessage) {
         log("object info status: " + objectInfoStatusMessage.toString());
-        // todo ignore at present
         nodeIndex++;
         executeUpdatingAction();
     }

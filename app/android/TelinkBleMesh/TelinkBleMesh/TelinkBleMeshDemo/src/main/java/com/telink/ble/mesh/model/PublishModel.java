@@ -13,7 +13,7 @@ public class PublishModel implements Serializable {
     public static final int RFU_DEFAULT = 0x0C;
 
 
-    // 采用固件端的默认配置
+    // use default ttl in device
     public static final int TTL_DEFAULT = 0xFF;
 
     /**
@@ -61,12 +61,12 @@ public class PublishModel implements Serializable {
         this.transmit = transmit;
     }
 
-    // 高5
+    // higher 5 bit
     public int getTransmitInterval() {
         return (transmit & 0xFF) >> 3;
     }
 
-    // 低3
+    // lower 3 bit
     public int getTransmitCount() {
         return (transmit & 0xFF) & 0b111;
     }

@@ -365,10 +365,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         LeScanFilter filter = (LeScanFilter) mActionParams.get(Parameters.SCAN_FILTERS);
         long timeout = mActionParams.getLong(Parameters.COMMON_SCAN_TIMEOUT, 10 * 1000);
         long spacing = mActionParams.getLong(Parameters.COMMON_SCAN_MIN_SPACING, 500);
-//        long spacing = 500;
         LeScanSetting scanSetting = new LeScanSetting(spacing, timeout);
-
-        log("start scan: " + actionMode + " -- " + filter.uuidInclude[0].toString());
         mBleScanner.startScan(filter, scanSetting);
     }
 
@@ -1182,7 +1179,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 //            if (!device.getAddress().toUpperCase().equals("A4:C1:38:3F:4C:05")) return;
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
-//            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
+            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
 //            if (!device.getAddress().toUpperCase().contains("FF:EE:EE:EE")) return;
 //            if (!device.getAddress().equalsIgnoreCase("AA:11:22:33:11:22")) return;
             onScanFilter(device, rssi, scanRecord);
@@ -1458,6 +1455,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 case MeshUpdatingController.STATE_STOPPED:
                     onMeshUpdatingComplete();
                     onMeshUpdatingEvent(MeshUpdatingEvent.EVENT_TYPE_UPDATING_STOPPED, null, desc, -1);
+                    break;
+
+                case MeshUpdatingController.STATE_PREPARED:
+                    onMeshUpdatingEvent(MeshUpdatingEvent.EVENT_TYPE_UPDATING_PREPARED, null, desc, -1);
                     break;
             }
         } else if (actionMode == Mode.MODE_REMOTE_PROVISION && mode == AccessBridge.MODE_REMOTE_PROVISIONING) {

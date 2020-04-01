@@ -36,7 +36,7 @@ public class MeshStorage {
     public List<ApplicationKey> appKeys;
 
     /**
-     * 默认会存在一个本地的node， 即手机节点， UUID与provisioner UUID 一致
+     * contains a local node (phone), its UUID is the same with provisioner uuid
      */
     public List<Node> nodes;
 
@@ -45,7 +45,7 @@ public class MeshStorage {
     public List<Scene> scenes;
 
     /**
-     * 自定义数据
+     * custom
      */
     public String ivIndex = String.format("%08X", Defaults.IV_INDEX);
 
@@ -102,7 +102,7 @@ public class MeshStorage {
     }
 
     /**
-     * 节点信息目前只包含一个netKey和一个appKey
+     * only contains one netKey and appKey currently
      */
     public static class Node {
 

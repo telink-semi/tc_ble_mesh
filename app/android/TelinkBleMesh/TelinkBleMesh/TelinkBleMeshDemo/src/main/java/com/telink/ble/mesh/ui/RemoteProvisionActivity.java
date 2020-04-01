@@ -77,14 +77,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     private Handler delayHandler = new Handler();
 
-    /**
-     * server address used in remote-scanning and remote-provisioning
-     */
-    private int serverAddress;
-
     private boolean proxyComplete = false;
-
-    private NodeInfo directDevice;
 
     private Button btn_back;
 
@@ -137,20 +130,9 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
     private void actionStart() {
         enableUI(false);
 
-        for (NodeInfo nodeInfo : meshInfo.nodes) {
-            nodeInfo.selected = false;
-        }
-
         boolean proxyLogin = MeshService.getInstance().isProxyLogin();
         MeshLogger.log("remote provision action start: login? " + proxyLogin);
         if (proxyLogin) {
-
-            int directAddress = MeshService.getInstance().getDirectConnectedNodeAddress();
-
-            this.directDevice = meshInfo.getDeviceByMeshAddress(directAddress);
-//            this.directDevice = getAnotherDevice(directAddress);
-//            this.serverAddress = directDevice.meshAddress;
-            this.directDevice.selected = false;
             proxyComplete = true;
             startRemoteScan();
         } else {
@@ -159,15 +141,6 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         }
     }
 
-    // for test
-    private NodeInfo getAnotherDevice(int directAddress) {
-        for (NodeInfo nodeInfo : meshInfo.nodes) {
-            if (nodeInfo.meshAddress != directAddress) {
-                return nodeInfo;
-            }
-        }
-        return null;
-    }
 
     private void enableUI(boolean enable) {
         btn_back.setEnabled(enable);
@@ -299,19 +272,13 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         final byte SCAN_LIMIT = 2;
         // scan for 3 seconds
         final byte SCAN_TIMEOUT = 8;
-        int availableServerAddress = getAvailableServerAddress();
-        if (availableServerAddress == -1) {
-            MeshLogger.log(TAG + " -- ALL device did remote scan !!!");
-            enableUI(true);
-            return;
-        }
+        final int SERVER_ADDRESS = 0xFFFF;
 
-        this.serverAddress = availableServerAddress;
-        ScanStartMessage remoteScanMessage = ScanStartMessage.getSimple(serverAddress, meshInfo.getDefaultAppKeyIndex(),
+        ScanStartMessage remoteScanMessage = ScanStartMessage.getSimple(SERVER_ADDRESS, meshInfo.getDefaultAppKeyIndex(),
                 1, SCAN_LIMIT, SCAN_TIMEOUT);
         MeshService.getInstance().sendMeshMessage(remoteScanMessage);
 
-        delayHandler.postDelayed(remoteScanTimeoutTask, (SCAN_TIMEOUT + 1) * 1000);
+        delayHandler.postDelayed(remoteScanTimeoutTask, (SCAN_TIMEOUT + 5) * 1000);
     }
 
     private void onRemoteComplete() {
@@ -334,25 +301,6 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             }, 500);
 
         }
-    }
-
-
-    /**
-     * nodeInfo.selected used as did-remote-scan
-     */
-    private int getAvailableServerAddress() {
-        if (directDevice != null && !directDevice.selected) {
-            return directDevice.meshAddress;
-        }
-        if (devices == null) return -1;
-        for (NodeInfo deviceInfo : devices) {
-            if (deviceInfo.state == NodeInfo.STATE_BIND_SUCCESS &&
-                    deviceInfo.getOnOff() != NodeInfo.ON_OFF_STATE_OFFLINE &&
-                    !deviceInfo.selected) {
-                return deviceInfo.meshAddress;
-            }
-        }
-        return -1;
     }
 
 
@@ -402,34 +350,14 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         @Override
         public void run() {
             if (remoteDevices.size() == 0) {
-                MeshLogger.log("no device found by: " + serverAddress);
-                // set device didRemoteScan = true
-                updateDeviceState();
-                // scan device by next server
-                startRemoteScan();
+                MeshLogger.log("no device found by remote scan");
+                enableUI(true);
             } else {
                 MeshLogger.log("remote devices scanned: " + remoteDevices.size());
                 provisionNextRemoteDevice(remoteDevices.valueAt(0));
             }
         }
     };
-
-    /**
-     *
-     */
-    private void updateDeviceState() {
-        if (directDevice != null && directDevice.meshAddress == serverAddress) {
-            directDevice.selected = true;
-            return;
-        }
-        if (devices != null) {
-            for (NodeInfo device : devices) {
-                if (device.meshAddress == serverAddress) {
-                    device.selected = true;
-                }
-            }
-        }
-    }
 
 
     @Override

@@ -218,11 +218,14 @@ public class BindingController {
 
             case MODE_APP_STATUS:
                 ModelAppStatusMessage appStatus = ((ModelAppStatusMessage) message.getStatusMessage());
-                if (appStatus.getStatus() == 0) {
-                    modelIndex++;
-                    bindNextModel();
-                } else {
-                    onBindFail("model app status error");
+                if (bindingModels.size() > modelIndex) {
+                    int modelId = bindingModels.get(modelIndex).modelId;
+                    if (modelId == appStatus.getModelIdentifier() && appStatus.getStatus() == 0) {
+                        modelIndex++;
+                        bindNextModel();
+                    } else {
+                        onBindFail("model app status error");
+                    }
                 }
                 break;
         }

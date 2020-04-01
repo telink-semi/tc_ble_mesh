@@ -217,21 +217,18 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="contains tid? "
+                    android:text="tid position: "
                     android:textSize="@dimen/info_text_size" />
+
 
                 <EditText
                     android:id="@+id/et_tid"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:digits="@string/number_input"
-                    android:drawableEnd="@drawable/ic_arrow_down"
-                    android:drawableTint="@color/grey"
-                    android:focusable="false"
-                    android:gravity="center"
-                    android:inputType="none"
-                    android:text="false"
+                    android:hint="@string/message_tid_hint"
                     android:textSize="@dimen/msg_input_size" />
+
 
             </LinearLayout>
 
