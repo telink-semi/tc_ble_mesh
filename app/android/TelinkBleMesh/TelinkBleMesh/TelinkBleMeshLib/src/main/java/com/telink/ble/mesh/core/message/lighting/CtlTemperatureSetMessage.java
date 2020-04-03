@@ -17,7 +17,7 @@ public class CtlTemperatureSetMessage extends GenericMessage {
 
     public int deltaUV;
 
-    // transition id
+    // transaction id
     public byte tid = 0;
 
     public byte transitionTime = 0;
@@ -25,6 +25,8 @@ public class CtlTemperatureSetMessage extends GenericMessage {
     public byte delay = 0;
 
     public boolean ack = false;
+
+    public boolean isComplete = false;
 
     public static CtlTemperatureSetMessage getSimple(int address, int appKeyIndex, int temperature, int deltaUV, boolean ack, int rspMax) {
         CtlTemperatureSetMessage message = new CtlTemperatureSetMessage(address, appKeyIndex);
@@ -52,12 +54,19 @@ public class CtlTemperatureSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return ByteBuffer.allocate(7).order(ByteOrder.LITTLE_ENDIAN)
-                .putShort((short) temperature)
-                .putShort((short) deltaUV)
-                .put(tid)
-                .put(transitionTime)
-                .put(delay).array();
+        return
+                isComplete ?
+                        ByteBuffer.allocate(7).order(ByteOrder.LITTLE_ENDIAN)
+                                .putShort((short) temperature)
+                                .putShort((short) deltaUV)
+                                .put(tid)
+                                .put(transitionTime)
+                                .put(delay).array()
+                        :
+                        ByteBuffer.allocate(5).order(ByteOrder.LITTLE_ENDIAN)
+                                .putShort((short) temperature)
+                                .putShort((short) deltaUV)
+                                .put(tid).array();
     }
 
 }

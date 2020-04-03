@@ -16,7 +16,6 @@ public class OnOffSetMessage extends GenericMessage {
     // 1: on, 0: off
     public byte onOff;
 
-    // transition id
     public byte tid = 0;
 
     public byte transitionTime = 0;

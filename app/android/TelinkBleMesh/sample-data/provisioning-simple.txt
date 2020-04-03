@@ -1,0 +1,32 @@
+2020-04-01 17:50:19.251 29946-29997/com.telink.ble.mesh.demo D/Provisioning: begin -- FF:FF:BB:CC:DD:51
+2020-04-01 17:50:19.252 29946-29997/com.telink.ble.mesh.demo D/Provisioning: provisioning state update: state -- 4097 desc -- Invite
+2020-04-01 17:50:19.255 29946-29997/com.telink.ble.mesh.demo D/Provisioning: pdu prepared: 00
+2020-04-01 17:50:19.393 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning pdu received: 010300010000000000000000
+2020-04-01 17:50:19.393 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning state update: state -- 4098 desc -- Capability Received
+2020-04-01 17:50:19.396 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning state update: state -- 4099 desc -- Start
+2020-04-01 17:50:19.401 29946-29968/com.telink.ble.mesh.demo D/Provisioning: pdu prepared: 00:00:00:00:00
+2020-04-01 17:50:19.868 29946-29968/com.telink.ble.mesh.demo D/Provisioning: get key x: 67:6F:D6:86:A5:4D:9A:FA:5A:2A:0A:DF:44:7A:BA:90:7B:DB:1B:B9:7A:2D:F0:55:EC:94:3E:68:59:FB:03:F2
+2020-04-01 17:50:19.871 29946-29968/com.telink.ble.mesh.demo D/Provisioning: get key y: 23:62:BA:1D:D7:50:33:A9:BB:A6:22:04:96:F3:6F:CC:DE:75:C7:51:11:51:E7:A9:A6:B4:63:FE:C8:33:DC:83
+2020-04-01 17:50:19.871 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning state update: state -- 4100 desc -- Send Public Key
+2020-04-01 17:50:19.876 29946-29968/com.telink.ble.mesh.demo D/Provisioning: pdu prepared: 67:6F:D6:86:A5:4D:9A:FA:5A:2A:0A:DF:44:7A:BA:90:7B:DB:1B:B9:7A:2D:F0:55:EC:94:3E:68:59:FB:03:F2:23:62:BA:1D:D7:50:33:A9:BB:A6:22:04:96:F3:6F:CC:DE:75:C7:51:11:51:E7:A9:A6:B4:63:FE:C8:33:DC:83
+2020-04-01 17:50:20.067 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning pdu received: 0313EF44FCEA4D96F0EED383EC515705FC7AC8AB4D144F50C5AD21166CB43FE923BEA4767725BA43D44D142995AD9E155E68DE37F1E6051944DB6CBEBD17DE97F1
+2020-04-01 17:50:20.068 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning state update: state -- 4101 desc -- Public Key received
+2020-04-01 17:50:20.074 29946-29968/com.telink.ble.mesh.demo D/Provisioning: pub key received: 13:EF:44:FC:EA:4D:96:F0:EE:D3:83:EC:51:57:05:FC:7A:C8:AB:4D:14:4F:50:C5:AD:21:16:6C:B4:3F:E9:23:BE:A4:76:77:25:BA:43:D4:4D:14:29:95:AD:9E:15:5E:68:DE:37:F1:E6:05:19:44:DB:6C:BE:BD:17:DE:97:F1
+2020-04-01 17:50:20.130 29946-29968/com.telink.ble.mesh.demo D/Provisioning: get secret: 81:48:6E:DA:CF:86:9F:34:1C:5F:E8:4A:2C:FE:AA:F6:40:80:01:EF:0A:46:6A:55:57:B7:5A:0E:EF:25:BC:B4
+2020-04-01 17:50:20.161 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning state update: state -- 4102 desc -- Send confirm
+2020-04-01 17:50:20.162 29946-29968/com.telink.ble.mesh.demo D/Provisioning: pdu prepared: D1:F0:EC:37:CC:C3:56:3E:D2:48:02:84:44:26:B4:DD
+2020-04-01 17:50:22.102 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning pdu received: 051BFFBF379899CCBB60D737BCE08FD9F2
+2020-04-01 17:50:22.102 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning state update: state -- 4103 desc -- Confirm received
+2020-04-01 17:50:22.102 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning state update: state -- 4104 desc -- Send random
+2020-04-01 17:50:22.104 29946-29968/com.telink.ble.mesh.demo D/Provisioning: pdu prepared: 09:98:69:9A:8B:25:79:C7:2F:55:A3:13:EB:52:D3:35
+2020-04-01 17:50:22.178 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning pdu received: 068134922333C66978B1B46E38886794BD
+2020-04-01 17:50:22.178 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning state update: state -- 4105 desc -- Random received
+2020-04-01 17:50:22.180 29946-29968/com.telink.ble.mesh.demo D/Provisioning: Confirmation values check pass
+2020-04-01 17:50:22.184 29946-29968/com.telink.ble.mesh.demo D/Provisioning: device key: 71:4F:0D:1A:88:BF:41:3C:D0:12:12:B8:B6:94:88:83
+2020-04-01 17:50:22.188 29946-29968/com.telink.ble.mesh.demo D/Provisioning: unencrypted provision data: 98:55:CF:07:45:A3:F5:FA:7C:EB:88:65:E8:93:3C:0D:00:00:00:00:00:00:00:00:02
+2020-04-01 17:50:22.197 29946-29968/com.telink.ble.mesh.demo D/Provisioning: encrypted provision data: 83:B2:C7:E8:C7:B7:6D:44:7C:28:B5:83:1E:04:E4:1E:5D:6E:BA:D9:30:FF:37:51:92:D1:10:0E:1D:83:B0:66:44
+2020-04-01 17:50:22.197 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning state update: state -- 4106 desc -- Send provisioning data
+2020-04-01 17:50:22.200 29946-29968/com.telink.ble.mesh.demo D/Provisioning: pdu prepared: 83:B2:C7:E8:C7:B7:6D:44:7C:28:B5:83:1E:04:E4:1E:5D:6E:BA:D9:30:FF:37:51:92:D1:10:0E:1D:83:B0:66:44
+2020-04-01 17:50:22.354 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning pdu received: 08
+2020-04-01 17:50:22.354 29946-29968/com.telink.ble.mesh.demo D/Provisioning: provisioning state update: state -- 4107 desc -- Provision Success
+2020-04-01 17:50:22.358 29946-29968/com.telink.ble.mesh.demo D/SIG-Mesh: post event : com.telink.ble.mesh.EVENT_TYPE_PROVISION_SUCCESS--ProvisioningEvent

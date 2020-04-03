@@ -1,0 +1,52 @@
+set time
+
+2020-04-02 10:53:46.953 29990-29990/com.telink.ble.mesh.demo D/MeshController: send mesh message: TimeSetMessage opcode: 0x005C -- dst: 0x0005 isReliable: true retryCnt: 2
+2020-04-02 10:53:46.957 29990-29990/com.telink.ble.mesh.demo D/Networking: post access pdu: 5C3A101826000000000060
+2020-04-02 10:53:46.957 29990-29990/com.telink.ble.mesh.demo D/Networking: getTransmitIvIndex : 00000000
+2020-04-02 10:53:46.959 29990-29990/com.telink.ble.mesh.demo D/Networking: upper transport pdu: EC69AE6ADE49BD98EDB361AADD1C58
+2020-04-02 10:53:46.959 29990-29990/com.telink.ble.mesh.demo D/Networking: send unsegmented access message
+2020-04-02 10:53:46.959 29990-29990/com.telink.ble.mesh.demo D/Networking: restart reliable message timeout task, immediate: false
+2020-04-02 10:53:46.959 29990-29990/com.telink.ble.mesh.demo D/Networking: reliable message timeout:960
+2020-04-02 10:53:46.962 29990-29990/com.telink.ble.mesh.demo D/Networking: single network pdu: 0D:4A:11:80:C8:8B:F4:C7:07:24:C8:95:09:B4:4A:4B:29:F0:48:FF:8F:A0:EF:6C:09:F4:DA:21:A1
+2020-04-02 10:53:46.964 29990-29990/com.telink.ble.mesh.demo D/Networking: networking pud prepared: 0D:4A:11:80:C8:8B:F4:C7:07:24:C8:95:09:B4:4A:4B:29:F0:48:FF:8F:A0:EF:6C:09:F4:DA:21:A1 busy?-false
+2020-04-02 10:53:46.964 29990-29990/com.telink.ble.mesh.demo D/Networking: networking pdu sending direct
+2020-04-02 10:53:46.965 29990-29990/com.telink.ble.mesh.demo D/GATT: send unsegment pkt: 00:0D:4A:11:80:C8:8B:F4:C7:07:24:C8:95:09:B4:4A:4B:29:F0:48:FF:8F:A0:EF:6C:09:F4:DA:21:A1
+2020-04-02 10:53:46.969 29990-29990/com.telink.ble.mesh.demo D/SIG-Mesh: setTime time: 639111226 zone 96
+2020-04-02 10:53:47.055 29990-30009/com.telink.ble.mesh.demo D/GATT: completed notification data: 00:0D:A6:38:7D:0F:78:9C:9D:54:80:D9:42:8E:40:4A:EC:97:3F:ED:E6:D0:4E:E4:59:F5:B7:E1:D7:4E
+2020-04-02 10:53:47.056 29990-30009/com.telink.ble.mesh.demo D/Networking: getAcceptedIvIndex : 00000000 ivi: 0
+2020-04-02 10:53:47.057 29990-30009/com.telink.ble.mesh.demo D/Networking: parse access message
+2020-04-02 10:53:47.057 29990-30009/com.telink.ble.mesh.demo D/Networking: parse unsegmented access message
+2020-04-02 10:53:47.060 29990-30009/com.telink.ble.mesh.demo D/Networking: access pdu received at 0x0005: opcode -- 0x005D params -- 3A101826000000000060
+2020-04-02 10:53:47.061 29990-30009/com.telink.ble.mesh.demo D/Networking: Reliable Message Complete: 00005C success?: true
+2020-04-02 10:53:47.062 29990-30009/com.telink.ble.mesh.demo D/MeshController: mesh model message received: src -- 0x0005 | dst -- 0x0001 | opcode -- 0x005D | params -- 3A101826000000000060 | action mode -- MODE_AUTO_CONNECT
+2020-04-02 10:53:47.062 29990-30009/com.telink.ble.mesh.demo D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.time.TimeStatusMessage
+2020-04-02 10:53:47.062 29990-30009/com.telink.ble.mesh.demo D/SIG-Mesh: post event : com.telink.ble.mesh.core.message.time.TimeStatusMessage--StatusNotificationEvent
+2020-04-02 10:53:47.063 29990-29990/com.telink.ble.mesh.demo D/SIG-Mesh: time status: 639111226
+2020-04-02 10:53:47.063 29990-29990/com.telink.ble.mesh.demo D/SIG-Mesh: set time success
+
+
+set scheduler
+
+2020-04-02 10:54:39.888 29990-29990/com.telink.ble.mesh.demo D/SIG-Mesh: scheduler params year: 100 month: 4095 day: 0 hour: 24 minute: 12 second: 20 week: 127 action: 0
+2020-04-02 10:54:39.894 29990-29990/com.telink.ble.mesh.demo D/SIG-Mesh: scheduler data: 40FE7F8019EA0F000000
+2020-04-02 10:54:39.895 29990-29990/com.telink.ble.mesh.demo D/MeshController: send mesh message: SchedulerActionSetMessage opcode: 0x0060 -- dst: 0x0005 isReliable: true retryCnt: 2
+2020-04-02 10:54:39.899 29990-29990/com.telink.ble.mesh.demo D/Networking: post access pdu: 6040FE7F8019EA0F000000
+2020-04-02 10:54:39.899 29990-29990/com.telink.ble.mesh.demo D/Networking: getTransmitIvIndex : 00000000
+2020-04-02 10:54:39.902 29990-29990/com.telink.ble.mesh.demo D/Networking: upper transport pdu: 0050A82450F29B12676D84C2B090F2
+2020-04-02 10:54:39.902 29990-29990/com.telink.ble.mesh.demo D/Networking: send unsegmented access message
+2020-04-02 10:54:39.902 29990-29990/com.telink.ble.mesh.demo D/Networking: restart reliable message timeout task, immediate: false
+2020-04-02 10:54:39.902 29990-29990/com.telink.ble.mesh.demo D/Networking: reliable message timeout:960
+2020-04-02 10:54:39.906 29990-29990/com.telink.ble.mesh.demo D/Networking: single network pdu: 0D:FD:A4:6A:90:6A:2D:3A:E3:4A:7A:86:DB:40:45:66:38:A9:6A:BB:AF:B7:88:72:FB:7E:8D:ED:7A
+2020-04-02 10:54:39.907 29990-29990/com.telink.ble.mesh.demo D/Networking: networking pud prepared: 0D:FD:A4:6A:90:6A:2D:3A:E3:4A:7A:86:DB:40:45:66:38:A9:6A:BB:AF:B7:88:72:FB:7E:8D:ED:7A busy?-false
+2020-04-02 10:54:39.907 29990-29990/com.telink.ble.mesh.demo D/Networking: networking pdu sending direct
+2020-04-02 10:54:39.908 29990-29990/com.telink.ble.mesh.demo D/GATT: send unsegment pkt: 00:0D:FD:A4:6A:90:6A:2D:3A:E3:4A:7A:86:DB:40:45:66:38:A9:6A:BB:AF:B7:88:72:FB:7E:8D:ED:7A
+2020-04-02 10:54:39.964 29990-30009/com.telink.ble.mesh.demo D/GATT: completed notification data: 00:0D:33:85:DA:58:A7:34:D8:3A:5D:75:3D:E5:AF:A8:9A:9E:40:67:C9:6A:1C:BC:B8:DF:8B:A4:13:50
+2020-04-02 10:54:39.964 29990-30009/com.telink.ble.mesh.demo D/Networking: getAcceptedIvIndex : 00000000 ivi: 0
+2020-04-02 10:54:39.965 29990-30009/com.telink.ble.mesh.demo D/Networking: parse access message
+2020-04-02 10:54:39.965 29990-30009/com.telink.ble.mesh.demo D/Networking: parse unsegmented access message
+2020-04-02 10:54:39.971 29990-30009/com.telink.ble.mesh.demo D/Networking: access pdu received at 0x0005: opcode -- 0x005F params -- 40FE7F8019EA0F000000
+2020-04-02 10:54:39.971 29990-30009/com.telink.ble.mesh.demo D/Networking: Reliable Message Complete: 000060 success?: true
+2020-04-02 10:54:39.972 29990-30009/com.telink.ble.mesh.demo D/MeshController: mesh model message received: src -- 0x0005 | dst -- 0x0001 | opcode -- 0x005F | params -- 40FE7F8019EA0F000000 | action mode -- MODE_AUTO_CONNECT
+2020-04-02 10:54:39.973 29990-30009/com.telink.ble.mesh.demo D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.scheduler.SchedulerActionStatusMessage
+2020-04-02 10:54:39.973 29990-30009/com.telink.ble.mesh.demo D/SIG-Mesh: post event : com.telink.ble.mesh.core.message.scheduler.SchedulerActionStatusMessage--StatusNotificationEvent
+

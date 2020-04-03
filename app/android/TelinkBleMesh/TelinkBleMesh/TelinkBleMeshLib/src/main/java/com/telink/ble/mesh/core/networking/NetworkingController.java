@@ -759,14 +759,14 @@ public class NetworkingController {
      * @return ivIndex
      */
     private int getAcceptedIvIndex(int ivi) {
-        MeshLogger.log(String.format("getAcceptedIvIndex : %08X", ivIndex) + " ivi: " + ivi);
+        log(String.format("getAcceptedIvIndex : %08X", ivIndex) + " ivi: " + ivi);
         boolean ivChecked = (ivIndex & 0b01) == ivi;
         return ivChecked ? (int) ivIndex : (int) (ivIndex - 1);
     }
 
     private int getTransmitIvIndex() {
         int re = (int) (!isIvUpdating ? ivIndex : ivIndex - 1);
-        MeshLogger.log(String.format("getTransmitIvIndex : %08X", re));
+        log(String.format("getTransmitIvIndex : %08X", re));
         return re;
     }
 

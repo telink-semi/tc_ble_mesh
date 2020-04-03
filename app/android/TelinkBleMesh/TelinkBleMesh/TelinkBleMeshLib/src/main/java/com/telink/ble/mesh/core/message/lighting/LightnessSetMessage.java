@@ -12,7 +12,7 @@ public class LightnessSetMessage extends GenericMessage {
     // 2 bytes
     public int lightness;
 
-    // transition id
+    // transaction id
     public byte tid = 0;
 
     public byte transitionTime = 0;

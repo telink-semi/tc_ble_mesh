@@ -91,11 +91,6 @@ public class MeshMessage {
      */
 //    protected boolean containsTid = false;
 
-    /**
-     * tid position in params
-     * if message dose not contains tid, tid position should be invalid value (such as -1)
-     */
-    protected int tidPosition = -1;
 
 
 //    boolean reliable = false;
@@ -105,6 +100,12 @@ public class MeshMessage {
      * defines message is reliable {@link #isReliable()}
      */
     protected int responseOpcode = OPCODE_INVALID;
+
+    /**
+     * tid position in params
+     * if message dose not contains tid, tid position should be invalid value (such as -1)
+     */
+    protected int tidPosition = -1;
 
     /**
      * if true, message will be cached and checked completion by message response or retryCnt == 0

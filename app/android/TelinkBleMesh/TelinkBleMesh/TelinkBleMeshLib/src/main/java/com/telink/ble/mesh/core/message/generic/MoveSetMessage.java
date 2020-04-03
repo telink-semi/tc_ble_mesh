@@ -11,15 +11,17 @@ import java.nio.ByteOrder;
 
 public class MoveSetMessage extends GenericMessage {
 
-    private int deltaLevel;
+    public int deltaLevel;
 
-    private byte tid;
+    public byte tid;
 
-    private byte transitionTime;
+    public byte transitionTime;
 
-    private byte delay;
+    public byte delay;
 
-    boolean ack;
+    public boolean ack;
+
+    public boolean isComplete = false;
 
     public MoveSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
@@ -34,9 +36,16 @@ public class MoveSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return ByteBuffer.allocate(5)
-                .order(ByteOrder.LITTLE_ENDIAN)
-                .putShort((short) deltaLevel)
-                .put(tid).put(transitionTime).put(delay).array();
+        return
+                isComplete ?
+                        ByteBuffer.allocate(5)
+                                .order(ByteOrder.LITTLE_ENDIAN)
+                                .putShort((short) deltaLevel)
+                                .put(tid).put(transitionTime).put(delay).array()
+                        :
+                        ByteBuffer.allocate(3)
+                                .order(ByteOrder.LITTLE_ENDIAN)
+                                .putShort((short) deltaLevel)
+                                .put(tid).array();
     }
 }
