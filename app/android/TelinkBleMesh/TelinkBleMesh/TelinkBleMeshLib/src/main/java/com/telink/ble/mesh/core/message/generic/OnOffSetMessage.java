@@ -24,6 +24,8 @@ public class OnOffSetMessage extends GenericMessage {
 
     public boolean ack = false;
 
+    public boolean isComplete = false;
+
     public static OnOffSetMessage getSimple(int address, int appKeyIndex, int onOff, boolean ack, int rspMax) {
         OnOffSetMessage message = new OnOffSetMessage(address, appKeyIndex);
         message.onOff = (byte) onOff;
@@ -49,11 +51,19 @@ public class OnOffSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return new byte[]{
-                this.onOff,
-                this.tid,
-                this.transitionTime,
-                this.delay
-        };
+        return
+                isComplete ?
+                        new byte[]{
+                                this.onOff,
+                                this.tid,
+                                this.transitionTime,
+                                this.delay
+                        }
+                        :
+                        new byte[]{
+                                this.onOff,
+                                this.tid
+                        }
+                ;
     }
 }

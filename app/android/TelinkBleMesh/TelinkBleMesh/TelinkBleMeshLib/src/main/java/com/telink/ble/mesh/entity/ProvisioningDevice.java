@@ -1,5 +1,6 @@
 package com.telink.ble.mesh.entity;
 
+import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -24,7 +25,9 @@ public class ProvisioningDevice implements Parcelable {
      */
     private static final int DATA_PDU_LEN = 16 + 2 + 1 + 4 + 2;
 
-    private AdvertisingDevice advertisingDevice;
+    private BluetoothDevice bluetoothDevice;
+
+    protected byte[] deviceUUID;
 
     protected byte[] networkKey;
 
@@ -69,13 +72,15 @@ public class ProvisioningDevice implements Parcelable {
 
     protected ProvisioningCapabilityPDU deviceCapability = null;
 
-    public ProvisioningDevice(AdvertisingDevice advertisingDevice, int unicastAddress) {
-        this.advertisingDevice = advertisingDevice;
+    public ProvisioningDevice(BluetoothDevice bluetoothDevice, byte[] deviceUUID, int unicastAddress) {
+        this.bluetoothDevice = bluetoothDevice;
+        this.deviceUUID = deviceUUID;
         this.unicastAddress = unicastAddress;
     }
 
-    public ProvisioningDevice(AdvertisingDevice advertisingDevice, byte[] networkKey, int networkKeyIndex, byte keyRefreshFlag, byte ivUpdateFlag, int ivIndex, int unicastAddress) {
-        this.advertisingDevice = advertisingDevice;
+    public ProvisioningDevice(BluetoothDevice bluetoothDevice, byte[] deviceUUID, byte[] networkKey, int networkKeyIndex, byte keyRefreshFlag, byte ivUpdateFlag, int ivIndex, int unicastAddress) {
+        this.bluetoothDevice = bluetoothDevice;
+        this.deviceUUID = deviceUUID;
         this.networkKey = networkKey;
         this.networkKeyIndex = networkKeyIndex;
         this.keyRefreshFlag = keyRefreshFlag;
@@ -84,8 +89,13 @@ public class ProvisioningDevice implements Parcelable {
         this.unicastAddress = unicastAddress;
     }
 
+
+    public ProvisioningDevice() {
+    }
+
     protected ProvisioningDevice(Parcel in) {
-        advertisingDevice = in.readParcelable(AdvertisingDevice.class.getClassLoader());
+        bluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
+        deviceUUID = in.createByteArray();
         networkKey = in.createByteArray();
         networkKeyIndex = in.readInt();
         keyRefreshFlag = in.readByte();
@@ -95,10 +105,6 @@ public class ProvisioningDevice implements Parcelable {
         authValue = in.createByteArray();
         provisioningState = in.readInt();
         deviceKey = in.createByteArray();
-    }
-
-    public String getMac() {
-        return advertisingDevice == null ? "null" : advertisingDevice.device.getAddress();
     }
 
     public static final Creator<ProvisioningDevice> CREATOR = new Creator<ProvisioningDevice>() {
@@ -113,9 +119,6 @@ public class ProvisioningDevice implements Parcelable {
         }
     };
 
-    public ProvisioningDevice() {
-    }
-
     public byte[] generateProvisioningData() {
         byte flags = (byte) ((keyRefreshFlag & 0b01) | (ivUpdateFlag & 0b10));
         ByteBuffer buffer = ByteBuffer.allocate(DATA_PDU_LEN).order(ByteOrder.BIG_ENDIAN);
@@ -127,9 +130,12 @@ public class ProvisioningDevice implements Parcelable {
         return buffer.array();
     }
 
+    public BluetoothDevice getBluetoothDevice() {
+        return bluetoothDevice;
+    }
 
-    public AdvertisingDevice getAdvertisingDevice() {
-        return advertisingDevice;
+    public byte[] getDeviceUUID() {
+        return deviceUUID;
     }
 
     public byte[] getNetworkKey() {
@@ -212,6 +218,7 @@ public class ProvisioningDevice implements Parcelable {
         this.unicastAddress = unicastAddress;
     }
 
+
     @Override
     public int describeContents() {
         return 0;
@@ -219,7 +226,8 @@ public class ProvisioningDevice implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeParcelable(advertisingDevice, flags);
+        dest.writeParcelable(bluetoothDevice, flags);
+        dest.writeByteArray(deviceUUID);
         dest.writeByteArray(networkKey);
         dest.writeInt(networkKeyIndex);
         dest.writeByte(keyRefreshFlag);

@@ -188,7 +188,7 @@ public class ProvisioningController {
     }
 
     public void begin(@NonNull ProvisioningDevice device) {
-        log("begin -- " + device.getMac());
+        log("begin -- " + Arrays.bytesToHexString(device.getDeviceUUID()));
         this.mProvisioningDevice = device;
 
         delayHandler.removeCallbacks(provisioningTimeoutTask);

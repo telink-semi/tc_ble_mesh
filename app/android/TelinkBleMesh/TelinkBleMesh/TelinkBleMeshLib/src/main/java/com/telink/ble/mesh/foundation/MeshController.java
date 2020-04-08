@@ -383,7 +383,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         if (mGattConnection.disconnect()) {
             this.isDisconnectWaiting = false;
         } else {
-            connect(provisioningDevice.getAdvertisingDevice().device);
+            connect(provisioningDevice.getBluetoothDevice());
         }
     }
 
@@ -416,7 +416,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         // if mac address
         int bindingTarget = bindingDevice.getMeshAddress();
         BindingBearer bindingBearer = bindingDevice.getBearer();
-        if (mGattConnection.isProxyNodeConnected() && (bindingDevice.getMacAddress().equals(mGattConnection.getMacAddress()) || bindingBearer == BindingBearer.Any)) {
+        if (mGattConnection.isProxyNodeConnected() && (directDeviceAddress == bindingTarget || bindingBearer == BindingBearer.Any)) {
             onConnectSuccess();
         } else {
             if (mGattConnection.disconnect()) {
@@ -713,17 +713,13 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             ProvisioningDevice provisioningDevice = (ProvisioningDevice) mActionParams.get(Parameters.ACTION_PROVISIONING_TARGET);
             onActionStart();
             mProvisioningController.begin(provisioningDevice);
+        } else if (actionMode == Mode.MODE_FAST_PROVISION) {
+            onProxyLoginSuccess();
         } else {
+            boolean isFilterInitNeeded
+                    = mActionParams.getBool(Parameters.COMMON_PROXY_FILTER_INIT_NEEDED, false);
 
-            boolean isFilterInitNeeded;
-            if (actionMode == Mode.MODE_FAST_PROVISION) {
-                // can not set filter when fast-provision
-                isFilterInitNeeded = false;
-            } else {
-                isFilterInitNeeded = mActionParams.getBool(Parameters.COMMON_PROXY_FILTER_INIT_NEEDED, false);
-            }
-
-            if (!isLogin && isFilterInitNeeded || directDeviceAddress == 0) {
+            if ((!isLogin && isFilterInitNeeded) || (directDeviceAddress == 0)) {
                 proxyFilterInit();
             } else {
                 // no need to init proxy filter
@@ -862,7 +858,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                                     if (actionMode == Mode.MODE_PROVISION) {
                                         ProvisioningDevice provisioningDevice = (ProvisioningDevice) mActionParams.get(Parameters.ACTION_PROVISIONING_TARGET);
                                         log("provisioning connect retry: " + connectRetry);
-                                        connect(provisioningDevice.getAdvertisingDevice().device);
+                                        connect(provisioningDevice.getBluetoothDevice());
                                     } else {
                                         startScan();
                                     }
@@ -1040,11 +1036,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 byte[] advertisingNetworkId = new byte[networkIdLen];
                 System.arraycopy(serviceData, 1, advertisingNetworkId, 0, networkIdLen);
                 boolean networkIdCheck = Arrays.equals(networkId, advertisingNetworkId);
-                log("check network id: " + networkIdCheck);
+                log("check network id pass? " + networkIdCheck);
                 return networkIdCheck;
             } else if (type == PROXY_ADV_TYPE_NODE_IDENTITY && filterType.isNodeIdentitySupport) {
                 boolean nodeIdentityCheck = validateNodeIdentity(serviceData);
-                log("check node identity: " + nodeIdentityCheck);
+                log("check node identity pass? " + nodeIdentityCheck);
                 return nodeIdentityCheck;
             }
         }
@@ -1179,9 +1175,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 //            if (!device.getAddress().toUpperCase().equals("A4:C1:38:3F:4C:05")) return;
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
-//            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
+            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
 //            if (!device.getAddress().toUpperCase().contains("FF:EE:EE:EE")) return;
-//            if (!device.getAddress().equalsIgnoreCase("AA:11:22:33:11:22")) return;
+//            if (!device.getAddress().contains("33:22:11")) return;
             onScanFilter(device, rssi, scanRecord);
         }
 
@@ -1222,6 +1218,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     private void onProvisionSuccess(ProvisioningDevice provisioningDevice, String desc) {
         onProvisionComplete();
+        this.directDeviceAddress = provisioningDevice.getUnicastAddress();
         postProvisioningEvent(ProvisioningEvent.EVENT_TYPE_PROVISION_SUCCESS, provisioningDevice, desc);
     }
 

@@ -21,9 +21,11 @@ public class LightnessSetMessage extends GenericMessage {
 
     public boolean ack = false;
 
+    public boolean isComplete = false;
+
     public static LightnessSetMessage getSimple(int address, int appKeyIndex, int lightness, boolean ack, int rspMax) {
         LightnessSetMessage message = new LightnessSetMessage(address, appKeyIndex);
-        message.lightness =  lightness;
+        message.lightness = lightness;
         message.ack = ack;
         message.setResponseMax(rspMax);
         return message;
@@ -46,13 +48,21 @@ public class LightnessSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return new byte[]{
-                (byte) this.lightness,
-                (byte) (this.lightness >> 8),
-                this.tid,
-                this.transitionTime,
-                this.delay
-        };
+        return
+                isComplete ?
+                        new byte[]{
+                                (byte) this.lightness,
+                                (byte) (this.lightness >> 8),
+                                this.tid,
+                                this.transitionTime,
+                                this.delay
+                        }
+                        :
+                        new byte[]{
+                                (byte) this.lightness,
+                                (byte) (this.lightness >> 8),
+                                this.tid
+                        };
     }
 
 }

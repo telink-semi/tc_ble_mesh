@@ -15,7 +15,7 @@ public class BindingDevice implements Parcelable {
      */
     private int meshAddress;
 
-    private String macAddress;
+    private byte[] deviceUUID;
 
     /**
      * model and appKey map, null means bind all models
@@ -49,25 +49,25 @@ public class BindingDevice implements Parcelable {
     public BindingDevice() {
     }
 
-    public BindingDevice(int meshAddress, String macAddress, int appKeyIndex) {
+    public BindingDevice(int meshAddress, byte[] deviceUUID, int appKeyIndex) {
         this.meshAddress = meshAddress;
-        this.macAddress = macAddress;
+        this.deviceUUID = deviceUUID;
         this.appKeyIndex = appKeyIndex;
         this.models = null;
         this.bearer = BindingBearer.GattOnly;
     }
 
-    public BindingDevice(int meshAddress, int appKeyIndex, int[] models, BindingBearer bearer) {
+    public BindingDevice(int meshAddress, byte[] deviceUUID, int appKeyIndex, int[] models, BindingBearer bearer) {
         this.meshAddress = meshAddress;
+        this.deviceUUID = deviceUUID;
         this.appKeyIndex = appKeyIndex;
         this.models = models;
         this.bearer = bearer;
     }
 
-
     protected BindingDevice(Parcel in) {
         meshAddress = in.readInt();
-        macAddress = in.readString();
+        deviceUUID = in.createByteArray();
         appKeyIndex = in.readInt();
         models = in.createIntArray();
         defaultBound = in.readByte() != 0;
@@ -92,6 +92,14 @@ public class BindingDevice implements Parcelable {
 
     public void setMeshAddress(int meshAddress) {
         this.meshAddress = meshAddress;
+    }
+
+    public byte[] getDeviceUUID() {
+        return deviceUUID;
+    }
+
+    public void setDeviceUUID(byte[] deviceUUID) {
+        this.deviceUUID = deviceUUID;
     }
 
     public int getAppKeyIndex() {
@@ -134,15 +142,6 @@ public class BindingDevice implements Parcelable {
         this.compositionData = compositionData;
     }
 
-    public String getMacAddress() {
-        return macAddress;
-    }
-
-    public void setMacAddress(String macAddress) {
-        this.macAddress = macAddress;
-    }
-
-
     @Override
     public int describeContents() {
         return 0;
@@ -151,7 +150,7 @@ public class BindingDevice implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(meshAddress);
-        dest.writeString(macAddress);
+        dest.writeByteArray(deviceUUID);
         dest.writeInt(appKeyIndex);
         dest.writeIntArray(models);
         dest.writeByte((byte) (defaultBound ? 1 : 0));

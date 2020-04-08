@@ -28,6 +28,7 @@ public class HslSetMessage extends GenericMessage {
 
     public boolean ack = false;
 
+    // if contains #transitionTime and #delay
     public boolean isComplete = false;
 
     public static HslSetMessage getSimple(int address, int appKeyIndex, int lightness, int hue, int saturation, boolean ack, int rspMax) {
@@ -42,7 +43,7 @@ public class HslSetMessage extends GenericMessage {
 
     public HslSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
-        setTidPosition(3);
+        setTidPosition(6);
     }
 
     @Override
