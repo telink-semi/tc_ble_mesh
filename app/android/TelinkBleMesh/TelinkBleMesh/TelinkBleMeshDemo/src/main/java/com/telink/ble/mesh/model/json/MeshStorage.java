@@ -107,7 +107,7 @@ public class MeshStorage {
     public static class Node {
 
         // custom: not in doc
-        public String macAddress;
+//        public String macAddress;
 
         /**
          * sequence number
@@ -117,7 +117,7 @@ public class MeshStorage {
          *
          * @see com.telink.ble.mesh.model.MeshInfo#sequenceNumber
          */
-        public String sno;
+//        public String sno;
 
         public String UUID;
         public String unicastAddress;

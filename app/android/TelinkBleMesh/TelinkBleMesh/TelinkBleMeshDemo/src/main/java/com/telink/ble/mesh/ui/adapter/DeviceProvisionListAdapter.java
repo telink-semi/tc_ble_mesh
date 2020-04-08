@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.util.Arrays;
 
 import java.util.List;
 
@@ -55,7 +56,7 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
         holder.iv_device.setImageResource(iconRes);
 
 //        holder.tv_name.setText(mDevices.get(position).getAddress());
-        holder.tv_device_info.setText(mContext.getString(R.string.device_prov_desc, String.format("%04X", device.meshAddress), device.macAddress));
+        holder.tv_device_info.setText(mContext.getString(R.string.device_prov_desc, String.format("%04X", device.meshAddress), Arrays.bytesToHexString(device.deviceUUID)));
         holder.tv_state.setText(device.getStateDesc());
 
         if (device.state == NodeInfo.STATE_PROVISIONING || device.state == NodeInfo.STATE_BINDING) {

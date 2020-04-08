@@ -19,6 +19,7 @@ import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.util.Arrays;
 
 /**
  * single device bind key, for device which bind fail
@@ -57,8 +58,8 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
         tv_kick.setOnClickListener(this);
         tv_device_info = findViewById(R.id.tv_device_info);
 
-        String info = "meshAddress:" + targetDevice.meshAddress
-                + "\nmac:" + targetDevice.macAddress;
+        String info = "MeshAddress:" + targetDevice.meshAddress
+                + "\nUUID:" + Arrays.bytesToHexString(targetDevice.deviceUUID, ":");
         tv_device_info.setText(info);
         tv_progress = findViewById(R.id.tv_progress);
 
@@ -125,7 +126,7 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
     private void startKeyBind() {
         MeshInfo mesh = TelinkMeshApplication.getInstance().getMeshInfo();
 
-        BindingDevice bindingDevice = new BindingDevice(targetDevice.meshAddress, targetDevice.macAddress,
+        BindingDevice bindingDevice = new BindingDevice(targetDevice.meshAddress, targetDevice.deviceUUID,
                 mesh.getDefaultAppKeyIndex());
 //        KeyBindParameters parameters = KeyBindParameters.getDefault(targetDevice,
 //                mesh.appKey, mesh.appKeyIndex, mesh.netKeyIndex, false);
@@ -156,7 +157,7 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
     private void kickOut() {
         // send reset message
         MeshService.getInstance().sendMeshMessage(new NodeResetMessage(targetDevice.meshAddress));
-        kickDirect = targetDevice.macAddress.equals(MeshService.getInstance().getCurDeviceMac());
+        kickDirect = targetDevice.meshAddress == (MeshService.getInstance().getDirectConnectedNodeAddress());
         showWaitingDialog("kick out processing");
         if (!kickDirect) {
             handler.postDelayed(new Runnable() {
@@ -182,7 +183,7 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
         complete = true;
         BindingDevice remote = event.getBindingDevice();
         MeshInfo mesh = TelinkMeshApplication.getInstance().getMeshInfo();
-        NodeInfo local = mesh.getDeviceByMacAddress(remote.getMacAddress());
+        NodeInfo local = mesh.getDeviceByUUID(remote.getDeviceUUID());
         if (local == null) return;
 
         local.state = NodeInfo.STATE_BIND_SUCCESS;

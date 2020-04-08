@@ -59,7 +59,13 @@ public class NodeInfo implements Serializable {
     /**
      * mac address
      */
-    public String macAddress;
+//    public String macAddress;
+    /**
+     * device-uuid from scan-record when normal provision
+     * or
+     * device scan report when fast-provision or remote-provision
+     */
+    public byte[] deviceUUID;
 
     /**
      * element count

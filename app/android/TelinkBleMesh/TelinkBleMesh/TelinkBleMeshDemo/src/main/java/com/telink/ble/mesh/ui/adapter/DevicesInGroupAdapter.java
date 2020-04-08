@@ -8,8 +8,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.util.Arrays;
 
 import java.util.List;
 
@@ -51,7 +52,7 @@ public class DevicesInGroupAdapter extends BaseRecyclerViewAdapter<DevicesInGrou
             holder.img_icon.setImageResource(R.drawable.icon_light_offline);
             holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.black));
         } else {
-            if (device.macAddress.equals(MeshService.getInstance().getCurDeviceMac())) {
+            if (device.meshAddress == (MeshService.getInstance().getDirectConnectedNodeAddress())) {
                 holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
             } else {
                 holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.black));
@@ -67,7 +68,7 @@ public class DevicesInGroupAdapter extends BaseRecyclerViewAdapter<DevicesInGrou
 
 //        holder.tv_name.setText(models.get(position).getAddress());
         String info = Integer.toHexString(device.meshAddress).toUpperCase();
-        
+
         if (device.state == NodeInfo.STATE_BIND_SUCCESS) {
             /*info += " : " +
                     (device.lum < 0 ? 0 : device.lum) + " : " +
@@ -77,7 +78,7 @@ public class DevicesInGroupAdapter extends BaseRecyclerViewAdapter<DevicesInGrou
             info += "(unbound)";
         }
 
-        info += "\n" + device.macAddress;
+        info += "\n" + Arrays.bytesToHexString(device.deviceUUID, ":");
         holder.tv_name.setText(info);
     }
 

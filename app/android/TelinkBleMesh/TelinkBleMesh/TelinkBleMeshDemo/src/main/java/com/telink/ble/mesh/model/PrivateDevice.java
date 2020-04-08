@@ -68,10 +68,10 @@ public enum PrivateDevice {
         return cpsData;
     }
 
-    public static PrivateDevice filter(byte[] serviceData) {
-        if (serviceData.length < 3) return null;
-        int vid = (serviceData[0] & 0xFF) + (((serviceData[1] & 0xFF) << 8));
-        int pid = serviceData[2] & 0xFF;
+    public static PrivateDevice filter(byte[] deviceUUID) {
+        if (deviceUUID.length < 3) return null;
+        int vid = (deviceUUID[0] & 0xFF) + (((deviceUUID[1] & 0xFF) << 8));
+        int pid = deviceUUID[2] & 0xFF;
         PrivateDevice[] values = PrivateDevice.values();
         for (PrivateDevice device :
                 values) {

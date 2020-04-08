@@ -81,17 +81,10 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
         TelinkMeshApplication.getInstance().removeEventListener(this);
         MeshService.getInstance().clear();
-        /*Intent serviceIntent = new Intent(this, MeshService.class);
-        stopService(serviceIntent);*/
     }
 
 

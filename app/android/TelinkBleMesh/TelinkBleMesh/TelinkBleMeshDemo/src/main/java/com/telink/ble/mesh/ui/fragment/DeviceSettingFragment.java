@@ -29,8 +29,8 @@ import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.ui.DeviceOtaActivity;
 import com.telink.ble.mesh.ui.ModelSettingActivity;
 import com.telink.ble.mesh.ui.SchedulerListActivity;
+import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
-
 
 import androidx.appcompat.app.AlertDialog;
 
@@ -65,7 +65,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(address);
         initPubModel();
         TextView tv_mac = view.findViewById(R.id.tv_mac);
-        tv_mac.setText(String.format("Mac: %s", deviceInfo.macAddress));
+        tv_mac.setText("UUID: " + Arrays.bytesToHexString(deviceInfo.deviceUUID));
         view.findViewById(R.id.view_scheduler).setOnClickListener(this);
         cb_pub = view.findViewById(R.id.cb_pub);
         cb_relay = view.findViewById(R.id.cb_relay);
@@ -170,7 +170,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
     private void kickOut() {
         // send reset message
         MeshService.getInstance().sendMeshMessage(new NodeResetMessage(deviceInfo.meshAddress));
-        kickDirect = deviceInfo.macAddress.equals(MeshService.getInstance().getCurDeviceMac());
+        kickDirect = deviceInfo.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress();
         showWaitingDialog("kick out processing");
         if (!kickDirect) {
             delayHandler.postDelayed(new Runnable() {
@@ -248,11 +248,6 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.view_ota:
-
-                if (deviceInfo.macAddress == null || deviceInfo.macAddress.equals("")) {
-                    toastMsg("device no record");
-                    return;
-                }
                 Intent otaIntent = new Intent(getActivity(), DeviceOtaActivity.class);
                 otaIntent.putExtra("meshAddress", deviceInfo.meshAddress);
                 startActivity(otaIntent);

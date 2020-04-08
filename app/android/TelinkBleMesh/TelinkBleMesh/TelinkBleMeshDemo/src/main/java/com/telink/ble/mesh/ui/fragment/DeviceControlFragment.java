@@ -237,9 +237,10 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         void onProgressUpdate(SeekBar seekBar, int progress, boolean immediate) {
 
             if (seekBar == sb_color) {
+
                 float visibility = ((float) progress) / 100;
                 if (color_panel != null) {
-                    color_panel.setVisibility(visibility, true);
+                    color_panel.setVisibility(visibility, immediate);
                 }
             } else if (seekBar == sb_lum || seekBar == sb_temp) {
                 long currentTime = System.currentTimeMillis();

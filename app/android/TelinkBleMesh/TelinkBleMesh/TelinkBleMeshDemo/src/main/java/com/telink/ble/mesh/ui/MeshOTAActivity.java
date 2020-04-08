@@ -368,7 +368,4 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
         }
     }
 
-    private int getCurMeshAdr() {
-        return mesh.getDeviceByMacAddress(MeshService.getInstance().getCurDeviceMac()).meshAddress;
-    }
 }

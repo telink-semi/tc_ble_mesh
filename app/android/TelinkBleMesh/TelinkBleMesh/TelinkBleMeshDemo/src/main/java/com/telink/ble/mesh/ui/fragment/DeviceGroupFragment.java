@@ -172,7 +172,8 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mAdapter.setEnabled(deviceInfo.getOnOff() != -1);
+                mAdapter.setEnabled(
+                        deviceInfo.isLpn() || deviceInfo.getOnOff() != -1);
             }
         });
     }

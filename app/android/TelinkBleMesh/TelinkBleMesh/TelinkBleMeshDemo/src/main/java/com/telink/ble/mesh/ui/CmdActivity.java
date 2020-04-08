@@ -276,7 +276,10 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
 
         et_opcode.setText(MeshUtils.formatIntegerByHex(opcode));
         et_params.setText(Arrays.bytesToHexString(params));
-        et_rsp_opcode.setText(MeshUtils.formatIntegerByHex(rspOpcode));
+        et_rsp_opcode.setText(
+                rspOpcode == MeshMessage.OPCODE_INVALID
+                        ?
+                        "" : MeshUtils.formatIntegerByHex(rspOpcode));
 
         et_rsp_max.setText(String.valueOf(rspMax));
         et_retry_cnt.setText(String.valueOf(retryCnt));
