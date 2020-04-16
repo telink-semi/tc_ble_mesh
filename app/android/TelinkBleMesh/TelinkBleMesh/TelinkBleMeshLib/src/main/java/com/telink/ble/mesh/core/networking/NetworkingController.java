@@ -256,6 +256,7 @@ public class NetworkingController {
         this.segmentedBusy.set(false);
         this.reliableBusy.set(false);
         this.mNetworkingQueue.clear();
+        this.lastSeqAuth = 0;
         this.deviceSequenceNumberMap.clear();
         if (receivedSegmentedMessageBuffer != null) {
             receivedSegmentedMessageBuffer.clear();
@@ -623,7 +624,7 @@ public class NetworkingController {
         return timeout;
     }
 
-    private long getReliableMessageTimeout(){
+    private long getReliableMessageTimeout() {
         int queueSize;
         synchronized (mNetworkingQueue) {
             queueSize = mNetworkingQueue.size();
@@ -1282,10 +1283,12 @@ public class NetworkingController {
                     byte[] completeTransportPdu = upperTransportAccessPDU.getDecryptedPayload();
 
                     log("decrypted upper: " + Arrays.bytesToHexString(completeTransportPdu, ""));
-                    accessPDU = AccessLayerPDU.parse(completeTransportPdu);
-
+                    if (completeTransportPdu != null) {
+                        accessPDU = AccessLayerPDU.parse(completeTransportPdu);
+                    } else {
+                        log("upper pdu decryption error: ", MeshLogger.LEVEL_WARN);
+                    }
                     saveCompletedSeqAuth(src, seqAuth);
-
                     lastSeqAuth = 0;
                 }
             }

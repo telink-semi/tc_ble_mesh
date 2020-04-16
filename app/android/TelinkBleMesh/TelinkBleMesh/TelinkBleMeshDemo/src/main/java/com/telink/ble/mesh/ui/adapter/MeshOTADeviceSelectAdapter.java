@@ -93,7 +93,7 @@ public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOT
         holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc_mesh_ota,
                 String.format("%04X", deviceInfo.meshAddress),
                 pidInfo));
-        holder.tv_version.setText("Ver:" + getDeviceVersion(deviceInfo));
+        holder.tv_version.setText("FwId:" + getDeviceFirmwareId(deviceInfo));
         holder.cb_device.setTag(position);
         holder.cb_device.setChecked(deviceInfo.selected);
         if (deviceInfo.getOnOff() != -1) {
@@ -109,16 +109,16 @@ public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOT
         } else {
             holder.iv_complete.setVisibility(View.VISIBLE);
             if (deviceState == MeshUpdatingDevice.STATE_FAIL) {
-                holder.iv_complete.setColorFilter(R.color.grey);
+//                holder.iv_complete.setColorFilter(R.color.grey);
                 holder.iv_complete.setImageResource(R.drawable.ic_mesh_ota_fail);
             } else {
-                holder.iv_complete.setColorFilter(R.color.colorPrimary);
+//                holder.iv_complete.setColorFilter(R.color.colorPrimary);
                 holder.iv_complete.setImageResource(R.drawable.ic_mesh_ota_complete);
             }
         }
     }
 
-    private String getDeviceVersion(NodeInfo deviceInfo) {
+    private String getDeviceFirmwareId(NodeInfo deviceInfo) {
         if (versions == null) return "NULL";
         for (Integer adr : versions.keySet()) {
             if (adr == deviceInfo.meshAddress) {

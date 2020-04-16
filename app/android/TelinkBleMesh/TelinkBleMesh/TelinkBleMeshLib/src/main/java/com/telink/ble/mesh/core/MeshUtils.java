@@ -7,7 +7,11 @@ import com.telink.ble.mesh.core.ble.UUIDInfo;
 
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
+
+import androidx.annotation.NonNull;
 
 public final class MeshUtils {
 
@@ -208,6 +212,25 @@ public final class MeshUtils {
     public static byte[] getMeshServiceData(byte[] scanRecord, boolean unprovisioned) {
         MeshScanRecord meshScanRecord = MeshScanRecord.parseFromBytes(scanRecord);
         return meshScanRecord.getServiceData(ParcelUuid.fromString((unprovisioned ? UUIDInfo.PROVISION_SERVICE_UUID : UUIDInfo.PROXY_SERVICE_UUID).toString()));
+    }
+
+    /**
+     * get missing bit position
+     */
+    public static List<Integer> parseMissingBitField(@NonNull byte[] params, int offset) {
+        List<Integer> missingChunks = new ArrayList<>();
+        final int BYTE_LEN = 8;
+        byte val;
+        for (int basePosition = 0; offset < params.length; offset++, basePosition += BYTE_LEN) {
+            val = params[offset];
+            for (int i = 0; i < BYTE_LEN; i++) {
+                boolean missing = ((val >> i) & 0b01) == 1;
+                if (missing) {
+                    missingChunks.add(basePosition + i);
+                }
+            }
+        }
+        return missingChunks;
     }
 
 

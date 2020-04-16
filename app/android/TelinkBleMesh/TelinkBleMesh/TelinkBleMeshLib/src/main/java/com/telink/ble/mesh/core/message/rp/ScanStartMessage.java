@@ -1,7 +1,8 @@
 package com.telink.ble.mesh.core.message.rp;
 
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.updating.UpdatingMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
+
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

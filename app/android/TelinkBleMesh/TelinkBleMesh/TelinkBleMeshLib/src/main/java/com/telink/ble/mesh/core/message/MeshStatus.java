@@ -9,6 +9,13 @@ import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelSubscriptionStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
 import com.telink.ble.mesh.core.message.fastpv.MeshAddressStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareMetadataStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobPartialBlockReportMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobBlockStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobInfoStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobTransferStatusMessage;
 import com.telink.ble.mesh.core.message.generic.LevelStatusMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlStatusMessage;
@@ -26,13 +33,6 @@ import com.telink.ble.mesh.core.message.scene.SceneStatusMessage;
 import com.telink.ble.mesh.core.message.scheduler.SchedulerActionStatusMessage;
 import com.telink.ble.mesh.core.message.scheduler.SchedulerStatusMessage;
 import com.telink.ble.mesh.core.message.time.TimeStatusMessage;
-import com.telink.ble.mesh.core.message.updating.FirmwareDistributionStatusMessage;
-import com.telink.ble.mesh.core.message.updating.FirmwareInfoStatusMessage;
-import com.telink.ble.mesh.core.message.updating.FirmwareUpdateStatusMessage;
-import com.telink.ble.mesh.core.message.updating.ObjectBlockStatusMessage;
-import com.telink.ble.mesh.core.message.updating.ObjectBlockTransferStatusMessage;
-import com.telink.ble.mesh.core.message.updating.ObjectInfoStatusMessage;
-import com.telink.ble.mesh.core.message.updating.ObjectTransferStatusMessage;
 
 /**
  * All registered StatusMessage should have empty constructor for [Creating Instance]
@@ -111,13 +111,22 @@ public class MeshStatus {
 
 
             // mesh firmware update
-            register(Opcode.FW_INFO_STATUS.value, FirmwareInfoStatusMessage.class);
+            register(Opcode.FIRMWARE_UPDATE_INFORMATION_STATUS.value, FirmwareUpdateInfoStatusMessage.class);
+            register(Opcode.FIRMWARE_UPDATE_FIRMWARE_METADATA_STATUS.value, FirmwareMetadataStatusMessage.class);
+            register(Opcode.FIRMWARE_UPDATE_STATUS.value, FirmwareUpdateStatusMessage.class);
+
+            /// blob transfer
+            register(Opcode.BLOB_BLOCK_STATUS.value, BlobBlockStatusMessage.class);
+            register(Opcode.BLOB_INFORMATION_STATUS.value, BlobInfoStatusMessage.class);
+            register(Opcode.BLOB_TRANSFER_STATUS.value, BlobTransferStatusMessage.class);
+            register(Opcode.BLOB_PARTIAL_BLOCK_REPORT.value, BlobPartialBlockReportMessage.class);
+            /*register(Opcode.FW_INFO_STATUS.value, FirmwareInfoStatusMessage.class);
             register(Opcode.FW_DISTRIBUT_STATUS.value, FirmwareDistributionStatusMessage.class);
             register(Opcode.FW_UPDATE_STATUS.value, FirmwareUpdateStatusMessage.class);
             register(Opcode.OBJ_BLOCK_STATUS.value, ObjectBlockStatusMessage.class);
             register(Opcode.OBJ_BLOCK_TRANSFER_STATUS.value, ObjectBlockTransferStatusMessage.class);
             register(Opcode.OBJ_INFO_STATUS.value, ObjectInfoStatusMessage.class);
-            register(Opcode.OBJ_TRANSFER_STATUS.value, ObjectTransferStatusMessage.class);
+            register(Opcode.OBJ_TRANSFER_STATUS.value, ObjectTransferStatusMessage.class);*/
 
             // remote provision
             register(Opcode.REMOTE_PROV_SCAN_STS.value, ScanStatusMessage.class);

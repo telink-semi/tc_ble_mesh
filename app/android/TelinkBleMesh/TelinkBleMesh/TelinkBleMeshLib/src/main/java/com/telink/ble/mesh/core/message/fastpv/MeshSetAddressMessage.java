@@ -1,12 +1,13 @@
 package com.telink.ble.mesh.core.message.fastpv;
 
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.updating.UpdatingMessage;
+import com.telink.ble.mesh.core.message.generic.GenericMessage;
+
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class MeshSetAddressMessage extends UpdatingMessage {
+public class MeshSetAddressMessage extends GenericMessage {
 
     private byte[] mac;
     private int newMeshAddress;

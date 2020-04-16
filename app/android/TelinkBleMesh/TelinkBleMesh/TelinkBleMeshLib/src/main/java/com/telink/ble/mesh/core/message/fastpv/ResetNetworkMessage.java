@@ -2,11 +2,12 @@ package com.telink.ble.mesh.core.message.fastpv;
 
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.updating.UpdatingMessage;
+import com.telink.ble.mesh.core.message.generic.GenericMessage;
+
 
 import java.nio.ByteOrder;
 
-public class ResetNetworkMessage extends UpdatingMessage {
+public class ResetNetworkMessage extends GenericMessage {
 
     /**
      * milliseconds

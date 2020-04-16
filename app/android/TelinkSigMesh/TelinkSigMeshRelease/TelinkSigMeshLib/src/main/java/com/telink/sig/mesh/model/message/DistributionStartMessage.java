@@ -28,7 +28,8 @@ package com.telink.sig.mesh.model.message;
 // sample: a3ff0000000000000001 b60a 1102 210000ff 00c0 0101
 public class DistributionStartMessage implements ModelMessage {
 
-    public int cid = 0x0211;
+//    public int cid = 0x0211;
+    public int cid = 0x0171;
 
     public int fwId = 0xFF000021;
 

@@ -341,7 +341,9 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
                 }
                 byte[] strArr = new byte[4];
                 System.arraycopy(fwInfoNotify.params, 2, strArr, 0, 4);
-                final String fwVer = new String(strArr);
+
+                final String fwVer = new String(strArr) + "(" + Arrays.bytesToHexString(strArr, ":") + ")";
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

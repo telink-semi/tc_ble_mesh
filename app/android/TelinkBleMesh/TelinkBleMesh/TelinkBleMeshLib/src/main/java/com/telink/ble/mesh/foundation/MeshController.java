@@ -14,7 +14,7 @@ import com.telink.ble.mesh.core.access.AccessBridge;
 import com.telink.ble.mesh.core.access.BindingBearer;
 import com.telink.ble.mesh.core.access.BindingController;
 import com.telink.ble.mesh.core.access.FastProvisioningController;
-import com.telink.ble.mesh.core.access.MeshUpdatingController;
+import com.telink.ble.mesh.core.access.FirmwareUpdatingController;
 import com.telink.ble.mesh.core.access.RemoteProvisioningController;
 import com.telink.ble.mesh.core.ble.BleScanner;
 import com.telink.ble.mesh.core.ble.GattConnection;
@@ -36,7 +36,7 @@ import com.telink.ble.mesh.entity.AdvertisingDevice;
 import com.telink.ble.mesh.entity.BindingDevice;
 import com.telink.ble.mesh.entity.FastProvisioningConfiguration;
 import com.telink.ble.mesh.entity.FastProvisioningDevice;
-import com.telink.ble.mesh.entity.MeshUpdatingConfiguration;
+import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.entity.ProvisioningDevice;
 import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
@@ -45,7 +45,7 @@ import com.telink.ble.mesh.foundation.event.BindingEvent;
 import com.telink.ble.mesh.foundation.event.FastProvisioningEvent;
 import com.telink.ble.mesh.foundation.event.GattOtaEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
-import com.telink.ble.mesh.foundation.event.MeshUpdatingEvent;
+import com.telink.ble.mesh.foundation.event.FirmwareUpdatingEvent;
 import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.foundation.event.OnlineStatusEvent;
 import com.telink.ble.mesh.foundation.event.ProvisioningEvent;
@@ -118,7 +118,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     private BindingController mBindingController;
 
     // mesh ota
-    private MeshUpdatingController mMeshUpdatingController;
+//    private MeshUpdatingController mMeshUpdatingController;
+
+    // firmware update
+    private FirmwareUpdatingController mFirmwareUpdatingController;
 
     /**
      * rely on ProvisioningController
@@ -225,9 +228,14 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             mBindingController = null;
         }
 
-        if (mMeshUpdatingController != null) {
+        /*if (mMeshUpdatingController != null) {
             mMeshUpdatingController.clear();
             mMeshUpdatingController = null;
+        }*/
+
+        if (mFirmwareUpdatingController != null) {
+            mFirmwareUpdatingController.clear();
+            mFirmwareUpdatingController = null;
         }
 
         if (mDelayHandler != null) {
@@ -287,8 +295,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         mBindingController = new BindingController(handlerThread);
         mBindingController.register(this);
 
-        mMeshUpdatingController = new MeshUpdatingController(handlerThread);
-        mMeshUpdatingController.register(this);
+//        mMeshUpdatingController = new MeshUpdatingController(handlerThread);
+//        mMeshUpdatingController.register(this);
+
+        mFirmwareUpdatingController = new FirmwareUpdatingController(handlerThread);
+        mFirmwareUpdatingController.register(this);
 
         mRemoteProvisioningController = new RemoteProvisioningController(handlerThread);
         mRemoteProvisioningController.register(this);
@@ -523,8 +534,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         this.actionMode = Mode.MODE_MESH_OTA;
         resetAction();
         if (mGattConnection.isProxyNodeConnected()) {
-            onActionStart();
-            mMeshUpdatingController.begin((MeshUpdatingConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG));
+            onConnectSuccess();
+            /*onActionStart();
+            mMeshUpdatingController.begin((FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG));*/
         } else {
             if (mGattConnection.disconnect()) {
                 // waiting for disconnected
@@ -540,7 +552,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             log("mesh updating stop: not running...");
             return;
         }
-        mMeshUpdatingController.stop();
+        mFirmwareUpdatingController.stop();
     }
 
     private boolean validateActionMode(Mode targetMode) {
@@ -557,7 +569,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             } else if (actionMode == Mode.MODE_BIND) {
                 mBindingController.clear();
             } else if (actionMode == Mode.MODE_MESH_OTA) {
-                mMeshUpdatingController.clear();
+                mFirmwareUpdatingController.clear();
             } else if (actionMode == Mode.MODE_FAST_PROVISION) {
                 mFastProvisioningController.clear();
                 isLogin = false;
@@ -753,7 +765,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
             case MODE_MESH_OTA:
                 onActionStart();
-                mMeshUpdatingController.begin((MeshUpdatingConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG));
+                mFirmwareUpdatingController.begin((FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG));
+//                mMeshUpdatingController.begin((FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG));
                 break;
 
             case MODE_FAST_PROVISION:
@@ -781,7 +794,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
             case MODE_MESH_OTA:
                 onMeshUpdatingComplete();
-                onMeshUpdatingEvent(MeshUpdatingEvent.EVENT_TYPE_UPDATING_FAIL,
+                onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_FAIL,
                         null,
                         desc, -1);
                 break;
@@ -809,7 +822,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
             case MODE_MESH_OTA:
                 onMeshUpdatingComplete();
-                onMeshUpdatingEvent(MeshUpdatingEvent.EVENT_TYPE_UPDATING_FAIL,
+                onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_FAIL,
                         null,
                         desc, -1);
                 break;
@@ -1175,7 +1188,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 //            if (!device.getAddress().toUpperCase().equals("A4:C1:38:3F:4C:05")) return;
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
-            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
+//            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
 //            if (!device.getAddress().toUpperCase().contains("FF:EE:EE:EE")) return;
 //            if (!device.getAddress().contains("33:22:11")) return;
             onScanFilter(device, rssi, scanRecord);
@@ -1287,7 +1300,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         if (actionMode == Mode.MODE_BIND) {
             mBindingController.onMessageNotification(notificationMessage);
         } else if (actionMode == Mode.MODE_MESH_OTA) {
-            mMeshUpdatingController.onMessageNotification(notificationMessage);
+
+            mFirmwareUpdatingController.onMessageNotification(notificationMessage);
         } else if (actionMode == Mode.MODE_REMOTE_PROVISION) {
             mRemoteProvisioningController.onMessageNotification(notificationMessage);
         } else if (actionMode == Mode.MODE_FAST_PROVISION) {
@@ -1317,7 +1331,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     @Override
     public void onReliableMessageComplete(boolean success, int opcode, int rspMax, int rspCount) {
         if (actionMode == Mode.MODE_MESH_OTA) {
-            mMeshUpdatingController.onUpdatingCommandComplete(success, opcode, rspMax, rspCount);
+            mFirmwareUpdatingController.onUpdatingCommandComplete(success, opcode, rspMax, rspCount);
         } else if (actionMode == Mode.MODE_REMOTE_PROVISION) {
             mRemoteProvisioningController.onRemoteProvisioningCommandComplete(success, opcode, rspMax, rspCount);
         } else if (actionMode == Mode.MODE_FAST_PROVISION) {
@@ -1387,7 +1401,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     private void onMeshUpdatingEvent(String eventType, MeshUpdatingDevice device, String desc, int progress) {
-        MeshUpdatingEvent updatingEvent = new MeshUpdatingEvent(this, eventType);
+        FirmwareUpdatingEvent updatingEvent = new FirmwareUpdatingEvent(this, eventType);
         updatingEvent.setUpdatingDevice(device);
         updatingEvent.setDesc(desc);
         updatingEvent.setProgress(progress);
@@ -1426,36 +1440,36 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             }
         } else if (actionMode == Mode.MODE_MESH_OTA && mode == AccessBridge.MODE_FIRMWARE_UPDATING) {
             switch (state) {
-                case MeshUpdatingController.STATE_SUCCESS:
+                case FirmwareUpdatingController.STATE_SUCCESS:
                     // at least one device success
                     onMeshUpdatingComplete();
-                    onMeshUpdatingEvent(MeshUpdatingEvent.EVENT_TYPE_UPDATING_SUCCESS, null, desc, -1);
+                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_SUCCESS, null, desc, -1);
                     break;
-                case MeshUpdatingController.STATE_FAIL:
+                case FirmwareUpdatingController.STATE_FAIL:
                     onMeshUpdatingComplete();
-                    onMeshUpdatingEvent(MeshUpdatingEvent.EVENT_TYPE_UPDATING_FAIL, null, desc, -1);
+                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_FAIL, null, desc, -1);
                     break;
 
-                case MeshUpdatingController.STATE_DEVICE_FAIL:
-                    onMeshUpdatingEvent(MeshUpdatingEvent.EVENT_TYPE_DEVICE_FAIL, (MeshUpdatingDevice) obj, desc, -1);
+                case FirmwareUpdatingController.STATE_DEVICE_FAIL:
+                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_DEVICE_FAIL, (MeshUpdatingDevice) obj, desc, -1);
                     break;
 
-                case MeshUpdatingController.STATE_DEVICE_SUCCESS:
-                    onMeshUpdatingEvent(MeshUpdatingEvent.EVENT_TYPE_DEVICE_SUCCESS, (MeshUpdatingDevice) obj, desc, -1);
+                case FirmwareUpdatingController.STATE_DEVICE_SUCCESS:
+                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_DEVICE_SUCCESS, (MeshUpdatingDevice) obj, desc, -1);
                     break;
 
-                case MeshUpdatingController.STATE_PROGRESS:
+                case FirmwareUpdatingController.STATE_PROGRESS:
                     int progress = (int) obj;
-                    onMeshUpdatingEvent(MeshUpdatingEvent.EVENT_TYPE_UPDATING_PROGRESS, null, desc, progress);
+                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_PROGRESS, null, desc, progress);
                     break;
 
-                case MeshUpdatingController.STATE_STOPPED:
+                case FirmwareUpdatingController.STATE_STOPPED:
                     onMeshUpdatingComplete();
-                    onMeshUpdatingEvent(MeshUpdatingEvent.EVENT_TYPE_UPDATING_STOPPED, null, desc, -1);
+                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_STOPPED, null, desc, -1);
                     break;
 
-                case MeshUpdatingController.STATE_PREPARED:
-                    onMeshUpdatingEvent(MeshUpdatingEvent.EVENT_TYPE_UPDATING_PREPARED, null, desc, -1);
+                case FirmwareUpdatingController.STATE_PREPARED:
+                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_PREPARED, null, desc, -1);
                     break;
             }
         } else if (actionMode == Mode.MODE_REMOTE_PROVISION && mode == AccessBridge.MODE_REMOTE_PROVISIONING) {

@@ -13,20 +13,19 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
-import com.telink.ble.mesh.core.message.updating.FirmwareInfoGetMessage;
-import com.telink.ble.mesh.core.message.updating.FirmwareInfoStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoGetMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoStatusMessage;
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.entity.MeshUpdatingConfiguration;
+import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
-import com.telink.ble.mesh.foundation.event.MeshUpdatingEvent;
+import com.telink.ble.mesh.foundation.event.FirmwareUpdatingEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.MeshOtaParameters;
 import com.telink.ble.mesh.model.MeshInfo;
@@ -35,12 +34,12 @@ import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.ui.adapter.BaseSelectableListAdapter;
 import com.telink.ble.mesh.ui.adapter.MeshOTADeviceSelectAdapter;
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
+import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -87,7 +86,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
             if (msg.what == MSG_INFO) {
                 tv_info.setText(msg.obj.toString());
             } else if (msg.what == MSG_PROGRESS) {
-                tv_progress.setText("" + progress);
+                tv_progress.setText(String.valueOf(progress));
                 pb_mesh_ota.setProgress(progress);
             }
         }
@@ -134,15 +133,15 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
 
 
         TelinkMeshApplication.getInstance().addEventListener(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, this);
-        TelinkMeshApplication.getInstance().addEventListener(FirmwareInfoStatusMessage.class.getName(), this);
+        TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdateInfoStatusMessage.class.getName(), this);
 
-        TelinkMeshApplication.getInstance().addEventListener(MeshUpdatingEvent.EVENT_TYPE_UPDATING_SUCCESS, this);
-        TelinkMeshApplication.getInstance().addEventListener(MeshUpdatingEvent.EVENT_TYPE_UPDATING_FAIL, this);
-        TelinkMeshApplication.getInstance().addEventListener(MeshUpdatingEvent.EVENT_TYPE_UPDATING_PROGRESS, this);
-        TelinkMeshApplication.getInstance().addEventListener(MeshUpdatingEvent.EVENT_TYPE_UPDATING_STOPPED, this);
-        TelinkMeshApplication.getInstance().addEventListener(MeshUpdatingEvent.EVENT_TYPE_DEVICE_SUCCESS, this);
-        TelinkMeshApplication.getInstance().addEventListener(MeshUpdatingEvent.EVENT_TYPE_DEVICE_FAIL, this);
-        TelinkMeshApplication.getInstance().addEventListener(MeshUpdatingEvent.EVENT_TYPE_UPDATING_PREPARED, this);
+        TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_SUCCESS, this);
+        TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_FAIL, this);
+        TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_PROGRESS, this);
+        TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_STOPPED, this);
+        TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdatingEvent.EVENT_TYPE_DEVICE_SUCCESS, this);
+        TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdatingEvent.EVENT_TYPE_DEVICE_FAIL, this);
+        TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_PREPARED, this);
     }
 
     @Override
@@ -189,7 +188,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
                     device.setUpdatingEleAddress(node.getTargetEleAdr(MeshSigModel.SIG_MD_OBJ_TRANSFER_S.modelId));
                     updatingDevices.add(device);
                 }
-                MeshUpdatingConfiguration configuration = new MeshUpdatingConfiguration(updatingDevices, mFirmware,
+                FirmwareUpdateConfiguration configuration = new FirmwareUpdateConfiguration(updatingDevices, mFirmware,
                         meshInfo.getDefaultAppKeyIndex(), 0xC00F);
                 MeshOtaParameters meshOtaParameters = new MeshOtaParameters(configuration);
                 MeshService.getInstance().startMeshOta(meshOtaParameters);
@@ -198,8 +197,9 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
 
             case R.id.btn_get_version:
                 meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-                FirmwareInfoGetMessage infoGetMessage = FirmwareInfoGetMessage.getSimple(0xFFFF,
-                        meshInfo.getDefaultAppKeyIndex(), 0);
+                FirmwareUpdateInfoGetMessage infoGetMessage = FirmwareUpdateInfoGetMessage.getSimple(0xFFFF,
+                        meshInfo.getDefaultAppKeyIndex());
+                infoGetMessage.setResponseMax(0);
                 if (MeshService.getInstance().sendMeshMessage(infoGetMessage)) {
                     versions.clear();
                     mDeviceAdapter.notifyDataSetChanged();
@@ -251,45 +251,45 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
         }
     }
 
-    private void onMeshUpdatingEvent(MeshUpdatingEvent updatingEvent) {
+    private void onMeshUpdatingEvent(FirmwareUpdatingEvent updatingEvent) {
         switch (updatingEvent.getType()) {
-            case MeshUpdatingEvent.EVENT_TYPE_UPDATING_PROGRESS:
+            case FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_PROGRESS:
                 if (isComplete) break;
                 progress = updatingEvent.getProgress();
                 infoHandler.obtainMessage(MSG_PROGRESS).sendToTarget();
                 break;
-            case MeshUpdatingEvent.EVENT_TYPE_UPDATING_SUCCESS:
+            case FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_SUCCESS:
                 isComplete = true;
                 infoHandler.obtainMessage(MSG_INFO, "Mesh OTA Complete").sendToTarget();
                 break;
 
-            case MeshUpdatingEvent.EVENT_TYPE_UPDATING_FAIL:
+            case FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_FAIL:
                 isComplete = true;
                 infoHandler.obtainMessage(MSG_INFO, "Mesh OTA Fail -- " + updatingEvent.getDesc()).sendToTarget();
                 break;
-            case MeshUpdatingEvent.EVENT_TYPE_UPDATING_STOPPED:
+            case FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_STOPPED:
                 isComplete = true;
                 infoHandler.obtainMessage(MSG_INFO, "OTA Stopped").sendToTarget();
                 break;
 
-            case MeshUpdatingEvent.EVENT_TYPE_DEVICE_SUCCESS:
+            case FirmwareUpdatingEvent.EVENT_TYPE_DEVICE_SUCCESS:
                 onDeviceOtaSuccess(updatingEvent.getUpdatingDevice());
                 break;
 
-            case MeshUpdatingEvent.EVENT_TYPE_DEVICE_FAIL:
+            case FirmwareUpdatingEvent.EVENT_TYPE_DEVICE_FAIL:
                 onDeviceOtaFail(updatingEvent.getUpdatingDevice(), updatingEvent.getDesc());
                 break;
 
-            case MeshUpdatingEvent.EVENT_TYPE_UPDATING_PREPARED:
-                infoHandler.obtainMessage(MSG_INFO, "Mesh OTA prepared").sendToTarget();
+            case FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_PREPARED:
+                infoHandler.obtainMessage(MSG_INFO, "Mesh OTA chunk sending...").sendToTarget();
                 break;
         }
     }
 
     @Override
     public void performed(Event<String> event) {
-        if (event instanceof MeshUpdatingEvent) {
-            onMeshUpdatingEvent((MeshUpdatingEvent) event);
+        if (event instanceof FirmwareUpdatingEvent) {
+            onMeshUpdatingEvent((FirmwareUpdatingEvent) event);
         } else {
             final String eventType = event.getType();
             if (eventType.equals(MeshEvent.EVENT_TYPE_DISCONNECTED)
@@ -303,17 +303,22 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
                         mDeviceAdapter.notifyDataSetChanged();
                     }
                 });
-            } else if (eventType.equals(FirmwareInfoStatusMessage.class.getName())) {
+            } else if (eventType.equals(FirmwareUpdateInfoStatusMessage.class.getName())) {
                 final NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
-                FirmwareInfoStatusMessage infoStatusMessage = (FirmwareInfoStatusMessage) notificationMessage.getStatusMessage();
-                final String fwVer = new String(MeshUtils.integer2Bytes(infoStatusMessage.getFirmwareId(), 4, ByteOrder.LITTLE_ENDIAN));
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        versions.put(notificationMessage.getSrc(), fwVer);
-                        mDeviceAdapter.notifyDataSetChanged();
-                    }
-                });
+                FirmwareUpdateInfoStatusMessage infoStatusMessage = (FirmwareUpdateInfoStatusMessage) notificationMessage.getStatusMessage();
+                FirmwareUpdateInfoStatusMessage.FirmwareInformationEntry firstEntry = infoStatusMessage.getFirstEntry();
+                if (firstEntry != null) {
+                    byte[] firmwareId = firstEntry.currentFirmwareID;
+                    final String fwVer = Arrays.bytesToHexString(firmwareId);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            versions.put(notificationMessage.getSrc(), fwVer);
+                            mDeviceAdapter.notifyDataSetChanged();
+                        }
+                    });
+                }
+
             } else if (eventType.equals(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN)) {
                 infoHandler.obtainMessage(MSG_INFO, "Device Login").sendToTarget();
             }

@@ -1,9 +1,10 @@
 package com.telink.ble.mesh.core.message.fastpv;
 
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.updating.UpdatingMessage;
+import com.telink.ble.mesh.core.message.generic.GenericMessage;
 
-public class MeshConfirmRequestMessage extends UpdatingMessage {
+
+public class MeshConfirmRequestMessage extends GenericMessage {
 
     public static MeshConfirmRequestMessage getSimple(int destinationAddress, int appKeyIndex) {
         MeshConfirmRequestMessage message = new MeshConfirmRequestMessage(destinationAddress, appKeyIndex);
