@@ -126,6 +126,7 @@ extern void set_proxy_initial_mode(u8 special_mode);
 extern void caculate_proxy_adv_hash_task();
 extern void set_pair_login_ok(u8 val);
 extern u8 proxy_proc_filter_mesh_cmd(u16 src);
+void caculate_proxy_adv_hash();
 
 #endif 
 

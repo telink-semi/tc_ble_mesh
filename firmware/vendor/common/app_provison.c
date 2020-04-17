@@ -1491,7 +1491,6 @@ void dispatch_pb_gatt(u8 *p ,u8 len )
 							25,"provision net info is ",0);
 				memcpy(&provision_mag.pro_net_info,p_prov_net,sizeof(provison_net_info_str));
 				// add the info about the gatt mode provision ,should set the cfg data part into the node identity
-				model_sig_cfg_s.node_identity_def = NODE_IDENTITY_SUBNET_SUPPORT_ENABLE;
 				mesh_provision_par_handle((u8 *)&provision_mag.pro_net_info);
 				#if !WIN32 
 				mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_SUC);
@@ -1506,6 +1505,7 @@ void dispatch_pb_gatt(u8 *p ,u8 len )
 				SET_TC_FIFO(TSCRIPT_PROVISION_SERVICE|TSCRIPT_MESH_RX,(u8 *)p,sizeof(pro_trans_data));
 				SET_TC_FIFO(TSCRIPT_PROVISION_SERVICE,(u8 *)p_notify,notify_len);
 				LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"provision suc! ",0);
+				mesh_key_node_identity_set_prov_set();
 			}else{
 			    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"gatt rcv err cmd in the STATE_DEV_CONFIRM state",0);
 				notify_len = prov_fail_cmd_proc(p_notify,UNEXPECTED_PDU);

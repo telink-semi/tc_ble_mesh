@@ -1672,7 +1672,6 @@ void mesh_global_var_init()
 #endif
 
 	model_sig_cfg_s.gatt_proxy = FEATURE_PROXY_EN ? GATT_PROXY_SUPPORT_ENABLE : GATT_PROXY_NOT_SUPPORT;
-	model_sig_cfg_s.node_identity_def = NODE_IDENTITY_SUBNET_SUPPORT_DISABLE;
 	model_sig_cfg_s.nw_transmit.count = TRANSMIT_CNT_DEF;
 	model_sig_cfg_s.nw_transmit.invl_steps = TRANSMIT_INVL_STEPS_DEF;
 	#if 0   // TEST_CASE_NODE_CFG_CFGR_BV01_EN in pts7_3_1.exe

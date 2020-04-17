@@ -1273,7 +1273,6 @@ void net_key_set2(mesh_net_key_t *key, const u8 *nk, u16 key_idx, int save)
 	
 	key->index = key_idx;
 	key->valid = KEY_VALID;
-	key->node_identity = model_sig_cfg_s.node_identity_def;
 	
 	if(save){
 		mesh_key_save();
@@ -2689,6 +2688,76 @@ void mesh_key_flash_sector_init()
 	flash_erase_sector(FLASH_ADR_MESH_KEY);
 	memset(mesh_key.net_key, 0, sizeof(mesh_key_t)-OFFSETOF(mesh_key_t,net_key));
 }
+#define MAX_SWITCH_IDENTITY_TIME_S 60
+void mesh_key_node_identity_init() // after power on ,we need to detect the flag ,and set timer part 
+{
+	foreach(i,NET_KEY_MAX){
+		mesh_net_key_t *p_in = &mesh_key.net_key[i][0];
+		if(p_in->valid){
+			if(p_in->node_identity == NODE_IDENTITY_SUBNET_SUPPORT_ENABLE){
+				p_in->start_identity_s = clock_time_s();
+			}
+		}
+	}
+	return ;
+}
+
+void mesh_key_node_identity_set_prov_set()// after gatt provision ,use this fun for setting part 
+{
+	u8 identity_trigger =0;
+	foreach(i,NET_KEY_MAX){
+		mesh_net_key_t *p_in = &mesh_key.net_key[i][0];
+		if(p_in->valid){
+			p_in->start_identity_s = clock_time_s();
+			if(p_in->node_identity != NODE_IDENTITY_SUBNET_SUPPORT_ENABLE){
+				p_in->node_identity = NODE_IDENTITY_SUBNET_SUPPORT_ENABLE;
+				identity_trigger++;
+			}
+		}
+	}
+	if(identity_trigger){
+		mesh_key_save();
+	}
+	return ;
+}
+
+/*
+void mesh_key_node_identity_prov_set(u8 identity,u8 netkey_idx)// client send node identity cfg cmd to set 
+{
+	foreach(i,NET_KEY_MAX){
+		mesh_net_key_t *p_in = &mesh_key.net_key[i][0];
+		if(p_in->valid && (p_in->index == netkey_idx)){
+			if(identity == NODE_IDENTITY_SUBNET_SUPPORT_ENABLE){
+				p_in->start_identity_s = clock_time_s();
+			}
+			if(p_in->node_identity != identity){
+				p_in->node_identity = identity;
+				mesh_key_save();	
+			}	
+			return ;	
+		}
+	}
+	return ;
+}
+*/
+void mesh_switch_identity_proc()// run in loop
+{
+	u8 identity_trigger =0;
+	foreach(i,NET_KEY_MAX){
+		mesh_net_key_t *p_in = &mesh_key.net_key[i][0];
+		if(p_in->node_identity == NODE_IDENTITY_SUBNET_SUPPORT_ENABLE && p_in->valid){
+			if(clock_time_exceed_s(p_in->start_identity_s,MAX_SWITCH_IDENTITY_TIME_S)){
+				identity_trigger++;
+				p_in->node_identity = NODE_IDENTITY_SUBNET_SUPPORT_DISABLE;
+			}
+		}
+	}
+	if(identity_trigger){
+		mesh_key_save();
+	}
+	return ;
+}
+
 
 void mesh_key_save()
 {
@@ -3299,6 +3368,8 @@ void mesh_loop_process()
     // remote prov proc
     mesh_cmd_sig_rp_loop_proc();
     #endif
+	// node identity proc 
+	mesh_switch_identity_proc();
     // provision loop proc
 	mesh_prov_proc_loop();
 	// mesh beacon proc 
@@ -3395,6 +3466,7 @@ void mesh_init_all()
 	init_heartbeat_str();
     // read parameters
     mesh_flash_retrieve();	// should be first, get unicast addr from config modle.
+    mesh_key_node_identity_init();// should be after key retrieve .
     provision_random_data_init();
 	mesh_provision_para_init();
 	//unprovision beacon send part 
@@ -3412,6 +3484,8 @@ void mesh_init_all()
 #if TEST_CASE_HBS_BV_05_EN
 	friend_add_special_grp_addr();
 #endif
+	caculate_proxy_adv_hash();
+
     mesh_init_flag = 0;
 }
 

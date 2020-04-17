@@ -838,8 +838,7 @@ typedef struct{
 	u8 net_key_list;	// wait for define struct
 	u8 app_key_list;	// wait for define struct
 	u8 md2app_key_list;	// wait for define struct
-	u8 node_identity_def;
-	u8 rfu2[1];
+	u8 rfu2[2];
 	mesh_heartbeat_pub_str hb_pub;
 	mesh_heartbeat_sub_str hb_sub;	// wait for define struct
 }model_sig_cfg_s_t;
@@ -1256,7 +1255,8 @@ typedef struct{
     u8 node_identity;
     u8 rfu2[2];		// for 16 align
 	mesh_app_key_t app_key[APP_KEY_MAX];
-    u8 rfu3[8];		// for 16 align
+	u32 start_identity_s;
+    u8 rfu3[4];		// for 16 align
 }mesh_net_key_t;
 
 #define DEC_BOTH_TWO_DEV_KEY        (2)    
@@ -1467,6 +1467,10 @@ int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u32 size
 void mesh_seg_ack_poll_rx();
 void mesh_seg_ack_poll_tx();
 void blc_pm_select_none();
+
+void mesh_key_node_identity_init(); // after power on ,we need to detect the flag ,and set timer part 
+void mesh_key_node_identity_set_prov_set();
+void mesh_switch_identity_proc();// run in loop
 
 
 extern u16 ele_adr_primary;
