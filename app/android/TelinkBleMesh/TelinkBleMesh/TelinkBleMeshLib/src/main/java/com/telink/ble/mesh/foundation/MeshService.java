@@ -90,11 +90,15 @@ public class MeshService implements MeshController.EventCallback {
         mController.startScan(scanParameters);
     }
 
+    public void stopScan() {
+        mController.stopScan();
+    }
+
     /**
      * start provisioning if device found by {@link #startScan(ScanParameters)}
      */
-    public void startProvisioning(ProvisioningParameters provisioningParameters) {
-        mController.startProvisioning(provisioningParameters);
+    public boolean startProvisioning(ProvisioningParameters provisioningParameters) {
+        return mController.startProvisioning(provisioningParameters);
     }
 
     /**

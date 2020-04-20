@@ -214,6 +214,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
             onRemoteProvisioningComplete();
         } else if (opcode == Opcode.REMOTE_PROV_PDU_SEND.value) {
             log("provisioning pdu send timeout");
+            onProvisioningComplete(false, "provision pdu send timeout");
         }
     }
 
@@ -298,7 +299,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
                 (byte) this.outboundNumber,
                 transmittingPdu
         );
-        provisioningPduSendMessage.setRetryCnt(3);
+        provisioningPduSendMessage.setRetryCnt(8);
 //        delayHandler.removeCallbacks(provisioningPduTimeoutTask);
 //        delayHandler.postDelayed(provisioningPduTimeoutTask, OUTBOUND_WAITING_TIMEOUT);
         log("send provisioning pdu: " + this.outboundNumber);

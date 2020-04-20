@@ -7,6 +7,8 @@ import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelAppStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelSubscriptionStatusMessage;
+import com.telink.ble.mesh.core.message.config.NodeIdentitySetMessage;
+import com.telink.ble.mesh.core.message.config.NodeIdentityStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
 import com.telink.ble.mesh.core.message.fastpv.MeshAddressStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareMetadataStatusMessage;
@@ -85,6 +87,7 @@ public class MeshStatus {
             register(Opcode.NODE_RESET_STATUS.value, NodeResetStatusMessage.class);
             register(Opcode.CFG_MODEL_SUB_STATUS.value, ModelSubscriptionStatusMessage.class);
             register(Opcode.CFG_MODEL_PUB_STATUS.value, ModelPublicationStatusMessage.class);
+            register(Opcode.NODE_ID_STATUS.value, NodeIdentityStatusMessage.class);
 
             // generic
             register(Opcode.G_ONOFF_STATUS.value, OnOffStatusMessage.class);

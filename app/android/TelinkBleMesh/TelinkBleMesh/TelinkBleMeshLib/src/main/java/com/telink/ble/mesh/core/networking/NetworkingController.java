@@ -165,7 +165,13 @@ public class NetworkingController {
      * 0: segment idle
      * others: segment busy
      */
-    private long lastSeqAuth;
+    private long lastSeqAuth = 0;
+
+    private int lastSegSrc = 0;
+
+    // if last segment packets complete
+    private boolean lastSegComplete = true;
+
 
     private NetworkingBridge mNetworkingBridge;
 
@@ -257,6 +263,8 @@ public class NetworkingController {
         this.reliableBusy.set(false);
         this.mNetworkingQueue.clear();
         this.lastSeqAuth = 0;
+        this.lastSegSrc = 0;
+        this.lastSegComplete = true;
         this.deviceSequenceNumberMap.clear();
         if (receivedSegmentedMessageBuffer != null) {
             receivedSegmentedMessageBuffer.clear();
@@ -274,8 +282,10 @@ public class NetworkingController {
 
 
     private synchronized void saveCompletedSeqAuth(int src, long seqAuth) {
+        log(String.format(Locale.getDefault(), "save complete seqAuth src: 0x%04X -- seqAuth: 0x%014X", src, seqAuth));
         this.completedSeqAuthBuffer.put(src, seqAuth);
         if (this.completedSeqAuthBuffer.size() > SEQ_AUTH_BUF_CAPACITY) {
+            log("remove buffer");
             this.completedSeqAuthBuffer.removeAt(SEQ_AUTH_BUF_CAPACITY);
         }
     }
@@ -814,8 +824,7 @@ public class NetworkingController {
                 log("sequence number check err", MeshLogger.LEVEL_WARN);
                 return;
             }
-            log(String.format("proxy network pdu src: %04X dst: %04X", proxyNetworkPdu.getSrc(), proxyNetworkPdu.getDst()),
-                    MeshLogger.LEVEL_WARN);
+            log(String.format("proxy network pdu src: %04X dst: %04X", proxyNetworkPdu.getSrc(), proxyNetworkPdu.getDst()));
             onProxyConfigurationNotify(proxyNetworkPdu.getTransportPDU(), proxyNetworkPdu.getSrc());
         }
 
@@ -1083,7 +1092,7 @@ public class NetworkingController {
         public void run() {
             MeshMessage meshMessage = mSendingReliableMessage;
             if (meshMessage != null) {
-                log("reliable message retry? retryCnt: " + meshMessage.getRetryCnt());
+                log(String.format(Locale.getDefault(), "reliable message retry? retryCnt: %d opcode: %06X", meshMessage.getRetryCnt(), meshMessage.getOpcode()));
                 if (meshMessage.getRetryCnt() <= 0) {
                     onReliableMessageComplete(false);
                 } else {
@@ -1150,7 +1159,7 @@ public class NetworkingController {
     private void sendSegmentBlockAck(int src) {
         log("send segment block ack:" + src);
         final SparseArray<SegmentedAccessMessagePDU> messages = receivedSegmentedMessageBuffer.clone();
-        if (receivedSegmentedMessageBuffer.size() > 0) {
+        if (messages.size() > 0) {
 //            int segN = -1;
             int seqZero = -1;
             int blockAck = 0;
@@ -1234,7 +1243,67 @@ public class NetworkingController {
                 segN));
         AccessLayerPDU accessPDU = null;
 
-        if (lastSeqAuth == 0) {
+        if (seqAuth != lastSeqAuth || lastSegSrc != src) {
+            if (lastSegComplete) {
+                log("last segment complete");
+                // save last seqAuth
+                saveCompletedSeqAuth(lastSegSrc, lastSeqAuth);
+                lastSegComplete = false;
+                // new segment message
+                lastSeqAuth = seqAuth;
+                lastSegSrc = src;
+                receivedSegmentedMessageBuffer.clear();
+                receivedSegmentedMessageBuffer.put(segO, message);
+                checkSegmentBlock(false, ttl, src);
+            } else {
+                sendSegmentBlockBusyAck(src, seqZero);
+            }
+        } else {
+            receivedSegmentedMessageBuffer.put(segO, message);
+
+            int messageCnt = receivedSegmentedMessageBuffer.size();
+            log("Received segment message count: " + messageCnt);
+
+            if (messageCnt != segN + 1) {
+                lastSeqAuth = seqAuth;
+                checkSegmentBlock(false, ttl, src);
+            } else {
+                lastSegComplete = true;
+                checkSegmentBlock(true, ttl, src);
+                if (isSeqAuthExists(src, seqAuth)) {
+                    log(" seqAuth already received: " + seqAuth);
+                    lastSeqAuth = 0;
+                    return null;
+                }
+                UpperTransportAccessPDU.UpperTransportEncryptionSuite encryptionSuite;
+                int akf = message.getAkf();
+                if (akf == AccessType.APPLICATION.akf) {
+                    encryptionSuite = new UpperTransportAccessPDU.UpperTransportEncryptionSuite(getAppKeyList(), ivIndex);
+                } else {
+                    byte[] deviceKey = getDeviceKey(src);
+                    if (deviceKey == null) {
+                        log("Device key not found when decrypt segmented access message", MeshLogger.LEVEL_WARN);
+                        return null;
+                    }
+                    encryptionSuite = new UpperTransportAccessPDU.UpperTransportEncryptionSuite(deviceKey, ivIndex);
+                }
+
+                UpperTransportAccessPDU upperTransportAccessPDU = new UpperTransportAccessPDU(encryptionSuite);
+                upperTransportAccessPDU.parseAndDecryptSegmentedMessage(receivedSegmentedMessageBuffer.clone(), transportSeqNo, src, networkLayerPDU.getDst());
+
+                byte[] completeTransportPdu = upperTransportAccessPDU.getDecryptedPayload();
+
+                log("decrypted upper: " + Arrays.bytesToHexString(completeTransportPdu, ""));
+                if (completeTransportPdu != null) {
+                    accessPDU = AccessLayerPDU.parse(completeTransportPdu);
+                } else {
+                    log("upper pdu decryption error: ", MeshLogger.LEVEL_WARN);
+                }
+            }
+        }
+
+
+        /*if (lastSeqAuth == 0) {
             // new segment message
             lastSeqAuth = seqAuth;
             receivedSegmentedMessageBuffer.clear();
@@ -1243,56 +1312,17 @@ public class NetworkingController {
 
         } else {
 
+
+
+
+
             if (lastSeqAuth != seqAuth) {
                 // send segment busy
                 sendSegmentBlockBusyAck(src, seqZero);
             } else {
-                receivedSegmentedMessageBuffer.put(segO, message);
 
-                int messageCnt = receivedSegmentedMessageBuffer.size();
-                log("Received segment message count: " + messageCnt);
-
-                if (messageCnt != segN + 1) {
-                    lastSeqAuth = seqAuth;
-                    checkSegmentBlock(false, ttl, src);
-                } else {
-                    checkSegmentBlock(true, ttl, src);
-
-                    if (isSeqAuthExists(src, seqAuth)) {
-                        log(" auth already received: " + seqAuth);
-                        lastSeqAuth = 0;
-                        return null;
-                    }
-
-                    UpperTransportAccessPDU.UpperTransportEncryptionSuite encryptionSuite;
-                    int akf = message.getAkf();
-                    if (akf == AccessType.APPLICATION.akf) {
-                        encryptionSuite = new UpperTransportAccessPDU.UpperTransportEncryptionSuite(getAppKeyList(), ivIndex);
-                    } else {
-                        byte[] deviceKey = getDeviceKey(src);
-                        if (deviceKey == null) {
-                            log("Device key not found when decrypt segmented access message", MeshLogger.LEVEL_WARN);
-                            return null;
-                        }
-                        encryptionSuite = new UpperTransportAccessPDU.UpperTransportEncryptionSuite(deviceKey, ivIndex);
-                    }
-
-                    UpperTransportAccessPDU upperTransportAccessPDU = new UpperTransportAccessPDU(encryptionSuite);
-                    upperTransportAccessPDU.parseAndDecryptSegmentedMessage(receivedSegmentedMessageBuffer.clone(), transportSeqNo, src, networkLayerPDU.getDst());
-
-                    byte[] completeTransportPdu = upperTransportAccessPDU.getDecryptedPayload();
-
-                    log("decrypted upper: " + Arrays.bytesToHexString(completeTransportPdu, ""));
-                    if (completeTransportPdu != null) {
-                        accessPDU = AccessLayerPDU.parse(completeTransportPdu);
-                    } else {
-                        log("upper pdu decryption error: ", MeshLogger.LEVEL_WARN);
-                    }
-                    saveCompletedSeqAuth(src, seqAuth);
-                    lastSeqAuth = 0;
-                }
             }
-        }
+        }*/
 
 
         return accessPDU;
