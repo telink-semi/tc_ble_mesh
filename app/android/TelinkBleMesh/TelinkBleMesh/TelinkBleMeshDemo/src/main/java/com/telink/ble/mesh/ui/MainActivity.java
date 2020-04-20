@@ -14,7 +14,6 @@ import com.telink.ble.mesh.foundation.MeshConfiguration;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
-import com.telink.ble.mesh.foundation.parameter.AutoConnectFilterType;
 import com.telink.ble.mesh.foundation.parameter.AutoConnectParameters;
 import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.MeshInfo;
@@ -102,7 +101,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     private void autoConnect() {
         MeshLogger.log("main auto connect");
 //        MeshService.getInstance().autoConnect(new AutoConnectParameters(AutoConnectFilterType.NODE_IDENTITY));
-        MeshService.getInstance().autoConnect(new AutoConnectParameters(AutoConnectFilterType.AUTO));
+        MeshService.getInstance().autoConnect(new AutoConnectParameters());
     }
 
 

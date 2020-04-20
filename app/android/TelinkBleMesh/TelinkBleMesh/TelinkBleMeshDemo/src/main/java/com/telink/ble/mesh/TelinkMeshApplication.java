@@ -103,10 +103,6 @@ public class TelinkMeshApplication extends MeshApplication {
         dispatchEvent(new MeshEvent(this, MeshEvent.EVENT_TYPE_MESH_RESET, "mesh reset"));
     }
 
-    public void saveMeshInfo() {
-        FileSystem.writeAsObject(this, MeshInfo.FILE_NAME, meshInfo);
-    }
-
     public MeshInfo getMeshInfo() {
         return meshInfo;
     }

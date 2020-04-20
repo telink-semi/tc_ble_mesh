@@ -24,8 +24,8 @@ import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
-import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.FirmwareUpdatingEvent;
+import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.MeshOtaParameters;
 import com.telink.ble.mesh.model.MeshInfo;
@@ -221,7 +221,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
     public List<NodeInfo> getSelectedNodes() {
         List<NodeInfo> nodes = null;
         for (NodeInfo deviceInfo : mesh.nodes) {
-            if (deviceInfo.selected && deviceInfo.getOnOff() != -1) {
+            if (deviceInfo.selected && deviceInfo.getOnOff() != -1 && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1) {
                 if (nodes == null) {
                     nodes = new ArrayList<>();
                 }

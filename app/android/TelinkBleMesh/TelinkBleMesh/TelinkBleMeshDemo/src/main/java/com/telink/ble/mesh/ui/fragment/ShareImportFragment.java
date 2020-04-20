@@ -3,6 +3,7 @@ package com.telink.ble.mesh.ui.fragment;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -73,11 +74,12 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
                     return;
                 }
                 String jsonData = FileSystem.readString(file);
-                MeshInfo newMesh = MeshStorageService.getInstance().importExternal(jsonData, TelinkMeshApplication.getInstance().getMeshInfo());
+                MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
+                MeshInfo newMesh = MeshStorageService.getInstance().importExternal(jsonData, localMesh);
                 newMesh.saveOrUpdate(getActivity());
                 MeshService.getInstance().idle(true);
-                MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());
                 TelinkMeshApplication.getInstance().setupMesh(newMesh);
+                MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());
                 tv_log.append("Mesh storage import success, back to home page to reconnect\n");
                 toastMsg("import success");
                 break;

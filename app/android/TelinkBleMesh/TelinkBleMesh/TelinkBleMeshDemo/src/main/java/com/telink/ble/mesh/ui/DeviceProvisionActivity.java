@@ -108,33 +108,12 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
     private void startScan() {
         enableUI(false);
-
-        ScanParameters parameters = ScanParameters.getDefault(false, true);
-
-        /*if (devices.size() != 0) {
-            String[] excludeMacs = new String[devices.size()];
-            for (int i = 0; i < devices.size(); i++) {
-                excludeMacs[i] = devices.get(i).macAddress;
-            }
-            parameters.setExcludeMacs(excludeMacs);
-        }*/
-
+        ScanParameters parameters = ScanParameters.getDefault(false, false);
         parameters.setScanTimeout(10 * 1000);
-//        parameters.setIncludeMacs(new String[]{"FF:FF:BB:CC:DD:53"});
         MeshService.getInstance().startScan(parameters);
     }
 
     private void onDeviceFound(AdvertisingDevice advertisingDevice) {
-        int address = mesh.provisionIndex;
-
-        MeshLogger.d("alloc address: " + address);
-        if (address == -1) {
-            enableUI(true);
-            return;
-        }
-
-        NodeInfo nodeInfo = new NodeInfo();
-        nodeInfo.meshAddress = mesh.provisionIndex;
         // provision service data: 15:16:28:18:[16-uuid]:[2-oobInfo]
         byte[] serviceData = MeshUtils.getMeshServiceData(advertisingDevice.scanRecord, true);
         if (serviceData == null || serviceData.length < 16) {
@@ -143,12 +122,23 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         }
         final int uuidLen = 16;
         byte[] deviceUUID = new byte[uuidLen];
-        System.arraycopy(serviceData, 0, deviceUUID, 0, uuidLen);
-        nodeInfo.deviceUUID = deviceUUID;
-        nodeInfo.state = NodeInfo.STATE_PROVISIONING;
 
-        devices.add(nodeInfo);
-        mListAdapter.notifyDataSetChanged();
+
+        System.arraycopy(serviceData, 0, deviceUUID, 0, uuidLen);
+        NodeInfo localNode = getNodeByUUID(deviceUUID);
+        if (localNode != null) {
+            MeshLogger.d("device exists: state -- " + localNode.getStateDesc());
+            return;
+        }
+        MeshService.getInstance().stopScan();
+
+        int address = mesh.provisionIndex;
+
+        MeshLogger.d("alloc address: " + address);
+        if (address == -1) {
+            enableUI(true);
+            return;
+        }
 
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice.device, deviceUUID, address);
 
@@ -158,7 +148,16 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
                 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
         });*/
         ProvisioningParameters provisioningParameters = new ProvisioningParameters(provisioningDevice);
-        MeshService.getInstance().startProvisioning(provisioningParameters);
+        if (MeshService.getInstance().startProvisioning(provisioningParameters)) {
+            NodeInfo nodeInfo = new NodeInfo();
+            nodeInfo.meshAddress = address;
+            nodeInfo.deviceUUID = deviceUUID;
+            nodeInfo.state = NodeInfo.STATE_PROVISIONING;
+            devices.add(nodeInfo);
+            mListAdapter.notifyDataSetChanged();
+        } else {
+            MeshLogger.d("provisioning busy");
+        }
     }
 
     @Override
@@ -220,10 +219,9 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
 
     private void onProvisionFail(ProvisioningEvent event) {
-        ProvisioningDevice deviceInfo = event.getProvisioningDevice();
+//        ProvisioningDevice deviceInfo = event.getProvisioningDevice();
 
-        NodeInfo pvDevice = getNodeByUUID(deviceInfo.getDeviceUUID());
-        if (pvDevice == null) return;
+        NodeInfo pvDevice = getProcessingNode();
         pvDevice.state = NodeInfo.STATE_PROVISION_FAIL;
         pvDevice.stateDesc = event.getDesc();
         mListAdapter.notifyDataSetChanged();
@@ -233,10 +231,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         ProvisioningDevice remote = event.getProvisioningDevice();
 
-        NodeInfo nodeInfo = getNodeByUUID(remote.getDeviceUUID());
-
-        if (nodeInfo == null) return;
-
+        NodeInfo nodeInfo = getProcessingNode();
         nodeInfo.state = NodeInfo.STATE_BINDING;
         int elementCnt = remote.getDeviceCapability().eleNum;
         nodeInfo.elementCnt = elementCnt;
@@ -275,10 +270,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
     private void onKeyBindSuccess(BindingEvent event) {
         BindingDevice remote = event.getBindingDevice();
-
-        NodeInfo deviceInList = getNodeByUUID(remote.getDeviceUUID());
-        if (deviceInList == null) return;
-
+        NodeInfo deviceInList = getProcessingNode();
         deviceInList.state = NodeInfo.STATE_BIND_SUCCESS;
 
         // if is default bound, composition data has been valued ahead of binding action
@@ -291,8 +283,8 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     }
 
     private void onKeyBindFail(BindingEvent event) {
-        BindingDevice remote = event.getBindingDevice();
-        NodeInfo deviceInList = getNodeByUUID(remote.getDeviceUUID());
+//        BindingDevice remote = event.getBindingDevice();
+        NodeInfo deviceInList = getProcessingNode();
         if (deviceInList == null) return;
 
         deviceInList.state = NodeInfo.STATE_BIND_FAIL;
@@ -300,6 +292,11 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         mListAdapter.notifyDataSetChanged();
         mesh.saveOrUpdate(DeviceProvisionActivity.this);
     }
+
+    private NodeInfo getProcessingNode() {
+        return this.devices.get(this.devices.size() - 1);
+    }
+
 
     private NodeInfo getNodeByUUID(byte[] deviceUUID) {
         for (NodeInfo nodeInfo : this.devices) {

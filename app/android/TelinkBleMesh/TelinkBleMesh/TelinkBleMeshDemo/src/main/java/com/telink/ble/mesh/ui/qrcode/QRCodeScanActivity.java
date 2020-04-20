@@ -190,8 +190,8 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
     private void syncData(MeshInfo newMesh) {
         newMesh.saveOrUpdate(this);
         MeshService.getInstance().idle(true);
-        MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());
         TelinkMeshApplication.getInstance().setupMesh(newMesh);
+        MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());
         Toast.makeText(this, "import success", Toast.LENGTH_SHORT).show();
         finish();
     }

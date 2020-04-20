@@ -9,10 +9,11 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.IconGenerator;
-import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 
 import java.util.List;
 import java.util.Map;
@@ -58,7 +59,8 @@ public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOT
 
     public void setAll(boolean selected) {
         for (NodeInfo deviceInfo : mDevices) {
-            deviceInfo.selected = selected;
+            if (isFirmwareUpdateSupport(deviceInfo) && deviceInfo.getOnOff() != -1)
+                deviceInfo.selected = selected;
         }
         notifyDataSetChanged();
     }
@@ -93,14 +95,15 @@ public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOT
         holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc_mesh_ota,
                 String.format("%04X", deviceInfo.meshAddress),
                 pidInfo));
-        holder.tv_version.setText("FwId:" + getDeviceFirmwareId(deviceInfo));
+        boolean support = isFirmwareUpdateSupport(deviceInfo);
+        holder.tv_version.setText(support ? "FwId:" + getDeviceFirmwareId(deviceInfo) : "not support");
         holder.cb_device.setTag(position);
         holder.cb_device.setChecked(deviceInfo.selected);
-        if (deviceInfo.getOnOff() != -1) {
+        if (deviceInfo.getOnOff() != -1 && support) {
             holder.cb_device.setEnabled(!started);
             holder.cb_device.setOnCheckedChangeListener(this.checkedChangeListener);
         } else {
-            holder.cb_device.setEnabled(!started && deviceInfo.selected);
+            holder.cb_device.setEnabled(false);
         }
         int deviceState = getDeviceState(deviceInfo);
 
@@ -117,6 +120,11 @@ public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOT
             }
         }
     }
+
+    private boolean isFirmwareUpdateSupport(NodeInfo nodeInfo) {
+        return nodeInfo.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1;
+    }
+
 
     private String getDeviceFirmwareId(NodeInfo deviceInfo) {
         if (versions == null) return "NULL";

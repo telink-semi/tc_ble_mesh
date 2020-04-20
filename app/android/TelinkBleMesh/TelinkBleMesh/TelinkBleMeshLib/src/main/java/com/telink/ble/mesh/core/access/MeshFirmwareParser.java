@@ -62,7 +62,7 @@ public class MeshFirmwareParser {
         return ++curBlockIndex;
     }
 
-    public void resetBlock(){
+    public void resetBlock() {
         curBlockIndex = -1;
     }
 
@@ -92,7 +92,7 @@ public class MeshFirmwareParser {
         // Math.ceil(mBlockSize/mChunkSize)
         float chunkNumberOffset = curBlockIndex * (mBlockSize / mChunkSize) + (curChunkIndex + 1);
         int progress = (int) (chunkNumberOffset * 100 / totalChunkNumber);
-        if (progress == this.progress) {
+        if (progress <= this.progress) {
             return false;
         }
         this.progress = progress;
@@ -142,7 +142,7 @@ public class MeshFirmwareParser {
         double blockSize = getCurBlockSize();
 
         chunkNumber = (int) Math.ceil(blockSize / mChunkSize);
-
+        if (chunkIndex >= chunkNumber) return null;
 
         int chunkSize;
         if (chunkIndex + 1 < chunkNumber || blockSize % mChunkSize == 0) {

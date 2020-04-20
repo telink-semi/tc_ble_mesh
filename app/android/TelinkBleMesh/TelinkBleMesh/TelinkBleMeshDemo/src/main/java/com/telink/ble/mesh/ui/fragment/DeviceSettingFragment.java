@@ -13,6 +13,7 @@ import android.widget.TextView;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.config.ConfigMessage;
+import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.config.ModelPublicationSetMessage;
 import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetMessage;
@@ -201,7 +202,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
             }
         } else if (event.getType().equals(ModelPublicationStatusMessage.class.getName())) {
             final ModelPublicationStatusMessage statusMessage = (ModelPublicationStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
-            if (statusMessage.getStatus() == ConfigMessage.STATUS_SUCCESS) {
+            if (statusMessage.getStatus() == ConfigStatus.SUCCESS.code) {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

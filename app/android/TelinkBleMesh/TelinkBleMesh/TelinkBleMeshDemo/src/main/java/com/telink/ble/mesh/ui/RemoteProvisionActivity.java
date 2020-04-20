@@ -148,28 +148,11 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
      ******************************************************************************/
     private void startScan() {
         ScanParameters parameters = ScanParameters.getDefault(false, true);
-        /*if (devices.size() != 0) {
-            String[] excludeMacs = new String[devices.size()];
-            for (int i = 0; i < devices.size(); i++) {
-                excludeMacs[i] = devices.get(i).macAddress;
-            }
-            parameters.setExcludeMacs(excludeMacs);
-        }*/
         parameters.setScanTimeout(10 * 1000);
         MeshService.getInstance().startScan(parameters);
     }
 
     private void onDeviceFound(AdvertisingDevice advertisingDevice) {
-        int address = meshInfo.provisionIndex;
-
-        MeshLogger.log("alloc address: " + address);
-        if (address == -1) {
-            enableUI(true);
-            return;
-        }
-
-        NodeInfo nodeInfo = new NodeInfo();
-        nodeInfo.meshAddress = meshInfo.provisionIndex;
         // provision service data: 15:16:28:18:[16-uuid]:[2-oobInfo]
         byte[] serviceData = MeshUtils.getMeshServiceData(advertisingDevice.scanRecord, true);
         if (serviceData == null || serviceData.length < 16) {
@@ -178,25 +161,49 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         }
         final int uuidLen = 16;
         byte[] deviceUUID = new byte[uuidLen];
-        System.arraycopy(serviceData, 0, deviceUUID, 0, uuidLen);
-        nodeInfo.deviceUUID = deviceUUID;
-        nodeInfo.state = NodeInfo.STATE_PROVISIONING;
 
-        devices.add(nodeInfo);
-        mListAdapter.notifyDataSetChanged();
+
+        System.arraycopy(serviceData, 0, deviceUUID, 0, uuidLen);
+        NodeInfo localNode = getNodeByUUID(deviceUUID);
+        if (localNode != null) {
+            MeshLogger.d("device exists: state -- " + localNode.getStateDesc());
+            return;
+        }
+        MeshService.getInstance().stopScan();
+
+        int address = meshInfo.provisionIndex;
+
+        MeshLogger.d("alloc address: " + address);
+        if (address == -1) {
+            enableUI(true);
+            return;
+        }
 
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice.device, deviceUUID, address);
+
+        // for static oob test
+        /*provisioningDevice.setAuthValue(new byte[]{
+                0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
+        });*/
         ProvisioningParameters provisioningParameters = new ProvisioningParameters(provisioningDevice);
-        MeshService.getInstance().startProvisioning(provisioningParameters);
+        if (MeshService.getInstance().startProvisioning(provisioningParameters)) {
+            NodeInfo nodeInfo = new NodeInfo();
+            nodeInfo.meshAddress = address;
+            nodeInfo.deviceUUID = deviceUUID;
+            nodeInfo.state = NodeInfo.STATE_PROVISIONING;
+            devices.add(nodeInfo);
+            mListAdapter.notifyDataSetChanged();
+        } else {
+            MeshLogger.d("provisioning busy");
+        }
     }
 
     private void onProvisionSuccess(ProvisioningEvent event) {
 
         ProvisioningDevice remote = event.getProvisioningDevice();
 
-        NodeInfo nodeInfo = getNodeByUUID(remote.getDeviceUUID());
-
-        if (nodeInfo == null) return;
+        NodeInfo nodeInfo = getProcessingNode();
 
         nodeInfo.state = NodeInfo.STATE_BINDING;
         int elementCnt = remote.getDeviceCapability().eleNum;
@@ -233,9 +240,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     private void onProvisionFail(ProvisioningEvent event) {
         ProvisioningDevice deviceInfo = event.getProvisioningDevice();
-
-        NodeInfo pvDevice = getNodeByUUID(deviceInfo.getDeviceUUID());
-        if (pvDevice == null) return;
+        NodeInfo pvDevice = getProcessingNode();
         pvDevice.state = NodeInfo.STATE_PROVISION_FAIL;
         pvDevice.stateDesc = event.getDesc();
         mListAdapter.notifyDataSetChanged();
@@ -243,12 +248,8 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     private void onKeyBindSuccess(BindingEvent event) {
         BindingDevice remote = event.getBindingDevice();
-
-        NodeInfo deviceInList = getNodeByUUID(remote.getDeviceUUID());
-        if (deviceInList == null) return;
-
+        NodeInfo deviceInList = getProcessingNode();
         deviceInList.state = NodeInfo.STATE_BIND_SUCCESS;
-
         // if is default bound, composition data has been valued ahead of binding action
         if (!remote.isDefaultBound()) {
             deviceInList.compositionData = remote.getCompositionData();
@@ -260,9 +261,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     private void onKeyBindFail(BindingEvent event) {
         BindingDevice remote = event.getBindingDevice();
-        NodeInfo deviceInList = getNodeByUUID(remote.getDeviceUUID());
-        if (deviceInList == null) return;
-
+        NodeInfo deviceInList = getProcessingNode();
         deviceInList.state = NodeInfo.STATE_BIND_FAIL;
         deviceInList.stateDesc = event.getDesc();
         mListAdapter.notifyDataSetChanged();
@@ -322,8 +321,10 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         RemoteProvisioningDevice remoteProvisioningDevice = new RemoteProvisioningDevice(scanReportStatusMessage, src);
 //        if (!remoteProvisioningDevice.getMac().contains("11:22:33:11:22")) return;
 
+        // check if device exists
         NodeInfo nodeInfo = getNodeByUUID(remoteProvisioningDevice.getUuid());
         if (nodeInfo != null) {
+            MeshLogger.d("device already exists");
             return;
         }
 
@@ -387,13 +388,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             onRemoteProvisioningFail((RemoteProvisioningEvent) event);
             onRemoteComplete();
         } else if (eventType.equals(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_SUCCESS)) {
-            delayHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    onRemoteProvisioningSuccess((RemoteProvisioningEvent) event);
-                }
-            }, 3000);
-
+            onRemoteProvisioningSuccess((RemoteProvisioningEvent) event);
         }
 
         // normal provisioning
@@ -434,11 +429,8 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
     private void onRemoteProvisioningSuccess(RemoteProvisioningEvent event) {
         // start remote binding
         RemoteProvisioningDevice remote = event.getRemoteProvisioningDevice();
-        MeshLogger.log("remote act success: " + remote.getUuid());
-
-        NodeInfo nodeInfo = getNodeByUUID(remote.getUuid());
-        if (nodeInfo == null) return;
-
+        MeshLogger.log("remote act success: " + Arrays.bytesToHexString(remote.getUuid()));
+        NodeInfo nodeInfo = getProcessingNode();
         nodeInfo.state = NodeInfo.STATE_BINDING;
         int elementCnt = remote.getDeviceCapability().eleNum;
         nodeInfo.elementCnt = elementCnt;
@@ -449,9 +441,15 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         nodeInfo.setDefaultBind(false);
         mListAdapter.notifyDataSetChanged();
         int appKeyIndex = meshInfo.getDefaultAppKeyIndex();
-        BindingDevice bindingDevice = new BindingDevice(nodeInfo.meshAddress, nodeInfo.deviceUUID, appKeyIndex);
+        final BindingDevice bindingDevice = new BindingDevice(nodeInfo.meshAddress, nodeInfo.deviceUUID, appKeyIndex);
         bindingDevice.setBearer(BindingBearer.Any);
-        MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
+        delayHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
+            }
+        }, 3000);
+
     }
 
     private void onRemoteProvisioningFail(RemoteProvisioningEvent event) {
@@ -459,13 +457,14 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         MeshLogger.log("remote act fail: " + event.getRemoteProvisioningDevice().getUuid());
 
         RemoteProvisioningDevice deviceInfo = event.getRemoteProvisioningDevice();
-
-        NodeInfo pvDevice = getNodeByUUID(deviceInfo.getUuid());
-
-        if (pvDevice == null) return;
+        NodeInfo pvDevice = getProcessingNode();
         pvDevice.state = NodeInfo.STATE_PROVISION_FAIL;
         pvDevice.stateDesc = event.getDesc();
         mListAdapter.notifyDataSetChanged();
+    }
+
+    private NodeInfo getProcessingNode() {
+        return this.devices.get(this.devices.size() - 1);
     }
 
     private NodeInfo getNodeByUUID(byte[] deviceUUID) {

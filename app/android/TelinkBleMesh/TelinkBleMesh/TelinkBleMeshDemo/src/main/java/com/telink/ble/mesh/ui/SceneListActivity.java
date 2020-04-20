@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.model.NodeInfo;
@@ -184,7 +185,7 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
             NotificationMessage notificationMessage = statusEvent.getNotificationMessage();
 
             SceneRegisterStatusMessage sceneMessage = (SceneRegisterStatusMessage) notificationMessage.getStatusMessage();
-            if (sceneMessage.getStatusCode() == ConfigMessage.STATUS_SUCCESS
+            if (sceneMessage.getStatusCode() == ConfigStatus.SUCCESS.code
                     && notificationMessage.getSrc() == tarScene.states.get(deleteIndex).address) {
                 handler.removeCallbacks(cmdTimeoutCheckTask);
                 deleteIndex++;
