@@ -28,31 +28,14 @@
 //
 
 #import "SigEncryptionHelper.h"
-#import <Security/Security.h>
 #import "SigLogger.h"
-#import <CommonCrypto/CommonCryptor.h>
-
-static const UInt8 publicKeyIdentifier[] = "com.apple.sample.publickey/0";
-static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
-
-u8 gatt_pro_psk[32]={0x06,0xa5,0x16,0x69,0x3c,0x9a,0xa3,0x1a, 0x60,0x84,0x54,0x5d,0x0c,0x5d,0xb6,0x41,
-    0xb4,0x85,0x72,0xb9,0x72,0x03,0xdd,0xff, 0xb7,0xac,0x73,0xf7,0xd0,0x45,0x76,0x63};
-u8  gatt_pro_ppk[64] = {     0x2c,0x31,0xa4,0x7b,0x57,0x79,0x80,0x9e, 0xf4,0x4c,0xb5,0xea,0xaf,0x5c,0x3e,0x43,
-    0xd5,0xf8,0xfa,0xad,0x4a,0x87,0x94,0xcb, 0x98,0x7e,0x9b,0x03,0x74,0x5c,0x78,0xdd,
-    0x91,0x95,0x12,0x18,0x38,0x98,0xdf,0xbe, 0xcd,0x52,0xe2,0x40,0x8e,0x43,0x87,0x1f,
-    0xd0,0x21,0x10,0x91,0x17,0xbd,0x3e,0xd4, 0xea,0xf8,0x43,0x77,0x43,0x71,0x5d,0x4f};
-
-@interface SigSeckeyModel : NSObject
-@property (nonatomic, assign) SecKeyRef privateKey;
-@property (nonatomic, assign) SecKeyRef publicKey;
-@end
-@implementation SigSeckeyModel
-@end
+#import "GMEllipticCurveCrypto.h"
 
 @interface SigEncryptionHelper ()
-@property (nonatomic, strong) SigSeckeyModel *seckeyModel;
 @property (nonatomic, strong) NSData *publicKeyLowIos10;
 @property (nonatomic, strong) NSData *privateKeyLowIos10;
+@property (nonatomic, strong) GMEllipticCurveCrypto *crypto;
+
 @end
 
 @implementation SigEncryptionHelper
@@ -62,7 +45,6 @@ u8  gatt_pro_ppk[64] = {     0x2c,0x31,0xa4,0x7b,0x57,0x79,0x80,0x9e, 0xf4,0x4c,
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
         shareHelper = [[SigEncryptionHelper alloc] init];
-        shareHelper.seckeyModel = [[SigSeckeyModel alloc] init];
     });
     return shareHelper;
 }
@@ -70,197 +52,49 @@ u8  gatt_pro_ppk[64] = {     0x2c,0x31,0xa4,0x7b,0x57,0x79,0x80,0x9e, 0xf4,0x4c,
 - (void)eccInit {
     __weak typeof(self) weakSelf = self;
     [self getECCKeyPair:^(NSData * _Nonnull publicKey, NSData * _Nonnull privateKey) {
-        if (@available(iOS 10.0, *)) {
-            TeLogInfo(@"init ECC bigger than ios10, publicKey=%@,privateKey=%@",weakSelf.seckeyModel.publicKey,weakSelf.seckeyModel.privateKey);
-        } else {
-            TeLogInfo(@"init ECC lower than ios10, publicKey=%@,privateKey=%@",weakSelf.publicKeyLowIos10,weakSelf.privateKeyLowIos10);
-        }
+        TeLogInfo(@"init ECC successful, publicKey=%@,privateKey=%@",weakSelf.publicKeyLowIos10,weakSelf.privateKeyLowIos10);
     }];
 }
 
 ///返回手机端64字节的ECC公钥
 - (NSData *)getPublicKeyData {
-    if (@available(iOS 10.0, *)) {
-        if (self.seckeyModel && self.seckeyModel.publicKey) {
-            NSData *pub = [self getPublicKeyBitsFromKey:self.seckeyModel.publicKey];
-            return [pub subdataWithRange:NSMakeRange(1, pub.length-1)];
-        } else {
-            return nil;
-        }
-    } else {
-        return self.publicKeyLowIos10;
-    }
+    return self.publicKeyLowIos10;
 }
 
 - (void)getECCKeyPair:(keyPair)pair{
-    if (@available(iOS 10.0, *)) {
-        [self getECCKeyPairWithKeySize:256 keyPair:pair];
-    } else {
-        u8 mac[8]={0x13,0x24,0x35,0x46,0x57,0x68,0x00,0x01};
-        tn_p256_keypair_mac(gatt_pro_psk,gatt_pro_ppk,gatt_pro_ppk+32,mac,sizeof(mac));
-        NSData *pubKeyData = [NSData dataWithBytes:&gatt_pro_ppk length:64];
-        NSData *privateKeyData = [NSData dataWithBytes:&gatt_pro_psk length:32];
-        self.publicKeyLowIos10 = pubKeyData;
-        self.privateKeyLowIos10 = privateKeyData;
-        if (pair) {
-            pair(pubKeyData,privateKeyData);
-        }
+    _crypto = [GMEllipticCurveCrypto generateKeyPairForCurve:GMEllipticCurveSecp256r1];
+    _crypto.compressedPublicKey = NO;
+    self.publicKeyLowIos10 = [_crypto.publicKey subdataWithRange:NSMakeRange(1, _crypto.publicKey.length-1)];
+    self.privateKeyLowIos10 = _crypto.privateKey;
+    if (pair) {
+        pair(self.publicKeyLowIos10,self.privateKeyLowIos10);
     }
 }
 
 - (NSData *)getSharedSecretWithDevicePublicKey:(NSData *)devicePublicKey {
-    if (@available(iOS 10.0, *)) {
-        return [self calculateSharedSecretEithPublicKey:devicePublicKey];
-    } else {
-        unsigned char sharedSecretKey[32] = {};
-        unsigned char sKey[32] = {};
-        unsigned char xKey[32] = {};
-        unsigned char yKey[32] = {};
-        unsigned char *tem = (unsigned char *)devicePublicKey.bytes;
-        unsigned char *pri = (unsigned char *)self.privateKeyLowIos10.bytes;
-        memcpy(&xKey, tem, 32);
-        memcpy(&yKey, tem+32, 32);
-        memcpy(&sKey, pri, 32);
-        tn_p256_dhkey (sharedSecretKey, sKey, xKey, yKey);
-        NSData *sharedSecretKeyData = [NSData dataWithBytes:&sharedSecretKey length:32];
-        return sharedSecretKeyData;
-    }
-}
-
-#pragma mark -  =============苹果自带方法=====================
-
-- (void)getECCKeyPairWithKeySize:(int)keySize keyPair:(keyPair)pair;
-{
-    OSStatus status = noErr;
-    if (keySize == 256 || keySize == 512 || keySize == 1024 || keySize == 2048) {
-        
-        //定义dictionary，用于传递SecKeyGeneratePair函数中的第1个参数。
-        NSMutableDictionary *privateKeyAttr = [[NSMutableDictionary alloc] init];
-        NSMutableDictionary *publicKeyAttr = [[NSMutableDictionary alloc] init];
-        NSMutableDictionary *keyPairAttr = [[NSMutableDictionary alloc] init];
-        
-        //把第1步中定义的字符串转换为NSData对象。
-        NSData * publicTag = [NSData dataWithBytes:publicKeyIdentifier
-                                            length:strlen((const char *)publicKeyIdentifier)];
-        NSData * privateTag = [NSData dataWithBytes:privateKeyIdentifier
-                                             length:strlen((const char *)privateKeyIdentifier)];
-        //为公／私钥对准备SecKeyRef对象。
-        SecKeyRef publicKey = NULL;
-        SecKeyRef privateKey = NULL;
-        //
-        //设置密钥对的密钥类型为kSecAttrKeyTypeEC。
-        [keyPairAttr setObject:(id)kSecAttrKeyTypeEC forKey:(id)kSecAttrKeyType];
-        //设置密钥对的密钥长度为256。
-        [keyPairAttr setObject:[NSNumber numberWithInt:keySize] forKey:(id)kSecAttrKeySizeInBits];
-        
-        //设置私钥的持久化属性（即是否存入钥匙串）为YES。
-        [privateKeyAttr setObject:[NSNumber numberWithBool:YES] forKey:(id)kSecAttrIsPermanent];
-        [privateKeyAttr setObject:privateTag forKey:(id)kSecAttrApplicationTag];
-        
-        //设置公钥的持久化属性（即是否存入钥匙串）为YES。
-        [publicKeyAttr setObject:[NSNumber numberWithBool:YES] forKey:(id)kSecAttrIsPermanent];
-        [publicKeyAttr setObject:publicTag forKey:(id)kSecAttrApplicationTag];
-        
-        // 把私钥的属性集（dictionary）加到密钥对的属性集（dictionary）中。
-        [keyPairAttr setObject:privateKeyAttr forKey:(id)kSecPrivateKeyAttrs];
-        [keyPairAttr setObject:publicKeyAttr forKey:(id)kSecPublicKeyAttrs];
-        
-        //生成密钥对
-        status = SecKeyGeneratePair((CFDictionaryRef)keyPairAttr,&publicKey, &privateKey); // 13
-        if (status == noErr && publicKey != NULL && privateKey != NULL) {
-            self.seckeyModel.publicKey = publicKey;
-            self.seckeyModel.privateKey = privateKey;
-            pair([self getPublicKeyBitsFromKey:publicKey],[NSData data]);
-        }else{
-            pair([NSData data],[NSData data]);
-        }
-    }
-}
-
-- (NSData *)getPublicKeyBitsFromKey:(SecKeyRef)givenKey {
-    NSData *publicTag = [[NSData alloc] initWithBytes:publicKeyIdentifier length:sizeof(publicKeyIdentifier)];
-    
-    OSStatus sanityCheck = noErr;
-    NSData * publicKeyBits = nil;
-    
-    NSMutableDictionary * queryPublicKey = [[NSMutableDictionary alloc] init];
-    [queryPublicKey setObject:(__bridge id)kSecClassKey forKey:(__bridge id)kSecClass];
-    [queryPublicKey setObject:publicTag forKey:(__bridge id)kSecAttrApplicationTag];
-    [queryPublicKey setObject:(__bridge id)kSecAttrKeyTypeEC forKey:(__bridge id)kSecAttrKeyType];
-    
-    // Temporarily add key to the Keychain, return as data:
-    NSMutableDictionary * attributes = [queryPublicKey mutableCopy];
-    [attributes setObject:(__bridge id)givenKey forKey:(__bridge id)kSecValueRef];
-    [attributes setObject:@YES forKey:(__bridge id)kSecReturnData];
-    CFTypeRef result;
-    sanityCheck = SecItemAdd((__bridge CFDictionaryRef) attributes, &result);
-    if (sanityCheck == errSecSuccess) {
-        publicKeyBits = CFBridgingRelease(result);
-        
-        // Remove from Keychain again:
-        (void)SecItemDelete((__bridge CFDictionaryRef) queryPublicKey);
-    }
-    
-    return publicKeyBits;
-}
-
-/// Calculates the Shared Secret based on the given Public Key
-/// and the local Private Key.
-///
-/// - parameter publicKey: The device's Public Key as bytes.
-/// - returns: The ECDH Shared Secret.
-- (NSData *)calculateSharedSecretEithPublicKey:(NSData *)publicKey {
-    // First byte has to be 0x04 to indicate uncompressed representation.
     UInt8 tem = 0x04;
     NSMutableData *devicePublicKeyData = [NSMutableData dataWithBytes:&tem length:1];
-    [devicePublicKeyData appendData:publicKey];
-    
-    NSMutableDictionary * pubKeyParameters = [[NSMutableDictionary alloc] init];
-    [pubKeyParameters setObject:(id)kSecAttrKeyTypeEC forKey:(id)kSecAttrKeyType];
-    [pubKeyParameters setObject:(__bridge id)kSecAttrKeyClassPublic forKey:(__bridge id)kSecAttrKeyClass];
-    
-    CFErrorRef *err = nil;
-    SecKeyRef devicePublicKey = NULL;
-    
-    if (@available(iOS 10.0, *)) {
-        devicePublicKey = SecKeyCreateWithData((CFDataRef)devicePublicKeyData, (CFDictionaryRef)pubKeyParameters, err);
-    }
-    if (err) {
-        TeLogError(@"SecKeyCreateWithData fail.");
-        return nil;
-    }
-    
-    NSMutableDictionary * exchangeResultParams = [[NSMutableDictionary alloc] init];
-    if (@available(iOS 10.0, *)) {
-        [exchangeResultParams setObject:@(32) forKey:(id)kSecKeyKeyExchangeParameterRequestedSize];
-    }
-    
-    NSData *ssk;
-    if (@available(iOS 10.0, *)) {
-        ssk = CFBridgingRelease(SecKeyCopyKeyExchangeResult(self.seckeyModel.privateKey, kSecKeyAlgorithmECDHKeyExchangeStandard, devicePublicKey, (CFDictionaryRef)exchangeResultParams, err));
-    }
-    
-    if (err) {
-        TeLogError(@"SecKeyCopyKeyExchangeResult fail.");
-        return nil;
-    }
-    
-    return ssk;
+    [devicePublicKeyData appendData:devicePublicKey];
+    GMEllipticCurveCrypto *deviceKeyCrypto = [GMEllipticCurveCrypto cryptoForKey:devicePublicKeyData];
+    deviceKeyCrypto.compressedPublicKey = YES;
+    NSData *sharedSecretKeyData = [_crypto sharedSecretForPublicKey:deviceKeyCrypto.publicKey];
+    TeLogInfo(@"sharedSecretKeyData=%@",sharedSecretKeyData);
+    return sharedSecretKeyData;
 }
 
 - (UInt8)aesAttDecryptionPacketOnlineStatusWithNetworkBeaconKey:(UInt8 *)key iv:(UInt8 *)iv ivLen:(UInt8)ivLen mic:(UInt8 *)mic micLen:(UInt8)micLen ps:(UInt8 *)ps psLen:(int)psLen {
     if(ivLen > 15){
         return 0;
     }
-    
+
     if(psLen < 0){
         return 0;   // failed
     }
 
     UInt8 len = (UInt8)psLen;
-    
+
     UInt8    e[16], r[16];
-    
+
     ///////////////// calculate enc ////////////////////////
     memset (r, 0, 16);
     memcpy (r+1, iv, ivLen);

@@ -74,31 +74,31 @@
 
     [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
-            TeLogDebug(@"stop mesh success.");
+            TeLogInfo(@"stop mesh success.");
             [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel unicastAddress:0 uuid:nil keyBindType:type.integerValue productID:0 cpsData:nil isAutoAddNextDevice:YES provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                 if (identify && address != 0) {
-                    
                     [weakSelf updateDeviceProvisionSuccess:identify address:address];
-                    TeLogDebug(@"addDevice_provision success : %@->0X%X",identify,address);
+                    TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
                 }
             } provisionFail:^(NSError * _Nonnull error) {
                 [weakSelf updateDeviceProvisionFail:SigBearer.share.getCurrentPeripheral.identifier.UUIDString];
-                TeLogDebug(@"addDevice provision fail error:%@",error);
+                TeLogInfo(@"addDevice provision fail error:%@",error);
             } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                 if (identify && address != 0) {
                     [weakSelf updateDeviceKeyBind:identify isSuccess:YES];
-                    TeLogDebug(@"addDevice_provision success : %@->0X%X",identify,address);
+                    TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
                 }
             } keyBindFail:^(NSError * _Nonnull error) {
                 [weakSelf updateDeviceKeyBind:SigBearer.share.getCurrentPeripheral.identifier.UUIDString isSuccess:NO];
-                TeLogDebug(@"addDevice keybind fail error:%@",error);
+                TeLogInfo(@"addDevice keybind fail error:%@",error);
             } finish:^{
-                TeLogDebug(@"addDevice finish.");
-                [weakSelf performSelectorOnMainThread:@selector(addDeviceFinish) withObject:nil waitUntilDone:YES];
+                TeLogInfo(@"addDevice finish.");
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf addDeviceFinish];
+                });
             }];
         } else {
-            TeLogDebug(@"stop mesh fail.");
-            
+            TeLogInfo(@"stop mesh fail.");
         }
     }];    
 }
@@ -122,8 +122,10 @@
     if (![self.source containsObject:model]) {
         [self.source addObject:model];
     }
-    [self.collectionView reloadData];
-    [self scrollowToBottom];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+        [self scrollowToBottom];
+    });
 }
 
 - (void)updateDeviceProvisionFail:(NSString *)uuid {
@@ -139,8 +141,10 @@
     if (![self.source containsObject:model]) {
         [self.source addObject:model];
     }
-    [self.collectionView reloadData];
-    [self scrollowToBottom];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+        [self scrollowToBottom];
+    });
 }
 
 - (void)updateDeviceKeyBind:(NSString *)uuid isSuccess:(BOOL)isSuccess{
@@ -154,7 +158,9 @@
             break;
         }
     }
-    [self.collectionView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+    });
 }
 
 - (void)addDeviceFinish{

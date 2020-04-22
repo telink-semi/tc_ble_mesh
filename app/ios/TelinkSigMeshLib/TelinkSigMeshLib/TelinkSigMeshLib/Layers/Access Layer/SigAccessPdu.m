@@ -163,7 +163,7 @@
 }
 
 - (NSString *)description {
-    return[NSString stringWithFormat:@"<%p> - Access PDU, source:(%04X)->destination: (%04X) Op Code: (%08X), accessPdu=%@", self, _source,_destination.address, (unsigned int)_opCode,[LibTools convertDataToHexStr:_accessPdu]];
+    return[NSString stringWithFormat:@"<%p> - Access PDU, source:(0x%04X)->destination: (0x%04X) Op Code: (0x%X), accessPdu=%@", self, _source,_destination.address, (unsigned int)_opCode,[LibTools convertDataToHexStr:_accessPdu]];
 }
 
 @end

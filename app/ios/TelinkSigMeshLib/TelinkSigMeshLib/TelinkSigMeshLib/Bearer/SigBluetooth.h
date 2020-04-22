@@ -47,6 +47,13 @@ typedef void(^bleIsReadyToSendWriteWithoutResponseCallback)(CBPeripheral *periph
 typedef void(^bleDidUpdateValueForCharacteristicCallback)(CBPeripheral *peripheral,CBCharacteristic *characteristic);
 
 @interface SigBluetooth : NSObject
+/// Default is NO.
+@property (nonatomic,assign) BOOL waitScanRseponseEnabel;
+
+
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
 
 + (SigBluetooth *)share;
 

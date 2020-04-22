@@ -120,6 +120,20 @@
     return NO;
 }
 
+/// The TTL field is a 7-bit field. The following values are defined:
+/// • 0 = has not been relayed and will not be relayed
+/// • 1 = may have been relayed, but will not be relayed
+/// • 2 to 126 = may have been relayed and can be relayed
+/// • 127 = has not been relayed and can be relayed
+///
+/// @param ttl TTL (Time To Live)
+- (BOOL)isRelayedTTL:(UInt8)ttl {
+    if (ttl >= 2 && ttl <= 127) {
+        return YES;
+    }
+    return NO;
+}
+
 - (UInt16)getUint16LightnessFromUInt8Lum:(UInt8)lum {
     return [self getUInt16LightnessFromSInt16Level:[self getSInt16LevelFromUInt8Lum:lum]];
 }
@@ -288,6 +302,12 @@ extern unsigned short crc16 (unsigned char *pD, int len) {
         case SigOpCode_configNetKeyUpdate:
             responseOpcode = SigOpCode_configNetKeyStatus;
             break;
+        
+        case SigOpCode_configNodeIdentityGet:
+        case SigOpCode_configNodeIdentitySet:
+            responseOpcode = SigOpCode_configNodeIdentityStatus;
+            break;
+
         case SigOpCode_configNodeReset:
             responseOpcode = SigOpCode_configNodeResetStatus;
             break;
@@ -297,6 +317,22 @@ extern unsigned short crc16 (unsigned char *pD, int len) {
         case SigOpCode_configVendorModelAppGet:
             responseOpcode = SigOpCode_configVendorModelAppList;
             break;
+            
+            // remote provision
+        case SigOpCode_remoteProvisioningScanCapabilitiesGet:
+            responseOpcode = SigOpCode_remoteProvisioningScanCapabilitiesStatus;
+            break;
+        case SigOpCode_remoteProvisioningScanGet:
+        case SigOpCode_remoteProvisioningScanStart:
+        case SigOpCode_remoteProvisioningScanStop:
+            responseOpcode = SigOpCode_remoteProvisioningScanStatus;
+            break;
+        case SigOpCode_remoteProvisioningLinkGet:
+        case SigOpCode_remoteProvisioningLinkOpen:
+        case SigOpCode_remoteProvisioningLinkClose:
+            responseOpcode = SigOpCode_remoteProvisioningLinkStatus;
+            break;
+
         case SigOpCode_genericOnOffGet:
         case SigOpCode_genericOnOffSet:
             responseOpcode = SigOpCode_genericOnOffStatus;
@@ -479,39 +515,41 @@ extern unsigned short crc16 (unsigned char *pD, int len) {
             break;
             
             // Firmware Update Messages
-        case SigOpCode_FirmwareInformationGet:
-            responseOpcode = SigOpCode_FirmwareInformationStatus;
+        case SigOpCode_FirmwareUpdateInformationGet:
+            responseOpcode = SigOpCode_FirmwareUpdateInformationStatus;
+            break;
+        case SigOpCode_FirmwareUpdateFirmwareMetadataCheck:
+            responseOpcode = SigOpCode_FirmwareUpdateFirmwareMetadataStatus;
             break;
         case SigOpCode_FirmwareUpdateGet:
-        case SigOpCode_FirmwareUpdatePrepare:
         case SigOpCode_FirmwareUpdateStart:
-        case SigOpCode_FirmwareUpdateAbort:
+        case SigOpCode_FirmwareUpdateCancel:
         case SigOpCode_FirmwareUpdateApply:
             responseOpcode = SigOpCode_FirmwareUpdateStatus;
             break;
         case SigOpCode_FirmwareDistributionGet:
         case SigOpCode_FirmwareDistributionStart:
-        case SigOpCode_FirmwareDistributionStop:
+        case SigOpCode_FirmwareDistributionCancel:
             responseOpcode = SigOpCode_FirmwareDistributionStatus;
             break;
-        case SigOpCode_FirmwareDistributionDetailsGet:
-            responseOpcode = SigOpCode_FirmwareDistributionDetailsList;
+        case SigOpCode_FirmwareDistributionNodesGet:
+            responseOpcode = SigOpCode_FirmwareDistributionNodesList;
             break;
 
-            // Object Transfer Messages
-        case SigOpCode_ObjectTransferGet:
-        case SigOpCode_ObjectTransferStart:
-        case SigOpCode_ObjectTransferAbort:
-            responseOpcode = SigOpCode_ObjectTransferStatus;
+            // BLOB Transfer Messages
+        case SigOpCode_BLOBTransferGet:
+        case SigOpCode_BLOBTransferStart:
+        case SigOpCode_BLOBTransferCancel:
+            responseOpcode = SigOpCode_BLOBTransferStatus;
             break;
-        case SigOpCode_ObjectBlockTransferStart:
+        case SigOpCode_BLOBBlockStart:
             responseOpcode = SigOpCode_ObjectBlockTransferStatus;
             break;
-        case SigOpCode_ObjectBlockGet:
-            responseOpcode = SigOpCode_ObjectBlockStatus;
+        case SigOpCode_BLOBBlockGet:
+            responseOpcode = SigOpCode_BLOBBlockStatus;
             break;
-        case SigOpCode_ObjectInformationGet:
-            responseOpcode = SigOpCode_ObjectInformationStatus;
+        case SigOpCode_BLOBInformationGet:
+            responseOpcode = SigOpCode_BLOBInformationStatus;
             break;
         default:
             TeLog(@"Warning:undefault or noAck sendOpcode:0x%x",sendOpcode);

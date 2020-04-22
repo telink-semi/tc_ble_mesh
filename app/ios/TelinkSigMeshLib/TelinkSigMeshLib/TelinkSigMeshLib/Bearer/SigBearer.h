@@ -135,6 +135,11 @@ typedef void(^SendPacketsFinishCallback)(void);
 
 #pragma  mark - Public API
 
+
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
+
 + (SigBearer *)share;
 
 - (void)changePeripheral:(CBPeripheral *)peripheral result:(bearerChangePeripheralCallback)block;
@@ -161,7 +166,7 @@ typedef void(^SendPacketsFinishCallback)(void);
 - (void)setBearerProvisioned:(BOOL)provisioned;
 
 /// 开始连接SigDataSource这个单列的mesh网络。
-- (void)startMeshConnectWithTimeOut:(NSTimeInterval)timeout complete:(nullable startMeshConnectResultBlock)complete;
+- (void)startMeshConnectWithComplete:(nullable startMeshConnectResultBlock)complete;
 
 /// 断开一个mesh网络的连接，切换不同的mesh网络时使用。
 - (void)stopMeshConnectWithComplete:(nullable stopMeshConnectResultBlock)complete;

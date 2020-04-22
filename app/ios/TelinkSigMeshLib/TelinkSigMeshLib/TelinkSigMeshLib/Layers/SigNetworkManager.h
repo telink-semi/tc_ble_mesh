@@ -48,9 +48,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Computed properties
 
-- (SigTransmitter *)transmitter;
-- (void)setTransmitter:(SigTransmitter *)transmitter;
-
 - (SigDataSource *)meshNetwork;
 
 - (UInt8)defaultTtl;
@@ -67,6 +64,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (int)retransmissionLimit;
 
+
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
+
 + (SigNetworkManager *)share;
 
 #pragma mark - Receiving messages
@@ -77,6 +79,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)handleIncomingPdu:(NSData *)pdu ofType:(SigPduType)type;
 
 #pragma mark - Sending messages
+
+- (void)sendMeshMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command;
 
 /// Encrypts the message with the Application Key and a Network Key
 /// bound to it, and sends to the given destination address.

@@ -41,6 +41,7 @@
 @property (nonatomic,strong) SigUpperTransportPdu *pdu;
 @property (nonatomic,assign) UInt8 ttl;
 @property (nonatomic,strong) SigNetkeyModel *networkKey;
+@property (nonatomic,strong) SigIvIndex *ivIndex;
 @end
 @implementation SigUpperTransportModel
 @end
@@ -62,7 +63,6 @@
 - (instancetype)initWithNetworkManager:(SigNetworkManager *)networkManager {
     if (self = [super init]) {
         _networkManager = networkManager;
-        _meshNetwork = networkManager.meshNetwork;
         _defaults = [NSUserDefaults standardUserDefaults];
         _queues = [NSMutableDictionary dictionary];
     }
@@ -75,7 +75,7 @@
             {
 //                TeLogDebug(@"lowerTransportPdu.upperTransportPdu=%@,length=%d",[LibTools convertDataToHexStr:lowerTransportPdu.transportPdu],lowerTransportPdu.transportPdu.length);
                 SigAccessMessage *accessMessage = (SigAccessMessage *)lowerTransportPdu;
-                NSDictionary *dict = [SigUpperTransportPdu decodeAccessMessage:accessMessage forMeshNetwork:_meshNetwork];
+                NSDictionary *dict = [SigUpperTransportPdu decodeAccessMessage:accessMessage forMeshNetwork:SigDataSource.share];
                 if (dict && dict.allKeys.count == 2) {
                     SigUpperTransportPdu *upperTransportPdu = dict[@"SigUpperTransportPdu"];
                     SigKeySet *keySet = dict[@"SigKeySet"];
@@ -113,6 +113,23 @@
     }
 }
 
+- (void)sendAccessPdu:(SigAccessPdu *)accessPdu withTtl:(UInt8)initialTtl usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
+    UInt32 sequence = [SigDataSource.share getCurrentProvisionerIntSequenceNumber];
+    SigNetkeyModel *networkKey = command.netkeyA;
+    SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromAccessPdu:accessPdu usingKeySet:keySet ivIndex:command.ivIndexA sequence:sequence];
+    TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
+    BOOL isSegmented = pdu.transportPdu.length > 15 || accessPdu.isSegmented;
+    if (isSegmented) {
+        TeLogVerbose(@"sendind segment pdu.");
+        // Enqueue the PDU. If the queue was empty, the PDU will be sent
+        // immediately.
+        [self enqueueSigUpperTransportPdu:pdu initialTtl:initialTtl networkKey:networkKey ivIndex:command.ivIndexA];
+    } else {
+        TeLogVerbose(@"sendind unsegment pdu.");
+        [_networkManager.lowerTransportLayer sendUnsegmentedUpperTransportPdu:pdu withTtl:initialTtl usingNetworkKey:networkKey ivIndex:command.ivIndexA];
+    }
+}
+
 - (void)sendAccessPdu:(SigAccessPdu *)accessPdu withTtl:(UInt8)initialTtl usingKeySet:(SigKeySet *)keySet {
     UInt32 sequence = [SigDataSource.share getCurrentProvisionerIntSequenceNumber];
     SigNetkeyModel *networkKey = keySet.networkKey;
@@ -120,12 +137,12 @@
     TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
     BOOL isSegmented = pdu.transportPdu.length > 15 || accessPdu.isSegmented;
     if (isSegmented) {
-        TeLogInfo(@"sendind segment pdu.");
+        TeLogVerbose(@"sendind segment pdu.");
         // Enqueue the PDU. If the queue was empty, the PDU will be sent
         // immediately.
         [self enqueueSigUpperTransportPdu:pdu initialTtl:initialTtl networkKey:networkKey];
     } else {
-        TeLogInfo(@"sendind unsegment pdu.");
+        TeLogVerbose(@"sendind unsegment pdu.");
         [_networkManager.lowerTransportLayer sendUnsegmentedUpperTransportPdu:pdu withTtl:initialTtl usingNetworkKey:networkKey];
     }
 }
@@ -200,6 +217,26 @@
 
 }
 
+- (void)enqueueSigUpperTransportPdu:(SigUpperTransportPdu *)pdu initialTtl:(UInt8)initialTtl networkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex {
+    NSMutableArray *array = _queues[@(pdu.destination)];
+    if (array == nil) {
+        _queues[@(pdu.destination)] = [NSMutableArray array];
+        array = [NSMutableArray array];
+    }
+    SigUpperTransportModel *model = [[SigUpperTransportModel alloc] init];
+    model.pdu = pdu;
+    model.ttl = initialTtl;
+    model.networkKey = networkKey;
+    model.ivIndex = ivIndex;
+    [array addObject:model];
+    _queues[@(pdu.destination)] = array;
+    if (_queues[@(pdu.destination)].count == 1) {
+        [self sendNextToDestination:pdu.destination];
+    }else{
+        TeLogWarn(@"异常逻辑，待完善。");
+    }
+}
+
 /// Enqueues the PDU to be sent using the given Network Key.
 ///
 /// - parameters:
@@ -217,6 +254,7 @@
     model.pdu = pdu;
     model.ttl = initialTtl;
     model.networkKey = networkKey;
+    model.ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     [array addObject:model];
     _queues[@(pdu.destination)] = array;
     if (_queues[@(pdu.destination)].count == 1) {
@@ -240,7 +278,7 @@
     }
     SigUpperTransportModel *model = array.firstObject;
     // If another PDU has been enqueued, send it.
-    [_networkManager.lowerTransportLayer sendSegmentedUpperTransportPdu:model.pdu withTtl:model.ttl usingNetworkKey:model.networkKey];
+    [_networkManager.lowerTransportLayer sendSegmentedUpperTransportPdu:model.pdu withTtl:model.ttl usingNetworkKey:model.networkKey ivIndex:model.ivIndex];
 }
 
 @end

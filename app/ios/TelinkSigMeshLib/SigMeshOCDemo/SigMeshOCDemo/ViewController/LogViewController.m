@@ -51,34 +51,46 @@
     [super normalSetting];
     self.title = @"Log";
     self.operation = [[NSOperationQueue alloc] init];
+    [self updateContent];
 }
 
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateContent) name:NotifyUpdateLogContent object:nil];
-    [self updateContent];
 }
 
 - (void)viewDidDisappear:(BOOL)animated{
     [super viewDidDisappear:animated];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:NotifyUpdateLogContent object:nil];
 }
 
 - (void)updateContent{
     __weak typeof(self) weakSelf = self;
+    NSLog(@"=======1");
     [self.operation addOperationWithBlock:^{
+        NSLog(@"=======2");
         NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:SigLogger.share.logFilePath];
+        NSLog(@"=======3");
         NSData *data = [handle readDataToEndOfFile];
-        NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        //日志文件可能比较大，只显示最新的100K的log信息。
+        NSLog(@"=======4");
+        NSString *str = @"";
+        NSInteger showLength = 1024 * 100;
+        if (data.length > showLength) {
+            str = [[NSString alloc] initWithData:[data subdataWithRange:NSMakeRange(data.length - showLength, showLength)] encoding:NSUTF8StringEncoding];
+        } else {
+            str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        }
+        NSLog(@"=======5");
         dispatch_async(dispatch_get_main_queue(), ^{
+            NSLog(@"=======6");
             weakSelf.contentText.text = str;
+            NSLog(@"=======7");
         });
     }];
 }
 
 -(void)dealloc{
-    TeLogDebug(@"");
+    TeLogInfo(@"");
 }
 
 @end

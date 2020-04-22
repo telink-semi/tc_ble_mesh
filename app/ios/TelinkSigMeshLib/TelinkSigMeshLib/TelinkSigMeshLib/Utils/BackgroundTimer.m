@@ -56,6 +56,6 @@
 }
 
 - (void)dealloc {
-    [self interval];
+    [self invalidate];
 }
 @end

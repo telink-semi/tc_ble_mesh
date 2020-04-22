@@ -18,6 +18,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 
 #import <CoreBluetooth/CoreBluetooth.h>
 
+#import <TelinkSigMeshLib/SigConst.h>
 #import <TelinkSigMeshLib/SigStruct.h>
 #import <TelinkSigMeshLib/SigEnumeration.h>
 #import <TelinkSigMeshLib/SigLogger.h>
@@ -56,7 +57,6 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/SigKeyBindManager.h>
 #import <TelinkSigMeshLib/SigTimeModel.h>
 #import <TelinkSigMeshLib/SigSensorDescriptorModel.h>
-#import <TelinkSigMeshLib/SigConst.h>
 #import <TelinkSigMeshLib/SigDataHandler.h>
 #import <TelinkSigMeshLib/SigNetworkLayer.h>
 #import <TelinkSigMeshLib/SigHearbeatMessage.h>
@@ -71,9 +71,10 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/SigSegmentedAccessMessage.h>
 #import <TelinkSigMeshLib/SigAutoConnectManager.h>
 #import <TelinkSigMeshLib/OTAManager.h>
-#import <TelinkSigMeshLib/TransmitJsonManager.h>
 #import <TelinkSigMeshLib/SigPublishManager.h>
 #import <TelinkSigMeshLib/MeshOTAManager.h>
-
+#import <TelinkSigMeshLib/TelinkHttpRequest.h>
+#import <TelinkSigMeshLib/SigRemoteAddManager.h>
+#import <TelinkSigMeshLib/SigFastProvisionAddManager.h>
 
 #import <TelinkSigMeshLib/PublicHeader.h>

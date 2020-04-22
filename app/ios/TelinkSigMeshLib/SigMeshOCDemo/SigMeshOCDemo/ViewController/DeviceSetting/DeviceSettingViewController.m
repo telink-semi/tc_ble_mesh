@@ -33,12 +33,14 @@
 #import "SingleOTAViewController.h"
 #import "DeviceSubscriptionListViewController.h"
 #import "UIViewController+Message.h"
+#import "SensorVC.h"
 
 @interface DeviceSettingViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UILabel *macLabel;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UIButton *kickOutButton;
 @property (nonatomic, assign) BOOL hasClickKickout;
+@property (nonatomic, strong) SigMessageHandle *messageHandle;
 @end
 
 @implementation DeviceSettingViewController
@@ -63,18 +65,24 @@
 - (void)kickoutAction{
     TeLogDebug(@"send kickout.");
     __weak typeof(self) weakSelf = self;
-    [DemoCommand kickoutDevice:self.model.address successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
-
-    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        if (isResponseAll) {
-            TeLogDebug(@"kickout success.");
-        } else {
-            TeLogDebug(@"kickout fail.");
-        }
-        [SigDataSource.share removeModelWithDeviceAddress:weakSelf.model.address];
-        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
-        [weakSelf pop];
-    }];
+    if (SigMeshLib.share.isBusyNow) {
+        TeLogInfo(@"send request for kick out, but busy now.");
+        [self showTips:@"app is busy now, try again later."];
+    } else {
+        TeLogInfo(@"send request for kick out address:%d",self.model.address);
+        _messageHandle = [SDKLibCommand resetNodeWithNodeAddress:self.model.address successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
+            
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            if (isResponseAll) {
+                TeLogDebug(@"kickout success.");
+            } else {
+                TeLogDebug(@"kickout fail.");
+            }
+            [SigDataSource.share removeModelWithDeviceAddress:weakSelf.model.address];
+            [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
+            [weakSelf pop];
+        }];
+    }
     
 //    if (self.model && [self.model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
 //        //if node is Bluetooth.share.currentPeripheral, wait node didDisconnectPeripheral, delay 1.5s and pop.
@@ -116,15 +124,27 @@
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
 }
 
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+    if (_messageHandle) {
+        [_messageHandle cancel];
+    }
+}
+
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    return 4;
+    if (self.model.isSensor) {
+        return 5;
+    } else {
+        return 4;
+    }
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     SettingItemCell *cell = (SettingItemCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_SettingItemCellID forIndexPath:indexPath];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     cell.stateSwitch.hidden = YES;
+
     switch (indexPath.row) {
         case 0:
         {
@@ -156,7 +176,7 @@
             [cell setChangeStateBlock:^(UISwitch * _Nonnull stateSwitch) {                
                 UInt32 option = weakSelf.model.publishModelID;
                 UInt16 eleAdr = [weakSelf.model.publishAddress.firstObject intValue];
-                /* 周期，5秒上报一次(periodSteps:kPublishInterval,:Range：0x01-0x3F; periodResolution:1) */
+                /* 周期，20秒上报一次(periodSteps:kPublishInterval,:Range：0x01-0x3F; periodResolution:1) */
                 [DemoCommand editPublishListWithPublishAddress:stateSwitch.isOn ? kMeshAddress_allNodes : kMeshAddress_unassignedAddress nodeAddress:weakSelf.model.address elementAddress:eleAdr modelID:option periodSteps:kPublishInterval periodResolution:SigStepResolution_seconds successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
                     TeLogDebug(@"editPublishList callback");
                     if (responseMessage.status == SigConfigMessageStatus_success && responseMessage.elementAddress == eleAdr) {
@@ -173,6 +193,12 @@
 
                 }];
             }];
+        }
+            break;
+        case 4:
+        {
+            cell.nameLabel.text = @"LPN";
+            cell.iconImageView.image = [UIImage imageNamed:@"ic_battery-20-bluetooth"];
         }
             break;
         default:
@@ -205,11 +231,17 @@
         {
             [self pushToDeviceOTA];
         }
+            break;
             case 3:
         {
             if (self.model.publishAddress.count == 0) {
                 [self showTips:@"Node hasn't publish model"];
             }
+        }
+            break;
+        case 4:
+        {
+            [self pushToSensorVC];
         }
             break;
         default:
@@ -232,6 +264,12 @@
 
 - (void)pushToDeviceOTA{
     SingleOTAViewController *vc = (SingleOTAViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SingleOTAViewControllerID];
+    vc.model = self.model;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)pushToSensorVC {
+    SensorVC *vc = (SensorVC *)[UIStoryboard initVC:ViewControllerIdentifiers_SensorVCID storybroad:@"Main"];
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }

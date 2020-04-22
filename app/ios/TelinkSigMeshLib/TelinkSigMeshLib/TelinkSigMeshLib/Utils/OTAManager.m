@@ -29,11 +29,22 @@
 
 #import "OTAManager.h"
 
+typedef enum : NSUInteger {
+    SigGattOTAProgress_idle                                     = 0,
+    SigGattOTAProgress_step1_startMeshConnectBeforeGATTOTA      = 1,
+    SigGattOTAProgress_step2_nodeIdentitySetBeforeGATTOTA       = 2,
+    SigGattOTAProgress_step3_startScanNodeIdentityBeforeGATTOTA = 3,
+    SigGattOTAProgress_step4_startConnectCBPeripheral           = 4,
+    SigGattOTAProgress_step5_setFilter                          = 5,
+    SigGattOTAProgress_step6_startSendGATTOTAPackets            = 6,
+} SigGattOTAProgress;
+
 @interface OTAManager()<SigBearerDataDelegate>
 
 @property (nonatomic,strong) SigBearer *bearer;
+@property (nonatomic, weak) id <SigBearerDataDelegate>oldBearerDataDelegate;
 
-@property (nonatomic,assign) NSTimeInterval connectPeripheralWithUUIDTimeoutInterval;//timeout of connect peripheral
+//@property (nonatomic,assign) NSTimeInterval connectPeripheralWithUUIDTimeoutInterval;//timeout of connect peripheral
 @property (nonatomic,assign) NSTimeInterval writeOTAInterval;//interval of write ota data, default is 6ms
 @property (nonatomic,assign) NSTimeInterval readTimeoutInterval;//timeout of read OTACharacteristic(write 8 packet, read one time), default is 5s.
 
@@ -55,6 +66,7 @@
 @property (nonatomic,assign) NSInteger otaIndex;//index of current ota packet
 @property (nonatomic,strong) NSData *localData;
 @property (nonatomic,assign) BOOL sendFinish;
+@property (nonatomic,assign) SigGattOTAProgress progress;
 
 
 
@@ -75,7 +87,7 @@
 - (void)initData{
     _bearer = SigBearer.share;
     
-    _connectPeripheralWithUUIDTimeoutInterval = 10.0;
+//    _connectPeripheralWithUUIDTimeoutInterval = 10.0;
     _writeOTAInterval = 0.006;
     _readTimeoutInterval = 5.0;
     
@@ -87,6 +99,7 @@
     _offset = 0;
     _otaIndex = -1;
     _sendFinish = NO;
+    _progress = SigGattOTAProgress_idle;
     
     _allModels = [[NSMutableArray alloc] init];
     _successModels = [[NSMutableArray alloc] init];
@@ -130,10 +143,11 @@
     [_successModels removeAllObjects];
     [_failModels removeAllObjects];
     
-    #warning 2019年12月17日15:44:23，需要设置dataDelegate到OTAmanager。
+    self.oldBearerDataDelegate = _bearer.dataDelegate;
     _bearer.dataDelegate = self;
     
     [self refreshCurrentModel];
+    SigBearer.share.isAutoReconnect = NO;
     [self otaNext];
     
     return YES;
@@ -145,115 +159,262 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
+    if (_OTAing) {
+        [SigBearer.share stopMeshConnectWithComplete:nil];
+    }
     _singleSuccessCallBack = nil;
     _singleFailCallBack = nil;
     _singleProgressCallBack = nil;
     _finishCallBack = nil;
     _stopOTAFlag = YES;
     _OTAing = NO;
-    [_bearer startMeshConnectWithTimeOut:kStartMeshConnectTimeout complete:nil];
-    #warning 2019年12月17日15:44:23，需要设置dataDelegate到OTA前。
-    _bearer.dataDelegate = nil;
+    _progress = SigGattOTAProgress_idle;
+    _bearer.dataDelegate = self.oldBearerDataDelegate;
 }
 
 - (void)connectDevice{
-    if (!_currentUUID && _currentUUID.length == 0) {
-        TeLogInfo(@"还未扫描到设备");
-        [self startScanForOTA];
-    } else {
-        if ([_bearer.getCurrentPeripheral.identifier.UUIDString isEqualToString:_currentUUID] && _bearer.isOpen) {
-            [self dalayToSetFilter];
-        }else{
-            __weak typeof(self) weakSelf = self;
-            [_bearer closeWithResult:^(BOOL successful) {
-                [weakSelf startConnectForOTA];
-            }];
-        }
-    }
-}
-
-- (void)dalayToSetFilter{
-    TeLogDebug(@"");
-    __weak typeof(self) weakSelf = self;
-    if (_bearer.isOpen) {
-        SigProvisionerModel *provisioner = SigDataSource.share.curProvisionerModel;
-        [SDKLibCommand setFilterForProvisioner:provisioner successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-            [weakSelf sendOTAAfterSetFilter];
-        } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            TeLogError(@"setFilter fail!!!");
-            //失败后逻辑：断开连接，扫描，连接(当前直接失败)
-    #warning 2019年12月17日16:21:13
-            [weakSelf connectPeripheralWithUUIDTimeout];
-        }];
-    #warning 2019年12月17日16:24:42，待确认是否需要mesh_tx_sec_nw_beacon_all_net(1);//send beacon, blt_sts can only be 0 or 1.
-
-    }
-}
-
-- (void)sendOTAAfterSetFilter{
-    [self sendPartData];
-}
-
-- (void)startConnectForOTA{
-    __weak typeof(self) weakSelf = self;
-    if (_currentUUID != nil && _currentUUID.length > 0) {
-        CBPeripheral *p = [SigBluetooth.share getPeripheralWithUUID:_currentUUID];
-        if (p) {
-            [_bearer changePeripheral:p result:^(BOOL successful) {
-                if (successful) {
-                    TeLogDebug(@"切换设备成功");
-                    [weakSelf.bearer openWithResult:^(BOOL successful) {
-                        if (successful) {
-                            TeLogDebug(@"读服务列表成功");
-
-                        } else {
-                            //失败后逻辑：断开连接，扫描，连接(当前直接失败)
-                            #warning 2019年12月17日16:21:13
-                            [weakSelf connectPeripheralWithUUIDTimeout];
-                        }
-                    }];
-                } else {
-                    //失败后逻辑：断开连接，扫描，连接(当前直接失败)
-                    #warning 2019年12月17日16:21:13
-                    [weakSelf connectPeripheralWithUUIDTimeout];
-                }
-            }];
+    if (SigBearer.share.isOpen) {
+        if (SigDataSource.share.unicastAddressOfConnected == self.currentModel.address) {
+            [self setFilter];
         } else {
-            TeLogInfo(@"get CBPeripheral is nil.");
+            [self nodeIdentitySetBeforeGATTOTA];
         }
-    }else{
-        TeLogInfo(@"error");
+    } else {
+        [self startMeshConnectBeforeGATTOTA];
     }
+//
+//    if (!_currentUUID && _currentUUID.length == 0) {
+//        TeLogInfo(@"还未扫描到设备");
+//        [self startScanNodeIdentityBeforeGATTOTA];
+//    } else {
+//        if ([_bearer.getCurrentPeripheral.identifier.UUIDString isEqualToString:_currentUUID] && _bearer.isOpen) {
+//            [self dalayToSetFilter];
+//        }else{
+//            __weak typeof(self) weakSelf = self;
+//            [_bearer stopMeshConnectWithComplete:^(BOOL successful) {
+//                [weakSelf startConnectForOTA];
+//            }];
+//        }
+//    }
 }
 
-- (void)startScanForOTA{
+#pragma mark step1:startMeshConnectBeforeGATTOTA
+- (void)startMeshConnectBeforeGATTOTA {
+    TeLogInfo(@"\n\n==========GATT OTA:step1\n\n");
+    self.progress = SigGattOTAProgress_step1_startMeshConnectBeforeGATTOTA;
     __weak typeof(self) weakSelf = self;
-    [SigBluetooth.share cancelAllConnecttionWithComplete:^{
-        [SigBluetooth.share scanProvisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
-            if (!unprovisioned && [SigDataSource.share getScanRspModelWithAddress:self.currentModel.address]) {
-                //扫描到当前需要OTA的设备
-                [SigBluetooth.share stopScan];
-                //更新uuid
-                [weakSelf refreshCurrentModel];
-                [weakSelf startConnectForOTA];
+    [SigBearer.share startMeshConnectWithComplete:^(BOOL successful) {
+        if (weakSelf.progress == SigGattOTAProgress_step1_startMeshConnectBeforeGATTOTA) {
+            if (successful) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(meshConnectTimeoutBeforeGATTOTA) object:nil];
+                });
+                [weakSelf nodeIdentitySetBeforeGATTOTA];
             }
-        }];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanPeripheralTimeout) object:nil];
-            [weakSelf performSelector:@selector(scanPeripheralTimeout) withObject:nil afterDelay:10.0];
-        });
+        }
+    }];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(meshConnectTimeoutBeforeGATTOTA) object:nil];
+        [self performSelector:@selector(meshConnectTimeoutBeforeGATTOTA) withObject:nil afterDelay:10.0];
+    });
+}
+
+/// OTA前直连设备超时。
+- (void)meshConnectTimeoutBeforeGATTOTA {
+    __weak typeof(self) weakSelf = self;
+    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        if (weakSelf.progress == SigGattOTAProgress_step1_startMeshConnectBeforeGATTOTA) {
+            TeLogInfo(@"OTA fail: startMeshConnect Timeout Before GATT OTA.");
+            [weakSelf otaFailAction];
+        }
     }];
 }
 
-- (void)connectPeripheralWithUUIDTimeout{
-    self.OTAing = NO;
+#pragma mark step2:nodeIdentitySetBeforeGATTOTA
+- (void)nodeIdentitySetBeforeGATTOTA {
+    TeLogInfo(@"\n\n==========GATT OTA:step2\n\n");
+    self.progress = SigGattOTAProgress_step2_nodeIdentitySetBeforeGATTOTA;
+    __weak typeof(self) weakSelf = self;
+    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
+    [oprationQueue addOperationWithBlock:^{
+        //这个block语句块在子线程中执行
+        __block BOOL hasSuccess = NO;
+        for (SigNodeModel *node in SigDataSource.share.curNodes) {
+            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+            [SDKLibCommand configNodeIdentitySetWithDestination:node.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
+                TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                if (!error) {
+                    hasSuccess = YES;
+                }
+                dispatch_semaphore_signal(semaphore);
+                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            }];
+            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
+        }
+        [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+            if (weakSelf.progress == SigGattOTAProgress_step2_nodeIdentitySetBeforeGATTOTA) {
+                if (hasSuccess) {
+                    [weakSelf startScanNodeIdentityBeforeGATTOTA];
+                } else {
+                    NSString *errStr = @"OTA fail: nodeIdentitySet fail Before GATT OTA.";
+                    TeLogInfo(@"%@",errStr);
+                    [weakSelf otaFailAction];
+                }
+            }
+        }];
+    }];
+}
+
+#pragma mark step3:startScanNodeIdentityBeforeGATTOTA
+- (void)startScanNodeIdentityBeforeGATTOTA {
+    TeLogInfo(@"\n\n==========GATT OTA:step3\n\n");
+    self.progress = SigGattOTAProgress_step3_startScanNodeIdentityBeforeGATTOTA;
+    __weak typeof(self) weakSelf = self;
+    [SigBluetooth.share scanProvisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
+        if (!unprovisioned) {
+            SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
+            if (rspModel.nodeIdentityData && rspModel.nodeIdentityData.length == 16) {
+                SigEncryptedModel *encryptedModel = [SigDataSource.share getSigEncryptedModelWithAddress:weakSelf.currentModel.address];
+                if (encryptedModel && encryptedModel.identityData && encryptedModel.identityData.length == 16 && [encryptedModel.identityData isEqualToData:rspModel.nodeIdentityData]) {
+                    TeLogInfo(@"gatt ota start connect macAddress:%@",rspModel.macAddress);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanNodeIdentityTimeoutBeforeGATTOTA) object:nil];
+                    });
+                    //扫描到当前需要OTA的设备
+                    [SigBluetooth.share stopScan];
+                    //更新uuid
+                    [weakSelf refreshCurrentModel];
+                    [weakSelf startConnectCBPeripheral:peripheral];
+                } else {
+                    if ([rspModel.macAddress isEqualToString:@"A4C138BB9CF7"]) {
+                        TeLogInfo(@"encryptedModel=%@",encryptedModel);
+                    }
+                }
+            }
+        }
+    }];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(scanNodeIdentityTimeoutBeforeGATTOTA) object:nil];
+        [self performSelector:@selector(scanNodeIdentityTimeoutBeforeGATTOTA) withObject:nil afterDelay:10.0];
+    });
+}
+
+- (void)scanNodeIdentityTimeoutBeforeGATTOTA{
     [self otaFailAction];
 }
 
-- (void)scanPeripheralTimeout{
-    self.OTAing = NO;
-    [self otaFailAction];
+#pragma mark step4:startConnectCBPeripheral
+- (void)startConnectCBPeripheral:(CBPeripheral *)peripheral {
+    TeLogInfo(@"\n\n==========GATT OTA:step4\n\n");
+    self.progress = SigGattOTAProgress_step4_startConnectCBPeripheral;
+    __weak typeof(self) weakSelf = self;
+    [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
+        if (weakSelf.progress == SigGattOTAProgress_step4_startConnectCBPeripheral) {
+            if (successful) {
+                [weakSelf performSelector:@selector(setFilter) withObject:nil afterDelay:0.5];
+            } else {
+                [weakSelf connectCBPeripheralFail];
+            }
+        }
+    }];
 }
+
+- (void)connectCBPeripheralFail {
+    __weak typeof(self) weakSelf = self;
+    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        if (weakSelf.progress == SigGattOTAProgress_step4_startConnectCBPeripheral) {
+            TeLogInfo(@"OTA fail: connectCBPeripheral fail Before GATT OTA.");
+            [weakSelf otaFailAction];
+        }
+    }];
+}
+
+#pragma mark step5:setFilter
+- (void)setFilter {
+    TeLogInfo(@"\n\n==========GATT OTA:step5\n\n");
+    self.progress = SigGattOTAProgress_step5_setFilter;
+    __weak typeof(self) weakSelf = self;
+    [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+        TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+    } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        if (weakSelf.progress == SigGattOTAProgress_step5_setFilter) {
+            if (error) {
+                [weakSelf setFilterFail];
+            } else {
+                [weakSelf startSendGATTOTAPackets];
+            }
+        }
+    }];
+}
+
+- (void)setFilterFail {
+    __weak typeof(self) weakSelf = self;
+    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        if (weakSelf.progress == SigGattOTAProgress_step5_setFilter) {
+            TeLogInfo(@"OTA fail: setFilter fail Before GATT OTA.");
+            [weakSelf otaFailAction];
+        }
+    }];
+}
+
+#pragma mark step6:startSendGATTOTAPackets
+- (void)startSendGATTOTAPackets {
+    TeLogInfo(@"\n\n==========GATT OTA:step6\n\n");
+    self.progress = SigGattOTAProgress_step6_startSendGATTOTAPackets;
+    [self sendPartData];
+}
+
+//
+//- (void)dalayToSetFilter{
+//    TeLogDebug(@"");
+//    __weak typeof(self) weakSelf = self;
+//    if (_bearer.isOpen) {
+//        SigProvisionerModel *provisioner = SigDataSource.share.curProvisionerModel;
+//        [SDKLibCommand setFilterForProvisioner:provisioner successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+//            [weakSelf startSendGATTOTAPackets];
+//        } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+//            TeLogError(@"setFilter fail!!!");
+//            //失败后逻辑：断开连接，扫描，连接(当前直接失败)
+//            [weakSelf connectPeripheralWithUUIDTimeout];
+//        }];
+//    }
+//}
+
+//- (void)startConnectForOTA {
+//    __weak typeof(self) weakSelf = self;
+//    if (_currentUUID != nil && _currentUUID.length > 0) {
+//        CBPeripheral *p = [SigBluetooth.share getPeripheralWithUUID:_currentUUID];
+//        if (p) {
+//            [_bearer changePeripheral:p result:^(BOOL successful) {
+//                if (successful) {
+//                    TeLogDebug(@"切换设备成功");
+//                    [weakSelf.bearer openWithResult:^(BOOL successful) {
+//                        if (successful) {
+//                            TeLogDebug(@"读服务列表成功");
+//
+//                        } else {
+//                            //失败后逻辑：断开连接，扫描，连接(当前直接失败)
+//                            [weakSelf connectPeripheralWithUUIDTimeout];
+//                        }
+//                    }];
+//                } else {
+//                    //失败后逻辑：断开连接，扫描，连接(当前直接失败)
+//                    [weakSelf connectPeripheralWithUUIDTimeout];
+//                }
+//            }];
+//        } else {
+//            TeLogInfo(@"get CBPeripheral is nil.");
+//        }
+//    }else{
+//        TeLogInfo(@"error");
+//    }
+//}
+//
+//- (void)connectPeripheralWithUUIDTimeout{
+//    [self otaFailAction];
+//}
 
 - (void)sendPartData{
     if (self.stopOTAFlag) {
@@ -318,13 +479,14 @@
 - (void)readTimeout{
     if (_bearer.getCurrentPeripheral) {
         __weak typeof(self) weakSelf = self;
-        [SigBluetooth.share cancelAllConnecttionWithComplete:^{
+        [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
             [weakSelf otaFailAction];
         }];
     }
 }
 
 - (void)otaSuccessAction{
+    self.progress = SigGattOTAProgress_idle;
     self.OTAing = NO;
     self.sendFinish = NO;
     self.stopOTAFlag = YES;
@@ -338,10 +500,10 @@
 }
 
 - (void)otaFailAction{
+    self.progress = SigGattOTAProgress_idle;
     self.OTAing = NO;
     self.sendFinish = NO;
     self.stopOTAFlag = YES;
-    [SigBearer.share startMeshConnectWithTimeOut:kStartMeshConnectTimeout complete:nil];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
@@ -357,10 +519,13 @@
 - (void)refreshCurrentModel{
     if (self.currentIndex < self.allModels.count) {
         self.currentModel = self.allModels[self.currentIndex];
-        self.currentUUID = [SigDataSource.share getNodeWithAddress:self.currentModel.address].peripheralUUID;
+        if (SigDataSource.share.unicastAddressOfConnected == self.currentModel.address) {
+            self.currentUUID = SigBearer.share.getCurrentPeripheral.identifier.UUIDString;
+        } else {
+            self.currentUUID = [SigDataSource.share getNodeWithAddress:self.currentModel.address].peripheralUUID;
+        }
     }else{
-        //直连OTA设备超时，默认后台进行重连mesh操作
-        [self connectWorkNormal];
+        _bearer.dataDelegate = self.oldBearerDataDelegate;
     }
 }
 
@@ -370,26 +535,19 @@
         if (self.finishCallBack) {
             self.finishCallBack(self.successModels,self.failModels);
         }
-        //OTA完成后，默认后台进行重连mesh操作
-        [self connectWorkNormal];
     } else {
         self.OTAing = YES;
         self.stopOTAFlag = NO;
         self.otaIndex = -1;
         self.offset = 0;
-        #warning 2019年12月17日15:44:23，OTA下一个设备的流程。
-//        [self.ble setOTAState];
         [self connectDevice];
     }
-}
-
-- (void)connectWorkNormal{
-    [_bearer startMeshConnectWithTimeOut:kStartMeshConnectTimeout complete:nil];
 }
 
 #pragma mark - SigBearerDataDelegate
 
 - (void)bearer:(SigBearer *)bearer didCloseWithError:(NSError *)error {
+    TeLogInfo(@"");
     if ([_bearer.getCurrentPeripheral.identifier.UUIDString isEqualToString:self.currentUUID]) {
         if (self.sendFinish) {
             [self otaSuccessAction];
@@ -416,6 +574,20 @@
     [_bearer sendOTAData:writeData];
 }
 
+- (void)sendReadFirmwareVersion {
+    uint8_t buf[2] = {0x00,0xff};
+    NSData *writeData = [NSData dataWithBytes:buf length:2];
+    TeLogInfo(@"sendReadFirmwareVersion -> length:%lu,%@",(unsigned long)writeData.length,writeData);
+    [_bearer sendOTAData:writeData];
+}
+
+- (void)sendStartOTA {
+    uint8_t buf[2] = {0x01,0xff};
+    NSData *writeData = [NSData dataWithBytes:buf length:2];
+    TeLogInfo(@"sendReadStartOTA -> length:%lu,%@",(unsigned long)writeData.length,writeData);
+    [_bearer sendOTAData:writeData];
+}
+
 /*
  packet of end OTA 6 bytes structure：1byte:0x02 + 1byte:0xff + 2bytes:index + 2bytes:~index
  */
@@ -431,22 +603,7 @@
     NSData *writeData = [NSData dataWithBytes:resultBytes length:6];
     TeLogInfo(@"sendOTAEndData -> %04x ,length:%lu,%@", index,(unsigned long)writeData.length,writeData);
     [_bearer sendOTAData:writeData];
+    TeLogInfo(@"\n\n==========GATT OTA:end\n\n");
 }
-
-- (void)sendReadFirmwareVersion {
-    uint8_t buf[2] = {0x00,0xff};
-    NSData *writeData = [NSData dataWithBytes:buf length:2];
-    TeLogInfo(@"sendReadFirmwareVersion -> length:%lu,%@",(unsigned long)writeData.length,writeData);
-    [_bearer sendOTAData:writeData];
-}
-
-- (void)sendStartOTA {
-    uint8_t buf[2] = {0x01,0xff};
-    NSData *writeData = [NSData dataWithBytes:buf length:2];
-    TeLogInfo(@"sendReadStartOTA -> length:%lu,%@",(unsigned long)writeData.length,writeData);
-    [_bearer sendOTAData:writeData];
-}
-
-
 
 @end

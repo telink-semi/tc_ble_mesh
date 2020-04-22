@@ -74,7 +74,20 @@
         DeviceTypeModel *model2 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_CT];
         [_defaultNodeInfos addObject:model1];
         [_defaultNodeInfos addObject:model2];
-        _defaultFirmwareIDLength = 4;
+//        _defaultFirmwareIDLength = 4;
+        SigNetkeyModel *netkey = [[SigNetkeyModel alloc] init];
+        netkey.key = @"7dd7364cd842ad18c17c74656c696e6b";
+        netkey.index = 0;
+        netkey.name = @"netkeyA";
+        netkey.minSecurity = @"high";
+        _netKeyA = netkey;
+        SigAppkeyModel *appkey = [[SigAppkeyModel alloc] init];
+        appkey.key = @"63964771734fbd76e3b474656c696e6b";
+        appkey.index = 0;
+        appkey.name = @"appkeyA";
+        appkey.boundNetKey = 0;
+        _appKeyA = appkey;
+        _ivIndexA = [[SigIvIndex alloc] initWithIndex:0x12345678 updateActive:NO];
     }
     return self;
 }
@@ -101,7 +114,8 @@
     }
     if (_netKeys) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigNetkeyModel *model in _netKeys) {
+        NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
+        for (SigNetkeyModel *model in netKeys) {
             NSDictionary *netkeyDict = [model getDictionaryOfSigNetkeyModel];
             [array addObject:netkeyDict];
         }
@@ -109,7 +123,8 @@
     }
     if (_appKeys) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigAppkeyModel *model in _appKeys) {
+        NSArray *appKeys = [NSArray arrayWithArray:_appKeys];
+        for (SigAppkeyModel *model in appKeys) {
             NSDictionary *appkeyDict = [model getDictionaryOfSigAppkeyModel];
             [array addObject:appkeyDict];
         }
@@ -117,7 +132,8 @@
     }
     if (_provisioners) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigProvisionerModel *model in _provisioners) {
+        NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
+        for (SigProvisionerModel *model in provisioners) {
             NSDictionary *provisionDict = [model getDictionaryOfSigProvisionerModel];
             [array addObject:provisionDict];
         }
@@ -125,7 +141,8 @@
     }
     if (_nodes) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigNodeModel *model in _nodes) {
+        NSArray *nodes = [NSArray arrayWithArray:_nodes];
+        for (SigNodeModel *model in nodes) {
             NSDictionary *nodeDict = [model getDictionaryOfSigNodeModel];
             [array addObject:nodeDict];
         }
@@ -133,7 +150,8 @@
     }
     if (_groups) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigGroupModel *model in _groups) {
+        NSArray *groups = [NSArray arrayWithArray:_groups];
+        for (SigGroupModel *model in groups) {
             NSDictionary *groupDict = [model getDictionaryOfSigGroupModel];
             [array addObject:groupDict];
         }
@@ -141,7 +159,8 @@
     }
     if (_scenes) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigSceneModel *model in _scenes) {
+        NSArray *scenes = [NSArray arrayWithArray:_scenes];
+        for (SigSceneModel *model in scenes) {
             NSDictionary *sceneDict = [model getDictionaryOfSigSceneModel];
             [array addObject:sceneDict];
         }
@@ -336,7 +355,7 @@
     NSMutableArray *elements = [NSMutableArray array];
     SigElementModel *element = [[SigElementModel alloc] init];
     element.name = @"Primary Element";
-    element.location = [SigHelper.share getNodeAddressString:(UInt16)provisioner.allocatedUnicastRange.firstObject.lowIntAddress];
+    element.location = 0;
     element.index = 0;
     NSMutableArray *models = [NSMutableArray array];
     NSArray *defaultModelIDs = @[@"0000",@"0001",@"0002",@"0003",@"0005",@"FE00",@"FE01",@"FE02",@"FE03",@"FF00",@"FF01",@"1202",@"1001",@"1003",@"1005",@"1008",@"1205",@"1208",@"1302",@"1305",@"1309",@"1311",@"1015",@"00010000"];
@@ -348,6 +367,7 @@
         [models addObject:modelIDModel];
     }
     element.models = models;
+    element.parentNode = node;
     [elements addObject:element];
     node.elements = elements;
     
@@ -361,16 +381,7 @@
     if (![node.appKeys containsObject:nodeAppkey]) {
         [node.appKeys addObject:nodeAppkey];
     }
-
-//    VC_node_info_t node_info = {};
-//    //_nodeInfo默认赋值ff
-//    memset(&node_info, 0xff, sizeof(VC_node_info_t));
-//    node_info.node_adr = [LibTools uint16From16String:node.unicastAddress];
-//    node_info.element_cnt = 1;
-//    node_info.cps.len_cps = SIZE_OF_PAGE0_LOCAL;
-//    memcpy(&node_info.cps.page0_head, gp_page0, SIZE_OF_PAGE0_LOCAL);
-//    node.nodeInfo = node_info;
-
+    
     [_nodes addObject:node];
 }
 
@@ -408,13 +419,15 @@
 
 - (void)removeModelWithDeviceAddress:(UInt16)deviceAddress{
     @synchronized(self) {
-        for (SigNodeModel *model in self.nodes) {
+        NSArray *nodes = [NSArray arrayWithArray:_nodes];
+        for (SigNodeModel *model in nodes) {
             if (model.address == deviceAddress) {
                 [_nodes removeObject:model];
                 break;
             }
         }
-        for (SigSceneModel *scene in self.scenes) {
+        NSArray *scenes = [NSArray arrayWithArray:_scenes];
+        for (SigSceneModel *scene in scenes) {
             for (NSString *actionAddress in scene.addresses) {
                 if (actionAddress.intValue == deviceAddress) {
                     [scene.addresses removeObject:actionAddress];
@@ -463,7 +476,8 @@
 
 - (NSInteger)getProvisionerCount{
     NSInteger max = 0;
-    for (SigProvisionerModel *provisioner in self.provisioners) {
+    NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
+    for (SigProvisionerModel *provisioner in provisioners) {
         if (max < provisioner.allocatedUnicastRange.firstObject.hightIntAddress) {
             max = provisioner.allocatedUnicastRange.firstObject.hightIntAddress;
         }
@@ -511,7 +525,9 @@
 
 - (void)setAllDevicesOutline{
     @synchronized(self) {
-        for (SigNodeModel *model in _nodes) {
+        _curNodes = nil;
+        NSArray *nodes = [NSArray arrayWithArray:_nodes];
+        for (SigNodeModel *model in nodes) {
             model.state = DeviceStateOutOfLine;
         }
     }
@@ -549,13 +565,13 @@
 ///Special handling: store the uuid and MAC mapping relationship.
 - (void)saveScanList{
     NSMutableArray *tem = [NSMutableArray array];
-    for (SigNodeModel *node in self.curNodes) {
+    NSArray *nodes = [NSArray arrayWithArray:self.curNodes];
+    for (SigNodeModel *node in nodes) {
         SigScanRspModel *rsp = [self getScanRspModelWithAddress:node.address];
         if (rsp) {
             [tem addObject:rsp];
         }
     }
-
     NSData *data = [NSKeyedArchiver archivedDataWithRootObject:tem];
     [[NSUserDefaults standardUserDefaults] setObject:data forKey:kScanList_key];
     [[NSUserDefaults standardUserDefaults] synchronize];
@@ -576,55 +592,46 @@
 ///Special handling: update the uuid and MAC mapping relationship.
 - (void)updateScanRspModelToDataSource:(SigScanRspModel *)model{
     @synchronized(self) {
-        if ([self.scanList containsObject:model]) {
-            NSInteger index = [self.scanList indexOfObject:model];
-            SigScanRspModel *oldModel = [self.scanList objectAtIndex:index];
-            if (oldModel.address != model.address || oldModel.PID != model.PID || oldModel.CID != model.CID || ![oldModel.macAddress isEqualToString:model.macAddress]) {
-                [self.scanList replaceObjectAtIndex:[self.scanList indexOfObject:model] withObject:model];
-                [self saveScanList];
-            }
-        } else {
-            BOOL add = NO;
-            if (model.macAddress && model.macAddress.length > 0) {
-                SigNodeModel *node = [self getDeviceWithMacAddress:model.macAddress];
-                if (node) {
-                    add = YES;
-                }else{
-                    ///未添加的设备，需要缓存
-                    if (model.advUuid && model.advUuid.length == 32) {
-                        add = YES;
+        if (model.uuid) {
+            if ([self.scanList containsObject:model]) {
+                NSInteger index = [self.scanList indexOfObject:model];
+                SigScanRspModel *oldModel = [self.scanList objectAtIndex:index];
+                if (![oldModel.macAddress isEqualToString:model.macAddress]) {
+                    if (!model.macAddress || model.macAddress.length != 6) {
+                        model.macAddress = oldModel.macAddress;
                     }
                 }
-            }
-            if (!add && model.address > 0){
-                SigNodeModel *node = [self getDeviceWithAddress:model.address];
-                if (node) {
-                    add = YES;
-                }else{
-                    ///已添加的设备，存在符合当前mesh的nodeIdentity或者networkID，需要缓存
-                    if ((model.nodeIdentityData && model.nodeIdentityData.length == 16)||(model.networkIDData && model.networkIDData.length == 8)) {
-                        add = YES;
+                if (oldModel.address != model.address && model.address == 0) {
+                    model.address = oldModel.address;
+                }
+                if (model.provisioned) {
+                    if (oldModel.networkIDData && oldModel.networkIDData.length == 8 && (model.networkIDData == nil || model.networkIDData.length != 8)) {
+                        model.networkIDData = oldModel.networkIDData;
+                    }
+                    if (oldModel.nodeIdentityData && oldModel.nodeIdentityData.length == 16 && (model.nodeIdentityData == nil || model.nodeIdentityData.length != 16)) {
+                        model.nodeIdentityData = oldModel.nodeIdentityData;
                     }
                 }
-            }
-
-            if (add) {
+                if (![oldModel.macAddress isEqualToString:model.macAddress] || oldModel.address != model.address || ![oldModel.networkIDData isEqualToData:model.networkIDData] || ![oldModel.nodeIdentityData isEqualToData:model.nodeIdentityData]) {
+                    [self.scanList replaceObjectAtIndex:index withObject:model];
+                    [self saveScanList];
+                }
+            } else {
                 [self.scanList addObject:model];
                 [self saveScanList];
-                TeLogInfo(@"新增缓存UUID=%@ address=%d macAddress=%@ self.scanList.count=%lu,ServiceUUIDs=%@",model.uuid,model.address,model.macAddress,(unsigned long)self.scanList.count,model.advertisementData[CBAdvertisementDataServiceUUIDsKey]);
             }
         }
     }
 }
 
 ///Special handling: determine model whether exist current meshNetwork
-- (BOOL)existScanRspModel:(SigScanRspModel *)model{
+- (BOOL)existScanRspModelOfCurrentMeshNetwork:(SigScanRspModel *)model{
     if (model.networkIDData && model.networkIDData.length > 0) {
-        if (self.curNetkeyModel.key && self.curNetkeyModel.key.length > 0) {
-            return [self.curNetkeyModel.key.uppercaseString isEqualToString:[LibTools convertDataToHexStr:model.networkIDData].uppercaseString];
+        if (self.curNetkeyModel.networkId && self.curNetkeyModel.networkId.length > 0) {
+            return [self.curNetkeyModel.networkId isEqualToData:model.networkIDData];
         }
-        if (self.curNetkeyModel.oldKey && self.curNetkeyModel.oldKey.length > 0) {
-            return [self.curNetkeyModel.oldKey.uppercaseString isEqualToString:[LibTools convertDataToHexStr:model.networkIDData].uppercaseString];
+        if (self.curNetkeyModel.oldNetworkId && self.curNetkeyModel.oldNetworkId.length > 0) {
+            return [self.curNetkeyModel.oldNetworkId isEqualToData:model.networkIDData];
         }
     }else if (model.nodeIdentityData && model.nodeIdentityData.length == 16) {
         return [self matchsWithNodeIdentityData:model.nodeIdentityData peripheralUUIDString:model.uuid];
@@ -634,12 +641,8 @@
 
 ///Special handling: determine peripheralUUIDString whether exist current meshNetwork
 - (BOOL)existPeripheralUUIDString:(NSString *)peripheralUUIDString{
-    for (SigEncryptedModel *model in self.encryptedArray) {
-        if ([model.peripheralUUID isEqualToString:peripheralUUIDString]) {
-            return YES;
-        }
-    }
-    return NO;
+    SigNodeModel *node = [self getNodeWithUUID:peripheralUUIDString];
+    return node != nil;
 }
 
 - (BOOL)existEncryptedWithNodeIdentityData:(NSData *)nodeIdentityData {
@@ -659,7 +662,8 @@
 }
 
 - (BOOL)matchsWithHashData:(NSData *)hash randomData:(NSData *)random peripheralUUIDString:(NSString *)peripheralUUIDString {
-    for (SigNodeModel *node in self.curNodes) {
+    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
+    for (SigNodeModel *node in curNodes) {
         // Data are: 48 bits of Padding (0s), 64 bit Random and Unicast Address.
         Byte byte[6];
         memset(byte, 0, 6);
@@ -693,6 +697,7 @@
             tem.peripheralUUID = peripheralUUIDString;
             tem.encryptedData = encryptedData;
             tem.address = node.address;
+            [self deleteSigEncryptedModelWithAddress:node.address];
             [self.encryptedArray addObject:tem];
             return YES;
         }
@@ -731,7 +736,8 @@
 
 - (NSInteger)getOnlineDevicesNumber{
     NSInteger count = 0;
-    for (SigNodeModel *model in self.curNodes) {
+    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
+    for (SigNodeModel *model in curNodes) {
         if (model.state != DeviceStateOutOfLine) {
             count ++;
         }
@@ -739,18 +745,9 @@
     return count;
 }
 
-- (SigNodeModel *)getDeviceWithUUID:(NSString *)uuid{
-    for (SigNodeModel *model in self.nodes) {
-        //peripheralUUID || location node's uuid
-        if ([model.peripheralUUID isEqualToString:uuid] || [model.UUID isEqualToString:uuid]) {
-            return model;
-        }
-    }
-    return nil;
-}
-
 - (SigNodeModel *)getDeviceWithMacAddress:(NSString *)macAddress{
-    for (SigNodeModel *model in self.nodes) {
+    NSArray *nodes = [NSArray arrayWithArray:_nodes];
+    for (SigNodeModel *model in nodes) {
         //peripheralUUID || location node's uuid
         if (macAddress && model.macAddress && [model.macAddress.uppercaseString isEqualToString:macAddress.uppercaseString]) {
             return model;
@@ -760,25 +757,25 @@
 }
 
 - (SigNodeModel *)getDeviceWithAddress:(UInt16)address{
-    @synchronized(self) {
-        for (SigNodeModel *model in self.curNodes) {
-            if (model.nodeInfo.element_cnt > 1) {
-                if (model.address <= address && model.address + model.nodeInfo.element_cnt - 1 >= address) {
-                    return model;
-                }
-            } else {
-                if (model.address == address) {
-                    return model;
-                }
+    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
+    for (SigNodeModel *model in curNodes) {
+        if (model.nodeInfo.element_cnt > 1) {
+            if (model.address <= address && model.address + model.nodeInfo.element_cnt - 1 >= address) {
+                return model;
+            }
+        } else {
+            if (model.address == address) {
+                return model;
             }
         }
-        return nil;
     }
+    return nil;
 }
 
 - (ModelIDModel *)getModelIDModel:(NSNumber *)modelID{
     ModelIDs *modelIDs = [[ModelIDs alloc] init];
-    for (ModelIDModel *model in modelIDs.modelIDs) {
+    NSArray *all = [NSArray arrayWithArray:modelIDs.modelIDs];
+    for (ModelIDModel *model in all) {
         if (model.sigModelID == [modelID intValue]) {
             return model;
         }
@@ -824,51 +821,52 @@
 }
 
 - (SigScanRspModel *)getScanRspModelWithUUID:(NSString *)uuid{
-    @synchronized(self) {
-        for (SigScanRspModel *model in _scanList) {
-            if ([model.uuid isEqualToString:uuid]) {
-                return model;
-            }
+    NSArray *scanList = [NSArray arrayWithArray:_scanList];
+    for (SigScanRspModel *model in scanList) {
+        if ([model.uuid isEqualToString:uuid]) {
+            return model;
         }
-        return nil;
     }
+    return nil;
 }
 
 - (SigScanRspModel *)getScanRspModelWithMac:(NSString *)mac{
-    @synchronized(self) {
-        for (SigScanRspModel *model in _scanList) {
-            if ([model.macAddress isEqualToString:mac]) {
-                return model;
-            }
+    NSArray *scanList = [NSArray arrayWithArray:_scanList];
+    for (SigScanRspModel *model in scanList) {
+        if ([model.macAddress isEqualToString:mac]) {
+            return model;
         }
-        return nil;
     }
+    return nil;
 }
 
 - (SigScanRspModel *)getScanRspModelWithAddress:(UInt16)address{
-    @synchronized(self) {
-        for (SigScanRspModel *model in _scanList) {
-            if (model.address == address) {
-                return model;
-            }
+    NSArray *scanList = [NSArray arrayWithArray:_scanList];
+    for (SigScanRspModel *model in scanList) {
+        if (model.address == address) {
+            return model;
         }
-        return nil;
     }
+    return nil;
 }
 
 - (void)deleteScanRspModelWithAddress:(UInt16)address{
-    for (SigScanRspModel *model in _scanList) {
-        if (model.address == address) {
-            [_scanList removeObject:model];
-            break;
+    @synchronized(self) {
+        NSArray *scanList = [NSArray arrayWithArray:_scanList];
+        for (SigScanRspModel *model in scanList) {
+            if (model.address == address) {
+                [_scanList removeObject:model];
+                break;
+            }
         }
+        [self saveScanList];
     }
-    [self saveScanList];
 }
 
 - (SigEncryptedModel *)getSigEncryptedModelWithAddress:(UInt16)address {
     SigEncryptedModel *tem = nil;
-    for (SigEncryptedModel *model in _encryptedArray) {
+    NSArray *encryptedArray = [NSArray arrayWithArray:_encryptedArray];
+    for (SigEncryptedModel *model in encryptedArray) {
         if (model.address == address) {
             return model;
         }
@@ -877,10 +875,13 @@
 }
 
 - (void)deleteSigEncryptedModelWithAddress:(UInt16)address {
-    for (SigEncryptedModel *model in _encryptedArray) {
-        if (model.address == address) {
-            [_encryptedArray removeObject:model];
-            break;
+    @synchronized(self) {
+        NSArray *encryptedArray = [NSArray arrayWithArray:_encryptedArray];
+        for (SigEncryptedModel *model in encryptedArray) {
+            if (model.address == address) {
+                [_encryptedArray removeObject:model];
+                break;
+            }
         }
     }
 }
@@ -908,7 +909,8 @@
 //    }
     //Practice 2. get provisioner by location node's uuid.
     NSString *curUUID = [self getCurrentProvisionerUUID];
-    for (SigProvisionerModel *provisioner in SigDataSource.share.provisioners) {
+    NSArray *provisioners = [NSArray arrayWithArray: _provisioners];
+    for (SigProvisionerModel *provisioner in provisioners) {
         if ([provisioner.UUID isEqualToString:curUUID]) {
             return provisioner;
         }
@@ -918,7 +920,8 @@
 
 - (SigNodeModel *)curLocationNodeModel{
     if (SigDataSource.share.curProvisionerModel) {
-        for (SigNodeModel *model in self.nodes) {
+        NSArray *nodes = [NSArray arrayWithArray: self.nodes];
+        for (SigNodeModel *model in nodes) {
             if ([model.UUID isEqualToString:SigDataSource.share.curProvisionerModel.UUID]) {
                 return model;
             }
@@ -948,13 +951,15 @@
 ///nodes should show in HomeViewController
 - (NSMutableArray<SigNodeModel *> *)curNodes{
     @synchronized(self) {
-        if (_curNodes && _curNodes.count == self.nodes.count - self.provisioners.count) {
+        if (_curNodes && _curNodes.count == _nodes.count - _provisioners.count) {
             return _curNodes;
         } else {
             _curNodes = [NSMutableArray array];
-            for (SigNodeModel *node in self.nodes) {
+            NSArray *nodes = [NSArray arrayWithArray:_nodes];
+            for (SigNodeModel *node in nodes) {
                 BOOL isProvisioner = NO;
-                for (SigProvisionerModel *provisioner in self.provisioners) {
+                NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
+                for (SigProvisionerModel *provisioner in provisioners) {
                     if (node.UUID && [node.UUID isEqualToString:provisioner.UUID]) {
                         isProvisioner = YES;
                         break;
@@ -976,7 +981,8 @@
         return kLocationAddress;
     } else {
         UInt16 maxAddr = self.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
-        for (SigNodeModel *node in SigDataSource.share.nodes) {
+        NSArray *nodes = [NSArray arrayWithArray:_nodes];
+        for (SigNodeModel *node in nodes) {
             NSInteger curMax = node.address + node.elements.count - 1;
             if (curMax > maxAddr) {
                 maxAddr = curMax;
@@ -1019,7 +1025,8 @@
 
 - (BOOL)hasNodeExistTimeModelID {
     BOOL tem = NO;
-    for (SigNodeModel *node in self.curNodes) {
+    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
+    for (SigNodeModel *node in curNodes) {
         UInt32 option = SIG_MD_TIME_S;
         NSArray *elementAddresses = [node getAddressesWithModelID:@(option)];
         if (elementAddresses.count > 0) {
@@ -1031,36 +1038,34 @@
 }
 
 - (SigNodeModel *)getNodeWithUUID:(NSString *)uuid{
-    @synchronized(self) {
-        for (SigNodeModel *model in SigDataSource.share.nodes) {
-            if ([model.peripheralUUID isEqualToString:uuid]) {
-                return model;
-            }
+    NSArray *nodes = [NSArray arrayWithArray:_nodes];
+    for (SigNodeModel *model in nodes) {
+        if ([model.peripheralUUID isEqualToString:uuid]) {
+            return model;
         }
-        return nil;
     }
+    return nil;
 }
 
 - (SigNodeModel *)getNodeWithAddress:(UInt16)address{
-    @synchronized(self) {
-        for (SigNodeModel *model in SigDataSource.share.nodes) {
-            if (model.elements.count > 1) {
-                if (model.address <= address && model.address + model.elements.count - 1 >= address) {
-                    return model;
-                }
-            } else {
-                if (model.address == address) {
-                    return model;
-                }
+    NSArray *nodes = [NSArray arrayWithArray:_nodes];
+    for (SigNodeModel *model in nodes) {
+        if (model.elements.count > 1) {
+            if (model.address <= address && model.address + model.elements.count - 1 >= address) {
+                return model;
+            }
+        } else {
+            if (model.address == address) {
+                return model;
             }
         }
-        return nil;
     }
+    return nil;
 }
 
 - (SigNodeModel *)getCurrentConnectedNode{
-    NSString *uuid = SigBearer.share.getCurrentPeripheral.identifier.UUIDString;
-    return [self getDeviceWithUUID:uuid];
+    SigNodeModel *node = [self getNodeWithAddress:self.unicastAddressOfConnected];
+    return node;
 }
 
 - (NSData *)getIvIndexData{
@@ -1080,7 +1085,6 @@
 - (int)getCurrentProvisionerIntSequenceNumber {
     if (self.curLocationNodeModel) {
         return [self getLocationSno];
-//        return self.curLocationNodeModel.getIntSNO;
     }
     TeLogInfo(@"get sequence fail.");
     return 0;
@@ -1088,10 +1092,10 @@
 
 - (void)updateCurrentProvisionerIntSequenceNumber:(int)sequenceNumber {
     if (sequenceNumber < self.getCurrentProvisionerIntSequenceNumber) {
-        TeLogVerbose(@"更新sequenceNumber异常=0x%x",sequenceNumber);
-//#warning 2019年12月30日17:11:46，暂时处理：将设备sequenceNumber赋值本地
-//        [self setLocationSno:sequenceNumber];
-//        [self saveLocationData];
+//        TeLogVerbose(@"更新sequenceNumber异常=0x%x",sequenceNumber);
+////#warning 2019年12月30日17:11:46，暂时处理：将设备sequenceNumber赋值本地
+////        [self setLocationSno:sequenceNumber];
+////        [self saveLocationData];
         return;
     }
     if (self.curLocationNodeModel && sequenceNumber != self.getCurrentProvisionerIntSequenceNumber) {
@@ -1108,7 +1112,8 @@
 
 - (SigNetkeyModel *)getNetkeyModelWithNetworkId:(NSData *)networkId {
     SigNetkeyModel *tem = nil;
-    for (SigNetkeyModel *model in self.netKeys) {
+    NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
+    for (SigNetkeyModel *model in netKeys) {
         if (model.networkId && [model.networkId isEqualToData:networkId]) {
             tem = model;
             break;
@@ -1122,7 +1127,8 @@
 
 - (SigAppkeyModel *)getAppkeyModelWithAppkeyIndex:(NSInteger)appkeyIndex {
     SigAppkeyModel *model = nil;
-    for (SigAppkeyModel *tem in self.appKeys) {
+    NSArray *appKeys = [NSArray arrayWithArray:_appKeys];
+    for (SigAppkeyModel *tem in appKeys) {
         if (tem.index == appkeyIndex) {
             model = tem;
             break;
@@ -1133,7 +1139,8 @@
 
 - (SigNetkeyModel *)getNetkeyModelWithNetkeyIndex:(NSInteger)index {
     SigNetkeyModel *tem = nil;
-    for (SigNetkeyModel *model in self.netKeys) {
+    NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
+    for (SigNetkeyModel *model in netKeys) {
         if (model.index == index) {
             tem = model;
             break;
@@ -1144,7 +1151,8 @@
 
 - (SigGroupModel *)getGroupModelWithGroupAddress:(UInt16)groupAddress {
     SigGroupModel *tem = nil;
-    for (SigGroupModel *model in self.groups) {
+    NSArray *groups = [NSArray arrayWithArray:_groups];
+    for (SigGroupModel *model in groups) {
         if (model.intAddress == groupAddress) {
             tem = model;
             break;
@@ -1171,7 +1179,8 @@
 
 - (DeviceTypeModel *)getNodeInfoWithCID:(UInt16)CID PID:(UInt16)PID {
     DeviceTypeModel *model = nil;
-    for (DeviceTypeModel *tem in _defaultNodeInfos) {
+    NSArray *defaultNodeInfos = [NSArray arrayWithArray:_defaultNodeInfos];
+    for (DeviceTypeModel *tem in defaultNodeInfos) {
         if (tem.CID == CID && tem.PID == PID) {
             model = tem;
             break;
@@ -1300,7 +1309,6 @@
 - (SigNetkeyDerivaties *)keys {
     if (!_keys && self.key && self.key.length > 0 && ![self.key isEqualToString:@"00000000000000000000000000000000"]) {
         _keys = [[SigNetkeyDerivaties alloc] initWithNetkeyData:[LibTools nsstringToHex:self.key] helper:OpenSSLHelper.share];
-//        _keys = [[SigNetkeyDerivaties alloc] initWithNetkeyData:[LibTools nsstringToHex:@"19db6fe9cce55a2512c8426097579bb1"] helper:OpenSSLHelper.share];
     }
     return _keys;
 }
@@ -1357,7 +1365,8 @@
     }
     if (_allocatedUnicastRange) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigRangeModel *model in _allocatedUnicastRange) {
+        NSMutableArray *allocatedUnicastRange = [NSMutableArray arrayWithArray:_allocatedUnicastRange];
+        for (SigRangeModel *model in allocatedUnicastRange) {
             NSDictionary *rangeDict = [model getDictionaryOfSigRangeModel];
             [array addObject:rangeDict];
         }
@@ -1365,7 +1374,8 @@
     }
     if (_allocatedGroupRange) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigRangeModel *model in _allocatedGroupRange) {
+        NSMutableArray *allocatedGroupRange = [NSMutableArray arrayWithArray:_allocatedGroupRange];
+        for (SigRangeModel *model in allocatedGroupRange) {
             NSDictionary *rangeDict = [model getDictionaryOfSigRangeModel];
             [array addObject:rangeDict];
         }
@@ -1373,7 +1383,8 @@
     }
     if (_allocatedSceneRange) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigSceneRangeModel *model in _allocatedSceneRange) {
+        NSMutableArray *allocatedSceneRange = [NSMutableArray arrayWithArray:_allocatedSceneRange];
+        for (SigSceneRangeModel *model in allocatedSceneRange) {
             NSDictionary *sceneRangeDict = [model getDictionaryOfSigSceneRangeModel];
             [array addObject:sceneRangeDict];
         }
@@ -1466,7 +1477,8 @@
 
 - (SigNodeModel *)node {
     SigNodeModel *tem = nil;
-    for (SigNodeModel *model in SigDataSource.share.nodes) {
+    NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.nodes];
+    for (SigNodeModel *model in nodes) {
         if ([model.UUID isEqualToString:_UUID]) {
             tem = model;
             break;
@@ -1604,7 +1616,8 @@
 
 - (SigNetkeyModel *)getCurrentBoundNetKey {
     SigNetkeyModel *tem = nil;
-    for (SigNetkeyModel *model in SigDataSource.share.netKeys) {
+    NSArray *netKeys = [NSArray arrayWithArray:SigDataSource.share.netKeys];
+    for (SigNetkeyModel *model in netKeys) {
         if (model.index == _boundNetKey) {
             tem = model;
             break;
@@ -1645,14 +1658,16 @@
     dict[@"number"] = @(_number);
     if (_addresses) {
         NSMutableArray *array = [NSMutableArray array];
-        for (NSString *str in _addresses) {
+        NSMutableArray *addresses = [NSMutableArray arrayWithArray:_addresses];
+        for (NSString *str in addresses) {
             [array addObject:str];
         }
         dict[@"addresses"] = array;
     }
     if (_actionList) {
         NSMutableArray *array = [NSMutableArray array];
-        for (ActionModel *model in _actionList) {
+        NSMutableArray *actionList = [NSMutableArray arrayWithArray:_actionList];
+        for (ActionModel *model in actionList) {
             NSDictionary *actionDict = [model getDictionaryOfActionModel];
             [array addObject:actionDict];
         }
@@ -1711,7 +1726,8 @@
 - (NSMutableArray<NSString *> *)addresses{
     if (self.actionList && self.actionList.count > 0) {
         NSMutableArray *tem = [NSMutableArray array];
-        for (ActionModel *action in self.actionList) {
+        NSMutableArray *actionList = [NSMutableArray arrayWithArray:_actionList];
+        for (ActionModel *action in actionList) {
             [tem addObject:[NSString stringWithFormat:@"%04X",action.address]];
         }
         return tem;
@@ -2135,7 +2151,8 @@
     if (self.elements.count > 0) {
         for (int i=0; i<self.elements.count; i++) {
             SigElementModel *ele = self.elements[i];
-            for (SigModelIDModel *modelID in ele.models) {
+            NSArray *all = [NSArray arrayWithArray:ele.models];
+            for (SigModelIDModel *modelID in all) {
                 if (modelID.getIntModelID == sigModelID.intValue) {
                     [array addObject:@(self.address+i)];
                     break;
@@ -2151,29 +2168,6 @@
         //location node's uuid
         return _UUID;
     }
-
-    //old code:use in v2.9.0 and before
-//    NSString *tem = nil;
-//    if (_macAddress && _macAddress.length > 0) {
-//        for (SigScanRspModel *model in SigDataSource.share.scanList) {
-//            if (model.macAddress && [model.macAddress.uppercaseString isEqualToString:_macAddress.uppercaseString]) {
-//                tem = model.uuid;
-//                break;
-//            }
-//        }
-//    }
-//
-//    if (tem != nil) {
-//        _peripheralUUID = tem;
-//    } else {
-//        if (kAddNotAdvertisementMac && self.address != 0) {
-//            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:self.address];
-//            if (node && node.UUID && ![node.UUID isEqualToString:@"00000000000000000000000000000000"]) {
-//                _peripheralUUID = node.UUID;
-//            }
-//        }
-//    }
-    
     //new code:use in v3.0.0 and later
     SigEncryptedModel *model = [SigDataSource.share getSigEncryptedModelWithAddress:self.address];
     _peripheralUUID = model.peripheralUUID;
@@ -2185,7 +2179,7 @@
             _peripheralUUID = rspModel.uuid;
         }
     }
-
+    
     //show in HomeViewController node's peripheralUUID
     return _peripheralUUID;
 
@@ -2197,20 +2191,16 @@
     }
     NSString *tem = nil;
     if (_peripheralUUID && _peripheralUUID.length > 0) {
-        for (SigScanRspModel *model in SigDataSource.share.scanList) {
-            if ([model.uuid isEqualToString:_peripheralUUID]) {
-                tem = model.macAddress;
-                break;
-            }
+        SigScanRspModel *model = [SigDataSource.share getScanRspModelWithUUID:_peripheralUUID];
+        if (model) {
+            tem = model.macAddress;
         }
     }
     if (tem == nil) {
         if (self.address != 0) {
-            for (SigScanRspModel *model in SigDataSource.share.scanList) {
-                if (model.address == self.address) {
-                    tem = model.macAddress;
-                    break;
-                }
+            SigScanRspModel *model = [SigDataSource.share getScanRspModelWithAddress:self.address];
+            if (model) {
+                tem = model.macAddress;
             }
         }
     }
@@ -2221,9 +2211,11 @@
 /// Returns list of Network Keys known to this Node.
 - (NSArray <SigNetkeyModel *>*)getNetworkKeys {
     NSMutableArray *tem = [NSMutableArray array];
-    for (SigNetkeyModel *key in SigDataSource.share.netKeys) {
+    NSArray *netKeys = [NSArray arrayWithArray:SigDataSource.share.netKeys];
+    for (SigNetkeyModel *key in netKeys) {
         BOOL has = NO;
-        for (SigNodeKeyModel *nodeKey in _netKeys) {
+        NSArray *all = [NSArray arrayWithArray:_netKeys];
+        for (SigNodeKeyModel *nodeKey in all) {
             if (nodeKey.index == key.index) {
                 has = YES;
                 break;
@@ -2248,9 +2240,11 @@
 
 - (SigModelIDModel *)getModelIDModelWithModelID:(UInt16)modelID {
     SigModelIDModel *model = nil;
-    for (SigElementModel *element in self.elements) {
+    NSArray *elements = [NSArray arrayWithArray:self.elements];
+    for (SigElementModel *element in elements) {
         element.parentNode = self;
-        for (SigModelIDModel *tem in element.models) {
+        NSArray *all = [NSArray arrayWithArray:element.models];
+        for (SigModelIDModel *tem in all) {
             tem.parentElement = element;
             if (tem.getIntModelID == modelID) {
                 model = tem;
@@ -2266,10 +2260,12 @@
 
 - (SigModelIDModel *)getModelIDModelWithModelID:(UInt16)modelID andElementAddress:(UInt16)elementAddress {
     SigModelIDModel *model = nil;
-    for (SigElementModel *element in self.elements) {
+    NSArray *elements = [NSArray arrayWithArray:self.elements];
+    for (SigElementModel *element in elements) {
         element.parentNode = self;
         if (element.unicastAddress == elementAddress) {
-            for (SigModelIDModel *tem in element.models) {
+            NSArray *all = [NSArray arrayWithArray:element.models];
+            for (SigModelIDModel *tem in all) {
                 tem.parentElement = element;
                 if (tem.getIntModelID == modelID) {
                     model = tem;
@@ -2336,7 +2332,8 @@
 //    }
     if (_elements) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigElementModel *model in _elements) {
+        NSArray *elements = [NSArray arrayWithArray:_elements];
+        for (SigElementModel *model in elements) {
             NSDictionary *elementDict = [model getDictionaryOfSigElementModel];
             [array addObject:elementDict];
         }
@@ -2344,7 +2341,8 @@
     }
     if (_netKeys) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigNodeKeyModel *model in _netKeys) {
+        NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
+        for (SigNodeKeyModel *model in netKeys) {
             NSDictionary *netkeyDict = [model getDictionaryOfSigNodeKeyModel];
             [array addObject:netkeyDict];
         }
@@ -2352,7 +2350,8 @@
     }
     if (_appKeys) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigNodeKeyModel *model in _appKeys) {
+        NSArray *appKeys = [NSArray arrayWithArray:_appKeys];
+        for (SigNodeKeyModel *model in appKeys) {
             NSDictionary *appkeyDict = [model getDictionaryOfSigNodeKeyModel];
             [array addObject:appkeyDict];
         }
@@ -2360,7 +2359,8 @@
     }
     if (_schedulerList) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SchedulerModel *model in _schedulerList) {
+        NSArray *schedulerList = [NSArray arrayWithArray:_schedulerList];
+        for (SchedulerModel *model in schedulerList) {
             NSDictionary *schedulerDict = [model getDictionaryOfSchedulerModel];
             [array addObject:schedulerDict];
         }
@@ -2494,9 +2494,11 @@
     features.lowPowerFeature = compositionData.features.lowPowerFeature;
     self.features = features;
     NSMutableArray *array = [NSMutableArray array];
-    for (SigElementModel *element in compositionData.elements) {
+    NSArray *elements = [NSArray arrayWithArray:compositionData.elements];
+    for (SigElementModel *element in elements) {
         element.parentNode = self;
-        for (SigModelIDModel *modelID in element.models) {
+        NSArray *all = [NSArray arrayWithArray:element.models];
+        for (SigModelIDModel *modelID in all) {
             [self setBindSigNodeKeyModel:self.appKeys.firstObject toSigModelIDModel:modelID];
         }
         [array addObject:element];
@@ -2566,10 +2568,12 @@
     NSInteger cpsLength = 2+8;
     if (self.appKeys.count > 0) {
         //keyBind成功
-        for (SigElementModel *element in self.elements) {
+        NSArray *elements = [NSArray arrayWithArray:self.elements];
+        for (SigElementModel *element in elements) {
             NSMutableArray *sigModelIDs = [NSMutableArray array];
             NSMutableArray *vendorModelIDs = [NSMutableArray array];
-            for (SigModelIDModel *modelIDModel in element.models) {
+            NSArray *all = [NSArray arrayWithArray:element.models];
+            for (SigModelIDModel *modelIDModel in all) {
                 if (modelIDModel.modelId.length <= 4) {
                     [sigModelIDs addObject:@([LibTools uint16From16String:modelIDModel.modelId])];
                 } else {
@@ -2750,12 +2754,15 @@
         NSArray *allOptions = SigDataSource.share.defaultGroupSubscriptionModels;
         for (NSNumber *modelID in allOptions) {
             BOOL hasOption = NO;
-            for (SigElementModel *element in self.elements) {
+            NSArray *elements = [NSArray arrayWithArray:self.elements];
+            for (SigElementModel *element in elements) {
                 BOOL shouldBreak = NO;
-                for (SigModelIDModel *modelIDModel in element.models) {
+                NSArray *models = [NSArray arrayWithArray:element.models];
+                for (SigModelIDModel *modelIDModel in models) {
                     if (modelIDModel.getIntModelID == modelID.intValue) {
                         //[NSString]->[NSNumber]
-                        for (NSString *groupIDString in modelIDModel.subscribe) {
+                        NSArray *subscribe = [NSArray arrayWithArray:modelIDModel.subscribe];
+                        for (NSString *groupIDString in subscribe) {
                             [tem addObject:@([LibTools uint16From16String:groupIDString])];
                         }
                         hasOption = YES;
@@ -2780,12 +2787,15 @@
     @synchronized (self) {
         NSArray *allOptions = SigDataSource.share.defaultGroupSubscriptionModels;
         for (NSNumber *modelID in allOptions) {
-            for (SigElementModel *element in self.elements) {
-                for (SigModelIDModel *modelIDModel in element.models) {
+            NSArray *elements = [NSArray arrayWithArray:self.elements];
+            for (SigElementModel *element in elements) {
+                NSArray *models = [NSArray arrayWithArray:element.models];
+                for (SigModelIDModel *modelIDModel in models) {
                     if (modelIDModel.getIntModelID == modelID.intValue) {
                         //[NSString]->[NSNumber]
                         NSMutableArray *tem = [NSMutableArray array];
-                        for (NSString *groupIDString in modelIDModel.subscribe) {
+                        NSArray *subscribe = [NSArray arrayWithArray:modelIDModel.subscribe];
+                        for (NSString *groupIDString in subscribe) {
                             [tem addObject:@([LibTools uint16From16String:groupIDString])];
                         }
                         if (![tem containsObject:groupID]) {
@@ -2803,12 +2813,15 @@
     @synchronized (self) {
         NSArray *allOptions = SigDataSource.share.defaultGroupSubscriptionModels;
         for (NSNumber *modelID in allOptions) {
-            for (SigElementModel *element in self.elements) {
-                for (SigModelIDModel *modelIDModel in element.models) {
+            NSArray *elements = [NSArray arrayWithArray:self.elements];
+            for (SigElementModel *element in elements) {
+                NSArray *models = [NSArray arrayWithArray:element.models];
+                for (SigModelIDModel *modelIDModel in models) {
                     if (modelIDModel.getIntModelID == modelID.intValue) {
                         //[NSString]->[NSNumber]
                         NSMutableArray *tem = [NSMutableArray array];
-                        for (NSString *groupIDString in modelIDModel.subscribe) {
+                        NSArray *subscribe = [NSArray arrayWithArray:modelIDModel.subscribe];
+                        for (NSString *groupIDString in subscribe) {
                             [tem addObject:@([LibTools uint16From16String:groupIDString])];
                         }
                         if ([tem containsObject:groupID]) {
@@ -2826,9 +2839,11 @@
     @synchronized (self) {
         if (self.hasPublishFunction) {
             //存在publish功能
-            for (SigElementModel *element in self.elements) {
+            NSArray *elements = [NSArray arrayWithArray:self.elements];
+            for (SigElementModel *element in elements) {
                 BOOL hasPublish = NO;
-                for (SigModelIDModel *sigModelIDModel in element.models) {
+                NSArray *models = [NSArray arrayWithArray:element.models];
+                for (SigModelIDModel *sigModelIDModel in models) {
                     if (sigModelIDModel.getIntModelID == self.publishModelID) {
                         hasPublish = YES;
                         sigModelIDModel.publish = [[SigPublishModel alloc] init];
@@ -2858,9 +2873,11 @@
     @synchronized (self) {
         if (self.hasPublishFunction) {
             //存在publish功能
-            for (SigElementModel *element in self.elements) {
+            NSArray *elements = [NSArray arrayWithArray:self.elements];
+            for (SigElementModel *element in elements) {
                 BOOL hasPublish = NO;
-                for (SigModelIDModel *sigModelIDModel in element.models) {
+                NSArray *models = [NSArray arrayWithArray:element.models];
+                for (SigModelIDModel *sigModelIDModel in models) {
                     if (sigModelIDModel.getIntModelID == self.publishModelID) {
                         sigModelIDModel.publish = nil;
                         hasPublish = YES;
@@ -2886,9 +2903,11 @@
         BOOL tem = NO;
         if (self.hasPublishFunction) {
             //存在publish功能
-            for (SigElementModel *element in self.elements) {
+            NSArray *elements = [NSArray arrayWithArray:self.elements];
+            for (SigElementModel *element in elements) {
                 BOOL hasPublish = NO;
-                for (SigModelIDModel *modelIDModel in element.models) {
+                NSArray *models = [NSArray arrayWithArray:element.models];
+                for (SigModelIDModel *modelIDModel in models) {
                     if (modelIDModel.getIntModelID == self.publishModelID) {
                         hasPublish = YES;
                         if (modelIDModel.publish != nil && [LibTools uint16From16String:modelIDModel.publish.address] == 0xffff) {
@@ -2912,9 +2931,11 @@
         BOOL tem = NO;
         if (self.hasPublishFunction) {
             //存在publish功能
-            for (SigElementModel *element in self.elements) {
+            NSArray *elements = [NSArray arrayWithArray:self.elements];
+            for (SigElementModel *element in elements) {
                 BOOL hasPublish = NO;
-                for (SigModelIDModel *modelIDModel in element.models) {
+                NSArray *models = [NSArray arrayWithArray:element.models];
+                for (SigModelIDModel *modelIDModel in models) {
                     if (modelIDModel.getIntModelID == self.publishModelID) {
                         hasPublish = YES;
                         if (modelIDModel.publish != nil && [LibTools uint16From16String:modelIDModel.publish.address] == 0xffff) {
@@ -3312,7 +3333,8 @@
     dict[@"index"] = @(_index);
     if (_models) {
         NSMutableArray *array = [NSMutableArray array];
-        for (SigModelIDModel *model in _models) {
+        NSArray *models = [NSArray arrayWithArray:_models];
+        for (SigModelIDModel *model in models) {
             NSDictionary *modelIDDict = [model getDictionaryOfSigModelIDModel];
             [array addObject:modelIDDict];
         }
@@ -3353,7 +3375,8 @@
     NSMutableData *mData = [NSMutableData dataWithBytes:&tem16 length:2];
     NSMutableArray <SigModelIDModel *>*sigModels = [NSMutableArray array];
     NSMutableArray <SigModelIDModel *>*vendorModels = [NSMutableArray array];
-    for (SigModelIDModel *modelID in self.models) {
+    NSArray *models = [NSArray arrayWithArray:self.models];
+    for (SigModelIDModel *modelID in models) {
         if (modelID.isBluetoothSIGAssigned) {
             [sigModels addObject:modelID];
         } else {
@@ -3545,7 +3568,8 @@
 /// to this Model, possibly bound by other Provisioner.
 - (NSMutableArray <SigAppkeyModel *>*)boundApplicationKeys {
     NSMutableArray *tem = [NSMutableArray array];
-    for (SigAppkeyModel *key in self.parentElement.parentNode.appKeys) {
+    NSArray *appKeys = [NSArray arrayWithArray:self.parentElement.parentNode.appKeys];
+    for (SigAppkeyModel *key in appKeys) {
         if ([self.bind containsObject:@(key.index)]) {
             [tem addObject:key];
         }
@@ -3604,7 +3628,8 @@
 ///            address, `false` otherwise.
 - (BOOL)isSubscribedToAddress:(SigMeshAddress *)address {
     BOOL has = NO;
-    for (SigGroupModel *model in self.subscriptions) {
+    NSArray *subscriptions = [NSArray arrayWithArray:self.subscriptions];
+    for (SigGroupModel *model in subscriptions) {
         if (model.intAddress == address.address) {
             has = YES;
             break;
@@ -3623,14 +3648,16 @@
     }
     if (_bind) {
         NSMutableArray *array = [NSMutableArray array];
-        for (NSNumber *num in _bind) {
+        NSArray *bind = [NSArray arrayWithArray:_bind];
+        for (NSNumber *num in bind) {
             [array addObject:num];
         }
         dict[@"bind"] = array;
     }
     if (_subscribe) {
         NSMutableArray *array = [NSMutableArray array];
-        for (NSString *str in _subscribe) {
+        NSArray *subscribe = [NSArray arrayWithArray:_subscribe];
+        for (NSString *str in subscribe) {
             [array addObject:str];
         }
         dict[@"subscribe"] = array;

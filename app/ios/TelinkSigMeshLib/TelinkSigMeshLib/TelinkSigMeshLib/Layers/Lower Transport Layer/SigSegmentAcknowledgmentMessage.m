@@ -59,7 +59,7 @@
         SigSegmentedMessage *segment = segments.firstObject;
         if (segments == nil || ![segment isKindOfClass:SigSegmentedMessage.class]) {
             for (SigSegmentedMessage *tem in segments) {
-                if (tem != nil && [tem isKindOfClass:SigSegmentedMessage.class]) {
+                if (tem != nil && ![tem isEqual:[NSNull null]] && [tem isKindOfClass:SigSegmentedMessage.class]) {
                     segment = tem;
                     break;
                 }
@@ -75,6 +75,7 @@
         _blockAck = ack;
         UInt32 bigAck = CFSwapInt32HostToBig(ack);
         self.upperTransportPdu = [NSData dataWithBytes:&bigAck length:4];
+        TeLogInfo(@"node response last segment,send response is acknowledged.ack.blockAck=0x%x,upperTransportPdu=%@",ack,self.upperTransportPdu);
         // Assuming all segments have the same source and destination addresses and network key.
         // Swaping source with destination. Destination here is guaranteed to be a Unicast Address.
         self.source = segment.destination;

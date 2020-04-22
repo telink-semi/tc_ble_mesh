@@ -37,6 +37,58 @@
 
 @implementation SigUpperTransportPdu
 
+- (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key ivIndex:(SigIvIndex *)ivIndex forVirtualGroup:(SigGroupModel *)virtualGroup {
+    if (self = [super init]) {
+//        TeLogDebug(@"accessMessage.upperTransportPdu=%@,length=%lu",[LibTools convertDataToHexStr:accessMessage.transportPdu],(unsigned long)accessMessage.transportPdu.length);
+        NSInteger micSize = accessMessage.transportMicSize;
+        NSInteger encryptedDataSize = accessMessage.upperTransportPdu.length - micSize;
+        NSData *encryptedData = [accessMessage.upperTransportPdu subdataWithRange:NSMakeRange(0, encryptedDataSize)];
+        NSData *mic = [accessMessage.upperTransportPdu subdataWithRange:NSMakeRange(encryptedDataSize, accessMessage.upperTransportPdu.length - encryptedDataSize)];
+        
+        // The nonce type is 0x01 for messages signed with Application Key and
+        // 0x02 for messages signed using Device Key (Configuration Messages).
+        UInt8 type = accessMessage.aid != 0 ? 0x01 : 0x02;
+        // ASZMIC is set to 1 for messages sent with high security
+        // (64-bit TransMIC). This is possible only for Segmented Access Messages.
+        UInt8 aszmic = micSize == 4 ? 0 : 1;
+        UInt32 sequ32 = CFSwapInt32HostToBig(accessMessage.sequence);
+        NSData *seq = [[NSData dataWithBytes:&sequ32 length:4] subdataWithRange:NSMakeRange(1, 3)];
+        NSMutableData *nonce = [NSMutableData data];
+        UInt8 tem1 = type;
+        UInt8 tem2 = aszmic << 7;
+        UInt16 tem3 = CFSwapInt16HostToBig(accessMessage.source);
+        UInt16 tem4 = CFSwapInt16HostToBig(accessMessage.destination);
+        UInt32 tem5 = CFSwapInt32HostToBig(ivIndex.index);
+        [nonce appendData:[NSData dataWithBytes:&tem1 length:1]];
+        [nonce appendData:[NSData dataWithBytes:&tem2 length:1]];
+        [nonce appendData:seq];
+        [nonce appendData:[NSData dataWithBytes:&tem3 length:2]];
+        [nonce appendData:[NSData dataWithBytes:&tem4 length:2]];
+        [nonce appendData:[NSData dataWithBytes:&tem5 length:4]];
+
+//            NSData *additionalData = virtualGroup?.address.virtualLabel?.data;
+        NSData *additionalData = nil;
+        NSData *decryptedData = [OpenSSLHelper.share calculateDecryptedCCM:encryptedData withKey:key nonce:nonce andMIC:mic withAdditionalData:additionalData];
+        
+        if (decryptedData == nil || decryptedData.length == 0) {
+            TeLogError(@"calculateDecryptedCCM fail.");
+            return nil;
+        }else{
+//            TeLogDebug(@"calculateDecryptedCCM success.");
+        }
+        _source = accessMessage.source;
+        _destination = accessMessage.destination;
+        _aid = accessMessage.aid;
+        _transportMicSize = accessMessage.transportMicSize;
+        _transportPdu = accessMessage.upperTransportPdu;
+        _accessPdu = decryptedData;
+        _sequence = accessMessage.sequence;
+        _message = nil;
+        _userInitiated = NO;
+    }
+    return self;
+}
+
 - (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key forVirtualGroup:(SigGroupModel *)virtualGroup {
     if (self = [super init]) {
 //        TeLogDebug(@"accessMessage.upperTransportPdu=%@,length=%lu",[LibTools convertDataToHexStr:accessMessage.transportPdu],(unsigned long)accessMessage.transportPdu.length);
@@ -94,6 +146,53 @@
     return [self initFromLowerTransportAccessMessage:accessMessage key:key forVirtualGroup:model];
 }
 
+- (instancetype)initFromAccessPdu:(SigAccessPdu *)pdu usingKeySet:(SigKeySet *)keySet ivIndex:(SigIvIndex *)ivIndex sequence:(UInt32)sequence {
+    if (self = [super init]) {
+        _message = pdu.message;
+        _localElement = pdu.localElement;
+        _userInitiated = pdu.userInitiated;
+        _source = pdu.localElement.unicastAddress;
+        _destination = pdu.destination.address;
+        _sequence = sequence;
+        _accessPdu = pdu.accessPdu;
+        _aid = keySet.aid;
+        SigMeshMessageSecurity security = pdu.message.security;
+        
+        // The nonce type is 0x01 for messages signed with Application Key and
+        // 0x02 for messages signed using Device Key (Configuration Messages).
+        UInt8 type = _aid != 0 ? 0x01 : 0x02;
+        // ASZMIC is set to 1 for messages that shall be sent with high security
+        // (64-bit TransMIC). This is possible only for Segmented Access Messages.
+        UInt8 aszmic = security == SigMeshMessageSecurityHigh && (_accessPdu.length > 11 || pdu.isSegmented) ? 1 : 0;
+        // SEQ is 24-bit value, in Big Endian.
+        UInt32 sequenceBigDian = CFSwapInt32HostToBig(_sequence);
+        NSData *sequenceData = [NSData dataWithBytes:&sequenceBigDian length:4];
+        NSData *seq = [sequenceData subdataWithRange:NSMakeRange(1, 3)];
+
+        NSMutableData *nonce = [NSMutableData data];
+        UInt8 tem[2] = {type,aszmic << 7};
+        NSData *temData = [NSData dataWithBytes:&tem length:2];
+        UInt16 sourceBigDian = CFSwapInt16HostToBig(_source);
+        NSData *sourceData = [NSData dataWithBytes:&sourceBigDian length:2];
+        UInt16 destinationBigDian = CFSwapInt16HostToBig(_destination);
+        NSData *destinationData = [NSData dataWithBytes:&destinationBigDian length:2];
+        UInt32 ivIndexBigDian = CFSwapInt32HostToBig(ivIndex.index);
+        NSData *ivIndexData = [NSData dataWithBytes:&ivIndexBigDian length:4];
+        [nonce appendData:temData];
+        [nonce appendData:seq];
+        [nonce appendData:sourceData];
+        [nonce appendData:destinationData];
+        [nonce appendData:ivIndexData];
+        //==========test=========//
+        TeLogVerbose(@"==========ivIndex=0x%x",ivIndex.index);
+        //==========test=========//
+
+        _transportMicSize = aszmic == 0 ? 4 : 8;
+        _transportPdu = [OpenSSLHelper.share calculateCCM:_accessPdu withKey:keySet.accessKey nonce:nonce andMICSize:_transportMicSize withAdditionalData:pdu.destination.virtualLabel.getData];
+    }
+    return self;
+}
+
 - (instancetype)initFromAccessPdu:(SigAccessPdu *)pdu usingKeySet:(SigKeySet *)keySet sequence:(UInt32)sequence {
     if (self = [super init]) {
         _message = pdu.message;
@@ -137,9 +236,6 @@
         //==========test=========//
 
         _transportMicSize = aszmic == 0 ? 4 : 8;
-        /*key---5d947c04 a903d011 d52437e5 2f675a06*/
-//        NSData *tem22 = [LibTools nsstringToHex:@"5d947c04a903d011d52437e52f675a06"];
-//        _transportPdu = [OpenSSLHelper.share calculateCCM:_accessPdu withKey:tem22 nonce:nonce andMICSize:_transportMicSize withAdditionalData:pdu.destination.virtualLabel.getData];
         _transportPdu = [OpenSSLHelper.share calculateCCM:_accessPdu withKey:keySet.accessKey nonce:nonce andMICSize:_transportMicSize withAdditionalData:pdu.destination.virtualLabel.getData];
     }
     return self;
@@ -165,19 +261,31 @@
         if (matchingGroups.count == 0) {
             [matchingGroups addObject:(SigGroupModel *)[NSNull null]];
         }
-        for (SigAppkeyModel *applicationKey in meshNetwork.appKeys) {
+        NSMutableArray *temAppKeys = [NSMutableArray arrayWithArray:meshNetwork.appKeys];
+        if (meshNetwork.appKeyA) {
+            [temAppKeys addObject:meshNetwork.appKeyA];
+        }
+        for (SigAppkeyModel *applicationKey in temAppKeys) {
             for (SigGroupModel *tem in matchingGroups) {
                 SigGroupModel *group = tem;
                 if ([group isMemberOfClass:[NSNull class]]) {
                     group = nil;
                 }
-                SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:applicationKey.getDataKey forVirtualGroup:group];
-                if (aid == applicationKey.aid && pdu) {
-                    SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];
-                    return @{@"SigUpperTransportPdu":pdu,@"SigKeySet":keySet};
+                if (applicationKey.getDataKey && applicationKey.getDataKey.length > 0) {
+                    SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:applicationKey.getDataKey forVirtualGroup:group];
+                    if (pdu == nil && meshNetwork.ivIndexA) {
+                        pdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:applicationKey.getDataKey ivIndex:meshNetwork.ivIndexA forVirtualGroup:group];
+                    }
+                    if (aid == applicationKey.aid && pdu) {
+                        SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];
+                        return @{@"SigUpperTransportPdu":pdu,@"SigKeySet":keySet};
+                    }
                 }
                 if (applicationKey.getDataOldKey && applicationKey.getDataOldKey.length > 0) {
                     SigUpperTransportPdu *oldPdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:applicationKey.getDataOldKey forVirtualGroup:group];
+                    if (oldPdu == nil) {
+                        oldPdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:applicationKey.getDataOldKey ivIndex:meshNetwork.ivIndexA forVirtualGroup:group];
+                    }
                     if (applicationKey.oldAid == applicationKey.aid && oldPdu) {
                         SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];
                         return @{@"SigUpperTransportPdu":oldPdu,@"SigKeySet":keySet};

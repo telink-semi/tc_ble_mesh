@@ -36,6 +36,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SigDataHandler : NSObject
 
+
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
+
 + (SigDataHandler *)share;
 
 - (void)receiveBleData:(NSData *)data;

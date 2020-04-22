@@ -73,7 +73,7 @@ typedef enum : NSUInteger {
     [self userAbled:NO];
 
     __weak typeof(self) weakSelf = self;
-    [SigBearer.share closeWithResult:^(BOOL successful) {
+    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
             TeLogDebug(@"close success.");
             [SigBluetooth.share scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
@@ -288,7 +288,11 @@ typedef enum : NSUInteger {
             default:
                 break;
         }
-        itemCell.titleLabel.text = [NSString stringWithFormat:@"mac:%@ state:%@",rsp.macAddress,state];
+        if (rsp.macAddress) {
+            itemCell.titleLabel.text = [NSString stringWithFormat:@"mac:%@ state:%@",rsp.macAddress,state];
+        } else {
+            itemCell.titleLabel.text = [NSString stringWithFormat:@"uuid:%@ state:%@",model.peripheral.identifier.UUIDString,state];
+        }
         if (self.selectDevices.count > 0) {
             itemCell.selectButton.selected = [self.selectDevices containsObject:model];
         } else {

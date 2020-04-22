@@ -3045,11 +3045,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark opcode:0xB601
 
-/// 3.2.1 Firmware Information Get
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.21)
-@interface SigFirmwareInformationGet : SigAcknowledgedGenericMessage
+/// 8.4.1.1 Firmware Update Information Get
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.81)
+@interface SigFirmwareUpdateInformationGet : SigAcknowledgedGenericMessage
+/// Index of the first requested entry from the Firmware Information List state.
+@property (nonatomic,assign) UInt8 firstIndex;
+/// Maximum number of entries that the server includes in a Firmware Update Information Status message.
+@property (nonatomic,assign) UInt8 entriesLimit;
 - (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithFirstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit;
 /// The Type of the response message.
 - (Class)responseType;
 /// The Op Code of the response message.
@@ -3061,92 +3066,115 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// 3.2.2 Firmware Information Status
 /// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.21)
-@interface SigFirmwareInformationStatus : SigGenericMessage
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
-/// URL for update source (optional)
-@property (nonatomic,strong) NSData *updateURL;
-- (instancetype)initWithParameters:(NSData *)parameters;
-@end
-
-
-#pragma mark opcode:0xB609
-
-/// 3.2.3 Firmware Distribution Get
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.22)
-@interface SigFirmwareDistributionGet : SigAcknowledgedGenericMessage
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID;
+@interface SigFirmwareUpdateInformationStatus : SigGenericMessage
+/// The number of entries in the Firmware Information List state of the server.
+@property (nonatomic,assign) UInt8 firmwareInformationListCount;
+/// Index of the first requested entry from the Firmware Information List state.
+@property (nonatomic,assign) UInt8 firstIndex;
+/// List of entries
+@property (nonatomic,strong) NSMutableArray <SigFirmwareInformationEntryModel *>*firmwareInformationList;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB60A
 
-/// 3.2.4 Firmware Distribution Start
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.22)
-@interface SigFirmwareDistributionStart : SigAcknowledgedGenericMessage
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
-/// Group address for multicast update mode
-@property (nonatomic,assign) UInt16 groupAddress;
-/// Update nodes list, size = 2 * count of update nodes list
-@property (nonatomic,strong) NSArray <NSNumber *>*updateNodesList;//[@(node.address)]
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID groupAddress:(UInt16)groupAddress updateNodesList:(NSArray <NSNumber *>*)updateNodesList;
+/// 8.4.2.8 Firmware Distribution Get
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.88)
+@interface SigFirmwareDistributionGet : SigAcknowledgedGenericMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB60B
 
-/// 3.2.5 Firmware Distribution Stop
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.23)
-@interface SigFirmwareDistributionStop : SigAcknowledgedGenericMessage
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID;
+/// 8.4.2.9 Firmware Distribution Start
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.88)
+@interface SigFirmwareDistributionStart : SigAcknowledgedGenericMessage
+/// Index of the application key used in a firmware image distribution.
+@property (nonatomic,assign) UInt16 distributionAppKeyIndex;
+/// Time To Live value used in a firmware image distribution.
+@property (nonatomic,assign) UInt8 distributionTTL;
+/// Used to compute the timeout of the firmware image distribution.
+@property (nonatomic,assign) UInt16 distributionTimeoutBase;
+/// Mode of the transfer, szie is 2 bits.
+@property (nonatomic,assign) SigTransferModeState distributionTransferMode;
+/// Firmware update policy, szie is 1 bits.
+@property (nonatomic,assign) BOOL updatePolicy;
+/// Reserved for Future Use. Size is 5 bits.
+@property (nonatomic,assign) UInt8 RFU;
+/// Index of the firmware image in the Firmware Images List state to use during firmware image distribution.
+@property (nonatomic,assign) UInt16 distributionFirmwareImageIndex;
+/// Multicast address used in a firmware image distribution. Size is 16 bits or 128 bits.
+@property (nonatomic,strong) NSData *distributionMulticastAddress;
+
+- (instancetype)initWithDistributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(BOOL)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex distributionMulticastAddress:(NSData *)distributionMulticastAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB60C
 
-/// 3.2.6 Firmware Distribution Status
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.23)
-@interface SigFirmwareDistributionStatus : SigGenericMessage
-/// Status code
-@property (nonatomic,assign) SigFirmwareDistributionStatusType status;
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
+/// 8.4.2.10 Firmware Distribution Cancel
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.89)
+@interface SigFirmwareDistributionCancel : SigAcknowledgedGenericMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB60D
 
-/// 3.2.7 Firmware Distribution Details Get
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.24)
-@interface SigFirmwareDistributionDetailsGet : SigAcknowledgedGenericMessage
-/// Status code
-@property (nonatomic,assign) SigFirmwareDistributionStatusType status;
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
-- (instancetype)initWithStatus:(SigFirmwareDistributionStatusType)status companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID;
+/// 8.4.2.11 Firmware Distribution Apply
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.89)
+@interface SigFirmwareDistributionApply : SigAcknowledgedGenericMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
+
+
+#pragma mark opcode:0xB60E
+
+/// 8.4.2.12 Firmware Distribution Status
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.89)
+@interface SigFirmwareDistributionStatus : SigGenericMessage
+/// Status Code for the requesting message.
+@property (nonatomic,assign) SigFirmwareDistributionServerAndClientModelStatusType status;
+/// Phase of the firmware image distribution.
+@property (nonatomic,assign) SigDistributionPhaseState distributionPhase;
+/// Multicast address used in firmware image distribution (Optional).
+@property (nonatomic,assign) UInt16 distributionMulticastAddress;
+/// Index of an application key used in a firmware image distribution (C.1). (C.1: If the Distribution Multicast Address field is present, the Distribution AppKey Index field, Distribution TTL field, Distribution Timeout Base field, Distribution Transfer Mode field, Update Policy field, RFU field, and the Distribution Firmware Image Index field shall also be present; otherwise, the Distribution AppKey Index field, Distribution TTL field, Distribution Timeout Base field, Distribution Transfer Mode field, Update Policy field, RFU field and the Distribution Firmware Image Index field shall not be present.)
+@property (nonatomic,assign) UInt16 distributionAppKeyIndex;
+/// Time To Live value used in a firmware image distribution (C.1).
+@property (nonatomic,assign) UInt8 distributionTTL;
+/// Used to compute the timeout of the firmware image distribution (C.1).
+@property (nonatomic,assign) UInt16 distributionTimeoutBase;
+/// Mode of the transfer, szie is 2 bits (C.1).
+@property (nonatomic,assign) SigTransferModeState distributionTransferMode;
+/// Firmware update policy, szie is 1 bits (C.1).
+@property (nonatomic,assign) BOOL updatePolicy;
+/// Reserved for Future Use. Size is 5 bits (C.1).
+@property (nonatomic,assign) UInt8 RFU;
+/// Index of the firmware image in the Firmware Images List state to use during firmware image distribution (C.1).
+@property (nonatomic,assign) UInt16 distributionFirmwareImageIndex;
+
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+//#pragma mark opcode:0xB60D
+//
+///// 3.2.7 Firmware Distribution Details Get
+///// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.24)
+//@interface SigFirmwareDistributionDetailsGet : SigAcknowledgedGenericMessage
+///// Status code
+//@property (nonatomic,assign) SigFirmwareDistributionStatusType status;
+///// Company identifier
+//@property (nonatomic,assign) UInt16 companyID;
+///// Unique firmware identifier
+//@property (nonatomic,strong) NSData *firmwareID;
+//- (instancetype)initWithStatus:(SigFirmwareDistributionStatusType)status companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID;
+//- (instancetype)initWithParameters:(NSData *)parameters;
+//@end
 
 
 #pragma mark opcode:0xB60E
@@ -3160,178 +3188,191 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
+#pragma mark opcode:0xB605
+
+/// 8.4.1.5 Firmware Update Get
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.83)
+@interface SigFirmwareUpdateGet : SigAcknowledgedGenericMessage
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
 #pragma mark opcode:0xB603
 
-/// 3.2.9 Firmware Update Get
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.25)
-@interface SigFirmwareUpdateGet : SigAcknowledgedGenericMessage
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID;
+/// 8.4.1.3 Firmware Update Firmware Metadata Check
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.82)
+@interface SigFirmwareUpdateFirmwareMetadataCheck : SigAcknowledgedGenericMessage
+/// Index of the firmware image in the Firmware Information List state to check.
+@property (nonatomic,assign) UInt8 updateFirmwareImageIndex;
+/// Vendor-specific metadata (Optional). Size is 1 to 255.
+@property (nonatomic,strong) NSData *incomingFirmwareMetadata;
+- (instancetype)initWithUpdateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex incomingFirmwareMetadata:(nullable NSData *)incomingFirmwareMetadata;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB604
 
-/// 3.2.10 Firmware Update Prepare
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.26)
-@interface SigFirmwareUpdatePrepare : SigAcknowledgedGenericMessage
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
-/// Unique object identifier
-@property (nonatomic,assign) UInt64 objectID;
-/// Vendor specific validation data for update (optional), size: 0~256
-@property (nonatomic,strong) NSData *vendorValidationData;
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID objectID:(UInt64)objectID vendorValidationData:(NSData *)vendorValidationData;
+/// 8.4.1.4 Firmware Update Firmware Metadata Status
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.82)
+@interface SigFirmwareUpdateFirmwareMetadataStatus : SigGenericMessage
+/// Status Code from the firmware metadata check, size is 3 bits.
+@property (nonatomic,assign) SigFirmwareUpdateServerAndClientModelStatusType status;
+/// The Firmware Update Additional Information state from the Firmware Update Server (see Section 8.3.1.3), szie is 5 bits.
+@property (nonatomic,assign) SigFirmwareUpdateAdditionalInformationStatusType additionalInformation;
+/// Index of the firmware image in the Firmware Information List state that was checked.
+@property (nonatomic,assign) UInt8 updateFirmwareImageIndex;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
-#pragma mark opcode:0xB605
 
-/// 3.2.11 Firmware Update Start
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.26)
+
+#pragma mark opcode:0xB606
+
+/// 8.4.1.6 Firmware Update Start
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.83)
 @interface SigFirmwareUpdateStart : SigAcknowledgedGenericMessage
-/// Firmware update policy
-@property (nonatomic,assign) SigUpdatePolicyType updatePolicy;
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
-- (instancetype)initWithUpdatePolicy:(SigUpdatePolicyType)updatePolicy companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID;
+/// Time To Live value to use during firmware image transfer.
+@property (nonatomic,assign) UInt8 updateTTL;
+/// Used to compute the timeout of the firmware image transfer.
+@property (nonatomic,assign) UInt16 updateTimeoutBase;
+/// BLOB identifier for the firmware image.
+@property (nonatomic,assign) UInt64 updateBLOBID;
+/// Index of the firmware image in the Firmware Information List state to be updated.
+@property (nonatomic,assign) UInt8 updateFirmwareImageIndex;
+/// Vendor-specific firmware metadata (Optional). Size is 1 to 255.
+@property (nonatomic,strong) NSData *incomingFirmwareMetadata;
+- (instancetype)initWithUpdateTTL:(UInt8)updateTTL updateTimeoutBase:(UInt16)updateTimeoutBase updateBLOBID:(UInt64)updateBLOBID updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex incomingFirmwareMetadata:(nullable NSData *)incomingFirmwareMetadata;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB606
 
-/// 3.2.12 Firmware Update Abort
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.27)
-@interface SigFirmwareUpdateAbort : SigAcknowledgedGenericMessage
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID;
-- (instancetype)initWithParameters:(NSData *)parameters;
-@end
-
-
-#pragma mark opcode:0xB607
-
-/// 3.2.13 Firmware Update Apply
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.27)
-@interface SigFirmwareUpdateApply : SigAcknowledgedGenericMessage
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID;
+/// 8.4.1.7 Firmware Update Cancel
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.84)
+@interface SigFirmwareUpdateCancel : SigAcknowledgedGenericMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB608
 
-/// 3.2.14 Firmware Update Status
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.27)
+/// 8.4.1.8 Firmware Update Apply
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.84)
+@interface SigFirmwareUpdateApply : SigAcknowledgedGenericMessage
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB609
+
+/// 8.4.1.9 Firmware Update Status
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.84)
 @interface SigFirmwareUpdateStatus : SigGenericMessage
-/// Status code of the operation
-@property (nonatomic,assign) SigFirmwareUpdateStatusType status;
-/// Phase of the update
-@property (nonatomic,assign) SigFirmwareUpdatePhaseType phase;
-/// Bitfield with additional information
-@property (nonatomic,assign) SigAdditionalInformation additionalInformation;
-/// Company identifier
-@property (nonatomic,assign) UInt16 companyID;
-/// Unique firmware identifier
-@property (nonatomic,strong) NSData *firmwareID;
-/// Unique object identifier
-@property (nonatomic,assign) UInt64 objectID;
+/// Status Code for the requesting message, szie is 3 bits.
+@property (nonatomic,assign) SigFirmwareUpdateServerAndClientModelStatusType status;
+/// Reserved for Future Use. Size is 2 bits.
+@property (nonatomic,assign) UInt8 RFU1;
+/// The Update Phase state of the Firmware Update Server, szie is 3 bits.
+@property (nonatomic,assign) SigFirmwareUpdatePhaseType updatePhase;
+/// Time To Live value to use during firmware image transfer (Optional), size is 8 bits.
+@property (nonatomic,assign) UInt8 updateTTL;
+/// The Firmware Update Additional Information state from the Firmware Update Server (see Section 8.3.1.3) (C.1), szie is 5 bits. (C.1: If the Update TTL field is present, the Additional Information field, RFU2 field, Update Timeout Base field, Update BLOB ID field, and Firmware Image Index field shall be present; otherwise, the Additional Information field, RFU2 field, Update Timeout Base field, BLOB ID field, and Firmware Image Index field shall not be present.)
+@property (nonatomic,assign) SigFirmwareUpdateAdditionalInformationStatusType additionalInformation;
+/// Reserved for Future Use (C.1), szie is 3 bits.
+@property (nonatomic,assign) UInt8 RFU2;
+/// Used to compute the timeout of the firmware image transfer (C.1).
+@property (nonatomic,assign) UInt16 updateTimeoutBase;
+/// BLOB identifier for the firmware image (C.1).
+@property (nonatomic,assign) UInt64 updateBLOBID;
+/// The index of the firmware image in the Firmware Information List state being updated (C.1).
+@property (nonatomic,assign) UInt8 updateFirmwareImageIndex;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB701
 
-/// 3.3.1 Object Transfer Get
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.29)
-@interface SigObjectTransferGet : SigAcknowledgedGenericMessage
-/// Unique object identifier
-@property (nonatomic,assign) UInt64 objectID;
-- (instancetype)initWithObjectID:(UInt64)objectID;
+/// 7.3.1.1 BLOB Transfer Get
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.26)
+@interface SigBLOBTransferGet : SigAcknowledgedGenericMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB702
 
-/// 3.3.2 Object Transfer Start
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.29)
-@interface SigObjectTransferStart : SigAcknowledgedGenericMessage
-/// Unique object identifier
-@property (nonatomic,assign) UInt64 objectID;
-/// Object size in bytes
-@property (nonatomic,assign) UInt32 objectSize;
-/// Size of the block during this transfer
-@property (nonatomic,assign) UInt8 blockSizeLog;
-- (instancetype)initWithObjectID:(UInt64)objectID objectSize:(UInt32)objectSize blockSizeLog:(UInt8)blockSizeLog;
+/// 7.3.1.2 BLOB Transfer Start
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.27)
+@interface SigBLOBTransferStart : SigAcknowledgedGenericMessage
+/// Reserved for Future Use, szie is 6 bits.
+@property (nonatomic,assign) UInt8 RFU;
+/// BLOB transfer mode, szie is 2 bits.
+@property (nonatomic,assign) SigTransferModeState transferMode;
+/// Unique BLOB identifier.
+@property (nonatomic,assign) UInt64 BLOBID;
+/// BLOB size in bytes
+@property (nonatomic,assign) UInt32 BLOBSize;
+/// Size of the block during this transfer.
+@property (nonatomic,assign) UInt8 BLOBBlockSizeLog;
+/// Maximum payload size supported by the client.
+@property (nonatomic,assign) UInt16 MTUSize;
+- (instancetype)initWithTransferMode:(SigTransferModeState)transferMode BLOBID:(UInt64)BLOBID BLOBSize:(UInt32)BLOBSize BLOBBlockSizeLog:(UInt8)BLOBBlockSizeLog MTUSize:(UInt16)MTUSize;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB703
 
-/// 3.3.3 Object Transfer Abort
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.30)
-@interface SigObjectTransferAbort : SigAcknowledgedGenericMessage
-/// Unique object identifier
-@property (nonatomic,assign) UInt64 objectID;
-- (instancetype)initWithObjectID:(UInt64)objectID;
+/// 7.3.1.3 BLOB Transfer Cancel
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.27)
+@interface SigObjectTransferCancel : SigAcknowledgedGenericMessage
+/// BLOB identifier.
+@property (nonatomic,assign) UInt64 BLOBID;
+- (instancetype)initWithBLOBID:(UInt64)BLOBID;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB704
 
-/// 3.3.4 Object Transfer Status
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.30)
-@interface SigObjectTransferStatus : SigGenericMessage
-/// Status code of the operation
-@property (nonatomic,assign) SigObjectTransferStatusType status;
-/// Unique object identifier
-@property (nonatomic,assign) UInt64 objectID;
-/// Object size in bytes
-@property (nonatomic,assign) UInt32 objectSize;
-/// Size of the block during this transfer
+/// 7.3.1.4 BLOB Transfer Status
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.27)
+@interface SigBLOBTransferStatus : SigGenericMessage
+/// Status Code for the requesting message, szie is 4 bits.
+@property (nonatomic,assign) SigBLOBTransferStatusType status;
+/// Reserved for Future Use, szie is 2 bits.
+@property (nonatomic,assign) UInt8 RFU;
+/// BLOB transfer mode, szie is 2 bits.
+@property (nonatomic,assign) SigTransferModeState transferMode;
+/// Transfer phase, size is 8 bits.
+@property (nonatomic,assign) SigTransferPhaseState transferPhase;
+/// BLOB identifier (Optional)
+@property (nonatomic,assign) UInt64 BLOBID;
+/// BLOB size in octets (C.1). (C.1: If the BLOB ID field is present, then the BLOB Size field may be present; otherwise, the BLOB Size field shall not be present.)
+@property (nonatomic,assign) UInt32 BLOBSize;
+/// Indicates the block size (C.2). (C.2: If the BLOB Size field is present, then the Block Size Log, Transfer MTU Size, and Blocks Not Received fields shall be present; otherwise, these fields shall not be present.)
 @property (nonatomic,assign) UInt8 blockSizeLog;
+/// MTU size in octets (C.2).
+@property (nonatomic,assign) UInt16 transferMTUSize;
+/// Bit field indicating blocks that were not received (C.2), size is variable.
+@property (nonatomic,strong) NSData *blocksNotReceived;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB705
 
-/// 3.3.5 Object Block Transfer Start
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.30)
-@interface SigObjectBlockTransferStart : SigAcknowledgedGenericMessage
-/// Unique object identifier
-@property (nonatomic,assign) UInt64 objectID;
+/// 3.1.3.1.6 BLOB Block Start
+/// - seeAlso: MshMDL_BLOB_CR_Vienna_IOP.pdf  (page.19)
+@interface SigBLOBBlockStart : SigAcknowledgedGenericMessage
 /// Block number
 @property (nonatomic,assign) UInt16 blockNumber;
 /// Chunk size bytes for this block
 @property (nonatomic,assign) UInt16 chunkSize;
-/// Checksum type
-@property (nonatomic,assign) SigBlockChecksumAlgorithmType blockChecksumAlgorithm;
-/// Checksum for image block, blockChecksumValue is 4 when blockChecksumAlgorithm == SigBlockChecksumAlgorithmType_CRC32.
-@property (nonatomic,strong) NSData *blockChecksumValue;
-/// Block size in bytes (optional)
-@property (nonatomic,assign) UInt16 currentBlockSize;
-- (instancetype)initWithObjectID:(UInt64)objectID blockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize blockChecksumAlgorithm:(SigBlockChecksumAlgorithmType)blockChecksumAlgorithm blockChecksumValue:(NSData *)blockChecksumValue currentBlockSize:(UInt16)currentBlockSize;
+- (instancetype)initWithBlockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -3349,66 +3390,82 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark opcode:0x7D
 
-/// 3.3.7 Object Chunk Transfer
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.32)
-@interface SigObjectChunkTransfer : SigGenericMessage
+/// 3.1.3.1.8 BLOB Chunk Transfer
+/// - seeAlso: MshMDL_BLOB_CR_Vienna_IOP.pdf  (page.20)
+@interface SigBLOBChunkTransfer : SigGenericMessage
 /// Chunk number
 @property (nonatomic,assign) UInt16 chunkNumber;
-/// Chunk data
-@property (nonatomic,strong) NSData *firmwareImageData;
-- (instancetype)initWithChunkNumber:(UInt16)chunkNumber firmwareImageData:(NSData *)firmwareImageData;
+/// Part of the BLOB data, szie is 1 to Chunk Size.
+@property (nonatomic,strong) NSData *chunkData;
+- (instancetype)initWithChunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB707
+
+/// 3.1.3.1.5 BLOB Block Get
+/// - seeAlso: MshMDL_BLOB_CR_Vienna_IOP.pdf  (page.19)
+@interface SigBLOBBlockGet : SigAcknowledgedGenericMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0x7E
 
-/// 3.3.8 Object Block Get
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.33)
-@interface SigObjectBlockGet : SigAcknowledgedGenericMessage
-/// Unique object identifier
-@property (nonatomic,assign) UInt64 objectID;
-/// Block number
+/// 3.1.3.1.7 BLOB Block Status
+/// - seeAlso: MshMDL_BLOB_CR_Vienna_IOP.pdf  (page.19)
+@interface SigBLOBBlockStatus : SigGenericMessage
+/// Status code of the block transfer, size is 4 bits.
+@property (nonatomic,assign) SigBLOBBlockStatusType status;
+/// Reserved for Future Use, size is 2 bits.
+@property (nonatomic,assign) UInt8 RFU;
+/// Indicates the format used to report missing chunks, size is 2 bits.
+@property (nonatomic,assign) SigBLOBBlockFormatType format;
+/// Transfer phase.
+@property (nonatomic,assign) SigTransferPhaseState transferPhase;
+/// Block’s number in a set of blocks.
 @property (nonatomic,assign) UInt16 blockNumber;
-- (instancetype)initWithObjectID:(UInt64)objectID blockNumber:(UInt16)blockNumber;
-- (instancetype)initWithParameters:(NSData *)parameters;
-@end
-
-
-#pragma mark opcode:0xB709
-
-/// 3.3.9 Object Block Status
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.33)
-@interface SigObjectBlockStatus : SigGenericMessage
-/// Status of operation
-@property (nonatomic,assign) SigObjectBlockStatusType status;
-/// Missing chunks list (optional)
+/// Chunk Size (in octets) for the current block.
+@property (nonatomic,assign) UInt16 chunkSize;
+/// Bit field of missing chunks for this block (C.1). (C.1: If the Format field is set to Some Chunks Missing, the Missing Chunks field shall be present; otherwise, it shall not be present.)
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*missingChunksList;//[@(node.address)]
+/// List of chunks requested by the server (C.2). (C.2 If the Format field is set to Encoded Missing Chunks, the Encoded Missing Chunks field shall be present; otherwise, it shall not be present.)
+@property (nonatomic,strong) NSMutableArray <NSNumber *>*encodedMissingChunksList;//[@(node.address)]
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB70A
 
-/// 3.3.10 Object Information Get
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.34)
-@interface SigObjectInformationGet : SigAcknowledgedGenericMessage
+/// 3.1.3.1.9 BLOB Information Get
+/// - seeAlso: MshMDL_BLOB_CR_Vienna_IOP.pdf  (page.21)
+@interface SigBLOBInformationGet : SigAcknowledgedGenericMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB70B
 
-/// 3.3.11 Object Information Status
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.34)
-@interface SigObjectInformationStatus : SigGenericMessage
+/// 3.1.3.1.10 BLOB Information Status
+/// - seeAlso: MshMDL_BLOB_CR_Vienna_IOP.pdf  (page.21)
+@interface SigBLOBInformationStatus : SigGenericMessage
 /// Minimum block size: 2 ^ Min Block Size Log
 @property (nonatomic,assign) UInt8 minBlockSizeLog;
 /// Maximum block size: 2 ^ Max Block Size Log
 @property (nonatomic,assign) UInt8 maxBlockSizeLog;
 /// Supported maximum number of chunks in block
 @property (nonatomic,assign) UInt16 maxChunksNumber;
+/// Maximum size of chunk supported by the server
+@property (nonatomic,assign) UInt16 maxChunkSize;
+/// Maximum BLOB size supported by the server
+@property (nonatomic,assign) UInt32 maxBLOBSize;
+/// Maximum payload size supported by the server
+@property (nonatomic,assign) UInt16 MTUSize;
+/// BLOB transfer modes supported by the server
+@property (nonatomic,assign) UInt8 supportedTransferMode;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
+
 
 NS_ASSUME_NONNULL_END

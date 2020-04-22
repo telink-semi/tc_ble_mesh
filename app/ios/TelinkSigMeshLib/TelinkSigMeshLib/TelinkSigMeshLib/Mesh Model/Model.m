@@ -302,12 +302,9 @@
     if (self = [super init]) {
         _nodeIdentityData = [coder decodeObjectForKey:kSigScanRspModel_nodeIdentityData_key];
         _networkIDData = [coder decodeObjectForKey:kSigScanRspModel_networkIDData_key];
-//        _encrypterData = [coder decodeObjectForKey:kSigScanRspModel_encrypheralData_key];
         _uuid = [coder decodeObjectForKey:kSigScanRspModel_uuid_key];
         _address = [coder decodeIntegerForKey:kSigScanRspModel_address_key];
         _macAddress = [coder decodeObjectForKey:kSigScanRspModel_mac_key];
-        _CID = [coder decodeIntegerForKey:kSigScanRspModel_CID_key];
-        _PID = [coder decodeIntegerForKey:kSigScanRspModel_PID_key];
     }
     return self;
 }
@@ -316,12 +313,9 @@
 {
     [coder encodeObject:_nodeIdentityData forKey:kSigScanRspModel_nodeIdentityData_key];
     [coder encodeObject:_networkIDData forKey:kSigScanRspModel_networkIDData_key];
-//    [coder encodeObject:_encrypterData forKey:kSigScanRspModel_encrypheralData_key];
     [coder encodeObject:_uuid forKey:kSigScanRspModel_uuid_key];
     [coder encodeInteger:_address forKey:kSigScanRspModel_address_key];
     [coder encodeObject:_macAddress forKey:kSigScanRspModel_mac_key];
-    [coder encodeInteger:_CID forKey:kSigScanRspModel_CID_key];
-    [coder encodeInteger:_PID forKey:kSigScanRspModel_PID_key];
 }
 
 /*蓝牙scan_rsp的结构体，iOS实际可以获取到mac_adr及之后的数据。
@@ -378,6 +372,7 @@
                 }
             }
         }
+
         if ([advertisementData.allKeys containsObject:CBAdvertisementDataServiceDataKey]) {
             NSData *advDataServiceData = [(NSDictionary *)advertisementData[CBAdvertisementDataServiceDataKey] allValues].firstObject;
             if (advDataServiceData) {
@@ -389,7 +384,9 @@
                     }
                     NSString *suuidString = ((CBUUID *)suuids.firstObject).UUIDString;
                     BOOL provisionAble = [suuidString  isEqualToString: kPBGATTService];
+                    _provisioned = !provisionAble;
                     if (provisionAble) {
+                        // 未入网
                         //且还需要支持fast bind的功能才有CID、PID。普通固件不广播该参数。
                         if (advDataServiceData.length >= 2) {
                             _CID = [LibTools uint16FromBytes:[advDataServiceData subdataWithRange:NSMakeRange(0, 2)]];
@@ -406,6 +403,7 @@
                             _advOobInformation = oob;
                         }
                     } else {
+                        // 已入网
                         UInt8 advType = [LibTools uint8From16String:[LibTools convertDataToHexStr:[LibTools turnOverData:[advDataServiceData subdataWithRange:NSMakeRange(0, 1)]]]];
                         if (advType == 0) {
                             if (advDataServiceData.length >= 9) {
@@ -427,11 +425,11 @@
 - (BOOL)isEqual:(id)object{
     if ([object isKindOfClass:[SigScanRspModel class]]) {
         SigScanRspModel *tem = (SigScanRspModel *)object;
-        if (tem.nodeIdentityData && tem.nodeIdentityData.length == 16 && _nodeIdentityData && _nodeIdentityData.length == 16) {
-            return [_nodeIdentityData isEqualToData:tem.nodeIdentityData];
-        } else {
+//        if (tem.nodeIdentityData && tem.nodeIdentityData.length == 16 && _nodeIdentityData && _nodeIdentityData.length == 16) {
+//            return tem.address == _address;
+//        } else {
             return [_uuid isEqualToString:tem.uuid];
-        }
+//        }
     } else {
         return NO;
     }
@@ -442,42 +440,87 @@
 
 @implementation SigRemoteScanRspModel
 
-- (instancetype)initWithPar:(UInt8 *)par len:(UInt8)len{
-    self = [super init];
-    if (self) {
-        remote_prov_scan_report_win32 *p_repwin32 = (remote_prov_scan_report_win32 *)par;
-        _unicastAddress = p_repwin32->unicast;
-        _uuid = [NSData dataWithBytes:p_repwin32->scan_report.uuid length:16];
-        _RSSI = p_repwin32->scan_report.rssi;
-        _oob = p_repwin32->scan_report.oob;
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters == nil || parameters.length <19) {
+            return nil;
+        }
+        SInt8 stem8 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&stem8, dataByte, 1);
+        _RSSI = stem8;
+        if (parameters.length >= 17) {
+            _reportNodeUUID = [parameters subdataWithRange:NSMakeRange(1, 16)];
+            if (parameters.length >= 19) {
+                UInt16 tem16 = 0;
+                memcpy(&tem16, dataByte+17, 2);
+                OobInformation oob = {};
+                oob.value = tem16;
+                _oob = oob;
+            }
+        }
     }
     return self;
 }
 
+//- (instancetype)initWithPar:(UInt8 *)par len:(UInt8)len{
+//    self = [super init];
+//    if (self) {
+//        remote_prov_scan_report_win32 *p_repwin32 = (remote_prov_scan_report_win32 *)par;
+//        _unicastAddress = p_repwin32->unicast;
+//        _uuid = [NSData dataWithBytes:p_repwin32->scan_report.uuid length:16];
+//        _RSSI = p_repwin32->scan_report.rssi;
+//        _oob = p_repwin32->scan_report.oob;
+//    }
+//    return self;
+//}
+
 - (NSString *)macAddress{
     NSString *tem = nil;
-    if (_uuid && _uuid.length >= 6) {
-        tem = [LibTools convertDataToHexStr:[LibTools turnOverData:[_uuid subdataWithRange:NSMakeRange(_uuid.length - 6, 6)]]];
+    if (_reportNodeUUID && _reportNodeUUID.length >= 6) {
+        tem = [LibTools convertDataToHexStr:[LibTools turnOverData:[_reportNodeUUID subdataWithRange:NSMakeRange(_reportNodeUUID.length - 6, 6)]]];
     }
     return tem;
 }
 
 - (BOOL)isEqual:(id)object{
     if ([object isKindOfClass:[SigRemoteScanRspModel class]]) {
-        return [_uuid isEqualToData:[(SigRemoteScanRspModel *)object uuid]];
+        return [_reportNodeUUID isEqualToData:[(SigRemoteScanRspModel *)object reportNodeUUID]];
     } else {
         return NO;
     }
 }
 
 - (NSString *)description{
-    return [NSString stringWithFormat:@"unicastAddress=%@,uuid=%@,macAddress=%@,RSSI=%@,OOB=%@",@(self.unicastAddress),_uuid,self.macAddress,@(_RSSI),@(_oob)];
+    return [NSString stringWithFormat:@"unicastAddress=%@,uuid=%@,macAddress=%@,RSSI=%@,OOB=%@",@(self.reportNodeAddress),_reportNodeUUID,self.macAddress,@(_RSSI),@(_oob.value)];
 }
 
 @end
 
 
 @implementation AddDeviceModel
+
+- (instancetype)initWithRemoteScanRspModel:(SigRemoteScanRspModel *)scanRemoteModel {
+    if (self = [super init]) {
+        _state = AddDeviceModelStateScaned;
+        SigScanRspModel *model = [[SigScanRspModel alloc] init];
+        model.address = scanRemoteModel.reportNodeAddress;
+        model.uuid = [LibTools convertDataToHexStr:scanRemoteModel.reportNodeUUID];
+        model.macAddress = scanRemoteModel.macAddress;
+        model.advOobInformation = scanRemoteModel.oob;
+        _scanRspModel = model;
+    }
+    return self;
+}
+
+- (BOOL)isEqual:(id)object{
+    if ([object isKindOfClass:[AddDeviceModel class]]) {
+        return [_scanRspModel.macAddress isEqualToString:[(AddDeviceModel *)object scanRspModel].macAddress];
+    } else {
+        return NO;
+    }
+}
+
 @end
 
 
@@ -878,6 +921,42 @@
     if (self = [super init]) {
         _address = address;
         _status = status;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigFirmwareInformationEntryModel
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length >= 3) {
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            _currentFirmwareIDLength = tem8;
+            if (_currentFirmwareIDLength > 0 && parameters.length >= _currentFirmwareIDLength+1+1) {
+                _currentFirmwareID = [parameters subdataWithRange:NSMakeRange(1, _currentFirmwareIDLength)];
+                memcpy(&tem8, dataByte+1+_currentFirmwareIDLength, 1);
+                _updateURILength = tem8;
+                if (_updateURILength > 0) {
+                    if (parameters.length >= 1+_currentFirmwareID.length+1+_updateURILength) {
+                        _updateURL = [parameters subdataWithRange:NSMakeRange(1+_currentFirmwareIDLength+1, _updateURILength)];
+                        _parameters = [parameters subdataWithRange:NSMakeRange(0, 1+_currentFirmwareIDLength+1+_updateURILength)];
+                    } else {
+                        return nil;
+                    }
+                } else {
+                    _parameters = [parameters subdataWithRange:NSMakeRange(0, 1+_currentFirmwareIDLength+1)];
+                }
+            } else {
+                return nil;
+            }
+        } else {
+            return nil;
+        }
     }
     return self;
 }

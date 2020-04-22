@@ -34,10 +34,9 @@
 //block大小，为10的kBlockSizeLog次幂，默认是10^12=4096字节
 #define kBlockSizeLog   (0x0C)
 #define kChunkSize      (0x0100)
-#define kRetryCountInObjectChunkTransfer    (3)
+#define kRetryCountInBLOBChunkTransfer    (3)
 #define kMeshOTAGroupAddress    (0xc000)
 
-#define kCid    @"cid"
 #define kPid    @"pid"
 #define kVid    @"vid"
 
@@ -52,6 +51,26 @@
 @property (nonatomic, assign) UInt16 companyID;
 @property (nonatomic, strong) NSError *failError;
 
+//========== R04 ==========//
+@property (nonatomic, assign) UInt16 distributionAppKeyIndex;
+@property (nonatomic, assign) SigTransferModeState distributionTransferMode;
+@property (nonatomic, assign) BOOL updatePolicy;
+/// Multicast address used in a firmware image distribution. Size is 16 bits or 128 bits.
+@property (nonatomic,strong) NSData *distributionMulticastAddress;
+@property (nonatomic, assign) UInt16 distributionFirmwareImageIndex;
+@property (nonatomic, assign) UInt8 incomingFirmwareMetadataLength;
+@property (nonatomic, strong) NSData *incomingFirmwareMetadata;
+@property (nonatomic, assign) UInt16 index;
+@property (nonatomic, assign) UInt8 updateTTL;
+@property (nonatomic, assign) UInt16 updateTimeoutBase;
+@property (nonatomic, assign) UInt64 updateBLOBID;
+@property (nonatomic, assign) UInt16 MTUSize;
+@property (nonatomic, assign) UInt16 timeout;
+// test model
+@property (nonatomic, assign) BOOL testFinish;
+
+//========== R04 ==========//
+
 @property (nonatomic, strong) NSMutableArray <NSNumber *>*allAddressArray;//Mesh OTA的所有短地址列表
 @property (nonatomic, strong) NSMutableArray <NSNumber *>*successAddressArray;//Mesh OTA成功的短地址列表
 
@@ -62,11 +81,11 @@
 @property (nonatomic, assign) UInt8 chunksCountofCurrentBlock;//记录当前block的chunk总个数
 @property (nonatomic, assign) UInt8 chunkIndex;//记录当前chunk的index
 @property (nonatomic, assign) UInt8 successActionInCurrentProgress;//记录当前阶段成功的设备个数
-@property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSArray *>*losePacketsDict;//step8阶段传输失败的包。
+@property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSArray *>*losePacketsDict;//step10阶段传输失败的包。
 @property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSDictionary *>*oFirmwareInformations;//记录MeshOTA前设备的版本号,[@(UInt16):@{@"cid":@(UInt16),@"pid":@(UInt16),@"vid":@(UInt16)}]
 @property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSNumber *>*nFirmwareInformations;//记录MeshOTA后设备的版本号,[@(UInt16):@{@"cid":@(UInt16),@"pid":@(UInt16),@"vid":@(UInt16)}]
-@property (nonatomic, strong) NSMutableDictionary <NSNumber *, SigObjectInformationStatus *>*oObjectInformations;//记录MeshOTA前设备的ObjectInformation
-@property (nonatomic, assign) UInt8 retryCountInObjectChunkTransfer;//记录step8:ObjectChunkTransfer阶段已经重试的次数
+@property (nonatomic, strong) NSMutableDictionary <NSNumber *, SigBLOBInformationStatus *>*oBLOBInformations;//记录MeshOTA前设备的BLOBInformation
+@property (nonatomic, assign) UInt8 retryCountInBLOBChunkTransfer;//记录step10:BLOBChunkTransfer阶段已经重试的次数
 @property (nonatomic, retain) dispatch_semaphore_t semaphore;
 @property (nonatomic, strong) SigMessageHandle *messageHandle;
 
@@ -94,6 +113,23 @@
     _firmwareIDData = [NSData dataWithBytes:&firmwareID length:4];
     _objectID = 0x8877665544332211;
     _companyID = 0x0211;
+    
+    // config parameters for meshOTA R04
+    _distributionAppKeyIndex = SigDataSource.share.curAppkeyModel.index;
+    _distributionTransferMode = SigTransferModeState_pushBLOBTransferMode;
+    _updatePolicy = NO;
+    _distributionFirmwareImageIndex = 0;
+    UInt16 gAddress = 0xc000;
+    _distributionMulticastAddress = [NSData dataWithBytes:&gAddress length:2];
+    _incomingFirmwareMetadataLength = 4;
+    UInt32 tem32 = 0;
+    _incomingFirmwareMetadata = [NSData dataWithBytes:&tem32 length:4];
+    _index = 0;
+    _updateTTL = 0xFF;
+    _updateTimeoutBase = 0;
+    _updateBLOBID = 0x8877665544332211;
+    _MTUSize = 380;
+    _timeout = 0;
     
     _meshOTAThread = [[NSThread alloc] initWithTarget:self selector:@selector(startThread) object:nil];
     _meshOTAThread.name = @"meshOTAThread";
@@ -124,12 +160,14 @@
     [self resetMeshOTAData];
     
     [self saveIsMeshOTAing:NO];
-    dispatch_semaphore_signal(self.semaphore);
+    if (self.semaphore) {
+        dispatch_semaphore_signal(self.semaphore);
+    }
     [self.meshOTAThread cancel];
     [SigMeshLib.share cancelSigMessageHandle:self.messageHandle];
 
-    [SDKLibCommand firmwareDistributionStopWithDestination:SigDataSource.share.getCurrentConnectedNode.address companyID:self.companyID firmwareID:self.firmwareIDData resMax:0 retryCount:0 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"firmwareDistributionStop=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+    [SDKLibCommand firmwareDistributionCancelWithDestination:SigDataSource.share.getCurrentConnectedNode.address resMax:0 retryCount:0 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+        TeLogDebug(@"firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
@@ -191,7 +229,7 @@
     [self.allAddressArray removeAllObjects];
     [self.successAddressArray removeAllObjects];
     [self.allAddressArray addObjectsFromArray:deviceAddresses];
-    
+    self.testFinish = otaData.length > 1024*10;
     self.oldBearerDataDelegate = SigBearer.share.dataDelegate;
     SigBearer.share.dataDelegate = self;
 
@@ -210,17 +248,90 @@
 //    [self startConfigModelSubscriptionAdd];
     
     //3.
-    [self performSelector:@selector(startConfigModelSubscriptionAdd) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
+    [self performSelector:@selector(firmwareDistributionStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
 }
 
-#pragma mark step1:configModelSubscriptionAdd
-- (void)startConfigModelSubscriptionAdd {
-    TeLogInfo(@"SigDataSource.share.getCurrentConnectedNode.address=0x%x",SigDataSource.share.getCurrentConnectedNode.address);
-    TeLogInfo(@"\n\n\n\n==========step1\n\n\n\n");
+#pragma mark step1:firmwareDistributionStart
+- (void)firmwareDistributionStart {
+    self.meshOTAProgress = SigMeshOTAProgressFirmwareDistributionStart;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
+
     if (self.progressBlock) {
         self.progressBlock(0);
     }
+    __block BOOL hasFail = NO;
+    self.successActionInCurrentProgress = 0;
+    __weak typeof(self) weakSelf = self;
+    
+    //做法1
+    self.semaphore = dispatch_semaphore_create(0);
+    [SDKLibCommand firmwareDistributionStartWithDestination:SigDataSource.share.curLocationNodeModel.address distributionAppKeyIndex:self.distributionAppKeyIndex distributionTTL:self.updateTTL distributionTimeoutBase:self.updateTimeoutBase distributionTransferMode:self.distributionTransferMode updatePolicy:self.updatePolicy RFU:0 distributionFirmwareImageIndex:self.distributionFirmwareImageIndex distributionMulticastAddress:self.distributionMulticastAddress resMax:0 retryCount:0 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+        TeLogDebug(@"firmwareDistributionStart=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        dispatch_semaphore_signal(weakSelf.semaphore);
+    }];
+    //Most provide 3 seconds to firmwareUpdateInformationGet every node.
+    dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
+    
+    //做法2
+//    for (NSNumber *nodeAddress in self.allAddressArray) {
+//        if (![self isMeshOTAing]) {
+//            return;
+//        }
+//        if ([self.allAddressArray indexOfObject:nodeAddress] == self.successActionInCurrentProgress) {
+//            SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
+//            if (node.state != DeviceStateOutOfLine) {
+//                self.semaphore = dispatch_semaphore_create(0);
+//                self.messageHandle = [SDKLibCommand firmwareDistributionStartWithDestination:node.address distributionAppKeyIndex:self.distributionAppKeyIndex distributionTTL:self.updateTTL distributionTimeoutBase:self.updateTimeoutBase distributionTransferMode:self.distributionTransferMode updatePolicy:self.updatePolicy RFU:0 distributionFirmwareImageIndex:self.distributionFirmwareImageIndex distributionMulticastAddress:self.distributionMulticastAddress resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+//                    if (source == nodeAddress.intValue && responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success) {
+//                        TeLogDebug(@"firmwareDistributionStart=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//                        weakSelf.successActionInCurrentProgress ++;
+//                    } else {
+//                        hasFail = YES;
+//                    }
+//                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//                    [NSThread sleepForTimeInterval:0.2];
+//                    dispatch_semaphore_signal(weakSelf.semaphore);
+//                }];
+//                //Most provide 3 seconds to firmwareUpdateInformationGet every node.
+//                dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
+//            } else {
+//                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareDistributionStart, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
+//                hasFail = YES;
+//                break;
+//            }
+//        } else {
+//            if (!self.failError) {
+//                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareDistributionStart, firmwareDistributionStart is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
+//            }
+//            hasFail = YES;
+//            break;
+//        }
+//    }
+    
+    if (hasFail) {
+        [self firmwareDistributionStartFailAction];
+    } else {
+        [self firmwareDistributionStartSuccessAction];
+    }
+
+}
+
+- (void)firmwareDistributionStartSuccessAction {
+    [self startConfigModelSubscriptionAdd];
+}
+
+- (void)firmwareDistributionStartFailAction {
+    [self meshOTAFailAction];
+}
+
+#pragma mark step2:configModelSubscriptionAdd
+- (void)startConfigModelSubscriptionAdd {
     self.meshOTAProgress = SigMeshOTAProgressSubscriptionAdd;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
+
     BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
     __weak typeof(self) weakSelf = self;
@@ -231,7 +342,7 @@
         if ([self.allAddressArray indexOfObject:nodeAddress] == self.successActionInCurrentProgress) {
             SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
             if (node.state != DeviceStateOutOfLine) {
-                UInt16 modelID = 0xFF00;
+                UInt16 modelID = SIG_MD_BLOB_TRANSFER_S;
                 UInt16 groupAddress = kMeshOTAGroupAddress;
                 NSArray *addressArray = [node getAddressesWithModelID:@(modelID)];
                 if (addressArray && addressArray.count > 0) {
@@ -288,17 +399,18 @@
 }
 
 - (void)configModelSubscriptionAddSuccessAction {
-    [self firmwareInformationGet];
+    [self firmwareUpdateInformationGet];
 }
 
 - (void)configModelSubscriptionAddFailAction {
     [self meshOTAFailAction];
 }
 
-#pragma mark step2:firmwareInformationGet
-- (void)firmwareInformationGet {
-    TeLogInfo(@"\n\n\n\n==========step2\n\n\n\n");
-    self.meshOTAProgress = SigMeshOTAProgressFirmwareInformationGet;
+#pragma mark step3:firmwareUpdateInformationGet
+- (void)firmwareUpdateInformationGet {
+    self.meshOTAProgress = SigMeshOTAProgressFirmwareUpdateInformationGet;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
+
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
     self.oFirmwareInformations = [NSMutableDictionary dictionary];
@@ -311,64 +423,66 @@
             SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
             if (node.state != DeviceStateOutOfLine) {
                 self.semaphore = dispatch_semaphore_create(0);
-                self.messageHandle = [SDKLibCommand firmwareInformationGetWithDestination:node.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareInformationStatus * _Nonnull responseMessage) {
-                    if (source == nodeAddress.intValue) {
+                self.messageHandle = [SDKLibCommand firmwareUpdateInformationGetWithDestination:node.address firstIndex:0 entriesLimit:1 resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
+                    if (source == nodeAddress.intValue && responseMessage.firmwareInformationListCount > 0) {
                         /*
-                         responseMessage.parameters.length = 6: 2 bytes cid(vendor id) + 2 bytes pid(设备类型) + 2 bytes vid(版本id).
+                         responseMessage.firmwareInformationList.firstObject.currentFirmwareID.length = 4: 2 bytes pid(设备类型) + 2 bytes vid(版本id).
                          */
-                        UInt16 cid = 0,pid = 0,vid = 0;
-                        Byte *pu = (Byte *)[responseMessage.parameters bytes];
-                        if (responseMessage.parameters.length >= 2) memcpy(&cid, pu, 2);
-                        if (responseMessage.parameters.length >= 4) memcpy(&pid, pu + 2, 2);
-                        if (responseMessage.parameters.length >= 6) memcpy(&vid, pu + 4, 2);
-                        TeLogDebug(@"firmwareInformationGet=%@,cid=%d,pid=%d,vid=%d",[LibTools convertDataToHexStr:responseMessage.parameters],cid,pid,vid);
-                        weakSelf.oFirmwareInformations[@(source)] = @{kCid:@(cid),kPid:@(pid),kVid:@(vid)};
-                        weakSelf.successActionInCurrentProgress ++;
+                        if (responseMessage.firmwareInformationList.count > 0) {
+                            NSData *currentFirmwareID = responseMessage.firmwareInformationList.firstObject.currentFirmwareID;
+                            UInt16 pid = 0,vid = 0;
+                            Byte *pu = (Byte *)[currentFirmwareID bytes];
+                            if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
+                            if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
+                            TeLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
+                            weakSelf.oFirmwareInformations[@(source)] = @{kPid:@(pid),kVid:@(vid)};
+                            weakSelf.successActionInCurrentProgress ++;
+                        }
                     } else {
                         hasFail = YES;
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     [NSThread sleepForTimeInterval:0.2];
-                        dispatch_semaphore_signal(weakSelf.semaphore);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
-                //Most provide 3 seconds to firmwareInformationGet every node.
+                //Most provide 3 seconds to firmwareUpdateInformationGet every node.
                 dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
             } else {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareInformationGet, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateInformationGet, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
                 hasFail = YES;
                 break;
             }
         } else {
             if (!self.failError) {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareInformationGet, firmwareInformationGet is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateInformationGet, firmwareUpdateInformationGet is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
             }
             hasFail = YES;
             break;
         }
     }
     if (hasFail) {
-        [self firmwareInformationGetFailAction];
+        [self firmwareUpdateInformationGetFailAction];
     } else {
-        [self firmwareInformationGetSuccessAction];
+        [self firmwareUpdateInformationGetSuccessAction];
     }
 }
 
-- (void)firmwareInformationGetSuccessAction {
-    [self objectInformationGet];
+- (void)firmwareUpdateInformationGetSuccessAction {
+    [self firmwareUpdateFirmwareMetadataCheck];
 }
 
-- (void)firmwareInformationGetFailAction {
+- (void)firmwareUpdateInformationGetFailAction {
     [self meshOTAFailAction];
 }
 
-#pragma mark step3:objectInformationGet
-- (void)objectInformationGet {
-    TeLogInfo(@"\n\n\n\n==========step3\n\n\n\n");
-    self.meshOTAProgress = SigMeshOTAProgressFirmwareInformationGet;
+#pragma mark step4:firmwareUpdateFirmwareMetadataCheck
+- (void)firmwareUpdateFirmwareMetadataCheck {
+    self.meshOTAProgress = SigMeshOTAProgressFirmwareUpdateFirmwareMetadataCheck;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
+
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
-    self.oObjectInformations = [NSMutableDictionary dictionary];
     __weak typeof(self) weakSelf = self;
     for (NSNumber *nodeAddress in self.allAddressArray) {
         if (![self isMeshOTAing]) {
@@ -378,10 +492,217 @@
             SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
             if (node.state != DeviceStateOutOfLine) {
                 self.semaphore = dispatch_semaphore_create(0);
-                self.messageHandle = [SDKLibCommand objectInformationGetWithDestination:node.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigObjectInformationStatus * _Nonnull responseMessage) {
+                TeLogInfo(@"firmwareUpdateFirmwareMetadataCheckWithDestination=0x%x",node.address);
+                self.messageHandle = [SDKLibCommand firmwareUpdateFirmwareMetadataCheckWithDestination:node.address updateFirmwareImageIndex:self.index incomingFirmwareMetadata:self.incomingFirmwareMetadata resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateFirmwareMetadataStatus * _Nonnull responseMessage) {
                     if (source == nodeAddress.intValue) {
-                        weakSelf.oObjectInformations[@(source)] = responseMessage;
-                        TeLogDebug(@"objectInformationGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                        TeLogDebug(@"firmwareUpdateFirmwareMetadataCheck=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                        if (responseMessage.status == SigFirmwareUpdateServerAndClientModelStatusType_success) {
+//                            if (responseMessage.additionalInformation == SigFirmwareUpdateAdditionalInformationStatusType_noChangeCompositionData) {
+                                weakSelf.successActionInCurrentProgress ++;
+//                            } else {
+//                                hasFail = YES;
+//                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareMetadataCheck,SigFirmwareUpdateStatus.phase=0x%x",responseMessage.phase] code:-weakSelf.meshOTAProgress userInfo:nil];
+//                            }
+                        } else {
+                            hasFail = YES;
+                            weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareMetadataCheck,SigFirmwareUpdateStatus.status=0x%x",responseMessage.status] code:-weakSelf.meshOTAProgress userInfo:nil];
+                        }
+                    } else {
+                        hasFail = YES;
+                    }
+                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    [NSThread sleepForTimeInterval:0.2];
+                    dispatch_semaphore_signal(weakSelf.semaphore);
+                }];
+                //Most provide 3 seconds to firmwareUpdateFirmwareMetadataCheck every node.
+                dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
+            } else {
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareMetadataCheck, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
+                hasFail = YES;
+                break;
+            }
+        } else {
+            if (!self.failError) {
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateFirmwareMetadataCheck, firmwareUpdateFirmwareMetadataCheck is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
+            }
+            hasFail = YES;
+            break;
+        }
+    }
+    if (hasFail) {
+        [self firmwareUpdateFirmwareMetadataCheckFailAction];
+    } else {
+        [self firmwareUpdateFirmwareMetadataCheckSuccessAction];
+    }
+}
+
+- (void)firmwareUpdateFirmwareMetadataCheckSuccessAction {
+    [self firmwareUpdateStart];
+}
+
+- (void)firmwareUpdateFirmwareMetadataCheckFailAction {
+    [self meshOTAFailAction];
+}
+
+#pragma mark step5:firmwareUpdateStart
+- (void)firmwareUpdateStart {
+    self.meshOTAProgress = SigMeshOTAProgressFirmwareUpdateStart;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
+
+    __block BOOL hasFail = NO;
+    self.successActionInCurrentProgress = 0;
+    __weak typeof(self) weakSelf = self;
+    for (NSNumber *nodeAddress in self.allAddressArray) {
+        if (![self isMeshOTAing]) {
+            return;
+        }
+        if ([self.allAddressArray indexOfObject:nodeAddress] == self.successActionInCurrentProgress) {
+            SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
+            if (node.state != DeviceStateOutOfLine) {
+                self.semaphore = dispatch_semaphore_create(0);
+                TeLogInfo(@"firmwareUpdateStartWithDestination=0x%x",node.address);
+                self.messageHandle = [SDKLibCommand firmwareUpdateStartWithDestination:node.address updateTTL:self.updateTTL updateTimeoutBase:self.updateTimeoutBase updateBLOBID:self.updateBLOBID updateFirmwareImageIndex:self.index incomingFirmwareMetadata:self.incomingFirmwareMetadata resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
+                    if (source == nodeAddress.intValue) {
+                        TeLogDebug(@"firmwareUpdateStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                        if (responseMessage.status == SigFirmwareUpdateStatusType_success) {
+//                            if (responseMessage.phase == SigFirmwareUpdatePhaseType_inProgress) {
+//                                if (!responseMessage.additionalInformation.ProvisioningNeeded) {
+                                    weakSelf.successActionInCurrentProgress ++;
+//                                } else {
+//                                    hasFail = YES;
+//                                    weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart,responseMessage.additionalInformation.ProvisioningNeeded=0x%x",responseMessage.additionalInformation.ProvisioningNeeded] code:-weakSelf.meshOTAProgress userInfo:nil];
+//                                }
+//                            } else {
+//                                hasFail = YES;
+//                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart,SigFirmwareUpdateStatus.phase=0x%x",responseMessage.phase] code:-weakSelf.meshOTAProgress userInfo:nil];
+//                            }
+                        } else {
+                            hasFail = YES;
+                            weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart,SigFirmwareUpdateStatus.status=0x%x",responseMessage.status] code:-weakSelf.meshOTAProgress userInfo:nil];
+                        }
+                    } else {
+                        hasFail = YES;
+                    }
+                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    [NSThread sleepForTimeInterval:0.2];
+                    dispatch_semaphore_signal(weakSelf.semaphore);
+                }];
+                //Most provide 3 seconds to firmwareUpdateStart every node.
+                dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
+            } else {
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
+                hasFail = YES;
+                break;
+            }
+        } else {
+            if (!self.failError) {
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart, firmwareUpdateStart is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
+            }
+            hasFail = YES;
+            break;
+        }
+    }
+    if (hasFail) {
+        [self firmwareUpdateStartFailAction];
+    } else {
+        [self firmwareUpdateStartSuccessAction];
+    }
+}
+
+- (void)firmwareUpdateStartSuccessAction {
+    [self BLOBTransferGet];
+}
+
+- (void)firmwareUpdateStartFailAction {
+    [self meshOTAFailAction];
+}
+
+#pragma mark step6:BLOBTransferGet
+- (void)BLOBTransferGet {
+    self.meshOTAProgress = SigMeshOTAProgressBLOBTransferGet;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
+
+    __block BOOL hasFail = NO;
+    self.successActionInCurrentProgress = 0;
+    __weak typeof(self) weakSelf = self;
+    for (NSNumber *nodeAddress in self.allAddressArray) {
+        if (![self isMeshOTAing]) {
+            return;
+        }
+        if ([self.allAddressArray indexOfObject:nodeAddress] == self.successActionInCurrentProgress) {
+            SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
+            if (node.state != DeviceStateOutOfLine) {
+                self.semaphore = dispatch_semaphore_create(0);
+                self.messageHandle = [SDKLibCommand BLOBTransferGetWithDestination:node.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigBLOBTransferStatus * _Nonnull responseMessage) {
+                    if (source == nodeAddress.intValue) {
+                        TeLogDebug(@"BLOBTransferGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//                        if (responseMessage.status == SigBLOBTransferStatusType_busy) {
+                            weakSelf.successActionInCurrentProgress ++;
+//                        } else {
+//                           hasFail = YES;
+//                           weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBTransferGet,SigBLOBTransferStatus.status=0x%x",responseMessage.status] code:-weakSelf.meshOTAProgress userInfo:nil];
+//                        }
+                    } else {
+                        hasFail = YES;
+                    }
+                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    [NSThread sleepForTimeInterval:0.2];
+                    dispatch_semaphore_signal(weakSelf.semaphore);
+                }];
+                //Most provide 3 seconds to BLOBTransferGet every node.
+                dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
+            } else {
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBTransferGet, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
+                hasFail = YES;
+                break;
+            }
+        } else {
+            if (!self.failError) {
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBTransferGet, BLOBTransferGet is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
+            }
+            hasFail = YES;
+            break;
+        }
+    }
+    if (hasFail) {
+        [self BLOBTransferGetFailAction];
+    } else {
+        [self BLOBTransferGetSuccessAction];
+    }
+}
+
+- (void)BLOBTransferGetSuccessAction {
+    [self BLOBInformationGet];
+}
+
+- (void)BLOBTransferGetFailAction {
+    [self meshOTAFailAction];
+}
+
+#pragma mark step7:BLOBInformationGet
+- (void)BLOBInformationGet {
+    self.meshOTAProgress = SigMeshOTAProgressBLOBInformationGet;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
+
+    __block BOOL hasFail = NO;
+    self.successActionInCurrentProgress = 0;
+    self.oBLOBInformations = [NSMutableDictionary dictionary];
+    __weak typeof(self) weakSelf = self;
+    for (NSNumber *nodeAddress in self.allAddressArray) {
+        if (![self isMeshOTAing]) {
+            return;
+        }
+        if ([self.allAddressArray indexOfObject:nodeAddress] == self.successActionInCurrentProgress) {
+            SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
+            if (node.state != DeviceStateOutOfLine) {
+                self.semaphore = dispatch_semaphore_create(0);
+                self.messageHandle = [SDKLibCommand BLOBInformationGetWithDestination:node.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigBLOBInformationStatus * _Nonnull responseMessage) {
+                    if (source == nodeAddress.intValue) {
+                        weakSelf.oBLOBInformations[@(source)] = responseMessage;
+                        TeLogDebug(@"BLOBInformationGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                         weakSelf.successActionInCurrentProgress ++;
                     } else {
                         hasFail = YES;
@@ -391,29 +712,29 @@
                     [NSThread sleepForTimeInterval:0.2];
                         dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
-                //Most provide 3 seconds to firmwareInformationGet every node.
+                //Most provide 3 seconds to firmwareUpdateInformationGet every node.
                 dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
             } else {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectInformationGet, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBInformationGet, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
                 hasFail = YES;
                 break;
             }
         } else {
             if (!self.failError) {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectInformationGet, objectInformationGet is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBInformationGet, BLOBInformationGet is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
             }
             hasFail = YES;
             break;
         }
     }
     if (hasFail) {
-        [self objectInformationGetFailAction];
+        [self BLOBInformationGetFailAction];
     } else {
-        if (self.oObjectInformations && self.oObjectInformations.count > 0) {
-            UInt8 minBlockSizeLog = self.oObjectInformations.allValues.firstObject.minBlockSizeLog;
-            UInt8 maxBlockSizeLog = self.oObjectInformations.allValues.firstObject.maxBlockSizeLog;
-            UInt16 maxChunksNumber = self.oObjectInformations.allValues.firstObject.maxChunksNumber;
-            for (SigObjectInformationStatus *message in self.oObjectInformations.allValues) {
+        if (self.oBLOBInformations && self.oBLOBInformations.count > 0) {
+            UInt8 minBlockSizeLog = self.oBLOBInformations.allValues.firstObject.minBlockSizeLog;
+            UInt8 maxBlockSizeLog = self.oBLOBInformations.allValues.firstObject.maxBlockSizeLog;
+            UInt16 maxChunksNumber = self.oBLOBInformations.allValues.firstObject.maxChunksNumber;
+            for (SigBLOBInformationStatus *message in self.oBLOBInformations.allValues) {
                 if (minBlockSizeLog < message.minBlockSizeLog) {
                     minBlockSizeLog = message.minBlockSizeLog;
                 }
@@ -439,13 +760,13 @@
             
             if (isAccord) {
                 //默认支持
-                [self objectInformationGetSuccessAction];
+                [self BLOBInformationGetSuccessAction];
             } else {
                 //默认值不支持，则重新计算blockSizeLog
                 if (minBlockSizeLog > maxBlockSizeLog) {
                     //无所有设备都支持的blockSizeLog值，meshOTA失败
-                    self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectInformationGet, blockSizeLog is error."] code:-weakSelf.meshOTAProgress userInfo:nil];
-                    [self objectInformationGetFailAction];
+                    self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBInformationGet, blockSizeLog is error."] code:-weakSelf.meshOTAProgress userInfo:nil];
+                    [self BLOBInformationGetFailAction];
                 } else {
                     //先判断minBlockSizeLog是否可用
                     UInt16 blockSize = pow(2, minBlockSizeLog);
@@ -471,33 +792,34 @@
                     
                     if (isAccord) {
                         //重新计算blockSizeLog成功
-                        [self objectInformationGetSuccessAction];
+                        [self BLOBInformationGetSuccessAction];
                     } else {
                         //重新计算blockSizeLog失败
-                        self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectInformationGet, blockSizeLog is error."] code:-weakSelf.meshOTAProgress userInfo:nil];
-                        [self objectInformationGetFailAction];
+                        self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBInformationGet, blockSizeLog is error."] code:-weakSelf.meshOTAProgress userInfo:nil];
+                        [self BLOBInformationGetFailAction];
                     }
                 }
             }
         } else {
-            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectInformationGet, objectInformation is empty."] code:-weakSelf.meshOTAProgress userInfo:nil];
-            [self objectInformationGetFailAction];
+            self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBInformationGet, BLOBInformation is empty."] code:-weakSelf.meshOTAProgress userInfo:nil];
+            [self BLOBInformationGetFailAction];
         }
     }
 }
 
-- (void)objectInformationGetSuccessAction {
-    [self firmwareUpdatePrepare];
+- (void)BLOBInformationGetSuccessAction {
+    [self BLOBTransferStart];
 }
 
-- (void)objectInformationGetFailAction {
+- (void)BLOBInformationGetFailAction {
     [self meshOTAFailAction];
 }
 
-#pragma mark step4:firmwareUpdatePrepare
-- (void)firmwareUpdatePrepare {
-    TeLogInfo(@"\n\n\n\n==========step4\n\n\n\n");
-    self.meshOTAProgress = SigMeshOTAProgressFirmwareUpdatePrepare;
+#pragma mark step8:BLOBTransferStart
+- (void)BLOBTransferStart {
+    self.meshOTAProgress = SigMeshOTAProgressBLOBTransferStart;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
+
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
     __weak typeof(self) weakSelf = self;
@@ -509,207 +831,62 @@
             SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
             if (node.state != DeviceStateOutOfLine) {
                 self.semaphore = dispatch_semaphore_create(0);
-                TeLogInfo(@"firmwareUpdatePrepareWithDestination=0x%x",node.address);
-                self.messageHandle = [SDKLibCommand firmwareUpdatePrepareWithDestination:node.address companyID:weakSelf.companyID firmwareID:weakSelf.firmwareIDData objectID:weakSelf.objectID vendorValidationData:nil resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
+                self.messageHandle = [SDKLibCommand BLOBTransferStartWithDestination:node.address transferMode:self.distributionTransferMode BLOBID:self.updateBLOBID BLOBSize:(UInt32)self.otaData.length BLOBBlockSizeLog:self.blockSizeLog MTUSize:self.MTUSize resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigBLOBTransferStatus * _Nonnull responseMessage) {
                     if (source == nodeAddress.intValue) {
-                        TeLogDebug(@"firmwareUpdatePrepare=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-                        if (responseMessage.status == SigFirmwareUpdateStatusType_success) {
-                            if (responseMessage.phase == SigFirmwareUpdatePhaseType_prepare || responseMessage.phase == SigFirmwareUpdatePhaseType_inProgress) {
-                                if (!responseMessage.additionalInformation.ProvisioningNeeded) {
-                                    weakSelf.successActionInCurrentProgress ++;
-                                } else {
-                                    hasFail = YES;
-                                    weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdatePrepare,responseMessage.additionalInformation.ProvisioningNeeded=0x%x",responseMessage.additionalInformation.ProvisioningNeeded] code:-weakSelf.meshOTAProgress userInfo:nil];
-                                }
-                            } else {
-                                hasFail = YES;
-                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdatePrepare,SigFirmwareUpdateStatus.phase=0x%x",responseMessage.phase] code:-weakSelf.meshOTAProgress userInfo:nil];
-                            }
-                        } else {
-                            hasFail = YES;
-                            weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdatePrepare,SigFirmwareUpdateStatus.status=0x%x",responseMessage.status] code:-weakSelf.meshOTAProgress userInfo:nil];
-                        }
-                    } else {
-                        hasFail = YES;
-                    }
-                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                    [NSThread sleepForTimeInterval:0.2];
-                        dispatch_semaphore_signal(weakSelf.semaphore);
-                }];
-                //Most provide 3 seconds to firmwareUpdatePrepare every node.
-                dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
-            } else {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdatePrepare, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
-                hasFail = YES;
-                break;
-            }
-        } else {
-            if (!self.failError) {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdatePrepare, firmwareUpdatePrepare is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
-            }
-            hasFail = YES;
-            break;
-        }
-    }
-    if (hasFail) {
-        [self firmwareUpdatePrepareFailAction];
-    } else {
-        [self firmwareUpdatePrepareSuccessAction];
-    }
-}
-
-- (void)firmwareUpdatePrepareSuccessAction {
-    [self firmwareUpdateStart];
-}
-
-- (void)firmwareUpdatePrepareFailAction {
-    [self meshOTAFailAction];
-}
-
-#pragma mark step5:firmwareUpdateStart
-- (void)firmwareUpdateStart {
-    TeLogInfo(@"\n\n\n\n==========step5\n\n\n\n");
-    self.meshOTAProgress = SigMeshOTAProgressFirmwareUpdateStart;
-    __block BOOL hasFail = NO;
-    self.successActionInCurrentProgress = 0;
-    __weak typeof(self) weakSelf = self;
-    for (NSNumber *nodeAddress in self.allAddressArray) {
-        if (![self isMeshOTAing]) {
-            return;
-        }
-        if ([self.allAddressArray indexOfObject:nodeAddress] == self.successActionInCurrentProgress) {
-            SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
-            if (node.state != DeviceStateOutOfLine) {
-                self.semaphore = dispatch_semaphore_create(0);
-                TeLogInfo(@"firmwareUpdateStartWithDestination=0x%x",node.address);
-                self.messageHandle = [SDKLibCommand firmwareUpdateStartWithDestination:node.address updatePolicy:SigUpdatePolicyType_none companyID:self.companyID firmwareID:self.firmwareIDData resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
-                    if (source == nodeAddress.intValue) {
-                        TeLogDebug(@"firmwareUpdateStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-                        if (responseMessage.status == SigFirmwareUpdateStatusType_success) {
-                            if (responseMessage.phase == SigFirmwareUpdatePhaseType_inProgress) {
-                                if (!responseMessage.additionalInformation.ProvisioningNeeded) {
-                                    weakSelf.successActionInCurrentProgress ++;
-                                } else {
-                                    hasFail = YES;
-                                    weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart,responseMessage.additionalInformation.ProvisioningNeeded=0x%x",responseMessage.additionalInformation.ProvisioningNeeded] code:-weakSelf.meshOTAProgress userInfo:nil];
-                                }
-                            } else {
-                                hasFail = YES;
-                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart,SigFirmwareUpdateStatus.phase=0x%x",responseMessage.phase] code:-weakSelf.meshOTAProgress userInfo:nil];
-                            }
-                        } else {
-                            hasFail = YES;
-                            weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart,SigFirmwareUpdateStatus.status=0x%x",responseMessage.status] code:-weakSelf.meshOTAProgress userInfo:nil];
-                        }
-                    } else {
-                        hasFail = YES;
-                    }
-                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                    [NSThread sleepForTimeInterval:0.2];
-                        dispatch_semaphore_signal(weakSelf.semaphore);
-                }];
-                //Most provide 3 seconds to firmwareUpdateStart every node.
-                dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
-            } else {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
-                hasFail = YES;
-                break;
-            }
-        } else {
-            if (!self.failError) {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateStart, firmwareUpdateStart is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
-            }
-            hasFail = YES;
-            break;
-        }
-    }
-    if (hasFail) {
-        [self firmwareUpdateStartFailAction];
-    } else {
-        [self firmwareUpdateStartSuccessAction];
-    }
-}
-
-- (void)firmwareUpdateStartSuccessAction {
-    [self objectTransferStart];
-}
-
-- (void)firmwareUpdateStartFailAction {
-    [self meshOTAFailAction];
-}
-
-#pragma mark step6:objectTransferStart
-- (void)objectTransferStart {
-    TeLogInfo(@"\n\n\n\n==========step6\n\n\n\n");
-    self.meshOTAProgress = SigMeshOTAProgressObjectTransferStart;
-    __block BOOL hasFail = NO;
-    self.successActionInCurrentProgress = 0;
-    __weak typeof(self) weakSelf = self;
-    for (NSNumber *nodeAddress in self.allAddressArray) {
-        if (![self isMeshOTAing]) {
-            return;
-        }
-        if ([self.allAddressArray indexOfObject:nodeAddress] == self.successActionInCurrentProgress) {
-            SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
-            if (node.state != DeviceStateOutOfLine) {
-                self.semaphore = dispatch_semaphore_create(0);
-                self.messageHandle = [SDKLibCommand objectTransferStartWithDestination:node.address objectID:self.objectID objectSize:(UInt32)self.otaData.length blockSizeLog:self.blockSizeLog resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigObjectTransferStatus * _Nonnull responseMessage) {
-                    if (source == nodeAddress.intValue) {
-                        TeLogDebug(@"objectTransferStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-                        if (responseMessage.status == SigObjectTransferStatusType_busy) {
+                        TeLogDebug(@"BLOBTransferStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//                        if (responseMessage.status == SigBLOBTransferStatusType_busy) {
                             weakSelf.successActionInCurrentProgress ++;
-                        } else {
-                           hasFail = YES;
-                           weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectTransferStart,SigObjectTransferStatus.status=0x%x",responseMessage.status] code:-weakSelf.meshOTAProgress userInfo:nil];
-                        }
+//                        } else {
+//                           hasFail = YES;
+//                           weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBTransferStart,SigBLOBTransferStatus.status=0x%x",responseMessage.status] code:-weakSelf.meshOTAProgress userInfo:nil];
+//                        }
                     } else {
                         hasFail = YES;
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     [NSThread sleepForTimeInterval:0.2];
-                        dispatch_semaphore_signal(weakSelf.semaphore);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
-                //Most provide 3 seconds to objectTransferStart every node.
+                //Most provide 3 seconds to BLOBTransferStart every node.
                 dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
             } else {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectTransferStart, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBTransferStart, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
                 hasFail = YES;
                 break;
             }
         } else {
             if (!self.failError) {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectTransferStart, objectTransferStart is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBTransferStart, BLOBTransferStart is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
             }
             hasFail = YES;
             break;
         }
     }
     if (hasFail) {
-        [self objectTransferStartFailAction];
+        [self BLOBTransferStartFailAction];
     } else {
-        [self objectTransferStartSuccessAction];
+        [self BLOBTransferStartSuccessAction];
     }
 }
 
-- (void)objectTransferStartSuccessAction {
+- (void)BLOBTransferStartSuccessAction {
     self.blockIndex = 0;
     double blockSize = (double)pow(2, self.blockSizeLog);
     self.allBlockCount = ceil(self.otaData.length / blockSize);
-    self.retryCountInObjectChunkTransfer = 0;
-    [self objectBlockTransferStart];
+    self.retryCountInBLOBChunkTransfer = 0;
+    [self BLOBBlockStart];
 }
 
-- (void)objectTransferStartFailAction {
+- (void)BLOBTransferStartFailAction {
     [self meshOTAFailAction];
 }
 
-#pragma mark step7:objectBlockTransferStart
-- (void)objectBlockTransferStart {
-    TeLogInfo(@"\n\n\n\n==========step7\n\n\n\n");
-    self.meshOTAProgress = SigMeshOTAProgressObjectBlockTransferStart;
+#pragma mark step9:BLOBBlockStart
+- (void)BLOBBlockStart {
+    self.meshOTAProgress = SigMeshOTAProgressBLOBBlockStart;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
+
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
     __weak typeof(self) weakSelf = self;
@@ -731,59 +908,59 @@
                 NSData *blockChecksumValue = [NSData dataWithBytes:&blockChecksum length:4];
                 TeLogInfo(@"blockChecksum=0x%x,blockChecksumValue=%@",blockChecksum,blockChecksumValue);
                 self.semaphore = dispatch_semaphore_create(0);
-                self.messageHandle = [SDKLibCommand objectBlockTransferStartWithDestination:node.address objectID:self.objectID blockNumber:self.blockIndex chunkSize:kChunkSize blockChecksumAlgorithm:SigBlockChecksumAlgorithmType_CRC32 blockChecksumValue:blockChecksumValue currentBlockSize:currentBlockSize resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigObjectBlockTransferStatus * _Nonnull responseMessage) {
+                self.messageHandle = [SDKLibCommand BLOBBlockStartWithBlockNumber:self.blockIndex chunkSize:kChunkSize toDestination:node.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigBLOBBlockStatus * _Nonnull responseMessage) {
                     if (source == nodeAddress.intValue) {
-                        TeLogDebug(@"objectBlockTransferStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-                        if (responseMessage.status == SigObjectBlockTransferStatusType_accepted || responseMessage.status == SigObjectBlockTransferStatusType_alreadyRX) {
+                        TeLogDebug(@"BLOBBlockStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//                        if (responseMessage.status == SigObjectBlockTransferStatusType_accepted || responseMessage.status == SigObjectBlockTransferStatusType_alreadyRX) {
                             weakSelf.successActionInCurrentProgress ++;
-                        } else {
-                            hasFail = YES;
-                            weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectBlockTransferStart,SigObjectBlockTransferStatus.status=0x%x",responseMessage.status] code:-weakSelf.meshOTAProgress userInfo:nil];
-                        }
+//                        } else {
+//                            hasFail = YES;
+//                            weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockStart,SigObjectBlockTransferStatus.status=0x%x",responseMessage.status] code:-weakSelf.meshOTAProgress userInfo:nil];
+//                        }
                     } else {
                         hasFail = YES;
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     [NSThread sleepForTimeInterval:0.2];
-                        dispatch_semaphore_signal(weakSelf.semaphore);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
-                //Most provide 3 seconds to objectBlockTransferStart every node.
+                //Most provide 3 seconds to BLOBBlockStart every node.
                 dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
             } else {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectBlockTransferStart, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockStart, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
                 hasFail = YES;
                 break;
             }
         } else {
             if (!self.failError) {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectBlockTransferStart, objectBlockTransferStart is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockStart, BLOBBlockStart is timeout."] code:-weakSelf.meshOTAProgress userInfo:nil];
             }
             hasFail = YES;
             break;
         }
     }
     if (hasFail) {
-        [self objectBlockTransferStartFailAction];
+        [self BLOBBlockStartFailAction];
     } else {
-        [self objectBlockTransferStartSuccessAction];
+        [self BLOBBlockStartSuccessAction];
     }
 }
 
-- (void)objectBlockTransferStartSuccessAction {
-    [self objectChunkTransfer];
+- (void)BLOBBlockStartSuccessAction {
+    [self BLOBChunkTransfer];
 }
 
-- (void)objectBlockTransferStartFailAction {
+- (void)BLOBBlockStartFailAction {
     [self meshOTAFailAction];
 }
 
-#pragma mark step8:objectChunkTransfer
-//做法一:默认只发送一次，设备端都可以收到。
-- (void)objectChunkTransfer {
-    TeLogInfo(@"\n\n\n\n==========step8\n\n\n\n");
+#pragma mark step10:BLOBChunkTransfer
+- (void)BLOBChunkTransfer {
+    self.meshOTAProgress = SigMeshOTAProgressBLOBChunkTransfer;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
+
     self.chunksCountofCurrentBlock = ceil(self.currentBlockData.length / (double)kChunkSize);
-    self.meshOTAProgress = SigMeshOTAProgressObjectChunkTransfer;
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
 
@@ -801,41 +978,49 @@
                 chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(kChunkSize * i, kChunkSize)];
             }
             __weak typeof(self) weakSelf = self;
-            self.semaphore = dispatch_semaphore_create(0);
             TeLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
             [self showMeshOTAProgressWithCurrentChunkData:chunkData];
-            self.messageHandle = [SDKLibCommand objectChunkTransferWithDestination:kMeshOTAGroupAddress chunkNumber:self.chunkIndex firmwareImageData:chunkData resMax:0 retryCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            if (!_testFinish) {
+                if (self.blockIndex == 0 && self.chunkIndex == 6) {
+                    //这个包不发送，测试补包流程
+                    _testFinish = YES;
+                    self.successActionInCurrentProgress ++;
+                    continue;
+                }
+            }
+            self.semaphore = dispatch_semaphore_create(0);
+            self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:kMeshOTAGroupAddress chunkNumber:self.chunkIndex chunkData:chunkData resMax:0 retryCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 if (error) {
                     hasFail = YES;
-                    weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectChunkTransfer, error=%@.",error.domain] code:-weakSelf.meshOTAProgress userInfo:nil];
+                    weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBChunkTransfer, error=%@.",error.domain] code:-weakSelf.meshOTAProgress userInfo:nil];
                 } else {
                     weakSelf.successActionInCurrentProgress ++;
 
                 }
                 [NSThread sleepForTimeInterval:0.2];
-                        dispatch_semaphore_signal(weakSelf.semaphore);
+                dispatch_semaphore_signal(weakSelf.semaphore);
             }];
-            //Most provide 1000 seconds for objectChunkTransferWithDestination in every chunk.
+            //Most provide 1000 seconds for BLOBChunkTransferWithDestination in every chunk.
             dispatch_semaphore_wait(self.semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1000.0));
         } else {
             if (!self.failError) {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectBlockTransferStart, objectBlockTransferStart is timeout."] code:-self.meshOTAProgress userInfo:nil];
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockStart, BLOBBlockStart is timeout."] code:-self.meshOTAProgress userInfo:nil];
             }
             hasFail = YES;
             break;
         }
     }
     if (hasFail) {
-        [self objectChunkTransferFailAction];
+        [self BLOBChunkTransferFailAction];
     } else {
-        [self objectChunkTransferSuccessFinishAction];
+        [self BLOBChunkTransferSuccessFinishAction];
     }
 }
 
-- (void)objectChunkTransferWithLosePackets {
-    TeLogInfo(@"\n\n\n\n==========step8.1\n\n\n\n");
-    self.meshOTAProgress = SigMeshOTAProgressObjectChunkTransfer;
+- (void)BLOBChunkTransferWithLosePackets {
+    self.meshOTAProgress = SigMeshOTAProgressBLOBChunkTransfer;
+    TeLogInfo(@"\n\n==========meshOTA:step%d.1\n\n",self.meshOTAProgress);
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
     if (self.losePacketsDict && self.losePacketsDict.allKeys.count > 0) {
@@ -855,37 +1040,36 @@
                 __weak typeof(self) weakSelf = self;
                 self.semaphore = dispatch_semaphore_create(0);
                 TeLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountofCurrentBlock,self.chunkIndex);
-                [self showMeshOTAProgressWithCurrentChunkData:chunkData];
-                self.messageHandle = [SDKLibCommand objectChunkTransferWithDestination:destination chunkNumber:self.chunkIndex firmwareImageData:chunkData resMax:0 retryCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData resMax:0 retryCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     if (error) {
                         hasFail = YES;
-                        weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectChunkTransfer, error=%@.",error.domain] code:-weakSelf.meshOTAProgress userInfo:nil];
+                        weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBChunkTransfer, error=%@.",error.domain] code:-weakSelf.meshOTAProgress userInfo:nil];
                     } else {
                         weakSelf.successActionInCurrentProgress ++;
 
                     }
                     [NSThread sleepForTimeInterval:0.2];
-                            dispatch_semaphore_signal(weakSelf.semaphore);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
-                //Most provide 1000 seconds for objectChunkTransferWithDestination in every chunk.
+                //Most provide 1000 seconds for BLOBChunkTransferWithDestination in every chunk.
                 dispatch_semaphore_wait(self.semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1000.0));
             }
         }
     }
     if (hasFail) {
-        [self objectChunkTransferFailAction];
+        [self BLOBChunkTransferFailAction];
     } else {
-        [self objectChunkTransferSuccessFinishAction];
+        [self BLOBChunkTransferSuccessFinishAction];
     }
 }
 
 
-- (void)objectChunkTransferSuccessFinishAction {
-    [self objectBlockGet];
+- (void)BLOBChunkTransferSuccessFinishAction {
+    [self BLOBBlockGet];
 }
 
-- (void)objectChunkTransferFailAction {
+- (void)BLOBChunkTransferFailAction {
     [self meshOTAFailAction];
 }
 
@@ -899,11 +1083,12 @@
     }
 }
 
-#pragma mark step9:objectBlockGet
-- (void)objectBlockGet {
-    TeLogInfo(@"\n\n\n\n==========step9\n\n\n\n");
+#pragma mark step11:BLOBBlockGet
+- (void)BLOBBlockGet {
+    self.meshOTAProgress = SigMeshOTAProgressBLOBBlockGet;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
+
     self.losePacketsDict = [NSMutableDictionary dictionary];
-    self.meshOTAProgress = SigMeshOTAProgressObjectBlockGet;
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
     __weak typeof(self) weakSelf = self;
@@ -916,20 +1101,32 @@
             if (node.state != DeviceStateOutOfLine) {
                 self.semaphore = dispatch_semaphore_create(0);
                 TeLogInfo(@"self.blockIndex=%d",self.blockIndex);
-                self.messageHandle = [SDKLibCommand objectBlockGetWithDestination:node.address objectID:self.objectID blockNumber:self.blockIndex resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigObjectBlockStatus * _Nonnull responseMessage) {
+                self.messageHandle = [SDKLibCommand BLOBBlockGetWithDestination:node.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigBLOBBlockStatus * _Nonnull responseMessage) {
                     if (source == nodeAddress.intValue) {
-                        TeLogDebug(@"objectBlockGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-                        if (responseMessage.status == SigObjectBlockTransferStatusType_accepted) {
+                        /*BLOBBlockGet=80000000010600,source=2,destination=1*/
+                        TeLogDebug(@"BLOBBlockGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                        if (responseMessage.status == SigBLOBBlockStatusType_success) {
                             weakSelf.successActionInCurrentProgress ++;
-                        } else if (responseMessage.status == SigObjectBlockTransferStatusType_alreadyRX) {
-                            hasFail = YES;
-                            NSString *errorString = [NSString stringWithFormat:@"fail in objectBlockGet,SigObjectBlockStatus.status=0x%x,blockIndex=%d",responseMessage.status,weakSelf.blockIndex];
-                            weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.meshOTAProgress userInfo:nil];
-                            TeLogInfo(@"%@",errorString);
-                            self.losePacketsDict[@(source)] = responseMessage.missingChunksList;
+                            if (responseMessage.format == SigBLOBBlockFormatType_someChunksMissing) {
+                                hasFail = YES;
+                                NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet,SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
+                                weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.meshOTAProgress userInfo:nil];
+                                TeLogInfo(@"%@",errorString);
+                                self.losePacketsDict[@(source)] = responseMessage.missingChunksList;
+                            } else if (responseMessage.format == SigBLOBBlockFormatType_allChunksMissing) {
+                                hasFail = YES;
+                                NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet,SigBLOBBlockStatus.status=0x%x,format=0x%x,blockIndex=%d",responseMessage.status,responseMessage.format,weakSelf.blockIndex];
+                                weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.meshOTAProgress userInfo:nil];
+                                TeLogInfo(@"%@",errorString);
+                                NSMutableArray *chunkIndexs = [NSMutableArray array];
+                                for (int i=0; i<self.chunksCountofCurrentBlock; i++) {
+                                    [chunkIndexs addObject:@(i)];
+                                }
+                                self.losePacketsDict[@(source)] = chunkIndexs;
+                            }
                         } else {
                             hasFail = YES;
-                            NSString *errorString = [NSString stringWithFormat:@"fail in objectBlockGet,SigObjectBlockStatus.status=0x%x,blockIndex=%d",responseMessage.status,weakSelf.blockIndex];
+                            NSString *errorString = [NSString stringWithFormat:@"fail in BLOBBlockGet,SigBLOBBlockStatus.status=0x%x,blockIndex=%d",responseMessage.status,weakSelf.blockIndex];
                             weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.meshOTAProgress userInfo:nil];
                             TeLogInfo(@"%@",errorString);
                         }
@@ -939,18 +1136,18 @@
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     [NSThread sleepForTimeInterval:0.2];
-                        dispatch_semaphore_signal(weakSelf.semaphore);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
-                //Most provide 3 seconds to objectBlockTransferStart every node.
+                //Most provide 3 seconds to BLOBBlockStart every node.
                 dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
             } else {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectBlockGet, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockGet, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
                 hasFail = YES;
                 break;
             }
         } else {
             if (!self.failError) {
-                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectBlockGet, objectBlockGet is timeout."] code:-self.meshOTAProgress userInfo:nil];
+                self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockGet, BLOBBlockGet is timeout."] code:-self.meshOTAProgress userInfo:nil];
             }
             hasFail = YES;
             break;
@@ -958,45 +1155,45 @@
     }
     if (hasFail) {
         if (self.losePacketsDict && self.losePacketsDict.allKeys.count > 0) {
-            [self objectChunkTransferWithLosePackets];
+            [self BLOBChunkTransferWithLosePackets];
         } else {
-            [self objectBlockGetFailAction];
+            [self BLOBBlockGetFailAction];
         }
     } else {
-        [self objectBlockGetSuccessAction];
+        [self BLOBBlockGetSuccessAction];
     }
 }
 
-- (void)objectBlockGetSuccessAction {
+- (void)BLOBBlockGetSuccessAction {
     if (self.blockIndex < self.allBlockCount - 1) {
         // send next block data
         self.blockIndex ++;
-        self.retryCountInObjectChunkTransfer = 0;
-        [self objectBlockTransferStart];
+        self.retryCountInBLOBChunkTransfer = 0;
+        [self BLOBBlockStart];
     } else if (self.blockIndex == self.allBlockCount - 1) {
         // all blcoks had send
         [self firmwareUpdateGet];
     } else {
-        self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in objectBlockGet, self.blockIndex > self.allBlockCount - 1."] code:-self.meshOTAProgress userInfo:nil];
+        self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBBlockGet, self.blockIndex > self.allBlockCount - 1."] code:-self.meshOTAProgress userInfo:nil];
         [self meshOTAFailAction];
     }
 }
 
-- (void)objectBlockGetFailAction {
-    if (self.retryCountInObjectChunkTransfer < kRetryCountInObjectChunkTransfer) {
+- (void)BLOBBlockGetFailAction {
+    if (self.retryCountInBLOBChunkTransfer < kRetryCountInBLOBChunkTransfer) {
         TeLogInfo(@"retry send block.");
-        self.retryCountInObjectChunkTransfer ++;
-        [self objectBlockTransferStart];
+        self.retryCountInBLOBChunkTransfer ++;
+        [self BLOBBlockStart];
     } else {
         TeLogInfo(@"send block fail.");
         [self meshOTAFailAction];
     }
 }
 
-#pragma mark step10:firmwareUpdateGet
+#pragma mark step12:firmwareUpdateGet
 - (void)firmwareUpdateGet {
-    TeLogInfo(@"\n\n\n\n==========step10\n\n\n\n");
     self.meshOTAProgress = SigMeshOTAProgressFirmwareUpdateGet;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
     __weak typeof(self) weakSelf = self;
@@ -1008,21 +1205,21 @@
             SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
             if (node.state != DeviceStateOutOfLine) {
                 self.semaphore = dispatch_semaphore_create(0);
-                self.messageHandle = [SDKLibCommand firmwareUpdateGetWithDestination:node.address companyID:self.companyID firmwareID:self.firmwareIDData resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
+                self.messageHandle = [SDKLibCommand firmwareUpdateGetWithDestination:node.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
                     if (source == nodeAddress.intValue) {
                         TeLogDebug(@"firmwareUpdateGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                         if (responseMessage.status == SigFirmwareUpdateStatusType_success) {
-                            if (responseMessage.phase == SigFirmwareUpdatePhaseType_DFUReady) {
-                                if (!responseMessage.additionalInformation.ProvisioningNeeded) {
+//                            if (responseMessage.phase == SigFirmwareUpdatePhaseType_DFUReady) {
+//                                if (!responseMessage.additionalInformation.ProvisioningNeeded) {
                                     weakSelf.successActionInCurrentProgress ++;
-                                } else {
-                                    hasFail = YES;
-                                    weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateGet,responseMessage.additionalInformation.ProvisioningNeeded=0x%x",responseMessage.additionalInformation.ProvisioningNeeded] code:-weakSelf.meshOTAProgress userInfo:nil];
-                                }
-                            } else {
-                                hasFail = YES;
-                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateGet,SigFirmwareUpdateStatus.phase=0x%x",responseMessage.phase] code:-weakSelf.meshOTAProgress userInfo:nil];
-                            }
+//                                } else {
+//                                    hasFail = YES;
+//                                    weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateGet,responseMessage.additionalInformation.ProvisioningNeeded=0x%x",responseMessage.additionalInformation.ProvisioningNeeded] code:-weakSelf.meshOTAProgress userInfo:nil];
+//                                }
+//                            } else {
+//                                hasFail = YES;
+//                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateGet,SigFirmwareUpdateStatus.phase=0x%x",responseMessage.phase] code:-weakSelf.meshOTAProgress userInfo:nil];
+//                            }
                         } else {
                             hasFail = YES;
                             weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateGet,SigFirmwareUpdateStatus.status=0x%x",responseMessage.status] code:-weakSelf.meshOTAProgress userInfo:nil];
@@ -1033,9 +1230,9 @@
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     [NSThread sleepForTimeInterval:0.2];
-                        dispatch_semaphore_signal(weakSelf.semaphore);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
-                //Most provide 3 seconds to objectBlockTransferStart every node.
+                //Most provide 3 seconds to BLOBBlockStart every node.
                 dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
             } else {
                 self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateGet, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
@@ -1065,10 +1262,10 @@
     [self meshOTAFailAction];
 }
 
-#pragma mark step11:firmwareUpdateApply
+#pragma mark step13:firmwareUpdateApply
 - (void)firmwareUpdateApply {
-    TeLogInfo(@"\n\n\n\n==========step11\n\n\n\n");
     self.meshOTAProgress = SigMeshOTAProgressFirmwareUpdateApply;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
     __weak typeof(self) weakSelf = self;
@@ -1080,22 +1277,22 @@
             SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:nodeAddress.intValue];
             if (node.state != DeviceStateOutOfLine) {
                 self.semaphore = dispatch_semaphore_create(0);
-                self.messageHandle = [SDKLibCommand firmwareUpdateApplyWithDestination:node.address companyID:self.companyID firmwareID:self.firmwareIDData resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
+                self.messageHandle = [SDKLibCommand firmwareUpdateApplyWithDestination:node.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
                     if (source == nodeAddress.intValue) {
                         TeLogDebug(@"firmwareUpdateApply=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-                        if (responseMessage.status == SigFirmwareUpdateStatusType_success) {
-                            if (responseMessage.phase == SigFirmwareUpdatePhaseType_idle) {
-                                if (!responseMessage.additionalInformation.ProvisioningNeeded) {
+                        if (responseMessage.status == SigFirmwareUpdateServerAndClientModelStatusType_success) {
+                            if (responseMessage.updatePhase == SigFirmwareUpdatePhaseType_verificationSuccess) {
+//                                if (!responseMessage.additionalInformation.ProvisioningNeeded) {
                                     weakSelf.successActionInCurrentProgress ++;
                                     // apply 成功，则标记meshOTA成功。
                                     [weakSelf callBackMeshOTASuccessAddress:node.address];
-                                } else {
-                                    hasFail = YES;
-                                    weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateApply,responseMessage.additionalInformation.ProvisioningNeeded=0x%x",responseMessage.additionalInformation.ProvisioningNeeded] code:-weakSelf.meshOTAProgress userInfo:nil];
-                                }
+//                                } else {
+//                                    hasFail = YES;
+//                                    weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateApply,responseMessage.additionalInformation.ProvisioningNeeded=0x%x",responseMessage.additionalInformation.ProvisioningNeeded] code:-weakSelf.meshOTAProgress userInfo:nil];
+//                                }
                             } else {
                                 hasFail = YES;
-                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateApply,SigFirmwareUpdateStatus.phase=0x%x",responseMessage.phase] code:-weakSelf.meshOTAProgress userInfo:nil];
+                                weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateApply,SigFirmwareUpdateStatus.updatePhase=0x%x",responseMessage.updatePhase] code:-weakSelf.meshOTAProgress userInfo:nil];
                             }
                         } else {
                             hasFail = YES;
@@ -1109,7 +1306,7 @@
                     [NSThread sleepForTimeInterval:0.2];
                         dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
-                //Most provide 3 seconds to objectBlockTransferStart every node.
+                //Most provide 3 seconds to BLOBBlockStart every node.
                 dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
             } else {
                 self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in firmwareUpdateApply, node is outOfLine"] code:-weakSelf.meshOTAProgress userInfo:nil];
@@ -1132,20 +1329,21 @@
 }
 
 - (void)firmwareUpdateApplySuccessAction {
-    [self firmwareDistributionStop];
+    [self firmwareDistributionCancel];
 }
 
 - (void)firmwareUpdateApplyFailAction {
     [self meshOTAFailAction];
 }
 
-#pragma mark step12:firmwareDistributionStop
-- (void)firmwareDistributionStop {
-    TeLogInfo(@"\n\n\n\n==========step12\n\n\n\n");
+#pragma mark step14:firmwareDistributionCancel
+- (void)firmwareDistributionCancel {
+    self.meshOTAProgress = SigMeshOTAProgressFirmwareDistributionCancel;
+    TeLogInfo(@"\n\n==========meshOTA:step%d\n\n",self.meshOTAProgress);
     __weak typeof(self) weakSelf = self;
-    self.messageHandle = [SDKLibCommand firmwareDistributionStopWithDestination:0x01 companyID:self.companyID firmwareID:self.firmwareIDData resMax:0 retryCount:0 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
-        TeLogDebug(@"firmwareDistributionStop=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-        [weakSelf firmwareDistributionStopSuccessAction];
+    self.messageHandle = [SDKLibCommand firmwareDistributionCancelWithDestination:SigDataSource.share.curLocationNodeModel.address resMax:0 retryCount:0 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+        TeLogDebug(@"firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        [weakSelf firmwareDistributionCancelSuccessAction];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
@@ -1153,11 +1351,11 @@
     [self showMeshOTAResult];
 }
 
-- (void)firmwareDistributionStopSuccessAction {
+- (void)firmwareDistributionCancelSuccessAction {
     
 }
 
-- (void)firmwareDistributionStopFailAction {
+- (void)firmwareDistributionCancelFailAction {
     [self meshOTAFailAction];
 }
 
