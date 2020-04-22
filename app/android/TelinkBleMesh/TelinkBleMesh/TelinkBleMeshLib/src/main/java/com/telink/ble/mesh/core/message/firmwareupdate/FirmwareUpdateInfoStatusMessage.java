@@ -183,4 +183,13 @@ public class FirmwareUpdateInfoStatusMessage extends StatusMessage implements Pa
             dest.writeByteArray(updateURI);
         }
     }
+
+    @Override
+    public String toString() {
+        return "FirmwareUpdateInfoStatusMessage{" +
+                "listCount=" + listCount +
+                ", firstIndex=" + firstIndex +
+                ", firmwareInformationList=" + firmwareInformationList.size() +
+                '}';
+    }
 }

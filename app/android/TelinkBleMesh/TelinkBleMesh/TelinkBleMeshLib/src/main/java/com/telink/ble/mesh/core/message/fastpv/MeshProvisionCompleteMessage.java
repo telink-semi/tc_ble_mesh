@@ -40,4 +40,7 @@ public class MeshProvisionCompleteMessage extends GenericMessage {
         return MeshUtils.integer2Bytes(delay, 2, ByteOrder.LITTLE_ENDIAN);
     }
 
+    public void setDelay(int delay) {
+        this.delay = delay;
+    }
 }

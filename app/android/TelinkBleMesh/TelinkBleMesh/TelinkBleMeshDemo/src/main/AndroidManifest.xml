@@ -32,8 +32,7 @@
         <activity
             android:name="com.telink.ble.mesh.ui.MainActivity"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateAlwaysHidden"
-            />
+            android:windowSoftInputMode="stateAlwaysHidden" />
 
         <activity
             android:name="com.telink.ble.mesh.ui.DeviceProvisionActivity"
@@ -132,21 +131,38 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.telink.ble.mesh.ui.RPActivity" />
-        <activity android:name="com.telink.ble.mesh.ui.FastProvisionActivity" />
-        <activity android:name="com.telink.ble.mesh.ui.qrcode.QRCodeShareActivity" />
-        <activity android:name="com.telink.ble.mesh.ui.qrcode.QRCodeScanActivity">
-
-
-        </activity>
+        <activity
+            android:name="com.telink.ble.mesh.ui.RPActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity
+            android:name="com.telink.ble.mesh.ui.FastProvisionActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity
+            android:name="com.telink.ble.mesh.ui.qrcode.QRCodeShareActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity
+            android:name="com.telink.ble.mesh.ui.qrcode.QRCodeScanActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysHidden"/>
 
         <activity
             android:name="com.telink.ble.mesh.ui.file.FileSelectActivity"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden" />
 
         <activity
             android:name="com.telink.ble.mesh.ui.file.FileSearchActivity"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden" />
+
+        <activity
+            android:name="com.telink.ble.mesh.ui.CompositionDataActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+
     </application>
 
 

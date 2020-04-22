@@ -90,11 +90,10 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     @Override
     protected void onResume() {
         super.onResume();
-        if (MeshService.getInstance().isBluetoothEnabled()) {
-            this.autoConnect();
-        } else {
+        if (!MeshService.getInstance().isBluetoothEnabled()) {
             showBleOpenDialog();
         }
+        this.autoConnect();
     }
 
 

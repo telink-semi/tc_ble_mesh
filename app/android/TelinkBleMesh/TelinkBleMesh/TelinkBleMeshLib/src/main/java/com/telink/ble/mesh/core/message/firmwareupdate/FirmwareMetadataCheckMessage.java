@@ -14,13 +14,13 @@ public class FirmwareMetadataCheckMessage extends UpdatingMessage {
      * Index of the firmware image in the Firmware Information List state to check
      * 1 byte
      */
-    public int updateFirmwareImageIndex;
+    private int updateFirmwareImageIndex;
 
     /**
      * If the value of the Incoming Firmware Metadata Length field is greater than 0,
      * the Incoming Firmware Metadata field shall be present.
      */
-    public byte[] incomingFirmwareMetadata;
+    private byte[] incomingFirmwareMetadata;
 
     public static FirmwareMetadataCheckMessage getSimple(int destinationAddress, int appKeyIndex,
                                                          int index, byte[] incomingFirmwareMetadata) {
@@ -61,4 +61,11 @@ public class FirmwareMetadataCheckMessage extends UpdatingMessage {
         return buffer.array();
     }
 
+    public void setUpdateFirmwareImageIndex(int updateFirmwareImageIndex) {
+        this.updateFirmwareImageIndex = updateFirmwareImageIndex;
+    }
+
+    public void setIncomingFirmwareMetadata(byte[] incomingFirmwareMetadata) {
+        this.incomingFirmwareMetadata = incomingFirmwareMetadata;
+    }
 }

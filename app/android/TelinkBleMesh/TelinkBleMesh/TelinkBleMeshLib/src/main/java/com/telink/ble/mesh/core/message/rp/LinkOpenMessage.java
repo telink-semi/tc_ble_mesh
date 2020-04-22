@@ -37,4 +37,7 @@ public class LinkOpenMessage extends GenericMessage {
         return uuid;
     }
 
+    public void setUuid(byte[] uuid) {
+        this.uuid = uuid;
+    }
 }

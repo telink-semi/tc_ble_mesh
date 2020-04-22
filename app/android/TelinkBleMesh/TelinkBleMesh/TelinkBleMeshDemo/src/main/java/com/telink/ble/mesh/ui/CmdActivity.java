@@ -55,15 +55,9 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             "[Custom]"};
     // add new
 
-    /*private final String[] TIDS = {
-            "FALSE",
-            "TRUE"};*/
-
     private final int MSG_DST_ADR = 0xFFFF;
 
     private int appKeyIndex;
-
-    private int presetIndex = -1;
 
     private View ll_name;
     private EditText et_actions, et_dst_adr, et_opcode,
@@ -288,7 +282,6 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
     }
 
     private void onActionSelect(int position) {
-        this.presetIndex = position;
         et_actions.setText(PRESET_ACCESS_MESSAGES[position]);
         MeshMessage meshMessage = null;
 
@@ -302,6 +295,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             "Generic Off",
             "[Custom]"
          */
+        // on/off (generic/vendor) command tid position is 1
         final int onOffTidPosition = 1;
         switch (position) {
             case 0: // Vendor On

@@ -13,7 +13,7 @@ public class BlobTransferCancelMessage extends UpdatingMessage {
      * BLOB identifier
      * 64 bits
      */
-    public long blobId;
+    private long blobId;
 
     public static BlobTransferCancelMessage getSimple(int destinationAddress, int appKeyIndex,
                                                       long blobId) {
@@ -44,4 +44,7 @@ public class BlobTransferCancelMessage extends UpdatingMessage {
                 .array();
     }
 
+    public void setBlobId(long blobId) {
+        this.blobId = blobId;
+    }
 }

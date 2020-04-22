@@ -57,4 +57,15 @@ public class ScanStartMessage extends UpdatingMessage {
         return bf.array();
     }
 
+    public void setScannedItemsLimit(byte scannedItemsLimit) {
+        this.scannedItemsLimit = scannedItemsLimit;
+    }
+
+    public void setTimeout(byte timeout) {
+        this.timeout = timeout;
+    }
+
+    public void setUuid(byte[] uuid) {
+        this.uuid = uuid;
+    }
 }

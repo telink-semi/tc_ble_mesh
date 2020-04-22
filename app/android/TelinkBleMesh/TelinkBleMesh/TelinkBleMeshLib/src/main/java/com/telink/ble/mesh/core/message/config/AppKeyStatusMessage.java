@@ -1,12 +1,10 @@
 package com.telink.ble.mesh.core.message.config;
 
 import android.os.Parcel;
-import android.os.Parcelable;
 
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.StatusMessage;
 
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
@@ -80,24 +78,13 @@ public class AppKeyStatusMessage extends StatusMessage {
         return status;
     }
 
-    public void setStatus(byte status) {
-        this.status = status;
-    }
-
     public int getNetKeyIndex() {
         return netKeyIndex;
-    }
-
-    public void setNetKeyIndex(int netKeyIndex) {
-        this.netKeyIndex = netKeyIndex;
     }
 
     public int getAppKeyIndex() {
         return appKeyIndex;
     }
 
-    public void setAppKeyIndex(int appKeyIndex) {
-        this.appKeyIndex = appKeyIndex;
-    }
 }
 

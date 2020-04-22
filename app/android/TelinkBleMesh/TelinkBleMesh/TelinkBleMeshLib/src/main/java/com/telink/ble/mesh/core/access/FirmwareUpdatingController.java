@@ -35,6 +35,7 @@ import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.TransferStat
 import com.telink.ble.mesh.core.networking.NetworkingController;
 import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
+import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
@@ -247,6 +248,7 @@ public class FirmwareUpdatingController {
             onUpdatingFail(STATE_FAIL, "updating params null");
             return;
         }
+        test = true;
         firmwareParser.reset(configuration.getFirmwareData());
         log(" config -- " + configuration.toString());
         this.appKeyIndex = configuration.getAppKeyIndex();
@@ -292,17 +294,18 @@ public class FirmwareUpdatingController {
 
     private void sendChunks() {
         byte[] chunkData = firmwareParser.nextChunk();
+        final int chunkIndex = firmwareParser.currentChunkIndex();
         if (test) {
-            if (firmwareParser.currentChunkIndex() == 3) {
-                firmwareParser.nextChunk();
+            if (firmwareParser.currentChunkIndex() == 2) {
+                byte[] missingChunkData = firmwareParser.nextChunk();
                 test = false;
             }
         }
         if (chunkData != null) {
             validateUpdatingProgress();
-            int chunkNumber = firmwareParser.currentChunkIndex();
+//            int chunkNumber = firmwareParser.currentChunkIndex();
 
-            BlobChunkTransferMessage blobChunkTransferMessage = generateChunkTransferMessage(chunkNumber, chunkData);
+            BlobChunkTransferMessage blobChunkTransferMessage = generateChunkTransferMessage(chunkIndex, chunkData);
 
             log("next chunk transfer msg: " + blobChunkTransferMessage.toString());
 
@@ -334,6 +337,7 @@ public class FirmwareUpdatingController {
             checkMissingChunks();
         } else {
             int chunkNumber = missingChunks.get(missingChunkIndex);
+            log("missing chunks: " + chunkNumber);
             byte[] chunkData = firmwareParser.chunkAt(chunkNumber);
             if (chunkData == null) {
                 log("chunk index overflow when resending chunk: " + chunkNumber);
@@ -470,11 +474,11 @@ public class FirmwareUpdatingController {
 
                 case STEP_UPDATE_START:
                     FirmwareUpdateStartMessage updateStartMessage = new FirmwareUpdateStartMessage(meshAddress, appKeyIndex);
-                    updateStartMessage.metadata = this.metadata;
-                    updateStartMessage.updateBLOBID = blobId;
-                    updateStartMessage.updateTtl = (byte) 0xFF;
-                    updateStartMessage.updateTimeoutBase = 0;
-                    updateStartMessage.updateFirmwareImageIndex = 0;
+                    updateStartMessage.setMetadata(this.metadata);
+                    updateStartMessage.setUpdateBLOBID(blobId);
+                    updateStartMessage.setUpdateTtl((byte) 0xFF);
+                    updateStartMessage.setUpdateTimeoutBase(0);
+                    updateStartMessage.setUpdateFirmwareImageIndex(0);
                     onMeshMessagePrepared(updateStartMessage);
                     break;
 
@@ -707,7 +711,7 @@ public class FirmwareUpdatingController {
         if (status != UpdateStatus.SUCCESS) {
             onDeviceFail(nodes.get(nodeIndex), "firmware update status err");
         } else {
-            final UpdatePhase phase = UpdatePhase.valueOf(firmwareUpdateStatusMessage.getPhase() & 0xFF);
+
             final int step = this.step;
             /*boolean pass = (step == STEP_UPDATE_START && phase == FirmwareUpdateStatusMessage.PHASE_IN_PROGRESS)
                     || (step == STEP_UPDATE_GET && phase == FirmwareUpdateStatusMessage.PHASE_READY)
@@ -716,8 +720,13 @@ public class FirmwareUpdatingController {
             if (!pass) {
                 onDeviceFail(nodes.get(nodeIndex), "firmware update phase err");
             } else {
+                final UpdatePhase phase = UpdatePhase.valueOf(firmwareUpdateStatusMessage.getPhase() & 0xFF);
                 if (step == STEP_UPDATE_APPLY) {
-                    onDeviceSuccess(nodes.get(nodeIndex));
+                    if (phase == UpdatePhase.VERIFICATION_SUCCESS){
+                        onDeviceSuccess(nodes.get(nodeIndex));
+                    }else {
+                        onDeviceFail(nodes.get(nodeIndex), "phase error when update apply");
+                    }
                 }
             }
             nodeIndex++;

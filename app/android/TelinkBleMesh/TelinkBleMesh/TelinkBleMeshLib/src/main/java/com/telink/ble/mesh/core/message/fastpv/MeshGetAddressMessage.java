@@ -38,4 +38,8 @@ public class MeshGetAddressMessage extends GenericMessage {
         return MeshUtils.integer2Bytes(this.pid, 2, ByteOrder.LITTLE_ENDIAN);
     }
 
+
+    public void setPid(int pid) {
+        this.pid = pid;
+    }
 }

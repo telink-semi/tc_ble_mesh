@@ -39,4 +39,11 @@ public class MeshSetAddressMessage extends GenericMessage {
         return ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).put(mac).putShort((short) newMeshAddress).array();
     }
 
+    public void setMac(byte[] mac) {
+        this.mac = mac;
+    }
+
+    public void setNewMeshAddress(int newMeshAddress) {
+        this.newMeshAddress = newMeshAddress;
+    }
 }

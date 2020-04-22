@@ -164,4 +164,18 @@ public class BlobTransferStatusMessage extends StatusMessage implements Parcelab
     public List<Integer> getBlocksNotReceived() {
         return blocksNotReceived;
     }
+
+    @Override
+    public String toString() {
+        return "BlobTransferStatusMessage{" +
+                "status=" + status +
+                ", transferMode=" + transferMode +
+                ", transferPhase=" + transferPhase +
+                ", blobId=0x" + Long.toHexString(blobId) +
+                ", blobSize=" + blobSize +
+                ", blockSizeLog=" + blockSizeLog +
+                ", transferMTUSize=" + transferMTUSize +
+                ", blocksNotReceived=" + blocksNotReceived +
+                '}';
+    }
 }

@@ -8,13 +8,13 @@ public class FirmwareUpdateInfoGetMessage extends UpdatingMessage {
      * Index of the first requested entry from the Firmware Information List state
      * 1 byte
      */
-    public byte firstIndex;
+    private byte firstIndex;
 
     /**
      * Maximum number of entries that the server includes in a Firmware Update Information Status message
      * 1 byte
      */
-    public byte entriesLimit;
+    private byte entriesLimit;
 
 
     public static FirmwareUpdateInfoGetMessage getSimple(int destinationAddress, int appKeyIndex) {
@@ -44,4 +44,11 @@ public class FirmwareUpdateInfoGetMessage extends UpdatingMessage {
         return new byte[]{firstIndex, entriesLimit};
     }
 
+    public void setFirstIndex(byte firstIndex) {
+        this.firstIndex = firstIndex;
+    }
+
+    public void setEntriesLimit(byte entriesLimit) {
+        this.entriesLimit = entriesLimit;
+    }
 }

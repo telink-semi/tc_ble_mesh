@@ -64,4 +64,19 @@ public class ScanStatusMessage extends StatusMessage implements Parcelable {
         this.timeout = params[index];
     }
 
+    public byte getStatus() {
+        return status;
+    }
+
+    public byte getRpScanningState() {
+        return rpScanningState;
+    }
+
+    public byte getScannedItemsLimit() {
+        return scannedItemsLimit;
+    }
+
+    public byte getTimeout() {
+        return timeout;
+    }
 }

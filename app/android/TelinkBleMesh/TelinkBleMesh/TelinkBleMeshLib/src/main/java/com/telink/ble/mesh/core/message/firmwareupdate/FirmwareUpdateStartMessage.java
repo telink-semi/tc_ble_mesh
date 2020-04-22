@@ -17,7 +17,7 @@ public class FirmwareUpdateStartMessage extends UpdatingMessage {
      * Time To Live value to use during firmware image transfer
      * 1 byte
      */
-    public byte updateTtl = DEFAULT_UPDATE_TTL;
+    private byte updateTtl = DEFAULT_UPDATE_TTL;
 
     /**
      * Used to compute the timeout of the firmware image transfer
@@ -25,19 +25,19 @@ public class FirmwareUpdateStartMessage extends UpdatingMessage {
      * using blockSize
      * 2 bytes
      */
-    public int updateTimeoutBase;
+    private int updateTimeoutBase;
 
     /**
      * BLOB identifier for the firmware image
      * 8 bytes
      */
-    public long updateBLOBID;
+    private long updateBLOBID;
 
     /**
      * Index of the firmware image in the Firmware Information List state to be updated
      * 1 byte
      */
-    public int updateFirmwareImageIndex;
+    private int updateFirmwareImageIndex;
 
     /**
      * Vendor-specific firmware metadata
@@ -45,7 +45,7 @@ public class FirmwareUpdateStartMessage extends UpdatingMessage {
      * the Incoming Firmware Metadata field shall be present.
      * 1-255 bytes
      */
-    public byte[] metadata;
+    private byte[] metadata;
 
     public static FirmwareUpdateStartMessage getSimple(int destinationAddress, int appKeyIndex,
                                                        int updateTimeoutBase, long blobId, byte[] metadata) {
@@ -81,4 +81,23 @@ public class FirmwareUpdateStartMessage extends UpdatingMessage {
         return bf.array();
     }
 
+    public void setUpdateTtl(byte updateTtl) {
+        this.updateTtl = updateTtl;
+    }
+
+    public void setUpdateTimeoutBase(int updateTimeoutBase) {
+        this.updateTimeoutBase = updateTimeoutBase;
+    }
+
+    public void setUpdateBLOBID(long updateBLOBID) {
+        this.updateBLOBID = updateBLOBID;
+    }
+
+    public void setUpdateFirmwareImageIndex(int updateFirmwareImageIndex) {
+        this.updateFirmwareImageIndex = updateFirmwareImageIndex;
+    }
+
+    public void setMetadata(byte[] metadata) {
+        this.metadata = metadata;
+    }
 }

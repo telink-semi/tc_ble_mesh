@@ -231,11 +231,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             mBindingController = null;
         }
 
-        /*if (mMeshUpdatingController != null) {
-            mMeshUpdatingController.clear();
-            mMeshUpdatingController = null;
-        }*/
-
         if (mFirmwareUpdatingController != null) {
             mFirmwareUpdatingController.clear();
             mFirmwareUpdatingController = null;
@@ -297,9 +292,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     private void initAccessController(HandlerThread handlerThread) {
         mBindingController = new BindingController(handlerThread);
         mBindingController.register(this);
-
-//        mMeshUpdatingController = new MeshUpdatingController(handlerThread);
-//        mMeshUpdatingController.register(this);
 
         mFirmwareUpdatingController = new FirmwareUpdatingController(handlerThread);
         mFirmwareUpdatingController.register(this);
@@ -536,8 +528,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         resetAction();
         if (mGattConnection.isProxyNodeConnected()) {
             onConnectSuccess();
-            /*onActionStart();
-            mMeshUpdatingController.begin((FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG));*/
         } else {
             startSafetyScan();
         }
@@ -757,8 +747,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     private void setNodeIdentity(int targetAddress) {
         log(String.format("set node for %04X", targetAddress));
         NodeIdentitySetMessage message = new NodeIdentitySetMessage(targetAddress);
-        message.netKeyIndex = meshConfiguration.netKeyIndex;
-        message.identity = NodeIdentity.RUNNING.code;
+        message.setNetKeyIndex(meshConfiguration.netKeyIndex);
+        message.setIdentity(NodeIdentity.RUNNING.code);
         sendMeshMessage(message);
     }
 
@@ -794,7 +784,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             case MODE_MESH_OTA:
                 onActionStart();
                 mFirmwareUpdatingController.begin((FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG));
-//                mMeshUpdatingController.begin((FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG));
                 break;
 
             case MODE_FAST_PROVISION:
@@ -1014,7 +1003,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     private void onScanFail() {
-        idle(false);
+//        idle(false);
         ScanEvent scanEvent = new ScanEvent(this, ScanEvent.EVENT_TYPE_SCAN_FAIL, null);
         onEventPrepared(scanEvent);
     }
@@ -1221,7 +1210,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 //            if (!device.getAddress().toUpperCase().equals("A4:C1:38:3F:4C:05")) return;
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
-            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
+//            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
 //            if (!device.getAddress().toUpperCase().contains("FF:EE:EE:EE")) return;
 //            if (!device.getAddress().contains("33:22:11")) return;
             onScanFilter(device, rssi, scanRecord);

@@ -93,13 +93,13 @@ public class FirmwareUpdateStatusMessage extends StatusMessage implements Parcel
 
         this.status = params[index] & 0x07;
 
-        this.phase = (params[index++] & 0xFF) >> 5;
+        this.phase = (params[index] & 0xFF) >> 5;
 
-        this.updateTtl = params[index];
-
-        isComplete = params.length > 2;
+        isComplete = params.length > 1;
         if (!isComplete) return;
         index++;
+
+        this.updateTtl = params[index++];
 
         this.additionalInfo = (params[index++] & 0x1F);
 
@@ -160,5 +160,19 @@ public class FirmwareUpdateStatusMessage extends StatusMessage implements Parcel
 
     public boolean isComplete() {
         return isComplete;
+    }
+
+    @Override
+    public String toString() {
+        return "FirmwareUpdateStatusMessage{" +
+                "status=" + status +
+                ", phase=" + phase +
+                ", updateTtl=" + updateTtl +
+                ", additionalInfo=" + additionalInfo +
+                ", updateTimeoutBase=" + updateTimeoutBase +
+                ", updateBLOBID=0x" + Long.toHexString(updateBLOBID) +
+                ", updateFirmwareImageIndex=" + updateFirmwareImageIndex +
+                ", isComplete=" + isComplete +
+                '}';
     }
 }

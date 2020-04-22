@@ -46,49 +46,24 @@ public class HeartbeatPublicationSetMessage extends ConfigMessage {
         return byteBuffer.array();
     }
 
-    public int getDestination() {
-        return destination;
-    }
-
     public void setDestination(int destination) {
         this.destination = destination;
-    }
-
-    public byte getCountLog() {
-        return countLog;
     }
 
     public void setCountLog(byte countLog) {
         this.countLog = countLog;
     }
 
-    public byte getPeriodLog() {
-        return periodLog;
-    }
-
     public void setPeriodLog(byte periodLog) {
         this.periodLog = periodLog;
-    }
-
-
-    public byte getHbTtl() {
-        return hbTtl;
     }
 
     public void setHbTtl(byte hbTtl) {
         this.hbTtl = hbTtl;
     }
 
-    public int getFeatures() {
-        return features;
-    }
-
     public void setFeatures(int features) {
         this.features = features;
-    }
-
-    public int getNetKeyIndex() {
-        return netKeyIndex;
     }
 
     public void setNetKeyIndex(int netKeyIndex) {

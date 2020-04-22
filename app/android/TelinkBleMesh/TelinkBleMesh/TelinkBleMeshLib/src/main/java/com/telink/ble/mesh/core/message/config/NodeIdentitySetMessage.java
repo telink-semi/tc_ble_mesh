@@ -12,9 +12,9 @@ import java.nio.ByteOrder;
 
 public class NodeIdentitySetMessage extends ConfigMessage {
 
-    public int netKeyIndex;
+    private int netKeyIndex;
 
-    public int identity;
+    private int identity;
 
     public NodeIdentitySetMessage(int destinationAddress) {
         super(destinationAddress);
@@ -41,5 +41,11 @@ public class NodeIdentitySetMessage extends ConfigMessage {
         return paramsBuffer.array();
     }
 
+    public void setNetKeyIndex(int netKeyIndex) {
+        this.netKeyIndex = netKeyIndex;
+    }
 
+    public void setIdentity(int identity) {
+        this.identity = identity;
+    }
 }

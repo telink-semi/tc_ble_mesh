@@ -11,17 +11,17 @@ import java.nio.ByteOrder;
 
 public class DeltaSetMessage extends GenericMessage {
 
-    public int deltaLevel;
+    private int deltaLevel;
 
-    public byte tid;
+    private byte tid;
 
-    public byte transitionTime;
+    private byte transitionTime;
 
-    public byte delay;
+    private byte delay;
 
-    public boolean ack;
+    private boolean ack;
 
-    public boolean isComplete = false;
+    private boolean isComplete = false;
 
 
     public static DeltaSetMessage getSimple(int destinationAddress, int appKeyIndex, int deltaLevel, boolean ack, int rspMax) {
@@ -57,5 +57,29 @@ public class DeltaSetMessage extends GenericMessage {
                         :
                         ByteBuffer.allocate(5).order(ByteOrder.LITTLE_ENDIAN).putInt(deltaLevel)
                                 .put(tid).array();
+    }
+
+    public void setDeltaLevel(int deltaLevel) {
+        this.deltaLevel = deltaLevel;
+    }
+
+    public void setTid(byte tid) {
+        this.tid = tid;
+    }
+
+    public void setTransitionTime(byte transitionTime) {
+        this.transitionTime = transitionTime;
+    }
+
+    public void setDelay(byte delay) {
+        this.delay = delay;
+    }
+
+    public void setAck(boolean ack) {
+        this.ack = ack;
+    }
+
+    public void setComplete(boolean complete) {
+        isComplete = complete;
     }
 }

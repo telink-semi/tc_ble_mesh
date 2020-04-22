@@ -554,7 +554,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         if (eventType.equals(TimeStatusMessage.class.getName())) {
             TimeStatusMessage timeStatusMessage = (TimeStatusMessage) ((StatusNotificationEvent)event).getNotificationMessage().getStatusMessage();
 
-            MeshLogger.d("time status: " + timeStatusMessage.taiSeconds);
+            MeshLogger.d("time status: " + timeStatusMessage.getTaiSeconds());
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

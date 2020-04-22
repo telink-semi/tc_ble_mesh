@@ -34,4 +34,7 @@ public class MeshSetNetInfoMessage extends GenericMessage {
         return netInfoData;
     }
 
+    public void setNetInfoData(byte[] netInfoData) {
+        this.netInfoData = netInfoData;
+    }
 }

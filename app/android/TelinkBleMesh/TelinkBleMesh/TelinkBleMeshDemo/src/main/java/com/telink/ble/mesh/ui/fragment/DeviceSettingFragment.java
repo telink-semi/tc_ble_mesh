@@ -12,7 +12,6 @@ import android.widget.TextView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshSigModel;
-import com.telink.ble.mesh.core.message.config.ConfigMessage;
 import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.config.ModelPublicationSetMessage;
 import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
@@ -27,6 +26,7 @@ import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
+import com.telink.ble.mesh.ui.CompositionDataActivity;
 import com.telink.ble.mesh.ui.DeviceOtaActivity;
 import com.telink.ble.mesh.ui.ModelSettingActivity;
 import com.telink.ble.mesh.ui.SchedulerListActivity;
@@ -72,6 +72,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         cb_relay = view.findViewById(R.id.cb_relay);
         cb_pub.setChecked(deviceInfo.isPubSet());
         cb_relay.setChecked(deviceInfo.isRelayEnable());
+        view.findViewById(R.id.view_cps).setOnClickListener(this);
         view.findViewById(R.id.view_pub).setOnClickListener(this);
         view.findViewById(R.id.view_relay).setOnClickListener(this);
         view.findViewById(R.id.view_sub).setOnClickListener(this);
@@ -79,7 +80,6 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         view.findViewById(R.id.btn_kick).setOnClickListener(this);
 
 
-        // todo mesh interface
         TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(NodeResetStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
@@ -225,23 +225,6 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                 onKickOutFinish();
             }
         }
-
-        // todo mesh interface
-        /*else if (event.getType().equals(NotificationEvent.EVENT_TYPE_CTL_STATUS_NOTIFY)) {
-
-        } else if (event.getType().equals(NotificationEvent.EVENT_TYPE_RELAY_STATUS)) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-//                    deviceInfo.set
-                    delayHandler.removeCallbacks(cmdTimeoutTask);
-                    dismissWaitingDialog();
-                    deviceInfo.setRelayEnable(!deviceInfo.isRelayEnable());
-                    cb_relay.setChecked(deviceInfo.isRelayEnable());
-                    TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity());
-                }
-            });
-        }*/
     }
 
 
@@ -257,6 +240,12 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
 
             case R.id.btn_kick:
                 showKickConfirmDialog();
+                break;
+
+            case R.id.view_cps:
+                Intent cpsIntent = new Intent(getActivity(), CompositionDataActivity.class);
+                cpsIntent.putExtra("meshAddress", deviceInfo.meshAddress);
+                startActivity(cpsIntent);
                 break;
 
             case R.id.view_scheduler:

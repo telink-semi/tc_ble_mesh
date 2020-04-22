@@ -13,18 +13,18 @@ import java.nio.ByteOrder;
  */
 public class SceneRecallMessage extends GenericMessage {
 
-    public int sceneNumber;
+    private int sceneNumber;
 
     // transition id
-    public byte tid = 0;
+    private byte tid = 0;
 
-    public byte transitionTime = 0;
+    private byte transitionTime = 0;
 
-    public byte delay = 0;
+    private byte delay = 0;
 
-    public boolean ack = false;
+    private boolean ack = false;
 
-    public boolean isComplete = false;
+    private boolean isComplete = false;
 
     public static SceneRecallMessage getSimple(int address, int appKeyIndex, int sceneNumber, boolean ack, int rspMax) {
         SceneRecallMessage message = new SceneRecallMessage(address, appKeyIndex);
@@ -64,4 +64,27 @@ public class SceneRecallMessage extends GenericMessage {
                                 .put(tid).array();
     }
 
+    public void setSceneNumber(int sceneNumber) {
+        this.sceneNumber = sceneNumber;
+    }
+
+    public void setTid(byte tid) {
+        this.tid = tid;
+    }
+
+    public void setTransitionTime(byte transitionTime) {
+        this.transitionTime = transitionTime;
+    }
+
+    public void setDelay(byte delay) {
+        this.delay = delay;
+    }
+
+    public void setAck(boolean ack) {
+        this.ack = ack;
+    }
+
+    public void setComplete(boolean complete) {
+        isComplete = complete;
+    }
 }

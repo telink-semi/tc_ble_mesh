@@ -15,12 +15,12 @@ public class BlobChunkTransferMessage extends UpdatingMessage {
      * The chunk’s number in a set of chunks in a block
      * 2 bytes
      */
-    public int chunkNumber;
+    private int chunkNumber;
 
     /**
      * Binary data from the current block
      */
-    public byte[] chunkData;
+    private byte[] chunkData;
 
 
     public static BlobChunkTransferMessage getSimple(int destinationAddress, int appKeyIndex,
@@ -61,5 +61,13 @@ public class BlobChunkTransferMessage extends UpdatingMessage {
                 "chunkNumber=" + chunkNumber +
                 ", chunkData=" + Arrays.bytesToHexString(chunkData) +
                 '}';
+    }
+
+    public void setChunkNumber(int chunkNumber) {
+        this.chunkNumber = chunkNumber;
+    }
+
+    public void setChunkData(byte[] chunkData) {
+        this.chunkData = chunkData;
     }
 }

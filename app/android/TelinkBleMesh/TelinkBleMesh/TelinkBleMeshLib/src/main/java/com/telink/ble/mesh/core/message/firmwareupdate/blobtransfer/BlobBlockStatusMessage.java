@@ -36,6 +36,7 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
     /**
      * Status Code for the requesting message
      * lower 4 bits in first byte
+     *
      * @see TransferStatus
      */
     private int status;
@@ -45,6 +46,11 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
      * higher 2 bits in first byte
      */
     private int format;
+
+    /**
+     * Transfer phase
+     */
+    private int transferPhase;
 
     /**
      * Block number of the current block
@@ -77,6 +83,7 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
     protected BlobBlockStatusMessage(Parcel in) {
         status = in.readInt();
         format = in.readInt();
+        transferPhase = in.readInt();
         blockNumber = in.readInt();
         chunkSize = in.readInt();
         missingChunks = new ArrayList<>();
@@ -102,6 +109,7 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
         int index = 0;
         this.status = params[index] & 0x0F;
         this.format = (params[index++] >> 6) & 0x03;
+        transferPhase = params[index++] & 0xFF;
         this.blockNumber = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
         index += 2;
         this.chunkSize = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
@@ -129,6 +137,7 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(status);
         dest.writeInt(format);
+        dest.writeInt(transferPhase);
         dest.writeInt(blockNumber);
         dest.writeInt(chunkSize);
         dest.writeList(missingChunks);
@@ -141,6 +150,10 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
 
     public int getFormat() {
         return format;
+    }
+
+    public int getTransferPhase() {
+        return transferPhase;
     }
 
     public int getBlockNumber() {

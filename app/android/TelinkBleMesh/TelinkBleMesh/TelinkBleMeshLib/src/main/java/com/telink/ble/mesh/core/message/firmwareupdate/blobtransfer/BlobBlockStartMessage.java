@@ -14,13 +14,13 @@ public class BlobBlockStartMessage extends UpdatingMessage {
      * Block number of the incoming block
      * 2 bytes
      */
-    public int blockNumber;
+    private int blockNumber;
 
     /**
      * Chunk size (in octets) for the incoming block
      * 2 bytes
      */
-    public int chunkSize;
+    private int chunkSize;
 
 
     public static BlobBlockStartMessage getSimple(int destinationAddress, int appKeyIndex,
@@ -54,4 +54,11 @@ public class BlobBlockStartMessage extends UpdatingMessage {
                 .putShort((short) chunkSize).array();
     }
 
+    public void setBlockNumber(int blockNumber) {
+        this.blockNumber = blockNumber;
+    }
+
+    public void setChunkSize(int chunkSize) {
+        this.chunkSize = chunkSize;
+    }
 }

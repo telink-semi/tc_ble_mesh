@@ -13,30 +13,30 @@ public class BlobTransferStartMessage extends UpdatingMessage {
      * BLOB transfer mode
      * higher 2 bits in first byte
      */
-    public TransferMode transferMode = TransferMode.PUSH;
+    private TransferMode transferMode = TransferMode.PUSH;
 
     /**
      * BLOB identifier
      * 64 bits
      */
-    public long blobId;
+    private long blobId;
 
     /**
      * BLOB size in octets
      * 32 bits
      */
-    public int blobSize;
+    private int blobSize;
 
     /**
      * Indicates the block size
      * 8 bits
      */
-    public int blockSizeLog;
+    private int blockSizeLog;
 
     /**
      * MTU size supported by the client
      */
-    public int clientMTUSize;
+    private int clientMTUSize;
 
 
     public static BlobTransferStartMessage getSimple(int destinationAddress, int appKeyIndex,
@@ -79,4 +79,23 @@ public class BlobTransferStartMessage extends UpdatingMessage {
                 .putShort((short) clientMTUSize).array();
     }
 
+    public void setTransferMode(TransferMode transferMode) {
+        this.transferMode = transferMode;
+    }
+
+    public void setBlobId(long blobId) {
+        this.blobId = blobId;
+    }
+
+    public void setBlobSize(int blobSize) {
+        this.blobSize = blobSize;
+    }
+
+    public void setBlockSizeLog(int blockSizeLog) {
+        this.blockSizeLog = blockSizeLog;
+    }
+
+    public void setClientMTUSize(int clientMTUSize) {
+        this.clientMTUSize = clientMTUSize;
+    }
 }

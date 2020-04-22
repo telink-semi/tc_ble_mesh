@@ -24,16 +24,8 @@ public class NetworkTransmitSetMessage extends ConfigMessage {
         super(destinationAddress);
     }
 
-    public int getCount() {
-        return count;
-    }
-
     public void setCount(int count) {
         this.count = count;
-    }
-
-    public int getIntervalSteps() {
-        return intervalSteps;
     }
 
     public void setIntervalSteps(int intervalSteps) {

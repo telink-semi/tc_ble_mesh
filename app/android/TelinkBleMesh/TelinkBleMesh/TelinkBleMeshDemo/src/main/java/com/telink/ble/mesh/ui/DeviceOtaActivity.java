@@ -74,7 +74,7 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
             finish();
             return;
         }
-        // todo mesh interface
+
         TelinkMeshApplication.getInstance().addEventListener(GattOtaEvent.EVENT_TYPE_OTA_SUCCESS, this);
         TelinkMeshApplication.getInstance().addEventListener(GattOtaEvent.EVENT_TYPE_OTA_PROGRESS, this);
         TelinkMeshApplication.getInstance().addEventListener(GattOtaEvent.EVENT_TYPE_OTA_FAIL, this);

@@ -44,4 +44,7 @@ public class LinkCloseMessage extends UpdatingMessage {
         return new byte[]{reason};
     }
 
+    public void setReason(byte reason) {
+        this.reason = reason;
+    }
 }
