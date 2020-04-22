@@ -170,6 +170,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (UInt32)getCRC32OfData:(NSData *)data;
 
+#pragma mark - 正则表达式相关
+
++ (BOOL)validateUUID:(NSString *)uuidString;
+
 @end
 
 NS_ASSUME_NONNULL_END

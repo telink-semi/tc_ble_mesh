@@ -32,11 +32,7 @@
 
 #define kTelinkSDKDebugLogData @"TelinkSDKDebugLogData"
 #define kTelinkSDKMeshJsonData @"TelinkSDKMeshJsonData"
-NSString *const NotifyUpdateLogContent = @"UpdateLogContent";
-
-@interface SigLogger ()
-@property (nonatomic, strong) NSThread *writeIOThread;
-@end
+#define kTelinkSDKDebugLogDataSize ((double)1024*1024*20) //默认日志最大存储大小为20M。
 
 @implementation SigLogger
 
@@ -68,8 +64,6 @@ NSString *const NotifyUpdateLogContent = @"UpdateLogContent";
             NSLog(@"%@",@"creat TelinkSDKMeshJsonData failure");
         }
     }
-    _writeIOThread = [[NSThread alloc] initWithTarget:self selector:@selector(startThread) object:nil];
-    [_writeIOThread start];
 }
 
 - (NSString *)logFilePath {
@@ -80,30 +74,37 @@ NSString *const NotifyUpdateLogContent = @"UpdateLogContent";
     return [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject stringByAppendingPathComponent:kTelinkSDKMeshJsonData];
 }
 
-#pragma mark - Private
-- (void)startThread{
-    [NSTimer scheduledTimerWithTimeInterval:[[NSDate distantFuture] timeIntervalSinceNow] target:self selector:@selector(nullFunc) userInfo:nil repeats:NO];
-    while (1) {
-        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
-    }
-}
-
-- (void)nullFunc{}
-
 - (void)setSDKLogLevel:(SigLogLevel)logLevel{
     _logLevel = logLevel;
+    [self checkSDKLogFileSize];
     [self enableLogger];
 }
 
 - (void)enableLogger{
-//    saveLogData(@"\n\n\n\n\t打开APP，初始化日志模块\n\n\n");
-    TelinkLogWithFile(@"\n\n\n\n\t打开APP，初始化日志模块\n\n\n");
+    TelinkLogWithFile([NSString stringWithFormat:@"\n\n\n\n\t打开APP，初始化TelinkSigMesh %@日志模块\n\n\n",kTelinkSigMeshLibVersion]);
 }
+
+/// 监测缓存本地的日志文件大小，大于阈值则砍掉多余部分，只保留阈值的80%。
+- (void)checkSDKLogFileSize {
+    NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:SigLogger.share.logFilePath];
+    NSData *data = [handle readDataToEndOfFile];
+    [handle closeFile];
+    NSInteger length = data.length;
+    if (length > kTelinkSDKDebugLogDataSize) {
+        NSInteger saveLength = ceil(kTelinkSDKDebugLogDataSize * 0.8);
+        NSData *saveData = [data subdataWithRange:NSMakeRange(length - saveLength, saveLength)];
+        handle = [NSFileHandle fileHandleForWritingAtPath:SigLogger.share.logFilePath];
+        [handle truncateFileAtOffset:0];
+        [handle writeData:saveData];
+        [handle closeFile];
+    }
+}
+
 
 void saveLogData(id data){
     if (SigLogger.share.logLevel > 0) {
         @synchronized (SigLogger.share) {
-            [SigLogger.share performSelector:@selector(saveLogOnThread:) onThread:SigLogger.share.writeIOThread withObject:data waitUntilDone:YES];
+            [SigLogger.share saveLogOnThread:data];
         }
     }
 }
@@ -128,7 +129,6 @@ void saveLogData(id data){
         [handle writeData:tempData];
     }
     [handle closeFile];
-    [NSNotificationCenter.defaultCenter postNotificationName:(NSString *)NotifyUpdateLogContent object:nil];
 }
 
 static NSFileHandle *TelinkLogFileHandle()
@@ -145,8 +145,6 @@ static NSFileHandle *TelinkLogFileHandle()
                 NSLog(@"%@",@"creat failure");
             }
         }
-//        fileHandle = [NSFileHandle fileHandleForWritingAtPath:SigLogger.share.logFilePath];
-//        [fileHandle truncateFileAtOffset:0];
         fileHandle = [NSFileHandle fileHandleForUpdatingAtPath:SigLogger.share.logFilePath];
         [fileHandle seekToEndOfFile];
     });
@@ -156,7 +154,9 @@ void TelinkLogWithFile(NSString *format, ...) {
     va_list L;
     va_start(L, format);
     NSString *message = [[NSString alloc] initWithFormat:format arguments:L];
-    NSLog(@"%@", message);
+    if (DEBUG) {
+        NSLog(@"%@", message);
+    }
     // 开启异步子线程，将打印写入文件
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NSFileHandle *output = TelinkLogFileHandle();

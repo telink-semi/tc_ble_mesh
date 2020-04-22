@@ -48,6 +48,8 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - keySet: The keySet that the message was encrypted with.
 - (void)handleUpperTransportPdu:(SigUpperTransportPdu *)upperTransportPdu sentWithSigKeySet:(SigKeySet *)keySet;
 
+- (void)sendMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command;
+
 /// Sends the MeshMessage to the destination. The message is encrypted
 /// using given Application Key and a Network Key bound to it.
 ///

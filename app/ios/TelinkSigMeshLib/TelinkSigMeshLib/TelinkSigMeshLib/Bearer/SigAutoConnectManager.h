@@ -30,7 +30,7 @@ typedef void(^connectFailCallBack)(NSString *errorString);
 - (void)startConnectWithTimeout:(UInt8)timeout successBlock:(connectSuccessCallBack)successBlock failBlock:(connectFailCallBack)failBlock;
 
 
-/// api use befor change meshNerwork stop nonnected and stop auto connect.
+/// api use to stop auto connect. (eg: stop connection to change meshNerwork, stop connection to add node)
 - (void)stopCurrentMeshConnectAndStopAutoConnect;
 
 

@@ -37,6 +37,8 @@
 @property (strong, nonatomic) NSMutableArray <AddDeviceModel *>*source;
 @property (strong, nonatomic) UIBarButtonItem *refreshItem;
 @property (nonatomic,strong) NSString *currentUUID;
+@property (nonatomic,assign) BOOL isAdding;
+@property (nonatomic,assign) BOOL currentConnectedNodeIsUnprovisioned;
 @end
 
 @implementation FastProvisionAddVC
@@ -53,125 +55,108 @@
     return self.source.count;
 }
 
-//#pragma mark - Event
-//- (void)startAddDevice{
-//    self.ble.commandHandle.responseVendorIDCallBack = nil;
-//    [Bluetooth.share stopAutoConnect];
-//    [Bluetooth.share clearCachelist];
-//
-//    [self userAbled:NO];
-//
-//    __weak typeof(self) weakSelf = self;
-//    [Bluetooth.share cancelAllConnecttionWithComplete:^{
-//        [weakSelf blockState];
-//        [Bluetooth.share setProvisionState];
-//        [Bluetooth.share startScan];
-//        [weakSelf userAbled:NO];
-//
-//        dispatch_async(dispatch_get_main_queue(), ^{
-//            [weakSelf performSelector:@selector(scanTimeout) withObject:nil afterDelay:5.0];
-//        });
-//    }];
-//
-//}
-//
-//- (void)scanTimeout{
-//    [Bluetooth.share setNormalState];
-//    [Bluetooth.share stopScan];
-//    [self userAbled:YES];
-//    [self showTips:@"scan timeout."];
-//}
-//
-//- (void)connectPeripheralTimeout{
-//    [Bluetooth.share setNormalState];
-//    [self userAbled:YES];
-//    [self showTips:@"connect timeout."];
-//}
-//
-//- (void)userAbled:(BOOL)able{
-//    dispatch_async(dispatch_get_main_queue(), ^{
-//        self.refreshItem.enabled = able;
-//        self.goBackButton.enabled = able;
-//        [self.goBackButton setBackgroundColor:able ? kDefultColor : kDefultUnableColor];
-//    });
-//}
-//
-//- (void)showTips:(NSString *)message{
-//    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
-//
-//    }];
-//}
-//
-//- (void)blockState{
-//    [super blockState];
-//
-//    __weak typeof(self) weakSelf = self;
-//    [self.ble setBleScanNewDeviceCallBack:^(CBPeripheral *peripheral, BOOL provisioned) {
-//        if (peripheral && provisioned) {
-//            [weakSelf.ble stopScan];
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanTimeout) object:nil];
-//                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(connectPeripheralTimeout) object:nil];
-//                [weakSelf performSelector:@selector(connectPeripheralTimeout) withObject:nil afterDelay:5.0];
-//            });
-//            weakSelf.currentUUID = peripheral.identifier.UUIDString;
-//            [weakSelf.ble connectPeripheral:peripheral];
-//        }
-//    }];
-//    [self.ble bleFinishScanedCharachteristic:^(CBPeripheral *peripheral) {
-//        if (weakSelf.ble.state == StateAddDevice_provision && [peripheral.identifier.UUIDString isEqualToString:weakSelf.currentUUID]) {
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(connectPeripheralTimeout) object:nil];
-//            });
-//            [weakSelf startFastProvision];
-//        }
-//    }];
-//}
-//
-//- (void)startFastProvision {
-//    __weak typeof(self) weakSelf = self;
-//    [self.ble.commandHandle startFastProvisionAddDevicesWithPID:SigNodePID_CT addSingleDeviceSuccessCallback:^(NSData *deviceKey, UInt16 address, UInt16 pid) {
-//        TeLogDebug(@"deviceKey=%@,address=%d,pid=%d",deviceKey,address,pid);
-//        [weakSelf saveNodeToLocationWithDeviceKey:deviceKey address:address pid:pid];
-//        [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey address:address pid:pid];
-//    } finish:^{
-//        TeLogDebug(@"finish");
-//        [weakSelf addDeviceFinish];
-//    }];
-//}
-//
-//- (void)saveNodeToLocationWithDeviceKey:(NSData *)deviceKey address:(UInt16)address pid:(UInt16)pid {
-//    SigNodeModel *model = [[SigNodeModel alloc] init];
-//    [model setAddress:address];
-//    model.deviceKey = [LibTools convertDataToHexStr:deviceKey];
-//    model.peripheralUUID = nil;
-//    NSData *macData = [LibTools turnOverData:[deviceKey subdataWithRange:NSMakeRange(0, 6)]];
-//    model.macAddress = [LibTools convertDataToHexStr:macData];
-//    SigAppkeyModel *appkey = [SigDataSource.share curAppkeyModel];
-//    if (![model.appKeys containsObject:appkey]) {
-//        [model.appKeys addObject:appkey];
-//    }
-//
-//    VC_node_info_t info = model.nodeInfo;
-//    info.element_cnt = [SigDataSource.share getElementCountOfPid:pid];
-//    info.cps.page0_head.pid = pid;
-//    if (pid == SigNodePID_CT || pid == SigNodePID_Panel) {
-//        DeviceTypeModel *typeModel = [[DeviceTypeModel alloc] initWithCID:0x0211 PID:pid];
-//        VC_node_info_t tem = typeModel.defultNodeInfo;
-//        memcpy(&tem, &info, 22);
-//        model.nodeInfo = tem;
-//    }else{
-//        TeLogDebug(@"\n\n\t[warning]:pid is not SigNodePID_CT or SigNodePID_Panel,please fix api initWithCID:PID:\n\n");
-//    }
-//
-//    [SigDataSource.share saveDeviceWithDeviceModel:model];
-//}
+#pragma mark - Event
+- (void)startAddDevice{
+    [self userAbled:NO];
+    _isAdding = YES;
+    if (SigBearer.share.isOpen) {
+        self.currentConnectedNodeIsUnprovisioned = NO;
+        [self startFastProvision];
+    } else {
+        self.currentConnectedNodeIsUnprovisioned = YES;
+        [self startScanSingleUnProvisionNode];
+    }
+}
 
-- (void)updateDeviceSuccessWithDeviceKey:(NSData *)deviceKey address:(UInt16)address pid:(UInt16)pid {
+- (void)startScanSingleUnProvisionNode {
+    __weak typeof(self) weakSelf = self;
+    SigBearer.share.isAutoReconnect = NO;
+    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        if (weakSelf.isAdding) {
+            if (successful) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanSingleUnProvisionNodeTimeout) object:nil];
+                    [weakSelf performSelector:@selector(scanSingleUnProvisionNodeTimeout) withObject:nil afterDelay:5.0];
+                });
+                [SigBluetooth.share scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
+                    if (unprovisioned && RSSI.intValue > -50) {
+                        TeLogInfo(@"advertisementData=%@,rssi=%@,unprovisioned=%@",advertisementData,RSSI,unprovisioned?@"没有入网":@"已经入网");
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanSingleUnProvisionNodeTimeout) object:nil];
+                        });
+                        [SigBluetooth.share stopScan];
+                        [SigBearer.share changePeripheral:peripheral result:^(BOOL successful) {
+                            if (successful) {
+                                [SigBearer.share openWithResult:^(BOOL successful) {
+                                    if (successful) {
+                                        [weakSelf startFastProvision];
+                                    } else {
+                                        NSString *str = @"open fail.";
+                                        TeLogError(@"%@",str);
+                                        [weakSelf showTips:str];
+                                        [weakSelf userAbled:YES];
+                                        weakSelf.isAdding = NO;
+                                    }
+                                }];
+                            } else {
+                                NSString *str = @"change node fail.";
+                                TeLogError(@"%@",str);
+                                [weakSelf showTips:str];
+                                [weakSelf userAbled:YES];
+                                weakSelf.isAdding = NO;
+                            }
+                        }];
+                    }
+                }];
+            } else {
+                NSString *str = @"close fail.";
+                TeLogError(@"%@",str);
+                [weakSelf showTips:str];
+                [weakSelf userAbled:YES];
+                weakSelf.isAdding = NO;
+            }
+        }
+    }];
+}
+
+- (void)scanSingleUnProvisionNodeTimeout {
+    [self userAbled:YES];
+    self.isAdding = NO;
+}
+
+- (void)startFastProvision {
+    UInt16 provisionAddress = SigDataSource.share.provisionAddress;
+    __weak typeof(self) weakSelf = self;
+    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:76] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+        TeLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
+        [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+    } finish:^(NSError * _Nullable error) {
+        TeLogInfo(@"error=%@",error);
+        [weakSelf userAbled:YES];
+        weakSelf.isAdding = NO;
+    }];
+}
+
+- (void)userAbled:(BOOL)able{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.refreshItem.enabled = able;
+        self.goBackButton.enabled = able;
+        [self.goBackButton setBackgroundColor:able ? kDefultColor : kDefultUnableColor];
+    });
+}
+
+- (void)showTips:(NSString *)message{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
+
+        }];
+    });
+}
+
+- (void)updateDeviceSuccessWithDeviceKey:(NSData *)deviceKey macAddress:(NSString *)macAddress address:(UInt16)address pid:(UInt16)pid {
     AddDeviceModel *model = [[AddDeviceModel alloc] init];
     SigScanRspModel *scanModel = [[SigScanRspModel alloc] init];
-    NSData *macData = [LibTools turnOverData:[deviceKey subdataWithRange:NSMakeRange(0, 6)]];
-    scanModel.macAddress = [LibTools convertDataToHexStr:macData];
+    scanModel.macAddress = macAddress;
     model.scanRspModel = scanModel;
     model.scanRspModel.address = address;
     model.state = AddDeviceModelStateBindSuccess;
@@ -190,12 +175,24 @@
     [self.collectionView scrollToItemAtIndexPath:lastItemIndex atScrollPosition:UICollectionViewScrollPositionTop animated:NO];
 }
 
-- (void)addDeviceFinish{
-//    [self userAbled:YES];
-}
-
 - (IBAction)clickGoBack:(UIButton *)sender {
-    [self.navigationController popViewControllerAnimated:YES];
+    __weak typeof(self) weakSelf = self;
+    SigProvisionerModel *provisioner = SigDataSource.share.curProvisionerModel;
+    [SDKLibCommand setFilterForProvisioner:provisioner successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.navigationController popViewControllerAnimated:YES];
+        });
+    } finishCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+        if (error) {
+            TeLogError(@"setFilter fail!!!");
+            //失败后逻辑：断开连接，再返回
+            [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf.navigationController popViewControllerAnimated:YES];
+                });
+            }];
+        }
+    }];
 }
 
 #pragma mark - Life method
@@ -206,8 +203,8 @@
 
     [self.collectionView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceItemCellID bundle:nil] forCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID];
     
-    self.refreshItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(startAddDevice)];
-    self.navigationItem.rightBarButtonItem = self.refreshItem;
+//    self.refreshItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(startAddDevice)];
+//    self.navigationItem.rightBarButtonItem = self.refreshItem;
 
 }
 
@@ -216,7 +213,7 @@
     self.tabBarController.tabBar.hidden = YES;
     self.navigationItem.hidesBackButton = YES;
     
-//    [self startAddDevice];
+    [self startAddDevice];
 }
 
 -(void)dealloc{

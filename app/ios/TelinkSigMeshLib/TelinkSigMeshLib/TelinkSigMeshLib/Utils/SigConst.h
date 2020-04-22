@@ -7,10 +7,16 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Const string
+
+UIKIT_EXTERN NSString * const kTelinkSigMeshLibVersion;
+
+UIKIT_EXTERN NSString * const kNotifyCommandIsBusyOrNot;
+UIKIT_EXTERN NSString * const kCommandIsBusyKey;
 
 /// Error thrown when the local Provisioner does not have
 /// a Unicast Address specified and is not able to send
@@ -64,17 +70,8 @@ UIKIT_EXTERN NSString * const kCurrentMeshProvisionAddress_key;
 UIKIT_EXTERN NSString * const kSigScanRspModel_uuid_key;
 UIKIT_EXTERN NSString * const kSigScanRspModel_address_key;
 UIKIT_EXTERN NSString * const kSigScanRspModel_mac_key;
-UIKIT_EXTERN NSString * const kSigScanRspModel_CID_key;
-UIKIT_EXTERN NSString * const kSigScanRspModel_PID_key;
 UIKIT_EXTERN NSString * const kSigScanRspModel_nodeIdentityData_key;
 UIKIT_EXTERN NSString * const kSigScanRspModel_networkIDData_key;
-//SigEncryptedModel
-UIKIT_EXTERN NSString * const kSigEncryptedModel_identityData_key;
-UIKIT_EXTERN NSString * const kSigEncryptedModel_hashData_key;
-UIKIT_EXTERN NSString * const kSigEncryptedModel_randomData_key;
-UIKIT_EXTERN NSString * const kSigEncryptedModel_peripheralUUID_key;
-UIKIT_EXTERN NSString * const kSigEncryptedModel_encryptedData_key;
-UIKIT_EXTERN NSString * const kSigEncryptedModel_address_key;
 //meshOTA
 UIKIT_EXTERN NSString * const kSaveMeshOTADictKey;
 /*存储在本地的数据的key，不再存储在cache中，以为苹果设备的存储快满的时候，系统会删除cache文件夹的数据*/
@@ -164,8 +161,8 @@ UIKIT_EXTERN UInt16 const SIG_MD_FW_UPDATE_S;// 0xFE00
 UIKIT_EXTERN UInt16 const SIG_MD_FW_UPDATE_C;// 0xFE01
 UIKIT_EXTERN UInt16 const SIG_MD_FW_DISTRIBUT_S;// 0xFE02
 UIKIT_EXTERN UInt16 const SIG_MD_FW_DISTRIBUT_C;// 0xFE03
-UIKIT_EXTERN UInt16 const SIG_MD_OBJ_TRANSFER_S;// 0xFF00
-UIKIT_EXTERN UInt16 const SIG_MD_OBJ_TRANSFER_C;// 0xFF01
+UIKIT_EXTERN UInt16 const SIG_MD_BLOB_TRANSFER_S;// 0xFF00
+UIKIT_EXTERN UInt16 const SIG_MD_BLOB_TRANSFER_C;// 0xFF01
 
 
 UIKIT_EXTERN UInt16 const kConfigurationServerModelId;// 0x0000

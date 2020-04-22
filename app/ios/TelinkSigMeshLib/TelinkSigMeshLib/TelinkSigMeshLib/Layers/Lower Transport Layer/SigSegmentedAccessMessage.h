@@ -32,6 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 ///                         Upper Transport message.
 - (instancetype)initFromSegmentedPdu:(SigNetworkPdu *)networkPdu;
 
+- (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex offset:(UInt8)offset;
+
 /// Creates a Segment of an Access Message object from the Upper Transport PDU
 /// with given segment offset.
 ///

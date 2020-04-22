@@ -72,7 +72,7 @@
             weakSelf.hasClickKeyBind = NO;
         }];
     } else {
-        [SigBearer.share startMeshConnectWithTimeOut:kStartMeshConnectTimeout complete:^(BOOL successful) {
+        [SigBearer.share startMeshConnectWithComplete:^(BOOL successful) {
             if (successful) {
                 [weakSelf performSelectorOnMainThread:@selector(keyBind:) withObject:nil waitUntilDone:YES];
             } else {
@@ -105,13 +105,13 @@
 }
 
 - (void)showKeyBindFail{
-    saveLogData(@"reKeyBind fail");
+    TeLog(@"reKeyBind fail");
     [ShowTipsHandle.share hidden];
-    [SigBearer.share closeWithResult:^(BOOL successful) {
+    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
-            TeLogDebug(@"close success");
+            TeLogDebug(@"stopMeshConnect success");
         } else {
-            TeLogDebug(@"close fail");
+            TeLogDebug(@"stopMeshConnect fail");
         }
     }];
     
@@ -201,8 +201,7 @@
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
     self.title = @"Key Bind";
-    SigScanRspModel *scanModel = [SigDataSource.share getScanRspModelWithUUID:self.model.peripheralUUID];
-    self.detailLabel.text = [NSString stringWithFormat:@"meshAddress:0x%02X\nmac:%@",self.model.address,[LibTools getMacStringWithMac:scanModel.macAddress]];
+    self.detailLabel.text = [NSString stringWithFormat:@"meshAddress:0x%02X\nmac:%@",self.model.address,[LibTools getMacStringWithMac:self.model.macAddress]];
 }
 
 - (void)viewWillDisappear:(BOOL)animated{

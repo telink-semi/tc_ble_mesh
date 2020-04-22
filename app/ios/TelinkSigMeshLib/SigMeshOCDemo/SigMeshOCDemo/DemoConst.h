@@ -73,7 +73,6 @@
 #define ViewControllerIdentifiers_FileChooseViewControllerID  @"FileChooseVC"
 #define ViewControllerIdentifiers_MeshInfoViewControllerID  @"MeshInfoVC"
 #define ViewControllerIdentifiers_ChooseAndAddDeviceViewControllerID  @"ChooseAndAddDeviceVC"
-#define ViewControllerIdentifiers_HomeListViewControllerID  @"HomeListViewController"
 #define ViewControllerIdentifiers_DebugViewControllerID  @"DebugViewController"
 #define ViewControllerIdentifiers_ShowQRCodeViewControllerID  @"ShowQRCodeViewController"
 
@@ -118,8 +117,7 @@
 #define kShareWithBluetoothPointToPoint (YES)
 //setting界面显示
 #define kShowScenes (YES)
-#define kShowHomes  (NO)
-#define kShowDebug  (YES)
+#define kShowDebug  (NO)
 #define kshowLog        (YES)
 #define kshowShare    (YES)
 #define kshowMeshInfo    (YES)

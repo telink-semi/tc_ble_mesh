@@ -103,11 +103,6 @@
         [self.iconSource addObject:@"ic_mesh_ota"];
         [self.vcIdentifiers addObject:@"no found"];
     }
-    if (kShowHomes) {
-        [self.source addObject:@"Homes"];
-        [self.iconSource addObject:@"ic_model"];
-        [self.vcIdentifiers addObject:ViewControllerIdentifiers_HomeListViewControllerID];
-    }
     if (kShowDebug) {
         [self.source addObject:@"Debug"];
         [self.iconSource addObject:@"ic_model"];

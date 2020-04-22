@@ -54,7 +54,7 @@
         shareManager = [[SigKeyBindManager alloc] init];
         shareManager.getCompositionTimeOut = 10;
         shareManager.appkeyAddTimeOut = 10;
-        shareManager.bindModelTimeOut = 10;
+        shareManager.bindModelTimeOut = 60;
     });
     return shareManager;
 }
@@ -111,11 +111,15 @@
     TeLogDebug(@"getCompositionData 0x%02x",self.address);
     __weak typeof(self) weakSelf = self;
     self.messageHandle = [SDKLibCommand configCompositionDataGetWithAddress:self.address successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"responseMessage=%@",responseMessage);
+        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         weakSelf.page = ((SigConfigCompositionDataStatus *)responseMessage).page;
         [weakSelf appkeyAdd];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCompositionDataTimeOut) object:nil];
+        });
         if (!isResponseAll || error) {
+            [weakSelf showKeyBindEnd];
             weakSelf.isKeybinding = NO;
             if (weakSelf.failBlock) {
                 weakSelf.failBlock(error);
@@ -125,6 +129,7 @@
 }
 
 - (void)getCompositionDataTimeOut {
+    [self showKeyBindEnd];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCompositionDataTimeOut) object:nil];
     });
@@ -143,7 +148,7 @@
     });
     __weak typeof(self) weakSelf = self;
     self.messageHandle = [SDKLibCommand configAppKeyAddWithSigAppkeyModel:self.appkeyModel toAddress:self.address successCallback:^(UInt16 source, UInt16 destination, SigConfigAppKeyStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"responseMessage=%@",responseMessage);
+        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (((SigConfigAppKeyStatus *)responseMessage).status == SigConfigMessageStatus_success) {
             if (self.type == KeyBindTpye_Normal) {
                 [weakSelf bindModel];
@@ -161,6 +166,7 @@
                 TeLogError(@"KeyBindTpye is error");
             }
         } else {
+            [weakSelf showKeyBindEnd];
             weakSelf.isKeybinding = NO;
             if (weakSelf.failBlock) {
                 NSError *error = [NSError errorWithDomain:@"KeyBind Fail:add appKey status is not success." code:-1 userInfo:nil];
@@ -169,6 +175,7 @@
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
         if (!isResponseAll || error) {
+            [weakSelf showKeyBindEnd];
             weakSelf.isKeybinding = NO;
             if (weakSelf.failBlock) {
                 weakSelf.failBlock(error);
@@ -178,6 +185,7 @@
 }
 
 - (void)addAppkeyTimeOut {
+    [self showKeyBindEnd];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(addAppkeyTimeOut) object:nil];
     });
@@ -191,6 +199,7 @@
 
 - (void)bindModel {
     dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(addAppkeyTimeOut) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(bindModelToAppkeyTimeOut) object:nil];
         [self performSelector:@selector(bindModelToAppkeyTimeOut) withObject:nil afterDelay:self.bindModelTimeOut];
     });
@@ -209,15 +218,34 @@
                 }
                 TeLogVerbose(@"appBind modelID=%@",modelID.modelId);
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-                self.messageHandle = [SDKLibCommand configModelAppBindWithSigAppkeyModel:weakSelf.appkeyModel toModelIDModel:modelID toNode:weakSelf.node successCallback:^(UInt16 source, UInt16 destination, SigConfigModelAppStatus * _Nonnull responseMessage) {
+                
+                // 写法1：不判断modelID
+//                self.messageHandle = [SDKLibCommand configModelAppBindWithSigAppkeyModel:weakSelf.appkeyModel toModelIDModel:modelID toNode:weakSelf.node successCallback:^(UInt16 source, UInt16 destination, SigConfigModelAppStatus * _Nonnull responseMessage) {
+//                    TeLogVerbose(@"SigConfigModelAppStatus.parameters=%@",responseMessage.parameters);
+//                    dispatch_semaphore_signal(semaphore);
+//                } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+//                    if (!isResponseAll || error) {
+//                        isFail = YES;
+//                    }
+//                    dispatch_semaphore_signal(semaphore);
+//                }];
+                
+                // 写法2：判断modelID
+                self.messageHandle = [SDKLibCommand configModelAppBindWithApplicationKeyIndex:weakSelf.appkeyModel.index elementAddress:modelID.parentElement.unicastAddress modelIdentifier:modelID.modelIdentifier companyIdentifier:modelID.companyIdentifier toDestination:weakSelf.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelAppStatus * _Nonnull responseMessage) {
                     TeLogVerbose(@"SigConfigModelAppStatus.parameters=%@",responseMessage.parameters);
-                    dispatch_semaphore_signal(semaphore);
-                } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                    if (!isResponseAll || error) {
-                        isFail = YES;
+                    if (responseMessage.status == SigConfigMessageStatus_success && responseMessage.modelIdentifier == modelID.modelIdentifier && responseMessage.companyIdentifier == modelID.companyIdentifier && responseMessage.elementAddress == modelID.parentElement.unicastAddress) {
+                        isFail = NO;
+                        dispatch_semaphore_signal(semaphore);
                     }
-                    dispatch_semaphore_signal(semaphore);
+                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                    if (!isFail) {
+                        if (!isResponseAll || error) {
+                            isFail = YES;
+                        }
+                        dispatch_semaphore_signal(semaphore);
+                    }
                 }];
+                
                 dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
                 if (isFail) {
                     break;
@@ -230,6 +258,7 @@
         if (!isFail) {
             [weakSelf keyBindSuccessAction];
         } else {
+            [weakSelf showKeyBindEnd];
             TeLogInfo(@"keyBind fail.");
             [weakSelf.messageHandle cancel];
             weakSelf.isKeybinding = NO;
@@ -242,6 +271,7 @@
 }
 
 - (void)bindModelToAppkeyTimeOut {
+    [self showKeyBindEnd];
     TeLogInfo(@"keyBind timeout.");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(bindModelToAppkeyTimeOut) object:nil];
@@ -255,6 +285,7 @@
 }
 
 - (void)keyBindSuccessAction {
+    [self showKeyBindEnd];
     TeLogInfo(@"keyBind successful.");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
@@ -303,6 +334,10 @@
             self.keyBindSuccessBlock(self.node.peripheralUUID, self.address);
         }
     }
+}
+
+- (void)showKeyBindEnd {
+    TeLogInfo(@"\n\n==========keyBind end.\n\n");
 }
 
 @end

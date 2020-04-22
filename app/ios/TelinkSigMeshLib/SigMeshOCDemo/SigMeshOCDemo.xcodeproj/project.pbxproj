@@ -66,7 +66,6 @@
 		A2944127216E057B0046F65A /* SettingItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = A2944126216E057B0046F65A /* SettingItemCell.m */; };
 		A2961CE8223A32E6008B2ABE /* SensorVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A2961CE7223A32E6008B2ABE /* SensorVC.m */; };
 		A2981276224224B40065C7C4 /* NSString+calculate.m in Sources */ = {isa = PBXBuildFile; fileRef = A2981275224224B40065C7C4 /* NSString+calculate.m */; };
-		A29AABCE21A24BAA0023F06C /* HomeListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A29AABCD21A24BAA0023F06C /* HomeListViewController.m */; };
 		A29AABD421A256300023F06C /* ScanView.m in Sources */ = {isa = PBXBuildFile; fileRef = A29AABD321A256300023F06C /* ScanView.m */; };
 		A29AABD721A2564C0023F06C /* ScanCodeVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A29AABD621A2564C0023F06C /* ScanCodeVC.m */; };
 		A29AABE121A2629D0023F06C /* ShowQRCodeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A29AABE021A2629D0023F06C /* ShowQRCodeViewController.m */; };
@@ -252,8 +251,6 @@
 		A2961CE7223A32E6008B2ABE /* SensorVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SensorVC.m; sourceTree = "<group>"; };
 		A2981274224224B40065C7C4 /* NSString+calculate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+calculate.h"; sourceTree = "<group>"; };
 		A2981275224224B40065C7C4 /* NSString+calculate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+calculate.m"; sourceTree = "<group>"; };
-		A29AABCC21A24BAA0023F06C /* HomeListViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HomeListViewController.h; sourceTree = "<group>"; };
-		A29AABCD21A24BAA0023F06C /* HomeListViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HomeListViewController.m; sourceTree = "<group>"; };
 		A29AABD221A256300023F06C /* ScanView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ScanView.h; sourceTree = "<group>"; };
 		A29AABD321A256300023F06C /* ScanView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ScanView.m; sourceTree = "<group>"; };
 		A29AABD521A2564C0023F06C /* ScanCodeVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ScanCodeVC.h; sourceTree = "<group>"; };
@@ -264,7 +261,7 @@
 		A29AABE321A2653F0023F06C /* UIImage+Extension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIImage+Extension.m"; sourceTree = "<group>"; };
 		A2A99D6721AFF30100194237 /* DebugViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugViewController.h; sourceTree = "<group>"; };
 		A2A99D6821AFF30200194237 /* DebugViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DebugViewController.m; sourceTree = "<group>"; };
-		A2AB8E992110046A00D73EB4 /* SigMeshOCDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SigMeshOCDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A2AB8E992110046A00D73EB4 /* TelinkSigMesh.l.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TelinkSigMesh.l.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2AB8E9C2110046A00D73EB4 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		A2AB8E9D2110046A00D73EB4 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		A2AB8EA32110046A00D73EB4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -391,9 +388,25 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		25E29A7E2429EEE50057D419 /* Share */ = {
+			isa = PBXGroup;
+			children = (
+				A27C99EA21F99E1E006D5A09 /* ShareVC.h */,
+				A27C99EB21F99E1E006D5A09 /* ShareVC.m */,
+				A27C99EF21F99E51006D5A09 /* ShareOutVC.h */,
+				A27C99F021F99E51006D5A09 /* ShareOutVC.m */,
+				A27C99F221F99E78006D5A09 /* ShareInVC.h */,
+				A27C99F321F99E78006D5A09 /* ShareInVC.m */,
+				A29AABDF21A2629D0023F06C /* ShowQRCodeViewController.h */,
+				A29AABE021A2629D0023F06C /* ShowQRCodeViewController.m */,
+			);
+			path = Share;
+			sourceTree = "<group>";
+		};
 		A277EAFC215A31E10001116F /* Setting */ = {
 			isa = PBXGroup;
 			children = (
+				25E29A7E2429EEE50057D419 /* Share */,
 				A277EAF4215A28BC0001116F /* ModelIDListViewController.h */,
 				A277EAF5215A28BC0001116F /* ModelIDListViewController.m */,
 				A2AB8F1221100FDC00D73EB4 /* EditModelIDsViewController.h */,
@@ -408,18 +421,8 @@
 				A277EB01215A324F0001116F /* SchedulerListViewController.m */,
 				A2B27FCD215B1E4700983428 /* SchedulerDetailViewController.h */,
 				A2B27FCE215B1E4700983428 /* SchedulerDetailViewController.m */,
-				A29AABCC21A24BAA0023F06C /* HomeListViewController.h */,
-				A29AABCD21A24BAA0023F06C /* HomeListViewController.m */,
-				A29AABDF21A2629D0023F06C /* ShowQRCodeViewController.h */,
-				A29AABE021A2629D0023F06C /* ShowQRCodeViewController.m */,
 				A2A99D6721AFF30100194237 /* DebugViewController.h */,
 				A2A99D6821AFF30200194237 /* DebugViewController.m */,
-				A27C99EA21F99E1E006D5A09 /* ShareVC.h */,
-				A27C99EB21F99E1E006D5A09 /* ShareVC.m */,
-				A27C99EF21F99E51006D5A09 /* ShareOutVC.h */,
-				A27C99F021F99E51006D5A09 /* ShareOutVC.m */,
-				A27C99F221F99E78006D5A09 /* ShareInVC.h */,
-				A27C99F321F99E78006D5A09 /* ShareInVC.m */,
 				A23FE43622CD96760018F090 /* FileChooseVC.h */,
 				A23FE43722CD96760018F090 /* FileChooseVC.m */,
 				A27C99F521F9A9FE006D5A09 /* MeshInfoVC.h */,
@@ -600,7 +603,7 @@
 		A2AB8E9A2110046A00D73EB4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A2AB8E992110046A00D73EB4 /* SigMeshOCDemo.app */,
+				A2AB8E992110046A00D73EB4 /* TelinkSigMesh.l.app */,
 				A2AB8EB12110046C00D73EB4 /* SigMeshOCDemoTests.xctest */,
 				A2AB8EBC2110046D00D73EB4 /* SigMeshOCDemoUITests.xctest */,
 			);
@@ -828,7 +831,7 @@
 			);
 			name = SigMeshOCDemo;
 			productName = SigMeshOCDemo;
-			productReference = A2AB8E992110046A00D73EB4 /* SigMeshOCDemo.app */;
+			productReference = A2AB8E992110046A00D73EB4 /* TelinkSigMesh.l.app */;
 			productType = "com.apple.product-type.application";
 		};
 		A2AB8EB02110046C00D73EB4 /* SigMeshOCDemoTests */ = {
@@ -1058,7 +1061,6 @@
 				A2864223226FFCAA0053B5E4 /* UIButton+extension.m in Sources */,
 				A2944119216DDDBD0046F65A /* DeviceSettingViewController.m in Sources */,
 				A277EAF6215A28BC0001116F /* ModelIDListViewController.m in Sources */,
-				A29AABCE21A24BAA0023F06C /* HomeListViewController.m in Sources */,
 				A27C99F121F99E51006D5A09 /* ShareOutVC.m in Sources */,
 				A28CA3B02181E4AD005B1DB6 /* IQToolbar.m in Sources */,
 				A28CA3AF2181E4AD005B1DB6 /* IQTitleBarButtonItem.m in Sources */,
@@ -1310,12 +1312,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 3.2.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = otw0909.SigMeshOCDemo;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = otw0909.SigMeshOCDemo.l;
+				PRODUCT_NAME = TelinkSigMesh.l;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -1343,12 +1346,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 3.2.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = otw0909.SigMeshOCDemo;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = otw0909.SigMeshOCDemo.l;
+				PRODUCT_NAME = TelinkSigMesh.l;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

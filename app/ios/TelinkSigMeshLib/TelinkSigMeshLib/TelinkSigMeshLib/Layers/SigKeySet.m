@@ -68,6 +68,10 @@
     return _applicationKey.aid;
 }
 
+- (NSString *)description {
+    return[NSString stringWithFormat:@"<%p> - applicationKey:0x%@", self, [LibTools convertDataToHexStr:[self accessKey]]];
+}
+
 @end
 
 
@@ -91,6 +95,10 @@
         _isInitAid = NO;
     }
     return self;
+}
+
+- (NSString *)description {
+    return[NSString stringWithFormat:@"<%p> - deviceKey:0x%@", self, [LibTools convertDataToHexStr:[self accessKey]]];
 }
 
 @end

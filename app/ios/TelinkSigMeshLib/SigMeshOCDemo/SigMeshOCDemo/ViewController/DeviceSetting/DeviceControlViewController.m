@@ -252,7 +252,8 @@
     
     [item setClickSwiftBlock:^(UISwitch * _Nonnull swift) {
         //attention: resMax change to 0, because node detail vc needn't response.
-        [DemoCommand switchOnOffWithIsOn:swift.isOn address:ele_adr.intValue responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
+//        [DemoCommand switchOnOffWithIsOn:swift.isOn address:ele_adr.intValue responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
+        [DemoCommand switchOnOffWithIsOn:swift.isOn address:ele_adr.intValue responseMaxCount:1 ack:YES successCallback:nil resultCallback:nil];
     }];
     //Attention: panel has 8 onoff button, but node just has one onoff data, developer should fix that when your app has panel.
     if (indexPath.item == 0) {

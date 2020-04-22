@@ -521,4 +521,12 @@
     return crc;
 }
 
+#pragma mark - 正则表达式相关
+
++ (BOOL)validateUUID:(NSString *)uuidString {
+    NSString *regex = @"\\w{8}(-\\w{4}){3}-\\w{12}";
+    NSPredicate *pred = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", regex];
+    return [pred evaluateWithObject:uuidString];
+}
+
 @end

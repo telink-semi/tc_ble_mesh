@@ -123,21 +123,26 @@
     [self.allItemVIDDict removeAllObjects];
     __weak typeof(self) weakSelf = self;
     
-    //2.firmwareInformationGet
-//    [SDKLibCommand firmwareInformationGetWithDestination:kMeshAddress_allNodes resMax:SigMeshLib.share.dataSource.getOnlineDevicesNumber retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareInformationStatus * _Nonnull responseMessage) {
-//        /*
-//         responseMessage.parameters.length = 6: 2 bytes cid(vendor id) + 2 bytes pid(设备类型) + 2 bytes vid(版本id).
-//         */
-//        UInt16 cid = 0,pid = 0,vid = 0;
-//        Byte *pu = (Byte *)[responseMessage.parameters bytes];
-//        if (responseMessage.parameters.length >= 2) memcpy(&cid, pu, 2);
-//        if (responseMessage.parameters.length >= 4) memcpy(&pid, pu + 2, 2);
-//        if (responseMessage.parameters.length >= 6) memcpy(&vid, pu + 4, 2);
-//        TeLogDebug(@"firmwareInformationGet=%@,cid=%d,pid=%d,vid=%d",[LibTools convertDataToHexStr:responseMessage.parameters],cid,pid,vid);
-//        [weakSelf updateNodeModelVidWithAddress:source vid:vid];
-//    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-//        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-//    }];
+    //2.firmwareUpdateInformationGet
+    [SDKLibCommand firmwareUpdateInformationGetWithDestination:kMeshAddress_allNodes firstIndex:0 entriesLimit:1 resMax:SigMeshLib.share.dataSource.getOnlineDevicesNumber retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
+        if (responseMessage.firmwareInformationListCount > 0) {
+            /*
+             responseMessage.firmwareInformationList.firstObject.currentFirmwareID.length = 4: 2 bytes pid(设备类型) + 2 bytes vid(版本id).
+             */
+            if (responseMessage.firmwareInformationList.count > 0) {
+                NSData *currentFirmwareID = responseMessage.firmwareInformationList.firstObject.currentFirmwareID;
+                UInt16 pid = 0,vid = 0;
+                Byte *pu = (Byte *)[currentFirmwareID bytes];
+                if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
+                if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
+                TeLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
+                [weakSelf updateNodeModelVidWithAddress:source vid:vid];
+            }
+        }
+    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+    }];
+    
     //=================test==================//
     
     //1.configModelSubscriptionAdd
@@ -171,18 +176,18 @@
 //        }
 //    }
     
-    //3.objectInformationGet
+    //3.BLOBInformationGet
 //    for (SigNodeModel *node in self.selectItemArray) {
 //        if (node.state != DeviceStateOutOfLine) {
-//            [SDKLibCommand objectInformationGetWithDestination:node.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigObjectInformationStatus * _Nonnull responseMessage) {
-//                TeLogDebug(@"objectInformationGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//            [SDKLibCommand BLOBInformationGetWithDestination:node.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigBLOBInformationStatus * _Nonnull responseMessage) {
+//                TeLogDebug(@"BLOBInformationGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
 //            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 //            }];
 //        }
 //    }
 
-    //4.firmwareUpdatePrepare
+    //4.firmwareUpdateFirmwareMetadataCheck
 //    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
 //    [oprationQueue addOperationWithBlock:^{
 //        //这个block语句块在子线程中执行
@@ -194,14 +199,14 @@
 //                UInt64 objID = 0x8877665544332211;
 //                dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 //                dispatch_async(dispatch_get_main_queue(), ^{
-//                    [SDKLibCommand firmwareUpdatePrepareWithDestination:node.address companyID:0x0211 firmwareID:firmwareIDData objectID:objID vendorValidationData:nil resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
-//                        TeLogDebug(@"firmwareUpdatePrepare=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//                    [SDKLibCommand firmwareUpdateFirmwareMetadataCheckWithDestination:node.address companyID:0x0211 firmwareID:firmwareIDData objectID:objID vendorValidationData:nil resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
+//                        TeLogDebug(@"firmwareUpdateFirmwareMetadataCheck=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
 //                    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //                        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 //                        dispatch_semaphore_signal(semaphore);
 //                    }];
 //                });
-//                //Most provide 3 seconds to firmwareUpdatePrepare every node.
+//                //Most provide 3 seconds to firmwareUpdateFirmwareMetadataCheck every node.
 //                dispatch_semaphore_wait(semaphore, (dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 3.0))));
 //            }
 //        }
@@ -211,9 +216,11 @@
 //    for (SigNodeModel *node in self.selectItemArray) {
 //        if (node.state != DeviceStateOutOfLine) {
 //            UInt16 cid = 0x0211;
-//            UInt32 firmwareID = 0xff000021;
+//            UInt32 firmwareID = 0;
 //            NSData *firmwareIDData = [NSData dataWithBytes:&firmwareID length:4];
-//            [SDKLibCommand firmwareUpdateStartWithDestination:node.address updatePolicy:SigUpdatePolicyType_none companyID:cid firmwareID:firmwareIDData resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
+////            [SDKLibCommand firmwareUpdateStartWithDestination:node.address updatePolicy:SigUpdatePolicyType_none companyID:cid firmwareID:firmwareIDData resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage)
+//             
+//            [SDKLibCommand firmwareUpdateStartWithDestination:node.address updateTTL:0xFF updateTimeoutBase:0 updateBLOBID:0x8877665544332211 updateFirmwareImageIndex:0 incomingFirmwareMetadata:firmwareIDData resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
 //                TeLogDebug(@"firmwareUpdateStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
 //            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -221,11 +228,11 @@
 //        }
 //    }
 
-    //6.objectTransferStart
-//    [self performSelector:@selector(testobjectTransferStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
+    //6.BLOBTransferStart
+//    [self performSelector:@selector(testBLOBTransferStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
     
 
-    //7.objectBlockTransferStart
+    //7.BLOBBlockStart
 //    for (SigNodeModel *node in self.selectItemArray) {
 //        if (node.state != DeviceStateOutOfLine) {
 //            UInt64 objID = 0x1122334455667788;
@@ -240,15 +247,15 @@
 //            //chunkSize为当前block的bin文件最大字节数
 //            //blockChecksumValue为CRC32校验
 //            //currentBlockSize为当前block的bin文件字节数
-//            [SDKLibCommand objectBlockTransferStartWithDestination:node.address objectID:objID blockNumber:0x00 chunkSize:0x1000 blockChecksumAlgorithm:SigBlockChecksumAlgorithmType_CRC32 blockChecksumValue:blockChecksumValue currentBlockSize:0x1000 resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigObjectBlockTransferStatus * _Nonnull responseMessage) {
-//                TeLogDebug(@"objectBlockTransferStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//            [SDKLibCommand BLOBBlockStartWithDestination:node.address objectID:objID blockNumber:0x00 chunkSize:0x1000 blockChecksumAlgorithm:SigBlockChecksumAlgorithmType_CRC32 blockChecksumValue:blockChecksumValue currentBlockSize:0x1000 resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigObjectBlockTransferStatus * _Nonnull responseMessage) {
+//                TeLogDebug(@"BLOBBlockStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
 //            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 //            }];
 //        }
 //    }
 
-        //8.objectChunkTransfer
+        //8.BLOBChunkTransfer
 //    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
 //    [oprationQueue addOperationWithBlock:^{
 //        //这个block语句块在子线程中执行
@@ -258,7 +265,7 @@
 //                NSData *otaData = [OTAFileSource.share getDataWithBinName:@"8258_mesh"];
 //                NSData *blockData = [otaData subdataWithRange:NSMakeRange(0, 0x1000)];
 //                NSData *firstChunkData = [blockData subdataWithRange:NSMakeRange(0, 0x0100)];
-//                [SDKLibCommand objectChunkTransferWithDestination:SigDataSource.share.getCurrentConnectedNode.address chunkNumber:0 firmwareImageData:firstChunkData resMax:0 retryCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                [SDKLibCommand BLOBChunkTransferWithDestination:SigDataSource.share.getCurrentConnectedNode.address chunkNumber:0 firmwareImageData:firstChunkData resMax:0 retryCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 //                }];
 //            }
@@ -266,17 +273,17 @@
 //    }];
 
     
-    //9.objectBlockGet
-    for (SigNodeModel *node in self.selectItemArray) {
-        if (node.state != DeviceStateOutOfLine) {
-            UInt64 objID = 0x1122334455667788;
-            [SDKLibCommand objectBlockGetWithDestination:node.address objectID:objID blockNumber:0x00 resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigObjectBlockStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"objectBlockGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-            }];
-        }
-    }
+    //9.BLOBBlockGet
+//    for (SigNodeModel *node in self.selectItemArray) {
+//        if (node.state != DeviceStateOutOfLine) {
+//            UInt64 objID = 0x1122334455667788;
+//            [SDKLibCommand BLOBBlockGetWithDestination:node.address objectID:objID blockNumber:0x00 resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigBLOBBlockStatus * _Nonnull responseMessage) {
+//                TeLogDebug(@"BLOBBlockGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//            }];
+//        }
+//    }
 
     //10.firmwareUpdateGet
 //    for (SigNodeModel *node in self.selectItemArray) {
@@ -306,14 +313,14 @@
 //        }
 //    }
 
-    //12.firmwareDistributionStop
+    //12.firmwareDistributionCancel
 //    for (SigNodeModel *node in self.selectItemArray) {
 //        if (node.state != DeviceStateOutOfLine) {
 //            UInt16 cid = 0x0211;
 //            UInt32 firmwareID = 0xff000021;
 //            NSData *firmwareIDData = [NSData dataWithBytes:&firmwareID length:4];
-//            [SDKLibCommand firmwareDistributionStopWithDestination:node.address companyID:cid firmwareID:firmwareIDData resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
-//                TeLogDebug(@"firmwareDistributionStop=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//            [SDKLibCommand firmwareDistributionCancelWithDestination:node.address companyID:cid firmwareID:firmwareIDData resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+//                TeLogDebug(@"firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
 //            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 //            }];
@@ -323,15 +330,15 @@
     //=================test==================//
 }
 
-- (void)testobjectTransferStart {
+- (void)testBLOBTransferStart {
     for (SigNodeModel *node in self.selectItemArray) {
         if (node.state != DeviceStateOutOfLine) {
             UInt64 objID = 0x1122334455667788;
             NSData *otaData = [OTAFileSource.share getDataWithBinName:@"8258_mesh"];
             UInt32 objectSize = (UInt32)otaData.length;//bin文件的总字节数
             UInt8 blockSizeLog = 0x0C;//10^12=4096，表示meshOTA的一个block应该传递的最大bin文件字节数。
-            [SDKLibCommand objectTransferStartWithDestination:node.address objectID:objID objectSize:objectSize blockSizeLog:blockSizeLog resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigObjectTransferStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"objectTransferStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            [SDKLibCommand BLOBTransferStartWithDestination:node.address transferMode:SigTransferModeState_pushBLOBTransferMode BLOBID:objID BLOBSize:objectSize BLOBBlockSizeLog:blockSizeLog MTUSize:380 resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigBLOBTransferStatus * _Nonnull responseMessage) {
+                TeLogDebug(@"BLOBTransferStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
             }];

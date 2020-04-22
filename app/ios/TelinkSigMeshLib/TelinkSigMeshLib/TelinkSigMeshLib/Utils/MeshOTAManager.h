@@ -33,22 +33,29 @@ typedef void(^ProgressBlock)(NSInteger progress);
 typedef void(^FinishBlock)(NSArray <NSNumber *>*successAddresses,NSArray <NSNumber *>*failAddresses);
 
 typedef enum : NSUInteger {
-    SigMeshOTAProgressFree                     = 0,
-    SigMeshOTAProgressSubscriptionAdd          = 1,
-    SigMeshOTAProgressFirmwareInformationGet   = 2,
-    SigMeshOTAProgressObjectInformationGet     = 3,
-    SigMeshOTAProgressFirmwareUpdatePrepare    = 4,
-    SigMeshOTAProgressFirmwareUpdateStart      = 5,
-    SigMeshOTAProgressObjectTransferStart      = 6,
-    SigMeshOTAProgressObjectBlockTransferStart = 7,
-    SigMeshOTAProgressObjectChunkTransfer      = 8,
-    SigMeshOTAProgressObjectBlockGet           = 9,
-    SigMeshOTAProgressFirmwareUpdateGet        = 10,
-    SigMeshOTAProgressFirmwareUpdateApply      = 11,
-    SigMeshOTAProgressFirmwareDistributionStop = 12,
+    SigMeshOTAProgressIdle                                = 0,
+    SigMeshOTAProgressFirmwareDistributionStart           = 1,
+    SigMeshOTAProgressSubscriptionAdd                     = 2,
+    SigMeshOTAProgressFirmwareUpdateInformationGet        = 3,
+    SigMeshOTAProgressFirmwareUpdateFirmwareMetadataCheck = 4,
+    SigMeshOTAProgressFirmwareUpdateStart                 = 5,
+    SigMeshOTAProgressBLOBTransferGet                     = 6,
+    SigMeshOTAProgressBLOBInformationGet                  = 7,
+    SigMeshOTAProgressBLOBTransferStart                   = 8,
+    SigMeshOTAProgressBLOBBlockStart                      = 9,
+    SigMeshOTAProgressBLOBChunkTransfer                   = 10,
+    SigMeshOTAProgressBLOBBlockGet                        = 11,
+    SigMeshOTAProgressFirmwareUpdateGet                   = 12,
+    SigMeshOTAProgressFirmwareUpdateApply                 = 13,
+    SigMeshOTAProgressFirmwareDistributionCancel          = 14,
 } SigMeshOTAProgress;
 
 @interface MeshOTAManager : NSObject
+
+
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
 
 + (MeshOTAManager *)share;
 

@@ -83,8 +83,12 @@
     switch (type) {
         case SigPduType_networkPdu:
             {
-                TeLogDebug(@"receive networkPdu");
+                TeLogVerbose(@"receive networkPdu");
+#warning 待完善：两个不同netkey进行解包如何处理比较好。
                 SigNetworkPdu *networkPdu = [SigNetworkPdu decodePdu:pdu pduType:SigPduType_networkPdu forMeshNetwork:_meshNetwork];
+                if (!networkPdu && _networkKey && _ivIndex) {
+                    networkPdu = [SigNetworkPdu decodePdu:pdu pduType:SigPduType_networkPdu usingNetworkKey:_networkKey ivIndex:_ivIndex];
+                }
 //                TeLogDebug(@"================2.networkPdu=%@,type=0x%lx,networkPdu.pduData=%@",networkPdu,SigPduType_networkPdu,networkPdu.pduData);
                 if (networkPdu == nil) {
                     TeLogDebug(@"decodePdu fail.");
@@ -95,7 +99,7 @@
             break;
         case SigPduType_meshBeacon:
             {
-                TeLogDebug(@"receive meshBeacon");
+                TeLogVerbose(@"receive meshBeacon");
                 SigSecureNetworkBeacon *beaconPdu = [SigSecureNetworkBeacon decodePdu:pdu forMeshNetwork:_meshNetwork];
                 if (beaconPdu != nil) {
                     [self handleSecureNetworkBeacon:beaconPdu];
@@ -111,7 +115,7 @@
             break;
         case SigPduType_proxyConfiguration:
             {
-//                TeLogDebug(@"receive proxyConfiguration");
+                TeLogVerbose(@"receive proxyConfiguration");
                 SigNetworkPdu *proxyPdu = [SigNetworkPdu decodePdu:pdu pduType:type forMeshNetwork:_meshNetwork];
                 if (proxyPdu == nil) {
                     TeLogInfo(@"Failed to decrypt proxy PDU");
@@ -127,20 +131,80 @@
     }
 }
 
-- (void)sendLowerTransportPdu:(SigLowerTransportPdu *)pdu ofType:(SigPduType)type withTtl:(UInt8)ttl {
-    if (_networkManager.transmitter == nil) {
+- (void)sendLowerTransportPdu:(SigLowerTransportPdu *)pdu ofType:(SigPduType)type withTtl:(UInt8)ttl ivIndex:(SigIvIndex *)ivIndex {
+    if (!SigBearer.share.isOpen) {
         TeLogError(@"bearer is closed.");
         return;
     }
+    
+    _ivIndex = ivIndex;
+    _networkKey = pdu.networkKey;
+    
     // Get the current sequence number for local Provisioner's source address.
     UInt32 sequence = (UInt32)[SigDataSource.share getCurrentProvisionerIntSequenceNumber];
     // As the sequnce number was just used, it has to be incremented.
     [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence+1];
 
-    SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl];
+    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
+    SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl ivIndex:ivIndex];
     // Loopback interface.
     if ([self shouldLoopback:networkPdu]) {
-        [self handleIncomingPdu:networkPdu.pduData ofType:type];
+        //==========telink not need this==========//
+//        [self handleIncomingPdu:networkPdu.pduData ofType:type];
+        //==========telink not need this==========//
+        if ([self isLocalUnicastAddress:networkPdu.destination]) {
+            // No need to send messages targetting local Unicast Addresses.
+            TeLogVerbose(@"No need to send messages targetting local Unicast Addresses.");
+            return;
+        }
+        [SigBearer.share sendBlePdu:networkPdu ofType:type];
+    }else{
+        [SigBearer.share sendBlePdu:networkPdu ofType:type];
+    }
+
+    // SDK need use networkTransmit in gatt provision.
+    SigNetworktransmitModel *networkTransmit = _meshNetwork.curLocationNodeModel.networkTransmit;
+    if (type == SigPduType_networkPdu && networkTransmit != nil && networkTransmit.count > 1 && !SigBearer.share.isProvisioned) {
+        self.networkTransmitCount = networkTransmit.count;
+        __block NSInteger count = networkTransmit.count;
+        __weak typeof(self) weakSelf = self;
+        BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:networkTransmit.interval repeats:YES block:^(BackgroundTimer * _Nonnull t) {
+            [SigBearer.share sendBlePdu:networkPdu ofType:type];
+            count -= 1;
+            if (count == 0) {
+                [weakSelf.networkTransmitTimers removeObject:t];
+                [t invalidate];
+            }
+        }];
+        [self.networkTransmitTimers addObject:timer];
+    }
+}
+
+- (void)sendLowerTransportPdu:(SigLowerTransportPdu *)pdu ofType:(SigPduType)type withTtl:(UInt8)ttl {
+    if (!SigBearer.share.isOpen) {
+        TeLogError(@"bearer is closed.");
+        return;
+    }
+    
+    _ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
+    _networkKey = pdu.networkKey;
+
+    // Get the current sequence number for local Provisioner's source address.
+    UInt32 sequence = (UInt32)[SigDataSource.share getCurrentProvisionerIntSequenceNumber];
+    // As the sequnce number was just used, it has to be incremented.
+    [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence+1];
+
+    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
+//    SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl];
+    if (pdu.networkKey == nil || pdu.ivIndex == nil) {
+        TeLogError(@"networkKey or ivIndex error!!!");
+    }
+    SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl ivIndex:pdu.ivIndex];
+    // Loopback interface.
+    if ([self shouldLoopback:networkPdu]) {
+        //==========telink not need this==========//
+//        [self handleIncomingPdu:networkPdu.pduData ofType:type];
+        //==========telink not need this==========//
         if ([self isLocalUnicastAddress:networkPdu.destination]) {
             // No need to send messages targetting local Unicast Addresses.
             TeLogError(@"No need to send messages targetting local Unicast Addresses.");
@@ -151,8 +215,7 @@
         [SigBearer.share sendBlePdu:networkPdu ofType:type];
     }
 
-    // Unless a GATT Bearer is used, network PDUs should be sent mutlitple times
-    // if Network Transmit has been set for the local Provisioner's Node.
+    // SDK need use networkTransmit in gatt provision.
     SigNetworktransmitModel *networkTransmit = _meshNetwork.curLocationNodeModel.networkTransmit;
     if (type == SigPduType_networkPdu && networkTransmit != nil && networkTransmit.count > 1 && !SigBearer.share.isProvisioned) {
         self.networkTransmitCount = networkTransmit.count;
@@ -185,6 +248,7 @@
     UInt16 source = _meshNetwork.curLocationNodeModel.address != 0 ? _meshNetwork.curLocationNodeModel.address : MeshAddress_maxUnicastAddress;
     TeLogInfo(@"Sending %@%@ from: 0x%x to: 0000",message,message.parameters,source);
     SigControlMessage *pdu = [[SigControlMessage alloc] initFromProxyConfigurationMessage:message sentFromSource:source usingNetworkKey:networkKey];
+    pdu.ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     TeLogInfo(@"Sending %@%@ from: 0x%x to: 0000",pdu,pdu.transportPdu,source);
     [self sendLowerTransportPdu:pdu ofType:SigPduType_proxyConfiguration withTtl:0];
 }
@@ -279,8 +343,11 @@
     if (controlMessage.opCode == filterStatus.opCode) {
         SigFilterStatus *message = [[SigFilterStatus alloc] initWithParameters:controlMessage.upperTransportPdu];
         TeLogVerbose(@"%@ received SigFilterStatus data:%@ from: 0x%x to: 0x%x",message,controlMessage.upperTransportPdu,proxyPdu.source,proxyPdu.destination);
-        if ([_networkManager.manager.delegate respondsToSelector:@selector(meshNetworkManager:didReceiveSigProxyConfigurationMessage:sentFromSource:toDestination:)]) {
-            [_networkManager.manager.delegate meshNetworkManager:_networkManager.manager didReceiveSigProxyConfigurationMessage:message sentFromSource:proxyPdu.source toDestination:proxyPdu.destination];
+        if ([_networkManager.manager.delegate respondsToSelector:@selector(didReceiveSigProxyConfigurationMessage:sentFromSource:toDestination:)]) {
+            [_networkManager.manager.delegate didReceiveSigProxyConfigurationMessage:message sentFromSource:proxyPdu.source toDestination:proxyPdu.destination];
+        }
+        if ([_networkManager.manager.delegateForDeveloper respondsToSelector:@selector(didReceiveSigProxyConfigurationMessage:sentFromSource:toDestination:)]) {
+            [_networkManager.manager.delegateForDeveloper didReceiveSigProxyConfigurationMessage:message sentFromSource:proxyPdu.source toDestination:proxyPdu.destination];
         }
     }else{
         TeLogInfo(@"Unsupported proxy configuration message (opcode: 0x%x)",controlMessage.opCode);

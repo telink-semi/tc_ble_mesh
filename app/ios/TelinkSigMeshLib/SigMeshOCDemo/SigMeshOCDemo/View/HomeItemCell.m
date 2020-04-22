@@ -86,20 +86,14 @@
         self.address.text = [NSString stringWithFormat:@"%@(unbound)",tempAddress];
     }
     self.address.textColor = [UIColor grayColor];
-    //直连设备显示蓝色
-    if ([model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString] && SigBearer.share.getCurrentPeripheral.state == CBPeripheralStateConnected) {
+    //原做法：直连设备显示蓝色
+//    if ([model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString] && SigBearer.share.getCurrentPeripheral.state == CBPeripheralStateConnected) {
+//        self.address.textColor = kDefultColor;
+//    }
+    //新做法：直连设备显示蓝色
+    if (model.address == SigDataSource.share.unicastAddressOfConnected && SigBearer.share.isOpen) {
         self.address.textColor = kDefultColor;
     }
-//    for (SigNodeModel *m in SigDataSource.share.curNodes) {
-//        UInt16 add = m.address;
-//        if (add == deviceAddress && [m.peripheralUUID isEqualToString:Bluetooth.share.store.peripheral.identifier.UUIDString]) {
-//            if (Bluetooth.share.store.peripheral.state == CBPeripheralStateConnected) {
-//                self.address.textColor = kDefultColor;
-//            }
-//            break;
-//        }
-//    }
-    
 }
 
 @end

@@ -15,54 +15,27 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLowerTransportLayer : NSObject
 
 @property (nonatomic,strong) SigNetworkManager *networkManager;
-@property (nonatomic,strong) SigDataSource *meshNetwork;
-/// The map of incomplete received segments. Every time a Segmented Message is received
-/// it is added to the map to an ordered array. When all segments are received
-/// they are sent for processing to higher layer.
-///
-/// The key consists of 16 bits of source address in 2 most significant bytes
-/// and `sequenceZero` field in 13 least significant bits.
-/// See `UInt32(keyFor:segment)` below.
-@property (nonatomic,strong) NSMutableDictionary <NSNumber *,NSMutableArray <SigSegmentedMessage *>*>*incompleteSegments;/*{NSNumber:NSMutableArray <SigSegmentedMessage *>*}*/
-/// This map contains Segment Acknowlegment Messages of completed messages.
-/// It is used when a complete Segmented Message has been received and the
-/// ACK has been sent but failed to reach the source Node.
-/// The Node would then resend all non-acknowledged segments and expect a new ACK.
-/// Without this map, this layer would have to complete again all segments in
-/// order to send the ACK. By checking if a segment comes from an already
-/// acknowledged message, it can immediatelly send the ACK again.
-///
+
+//#prage mark out going segments
+
+/// 缓存APP端发送到设备端的Segment数据包列表。The key is the `sequenceZero` of the message.
+@property (nonatomic,strong) NSMutableDictionary <NSNumber *,NSMutableArray <SigSegmentedMessage *>*>*outgoingSegments;
+/// 缓存APP端发送Segment数据包列表的定时器。The key is the `sequenceZero` of the message.（用于判断outgoingSegments的数据包是否有发送失败的，失败则再发送一次。）
+@property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*segmentTransmissionTimers;
+/// 缓存重发segment数据包的定时器。(设备端不返回这个Segment长包的接收情况，该定时器就会进行segment数据包outgoingSegments的重发。)
+@property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*incompleteTimers;
 /// An item is removed when a next message has been received from the same Node.
-@property (nonatomic,strong) NSMutableDictionary <NSNumber *,SigSegmentAcknowledgmentMessage *>*acknowledgments;/*{NSNumber:SigSegmentAcknowledgmentMessage}*/
-/// The map of active timers. Every message has `defaultIncompleteTimerInterval`
-/// seconds to be completed (timer resets when next segment was received).
-/// After that time the segments are discarded.
-///
-/// The key consists of 16 bits of source address in 2 most significant bytes
-/// and `sequenceZero` field in 13 least significant bits.
-/// See `UInt32(keyFor:sequenceZero)` below.
-@property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*incompleteTimers;/*{NSNumber:NSTimer}*/
-/// The map of acknowledgment timers. After receiving a segment targetting
-/// any of the Unicast Addresses of one of the Elements of the local Node, a
-/// timer is started that will send the Segment Acknowledgment Message for
-/// segments received until than. The timer is invalidated when the message
-/// has been completed.
-///
-/// The key consists of 16 bits of source address in 2 most significant bytes
-/// and `sequenceZero` field in 13 least significant bits.
-/// See `UInt32(keyFor:sequenceZero)` below.
-@property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*acknowledgmentTimers;/*{NSNumber:NSTimer}*/
-/// The map of outgoing segmented messages.
-///
-/// The key is the `sequenceZero` of the message.
-@property (nonatomic,strong) NSMutableDictionary <NSNumber *,NSMutableArray <SigSegmentedMessage *>*>*outgoingSegments;/*{NSNumber:SigSegmentedMessage}*/
-/// The map of segment transmission timers. A segment transmission timer
-/// for a Segmented Message with `sequenceZero` is started whenever such
-/// message is sent to a Unicast Address. After the timer expires, the
-/// layer will resend all non-confirmed segments and reset the timer.
-///
-/// The key is the `sequenceZero` of the message.
-@property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*segmentTransmissionTimers;/*{NSNumber:NSTimer}*/
+/// 缓存接收到的Segment Acknowlegment Messages。（设备端返回这个APP发送的Segment长包的接收情况，APP需要补充丢失的包或者停止重发segment数据包的定时器incompleteTimers）
+@property (nonatomic,strong) NSMutableDictionary <NSNumber *,SigSegmentAcknowledgmentMessage *>*acknowledgments;
+
+//#prage mark in going segments
+
+/// 缓存接收到的segment数据包。（用于返回app接收到segment的情况，定时器）
+@property (nonatomic,strong) NSMutableDictionary <NSNumber *,NSMutableArray <SigSegmentedMessage *>*>*incompleteSegments;
+/// 缓存APP端向设备端发送Segment Acknowlegment Messages的定时器。(告诉设备端一个Segment长包中哪个包丢失了或者所有包都接收了。)
+@property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*acknowledgmentTimers;
+
+
 
 /// The initial TTL values.
 ///
@@ -78,6 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter networkPdu: The Network PDU received.
 - (void)handleNetworkPdu:(SigNetworkPdu *)networkPdu;
 
+- (void)sendUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
+
 /// This method tries to send the Upper Transport Message.
 ///
 /// - parameters:
@@ -87,6 +62,8 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - networkKey: The Network Key to be used to encrypt the message on
 ///                 on Network Layer.
 - (void)sendUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey;
+
+- (void)sendSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
 
 /// This method tries to send the Upper Transport Message.
 ///

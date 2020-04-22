@@ -61,6 +61,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key;
 - (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key forVirtualGroup:(SigGroupModel *)virtualGroup;
+- (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key ivIndex:(SigIvIndex *)ivIndex forVirtualGroup:(SigGroupModel *)virtualGroup;
+- (instancetype)initFromAccessPdu:(SigAccessPdu *)pdu usingKeySet:(SigKeySet *)keySet ivIndex:(SigIvIndex *)ivIndex sequence:(UInt32)sequence;
 - (instancetype)initFromAccessPdu:(SigAccessPdu *)pdu usingKeySet:(SigKeySet *)keySet sequence:(UInt32)sequence;
 + (NSDictionary *)decodeAccessMessage:(SigAccessMessage *)accessMessage forMeshNetwork:(SigDataSource *)meshNetwork;//{@"SigUpperTransportPdu":SigUpperTransportPdu,@"SigKeySet":SigKeySet}
 

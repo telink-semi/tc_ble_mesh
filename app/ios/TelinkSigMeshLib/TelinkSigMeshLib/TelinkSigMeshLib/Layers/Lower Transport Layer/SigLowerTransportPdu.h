@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 destination;
 /// The Network Key used to decode/encode the PDU.
 @property (nonatomic,strong) SigNetkeyModel *networkKey;
+@property (nonatomic,strong) SigIvIndex *ivIndex;
 /// Message type.
 @property (nonatomic,assign) SigLowerTransportPduType type;
 /// The raw data of Lower Transport Layer PDU.

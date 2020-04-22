@@ -65,7 +65,7 @@
 - (IBAction)addNewDevice:(UIBarButtonItem *)sender {
     BOOL isRemoteAdd = [[[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType] boolValue];
     if (isRemoteAdd) {
-        saveLogData(@"click remote add device");
+        TeLog(@"click remote add device");
         
         RemoteAddVC *vc = (RemoteAddVC *)[UIStoryboard initVC:ViewControllerIdentifiers_RemoteAddVCID];
         [SigDataSource.share setAllDevicesOutline];
@@ -77,7 +77,7 @@
             [SigDataSource.share setAllDevicesOutline];
             [self.navigationController pushViewController:vc animated:YES];
         } else {
-            saveLogData(@"click normal add device");
+            TeLog(@"click normal add device");
             
             //自动添加多个设备
             AddDeviceViewController *vc = (AddDeviceViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_AddDeviceViewControllerID];
@@ -214,7 +214,7 @@
     if ([SDKLibCommand isBLEInitFinish]) {
         __weak typeof(self) weakSelf = self;
         if (self.source.count > 0) {
-            [SigBearer.share startMeshConnectWithTimeOut:kStartMeshConnectTimeout complete:^(BOOL successful) {
+            [SigBearer.share startMeshConnectWithComplete:^(BOOL successful) {
                 if (successful) {
                     //Demo can show Bluetooth.share.currentPeripheral in HomeViewController when CanControl callback.
                     [weakSelf.collectionView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
@@ -222,7 +222,9 @@
                     [weakSelf blockState];
                     [weakSelf freshOnline:nil];
                 } else {
-                    [weakSelf workNormal];
+                    if (SigBearer.share.isAutoReconnect) {
+                        [weakSelf workNormal];
+                    }
                 }
             }];
         }else{
@@ -261,11 +263,6 @@
             [weakSelf reloadCollectionView];
         }
     }];
-//    [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
-//        TeLogInfo(@"Mesh is disconnected, node.address=0x%x,uuid=%@,error=%@",[SigDataSource.share getNodeWithUUID:peripheral.identifier.UUIDString].address,peripheral.identifier.UUIDString,error);
-//        [SigDataSource.share setAllDevicesOutline];
-//        [weakSelf reloadCollectionView];
-//    }];
 }
 
 - (void)viewWillDisappear:(BOOL)animated{
@@ -285,7 +282,15 @@
 - (void)blockState{
     [super blockState];
     
-//    __weak typeof(self) weakSelf = self;
+    __weak typeof(self) weakSelf = self;
+    //this block will callback when publish timer check offline.
+    [SigPublishManager.share setDiscoverOutlineNodeCallback:^(NSNumber * _Nonnull unicastAddress) {
+        [weakSelf reloadCollectionView];
+    }];
+    //Power off and power on electricity directly connected devices, returns response of opcode 0x4E82 packets.
+    [SigPublishManager.share setDiscoverOnlineNodeCallback:^(NSNumber * _Nonnull unicastAddress) {
+        [weakSelf reloadCollectionView];
+    }];
 //    self.ble.bleFinishScanedCharachteristicCallBack = ^(CBPeripheral *peripheral) {
 //        if (weakSelf.ble.state == StateNormal) {
 //            [weakSelf freshOnline:nil];
@@ -306,17 +311,8 @@
 //            }
 //        }
 //    };
-//
-//    //Power off and power on electricity directly connected devices, returns response of opcode 0x4E82 packets.
-//    [self.ble.commandHandle setNotifyOnlineStatusCallBack:^(ResponseModel *m) {
-//        [weakSelf reloadCollectionView];
-//    }];
 //    //node notify publish status data when publish sig modelid is 0x1303.(if developer use other modelid to set publish, developer need fix the opcode.)
 //    [self.ble.commandHandle setNotifyPublishStatusCallBack:^(ResponseModel *m) {
-//        [weakSelf reloadCollectionView];
-//    }];
-//    //this block will callback when publish timer check offline.
-//    [self.ble.commandHandle setCheckOfflineCallBack:^(NSNumber *address) {
 //        [weakSelf reloadCollectionView];
 //    }];
 //    [self.ble setBleDisconnectOrConnectFailCallBack:^(CBPeripheral *peripheral) {
@@ -351,15 +347,15 @@
         if (indexPath != nil) {
             SigNodeModel *model = self.source[indexPath.item];
             if (model.isKeyBindSuccess) {
-                if (model.isSensor) {
-                    SensorVC *vc = (SensorVC *)[UIStoryboard initVC:ViewControllerIdentifiers_SensorVCID storybroad:@"Main"];
-                    vc.model = model;
-                    [self.navigationController pushViewController:vc animated:YES];
-                } else {
+//                if (model.isSensor) {
+//                    SensorVC *vc = (SensorVC *)[UIStoryboard initVC:ViewControllerIdentifiers_SensorVCID storybroad:@"Main"];
+//                    vc.model = model;
+//                    [self.navigationController pushViewController:vc animated:YES];
+//                } else {
                     SingleDeviceViewController *vc = (SingleDeviceViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SingleDeviceViewControllerID storybroad:@"DeviceSetting"];
                     vc.model = model;
                     [self.navigationController pushViewController:vc animated:YES];
-                }
+//                }
             } else {
                 ReKeyBindViewController *vc = (ReKeyBindViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ReKeyBindViewControllerID];
                 vc.model = model;

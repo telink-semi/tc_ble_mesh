@@ -10,6 +10,11 @@
 
 #pragma mark - Const string
 
+NSString * const kTelinkSigMeshLibVersion = @"v3.2.0";
+
+NSString * const kNotifyCommandIsBusyOrNot = @"CommandIsBusyOrNot";
+NSString * const kCommandIsBusyKey = @"IsBusy";
+
 NSString * const AccessError_invalidSource = @"Local Provisioner does not have Unicast Address specified.";
 NSString * const AccessError_invalidElement = @"Element does not belong to the local Node.";
 NSString * const AccessError_invalidTtl = @"Invalid TTL.";
@@ -46,17 +51,8 @@ NSString * const kCurrentMeshProvisionAddress_key = @"currentMeshProvisionAddres
 NSString * const kSigScanRspModel_uuid_key = @"sigScanRspModel_uuid_key";
 NSString * const kSigScanRspModel_address_key = @"sigScanRspModel_address_key";
 NSString * const kSigScanRspModel_mac_key = @"sigScanRspModel_mac_key";
-NSString * const kSigScanRspModel_CID_key = @"sigScanRspModel_CID_key";
-NSString * const kSigScanRspModel_PID_key = @"sigScanRspModel_PID_key";
 NSString * const kSigScanRspModel_nodeIdentityData_key = @"sigScanRspModel_nodeIdentityData_key";
 NSString * const kSigScanRspModel_networkIDData_key = @"sigScanRspModel_networkIDData_key";
-//SigEncryptedModel
-NSString * const kSigEncryptedModel_identityData_key = @"sigEncryptedModel_identityData_key";
-NSString * const kSigEncryptedModel_hashData_key = @"sigEncryptedModel_hashData_key";
-NSString * const kSigEncryptedModel_randomData_key = @"sigEncryptedModel_randomData_key";
-NSString * const kSigEncryptedModel_peripheralUUID_key = @"sigEncryptedModel_peripheralUUID_key";
-NSString * const kSigEncryptedModel_encryptedData_key = @"sigEncryptedModel_encryptedData_key";
-NSString * const kSigEncryptedModel_address_key = @"sigEncryptedModel_address_key";
 //meshOTA
 NSString * const kSaveMeshOTADictKey = @"kSaveMeshOTADictKey";
 /*存储在本地的数据的key，不再存储在cache中，以为苹果设备的存储快满的时候，系统会删除cache文件夹的数据*/
@@ -72,7 +68,7 @@ BOOL const kSaveMacAddressToJson = YES;
 
 UInt16 const CTL_TEMP_MIN = 0x0320;// 800
 UInt16 const CTL_TEMP_MAX = 0x4E20;// 20000
-UInt8 const TTL_DEFAULT = 5;// max relay count = TTL_DEFAULT - 1
+UInt8 const TTL_DEFAULT = 10;// max relay count = TTL_DEFAULT - 1
 UInt16 const LEVEL_OFF = -32768;
 UInt16 const LUM_OFF = 0;
 
@@ -144,8 +140,8 @@ UInt16 const SIG_MD_FW_UPDATE_S            = 0xFE00;
 UInt16 const SIG_MD_FW_UPDATE_C            = 0xFE01;
 UInt16 const SIG_MD_FW_DISTRIBUT_S         = 0xFE02;
 UInt16 const SIG_MD_FW_DISTRIBUT_C         = 0xFE03;
-UInt16 const SIG_MD_OBJ_TRANSFER_S         = 0xFF00;
-UInt16 const SIG_MD_OBJ_TRANSFER_C         = 0xFF01;
+UInt16 const SIG_MD_BLOB_TRANSFER_S         = 0xFF00;
+UInt16 const SIG_MD_BLOB_TRANSFER_C         = 0xFF01;
 
 UInt16 const kConfigurationServerModelId = 0x0000;
 UInt16 const kConfigurationClientModelId = 0x0001;

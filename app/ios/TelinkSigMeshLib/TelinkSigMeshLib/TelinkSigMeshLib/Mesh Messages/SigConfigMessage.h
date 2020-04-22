@@ -821,6 +821,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 #pragma mark opcode:0x803D
+
+/// 4.3.2.46 Config Model App Bind
+/// - seeAlso: Mesh_v1.0.pdf  (page.173)
 @interface SigConfigModelAppBind : SigConfigAppKeyMessage
 /// The Company identified, as defined in Assigned Numbers, or `nil`,
 /// if the Model is defined in Bluetooth Mesh Model Specification.
@@ -829,12 +832,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign,readonly) UInt16 companyIdentifier;
 /// The 16-bit Model identifier.
 @property (nonatomic,assign) UInt16 modelIdentifier;
-/// The 32-bit Model identifier.
-@property (nonatomic,assign,readonly) UInt32 modelId;
+///// The 32-bit Model identifier.
+//@property (nonatomic,assign,readonly) UInt32 modelId;
 /// The Unicast Address of the Model's parent Element.
 @property (nonatomic,assign,readonly) UInt16 elementAddress;
 
 - (NSData *)parameters;
+- (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -853,8 +857,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign,readonly) UInt16 companyIdentifier;
 /// The 16-bit Model identifier.
 @property (nonatomic,assign) UInt16 modelIdentifier;
-/// The 32-bit Model identifier.
-@property (nonatomic,assign,readonly) UInt32 modelId;
+///// The 32-bit Model identifier.
+//@property (nonatomic,assign,readonly) UInt32 modelId;
 /// The Unicast Address of the Model's parent Element.
 @property (nonatomic,assign,readonly) UInt16 elementAddress;
 @property (nonatomic,assign,readonly) SigConfigMessageStatus status;
@@ -965,6 +969,58 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
+#pragma mark opcode:0x8046
+
+/// 4.3.2.43 Config Node Identity Get
+/// - seeAlso: Mesh_v1.0.pdf  (page.171)
+@interface SigConfigNodeIdentityGet : SigConfigMessage
+/// Index of the NetKey.
+@property (nonatomic,assign) UInt16 netKeyIndex;
+- (NSData *)parameters;
+- (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex;
+- (instancetype)initWithParameters:(NSData *)parameters;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0x8047
+
+/// 4.3.2.44 Config Node Identity Set
+/// - seeAlso: Mesh_v1.0.pdf  (page.172)
+@interface SigConfigNodeIdentitySet : SigConfigMessage
+/// Index of the NetKey.
+@property (nonatomic,assign) UInt16 netKeyIndex;
+/// New Node Identity state.
+@property (nonatomic,assign) SigNodeIdentityState identity;
+- (NSData *)parameters;
+- (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex identity:(SigNodeIdentityState)identity;
+- (instancetype)initWithParameters:(NSData *)parameters;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0x8048
+
+/// 4.3.2.45 Config Node Identity Status
+/// - seeAlso: Mesh_v1.0.pdf  (page.172)
+@interface SigConfigNodeIdentityStatus : SigConfigMessage
+/// Status Code for the requesting message.
+@property (nonatomic,assign) SigConfigMessageStatus status;
+/// Index of the NetKey.
+@property (nonatomic,assign) UInt16 netKeyIndex;
+/// Node Identity state.
+@property (nonatomic,assign) SigNodeIdentityState identity;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
 #pragma mark opcode:0x8049
 @interface SigConfigNodeReset : SigConfigMessage
 - (NSData *)parameters;
@@ -1023,6 +1079,241 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 companyIdentifier;
 - (NSData *)parameters;
 - (instancetype)initWithModel:(SigModelIDModel *)model applicationKeys:(NSArray <SigAppkeyModel *>*)applicationKeys status:(SigConfigMessageStatus)status;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark - remote provision
+
+#pragma mark opcode:0x804F
+
+/// 4.3.4.1 Remote Provisioning Scan Capabilities Get
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.18)
+@interface SigRemoteProvisioningScanCapabilitiesGet : SigConfigMessage
+- (NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x805F
+
+/// 4.3.4.2 Remote Provisioning Scan Capabilities Status
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.18)
+@interface SigRemoteProvisioningScanCapabilitiesStatus : SigConfigMessage
+/// The maximum number of UUIDs that can be reported during scanning.
+@property (nonatomic,assign) UInt8 maxScannedItems;
+/// Indication if active scan is supported.
+@property (nonatomic,assign) BOOL activeScan;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x8051
+
+/// 4.3.4.3 Remote Provisioning Scan Get
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.18)
+@interface SigRemoteProvisioningScanGet : SigConfigMessage
+- (NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x8052
+
+/// 4.3.4.4 Remote Provisioning Scan Start
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.18)
+@interface SigRemoteProvisioningScanStart : SigConfigMessage
+/// Maximum number of scanned items to be reported.
+@property (nonatomic,assign) UInt8 scannedItemsLimit;
+/// Time limit for a scan (in seconds).
+@property (nonatomic,assign) UInt8 timeout;
+/// Device UUID (Optional)
+@property (nonatomic,strong) NSData *UUID;
+- (NSData *)parameters;
+- (instancetype)initWithScannedItemsLimit:(UInt8)scannedItemsLimit timeout:(UInt8)timeout UUID:(nullable NSData *)UUID;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x8053
+
+/// 4.3.4.5 Remote Provisioning Scan Stop
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.19)
+@interface SigRemoteProvisioningScanStop : SigConfigMessage
+- (NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x8054
+
+/// 4.3.4.6 Remote Provisioning Scan Status
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.19)
+@interface SigRemoteProvisioningScanStatus : SigConfigMessage
+/// Status for the requesting message.
+@property (nonatomic,assign) UInt8 status;
+/// The Remote Provisioning Scan state value.
+@property (nonatomic,assign) UInt8 RPScanningState;
+/// Maximum number of scanned items to be reported.
+@property (nonatomic,assign) UInt8 scannedItemsLimit;
+/// Time limit for a scan (in seconds).
+@property (nonatomic,assign) UInt8 timeout;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x8055
+
+/// 4.3.4.7 Remote Provisioning Scan Report
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.20)
+@interface SigRemoteProvisioningScanReport : SigConfigMessage
+/// Signed integer that is interpreted as an indication of received signal strength measured in dBm..
+@property (nonatomic,assign) SInt8 RSSI;
+/// Device UUID.
+@property (nonatomic,strong) NSData *UUID;
+/// OOB information.
+@property (nonatomic,assign) UInt16 OOB;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x8056
+
+/// 4.3.4.8 Remote Provisioning Extended Scan Start
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.20)
+@interface SigRemoteProvisioningExtendedScanStart : SigConfigMessage
+/// Number of AD Types in the ADTypeFilter field.
+@property (nonatomic,assign) UInt8 ADTypeFilterCount;
+/// List of AD Types to be reported, size:variable.
+@property (nonatomic,strong) NSData *ADTypeFilter;
+/// Device UUID (Optional).
+@property (nonatomic,strong) NSData *UUID;
+/// Time limit for a scan (in seconds). Length of time (in seconds) to collect information about the unprovisioned device: 0x01~0x05
+@property (nonatomic,assign) UInt8 timeout;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithADTypeFilterCount:(UInt8)ADTypeFilterCount ADTypeFilter:(nullable NSData *)ADTypeFilter UUID:(nullable NSData *)UUID timeout:(UInt8)timeout;
+@end
+
+
+#pragma mark opcode:0x8057
+
+/// 4.3.4.9 Remote Provisioning Extended Scan Report
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.21)
+@interface SigRemoteProvisioningExtendedScanReport : SigConfigMessage
+/// Status for the requesting message.
+@property (nonatomic,assign) SigRemoteProvisioningStatus status;
+/// Device UUID (Optional).
+@property (nonatomic,strong) NSData *UUID;
+/// OOB Information (Optional).
+@property (nonatomic,assign) UInt16 OOBInformation;
+/// Concatenated list of AD Structures that match the AD Types requested by the client in the ADTypeFilter field of the Remote Provisioning Extended Scan Start message. size:variable
+@property (nonatomic,strong) NSData *AdvStructures;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x8058
+
+/// 4.3.4.10 Remote Provisioning Link Get
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.22)
+@interface SigRemoteProvisioningLinkGet : SigConfigMessage
+- (NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x8059
+
+/// 4.3.4.11 Remote Provisioning Link Open
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.22)
+@interface SigRemoteProvisioningLinkOpen : SigConfigMessage
+/// Device UUID (Optional).
+@property (nonatomic,strong) NSData *UUID;
+- (NSData *)parameters;
+- (instancetype)initWithUUID:(nullable NSData *)UUID;
+@end
+
+
+#pragma mark opcode:0x805A
+
+/// 4.3.4.12 Remote Provisioning Link Close
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.23)
+@interface SigRemoteProvisioningLinkClose : SigConfigMessage
+/// Link close reason code.
+@property (nonatomic,assign) SigRemoteProvisioningLinkCloseStatus reason;
+- (NSData *)parameters;
+- (instancetype)initWithReason:(SigRemoteProvisioningLinkCloseStatus)reason;
+@end
+
+
+#pragma mark opcode:0x805B
+
+/// 4.3.4.13 Remote Provisioning Link Status
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.23)
+@interface SigRemoteProvisioningLinkStatus : SigConfigMessage
+/// Status for the requesting message.
+@property (nonatomic,assign) SigRemoteProvisioningStatus status;
+/// Remote Provisioning Link state
+@property (nonatomic,assign) BOOL RPState;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x805C
+
+/// 4.3.4.14 Remote Provisioning Link Report
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.24)
+@interface SigRemoteProvisioningLinkReport : SigConfigMessage
+/// Status for the requesting message.
+@property (nonatomic,assign) SigRemoteProvisioningStatus status;
+/// Remote Provisioning Link state
+@property (nonatomic,assign) BOOL RPState;
+/// Link close Reason code (Optional).
+@property (nonatomic,assign) SigRemoteProvisioningLinkCloseStatus reason;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x805D
+
+/// 4.3.4.14 Remote Provisioning PDU Send
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.24)
+@interface SigRemoteProvisioningPDUSend : SigConfigMessage
+/// Provisioning PDU identification number.
+@property (nonatomic,assign) UInt8 outboundPDUNumber;
+/// Provisioning PDU.
+@property (nonatomic,strong) NSData *provisioningPDU;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithOutboundPDUNumber:(UInt8)outboundPDUNumber provisioningPDU:(NSData *)provisioningPDU;
+@end
+
+
+#pragma mark opcode:0x805E
+
+/// 4.3.4.14 Remote Provisioning PDU Outbound Report
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.25)
+@interface SigRemoteProvisioningPDUOutboundReport : SigConfigMessage
+/// Provisioning PDU identification number.
+@property (nonatomic,assign) UInt8 outboundPDUNumber;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x805F
+
+/// 4.3.4.14 Remote Provisioning PDU Report
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.25)
+@interface SigRemoteProvisioningPDUReport : SigConfigMessage
+/// Provisioning PDU identification number.
+@property (nonatomic,assign) UInt8 outboundPDUNumber;
+/// Provisioning PDU.
+@property (nonatomic,strong) NSData *provisioningPDU;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 

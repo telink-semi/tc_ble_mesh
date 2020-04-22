@@ -33,6 +33,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SigHelper : NSObject
 
+
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
+
 + (SigHelper *)share;
 
 - (BOOL)isValidAddress:(UInt16)address;
@@ -58,6 +63,7 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// @param ttl TTL (Time To Live)
 - (BOOL)isValidTTL:(UInt8)ttl;
+- (BOOL)isRelayedTTL:(UInt8)ttl;
 
 - (UInt16)getUint16LightnessFromUInt8Lum:(UInt8)lum;
 - (UInt8)getUInt8LumFromUint16Lightness:(UInt16)lightness;

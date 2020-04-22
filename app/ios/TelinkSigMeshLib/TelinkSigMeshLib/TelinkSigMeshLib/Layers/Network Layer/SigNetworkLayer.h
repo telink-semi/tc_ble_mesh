@@ -38,6 +38,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigDataSource *meshNetwork;
 @property (nonatomic,strong) NSCache <NSData *, NSNull *>*networkMessageCache;
 @property (nonatomic,strong) NSUserDefaults *defaults;
+@property (nonatomic,strong) SigIvIndex *ivIndex;
+@property (nonatomic,strong) SigNetkeyModel *networkKey;
 
 - (instancetype)initWithNetworkManager:(SigNetworkManager *)networkManager;
 
@@ -47,6 +49,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter pdu:  The data received.
 /// - parameter type: The PDU type.
 - (void)handleIncomingPdu:(NSData *)pdu ofType:(SigPduType)type;
+
+- (void)sendLowerTransportPdu:(SigLowerTransportPdu *)pdu ofType:(SigPduType)type withTtl:(UInt8)ttl ivIndex:(SigIvIndex *)ivIndex;
 
 /// This method tries to send the Lower Transport Message of given type to the
 /// given destination address. If the local Provisioner does not exist, or

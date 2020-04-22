@@ -26,7 +26,7 @@
 }
 
 - (void)initData{
-
+    _checkOfflineTimerDict = [NSMutableDictionary dictionary];
 }
 
 #pragma mark check outline timer
@@ -38,13 +38,12 @@
     SigNodeModel *device = [SigDataSource.share getNodeWithAddress:adr];
     if (device) {
         if (device.hasPublishFunction && device.hasOpenPublish) {
-            TeLogInfo(@"setDeviceOffline:0x%02X",adr);
             device.state = DeviceStateOutOfLine;
             NSString *str = [NSString stringWithFormat:@"======================device offline:0x%02X======================",adr];
-            saveLogData(str);
-//            if (self.commandHandle.checkOfflineCallBack) {
-//                self.commandHandle.checkOfflineCallBack(@(adr));
-//            }
+            TeLogInfo(@"setDeviceOffline:0x%02X,%@",adr,str);
+            if (self.discoverOutlineNodeCallback) {
+                self.discoverOutlineNodeCallback(@(device.address));
+            }
         }
     }
 }

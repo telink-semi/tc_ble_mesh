@@ -46,6 +46,7 @@
 
 - (void)updateContent:(AddDeviceModel *)model{
     _nameLabel.text = [NSString stringWithFormat:@"adr:0x%X\nmac:%@",model.scanRspModel.address,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
+    _nameLabel.font = [UIFont systemFontOfSize:10.0];
     switch (model.state) {
         case AddDeviceModelStateBinding:
             _stateLabel.text = @"BINDING";
@@ -55,6 +56,12 @@
             break;
         case AddDeviceModelStateBindFail:
             _stateLabel.text = @"UNBIND";
+            break;
+        case AddDeviceModelStateScaned:
+            _stateLabel.text = @"SCANED";
+            break;
+        case AddDeviceModelStateProvisioning:
+            _stateLabel.text = @"PROVISIONING";
             break;
 
         default:

@@ -35,6 +35,11 @@ typedef void (^keyPair)(NSData *publicKey ,NSData *privateKey);
 
 @interface SigEncryptionHelper : NSObject
 
+
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
+
 + (SigEncryptionHelper *)share;
 
 - (void)eccInit;
@@ -43,16 +48,6 @@ typedef void (^keyPair)(NSData *publicKey ,NSData *privateKey);
 - (NSData *)getPublicKeyData;
 
 - (NSData *)getSharedSecretWithDevicePublicKey:(NSData *)devicePublicKey;
-
-/**
- 苹果自带类获取密钥对
- @param keySize 密钥对长度256/512/1024/2048
- @param pair 返回的公钥对
- */
-- (void)getECCKeyPairWithKeySize:(int)keySize keyPair:(keyPair)pair;
-
-///SecKeyRef -> NSData
-- (NSData *)getPublicKeyBitsFromKey:(SecKeyRef)givenKey;
 
 - (void)getECCKeyPair:(keyPair)pair;
 

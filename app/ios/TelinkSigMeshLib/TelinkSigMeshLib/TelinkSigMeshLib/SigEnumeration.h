@@ -29,25 +29,27 @@ typedef enum : NSUInteger {
 } SigStepResolution;
 
 /// The status of a Config operation.
+/// - seeAlso: Mesh_v1.0.pdf  (page.194)
 typedef enum : UInt8 {
-SigConfigMessageStatus_success                        = 0x00,
-SigConfigMessageStatus_invalidAddress                 = 0x01,
-SigConfigMessageStatus_invalidModel                   = 0x02,
-SigConfigMessageStatus_invalidAppKeyIndex             = 0x03,
-SigConfigMessageStatus_invalidNetKeyIndex             = 0x04,
-SigConfigMessageStatus_insufficientResources          = 0x05,
-SigConfigMessageStatus_keyIndexAlreadyStored          = 0x06,
-SigConfigMessageStatus_invalidPublishParameters       = 0x07,
-SigConfigMessageStatus_notASubscribeModel             = 0x08,
-SigConfigMessageStatus_storageFailure                 = 0x09,
-SigConfigMessageStatus_featureNotSupported            = 0x0A,
-SigConfigMessageStatus_cannotUpdate                   = 0x0B,
-SigConfigMessageStatus_cannotRemove                   = 0x0C,
-SigConfigMessageStatus_cannotBind                     = 0x0D,
-SigConfigMessageStatus_temporarilyUnableToChangeState = 0x0E,
-SigConfigMessageStatus_cannotSet                      = 0x0F,
-SigConfigMessageStatus_unspecifiedError               = 0x10,
-SigConfigMessageStatus_invalidBinding                 = 0x11,
+    SigConfigMessageStatus_success                        = 0x00,
+    SigConfigMessageStatus_invalidAddress                 = 0x01,
+    SigConfigMessageStatus_invalidModel                   = 0x02,
+    SigConfigMessageStatus_invalidAppKeyIndex             = 0x03,
+    SigConfigMessageStatus_invalidNetKeyIndex             = 0x04,
+    SigConfigMessageStatus_insufficientResources          = 0x05,
+    SigConfigMessageStatus_keyIndexAlreadyStored          = 0x06,
+    SigConfigMessageStatus_invalidPublishParameters       = 0x07,
+    SigConfigMessageStatus_notASubscribeModel             = 0x08,
+    SigConfigMessageStatus_storageFailure                 = 0x09,
+    SigConfigMessageStatus_featureNotSupported            = 0x0A,
+    SigConfigMessageStatus_cannotUpdate                   = 0x0B,
+    SigConfigMessageStatus_cannotRemove                   = 0x0C,
+    SigConfigMessageStatus_cannotBind                     = 0x0D,
+    SigConfigMessageStatus_temporarilyUnableToChangeState = 0x0E,
+    SigConfigMessageStatus_cannotSet                      = 0x0F,
+    SigConfigMessageStatus_unspecifiedError               = 0x10,
+    SigConfigMessageStatus_invalidBinding                 = 0x11,
+    /// 0x12-0xFF, RFU
 } SigConfigMessageStatus;
 
 typedef enum : UInt32 {
@@ -118,12 +120,37 @@ typedef enum : UInt32 {
     SigOpCode_configNetKeyStatus                             = 0x8044,
     SigOpCode_configNetKeyUpdate                             = 0x8045,
 
+    SigOpCode_configNodeIdentityGet                             = 0x8046,
+    SigOpCode_configNodeIdentitySet                             = 0x8047,
+    SigOpCode_configNodeIdentityStatus                             = 0x8048,
+
     SigOpCode_configNodeReset                                = 0x8049,
     SigOpCode_configNodeResetStatus                          = 0x804A,
     SigOpCode_configSIGModelAppGet                           = 0x804B,
     SigOpCode_configSIGModelAppList                          = 0x804C,
     SigOpCode_configVendorModelAppGet                        = 0x804D,
     SigOpCode_configVendorModelAppList                       = 0x804E,
+
+    /// 4.3.5.2 Numerical summary of opcodes
+    /// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.26)
+
+    SigOpCode_remoteProvisioningScanCapabilitiesGet          = 0x804F,
+    SigOpCode_remoteProvisioningScanCapabilitiesStatus       = 0x8050,
+    SigOpCode_remoteProvisioningScanGet                      = 0x8051,
+    SigOpCode_remoteProvisioningScanStart                    = 0x8052,
+    SigOpCode_remoteProvisioningScanStop                     = 0x8053,
+    SigOpCode_remoteProvisioningScanStatus                   = 0x8054,
+    SigOpCode_remoteProvisioningScanReport                   = 0x8055,
+    SigOpCode_remoteProvisioningExtendedScanStart            = 0x8056,
+    SigOpCode_remoteProvisioningExtendedScanReport           = 0x8057,
+    SigOpCode_remoteProvisioningLinkGet                      = 0x8058,
+    SigOpCode_remoteProvisioningLinkOpen                     = 0x8059,
+    SigOpCode_remoteProvisioningLinkClose                    = 0x805A,
+    SigOpCode_remoteProvisioningLinkStatus                   = 0x805B,
+    SigOpCode_remoteProvisioningLinkReport                   = 0x805C,
+    SigOpCode_remoteProvisioningPDUSend                      = 0x805D,
+    SigOpCode_remoteProvisioningPDUOutboundReport            = 0x805E,
+    SigOpCode_remoteProvisioningPDUReport                    = 0x805F,
 
     /// 7.1 Messages summary
     /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.298)
@@ -335,41 +362,77 @@ typedef enum : UInt32 {
     SigOpCode_LightLCPropertySetUnacknowledged               = 0x63,
     SigOpCode_LightLCPropertyStatus                          = 0x64,
 
-    /// 3.1.1 Firmware Update Messages
-    /// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.20)
+    /// 3.1.1 Firmware Update Model Messages
+    /// - seeAlso: pre-spec OTA model opcode details.pdf  (page.2)
+    /// 8.4 Firmware update messages
+    /// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.80)
 
-    //Firmware Update Messages
-    SigOpCode_FirmwareInformationGet                         = 0xB601,
-    SigOpCode_FirmwareInformationStatus                      = 0xB602,
-    SigOpCode_FirmwareUpdateGet                              = 0xB603,
-    SigOpCode_FirmwareUpdatePrepare                          = 0xB604,
-    SigOpCode_FirmwareUpdateStart                            = 0xB605,
-    SigOpCode_FirmwareUpdateAbort                            = 0xB606,
-    SigOpCode_FirmwareUpdateApply                            = 0xB607,
-    SigOpCode_FirmwareUpdateStatus                           = 0xB608,
-    SigOpCode_FirmwareDistributionGet                        = 0xB609,
-    SigOpCode_FirmwareDistributionStart                      = 0xB60A,
-    SigOpCode_FirmwareDistributionStop                       = 0xB60B,
-    SigOpCode_FirmwareDistributionStatus                     = 0xB60C,
-    SigOpCode_FirmwareDistributionDetailsGet                 = 0xB60D,
-    SigOpCode_FirmwareDistributionDetailsList                = 0xB60E,
+    //8.4.1 Firmware Update model messages
+    SigOpCode_FirmwareUpdateInformationGet                   = 0xB601,
+    SigOpCode_FirmwareUpdateInformationStatus                = 0xB602,
+    SigOpCode_FirmwareUpdateFirmwareMetadataCheck            = 0xB603,
+    SigOpCode_FirmwareUpdateFirmwareMetadataStatus           = 0xB604,
+    SigOpCode_FirmwareUpdateGet                              = 0xB605,
+    SigOpCode_FirmwareUpdateStart                            = 0xB606,
+    SigOpCode_FirmwareUpdateCancel                           = 0xB607,
+    SigOpCode_FirmwareUpdateApply                            = 0xB608,
+    SigOpCode_FirmwareUpdateStatus                           = 0xB609,
 
-    /// 3.1.2 Object Transfer Messages
-    /// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.20)
+    //8.4.2 Firmware Distribution model messages
+    SigOpCode_FirmwareDistributionGet                        = 0xB60A,
+    SigOpCode_FirmwareDistributionStart                      = 0xB60B,
+    SigOpCode_FirmwareDistributionCancel                     = 0xB60C,
+    SigOpCode_FirmwareDistributionApply                      = 0xB60D,
+    SigOpCode_FirmwareDistributionStatus                     = 0xB60E,
+    SigOpCode_FirmwareDistributionNodesGet                   = 0xB60F,
+    SigOpCode_FirmwareDistributionNodesList                  = 0xB610,
+    SigOpCode_FirmwareDistributionNodesAdd                   = 0xB611,
+    SigOpCode_FirmwareDistributionNodesDeleteAll             = 0xB612,
+    SigOpCode_FirmwareDistributionNodesStatus                = 0xB613,
+    SigOpCode_FirmwareDistributionCapabilitiesGet            = 0xB614,
+    SigOpCode_FirmwareDistributionCapabilitiesStatus         = 0xB615,
+    SigOpCode_FirmwareDistributionUploadGet                  = 0xB616,
+    SigOpCode_FirmwareDistributionUploadStart                = 0xB617,
+    SigOpCode_FirmwareDistributionUploadOOBStart             = 0xB618,
+    SigOpCode_FirmwareDistributionUploadCancel               = 0xB619,
+    SigOpCode_FirmwareDistributionUploadStatus               = 0xB61A,
+    SigOpCode_FirmwareDistributionFirmwareGet                = 0xB61B,
+    SigOpCode_FirmwareDistributionFirmwareStatus             = 0xB61C,
+    SigOpCode_FirmwareDistributionFirmwareGetByIndex         = 0xB61D,
+    SigOpCode_FirmwareDistributionFirmwareDelete             = 0xB61E,
+    SigOpCode_FirmwareDistributionFirmwareDeleteAll          = 0xB61F,
 
-    //Object Transfer Messages
-    SigOpCode_ObjectTransferGet                              = 0xB701,
-    SigOpCode_ObjectTransferStart                            = 0xB702,
-    SigOpCode_ObjectTransferAbort                            = 0xB703,
-    SigOpCode_ObjectTransferStatus                           = 0xB704,
-    SigOpCode_ObjectBlockTransferStart                       = 0xB705,
+    /// 3.1.3.1 BLOB Transfer messages
+    /// - seeAlso: MshMDL_BLOB_CR_Vienna_IOP.pdf  (page.35)
+
+    //BLOB Transfer Messages
+    SigOpCode_BLOBTransferGet                                = 0xB701,
+    SigOpCode_BLOBTransferStart                              = 0xB702,
+    SigOpCode_BLOBTransferCancel                             = 0xB703,
+    SigOpCode_BLOBTransferStatus                             = 0xB704,
+    SigOpCode_BLOBBlockGet                                   = 0xB707,
+    SigOpCode_BLOBBlockStart                                 = 0xB705,
+    SigOpCode_BLOBBlockStatus                                = 0x7E,
+    SigOpCode_BLOBChunkTransfer                              = 0x7D,
+    SigOpCode_BLOBInformationGet                             = 0xB70A,
+    SigOpCode_BLOBInformationStatus                          = 0xB70B,
+    SigOpCode_BLOBPartialBlockReport                         = 0x7C,
+
     SigOpCode_ObjectBlockTransferStatus                      = 0xB706,
-    SigOpCode_ObjectChunkTransfer                            = 0x7D,
-    SigOpCode_ObjectBlockGet                                 = 0x7E,
-    SigOpCode_ObjectBlockStatus                              = 0xB709,
-    SigOpCode_ObjectInformationGet                           = 0xB70A,
-    SigOpCode_ObjectInformationStatus                        = 0xB70B,
-    
+
+    /// - seeAlso: fast provision流程简介.pdf  (page.1)
+
+    // fast provision
+    SigOpCode_VendorID_MeshResetNetwork                      = 0xC5,
+    SigOpCode_VendorID_MeshAddressGet                        = 0xC6,
+    SigOpCode_VendorID_MeshAddressGetStatus                  = 0xC7,
+    SigOpCode_VendorID_MeshAddressSet                        = 0xC8,
+    SigOpCode_VendorID_MeshAddressSetStatus                  = 0xC9,
+    SigOpCode_VendorID_MeshProvisionDataSet                  = 0xCA,
+    SigOpCode_VendorID_MeshProvisionConfirm                  = 0xCB,
+    SigOpCode_VendorID_MeshProvisionConfirmStatus            = 0xCC,
+    SigOpCode_VendorID_MeshProvisionComplete                 = 0xCD,
+
 } SigOpCode;
 
 typedef enum : UInt8 {
@@ -966,33 +1029,20 @@ typedef enum : UInt8 {
     SigFirmwareUpdateStatusType_combinationTempReject = 0x05,
 } SigFirmwareUpdateStatusType;
 
-/// Phase Values
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.28)
-typedef enum : UInt8 {
-    /// No DFU update in progress
-    SigFirmwareUpdatePhaseType_idle = 0x00,
-    /// DFU update is prepared and awaiting start
-    SigFirmwareUpdatePhaseType_prepare = 0x01,
-    /// DFU update is in progress
-    SigFirmwareUpdatePhaseType_inProgress = 0x02,
-    /// DFU upload is finished and waiting to be applied
-    SigFirmwareUpdatePhaseType_DFUReady = 0x03,
-    /// just use internal
-    SigFirmwareUpdatePhaseType_applyOk = 0x07,
-} SigFirmwareUpdatePhaseType;
-
-/// Object Transfer Status Values
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.30)
-typedef enum : UInt8 {
-    /// ready, object transfer is not active
-    SigObjectTransferStatusType_ready = 0x00,
-    /// busy, object transfer is active
-    SigObjectTransferStatusType_busy = 0x01,
-    /// busy, with different transfer
-    SigObjectTransferStatusType_busyWithDifferent = 0x02,
-    /// object is too big to be stored
-    SigObjectTransferStatusType_tooBig = 0x03,
-} SigObjectTransferStatusType;
+///// Phase Values
+///// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.28)
+//typedef enum : UInt8 {
+//    /// No DFU update in progress
+//    SigFirmwareUpdatePhaseType_idle = 0x00,
+//    /// DFU update is prepared and awaiting start
+//    SigFirmwareUpdatePhaseType_prepare = 0x01,
+//    /// DFU update is in progress
+//    SigFirmwareUpdatePhaseType_inProgress = 0x02,
+//    /// DFU upload is finished and waiting to be applied
+//    SigFirmwareUpdatePhaseType_DFUReady = 0x03,
+//    /// just use internal
+//    SigFirmwareUpdatePhaseType_applyOk = 0x07,
+//} SigFirmwareUpdatePhaseType;
 
 /// The Block Checksum Algorithm values
 /// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.31)
@@ -1021,21 +1071,253 @@ typedef enum : UInt8 {
     SigObjectBlockTransferStatusType_rejected = 0x0F,
 } SigObjectBlockTransferStatusType;
 
-/// The Object Block Status values
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.34)
+/// Table 8.22: Status codes for the Firmware Update Server model and Firmware Update Client model
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.80)
 typedef enum : UInt8 {
-    /// All chunks received, checksum is valid, ready for the next block.
-    SigObjectBlockStatusType_allChunksReceived = 0x00,
-    /// Not all chunks received, checksum is not computed.
-    SigObjectBlockStatusType_notAllChunksReceived = 0x01,
-    /// All chunks received, computed checksum value is not equal to expected value.
-    SigObjectBlockStatusType_wrongChecksum = 0x02,
-    /// Requested Object ID not active.
-    SigObjectBlockStatusType_wrongObjectID = 0x03,
-    /// Requested block not active.
-    SigObjectBlockStatusType_wrongBlock = 0x04,
-    /// Reserved for Future Use, 0x05-0xFF
-} SigObjectBlockStatusType;
+    /// The message was processed successfully.
+    SigFirmwareUpdateServerAndClientModelStatusType_success = 0x00,
+    /// Insufficient resources on the node.
+    SigFirmwareUpdateServerAndClientModelStatusType_insufficientResources = 0x01,
+    /// The operation cannot be performed while the server is in the current phase.
+    SigFirmwareUpdateServerAndClientModelStatusType_wrongPhase = 0x02,
+    /// An internal error occurred on the node.
+    SigFirmwareUpdateServerAndClientModelStatusType_internalError = 0x03,
+    /// The message contains a firmware index value that is not expected.
+    SigFirmwareUpdateServerAndClientModelStatusType_wrongFirmwareIndex = 0x04,
+    /// The metadata check failed.
+    SigFirmwareUpdateServerAndClientModelStatusType_metadataCheckFailed = 0x05,
+    /// The server cannot start a firmware update.
+    SigFirmwareUpdateServerAndClientModelStatusType_temporarilyUnavailable = 0x06,
+    /// Another BLOB transfer is in progress.
+    SigFirmwareUpdateServerAndClientModelStatusType_BLOBTransferBusy = 0x07,
+} SigFirmwareUpdateServerAndClientModelStatusType;
 
+/// Table 8.24: Status codes for the Firmware Distribution Server model and Firmware Distribution Client model
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.80)
+typedef enum : UInt8 {
+    /// The message was processed successfully.
+    SigFirmwareDistributionServerAndClientModelStatusType_success = 0x00,
+    /// Insufficient resources on the node.
+    SigFirmwareDistributionServerAndClientModelStatusType_insufficientResources = 0x01,
+    /// The operation cannot be performed while the server is in the current phase.
+    SigFirmwareDistributionServerAndClientModelStatusType_wrongPhase = 0x02,
+    /// An internal error occurred on the node.
+    SigFirmwareDistributionServerAndClientModelStatusType_internalError = 0x03,
+    /// The requested firmware image is not stored on the Distributor.
+    SigFirmwareDistributionServerAndClientModelStatusType_firmwareNotFound = 0x04,
+    /// The AppKey identified by the AppKey Index is not known to the node.
+    SigFirmwareDistributionServerAndClientModelStatusType_invalidAppKeyIndex = 0x05,
+    /// There are no Updating nodes in the Distribution Receivers List state.
+    SigFirmwareDistributionServerAndClientModelStatusType_receiversListEmpty = 0x06,
+    /// Another firmware image distribution is in progress.
+    SigFirmwareDistributionServerAndClientModelStatusType_busyWithDistribution = 0x07,
+    /// Another upload is in progress.
+    SigFirmwareDistributionServerAndClientModelStatusType_busyWithUpload = 0x08,
+    /// The URI scheme name indicated by the Update URI is not supported.
+    SigFirmwareDistributionServerAndClientModelStatusType_URINotSupported = 0x09,
+    /// The format of the Update URI is invalid.
+    SigFirmwareDistributionServerAndClientModelStatusType_URIMalformed = 0x0A,
+    /// Reserved For Future Use, 0x0B–0xFF.
+} SigFirmwareDistributionServerAndClientModelStatusType;
+
+/// Table 8.8: Firmware Update Additional Information state values
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.71)
+typedef enum : UInt8 {
+    /// No changes to node composition data.
+    SigFirmwareUpdateAdditionalInformationStatusType_noChangeCompositionData = 0x00,
+    /// Node composition data changed. The node does not support remote provisioning.
+    SigFirmwareUpdateAdditionalInformationStatusType_changeCompositionDataUnSupportRemote = 0x01,
+    /// Node composition data changed, and remote provisioning is supported. The node supports remote provisioning and composition data page 0x80. Page 0x80 contains different composition data than page 0x0.
+    SigFirmwareUpdateAdditionalInformationStatusType_changeCompositionDataSupportRemote = 0x02,
+    /// Node unprovisioned. The node is unprovisioned after successful application of a verified firmware image.
+    SigFirmwareUpdateAdditionalInformationStatusType_nodeUnprovisioned = 0x03,
+    /// Reserved for Future Use: 0x4–0x1F
+} SigFirmwareUpdateAdditionalInformationStatusType;
+
+/// Table 8.7: Update Phase state values
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.71)
+typedef enum : UInt8 {
+    /// Ready to start a Receive Firmware procedure..
+    SigFirmwareUpdatePhaseType_idle = 0x00,
+    /// The Transfer BLOB procedure failed.
+    SigFirmwareUpdatePhaseType_transferError = 0x01,
+    /// The Receive Firmware procedure is being executed.
+    SigFirmwareUpdatePhaseType_transferActive = 0x02,
+    /// The Verify Firmware procedure is being executed.
+    SigFirmwareUpdatePhaseType_verificationActive = 0x03,
+    /// The Verify Firmware procedure completed successfully.
+    SigFirmwareUpdatePhaseType_verificationSuccess = 0x04,
+    /// The Verify Firmware procedure failed.
+    SigFirmwareUpdatePhaseType_verificationFailed = 0x05,
+    /// The Apply New Firmware procedure is being executed.
+    SigFirmwareUpdatePhaseType_applyActive = 0x06,
+    /// Prohibited.
+    SigFirmwareUpdatePhaseType_prohibited = 0x07,
+} SigFirmwareUpdatePhaseType;
+
+/// Table 3.10 Status codes used by the BLOB Transfer models
+/// - seeAlso: MshMDL_BLOB_CR_Vienna_IOP.pdf  (page.16)
+typedef enum : UInt8 {
+    /// The message was processed successfully.
+    SigBLOBBlockStatusType_success = 0x00,
+    /// The Block Number field value is not within range.
+    SigBLOBBlockStatusType_invalidBlockNumber = 0x01,
+    /// The block size is lower than the size represented by Min Block Size Log, or the block size is higher than the size represented by Max Block Size Log.
+    SigBLOBBlockStatusType_wrongBlockSize = 0x02,
+    /// Chunk size exceeds the size represented by Max Chunk Size, or the number of chunks exceeds the number specified by Max Chunks Number.
+    SigBLOBBlockStatusType_wrongChunkSize = 0x03,
+    /// The model is in a state where it cannot process the message.
+    SigBLOBBlockStatusType_invalidState = 0x04,
+    /// A parameter value in the message cannot be accepted.
+    SigBLOBBlockStatusType_invalidParameter = 0x05,
+    /// The requested BLOB ID is not expected.
+    SigBLOBBlockStatusType_wrongBLOBID = 0x06,
+    /// There is not enough space available in memory to receive the BLOB.
+    SigBLOBBlockStatusType_BLOBTooLarge = 0x07,
+    /// The transfer mode is not supported by the BLOB Transfer Server model.
+    SigBLOBBlockStatusType_unsupportedTransferMode = 0x08,
+    /// An internal error occurred on the node.
+    SigBLOBBlockStatusType_internalError = 0x09,
+    /// Prohibited, 0xA-0xF
+} SigBLOBBlockStatusType;
+
+/// Table 3.16 Format field enumeration values
+/// - seeAlso: MshMDL_BLOB_CR_Vienna_IOP.pdf  (page.20)
+typedef enum : UInt8 {
+    /// All chunks in the block are missing.
+    SigBLOBBlockFormatType_allChunksMissing = 0x00,
+    /// All chunks in the block have been received.
+    SigBLOBBlockFormatType_noMissingChunks = 0x01,
+    /// At least one chunk has been received and at least one chunk is missing.
+    SigBLOBBlockFormatType_someChunksMissing = 0x02,
+    /// List of chunks requested by the server.
+    SigBLOBBlockFormatType_encodedMissingChunks = 0x03,
+} SigBLOBBlockFormatType;
+
+/// Table 7.17 Status codes used by the BLOB Transfer Server and the BLOB Transfer Client models
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.26)
+typedef enum : UInt8 {
+    /// The message was processed successfully.
+    SigBLOBTransferStatusType_success = 0x00,
+    /// The Block Number field value is not within the range of blocks being transferred.
+    SigBLOBTransferStatusType_invalidBlockNumber = 0x01,
+    /// The block size is smaller than the size indicated by the Min Block Size Log state or is larger than the size indicated by the Max Block Size Log state.
+    SigBLOBTransferStatusType_invalidBlockSize = 0x02,
+    /// The chunk size exceeds the size indicated by the Max Chunk Size state, or the number of chunks exceeds the number specified by the Max Total Chunks state.
+    SigBLOBTransferStatusType_invalidChunkSize = 0x03,
+    /// The operation cannot be performed while the server is in the current phase.
+    SigBLOBTransferStatusType_invalidState = 0x04,
+    /// A parameter value in the message cannot be accepted.
+    SigBLOBTransferStatusType_invalidParameter = 0x05,
+    /// The message contains a BLOB ID value that is not expected.
+    SigBLOBTransferStatusType_wrongBLOBID = 0x06,
+    /// There is not enough space available in memory to receive the BLOB.
+    SigBLOBTransferStatusType_BLOBTooLarge = 0x07,
+    /// The transfer mode is not supported by the BLOB Transfer Server model.
+    SigBLOBTransferStatusType_unsupportedTransferMode = 0x08,
+    /// An internal error occurred on the node.
+    SigBLOBTransferStatusType_internalError = 0x09,
+    /// Prohibited: 0xA–0xF
+} SigBLOBTransferStatusType;
+
+/// Table 7.5: Transfer Mode state values
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.21)
+typedef enum : UInt8 {
+    /// No Active Transfer.
+    SigTransferModeState_noActiveTransfer = 0x00,
+    /// Push BLOB Transfer Mode (see Section 7.1.1.1).
+    SigTransferModeState_pushBLOBTransferMode = 0x01,
+    /// Pull BLOB Transfer Mode (see Section 7.1.1.1).
+    SigTransferModeState_pullBLOBTransferMode = 0x02,
+    /// Prohibited.
+    SigTransferModeState_prohibited = 0x03,
+} SigTransferModeState;
+
+/// Table 7.6: Transfer Phase state values
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.22)
+typedef enum : UInt8 {
+    /// The BLOB Transfer Server is awaiting configuration and cannot receive a BLOB.
+    SigTransferPhaseState_inactive = 0x00,
+    /// The BLOB Transfer Server is ready to receive the BLOB identified by the Expected BLOB ID.
+    SigTransferPhaseState_waitingForTransferStart = 0x01,
+    /// The BLOB Transfer Server is waiting for the next block of data.
+    SigTransferPhaseState_waitingForNextBlock = 0x02,
+    /// The BLOB Transfer Server is waiting for the next chunk of data.
+    SigTransferPhaseState_waitingForNextChunk = 0x03,
+    /// The BLOB was transferred successfully.
+    SigTransferPhaseState_complete = 0x04,
+    /// The Initialize and Receive BLOB procedure is paused.
+    SigTransferPhaseState_suspended = 0x05,
+    /// Prohibited: 0x06–0xFF
+} SigTransferPhaseState;
+
+/// Table 8.16: Distribution Phase state values
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.76)
+typedef enum : UInt8 {
+    /// No firmware distribution is in progress.
+    SigDistributionPhaseState_idle = 0x00,
+    /// Firmware distribution is in progress.
+    SigDistributionPhaseState_transferActive = 0x01,
+    /// The Transfer BLOB procedure has completed successfully.
+    SigDistributionPhaseState_transferSuccess = 0x02,
+    /// The Apply Firmware on Updating Nodes procedure is being executed.
+    SigDistributionPhaseState_applyingUpdate = 0x03,
+    /// The Distribute Firmware procedure has completed successfully.
+    SigDistributionPhaseState_completed = 0x04,
+    /// The Distribute Firmware procedure has failed.
+    SigDistributionPhaseState_failed = 0x05,
+    /// The Cancel Firmware Update procedure is being executed.
+    SigDistributionPhaseState_cancelingUpdate = 0x06,
+    /// Prohibited: 0x07–0xFF
+} SigDistributionPhaseState;
+
+
+
+/// Table 4.22 defines status codes for Remote Provisioning Server messages that contain a status code.
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.27)
+typedef enum : UInt8 {
+    SigRemoteProvisioningStatus_success = 0x00,
+    SigRemoteProvisioningStatus_scanningCannotStart = 0x01,
+    SigRemoteProvisioningStatus_invalidState = 0x02,
+    SigRemoteProvisioningStatus_limitedResources = 0x03,
+    SigRemoteProvisioningStatus_linkCannotOpen = 0x04,
+    SigRemoteProvisioningStatus_linkOpenFailed = 0x05,
+    SigRemoteProvisioningStatus_linkClosedByDevice = 0x06,
+    SigRemoteProvisioningStatus_linkClosedByServer = 0x07,
+    SigRemoteProvisioningStatus_linkClosedByClient = 0x08,
+    SigRemoteProvisioningStatus_linkClosedAsCannotReceivePDU = 0x09,
+    SigRemoteProvisioningStatus_linkClosedAsCannotSendPDU = 0x0A,
+    SigRemoteProvisioningStatus_linkClosedAsCannotDeliverPDUReport = 0x0B,
+    SigRemoteProvisioningStatus_linkClosedAsCannotDeliverPDUOutboundReport = 0x0C,
+    /// Reserved for Future Use, 0x0D-0xFF
+} SigRemoteProvisioningStatus;
+
+/// Table 4.15: Reason field values for a Remote Provisioning Link Close message
+/// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.23)
+typedef enum : UInt8 {
+    /// The provisioning or Device Key Refresh procedure completed successfully.
+    SigRemoteProvisioningLinkCloseStatus_success = 0x00,
+    /// Prohibited
+    SigRemoteProvisioningLinkCloseStatus_prohibited = 0x01,
+    /// The provisioning or Device Key Refresh procedure failed.
+    SigRemoteProvisioningLinkCloseStatus_fail = 0x02,
+    /// Reserved for Future Use, 0x03-0xFF
+} SigRemoteProvisioningLinkCloseStatus;
+
+/// Fast provision status
+/// - seeAlso: fast provision流程简介.pdf  (page.1)
+typedef enum : UInt8 {
+    SigFastProvisionStatus_idle = 0x00,
+    SigFastProvisionStatus_start = 0x01,
+    SigFastProvisionStatus_resetNetwork = 0x02,
+    SigFastProvisionStatus_getAddress = 0x03,
+    SigFastProvisionStatus_getAddressRetry = 0x04,
+    SigFastProvisionStatus_setAddress = 0x05,
+    SigFastProvisionStatus_setNetworkInfo = 0x06,
+    SigFastProvisionStatus_confirm = 0x07,
+    SigFastProvisionStatus_confirmOk = 0x08,
+    SigFastProvisionStatus_complete = 0x09,
+    SigFastProvisionStatus_timeout = 0x0A,
+} SigFastProvisionStatus;
 
 #endif /* SigEnumeration_h */

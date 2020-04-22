@@ -3099,6 +3099,17 @@
     return self;
 }
 
+- (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppBind;
+        self.applicationKeyIndex = applicationKeyIndex;
+        _elementAddress = elementAddress;
+        _modelIdentifier = modelIdentifier;
+        _companyIdentifier = companyIdentifier;
+    }
+    return self;
+}
+
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelAppBind;
@@ -3601,6 +3612,148 @@
 @end
 
 
+@implementation SigConfigNodeIdentityGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeIdentityGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeIdentityGet;
+        _netKeyIndex = netKeyIndex;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeIdentityGet;
+        if (parameters == nil || parameters.length != 2) {
+            return nil;
+        }
+        UInt16 tem16 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem16, dataByte, 2);
+        _netKeyIndex = (tem16 >> 4) & 0xFFF;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem16 = _netKeyIndex << 4;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigNodeIdentityStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigNodeIdentitySet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeIdentitySet;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex identity:(SigNodeIdentityState)identity {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeIdentitySet;
+        _netKeyIndex = netKeyIndex;
+        _identity = identity;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeIdentitySet;
+        if (parameters == nil || parameters.length != 3) {
+            return nil;
+        }
+        UInt16 tem16 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem16, dataByte, 2);
+        _netKeyIndex = (tem16 >> 4) & 0xFFF;
+        UInt8 tem8 = 0;
+        memcpy(&tem8, dataByte+2, 1);
+        _identity = tem8;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem16 = _netKeyIndex << 4;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    UInt8 tem8 = _identity;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigNodeIdentityStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigNodeIdentityStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeIdentityStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNodeIdentityStatus;
+        if (parameters == nil || parameters.length != 4) {
+            return nil;
+        }
+        Byte *dataByte = (Byte *)parameters.bytes;
+        UInt8 tem8 = 0;
+        memcpy(&tem8, dataByte, 1);
+        _status = tem8;
+        UInt16 tem16 = 0;
+        memcpy(&tem16, dataByte+1, 2);
+        _netKeyIndex = (tem16 >> 4) & 0xFFF;
+        memcpy(&tem8, dataByte+3, 1);
+        _identity = tem8;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+@end
+
+
 @implementation SigConfigNodeReset
 
 - (instancetype)init {
@@ -3933,6 +4086,741 @@
     data = [self encodeIndexes:self.applicationKeyIndexes];
     [mData appendData:data];
     return mData;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningScanCapabilitiesGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanCapabilitiesGet;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigRemoteProvisioningScanCapabilitiesStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+- (BOOL)isSegmented {
+    return NO;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningScanCapabilitiesStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanCapabilitiesStatus;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = self.maxScannedItems;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = self.activeScan?1:0;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanCapabilitiesStatus;
+        if (parameters == nil || parameters.length < 2) {
+            return nil;
+        }
+        UInt8 tem=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _maxScannedItems = tem;
+        memcpy(&tem, dataByte+1, 1);
+        _activeScan = tem;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningScanGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanGet;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigRemoteProvisioningScanStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+- (BOOL)isSegmented {
+    return NO;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningScanStart
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanStart;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = self.scannedItemsLimit;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = self.timeout;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    if (self.UUID && self.UUID.length) {
+        [mData appendData:self.UUID];
+    }
+    return mData;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanStart;
+        if (parameters == nil || (parameters.length != 18 && parameters.length != 2)) {
+            return nil;
+        }
+        UInt8 tem=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _scannedItemsLimit = tem;
+        memcpy(&tem, dataByte+1, 1);
+        _timeout = tem;
+        if (parameters.length >= 18) {
+            _UUID = [parameters subdataWithRange:NSMakeRange(2, 16)];
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithScannedItemsLimit:(UInt8)scannedItemsLimit timeout:(UInt8)timeout UUID:(nullable NSData *)UUID {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanStart;
+        _scannedItemsLimit = scannedItemsLimit;
+        _timeout = timeout;
+        _UUID = UUID;
+    }
+    return self;
+}
+
+- (Class)responseType {
+    return [SigRemoteProvisioningScanStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+- (BOOL)isSegmented {
+    return NO;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningScanStop
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanStop;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigRemoteProvisioningScanStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+- (BOOL)isSegmented {
+    return NO;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningScanStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanStatus;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = self.status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = self.RPScanningState;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = self.scannedItemsLimit;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = self.timeout;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanStatus;
+        if (parameters == nil || parameters.length < 4) {
+            return nil;
+        }
+        UInt8 tem=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _status = tem;
+        memcpy(&tem, dataByte+1, 1);
+        _RPScanningState = tem;
+        memcpy(&tem, dataByte+2, 1);
+        _scannedItemsLimit = tem;
+        memcpy(&tem, dataByte+3, 1);
+        _timeout = tem;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningScanReport
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanReport;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    SInt8 stem8 = self.RSSI;
+    NSData *data = [NSData dataWithBytes:&stem8 length:1];
+    [mData appendData:data];
+    if (self.UUID && self.UUID.length) {
+        [mData appendData:self.UUID];
+    }
+    UInt16 tem16 = self.OOB;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningScanReport;
+        if (parameters == nil || parameters.length <19) {
+            return nil;
+        }
+        SInt8 stem8 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&stem8, dataByte, 1);
+        _RSSI = stem8;
+        if (parameters.length >= 17) {
+            _UUID = [parameters subdataWithRange:NSMakeRange(1, 16)];
+            if (parameters.length >= 19) {
+                UInt16 tem16 = 0;
+                memcpy(&tem16, dataByte+17, 2);
+                _OOB = tem16;
+            }
+        }
+    }
+    return self;
+}
+
+- (BOOL)isSegmented {
+    return NO;
+}
+
+@end
+
+@implementation SigRemoteProvisioningExtendedScanStart
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningExtendedScanStart;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = self.ADTypeFilterCount;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    if (self.ADTypeFilter && self.ADTypeFilter.length) {
+        [mData appendData:self.ADTypeFilter];
+    }
+    if (self.UUID && self.UUID.length) {
+        [mData appendData:self.UUID];
+        tem8 = self.timeout;
+        data = [NSData dataWithBytes:&tem8 length:2];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningExtendedScanStart;
+        if (parameters == nil || parameters.length < 1) {
+            return nil;
+        }
+        UInt8 tem8 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem8, dataByte, 1);
+        self.ADTypeFilterCount = tem8;
+        if (self.ADTypeFilterCount == 0) {
+            if (parameters.length >= 17) {
+                self.UUID = [parameters subdataWithRange:NSMakeRange(1, 16)];
+                if (parameters.length >= 18) {
+                    memcpy(&tem8, dataByte+17, 1);
+                    self.timeout = tem8;
+                }
+            }
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithADTypeFilterCount:(UInt8)ADTypeFilterCount ADTypeFilter:(nullable NSData *)ADTypeFilter UUID:(nullable NSData *)UUID timeout:(UInt8)timeout {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningExtendedScanStart;
+        _ADTypeFilterCount = ADTypeFilterCount;
+        _ADTypeFilter = ADTypeFilter;
+        _UUID = UUID;
+        _timeout = timeout;
+    }
+    return self;
+}
+
+- (Class)responseType {
+    return [SigRemoteProvisioningExtendedScanReport class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+- (BOOL)isSegmented {
+    return NO;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningExtendedScanReport
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningExtendedScanReport;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = self.status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    [mData appendData:self.UUID];
+    UInt16 tem16 = self.OOBInformation;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningExtendedScanReport;
+        if (parameters == nil || parameters.length <17) {
+            return nil;
+        }
+        UInt8 tem8 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem8, dataByte, 1);
+        _status = tem8;
+        if (parameters.length >= 17) {
+            _UUID = [parameters subdataWithRange:NSMakeRange(1, 16)];
+            if (parameters.length >= 19) {
+                UInt16 tem16 = 0;
+                memcpy(&tem16, dataByte+17, 2);
+                _OOBInformation = tem16;
+                if (parameters.length > 19) {
+                    _AdvStructures = [parameters subdataWithRange:NSMakeRange(19, parameters.length-19)];
+                }
+            }
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningLinkGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningLinkGet;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigRemoteProvisioningLinkStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+- (BOOL)isSegmented {
+    return NO;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningLinkOpen
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningLinkOpen;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    if (_UUID && _UUID.length > 0) {
+        return [NSData dataWithData:_UUID];
+    }
+    return nil;
+}
+
+- (instancetype)initWithUUID:(nullable NSData *)UUID {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningLinkOpen;
+        _UUID = UUID;
+    }
+    return self;
+}
+
+- (Class)responseType {
+    return [SigRemoteProvisioningLinkStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+- (BOOL)isSegmented {
+    return NO;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningLinkClose
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningLinkClose;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = self.reason;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+- (instancetype)initWithReason:(SigRemoteProvisioningLinkCloseStatus)reason {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningLinkOpen;
+        _reason = reason;
+    }
+    return self;
+}
+
+- (Class)responseType {
+    return [SigRemoteProvisioningLinkStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+- (BOOL)isSegmented {
+    return NO;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningLinkStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningLinkStatus;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _RPState;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningLinkStatus;
+        if (parameters == nil || parameters.length != 2) {
+            return nil;
+        }
+        UInt8 tem=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _status = tem;
+        memcpy(&tem, dataByte+1, 1);
+        _RPState = tem;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningLinkReport
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningLinkReport;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _RPState;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    if (_reason < 0x03) {
+        tem8 = _reason;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+    }
+    return mData;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningLinkReport;
+        if (parameters == nil || (parameters.length != 2 && parameters.length != 3)) {
+            return nil;
+        }
+        UInt8 tem=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _status = tem;
+        memcpy(&tem, dataByte+1, 1);
+        _RPState = tem;
+        if (parameters.length >= 3) {
+            memcpy(&tem, dataByte+2, 1);
+            _reason = tem;
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningPDUSend
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningPDUSend;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _outboundPDUNumber;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    if (_provisioningPDU) {
+        [mData appendData:_provisioningPDU];
+    }
+    return mData;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningPDUSend;
+        if (parameters == nil || parameters.length < 2) {
+            return nil;
+        }
+        UInt8 tem=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _outboundPDUNumber = tem;
+        if (parameters.length >= 2) {
+            _provisioningPDU = [parameters subdataWithRange:NSMakeRange(1, parameters.length-1)];
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithOutboundPDUNumber:(UInt8)outboundPDUNumber provisioningPDU:(NSData *)provisioningPDU {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningPDUSend;
+        _outboundPDUNumber = outboundPDUNumber;
+        _provisioningPDU = provisioningPDU;
+    }
+    return self;
+}
+
+- (BOOL)isSegmented {
+    return NO;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningPDUOutboundReport
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningPDUOutboundReport;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _outboundPDUNumber;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningPDUOutboundReport;
+        if (parameters == nil || parameters.length != 1) {
+            return nil;
+        }
+        UInt8 tem=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _outboundPDUNumber = tem;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigRemoteProvisioningPDUReport
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningPDUReport;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _outboundPDUNumber;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    if (_provisioningPDU) {
+        [mData appendData:_provisioningPDU];
+    }
+    return mData;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_remoteProvisioningPDUReport;
+        if (parameters == nil || parameters.length < 2) {
+            return nil;
+        }
+        UInt8 tem=0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _outboundPDUNumber = tem;
+        if (parameters.length >= 2) {
+            _provisioningPDU = [parameters subdataWithRange:NSMakeRange(1, parameters.length-1)];
+        }
+    }
+    return self;
 }
 
 @end

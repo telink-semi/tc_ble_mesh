@@ -41,6 +41,7 @@ struct ProvisionInfo {
     Byte prov_unicast_address[2];
 };
 
+/// 唯一标识符为identityData，且只存储本地json存在的identityData不为空的SigEncryptedModel。设备断电后会改变identityData，出现相同的address的SigEncryptedModel时，需要replace旧的。
 @interface SigEncryptedModel : NSObject
 @property (nonatomic, strong) NSData *identityData;
 @property (nonatomic, strong) NSData *hashData;
@@ -81,7 +82,15 @@ struct ProvisionInfo {
 @property (nonatomic,strong) NSMutableArray <SigEncryptedModel *>*encryptedArray;
 
 /* config value */
-@property (nonatomic,assign) UInt8 defaultFirmwareIDLength;//default is 4.
+//@property (nonatomic,assign) UInt8 defaultFirmwareIDLength;//default is 4.
+@property (nonatomic, strong) SigNetkeyModel *netKeyA;
+@property (nonatomic, strong) SigAppkeyModel *appKeyA;
+@property (nonatomic, strong) SigIvIndex *ivIndexA;
+
+
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
 
 + (SigDataSource *)share;
 
@@ -111,6 +120,7 @@ struct ProvisionInfo {
 @property (nonatomic, assign) BOOL hasWriteDataSourceToLib;
 @property (nonatomic, strong) NSMutableArray <NSNumber *>*defaultGroupSubscriptionModels;//modelID of subscription group
 @property (nonatomic, strong) NSMutableArray <DeviceTypeModel *>*defaultNodeInfos;// default nodeInfo for fast bind.
+@property (nonatomic, assign) UInt16 unicastAddressOfConnected;//get from source address of `setFilterForProvisioner:`
 
 /// Init SDK location Data(include create mesh.json, check provisioner, provisionLocation)
 - (void)configData;
@@ -165,10 +175,9 @@ struct ProvisionInfo {
 - (SigScanRspModel *)getScanRspModelWithAddress:(UInt16)address;
 - (void)deleteScanRspModelWithAddress:(UInt16)address;
 - (SigEncryptedModel *)getSigEncryptedModelWithAddress:(UInt16)address;
-- (void)deleteSigEncryptedModelWithAddress:(UInt16)address;
 - (void)updateScanRspModelToDataSource:(SigScanRspModel *)model;
 ///Special handling: determine model whether exist current meshNetwork
-- (BOOL)existScanRspModel:(SigScanRspModel *)model;
+- (BOOL)existScanRspModelOfCurrentMeshNetwork:(SigScanRspModel *)model;
 ///Special handling: determine peripheralUUIDString whether exist current meshNetwork
 - (BOOL)existPeripheralUUIDString:(NSString *)peripheralUUIDString;
 
