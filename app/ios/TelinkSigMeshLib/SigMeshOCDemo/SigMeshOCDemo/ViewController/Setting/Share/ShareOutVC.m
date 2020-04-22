@@ -70,12 +70,10 @@
             
             NSString *tipString = [NSString stringWithFormat:@"export %@ success!",jsonName];
             [self showTips:tipString];
-            saveLogData(tipString);
             TeLogDebug(@"%@",tipString);
         } else {
             NSString *tipString = [NSString stringWithFormat:@"export %@ fail!",jsonName];
             [self showTips:tipString];
-            saveLogData(tipString);
             TeLogDebug(@"%@",tipString);
         }
     }

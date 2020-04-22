@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     ShowQRCodeViewController.h
+ * @file     ShowQRCodeViewController.m
  *
  * @brief    for TLSR chips
  *
@@ -20,19 +20,35 @@
  *
  *******************************************************************************************************/
 //
-//  ScanQRCodeViewController.h
+//  ScanQRCodeViewController.m
 //  SigMeshOCDemo
 //
 //  Created by Liangjiazhi on 2018/11/19.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
-#import "BaseViewController.h"
+#import "ShowQRCodeViewController.h"
+#import "UIImage+Extension.h"
+#import "zipAndUnzip+zipString.h"
+#import "zipAndUnzip.h"
 
-NS_ASSUME_NONNULL_BEGIN
-
-@interface ShowQRCodeViewController : BaseViewController
+@interface ShowQRCodeViewController ()
+@property (strong, nonatomic) IBOutlet UIImageView *QRCodeImage;
 
 @end
 
-NS_ASSUME_NONNULL_END
+@implementation ShowQRCodeViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    self.title = @"Share";
+    self.QRCodeImage.image = [UIImage createQRImageWithString:self.uuidString rate:3];
+}
+
+-(void)dealloc{
+    TeLogDebug(@"%s",__func__);
+}
+
+@end
