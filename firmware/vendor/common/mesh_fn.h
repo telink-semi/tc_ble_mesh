@@ -40,6 +40,16 @@ u32 get_RecWin_connected();
 void friend_ship_establish_ok_cb_fn(u8 lpn_idx);
 void friend_ship_disconnect_cb_fn(u8 lpn_idx, int type);
 u8 mesh_get_fn_cache_size_log_cnt();
+void friend_cmd_send_offer(u8 lpn_idx);
+void friend_cmd_send_update(u8 lpn_idx, u8 md);
+void friend_cmd_send_clear(u16 adr_dst, u8 *par, u32 len);
+void friend_cmd_send_clear_conf(u16 adr_dst, u8 *par, u32 len);
+void friend_cmd_send_subsc_conf(u16 adr_dst, u8 transNo);
+int mesh_tx_cmd_layer_upper_ctl_FN(u8 op, u8 *par, u32 len_par, u16 adr_dst);
+void mesh_iv_update_start_poll_fn(u8 iv_update_by_sno, u8 beacon_iv_update_pkt_flag);
+u16 mesh_group_match_friend(u16 adr);
 
 
 extern u8 g_max_lpn_num;
+extern u8 use_mesh_adv_fifo_fn2lpn;
+

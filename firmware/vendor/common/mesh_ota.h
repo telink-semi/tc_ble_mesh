@@ -25,36 +25,40 @@
 #include "../../proj/tl_common.h"
 #include "../../proj_lib/sig_mesh/app_mesh.h"
 
+#define CEIL_8(val)                     ((val+7)/8)
+
 //----------------------------------- op code
 // op cmd 0xxxxxxx (SIG)
 
 // op cmd 10xxxxxx xxxxxxxx (SIG)
-#define FW_INFO_GET		        		0x01B6
-#define FW_INFO_STATUS		        	0x02B6
-#define FW_UPDATE_GET		        	0x03B6
-#define FW_UPDATE_PREPARE		        0x04B6
-#define FW_UPDATE_START		        	0x05B6
-#define FW_UPDATE_ABORT		        	0x06B6
-#define FW_UPDATE_APPLY		        	0x07B6
-#define FW_UPDATE_STATUS		        0x08B6
-#define FW_DISTRIBUT_GET		        0x09B6
-#define FW_DISTRIBUT_START		        0x0AB6
-#define FW_DISTRIBUT_STOP		        0x0BB6
-#define FW_DISTRIBUT_STATUS		        0x0CB6
-#define FW_DISTRIBUT_DETAIL_GET		    0x0DB6
-#define FW_DISTRIBUT_DETAIL_LIST		0x0EB6
+#define FW_UPDATE_INFO_GET		        0x01B6
+#define FW_UPDATE_INFO_STATUS		    0x02B6
+#define FW_UPDATE_METADATA_CHECK	    0x03B6
+#define FW_UPDATE_METADATA_CHECK_STATUS 0x04B6
+#define FW_UPDATE_GET		        	0x05B6
+#define FW_UPDATE_START		        	0x06B6
+#define FW_UPDATE_CANCEL		        0x07B6
+#define FW_UPDATE_APPLY		        	0x08B6
+#define FW_UPDATE_STATUS		        0x09B6
+#define FW_DISTRIBUT_GET		        0x0AB6
+#define FW_DISTRIBUT_START		        0x0BB6
+#define FW_DISTRIBUT_CANCEL		        0x0CB6
+#define FW_DISTRIBUT_APPLY		        0x0DB6
+#define FW_DISTRIBUT_STATUS		        0x0EB6
+#define FW_DISTRIBUT_DETAIL_GET		    0x0FB6
+#define FW_DISTRIBUT_DETAIL_LIST		0x10B6
 
-#define OBJ_TRANSFER_GET		        0x01B7
-#define OBJ_TRANSFER_START		        0x02B7
-#define OBJ_TRANSFER_ABORT		        0x03B7
-#define OBJ_TRANSFER_STATUS		        0x04B7
-#define OBJ_BLOCK_TRANSFER_START		0x05B7
-#define OBJ_BLOCK_TRANSFER_STATUS		0x06B7
-#define OBJ_CHUNK_TRANSFER		        0x7D
-#define OBJ_BLOCK_GET		            0x7E
-#define OBJ_BLOCK_STATUS		        0x09B7
-#define OBJ_INFO_GET		            0x0AB7
-#define OBJ_INFO_STATUS		            0x0BB7
+#define BLOB_TRANSFER_GET		        0x01B7
+#define BLOB_TRANSFER_START		        0x02B7
+#define BLOB_TRANSFER_CANCEL		    0x03B7
+#define BLOB_TRANSFER_STATUS		    0x04B7
+#define BLOB_BLOCK_GET		            0x07B7
+#define BLOB_BLOCK_START		        0x05B7
+#define BLOB_BLOCK_STATUS		        0x7E
+#define BLOB_CHUNK_TRANSFER		        0x7D
+#define BLOB_INFO_GET		            0x0AB7
+#define BLOB_INFO_STATUS		        0x0BB7
+#define BLOB_PART_BLOCK_REPORT		    0x7C    // used for pull mode(LPN)
 
 //------op parameters
 #if WIN32
@@ -74,11 +78,13 @@
 #endif
 #define MESH_OTA_BLOCK_SIZE_MIN         (1 << MESH_OTA_BLOCK_SIZE_LOG_MIN)
 #define MESH_OTA_BLOCK_SIZE_MAX         (1 << MESH_OTA_BLOCK_SIZE_LOG_MAX)
+#define MESH_OTA_CHUNK_SIZE_MAX         (MESH_OTA_CHUNK_SIZE)
 #define MESH_OTA_CHUNK_NUM_MAX          ((MESH_OTA_BLOCK_SIZE_MAX + MESH_OTA_CHUNK_SIZE - 1)/MESH_OTA_CHUNK_SIZE)
+#define MESH_OTA_CHUNK_NUM_MAX_CEIL     (CEIL_8(MESH_OTA_CHUNK_NUM_MAX))
 // #define MESH_OTA_CHUNK_MISS_MAX         (4)     // for unsegment // TODO
-#define MESH_OTA_OBJ_SIZE_MAX           (FW_SIZE_MAX_K * 1024)
+#define MESH_OTA_BLOB_SIZE_MAX        	(FW_SIZE_MAX_K * 1024)
 
-#define MESH_OTA_BLOCK_MAX  ((MESH_OTA_OBJ_SIZE_MAX + (MESH_OTA_BLOCK_SIZE_MIN - 1)) / MESH_OTA_BLOCK_SIZE_MIN)
+#define MESH_OTA_BLOCK_MAX 	((MESH_OTA_BLOB_SIZE_MAX + (MESH_OTA_BLOCK_SIZE_MIN - 1)) / MESH_OTA_BLOCK_SIZE_MIN)
 
 #if MD_MESH_OTA_EN
     #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)
@@ -92,14 +98,22 @@ enum{
     OTA_CHECK_TYPE_TELINK_MESH      = 1,
 };
 
+/*distribute model status code*/
 enum{
-	DISTRIBUT_ST_NOT_ACTIVE         = 0,
-	DISTRIBUT_ST_ACTIVE             = 1,
-	DISTRIBUT_ST_NO_SUCH_ID         = 2,
-	DISTRIBUT_ST_BUSY_WITH_DIFF     = 3,
-	DISTRIBUT_ST_UPDATE_NODE_LIST_TOO_LONG  = 4,
+	DISTRIBUT_ST_SUCCESS                = 0,
+	DISTRIBUT_ST_OUTOF_RESOURCE         = 1,
+	DISTRIBUT_ST_INVALID_APPKEY_IDX     = 2,
+	DISTRIBUT_ST_NODE_LIST_EMPTY        = 3,
+	DISTRIBUT_ST_INVALID_PHASE          = 4,
+	DISTRIBUT_ST_FW_NOT_FOUND           = 5,
+	DISTRIBUT_ST_BUSY_WITH_TRANSFER     = 6,
+	DISTRIBUT_ST_URI_NOT_SUPPORT        = 7,
+	DISTRIBUT_ST_URI_MALFORMED          = 8,
+	DISTRIBUT_ST_DISTRIBUTOR_BUSY       = 9,
+	DISTRIBUT_ST_INTERNAL_ERROR         = 0x0A,
 	DISTRIBUT_ST_MAX,
 };
+/*distribute model status code end*/
 
 enum{
 	UPDATE_NODE_ST_SUCCESS          = 0,
@@ -108,35 +122,20 @@ enum{
 };
 
 typedef struct{
-	u16 cid;
-	u32 fw_id;
-}fw_cid_fwid_t;
+	u16 pid;
+	u16 vid;
+}fw_id_t;
 
 typedef struct{
-	fw_cid_fwid_t id;
-}fw_info_status_t;
-
-typedef struct{
-	fw_cid_fwid_t id;
-}fw_distribut_get_t;
-
-typedef struct{
-	fw_cid_fwid_t id;
 	u16 adr_group;
 	u16 update_list[MESH_OTA_UPDATE_NODE_MAX];
 }fw_distribut_start_t;
 
 typedef struct{
-	fw_cid_fwid_t id;
-}fw_distribut_stop_t;
-
-typedef struct{
     u8 st;
-	fw_cid_fwid_t id;
 }fw_distribut_status_t;
 
 typedef struct{
-	fw_cid_fwid_t id;
 }fw_distribut_detail_get_t;
 
 typedef struct{
@@ -149,149 +148,207 @@ typedef struct{
 }fw_distribut_detail_list_t;
 
 enum{
-	UPDATE_PHASE_IDLE               = 0,    // no DFU update in progress
-	UPDATE_PHASE_PREPARE            = 1,
-	UPDATE_PHASE_IN_PROGRESS        = 2,
-	UPDATE_PHASE_DUF_READY          = 3,
-	UPDATE_PHASE_APPLY_OK           = 7,    // just use internal
-	UPDATE_PHASE_MAX,
+    UPDATE_PHASE_IDLE               = 0,    // no DFU update in progress
+    UPDATE_PHASE_TRANSFER_ERR       = 1,
+    UPDATE_PHASE_TRANSFER_ACTIVE    = 2,
+    UPDATE_PHASE_VERIFYING_UPDATE   = 3,	// DUF_READY
+    UPDATE_PHASE_VERIFYING_SUCCESS  = 4,
+    UPDATE_PHASE_VERIFYING_FAIL     = 5,
+    UPDATE_PHASE_APPLYING_UPDATE    = 6,
+    UPDATE_PHASE_MAX,
 };
 
 enum{
-	ADDITIONAL_PROV_NEED            = 0,
-	ADDITIONAL_MAX,
+    ADDITIONAL_CPS_NO_CHANGE                    = 0, // CPS: composition data
+    ADDITIONAL_CPS_CHANGE_NO_REMOTE_PROVISIOIN  = 1,
+    ADDITIONAL_CPS_CHANGE_REMOTE_PROVISIOIN     = 2,
+    ADDITIONAL_NODE_UNPROVISIONED               = 3, // The node is unprovisioned after successful application of a verified firmware image.
+    ADDITIONAL_MAX,
 };
 
 enum{
-	UPDATE_POLICY_NONE              = 0,
-	UPDATE_POLICY_AUTO_UPDATE       = 1,
+	UPDATE_POLICY_VERIFY_ONLY       = 0,
+	UPDATE_POLICY_VERIFY_AND_APPLY  = 1,
 	UPDATE_POLICY_MAX,
 };
 
+/*firmware update model status code*/
 enum{
-	UPDATE_ST_SUCCESS                       = 0,
-	UPDATE_ST_ID_COMBINATION_WRONG          = 1,
-	UPDATE_ST_BUSY_WITH_DIFF_OBJ            = 2,
-	UPDATE_ST_ID_COMBINATION_APPLY_FAIL     = 3,
-	UPDATE_ST_ID_COMBINATION_ALWAYS_REJECT  = 4,    // newer firmware version present
-	UPDATE_ST_ID_COMBINATION_TEMP_REJECT    = 5,    // node is not able to accept new firmware now, try again later
+	UPDATE_ST_SUCCESS               = 0,
+	UPDATE_ST_METADATA_CHECK_FAIL   = 1,
+	UPDATE_ST_INVALID_FW_ID         = 2,
+	UPDATE_ST_OUTOF_RESOURCE        = 3,
+	UPDATE_ST_BLOB_TRANSFER_BUSY    = 4,
+	UPDATE_ST_INVALID_CMD           = 5,
+	UPDATE_ST_TEMP_UNAVAILABLE      = 6,
+	UPDATE_ST_INTERNAL_ERROR        = 7,
 	UPDATE_ST_MAX,
 };
+/*firmware update model status code end*/
+
 
 typedef struct{
-	fw_cid_fwid_t id;
-}fw_update_get_t;
+    u8 first_index;
+    u8 entry_limit;
+}fw_update_info_get_t;
 
 typedef struct{
-	fw_cid_fwid_t id;
-	u8 obj_id[8];
-}fw_update_prepare_t;
+    u8 list_count;
+    u8 first_index;
+#if 1   // only one firmware for telink SDK
+    u8 fw_id_len;
+    fw_id_t fw_id;
+    u8 uri_len; // set 0 now.
+    // uri[];
+#endif
+}fw_update_info_status_t;
 
 typedef struct{
-	u8 policy;
-	fw_cid_fwid_t id;
+    u8 data[4]; // just for demo
+}fw_metadata_t;
+
+typedef struct{
+    u8 image_index; // Index of the firmware image in the Firmware information List state that is being updated
+    fw_metadata_t metadata;
+}fw_update_metadata_check_t;
+
+typedef struct{
+	u8 st               :3;
+	u8 rfu              :5;
+	u8 image_index;
+}fw_update_metadata_check_status_t;
+
+typedef struct{
+    u8 ttl;
+    u16 timeout_base;
+    u8 blob_id[8];
+    u8 image_index;  // Index of the firmware image in the Firmware information List state that is being updated
+    fw_metadata_t metadata;
 }fw_update_start_t;
 
 typedef struct{
-	fw_cid_fwid_t id;
-}fw_update_control_t;
-
-typedef struct{
-    u8 st;
-    u8 phase            :3;
-    u8 additional_info  :5;
-	fw_cid_fwid_t id;
-	u8 obj_id[8];
+	u8 st               :3;
+	u8 rfu              :2;
+	u8 update_phase     :3;
+	// --below is optional
+	u8 ttl;
+	u8 additional_info  :5;
+	u8 rfu2             :3;
+	u16 timeout_base;
+	u8 blob_id[8];
+	u8 image_index;
 }fw_update_status_t;
 
 
+/*BLOB transfer update model status code*/
 enum{
-	OBJ_TRANS_ST_READY                      = 0,
-	OBJ_TRANS_ST_BUSY                       = 1,
-	OBJ_TRANS_ST_BUSY_WITH_DIFF             = 2,
-	OBJ_TRANS_ST_TOO_BIG                    = 3,
-	OBJ_TRANS_ST_MAX
+	BLOB_TRANS_ST_SUCCESS              	= 0,
+	BLOB_TRANS_ST_INVALID_BK_NUM       	= 1,        // invalid block number, no previous block
+	BLOB_TRANS_ST_INVALID_BK_SIZE      	= 2,        // bigger then Block Size Log [Object Transfer Start]
+	BLOB_TRANS_ST_INVALID_CHUNK_SIZE   	= 3,        // bigger then Block Size divided by Max Chunks Number [Object Information Status]
+	BLOB_TRANS_ST_INVALID_STATE        	= 4,
+	BLOB_TRANS_ST_INVALID_PAR         	= 5,
+	BLOB_TRANS_ST_WRONG_BLOB_ID        	= 6,
+	BLOB_TRANS_ST_BLOB_TOO_LARGE       	= 7,
+	BLOB_TRANS_ST_UNSUPPORT_TRANS_MODE 	= 8,
+	BLOB_TRANS_ST_INTERNAL_ERROR       	= 9,
+	BLOB_TRANS_ST_MAX
+};
+/*BLOB transfer update model status code end*/
+
+typedef struct{
+    u8 rfu              :6;
+    u8 transfer_mode    :2;
+	u8 blob_id[8];
+	u32 blob_size;
+	u8 bk_size_log;
+	u16 client_mtu_size;
+}blob_transfer_start_t;
+
+typedef struct{
+	u8 blob_id[8];
+}blob_transfer_cancel_t;
+
+enum{
+    BLOB_TRANS_PHASE_INACTIVE           = 0,
+    BLOB_TRANS_PHASE_WAIT_START         = 1,
+    BLOB_TRANS_PHASE_WAIT_NEXT_BLOCK    = 2,
+    BLOB_TRANS_PHASE_WAIT_NEXT_CHUNK    = 3,
+    BLOB_TRANS_PHASE_COMPLETE           = 4,    // The BLOB was transferred successfully.
+    BLOB_TRANS_PHASE_SUSPEND            = 5,
+    BLOB_TRANS_PHASE_MAX,
 };
 
 typedef struct{
-	u8 obj_id[8];
-}obj_transfer_get_t;
-
-typedef struct{
-	u8 obj_id[8];
-	u32 obj_size;
+	u8 st               :4;
+	u8 rfu              :2;
+	u8 transfer_mode    :2;
+	u8 transfer_phase;
+	// -- below is optional
+	u8 blob_id[8];
+	u32 blob_size;
 	u8 bk_size_log;
-}obj_transfer_start_t;
-
-typedef struct{
-	u8 st;
-	u8 obj_id[8];
-	u32 obj_size;
-	u8 bk_size_log;
-}obj_transfer_status_t;
+	u16 transfer_mtu_size;
+	u8 bk_not_receive[1];   // variable: bit field
+}blob_transfer_status_t;
 
 enum{
-	OBJ_BLOCK_TRANS_ST_ACCEPTED             = 0,
-	OBJ_BLOCK_TRANS_ST_ALREADY_RX           = 1,
-	OBJ_BLOCK_TRANS_ST_INVALID_BK_NUM       = 2,        // invalid block number, no previous block
-	OBJ_BLOCK_TRANS_ST_WRONG_BK_SIZE_CURRENT    = 3,    // bigger then Block Size Log [Object Transfer Start]
-	OBJ_BLOCK_TRANS_ST_WRONG_CHUNK_SIZE     = 4,        // bigger then Block Size divided by Max Chunks Number [Object Information Status]
-	OBJ_BLOCK_TRANS_ST_UNKNOWN_CHECK_SUM_TYPE   = 5,
-	OBJ_BLOCK_TRANS_ST_REJECT               = 0x0f,
-	OBJ_BLOCK_TRANS_ST_MAX
-};
-
-enum{
-	OBJ_BLOCK_CHECK_SUM_TYPE_CRC32          = 0,
-	OBJ_BLOCK_CHECK_SUM_TYPE_MAX
+	BLOB_BLOCK_CHECK_SUM_TYPE_CRC32        	= 0,
+	BLOB_BLOCK_CHECK_SUM_TYPE_MAX
 };
 
 typedef struct{
 	u16 block_num;
 	u16 chunk_size;
-	u8 bk_check_sum_type;
-	u32 bk_check_sum_val;
-	u16 bk_size_current;    // optional
-}block_transfer_start_par_t;
-
-typedef struct{
-	u8 obj_id[8];
-	block_transfer_start_par_t par;
-}obj_block_transfer_start_t;
-
-typedef struct{
-	u8 st;
-}obj_block_transfer_status_t;
+}blob_block_start_t;
 
 typedef struct{
 	u16 chunk_num;
 	u8 data[256];
-}obj_chunk_transfer_t;
+}blob_chunk_transfer_t;
 
 enum{
-	OBJ_BLOCK_ST_ALL_CHUNK_RX               = 0,
-	OBJ_BLOCK_ST_NOT_ALL_CHUNK_RX           = 1,
-	OBJ_BLOCK_ST_WRONG_CHECK_SUM            = 2,
-	OBJ_BLOCK_ST_WRONG_OBJ_ID               = 3,
-	OBJ_BLOCK_ST_WRONG_BLOCK                = 4,
-	OBJ_BLOCK_ST_MAX
+	BLOB_BLOCK_FORMAT_ALL_CHUNK_MISS   	= 0,
+	BLOB_BLOCK_FORMAT_NO_CHUNK_MISS     = 1,    // 0x40
+	BLOB_BLOCK_FORMAT_SOME_CHUNK_MISS  	= 2,    // 0x80
+	BLOB_BLOCK_FORMAT_ENCODE_MISS_CHUNK	= 3,    // 0xc0
 };
 
 typedef struct{
-	u8 obj_id[8];
+	u8 st       :4;
+	u8 rfu      :2;
+	u8 format   :2;
+	u8 transfer_phase;
 	u16 block_num;
-}obj_block_get_t;
+	u16 chunk_size;
+	u8 miss_chunk[MESH_OTA_CHUNK_NUM_MAX_CEIL]; // optional for block get
+}blob_block_status_t;
 
-typedef struct{
-	u8 st;
-	u16 miss_chunk[MESH_OTA_CHUNK_NUM_MAX];
-}obj_block_status_t;
+enum{
+    MESH_OTA_TRANSFER_MODE_PUSH = BIT(0),
+    MESH_OTA_TRANSFER_MODE_PULL = BIT(1),    // for LPN
+};
 
 typedef struct{
 	u8 bk_size_log_min;
 	u8 bk_size_log_max;
 	u16 chunk_num_max;
-}obj_info_status_t;
+	u16 chunk_size_max;
+	u32 blob_size_max;  // max firmware size
+	u16 server_mtu_size;
+	#if 1
+    u8 transfer_mode;
+	#else
+	union{
+	    u8 transfer_mode;
+	    struct{
+        	u8 transfer_mode_push   :1;
+        	u8 transfer_mode_pull   :1;
+        	u8 transfer_mode_rsv    :6;
+    	};
+	};
+	#endif
+}blob_info_status_t;
 
 
 //--- proc
@@ -301,26 +358,27 @@ enum{
 	MASTER_OTA_ST_IDLE                      = 0,
 	MASTER_OTA_ST_DISTRIBUT_START,
 	MASTER_OTA_ST_SUBSCRIPTION_SET,
-	MASTER_OTA_ST_FW_INFO_GET,
-	MASTER_OTA_ST_OBJ_INFO_GET,
-	MASTER_OTA_ST_UPDATE_PREPARE,
-	MASTER_OTA_ST_UPDATE_START,                 // 10
-	MASTER_OTA_ST_OBJ_TRANSFER_START,
-	MASTER_OTA_ST_OBJ_BLOCK_TRANSFER_START,
-	MASTER_OTA_ST_OBJ_BLOCK_TRANSFER_START_CHECK_RESULT,
-	MASTER_OTA_ST_OBJ_CHUNK_START,
-	MASTER_OTA_ST_OBJ_BLOCK_GET,
-	MASTER_OTA_ST_UPDATE_GET,                   // 20
+	MASTER_OTA_ST_FW_UPDATE_INFO_GET,
+	MASTER_OTA_ST_UPDATE_METADATA_CHECK,
+	MASTER_OTA_ST_UPDATE_START,        		// 5
+	MASTER_OTA_ST_BLOB_TRANSFER_GET,
+	MASTER_OTA_ST_BLOB_INFO_GET,
+	MASTER_OTA_ST_BLOB_TRANSFER_START,
+	MASTER_OTA_ST_BLOB_BLOCK_START,
+	MASTER_OTA_ST_BLOB_BLOCK_START_CHECK_RESULT, // 10
+	MASTER_OTA_ST_BLOB_CHUNK_START,
+	MASTER_OTA_ST_BLOB_BLOCK_GET,
+	MASTER_OTA_ST_UPDATE_GET,
 	MASTER_OTA_ST_UPDATE_APPLY,
-	MASTER_OTA_ST_DISTRIBUT_STOP,
+	MASTER_OTA_ST_DISTRIBUT_STOP,           // 15
 	MASTER_OTA_ST_MAX,
 };
 
 typedef struct{
 	u16 adr;
-	u8 st_block_trans_start;
+	u8 st_block_start;
 	u8 st_block_get;
-    u8 phase            :3;
+    u8 update_phase     :3;
     u8 additional_info  :5;
     u8 skip_flag        :1;
     u8 apply_flag       :1;
@@ -328,18 +386,23 @@ typedef struct{
 }fw_detail_list_t;
 
 typedef struct{
-	fw_cid_fwid_t id;
-	u8 obj_id[8];
+	u8 blob_id[8];
 	u16 adr_group;
 	fw_detail_list_t list[MESH_OTA_UPDATE_NODE_MAX];
-	u32 miss_mask;
-	block_transfer_start_par_t block_start_par;
+#if WIN32
+	u8 miss_mask[max2(MESH_OTA_CHUNK_NUM_MAX_CEIL, 32)];   // set enough RAM
+#else
+	u8 miss_mask[max2(MESH_OTA_CHUNK_NUM_MAX_CEIL, 8)];
+#endif
+	blob_block_start_t block_start;
 	u8 bk_size_log;  // for 4 byte align
 	u16 node_cnt;    // update node cnt
 	u16 node_num;    // for check all
-	u32 obj_size;
+	u32 blob_size;
+	u16 bk_size_current;
 	u16 chunk_num;
 	u16 adr_distr_node;
+	u8 miss_chunk_test_flag;
 	u8 percent_last;    // progress
 	u8 policy;
 	u8 pause_flag;  // pause mesh ota tx flow when GATT disconnect, untill APP resume.
@@ -347,19 +410,21 @@ typedef struct{
 }fw_distribut_srv_proc_t;
 
 typedef struct{
-	fw_cid_fwid_t id;
-	u8 obj_id[8];
-	u16 obj_block_trans_num_next;       // for 4 byte align
-	block_transfer_start_par_t block_start_par;
-	u8 obj_block_trans_accepted;        // for 4 byte align
-	u32 miss_mask;
-	u32 obj_size;
+	u32 blob_size;
 	u32 crc_total;
+	fw_update_start_t start;            // 0x08
+	blob_block_start_t block_start;     // 0x18:2 byte align here
+	u16 blob_block_trans_num_next;      // 0x1C
+	u16 client_mtu_size;
+	u16 bk_size_current;
 	u8 blk_crc_tlk_mask[(MESH_OTA_BLOCK_MAX + 7)/8];
-	u8 obj_trans_busy;
+	u8 miss_mask[MESH_OTA_CHUNK_NUM_MAX_CEIL];
+	u8 blob_block_trans_accepted;       // 
+	u8 blob_trans_busy;
+	u8 blob_trans_phase;
+	u8 transfer_mode;
 	u8 bk_size_log;
-	u8 policy;
-    u8 phase            :3;
+    u8 update_phase     :3;
     u8 additional_info  :5;
     u8 bin_crc_done;
     u8 reboot_flag_backup;
@@ -368,40 +433,55 @@ typedef struct{
 
 typedef struct{
     
-}obj_trans_srv_proc_t;
+}blob_trans_srv_proc_t;
 
 // -----------
-int mesh_cmd_sig_fw_info_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_fw_info_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int is_buf_zero(void *data, unsigned int len);
+u32 set_bit_by_cnt(u8 *out, u32 len, u32 cnt);
+
+static inline int is_buf_bit_set(u8 *buf, u32 num)
+{
+    return (buf[num / 8] & BIT(num % 8));
+}
+
+static inline int buf_bit_clear(u8 *buf, u32 num)
+{
+    return (buf[num / 8] &= (~ BIT(num % 8)));
+}
+
+int mesh_cmd_sig_fw_update_info_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_fw_update_info_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_fw_update_metadata_check(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_fw_update_metadata_check_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+
 #if DISTRIBUTOR_UPDATE_CLIENT_EN
 int mesh_cmd_sig_fw_distribut_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_fw_distribut_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_fw_distribut_stop(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_fw_distribut_cancel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_fw_distribut_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_fw_distribut_detail_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_fw_distribut_detail_list(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 #else
 #define mesh_cmd_sig_fw_distribut_get               0
 #define mesh_cmd_sig_fw_distribut_start             0
-#define mesh_cmd_sig_fw_distribut_stop              0
+#define mesh_cmd_sig_fw_distribut_cancel            0
 #define mesh_cmd_sig_fw_distribut_status            0
 #define mesh_cmd_sig_fw_distribut_detail_get        0
 #define mesh_cmd_sig_fw_distribut_detail_list       0
 #endif
 int mesh_cmd_sig_fw_update_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_fw_update_prepare(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_fw_update_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_fw_update_control(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_fw_update_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_obj_transfer_handle(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_obj_transfer_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_obj_block_transfer_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_obj_block_transfer_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_obj_chunk_transfer(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_obj_info_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_obj_info_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_obj_block_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_obj_block_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_blob_transfer_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_blob_transfer_handle(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_blob_transfer_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_blob_block_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_blob_chunk_transfer(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_blob_info_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_blob_info_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_blob_block_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_blob_block_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 
 // ---
 int access_cmd_fw_update_control(u16 adr_dst, u16 op, u8 rsp_max);
@@ -424,4 +504,5 @@ u16 APP_get_GATT_connect_addr();
 void APP_set_mesh_ota_pause_flag(u8 val);
 int is_mesh_ota_and_only_VC_update();
 u32 soft_crc32_ota_flash(u32 addr, u32 len, u32 crc_init,u32 *out_crc_type1_blk);
+int mesh_ota_slave_need_ota(fw_metadata_t *p_metadata, int len);
 

@@ -396,7 +396,7 @@ int mesh_proxy_set_filter_cmd(u8 opcode,u8 filter_type, u8* dat,u8 len )
 	if(opcode == PROXY_FILTER_SET_TYPE){
 		len =1;// get the first byte of the dat buf 
 		dat[0]= filter_type;
-	}else if (opcode == PROXY_FILTER_ADDR_ADR || opcode == PROXY_FILTER_RM_ADR){
+	}else if (opcode == PROXY_FILTER_ADD_ADR || opcode == PROXY_FILTER_RM_ADR){
 		if(len %2 !=0){
 			len = len -1;
 		}
@@ -416,7 +416,7 @@ int mesh_proxy_set_filter_type(u8 filter_type)
 }
 int mesh_proxy_filter_add_adr(u16 adr)
 {
-	return mesh_proxy_set_filter_cmd(PROXY_FILTER_ADDR_ADR,0,(u8 *)&adr,sizeof(adr));
+	return mesh_proxy_set_filter_cmd(PROXY_FILTER_ADD_ADR,0,(u8 *)&adr,sizeof(adr));
 }
 
 int mesh_proxy_filter_remove_adr(u16 adr)

@@ -37,18 +37,8 @@ extern "C" {
 #define	__LOG_RT_ENABLE__		0
 //#define	__DEBUG_PRINT__			0
 
-#if DUAL_VENDOR_EN
-#define FLASH_1M_ENABLE         0
-#else
-#define FLASH_1M_ENABLE         0
-#endif
-
-#if FLASH_1M_ENABLE
-#define PINGPONG_OTA_DISABLE    0 // it can disable only when 1M flash.
-#if	PINGPONG_OTA_DISABLE
-#define SWITCH_FW_ENABLE		0 // set to 0, just for particular customer 
-#endif
-#endif
+#define FLASH_1M_ENABLE         1
+#define PINGPONG_OTA_DISABLE    1 // it can disable only when 1M flash.
 
 //////////// product  Information  //////////////////////////////
 #define ID_VENDOR				0x248a			// for report
@@ -99,15 +89,7 @@ extern "C" {
 #endif
 
 /////////////////// mesh project config /////////////////////////////////
-#if (MESH_RX_TEST || (!MD_DEF_TRANSIT_TIME_EN))
 #define TRANSITION_TIME_DEFAULT_VAL (0)
-#else
-	#if MI_API_ENABLE
-#define TRANSITION_TIME_DEFAULT_VAL	0
-	#else
-#define TRANSITION_TIME_DEFAULT_VAL (GET_TRANSITION_TIME_WITH_STEP(1, TRANSITION_STEP_RES_1S)) // (0x41)  // 0x41: 1 second // 0x00: means no default transition time
-	#endif
-#endif
 
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			0
@@ -119,11 +101,8 @@ extern "C" {
 #define BLT_SOFTWARE_TIMER_ENABLE		0
 #endif
 
-#if MI_SWITCH_LPN_EN
-#define PM_DEEPSLEEP_RETENTION_ENABLE   1
-#else
 #define PM_DEEPSLEEP_RETENTION_ENABLE   0
-#endif
+
 //////////////////////////// KEYSCAN/MIC  GPIO //////////////////////////////////
 #define	MATRIX_ROW_PULL					PM_PIN_PULLDOWN_100K
 #define	MATRIX_COL_PULL					PM_PIN_PULLUP_10K
@@ -144,6 +123,10 @@ extern "C" {
 //
 
 //----------------------- GPIO for UI --------------------------------
+#if ((0 == PM_DEEPSLEEP_RETENTION_ENABLE) && DUAL_VENDOR_EN)
+#define SLEEP_FUNCTION_DISABLE          1
+#endif
+
 //---------------  Button 
 #if (PCBA_SEL == PCBA_8278_DONGLE_48PIN)
 #define PULL_WAKEUP_SRC_PD6     PM_PIN_PULLUP_1M	//btn
@@ -212,21 +195,13 @@ extern "C" {
 #define	USE_SYS_TICK_PER_US
 #define CLOCK_SYS_TYPE  		CLOCK_TYPE_PLL	//  one of the following:  CLOCK_TYPE_PLL, CLOCK_TYPE_OSC, CLOCK_TYPE_PAD, CLOCK_TYPE_ADC
 
-#if (MI_API_ENABLE)
 #define CLOCK_SYS_CLOCK_HZ  	48000000
-#else
-#define CLOCK_SYS_CLOCK_HZ  	16000000
-#endif
 //////////////////Extern Crystal Type///////////////////////
 #define CRYSTAL_TYPE			XTAL_12M		//  extern 12M crystal
 
 /////////////////// watchdog  //////////////////////////////
 #define MODULE_WATCHDOG_ENABLE		0
-#if (MI_API_ENABLE)
-#define WATCHDOG_INIT_TIMEOUT		20000  //in mi mode the watchdog timeout is 20s
-#else
 #define WATCHDOG_INIT_TIMEOUT		2000  //in mi mode the watchdog timeout is 20s
-#endif
 
 
 

@@ -41,6 +41,7 @@
 #include "../../vendor/common/mesh_ota.h"
 #include "../../vendor/common/mesh_property.h"
 #include "generic_model.h"
+#include "directed_forwarding.h"
 
 /** @addtogroup Mesh_Common
   * @{
@@ -269,6 +270,15 @@ int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	if(err){
 		return err;
 	}
+	#if MI_API_ENABLE
+		// have transmit and delay 
+		mesh_cmd_g_onoff_set_t *p_set = (mesh_cmd_g_onoff_set_t *)par;
+		if(par_len == sizeof(mesh_cmd_g_onoff_set_t)){
+			mi_pub_sigmodel_inter(p_set->transit_t,p_set->delay,1);
+		}else{
+			mi_pub_sigmodel_inter(0,0,0);
+		}
+	#endif
 
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_g_onoff_st_rsp(cb_par);
@@ -950,6 +960,63 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
     {HEALTH_ATTENTION_SET_NOACK,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_attention_set_unrel,STATUS_NONE},
     {HEALTH_ATTENTION_STATUS,1,SIG_MD_HEALTH_SERVER,SIG_MD_HEALTH_CLIENT,mesh_cmd_sig_attention_status,STATUS_NONE},
 
+#if DIRECTED_FORWARDING_MODULE_EN
+	// directed forwarding
+	{DIRECTED_CONTROL_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_get,DIRECTED_CONTROL_STATUS},
+	{DIRECTED_CONTROL_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_set,DIRECTED_CONTROL_STATUS},
+    {DIRECTED_CONTROL_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_control_status,STATUS_NONE},
+    {PATH_METRIC_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_metric_get,PATH_METRIC_STATUS},
+    {PATH_METRIC_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_metric_set,PATH_METRIC_STATUS},
+    {PATH_METRIC_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_path_metric_status,STATUS_NONE},
+	{DISCOVERY_TABLE_CAPABILITIES_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_dsc_tbl_capa_get,DISCOVERY_TABLE_CAPABILITIES_STATUS},
+	{DISCOVERY_TABLE_CAPABILITIES_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_dsc_tbl_capa_set,DISCOVERY_TABLE_CAPABILITIES_STATUS},
+    {DISCOVERY_TABLE_CAPABILITIES_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_dsc_tbl_capa_status,STATUS_NONE},
+    {FORWARDING_TABLE_ADD,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_add,FORWARDING_TABLE_STATUS},
+    {FORWARDING_TABLE_DELETE,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_delete,FORWARDING_TABLE_STATUS},
+    {FORWARDING_TABLE_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_forwarding_tbl_status,STATUS_NONE},    
+    {FORWARDING_TABLE_DEPENDENTS_ADD,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_dependents_add,FORWARDING_TABLE_DEPENDENTS_STATUS},
+    {FORWARDING_TABLE_DEPENDENTS_DELETE,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_dependents_delete,FORWARDING_TABLE_DEPENDENTS_STATUS},
+    {FORWARDING_TABLE_DEPENDENTS_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_forwarding_tbl_dependents_status,STATUS_NONE},
+	{FORWARDING_TABLE_DEPENDENTS_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_dependents_get,FORWARDING_TABLE_DEPENDENTS_GET_STATUS},
+   	{FORWARDING_TABLE_DEPENDENTS_GET_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_forwarding_tbl_dependents_get_status,STATUS_NONE},   	
+	{FORWARDING_TABLE_ENTRIES_COUNT_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_entries_count_get,FORWARDING_TABLE_ENTRIES_COUNT_STATUS},
+	{FORWARDING_TABLE_ENTRIES_COUNT_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_forwarding_tbl_entries_count_status,STATUS_NONE},
+	{FORWARDING_TABLE_ENTRIES_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_entries_get,FORWARDING_TABLE_ENTRIES_STATUS},
+	{FORWARDING_TABLE_ENTRIES_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_forwarding_tbl_entries_status,STATUS_NONE},
+	{WANTED_LANES_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_wanted_lanes_get,WANTED_LANES_STATUS},
+	{WANTED_LANES_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_wanted_lanes_set,WANTED_LANES_STATUS},
+    {WANTED_LANES_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_wanted_lanes_status,STATUS_NONE},
+    {TWO_WAY_PATH_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_two_way_path_get,TWO_WAY_PATH_STATUS},
+	{TWO_WAY_PATH_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_two_way_path_set,TWO_WAY_PATH_STATUS},
+    {TWO_WAY_PATH_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_two_way_path_status,STATUS_NONE},
+	{PATH_ECHO_INTERVAL_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_echo_interval_get,PATH_ECHO_INTERVAL_STATUS},
+	{PATH_ECHO_INTERVAL_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_echo_interval_set,PATH_ECHO_INTERVAL_STATUS},
+	{PATH_ECHO_INTERVAL_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_path_echo_interval_status,STATUS_NONE},
+	{DIRECTED_NETWORK_TRANSMIT_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_network_transmit_get,DIRECTED_NETWORK_TRANSMIT_STATUS},
+    {DIRECTED_NETWORK_TRANSMIT_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_network_transmit_set,DIRECTED_NETWORK_TRANSMIT_STATUS},
+    {DIRECTED_NETWORK_TRANSMIT_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_network_transmit_status,STATUS_NONE},
+	{DIRECTED_RELAY_RETRANSMIT_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_relay_retransmit_get,DIRECTED_RELAY_RETRANSMIT_STATUS},
+    {DIRECTED_RELAY_RETRANSMIT_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_relay_retransmit_set,DIRECTED_RELAY_RETRANSMIT_STATUS},
+    {DIRECTED_RELAY_RETRANSMIT_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_relay_retransmit_status,STATUS_NONE},
+	{RSSI_THRESHOLD_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_rssi_threshold_get,RSSI_THRESHOLD_STATUS},
+	{RSSI_THRESHOLD_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_rssi_threshold_set,RSSI_THRESHOLD_STATUS},
+	{RSSI_THRESHOLD_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_rssi_threshold_status,STATUS_NONE}, 
+	{DIRECTED_PATHS_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_paths_get,DIRECTED_PATHS_STATUS},
+    {DIRECTED_PATHS_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_paths_status,STATUS_NONE},
+    {DIRECTED_PUBLISH_POLICY_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_publish_policy_get,DIRECTED_PUBLISH_POLICY_STATUS},
+    {DIRECTED_PUBLISH_POLICY_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_publish_policy_set,DIRECTED_PUBLISH_POLICY_STATUS},
+    {DIRECTED_PUBLISH_POLICY_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_publish_policy_status,STATUS_NONE},
+	{PATH_DISCOVERY_TIMING_CONTROL_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_discovery_timing_control_get,PATH_DISCOVERY_TIMING_CONTROL_STATUS},
+	{PATH_DISCOVERY_TIMING_CONTROL_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_discovery_timing_control_set,PATH_DISCOVERY_TIMING_CONTROL_STATUS},
+	{PATH_DISCOVERY_TIMING_CONTROL_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_path_discovery_timing_control_status,STATUS_NONE},
+    {DIRECTED_CONTROL_NETWORK_TRANSMIT_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_network_transmit_get,DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS},
+    {DIRECTED_CONTROL_NETWORK_TRANSMIT_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_network_transmit_set,DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS},
+    {DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_control_network_transmit_status,STATUS_NONE},    
+    {DIRECTED_CONTROL_RELAY_RETRANSMIT_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_relay_transmit_get,DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS},
+    {DIRECTED_CONTROL_RELAY_RETRANSMIT_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_relay_transmit_set,DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS},
+    {DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_control_relay_transmit_status,STATUS_NONE},      
+#endif
+
 #if MD_REMOTE_PROV  
     // remote provision scan capability 
     {REMOTE_PROV_SCAN_CAPA_GET,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_capa,REMOTE_PROV_SCAN_CAPA_STS},
@@ -1079,31 +1146,31 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 #endif
     // ----- mesh ota
 #if MD_MESH_OTA_EN
-    {FW_INFO_GET, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_info_get, FW_INFO_STATUS},
-    {FW_INFO_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_info_status, STATUS_NONE},
+    {FW_UPDATE_INFO_GET, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_info_get, FW_UPDATE_INFO_STATUS},
+    {FW_UPDATE_INFO_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_update_info_status, STATUS_NONE},
+    {FW_UPDATE_METADATA_CHECK, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_metadata_check, FW_UPDATE_METADATA_CHECK_STATUS},
+    {FW_UPDATE_METADATA_CHECK_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_update_metadata_check_status, STATUS_NONE},
     {FW_UPDATE_GET, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_get, FW_UPDATE_STATUS},
-    {FW_UPDATE_PREPARE, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_prepare, FW_UPDATE_STATUS},
     {FW_UPDATE_START, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_start, FW_UPDATE_STATUS},
-    {FW_UPDATE_ABORT, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_control, FW_UPDATE_STATUS},
+    {FW_UPDATE_CANCEL, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_control, FW_UPDATE_STATUS},
     {FW_UPDATE_APPLY, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_control, FW_UPDATE_STATUS},
     {FW_UPDATE_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_update_status, STATUS_NONE},
     {FW_DISTRIBUT_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_get, FW_DISTRIBUT_STATUS},
     {FW_DISTRIBUT_START, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_start, FW_DISTRIBUT_STATUS},
-    {FW_DISTRIBUT_STOP, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_stop, FW_DISTRIBUT_STATUS},
+    {FW_DISTRIBUT_CANCEL, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_cancel, FW_DISTRIBUT_STATUS},
     {FW_DISTRIBUT_STATUS, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_status, STATUS_NONE},
     {FW_DISTRIBUT_DETAIL_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_detail_get, FW_DISTRIBUT_DETAIL_LIST},
     {FW_DISTRIBUT_DETAIL_LIST, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_detail_list, STATUS_NONE},
-    {OBJ_TRANSFER_GET, 0, SIG_MD_OBJ_TRANSFER_C, SIG_MD_OBJ_TRANSFER_S, mesh_cmd_sig_obj_transfer_handle, OBJ_TRANSFER_STATUS},
-    {OBJ_TRANSFER_START, 0, SIG_MD_OBJ_TRANSFER_C, SIG_MD_OBJ_TRANSFER_S, mesh_cmd_sig_obj_transfer_handle, OBJ_TRANSFER_STATUS},
-    {OBJ_TRANSFER_ABORT, 0, SIG_MD_OBJ_TRANSFER_C, SIG_MD_OBJ_TRANSFER_S, mesh_cmd_sig_obj_transfer_handle, OBJ_TRANSFER_STATUS},
-    {OBJ_TRANSFER_STATUS, 1, SIG_MD_OBJ_TRANSFER_S, SIG_MD_OBJ_TRANSFER_C, mesh_cmd_sig_obj_transfer_status, STATUS_NONE},
-    {OBJ_BLOCK_TRANSFER_START, 0, SIG_MD_OBJ_TRANSFER_C, SIG_MD_OBJ_TRANSFER_S, mesh_cmd_sig_obj_block_transfer_start, OBJ_BLOCK_TRANSFER_STATUS},
-    {OBJ_BLOCK_TRANSFER_STATUS, 1, SIG_MD_OBJ_TRANSFER_S, SIG_MD_OBJ_TRANSFER_C, mesh_cmd_sig_obj_block_transfer_status, STATUS_NONE},
-    {OBJ_CHUNK_TRANSFER, 0, SIG_MD_OBJ_TRANSFER_C, SIG_MD_OBJ_TRANSFER_S, mesh_cmd_sig_obj_chunk_transfer, STATUS_NONE},
-    {OBJ_BLOCK_GET, 0, SIG_MD_OBJ_TRANSFER_C, SIG_MD_OBJ_TRANSFER_S, mesh_cmd_sig_obj_block_get, OBJ_BLOCK_STATUS},
-    {OBJ_BLOCK_STATUS, 1, SIG_MD_OBJ_TRANSFER_S, SIG_MD_OBJ_TRANSFER_C, mesh_cmd_sig_obj_block_status, STATUS_NONE},
-    {OBJ_INFO_GET, 0, SIG_MD_OBJ_TRANSFER_C, SIG_MD_OBJ_TRANSFER_S, mesh_cmd_sig_obj_info_get, OBJ_INFO_STATUS},
-    {OBJ_INFO_STATUS, 1, SIG_MD_OBJ_TRANSFER_S, SIG_MD_OBJ_TRANSFER_C, mesh_cmd_sig_obj_info_status, STATUS_NONE},
+    {BLOB_TRANSFER_GET, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_get, BLOB_TRANSFER_STATUS},
+    {BLOB_TRANSFER_START, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_handle, BLOB_TRANSFER_STATUS},
+    {BLOB_TRANSFER_CANCEL, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_handle, BLOB_TRANSFER_STATUS},
+    {BLOB_TRANSFER_STATUS, 1, SIG_MD_BLOB_TRANSFER_S, SIG_MD_BLOB_TRANSFER_C, mesh_cmd_sig_blob_transfer_status, STATUS_NONE},
+    {BLOB_BLOCK_START, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_block_start, BLOB_BLOCK_STATUS},
+    {BLOB_CHUNK_TRANSFER, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_chunk_transfer, STATUS_NONE},
+    {BLOB_BLOCK_GET, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_block_get, BLOB_BLOCK_STATUS},
+    {BLOB_BLOCK_STATUS, 1, SIG_MD_BLOB_TRANSFER_S, SIG_MD_BLOB_TRANSFER_C, mesh_cmd_sig_blob_block_status, STATUS_NONE},
+    {BLOB_INFO_GET, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_info_get, BLOB_INFO_STATUS},
+    {BLOB_INFO_STATUS, 1, SIG_MD_BLOB_TRANSFER_S, SIG_MD_BLOB_TRANSFER_C, mesh_cmd_sig_blob_info_status, STATUS_NONE},
 #endif
     
 	// lighting model
@@ -1449,31 +1516,33 @@ u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, int sig_model, u8
 			break;
 
 			#if MD_MESH_OTA_EN
+			    #if DISTRIBUTOR_UPDATE_CLIENT_EN
             case SIG_MD_FW_DISTRIBUT_S:
                 	p_model = (u8 *)&model_mesh_ota.fw_distr_srv;
             break;
 
-			    #if MD_CLIENT_EN
             case SIG_MD_FW_DISTRIBUT_C:
                 	p_model = (u8 *)&model_mesh_ota.fw_distr_clnt;
             break;
+            
+            case SIG_MD_FW_UPDATE_C:
+                	p_model = (u8 *)&model_mesh_ota.fw_update_clnt;
+            break;
+            
+            case SIG_MD_BLOB_TRANSFER_C:
+                	p_model = (u8 *)&model_mesh_ota.blob_trans_clnt;
+            break;
                 #endif
-			
+
+			    #if MD_SERVER_EN
             case SIG_MD_FW_UPDATE_S:
                 	p_model = (u8 *)&model_mesh_ota.fw_update_srv;
             break;
 			
-            case SIG_MD_FW_UPDATE_C:
-                	p_model = (u8 *)&model_mesh_ota.fw_update_clnt;
+            case SIG_MD_BLOB_TRANSFER_S:
+                	p_model = (u8 *)&model_mesh_ota.blob_trans_srv;
             break;
-			
-            case SIG_MD_OBJ_TRANSFER_S:
-                	p_model = (u8 *)&model_mesh_ota.obj_trans_srv;
-            break;
-			
-            case SIG_MD_OBJ_TRANSFER_C:
-                	p_model = (u8 *)&model_mesh_ota.obj_trans_clnt;
-            break;
+                #endif
             #endif
             #if MD_REMOTE_PROV
                 #if MD_SERVER_EN
@@ -1961,7 +2030,7 @@ void mesh_model_cb_pub_st_register()
 	MODEL_PUB_ST_CB_INIT(model_vd_light.srv, &cb_vd_lpn_sensor_st_publish);
     	#else
     	    #if (VENDOR_MD_MI_EN)
-    MODEL_PUB_ST_CB_INIT(model_vd_light.srv, &mi_vd_light_onoff_st_publish);
+    MODEL_PUB_ST_CB_INIT(model_vd_light.srv, &vd_mi_proper_sts_publish);
     	    #else // (VENDOR_MD_NORMAL_EN)
     MODEL_PUB_ST_CB_INIT(model_vd_light.srv, &vd_light_onoff_st_publish);
             #endif

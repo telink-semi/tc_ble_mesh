@@ -70,7 +70,7 @@ void user_sha256_data_proc()
 
 void user_node_oob_set()
 {
-    if(AIS_ENABLE || (mesh_user_define_mode == MESH_AES_ENABLE)){
+    if(AIS_ENABLE || (MESH_USER_DEFINE_MODE == MESH_AES_ENABLE)){
         set_node_prov_para_no_pubkey_static_oob();
     }else {
         #if 0 // output oob test
@@ -247,7 +247,7 @@ void user_prov_multi_device_uuid()
         set_dev_uuid_for_simple_flow(prov_para.device_uuid);
     #elif (MESH_USER_DEFINE_MODE == MESH_MI_ENABLE)
         // NO NEED DEV UUID
-    #else // (MESH_USER_DEFINE_MODE == MESH_NORMAL_MODE || MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+    #else // (MESH_USER_DEFINE_MODE == MESH_NORMAL_MODE  and all other)
         if(PROVISION_FLOW_SIMPLE_EN){
 		    set_dev_uuid_for_simple_flow(prov_para.device_uuid);
 	    }else{

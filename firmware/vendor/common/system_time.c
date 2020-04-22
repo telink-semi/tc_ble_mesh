@@ -35,6 +35,9 @@
 #include "system_time.h"
 #include "fast_provision_model.h"
 #include "app_heartbeat.h"
+#if MI_API_ENABLE
+#include "./mi_api/mijia_pub_proc.h"
+#endif
 
 #if ALI_MD_TIME_EN
 #include "user_ali_time.h"
@@ -151,7 +154,7 @@ void system_time_run(){
 	        publish_powerup_random_ms = 0;
 			#if STEP_PUB_MODE_EN
 			mi_pub_clear_trans_flag();
-			mi_pub_para_init();
+			mi_pub_vd_sig_para_init();
 			mi_pub_send_all_status();
 			#else
 			publish_when_powerup();

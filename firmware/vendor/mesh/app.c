@@ -50,7 +50,7 @@
 
 #if MI_API_ENABLE
 #include "../../vendor/common/mi_api/telink_sdk_mible_api.h"
-#include "../../vendor/common/mi_api/certi/mijia_profiles/mi_service_server.h"
+#include "../../vendor/common/mi_api/libs/mijia_profiles/mi_service_server.h"
 #endif 
 #if (HCI_ACCESS==HCI_USE_UART)
 #include "../../proj/drivers/uart.h"
@@ -616,6 +616,7 @@ void user_init()
 	blc_l2cap_register_pre_handler(telink_ble_mi_event_cb_att);// for telink event callback
 	advertise_init();
 	mi_service_init();
+	telink_mi_vendor_init();
 	mi_scheduler_init(20, mi_schd_event_handler, NULL);
 	if(is_provision_success()){
 		mi_scheduler_start(SYS_KEY_RESTORE); 

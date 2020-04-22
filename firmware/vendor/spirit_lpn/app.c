@@ -48,7 +48,7 @@
 
 #if MI_API_ENABLE
 #include "../../vendor/common/mi_api/telink_sdk_mible_api.h"
-#include "../../vendor/common/mi_api/certi/mesh_auth/mi_service_server.h"
+#include "../../vendor/common/mi_api/libs/mesh_auth/mi_service_server.h"
 #endif 
 #if (HCI_ACCESS==HCI_USE_UART)
 #include "../../proj/drivers/uart.h"

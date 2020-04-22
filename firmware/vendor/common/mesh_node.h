@@ -237,8 +237,8 @@ enum{
 #define SIG_MD_FW_UPDATE_C              0xFE01
 #define SIG_MD_FW_DISTRIBUT_S           0xFE02
 #define SIG_MD_FW_DISTRIBUT_C           0xFE03
-#define SIG_MD_OBJ_TRANSFER_S           0xFF00
-#define SIG_MD_OBJ_TRANSFER_C           0xFF01
+#define SIG_MD_BLOB_TRANSFER_S        	0xFF00
+#define SIG_MD_BLOB_TRANSFER_C         	0xFF01
 
 
 //--------------------------------------- config model
@@ -486,6 +486,61 @@ typedef struct{
 	u16 sub_adr[SUB_LIST_MAX];
 }mesh_cfg_model_sub_list_vendor_t;
 
+// directed forwarding message
+typedef struct{
+	u8 directed_forwarding;
+	u8 directed_relay;
+	u8 directed_proxy;
+	u8 directed_proxy_use_directed_default;
+	u8 directed_friend;
+}directed_control_t;
+
+typedef struct{
+	u8  metric_type:3;	
+	u8  path_lifetime:2;
+	u8  rfu:3;
+}path_metric_t;
+
+typedef struct{
+	s8 default_rssi_threshold;
+	s8 rssi_margin;
+}rssi_threshold_t;
+
+typedef struct{
+	u16 node_paths;
+	u16 relay_paths;
+	u16 proxy_paths;
+	u16 friend_paths;
+}directed_paths_t;
+
+typedef struct{
+	u16 path_monitoring_interval;
+	u16 path_discovery_retry_interval;
+	u8 path_discovery_interval:1;
+	u8 lane_discovery_guard_interval:1;
+	u8 prohibited:6;
+}discovery_timing_t;
+
+typedef struct{
+	directed_control_t directed_control;
+	path_metric_t path_metric;
+	u8 max_concurrent_init;
+	u8 wanted_lanes;
+	u8 two_way_path;
+	u8 path_echo_interval;
+}mesh_directed_subnet_state_t;
+
+typedef struct{
+	mesh_directed_subnet_state_t subnet_state[NET_KEY_MAX];
+	mesh_transmit_t transmit;
+	mesh_transmit_t relay_transmit;
+	rssi_threshold_t rssi_threshold;
+	directed_paths_t directed_paths;
+	discovery_timing_t discovery_timing;
+	mesh_transmit_t	control_transmit;
+	mesh_transmit_t	control_relay_transmit;
+}mesh_directed_forward_t;
+
 //--------------------------------------- generic model
 enum{
     PAR_TYPE_PUB_ADR = 0,
@@ -666,12 +721,14 @@ enum{
     GATT_PROXY_ST_MAX,
 };
 
+
 enum{
-    NODE_IDENTITY_SUBNET_SUPPORT_DISABLE = 0,
-    NODE_IDENTITY_SUBNET_SUPPORT_ENABLE,
-    NODE_IDENTITY_SUBNET_NOT_SUPPORT,
-    NODE_IDENTITY_SUBNET_ST_MAX,
+	NODE_IDENTITY_SUB_NET_STOP =0,
+	NODE_IDENTITY_SUB_NET_RUN ,
+	NODE_IDENTITY_SUB_NET_NOT_SUPPORT,
+	NODE_IDENTITY_SUB_NET_PROHIT,
 };
+
 
 enum{
     FRIEND_SUPPORT_DISABLE = 0,
@@ -750,7 +807,7 @@ typedef struct{
 	u32 cb_tick_ms;		    // no need to save, fix later
 	u16 pub_adr;    // pub_adr and pub_par must existed if sub_list existed //  offset:32
 	mesh_model_pub_par_t pub_par;
-	u8 rfu3[1];
+	u8 directed_pub_policy;
 	u16 sub_list[SUB_LIST_MAX];     // pub_adr, pub_par, sub_list must follow com if existed
 	u8 sub_uuid[SUB_LIST_MAX][16];
 }model_common_t;
@@ -841,6 +898,9 @@ typedef struct{
 	u8 rfu2[2];
 	mesh_heartbeat_pub_str hb_pub;
 	mesh_heartbeat_sub_str hb_sub;	// wait for define struct
+#if DIRECTED_FORWARDING_MODULE_EN
+	mesh_directed_forward_t directed_forward;
+#endif
 }model_sig_cfg_s_t;
 
 typedef struct{
@@ -1176,20 +1236,18 @@ typedef struct{
 }mesh_generic_location_t;
 
 typedef struct{
-#if 1 // MD_SERVER_EN
-    #if 1 // DISTRIBUTOR_UPDATE_CLIENT_EN       // for compatibility of flash, and distribute serve may use in node in future.
-	model_g_light_s_t fw_distr_srv;			// server
-	#endif
+#if 1 // MD_SERVER_EN, gateway also need ota.
 	model_g_light_s_t fw_update_srv;		// server
-	model_g_light_s_t obj_trans_srv;		// server
-	model_client_common_t fw_update_clnt;	// client   // may use
-	model_client_common_t obj_trans_clnt;	// client   // may use
+	model_g_light_s_t blob_trans_srv;		// server
 #endif
-#if MD_CLIENT_EN
+#if DISTRIBUTOR_UPDATE_CLIENT_EN
 	model_client_common_t fw_distr_clnt;	// client
+    model_g_light_s_t fw_distr_srv;         // server
+	model_client_common_t fw_update_clnt;	// client   // may use
+	model_client_common_t blob_trans_clnt;	// client   // may use
 #endif
 #if MD_SERVER_EN
-    u32 rsv;    // remove later
+    // u32 rsv;    // remove later
 #endif
 }model_mesh_ota_t;
 
@@ -1242,18 +1300,27 @@ typedef struct{
 }mesh_app_key_t;
 
 typedef struct{
+    u8 ek_d[16];    // directed
+    u8 pk_d[16];
+    u8 nid_d;		// directed
+}directed_key_t;
+
+typedef struct{
     u8 key[16];		// network key
     u8 ek_m[16];    // master: encryption key
     u8 pk_m[16];	//             Privacy Key
+    u8 ek_d[16];    // directed: encryption key
+    u8 pk_d[16];	//             Privacy Key
     u8 idk[16];		// identity key
     u8 bk[16];		// beacon key
     u8 nw_id[8];    // network_id,    store in big endianness
     u8 nid_m;		// master: map to encryption key
+    u8 nid_d;		// directed: map to encryption key
     u16 index;		// network key index
     u8 valid;
     u8 key_phase;
     u8 node_identity;
-    u8 rfu2[2];		// for 16 align
+    u8 rfu2[1];		// for 16 align
 	mesh_app_key_t app_key[APP_KEY_MAX];
 	u32 start_identity_s;
     u8 rfu3[4];		// for 16 align
@@ -1266,6 +1333,7 @@ typedef struct{
 	mesh_net_key_t net_key[NET_KEY_MAX][2];	// one is normal, another is key refresh
 	u8 node_identity_hash[NET_KEY_MAX][8];
 	u8 netkey_sel_dec;	// slecte network key index in array. valid netkey_idx in mesh_sec_msg_dec_apl() 
+	u8 sec_type_sel;// security material: MASTER DIRECTED or DRIENDSHIP
 	u8 appkey_sel_dec;	// slecte app key index in array.
 	u8 devkey_self_dec;	// 0: use device key of TX node, 1: use device key of self (RX node).
 	u8 new_netkey_dec;
@@ -1377,6 +1445,7 @@ int is_retransaction(u16 adr, u8 tid);
 int mesh_provision_par_set(u8 *prov_pars);
 u8 mesh_provision_and_bind_self(u8 *p_prov_data, u8 *p_dev_key, u16 appkey_idx, u8 *p_app_key);
 mesh_net_key_t * is_mesh_net_key_exist(u16 key_idx);
+int get_mesh_net_key_offset(u16 key_idx);
 int is_net_key_save();
 void model_pub_st_cb_re_init_lc_srv(cb_pub_st_t cb);
 void model_pub_st_cb_re_init_sensor_setup(cb_pub_st_t cb);
@@ -1515,6 +1584,7 @@ extern model_vd_light_t       	model_vd_light;
 extern mesh_key_t mesh_key; 
 extern friend_key_t mesh_fri_key_lpn[NET_KEY_MAX][2];
 extern friend_key_t mesh_fri_key_fn[MAX_LPN_NUM][2];
+extern directed_key_t directed_key[NET_KEY_MAX][2];
 extern s8 rssi_pkt; // have been -110
 
 extern u8 pts_test_en;

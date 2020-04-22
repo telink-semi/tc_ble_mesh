@@ -41,7 +41,11 @@
 #include "mesh_ota.h"
 #include "mesh_common.h"
 #include "mesh_config.h"
-    
+#include "directed_forwarding.h"
+
+#if MI_API_ENABLE
+#include "./mi_api/mijia_pub_proc.h"
+#endif
 #if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258))
 #include "stack/ble/ble.h"
 #elif(MCU_CORE_TYPE == MCU_CORE_8278)
@@ -382,6 +386,35 @@ void mesh_secure_beacon_loop_proc()
 	}
 }
 
+void mesh_beacon_poll_100ms()
+{
+#if (IV_UPDATE_DISABLE)
+    return ;
+#endif
+
+#if (0 == NODE_CAN_SEND_ADV_FLAG)
+	return ;	// for test
+#endif
+
+    if((NW_BEACON_BROADCASTING != model_sig_cfg_s.sec_nw_beacon) || switch_project_flag){
+        return ;
+    }
+
+    if(is_lpn_support_and_en){   
+        //if(fri_ship_proc_lpn.status || is_in_mesh_friend_st_lpn()){
+            return ;
+        //}
+    }else if(is_fn_support_and_en){
+    	foreach(i,g_max_lpn_num){
+			mesh_fri_ship_proc_fn_t *proc_fn = &fri_ship_proc_fn[i];
+	        if(proc_fn->status && (FRI_ST_TIMEOUT_CHECK != proc_fn->status)){
+	            return ;
+	        }
+        }
+    }
+    mesh_secure_beacon_loop_proc();
+}
+
 void mesh_tid_save(int ele_idx)
 {
 #if __PROJECT_MESH_SWITCH__
@@ -558,7 +591,7 @@ const u16 master_filter_list[]={
 	SIG_MD_LIGHTNESS_SETUP_S,SIG_MD_LIGHT_CTL_S,SIG_MD_LIGHT_CTL_SETUP_S,SIG_MD_LIGHT_CTL_TEMP_S,
 	SIG_MD_LIGHT_LC_S,SIG_MD_LIGHT_LC_SETUP_S,
     SIG_MD_LIGHT_HSL_S,SIG_MD_LIGHT_HSL_SETUP_S,SIG_MD_LIGHT_HSL_HUE_S,SIG_MD_LIGHT_HSL_SAT_S,
-	SIG_MD_FW_UPDATE_S,SIG_MD_FW_UPDATE_C,SIG_MD_FW_DISTRIBUT_S,SIG_MD_FW_DISTRIBUT_C,SIG_MD_OBJ_TRANSFER_S,SIG_MD_OBJ_TRANSFER_C,
+	SIG_MD_FW_UPDATE_S,SIG_MD_FW_UPDATE_C,SIG_MD_FW_DISTRIBUT_S,SIG_MD_FW_DISTRIBUT_C,SIG_MD_BLOB_TRANSFER_S,SIG_MD_BLOB_TRANSFER_C,
 };
 u8 model_need_key_bind_whitelist(u16 *key_bind_list_buf,u8 *p_list_cnt,u8 max_cnt)
 {
@@ -607,6 +640,10 @@ const sub_share_mode_t share_mode[5] = {
 const sub_share_mode_t share_mode[3] = {
 		{SIG_MD_G_ONOFF_S,0},{MIOT_SEPC_VENDOR_MODEL_SER,0},{MIOT_VENDOR_MD_SER,0}
 };
+#elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_FANS)
+const sub_share_mode_t share_mode[3] = {
+		{SIG_MD_G_ONOFF_S,0},{MIOT_SEPC_VENDOR_MODEL_SER,0},{MIOT_VENDOR_MD_SER,0}
+};
 #endif
 
 
@@ -639,19 +676,57 @@ u16 mi_share_model_sub(u16 op,u16 ele_adr,u16 sub_adr,u8 *uuid,u32 model_id)
 }
 #endif
 
-#if(AIS_ENABLE)
+#if (VENDOR_MD_NORMAL_EN)
+#define SHARE_ALL_LIGHT_STATE_MODEL_EN      (AIS_ENABLE)
 const u16 sub_share_model_sig[] = {
-    SIG_MD_G_ONOFF_S, SIG_MD_G_LEVEL_S, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_SETUP_S,
-    SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_SETUP_S, SIG_MD_LIGHT_CTL_TEMP_S,
-    SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_HSL_SETUP_S, SIG_MD_LIGHT_HSL_HUE_S, SIG_MD_LIGHT_HSL_SAT_S,
+    #if MD_SERVER_EN
+        #if MD_ONOFF_EN
+    SIG_MD_G_ONOFF_S, 
+        #endif
+        #if MD_LEVEL_EN
+    SIG_MD_G_LEVEL_S, 
+        #endif
+        #if MD_LIGHTNESS_EN
+    SIG_MD_LIGHTNESS_S, 
+            #if SHARE_ALL_LIGHT_STATE_MODEL_EN
+    SIG_MD_LIGHTNESS_SETUP_S,
+            #endif
+        #endif
+        #if LIGHT_TYPE_CT_EN
+    SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_TEMP_S,
+            #if SHARE_ALL_LIGHT_STATE_MODEL_EN
+    SIG_MD_LIGHT_CTL_SETUP_S, 
+            #endif
+        #endif
+        #if LIGHT_TYPE_HSL_EN
+    SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_HSL_HUE_S, SIG_MD_LIGHT_HSL_SAT_S,
+            #if SHARE_ALL_LIGHT_STATE_MODEL_EN
+    SIG_MD_LIGHT_HSL_SETUP_S, 
+            #endif
+        #endif
+        #if SHARE_ALL_LIGHT_STATE_MODEL_EN // other not light state model
     SIG_MD_SCENE_S,
+        #endif
+    #endif
+
+    #if WIN32 
+    0, //  because WIN32 can't assigned 0 size array.
+    #endif
 };
 
 const u32 sub_share_model_vendor[] = {
+    #if MD_SERVER_EN
+        #if(SHARE_ALL_LIGHT_STATE_MODEL_EN)
     VENDOR_MD_LIGHT_S,
-#if MD_VENDOR_2ND_EN
+            #if MD_VENDOR_2ND_EN
     VENDOR_MD_LIGHT_S2,
-#endif
+            #endif
+        #endif
+    #endif
+    
+    #if WIN32 
+    0, //  because WIN32 can't assigned 0 size array.
+    #endif
 };
 
 void share_model_sub(u16 op, u16 sub_adr, u8 *uuid)
@@ -667,7 +742,7 @@ void share_model_sub(u16 op, u16 sub_adr, u8 *uuid)
 			mesh_sub_search_and_set(op, ele_adr, sub_adr, uuid, sub_share_model_vendor[i], 0);
 		}
 			
-  #if (ELE_CNT_EVERY_LIGHT >= 2)
+#if (ELE_CNT_EVERY_LIGHT >= 2)
 		foreach(i,ELE_CNT_EVERY_LIGHT - 1){
 			mesh_sub_search_and_set(op, ele_adr+i, sub_adr, uuid, SIG_MD_G_LEVEL_S, 1);
 		}
@@ -683,17 +758,28 @@ void share_model_sub(u16 op, u16 sub_adr, u8 *uuid)
 		mesh_sub_search_and_set(op, ele_adr+offset, sub_adr, uuid, SIG_MD_LIGHT_HSL_HUE_S, 1);
 		mesh_sub_search_and_set(op, ele_adr+offset+1, sub_adr, uuid, SIG_MD_LIGHT_HSL_SAT_S, 1);
     #endif
-  #endif
+#endif
 	}
 }
 
+int is_need_share_model_sub(u32 model_id, int sig_model)
+{
+    if(sig_model){
+        foreach_arr(i,sub_share_model_sig){
+            if(sub_share_model_sig[i] == model_id){
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
 #endif
 
 
 #endif
 
-u16 sub_adr_onoff =0;
 #if MI_API_ENABLE
+u16 sub_adr_onoff =0;
 void mi_share_model_add_sub_adr(u8*uuid)
 {
 	foreach_arr(i,share_mode){
@@ -725,6 +811,7 @@ u8 mi_share_model_op_is_valid(u16 op)
 	}
 }
 #endif
+
 void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_adr, u16 dst_adr,u8 *uuid, u32 model_id, int sig_model)
 {
 #if SUBSCRIPTION_SHARE_EN
@@ -738,7 +825,8 @@ void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_adr, u16 dst_adr,u8 
     	if( op == CFG_MODEL_SUB_OVER_WRITE || 
     		op == CFG_MODEL_SUB_DEL)// special proc for the overwrite and rsp the vendor part 
     	#else
-    	if(op == CFG_MODEL_SUB_OVER_WRITE)// special proc for the overwrite and rsp the vendor part 
+    	if(	op == CFG_MODEL_SUB_OVER_WRITE ||
+			op == CFG_MODEL_SUB_DEL)// special proc for the overwrite and rsp the vendor part 
     	#endif
     	{
     		sub_adr_onoff = mi_share_model_sub(op, ele_adr,sub_adr, uuid,model_id);
@@ -754,13 +842,9 @@ void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_adr, u16 dst_adr,u8 
 	if(DUAL_VENDOR_ST_ALI == provision_mag.dual_vendor_st)
     #endif
     {
-    	if(ele_adr == ele_adr_primary){
-            if(sig_model){
-                if(model_id == SIG_MD_G_ONOFF_S){
-                    share_model_sub(op, sub_adr, uuid);
-                }
-    		}
-        }
+        if(is_need_share_model_sub(model_id, sig_model)){
+            share_model_sub(op, sub_adr, uuid);
+		}
     }
 	#endif
        
@@ -900,7 +984,7 @@ void set_firmware_type_init()
     flash_erase_sector(FLASH_ADR_MESH_TYPE_FLAG);
 }
 
-#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#if (DUAL_MESH_ZB_BL_EN)
 #define TLK_MESH_NO_TYPE_CHECK_EN   0 // must 0
 #else
 #define TLK_MESH_NO_TYPE_CHECK_EN   ((0 == FLASH_1M_ENABLE) && (CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_512K_FLASH))
@@ -1254,6 +1338,14 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
             }
             #endif
         }
+#if(BEACON_ENABLE)
+        else{
+        	#if(BEACON_ENABLE)
+        	extern int pre_set_beacon_to_adv(rf_packet_adv_t *p);
+        	ret = pre_set_beacon_to_adv(p);
+        	#endif
+        }
+#endif
     }
 #endif 
 
@@ -1575,7 +1667,7 @@ void mesh_vd_init()
 	publish_powerup_random_ms = rand() % 1500;  // 0--1500ms
 	#endif
 	#if STEP_PUB_MODE_EN
-	mi_pub_para_init();
+	mi_pub_vd_sig_para_init();
 	#endif
 	STATIC_ASSERT(MESH_POWERUP_BASE_TIME >=200);
 	publish_powerup_random_ms += MESH_POWERUP_BASE_TIME; // 200ms: base time.
@@ -1639,7 +1731,7 @@ mesh_global_var_init(): run in mesh_init_all() and before read parameters in fla
 */
 void mesh_global_var_init()
 {
-    get_fw_id();    // must first
+    //get_fw_id();    // must first
 #if !WIN32
 	blc_readFlashSize_autoConfigCustomFlashSector();
 #endif
@@ -1681,11 +1773,15 @@ void mesh_global_var_init()
 	model_sig_cfg_s.relay_retransmit.invl_steps = TRANSMIT_INVL_STEPS_DEF_RELAY;
 	model_sig_cfg_s.relay = FEATURE_RELAY_EN ? RELAY_SUPPORT_ENABLE : RELAY_NOT_SUPPORT;
 	#endif
-
+#if DIRECTED_FORWARDING_MODULE_EN
+	mesh_directed_forwarding_default_val_init();
+#endif	
 #if DUAL_VENDOR_EN
 	provision_mag.dual_vendor_st = DUAL_VENDOR_ST_STANDBY;
 #endif
+#if (FEATURE_FRIEND_EN)
 	mesh_global_var_init_fn_buf();
+#endif
 #if MD_SERVER_EN
 	mesh_global_var_init_light_sw();
     #if (MD_SENSOR_EN)
@@ -1788,9 +1884,10 @@ void set_proxy_adv_data(u8 *p_hash,u8 *p_random)
 */
 void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 							u16 adr_src, u16 adr_dst, u8 retry_cnt, int rsp_max, u8 *uuid, 
-							u8 nk_array_idx, u8 ak_array_idx, model_common_t *pub_md)
+							u8 nk_array_idx, u8 ak_array_idx, model_common_t *pub_md, u8 sec_type)
 {
 	memset(p_mat, 0, sizeof(material_tx_cmd_t));
+	p_mat->sec_type = sec_type;
 	p_mat->op = op;
 	p_mat->p_ac = par;
 	p_mat->len_ac = par_len;
@@ -1848,7 +1945,15 @@ int mesh_tx_cmd2normal(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, i
 	material_tx_cmd_t mat;
     u8 nk_array_idx = get_nk_arr_idx_first_valid();
     u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0);
+	u8 sec_type = MASTER;
+#if DIRECTED_FORWARDING_MODULE_EN
+	if(DIRECTED_FORWARDING_ENABLE == model_sig_cfg_s.directed_forward.subnet_state[nk_array_idx].directed_control.directed_forwarding){
+		if(get_forwarding_entry(nk_array_idx, adr_src, adr_dst, ANY_PATH)){
+			sec_type = DIRECTED;
+		}
+	}
+#endif
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, sec_type);
 	return mesh_tx_cmd(&mat);
 }
 
@@ -1862,7 +1967,15 @@ int mesh_tx_cmd2uuid(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, int
 	material_tx_cmd_t mat;
     u8 nk_array_idx = get_nk_arr_idx_first_valid();
     u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, uuid, nk_array_idx, ak_array_idx, 0);
+	u8 sec_type = MASTER;
+#if DIRECTED_FORWARDING_MODULE_EN
+	if(DIRECTED_FORWARDING_ENABLE == model_sig_cfg_s.directed_forward.subnet_state[nk_array_idx].directed_control.directed_forwarding){
+		if(get_forwarding_entry(nk_array_idx, adr_src, adr_dst, ANY_PATH)){
+			sec_type = DIRECTED;
+		}
+	}
+#endif
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, uuid, nk_array_idx, ak_array_idx, 0, sec_type);
 	return mesh_tx_cmd(&mat);
 }
 
@@ -1959,8 +2072,8 @@ void mesh_rsp_delay_set(u32 delay_step, u8 is_seg_ack)
  */
 int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-    LOG_MSG_LIB(TL_LOG_NODE_SDK,params, par_len,"rcv access layer,retransaction:%d,src:0x%x op:0x%04x, par:",cb_par->retransaction,cb_par->adr_src, cb_par->op);
-    mesh_op_resource_t *p_res = (mesh_op_resource_t *)cb_par->res;
+    LOG_MSG_LIB(TL_LOG_NODE_SDK,params, par_len,"rcv access layer,retransaction:%d,ttl:%d,src:0x%x op:0x%04x, par:",cb_par->retransaction,cb_par->p_nw->ttl,cb_par->adr_src, cb_par->op);
+	mesh_op_resource_t *p_res = (mesh_op_resource_t *)cb_par->res;
     if(!is_cfg_model(p_res->id, p_res->sig)){ // user should not handle config model op code
         #if (VENDOR_MD_NORMAL_EN)
             #if (VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
@@ -2006,6 +2119,10 @@ int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_
         p_res->cb(params, par_len, cb_par);   // use mesh_need_random_delay in this function in library.
     }
     mesh_need_random_delay = 0; // must be clear here 
+    #if DF_TEST_MODE_EN
+	extern void cfg_led_event (u32 e);
+	cfg_led_event(LED_EVENT_FLASH_2HZ_2S);
+	#endif
     return err;
 }
 
@@ -2414,7 +2531,7 @@ const char  TL_LOG_STRING[TL_LOG_LEVEL_MAX][MAX_LEVEL_STRING_CNT] = {
 const char tl_log_module_mesh[TL_LOG_MAX][MAX_MODULE_STRING_CNT] ={
 	"(mesh)","(provision)","(lowpower)","(friend)",
 	"(proxy)","(GattProv)","(log_win32)","(GATEWAY)",
-	"(KEYBIND)","(sdk)","(Basic)","(RemotePro)","(cmd_rsp)",
+	"(KEYBIND)","(sdk)","(Basic)","(RemotePro)","(directed)","(cmd_rsp)",
 	"(common)","(cmd_name)","(sdk_nw_ut)","(iv_update)","(gw_vc_log)","(USER)"
 };
 

@@ -350,7 +350,7 @@ void mesh_provision_para_reset()
         return ;// remote prov cannot clear the para for the remoteprov server part 
     }
     #endif
-
+	LOG_MSG_INFO(TL_LOG_PROVISION,0, 0 ,"mesh_provision_para_reset",0);	
 	memset((u8 *)(&prov_para),0,OFFSETOF(prov_para_proc_t, rsp_ack_transnum));
 	prov_para.provison_send_state = LINK_UNPROVISION_STATE;
 	prov_para.provison_rcv_state= LINK_UNPROVISION_STATE;
@@ -1509,6 +1509,7 @@ void dispatch_pb_gatt(u8 *p ,u8 len )
 			}else{
 			    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"gatt rcv err cmd in the STATE_DEV_CONFIRM state",0);
 				notify_len = prov_fail_cmd_proc(p_notify,UNEXPECTED_PDU);
+				
 			}
 			break;
 		default:
@@ -2196,7 +2197,7 @@ u8 wait_and_check_complete_state()
 	if( provision_mag.gatt_mode == GATT_PROXY_MODE ){
 		tick_check_complete =0;
 	}
-	if(tick_check_complete && clock_time_exceed(tick_check_complete,2000*1000)){
+	if(tick_check_complete && clock_time_exceed(tick_check_complete,4000*1000)){
 		tick_check_complete =0;
 		mesh_provision_par_handle((u8 *)&provision_mag.pro_net_info);
 		prov_para.provison_rcv_state = STATE_PRO_SUC;
@@ -3308,6 +3309,12 @@ u8 VC_search_and_bind_model()
                 p->model_bind_index++;
             }else{
                 LOG_MSG_INFO(TL_LOG_KEY_BIND,0,0,"SEND: appkey bind addr: 0x%04x,sig model id: 0x%04x ",ele_adr,model_id);
+
+				if((!p->is_new_model) && (p->model_id != model_id)){
+					p->is_new_model = 1;
+				}
+				
+				p->model_id = model_id;
                 cfg_cmd_ak_bind(p->node_adr, ele_adr, p->ak_idx, model_id, 1);
             }
         }
@@ -3315,11 +3322,16 @@ u8 VC_search_and_bind_model()
             u32 model_id;
             memcpy(&model_id, p_model_id->id+p_model_id->nums*2+(p->model_bind_index-p_model_id->nums)*4, 4);
             LOG_MSG_INFO(TL_LOG_KEY_BIND,0,0,"SEND: appkey bind addr: 0x%04x,vendor model id: 0x%08x ",ele_adr,model_id);
+			if((!p->is_new_model) && (p->model_id != model_id)){
+				p->is_new_model = 1;
+			}
+			p->model_id = model_id;
             cfg_cmd_ak_bind(p->node_adr, ele_adr, p->ak_idx, model_id, 0);
         }
         else{
             if((++p->ele_bind_index) < p_info->element_cnt){
                 p->model_bind_index = 0;
+				p->is_new_model = 1;
             }else{
                 mesh_cfg_keybind_end_event(MESH_KEYBIND_EVE_SUC,0);
             }

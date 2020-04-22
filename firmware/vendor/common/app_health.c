@@ -28,6 +28,9 @@
 #include "app_health.h"
 #define ATTENTION_VAL_100_MS	10
 #define HEALTH_INTERVAL_DEF_100MS	10
+
+model_health_t 			model_sig_health;
+
 u8 init_health_para()
 {
 	model_sig_health.srv.health_mag.cur_sts.company_id = model_sig_health.srv.health_mag.fault_sts.company_id = g_vendor_id;

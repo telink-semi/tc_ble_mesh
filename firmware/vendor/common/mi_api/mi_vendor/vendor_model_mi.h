@@ -22,8 +22,9 @@
 
 #pragma once
 
-#include "../../../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #include "../../mesh_node.h"
+#include "../mijia_pub_proc.h"
 
 #if (VENDOR_MD_MI_EN)
 // op cmd 11xxxxxx yyyyyyyy yyyyyyyy (vendor)
@@ -46,10 +47,16 @@
 #define VD_MI_GET_PROPERTY			0xc1
 #define VD_MI_SET_PROPERTY			0xc3
 #define VD_MI_SET_PROPERTY_NO_ACK	0xc4
-#define VD_MI_PROPERTY_CHANGED		0xc5
+#define VD_MI_PROPERTY_STS			0xc5
+// RESERVED
 #define VD_MI_ACTION				0xc6
 #define VD_MI_RELAY_ACTION 			0xc7
 #define VD_MI_EVENT_REPORT			0xc8
+
+#define VD_MI_INDICATION			0xce
+#define VD_MI_INDICATION_ACK		0xcf
+
+
 
 #define VD_MI_GW_NODE				0xfe
 	#define MI_GW_FOUND_REQ				2
@@ -71,22 +78,26 @@ typedef struct{
 	u8 buf[4];
 }vd_mi_get_property_str;
 
-
 typedef struct{
 	vd_mi_head_str mi_head;
 	u8 value[4];
+	u8 tid;
+	u8 type;
 }vd_mi_set_property_str;
 
 typedef struct{
 	vd_mi_head_str mi_head;
 	u8 value[4];
+	u8 tid;
+	u8 type;
 }vd_mi_set_noack_property_str;
 
 typedef struct{
 	vd_mi_head_str mi_head;
 	u8 value[4];
+	u8 tid;
+	u8 type;
 }vd_mi_property_changed_str;
-
 
 typedef struct{
 	vd_mi_head_str mi_head;
@@ -137,14 +148,42 @@ typedef struct{
 }vd_mi_light_onoff_st_t;
 
 // ------------------
+// ------ MI -------
+#define MI_MAX_SSID_CNT 2
+#define MI_MAX_PIID_CNT	2
+#define MI_MAX_PROPER_CNT (MI_MAX_SSID_CNT * MI_MAX_PIID_CNT)
+
+
+
+typedef struct mi_proper_str{
+	
+	u8 ver_new;
+	u8 pub_mode;
+	u16 last_grp_tid;
+	u8 ssid_sts_change;
+	u8 piid_sts_change;
+	u8 ssid_now;
+	u8 piid_now;
+	vd_mi_property_changed_str proper_data[MI_MAX_PROPER_CNT];
+	mi_pub_str_t pub[MI_MAX_PROPER_CNT];
+	u8 ssid_sn[MI_MAX_PROPER_CNT];
+}mi_proper_str;
+extern mi_proper_str mi_proper;
+extern mi_proper_str *p_mi_proper;
 
 
 //------------------vendor op end-------------------
+void mi_set_pub_ssid_piid_now(u8 ssid,u8 piid);
+u8 mi_pub_ssid_piid_is_valid(u8 ssid,u8 piid);
+void init_mi_ssid_sn();
+void init_mi_proper_data();
+mi_pub_str_t *get_mi_pub_by_ssid_piid();
 
 int mi_vd_cmd_key_report(u16 adr_dst, u8 key_code);
 int mi_vd_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack);
 int mi_vd_light_onoff_st_publish(u8 idx);
 int mi_vd_light_onoff_st_publish2(u8 idx);
+int vd_mi_proper_sts_publish(u8 idx);
 
 
 int mi_mesh_search_model_id_by_op_vendor(mesh_op_resource_t *op_res, u16 op, u8 tx_flag);

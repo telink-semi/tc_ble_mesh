@@ -192,45 +192,251 @@ int mi_cb_vd_light_onoff_set2(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     #endif
 #endif
 
-// ------ MI -------
-vd_mi_property_changed_str property_data ;
-int mi_cb_vd_property_change(u16 ele_adr, u16 dst_adr)
+
+mi_proper_str mi_proper;
+mi_proper_str *p_mi_proper;
+
+
+u8 mi_pub_ssid_piid_is_valid(u8 ssid,u8 piid)
 {
+	if(ssid ==0 && piid == 0){
+		return 0;
+	}else{
+		return 1;
+	}
+}
+
+void mi_set_pub_ssid_piid_now(u8 ssid,u8 piid)
+{
+	p_mi_proper->piid_now = piid;
+	p_mi_proper->ssid_now = ssid;
+}
+
+mi_pub_str_t *get_mi_pub_by_ssid_piid()
+{
+	u8 ssid,piid;
+	ssid = p_mi_proper->ssid_now;
+	piid = p_mi_proper->piid_now;
+	for(int i=0;i<MI_MAX_PROPER_CNT;i++){
+		vd_mi_property_changed_str *p_pro = &(p_mi_proper->proper_data[i]);
+		if(ssid == p_pro->mi_head.ssid && piid == p_pro->mi_head.piid){
+			return &(p_mi_proper->pub[i]);
+		}
+	}
+	return NULL;
+}
+
+int  get_ssid_piid_idx(u8 ssid,u8 piid)
+{
+	for(int i=0;i<MI_MAX_PROPER_CNT;i++){
+		vd_mi_property_changed_str *p_pro = &(p_mi_proper->proper_data[i]);
+		if(ssid == p_pro->mi_head.ssid && piid == p_pro->mi_head.piid){
+			return i;
+		}
+	}
+	return -1;
+}
+
+
+vd_mi_property_changed_str * get_ssid_piid_pointer(u8 ssid,u8 piid)
+{
+	for(int i=0;i<MI_MAX_PROPER_CNT;i++){
+		vd_mi_property_changed_str *p_pro = &(p_mi_proper->proper_data[i]);
+		if(ssid == p_pro->mi_head.ssid && piid == p_pro->mi_head.piid){
+			return p_pro;
+		}
+	}
+	return NULL;
+}
+
+vd_mi_property_changed_str * get_ssid_piid_pointer_internal()
+{
+	return get_ssid_piid_pointer(p_mi_proper->ssid_now,p_mi_proper->piid_now);
+}
+
+int  set_mi_proper_data(vd_mi_property_changed_str * property_data) 
+{
+	vd_mi_property_changed_str *p_pro = get_ssid_piid_pointer(property_data->mi_head.ssid ,property_data->mi_head.piid);
+	if(p_pro != NULL){
+		
+	}else{
+		// need to find a empty buf to store 
+		p_pro = get_ssid_piid_pointer(0,0);
+		if(p_pro == NULL){// the buffer is full
+			return 0;
+		}
+	}
+	p_mi_proper->ssid_now = property_data->mi_head.ssid;
+	p_mi_proper->piid_now= property_data->mi_head.piid;
+	memcpy(p_pro,property_data,sizeof(vd_mi_property_changed_str));
+	return 1;
+}
+
+void init_mi_ssid_piid_val()
+{
+	vd_mi_property_changed_str *p_proper = &(p_mi_proper->proper_data[0]);
+	p_proper->mi_head.ssid = 0x03;
+	p_proper->mi_head.piid = 0x03;
+	p_proper = &(p_mi_proper->proper_data[1]);
+	p_proper->mi_head.ssid = 0x03;
+	p_proper->mi_head.piid = 0x05;
+	p_proper = &(p_mi_proper->proper_data[2]);
+	p_proper->mi_head.ssid = 0x03;
+	p_proper->mi_head.piid = 0x0f;
+
+}
+
+void init_mi_ssid_sn()
+{
+	for(int i=0;i<MI_MAX_PROPER_CNT;i++){
+		p_mi_proper->ssid_sn[i] = rand()&0xff;
+	}
+}
+
+void init_mi_proper_data()
+{
+	p_mi_proper = &mi_proper;
+	init_mi_ssid_sn();
+	p_mi_proper->pub_mode =1;
+	init_mi_ssid_piid_val();
+}
+
+
+u8 set_new_mi_ssid(u8 ssid,u8 piid)
+{
+	u8 idx = get_ssid_piid_idx(ssid,piid);
+	if(idx >=0){
+		return ++(p_mi_proper->ssid_sn[idx]);
+	}else{
+		return 0;
+	}
+	
+}
+u8 get_new_mi_ssid(u8 ssid,u8 piid)
+{
+	u8 idx = get_ssid_piid_idx(ssid,piid);
+	if(idx >=0){
+		return (p_mi_proper->ssid_sn[idx]);
+	}else{
+		return 0;
+	}
+}
+
+int mi_cb_vd_property_change(u16 ele_adr, u16 dst_adr,u8 ssid,u8 piid)
+{
+	int err = -1;
 	vd_mi_property_changed_str property_sts ;
 	memset((u8 *)&property_sts ,0,sizeof(property_sts));
-	#if 0
-	property_sts.mi_head.piid = 0x03;
-	property_sts.mi_head.ssid = 0x8f;
-	#endif
-	memcpy((u8 *)&property_sts,(u8 *)&property_data,sizeof(property_data));
-	return mesh_tx_cmd_rsp(VD_MI_PROPERTY_CHANGED, (u8 *)&property_sts, sizeof(property_sts), ele_adr, 
+	vd_mi_property_changed_str *p_pro = get_ssid_piid_pointer(ssid,piid);
+	if(p_pro == NULL){
+		return err;
+	}
+	memcpy((u8 *)&property_sts,p_pro,sizeof(vd_mi_property_changed_str));// excpet the tid ,others are the same 
+	if(p_mi_proper->ver_new){
+		property_sts.tid = get_new_mi_ssid(ssid,piid);
+		err = mesh_tx_cmd_rsp(VD_MI_PROPERTY_STS, (u8 *)&property_sts, sizeof(property_sts), ele_adr, 
 								dst_adr,0, 0);
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"send property new protocol",0);
+	}else{
+		err = mesh_tx_cmd_rsp(VD_MI_PROPERTY_STS, (u8 *)&property_sts, 6, ele_adr, 
+								dst_adr,0, 0);
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"send property old protocol",0);
+	}
+	return err;
 }
+
+int vd_mi_proper_sts_publish(u8 idx)
+{
+#if DUAL_VENDOR_EN
+    return 0;   // not use now.
+#else
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"mi vendor status publish ",0);
+	model_common_t *p_com_md = &model_vd_light.srv[idx].com;
+	u16 ele_adr = p_com_md->ele_adr;
+	u16 pub_adr = p_com_md->pub_adr;
+	if(!pub_adr){
+		return -1;
+	}
+	u8 *uuid = get_virtual_adr_uuid(pub_adr, p_com_md);
+    return mi_cb_vd_property_change(ele_adr,pub_adr,p_mi_proper->ssid_now,p_mi_proper->piid_now);
+#endif
+}
+
 
 int mi_cb_vd_get_property(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	model_common_t *p_com_md = (model_common_t *)cb_par->model;
-	vd_mi_property_changed_str *p_proper = (vd_mi_property_changed_str *)par;
-	property_data.mi_head.ssid = p_proper->mi_head.ssid;
-	property_data.mi_head.piid = p_proper->mi_head.piid;
-	mi_cb_vd_property_change(p_com_md->ele_adr,cb_par->adr_src);
+	vd_mi_get_property_str *p_proper = (vd_mi_get_property_str *)par;
+	mi_cb_vd_property_change(p_com_md->ele_adr,cb_par->adr_src,
+							p_proper->mi_head.ssid,p_proper->mi_head.piid);
 	return 1;
 }
+
+int soft_timer_proper_sts_proc(void)
+{
+	//gpio 0 toggle to see the effect
+	DBG_CHN4_TOGGLE;
+	static u32 mi_beacon_cnt ;
+	mi_beacon_cnt++;
+	vd_mi_proper_sts_publish(0);// send publish cmd for about 3 times
+	if(mi_beacon_cnt == 3){
+		mi_beacon_cnt =0;
+		return -1;
+	}else{
+		return 0;
+	}
+}
+
 int mi_cb_vd_set_property(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,par,par_len,"mi_cb_vd_set_property ",0);
+	if(mi_cb_vd_set_property_noack(par,par_len,cb_par)== 0){
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,par,par_len,"mi_cb_vd_set_property_noack ERR ",0);
+		return 0;
+	}
 	model_common_t *p_com_md = (model_common_t *)cb_par->model;
-	vd_mi_property_changed_str *p_proper = (vd_mi_property_changed_str *)par;
-	memcpy((u8 *)&property_data,p_proper,sizeof(property_data));
-	mi_cb_vd_property_change(p_com_md->ele_adr,cb_par->adr_src);
+	vd_mi_set_property_str *p_proper = (vd_mi_set_property_str *)par;
+	set_new_mi_ssid(p_proper->mi_head.ssid,p_proper->mi_head.piid);
+	mi_cb_vd_property_change(p_com_md->ele_adr,cb_par->adr_src,
+				p_proper->mi_head.ssid,p_proper->mi_head.piid);
 	return 1;
 }
+
 
 int mi_cb_vd_set_property_noack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	model_common_t *p_com_md = (model_common_t *)cb_par->model;
-	vd_mi_property_changed_str *p_proper = (vd_mi_property_changed_str *)par;
-	memcpy((u8 *)&property_data,p_proper,sizeof(property_data));
-	mi_cb_vd_property_change(p_com_md->ele_adr,cb_par->adr_src);
+	vd_mi_set_property_str *p_proper = (vd_mi_set_property_str *)par;
+	if(par_len == sizeof(vd_mi_set_property_str)){
+		p_mi_proper->ver_new =1;
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"use mi version new ",0);
+	}else{
+		p_mi_proper->ver_new =0;
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"use mi version old ",0);
+	}
+	if(p_mi_proper->ver_new){
+		if( is_group_adr(cb_par->adr_dst)){
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"is grp or not ",0);
+			if(p_mi_proper->last_grp_tid== p_proper->tid){
+				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tid is the same",0);
+				return 0;
+			}else{
+				p_mi_proper->last_grp_tid = p_proper->tid;
+			}
+		}
+	}
+	if(set_mi_proper_data(p_proper)==0){
+		return 0;
+	}
+	if(p_mi_proper->pub_mode){
+		st_pub_list_t pub_list = {{0}};
+		pub_list.st[ST_TRANS_MI_VENDOR_STS] = ST_G_LEVEL_SET_PUB_NOW;
+    	model_pub_check_set_bind_all(&pub_list, cb_par, 0);
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"check bind and send sts quickly  ",0);
+	}else{
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"use const fast inter to send ",0);
+		blt_soft_timer_add(&soft_timer_proper_sts_proc, 300*1000);
+	}
 	return 1;
 }
 
@@ -257,7 +463,7 @@ int mi_cb_vd_vendor(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		u8 rsp = MI_DEV_FOUND_RSP;
 		mesh_tx_cmd2normal_primary(VD_MI_NODE_GW, (u8 *)&rsp, sizeof(rsp),cb_par->adr_src,0);
 	}else if (type == MI_NET_PARA_RSP){
-		pub_max_inter_rcv_cb(par[1]);
+		pub_max_inter_rcv_cb(par[2]);
 	}
 	return 1;
 }
@@ -398,10 +604,10 @@ STATIC_ASSERT(sizeof(vd_mi_rc_key_report_t) <= 8);
 const 
 #endif
 mesh_cmd_sig_func_t mi_mesh_cmd_vd_func[] = {
-	{VD_MI_GET_PROPERTY, 		0, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_SEPC_VENDOR_MODEL_SER, mi_cb_vd_get_property, 	   	VD_MI_PROPERTY_CHANGED},
-    {VD_MI_SET_PROPERTY, 		0, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_SEPC_VENDOR_MODEL_SER, mi_cb_vd_set_property, 		VD_MI_PROPERTY_CHANGED},
-	{VD_MI_SET_PROPERTY_NO_ACK, 0, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_SEPC_VENDOR_MODEL_SER, mi_cb_vd_set_property_noack,VD_MI_PROPERTY_CHANGED},
-	{VD_MI_PROPERTY_CHANGED, 	1, MIOT_SEPC_VENDOR_MODEL_SER, MIOT_SEPC_VENDOR_MODEL_CLI, mi_cb_vd_property_change_status, STATUS_NONE},
+	{VD_MI_GET_PROPERTY, 		0, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_SEPC_VENDOR_MODEL_SER, mi_cb_vd_get_property, 	   	VD_MI_PROPERTY_STS},
+    {VD_MI_SET_PROPERTY, 		0, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_SEPC_VENDOR_MODEL_SER, mi_cb_vd_set_property, 		VD_MI_PROPERTY_STS},
+	{VD_MI_SET_PROPERTY_NO_ACK, 0, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_SEPC_VENDOR_MODEL_SER, mi_cb_vd_set_property_noack,VD_MI_PROPERTY_STS},
+	{VD_MI_PROPERTY_STS, 		1, MIOT_SEPC_VENDOR_MODEL_SER, MIOT_SEPC_VENDOR_MODEL_CLI, mi_cb_vd_property_change_status, STATUS_NONE},
 	{VD_MI_ACTION, 				0, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_SEPC_VENDOR_MODEL_SER, mi_cb_vd_action, STATUS_NONE},
 	{VD_MI_RELAY_ACTION, 		0, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_SEPC_VENDOR_MODEL_SER, mi_cb_vd_reply_action, STATUS_NONE},
 	{VD_MI_EVENT_REPORT, 		0, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_SEPC_VENDOR_MODEL_SER, mi_cb_vd_event_report, STATUS_NONE},

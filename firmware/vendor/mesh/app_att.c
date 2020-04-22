@@ -321,6 +321,10 @@ int proxy_gatt_Write(void *p)
 		p_bear->len=para_len+1;
 		p_bear->type=MESH_ADV_TYPE_MESSAGE;
 		mesh_nw_pdu_from_gatt_handle((u8 *)p_bear);
+		#if DF_TEST_MODE_EN
+		extern void cfg_led_event (u32 e);
+		cfg_led_event(LED_EVENT_FLASH_2HZ_2S);
+		#endif
 	}
 #if MESH_RX_TEST
 	else if((p_gatt->msgType == MSG_RX_TEST_PDU)&&(p_gatt->data[0] == 0xA3) && (p_gatt->data[1] == 0xFF)){
@@ -403,6 +407,33 @@ const u8 mi_ota_data_str[]="Ota data";
 u8 mi_ota_data_ccc[2]=	{0x00,0x00};
 u8 mi_ota_data_buf_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 u8 mi_ota_data_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
+
+
+#define BLE_UUID_STDIO_SRV    {0x6D,0x69,0x2E,0x6D,0x69,0x6F,0x74,0x2E,0x62,0x6C,0x65,0x00,0x00,0x01,0x00,0x00}
+#define BLE_UUID_STDIO_RX     {0x6D,0x69,0x2E,0x6D,0x69,0x6F,0x74,0x2E,0x62,0x6C,0x65,0x00,0x01,0x01,0x00,0x00}
+#define BLE_UUID_STDIO_TX     {0x6D,0x69,0x2E,0x6D,0x69,0x6F,0x74,0x2E,0x62,0x6C,0x65,0x00,0x02,0x01,0x00,0x00}
+
+
+#define MAX_MI_STDIO_NUM	9
+const u8 mi_primary_stdio_uuid[16] = BLE_UUID_STDIO_SRV;
+u8 mi_pri_stdio_perm = ATT_PERMISSIONS_READ_AUTHOR;
+
+const u8 mi_stdio_rx_uuid[16] = BLE_UUID_STDIO_RX;
+static u8 mi_stdio_rx_prop = CHAR_PROP_WRITE_WITHOUT_RSP;
+static u8 mi_stdio_rx_buf[20];
+const u8 mi_stdio_rx_str[]="STDIO_RX";
+u8 mi_stdio_rx_ccc[2]=	{0x00,0x00};
+u8 mi_stdio_rx_buf_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
+u8 mi_stdio_rx_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
+
+const u8 mi_stdio_tx_uuid[16] = BLE_UUID_STDIO_TX;
+static u8 mi_stdio_tx_prop = CHAR_PROP_NOTIFY;
+static u8 mi_stdio_tx_buf[20];
+const u8 mi_stdio_tx_str[]="STDIO_TX";
+u8 mi_stdio_tx_ccc[2]=	{0x00,0x00};
+u8 mi_stdio_tx_buf_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
+u8 mi_stdio_tx_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
+
 #endif 
 
 #if(AIS_ENABLE)
@@ -454,7 +485,7 @@ int online_st_att_write(void *pw)
 #define MAX_SERVICE_PROVISION           (9)
 #define MAX_SERVICE_PROXY               (9)
 #define MAX_USER_DEFINE_SET_CCC_ATT_NUM (USER_DEFINE_SET_CCC_ENABLE ? 4 : 0)
-#define MAX_MI_ATT_NUM                  (MI_API_ENABLE ? 20 : 0)
+#define MAX_MI_ATT_NUM                  (MI_API_ENABLE ? 29 : 0)
 #define MAX_SERVICE_CHANGE_ATT_NUM      (5)
 #define MAX_AIS_ATT_NUM 	            (AIS_ENABLE ? 12 : 0)
 #define MAX_ONLINE_ST_ATT_NUM 	        (ONLINE_STATUS_EN ? 4 : 0)
@@ -534,7 +565,7 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 
 #if MI_API_ENABLE
 #define MY_ATTRIBUTE_MI_API                        \
-	{MAX_MI_ATT_NUM,&mi_pri_service_perm, 2,2,(u8*)(&my_primaryServiceUUID),	(u8*)(&mi_primary_service_uuid), 0},\
+	{MAX_MI_ATT_NUM-MAX_MI_STDIO_NUM,&mi_pri_service_perm, 2,2,(u8*)(&my_primaryServiceUUID),	(u8*)(&mi_primary_service_uuid), 0},\
 	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&mi_version_prop), 0}, /*prop*/   \
 	{0,&mi_version_perm, 2,sizeof(mi_version_buf),(u8*)(&mi_version_uuid),	(mi_version_buf), 0, 0}, /*value*/   \
 	{0,&att_perm_auth_read, 2,sizeof (mi_version_str),(u8*)(&userdesc_UUID), (u8*)(mi_version_str), 0},\
@@ -557,7 +588,19 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&mi_ota_data_prop), 0}, /*prop*/   \
 	{0,&mi_ota_data_buf_perm, 2,sizeof(mi_ota_data_buf),(u8*)(&mi_ota_data_uuid),	(mi_ota_data_buf), 0, 0}, /*value*/   \
 	{0,&att_perm_auth_read, 2,sizeof (mi_ota_data_str),(u8*)(&userdesc_UUID), (u8*)(mi_ota_data_str), 0},	\
-	{0,&mi_ota_data_ccc_perm, 2, sizeof(mi_ota_data_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_ota_data_ccc), 0}, /*value*/   
+	{0,&mi_ota_data_ccc_perm, 2, sizeof(mi_ota_data_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_ota_data_ccc), 0}, /*value*/ \
+	\
+	{MAX_MI_STDIO_NUM,&att_perm_auth_read, 2,16,(u8*)(&my_primaryServiceUUID),	(u8*)(&mi_primary_stdio_uuid), 0},\
+		{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&mi_stdio_rx_prop), 0},				\
+		{0,&mi_stdio_rx_buf_perm, 16,sizeof(mi_stdio_rx_buf),(u8*)(&mi_stdio_rx_uuid),	(mi_stdio_rx_buf), 0, 0},\
+		{0,&att_perm_auth_read, 2,sizeof (mi_stdio_rx_str),(u8*)(&userdesc_UUID), (u8*)(mi_stdio_rx_str), 0},\
+		{0,&mi_stdio_rx_ccc_perm, 2, sizeof(mi_stdio_rx_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_stdio_rx_ccc), 0},\
+		\
+		{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&mi_stdio_tx_prop), 0},\
+		{0,&mi_stdio_tx_buf_perm, 16,sizeof(mi_stdio_tx_buf),(u8*)(&mi_stdio_tx_uuid),	(mi_stdio_tx_buf), 0, 0},\
+		{0,&att_perm_auth_read, 2,sizeof (mi_stdio_tx_str),(u8*)(&userdesc_UUID), (u8*)(mi_stdio_tx_str), 0},\
+		{0,&mi_stdio_tx_ccc_perm, 2, sizeof(mi_stdio_tx_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_stdio_tx_ccc), 0},
+
 #endif
 
 #define MY_ATTRIBUTE_SERVICE_CHANGE                        \

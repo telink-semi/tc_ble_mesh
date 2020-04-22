@@ -12,13 +12,13 @@
 //#include "../../../proj_lib/mesh_crypto/ecc_dsa.h"
 #include "../mesh_common.h"
 #include "../ev.h"
-#include "./certi/third_party/micro-ecc/uECC.h"
-#include "./certi/third_party/micro-ecc/types.h"
+#include "./libs/third_party/micro-ecc/uECC.h"
+#include "./libs/third_party/micro-ecc/types.h"
 
 #if MI_API_ENABLE
-#include "./certi/third_party/mbedtls/sha256_hkdf.h"
-#include "./certi/mi_config.h"
-#include "./certi/mesh_auth/mible_mesh_auth.h"
+#include "./libs/third_party/mbedtls/sha256_hkdf.h"
+#include "./libs/mi_config.h"
+#include "./libs/mesh_auth/mible_mesh_auth.h"
 void mi_schd_event_handler(schd_evt_t *evt_id);
 #endif
 extern attribute_t* gAttributes;
@@ -83,6 +83,9 @@ void telink_mible_upgrade_firmware(void);
 void telink_mible_ota_start();
 void telink_mible_ota_end();
 u8 mi_mesh_sleep_time_exceed_adv_iner();
+void telink_mi_vendor_init();
+void mi_reboot_proc();
+unsigned char  mi_ota_is_busy();
 
 
 

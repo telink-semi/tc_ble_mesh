@@ -26,6 +26,8 @@
 
 #define		BIT_INTERVAL_SYS_TICK	(CLOCK_SYS_CLOCK_1S/BAUD_USE)
 
+_attribute_no_retention_bss_ static int tx_pin_initialed = 0;
+
 /**
  * @brief  DEBUG_INFO_TX_PIN initialize. Enable 1M pull-up resistor,
  *   set pin as gpio, enable gpio output, disable gpio input.
@@ -88,7 +90,6 @@ static void uart_do_put_char(u32 pcTxReg, u8 *bit)
  * @retval None
  */
 _attribute_ram_code_ static void uart_put_char(u8 byte){
-	static int tx_pin_initialed = 0;
 	if (!tx_pin_initialed) {
 	    debug_info_tx_pin_init();
 		tx_pin_initialed = 1;

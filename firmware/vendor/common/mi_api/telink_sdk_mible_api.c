@@ -1,13 +1,15 @@
 #include "telink_sdk_mible_api.h"
 #include "../../../proj_lib/ble/ll/ll_whitelist.h"
 #if MI_API_ENABLE
-#include "./certi/mijia_profiles/mi_service_server.h"
-#include "./certi/common/mible_beacon.h"
-#include "./certi/mesh_auth/mible_mesh_auth.h"
+#include "./libs/mijia_profiles/mi_service_server.h"
+#include "./libs/common/mible_beacon.h"
+#include "./libs/mesh_auth/mible_mesh_auth.h"
 #include "common/mible_beacon_internal.h"
 #include "mible_log.h"
 #include "Mijia_pub_proc.h"
 #include "vendor/common/blt_soft_timer.h"
+#include "./libs/gatt_dfu/mible_dfu_main.h"
+
 MYFIFO_INIT(blt_gatt_event_buf, 0x30, 8);
 telink_record_t telink_record;
 // call back function ,will be call by the telink api 
@@ -82,7 +84,7 @@ u8 telink_ble_mi_app_event(u8 sub_code , u8 *p, int n)
 }
 
 // callback function ,will call by the telink part 
-u8 telink_ble_mi_event_callback(u8 opcode,u8 *p)
+_attribute_ram_code_ u8 telink_ble_mi_event_callback(u8 opcode,u8 *p)
 {
 	mible_gatts_evt_t evt = MIBLE_GATTS_EVT_WRITE;
 	mible_gatts_evt_param_t evt_param_t;
@@ -216,10 +218,14 @@ mible_status_t telink_ble_mi_adv_start(mible_gap_adv_param_t *p_param)
 	}else{
 		chn_mask |= BIT(2);
 	}
+	bls_ll_setAdvEnable(1);  //adv enable
+	if(p_param->adv_interval_min == 16){ //protect the mesh stack ,the interval must be 10ms
+		return MI_SUCCESS;
+	}
 	status = bls_ll_setAdvParam( p_param->adv_interval_min, p_param->adv_interval_max, \
 			 	 	 	 	 	     p_param->adv_type, OWN_ADDRESS_PUBLIC, \
 			 	 	 	 	 	     0,  NULL,  chn_mask, ADV_FP_NONE);
-	bls_ll_setAdvEnable(1);  //adv enable
+	
 	return MI_SUCCESS;
 }
 // user function ,and will call by the mi part 
@@ -569,6 +575,74 @@ void telink_record_part_init()
 		record_adr += telink_record.len +3 ;
 	}
 }
+
+u8 mi_ota_downing =0;
+unsigned char  mi_ota_is_busy()
+{
+	if(mi_ota_downing){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+static u8 reboot_flag =0;
+void mi_reboot_proc()
+{
+	if(reboot_flag && blt_state == BLS_LINK_STATE_ADV){
+		reboot_flag =0;
+		MI_LOG_INFO("reset\n");
+		mible_upgrade_firmware_fail();
+	}
+}
+
+void mible_dfu_handler(mible_dfu_state_t state, mible_dfu_param_t *param)
+{   
+    if(MIBLE_DFU_STATE_START == state){
+        MI_LOG_INFO("state = MIBLE_DFU_STATE_START\n");
+		mi_ota_downing =1;
+    }
+    else if(MIBLE_DFU_STATE_VERIFY == state){
+      	MI_LOG_INFO("state = MIBLE_DFU_STATE_VERIFY\n");
+		mi_ota_downing =0;
+		
+       if(MIBLE_DFU_VERIFY_SUCC == param->verify.value){
+          	MI_LOG_INFO("value = MIBLE_DFU_VERIFY_SUCC\n");
+			// in this mode ,it will control reset automatic
+       }else if(MIBLE_DFU_VERIFY_FAIL == param->verify.value){
+          	MI_LOG_INFO("value = MIBLE_DFU_VERIFY_FAIL\n");
+			// set flag and wait to reset ,when disconnect 
+			reboot_flag =1;
+       }
+    }else if(MIBLE_DFU_STATE_SWITCH == state){
+        MI_LOG_INFO("state = MIBLE_DFU_STATE_SWITCH\n");
+
+    }else if(MIBLE_DFU_STATE_CANCEL == state){
+        MI_LOG_INFO("state = MIBLE_DFU_STATE_CANCEL\n");
+    }
+}
+
+void stdio_rx_handler(uint8_t* p, uint8_t l)
+{
+	int errno;
+	/* RX plain text (It has been decrypted) */
+	MI_LOG_INFO("RX raw data\n");
+	MI_LOG_HEXDUMP(p, l);
+	
+	/* TX plain text (It will be encrypted before send out.) */
+	errno = stdio_tx(p, l);
+	MI_LOG_INFO("errno = %d\n", errno);
+	MI_ERR_CHECK(errno);
+}
+
+
+void telink_mi_vendor_init()
+{
+	stdio_service_init(stdio_rx_handler);
+	init_mi_proper_data();
+	mible_dfu_callback_register(mible_dfu_handler);
+}
+
+
 u8 telink_write_flash(u32 *p_adr,u8 *p_buf,u8 len )
 {
 	u32 tmp_adr = *p_adr;
@@ -949,6 +1023,11 @@ void xiaomi_publish_set_proc_lamp()
 	xiaomi_publish_set_model(SIG_MD_LIGHTNESS_S,0,1);
 }
 
+void xiaomi_publish_set_vendor_model()
+{
+	xiaomi_publish_set_model(MIOT_SEPC_VENDOR_MODEL_SER,0,0);
+}
+
 void xiaomi_publish_set_proc()
 {
 #if (MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_CT_LIGHT)
@@ -961,7 +1040,11 @@ void xiaomi_publish_set_proc()
 	xiaomi_publish_set_proc_onff(2);
 #elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_THREE_ONOFF)
 	xiaomi_publish_set_proc_onff(3);
+#elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_FANS)
+	xiaomi_publish_set_proc_onff(1);
 #endif	
+	// need to add the vendor model pub setting part 
+	xiaomi_publish_set_vendor_model();
 }
 
 
@@ -997,6 +1080,7 @@ void mi_dispatch_led_status()
 #define MI_TEST_MODE_EN	1
 u8 mi_api_loop_run()
 {
+	mi_reboot_proc();
 	mi_dispatch_led_status();
 	return TRUE;
 }
@@ -1128,6 +1212,10 @@ static void advertising_start(void)
     }
 }
 #define MI_REG_STS_RECORD_ID 	0x0180
+
+
+
+
 void advertise_init()
 {
 	uint8_t sts_rec[1];
@@ -1213,7 +1301,7 @@ void mi_schd_event_handler(schd_evt_t* p_evt_id)
 		}
 		// pub all the sts on time .
 		xiaomi_publish_set_proc();
-		mi_pub_para_init();
+		mi_pub_vd_sig_para_init();
 		mi_pub_send_all_status();
     }else if (mi_schd_event_fail(p_evt_id->id)){
         mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_TIMEOUT);

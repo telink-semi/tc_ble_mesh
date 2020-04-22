@@ -44,7 +44,7 @@ extern "C" {
 #define	__LOG_RT_ENABLE__		0
 //#define	__DEBUG_PRINT__			0
 
-#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#if DUAL_MESH_ZB_BL_EN
 #define FLASH_1M_ENABLE         1
 #elif DUAL_VENDOR_EN
 #define FLASH_1M_ENABLE         0
@@ -53,7 +53,7 @@ extern "C" {
 #endif
 
 #if FLASH_1M_ENABLE
-#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#if DUAL_MESH_ZB_BL_EN
 #define PINGPONG_OTA_DISABLE    1 // it can disable only when 1M flash.
 #else
 #define PINGPONG_OTA_DISABLE    0 // it can disable only when 1M flash.
@@ -110,7 +110,7 @@ extern "C" {
 
 #define ONLINE_STATUS_EN        0
 
-#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#if DUAL_MESH_ZB_BL_EN
 #define DUAL_MODE_ADAPT_EN 			1   // dual mode as master with Zigbee
 #else
 #define DUAL_MODE_ADAPT_EN 			0   // dual mode as master with Zigbee
@@ -266,7 +266,7 @@ extern "C" {
 #define	USE_SYS_TICK_PER_US
 #define CLOCK_SYS_TYPE  		CLOCK_TYPE_PLL	//  one of the following:  CLOCK_TYPE_PLL, CLOCK_TYPE_OSC, CLOCK_TYPE_PAD, CLOCK_TYPE_ADC
 
-#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#if DUAL_MESH_ZB_BL_EN // keep same with zb
 #define CLOCK_SYS_CLOCK_HZ  	32000000
 #elif (MI_API_ENABLE)
 #define CLOCK_SYS_CLOCK_HZ  	48000000

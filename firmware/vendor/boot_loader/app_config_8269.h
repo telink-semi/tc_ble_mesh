@@ -44,8 +44,6 @@ extern "C" {
 #define APPLICATION_DONGLE		0					// or else APPLICATION_DEVICE
 #define	USB_PRINTER				1
 #define	FLOW_NO_OS				1
-#define XIAOMI_MODULE_ENABLE	MI_API_ENABLE
-#define XIAOMI_TEST_CODE_ENABLE 	0
 
 /////////////////////HCI ACCESS OPTIONS///////////////////////////////////////
 #define HCI_USE_NONE	0
@@ -55,8 +53,8 @@ extern "C" {
 #if WIN32
 #define HCI_ACCESS		HCI_USE_USB
 #else
-#define HCI_ACCESS		HCI_USE_NONE	
-#endif
+#define HCI_ACCESS		HCI_USE_NONE
+#endif 
 
 #if (HCI_ACCESS==HCI_USE_UART)
 #define UART_GPIO_SEL           UART_GPIO_8267_PC2_PC3
@@ -87,15 +85,7 @@ extern "C" {
 #endif
 
 /////////////////// mesh project config /////////////////////////////////
-#if (MESH_RX_TEST || (!MD_DEF_TRANSIT_TIME_EN))
 #define TRANSITION_TIME_DEFAULT_VAL (0)
-#else
-	#if MI_API_ENABLE
-#define TRANSITION_TIME_DEFAULT_VAL (0)
-	#else
-#define TRANSITION_TIME_DEFAULT_VAL (GET_TRANSITION_TIME_WITH_STEP(1, TRANSITION_STEP_RES_1S)) // (0x41)  // 0x41: 1 second // 0x00: means no default transition time
-	#endif
-#endif
 
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			0
@@ -221,18 +211,15 @@ extern "C" {
 /////////////////// Clock  /////////////////////////////////
 #define	USE_SYS_TICK_PER_US
 #define CLOCK_SYS_TYPE  		CLOCK_TYPE_PLL	//  one of the following:  CLOCK_TYPE_PLL, CLOCK_TYPE_OSC, CLOCK_TYPE_PAD, CLOCK_TYPE_ADC
-#define CLOCK_SYS_CLOCK_HZ  	32000000
 
+#define CLOCK_SYS_CLOCK_HZ  	32000000
 //////////////////Extern Crystal Type///////////////////////
 #define CRYSTAL_TYPE			XTAL_12M		//  extern 12M crystal
 
 /////////////////// watchdog  //////////////////////////////
 #define MODULE_WATCHDOG_ENABLE		0
-#if (MESH_USER_DEFINE_MODE == MESH_MI_ENABLE)
-#define WATCHDOG_INIT_TIMEOUT		20000  //in mi mode the watchdog timeout is 20s
-#else
 #define WATCHDOG_INIT_TIMEOUT		2000  //in mi mode the watchdog timeout is 20s
-#endif
+
 
 
 /////////////////// set default   ////////////////
