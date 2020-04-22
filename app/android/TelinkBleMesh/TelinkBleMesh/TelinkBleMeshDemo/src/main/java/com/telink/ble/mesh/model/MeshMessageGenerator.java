@@ -19,7 +19,7 @@ public class MeshMessageGenerator {
     public static MeshMessage onOffSetMsg(int nodeAddress, byte onOff, int appKeyIndex) {
         OnOffSetMessage message = new OnOffSetMessage(nodeAddress, appKeyIndex);
         message.onOff = onOff;
-        message.setContainsTid(true);
+        message.setTidPosition(1);
         message.setResponseOpcode(Opcode.G_ONOFF_STATUS.value);
         return message;
     }

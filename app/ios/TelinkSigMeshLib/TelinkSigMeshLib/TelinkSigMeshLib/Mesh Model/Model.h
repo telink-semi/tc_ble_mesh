@@ -30,7 +30,7 @@
 #import <Foundation/Foundation.h>
 //#import "LibHandle.h"
 
-@class BLEStore,SigNodeModel,SigMeshMessage;
+@class BLEStore,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex;
 typedef void(^BeaconBackCallBack)(BOOL available);
 typedef void(^responseAllMessageBlock)(UInt16 source,UInt16 destination,SigMeshMessage *responseMessage);
 
@@ -175,6 +175,8 @@ typedef enum : NSUInteger {
     AddDeviceModelStateBinding,
     AddDeviceModelStateBindSuccess,
     AddDeviceModelStateBindFail,
+    AddDeviceModelStateScaned,
+    AddDeviceModelStateProvisioning,
 } AddDeviceModelState;//添加的设备的状态
 
 @interface Model : NSObject
@@ -286,20 +288,20 @@ typedef enum : NSUInteger {
 @end
 
 
-//缓存蓝牙扫描回调的模型
+/// 缓存蓝牙扫描回调的模型，uuid(peripheral.identifier.UUIDString)为唯一标识符。
 @interface SigScanRspModel : NSObject
 @property (nonatomic, strong) NSData *nodeIdentityData;//byte[0]:type=0x01,byte[1~17]:data
 @property (nonatomic, strong) NSData *networkIDData;//byte[0]:type=0x00,byte[1~9]:data
-//@property (nonatomic, strong) NSData *encrypterData;
 @property (nonatomic, strong) NSString *macAddress;
 @property (nonatomic, assign) UInt16 CID;//企业ID，默认为0x0211，十进制为529.
 @property (nonatomic, assign) UInt16 PID;//产品ID，CT灯为1，面板panel为7.
 @property (nonatomic, strong) NSString *uuid;
 @property (nonatomic, assign) UInt16 address;
 @property (nonatomic, strong) NSString *advName;//广播包中的CBAdvertisementDataLocalNameKey
-@property (nonatomic, strong) NSString *advUuid;//未添加的设备广播包中的CBAdvertisementDataServiceDataKey中的UUID（bytes:0-15）
+@property (nonatomic, strong) NSString *advUuid;//未添加的设备广播包中的CBAdvertisementDataServiceDataKey中的UUID（bytes:0-15），cid和pid为其前四个字节
 @property (nonatomic, assign) OobInformation advOobInformation;//未添加的设备广播包中的CBAdvertisementDataServiceDataKey中的oob信息（bytes:16-17）
 @property (nonatomic, strong) NSDictionary<NSString *,id> *advertisementData;//扫描到的蓝牙设备广播包完整数据
+@property (nonatomic, assign) BOOL provisioned;//YES表示已经入网。
 
 - (instancetype)initWithPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData;
 @end
@@ -307,18 +309,20 @@ typedef enum : NSUInteger {
 
 //缓存Remot add扫描回调的模型
 @interface SigRemoteScanRspModel : NSObject
-@property (nonatomic, assign) UInt16 unicastAddress;
-@property (nonatomic, strong) NSData *uuid;
+@property (nonatomic, assign) UInt16 reportNodeAddress;
+@property (nonatomic, strong) NSData *reportNodeUUID;
 @property (nonatomic, assign) int RSSI;//负值
-@property (nonatomic, assign) UInt16 oob;
+@property (nonatomic, assign) OobInformation oob;
 @property (nonatomic, strong) NSString *macAddress;
-- (instancetype)initWithPar:(UInt8 *)par len:(UInt8)len;
+- (instancetype)initWithParameters:(NSData *)parameters;
+//- (instancetype)initWithPar:(UInt8 *)par len:(UInt8)len;
 @end
 
 
 @interface AddDeviceModel : Model
 @property (nonatomic, strong) SigScanRspModel *scanRspModel;
 @property (nonatomic, assign) AddDeviceModelState state;
+- (instancetype)initWithRemoteScanRspModel:(SigRemoteScanRspModel *)scanRemoteModel;
 @end
 
 @interface PublishResponseModel : NSObject
@@ -452,6 +456,11 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic, copy) responseAllMessageBlock responseCallBack;
 @property (nonatomic, assign) BOOL hasReceiveResponse;
 
+@property (nonatomic,strong) SigNetkeyModel *netkeyA;
+@property (nonatomic,strong) SigAppkeyModel *appkeyA;
+@property (nonatomic,strong) SigIvIndex *ivIndexA;
+@property (nonatomic,assign) NSTimeInterval timeout;
+
 /// create sig model ini command
 - (instancetype)initSigModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt16)opcode commandData:(NSData *)commandData;
 /// create vebdor model ini command
@@ -468,4 +477,19 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic, assign) UInt16 address;
 @property (nonatomic, assign) SigUpdateStatusType status;
 - (instancetype)initWithAddress:(UInt16)address status:(SigUpdateStatusType)status;
+@end
+
+/// 8.4.1.2 Firmware Update Information Status
+/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.81)
+@interface SigFirmwareInformationEntryModel : Model
+/// Length of the Current Firmware ID field.
+@property (nonatomic,assign) UInt8 currentFirmwareIDLength;
+/// Identifies the firmware image on the node or any subsystem on the node. Size is variable.
+@property (nonatomic,strong) NSData *currentFirmwareID;
+/// Length of the Update URI field.
+@property (nonatomic,assign) UInt8 updateURILength;
+/// URI used to retrieve a new firmware image. Size is 1 ~ 255. (optional)
+@property (nonatomic,strong) NSData *updateURL;
+@property (nonatomic,strong) NSData *parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
 @end

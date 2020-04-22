@@ -33,13 +33,14 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class SigMessageHandle,SigTransitionTime,SigMeshMessage,SigBaseMeshMessage,SigPublish,SigTimeModel,SigFilterStatus;
-@class SigConfigAppKeyStatus,SigConfigAppKeyList,SigConfigBeaconStatus,SigConfigCompositionDataStatus,SigConfigDefaultTtlStatus,SigConfigFriendStatus,SigConfigGATTProxyStatus,SigConfigModelPublicationStatus,SigConfigModelSubscriptionStatus,SigConfigNetworkTransmitStatus,SigConfigRelayStatus,SigConfigSIGModelSubscriptionList,SigConfigVendorModelSubscriptionList,SigConfigModelAppStatus,SigConfigNetKeyStatus,SigConfigNetKeyList,SigConfigNodeResetStatus,SigConfigSIGModelAppList,SigConfigVendorModelAppList;
+@class SigConfigAppKeyStatus,SigConfigAppKeyList,SigConfigBeaconStatus,SigConfigCompositionDataStatus,SigConfigDefaultTtlStatus,SigConfigFriendStatus,SigConfigGATTProxyStatus,SigConfigModelPublicationStatus,SigConfigModelSubscriptionStatus,SigConfigNetworkTransmitStatus,SigConfigRelayStatus,SigConfigSIGModelSubscriptionList,SigConfigVendorModelSubscriptionList,SigConfigModelAppStatus,SigConfigNetKeyStatus,SigConfigNetKeyList,SigConfigNodeIdentityStatus,SigConfigNodeResetStatus,SigConfigSIGModelAppList,SigConfigVendorModelAppList;
 @class SigGenericOnOffStatus,SigGenericLevelStatus,SigGenericDefaultTransitionTimeStatus,SigGenericOnPowerUpStatus,SigGenericPowerLevelStatus,SigGenericPowerLastStatus,SigGenericPowerDefaultStatus,SigGenericPowerRangeStatus,SigGenericBatteryStatus,SigSensorDescriptorStatus,SigSensorStatus,SigSensorColumnStatus,SigSensorSeriesStatus,SigSensorCadenceStatus,SigSensorSettingsStatus,SigSensorSettingStatus,SigTimeStatus,SigTimeRoleStatus,SigTimeZoneStatus,SigTAI_UTC_DeltaStatus,SigSceneStatus,SigSceneRegisterStatus,SigSchedulerActionStatus,SigSchedulerStatus,SigLightLightnessStatus,SigLightLightnessLinearStatus,SigLightLightnessLastStatus,SigLightLightnessDefaultStatus,SigLightLightnessRangeStatus,SigLightCTLStatus,SigLightCTLTemperatureRangeStatus,SigLightCTLTemperatureStatus,SigLightCTLDefaultStatus,SigLightHSLHueStatus,SigLightHSLSaturationStatus,SigLightHSLStatus,SigLightHSLTargetStatus,SigLightHSLDefaultStatus,SigLightHSLRangeStatus,SigLightXyLStatus,SigLightXyLTargetStatus,SigLightXyLDefaultStatus,SigLightXyLRangeStatus,SigLightLCModeStatus,SigLightLCOMStatus,SigLightLCLightOnOffStatus,SigLightLCPropertyStatus;
-@class SigFirmwareInformationStatus,SigFirmwareUpdateStatus,SigFirmwareDistributionStatus,SigFirmwareDistributionDetailsList;
-@class SigObjectTransferStatus,SigObjectBlockTransferStatus,SigObjectBlockStatus,SigObjectInformationStatus;
+@class SigFirmwareUpdateInformationStatus,SigFirmwareUpdateFirmwareMetadataStatus,SigFirmwareUpdateStatus,SigFirmwareDistributionStatus,SigFirmwareDistributionDetailsList;
+@class SigBLOBTransferStatus,SigObjectBlockTransferStatus,SigBLOBBlockStatus,SigBLOBInformationStatus;
+@class SigRemoteProvisioningScanCapabilitiesStatus,SigRemoteProvisioningScanStatus,SigRemoteProvisioningLinkStatus;
 
 typedef void(^resultBlock)(BOOL isResponseAll, NSError * _Nullable error);
-typedef void(^ErrorBlock)(NSError *error);
+typedef void(^ErrorBlock)(NSError * _Nullable error);
 
 typedef void(^responseAllMessageBlock)(UInt16 source,UInt16 destination,SigMeshMessage *responseMessage);
 
@@ -61,6 +62,7 @@ typedef void(^responseConfigVendorModelSubscriptionListMessageBlock)(UInt16 sour
 typedef void(^responseConfigModelAppStatusMessageBlock)(UInt16 source,UInt16 destination,SigConfigModelAppStatus *responseMessage);
 typedef void(^responseConfigNetKeyStatusMessageBlock)(UInt16 source,UInt16 destination,SigConfigNetKeyStatus *responseMessage);
 typedef void(^responseConfigNetKeyListMessageBlock)(UInt16 source,UInt16 destination,SigConfigNetKeyList *responseMessage);
+typedef void(^responseConfigNodeIdentityStatusMessageBlock)(UInt16 source,UInt16 destination,SigConfigNodeIdentityStatus *responseMessage);
 typedef void(^responseConfigNodeResetStatusMessageBlock)(UInt16 source,UInt16 destination,SigConfigNodeResetStatus *responseMessage);
 typedef void(^responseConfigSIGModelAppListMessageBlock)(UInt16 source,UInt16 destination,SigConfigSIGModelAppList *responseMessage);
 typedef void(^responseConfigVendorModelAppListMessageBlock)(UInt16 source,UInt16 destination,SigConfigVendorModelAppList *responseMessage);
@@ -114,21 +116,27 @@ typedef void(^responseLightLCLightOnOffStatusMessageBlock)(UInt16 source,UInt16 
 typedef void(^responseLightLCPropertyStatusMessageBlock)(UInt16 source,UInt16 destination,SigLightLCPropertyStatus *responseMessage);
 
 // callback about Firmware Update Messages
-typedef void(^responseFirmwareInformationStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareInformationStatus *responseMessage);
+typedef void(^responseFirmwareInformationStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareUpdateInformationStatus *responseMessage);
+typedef void(^responseFirmwareUpdateFirmwareMetadataStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareUpdateFirmwareMetadataStatus *responseMessage);
 typedef void(^responseFirmwareUpdateStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareUpdateStatus *responseMessage);
 typedef void(^responseFirmwareDistributionStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareDistributionStatus *responseMessage);
 typedef void(^responseFirmwareDistributionDetailsListMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareDistributionDetailsList *responseMessage);
 
-// callback about Object Transfer Messages
-typedef void(^responseObjectTransferStatusMessageBlock)(UInt16 source,UInt16 destination,SigObjectTransferStatus *responseMessage);
+// callback about BLOB Transfer Messages
+typedef void(^responseBLOBTransferStatusMessageBlock)(UInt16 source,UInt16 destination,SigBLOBTransferStatus *responseMessage);
 typedef void(^responseObjectBlockTransferStatusMessageBlock)(UInt16 source,UInt16 destination,SigObjectBlockTransferStatus *responseMessage);
-typedef void(^responseObjectBlockStatusMessageBlock)(UInt16 source,UInt16 destination,SigObjectBlockStatus *responseMessage);
-typedef void(^responseObjectInformationStatusMessageBlock)(UInt16 source,UInt16 destination,SigObjectInformationStatus *responseMessage);
+typedef void(^responseBLOBBlockStatusMessageBlock)(UInt16 source,UInt16 destination,SigBLOBBlockStatus *responseMessage);
+typedef void(^responseBLOBInformationStatusMessageBlock)(UInt16 source,UInt16 destination,SigBLOBInformationStatus *responseMessage);
+
+// callback about Remote Provision
+typedef void(^responseRemoteProvisioningScanCapabilitiesStatusMessageBlock)(UInt16 source,UInt16 destination,SigRemoteProvisioningScanCapabilitiesStatus *responseMessage);
+typedef void(^responseRemoteProvisioningScanStatusMessageBlock)(UInt16 source,UInt16 destination,SigRemoteProvisioningScanStatus *responseMessage);
+typedef void(^responseRemoteProvisioningLinkStatusMessageBlock)(UInt16 source,UInt16 destination,SigRemoteProvisioningLinkStatus *responseMessage);
 
 // callback about addDevice
 typedef void(^addDevice_prvisionSuccessCallBack)(NSString *identify,UInt16 address);
 typedef void(^addDevice_keyBindSuccessCallBack)(NSString *identify,UInt16 address);
-typedef void(^prvisionFinishCallBack)(void);
+typedef void(^AddDeviceFinishCallBack)(void);
 
 
 @interface SDKLibCommand : NSObject
@@ -137,10 +145,13 @@ typedef void(^prvisionFinishCallBack)(void);
 @property (nonatomic,assign) NSInteger responseMaxCount;
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*responseSourceArray;
 @property (nonatomic,assign) UInt8 retryCount;//default is 2.
-@property (nonatomic,assign) UInt8 reSendCount;//default is 0.
+//@property (nonatomic,assign) UInt8 reSendCount;//default is 0.
 @property (nonatomic,assign) NSTimeInterval timeout;//default is 1s,kSDKLibCommandTimeout.
 @property (nonatomic,assign) UInt8 hadRetryCount;//default is 0.
 @property (nonatomic,strong) BackgroundTimer *retryTimer;
+@property (nonatomic,strong) SigNetkeyModel *netkeyA;
+@property (nonatomic,strong) SigAppkeyModel *appkeyA;
+@property (nonatomic,strong) SigIvIndex *ivIndexA;
 
 #pragma mark - Save call back
 @property (nonatomic,copy) resultBlock resultCallback;
@@ -164,6 +175,7 @@ typedef void(^prvisionFinishCallBack)(void);
 @property (nonatomic,copy) responseConfigModelAppStatusMessageBlock responseModelAppStatusCallBack;
 @property (nonatomic,copy) responseConfigNetKeyStatusMessageBlock responseNetKeyStatusCallBack;
 @property (nonatomic,copy) responseConfigNetKeyListMessageBlock responseNetKeyListCallBack;
+@property (nonatomic,copy) responseConfigNodeIdentityStatusMessageBlock responseNodeIdentityStatusCallBack;
 @property (nonatomic,copy) responseConfigNodeResetStatusMessageBlock responseNodeResetStatusCallBack;
 @property (nonatomic,copy) responseConfigSIGModelAppListMessageBlock responseSIGModelAppListCallBack;
 @property (nonatomic,copy) responseConfigVendorModelAppListMessageBlock responseVendorModelAppListCallBack;
@@ -217,51 +229,20 @@ typedef void(^prvisionFinishCallBack)(void);
 @property (nonatomic,copy) responseLightLCPropertyStatusMessageBlock responseLightLCPropertyStatusCallBack;
 // callback about Firmware Update Messages
 @property (nonatomic,copy) responseFirmwareInformationStatusMessageBlock responseFirmwareInformationStatusCallBack;
+@property (nonatomic,copy) responseFirmwareUpdateFirmwareMetadataStatusMessageBlock responseFirmwareUpdateFirmwareMetadataStatusCallBack;
 @property (nonatomic,copy) responseFirmwareUpdateStatusMessageBlock responseFirmwareUpdateStatusCallBack;
 @property (nonatomic,copy) responseFirmwareDistributionStatusMessageBlock responseFirmwareDistributionStatusCallBack;
 @property (nonatomic,copy) responseFirmwareDistributionDetailsListMessageBlock responseFirmwareDistributionDetailsListCallBack;
-// callback about Object Transfer Messages
-@property (nonatomic,copy) responseObjectTransferStatusMessageBlock responseObjectTransferStatusCallBack;
+// callback about BLOB Transfer Messages
+@property (nonatomic,copy) responseBLOBTransferStatusMessageBlock responseBLOBTransferStatusCallBack;
 @property (nonatomic,copy) responseObjectBlockTransferStatusMessageBlock responseObjectBlockTransferStatusCallBack;
-@property (nonatomic,copy) responseObjectBlockStatusMessageBlock responseObjectBlockStatusCallBack;
-@property (nonatomic,copy) responseObjectInformationStatusMessageBlock responseObjectInformationStatusCallBack;
+@property (nonatomic,copy) responseBLOBBlockStatusMessageBlock responseBLOBBlockStatusCallBack;
+@property (nonatomic,copy) responseBLOBInformationStatusMessageBlock responseBLOBInformationStatusCallBack;
+// callback about Remote Provision
+@property (nonatomic,copy) responseRemoteProvisioningScanCapabilitiesStatusMessageBlock responseRemoteProvisioningScanCapabilitiesStatusCallBack;
+@property (nonatomic,copy) responseRemoteProvisioningScanStatusMessageBlock responseRemoteProvisioningScanStatusCallBack;
+@property (nonatomic,copy) responseRemoteProvisioningLinkStatusMessageBlock responseRemoteProvisioningLinkStatusCallBack;
 
-
-/**
-function 1:AUTO if you need do provision , you should call this method, and it'll call back what you need
-
-@param address address of new device
-@param networkKey network key, which provsion need, you can see it as password of the mesh
-@param netkeyIndex netkey index
-@param appkeyModel appkey model
-@param unicastAddress address of remote device
-@param uuid uuid of remote device
-@param type KeyBindTpye_Normal是普通添加模式，KeyBindTpye_Quick是快速添加模式
-@param isAuto 添加完成一个设备后，是否自动扫描添加下一个设备
-@param provisionSuccess call back when a device provision successful
-@param provisionFail call back when a device provision fail
-@param keyBindSuccess call back when a device keybind successful
-@param keyBindFail call back when a device keybind fail
-@param finish finish add the available devices list to the mesh
-*/
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(prvisionFinishCallBack)finish;
-
-/**
-function 1:special if you need do provision , you should call this method, and it'll call back what you need
-
-@param address address of new device
-@param networkKey network key, which provsion need, you can see it as password of the mesh
-@param netkeyIndex netkey index
-@param peripheral device need add to mesh
-@param provisionType ProvisionTpye_NoOOB or ProvisionTpye_StaticOOB.
-@param staticOOBData oob for ProvisionTpye_StaticOOB.
-@param type KeyBindTpye_Normal是普通添加模式，KeyBindTpye_Quick是快速添加模式
-@param provisionSuccess call back when a device provision successful
-@param provisionFail call back when a device provision fail
-@param keyBindSuccess call back when a device keybind successful
-@param keyBindFail call back when a device keybind fail
-*/
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
 
 + (SigMessageHandle *)configAppKeyAddWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toAddress:(UInt16)address successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (SigMessageHandle *)configAppKeyAddWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toNode:(SigNodeModel *)node successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
@@ -323,6 +304,7 @@ function 1:special if you need do provision , you should call this method, and i
 + (SigMessageHandle *)configSIGModelSubscriptionGetWithModelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigSIGModelSubscriptionListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (SigMessageHandle *)configVendorModelSubscriptionGetWithModelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigVendorModelSubscriptionListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
++ (SigMessageHandle *)configModelAppBindWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier toDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (SigMessageHandle *)configModelAppBindWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toModelIDModel:(SigModelIDModel *)modelIDModel toNode:(SigNodeModel *)node successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (SigMessageHandle *)configModelAppUnbindWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toModelIDModel:(SigModelIDModel *)modelIDModel toNode:(SigNodeModel *)node successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
@@ -333,6 +315,9 @@ function 1:special if you need do provision , you should call this method, and i
 + (SigMessageHandle *)configNetKeyGetWithAddress:(UInt16)address networkKey:(SigNetkeyModel *)networkKey successCallback:(responseConfigNetKeyListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (SigMessageHandle *)configNetKeyGetWithNode:(SigNodeModel *)node networkKey:(SigNetkeyModel *)networkKey successCallback:(responseConfigNetKeyListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (SigMessageHandle *)configNetKeyUpdateWithNode:(SigNodeModel *)node networkKey:(SigNetkeyModel *)networkKey successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)configNodeIdentityGetWithDestination:(UInt16)destination netKeyIndex:(UInt16)netKeyIndex resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseConfigNodeIdentityStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)configNodeIdentitySetWithDestination:(UInt16)destination netKeyIndex:(UInt16)netKeyIndex identity:(SigNodeIdentityState)identity resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseConfigNodeIdentityStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 + (SigMessageHandle *)resetNodeWithNodeAddress:(UInt16)nodeAddress successCallback:(responseConfigNodeResetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (SigMessageHandle *)resetNode:(SigNodeModel *)node successCallback:(responseConfigNodeResetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
@@ -538,60 +523,77 @@ function 1:special if you need do provision , you should call this method, and i
 + (void)removeAddressesFromFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback;
 /// Adds all the addresses the Provisioner is subscribed to to the
 /// Proxy Filter.
-+ (void)setFilterForProvisioner:(SigProvisionerModel *)provisioner successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback;
++ (void)setFilterForProvisioner:(SigProvisionerModel *)provisioner successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)failCallback;
 
 #pragma mark - Mesh Firmware update (Mesh OTA)
 
 /* Firmware Update Messages */
 
-+ (SigMessageHandle *)firmwareInformationGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareUpdateInformationGetWithDestination:(UInt16)destination firstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)firmwareUpdateGetWithDestination:(UInt16)destination companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareUpdateFirmwareMetadataCheckWithDestination:(UInt16)destination updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex incomingFirmwareMetadata:(nullable NSData *)incomingFirmwareMetadata resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateFirmwareMetadataStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)firmwareUpdatePrepareWithDestination:(UInt16)destination companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID objectID:(UInt64)objectID vendorValidationData:(nullable NSData *)vendorValidationData resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareUpdateGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)firmwareUpdateStartWithDestination:(UInt16)destination updatePolicy:(SigUpdatePolicyType)updatePolicy companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareUpdateStartWithDestination:(UInt16)destination updateTTL:(UInt8)updateTTL updateTimeoutBase:(UInt16)updateTimeoutBase updateBLOBID:(UInt64)updateBLOBID updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex incomingFirmwareMetadata:(nullable NSData *)incomingFirmwareMetadata resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)firmwareUpdateAbortWithDestination:(UInt16)destination companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareUpdateCancelWithDestination:(UInt16)destination companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)firmwareUpdateApplyWithDestination:(UInt16)destination companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareUpdateApplyWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)firmwareDistributionGetWithDestination:(UInt16)destination companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareDistributionGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)firmwareDistributionStartWithDestination:(UInt16)destination companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID groupAddress:(UInt16)groupAddress updateNodesList:(NSArray <NSNumber *>*)updateNodesList resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareDistributionStartWithDestination:(UInt16)destination distributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(BOOL)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex distributionMulticastAddress:(NSData *)distributionMulticastAddress resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)firmwareDistributionStopWithDestination:(UInt16)destination companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareDistributionCancelWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)firmwareDistributionDetailsGetWithDestination:(UInt16)destination status:(SigFirmwareDistributionStatusType)status companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionDetailsListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+//+ (SigMessageHandle *)firmwareDistributionDetailsGetWithDestination:(UInt16)destination status:(SigFirmwareDistributionStatusType)status companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionDetailsListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-/* Object Transfer Messages */
+/* BLOB Transfer Messages */
 
-+ (SigMessageHandle *)objectTransferGetWithDestination:(UInt16)destination objectID:(UInt64)objectID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseObjectTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBTransferGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)objectTransferStartWithDestination:(UInt16)destination objectID:(UInt64)objectID objectSize:(UInt32)objectSize blockSizeLog:(UInt8)blockSizeLog resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseObjectTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBTransferStartWithDestination:(UInt16)destination transferMode:(SigTransferModeState)transferMode BLOBID:(UInt64)BLOBID BLOBSize:(UInt32)BLOBSize BLOBBlockSizeLog:(UInt8)BLOBBlockSizeLog MTUSize:(UInt16)MTUSize resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)objectTransferAbortWithDestination:(UInt16)destination objectID:(UInt64)objectID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseObjectTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBTransferAbortWithDestination:(UInt16)destination BLOBID:(UInt64)BLOBID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 
-/// objectBlockTransferStart
+/// BLOBBlockStart
 /// @param destination node address
-/// @param objectID objectID, default is 0x1122334455667788
 /// @param blockNumber block index, 0. 1. 2. 3. ··· n.
 /// @param chunkSize size of every chunk, 0~256.
-/// @param blockChecksumAlgorithm SigBlockChecksumAlgorithmType_CRC32
-/// @param blockChecksumValue Block Checksum Value len is 4 when blockChecksumAlgorithm is SigBlockChecksumAlgorithmType_CRC32.
-/// @param currentBlockSize size of current block
 /// @param resMax max response count
 /// @param retryCount retry count
 /// @param successCallback success Callback
 /// @param resultCallback end Callback of fail callback
-+ (SigMessageHandle *)objectBlockTransferStartWithDestination:(UInt16)destination objectID:(UInt64)objectID blockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize blockChecksumAlgorithm:(SigBlockChecksumAlgorithmType)blockChecksumAlgorithm blockChecksumValue:(NSData *)blockChecksumValue currentBlockSize:(UInt16)currentBlockSize resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseObjectBlockTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBBlockStartWithBlockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize toDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)objectChunkTransferWithDestination:(UInt16)destination chunkNumber:(UInt16)chunkNumber firmwareImageData:(NSData *)firmwareImageData resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBChunkTransferWithDestination:(UInt16)destination chunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)objectBlockGetWithDestination:(UInt16)destination objectID:(UInt64)objectID blockNumber:(UInt16)blockNumber resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseObjectBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBBlockGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)objectInformationGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseObjectInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBInformationGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
+
+#pragma mark - Remote Provision
+
++ (SigMessageHandle *)remoteProvisioningScanCapabilitiesGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningScanCapabilitiesStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)remoteProvisioningScanGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)remoteProvisioningScanStartWithScannedItemsLimit:(UInt8)scannedItemsLimit timeout:(UInt8)timeout UUID:(nullable NSData *)UUID destination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)remoteProvisioningScanStopWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)remoteProvisioningExtendedScanStartWithADTypeFilterCount:(UInt8)ADTypeFilterCount ADTypeFilter:(nullable NSData *)ADTypeFilter UUID:(nullable NSData *)UUID timeout:(UInt8)timeout destination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)remoteProvisioningLinkGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)remoteProvisioningLinkOpenWithUUID:(nullable NSData *)UUID destination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)remoteProvisioningLinkCloseWithReason:(SigRemoteProvisioningLinkCloseStatus)reason destination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)remoteProvisioningPDUSendWithOutboundPDUNumber:(UInt8)outboundPDUNumber provisioningPDU:(NSData *)provisioningPDU destination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount resultCallback:(resultBlock)resultCallback;
 
 #pragma mark - API by Telink
 
@@ -601,7 +603,8 @@ function 1:special if you need do provision , you should call this method, and i
 
 + (void)cancelReadOTACharachteristic;
 
-+ (void)sendOpINIData:(NSData *)iniData successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (nullable NSError *)sendIniCommandModel:(IniCommandModel *)model successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (nullable NSError *)sendOpINIData:(NSData *)iniData successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (void)sendOpByINI:(UInt8 *)iniBuf length:(UInt32)length successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 + (void)startMeshSDK;
@@ -660,6 +663,44 @@ peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+provisionTyp
 /// @param keyBindSuccess callback when keybind success.
 /// @param fail callback when provision fail.
 - (void)startKeyBindWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress appKey:(NSData *)appkey appkeyIndex:(UInt16)appkeyIndex netkeyIndex:(UInt16)netkeyIndex keyBindType:(KeyBindTpye)keyBindType productID:(UInt16)productID cpsData:(NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail;
+
+
+/**
+function 1:AUTO if you need do provision , you should call this method, and it'll call back what you need
+
+@param address address of new device
+@param networkKey network key, which provsion need, you can see it as password of the mesh
+@param netkeyIndex netkey index
+@param appkeyModel appkey model
+@param unicastAddress address of remote device
+@param uuid uuid of remote device
+@param type KeyBindTpye_Normal是普通添加模式，KeyBindTpye_Quick是快速添加模式
+@param isAuto 添加完成一个设备后，是否自动扫描添加下一个设备
+@param provisionSuccess call back when a device provision successful
+@param provisionFail call back when a device provision fail
+@param keyBindSuccess call back when a device keybind successful
+@param keyBindFail call back when a device keybind fail
+@param finish finish add the available devices list to the mesh
+*/
++ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish;
+
+
+/**
+function 1:special if you need do provision , you should call this method, and it'll call back what you need
+
+@param address address of new device
+@param networkKey network key, which provsion need, you can see it as password of the mesh
+@param netkeyIndex netkey index
+@param peripheral device need add to mesh
+@param provisionType ProvisionTpye_NoOOB or ProvisionTpye_StaticOOB.
+@param staticOOBData oob for ProvisionTpye_StaticOOB.
+@param type KeyBindTpye_Normal是普通添加模式，KeyBindTpye_Quick是快速添加模式
+@param provisionSuccess call back when a device provision successful
+@param provisionFail call back when a device provision fail
+@param keyBindSuccess call back when a device keybind successful
+@param keyBindFail call back when a device keybind fail
+*/
++ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
 
 @end
 

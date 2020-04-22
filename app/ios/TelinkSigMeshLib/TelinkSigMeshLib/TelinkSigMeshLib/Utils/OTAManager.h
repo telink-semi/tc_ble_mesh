@@ -36,6 +36,10 @@ typedef void(^finishCallBack)(NSArray <SigNodeModel *>*successModels,NSArray <Si
 @interface OTAManager : NSObject
 
 
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
+
 + (OTAManager *)share;
 
 /**

@@ -12,7 +12,7 @@ public class LightnessSetMessage extends GenericMessage {
     // 2 bytes
     public int lightness;
 
-    // transition id
+    // transaction id
     public byte tid = 0;
 
     public byte transitionTime = 0;
@@ -25,13 +25,13 @@ public class LightnessSetMessage extends GenericMessage {
         LightnessSetMessage message = new LightnessSetMessage(address, appKeyIndex);
         message.lightness =  lightness;
         message.ack = ack;
-        message.setContainsTid(true);
         message.setResponseMax(rspMax);
         return message;
     }
 
     public LightnessSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(2);
     }
 
     @Override
@@ -55,8 +55,4 @@ public class LightnessSetMessage extends GenericMessage {
         };
     }
 
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
-    }
 }

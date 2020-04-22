@@ -33,182 +33,57 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
-#ifdef DEBUG
-
-/*
- log 写法1：
- */
-//#define TeLog(fmt, ...) SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);
-//
-//#define TeLogError(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagError) {\
-//SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Error][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);\
-//}
-//
-//#define TeLogWarn(fmt, ...)     if (SigLogger.share.logLevel & SigLogFlagWarning) {\
-//SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Warn][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);\
-//}
-//
-//#define TeLogInfo(fmt, ...)     if (SigLogger.share.logLevel & SigLogFlagInfo) {\
-//SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Info][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);\
-//}
-//
-//#define TeLogDebug(fmt, ...)     if (SigLogger.share.logLevel & SigLogFlagDebug) {\
-//SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Debug][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);\
-//}
-//
-//#define TeLogVerbose(fmt, ...)     if (SigLogger.share.logLevel & SigLogFlagVerbose) {\
-//SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Verbose][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);\
-//}
-
-
-/*
-log 写法2：
-*/
-//#define TeLog(fmt, ...) @synchronized (SigLogger.share) {\
-//SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);\
-//}
-//
-//#define TeLogError(fmt, ...) @synchronized (SigLogger.share) {\
-//if (SigLogger.share.logLevel & SigLogFlagError) {\
-//SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Error][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);\
-//}\
-//}
-//
-//#define TeLogWarn(fmt, ...)     @synchronized (SigLogger.share) {\
-//if (SigLogger.share.logLevel & SigLogFlagWarning) {\
-//SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Warn][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);\
-//}\
-//}
-//
-//#define TeLogInfo(fmt, ...)     @synchronized (SigLogger.share) {\
-//if (SigLogger.share.logLevel & SigLogFlagInfo) {\
-//SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Info][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);\
-//}\
-//}
-//
-//#define TeLogDebug(fmt, ...)     @synchronized (SigLogger.share) {\
-//if (SigLogger.share.logLevel & SigLogFlagDebug) {\
-//SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Debug][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);\
-//}\
-//}
-//
-//#define TeLogVerbose(fmt, ...)     @synchronized (SigLogger.share) {\
-//if (SigLogger.share.logLevel & SigLogFlagVerbose) {\
-//SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Verbose][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-//NSLog(@"%@",SigLogger.share.saveLogObject);\
-//saveLogData(SigLogger.share.saveLogObject);\
-//}\
-//}
-
-
 /*
 log 写法3.1：测试验证线程
 */
-# define TeLog(fmt, ...) TelinkLogWithFile((@"[%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);
-
-#define TeLogError(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagError) {\
-TelinkLogWithFile((@"[Error][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-}
-
-#define TeLogWarn(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagWarning) {\
-TelinkLogWithFile((@"[Warn][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-}
-
-#define TeLogInfo(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagInfo) {\
-TelinkLogWithFile((@"[Info][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-}
-
-#define TeLogDebug(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagDebug) {\
-TelinkLogWithFile((@"[Debug][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-}
-
-#define TeLogVerbose(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagVerbose) {\
-TelinkLogWithFile((@"[Verbose][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
-}
+//# define TeLog(fmt, ...) TelinkLogWithFile((@"[%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);
+//
+//#define TeLogError(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagError) {\
+//TelinkLogWithFile((@"[Error][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
+//}
+//
+//#define TeLogWarn(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagWarning) {\
+//TelinkLogWithFile((@"[Warn][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
+//}
+//
+//#define TeLogInfo(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagInfo) {\
+//TelinkLogWithFile((@"[Info][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
+//}
+//
+//#define TeLogDebug(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagDebug) {\
+//TelinkLogWithFile((@"[Debug][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
+//}
+//
+//#define TeLogVerbose(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagVerbose) {\
+//TelinkLogWithFile((@"[Verbose][%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);\
+//}
 
 
 /*
 log 写法3.2：
 */
-//# define TeLog(fmt, ...) TelinkLogWithFile((@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);
-//
-//#define TeLogError(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagError) {\
-//TelinkLogWithFile((@"[Error][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
-//}
-//
-//#define TeLogWarn(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagWarning) {\
-//TelinkLogWithFile((@"[Warn][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
-//}
-//
-//#define TeLogInfo(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagInfo) {\
-//TelinkLogWithFile((@"[Info][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
-//}
-//
-//#define TeLogDebug(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagDebug) {\
-//TelinkLogWithFile((@"[Debug][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
-//}
-//
-//#define TeLogVerbose(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagVerbose) {\
-//TelinkLogWithFile((@"[Verbose][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
-//}
+# define TeLog(fmt, ...) TelinkLogWithFile((@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);
 
-#else
-
-#define TeLog(fmt, ...) SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__];\
-saveLogData(SigLogger.share.saveLogObject);
-
-#define TeLogError(fmt, ...)     if (SigLogger.share.logLevel & SigLogFlagError) {\
-SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Error][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-saveLogData(SigLogger.share.saveLogObject);\
+#define TeLogError(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagError) {\
+TelinkLogWithFile((@"[Error][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
-#define TeLogWarn(fmt, ...)     if (SigLogger.share.logLevel & SigLogFlagWarning) {\
-SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Warn][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-saveLogData(SigLogger.share.saveLogObject);\
+#define TeLogWarn(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagWarning) {\
+TelinkLogWithFile((@"[Warn][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
-#define TeLogInfo(fmt, ...)     if (SigLogger.share.logLevel & SigLogFlagInfo) {\
-SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Info][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-saveLogData(SigLogger.share.saveLogObject);\
+#define TeLogInfo(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagInfo) {\
+TelinkLogWithFile((@"[Info][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
-#define TeLogDebug(fmt, ...)     if (SigLogger.share.logLevel & SigLogFlagDebug) {\
-SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Debug][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-saveLogData(SigLogger.share.saveLogObject);\
+#define TeLogDebug(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagDebug) {\
+TelinkLogWithFile((@"[Debug][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
-#define TeLogVerbose(fmt, ...)     if (SigLogger.share.logLevel & SigLogFlagVerbose) {\
-SigLogger.share.saveLogObject = [NSString stringWithFormat:(@"[Verbose][%@][%s Line %d] " fmt),[NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__];\
-saveLogData(SigLogger.share.saveLogObject);\
+#define TeLogVerbose(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagVerbose) {\
+TelinkLogWithFile((@"[Verbose][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
-#endif
-
-
-
-UIKIT_EXTERN NSString *const NotifyUpdateLogContent;
 
 typedef enum : NSUInteger {
     /**
@@ -265,9 +140,13 @@ typedef enum : NSUInteger {
 } SigLogLevel;
 
 @interface SigLogger : NSObject
-@property (strong,nonatomic) NSObject *saveLogObject;
 @property (assign,nonatomic,readonly) SigLogLevel logLevel;
 @property (strong,nonatomic,readonly) NSString *logFilePath;
+
+
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
 
 + (SigLogger *)share;
 

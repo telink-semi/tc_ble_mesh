@@ -62,7 +62,7 @@
         }
     }
     
-    saveLogData(@"clickStartOTA");
+    TeLog(@"clickStartOTA");
     self.OTAing = YES;
     self.otaButton.backgroundColor = self.unableColor;
     self.tableView.userInteractionEnabled = NO;
@@ -128,9 +128,8 @@
     self.otaButton.backgroundColor = self.normalColor;
     self.tableView.userInteractionEnabled = YES;
     [self showOTATips:@"OTA success"];
-//    [self.ble setNormalState];
-    [SigBearer.share startMeshConnectWithTimeOut:kStartMeshConnectTimeout complete:nil];
-    saveLogData(@"otaSuccess");
+    [SigBearer.share startMeshConnectWithComplete:nil];
+    TeLog(@"otaSuccess");
 }
 
 - (void)otaFailAction{
@@ -139,12 +138,11 @@
     self.otaButton.backgroundColor = self.normalColor;
     self.tableView.userInteractionEnabled = YES;
     [self showOTATips:@"OTA fail"];
-//    [self.ble setNormalState];
-    [SigBearer.share startMeshConnectWithTimeOut:kStartMeshConnectTimeout complete:nil];
+    [SigBearer.share startMeshConnectWithComplete:nil];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
-    saveLogData(@"otaFail");
+    TeLog(@"otaFail");
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{

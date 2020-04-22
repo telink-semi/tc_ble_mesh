@@ -33,7 +33,7 @@
             android:name="com.telink.ble.mesh.ui.MainActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden"
-            android:launchMode="singleTask"/>
+            />
 
         <activity
             android:name="com.telink.ble.mesh.ui.DeviceProvisionActivity"

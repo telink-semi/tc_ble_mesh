@@ -11,20 +11,22 @@ import java.nio.ByteOrder;
 
 public class DeltaSetMessage extends GenericMessage {
 
-    private int deltaLevel;
+    public int deltaLevel;
 
-    private byte tid;
+    public byte tid;
 
-    private byte transitionTime;
+    public byte transitionTime;
 
-    private byte delay;
+    public byte delay;
 
-    boolean ack;
+    public boolean ack;
+
+    public boolean isComplete = false;
+
 
     public static DeltaSetMessage getSimple(int destinationAddress, int appKeyIndex, int deltaLevel, boolean ack, int rspMax) {
         DeltaSetMessage deltaSetMessage = new DeltaSetMessage(destinationAddress, appKeyIndex);
         deltaSetMessage.deltaLevel = deltaLevel;
-        deltaSetMessage.containsTid = true;
         deltaSetMessage.transitionTime = 0;
         deltaSetMessage.delay = 0;
 
@@ -37,6 +39,7 @@ public class DeltaSetMessage extends GenericMessage {
 
     public DeltaSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(4);
     }
 
 
@@ -47,12 +50,12 @@ public class DeltaSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return ByteBuffer.allocate(7).order(ByteOrder.LITTLE_ENDIAN).putInt(deltaLevel)
-                .put(tid).put(transitionTime).put(delay).array();
-    }
-
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
+        return
+                isComplete ?
+                        ByteBuffer.allocate(7).order(ByteOrder.LITTLE_ENDIAN).putInt(deltaLevel)
+                                .put(tid).put(transitionTime).put(delay).array()
+                        :
+                        ByteBuffer.allocate(5).order(ByteOrder.LITTLE_ENDIAN).putInt(deltaLevel)
+                                .put(tid).array();
     }
 }

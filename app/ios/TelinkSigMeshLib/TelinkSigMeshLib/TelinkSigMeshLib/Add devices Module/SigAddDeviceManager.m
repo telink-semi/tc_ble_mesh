@@ -52,7 +52,7 @@ typedef enum : NSUInteger {
 @property (nonatomic,copy) addDevice_keyBindSuccessCallBack keyBindSuccessBlock;
 @property (nonatomic,copy) ErrorBlock provisionFailBlock;
 @property (nonatomic,copy) ErrorBlock keyBindFailBlock;
-@property (nonatomic,copy) prvisionFinishCallBack finishBlock;
+@property (nonatomic,copy) AddDeviceFinishCallBack finishBlock;
 @property (nonatomic,assign) SigAddStatus addStatus;
 // it is need to call start scan after add one node successful. default is NO.
 @property (nonatomic,assign) BOOL isAutoAddDevice;
@@ -83,7 +83,7 @@ typedef enum : NSUInteger {
 }
 
 /// function1 :add bluetooth devices (auto add)
-- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(prvisionFinishCallBack)finish {
+- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
     self.unicastAddress = address;
     self.networkKey = networkKey;
     self.netkeyIndex = netkeyIndex;
@@ -184,19 +184,21 @@ typedef enum : NSUInteger {
             [weakSelf refreshNextUnicastAddress];
             [weakSelf addPeripheralFail:peripheral];
         }];
-    } failCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        if (weakSelf.retryCount > 0) {
-            TeLogDebug(@"retry setFilter peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
-            weakSelf.retryCount --;
-            [weakSelf keybind];
-        } else {
-            TeLogDebug(@"setFilter fail, so keybind fail.");
-            if (weakSelf.keyBindFailBlock) {
-                NSError *err = [NSError errorWithDomain:@"setFilter fail, so keybind fail." code:0 userInfo:nil];
-                weakSelf.keyBindFailBlock(err);
+    } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        if (error) {
+            if (weakSelf.retryCount > 0) {
+                TeLogDebug(@"retry setFilter peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
+                weakSelf.retryCount --;
+                [weakSelf keybind];
+            } else {
+                TeLogDebug(@"setFilter fail, so keybind fail.");
+                if (weakSelf.keyBindFailBlock) {
+                    NSError *err = [NSError errorWithDomain:@"setFilter fail, so keybind fail." code:0 userInfo:nil];
+                    weakSelf.keyBindFailBlock(err);
+                }
+                [weakSelf refreshNextUnicastAddress];
+                [weakSelf addPeripheralFail:peripheral];
             }
-            [weakSelf refreshNextUnicastAddress];
-            [weakSelf addPeripheralFail:peripheral];
         }
     }];
 }
@@ -220,7 +222,9 @@ typedef enum : NSUInteger {
                             }
                             if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
                                 weakSelf.addStatus = SigAddStatusConnectSecond;
-                                [weakSelf startAddPeripheral:peripheral];
+                                [SigBearer.share closeWithResult:^(BOOL successful) {
+                                    [weakSelf startAddPeripheral:peripheral];
+                                }];
                             } else {
                                 [weakSelf keybind];
                             }
@@ -237,7 +241,9 @@ typedef enum : NSUInteger {
                             }
                             if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
                                 weakSelf.addStatus = SigAddStatusConnectSecond;
-                                [weakSelf startAddPeripheral:peripheral];
+                                [SigBearer.share closeWithResult:^(BOOL successful) {
+                                    [weakSelf startAddPeripheral:peripheral];
+                                }];
                             } else {
                                 [weakSelf keybind];
                             }

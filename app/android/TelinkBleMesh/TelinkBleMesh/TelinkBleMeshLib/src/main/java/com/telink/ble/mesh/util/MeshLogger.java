@@ -21,11 +21,7 @@ public class MeshLogger {
     public static List<LogInfo> logInfoList = new ArrayList<>();
 
 
-    public static final String GLOBAL_TAG = "SIG-Mesh";
-
-    public static final String LOG_NONE_TAG = "NONE-TAG";
-
-    public static final String TAG_SEPARATOR = " -- ";
+    public static final String DEFAULT_TAG = "SIG-Mesh";
 
     public static final int DEFAULT_LEVEL = LEVEL_DEBUG;
 
@@ -46,7 +42,7 @@ public class MeshLogger {
     }
 
     public static void log(String logMessage) {
-        log(logMessage, LOG_NONE_TAG);
+        log(logMessage, DEFAULT_TAG);
     }
 
     public static void log(String logMessage, String tag) {
@@ -54,7 +50,7 @@ public class MeshLogger {
     }
 
     public static void log(String logMessage, int level) {
-        log(logMessage, LOG_NONE_TAG, level);
+        log(logMessage, DEFAULT_TAG, level);
     }
 
 
@@ -83,23 +79,23 @@ public class MeshLogger {
         if (print) {
             switch (level) {
                 case LEVEL_VERBOSE:
-                    Log.v(GLOBAL_TAG, tag + TAG_SEPARATOR + logMessage);
+                    Log.v(tag, logMessage);
                     break;
                 case LEVEL_INFO:
-                    Log.i(GLOBAL_TAG, tag + TAG_SEPARATOR + logMessage);
+                    Log.i(tag, logMessage);
                     break;
 
                 case LEVEL_WARN:
-                    Log.w(GLOBAL_TAG, tag + TAG_SEPARATOR + logMessage);
+                    Log.w(tag, logMessage);
                     break;
 
                 case LEVEL_ERROR:
-                    Log.e(GLOBAL_TAG, tag + TAG_SEPARATOR + logMessage);
+                    Log.e(tag, logMessage);
                     break;
 
                 case LEVEL_DEBUG:
                 default:
-                    Log.d(GLOBAL_TAG, tag + TAG_SEPARATOR + logMessage);
+                    Log.d(tag, logMessage);
             }
         }
 

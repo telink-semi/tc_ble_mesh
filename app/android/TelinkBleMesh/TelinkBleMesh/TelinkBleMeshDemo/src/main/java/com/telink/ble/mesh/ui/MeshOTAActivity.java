@@ -1,5 +1,6 @@
 package com.telink.ble.mesh.ui;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -33,7 +34,6 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.ui.adapter.BaseSelectableListAdapter;
 import com.telink.ble.mesh.ui.adapter.MeshOTADeviceSelectAdapter;
-
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -63,7 +63,8 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
     private Map<Integer, String> versions;
     private Set<MeshUpdatingDevice> completeDevices;
     private CheckBox cb_device;
-    private Button btn_start;
+    private Button btn_start, btn_get_version;
+    private RecyclerView rv_device;
     private ProgressBar pb_mesh_ota;
 
     private Handler delayHandler = new Handler();
@@ -78,11 +79,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
     private static final int MSG_INFO = 0;
     private static final int MSG_PROGRESS = 1;
 
-    private List<NodeInfo> selectedNodes;
-
-    private static final String DIST_STOP_TAG = "dist_stop";
-    private boolean distStopped = false;
-
+    @SuppressLint("HandlerLeak")
     private Handler infoHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -100,12 +97,15 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_mesh_ota);
         mesh = TelinkMeshApplication.getInstance().getMeshInfo();
         setTitle("Mesh OTA");
         enableBackNav(true);
         cb_device = findViewById(R.id.cb_device);
-        RecyclerView rv_device = findViewById(R.id.rv_device);
+        rv_device = findViewById(R.id.rv_device);
 
         rv_device.setLayoutManager(new LinearLayoutManager(this));
         if (mesh.nodes != null) {
@@ -122,7 +122,8 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
         cb_device.setChecked(mDeviceAdapter.allSelected());
         btn_start = findViewById(R.id.btn_start);
         btn_start.setOnClickListener(this);
-        findViewById(R.id.btn_get_version).setOnClickListener(this);
+        btn_get_version = findViewById(R.id.btn_get_version);
+        btn_get_version.setOnClickListener(this);
         cb_device.setOnClickListener(this);
         tv_version_info = findViewById(R.id.tv_version_info);
         tv_file_path = findViewById(R.id.tv_file_path);
@@ -141,19 +142,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
         TelinkMeshApplication.getInstance().addEventListener(MeshUpdatingEvent.EVENT_TYPE_UPDATING_STOPPED, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshUpdatingEvent.EVENT_TYPE_DEVICE_SUCCESS, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshUpdatingEvent.EVENT_TYPE_DEVICE_FAIL, this);
-
-//        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
-//        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN, this);
-
-
-//        TelinkMeshApplication.getInstance().addEventListener(NotificationEvent.EVENT_TYPE_MESH_OTA_FIRMWARE_UPDATE_STATUS, this);
-//        TelinkMeshApplication.getInstance().addEventListener(NotificationEvent.EVENT_TYPE_MESH_OTA_FIRMWARE_DISTRIBUTION_STATUS, this);
-//        TelinkMeshApplication.getInstance().addEventListener(NotificationEvent.EVENT_TYPE_MESH_OTA_FIRMWARE_INFO_STATUS, this);
-//
-//        TelinkMeshApplication.getInstance().addEventListener(CommandEvent.EVENT_TYPE_CMD_COMPLETE, this);
-//
-//        TelinkMeshApplication.getInstance().addEventListener(MeshOtaEvent.EVENT_TYPE_APPLY_STATUS, this);
-
+        TelinkMeshApplication.getInstance().addEventListener(MeshUpdatingEvent.EVENT_TYPE_UPDATING_PREPARED, this);
     }
 
     @Override
@@ -161,7 +150,6 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
         super.finish();
         if (!isComplete) {
             MeshService.getInstance().stopMeshOta();
-//            TelinkMeshApplication.getInstance().getMeshLib().pauseMeshOta();
         }
     }
 
@@ -188,7 +176,8 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
                     toastMsg("Pls select at least ONE device");
                     return;
                 }
-                this.selectedNodes = nodes;
+                infoHandler.obtainMessage(MSG_INFO, "Mesh OTA preparing...").sendToTarget();
+                enableUI(false);
 
                 MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
                 List<MeshUpdatingDevice> updatingDevices = new ArrayList<>();
@@ -204,6 +193,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
                         meshInfo.getDefaultAppKeyIndex(), 0xC00F);
                 MeshOtaParameters meshOtaParameters = new MeshOtaParameters(configuration);
                 MeshService.getInstance().startMeshOta(meshOtaParameters);
+
                 break;
 
             case R.id.btn_get_version:
@@ -241,6 +231,18 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
         return nodes;
     }
 
+    private void enableUI(final boolean enable) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mDeviceAdapter.setStarted(!enable);
+                cb_device.setEnabled(enable);
+                btn_start.setEnabled(enable);
+                btn_get_version.setEnabled(enable);
+            }
+        });
+    }
+
 
     @Override
     public void onStatusChanged(BaseSelectableListAdapter adapter) {
@@ -252,22 +254,18 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
     private void onMeshUpdatingEvent(MeshUpdatingEvent updatingEvent) {
         switch (updatingEvent.getType()) {
             case MeshUpdatingEvent.EVENT_TYPE_UPDATING_PROGRESS:
-
                 if (isComplete) break;
                 progress = updatingEvent.getProgress();
-                if (progress == 100) {
-
-                }
                 infoHandler.obtainMessage(MSG_PROGRESS).sendToTarget();
                 break;
             case MeshUpdatingEvent.EVENT_TYPE_UPDATING_SUCCESS:
                 isComplete = true;
-                infoHandler.obtainMessage(MSG_INFO, "OTA Complete").sendToTarget();
+                infoHandler.obtainMessage(MSG_INFO, "Mesh OTA Complete").sendToTarget();
                 break;
 
             case MeshUpdatingEvent.EVENT_TYPE_UPDATING_FAIL:
                 isComplete = true;
-                infoHandler.obtainMessage(MSG_INFO, "OTA Fail -- " + updatingEvent.getDesc()).sendToTarget();
+                infoHandler.obtainMessage(MSG_INFO, "Mesh OTA Fail -- " + updatingEvent.getDesc()).sendToTarget();
                 break;
             case MeshUpdatingEvent.EVENT_TYPE_UPDATING_STOPPED:
                 isComplete = true;
@@ -280,6 +278,10 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
 
             case MeshUpdatingEvent.EVENT_TYPE_DEVICE_FAIL:
                 onDeviceOtaFail(updatingEvent.getUpdatingDevice(), updatingEvent.getDesc());
+                break;
+
+            case MeshUpdatingEvent.EVENT_TYPE_UPDATING_PREPARED:
+                infoHandler.obtainMessage(MSG_INFO, "Mesh OTA prepared").sendToTarget();
                 break;
         }
     }

@@ -34,9 +34,4 @@ public class OnOffGetMessage extends GenericMessage {
         return null;
     }
 
-    @Override
-    public boolean isContainsTid() {
-        return false;
-    }
-
 }

@@ -44,25 +44,12 @@
     dispatch_once(&tempOnce, ^{
         shareManager = [[SigNetworkManager alloc] init];
         shareManager.manager = [SigMeshLib share];
-        shareManager.transmitter = SigBearer.share;
         shareManager.networkLayer = [[SigNetworkLayer alloc] initWithNetworkManager:shareManager];
         shareManager.lowerTransportLayer = [[SigLowerTransportLayer alloc] initWithNetworkManager:shareManager];
         shareManager.upperTransportLayer = [[SigUpperTransportLayer alloc] initWithNetworkManager:shareManager];
         shareManager.accessLayer = [[SigAccessLayer alloc] initWithNetworkManager:shareManager];
     });
     return shareManager;
-}
-
-- (SigTransmitter *)transmitter {
-    return _manager.transmitter;
-}
-
-- (void)setTransmitter:(SigTransmitter *)transmitter {
-    _manager.transmitter = transmitter;
-}
-
-- (SigDataSource *)meshNetwork {
-    return _manager.dataSource;
 }
 
 - (UInt8)defaultTtl {
@@ -101,6 +88,10 @@
 
 #pragma mark - Sending messages
 
+- (void)sendMeshMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
+    [_accessLayer sendMessage:message fromElement:element toDestination:destination withTtl:initialTtl usingApplicationKey:applicationKey command:command];
+}
+
 - (void)sendMeshMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey {
     [_accessLayer sendMessage:message fromElement:element toDestination:destination withTtl:initialTtl usingApplicationKey:applicationKey];
 }
@@ -132,24 +123,33 @@
 
 - (void)notifyAboutNewMessage:(SigMeshMessage *)message fromSource:(UInt16)source toDestination:(UInt16)destination {
     dispatch_async(self.manager.delegateQueue, ^{
-        if ([self.manager.delegate respondsToSelector:@selector(meshNetworkManager:didReceiveMessage:sentFromSource:toDestination:)]) {
-            [self.manager.delegate meshNetworkManager:self.manager didReceiveMessage:message sentFromSource:source toDestination:destination];
+        if ([self.manager.delegate respondsToSelector:@selector(didReceiveMessage:sentFromSource:toDestination:)]) {
+            [self.manager.delegate didReceiveMessage:message sentFromSource:source toDestination:destination];
+        }
+        if ([self.manager.delegateForDeveloper respondsToSelector:@selector(didReceiveMessage:sentFromSource:toDestination:)]) {
+            [self.manager.delegateForDeveloper didReceiveMessage:message sentFromSource:source toDestination:destination];
         }
     });
 }
 
 - (void)notifyAboutDeliveringMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination {
     dispatch_async(self.manager.delegateQueue, ^{
-        if ([self.manager.delegate respondsToSelector:@selector(meshNetworkManager:didSendMessage:fromLocalElement:toDestination:)]) {
-            [self.manager.delegate meshNetworkManager:self.manager didSendMessage:message fromLocalElement:localElement toDestination:destination];
+        if ([self.manager.delegate respondsToSelector:@selector(didSendMessage:fromLocalElement:toDestination:)]) {
+            [self.manager.delegate didSendMessage:message fromLocalElement:localElement toDestination:destination];
+        }
+        if ([self.manager.delegateForDeveloper respondsToSelector:@selector(didSendMessage:fromLocalElement:toDestination:)]) {
+            [self.manager.delegateForDeveloper didSendMessage:message fromLocalElement:localElement toDestination:destination];
         }
     });
 }
 
 - (void)notifyAboutError:(NSError *)error duringSendingMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination {
     dispatch_async(self.manager.delegateQueue, ^{
-        if ([self.manager.delegate respondsToSelector:@selector(meshNetworkManager:failedToSendMessage:fromLocalElement:toDestination:error:)]) {
-            [self.manager.delegate meshNetworkManager:self.manager failedToSendMessage:message fromLocalElement:localElement toDestination:destination error:error];
+        if ([self.manager.delegate respondsToSelector:@selector(failedToSendMessage:fromLocalElement:toDestination:error:)]) {
+            [self.manager.delegate failedToSendMessage:message fromLocalElement:localElement toDestination:destination error:error];
+        }
+        if ([self.manager.delegateForDeveloper respondsToSelector:@selector(failedToSendMessage:fromLocalElement:toDestination:error:)]) {
+            [self.manager.delegateForDeveloper failedToSendMessage:message fromLocalElement:localElement toDestination:destination error:error];
         }
     });
 }

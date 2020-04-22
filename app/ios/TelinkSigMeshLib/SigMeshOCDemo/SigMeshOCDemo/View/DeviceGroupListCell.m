@@ -114,6 +114,7 @@
             [self editOneOptionSuccessWithAddress:self.model.address];
             return;
         }
+        __block BOOL editSubSuccess = NO;
         [DemoCommand editSubscribeListWithGroupAddress:weakSelf.groupAddress nodeAddress:weakSelf.model.address elementAddress:eleAddress isAdd:button.isSelected modelID:option successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
             if (weakSelf.isEditing && responseMessage.elementAddress == eleAddress && responseMessage.address == weakSelf.groupAddress) {
                 UInt32 modelId = 0;
@@ -124,14 +125,19 @@
                 }
                 if (modelId == option) {
                     if (responseMessage.status == SigConfigMessageStatus_success) {
-                        [weakSelf editOneOptionSuccessWithAddress:weakSelf.model.address];
+                        editSubSuccess = YES;
                     } else {
+                        editSubSuccess = NO;
                         TeLogError(@"订阅组号失败：error code=%d",responseMessage.status);
                     }
                 }
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            
+            if (editSubSuccess && error == nil) {
+                [weakSelf editOneOptionSuccessWithAddress:weakSelf.model.address];
+            } else {
+                [weakSelf editGroupFail:button];
+            }
         }];
     }
 }

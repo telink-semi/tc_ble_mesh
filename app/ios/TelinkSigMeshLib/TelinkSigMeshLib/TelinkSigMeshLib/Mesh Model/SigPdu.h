@@ -198,6 +198,7 @@ typedef enum : UInt8 {
 
 
 @interface SigProvisioningPdu : SigPdu
+@property (nonatomic, assign) SigProvisioningPduType provisionType;
 #pragma mark - 组包
 - (instancetype)initProvisioningInvitePduWithAttentionTimer:(UInt8)timer;
 - (instancetype)initProvisioningstartPduWithAlgorithm:(Algorithm)algorithm publicKeyType:(PublicKeyType)publicKeyType authenticationMethod:(AuthenticationMethod)method authenticationAction:(UInt8)authenticationAction authenticationSize:(UInt8)authenticationSize;
@@ -239,6 +240,8 @@ typedef enum : UInt8 {
 /// Transport Protocol Data Unit. It is guaranteed to have 1 to 16 bytes.
 @property (nonatomic,strong) NSData *transportPdu;
 
+- (instancetype)initWithDecodePduData:(NSData *)pdu pduType:(SigPduType)pduType usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
+
 /// Creates Network PDU object from received PDU. The initiator tries
 /// to deobfuscate and decrypt the data using given Network Key and IV Index.
 ///
@@ -248,6 +251,8 @@ typedef enum : UInt8 {
 /// - returns: The deobfuscated and decided Network PDU object, or `nil`,
 ///            if the key or IV Index don't match.
 - (instancetype)initWithDecodePduData:(NSData *)pdu pduType:(SigPduType)pduType usingNetworkKey:(SigNetkeyModel *)networkKey;
+
+- (instancetype)initWithEncodeLowerTransportPdu:(SigLowerTransportPdu *)lowerTransportPdu pduType:(SigPduType)pduType withSequence:(UInt32)sequence andTtl:(UInt8)ttl ivIndex:(SigIvIndex *)ivIndex;
 
 /// Creates the Network PDU. This method enctypts and obfuscates data
 /// that are to be send to the mesh network.
@@ -259,6 +264,8 @@ typedef enum : UInt8 {
 /// - parameter ttl: Time To Live.
 /// - returns: The Network PDU object.
 - (instancetype)initWithEncodeLowerTransportPdu:(SigLowerTransportPdu *)lowerTransportPdu pduType:(SigPduType)pduType withSequence:(UInt32)sequence andTtl:(UInt8)ttl;
+
++ (SigNetworkPdu *)decodePdu:(NSData *)pdu pduType:(SigPduType)pduType usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex;
 
 /// This method goes over all Network Keys in the mesh network and tries
 /// to deobfuscate and decode the network PDU.
@@ -313,7 +320,6 @@ typedef enum : UInt8 {
 - (instancetype)initWithDecodePdu:(NSData *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey;
 + (SigSecureNetworkBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork;
 - (instancetype)initWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive networkId:(NSData *)networkId ivIndex:(UInt32)ivIndex usingNetworkKey:(SigNetkeyModel *)networkKey;
-- (SigLowerTransportPdu *)getSecureNetworkbeaconPdu;
 
 @end
 

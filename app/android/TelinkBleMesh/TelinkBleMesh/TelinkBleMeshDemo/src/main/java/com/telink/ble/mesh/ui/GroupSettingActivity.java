@@ -98,6 +98,9 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_group_setting);
 
         final Intent intent = getIntent();

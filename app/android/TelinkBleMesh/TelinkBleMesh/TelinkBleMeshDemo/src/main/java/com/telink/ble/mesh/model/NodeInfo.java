@@ -229,8 +229,8 @@ public class NodeInfo implements Serializable {
     }
 
     /**
-     * 获取设备支持on off model 的元素列表
-     * 面板模式下， 可能支持多个on off model
+     * get on/off model element info
+     * in panel , multi on/off may exist in different element
      *
      * @return adr
      */
@@ -238,7 +238,7 @@ public class NodeInfo implements Serializable {
         if (compositionData == null) return null;
         List<Integer> addressList = new ArrayList<>();
 
-        // element 地址由primary地址递增计算得出
+        // element address is based on primary address and increase in loop
         int eleAdr = this.meshAddress;
         outer:
         for (CompositionData.Element element : compositionData.elements) {
@@ -286,7 +286,7 @@ public class NodeInfo implements Serializable {
     }
 
     /**
-     * 获取设备亮度支持
+     * get lum model element
      *
      * @return lum lightness union info
      */
@@ -300,7 +300,7 @@ public class NodeInfo implements Serializable {
             if (element.sigModels != null) {
                 boolean levelSupport = false;
                 boolean lumSupport = false;
-                // 是否包含亮度信息
+                // if contains lightness model
                 for (int modelId : element.sigModels) {
                     if (modelId == MeshSigModel.SIG_MD_LIGHTNESS_S.modelId) {
                         lumSupport = true;
@@ -321,7 +321,7 @@ public class NodeInfo implements Serializable {
     }
 
     /**
-     * 获取设备色温支持
+     * get element with temperature model
      *
      * @return temp & isLevelSupported
      */
@@ -335,7 +335,7 @@ public class NodeInfo implements Serializable {
             if (element.sigModels != null) {
                 boolean levelSupport = false;
                 boolean tempSupport = false;
-                // 是否包含亮度信息
+                // contains temperature model
                 for (int modelId : element.sigModels) {
                     if (modelId == MeshSigModel.SIG_MD_LIGHT_CTL_TEMP_S.modelId) {
                         tempSupport = true;

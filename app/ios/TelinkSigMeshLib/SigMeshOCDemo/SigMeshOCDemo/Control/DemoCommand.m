@@ -51,7 +51,7 @@
             return YES;
         }
     }else{
-        if (SigMeshLib.share.isBusy) {
+        if (SigMeshLib.share.isBusyNow) {
             TeLogInfo(@"send request for onlinestatus, but busy now.");
             if (resultCallback) {
                 NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -60,7 +60,7 @@
             return NO;
         } else {
             TeLogInfo(@"send request for onlinestatus");
-            [SDKLibCommand genericOnOffGetWithDestination:kMeshAddress_allNodes resMax:(int)SigDataSource.share.curNodes.count successCallback:successCallback resultCallback:resultCallback ];
+            [SDKLibCommand genericOnOffGetWithDestination:kMeshAddress_allNodes resMax:responseMaxCount successCallback:successCallback resultCallback:resultCallback ];
             return YES;
         }
     }
@@ -68,7 +68,7 @@
 
 /// Get Lum
 + (BOOL)getLumWithNodeAddress:(UInt16)nodeAddress responseMacCount:(int)responseMacCount successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for get lum, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -84,7 +84,7 @@
 
 /// Get CTL, (Lum and Temprature)
 + (BOOL)getCTLWithNodeAddress:(UInt16)nodeAddress responseMacCount:(int)responseMacCount successCallback:(responseLightCTLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for get CTL, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -100,7 +100,7 @@
 
 ///change subscribe list（develop can see mesh_node.h line129 to get more detail of option）
 + (BOOL)editSubscribeListWithGroupAddress:(UInt16)groupAddress nodeAddress:(UInt16)nodeAddress elementAddress:(UInt16)elementAddress isAdd:(BOOL)isAdd modelID:(UInt32)modelID successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for edit subscribe list, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -140,7 +140,7 @@
 
 /// Change publish list
 + (BOOL)editPublishListWithPublishAddress:(UInt16)publishAddress nodeAddress:(UInt16)nodeAddress elementAddress:(UInt16)elementAddress modelID:(UInt32)modelID periodSteps:(UInt8)periodSteps periodResolution:(SigStepResolution)periodResolution successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for edit publish list, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -169,7 +169,7 @@
 
 /// Get publish address
 + (BOOL)getPublishAddressWithNodeAddress:(UInt16)nodeAddress elementAddress:(UInt16)elementAddress modelID:(UInt32)modelID successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for edit publish list, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -196,7 +196,7 @@
 
 /// Turn on or turn off the lights part
 + (BOOL)switchOnOffWithIsOn:(BOOL)isOn address:(UInt16)address responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for switch onoff, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -214,7 +214,7 @@
 
 /// Change brightness100
 + (BOOL)changeBrightnessWithBrightness100:(UInt8)brightness100 address:(UInt16)address responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for change brightness100, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -231,7 +231,7 @@
 
 /// Change temprature
 + (BOOL)changeTempratureWithTemprature100:(UInt8)temprature100 address:(UInt16)address responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for change temprature100, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -248,7 +248,7 @@
 
 /// Get temprature
 + (BOOL)getTempratureWithAddress:(UInt16)address responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for get temprature100, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -264,7 +264,7 @@
 
 /// Change HSL
 + (BOOL)changeHSLWithAddress:(UInt16)address hue100:(UInt8)hue100 saturation100:(UInt8)saturation100 brightness100:(UInt8)brightness100 responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for change HSL100, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -283,7 +283,7 @@
 
 /// Get HSL
 + (BOOL)getHSLWithAddress:(UInt16)address responseMaxCount:(int)responseMaxCount successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for get HSL, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -299,7 +299,7 @@
 
 /// Change level
 + (BOOL)changeLevelWithAddress:(UInt16)address level:(SInt16)level responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for change level, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -316,7 +316,7 @@
 
 /// Get level
 + (BOOL)getLevelWithAddress:(UInt16)address responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for get level, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -332,7 +332,7 @@
 
 /// Kick out
 + (BOOL)kickoutDevice:(UInt16)address successCallback:(responseConfigNodeResetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for kick out, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -348,7 +348,7 @@
 
 /// Set nodes's time to app's time
 + (BOOL)setNowTimeWithAddress:(UInt16)address responseMaxCount:(int)responseMaxCount successCallback:(responseTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for set time, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -369,7 +369,7 @@
 
 /// status NowTime to node, without response
 + (BOOL)statusNowTimeWithAddress:(UInt16)address successCallback:(responseTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for status time, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -390,7 +390,7 @@
 
 /// Save scene
 + (BOOL)saveSceneWithAddress:(UInt16)address sceneId:(UInt16)sceneId responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for save scene, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -406,7 +406,7 @@
 
 /// Recall scene
 + (BOOL)recallSceneWithAddress:(UInt16)address sceneId:(UInt16)sceneId responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseSceneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for recall scene, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -422,7 +422,7 @@
 
 /// Delete scene
 + (BOOL)delSceneWithAddress:(UInt16)address sceneId:(UInt16)sceneId responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for delete scene, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -438,7 +438,7 @@
 
 /// Get scene register status
 + (BOOL)getSceneRegisterStatusWithAddress:(UInt16)address responseMaxCount:(int)responseMaxCount successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for get scene register status, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -454,7 +454,7 @@
 
 /// Get scheduler status
 + (BOOL)getSchedulerStatusWithAddress:(UInt16)address responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseSchedulerStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for get Scheduler Status, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -470,7 +470,7 @@
 
 /// Set scheduler action
 + (BOOL)setSchedulerActionWithAddress:(UInt16)address schedulerModel:(SchedulerModel *)schedulerModel responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseSchedulerActionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for set Scheduler Action, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -486,7 +486,7 @@
 
 /// get scheduler action
 + (BOOL)getSchedulerActionWithAddress:(UInt16)address schedulerModelID:(UInt8)schedulerModelID responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseSchedulerActionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    if (SigMeshLib.share.isBusy) {
+    if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for get Scheduler Action, but busy now.");
         if (resultCallback) {
             NSError *error = [NSError errorWithDomain:kSigMeshLibIsBusyErrorMessage code:kSigMeshLibIsBusyErrorCode userInfo:nil];
@@ -499,12 +499,5 @@
         return YES;
     }
 }
-
-/// get fw info
-//+ (void)getFwInfoWithAddress:(u16)address Completation:(responseModelCallBack)complete{
-//    [Bluetooth.share.commandHandle getFwInfoWithAddress:address Completation:complete];
-//    NSString *logStr = [NSString stringWithFormat:@"get fw info address:%02x",address];
-//    saveLogData(logStr);
-//}
 
 @end

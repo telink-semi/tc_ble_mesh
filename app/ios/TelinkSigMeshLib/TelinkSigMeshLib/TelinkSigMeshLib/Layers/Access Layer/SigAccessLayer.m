@@ -121,7 +121,6 @@
 
 @interface SigAccessLayer ()
 @property (nonatomic,strong) SigNetworkManager *networkManager;
-@property (nonatomic,strong) SigDataSource *meshNetwork;
 /// A map of current transactions.
 ///
 /// The key is a value combined from the source and destination addresses.
@@ -146,7 +145,6 @@
 - (instancetype)initWithNetworkManager:(SigNetworkManager *)networkManager {
     if (self = [super init]) {
         _networkManager = networkManager;
-        _meshNetwork = networkManager.meshNetwork;
         _transactions = [NSMutableDictionary dictionary];
         _reliableMessageContexts = [NSMutableArray array];
     }
@@ -187,9 +185,51 @@
         [_reliableMessageContexts removeObjectAtIndex:index];
         TeLogDebug(@"============8.Response %@ receieved (decrypted using key: %@),_reliableMessageContexts=%@",accessPdu,keySet,_reliableMessageContexts);
     } else {
-        TeLogVerbose(@"%@ receieved (decrypted using key: %@)",accessPdu,keySet);
+        TeLogInfo(@"%@ receieved (decrypted using key: %@)",accessPdu,keySet);
     }
     [self handleAccessPdu:accessPdu sendWithSigKeySet:keySet asResponseToRequest:request];
+}
+
+- (void)sendMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
+    // Should the TID be updated?
+    SigMeshMessage *m = message;
+    if ([message isKindOfClass:[SigGenericMessage class]]) {
+        SigGenericMessage *genericMessage = (SigGenericMessage *)message;
+        if ([genericMessage isTransactionMessage] && genericMessage.tid == 0) {
+            // Ensure there is a transaction for our destination.
+            UInt32 k = [self getKeyForElement:element andDestination:destination];
+            _transactions[@(k)] = _transactions[@(k)] == nil ? [[SigTransaction alloc] init] : _transactions[@(k)];
+            // Should the last transaction be continued?
+            if (genericMessage.continueTransaction && [_transactions[@(k)] isActive]) {
+                genericMessage.tid = [_transactions[@(k)] currentTid];
+            } else {
+                // If not, start a new transaction by setting a new TID value.
+                genericMessage.tid = [_transactions[@(k)] nextTid];
+            }
+            m = genericMessage;
+        }
+        TeLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
+    }
+    TeLogVerbose(@"Sending %@ from: %@, to: 0x%x",m,element,destination.address);
+    SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:m sentFromLocalElement:element toDestination:destination userInitiated:YES];
+    SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];
+    TeLogInfo(@"Sending %@",pdu);
+    
+    // Set timers for the acknowledged messages.
+//    #warning 2019年11月10日23:44:04，类型可能不太匹配，待完善
+//    if ([message isKindOfClass:[SigAcknowledgedMeshMessage class]]) {
+//        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
+//    }else{
+//        TeLogDebug(@"非SigAcknowledgedMeshMessage子类。");
+//    }
+//    if ([SigHelper.share getResponseOpcodeWithSendOpcode:message.opCode] != 0 || [message isKindOfClass:[SigAcknowledgedMeshMessage class]]) {
+    
+    //==========telink retry by retry count in SigMeshLib==========//
+//    if ([SigHelper.share isAcknowledgedMessage:message]) {
+//        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
+//    }
+    //==========telink retry by retry count in SigMeshLib==========//
+    [_networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet command:command];
 }
 
 - (void)sendMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey {
@@ -214,8 +254,7 @@
     }
     TeLogVerbose(@"Sending %@ from: %@, to: 0x%x",m,element,destination.address);
     SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:m sentFromLocalElement:element toDestination:destination userInitiated:YES];
-    SigAccessKeySet *keySet = [[SigAccessKeySet alloc] init];
-    keySet.applicationKey = applicationKey;
+    SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];
     TeLogInfo(@"Sending %@",pdu);
     
     // Set timers for the acknowledged messages.
@@ -226,21 +265,22 @@
 //        TeLogDebug(@"非SigAcknowledgedMeshMessage子类。");
 //    }
 //    if ([SigHelper.share getResponseOpcodeWithSendOpcode:message.opCode] != 0 || [message isKindOfClass:[SigAcknowledgedMeshMessage class]]) {
-    if ([SigHelper.share isAcknowledgedMessage:message]) {
-        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
-    }
+    
+    //==========telink retry by retry count in SigMeshLib==========//
+//    if ([SigHelper.share isAcknowledgedMessage:message]) {
+//        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
+//    }
+    //==========telink retry by retry count in SigMeshLib==========//
     [_networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet];
 }
 
 - (void)sendSigConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt16)initialTtl {
-    SigElementModel *element = _meshNetwork.curLocationNodeModel.elements.firstObject;
-    element.parentNode = _meshNetwork.curLocationNodeModel;
-    SigNodeModel *node = [_meshNetwork getNodeWithAddress:destination];
+    SigElementModel *element = SigDataSource.share.curLocationElementModel;
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
     SigNetkeyModel *networkKey = node.getNetworkKeys.firstObject;
-//    if (!element || !node || !networkKey) {
-//        TeLogError(@"!element || !node || !networkKey");
-//        return;
-//    }
+    if (networkKey == nil) {
+        networkKey = SigDataSource.share.curNetkeyModel;
+    }
     // ConfigNetKeyDelete must not be signed using the key that is being deleted.
     if ([message isMemberOfClass:[SigConfigNetKeyDelete class]]) {
         SigConfigNetKeyDelete *netKeyDelete = (SigConfigNetKeyDelete *)message;
@@ -255,11 +295,14 @@
     SigDeviceKeySet *keySet = [[SigDeviceKeySet alloc] initWithNetworkKey:networkKey node:node];
     
     // Set timers for the acknowledged messages.
-    if ([SigHelper.share isAcknowledgedMessage:message]) {
-        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
-    } else {
-        TeLogDebug(@"unAcknowledged Message.");
-    }
+    //==========telink retry by retry count in SigMeshLib==========//
+//    if ([SigHelper.share isAcknowledgedMessage:message]) {
+//        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
+//    } else {
+//        TeLogDebug(@"unAcknowledged Message.");
+//    }
+    //==========telink retry by retry count in SigMeshLib==========//
+
 //#warning 2019年11月10日23:44:04，类型可能不太匹配，待完善（SigConfigCompositionDataGet已经匹配）
 //    if ([message isKindOfClass:[SigConfigMessage class]]) {
 ////        if ([message isMemberOfClass:[SigAcknowledgedConfigMessage class]]) {
@@ -288,7 +331,7 @@
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         TeLogInfo(@"Sending %@",pdu);
         UInt8 ttl = element.parentNode.defaultTTL;
-        if (![SigHelper.share isValidTTL:ttl]) {
+        if (![SigHelper.share isRelayedTTL:ttl]) {
             ttl = weakSelf.networkManager.defaultTtl;
         }
         [weakSelf.networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:ttl usingKeySet:keySet];
@@ -313,7 +356,7 @@
 }
 
 - (void)handleAccessPdu:(SigAccessPdu *)accessPdu sendWithSigKeySet:(SigKeySet *)keySet asResponseToRequest:(SigAcknowledgedMeshMessage *)request {
-    SigNodeModel *localNode = _meshNetwork.curLocationNodeModel;
+    SigNodeModel *localNode = SigDataSource.share.curLocationNodeModel;
     if (localNode == nil) {
         TeLogError(@"localNode error.");
         return;
@@ -338,7 +381,7 @@
     if ((request && [request isKindOfClass:[SigAcknowledgedMeshMessage class]]) || [SigHelper.share isAcknowledgedMessage:pdu.message]) {
         /// The TTL with which the request will be sent.
         UInt8 ttl = element.parentNode.defaultTTL;
-        if (![SigHelper.share isValidTTL:ttl]) {
+        if (![SigHelper.share isRelayedTTL:ttl]) {
             ttl = _networkManager.defaultTtl;
         }
 
@@ -588,6 +631,18 @@
             case SigOpCode_configVendorModelSubscriptionList:
                 messageType = [SigConfigVendorModelSubscriptionList class];
                 break;
+                
+                // node identity
+            case SigOpCode_configNodeIdentityGet:
+                messageType = [SigConfigNodeIdentityGet class];
+                break;
+            case SigOpCode_configNodeIdentitySet:
+                messageType = [SigConfigNodeIdentitySet class];
+                break;
+            case SigOpCode_configNodeIdentityStatus:
+                messageType = [SigConfigNodeIdentityStatus class];
+                break;
+
                 // Resetting Node
             case SigOpCode_configNodeReset:
                 messageType = [SigConfigNodeReset class];
@@ -604,6 +659,58 @@
                 break;
             case SigOpCode_configDefaultTtlStatus:
                 messageType = [SigConfigDefaultTtlStatus class];
+                break;
+                // remote provision
+            case SigOpCode_remoteProvisioningScanCapabilitiesGet:
+                messageType = [SigRemoteProvisioningScanCapabilitiesGet class];
+                break;
+            case SigOpCode_remoteProvisioningScanCapabilitiesStatus:
+                messageType = [SigRemoteProvisioningScanCapabilitiesStatus class];
+                break;
+            case SigOpCode_remoteProvisioningScanGet:
+                messageType = [SigRemoteProvisioningScanGet class];
+                break;
+            case SigOpCode_remoteProvisioningScanStart:
+                messageType = [SigRemoteProvisioningScanStart class];
+                break;
+            case SigOpCode_remoteProvisioningScanStop:
+                messageType = [SigRemoteProvisioningScanStop class];
+                break;
+            case SigOpCode_remoteProvisioningScanStatus:
+                messageType = [SigRemoteProvisioningScanStatus class];
+                break;
+            case SigOpCode_remoteProvisioningScanReport:
+                messageType = [SigRemoteProvisioningScanReport class];
+                break;
+            case SigOpCode_remoteProvisioningExtendedScanStart:
+                messageType = [SigRemoteProvisioningExtendedScanStart class];
+                break;
+            case SigOpCode_remoteProvisioningExtendedScanReport:
+                messageType = [SigRemoteProvisioningExtendedScanReport class];
+                break;
+            case SigOpCode_remoteProvisioningLinkGet:
+                messageType = [SigRemoteProvisioningLinkGet class];
+                break;
+            case SigOpCode_remoteProvisioningLinkOpen:
+                messageType = [SigRemoteProvisioningLinkOpen class];
+                break;
+            case SigOpCode_remoteProvisioningLinkClose:
+                messageType = [SigRemoteProvisioningLinkClose class];
+                break;
+            case SigOpCode_remoteProvisioningLinkStatus:
+                messageType = [SigRemoteProvisioningLinkStatus class];
+                break;
+            case SigOpCode_remoteProvisioningLinkReport:
+                messageType = [SigRemoteProvisioningLinkReport class];
+                break;
+            case SigOpCode_remoteProvisioningPDUSend:
+                messageType = [SigRemoteProvisioningPDUSend class];
+                break;
+            case SigOpCode_remoteProvisioningPDUOutboundReport:
+                messageType = [SigRemoteProvisioningPDUOutboundReport class];
+                break;
+            case SigOpCode_remoteProvisioningPDUReport:
+                messageType = [SigRemoteProvisioningPDUReport class];
                 break;
                 // Generics
             case SigOpCode_genericOnOffGet:
@@ -1129,23 +1236,26 @@
                 break;
                 
                 // Firmware Update Messages
-            case SigOpCode_FirmwareInformationGet:
-                messageType = [SigFirmwareInformationGet class];
+            case SigOpCode_FirmwareUpdateInformationGet:
+                messageType = [SigFirmwareUpdateInformationGet class];
                 break;
-            case SigOpCode_FirmwareInformationStatus:
-                messageType = [SigFirmwareInformationStatus class];
+            case SigOpCode_FirmwareUpdateInformationStatus:
+                messageType = [SigFirmwareUpdateInformationStatus class];
                 break;
             case SigOpCode_FirmwareUpdateGet:
                 messageType = [SigFirmwareUpdateGet class];
                 break;
-            case SigOpCode_FirmwareUpdatePrepare:
-                messageType = [SigFirmwareUpdatePrepare class];
+            case SigOpCode_FirmwareUpdateFirmwareMetadataCheck:
+                messageType = [SigFirmwareUpdateFirmwareMetadataCheck class];
+                break;
+            case SigOpCode_FirmwareUpdateFirmwareMetadataStatus:
+                messageType = [SigFirmwareUpdateFirmwareMetadataStatus class];
                 break;
             case SigOpCode_FirmwareUpdateStart:
                 messageType = [SigFirmwareUpdateStart class];
                 break;
-            case SigOpCode_FirmwareUpdateAbort:
-                messageType = [SigFirmwareUpdateAbort class];
+            case SigOpCode_FirmwareUpdateCancel:
+                messageType = [SigFirmwareUpdateCancel class];
                 break;
             case SigOpCode_FirmwareUpdateApply:
                 messageType = [SigFirmwareUpdateApply class];
@@ -1159,52 +1269,52 @@
             case SigOpCode_FirmwareDistributionStart:
                 messageType = [SigFirmwareDistributionStart class];
                 break;
-            case SigOpCode_FirmwareDistributionStop:
-                messageType = [SigFirmwareDistributionStop class];
+            case SigOpCode_FirmwareDistributionCancel:
+                messageType = [SigFirmwareDistributionCancel class];
                 break;
             case SigOpCode_FirmwareDistributionStatus:
                 messageType = [SigFirmwareDistributionStatus class];
                 break;
-            case SigOpCode_FirmwareDistributionDetailsGet:
-                messageType = [SigFirmwareDistributionDetailsGet class];
-                break;
-            case SigOpCode_FirmwareDistributionDetailsList:
+//            case SigOpCode_FirmwareDistributionNodesGet:
+//                messageType = [SigFirmwareDistributionDetailsGet class];
+//                break;
+            case SigOpCode_FirmwareDistributionNodesList:
                 messageType = [SigFirmwareDistributionDetailsList class];
                 break;
 
-                // Object Transfer Messages
-            case SigOpCode_ObjectTransferGet:
-                messageType = [SigObjectTransferGet class];
+                // BLOB Transfer Messages
+            case SigOpCode_BLOBTransferGet:
+                messageType = [SigBLOBTransferGet class];
                 break;
-            case SigOpCode_ObjectTransferStart:
-                messageType = [SigObjectTransferStart class];
+            case SigOpCode_BLOBTransferStart:
+                messageType = [SigBLOBTransferStart class];
                 break;
-            case SigOpCode_ObjectTransferAbort:
-                messageType = [SigObjectTransferAbort class];
+            case SigOpCode_BLOBTransferCancel:
+                messageType = [SigObjectTransferCancel class];
                 break;
-            case SigOpCode_ObjectTransferStatus:
-                messageType = [SigObjectTransferStatus class];
+            case SigOpCode_BLOBTransferStatus:
+                messageType = [SigBLOBTransferStatus class];
                 break;
-            case SigOpCode_ObjectBlockTransferStart:
-                messageType = [SigObjectBlockTransferStart class];
+            case SigOpCode_BLOBBlockStart:
+                messageType = [SigBLOBBlockStart class];
                 break;
             case SigOpCode_ObjectBlockTransferStatus:
                 messageType = [SigObjectBlockTransferStatus class];
                 break;
-            case SigOpCode_ObjectChunkTransfer:
-                messageType = [SigObjectChunkTransfer class];
+            case SigOpCode_BLOBChunkTransfer:
+                messageType = [SigBLOBChunkTransfer class];
                 break;
-            case SigOpCode_ObjectBlockGet:
-                messageType = [SigObjectBlockGet class];
+            case SigOpCode_BLOBBlockGet:
+                messageType = [SigBLOBBlockGet class];
                 break;
-            case SigOpCode_ObjectBlockStatus:
-                messageType = [SigObjectBlockStatus class];
+            case SigOpCode_BLOBBlockStatus:
+                messageType = [SigBLOBBlockStatus class];
                 break;
-            case SigOpCode_ObjectInformationGet:
-                messageType = [SigObjectInformationGet class];
+            case SigOpCode_BLOBInformationGet:
+                messageType = [SigBLOBInformationGet class];
                 break;
-            case SigOpCode_ObjectInformationStatus:
-                messageType = [SigObjectInformationStatus class];
+            case SigOpCode_BLOBInformationStatus:
+                messageType = [SigBLOBInformationStatus class];
                 break;
             default:
                 break;

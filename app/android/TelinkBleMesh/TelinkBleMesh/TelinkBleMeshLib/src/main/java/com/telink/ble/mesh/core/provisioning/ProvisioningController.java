@@ -16,14 +16,12 @@ import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningStatePDU;
 import com.telink.ble.mesh.core.proxy.ProxyPDU;
 import com.telink.ble.mesh.entity.ProvisioningDevice;
 import com.telink.ble.mesh.util.Arrays;
-import com.telink.ble.mesh.util.LogInfo;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
-import java.util.logging.Level;
 
 import androidx.annotation.NonNull;
 
@@ -49,8 +47,21 @@ public class ProvisioningController {
      * =>
      * start(P->D)
      * =>
+     * pub_key(P->D)
+     * =>
      * pub_key(D->P)
      * =>
+     * confirm(P->D)
+     * =>
+     * confirm(D->P)
+     * =>
+     * random(P->D)
+     * =>
+     * random(D->P)
+     * =>
+     * check confirm
+     * =>
+     * provisioning end
      */
     private int state = STATE_IDLE;
 
@@ -204,6 +215,7 @@ public class ProvisioningController {
             log("received notification when idle", MeshLogger.LEVEL_WARN);
             return;
         }
+        log("provisioning pdu received: " + Arrays.bytesToHexString(provisioningPdu, ""));
         int provisioningPduType = provisioningPdu[0];
         byte[] provisioningData = new byte[provisioningPdu.length - 1];
         System.arraycopy(provisioningPdu, 1, provisioningData, 0, provisioningData.length);
@@ -253,7 +265,7 @@ public class ProvisioningController {
     }
 
     private void updateProvisioningState(int state, String desc) {
-        log("provisioning state update: state -- " + " desc -- " + desc);
+        log("provisioning state update: state -- " + state + " desc -- " + desc);
         this.state = state;
         if (mProvisioningBridge != null) {
             mProvisioningBridge.onProvisionStateChanged(state, desc);
@@ -306,7 +318,7 @@ public class ProvisioningController {
         }
 
         updateProvisioningState(STATE_PUB_KEY_RECEIVED, "Public Key received");
-        log("on pub key fetch: " + Arrays.bytesToHexString(pubKeyData, ":"));
+        log("pub key received: " + Arrays.bytesToHexString(pubKeyData, ":"));
         devicePubKeyPDU = ProvisioningPubKeyPDU.fromBytes(pubKeyData);
         deviceECDHSecret = Encipher.generateSharedECDHSecret(pubKeyData, provisionerKeyPair.getPrivate());
         log("get secret: " + Arrays.bytesToHexString(deviceECDHSecret, ":"));
@@ -496,6 +508,7 @@ public class ProvisioningController {
             System.arraycopy(data, 0, re, 1, data.length);
         }
         if (mProvisioningBridge != null) {
+            log("pdu prepared: " + Arrays.bytesToHexString(data, ":"));
             mProvisioningBridge.onCommandPrepared(ProxyPDU.TYPE_PROVISIONING_PDU, re);
         }
     }

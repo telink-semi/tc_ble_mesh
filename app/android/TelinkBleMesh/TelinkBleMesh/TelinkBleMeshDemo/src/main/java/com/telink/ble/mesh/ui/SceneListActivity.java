@@ -46,6 +46,9 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_common_list);
         ll_empty = findViewById(R.id.ll_empty);
         findViewById(R.id.btn_add).setOnClickListener(this);
@@ -133,7 +136,7 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
             NodeInfo deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo()
                     .getDeviceByMeshAddress(tarScene.states.get(deleteIndex).address);
 
-            // 离线设备直接删除
+            // remove offline device
             if (deviceInfo.getOnOff() == -1) {
 //                tarScene.deleteDevice(deviceInfo);
                 deleteIndex++;

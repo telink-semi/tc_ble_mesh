@@ -70,12 +70,12 @@ public class FileListAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
         if (mFiles.get(position).isDirectory()) {
-            // 目录
+            // dir
             holder.iv_icon.setImageResource(R.drawable.ic_folder);
             holder.iv_right.setVisibility(View.VISIBLE);
         } else {
             holder.iv_right.setVisibility(View.GONE);
-            // 文件 .bin
+            // file .bin
             if (targetSuffix != null && !targetSuffix.equals("") && mFiles.get(position).getName().endsWith(targetSuffix)) {
                 holder.iv_icon.setImageResource(R.drawable.ic_file_checked);
             } else {

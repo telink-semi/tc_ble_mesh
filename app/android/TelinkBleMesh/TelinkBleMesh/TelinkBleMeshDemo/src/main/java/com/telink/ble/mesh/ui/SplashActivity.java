@@ -41,9 +41,6 @@ public class SplashActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
-        MeshService.getInstance().init(this, TelinkMeshApplication.getInstance());
-        MeshConfiguration meshConfiguration = TelinkMeshApplication.getInstance().getMeshInfo().convertToConfiguration();
-        MeshService.getInstance().setupMeshNetwork(meshConfiguration);
     }
 
     @Override
@@ -78,10 +75,12 @@ public class SplashActivity extends BaseActivity {
         delayHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                startActivity(new Intent(SplashActivity.this, MainActivity.class));
+                Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+//                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
                 finish();
             }
-        }, 1000);
+        }, 500);
     }
 
     private void onPermissionDenied() {

@@ -1,0 +1,25 @@
+2020-04-01 17:50:23.163 29946-29997/com.telink.ble.mesh.demo D/Binding: binding begin: defaultBound? false
+2020-04-01 17:50:23.362 29946-29968/com.telink.ble.mesh.demo D/Binding: models prepared: 19
+2020-04-01 17:50:23.363 29946-29968/com.telink.ble.mesh.demo D/Binding: add app key
+2020-04-01 17:50:23.487 29946-29968/com.telink.ble.mesh.demo D/Binding: app key add success
+2020-04-01 17:50:23.487 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 4 at: 2
+2020-04-01 17:50:23.563 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: fe00 at: 2
+2020-04-01 17:50:23.680 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: fe01 at: 2
+2020-04-01 17:50:23.798 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: ff00 at: 2
+2020-04-01 17:50:23.905 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: ff01 at: 2
+2020-04-01 17:50:24.080 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 1000 at: 2
+2020-04-01 17:50:24.180 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 1002 at: 2
+2020-04-01 17:50:24.319 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 1004 at: 2
+2020-04-01 17:50:24.475 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 1006 at: 2
+2020-04-01 17:50:24.591 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 1007 at: 2
+2020-04-01 17:50:24.762 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 1300 at: 2
+2020-04-01 17:50:24.892 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 1301 at: 2
+2020-04-01 17:50:25.037 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 1307 at: 2
+2020-04-01 17:50:25.180 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 1308 at: 2
+2020-04-01 17:50:25.337 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 211 at: 2
+2020-04-01 17:50:25.454 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 1002 at: 3
+2020-04-01 17:50:25.570 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 130a at: 3
+2020-04-01 17:50:25.695 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 1002 at: 4
+2020-04-01 17:50:25.786 29946-29968/com.telink.ble.mesh.demo D/Binding: bind next model: 130b at: 4
+2020-04-01 17:50:25.905 29946-29968/com.telink.ble.mesh.demo D/MeshController: access state changed: 1 -- binding success
+2020-04-01 17:50:25.908 29946-29968/com.telink.ble.mesh.demo D/SIG-Mesh: post event : com.telink.ble.mesh.EVENT_TYPE_BIND_SUCCESS--BindingEvent

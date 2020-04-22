@@ -17,7 +17,7 @@ import java.util.List;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 设备列表适配器
+ * online devices
  * Created by Administrator on 2016/10/25.
  */
 public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDeviceListAdapter.ViewHolder> {

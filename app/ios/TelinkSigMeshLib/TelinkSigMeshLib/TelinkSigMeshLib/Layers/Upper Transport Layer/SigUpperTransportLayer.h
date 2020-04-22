@@ -36,7 +36,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigUpperTransportLayer : NSObject
 
 @property (nonatomic,strong) SigNetworkManager *networkManager;
-@property (nonatomic,strong) SigDataSource *meshNetwork;
 
 - (instancetype)initWithNetworkManager:(SigNetworkManager *)networkManager;
 
@@ -46,6 +45,8 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// - parameter lowetTransportPdu: The Lower Trasport PDU received.
 - (void)handleLowerTransportPdu:(SigLowerTransportPdu *)lowerTransportPdu;
+
+- (void)sendAccessPdu:(SigAccessPdu *)accessPdu withTtl:(UInt8)initialTtl usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command;
 
 /// Encrypts the Access PDU using given key set and sends it down to
 /// Lower Transport Layer.

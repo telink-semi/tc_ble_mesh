@@ -19,7 +19,7 @@ public class HslSetMessage extends GenericMessage {
 
     public int saturation;
 
-    // transition id
+    // transaction id
     public byte tid = 0;
 
     public byte transitionTime = 0;
@@ -28,19 +28,21 @@ public class HslSetMessage extends GenericMessage {
 
     public boolean ack = false;
 
+    public boolean isComplete = false;
+
     public static HslSetMessage getSimple(int address, int appKeyIndex, int lightness, int hue, int saturation, boolean ack, int rspMax) {
         HslSetMessage message = new HslSetMessage(address, appKeyIndex);
         message.lightness = lightness;
         message.hue = hue;
         message.saturation = saturation;
         message.ack = ack;
-        message.setContainsTid(true);
         message.setResponseMax(rspMax);
         return message;
     }
 
     public HslSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(3);
     }
 
     @Override
@@ -55,17 +57,20 @@ public class HslSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return ByteBuffer.allocate(9).order(ByteOrder.LITTLE_ENDIAN)
-                .putShort((short) lightness)
-                .putShort((short) hue)
-                .putShort((short) saturation)
-                .put(tid)
-                .put(transitionTime)
-                .put(delay).array();
-    }
-
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
+        return
+                isComplete ?
+                        ByteBuffer.allocate(9).order(ByteOrder.LITTLE_ENDIAN)
+                                .putShort((short) lightness)
+                                .putShort((short) hue)
+                                .putShort((short) saturation)
+                                .put(tid)
+                                .put(transitionTime)
+                                .put(delay).array()
+                        :
+                        ByteBuffer.allocate(7).order(ByteOrder.LITTLE_ENDIAN)
+                                .putShort((short) lightness)
+                                .putShort((short) hue)
+                                .putShort((short) saturation)
+                                .put(tid).array();
     }
 }

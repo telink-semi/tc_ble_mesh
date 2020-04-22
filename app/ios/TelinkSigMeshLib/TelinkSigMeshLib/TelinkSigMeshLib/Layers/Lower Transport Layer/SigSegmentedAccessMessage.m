@@ -41,7 +41,7 @@
         memcpy(&tem3, dataByte+3, 1);
         UInt8 szmic = tem1 >> 7;
         _transportMicSize = szmic == 0 ? 4 : 8;
-        self.sequenceZero = (UInt16)(((tem1 & 0x7F) << 6) | (UInt16)tem2 >> 2);
+        self.sequenceZero = (UInt16)(((tem1 & 0x7F) << 6) | (UInt16)(tem2 >> 2));
         self.segmentOffset = ((tem2 & 0x03) << 3) | ((tem3 & 0xE0) >> 5);
         self.lastSegmentNumber = tem3 & 0x1F;
         if (self.segmentOffset > self.lastSegmentNumber) {
@@ -58,6 +58,30 @@
         self.userInitiated = NO;
     }
     return self;
+}
+
+- (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex offset:(UInt8)offset {
+    if (self = [super init]) {
+        self.type = SigLowerTransportPduType_accessMessage;
+        self.message = pdu.message;
+        self.localElement = pdu.localElement;
+        _aid = pdu.aid;
+        self.source = pdu.source;
+        self.destination = pdu.destination;
+        self.networkKey = networkKey;
+        self.ivIndex = ivIndex;
+        _transportMicSize = pdu.transportMicSize;
+        _sequence = pdu.sequence;
+        self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
+        self.segmentOffset = offset;
+        int lowerBound = (int)(offset * 12);
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * 12);
+        NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + 11) / 12) - 1;
+        self.upperTransportPdu = segment;
+    }
+    return self;
+
 }
 
 /// Creates a Segment of an Access Message object from the Upper Transport PDU
@@ -105,6 +129,10 @@
     [mData appendData:[NSData dataWithBytes:&octet3 length:1]];
     [mData appendData:self.upperTransportPdu];
     return mData;
+}
+
+- (NSString *)description {
+    return[NSString stringWithFormat:@"<%p> - SigSegmentedAccessMessage, aid:(0x%X) transportMicSize:(0x%X) sequence:(0x%X),sequenceZero:(0x%X), opCode:(0x%X)", self, _aid,_transportMicSize,_sequence,self.sequenceZero,_opCode];
 }
 
 @end

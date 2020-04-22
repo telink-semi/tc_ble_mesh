@@ -79,7 +79,7 @@ public class MeshStorageService {
         }
 
 
-        // 设备信息 必须要同步
+        // sync devices
         /*mesh.devices = tempMesh.devices;
         mesh.scenes = tempMesh.scenes;
         if (!tempMesh.provisionerUUID.equals(mesh.provisionerUUID)) {
@@ -95,7 +95,7 @@ public class MeshStorageService {
             mesh.pvIndex = unicastStart + 1;
             mesh.ivIndex = tempMesh.ivIndex;
         } else {
-            // 在provisioner 相同时， 只需要把pv index同步即可
+            // if is the same provisioner, sync pvIndex
             mesh.pvIndex = tempMesh.pvIndex;
             mesh.sno = tempMesh.sno;
         }*/
@@ -135,7 +135,7 @@ public class MeshStorageService {
         long time = MeshUtils.getTaiTime();
         meshStorage.timestamp = String.format("%020X", time);
 
-        // 添加默认的netKey
+        // add default netKey
         MeshStorage.NetworkKey netKey = new MeshStorage.NetworkKey();
         netKey.name = "Telink Network Key";
         netKey.index = mesh.netKeyIndex;
@@ -146,7 +146,7 @@ public class MeshStorageService {
         meshStorage.netKeys = new ArrayList<>();
         meshStorage.netKeys.add(netKey);
 
-        // 添加默认的appKey
+        // add default appKey
         MeshStorage.ApplicationKey appKey;
         meshStorage.appKeys = new ArrayList<>();
         for (MeshInfo.AppKey ak : mesh.appKeyList) {
@@ -155,7 +155,7 @@ public class MeshStorageService {
             appKey.index = ak.index;
             appKey.key = Arrays.bytesToHexString(ak.key, "").toUpperCase();
 
-            // 绑定的network key index，即所在network
+            // bound network key index
             appKey.boundNetKey = mesh.netKeyIndex;
             meshStorage.appKeys.add(appKey);
         }
@@ -171,11 +171,11 @@ public class MeshStorageService {
         }
 
 
-        // 创建默认provisioner数据
+        // create default provisioner
         MeshStorage.Provisioner provisioner = new MeshStorage.Provisioner();
         provisioner.UUID = mesh.provisionerUUID;
         provisioner.provisionerName = "Telink Provisioner";
-        // 创建 可分配的设备unicast地址列表 0x0001 -- 0x00FF
+        // create uncast range, default: 0x0001 -- 0x00FF
         provisioner.allocatedUnicastRange = new ArrayList<>();
         provisioner.allocatedUnicastRange.add(
                 new MeshStorage.Provisioner.AddressRange(String.format("%04X", mesh.unicastRange.low), String.format("%04X", mesh.unicastRange.high))
@@ -190,21 +190,21 @@ public class MeshStorageService {
 
 
         /**
-         * 创建与provisioner对应的node信息
+         * create node info by provisioner info
          */
         MeshStorage.Node localNode = new MeshStorage.Node();
-        // 关联 provisioner 和 node 信息
+        // bind provisioner and node
         localNode.UUID = provisioner.UUID;
         localNode.sno = String.format("%08X", mesh.sequenceNumber);
         localNode.unicastAddress = String.format("%04X", mesh.localAddress);
         MeshLogger.log("alloc address: " + localNode.unicastAddress);
         localNode.name = "Provisioner Node";
 
-        // 添加默认的netKey到node
+        // add default netKey in node
         localNode.netKeys = new ArrayList<>();
         localNode.netKeys.add(new MeshStorage.NodeKey(0, false));
 
-        // 添加默认的appKey到node
+        // add default appKey in node
         localNode.appKeys = new ArrayList<>();
         localNode.appKeys.add(new MeshStorage.NodeKey(0, false));
         getLocalElements(localNode, mesh.getDefaultAppKeyIndex());
@@ -303,7 +303,7 @@ public class MeshStorageService {
             mesh.pvIndex = unicastStart + 1;
             mesh.ivIndex = tempMesh.ivIndex;
         } else {
-            // 在provisioner 相同时， 只需要把pv index同步即可
+
             mesh.pvIndex = tempMesh.pvIndex;
             mesh.sno = tempMesh.sno;
         }
@@ -376,7 +376,7 @@ public class MeshStorageService {
                                 if (model.publish != null) {
                                     MeshStorage.Publish publish = model.publish;
                                     int pubAddress = Integer.valueOf(publish.address, 16);
-                                    // vc 传过来的 pub address， 在没有配置是为0
+                                    // pub address from vc-tool， default is 0
                                     if (pubAddress != 0 && publish.period != 0) {
                                         int elementAddress = element.index + Integer.valueOf(node.unicastAddress, 16);
                                         int transmit = publish.retransmit.count | (publish.retransmit.interval << 3);
@@ -439,7 +439,7 @@ public class MeshStorageService {
     }
 
 
-    // mesh中的deviceInfo 转成 json 中的 node
+    // convert nodeInfo(mesh.java) to node(json)
     public MeshStorage.Node convertDeviceInfoToNode(NodeInfo deviceInfo, int appKeyIndex) {
         MeshStorage.Node node = new MeshStorage.Node();
         node.macAddress = deviceInfo.macAddress.replace(":", "").toUpperCase();
@@ -457,8 +457,8 @@ public class MeshStorageService {
             node.vid = String.format("%04X", deviceInfo.compositionData.vid);
             node.crpl = String.format("%04X", deviceInfo.compositionData.crpl);
             int features = deviceInfo.compositionData.features;
-            // 支持的节点默认都是打开的， 即为1， 不支持的节点 composition 数据是0， 传到 node 中为2
-            // 已关闭相关判断
+            // value in supported node is 1, value in unsupported node is 0 (as 2 in json)
+            // closed
             /*node.features = new MeshStorage.Features((features & 0b0001) == 0 ? 2 : 1,
                     (features & 0b0010) == 0 ? 2 : 1,
                     (features & 0b0100) == 0 ? 2 : 1,
@@ -530,7 +530,7 @@ public class MeshStorageService {
             }
         } else {
 
-            // 创建空的element对象， 用于同步element个数
+            // create elements
             for (int i = 0; i < deviceInfo.elementCnt; i++) {
                 node.elements.add(new MeshStorage.Element());
             }
@@ -540,7 +540,7 @@ public class MeshStorageService {
         node.configComplete = true;
         node.name = "Common Node";
 
-        //目前根据appKey列表是否存在判断设备是否绑定成功
+        // check if appKey list exists to confirm device bound state
         if (deviceInfo.state == NodeInfo.STATE_BIND_SUCCESS) {
             node.appKeys = new ArrayList<>();
             node.appKeys.add(new MeshStorage.NodeKey(0, false));
@@ -615,7 +615,7 @@ public class MeshStorageService {
 
 
     /**
-     * 把json格式的 node 信息转为 node info
+     * convert node in json to composition data
      */
     public CompositionData convertNodeToNodeInfo(MeshStorage.Node node) {
 
@@ -651,7 +651,7 @@ public class MeshStorageService {
                     int modelId;
                     for (MeshStorage.Model model : element.models) {
 
-                        // 根据model id字节数判断是否为vendor model
+                        // check if is vendor model
                         if (model.modelId != null && !model.modelId.equals("")) {
                             modelId = Integer.valueOf(model.modelId, 16);
                             if ((model.modelId.length()) > 4) {
@@ -676,7 +676,7 @@ public class MeshStorageService {
     }
 
 
-    // 判断node是否是 provisioner节点
+    // check if node is provisioner
     private boolean isProvisionerNode(MeshStorage meshStorage, MeshStorage.Node node) {
         for (MeshStorage.Provisioner provisioner : meshStorage.provisioners) {
             if (provisioner.UUID.equals(node.UUID)) {

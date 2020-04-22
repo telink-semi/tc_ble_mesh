@@ -9170,20 +9170,27 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigFirmwareInformationGet
+@implementation SigFirmwareUpdateInformationGet
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareInformationGet;
+        self.opCode = SigOpCode_FirmwareUpdateInformationGet;
+        _firstIndex = 0;
+        _entriesLimit = 0;
     }
     return self;
 }
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareInformationGet;
-        if (parameters == nil || parameters.length == 0) {
-            return self;
+        self.opCode = SigOpCode_FirmwareUpdateInformationGet;
+        if (parameters != nil && parameters.length > 2) {
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            _firstIndex = tem8;
+            memcpy(&tem8, dataByte+1, 1);
+            _entriesLimit = tem8;
         }else{
             return nil;
         }
@@ -9191,12 +9198,28 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
+- (instancetype)initWithFirstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_FirmwareUpdateInformationGet;
+        _firstIndex = firstIndex;
+        _entriesLimit = entriesLimit;
+    }
+    return self;
+}
+
 - (NSData *)parameters {
-    return nil;
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _firstIndex;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _entriesLimit;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
 }
 
 - (Class)responseType {
-    return [SigFirmwareInformationStatus class];
+    return [SigFirmwareUpdateInformationStatus class];
 }
 
 - (UInt32)responseOpCode {
@@ -9205,31 +9228,43 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigFirmwareInformationStatus
+@implementation SigFirmwareUpdateInformationStatus
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareInformationStatus;
+        self.opCode = SigOpCode_FirmwareUpdateInformationStatus;
     }
     return self;
 }
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareInformationStatus;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 2 + SigDataSource.share.defaultFirmwareIDLength) {
+        self.opCode = SigOpCode_FirmwareUpdateInformationStatus;
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters.length < 2 + 3) {
             return nil;
         }
-        UInt16 tem = 0;
+        UInt8 tem8 = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem, dataByte, 2);
-        _companyID = tem;
-        if (parameters.length >= 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(2, SigDataSource.share.defaultFirmwareIDLength)];
-        }
-        if (parameters.length > 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _updateURL = [parameters subdataWithRange:NSMakeRange(2 + SigDataSource.share.defaultFirmwareIDLength, parameters.length - 2 - SigDataSource.share.defaultFirmwareIDLength)];
+        memcpy(&tem8, dataByte, 1);
+        _firmwareInformationListCount = tem8;
+        memcpy(&tem8, dataByte+1, 1);
+        _firstIndex = tem8;
+        NSInteger index = 2;
+        _firmwareInformationList = [NSMutableArray array];
+        while (parameters.length > index) {
+            SigFirmwareInformationEntryModel *model = [[SigFirmwareInformationEntryModel alloc] initWithParameters:[parameters subdataWithRange:NSMakeRange(index, parameters.length - index)]];
+            if (model) {
+                [_firmwareInformationList addObject:model];
+                index += model.parameters.length;
+            } else {
+                break;
+            }
+            if (_firmwareInformationList.count >= _firmwareInformationListCount) {
+                break;
+            }
         }
     }
     return self;
@@ -9247,34 +9282,13 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareDistributionGet;
-        _companyID = companyID;
-        _firmwareID = [NSData dataWithData:firmwareID];
-        NSMutableData *mData = [NSMutableData data];
-        UInt16 tem16 = companyID;
-        NSData *data = [NSData dataWithBytes:&tem16 length:2];
-        [mData appendData:data];
-        [mData appendData:firmwareID];
-        self.parameters = mData;
-    }
-    return self;
-}
-
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareDistributionGet;
-                self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 2 + SigDataSource.share.defaultFirmwareIDLength) {
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
             return nil;
-        }
-        UInt16 tem = 0;
-        Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem, dataByte, 2);
-        _companyID = tem;
-        if (parameters.length >= 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(2, SigDataSource.share.defaultFirmwareIDLength)];
         }
     }
     return self;
@@ -9299,28 +9313,35 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID groupAddress:(UInt16)groupAddress updateNodesList:(NSArray <NSNumber *>*)updateNodesList {
+- (instancetype)initWithDistributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(BOOL)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex distributionMulticastAddress:(NSData *)distributionMulticastAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareDistributionStart;
-        _companyID = companyID;
-        _firmwareID = [NSData dataWithData:firmwareID];
-        _groupAddress = groupAddress;
-        _updateNodesList = [NSMutableArray arrayWithArray:updateNodesList];
+        _distributionAppKeyIndex = distributionAppKeyIndex;
+        _distributionTTL = distributionTTL;
+        _distributionTimeoutBase = distributionTimeoutBase;
+        _distributionTransferMode = distributionTransferMode;
+        _updatePolicy = updatePolicy;
+        _RFU = RFU;
+        _distributionFirmwareImageIndex = distributionFirmwareImageIndex;
+        _distributionMulticastAddress = [NSData dataWithData:distributionMulticastAddress];
+        
         NSMutableData *mData = [NSMutableData data];
-        UInt16 tem16 = companyID;
+        UInt16 tem16 = distributionAppKeyIndex;
         NSData *data = [NSData dataWithBytes:&tem16 length:2];
         [mData appendData:data];
-        [mData appendData:firmwareID];
-        tem16 = groupAddress;
+        UInt8 tem8 = distributionTTL;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem16 = distributionTimeoutBase;
         data = [NSData dataWithBytes:&tem16 length:2];
         [mData appendData:data];
-        if (updateNodesList && updateNodesList.count > 0) {
-            for (NSNumber *nodeAddress in updateNodesList) {
-                tem16 = nodeAddress.intValue;
-                data = [NSData dataWithBytes:&tem16 length:2];
-                [mData appendData:data];
-            }
-        }
+        tem8 = distributionTransferMode | ((updatePolicy?1:0) << 2) | ((RFU&0b11111) << 3);
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem16 = distributionFirmwareImageIndex;
+        data = [NSData dataWithBytes:&tem16 length:2];
+        [mData appendData:data];
+        [mData appendData:distributionMulticastAddress];
         self.parameters = mData;
     }
     return self;
@@ -9329,28 +9350,31 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareDistributionStart;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 2 + SigDataSource.share.defaultFirmwareIDLength + 2 + 2) {
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters == nil || (parameters.length != 10 && parameters.length != 24)) {
             return nil;
         }
-        UInt16 tem = 0;
+        UInt16 tem16 = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem, dataByte, 2);
-        _companyID = tem;
-        if (parameters.length >= 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(2, SigDataSource.share.defaultFirmwareIDLength)];
-        }
-        if (parameters.length >= 2 + SigDataSource.share.defaultFirmwareIDLength + 2) {
-            memcpy(&tem, dataByte + 2 + SigDataSource.share.defaultFirmwareIDLength, 2);
-            _groupAddress = tem;
-        }
-        if (parameters.length > 2 + SigDataSource.share.defaultFirmwareIDLength + 2) {
-            NSMutableArray *array = [NSMutableArray array];
-            while (parameters.length >= 2 + SigDataSource.share.defaultFirmwareIDLength + 2 + 2 * (array.count + 1)) {
-                memcpy(&tem, dataByte + 2 + SigDataSource.share.defaultFirmwareIDLength + 2 + 2 * array.count, 2);
-                [array addObject:@(tem)];
-            }
-            _updateNodesList = array;
+        memcpy(&tem16, dataByte, 2);
+        _distributionAppKeyIndex = tem16;
+        UInt8 tem8 = 0;
+        memcpy(&tem8, dataByte+2, 1);
+        _distributionTTL = tem8;
+        memcpy(&tem16, dataByte+3, 2);
+        _distributionTimeoutBase = tem16;
+        memcpy(&tem8, dataByte+5, 1);
+        _distributionTransferMode = tem8 & 0b11;
+        _updatePolicy = (tem8 >> 2) & 0b1;
+        _RFU = tem8 >> 3;
+        memcpy(&tem16, dataByte+6, 2);
+        _distributionFirmwareImageIndex = tem16;
+        if (parameters.length == 10) {
+            _distributionMulticastAddress = [parameters subdataWithRange:NSMakeRange(8, 2)];
+        } else if (parameters.length >= 24){
+            _distributionMulticastAddress = [parameters subdataWithRange:NSMakeRange(8, 16)];
         }
     }
     return self;
@@ -9366,43 +9390,53 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigFirmwareDistributionStop
+@implementation SigFirmwareDistributionCancel
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareDistributionStop;
-    }
-    return self;
-}
-
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareDistributionStop;
-        _companyID = companyID;
-        _firmwareID = [NSData dataWithData:firmwareID];
-        NSMutableData *mData = [NSMutableData data];
-        UInt16 tem16 = companyID;
-        NSData *data = [NSData dataWithBytes:&tem16 length:2];
-        [mData appendData:data];
-        [mData appendData:firmwareID];
-        self.parameters = mData;
+        self.opCode = SigOpCode_FirmwareDistributionCancel;
     }
     return self;
 }
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareDistributionStop;
-                self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 2 + SigDataSource.share.defaultFirmwareIDLength) {
+        self.opCode = SigOpCode_FirmwareDistributionCancel;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
             return nil;
         }
-        UInt16 tem = 0;
-        Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem, dataByte, 2);
-        _companyID = tem;
-        if (parameters.length >= 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(2, SigDataSource.share.defaultFirmwareIDLength)];
+    }
+    return self;
+}
+
+- (Class)responseType {
+    return [SigFirmwareDistributionStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+@end
+
+
+@implementation SigFirmwareDistributionApply
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_FirmwareDistributionApply;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_FirmwareDistributionApply;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
         }
     }
     return self;
@@ -9430,19 +9464,34 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareDistributionStatus;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 1 + 2 + SigDataSource.share.defaultFirmwareIDLength) {
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters == nil || (parameters.length != 2 && parameters.length != 12)) {
             return nil;
         }
         UInt8 tem8 = 0;
-        UInt16 tem = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
         memcpy(&tem8, dataByte, 1);
-        memcpy(&tem, dataByte + 1, 2);
         _status = tem8;
-        _companyID = tem;
-        if (parameters.length >= 1 + 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(1 + 2, SigDataSource.share.defaultFirmwareIDLength)];
+        memcpy(&tem8, dataByte+1, 1);
+        _distributionPhase = tem8;
+        if (parameters.length == 12) {
+            UInt16 tem16 = 0;
+            memcpy(&tem16, dataByte + 2, 2);
+            _distributionMulticastAddress = tem16;
+            memcpy(&tem16, dataByte + 4, 2);
+            _distributionAppKeyIndex = tem16;
+            memcpy(&tem8, dataByte+6, 1);
+            _distributionTTL = tem8;
+            memcpy(&tem16, dataByte + 7, 2);
+            _distributionTimeoutBase = tem16;
+            memcpy(&tem8, dataByte+9, 1);
+            _distributionTransferMode = tem8 & 0b11;
+            _updatePolicy = (tem8 >> 2) & 0b1;
+            _RFU = (tem8 >> 3) & 0b11111;
+            memcpy(&tem16, dataByte + 10, 2);
+            _distributionFirmwareImageIndex = tem16;
         }
     }
     return self;
@@ -9451,78 +9500,82 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigFirmwareDistributionDetailsGet
-
-- (instancetype)init {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareDistributionDetailsGet;
-    }
-    return self;
-}
-
-- (instancetype)initWithStatus:(SigFirmwareDistributionStatusType)status companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareDistributionDetailsGet;
-        _status = status;
-        _companyID = companyID;
-        _firmwareID = [NSData dataWithData:firmwareID];
-        NSMutableData *mData = [NSMutableData data];
-        UInt8 tem8 = status;
-        NSData *data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        UInt16 tem16 = companyID;
-        data = [NSData dataWithBytes:&tem16 length:2];
-        [mData appendData:data];
-        [mData appendData:firmwareID];
-        self.parameters = mData;
-    }
-    return self;
-}
-
-- (instancetype)initWithParameters:(NSData *)parameters {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareDistributionDetailsGet;
-                self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 1 + 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            return nil;
-        }
-        UInt8 tem8 = 0;
-        UInt16 tem = 0;
-        Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem8, dataByte, 1);
-        memcpy(&tem, dataByte + 1, 2);
-        _status = tem;
-        _companyID = tem;
-        if (parameters.length >= 1 + 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(1 + 2, SigDataSource.share.defaultFirmwareIDLength)];
-        }
-    }
-    return self;
-}
-
-- (Class)responseType {
-    return [SigFirmwareDistributionDetailsList class];
-}
-
-- (UInt32)responseOpCode {
-    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
-}
-@end
+//@implementation SigFirmwareDistributionDetailsGet
+//
+//- (instancetype)init {
+//    if (self = [super init]) {
+//        self.opCode = SigOpCode_FirmwareDistributionNodesGet;
+//    }
+//    return self;
+//}
+//
+//- (instancetype)initWithStatus:(SigFirmwareDistributionStatusType)status companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID {
+//    if (self = [super init]) {
+//        self.opCode = SigOpCode_FirmwareDistributionNodesGet;
+//        _status = status;
+//        _companyID = companyID;
+//        _firmwareID = [NSData dataWithData:firmwareID];
+//        NSMutableData *mData = [NSMutableData data];
+//        UInt8 tem8 = status;
+//        NSData *data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        UInt16 tem16 = companyID;
+//        data = [NSData dataWithBytes:&tem16 length:2];
+//        [mData appendData:data];
+//        [mData appendData:firmwareID];
+//        self.parameters = mData;
+//    }
+//    return self;
+//}
+//
+//- (instancetype)initWithParameters:(NSData *)parameters {
+//    if (self = [super init]) {
+//        self.opCode = SigOpCode_FirmwareDistributionNodesGet;
+//        if (parameters) {
+//            self.parameters = [NSData dataWithData:parameters];
+//        }
+//        if (parameters == nil || parameters.length < 1 + 2 + SigDataSource.share.defaultFirmwareIDLength) {
+//            return nil;
+//        }
+//        UInt8 tem8 = 0;
+//        UInt16 tem = 0;
+//        Byte *dataByte = (Byte *)parameters.bytes;
+//        memcpy(&tem8, dataByte, 1);
+//        memcpy(&tem, dataByte + 1, 2);
+//        _status = tem;
+//        _companyID = tem;
+//        if (parameters.length >= 1 + 2 + SigDataSource.share.defaultFirmwareIDLength) {
+//            _firmwareID = [parameters subdataWithRange:NSMakeRange(1 + 2, SigDataSource.share.defaultFirmwareIDLength)];
+//        }
+//    }
+//    return self;
+//}
+//
+//- (Class)responseType {
+//    return [SigFirmwareDistributionDetailsList class];
+//}
+//
+//- (UInt32)responseOpCode {
+//    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+//}
+//@end
 
 
 @implementation SigFirmwareDistributionDetailsList
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareDistributionDetailsList;
+        self.opCode = SigOpCode_FirmwareDistributionNodesList;
     }
     return self;
 }
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareDistributionDetailsList;
-        self.parameters = [NSData dataWithData:parameters];
+        self.opCode = SigOpCode_FirmwareDistributionNodesList;
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
         if (parameters == nil || parameters.length < 1 + 2) {
             return nil;
         }
@@ -9552,34 +9605,13 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareUpdateGet;
-        _companyID = companyID;
-        _firmwareID = [NSData dataWithData:firmwareID];
-        NSMutableData *mData = [NSMutableData data];
-        UInt16 tem16 = companyID;
-        NSData *data = [NSData dataWithBytes:&tem16 length:2];
-        [mData appendData:data];
-        [mData appendData:firmwareID];
-        self.parameters = mData;
-    }
-    return self;
-}
-
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareUpdateGet;
-                self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 2 + SigDataSource.share.defaultFirmwareIDLength) {
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
             return nil;
-        }
-        UInt16 tem = 0;
-        Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem, dataByte, 2);
-        _companyID = tem;
-        if (parameters.length >= 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(2, SigDataSource.share.defaultFirmwareIDLength)];
         }
     }
     return self;
@@ -9595,31 +9627,29 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigFirmwareUpdatePrepare
+@implementation SigFirmwareUpdateFirmwareMetadataCheck
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareUpdatePrepare;
+        self.opCode = SigOpCode_FirmwareUpdateFirmwareMetadataCheck;
     }
     return self;
 }
 
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID objectID:(UInt64)objectID vendorValidationData:(NSData *)vendorValidationData {
+- (instancetype)initWithUpdateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex incomingFirmwareMetadata:(nullable NSData *)incomingFirmwareMetadata {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareUpdatePrepare;
-        _companyID = companyID;
-        _firmwareID = [NSData dataWithData:firmwareID];
-        _objectID = objectID;
-        _vendorValidationData = [NSData dataWithData:vendorValidationData];
+        self.opCode = SigOpCode_FirmwareUpdateFirmwareMetadataCheck;
+        if (incomingFirmwareMetadata && incomingFirmwareMetadata.length) {
+            _incomingFirmwareMetadata = [NSData dataWithData:incomingFirmwareMetadata];
+        }
+        _updateFirmwareImageIndex = updateFirmwareImageIndex;
         NSMutableData *mData = [NSMutableData data];
-        UInt16 tem16 = companyID;
-        NSData *data = [NSData dataWithBytes:&tem16 length:2];
+        UInt8 tem8 = updateFirmwareImageIndex;
+        NSData *data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-        [mData appendData:firmwareID];
-        UInt64 tem64 = objectID;
-        data = [NSData dataWithBytes:&tem64 length:8];
-        [mData appendData:data];
-        [mData appendData:vendorValidationData];
+        if (incomingFirmwareMetadata && incomingFirmwareMetadata.length) {
+            [mData appendData:incomingFirmwareMetadata];
+        }
         self.parameters = mData;
     }
     return self;
@@ -9627,38 +9657,65 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareUpdatePrepare;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 2 + SigDataSource.share.defaultFirmwareIDLength + 8) {
+        self.opCode = SigOpCode_FirmwareUpdateFirmwareMetadataCheck;
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters == nil || parameters.length == 0) {
             return nil;
         }
-        UInt16 tem = 0;
+        UInt8 tem8 = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem, dataByte, 2);
-        _companyID = tem;
-        if (parameters.length >= 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(2, SigDataSource.share.defaultFirmwareIDLength)];
-        }
-        if (parameters.length >= 2 + SigDataSource.share.defaultFirmwareIDLength + 8) {
-            UInt64 tem64 = 0;
-            memcpy(&tem64, dataByte + 2 + SigDataSource.share.defaultFirmwareIDLength, 8);
-
-            _objectID = tem64;
-        }
-        if (parameters.length > 2 + SigDataSource.share.defaultFirmwareIDLength + 8) {
-            _vendorValidationData = [parameters subdataWithRange:NSMakeRange(2 + SigDataSource.share.defaultFirmwareIDLength + 8, parameters.length - 2 - SigDataSource.share.defaultFirmwareIDLength - 8)];
+        memcpy(&tem8, dataByte, 1);
+        _updateFirmwareImageIndex = tem8;
+        if (parameters.length > 1) {
+            _incomingFirmwareMetadata = [parameters subdataWithRange:NSMakeRange(1, parameters.length - 1)];
+        } else {
+            return nil;
         }
     }
     return self;
 }
 
 - (Class)responseType {
-    return [SigFirmwareUpdateStatus class];
+    return [SigFirmwareUpdateFirmwareMetadataStatus class];
 }
 
 - (UInt32)responseOpCode {
     return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
 }
+@end
+
+
+@implementation SigFirmwareUpdateFirmwareMetadataStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_FirmwareUpdateFirmwareMetadataStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_FirmwareUpdateFirmwareMetadataStatus;
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters == nil || parameters.length < 2) {
+            return nil;
+        }
+        UInt8 tem8 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem8, dataByte, 1);
+        _status = tem8 & 0b111;
+        _additionalInformation = (tem8 >> 3) & 0b11111;
+        memcpy(&tem8, dataByte+1, 1);
+        _updateFirmwareImageIndex = tem8;
+    }
+    return self;
+}
+
 @end
 
 
@@ -9671,20 +9728,30 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithUpdatePolicy:(SigUpdatePolicyType)updatePolicy companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID {
+- (instancetype)initWithUpdateTTL:(UInt8)updateTTL updateTimeoutBase:(UInt16)updateTimeoutBase updateBLOBID:(UInt64)updateBLOBID updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex incomingFirmwareMetadata:(nullable NSData *)incomingFirmwareMetadata {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareUpdateStart;
-        _updatePolicy = updatePolicy;
-        _companyID = companyID;
-        _firmwareID = [NSData dataWithData:firmwareID];
+        _updateTTL = updateTTL;
+        _updateTimeoutBase = updateTimeoutBase;
+        _updateBLOBID = updateBLOBID;
+        _updateFirmwareImageIndex = updateFirmwareImageIndex;
+        _incomingFirmwareMetadata = [NSData dataWithData:incomingFirmwareMetadata];
         NSMutableData *mData = [NSMutableData data];
-        UInt8 tem8 = updatePolicy;
+        UInt8 tem8 = updateTTL;
         NSData *data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-        UInt16 tem16 = companyID;
+        UInt16 tem16 = updateTimeoutBase;
         data = [NSData dataWithBytes:&tem16 length:2];
         [mData appendData:data];
-        [mData appendData:firmwareID];
+        UInt64 tem64 = updateBLOBID;
+        data = [NSData dataWithBytes:&tem64 length:8];
+        [mData appendData:data];
+        tem8 = updateFirmwareImageIndex;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        if (incomingFirmwareMetadata && incomingFirmwareMetadata.length) {
+            [mData appendData:incomingFirmwareMetadata];
+        }
         self.parameters = mData;
     }
     return self;
@@ -9693,19 +9760,26 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareUpdateStart;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 1 + 2 + SigDataSource.share.defaultFirmwareIDLength) {
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters == nil || parameters.length < 1 + 2 + 8 + 1 + 2) {
             return nil;
         }
         UInt8 tem8 = 0;
-        UInt16 tem = 0;
+        UInt16 tem16 = 0;
+        UInt64 tem64 = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
         memcpy(&tem8, dataByte, 1);
-        memcpy(&tem, dataByte + 1, 2);
-        _updatePolicy = tem8;
-        _companyID = tem;
-        if (parameters.length >= 1 + 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(1 + 2, SigDataSource.share.defaultFirmwareIDLength)];
+        memcpy(&tem16, dataByte + 1, 2);
+        memcpy(&tem64, dataByte + 3, 8);
+        _updateTTL = tem8;
+        _updateTimeoutBase = tem16;
+        _updateBLOBID = tem64;
+        memcpy(&tem8, dataByte + 11, 1);
+        _updateFirmwareImageIndex = tem8;
+        if (_incomingFirmwareMetadata && _incomingFirmwareMetadata.length > 0) {
+            _incomingFirmwareMetadata = [parameters subdataWithRange:NSMakeRange(12, parameters.length - 12)];
         }
     }
     return self;
@@ -9721,43 +9795,22 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigFirmwareUpdateAbort
+@implementation SigFirmwareUpdateCancel
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareUpdateAbort;
-    }
-    return self;
-}
-
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareUpdateAbort;
-        _companyID = companyID;
-        _firmwareID = [NSData dataWithData:firmwareID];
-        NSMutableData *mData = [NSMutableData data];
-        UInt16 tem16 = companyID;
-        NSData *data = [NSData dataWithBytes:&tem16 length:2];
-        [mData appendData:data];
-        [mData appendData:firmwareID];
-        self.parameters = mData;
+        self.opCode = SigOpCode_FirmwareUpdateCancel;
     }
     return self;
 }
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareUpdateAbort;
-                self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 2 + SigDataSource.share.defaultFirmwareIDLength) {
+        self.opCode = SigOpCode_FirmwareUpdateCancel;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
             return nil;
-        }
-        UInt16 tem = 0;
-        Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem, dataByte, 2);
-        _companyID = tem;
-        if (parameters.length >= 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(2, SigDataSource.share.defaultFirmwareIDLength)];
         }
     }
     return self;
@@ -9782,34 +9835,13 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithCompanyID:(UInt16)companyID firmwareID:(NSData *)firmwareID {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_FirmwareUpdateApply;
-        _companyID = companyID;
-        _firmwareID = [NSData dataWithData:firmwareID];
-        NSMutableData *mData = [NSMutableData data];
-        UInt16 tem16 = companyID;
-        NSData *data = [NSData dataWithBytes:&tem16 length:2];
-        [mData appendData:data];
-        [mData appendData:firmwareID];
-        self.parameters = mData;
-    }
-    return self;
-}
-
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareUpdateApply;
-                self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 2 + SigDataSource.share.defaultFirmwareIDLength) {
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
             return nil;
-        }
-        UInt16 tem = 0;
-        Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem, dataByte, 2);
-        _companyID = tem;
-        if (parameters.length >= 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(2, SigDataSource.share.defaultFirmwareIDLength)];
         }
     }
     return self;
@@ -9837,27 +9869,32 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareUpdateStatus;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 1 + 1 + 2 + SigDataSource.share.defaultFirmwareIDLength + 8) {
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters == nil || (parameters.length != 1 && parameters.length <= 13)) {
             return nil;
         }
         UInt8 tem8 = 0;
-        UInt16 tem = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
         memcpy(&tem8, dataByte, 1);
-        _status = tem8;
-        memcpy(&tem8, dataByte + 1, 1);
-        _phase = tem8 & 0B111;
-        _additionalInformation.value = tem8 >> 3;
-        memcpy(&tem, dataByte + 2, 2);
-        _companyID = tem;
-        if (parameters.length >= 1 + 1 + 2 + SigDataSource.share.defaultFirmwareIDLength) {
-            _firmwareID = [parameters subdataWithRange:NSMakeRange(1 + 1 + 2, SigDataSource.share.defaultFirmwareIDLength)];
-        }
-        if (parameters.length >= 1 + 1 + 2 + SigDataSource.share.defaultFirmwareIDLength + 8) {
+        _status = tem8 & 0b111;
+        _RFU1 = (tem8 >> 3) & 0b11;
+        _updatePhase = (tem8 >> 5) & 0b111;
+        if (parameters.length > 1) {
+            memcpy(&tem8, dataByte+1, 1);
+            _updateTTL = tem8;
+            memcpy(&tem8, dataByte+2, 1);
+            _additionalInformation = tem8 & 0b11111;
+            _RFU2 = (tem8 >> 5) & 0b111;
+            UInt16 tem16 = 0;
+            memcpy(&tem16, dataByte + 3, 2);
+            _updateTimeoutBase = tem16;
             UInt64 tem64 = 0;
-            memcpy(&tem64, dataByte + 1 + 1 + 2 + SigDataSource.share.defaultFirmwareIDLength, 8);
-            _objectID = tem64;
+            memcpy(&tem64, dataByte + 5, 8);
+            _updateBLOBID = tem64;
+            memcpy(&tem8, dataByte+13, 1);
+            _updateFirmwareImageIndex = tem8;
         }
     }
     return self;
@@ -9866,43 +9903,29 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigObjectTransferGet
+@implementation SigBLOBTransferGet
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectTransferGet;
-    }
-    return self;
-}
-
-- (instancetype)initWithObjectID:(UInt64)objectID {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectTransferGet;
-        _objectID = objectID;
-        UInt64 tem64 = objectID;
-        NSData *data = [NSData dataWithBytes:&tem64 length:8];
-        self.parameters = data;
+        self.opCode = SigOpCode_BLOBTransferGet;
     }
     return self;
 }
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectTransferGet;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length != 8) {
+        self.opCode = SigOpCode_BLOBTransferGet;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
             return nil;
         }
-        UInt64 tem64 = 0;
-        Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem64, dataByte, 8);
-        _objectID = tem64;
     }
     return self;
 }
 
 - (Class)responseType {
-    return [SigObjectTransferStatus class];
+    return [SigBLOBTransferStatus class];
 }
 
 - (UInt32)responseOpCode {
@@ -9912,30 +9935,39 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigObjectTransferStart
+@implementation SigBLOBTransferStart
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectTransferStart;
+        self.opCode = SigOpCode_BLOBTransferStart;
     }
     return self;
 }
 
-- (instancetype)initWithObjectID:(UInt64)objectID objectSize:(UInt32)objectSize blockSizeLog:(UInt8)blockSizeLog {
+- (instancetype)initWithTransferMode:(SigTransferModeState)transferMode BLOBID:(UInt64)BLOBID BLOBSize:(UInt32)BLOBSize BLOBBlockSizeLog:(UInt8)BLOBBlockSizeLog MTUSize:(UInt16)MTUSize {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectTransferStart;
-        _objectID = objectID;
-        _objectSize = objectSize;
-        _blockSizeLog = blockSizeLog;
+        self.opCode = SigOpCode_BLOBTransferStart;
+        _RFU = 0;
+        _transferMode = transferMode;
+        _BLOBID = BLOBID;
+        _BLOBSize = BLOBSize;
+        _BLOBBlockSizeLog = BLOBBlockSizeLog;
+        _MTUSize = MTUSize;
         NSMutableData *mData = [NSMutableData data];
-        UInt64 tem64 = objectID;
-        UInt32 tem32 = objectSize;
-        UInt8 tem8 = blockSizeLog;
-        NSData *data = [NSData dataWithBytes:&tem64 length:8];
+        UInt8 tem8 = (_transferMode << 6) | _RFU;
+        NSData *data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
+        UInt64 tem64 = BLOBID;
+        data = [NSData dataWithBytes:&tem64 length:8];
+        [mData appendData:data];
+        UInt32 tem32 = BLOBSize;
         data = [NSData dataWithBytes:&tem32 length:4];
         [mData appendData:data];
+        tem8 = BLOBBlockSizeLog;
         data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        UInt16 tem16 = MTUSize;
+        data = [NSData dataWithBytes:&tem16 length:2];
         [mData appendData:data];
         self.parameters = mData;
     }
@@ -9944,27 +9976,36 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectTransferStart;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length != 8+4+1) {
+        self.opCode = SigOpCode_BLOBTransferStart;
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters == nil || parameters.length != 17) {
             return nil;
         }
         UInt64 tem64 = 0;
         UInt32 tem32 = 0;
         UInt8 tem8 = 0;
+        UInt16 tem16 = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem64, dataByte, 8);
-        memcpy(&tem32, dataByte+8, 4);
-        memcpy(&tem8, dataByte+8+4, 1);
-        _objectID = tem64;
-        _objectSize = tem32;
-        _blockSizeLog = tem8;
+        memcpy(&tem8, dataByte, 1);
+        _RFU = tem8 & 0b111111;
+        _transferMode = (tem8 >> 6) & 0b11;
+
+        memcpy(&tem64, dataByte+1, 8);
+        memcpy(&tem32, dataByte+1+8, 4);
+        memcpy(&tem8, dataByte+1+8+4, 1);
+        memcpy(&tem16, dataByte+1+8+4+1, 2);
+        _BLOBID = tem64;
+        _BLOBSize = tem32;
+        _BLOBBlockSizeLog = tem8;
+        _MTUSize = tem16;
     }
     return self;
 }
 
 - (Class)responseType {
-    return [SigObjectTransferStatus class];
+    return [SigBLOBTransferStatus class];
 }
 
 - (UInt32)responseOpCode {
@@ -9974,21 +10015,21 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigObjectTransferAbort
+@implementation SigObjectTransferCancel
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectTransferAbort;
+        self.opCode = SigOpCode_BLOBTransferCancel;
     }
     return self;
 }
 
-- (instancetype)initWithObjectID:(UInt64)objectID {
+- (instancetype)initWithBLOBID:(UInt64)BLOBID {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectTransferAbort;
-        _objectID = objectID;
+        self.opCode = SigOpCode_BLOBTransferCancel;
+        _BLOBID = BLOBID;
         NSMutableData *mData = [NSMutableData data];
-        UInt64 tem64 = objectID;
+        UInt64 tem64 = BLOBID;
         NSData *data = [NSData dataWithBytes:&tem64 length:8];
         [mData appendData:data];
         self.parameters = mData;
@@ -9998,21 +10039,23 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectTransferAbort;
-        self.parameters = [NSData dataWithData:parameters];
+        self.opCode = SigOpCode_BLOBTransferCancel;
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
         if (parameters == nil || parameters.length != 8) {
             return nil;
         }
         UInt64 tem64 = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
         memcpy(&tem64, dataByte, 8);
-        _objectID = tem64;
+        _BLOBID = tem64;
     }
     return self;
 }
 
 - (Class)responseType {
-    return [SigObjectTransferStatus class];
+    return [SigBLOBTransferStatus class];
 }
 
 - (UInt32)responseOpCode {
@@ -10022,34 +10065,48 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigObjectTransferStatus
+@implementation SigBLOBTransferStatus
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectTransferStatus;
+        self.opCode = SigOpCode_BLOBTransferStatus;
     }
     return self;
 }
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectTransferStatus;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length != 1 + 8 + 4 + 1) {
+        self.opCode = SigOpCode_BLOBTransferStatus;
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters == nil || parameters.length < 2) {
             return nil;
         }
         UInt8 tem8 = 0;
-        UInt64 tem64 = 0;
-        UInt32 tem32 = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
         memcpy(&tem8, dataByte, 1);
-        _status = tem8;
-        memcpy(&tem64, dataByte + 1, 8);
-        _objectID = tem64;
-        memcpy(&tem32, dataByte + 1 + 8, 4);
-        _objectSize = tem32;
-        memcpy(&tem8, dataByte+1+8+4, 1);
-        _blockSizeLog = tem8;
+        _status = tem8 & 0b1111;
+        _RFU = (tem8 >> 4) & 0b11;
+        _transferMode = (tem8 >> 6) & 0b11;
+        memcpy(&tem8, dataByte+1, 1);
+        _transferPhase = tem8;
+        if (parameters.length >= 1+1+8) {
+            UInt64 tem64 = 0;
+            memcpy(&tem64, dataByte + 1 + 1, 8);
+            _BLOBID = tem64;
+            if (parameters.length >= 1+1+8+4+1+2+1) {
+                UInt32 tem32 = 0;
+                memcpy(&tem32, dataByte + 1 + 1 + 8, 4);
+                _BLOBSize = tem32;
+                memcpy(&tem8, dataByte+1+1+8+4, 1);
+                _blockSizeLog = tem8;
+                UInt16 tem16 = 0;
+                memcpy(&tem16, dataByte+1+1+8+4+1, 2);
+                _transferMTUSize = tem16;
+                _blocksNotReceived = [parameters subdataWithRange:NSMakeRange(1+1+8+4+1+2, parameters.length - (1+1+8+4+1+2))];
+            }
+        }
     }
     return self;
 }
@@ -10057,43 +10114,27 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigObjectBlockTransferStart
+@implementation SigBLOBBlockStart
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectBlockTransferStart;
+        self.opCode = SigOpCode_BLOBBlockStart;
     }
     return self;
 }
 
-- (instancetype)initWithObjectID:(UInt64)objectID blockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize blockChecksumAlgorithm:(SigBlockChecksumAlgorithmType)blockChecksumAlgorithm blockChecksumValue:(NSData *)blockChecksumValue currentBlockSize:(UInt16)currentBlockSize {
+- (instancetype)initWithBlockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectBlockTransferStart;
-        _objectID = objectID;
+        self.opCode = SigOpCode_BLOBBlockStart;
         _blockNumber = blockNumber;
         _chunkSize = chunkSize;
-        _blockChecksumAlgorithm = blockChecksumAlgorithm;
-        _blockChecksumValue = [NSData dataWithData:blockChecksumValue];
-        _currentBlockSize = currentBlockSize;
         NSMutableData *mData = [NSMutableData data];
-        UInt64 tem64 = objectID;
-        NSData *data = [NSData dataWithBytes:&tem64 length:8];
-        [mData appendData:data];
         UInt16 tem16 = blockNumber;
-        data = [NSData dataWithBytes:&tem16 length:2];
+        NSData *data = [NSData dataWithBytes:&tem16 length:2];
         [mData appendData:data];
         tem16 = chunkSize;
         data = [NSData dataWithBytes:&tem16 length:2];
         [mData appendData:data];
-        UInt8 tem8 = blockChecksumAlgorithm;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:blockChecksumValue];
-        if (currentBlockSize != 0) {
-            tem16 = currentBlockSize;
-            data = [NSData dataWithBytes:&tem16 length:2];
-            [mData appendData:data];
-        }
         self.parameters = mData;
     }
     return self;
@@ -10101,38 +10142,25 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectBlockTransferStart;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 8+2+2+1+1) {
+        self.opCode = SigOpCode_BLOBBlockStart;
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters == nil || parameters.length < 4) {
             return nil;
         }
-        UInt64 tem64 = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem64, dataByte, 8);
-        _objectID = tem64;
         UInt16 tem16 = 0;
-        memcpy(&tem16, dataByte+8, 2);
+        memcpy(&tem16, dataByte, 2);
         _blockNumber = tem16;
-        memcpy(&tem16, dataByte+8+2, 2);
+        memcpy(&tem16, dataByte+2, 2);
         _chunkSize = tem16;
-        UInt8 tem8 = 0;
-        memcpy(&tem8, dataByte+8+2+2, 1);
-        _blockChecksumAlgorithm = tem8;
-        if (_blockChecksumAlgorithm == SigBlockChecksumAlgorithmType_CRC32) {
-            if (parameters.length >= 8+2+2+1+4) {
-                _blockChecksumValue = [parameters subdataWithRange:NSMakeRange(8+2+2+1, 4)];
-            }
-            if (parameters.length >= 8+2+2+1+4+2) {
-                memcpy(&tem16, dataByte+8+2+2+1+4, 2);
-                _currentBlockSize = tem16;
-            }
-        }
     }
     return self;
 }
 
 - (Class)responseType {
-    return [SigObjectBlockTransferStatus class];
+    return [SigBLOBBlockStatus class];
 }
 
 - (UInt32)responseOpCode {
@@ -10154,7 +10182,9 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_ObjectBlockTransferStatus;
-        self.parameters = [NSData dataWithData:parameters];
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
         if (parameters == nil || parameters.length != 1) {
             return nil;
         }
@@ -10169,25 +10199,25 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigObjectChunkTransfer
+@implementation SigBLOBChunkTransfer
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectChunkTransfer;
+        self.opCode = SigOpCode_BLOBChunkTransfer;
     }
     return self;
 }
 
-- (instancetype)initWithChunkNumber:(UInt16)chunkNumber firmwareImageData:(NSData *)firmwareImageData {
+- (instancetype)initWithChunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectChunkTransfer;
+        self.opCode = SigOpCode_BLOBChunkTransfer;
         _chunkNumber = chunkNumber;
-        _firmwareImageData = [NSData dataWithData:firmwareImageData];
+        _chunkData = [NSData dataWithData:chunkData];
         NSMutableData *mData = [NSMutableData data];
         UInt16 tem16 = chunkNumber;
         NSData *data = [NSData dataWithBytes:&tem16 length:2];
         [mData appendData:data];
-        [mData appendData:firmwareImageData];
+        [mData appendData:chunkData];
         self.parameters = mData;
     }
     return self;
@@ -10195,8 +10225,10 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectChunkTransfer;
-        self.parameters = [NSData dataWithData:parameters];
+        self.opCode = SigOpCode_BLOBChunkTransfer;
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
         if (parameters == nil || parameters.length < 2+1) {
             return nil;
         }
@@ -10205,7 +10237,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         memcpy(&tem16, dataByte, 2);
         _chunkNumber = tem16;
         if (parameters.length >= 2+1) {
-            _firmwareImageData = [parameters subdataWithRange:NSMakeRange(2, parameters.length-2)];
+            _chunkData = [parameters subdataWithRange:NSMakeRange(2, parameters.length-2)];
         }
     }
     return self;
@@ -10214,108 +10246,18 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigObjectBlockGet
+@implementation SigBLOBBlockGet
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectBlockGet;
-    }
-    return self;
-}
-
-- (instancetype)initWithObjectID:(UInt64)objectID blockNumber:(UInt16)blockNumber {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectBlockGet;
-        _objectID = objectID;
-        _blockNumber = blockNumber;
-        NSMutableData *mData = [NSMutableData data];
-        UInt64 tem64 = objectID;
-        NSData *data = [NSData dataWithBytes:&tem64 length:8];
-        [mData appendData:data];
-        UInt16 tem16 = blockNumber;
-        data = [NSData dataWithBytes:&tem16 length:2];
-        [mData appendData:data];
-        self.parameters = mData;
+        self.opCode = SigOpCode_BLOBBlockGet;
     }
     return self;
 }
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectBlockGet;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length < 8+2+2+1+1) {
-            return nil;
-        }
-        UInt64 tem64 = 0;
-        Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem64, dataByte, 8);
-        _objectID = tem64;
-        UInt16 tem16 = 0;
-        memcpy(&tem16, dataByte+8, 2);
-        _blockNumber = tem16;
-    }
-    return self;
-}
-
-- (Class)responseType {
-    return [SigObjectBlockStatus class];
-}
-
-- (UInt32)responseOpCode {
-    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
-}
-
-@end
-
-
-@implementation SigObjectBlockStatus
-
-- (instancetype)init {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectBlockStatus;
-    }
-    return self;
-}
-
-- (instancetype)initWithParameters:(NSData *)parameters {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectBlockStatus;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length == 0) {
-            return nil;
-        }
-        UInt8 tem8 = 0;
-        Byte *dataByte = (Byte *)parameters.bytes;
-        memcpy(&tem8, dataByte, 1);
-        _status = tem8;
-        if (parameters.length >= 1+2) {
-            _missingChunksList = [NSMutableArray array];
-            UInt16 address = 0;
-            while (parameters.length >= 1+2*(_missingChunksList.count+1)) {
-                memcpy(&address, dataByte+1+2*_missingChunksList.count, 2);
-                [_missingChunksList addObject:@(address)];
-            }
-        }
-    }
-    return self;
-}
-
-@end
-
-
-@implementation SigObjectInformationGet
-
-- (instancetype)init {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectInformationGet;
-    }
-    return self;
-}
-
-- (instancetype)initWithParameters:(NSData *)parameters {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectInformationGet;
+        self.opCode = SigOpCode_BLOBBlockGet;
         if (parameters == nil || parameters.length == 0) {
             return self;
         }else{
@@ -10326,7 +10268,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 }
 
 - (Class)responseType {
-    return [SigObjectInformationStatus class];
+    return [SigBLOBBlockStatus class];
 }
 
 - (UInt32)responseOpCode {
@@ -10336,20 +10278,108 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 @end
 
 
-@implementation SigObjectInformationStatus
+@implementation SigBLOBBlockStatus
 
 - (instancetype)init {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectInformationStatus;
+        self.opCode = SigOpCode_BLOBBlockStatus;
     }
     return self;
 }
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        self.opCode = SigOpCode_ObjectInformationStatus;
-        self.parameters = [NSData dataWithData:parameters];
-        if (parameters == nil || parameters.length != 4) {
+        self.opCode = SigOpCode_BLOBBlockStatus;
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters == nil || parameters.length < 6) {
+            return nil;
+        }
+        UInt8 tem8 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem8, dataByte, 1);
+        _status = tem8 & 0b1111;
+        _RFU = (tem8 >> 4) & 0b11;
+        _format = (tem8 >> 6) & 0b11;
+        memcpy(&tem8, dataByte+1, 1);
+        _transferPhase = tem8;
+        UInt16 tem16 = 0;
+        memcpy(&tem16, dataByte+2, 2);
+        _blockNumber = tem16;
+        memcpy(&tem16, dataByte+4, 2);
+        _chunkSize = tem16;
+        if (parameters.length >= 6+2) {
+            memcpy(&tem16, dataByte+6, 2);
+            UInt16 addressBits = tem16;
+            NSMutableArray *array = [NSMutableArray array];
+            for (int i=0; i<32; i++) {
+                BOOL exist = (addressBits >> i) & 1;
+                if (exist) {
+                    [array addObject:@(i)];
+                }
+            }
+            if (_format == SigBLOBBlockFormatType_someChunksMissing) {
+                _missingChunksList = array;
+            } else if (_format == SigBLOBBlockFormatType_encodedMissingChunks) {
+                _encodedMissingChunksList = array;
+            }
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigBLOBInformationGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_BLOBInformationGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_BLOBInformationGet;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (Class)responseType {
+    return [SigBLOBInformationStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigBLOBInformationStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_BLOBInformationStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_BLOBInformationStatus;
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        if (parameters == nil || parameters.length < 13) {
             return nil;
         }
         UInt8 tem8 = 0;
@@ -10361,6 +10391,15 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         UInt16 tem16 = 0;
         memcpy(&tem16, dataByte+2, 2);
         _maxChunksNumber = tem16;
+        memcpy(&tem16, dataByte+4, 2);
+        _maxChunkSize = tem16;
+        UInt32 tem32 = 0;
+        memcpy(&tem32, dataByte+6, 4);
+        _maxBLOBSize = tem32;
+        memcpy(&tem16, dataByte+10, 2);
+        _MTUSize = tem16;
+        memcpy(&tem8, dataByte+12, 1);
+        _supportedTransferMode = tem8;
     }
     return self;
 }

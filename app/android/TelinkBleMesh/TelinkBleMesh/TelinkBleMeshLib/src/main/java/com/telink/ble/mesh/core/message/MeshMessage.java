@@ -89,7 +89,8 @@ public class MeshMessage {
      *
      * @see com.telink.ble.mesh.core.networking.NetworkingController#tid
      */
-    protected boolean containsTid = false;
+//    protected boolean containsTid = false;
+
 
 
 //    boolean reliable = false;
@@ -99,6 +100,12 @@ public class MeshMessage {
      * defines message is reliable {@link #isReliable()}
      */
     protected int responseOpcode = OPCODE_INVALID;
+
+    /**
+     * tid position in params
+     * if message dose not contains tid, tid position should be invalid value (such as -1)
+     */
+    protected int tidPosition = -1;
 
     /**
      * if true, message will be cached and checked completion by message response or retryCnt == 0
@@ -116,19 +123,12 @@ public class MeshMessage {
         this.responseOpcode = responseOpcode;
     }
 
-    public boolean isContainsTid() {
-        return containsTid;
+    public int getTidPosition() {
+        return tidPosition;
     }
 
-    public void setContainsTid(boolean containsTid) {
-        this.containsTid = containsTid;
-    }
-
-    /**
-     * should override if #containsTid
-     */
-    public void setTid(byte tid) {
-
+    public void setTidPosition(int tidPosition) {
+        this.tidPosition = tidPosition;
     }
 
     public int getOpcode() {

@@ -66,10 +66,4 @@ public abstract class ConfigMessage extends MeshMessage {
         return AccessType.DEVICE;
     }
 
-
-    @Override
-    public boolean isContainsTid() {
-        return false;
-    }
-
 }

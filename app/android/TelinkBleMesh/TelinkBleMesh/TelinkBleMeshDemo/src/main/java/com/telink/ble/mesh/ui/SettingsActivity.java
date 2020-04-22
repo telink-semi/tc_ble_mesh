@@ -34,6 +34,9 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_settings);
         setTitle("Settings");
         switch_log = findViewById(R.id.switch_log);

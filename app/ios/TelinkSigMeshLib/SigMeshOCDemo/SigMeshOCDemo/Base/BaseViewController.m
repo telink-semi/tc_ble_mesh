@@ -42,35 +42,31 @@
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     [self blockState];
-//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(isBusy:) name:NotifyCommandIsBusyOrNot object:nil];
-//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(responseBack:) name:NotifyReliableReportBack object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(isBusy:) name:kNotifyCommandIsBusyOrNot object:nil];
 }
 
 - (void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
     [self nilBlock];
-//    [[NSNotificationCenter defaultCenter] removeObserver:self name:NotifyCommandIsBusyOrNot object:nil];
-//    [[NSNotificationCenter defaultCenter] removeObserver:self name:NotifyReliableReportBack object:nil];
-}
-
-- (void)responseBack:(NSNotification *)notify{
-    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kNotifyCommandIsBusyOrNot object:nil];
 }
 
 - (void)isBusy:(NSNotification *)notify{
-//    NSDictionary *dict = notify.userInfo;
-//    BOOL isBusy = [dict[CommandIsBusyKey] boolValue];
-//    if (isBusy) {
-//        [ShowTipsHandle.share show:Tip_CommandBusy];
-//        self.view.userInteractionEnabled = NO;
-//    } else {
-//        dispatch_async(dispatch_get_main_queue(), ^{
-//            if (!self.view.isUserInteractionEnabled) {
-//                [ShowTipsHandle.share hidden];
-//            }
-//            self.view.userInteractionEnabled = YES;
-//        });
-//    }
+    NSDictionary *dict = notify.userInfo;
+    BOOL isBusy = [dict[kCommandIsBusyKey] boolValue];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (isBusy) {
+            TeLogInfo(@"show busy now.");
+            [ShowTipsHandle.share show:Tip_CommandBusy];
+            self.view.userInteractionEnabled = NO;
+        } else {
+            TeLogInfo(@"show no busy now.");
+            if (!self.view.isUserInteractionEnabled) {
+                [ShowTipsHandle.share hidden];
+            }
+            self.view.userInteractionEnabled = YES;
+        }
+    });
 }
 
 - (void)normalSetting{

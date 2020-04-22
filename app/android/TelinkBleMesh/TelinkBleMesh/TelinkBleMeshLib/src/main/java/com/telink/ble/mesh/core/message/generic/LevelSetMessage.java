@@ -11,7 +11,6 @@ public class LevelSetMessage extends GenericMessage {
     // 1: on, 0: off
     public int level;
 
-    // transition id
     public byte tid = 0;
 
     public byte transitionTime = 0;
@@ -20,8 +19,14 @@ public class LevelSetMessage extends GenericMessage {
 
     public boolean ack = false;
 
+    /**
+     * is complete message with optional params filled
+     */
+    public boolean isComplete = false;
+
     public LevelSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(2);
     }
 
 
@@ -32,17 +37,21 @@ public class LevelSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return new byte[]{
-                (byte) this.level,
-                (byte) (this.level >> 8),
-                this.tid,
-                this.transitionTime,
-                this.delay
-        };
+        return isComplete ?
+                new byte[]{
+                        (byte) this.level,
+                        (byte) (this.level >> 8),
+                        this.tid,
+                        this.transitionTime,
+                        this.delay
+                }
+                :
+                new byte[]{
+                        (byte) this.level,
+                        (byte) (this.level >> 8),
+                        this.tid
+                };
     }
 
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
-    }
+
 }

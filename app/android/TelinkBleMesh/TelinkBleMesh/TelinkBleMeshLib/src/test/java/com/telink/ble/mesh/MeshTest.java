@@ -24,7 +24,7 @@ public class MeshTest {
     @Test
     public void testFirmwareParser() {
         MeshFirmwareParser firmwareParser = new MeshFirmwareParser();
-//        byte[] testData = new byte[9 * 1024];
+//        byte[] testData = new byte[109 * 1024];
         byte[] testData = new byte[57];
         for (int i = 0; i < testData.length; i++) {
             testData[i] = (byte) (i + 1);
@@ -32,6 +32,7 @@ public class MeshTest {
 
         int blockSize = 21;
         int chunkSize = 5;
+
 
 //        firmwareParser.reset(testData);
         firmwareParser.reset(testData, blockSize, chunkSize);
@@ -48,8 +49,8 @@ public class MeshTest {
         }
 
 
-        Assert.assertArrayEquals(firmwareParser.chunkAt(2), Arrays.hexToBytes("3536373839"));
-
+//        Assert.assertArrayEquals(firmwareParser.chunkAt(2), Arrays.hexToBytes("3536373839"));
+//
         Assert.assertEquals(blockNumber, 3);
     }
 

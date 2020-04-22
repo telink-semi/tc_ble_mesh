@@ -14,6 +14,7 @@
 
 #import <CoreBluetooth/CoreBluetooth.h>
 
+#import "SigConst.h"
 #import "SigLogger.h"
 #import "SigEnumeration.h"
 #import "Model.h"
@@ -54,10 +55,8 @@
 #import "SigGenericMessage.h"
 #import "SigTimeModel.h"
 #import "SigSensorDescriptorModel.h"
-#import "SigConst.h"
 #import "SigAutoConnectManager.h"
 #import "OTAManager.h"
-#import "TransmitJsonManager.h"
 #import "SigPublishManager.h"
 
 

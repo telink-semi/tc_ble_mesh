@@ -38,7 +38,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 设备控制fragment
+ * device control fragment
  * Created by kee on 2017/8/18.
  */
 
@@ -73,7 +73,6 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         double max = 0xFFFF;
         double stepCnt = 10;
 
-        // 防止精度丢失导致取不到最大值
         delta = (int) Math.ceil(max / stepCnt);
         final int address = getArguments().getInt("address");
         deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(address);

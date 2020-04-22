@@ -1,0 +1,37 @@
+
+scene store
+
+2020-04-02 10:56:05.180 29990-29990/com.telink.ble.mesh.demo D/SIG-Mesh: set next address: 5
+2020-04-02 10:56:05.181 29990-29990/com.telink.ble.mesh.demo D/MeshController: send mesh message: SceneStoreMessage opcode: 0x4682 -- dst: 0x0005 isReliable: true retryCnt: 2
+2020-04-02 10:56:05.182 29990-29990/com.telink.ble.mesh.demo D/Networking: post access pdu: 82460100
+2020-04-02 10:56:05.182 29990-29990/com.telink.ble.mesh.demo D/Networking: getTransmitIvIndex : 00000000
+2020-04-02 10:56:05.183 29990-29990/com.telink.ble.mesh.demo D/Networking: upper transport pdu: 0C9D71064E6FB022
+2020-04-02 10:56:05.183 29990-29990/com.telink.ble.mesh.demo D/Networking: send unsegmented access message
+2020-04-02 10:56:05.183 29990-29990/com.telink.ble.mesh.demo D/Networking: restart reliable message timeout task, immediate: false
+2020-04-02 10:56:05.183 29990-29990/com.telink.ble.mesh.demo D/Networking: reliable message timeout:960
+2020-04-02 10:56:05.185 29990-29990/com.telink.ble.mesh.demo D/Networking: single network pdu: 0D:0F:8A:4E:40:5E:FB:29:DD:8E:E5:8D:05:48:B0:C7:09:43:BF:C0:C0:AF
+2020-04-02 10:56:05.185 29990-29990/com.telink.ble.mesh.demo D/Networking: networking pud prepared: 0D:0F:8A:4E:40:5E:FB:29:DD:8E:E5:8D:05:48:B0:C7:09:43:BF:C0:C0:AF busy?-false
+2020-04-02 10:56:05.185 29990-29990/com.telink.ble.mesh.demo D/Networking: networking pdu sending direct
+2020-04-02 10:56:05.186 29990-29990/com.telink.ble.mesh.demo D/GATT: send unsegment pkt: 00:0D:0F:8A:4E:40:5E:FB:29:DD:8E:E5:8D:05:48:B0:C7:09:43:BF:C0:C0:AF
+2020-04-02 10:56:05.245 29990-30009/com.telink.ble.mesh.demo D/GATT: completed notification data: 00:0D:5A:92:C7:2D:FE:43:8E:B0:0A:31:9B:54:5D:97:04:0F:C3:4B:2A:84:85:20:88:F1
+2020-04-02 10:56:05.246 29990-30009/com.telink.ble.mesh.demo D/Networking: getAcceptedIvIndex : 00000000 ivi: 0
+2020-04-02 10:56:05.248 29990-30009/com.telink.ble.mesh.demo D/Networking: parse access message
+2020-04-02 10:56:05.248 29990-30009/com.telink.ble.mesh.demo D/Networking: parse unsegmented access message
+2020-04-02 10:56:05.252 29990-30009/com.telink.ble.mesh.demo D/Networking: access pdu received at 0x0005: opcode -- 0x4582 params -- 0001000100
+2020-04-02 10:56:05.252 29990-30009/com.telink.ble.mesh.demo D/Networking: Reliable Message Complete: 004682 success?: true
+2020-04-02 10:56:05.254 29990-30009/com.telink.ble.mesh.demo D/MeshController: mesh model message received: src -- 0x0005 | dst -- 0x0001 | opcode -- 0x4582 | params -- 0001000100 | action mode -- MODE_AUTO_CONNECT
+2020-04-02 10:56:05.255 29990-30009/com.telink.ble.mesh.demo D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.scene.SceneRegisterStatusMessage
+2020-04-02 10:56:05.256 29990-30009/com.telink.ble.mesh.demo D/SIG-Mesh: post event : com.telink.ble.mesh.core.message.scene.SceneRegisterStatusMessage--StatusNotificationEvent
+
+scene recall (no-ack)
+
+2020-04-02 10:57:25.905 29990-29990/com.telink.ble.mesh.demo D/MeshController: send mesh message: SceneRecallMessage opcode: 0x4382 -- dst: 0xFFFF isReliable: false retryCnt: 2
+2020-04-02 10:57:25.907 29990-29990/com.telink.ble.mesh.demo D/Networking: post access pdu: 82430100030000
+2020-04-02 10:57:25.907 29990-29990/com.telink.ble.mesh.demo D/Networking: getTransmitIvIndex : 00000000
+2020-04-02 10:57:25.908 29990-29990/com.telink.ble.mesh.demo D/Networking: upper transport pdu: F72D6F755A2761242AF275
+2020-04-02 10:57:25.909 29990-29990/com.telink.ble.mesh.demo D/Networking: send unsegmented access message
+2020-04-02 10:57:25.910 29990-29990/com.telink.ble.mesh.demo D/Networking: single network pdu: 0D:BB:95:E3:6A:00:D4:F9:D8:D4:2C:EB:25:17:5F:F5:88:71:82:B0:9A:99:9A:A6:53
+2020-04-02 10:57:25.911 29990-29990/com.telink.ble.mesh.demo D/Networking: networking pud prepared: 0D:BB:95:E3:6A:00:D4:F9:D8:D4:2C:EB:25:17:5F:F5:88:71:82:B0:9A:99:9A:A6:53 busy?-false
+2020-04-02 10:57:25.912 29990-29990/com.telink.ble.mesh.demo D/Networking: networking pud poll: 0D:BB:95:E3:6A:00:D4:F9:D8:D4:2C:EB:25:17:5F:F5:88:71:82:B0:9A:99:9A:A6:53
+2020-04-02 10:57:25.913 29990-29990/com.telink.ble.mesh.demo D/GATT: send unsegment pkt: 00:0D:BB:95:E3:6A:00:D4:F9:D8:D4:2C:EB:25:17:5F:F5:88:71:82:B0:9A:99:9A:A6:53
+2020-04-02 10:57:26.236 29990-30026/com.telink.ble.mesh.demo D/Networking: networking pud poll: null

@@ -28,6 +28,9 @@ public class ModelSettingActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_model_setting);
         setTitle("Subscription Models");
         enableBackNav(true);

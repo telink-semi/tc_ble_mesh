@@ -16,9 +16,6 @@ public class SharedPreferenceHelper {
     private static final String DEFAULT_NAME = "telink_shared";
     private static final String KEY_FIRST_LOAD = "com.telink.bluetooth.light.KEY_FIRST_LOAD";
 
-    // 记录上一个文件选择器的位置
-    private static final String KEY_DIR_PATH = "com.telink.bluetooth.light.KEY_DIR_PATH";
-
     private static final String KEY_LOCATION_IGNORE = "com.telink.bluetooth.light.KEY_LOCATION_IGNORE";
 
     private static final String KEY_LOG_ENABLE = "com.telink.bluetooth.light.KEY_LOG_ENABLE";
@@ -44,17 +41,6 @@ public class SharedPreferenceHelper {
         sharedPreferences.edit().putBoolean(KEY_FIRST_LOAD, isFirst).apply();
     }
 
-    public static void saveDirPath(Context context, String path) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(KEY_DIR_PATH, path)
-                .apply();
-    }
-
-    public static String getDirPath(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getString(KEY_DIR_PATH, null);
-    }
 
     public static boolean isLocationIgnore(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);

@@ -45,7 +45,7 @@ public class GZIP {
         }
     }
 
-    // 解压缩
+    // depress
     public static String decompressed(String str) {
         if (str == null || str.length() == 0) {
             return str;
@@ -64,7 +64,6 @@ public class GZIP {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // toString()使用平台默认编码，也可以显式的指定如toString(&quot;GBK&quot;)
         return out.toString();
     }
 

@@ -36,6 +36,9 @@ public class LogActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
         setContentView(R.layout.activity_log_info);
         RecyclerView recyclerView = findViewById(R.id.rv_log);
         adapter = new LogInfoAdapter(this);

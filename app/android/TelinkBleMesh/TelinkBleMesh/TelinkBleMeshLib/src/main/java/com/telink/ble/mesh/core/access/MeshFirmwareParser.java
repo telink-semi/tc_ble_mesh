@@ -76,8 +76,13 @@ public class MeshFirmwareParser {
     }
 
 
+    /**
+     * refresh progress by chunk/total
+     *
+     * @return progress
+     */
     public boolean validateProgress() {
-        float offset = curBlockIndex * mBlockSize + curChunkIndex * mChunkSize;
+        float offset = curBlockIndex * mBlockSize + (curChunkIndex + 1) * mChunkSize;
         float total = this.firmwareData.length;
         int progress = (int) (offset * 100 / total);
         if (progress == this.progress) {

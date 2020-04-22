@@ -30,7 +30,6 @@
 #import <Foundation/Foundation.h>
 #import "SigProvisionigState.h"
 #import "SigAuthenticationModel.h"
-//#import "SigAddDeviceManager.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -59,6 +58,11 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningResponse * _Nullable resp
 /// The current state of the provisioning process.
 @property (nonatomic, assign) ProvisionigState state;//init with ready
 
+
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
+
 + (SigProvisioningManager *)share;
 
 /// founcation1: no oob provision (CBPeripheral's state mush be CBPeripheralStateConnected.)
@@ -77,6 +81,19 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningResponse * _Nullable resp
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
 - (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+
+
+/// founcation4: remote provision (SDK need connected provisioned node.)
+/// @param provisionAddress address of new device.
+/// @param reportNodeAddress address of node that report this uuid
+/// @param reportNodeUUID identify node that need to provision.
+/// @param networkKey networkKey
+/// @param netkeyIndex netkeyIndex
+/// @param provisionType ProvisionTpye_NoOOB means oob data is 16 bytes zero data, ProvisionTpye_StaticOOB means oob data is get from HTTP API.
+/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionTpye_StaticOOB.
+/// @param provisionSuccess callback when provision success.
+/// @param fail callback when provision fail.
+- (void)remoteProvisionWithNextProvisionAddress:(UInt16)provisionAddress reportNodeAddress:(UInt16)reportNodeAddress reportNodeUUID:(NSData *)reportNodeUUID networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 @end
 

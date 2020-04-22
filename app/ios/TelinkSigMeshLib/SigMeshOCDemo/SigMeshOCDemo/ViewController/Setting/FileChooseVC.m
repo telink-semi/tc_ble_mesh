@@ -52,10 +52,11 @@
         [self showTips:@"this json file is empty, please choose other!"];
         return;
     }
-    
+        
     if (self.backJsonData) {
         self.backJsonData(jsonData,jsonName);
     }
+    
     [self.navigationController popViewControllerAnimated:YES];
 }
 
@@ -70,6 +71,7 @@
 
 - (void)normalSetting{
     [super normalSetting];
+    self.title = @"Choose json file";
     self.selectIndex = -1;
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_ChooseBinCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_ChooseBinCellID];

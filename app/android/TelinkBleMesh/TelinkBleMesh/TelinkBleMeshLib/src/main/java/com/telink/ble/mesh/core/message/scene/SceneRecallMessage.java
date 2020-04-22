@@ -24,17 +24,19 @@ public class SceneRecallMessage extends GenericMessage {
 
     public boolean ack = false;
 
+    public boolean isComplete = false;
+
     public static SceneRecallMessage getSimple(int address, int appKeyIndex, int sceneNumber, boolean ack, int rspMax) {
         SceneRecallMessage message = new SceneRecallMessage(address, appKeyIndex);
         message.sceneNumber = sceneNumber;
         message.ack = ack;
-        message.setContainsTid(true);
         message.setResponseMax(rspMax);
         return message;
     }
 
     public SceneRecallMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(2);
     }
 
     @Override
@@ -49,15 +51,17 @@ public class SceneRecallMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return ByteBuffer.allocate(5).order(ByteOrder.LITTLE_ENDIAN)
-                .putShort((short) sceneNumber)
-                .put(tid)
-                .put(transitionTime)
-                .put(delay).array();
+        return
+                isComplete ?
+                        ByteBuffer.allocate(5).order(ByteOrder.LITTLE_ENDIAN)
+                                .putShort((short) sceneNumber)
+                                .put(tid)
+                                .put(transitionTime)
+                                .put(delay).array()
+                        :
+                        ByteBuffer.allocate(3).order(ByteOrder.LITTLE_ENDIAN)
+                                .putShort((short) sceneNumber)
+                                .put(tid).array();
     }
 
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
-    }
 }

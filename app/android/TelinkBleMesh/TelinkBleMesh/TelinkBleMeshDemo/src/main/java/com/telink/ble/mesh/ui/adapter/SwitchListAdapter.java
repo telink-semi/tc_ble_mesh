@@ -19,7 +19,7 @@ import java.util.List;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 设备列表适配器
+ * on/off switch
  * Created by Administrator on 2016/10/25.
  */
 public class SwitchListAdapter extends BaseRecyclerViewAdapter<SwitchListAdapter.ViewHolder> {

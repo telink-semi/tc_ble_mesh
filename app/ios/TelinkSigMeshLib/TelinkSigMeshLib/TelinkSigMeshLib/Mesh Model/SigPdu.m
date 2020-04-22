@@ -129,11 +129,10 @@ struct EncryptedDataWithMicPdu {
     
     Byte *byte = (Byte *)data.bytes;
     memcpy(provisioningCapabilities, byte, 12);
-    
     if (provisioningCapabilities->pduType == SigProvisioningPduType_capabilities) {
-        TeLogDebug(@"analysis ProvisioningCapabilitiesPDU success.")
+        TeLogVerbose(@"analysis ProvisioningCapabilitiesPDU success.")
     }else{
-        TeLogDebug(@"analysis ProvisioningCapabilitiesPDU fail.")
+        TeLogVerbose(@"analysis ProvisioningCapabilitiesPDU fail.")
         memcpy(provisioningCapabilities, 0, 12);
     }
 }
@@ -205,6 +204,114 @@ struct EncryptedDataWithMicPdu {
 
 
 @implementation SigNetworkPdu
+
+- (instancetype)initWithDecodePduData:(NSData *)pdu pduType:(SigPduType)pduType usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex {
+    if (self = [super init]) {
+        if (pduType != SigPduType_networkPdu && pduType != SigPduType_proxyConfiguration) {
+            TeLogError(@"pdutype is not support.");
+            return nil;
+        }
+        self.pduData = pdu;
+        if (pdu.length < 14) {
+            TeLogDebug(@"Valid message must have at least 14 octets.");
+            return nil;
+        }
+        
+        // The first byte is not obfuscated.
+        UInt8 *byte = (UInt8 *)pdu.bytes;
+        UInt8 tem = 0;
+        memcpy(&tem, byte, 1);
+        _ivi  = tem >> 7;
+        _nid  = tem & 0x7F;
+        // The NID must match.
+        // If the Key Refresh procedure is in place, the received packet might have been
+        // encrypted using an old key. We have to try both.
+        NSMutableArray <SigNetkeyDerivaties *>*keySets = [NSMutableArray array];
+        if (_nid == networkKey.nid) {
+            [keySets addObject:networkKey.keys];
+        }
+        if (networkKey.oldKeys != nil && networkKey.oldNid == _nid) {
+            [keySets addObject:networkKey.keys];
+        }
+        if (keySets.count == 0) {
+            return nil;
+        }
+        
+        // IVI should match the LSB bit of current IV Index.
+        // If it doesn't, and the IV Update procedure is active, the PDU will be
+        // deobfuscated and decoded with IV Index decremented by 1.
+        UInt32 index = ivIndex.index;
+        if (_ivi != (index & 0x01)) {
+            if (ivIndex.updateActive && index > 1) {
+                index -= 1;
+            } else {
+                return nil;
+            }
+        }
+        for (SigNetkeyDerivaties *keys in keySets) {
+            // Deobfuscate CTL, TTL, SEQ and SRC.
+            NSData *deobfuscatedData = [OpenSSLHelper.share deobfuscate:pdu ivIndex:index privacyKey:keys.privacyKey];
+
+            // First validation: Control Messages have NetMIC of size 64 bits.
+            byte = (UInt8 *)deobfuscatedData.bytes;
+            memcpy(&tem, byte, 1);
+            UInt8 ctl = tem >> 7;
+            if (ctl != 0 && pdu.length < 18) {
+                continue;
+            }
+            SigLowerTransportPduType type = (SigLowerTransportPduType)ctl;
+            UInt8 ttl = tem & 0x7F;
+            UInt32 tem1=0,tem2=0,tem3=0,tem4=0,tem5=0;
+            memcpy(&tem1, byte+1, 1);
+            memcpy(&tem2, byte+2, 1);
+            memcpy(&tem3, byte+3, 1);
+            memcpy(&tem4, byte+4, 1);
+            memcpy(&tem5, byte+5, 1);
+
+            // Multiple octet values use Big Endian.
+            UInt32 sequence = tem1 << 16 | tem2 << 8 | tem3;
+            UInt32 source = tem4 << 8 | tem5;
+            NSInteger micOffset = pdu.length - [self getNetMicSizeOfLowerTransportPduType:type];
+            NSData *destAndTransportPdu = [pdu subdataWithRange:NSMakeRange(7, micOffset-7)];
+            NSData *mic = [pdu subdataWithRange:NSMakeRange(micOffset, pdu.length-micOffset)];
+            tem = [self getNonceIdOfSigPduType:pduType];
+            NSData *data1 = [NSData dataWithBytes:&tem length:1];
+            UInt16 tem16 = 0;
+            NSData *data2 = [NSData dataWithBytes:&tem16 length:2];
+            UInt32 bigIndex = CFSwapInt32HostToBig(index);
+            NSData *data3 = [NSData dataWithBytes:&bigIndex length:4];
+            NSMutableData *networkNonce = [NSMutableData dataWithData:data1];
+            [networkNonce appendData:deobfuscatedData];
+            [networkNonce appendData:data2];
+            [networkNonce appendData:data3];
+            if (pduType == SigPduType_proxyConfiguration) {
+                UInt8 zero = 0;// Pad
+                [networkNonce replaceBytesInRange:NSMakeRange(1, 1) withBytes:&zero length:1];
+            }
+            NSData *decryptedData = [OpenSSLHelper.share calculateDecryptedCCM:destAndTransportPdu withKey:keys.encryptionKey nonce:networkNonce andMIC:mic withAdditionalData:nil];
+            if (decryptedData == nil || decryptedData.length == 0) {
+                TeLogError(@"decryptedData == nil");
+                continue;
+            }
+            
+            _networkKey = networkKey;
+            _type = type;
+            _ttl = ttl;
+            _sequence = sequence;
+//            TeLogVerbose(@"返回蓝牙包的sequence=0x%x",(unsigned int)sequence);
+//            [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence+1];
+            _source = source;
+            UInt8 decryptedData0 = 0,decryptedData1 = 0;
+            Byte *decryptedDataByte = (Byte *)decryptedData.bytes;
+            memcpy(&decryptedData0, decryptedDataByte+0, 1);
+            memcpy(&decryptedData1, decryptedDataByte+1, 1);
+            _destination = (UInt16)decryptedData0 << 8 | (UInt16)decryptedData1;
+            _transportPdu = [decryptedData subdataWithRange:NSMakeRange(2, decryptedData.length-2)];
+            return self;
+        }
+    }
+    return nil;
+}
 
 /// Creates Network PDU object from received PDU. The initiator tries
 /// to deobfuscate and decrypt the data using given Network Key and IV Index.
@@ -308,8 +415,8 @@ struct EncryptedDataWithMicPdu {
             _type = type;
             _ttl = ttl;
             _sequence = sequence;
-            TeLogVerbose(@"返回蓝牙包的sequence=0x%x",(unsigned int)sequence);
-            [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence+1];
+//            TeLogVerbose(@"返回蓝牙包的sequence=0x%x",(unsigned int)sequence);
+//            [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence+1];
             _source = source;
             UInt8 decryptedData0 = 0,decryptedData1 = 0;
             Byte *decryptedDataByte = (Byte *)decryptedData.bytes;
@@ -322,6 +429,68 @@ struct EncryptedDataWithMicPdu {
         }
     }
     return nil;
+}
+
+- (instancetype)initWithEncodeLowerTransportPdu:(SigLowerTransportPdu *)lowerTransportPdu pduType:(SigPduType)pduType withSequence:(UInt32)sequence andTtl:(UInt8)ttl ivIndex:(SigIvIndex *)ivIndex {
+    if (self = [super init]) {
+        UInt32 index = ivIndex.index;
+
+        _networkKey = lowerTransportPdu.networkKey;
+        _ivi = (UInt8)(index&0x01);
+        _nid = _networkKey.nid;
+        _type = lowerTransportPdu.type;
+        _source = lowerTransportPdu.source;
+        _destination = lowerTransportPdu.destination;
+        _transportPdu = lowerTransportPdu.transportPdu;
+        _ttl = ttl;
+        _sequence = sequence;
+
+        UInt8 iviNid = (_ivi << 7) | (_nid & 0x7F);
+        UInt8 ctlTtl = (_type << 7) | (_ttl & 0x7F);
+
+        // Data to be obfuscated: CTL/TTL, Sequence Number, Source Address.
+        UInt32 bigSequece = CFSwapInt32HostToBig(sequence);
+        UInt16 bigSource = CFSwapInt16HostToBig(_source);
+        UInt16 bigDestination = CFSwapInt16HostToBig(_destination);
+        UInt32 bigIndex = CFSwapInt32HostToBig(index);
+
+        NSData *seq = [[NSData dataWithBytes:&bigSequece length:4] subdataWithRange:NSMakeRange(1, 3)];
+        NSData *data1 = [NSData dataWithBytes:&ctlTtl length:1];
+        NSData *data2 = [NSData dataWithBytes:&bigSource length:2];
+        NSMutableData *deobfuscatedData = [NSMutableData dataWithData:data1];
+        [deobfuscatedData appendData:seq];
+        [deobfuscatedData appendData:data2];
+
+        // Data to be encrypted: Destination Address, Transport PDU.
+        NSData *data3 = [NSData dataWithBytes:&bigDestination length:2];
+        NSMutableData *decryptedData = [NSMutableData dataWithData:data3];
+        [decryptedData appendData:_transportPdu];
+        
+        // The key set used for encryption depends on the Key Refresh Phase.
+        SigNetkeyDerivaties *keys = _networkKey.transmitKeys;
+        UInt8 tem = [self getNonceIdOfSigPduType:pduType];
+        data1 = [NSData dataWithBytes:&tem length:1];
+        UInt16 tem16 = 0;
+        data2 = [NSData dataWithBytes:&tem16 length:2];
+        data3 = [NSData dataWithBytes:&bigIndex length:4];
+        NSMutableData *networkNonce = [NSMutableData dataWithData:data1];
+        [networkNonce appendData:deobfuscatedData];
+        [networkNonce appendData:data2];
+        [networkNonce appendData:data3];
+        if (pduType == SigPduType_proxyConfiguration) {
+            tem = 0x00;//Pad
+            [networkNonce replaceBytesInRange:NSMakeRange(1, 1) withBytes:&tem length:1];
+        }
+
+        NSData *encryptedData = [OpenSSLHelper.share calculateCCM:decryptedData withKey:keys.encryptionKey nonce:networkNonce andMICSize:[self getNetMicSizeOfLowerTransportPduType:_type] withAdditionalData:nil];
+        NSData *obfuscatedData = [OpenSSLHelper.share obfuscate:deobfuscatedData usingPrivacyRandom:encryptedData ivIndex:index andPrivacyKey:keys.privacyKey];
+
+        NSMutableData *pduData = [NSMutableData dataWithBytes:&iviNid length:1];
+        [pduData appendData:obfuscatedData];
+        [pduData appendData:encryptedData];
+        self.pduData = pduData;
+    }
+    return self;
 }
 
 /// Creates the Network PDU. This method enctypts and obfuscates data
@@ -392,6 +561,10 @@ struct EncryptedDataWithMicPdu {
         self.pduData = pduData;
     }
     return self;
+}
+
++ (SigNetworkPdu *)decodePdu:(NSData *)pdu pduType:(SigPduType)pduType usingNetworkKey:(SigNetkeyModel *)networkKey ivIndex:(SigIvIndex *)ivIndex {
+    return [[SigNetworkPdu alloc] initWithDecodePduData:pdu pduType:pduType usingNetworkKey:networkKey ivIndex:ivIndex];
 }
 
 /// This method goes over all Network Keys in the mesh network and tries
@@ -537,6 +710,7 @@ struct EncryptedDataWithMicPdu {
 
 - (instancetype)initWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive networkId:(NSData *)networkId ivIndex:(UInt32)ivIndex usingNetworkKey:(SigNetkeyModel *)networkKey {
     if (self = [super init]) {
+        [super setBeaconType:SigBeaconType_secureNetwork];
         _keyRefreshFlag = keyRefreshFlag;
         _ivUpdateActive = ivUpdateActive;
         _networkId = networkId;
@@ -544,40 +718,6 @@ struct EncryptedDataWithMicPdu {
         _networkKey = networkKey;
     }
     return self;
-}
-
-- (SigLowerTransportPdu *)getSecureNetworkbeaconPdu {
-    struct Flags flags = {};
-    flags.value = 0;
-    if (_keyRefreshFlag) {
-        flags.value |= (1 << 0);
-    }
-    if (_ivUpdateActive) {
-        flags.value |= (1 << 1);
-    }
-    NSMutableData *mData = [NSMutableData data];
-    [mData appendData:[NSData dataWithBytes:&flags length:1]];
-    [mData appendData:_networkId];
-    UInt32 ivIndex32 = _ivIndex;
-    [mData appendData:[NSData dataWithBytes:&ivIndex32 length:4]];
-    NSData *authenticationValue = nil;
-    if ([_networkId isEqualToData:_networkKey.networkId]) {
-        authenticationValue = [OpenSSLHelper.share calculateCMAC:mData andKey:_networkKey.keys.beaconKey];
-    }else if (_networkKey.oldNetworkId != nil && [_networkKey.oldNetworkId isEqualToData:_networkId]) {
-        authenticationValue = [OpenSSLHelper.share calculateCMAC:mData andKey:_networkKey.oldKeys.beaconKey];
-    }
-    if (authenticationValue) {
-        [mData appendData:authenticationValue];
-        SigLowerTransportPdu *pdu = [[SigLowerTransportPdu alloc] init];
-        pdu.source = SigMeshLib.share.dataSource.curLocationNodeModel.address;
-        pdu.destination = 0;
-        pdu.networkKey = _networkKey;
-        pdu.type = SigLowerTransportPduType_accessMessage;
-        pdu.transportPdu = mData;
-        return pdu;
-    } else {
-        return nil;
-    }
 }
 
 /// This method goes over all Network Keys in the mesh network and tries
@@ -606,6 +746,38 @@ struct EncryptedDataWithMicPdu {
         return nil;
     }
     return nil;
+}
+
+- (NSData *)pduData {
+    struct Flags flags = {};
+    flags.value = 0;
+    if (_keyRefreshFlag) {
+        flags.value |= (1 << 0);
+    }
+    if (_ivUpdateActive) {
+        flags.value |= (1 << 1);
+    }
+    NSMutableData *mData = [NSMutableData data];
+    [mData appendData:[NSData dataWithBytes:&flags length:1]];
+    [mData appendData:_networkId];
+    UInt32 ivIndex32 = CFSwapInt32HostToBig(_ivIndex);
+    [mData appendData:[NSData dataWithBytes:&ivIndex32 length:4]];
+    NSData *authenticationValue = nil;
+    if ([_networkId isEqualToData:_networkKey.networkId]) {
+        authenticationValue = [OpenSSLHelper.share calculateCMAC:mData andKey:_networkKey.keys.beaconKey];
+    }else if (_networkKey.oldNetworkId != nil && [_networkKey.oldNetworkId isEqualToData:_networkId]) {
+        authenticationValue = [OpenSSLHelper.share calculateCMAC:mData andKey:_networkKey.oldKeys.beaconKey];
+    }
+    if (authenticationValue) {
+        [mData appendData:[authenticationValue subdataWithRange:NSMakeRange(0, 8)]];
+        UInt8 bType = self.beaconType;
+        NSMutableData *allData = [NSMutableData data];
+        [allData appendData:[NSData dataWithBytes:&bType length:1]];
+        [allData appendData:mData];
+        return allData;
+    } else {
+        return nil;
+    }
 }
 
 - (NSString *)description {

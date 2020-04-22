@@ -69,7 +69,8 @@
 }
 
 - (void)backToMain{
-    [self.navigationController popToRootViewControllerAnimated:true];
+    [self.navigationController popViewControllerAnimated:YES];
+//    [self.navigationController popToRootViewControllerAnimated:true];
 }
 
 - (void)viewWillAppear:(BOOL)animated

@@ -19,7 +19,7 @@ public class CtlSetMessage extends GenericMessage {
 
     public int deltaUV;
 
-    // transition id
+    // transaction id
     public byte tid = 0;
 
     public byte transitionTime = 0;
@@ -28,19 +28,21 @@ public class CtlSetMessage extends GenericMessage {
 
     public boolean ack = false;
 
+    public boolean isComplete = false;
+
     public static CtlSetMessage getSimple(int address, int appKeyIndex, int lightness, int temperature, int deltaUV, boolean ack, int rspMax) {
         CtlSetMessage message = new CtlSetMessage(address, appKeyIndex);
         message.lightness = lightness;
         message.temperature = temperature;
         message.deltaUV = deltaUV;
         message.ack = ack;
-        message.setContainsTid(true);
         message.setResponseMax(rspMax);
         return message;
     }
 
     public CtlSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
+        setTidPosition(6);
     }
 
     @Override
@@ -55,17 +57,21 @@ public class CtlSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return ByteBuffer.allocate(9).order(ByteOrder.LITTLE_ENDIAN)
-                .putShort((short) lightness)
-                .putShort((short) temperature)
-                .putShort((short) deltaUV)
-                .put(tid)
-                .put(transitionTime)
-                .put(delay).array();
-    }
-
-    @Override
-    public void setTid(byte tid) {
-        this.tid = tid;
+        return
+                isComplete ?
+                        ByteBuffer.allocate(9).order(ByteOrder.LITTLE_ENDIAN)
+                                .putShort((short) lightness)
+                                .putShort((short) temperature)
+                                .putShort((short) deltaUV)
+                                .put(tid)
+                                .put(transitionTime)
+                                .put(delay).array()
+                        :
+                        ByteBuffer.allocate(7).order(ByteOrder.LITTLE_ENDIAN)
+                                .putShort((short) lightness)
+                                .putShort((short) temperature)
+                                .putShort((short) deltaUV)
+                                .put(tid).array()
+                ;
     }
 }

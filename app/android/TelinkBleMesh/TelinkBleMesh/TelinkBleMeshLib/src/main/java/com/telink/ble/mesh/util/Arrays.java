@@ -5,7 +5,7 @@ import java.security.SecureRandom;
 import java.util.Formatter;
 
 /**
- * 数组工具类
+ * array util
  */
 public final class Arrays {
 
@@ -13,7 +13,7 @@ public final class Arrays {
     }
 
     /**
-     * 反转byte数组
+     * reverse array
      *
      * @param a
      * @return
@@ -34,7 +34,7 @@ public final class Arrays {
     }
 
     /**
-     * 反转byte数组中的某一段
+     * reverse part of array
      *
      * @param arr
      * @param begin
@@ -55,7 +55,7 @@ public final class Arrays {
     }
 
     /**
-     * 比较两个byte数组中的每一项值是否相等
+     * compare two arrays
      *
      * @param array1
      * @param array2
@@ -111,11 +111,7 @@ public final class Arrays {
     }
 
     /**
-     * byte数组转成十六进制字符串
-     *
-     * @param array     原数组
-     * @param separator 分隔符
-     * @return
+     * array to hex string
      */
     public static String bytesToHexString(byte[] array, String separator) {
         if (array == null || array.length == 0)

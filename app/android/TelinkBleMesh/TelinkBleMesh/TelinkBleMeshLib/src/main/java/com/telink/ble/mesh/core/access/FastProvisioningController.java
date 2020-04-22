@@ -65,7 +65,7 @@ public class FastProvisioningController {
 
     private static final int ROUND_MAX = 10;
     /**
-     * opcode定义:
+     * opcode:
      * #define VD_MESH_RESET_NETWORK 0xC5
      * #define VD_MESH_ADDR_GET 0xC6
      * #define VD_MESH_ADDR_GET_STS 0xC7

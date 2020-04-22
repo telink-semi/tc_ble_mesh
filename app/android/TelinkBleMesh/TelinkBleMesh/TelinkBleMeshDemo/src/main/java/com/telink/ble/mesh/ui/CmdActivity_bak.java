@@ -55,7 +55,7 @@ public class CmdActivity_bak extends BaseActivity implements View.OnClickListene
      */
 
     // {(byte) 0xa3, (byte) 0xff, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, (byte) 0xff, (byte) 0xff, (byte) 0xc2, 0x11, 0x02, (byte) 0xc4, 0x01, 0x01, 0x00}
-    /// default 0xa3ff, network_key_index: 0x0000, app_key_index: 0x0000, retry_cnt: 0x02, rsp_max: 0x00 (00 与 01 同效果)
+    /// default 0xa3ff, network_key_index: 0x0000, app_key_index: 0x0000, retry_cnt: 0x02, rsp_max: 0x00 (00 equals 01 )
     private byte[][] iniSettings = {
             {(byte) 0xa3, (byte) 0xff, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, (byte) 0xff, (byte) 0xff, (byte) 0xc2, 0x11, 0x02, (byte) 0xc4, 0x01, 0x01, 0x00},
             {(byte) 0xa3, (byte) 0xff, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, (byte) 0xff, (byte) 0xff, (byte) 0xc2, 0x11, 0x02, (byte) 0xc4, 0x01, 0x00, 0x00},
@@ -272,10 +272,10 @@ public class CmdActivity_bak extends BaseActivity implements View.OnClickListene
 
 
             if (before < input.length() && inputLen + 1 == resultLen) {
-                // 添加
+                // add
                 et.setSelection(sel + 1);
             } else {
-                // 删除
+                // remove
                 et.setSelection(sel);
             }
 

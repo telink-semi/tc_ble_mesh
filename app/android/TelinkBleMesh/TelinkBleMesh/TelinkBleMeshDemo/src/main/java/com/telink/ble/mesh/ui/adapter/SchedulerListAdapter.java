@@ -18,7 +18,7 @@ import java.util.List;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 设备列表适配器
+ * scheduler list
  * Created by Administrator on 2016/10/25.
  */
 public class SchedulerListAdapter extends BaseRecyclerViewAdapter<SchedulerListAdapter.ViewHolder> {

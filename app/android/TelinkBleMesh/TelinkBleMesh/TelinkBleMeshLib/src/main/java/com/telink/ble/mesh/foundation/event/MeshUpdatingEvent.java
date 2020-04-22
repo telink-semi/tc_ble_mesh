@@ -24,6 +24,8 @@ public class MeshUpdatingEvent extends Event<String> {
 
     public static final String EVENT_TYPE_DEVICE_FAIL = "com.telink.sig.mesh.EVENT_TYPE_DEVICE_FAIL";
 
+    public static final String EVENT_TYPE_UPDATING_PREPARED = "com.telink.sig.mesh.EVENT_TYPE_UPDATING_PREPARED";
+
     private MeshUpdatingDevice updatingDevice;
     private int progress;
     private String desc;

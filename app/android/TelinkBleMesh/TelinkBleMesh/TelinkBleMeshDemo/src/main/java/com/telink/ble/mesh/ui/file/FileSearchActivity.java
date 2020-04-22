@@ -116,7 +116,6 @@ public class FileSearchActivity extends AppCompatActivity {
         et_search_input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                /*判断是否是“搜索”键*/
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                     search();
                     return true;

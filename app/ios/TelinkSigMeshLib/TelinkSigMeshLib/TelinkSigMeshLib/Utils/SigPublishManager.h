@@ -10,7 +10,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef void(^DiscoverOutlineNodeBlock)(NSNumber *unicastAddress);
+typedef void(^DiscoverOnlineNodeBlock)(NSNumber *unicastAddress);
+
 @interface SigPublishManager : NSObject
+@property (nonatomic,copy) DiscoverOutlineNodeBlock discoverOutlineNodeCallback;
+@property (nonatomic,copy) DiscoverOnlineNodeBlock discoverOnlineNodeCallback;
+
++ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+
 
 + (SigPublishManager *)share;
 

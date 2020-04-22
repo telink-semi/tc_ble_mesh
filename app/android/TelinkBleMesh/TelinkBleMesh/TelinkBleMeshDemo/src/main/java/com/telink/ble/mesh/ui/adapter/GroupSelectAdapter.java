@@ -21,7 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 指定设备的分组信息
+ * set device group
  * Created by kee on 2017/8/18.
  */
 

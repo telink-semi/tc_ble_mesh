@@ -16,7 +16,7 @@ import java.util.Locale;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * 分组列表 in GroupFragment
+ * groups in GroupFragment
  * Created by kee on 2017/8/21.
  */
 
