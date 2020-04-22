@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
+import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.model.MeshInfo;
@@ -227,7 +228,7 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
             StatusNotificationEvent statusNotificationEvent = (StatusNotificationEvent) event;
             NotificationMessage notificationMessage = statusNotificationEvent.getNotificationMessage();
             SceneRegisterStatusMessage sceneRegisterStatusMessage = (SceneRegisterStatusMessage) notificationMessage.getStatusMessage();
-            if (sceneRegisterStatusMessage.getStatusCode() == ConfigMessage.STATUS_SUCCESS
+            if (sceneRegisterStatusMessage.getStatusCode() == ConfigStatus.SUCCESS.code
                     && notificationMessage.getSrc() == selectedAdrList.get(settingIndex).address) {
                 delayHandler.removeCallbacks(cmdTimeoutCheckTask);
                 NodeInfo deviceInfo = mesh.getDeviceByMeshAddress(notificationMessage.getSrc());

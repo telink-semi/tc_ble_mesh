@@ -1,9 +1,10 @@
 package com.telink.ble.mesh.core.message.rp;
 
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.updating.UpdatingMessage;
+import com.telink.ble.mesh.core.message.generic.GenericMessage;
 
-public class LinkOpenMessage extends UpdatingMessage {
+
+public class LinkOpenMessage extends GenericMessage {
 
     /**
      * 16 bytes
@@ -36,4 +37,7 @@ public class LinkOpenMessage extends UpdatingMessage {
         return uuid;
     }
 
+    public void setUuid(byte[] uuid) {
+        this.uuid = uuid;
+    }
 }

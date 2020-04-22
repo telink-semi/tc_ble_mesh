@@ -4,13 +4,13 @@ import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.generic.GenericMessage;
 
 /**
- * scene store
+ * scheduler action get
  * Created by kee on 2019/8/14.
  */
 public class SchedulerActionGetMessage extends GenericMessage {
 
     // scene id
-    public byte index;
+    private byte index;
 
 
     public static SchedulerActionGetMessage getSimple(int address, int appKeyIndex, byte schedulerIndex, int rspMax) {
@@ -39,4 +39,7 @@ public class SchedulerActionGetMessage extends GenericMessage {
         return new byte[]{index};
     }
 
+    public void setIndex(byte index) {
+        this.index = index;
+    }
 }

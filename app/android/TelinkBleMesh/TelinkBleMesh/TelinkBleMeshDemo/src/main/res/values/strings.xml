@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BleMesh</string>
+    <string name="app_name">TelinkBleMesh</string>
 
     <string name="app_copyright">©2019 Telink Semiconductor</string>
 
@@ -40,7 +40,7 @@
 
     <string name="device_state_desc_mesh_ota">Adr: 0x%s\nPid:%s</string>
 
-    <string name="device_prov_desc">adr: 0x%s\nmac:%s</string>
+    <string name="device_prov_desc">adr: 0x%s\nuuid:%s</string>
 
 
     <string name="publication_setting">Publication (ele : %s model: %s)</string>

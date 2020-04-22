@@ -68,7 +68,8 @@ public class MeshService implements MeshController.EventCallback {
     }
 
     /**
-     * @return direct connected node address, 0 : invalid address
+     * @return direct connected node address,
+     * if 0 : invalid address
      */
     public int getDirectConnectedNodeAddress() {
         return mController.getDirectNodeAddress();
@@ -89,11 +90,15 @@ public class MeshService implements MeshController.EventCallback {
         mController.startScan(scanParameters);
     }
 
+    public void stopScan() {
+        mController.stopScan();
+    }
+
     /**
      * start provisioning if device found by {@link #startScan(ScanParameters)}
      */
-    public void startProvisioning(ProvisioningParameters provisioningParameters) {
-        mController.startProvisioning(provisioningParameters);
+    public boolean startProvisioning(ProvisioningParameters provisioningParameters) {
+        return mController.startProvisioning(provisioningParameters);
     }
 
     /**

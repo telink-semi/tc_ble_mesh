@@ -36,32 +36,16 @@ public class ModelAppBindMessage extends ConfigMessage {
         super(destinationAddress);
     }
 
-    public int getElementAddress() {
-        return elementAddress;
-    }
-
     public void setElementAddress(int elementAddress) {
         this.elementAddress = elementAddress;
-    }
-
-    public int getAppKeyIndex() {
-        return appKeyIndex;
     }
 
     public void setAppKeyIndex(int appKeyIndex) {
         this.appKeyIndex = appKeyIndex;
     }
 
-    public int getModelIdentifier() {
-        return modelIdentifier;
-    }
-
     public void setModelIdentifier(int modelIdentifier) {
         this.modelIdentifier = modelIdentifier;
-    }
-
-    public boolean isSigModel() {
-        return isSigModel;
     }
 
     public void setSigModel(boolean sigModel) {

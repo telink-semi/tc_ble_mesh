@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+
 /**
  * Created by kee on 2019/8/22.
  */
@@ -98,18 +100,21 @@ public class MeshInfo implements Serializable, Cloneable {
         return null;
     }
 
-    public NodeInfo getDeviceByMacAddress(String address) {
+    /**
+     * @param deviceUUID 16 bytes uuid
+     */
+    public NodeInfo getDeviceByUUID(@NonNull byte[] deviceUUID) {
         for (NodeInfo info : nodes) {
-            if (info.macAddress.equals(address))
+            if (Arrays.equals(deviceUUID, info.deviceUUID))
                 return info;
         }
         return null;
     }
 
     public void insertDevice(NodeInfo deviceInfo) {
-        NodeInfo local = getDeviceByMacAddress(deviceInfo.macAddress);
+        NodeInfo local = getDeviceByUUID(deviceInfo.deviceUUID);
         if (local != null) {
-            this.removeDeviceByMac(deviceInfo.macAddress);
+            this.removeDeviceByUUID(deviceInfo.deviceUUID);
         }
         nodes.add(deviceInfo);
     }
@@ -136,13 +141,13 @@ public class MeshInfo implements Serializable, Cloneable {
         return false;
     }
 
-    public boolean removeDeviceByMac(String address) {
+    public boolean removeDeviceByUUID(byte[] deviceUUID) {
 
         if (this.nodes == null || this.nodes.size() == 0) return false;
         Iterator<NodeInfo> iterator = nodes.iterator();
         while (iterator.hasNext()) {
             NodeInfo deviceInfo = iterator.next();
-            if (deviceInfo.macAddress.equalsIgnoreCase(address)) {
+            if (Arrays.equals(deviceUUID, deviceInfo.deviceUUID)) {
                 iterator.remove();
                 return true;
             }
@@ -325,7 +330,8 @@ public class MeshInfo implements Serializable, Cloneable {
         meshInfo.localAddress = DEFAULT_LOCAL_ADDRESS;
         meshInfo.provisionIndex = DEFAULT_LOCAL_ADDRESS + 1; // 0x0002
 
-        meshInfo.provisionerUUID = SharedPreferenceHelper.getLocalUUID(context);;
+        meshInfo.provisionerUUID = SharedPreferenceHelper.getLocalUUID(context);
+        ;
         meshInfo.groups = new ArrayList<>();
         meshInfo.unicastRange = new AddressRange(0x01, 0xFF);
         String[] groupNames = context.getResources().getStringArray(R.array.group_name);

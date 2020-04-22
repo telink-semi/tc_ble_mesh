@@ -1,6 +1,6 @@
 package com.telink.ble.mesh.foundation.parameter;
 
-import com.telink.ble.mesh.entity.MeshUpdatingConfiguration;
+import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
 
 /**
  * Created by kee on 2017/11/23.
@@ -8,9 +8,9 @@ import com.telink.ble.mesh.entity.MeshUpdatingConfiguration;
 
 public class MeshOtaParameters extends Parameters {
 
-    public MeshOtaParameters(MeshUpdatingConfiguration meshUpdatingConfiguration) {
+    public MeshOtaParameters(FirmwareUpdateConfiguration configuration) {
         this.set(COMMON_PROXY_FILTER_INIT_NEEDED, true);
-        this.set(ACTION_MESH_OTA_CONFIG, meshUpdatingConfiguration);
+        this.set(ACTION_MESH_OTA_CONFIG, configuration);
     }
 
 }

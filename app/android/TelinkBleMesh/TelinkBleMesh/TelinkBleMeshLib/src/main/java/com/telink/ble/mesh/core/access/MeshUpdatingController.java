@@ -1,3 +1,4 @@
+/*
 package com.telink.ble.mesh.core.access;
 
 import android.os.Handler;
@@ -29,7 +30,7 @@ import com.telink.ble.mesh.core.message.updating.ObjectInfoStatusMessage;
 import com.telink.ble.mesh.core.message.updating.ObjectTransferStartMessage;
 import com.telink.ble.mesh.core.message.updating.ObjectTransferStatusMessage;
 import com.telink.ble.mesh.core.networking.NetworkingController;
-import com.telink.ble.mesh.entity.MeshUpdatingConfiguration;
+import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -39,137 +40,187 @@ import java.util.List;
 import java.util.Locale;
 
 
+*/
 /**
  * Mesh firmware updating
  * (Mesh OTA)
  * Created by kee on 2019/9/26.
- */
+ *//*
+
 public class MeshUpdatingController {
 
     private final String LOG_TAG = "MeshUpdating";
 
-    /**
+    */
+/**
      * all complete, fail or success
-     */
+     *//*
+
     public static final int STATE_SUCCESS = 0x00;
 
-    /**
+    */
+/**
      * chunks sending progress
-     */
+     *//*
+
     public static final int STATE_PROGRESS = 0x01;
 
-    /**
+    */
+/**
      * device succeed when apply status success
-     */
+     *//*
+
     public static final int STATE_DEVICE_SUCCESS = 0x02;
 
-    /**
+    */
+/**
      * device failed at every step status err
-     */
+     *//*
+
     public static final int STATE_DEVICE_FAIL = 0x03;
 
-    /**
+    */
+/**
      * mesh updating flow failed
-     */
+     *//*
+
     public static final int STATE_FAIL = 0x04;
 
 
-    /**
+    */
+/**
      * params check err
-     */
+     *//*
+
     public static final int STATE_STOPPED = 0x05;
 
 
-    /**
+    */
+/**
      * prepare complete when  STEP_OBJECT_TRANSFER_START sent success
-     */
+     *//*
+
     public static final int STATE_PREPARED = 0x06;
 
-    /**
+    */
+/**
      * get firmware info err
-     */
+     *//*
+
 //    public static final int STATE_ACTION_EXECUTE_FAIL = 0x05;
 
-    /**
+    */
+/**
      * initial
-     */
+     *//*
+
     private static final int STEP_INITIAL = 0x00;
 
-    /**
+    */
+/**
      * get firmware information
-     */
+     *//*
+
     private static final int STEP_GET_FIRMWARE_INFO = 0x01;
 
-    /**
+    */
+/**
      * set subscription at firmware-updating-model
-     */
+     *//*
+
     private static final int STEP_SET_SUBSCRIPTION = 0x02;
 
-    /**
+    */
+/**
      * get object info
-     */
+     *//*
+
     private static final int STEP_GET_OBJECT_INFO = 0x03;
 
-    /**
+    */
+/**
      * firmware updating prepare
-     */
+     *//*
+
     private static final int STEP_UPDATE_PREPARE = 0x04;
 
-    /**
+    */
+/**
      * firmware update start
-     */
+     *//*
+
     private static final int STEP_UPDATE_START = 0x05;
 
-    /**
+    */
+/**
      * object transfer start
-     */
+     *//*
+
     private static final int STEP_OBJECT_TRANSFER_START = 0x06;
 
-    /**
+    */
+/**
      * object block transfer start
-     */
+     *//*
+
     private static final int STEP_OBJECT_BLOCK_TRANSFER_START = 0x07;
 
-    /**
+    */
+/**
      * sending chunk data
-     */
+     *//*
+
     private static final int STEP_OBJECT_CHUNK_SENDING = 0x08;
 
-    /**
+    */
+/**
      * get block
      *
      * @see Opcode#OBJ_BLOCK_STATUS
-     */
+     *//*
+
     private static final int STEP_GET_OBJECT_BLOCK = 0x09;
 
-    /**
+    */
+/**
      * get firmware update after block sent complete
-     */
+     *//*
+
     private static final int STEP_UPDATE_GET = 0x0A;
 
-    /**
+    */
+/**
      * firmware update apply
-     */
+     *//*
+
     private static final int STEP_UPDATE_APPLY = 0x0B;
 
-    /**
+    */
+/**
      * all complete
-     */
+     *//*
+
     private static final int STEP_UPDATE_COMPLETE = 0x0C;
 
-    /**
+    */
+/**
      * manual stopping mesh updating flow
-     */
+     *//*
+
     private static final int STEP_UPDATE_ABORTING = -0x10;
 
-    /**
+    */
+/**
      * step
-     */
+     *//*
+
     private int step = STEP_INITIAL;
 
-    /**
+    */
+/**
      * node address | ignore
-     */
+     *//*
+
     private List<MeshUpdatingDevice> nodes;
 
 //    private int[] nodeAddresses;
@@ -188,9 +239,11 @@ public class MeshUpdatingController {
 
     private MeshFirmwareParser firmwareParser = new MeshFirmwareParser();
 
-    /**
+    */
+/**
      * received missing chunk number
-     */
+     *//*
+
     private ArrayList<Integer> missingChunks = new ArrayList<>();
 
     private int missingChunkIndex = 0;
@@ -207,15 +260,17 @@ public class MeshUpdatingController {
         this.accessBridge = accessBridge;
     }
 
-    /**
+    */
+/**
      * ignore distribution start action
      * <p>
      * 1. get all nodes's firmware information ->
      * 2. subscribe target group address
      * 3. distribution start (ignore)
      * 4. send block
-     */
-    public void begin(MeshUpdatingConfiguration configuration) {
+     *//*
+
+    public void begin(FirmwareUpdateConfiguration configuration) {
         if (configuration == null) {
             onUpdatingFail(STATE_FAIL, "updating params null");
             return;
@@ -227,7 +282,7 @@ public class MeshUpdatingController {
         this.nodes = configuration.getUpdatingDevices();
         this.companyId = configuration.getCompanyId();
         this.firmwareId = configuration.getFirmwareId();
-        this.objectId = configuration.getObjectId();
+        this.objectId = configuration.getBlobId();
         this.nodeIndex = 0;
         if (nodes != null && nodes.size() != 0) {
             this.step = STEP_GET_FIRMWARE_INFO;
@@ -338,11 +393,13 @@ public class MeshUpdatingController {
     }
 
 
-    /**
+    */
+/**
      * execute updating actions(one by one && step by step)
      * one device by one device
      * if all devices executed, then next step
-     */
+     *//*
+
     private void executeUpdatingAction() {
         log("action: " + getStepDesc(step) + " -- node index -- " + nodeIndex);
         if (nodeIndex >= nodes.size()) {
@@ -584,19 +641,23 @@ public class MeshUpdatingController {
     }
 
 
-    /**
+    */
+/**
      * response of {@link ObjectInfoGetMessage}
-     */
+     *//*
+
     private void onObjectInfoStatus(ObjectInfoStatusMessage objectInfoStatusMessage) {
         log("object info status: " + objectInfoStatusMessage.toString());
         nodeIndex++;
         executeUpdatingAction();
     }
 
-    /**
+    */
+/**
      * response of {@link FirmwareUpdateStartMessage}
      * , {@link FirmwareUpdatePrepareMessage}, {@link FirmwareUpdateGetMessage}
-     */
+     *//*
+
     private void onFirmwareUpdateStatus(FirmwareUpdateStatusMessage firmwareUpdateStatusMessage) {
 
         log("firmware update status: " + " at: " + getStepDesc(step)
@@ -625,9 +686,11 @@ public class MeshUpdatingController {
 
     }
 
-    /**
+    */
+/**
      * response of {@link ObjectTransferStartMessage}
-     */
+     *//*
+
     private void onTransferStatus(ObjectTransferStatusMessage transferStatusMessage) {
         log("object transfer status: " + transferStatusMessage.toString());
         byte status = transferStatusMessage.getStatus();
@@ -639,9 +702,11 @@ public class MeshUpdatingController {
         executeUpdatingAction();
     }
 
-    /**
+    */
+/**
      * response of {@link ObjectBlockTransferStartMessage} before start chunks sending
-     */
+     *//*
+
     private void onBlockTransferStatus(ObjectBlockTransferStatusMessage blockTransferStatusMessage) {
         log("block transfer status: " + blockTransferStatusMessage.toString());
         byte status = blockTransferStatusMessage.getStatus();
@@ -652,10 +717,12 @@ public class MeshUpdatingController {
         executeUpdatingAction();
     }
 
-    /**
+    */
+/**
      * response of BLOCK_GET
      * {@link #checkMissingChunks()}
-     */
+     *//*
+
     private void onBlockStatus(NotificationMessage message) {
         ObjectBlockStatusMessage objectBlockStatusMessage = (ObjectBlockStatusMessage) message.getStatusMessage();
         log("block status: " + objectBlockStatusMessage.toString());
@@ -698,9 +765,11 @@ public class MeshUpdatingController {
     }
 
 
-    /**
+    */
+/**
      * reliable command complete
-     */
+     *//*
+
     public void onUpdatingCommandComplete(boolean success, int opcode, int rspMax, int rspCount) {
         log(String.format("updating command complete: opcode-%04X success?" + success, opcode));
         if (!success) {
@@ -754,18 +823,22 @@ public class MeshUpdatingController {
                 device);
     }
 
-    /**
+    */
+/**
      * at least one device success
-     */
+     *//*
+
     private void onUpdatingSuccess() {
         log("updating complete");
         this.step = STEP_INITIAL;
         onStateUpdate(STATE_SUCCESS, "updating success", null);
     }
 
-    /**
+    */
+/**
      * no device success
-     */
+     *//*
+
     private void onUpdatingFail(int state, String desc) {
         log("updating failed: " + state + " -- " + desc);
         this.step = STEP_INITIAL;
@@ -786,9 +859,11 @@ public class MeshUpdatingController {
     }
 
 
-    /**
+    */
+/**
      * get step description
-     */
+     *//*
+
     private String getStepDesc(int step) {
         switch (step) {
 
@@ -844,3 +919,4 @@ public class MeshUpdatingController {
 
 
 }
+*/

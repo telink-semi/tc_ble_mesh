@@ -87,31 +87,15 @@ public class ModelAppStatusMessage extends StatusMessage implements Parcelable {
         return status;
     }
 
-    public void setStatus(byte status) {
-        this.status = status;
-    }
-
     public int getElementAddress() {
         return elementAddress;
-    }
-
-    public void setElementAddress(int elementAddress) {
-        this.elementAddress = elementAddress;
     }
 
     public int getAppKeyIndex() {
         return appKeyIndex;
     }
 
-    public void setAppKeyIndex(int appKeyIndex) {
-        this.appKeyIndex = appKeyIndex;
-    }
-
     public int getModelIdentifier() {
         return modelIdentifier;
-    }
-
-    public void setModelIdentifier(int modelIdentifier) {
-        this.modelIdentifier = modelIdentifier;
     }
 }

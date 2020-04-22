@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshSigModel;
-import com.telink.ble.mesh.core.message.config.ConfigMessage;
+import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.config.ModelPublicationSetMessage;
 import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetMessage;
@@ -26,11 +26,12 @@ import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
+import com.telink.ble.mesh.ui.CompositionDataActivity;
 import com.telink.ble.mesh.ui.DeviceOtaActivity;
 import com.telink.ble.mesh.ui.ModelSettingActivity;
 import com.telink.ble.mesh.ui.SchedulerListActivity;
+import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
-
 
 import androidx.appcompat.app.AlertDialog;
 
@@ -65,12 +66,13 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(address);
         initPubModel();
         TextView tv_mac = view.findViewById(R.id.tv_mac);
-        tv_mac.setText(String.format("Mac: %s", deviceInfo.macAddress));
+        tv_mac.setText("UUID: " + Arrays.bytesToHexString(deviceInfo.deviceUUID));
         view.findViewById(R.id.view_scheduler).setOnClickListener(this);
         cb_pub = view.findViewById(R.id.cb_pub);
         cb_relay = view.findViewById(R.id.cb_relay);
         cb_pub.setChecked(deviceInfo.isPubSet());
         cb_relay.setChecked(deviceInfo.isRelayEnable());
+        view.findViewById(R.id.view_cps).setOnClickListener(this);
         view.findViewById(R.id.view_pub).setOnClickListener(this);
         view.findViewById(R.id.view_relay).setOnClickListener(this);
         view.findViewById(R.id.view_sub).setOnClickListener(this);
@@ -78,7 +80,6 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         view.findViewById(R.id.btn_kick).setOnClickListener(this);
 
 
-        // todo mesh interface
         TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(NodeResetStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
@@ -170,7 +171,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
     private void kickOut() {
         // send reset message
         MeshService.getInstance().sendMeshMessage(new NodeResetMessage(deviceInfo.meshAddress));
-        kickDirect = deviceInfo.macAddress.equals(MeshService.getInstance().getCurDeviceMac());
+        kickDirect = deviceInfo.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress();
         showWaitingDialog("kick out processing");
         if (!kickDirect) {
             delayHandler.postDelayed(new Runnable() {
@@ -201,7 +202,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
             }
         } else if (event.getType().equals(ModelPublicationStatusMessage.class.getName())) {
             final ModelPublicationStatusMessage statusMessage = (ModelPublicationStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
-            if (statusMessage.getStatus() == ConfigMessage.STATUS_SUCCESS) {
+            if (statusMessage.getStatus() == ConfigStatus.SUCCESS.code) {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -224,23 +225,6 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                 onKickOutFinish();
             }
         }
-
-        // todo mesh interface
-        /*else if (event.getType().equals(NotificationEvent.EVENT_TYPE_CTL_STATUS_NOTIFY)) {
-
-        } else if (event.getType().equals(NotificationEvent.EVENT_TYPE_RELAY_STATUS)) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-//                    deviceInfo.set
-                    delayHandler.removeCallbacks(cmdTimeoutTask);
-                    dismissWaitingDialog();
-                    deviceInfo.setRelayEnable(!deviceInfo.isRelayEnable());
-                    cb_relay.setChecked(deviceInfo.isRelayEnable());
-                    TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity());
-                }
-            });
-        }*/
     }
 
 
@@ -248,11 +232,6 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.view_ota:
-
-                if (deviceInfo.macAddress == null || deviceInfo.macAddress.equals("")) {
-                    toastMsg("device no record");
-                    return;
-                }
                 Intent otaIntent = new Intent(getActivity(), DeviceOtaActivity.class);
                 otaIntent.putExtra("meshAddress", deviceInfo.meshAddress);
                 startActivity(otaIntent);
@@ -261,6 +240,12 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
 
             case R.id.btn_kick:
                 showKickConfirmDialog();
+                break;
+
+            case R.id.view_cps:
+                Intent cpsIntent = new Intent(getActivity(), CompositionDataActivity.class);
+                cpsIntent.putExtra("meshAddress", deviceInfo.meshAddress);
+                startActivity(cpsIntent);
                 break;
 
             case R.id.view_scheduler:

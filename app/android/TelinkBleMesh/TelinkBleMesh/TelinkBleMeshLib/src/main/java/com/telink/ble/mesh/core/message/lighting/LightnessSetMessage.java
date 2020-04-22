@@ -10,20 +10,22 @@ import com.telink.ble.mesh.core.message.generic.GenericMessage;
  */
 public class LightnessSetMessage extends GenericMessage {
     // 2 bytes
-    public int lightness;
+    private int lightness;
 
     // transaction id
-    public byte tid = 0;
+    private byte tid = 0;
 
-    public byte transitionTime = 0;
+    private byte transitionTime = 0;
 
-    public byte delay = 0;
+    private byte delay = 0;
 
-    public boolean ack = false;
+    private boolean ack = false;
+
+    private boolean isComplete = false;
 
     public static LightnessSetMessage getSimple(int address, int appKeyIndex, int lightness, boolean ack, int rspMax) {
         LightnessSetMessage message = new LightnessSetMessage(address, appKeyIndex);
-        message.lightness =  lightness;
+        message.lightness = lightness;
         message.ack = ack;
         message.setResponseMax(rspMax);
         return message;
@@ -46,13 +48,44 @@ public class LightnessSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return new byte[]{
-                (byte) this.lightness,
-                (byte) (this.lightness >> 8),
-                this.tid,
-                this.transitionTime,
-                this.delay
-        };
+        return
+                isComplete ?
+                        new byte[]{
+                                (byte) this.lightness,
+                                (byte) (this.lightness >> 8),
+                                this.tid,
+                                this.transitionTime,
+                                this.delay
+                        }
+                        :
+                        new byte[]{
+                                (byte) this.lightness,
+                                (byte) (this.lightness >> 8),
+                                this.tid
+                        };
     }
 
+    public void setLightness(int lightness) {
+        this.lightness = lightness;
+    }
+
+    public void setTid(byte tid) {
+        this.tid = tid;
+    }
+
+    public void setTransitionTime(byte transitionTime) {
+        this.transitionTime = transitionTime;
+    }
+
+    public void setDelay(byte delay) {
+        this.delay = delay;
+    }
+
+    public void setAck(boolean ack) {
+        this.ack = ack;
+    }
+
+    public void setComplete(boolean complete) {
+        isComplete = complete;
+    }
 }

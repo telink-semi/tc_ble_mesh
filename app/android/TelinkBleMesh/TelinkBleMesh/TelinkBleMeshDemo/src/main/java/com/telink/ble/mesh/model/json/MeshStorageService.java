@@ -195,7 +195,7 @@ public class MeshStorageService {
         MeshStorage.Node localNode = new MeshStorage.Node();
         // bind provisioner and node
         localNode.UUID = provisioner.UUID;
-        localNode.sno = String.format("%08X", mesh.sequenceNumber);
+//        localNode.sno = String.format("%08X", mesh.sequenceNumber);
         localNode.unicastAddress = String.format("%04X", mesh.localAddress);
         MeshLogger.log("alloc address: " + localNode.unicastAddress);
         localNode.name = "Provisioner Node";
@@ -351,7 +351,7 @@ public class MeshStorageService {
                 if (!isProvisionerNode(meshStorage, node)) {
                     deviceInfo = new NodeInfo();
                     deviceInfo.meshAddress = Integer.valueOf(node.unicastAddress, 16);
-                    deviceInfo.macAddress = Arrays.bytesToHexString(Arrays.hexToBytes(node.macAddress.replace(":", "")), ":").toUpperCase();
+                    deviceInfo.deviceUUID = (Arrays.hexToBytes(node.UUID.replace(":", "")));
                     deviceInfo.elementCnt = node.elements == null ? 0 : node.elements.size();
                     deviceInfo.deviceKey = Arrays.hexToBytes(node.deviceKey);
 
@@ -442,7 +442,7 @@ public class MeshStorageService {
     // convert nodeInfo(mesh.java) to node(json)
     public MeshStorage.Node convertDeviceInfoToNode(NodeInfo deviceInfo, int appKeyIndex) {
         MeshStorage.Node node = new MeshStorage.Node();
-        node.macAddress = deviceInfo.macAddress.replace(":", "").toUpperCase();
+        node.UUID = Arrays.bytesToHexString(deviceInfo.deviceUUID).toUpperCase();
         node.unicastAddress = String.format("%04X", deviceInfo.meshAddress);
 
         if (deviceInfo.deviceKey != null) {

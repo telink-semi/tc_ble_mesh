@@ -13,22 +13,23 @@ import java.nio.ByteOrder;
  */
 public class HslSetMessage extends GenericMessage {
 
-    public int lightness;
+    private int lightness;
 
-    public int hue;
+    private int hue;
 
-    public int saturation;
+    private int saturation;
 
     // transaction id
-    public byte tid = 0;
+    private byte tid = 0;
 
-    public byte transitionTime = 0;
+    private byte transitionTime = 0;
 
-    public byte delay = 0;
+    private byte delay = 0;
 
-    public boolean ack = false;
+    private boolean ack = false;
 
-    public boolean isComplete = false;
+    // if contains #transitionTime and #delay
+    private boolean isComplete = false;
 
     public static HslSetMessage getSimple(int address, int appKeyIndex, int lightness, int hue, int saturation, boolean ack, int rspMax) {
         HslSetMessage message = new HslSetMessage(address, appKeyIndex);
@@ -42,7 +43,7 @@ public class HslSetMessage extends GenericMessage {
 
     public HslSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
-        setTidPosition(3);
+        setTidPosition(6);
     }
 
     @Override
@@ -72,5 +73,37 @@ public class HslSetMessage extends GenericMessage {
                                 .putShort((short) hue)
                                 .putShort((short) saturation)
                                 .put(tid).array();
+    }
+
+    public void setLightness(int lightness) {
+        this.lightness = lightness;
+    }
+
+    public void setHue(int hue) {
+        this.hue = hue;
+    }
+
+    public void setSaturation(int saturation) {
+        this.saturation = saturation;
+    }
+
+    public void setTid(byte tid) {
+        this.tid = tid;
+    }
+
+    public void setTransitionTime(byte transitionTime) {
+        this.transitionTime = transitionTime;
+    }
+
+    public void setDelay(byte delay) {
+        this.delay = delay;
+    }
+
+    public void setAck(boolean ack) {
+        this.ack = ack;
+    }
+
+    public void setComplete(boolean complete) {
+        isComplete = complete;
     }
 }

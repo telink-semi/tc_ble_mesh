@@ -14,15 +14,17 @@ public class OnOffSetMessage extends GenericMessage {
     public static final byte OFF = 0;
 
     // 1: on, 0: off
-    public byte onOff;
+    private byte onOff;
 
-    public byte tid = 0;
+    private byte tid = 0;
 
-    public byte transitionTime = 0;
+    private byte transitionTime = 0;
 
-    public byte delay = 0;
+    private byte delay = 0;
 
-    public boolean ack = false;
+    private boolean ack = false;
+
+    private boolean isComplete = false;
 
     public static OnOffSetMessage getSimple(int address, int appKeyIndex, int onOff, boolean ack, int rspMax) {
         OnOffSetMessage message = new OnOffSetMessage(address, appKeyIndex);
@@ -49,11 +51,43 @@ public class OnOffSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return new byte[]{
-                this.onOff,
-                this.tid,
-                this.transitionTime,
-                this.delay
-        };
+        return
+                isComplete ?
+                        new byte[]{
+                                this.onOff,
+                                this.tid,
+                                this.transitionTime,
+                                this.delay
+                        }
+                        :
+                        new byte[]{
+                                this.onOff,
+                                this.tid
+                        }
+                ;
+    }
+
+    public void setOnOff(byte onOff) {
+        this.onOff = onOff;
+    }
+
+    public void setTid(byte tid) {
+        this.tid = tid;
+    }
+
+    public void setTransitionTime(byte transitionTime) {
+        this.transitionTime = transitionTime;
+    }
+
+    public void setDelay(byte delay) {
+        this.delay = delay;
+    }
+
+    public void setAck(boolean ack) {
+        this.ack = ack;
+    }
+
+    public void setComplete(boolean complete) {
+        isComplete = complete;
     }
 }

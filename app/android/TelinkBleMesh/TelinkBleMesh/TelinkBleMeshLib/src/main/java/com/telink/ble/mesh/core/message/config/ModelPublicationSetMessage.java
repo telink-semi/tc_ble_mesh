@@ -37,5 +37,7 @@ public class ModelPublicationSetMessage extends ConfigMessage {
         return modelPublication.toBytes();
     }
 
-
+    public void setModelPublication(ModelPublication modelPublication) {
+        this.modelPublication = modelPublication;
+    }
 }

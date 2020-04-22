@@ -237,9 +237,10 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         void onProgressUpdate(SeekBar seekBar, int progress, boolean immediate) {
 
             if (seekBar == sb_color) {
+
                 float visibility = ((float) progress) / 100;
                 if (color_panel != null) {
-                    color_panel.setVisibility(visibility, true);
+                    color_panel.setVisibility(visibility, immediate);
                 }
             } else if (seekBar == sb_lum || seekBar == sb_temp) {
                 long currentTime = System.currentTimeMillis();
@@ -251,7 +252,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
                         LightnessSetMessage message = LightnessSetMessage.getSimple(lumEleInfo.keyAt(0),
                                 meshInfo.getDefaultAppKeyIndex(),
                                 UnitConvert.lum2lightness(progress),
-                                false, 0);
+                                true, 0);
                         MeshService.getInstance().sendMeshMessage(message);
                     }
                 } else if (seekBar == sb_temp) {
@@ -262,7 +263,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
                         CtlTemperatureSetMessage temperatureSetMessage =
                                 CtlTemperatureSetMessage.getSimple(tempEleInfo.keyAt(0),
                                         meshInfo.getDefaultAppKeyIndex(), UnitConvert.temp100ToTemp(progress),
-                                        0, false, 0);
+                                        0, true, 0);
                         MeshService.getInstance().sendMeshMessage(temperatureSetMessage);
                     }
                 }

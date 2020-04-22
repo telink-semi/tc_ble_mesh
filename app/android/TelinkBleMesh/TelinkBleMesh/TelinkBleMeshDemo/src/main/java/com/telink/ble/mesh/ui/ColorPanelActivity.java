@@ -114,7 +114,7 @@ public class ColorPanelActivity extends BaseActivity {
             if (seekBar == sb_lightness) {
                 float visibility = ((float) progress) / 100;
                 if (color_panel != null) {
-                    color_panel.setVisibility(visibility, true);
+                    color_panel.setVisibility(visibility, immediate);
                 }
             } else if (seekBar == sb_red || seekBar == sb_green || seekBar == sb_blue) {
                 long currentTime = System.currentTimeMillis();

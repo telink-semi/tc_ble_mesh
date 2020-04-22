@@ -50,9 +50,6 @@ public class Parameters {
 
     // fast provision
     public static final String ACTION_FAST_PROVISION_CONFIG = "com.telink.ble.mesh.light.ACTION_FAST_PROVISION_CONFIG";
-    // auto connect
-
-    public static final String ACTION_AUTO_CONNECT_FILTER_TYPE = "com.telink.ble.mesh.light.ACTION_AUTO_CONNECT_FILTER_TYPE";
 
 
     // min scan period: default 3s for RSSI filter

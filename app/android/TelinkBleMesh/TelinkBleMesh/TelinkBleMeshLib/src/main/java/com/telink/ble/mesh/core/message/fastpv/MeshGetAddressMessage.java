@@ -2,11 +2,12 @@ package com.telink.ble.mesh.core.message.fastpv;
 
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.updating.UpdatingMessage;
+import com.telink.ble.mesh.core.message.generic.GenericMessage;
+
 
 import java.nio.ByteOrder;
 
-public class MeshGetAddressMessage extends UpdatingMessage {
+public class MeshGetAddressMessage extends GenericMessage {
 
     private int pid;
 
@@ -37,4 +38,8 @@ public class MeshGetAddressMessage extends UpdatingMessage {
         return MeshUtils.integer2Bytes(this.pid, 2, ByteOrder.LITTLE_ENDIAN);
     }
 
+
+    public void setPid(int pid) {
+        this.pid = pid;
+    }
 }

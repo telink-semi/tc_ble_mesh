@@ -23,31 +23,14 @@ public class AppKeyAddMessage extends ConfigMessage {
         super(destinationAddress);
     }
 
-    /*public AppKeyAddMessage(int netKeyIndex, int appKeyIndex, byte[] DEFAULT_APP_KEY) {
-        this.netKeyIndex = netKeyIndex;
-        this.appKeyIndex = appKeyIndex;
-        this.DEFAULT_APP_KEY = DEFAULT_APP_KEY;
-    }*/
-
-    public int getNetKeyIndex() {
-        return netKeyIndex;
-    }
-
     public void setNetKeyIndex(int netKeyIndex) {
         this.netKeyIndex = netKeyIndex;
-    }
-
-    public int getAppKeyIndex() {
-        return appKeyIndex;
     }
 
     public void setAppKeyIndex(int appKeyIndex) {
         this.appKeyIndex = appKeyIndex;
     }
 
-    public byte[] getAppKey() {
-        return appKey;
-    }
 
     public void setAppKey(byte[] appKey) {
         this.appKey = appKey;

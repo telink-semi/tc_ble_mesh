@@ -1,13 +1,14 @@
 package com.telink.ble.mesh.core.message.rp;
 
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.updating.UpdatingMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
+
 
 import java.nio.ByteBuffer;
 
 public class ProvisioningPduSendMessage extends UpdatingMessage {
 
-    byte outboundPDUNumber;
+    private byte outboundPDUNumber;
 
     /**
      * 16 bytes
@@ -49,4 +50,11 @@ public class ProvisioningPduSendMessage extends UpdatingMessage {
                 .put(provisioningPDU).array();
     }
 
+    public void setOutboundPDUNumber(byte outboundPDUNumber) {
+        this.outboundPDUNumber = outboundPDUNumber;
+    }
+
+    public void setProvisioningPDU(byte[] provisioningPDU) {
+        this.provisioningPDU = provisioningPDU;
+    }
 }

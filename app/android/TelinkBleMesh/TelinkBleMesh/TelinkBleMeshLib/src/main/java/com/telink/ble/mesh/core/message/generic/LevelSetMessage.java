@@ -9,20 +9,20 @@ import com.telink.ble.mesh.core.message.Opcode;
  */
 public class LevelSetMessage extends GenericMessage {
     // 1: on, 0: off
-    public int level;
+    private int level;
 
-    public byte tid = 0;
+    private byte tid = 0;
 
-    public byte transitionTime = 0;
+    private byte transitionTime = 0;
 
-    public byte delay = 0;
+    private byte delay = 0;
 
-    public boolean ack = false;
+    private boolean ack = false;
 
     /**
      * is complete message with optional params filled
      */
-    public boolean isComplete = false;
+    private boolean isComplete = false;
 
     public LevelSetMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
@@ -53,5 +53,27 @@ public class LevelSetMessage extends GenericMessage {
                 };
     }
 
+    public void setLevel(int level) {
+        this.level = level;
+    }
 
+    public void setTid(byte tid) {
+        this.tid = tid;
+    }
+
+    public void setTransitionTime(byte transitionTime) {
+        this.transitionTime = transitionTime;
+    }
+
+    public void setDelay(byte delay) {
+        this.delay = delay;
+    }
+
+    public void setAck(boolean ack) {
+        this.ack = ack;
+    }
+
+    public void setComplete(boolean complete) {
+        isComplete = complete;
+    }
 }

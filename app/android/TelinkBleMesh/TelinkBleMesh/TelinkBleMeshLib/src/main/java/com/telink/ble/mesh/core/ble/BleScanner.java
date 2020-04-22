@@ -200,9 +200,9 @@ public class BleScanner {
     public synchronized void startScan(@Nullable LeScanFilter leScanFilter, @Nullable LeScanSetting leScanSetting) {
 
         mDelayHandler.removeCallbacksAndMessages(null);
-        if (!isEnabled()) {
+        /*if (!isEnabled()) {
             return;
-        }
+        }*/
 
         if (isScanning) {
             stopScan();
@@ -266,15 +266,15 @@ public class BleScanner {
             } else if (mScannerType == ScannerType.Lollipop) {
                 scanStarted = startLollipopScan(mLeScanFilter, null);
             }
-
+            startScanningTimeoutTask(mLeScanSetting.timeout);
             if (scanStarted) {
                 if (mScannerCallback != null) {
                     mScannerCallback.onStartedScan();
                 }
-                startScanningTimeoutTask(mLeScanSetting.timeout);
             } else {
                 onScanFailed(CODE_START_FAIL, "scan action start failed");
             }
+
         }
     };
 
@@ -347,8 +347,9 @@ public class BleScanner {
         }
 
         List<ScanFilter> results = new ArrayList<>();
-        ScanFilter.Builder builder = new ScanFilter.Builder();
+        ScanFilter.Builder builder;
         for (int i = 0; i < maxSize; i++) {
+            builder = new ScanFilter.Builder();
             if (filter.uuidInclude != null && filter.uuidInclude.length > i) {
                 builder.setServiceUuid(ParcelUuid.fromString(filter.uuidInclude[i].toString()));
             }

@@ -10,9 +10,9 @@ import com.telink.ble.mesh.core.message.generic.GenericMessage;
 public class SceneDeleteMessage extends GenericMessage {
 
     // scene id
-    public int sceneNumber;
+    private int sceneNumber;
 
-    public boolean ack;
+    private boolean ack;
 
     public static SceneDeleteMessage getSimple(int address, int appKeyIndex, int sceneNumber, boolean ack, int rspMax) {
         SceneDeleteMessage message = new SceneDeleteMessage(address, appKeyIndex);
@@ -41,4 +41,11 @@ public class SceneDeleteMessage extends GenericMessage {
         return new byte[]{(byte) sceneNumber, (byte) (sceneNumber >> 8)};
     }
 
+    public void setSceneNumber(int sceneNumber) {
+        this.sceneNumber = sceneNumber;
+    }
+
+    public void setAck(boolean ack) {
+        this.ack = ack;
+    }
 }

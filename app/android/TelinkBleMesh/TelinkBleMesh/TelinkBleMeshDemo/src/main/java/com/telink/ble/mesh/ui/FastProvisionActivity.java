@@ -116,7 +116,9 @@ public class FastProvisionActivity extends BaseActivity implements View.OnClickL
     private void onDeviceFound(FastProvisioningDevice fastProvisioningDevice) {
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.meshAddress = fastProvisioningDevice.getNewAddress();
-        nodeInfo.macAddress = Arrays.bytesToHexString(fastProvisioningDevice.getMac());
+
+        nodeInfo.deviceUUID = new byte[16];
+        System.arraycopy(fastProvisioningDevice.getMac(), 0, nodeInfo.deviceUUID, 0, 6);
 
         nodeInfo.deviceKey = fastProvisioningDevice.getDeviceKey();
         nodeInfo.elementCnt = fastProvisioningDevice.getElementCount();

@@ -2,7 +2,6 @@ package com.telink.ble.mesh.ui;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.ParcelUuid;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -11,8 +10,6 @@ import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.access.BindingBearer;
-import com.telink.ble.mesh.core.ble.MeshScanRecord;
-import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.rp.ScanReportStatusMessage;
 import com.telink.ble.mesh.core.message.rp.ScanStartMessage;
@@ -151,46 +148,62 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
      ******************************************************************************/
     private void startScan() {
         ScanParameters parameters = ScanParameters.getDefault(false, true);
-        if (devices.size() != 0) {
-            String[] excludeMacs = new String[devices.size()];
-            for (int i = 0; i < devices.size(); i++) {
-                excludeMacs[i] = devices.get(i).macAddress;
-            }
-            parameters.setExcludeMacs(excludeMacs);
-        }
         parameters.setScanTimeout(10 * 1000);
         MeshService.getInstance().startScan(parameters);
     }
 
     private void onDeviceFound(AdvertisingDevice advertisingDevice) {
+        // provision service data: 15:16:28:18:[16-uuid]:[2-oobInfo]
+        byte[] serviceData = MeshUtils.getMeshServiceData(advertisingDevice.scanRecord, true);
+        if (serviceData == null || serviceData.length < 16) {
+            MeshLogger.log("serviceData error", MeshLogger.LEVEL_ERROR);
+            return;
+        }
+        final int uuidLen = 16;
+        byte[] deviceUUID = new byte[uuidLen];
+
+
+        System.arraycopy(serviceData, 0, deviceUUID, 0, uuidLen);
+        NodeInfo localNode = getNodeByUUID(deviceUUID);
+        if (localNode != null) {
+            MeshLogger.d("device exists: state -- " + localNode.getStateDesc());
+            return;
+        }
+        MeshService.getInstance().stopScan();
+
         int address = meshInfo.provisionIndex;
 
-        MeshLogger.log("alloc address: " + address);
+        MeshLogger.d("alloc address: " + address);
         if (address == -1) {
             enableUI(true);
             return;
         }
 
-        NodeInfo nodeInfo = new NodeInfo();
-        nodeInfo.meshAddress = meshInfo.provisionIndex;
-        nodeInfo.macAddress = advertisingDevice.device.getAddress();
-        nodeInfo.state = NodeInfo.STATE_PROVISIONING;
+        ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice.device, deviceUUID, address);
 
-        devices.add(nodeInfo);
-        mListAdapter.notifyDataSetChanged();
-
-        ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice, address);
+        // for static oob test
+        /*provisioningDevice.setAuthValue(new byte[]{
+                0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
+        });*/
         ProvisioningParameters provisioningParameters = new ProvisioningParameters(provisioningDevice);
-        MeshService.getInstance().startProvisioning(provisioningParameters);
+        if (MeshService.getInstance().startProvisioning(provisioningParameters)) {
+            NodeInfo nodeInfo = new NodeInfo();
+            nodeInfo.meshAddress = address;
+            nodeInfo.deviceUUID = deviceUUID;
+            nodeInfo.state = NodeInfo.STATE_PROVISIONING;
+            devices.add(nodeInfo);
+            mListAdapter.notifyDataSetChanged();
+        } else {
+            MeshLogger.d("provisioning busy");
+        }
     }
 
     private void onProvisionSuccess(ProvisioningEvent event) {
 
         ProvisioningDevice remote = event.getProvisioningDevice();
 
-        NodeInfo nodeInfo = getNodeByMac(remote.getAdvertisingDevice().device.getAddress());
-
-        if (nodeInfo == null) return;
+        NodeInfo nodeInfo = getProcessingNode();
 
         nodeInfo.state = NodeInfo.STATE_BINDING;
         int elementCnt = remote.getDeviceCapability().eleNum;
@@ -205,8 +218,8 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
         // check if device support fast bind
         boolean defaultBound = false;
-        if (privateMode && remote.getAdvertisingDevice().scanRecord != null) {
-            PrivateDevice device = getPrivateDevice(remote.getAdvertisingDevice().scanRecord);
+        if (privateMode && remote.getDeviceUUID() != null) {
+            PrivateDevice device = PrivateDevice.filter(remote.getDeviceUUID());
             if (device != null) {
                 MeshLogger.log("private device");
                 final byte[] cpsData = device.getCpsData();
@@ -220,16 +233,14 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         nodeInfo.setDefaultBind(defaultBound);
         mListAdapter.notifyDataSetChanged();
         int appKeyIndex = meshInfo.getDefaultAppKeyIndex();
-        BindingDevice bindingDevice = new BindingDevice(nodeInfo.meshAddress, nodeInfo.macAddress, appKeyIndex);
+        BindingDevice bindingDevice = new BindingDevice(nodeInfo.meshAddress, nodeInfo.deviceUUID, appKeyIndex);
         bindingDevice.setDefaultBound(defaultBound);
         MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
     }
 
     private void onProvisionFail(ProvisioningEvent event) {
         ProvisioningDevice deviceInfo = event.getProvisioningDevice();
-
-        NodeInfo pvDevice = getNodeByMac(deviceInfo.getAdvertisingDevice().device.getAddress());
-        if (pvDevice == null) return;
+        NodeInfo pvDevice = getProcessingNode();
         pvDevice.state = NodeInfo.STATE_PROVISION_FAIL;
         pvDevice.stateDesc = event.getDesc();
         mListAdapter.notifyDataSetChanged();
@@ -237,12 +248,8 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     private void onKeyBindSuccess(BindingEvent event) {
         BindingDevice remote = event.getBindingDevice();
-
-        NodeInfo deviceInList = getNodeByMac(remote.getMacAddress());
-        if (deviceInList == null) return;
-
+        NodeInfo deviceInList = getProcessingNode();
         deviceInList.state = NodeInfo.STATE_BIND_SUCCESS;
-
         // if is default bound, composition data has been valued ahead of binding action
         if (!remote.isDefaultBound()) {
             deviceInList.compositionData = remote.getCompositionData();
@@ -254,9 +261,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     private void onKeyBindFail(BindingEvent event) {
         BindingDevice remote = event.getBindingDevice();
-        NodeInfo deviceInList = getNodeByMac(remote.getMacAddress());
-        if (deviceInList == null) return;
-
+        NodeInfo deviceInList = getProcessingNode();
         deviceInList.state = NodeInfo.STATE_BIND_FAIL;
         deviceInList.stateDesc = event.getDesc();
         mListAdapter.notifyDataSetChanged();
@@ -314,10 +319,12 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
     private void onRemoteDeviceScanned(int src, ScanReportStatusMessage scanReportStatusMessage) {
 //        MeshLogger.log("on remote device found: " + Arrays.bytesToHexString(scanReportStatusMessage.getUuid(), ":"));
         RemoteProvisioningDevice remoteProvisioningDevice = new RemoteProvisioningDevice(scanReportStatusMessage, src);
-        if (!remoteProvisioningDevice.getMac().contains("11:22:33:11:22")) return;
+//        if (!remoteProvisioningDevice.getMac().contains("11:22:33:11:22")) return;
 
-        NodeInfo nodeInfo = getNodeByMac(remoteProvisioningDevice.getMac());
+        // check if device exists
+        NodeInfo nodeInfo = getNodeByUUID(remoteProvisioningDevice.getUuid());
         if (nodeInfo != null) {
+            MeshLogger.d("device already exists");
             return;
         }
 
@@ -337,7 +344,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         }
         device.setUnicastAddress(address);
         NodeInfo nodeInfo = new NodeInfo();
-        nodeInfo.macAddress = device.getMac();
+        nodeInfo.deviceUUID = device.getUuid();
         nodeInfo.meshAddress = address;
         nodeInfo.state = NodeInfo.STATE_PROVISIONING;
         devices.add(nodeInfo);
@@ -381,13 +388,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             onRemoteProvisioningFail((RemoteProvisioningEvent) event);
             onRemoteComplete();
         } else if (eventType.equals(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_SUCCESS)) {
-            delayHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    onRemoteProvisioningSuccess((RemoteProvisioningEvent) event);
-                }
-            }, 3000);
-
+            onRemoteProvisioningSuccess((RemoteProvisioningEvent) event);
         }
 
         // normal provisioning
@@ -428,11 +429,8 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
     private void onRemoteProvisioningSuccess(RemoteProvisioningEvent event) {
         // start remote binding
         RemoteProvisioningDevice remote = event.getRemoteProvisioningDevice();
-        MeshLogger.log("remote act success: " + remote.getMac());
-
-        NodeInfo nodeInfo = getNodeByMac(remote.getMac());
-        if (nodeInfo == null) return;
-
+        MeshLogger.log("remote act success: " + Arrays.bytesToHexString(remote.getUuid()));
+        NodeInfo nodeInfo = getProcessingNode();
         nodeInfo.state = NodeInfo.STATE_BINDING;
         int elementCnt = remote.getDeviceCapability().eleNum;
         nodeInfo.elementCnt = elementCnt;
@@ -443,37 +441,35 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         nodeInfo.setDefaultBind(false);
         mListAdapter.notifyDataSetChanged();
         int appKeyIndex = meshInfo.getDefaultAppKeyIndex();
-        BindingDevice bindingDevice = new BindingDevice(nodeInfo.meshAddress, nodeInfo.macAddress, appKeyIndex);
+        final BindingDevice bindingDevice = new BindingDevice(nodeInfo.meshAddress, nodeInfo.deviceUUID, appKeyIndex);
         bindingDevice.setBearer(BindingBearer.Any);
-        MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
+        delayHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
+            }
+        }, 3000);
+
     }
 
     private void onRemoteProvisioningFail(RemoteProvisioningEvent event) {
         //
-        MeshLogger.log("remote act fail: " + event.getRemoteProvisioningDevice().getMac());
+        MeshLogger.log("remote act fail: " + event.getRemoteProvisioningDevice().getUuid());
 
         RemoteProvisioningDevice deviceInfo = event.getRemoteProvisioningDevice();
-
-        NodeInfo pvDevice = getNodeByMac(deviceInfo.getMac());
-
-        if (pvDevice == null) return;
+        NodeInfo pvDevice = getProcessingNode();
         pvDevice.state = NodeInfo.STATE_PROVISION_FAIL;
         pvDevice.stateDesc = event.getDesc();
         mListAdapter.notifyDataSetChanged();
     }
 
-    private PrivateDevice getPrivateDevice(byte[] scanRecord) {
-        if (scanRecord == null) return null;
-        MeshScanRecord sr = MeshScanRecord.parseFromBytes(scanRecord);
-        byte[] serviceData = sr.getServiceData(ParcelUuid.fromString(UUIDInfo.PROVISION_SERVICE_UUID.toString()));
-        if (serviceData == null) return null;
-        return PrivateDevice.filter(serviceData);
+    private NodeInfo getProcessingNode() {
+        return this.devices.get(this.devices.size() - 1);
     }
 
-    private NodeInfo getNodeByMac(String mac) {
-        for (NodeInfo nodeInfo :
-                this.devices) {
-            if (mac.equals(nodeInfo.macAddress)) {
+    private NodeInfo getNodeByUUID(byte[] deviceUUID) {
+        for (NodeInfo nodeInfo : this.devices) {
+            if (Arrays.equals(deviceUUID, nodeInfo.deviceUUID)) {
                 return nodeInfo;
             }
         }

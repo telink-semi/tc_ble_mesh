@@ -56,6 +56,7 @@ public class CompositionData implements Serializable, Parcelable {
 
     /**
      * supported features
+     * 16 bits
      */
     public int features;
 

@@ -11,9 +11,9 @@ import com.telink.ble.mesh.entity.Scheduler;
  */
 public class SchedulerActionSetMessage extends GenericMessage {
 
-    public Scheduler scheduler;
+    private Scheduler scheduler;
 
-    public boolean ack = false;
+    private boolean ack = false;
 
     public static SchedulerActionSetMessage getSimple(int address, int appKeyIndex, Scheduler scheduler, boolean ack, int rspMax) {
         SchedulerActionSetMessage message = new SchedulerActionSetMessage(address, appKeyIndex);
@@ -40,5 +40,13 @@ public class SchedulerActionSetMessage extends GenericMessage {
     @Override
     public byte[] getParams() {
         return scheduler.toBytes();
+    }
+
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
+
+    public void setAck(boolean ack) {
+        this.ack = ack;
     }
 }

@@ -485,7 +485,7 @@ public class GattConnection extends BluetoothGattCallback {
             }
         }
         log("services: " + serviceInfo);*/
-
+        log("service discover complete");
         if (mConnectionCallback != null) {
             mConnectionCallback.onServicesDiscovered(services);
         }

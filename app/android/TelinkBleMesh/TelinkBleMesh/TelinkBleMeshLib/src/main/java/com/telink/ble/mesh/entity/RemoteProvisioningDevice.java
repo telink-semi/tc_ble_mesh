@@ -17,23 +17,16 @@ public class RemoteProvisioningDevice extends ProvisioningDevice {
     // proxy address
     private int serverAddress;
 
-    private String mac;
-
 
     public RemoteProvisioningDevice(ScanReportStatusMessage scanReportStatusMessage, int serverAddress) {
         this.uuid = scanReportStatusMessage.getUuid();
         this.serverAddress = serverAddress;
-        byte[] macBytes = new byte[6];
-        System.arraycopy(this.uuid, 10, macBytes, 0, macBytes.length);
-        macBytes = Arrays.reverse(macBytes);
-        this.mac = Arrays.bytesToHexString(macBytes, ":").toUpperCase();
     }
 
     protected RemoteProvisioningDevice(Parcel in) {
         super(in);
         uuid = in.createByteArray();
         serverAddress = in.readInt();
-        mac = in.readString();
     }
 
     @Override
@@ -41,7 +34,6 @@ public class RemoteProvisioningDevice extends ProvisioningDevice {
         super.writeToParcel(dest, flags);
         dest.writeByteArray(uuid);
         dest.writeInt(serverAddress);
-        dest.writeString(mac);
     }
 
     @Override
@@ -67,10 +59,6 @@ public class RemoteProvisioningDevice extends ProvisioningDevice {
 
     public int getServerAddress() {
         return serverAddress;
-    }
-
-    public String getMac() {
-        return mac;
     }
 
     @Override

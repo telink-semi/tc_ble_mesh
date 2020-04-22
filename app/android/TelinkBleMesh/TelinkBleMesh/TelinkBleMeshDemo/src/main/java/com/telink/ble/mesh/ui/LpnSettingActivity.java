@@ -9,14 +9,21 @@ import android.view.View;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.NotificationMessage;
+import com.telink.ble.mesh.core.message.config.NodeResetMessage;
+import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
+import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
+import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.foundation.Event;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import androidx.appcompat.app.AlertDialog;
 
@@ -86,18 +93,34 @@ public class LpnSettingActivity extends BaseActivity implements EventListener<St
         mesh = TelinkMeshApplication.getInstance().getMeshInfo();
         deviceInfo = mesh.getDeviceByMeshAddress(address);
         eleAdr = deviceInfo.getTargetEleAdr(VENDOR_MODEL_ID);
-        if (eleAdr == -1){
+        if (eleAdr == -1) {
             toastMsg("vendor model not found");
             return;
         }
-        // todo mesh interface
-//        TelinkMeshApplication.getInstance().addEventListener(NotificationEvent.EVENT_TYPE_KICK_OUT_CONFIRM, this);
+
+        TelinkMeshApplication.getInstance().addEventListener(NodeResetStatusMessage.class.getName(), this);
+        TelinkMeshApplication.getInstance().addEventListener(StatusNotificationEvent.EVENT_TYPE_NOTIFICATION_MESSAGE_UNKNOWN, this);
 //        TelinkMeshApplication.getInstance().addEventListener(NotificationEvent.EVENT_TYPE_VENDOR_RESPONSE, this);
     }
 
     @Override
     public void performed(Event<String> event) {
-        // todo mesh interface
+        if (event.getType().equals(NodeResetStatusMessage.class.getName())) {
+            onKickOutFinish();
+        } else if (event.getType().equals(StatusNotificationEvent.EVENT_TYPE_NOTIFICATION_MESSAGE_UNKNOWN)) {
+            StatusNotificationEvent statusNotificationEvent = (StatusNotificationEvent) event;
+            NotificationMessage message = statusNotificationEvent.getNotificationMessage();
+            int opcode = message.getOpcode();
+            if (opcode == OP_VENDOR_STATUS) {
+                byte[] params = message.getParams();
+                if (params.length == 4) {
+                    int humidity = (params[0] & 0xFF) + ((params[1] & 0xFF) << 8);
+                    int temperature = (params[2] & 0xFF) + ((params[3] & 0xFF) << 8);
+                    msgHandler.obtainMessage(MSG_APPEND_LOG, dateFormat.format(new Date()) + " Sensor State STATUS : H=" + humidity + " T=" + temperature + '\n')
+                            .sendToTarget();
+                }
+            }
+        }
         /*if (event.getType().equals(NotificationEvent.EVENT_TYPE_VENDOR_RESPONSE)) {
             NotificationInfo info = ((NotificationEvent) event).getNotificationInfo();
             MeshLogger.log("vendor response: " + info.toString());
@@ -148,8 +171,8 @@ public class LpnSettingActivity extends BaseActivity implements EventListener<St
     }
 
     private void kickOut() {
-        // todo mesh interface
-//        MeshService.getInstance().resetNode(deviceInfo.meshAddress, null);
+        // send reset message
+        MeshService.getInstance().sendMeshMessage(new NodeResetMessage(deviceInfo.meshAddress));
         showWaitingDialog("kick out processing");
         delayHandler.postDelayed(new Runnable() {
             @Override
@@ -161,8 +184,7 @@ public class LpnSettingActivity extends BaseActivity implements EventListener<St
 
     private void onKickOutFinish() {
         delayHandler.removeCallbacksAndMessages(null);
-        // todo mesh interface
-//        MeshService.getInstance().removeNodeInfo(deviceInfo.meshAddress);
+        MeshService.getInstance().removeDevice(deviceInfo.meshAddress);
         TelinkMeshApplication.getInstance().getMeshInfo().removeDeviceByMeshAddress(deviceInfo.meshAddress);
         TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getApplicationContext());
         dismissWaitingDialog();
@@ -183,6 +205,15 @@ public class LpnSettingActivity extends BaseActivity implements EventListener<St
             switch (v.getId()) {
 
                 case R.id.btn_get_lpn_status:
+                    MeshMessage meshMessage = new MeshMessage();
+                    meshMessage.setDestinationAddress(deviceInfo.meshAddress);
+                    meshMessage.setOpcode(OP_VENDOR_GET);
+                    meshMessage.setResponseOpcode(OP_VENDOR_STATUS);
+                    meshMessage.setParams(new byte[]{0, 0});
+                    if (MeshService.getInstance().sendMeshMessage(meshMessage)) {
+                        msgHandler.obtainMessage(MSG_APPEND_LOG, dateFormat.format(new Date()) + " Sensor State GET \n").sendToTarget();
+                    }
+//                    meshMessage.setTidPosition(tidPosition);
                     /*
                     final byte[] params = new byte[]{
                             (byte) 0xa3, (byte) 0xff, //flag

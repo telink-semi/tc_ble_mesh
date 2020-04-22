@@ -25,39 +25,39 @@ public class TimeStatusMessage extends StatusMessage implements Parcelable {
      * the Subsecond, Uncertainty, Time Authority, TAI-UTC Delta and Time Zone Offset fields shall be omitted;
      * otherwise these fields shall be present.
      */
-    public long taiSeconds;
+    private long taiSeconds;
 
     /**
      * 8 bits
      * The sub-second time in units of 1/256th second
      */
-    public byte subSecond;
+    private byte subSecond;
 
     /**
      * 8 bits
      * The estimated uncertainty in 10 millisecond steps
      */
-    public byte uncertainty;
+    private byte uncertainty;
 
     /**
      * 1 bit
      * 0 = No Time Authority, 1 = Time Authority
      */
-    public byte timeAuthority;
+    private byte timeAuthority;
 
     /**
      * TAI-UTC Delta
      * 15 bits
      * Current difference between TAI and UTC in seconds
      */
-    public int delta;
+    private int delta;
 
     /**
      * Time Zone Offset
      * 8 bits
      * The local time zone offset in 15-minute increments
      */
-    public int zoneOffset;
+    private int zoneOffset;
 
     /**
      * tag of is complete message
@@ -147,5 +147,33 @@ public class TimeStatusMessage extends StatusMessage implements Parcelable {
 
     public boolean isComplete() {
         return isComplete;
+    }
+
+    public void setTaiSeconds(long taiSeconds) {
+        this.taiSeconds = taiSeconds;
+    }
+
+    public void setSubSecond(byte subSecond) {
+        this.subSecond = subSecond;
+    }
+
+    public void setUncertainty(byte uncertainty) {
+        this.uncertainty = uncertainty;
+    }
+
+    public void setTimeAuthority(byte timeAuthority) {
+        this.timeAuthority = timeAuthority;
+    }
+
+    public void setDelta(int delta) {
+        this.delta = delta;
+    }
+
+    public void setZoneOffset(int zoneOffset) {
+        this.zoneOffset = zoneOffset;
+    }
+
+    public void setComplete(boolean complete) {
+        isComplete = complete;
     }
 }

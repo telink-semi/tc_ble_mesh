@@ -11,6 +11,7 @@ import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.config.ConfigMessage;
+import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.config.ModelSubscriptionSetMessage;
 import com.telink.ble.mesh.core.message.config.ModelSubscriptionStatusMessage;
 import com.telink.ble.mesh.demo.R;
@@ -172,7 +173,8 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mAdapter.setEnabled(deviceInfo.getOnOff() != -1);
+                mAdapter.setEnabled(
+                        deviceInfo.isLpn() || deviceInfo.getOnOff() != -1);
             }
         });
     }
@@ -183,7 +185,7 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
         if (eventType.equals(ModelSubscriptionStatusMessage.class.getName())) {
             NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
             ModelSubscriptionStatusMessage statusMessage = (ModelSubscriptionStatusMessage) notificationMessage.getStatusMessage();
-            if (statusMessage.getStatus() == ConfigMessage.STATUS_SUCCESS) {
+            if (statusMessage.getStatus() == ConfigStatus.SUCCESS.code) {
                 modelIndex++;
                 setNextModel();
             } else {

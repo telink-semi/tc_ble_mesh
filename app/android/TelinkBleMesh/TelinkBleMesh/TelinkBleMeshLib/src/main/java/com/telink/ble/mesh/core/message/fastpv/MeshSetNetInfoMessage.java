@@ -1,9 +1,11 @@
 package com.telink.ble.mesh.core.message.fastpv;
 
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.updating.UpdatingMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
+import com.telink.ble.mesh.core.message.generic.GenericMessage;
 
-public class MeshSetNetInfoMessage extends UpdatingMessage {
+
+public class MeshSetNetInfoMessage extends GenericMessage {
 
     private byte[] netInfoData;
 
@@ -32,4 +34,7 @@ public class MeshSetNetInfoMessage extends UpdatingMessage {
         return netInfoData;
     }
 
+    public void setNetInfoData(byte[] netInfoData) {
+        this.netInfoData = netInfoData;
+    }
 }

@@ -35,7 +35,7 @@ public class QRCodeShareActivity extends BaseActivity {
     private TextView tv_info;
 
     // time unit : second
-    private static final int QRCODE_TIMEOUT = 1 * 60;
+    private static final int QRCODE_TIMEOUT = 5 * 60;
     private int countIndex;
     private QRCodeGenerator mQrCodeGenerator;
     private Handler countDownHandler = new Handler();
