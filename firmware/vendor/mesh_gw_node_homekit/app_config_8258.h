@@ -75,6 +75,16 @@ extern "C" {
 #define PRINT_DEBUG_INFO                    1
 #endif
 
+#define ADC_ENABLE		0
+#if ADC_ENABLE
+#define ADC_BASE_MODE	1	//GPIO voltage
+#define ADC_VBAT_MODE	2	//Battery Voltage
+
+#define ADC_MODE		ADC_VBAT_MODE
+#define ADC_CHNM_ANA_INPUT 		GPIO_PB3 // one of ADC_GPIO_tab[]
+#define ADC_PRESCALER	ADC_PRESCALER_1F8
+#endif
+
 /////////////////// mesh project config /////////////////////////////////
 #define TRANSITION_TIME_DEFAULT_VAL (0x00)  // 0x41: 1 second // 0x00: means no default transition time
 

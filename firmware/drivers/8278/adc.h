@@ -681,6 +681,12 @@ unsigned short adc_sample_and_get_result_manual_mode(void);
  */
 unsigned short adc_temp_result(void);
 
+/**
+ * @brief This function serves to adc module setting init.
+ * @param[in]  none.
+ * @return none.
+ */
+void adc_drv_init();
 
 
 

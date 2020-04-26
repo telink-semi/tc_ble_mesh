@@ -28,6 +28,20 @@
 #include "analog.h"
 #include "register.h"
 #include "gpio_8258.h"
+
+
+/**
+ *  ADC sample rate
+ */
+typedef enum{
+	ADC_SAMPLE_RATE_23K,
+	ADC_SAMPLE_RATE_96K
+}ADC_SampleRateTypeDef;
+
+#define   ADC_SAMPLE_RATE_SELECT        ADC_SAMPLE_RATE_23K
+
+
+
 //ADC reference voltage cfg
 typedef struct {
 	unsigned short adc_vref; //default: 1175 mV
@@ -47,6 +61,8 @@ typedef enum{
 	ADC_VREF_1P2V,
 	ADC_VREF_VBAT_N,
 }ADC_RefVolTypeDef;
+
+
 
 /**
  *  ADC Vbat divider
@@ -791,6 +807,7 @@ static inline void adc_set_state_length(unsigned short R_max_mc, unsigned short 
 	analog_write(areg_r_max_mc, R_max_mc);
 	analog_write(areg_r_max_c, R_max_c);
 	analog_write(areg_r_max_s, ((R_max_mc>>8)<<6) | ((R_max_c>>8)<<4)  | (R_max_s & FLD_R_MAX_S)   );
+
 }
 
 /***************************************************************************************
@@ -1150,3 +1167,11 @@ void adc_vbat_init(GPIO_PinTypeDef pin);
  * @return the result of sampling.
  */
 unsigned int adc_sample_and_get_result(void);
+
+/**
+ * @brief This function serves to adc module setting init.
+ * @param[in]  none.
+ * @return none.
+ */
+void adc_drv_init();
+

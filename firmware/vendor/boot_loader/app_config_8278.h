@@ -77,8 +77,12 @@ extern "C" {
 
 #define ADC_ENABLE		0
 #if ADC_ENABLE
-#define ADC_CHNM_ANA_INPUT 		AVSS
-#define ADC_CHNM_REF_SRC 		RV_1P428
+#define ADC_BASE_MODE	1	//GPIO voltage
+#define ADC_VBAT_MODE	2	//Battery Voltage
+
+#define ADC_MODE		ADC_VBAT_MODE
+#define ADC_CHNM_ANA_INPUT 		GPIO_PB3 // one of ADC_GPIO_tab[]
+#define ADC_PRESCALER	ADC_PRESCALER_1F8
 #endif
 
 #define ONLINE_STATUS_EN        0

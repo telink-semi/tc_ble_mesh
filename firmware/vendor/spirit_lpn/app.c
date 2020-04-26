@@ -384,14 +384,19 @@ void main_loop ()
 	mi_schd_process();
 	#endif 
 	
-	#if ADC_ENABLE
+#if ADC_ENABLE
 	static u32 adc_check_time;
-    if(clock_time_exceed(adc_check_time, 1000*1000)){
-        adc_check_time = clock_time();
-        static u16 T_adc_val;
-        T_adc_val = adc_BatteryValueGet();
-    }  
+	if(clock_time_exceed(adc_check_time, 1000*1000)){
+		adc_check_time = clock_time();
+		static u16 T_adc_val;
+	#if(MCU_CORE_TYPE == MCU_CORE_8269)     
+		T_adc_val = adc_BatteryValueGet();
+	#else
+		T_adc_val = adc_sample_and_get_result();
 	#endif
+	}  
+#endif
+
 	//sim_tx_cmd_node2node();
 
 	#if DEBUG_IV_UPDATE_TEST_EN
@@ -574,6 +579,12 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 	rf_set_power_level_index (MY_RF_POWER_INDEX);
 	
 	blc_ll_recoverDeepRetention();
+#if (HCI_ACCESS == HCI_USE_UART)	//uart
+	uart_drv_init();
+#endif
+#if ADC_ENABLE
+	adc_drv_init();
+#endif
 
 	spirit_lpn_ui_init();
 }

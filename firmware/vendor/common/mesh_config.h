@@ -568,7 +568,7 @@ extern "C" {
 #define FEATURE_RELAY_EN		0
 #define FEATURE_PROXY_EN 		0
 #else
-#define FEATURE_FRIEND_EN 		1
+#define FEATURE_FRIEND_EN 		1   // WIN 32 should be suport disable: model_sig_cfg_s.frid
 #define FEATURE_LOWPOWER_EN		0
 #define FEATURE_PROV_EN 		1
     #if (0 == NODE_CAN_SEND_ADV_FLAG)

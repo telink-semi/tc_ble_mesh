@@ -113,10 +113,10 @@ void mesh_revert_network()
 	#endif
 	{
 		memset(mesh_key.net_key, 0, sizeof(mesh_key_t)-OFFSETOF(mesh_key_t,net_key));
+        u8 node_ident_random[8];    // because it will be used in both mesh_flash_retrieve_()->mesh_net_key_set_() and mesh_provision_para_init_()
+        prov_random_proc(node_ident_random);
 		mesh_flash_retrieve();	
-		u8 random1[8];
-		memcpy(random1, prov_para.random, sizeof(random1));
-		mesh_provision_para_init(random1);
+		mesh_provision_para_init(node_ident_random);
 	}
 
 	#if WIN32

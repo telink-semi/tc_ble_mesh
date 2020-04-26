@@ -464,7 +464,23 @@ unsigned short adc_temp_result(void)
 	return adc_temp_value;
 }
 
-
+/**
+ * @brief This function serves to adc module setting init.
+ * @param[in]  none.
+ * @return none.
+ */
+#if ADC_ENABLE
+void adc_drv_init(){
+	adc_init();
+	#if(ADC_MODE==ADC_BASE_MODE)
+	adc_base_init(ADC_CHNM_ANA_INPUT);	
+	#elif (ADC_MODE==ADC_VBAT_MODE)
+	adc_vbat_init(ADC_CHNM_ANA_INPUT);
+	#endif
+	adc_set_ain_pre_scaler(ADC_PRESCALER);//ADC pre_scaling default value is ADC_PRESCALER_1F8, it can change after adc_base_init().
+	adc_power_on_sar_adc(1);		//After setting the ADC parameters, turn on the ADC power supply control bit
+}
+#endif
 
 
 

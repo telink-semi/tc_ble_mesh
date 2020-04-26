@@ -2090,6 +2090,14 @@ int is_tx_status_cmd2self(u16 op, u16 adr_dst)
     return 0;
 }
 
+static inline u8 get_rsp_sec_type()
+{
+    if(FRIENDSHIP == mesh_key.sec_type_sel){
+        return MASTER;
+    }
+    return mesh_key.sec_type_sel;
+}
+
 /**
  * @brief  Called after receiving the command, and when it is published
  * @param  op: Opcode.
@@ -2132,7 +2140,7 @@ int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *
 	
 //	LOG_MSG_LIB(TL_LOG_NODE_SDK,par,par_len,"cmd data rsp: adr_src0x%04x,dst adr 0x%04x ",adr_src,adr_dst);
 	
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, 0, uuid, mesh_key.netkey_sel_dec, ak_array_idx, pub_md, mesh_key.sec_type_sel);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, 0, uuid, mesh_key.netkey_sel_dec, ak_array_idx, pub_md, get_rsp_sec_type());
 	return mesh_tx_cmd_unreliable(&mat);
 }
 
@@ -2142,7 +2150,7 @@ int mesh_tx_cmd_rsp_cfg_model(u16 op, u8 *par, u32 par_len, u16 adr_dst)
         return 0;
     }
 	material_tx_cmd_t mat;
-	set_material_tx_cmd(&mat, op, par, par_len, ele_adr_primary, adr_dst, g_reliable_retry_cnt_def, 0, 0, mesh_key.netkey_sel_dec, -1, 0, mesh_key.sec_type_sel);
+	set_material_tx_cmd(&mat, op, par, par_len, ele_adr_primary, adr_dst, g_reliable_retry_cnt_def, 0, 0, mesh_key.netkey_sel_dec, -1, 0, get_rsp_sec_type());
 	return mesh_tx_cmd_unreliable(&mat);
 }
 

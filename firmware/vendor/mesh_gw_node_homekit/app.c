@@ -1563,7 +1563,18 @@ void main_loop ()
 	factory_reset_cnt_check();
 	
 	mesh_loop_process();
-
+#if ADC_ENABLE
+	static u32 adc_check_time;
+    if(clock_time_exceed(adc_check_time, 1000*1000)){
+        adc_check_time = clock_time();
+		static u16 T_adc_val;
+		#if(MCU_CORE_TYPE == MCU_CORE_8269)     
+        T_adc_val = adc_BatteryValueGet();
+		#else
+		T_adc_val = adc_sample_and_get_result();
+		#endif
+    }  
+#endif	
 	#if (TESTCASE_FLAG_ENABLE && (!__PROJECT_MESH_PRO__))
 	test_case_key_refresh_patch();
 	#endif
@@ -1672,6 +1683,9 @@ void user_init()
 	blc_register_hci_handler (blc_rx_from_uart, blc_hci_tx_to_uart);		//default handler
 	//blc_register_hci_handler(rx_from_uart_cb,tx_to_uart_cb);				//customized uart handler
 	#endif
+#endif
+#if ADC_ENABLE
+	adc_drv_init();
 #endif
 	rf_pa_init();
 	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);

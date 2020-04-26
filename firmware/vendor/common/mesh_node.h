@@ -1543,6 +1543,7 @@ void mesh_switch_identity_proc();// run in loop
 int is_pkt_notify_only(u16 dst_adr, int relay_flag);
 u32 get_reliable_interval_ms_min();
 u32 get_reliable_interval_ms_max();
+void prov_random_proc(u8 *p_random);
 
 
 extern u16 ele_adr_primary;

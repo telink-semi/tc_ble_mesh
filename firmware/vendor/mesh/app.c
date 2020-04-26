@@ -421,8 +421,12 @@ void main_loop ()
 	static u32 adc_check_time;
     if(clock_time_exceed(adc_check_time, 1000*1000)){
         adc_check_time = clock_time();
-        static u16 T_adc_val;
+		static u16 T_adc_val;
+		#if(MCU_CORE_TYPE == MCU_CORE_8269)     
         T_adc_val = adc_BatteryValueGet();
+		#else
+		T_adc_val = adc_sample_and_get_result();
+		#endif
     }  
 	#endif
 	//sim_tx_cmd_node2node();
@@ -665,7 +669,12 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 	DBG_CHN0_HIGH;    //debug
 	
     light_pwm_init();
-    
+#if (HCI_ACCESS == HCI_USE_UART)	//uart
+	uart_drv_init();
+#endif
+#if ADC_ENABLE
+	adc_drv_init();
+#endif
     // should enable IRQ here, because it may use irq here, for example BLE connect.
     // irq_enable();
 }
