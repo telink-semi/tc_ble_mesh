@@ -152,6 +152,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
             NodeInfo nodeInfo = new NodeInfo();
             nodeInfo.meshAddress = address;
             nodeInfo.deviceUUID = deviceUUID;
+            nodeInfo.macAddress = advertisingDevice.device.getAddress();
             nodeInfo.state = NodeInfo.STATE_PROVISIONING;
             devices.add(nodeInfo);
             mListAdapter.notifyDataSetChanged();

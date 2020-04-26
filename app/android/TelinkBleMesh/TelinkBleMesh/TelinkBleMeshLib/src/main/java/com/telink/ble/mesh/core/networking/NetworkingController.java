@@ -1041,8 +1041,6 @@ public class NetworkingController {
         if (mNetworkingBridge != null) {
             mNetworkingBridge.onMeshMessageReceived(src, dst, accessPDU.opcode, accessPDU.params);
         }
-
-
     }
 
     private void updateReliableMessage(int src, AccessLayerPDU accessLayerPDU) {
@@ -1148,6 +1146,11 @@ public class NetworkingController {
     }
 
     private void checkSegmentBlock(boolean immediate, int ttl, int src) {
+        if (immediate) {
+            stopSegmentTimeoutTask();
+        } else {
+            restartSegmentTimeoutTask();
+        }
         mDelayHandler.removeCallbacks(mAccessSegCheckTask);
         long timeout = immediate ? 0 : getSegmentedTimeout(ttl, false);
         mAccessSegCheckTask.src = src;
@@ -1202,6 +1205,31 @@ public class NetworkingController {
         int ivIndex = getTransmitIvIndex();
         NetworkLayerPDU networkPDU = createNetworkPDU(data, ctl, ttl, src, dst, ivIndex, mSequenceNumber.get());
         sendNetworkPdu(networkPDU);
+    }
+
+    /**
+     * not receive any segment with current segAuth
+     */
+    private static final long SEG_TIMEOUT = 10 * 1000;
+    private Runnable segmentTimeoutTask = new Runnable() {
+        @Override
+        public void run() {
+            log(String.format(Locale.getDefault(), "segment timeout : lastSeqAuth: 0x%014X -- src: %02d",
+                    lastSeqAuth,
+                    lastSegSrc));
+            lastSegComplete = true;
+            lastSegSrc = 0;
+            lastSeqAuth = 0;
+        }
+    };
+
+    private void restartSegmentTimeoutTask() {
+        mDelayHandler.removeCallbacks(segmentTimeoutTask);
+        mDelayHandler.postDelayed(segmentTimeoutTask, SEG_TIMEOUT);
+    }
+
+    private void stopSegmentTimeoutTask() {
+        mDelayHandler.removeCallbacks(segmentTimeoutTask);
     }
 
     /**

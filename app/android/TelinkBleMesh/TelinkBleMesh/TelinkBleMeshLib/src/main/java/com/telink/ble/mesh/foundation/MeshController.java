@@ -67,6 +67,7 @@ import com.telink.ble.mesh.foundation.parameter.ScanParameters;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -783,7 +784,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
             case MODE_MESH_OTA:
                 onActionStart();
-                mFirmwareUpdatingController.begin((FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG));
+                FirmwareUpdateConfiguration configuration = (FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG);
+                rebuildFirmwareUpdatingDevices(configuration.getUpdatingDevices());
+                mFirmwareUpdatingController.begin(configuration);
                 break;
 
             case MODE_FAST_PROVISION:
@@ -793,6 +796,28 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
         }
     }
+
+    /**
+     * move direct device to last
+     *
+     * @param devices updating targets
+     */
+    private void rebuildFirmwareUpdatingDevices(List<MeshUpdatingDevice> devices) {
+        Iterator<MeshUpdatingDevice> iterator = devices.iterator();
+        MeshUpdatingDevice device;
+        MeshUpdatingDevice directDevice = null;
+        while (iterator.hasNext()) {
+            device = iterator.next();
+            if (device.getMeshAddress() == directDeviceAddress) {
+                directDevice = device;
+                iterator.remove();
+            }
+        }
+        if (directDevice != null) {
+            devices.add(directDevice);
+        }
+    }
+
 
     private void onConnectionInterrupt() {
         String desc = "connection interrupt";
@@ -1210,7 +1235,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 //            if (!device.getAddress().toUpperCase().equals("A4:C1:38:3F:4C:05")) return;
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
-//            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
+//            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD:51")) return;
 //            if (!device.getAddress().toUpperCase().contains("FF:EE:EE:EE")) return;
 //            if (!device.getAddress().contains("33:22:11")) return;
             onScanFilter(device, rssi, scanRecord);

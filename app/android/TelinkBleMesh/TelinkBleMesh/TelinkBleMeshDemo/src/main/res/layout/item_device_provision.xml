@@ -32,8 +32,9 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:textSize="12sp"
-                android:lines="4"
-                android:maxLines="4"
+                android:lines="6"
+                android:breakStrategy="simple"
+                android:maxLines="6"
                 android:ellipsize="end"/>
         </LinearLayout>
 

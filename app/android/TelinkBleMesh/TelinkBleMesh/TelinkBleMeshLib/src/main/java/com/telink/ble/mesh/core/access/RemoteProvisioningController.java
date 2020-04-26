@@ -19,8 +19,6 @@ import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import java.util.logging.Level;
-
 /**
  * todo
  * Mesh remote provision
@@ -34,7 +32,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
 
     public static final int STATE_INIT = 0x00;
 
-    public static final int STATE_LINK_OPENED = 0x01;
+    public static final int STATE_LINK_OPENING = 0x01;
 
     public static final int STATE_PROVISIONING = 0x02;
 
@@ -42,7 +40,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
 
     public static final int STATE_PROVISION_FAIL = 0x04;
 
-    public static final int STATE_LINK_CLOSED = 0x05;
+    public static final int STATE_LINK_CLOSING = 0x05;
 
     private int state;
 
@@ -87,7 +85,9 @@ public class RemoteProvisioningController implements ProvisioningBridge {
     }
 
     public void begin(ProvisioningController provisioningController, int appKeyIndex, RemoteProvisioningDevice remoteProvisioningDevice) {
-        log(String.format("remote provisioning begin: server -- %04X", remoteProvisioningDevice.getServerAddress()));
+        log(String.format("remote provisioning begin: server -- %04X  uuid -- %s",
+                remoteProvisioningDevice.getServerAddress(),
+                Arrays.bytesToHexString(remoteProvisioningDevice.getUuid())));
         this.outboundNumber = OUTBOUND_INIT_VALUE;
         this.inboundPDUNumber = -1;
         this.cachePdu = null;
@@ -124,11 +124,12 @@ public class RemoteProvisioningController implements ProvisioningBridge {
         int serverAddress = provisioningDevice.getServerAddress();
         byte[] uuid = provisioningDevice.getUuid();
         MeshMessage linkOpenMessage = LinkOpenMessage.getSimple(serverAddress, appKeyIndex, 1, uuid);
-
+        this.state = STATE_LINK_OPENING;
         this.onMeshMessagePrepared(linkOpenMessage);
     }
 
     private void linkClose(boolean success) {
+        this.state = STATE_LINK_CLOSING;
         int serverAddress = provisioningDevice.getServerAddress();
         byte reason = success ? LinkCloseMessage.REASON_SUCCESS : LinkCloseMessage.REASON_FAIL;
         LinkCloseMessage linkCloseMessage = LinkCloseMessage.getSimple(serverAddress, appKeyIndex, 1, reason);
@@ -136,12 +137,12 @@ public class RemoteProvisioningController implements ProvisioningBridge {
     }
 
     private void onLinkStatus(LinkStatusMessage linkStatusMessage) {
-        // todo check link status
         log("link status : " + linkStatusMessage.toString());
-        if (state == STATE_INIT) {
-            this.state = STATE_LINK_OPENED;
+        if (state == STATE_LINK_OPENING) {
             startProvisioningFlow();
         } else if (state == STATE_PROVISIONING) {
+            log("link status when provisioning");
+        } else if (state == STATE_LINK_CLOSING) {
             this.state = provisionSuccess ? STATE_PROVISION_SUCCESS : STATE_PROVISION_FAIL;
             onRemoteProvisioningComplete();
         }
@@ -164,9 +165,6 @@ public class RemoteProvisioningController implements ProvisioningBridge {
 
     private void onOutboundReport(ProvisioningPDUOutboundReportMessage outboundReportMessage) {
         int outboundPDUNumber = outboundReportMessage.getOutboundPDUNumber() & 0xFF;
-        /*if (this.outboundNumber == outboundPDUNumber) {
-
-        }*/
         log("outbound report message received: " + outboundPDUNumber + " waiting? " + this.outboundReportWaiting);
         if (this.outboundNumber == outboundPDUNumber) {
 //            delayHandler.removeCallbacks(provisioningPduTimeoutTask);
@@ -179,6 +177,12 @@ public class RemoteProvisioningController implements ProvisioningBridge {
                 this.cachePdu = null;
             } else {
                 log("no cached provisioning pdu: waiting for provisioning response");
+            }
+        } else if (outboundReportWaiting) {
+            log("outbound number not pair: need resend provision pdu message");
+            outboundReportWaiting = false;
+            if (this.transmittingPdu != null) {
+                this.onCommandPrepared(ProxyPDU.TYPE_PROVISIONING_PDU, this.transmittingPdu);
             }
         }
     }
@@ -221,6 +225,9 @@ public class RemoteProvisioningController implements ProvisioningBridge {
     private void onProvisioningComplete(boolean success, String desc) {
         delayHandler.removeCallbacksAndMessages(null);
         provisionSuccess = success;
+        if (!success){
+            provisioningController.clear();
+        }
         linkClose(success);
     }
 

@@ -50,10 +50,10 @@ public final class Encipher {
 
     //    private static final byte[] SALT_INPUT_SMK4 = "smk4".getBytes();
     //  “id6” || 0x01
-    public static final byte[] SALT_K3_M = new byte[]{0x69, 0x64, 0x36, 0x34, 0x01};
+    private static final byte[] SALT_K3_M = new byte[]{0x69, 0x64, 0x36, 0x34, 0x01};
 
     // //  “id64” || 0x01
-    public static final byte[] SALT_K4_M = new byte[]{0x69, 0x64, 0x36, 0x01};
+    private static final byte[] SALT_K4_M = new byte[]{0x69, 0x64, 0x36, 0x01};
 
     private static final byte[] SALT_NKIK = "nkik".getBytes();
 
@@ -86,7 +86,7 @@ public final class Encipher {
         }
     }
 
-    public static byte[] generateSharedECDHSecret(byte[] xy, PrivateKey provisionerPrivateKey) {
+    public static byte[] generateECDH(byte[] xy, PrivateKey provisionerPrivateKey) {
 
         BigInteger x = BigIntegers.fromUnsignedByteArray(xy, 0, 32);
         BigInteger y = BigIntegers.fromUnsignedByteArray(xy, 32, 32);

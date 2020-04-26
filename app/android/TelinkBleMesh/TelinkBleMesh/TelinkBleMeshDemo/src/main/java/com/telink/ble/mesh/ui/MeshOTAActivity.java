@@ -180,14 +180,27 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
 
                 MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
                 List<MeshUpdatingDevice> updatingDevices = new ArrayList<>();
+                final int directAddress = MeshService.getInstance().getDirectConnectedNodeAddress();
                 MeshUpdatingDevice device;
+                MeshUpdatingDevice directDevice = null;
                 for (NodeInfo node : nodes) {
 //                    if (node.getOnOff() == NodeInfo.ON_OFF_STATE_OFFLINE || node.macAddress .endsWith("BB:CC:DD:81")) continue;
-                    device = new MeshUpdatingDevice();
-                    device.setMeshAddress(node.meshAddress);
-                    device.setUpdatingEleAddress(node.getTargetEleAdr(MeshSigModel.SIG_MD_OBJ_TRANSFER_S.modelId));
-                    updatingDevices.add(device);
+                    if (directAddress == node.meshAddress) {
+                        directDevice = new MeshUpdatingDevice();
+                        directDevice.setMeshAddress(node.meshAddress);
+                        directDevice.setUpdatingEleAddress(node.getTargetEleAdr(MeshSigModel.SIG_MD_OBJ_TRANSFER_S.modelId));
+                    } else {
+                        device = new MeshUpdatingDevice();
+                        device.setMeshAddress(node.meshAddress);
+                        device.setUpdatingEleAddress(node.getTargetEleAdr(MeshSigModel.SIG_MD_OBJ_TRANSFER_S.modelId));
+                        updatingDevices.add(device);
+                    }
                 }
+                // put direct device to last
+                if (directDevice != null) {
+                    updatingDevices.add(directDevice);
+                }
+
                 FirmwareUpdateConfiguration configuration = new FirmwareUpdateConfiguration(updatingDevices, mFirmware,
                         meshInfo.getDefaultAppKeyIndex(), 0xC00F);
                 MeshOtaParameters meshOtaParameters = new MeshOtaParameters(configuration);

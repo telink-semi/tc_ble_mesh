@@ -1,6 +1,7 @@
 package com.telink.ble.mesh.ui.adapter;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,7 +57,11 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
         holder.iv_device.setImageResource(iconRes);
 
 //        holder.tv_name.setText(mDevices.get(position).getAddress());
-        holder.tv_device_info.setText(mContext.getString(R.string.device_prov_desc, String.format("%04X", device.meshAddress), Arrays.bytesToHexString(device.deviceUUID)));
+        String deviceDesc = mContext.getString(R.string.device_prov_desc, String.format("%04X", device.meshAddress), Arrays.bytesToHexString(device.deviceUUID));
+        if (!TextUtils.isEmpty(device.macAddress)) {
+            deviceDesc += "\nmac: " + device.macAddress;
+        }
+        holder.tv_device_info.setText(deviceDesc);
         holder.tv_state.setText(device.getStateDesc());
 
         if (device.state == NodeInfo.STATE_PROVISIONING || device.state == NodeInfo.STATE_BINDING) {

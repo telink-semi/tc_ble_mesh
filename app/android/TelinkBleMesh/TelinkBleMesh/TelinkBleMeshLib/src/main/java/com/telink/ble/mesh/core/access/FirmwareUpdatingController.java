@@ -939,6 +939,7 @@ public class FirmwareUpdatingController {
      * at least one device success
      */
     private void onUpdatingSuccess() {
+        onStateUpdate(STATE_PROGRESS, "update complete -> progress ", 100);
         log("updating complete");
         this.step = STEP_INITIAL;
         onStateUpdate(STATE_SUCCESS, "updating success", null);
