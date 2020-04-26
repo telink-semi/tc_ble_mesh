@@ -342,11 +342,11 @@ extern "C" {
 	#if ((MESH_USER_DEFINE_MODE == MESH_MI_ENABLE) || (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL) || __PROJECT_MESH_LPN__ || SPIRIT_PRIVATE_LPN_EN || (LIGHT_TYPE_SEL == TYPE_TOOTH_BRUSH))
 #define MD_MESH_OTA_EN				0   // must 0
     #elif (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-#define MD_MESH_OTA_EN				1	// 
+#define MD_MESH_OTA_EN				0	// 
     #elif (AIS_ENABLE)
 #define MD_MESH_OTA_EN				0	// default disable
 	#else
-#define MD_MESH_OTA_EN				1   // dufault disable before released by SIG.
+#define MD_MESH_OTA_EN				0   // dufault disable before released by SIG.
 	#endif
 #endif
 
@@ -478,11 +478,11 @@ extern "C" {
     #if (WIN32)
 #define MD_REMOTE_PROV              1
     #elif (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
-#define MD_REMOTE_PROV              1   // default disable
+#define MD_REMOTE_PROV              0   // default disable
     #elif (MI_API_ENABLE)
 #define MD_REMOTE_PROV              0   // must 0
     #elif (__PROJECT_MESH__)
-#define MD_REMOTE_PROV              1   // dufault disable before released by SIG.
+#define MD_REMOTE_PROV              0   // dufault disable before released by SIG.
     #else
 #define MD_REMOTE_PROV              0   // must 0, only project_mesh support now. dufault disable before released by SIG.
     #endif
