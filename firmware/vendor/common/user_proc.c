@@ -157,18 +157,8 @@ int user_node_rc_link_open_callback()
 }
 
 
-void prov_random_proc()
-{
-    #if !WIN32
-    u8 *p_random = prov_para.random;
-    for(int i=0;i<8;i++){
-            p_random[i]= rand()&0xff;
-    }
-    #endif
-    return ;
-}
 
-void mesh_provision_para_init()
+void mesh_provision_para_init(u8 *p_random)
 {
 	const u8 hash[8]={0x00,0x86,0x17,0x65,0xae,0xfc,0xc5,0x7b};
 	mesh_provision_para_reset();
@@ -178,7 +168,7 @@ void mesh_provision_para_init()
 	memcpy(prov_para.hash,hash,sizeof(hash));// hash can caculate automatically 
 	//provision_mag.unicast_adr_last =1;
 	prov_para.ele_cnt =1;
-	prov_random_proc();
+	memcpy(prov_para.random,p_random,sizeof(prov_para.random));
 	#if !WIN32
 	user_prov_multi_device_uuid();// use the mac address part to create the device uuid part
 	#if (!AIS_ENABLE)

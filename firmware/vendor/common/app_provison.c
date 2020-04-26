@@ -49,6 +49,8 @@ _attribute_no_retention_bss_ pro_PB_ADV rcv_pb;
 _attribute_no_retention_bss_ u8 para_pro[PROVISION_GATT_MAX_LEN]; //it's also used in proxy_gatt_Write(), but network payload is less then 31, because it will be relayed directly.
 _attribute_no_retention_bss_ u8 para_len ;
 
+u8 proxy_para_buf[PROVISION_GATT_MAX_LEN]; 
+u8 proxy_para_len=0;
 
 #define OFFSET_START	0x1F
 #define OFFSET_CON		0x17
@@ -248,7 +250,7 @@ u8 pkt_pb_gatt_data(rf_packet_att_data_t *p, u8 l2cap_type,u8 *p_rcv,u8 *p_rcv_l
 
     u8 len_payload = p->l2cap-4;
     u8 len_total = ((((p_gatt->sar == SAR_CONTINUS)||(p_gatt->sar == SAR_END))? idx_num : 0) + len_payload);
-	if(len_total > sizeof(para_pro)){    // p_rcv point to para_pro, over folw.
+	if(len_total > PROVISION_GATT_MAX_LEN){    // p_rcv point to para_pro, over folw.
 	    static u8 para_pro_overflow_cnt;para_pro_overflow_cnt++;
 		mesh_proxy_sar_para_init();
 	    return 0;

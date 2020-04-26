@@ -2736,7 +2736,12 @@ void mesh_key_flash_sector_init()
 	flash_erase_sector(FLASH_ADR_MESH_KEY);
 	memset(mesh_key.net_key, 0, sizeof(mesh_key_t)-OFFSETOF(mesh_key_t,net_key));
 }
-#define MAX_SWITCH_IDENTITY_TIME_S 60
+
+/**
+ * @brief  node identity initialization, check the Node Identity state,
+ *         and set the timer stamp for reference
+ * @retval None
+ */
 void mesh_key_node_identity_init() // after power on ,we need to detect the flag ,and set timer part 
 {
 	foreach(i,NET_KEY_MAX){
@@ -2750,6 +2755,11 @@ void mesh_key_node_identity_init() // after power on ,we need to detect the flag
 	return ;
 }
 
+/**
+ * @brief  after gatt provision, set the Node Identity state Enabled, and set the time stamp
+ *         for the duration of the Node Identity Advertisement
+ * @retval None
+ */
 void mesh_key_node_identity_set_prov_set()// after gatt provision ,use this fun for setting part 
 {
 	u8 identity_trigger =0;
@@ -2788,13 +2798,21 @@ void mesh_key_node_identity_prov_set(u8 identity,u8 netkey_idx)// client send no
 	return ;
 }
 */
+
+/**
+ * @brief  This is running in main loop to handle the Node/Network Identity switch,
+ *         ref: MshPRFv1.0.1 7.2.2.2.3.
+ *         In between the state, the Node Identity shouldn't not transmit
+ *         more than 60s, the NODE_IDENTITY_TIMEOUT_S defines the duration.
+ * @retval None
+ */
 void mesh_switch_identity_proc()// run in loop
 {
 	u8 identity_trigger =0;
 	foreach(i,NET_KEY_MAX){
 		mesh_net_key_t *p_in = &mesh_key.net_key[i][0];
 		if(p_in->valid && p_in->node_identity == NODE_IDENTITY_SUB_NET_RUN){
-			if(clock_time_exceed_s(p_in->start_identity_s,MAX_SWITCH_IDENTITY_TIME_S)){
+			if(clock_time_exceed_s(p_in->start_identity_s,NODE_IDENTITY_TIMEOUT_S)){
 				identity_trigger++;
 				p_in->node_identity =0;
 			}
@@ -3181,6 +3199,19 @@ void client_node_reset_cb(u16 adr_dst)
         client_del_node_adr_dst = adr_dst;
     }
 }
+
+#define RELIABLE_INTERVAL_MS_MIN       (2 * CMD_INTERVAL_MS + MESH_RSP_BASE_DELAY_STEP*10 + 300)	// relay + response
+#define RELIABLE_INTERVAL_MS_MAX       (max2((RELIABLE_INTERVAL_MS_MIN + 500), 2000))
+
+u32 get_reliable_interval_ms_min()
+{
+    return RELIABLE_INTERVAL_MS_MIN;
+}
+
+u32 get_reliable_interval_ms_max()
+{
+    return RELIABLE_INTERVAL_MS_MAX;
+}
 #endif
 
 void proc_node_reset()
@@ -3497,7 +3528,38 @@ void mesh_random_delay()
 FLASH_ADDRESS_DEFINE;
 #endif
 
+/** @
+  * @relay_flag: 1: relay; 0: tx command
+  */
+int is_pkt_notify_only(u16 dst_adr, int relay_flag)
+{
+    if(is_proxy_support_and_en){
+        if(relay_flag){
+            //reduce tx time of GATT connected node to receive more messages. especially when get all.
+            return (app_adr == dst_adr); // other nodes will relay this address.
+        }else{ // tx command
+            #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+            // other proxy client's filter address may subscribe this address. //return 0;
+            #else
+            return (app_adr == dst_adr);
+            #endif
+        }
+    }
+    return 0;
+}
+
 u8 mesh_init_flag = 1;
+
+void prov_random_proc(u8 *p_random)
+{
+    #if !WIN32
+    for(int i=0;i<8;i++){
+            p_random[i]= rand()&0xff;
+    }
+	memcpy(prov_para.random,p_random,8);
+    #endif
+}
+
 void mesh_init_all()
 {	
     mesh_init_flag = 1;
@@ -3517,11 +3579,13 @@ void mesh_init_all()
 	set_proxy_initial_mode(0);
 	// init the heartbeat msg 
 	init_heartbeat_str();
+    u8 node_ident_random[8];    // because it will be used in both mesh_flash_retrieve_()->mesh_net_key_set_() and mesh_provision_para_init_()
+	prov_random_proc(node_ident_random);
     // read parameters
     mesh_flash_retrieve();	// should be first, get unicast addr from config modle.
     mesh_key_node_identity_init();// should be after key retrieve .
     provision_random_data_init();
-	mesh_provision_para_init();
+	mesh_provision_para_init(node_ident_random);
 	//unprovision beacon send part 
 	beacon_str_init();
 	mesh_node_init();

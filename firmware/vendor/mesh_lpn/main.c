@@ -26,6 +26,7 @@
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor/common/mesh_lpn.h"
 
 extern void user_init();
@@ -63,9 +64,16 @@ _attribute_ram_code_ void irq_uart_handle()
 
 _attribute_ram_code_ void irq_handler(void)
 {
-    lpn_debug_set_irq_pin(1);
-	irq_blt_sdk_handler ();  //ble irq proc
-    lpn_debug_set_irq_pin(0);
+	#if DUAL_MODE_ADAPT_EN
+	if(rf_mode == RF_MODE_ZIGBEE){
+		irq_zigbee_sdk_handler();
+	}else
+	#endif
+	{
+    	lpn_debug_set_irq_pin(1);
+		irq_blt_sdk_handler ();  //ble irq proc
+    	lpn_debug_set_irq_pin(0);
+	}
 
 #if (HCI_ACCESS==HCI_USE_UART)
 	irq_uart_handle();
@@ -123,7 +131,7 @@ _attribute_ram_code_ int main (void)    //must run in ramcode
 	clock_init(SYS_CLK_48M_Crystal);
 #endif
 
-	
+
 #if	(PM_DEEPSLEEP_RETENTION_ENABLE)
 		if( pm_is_MCU_deepRetentionWakeup() ){
 			user_init_deepRetn ();
@@ -136,6 +144,9 @@ _attribute_ram_code_ int main (void)    //must run in ramcode
 
 
     irq_enable();
+	#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+	LOG_USER_MSG_INFO(0, 0,"[mesh] Start from SIG Mesh", 0);
+	#endif
 
 	while (1) {
 #if (MODULE_WATCHDOG_ENABLE)

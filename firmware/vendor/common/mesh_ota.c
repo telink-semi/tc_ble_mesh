@@ -797,9 +797,9 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
 				}
 				APP_report_mesh_ota_apply_status(rsp->src, p);
 				if(UPDATE_ST_SUCCESS == p->st && UPDATE_PHASE_VERIFYING_SUCCESS == p->update_phase){
-                    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"fw update apply sucess!!!");
+                    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"fw update apply sucess!!!",0);
 				}else{
-                    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "------------------------------!!! Firmware update apply ERROR !!!");
+                    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "------------------------------!!! Firmware update apply ERROR !!!",0);
                 }
             }
         
@@ -1809,6 +1809,10 @@ int mesh_cmd_sig_blob_chunk_transfer(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 }
 
 //------
+/**
+ * @retval  return have not been receive "block get" before when BLOCK_CRC32_CHECKSUM_EN is 0,
+ *             return crc valid when BLOCK_CRC32_CHECKSUM_EN is 1,
+ */
 int block_crc32_check_current(u32 check_val)
 {
     u32 adr = updater_get_fw_data_position(0);
@@ -1826,6 +1830,11 @@ int block_crc32_check_current(u32 check_val)
             fw_update_srv_proc.crc_total += crc_type1_blk;
             set_array_mask_en(mask, blk_num);
         }
+        #if (0 == BLOCK_CRC32_CHECKSUM_EN)
+        else{
+            return 0;
+        }
+        #endif
         
         return 1;
     }
@@ -1853,10 +1862,12 @@ int mesh_cmd_sig_blob_block_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
                 st = BLOB_BLOCK_ST_WRONG_CHECK_SUM;
             }else
             #else
-            block_crc32_check_current(0);
+            int crc_ok = block_crc32_check_current(0); // crc_ok =1 means have not been receive "block get" before
             #endif
             {
-                fw_update_srv_proc.blob_block_trans_num_next++;  // receive ok
+                if(crc_ok){
+                    fw_update_srv_proc.blob_block_trans_num_next++;  // receive ok
+                }
                 if(fw_update_srv_proc.blob_block_trans_num_next == updater_get_fw_block_cnt()){// all block rx ok
                     fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_COMPLETE;
                 }

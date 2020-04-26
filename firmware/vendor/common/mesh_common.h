@@ -42,6 +42,21 @@
   * @{
   */
 
+#if 1   // test firmware size
+#define NOP_TEST_BYTE_50       \
+    CLOCK_DLY_5_CYC;CLOCK_DLY_5_CYC;CLOCK_DLY_5_CYC;CLOCK_DLY_5_CYC;CLOCK_DLY_5_CYC
+#define NOP_TEST_BYTE_100       \
+    NOP_TEST_BYTE_50;NOP_TEST_BYTE_50
+#define NOP_TEST_BYTE_500       \
+    NOP_TEST_BYTE_100;NOP_TEST_BYTE_100;NOP_TEST_BYTE_100;NOP_TEST_BYTE_100;NOP_TEST_BYTE_100
+#define NOP_TEST_BYTE_1K        \
+    NOP_TEST_BYTE_500;NOP_TEST_BYTE_500;\
+    CLOCK_DLY_10_CYC;CLOCK_DLY_10_CYC;CLOCK_DLY_4_CYC
+#define NOP_TEST_BYTE_5K        \
+    NOP_TEST_BYTE_1K;NOP_TEST_BYTE_1K;NOP_TEST_BYTE_1K;NOP_TEST_BYTE_1K;NOP_TEST_BYTE_1K
+#define NOP_TEST_BYTE_10K       \
+    NOP_TEST_BYTE_5K;NOP_TEST_BYTE_5K
+#endif
 
 #ifndef HCI_LOG_FW_EN
 #define HCI_LOG_FW_EN   0
@@ -97,11 +112,14 @@ static inline int is_valid_val_100(u8 val_100)
 	return (val_100 <= 100);
 }
 
+static inline int mesh_get_proxy_hci_type()
+{
+    return PROXY_HCI_SEL;
+}
 //---------
 void mesh_ble_connect_cb(u8 e, u8 *p, int n);
 void mesh_ble_disconnect_cb();
 void mesh_conn_param_update_req();
-int mesh_get_proxy_hci_type();
 void vendor_id_check_and_update();
 void mesh_global_var_init();
 void mesh_tid_save(int ele_idx);

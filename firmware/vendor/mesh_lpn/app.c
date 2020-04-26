@@ -255,6 +255,15 @@ void main_loop ()
 #if (BLT_SOFTWARE_TIMER_ENABLE)
 	blt_soft_timer_process(MAINLOOP_ENTRY);
 #endif
+	#if DUAL_MODE_ADAPT_EN
+	if(RF_MODE_BLE != dual_mode_proc()){    // should be before is mesh latency window()
+        proc_ui();
+        proc_led();
+        factory_reset_cnt_check();
+		return ;
+	}
+	#endif
+	
 	////////////////////////////////////// BLE entry /////////////////////////////////
 	blt_sdk_main_loop ();
 
@@ -283,6 +292,9 @@ void user_init()
 	lpn_provision_ok = is_net_key_save();
 	proc_telink_mesh_to_sig_mesh();		// must at first
 
+	#if (DUAL_MODE_ADAPT_EN)
+	dual_mode_en_init();    // must before factory_reset_handle, because "dual_mode_state" is used in it.
+	#endif
 	blc_app_loadCustomizedParameters();  //load customized freq_offset cap value and tp value
 
 	usb_id_init();
@@ -323,7 +335,7 @@ void user_init()
 	blc_ll_setAdvCustomedChannel (37, 38, 39);
 	bls_ll_setAdvEnable(1);  //adv enable
 
-	rf_set_power_level_index (MY_RF_POWER_INDEX);
+	rf_set_power_level_index (my_rf_power_index);
 	bls_pm_setSuspendMask (SUSPEND_DISABLE);//(SUSPEND_ADV | SUSPEND_CONN)
     blc_hci_le_setEventMask_cmd(HCI_LE_EVT_MASK_ADVERTISING_REPORT|HCI_LE_EVT_MASK_CONNECTION_COMPLETE);
 
@@ -353,8 +365,13 @@ void user_init()
 
 	// mesh_mode and layer init
 	mesh_init_all();
+
 	// OTA init
-	bls_ota_clearNewFwDataArea(); //must
+	#if (DUAL_MODE_ADAPT_EN && (0 == FW_START_BY_BOOTLOADER_EN) || DUAL_MODE_WITH_TLK_MESH_EN)
+	if(DUAL_MODE_NOT_SUPPORT == dual_mode_state)
+	#endif
+	{bls_ota_clearNewFwDataArea();	 //must
+	}
 	lpn_node_io_init();	// should be after mesh init all
 	//blc_ll_initScanning_module(tbl_mac);
 	#if((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
@@ -377,7 +394,7 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 {
     blc_app_loadCustomizedParameters();
 	blc_ll_initBasicMCU();   //mandatory
-	rf_set_power_level_index (MY_RF_POWER_INDEX);
+	rf_set_power_level_index (my_rf_power_index);
 
 	blc_ll_recoverDeepRetention();
 

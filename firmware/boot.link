@@ -118,4 +118,5 @@ SECTIONS
     ASSERT((_end_bss_ - 0x840000) * __PM_DEEPSLEEP_RETENTION_ENABLE <= 0x8000, "**Retention Area Overflow, Check your data/bss usages**")
     ASSERT((_bin_size_ + 16) * __FLASH_512K_ENABLE <= 0x30000, "**Error:firmware size Overflow!!!**")
     ASSERT((_ramcode_size_div_16_align_256_ * 16 * __FW_START_BY_BOOTLOADER_EN) <= __FW_RAMCODE_SIZE_MAX, "**Error:ramcode size Overflow!!!**")
+    ASSERT((_bin_size_ * __BOOT_LOADER_EN) <= 0x6000, "**Error:firmware size Overflow!!! par is in 0x6000**")
 }

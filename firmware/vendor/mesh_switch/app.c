@@ -527,7 +527,7 @@ void user_init()
 	blc_ll_setAdvCustomedChannel (37, 38, 39);
 	bls_ll_setAdvEnable(1);  //adv enable
 
-	rf_set_power_level_index (MY_RF_POWER_INDEX);
+	rf_set_power_level_index (my_rf_power_index);
 	bls_pm_setSuspendMask (SUSPEND_DISABLE);//(SUSPEND_ADV | SUSPEND_CONN)
     blc_hci_le_setEventMask_cmd(HCI_LE_EVT_MASK_ADVERTISING_REPORT|HCI_LE_EVT_MASK_CONNECTION_COMPLETE);
 
@@ -582,7 +582,7 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 {
     blc_app_loadCustomizedParameters();
 	blc_ll_initBasicMCU();   //mandatory
-	rf_set_power_level_index (MY_RF_POWER_INDEX);
+	rf_set_power_level_index (my_rf_power_index);
 
 	blc_ll_recoverDeepRetention();
 

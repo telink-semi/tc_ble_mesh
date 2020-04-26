@@ -92,7 +92,7 @@ int is_unicast_friend_msg_to_fn(mesh_cmd_nw_t *p_nw)
 
 void friend_cmd_send_request()
 {
-	LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)&mesh_lpn_par.req, sizeof(mesh_ctl_fri_req_t),"send friend request:",0);
+	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)&mesh_lpn_par.req, sizeof(mesh_ctl_fri_req_t),"send friend request:",0);
 	mesh_lpn_par.link_ok = 0;
     mesh_lpn_par.req.LPNCounter++;   // must before
     mesh_tx_cmd_layer_upper_ctl(CMD_CTL_REQUEST, (u8 *)&mesh_lpn_par.req, sizeof(mesh_ctl_fri_req_t), ele_adr_primary, ADR_ALL_NODES,0);
@@ -100,21 +100,21 @@ void friend_cmd_send_request()
 
 void friend_cmd_send_poll()
 {
-	LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)(&mesh_lpn_par.poll), sizeof(mesh_ctl_fri_poll_t),"send friend poll:",0);
+	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)(&mesh_lpn_par.poll), sizeof(mesh_ctl_fri_poll_t),"send friend poll:",0);
     fri_ship_proc_lpn.poll_tick = clock_time()|1;
     mesh_tx_cmd_layer_upper_ctl(CMD_CTL_POLL, (u8 *)(&mesh_lpn_par.poll), sizeof(mesh_ctl_fri_poll_t), ele_adr_primary, mesh_lpn_par.FriAdr,0);
 }
 
 void friend_cmd_send_subsc_add(u8 *par_subsc, u32 len)  // only LPN support
 {
-	LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)par_subsc, len,"send friend sub list add:",0);
+	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)par_subsc, len,"send friend sub list add:",0);
     subsc_list_retry.tick = clock_time();
     mesh_tx_cmd_layer_upper_ctl(CMD_CTL_SUBS_LIST_ADD, (u8 *)par_subsc, len, ele_adr_primary, mesh_lpn_par.FriAdr,0);
 }
 
 void friend_cmd_send_subsc_rmv(u8 *par_subsc, u32 len)  // only LPN support
 {
-	LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)par_subsc, len,"send friend sub list remove:",0);
+	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)par_subsc, len,"send friend sub list remove:",0);
     subsc_list_retry.tick = clock_time();
     mesh_tx_cmd_layer_upper_ctl(CMD_CTL_SUBS_LIST_REMOVE, (u8 *)par_subsc, len, ele_adr_primary, mesh_lpn_par.FriAdr,0);
 }
@@ -236,7 +236,7 @@ void mesh_friend_ship_proc_LPN(u8 *bear)
             // whether restart establish procedure or not
             mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);    // restart establish procedure
         }else{
-            LOG_MSG_INFO(TL_LOG_FRIEND, 0, 0,"friend_subsc_repeat_***********************",0);
+            LOG_MSG_LIB(TL_LOG_FRIEND, 0, 0,"friend_subsc_repeat_***********************",0);
             friend_subsc_repeat();
         }
     }
@@ -254,7 +254,7 @@ void mesh_friend_ship_proc_LPN(u8 *bear)
             if(CMD_CTL_SUBS_LIST_CONF == op){
                 mesh_ctl_fri_subsc_list_t *p_subsc = CONTAINER_OF(p_lt_ctl_unseg->data,mesh_ctl_fri_subsc_list_t,TransNo);
                 if(p_subsc->TransNo == (subsc_list_retry.TransNo)){   //TransNo have increased
-                	LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)&p_subsc->TransNo, sizeof(p_subsc->TransNo),"rcv sub list confirm:",0);
+                	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)&p_subsc->TransNo, sizeof(p_subsc->TransNo),"rcv sub list confirm:",0);
                     if(SUBSC_ADD == subsc_list_retry.retry_type){
                         friend_subsc_list_add_adr((lpn_adr_list_t *)(&lpn_subsc_list.adr), (lpn_adr_list_t *)(&subsc_list_retry.adr), subsc_list_retry.subsc_cnt);
                     }
@@ -262,7 +262,7 @@ void mesh_friend_ship_proc_LPN(u8 *bear)
                 }
             }else if(CMD_CTL_UPDATE == op){
                 mesh_ctl_fri_update_t *p_update = (mesh_ctl_fri_update_t *)(p_lt_ctl_unseg->data);
-				LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_update, sizeof(mesh_ctl_fri_update_t),"NW_IVI %d, rcv friend update:",p_bear->nw.ivi);
+				LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_update, sizeof(mesh_ctl_fri_update_t),"NW_IVI %d, rcv friend update:",p_bear->nw.ivi);
                 iv_update_key_refresh_rx_handle(&p_update->flag, p_update->IVIndex);
 
             }
@@ -313,7 +313,7 @@ void mesh_friend_ship_proc_LPN(u8 *bear)
                 if(bear){   // current state is establishing friend ship
                     if(CMD_CTL_UPDATE == p_lt_ctl_unseg->opcode){
                         mesh_ctl_fri_update_t *p_update = (mesh_ctl_fri_update_t *)(p_lt_ctl_unseg->data);
-						LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_update, sizeof(mesh_ctl_fri_update_t),"rcv friend update:",0);
+						LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_update, sizeof(mesh_ctl_fri_update_t),"rcv friend update:",0);
                         memcpy(&mesh_lpn_par.update, p_update, sizeof(mesh_ctl_fri_update_t));
                         //friend ship establish done
                         mesh_lpn_par.req.PreAdr = mesh_lpn_par.FriAdr;
@@ -793,14 +793,13 @@ int lpn_rx_offer_handle(u8 *bear)
     mesh_cmd_nw_t *p_nw = &p_bear->nw;
     mesh_cmd_lt_ctl_unseg_t *p_lt_ctl_unseg = &p_bear->lt_ctl_unseg;
     mesh_ctl_fri_offer_t *p_offer = (mesh_ctl_fri_offer_t *)(p_lt_ctl_unseg->data);
-	LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_offer, sizeof(mesh_ctl_fri_offer_t),"rcv friend offer:",0);
+	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_offer, sizeof(mesh_ctl_fri_offer_t),"rcv friend offer:",0);
     if(0 == mesh_friend_offer_is_valid(p_offer)){
         return -1;
     }
     
     //if(FN_RSSI_INVALID == p_offer->RSSI){
-        event_adv_report_t *pa = CONTAINER_OF(&p_bear->len,event_adv_report_t,data[0]);
-        adv_report_extend_t *p_extend = (adv_report_extend_t *)(pa->data+(p_bear->len+1));
+        adv_report_extend_t *p_extend = get_adv_report_extend(&p_bear->len);;
         p_offer->RSSI = p_extend->rssi;    // rssi: measure by LPN self,
     //}
     

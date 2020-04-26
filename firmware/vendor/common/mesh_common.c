@@ -193,7 +193,7 @@ MYFIFO_INIT(hci_tx_fifo, HCI_TX_FIFO_SIZE, HCI_TX_FIFO_NUM); // include adv pkt 
 MYFIFO_INIT(hci_rx_fifo, 512, 4);   // max play load 382
 #else
 #define UART_DATA_SIZE              (72)    // increase or decrease 16bytes for each step.
-#define HCI_RX_FIFO_SIZE            (UART_DATA_SIZE + 4 + 4)    // 4: sizeof DMA len;  4: margin reserve
+#define HCI_RX_FIFO_SIZE            (UART_DATA_SIZE + 4 + 4)    // 4: sizeof DMA len;  4: margin reserve(can't reveive valid data, because UART_DATA_SIZE is max value of DMA len)
 STATIC_ASSERT(HCI_RX_FIFO_SIZE % 16 == 0);
 
 MYFIFO_INIT(hci_rx_fifo, HCI_RX_FIFO_SIZE, 4);
@@ -371,11 +371,6 @@ void cal_private_and_public_key()
 	
 }
 #endif 
-
-int mesh_get_proxy_hci_type()
-{
-	return PROXY_HCI_SEL;
-}
 
 void mesh_secure_beacon_loop_proc()
 {
@@ -1424,7 +1419,7 @@ int app_advertise_prepare_handler (rf_packet_adv_t * p)
 
 		if(p_bear->type & RSP_DELAY_FLAG){
 			if(mesh_rsp_random_delay_step && !clock_time_exceed(mesh_rsp_random_delay_tick,mesh_rsp_random_delay_step*10000)){
-				return 0;
+				return gatt_adv_prepare_handler(p, 1);
 			}else{
 				mesh_rsp_random_delay_step =0;
 			}
@@ -2072,7 +2067,17 @@ void mesh_rsp_delay_set(u32 delay_step, u8 is_seg_ack)
  */
 int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-    LOG_MSG_LIB(TL_LOG_NODE_SDK,params, par_len,"rcv access layer,retransaction:%d,ttl:%d,src:0x%x op:0x%04x, par:",cb_par->retransaction,cb_par->p_nw->ttl,cb_par->adr_src, cb_par->op);
+    int log_len = par_len;
+    #if HCI_LOG_FW_EN
+    if(log_len > 10){
+        if(BLOB_CHUNK_TRANSFER == cb_par->op){
+            log_len = 10;
+        }
+    }
+    #endif
+    LOG_MSG_LIB(TL_LOG_NODE_SDK,params, log_len,"rcv access layer,retransaction:%d,ttl:%d,src:0x%4x,dst:0x%4x op:0x%04x,par_len:%d,par:",
+            cb_par->retransaction,cb_par->p_nw->ttl,cb_par->adr_src,cb_par->adr_dst, cb_par->op, par_len);
+
 	mesh_op_resource_t *p_res = (mesh_op_resource_t *)cb_par->res;
     if(!is_cfg_model(p_res->id, p_res->sig)){ // user should not handle config model op code
         #if (VENDOR_MD_NORMAL_EN)
@@ -2088,7 +2093,7 @@ int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_
         #if (!WIN32 && !FEATURE_LOWPOWER_EN)
         if(0 == mesh_rsp_random_delay_step){
             if((blt_state == BLS_LINK_STATE_ADV) && (cb_par->op_rsp != STATUS_NONE)){
-				u32 random_delay_step = 0;
+				u8 random_delay_step = 0;
 				if(is_group_adr(cb_par->adr_dst)){
 					#if MI_API_ENABLE
 						#if MI_SWITCH_LPN_EN
@@ -2104,7 +2109,7 @@ int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_
 					random_delay_step = 120 + (rand() %10);    // random delay between 1200~1300ms
 					#endif
 				}
-				mesh_rsp_delay_set(random_delay_step, 0);
+				mesh_rsp_delay_set(random_delay_step, 0); // set mesh_rsp_random_delay_step inside.
             }
         }
         #endif
@@ -2707,7 +2712,7 @@ int LogMsgModule_io_simu(u8 *pbuf,int len,char *log_str,char *format, va_list li
 	pp_buf = &(p_buf);
 	u32 head_len = print(pp_buf,log_str, 0)+print(pp_buf,format,list);   // log_dst[] is enough ram.
 	if((head_len + get_len_Bin2Text(len))> sizeof(log_dst)){
-        return 0;
+        // no need, have been check buf max in printf_Bin2Text. // return 0;
 	}
 	u8 dump_len = printf_Bin2Text((char *)(log_dst+head_len), sizeof(log_dst) - head_len, (char *)(pbuf), len);
 	uart_simu_send_bytes((u8 *)log_dst, head_len+dump_len);

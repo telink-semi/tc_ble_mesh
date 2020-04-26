@@ -640,12 +640,14 @@ extern fast_prov_par_t fast_prov;
 extern VC_node_info_t VC_node_info[MESH_NODE_MAX_NUM];
 extern pro_PB_ADV rcv_pb;
 #define PROVISION_GATT_MAX_LEN      (sizeof(rcv_pb.pb_pdu)) // 0x50
+extern u8 proxy_para_buf[PROVISION_GATT_MAX_LEN]; 
+extern u8 proxy_para_len;
+extern u8 para_pro[PROVISION_GATT_MAX_LEN]; //it's also used in proxy_gatt_Write(), but network payload is less then 31, because it will be relayed directly.
+extern u8 para_len ;
 
 extern mesh_cmd_bear_unseg_t		pro_adv_pkt;
 extern mesh_pro_data_structer		pro_data_str;
 extern pro_para_mag  provision_mag;
-extern u8 para_pro[PROVISION_GATT_MAX_LEN];
-extern u8 para_len ;
 extern u8 prov_net_key[16];
 
 extern u8 dev_auth[];
@@ -664,7 +666,7 @@ extern void set_adv_proxy(rf_packet_adv_t * p);
 
 
 void set_provision_stop_flag_act(u8 stop_flag);
-extern void mesh_provision_para_init();
+extern void mesh_provision_para_init(u8 *p_random);
 extern void mesh_provision_para_reset();
 
 extern void send_rcv_retry_set(u8 cmd, u8 bearerCode, u8 ack_retry_flag);

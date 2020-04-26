@@ -2319,8 +2319,7 @@ void mesh_directed_forwarding_proc(u8 *bear, int src_type)
 		if(CMD_CTL_PATH_REQUEST == op){		
 			mesh_ctl_path_req_t *p_path_req = (mesh_ctl_path_req_t *)(p_lt_ctl_unseg->data);
 			addr_range_big_endian_t *p_addr_origin = (addr_range_big_endian_t *)p_path_req->addr_par;				
-			event_adv_report_t *pa = CONTAINER_OF(&p_bear->len,event_adv_report_t,data[0]);
-			adv_report_extend_t *p_extend = (adv_report_extend_t *)(pa->data+(p_bear->len+1));
+			adv_report_extend_t *p_extend = get_adv_report_extend(&p_bear->len);;
 			s8 rssi = p_extend->rssi;  
 			LOG_MSG_LIB(TL_LOG_DIRECTED_FORWARDING, (u8 *)p_path_req, sizeof(mesh_ctl_path_req_t), "receive CMD_CTL_PATH_REQUEST rssi:%d p_nw->src:0x%x dst:0x%x ", rssi, p_nw->src, p_path_req->destination);
 			if(rssi > (model_sig_cfg_s.directed_forward.rssi_threshold.default_rssi_threshold + model_sig_cfg_s.directed_forward.rssi_threshold.rssi_margin)){

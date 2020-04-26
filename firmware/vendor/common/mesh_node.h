@@ -1540,6 +1540,9 @@ void blc_pm_select_none();
 void mesh_key_node_identity_init(); // after power on ,we need to detect the flag ,and set timer part 
 void mesh_key_node_identity_set_prov_set();
 void mesh_switch_identity_proc();// run in loop
+int is_pkt_notify_only(u16 dst_adr, int relay_flag);
+u32 get_reliable_interval_ms_min();
+u32 get_reliable_interval_ms_max();
 
 
 extern u16 ele_adr_primary;

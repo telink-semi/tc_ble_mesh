@@ -104,7 +104,7 @@ void mesh_friend_logmsg(mesh_cmd_bear_unseg_t *p_bear_big, u8 len)
 		LOG_MSG_WARN(TL_LOG_FRIEND,(u8 *)p_bear_big, len,"mesh_friend_logmsg:send message to LPN_win32: \r\n",0);
 	}
 	#else
-	LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_bear_big, len,"mesh_friend_logmsg:send message to LPN: \r\n",0);
+	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_bear_big, len,"mesh_friend_logmsg:send message to LPN: \r\n",0);
 	#endif
 }
 
@@ -147,7 +147,7 @@ void friend_subsc_list_rmv_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr
 
 void friend_cmd_send_clear(u16 adr_dst, u8 *par, u32 len)
 {	
-	LOG_MSG_INFO(TL_LOG_FRIEND,par, len,"send friend clear:",0);
+	LOG_MSG_LIB(TL_LOG_FRIEND,par, len,"send friend clear:",0);
     mesh_tx_cmd_layer_upper_ctl(CMD_CTL_CLEAR, par, len, ele_adr_primary, adr_dst,0);
 }
 
@@ -348,7 +348,7 @@ int is_friend_ship_link_ok_fn(u8 lpn_idx)
 
 void friend_cmd_send_offer(u8 lpn_idx)
 {
-	LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)(fn_offer+lpn_idx), sizeof(mesh_ctl_fri_offer_t),"send friend offer:",0);
+	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)(fn_offer+lpn_idx), sizeof(mesh_ctl_fri_offer_t),"send friend offer:",0);
     fn_offer[lpn_idx].FriCounter++; // must before
     mesh_tx_cmd_layer_upper_ctl_FN(CMD_CTL_OFFER, (u8 *)(fn_offer+lpn_idx), sizeof(mesh_ctl_fri_offer_t), fn_other_par[lpn_idx].LPNAdr);
     mesh_friend_key_update_all_nk(lpn_idx, fn_other_par[lpn_idx].nk_sel_dec_fn);
@@ -359,19 +359,19 @@ void friend_cmd_send_update(u8 lpn_idx, u8 md)
     mesh_net_key_t *p_netkey = &mesh_key.net_key[fn_other_par[lpn_idx].nk_sel_dec_fn][0];
     get_iv_update_key_refresh_flag(&fn_update[lpn_idx].flag, fn_update[lpn_idx].IVIndex, p_netkey->key_phase);
     fn_update[lpn_idx].md = !!md;
-    LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)(fn_update+lpn_idx), sizeof(mesh_ctl_fri_update_t),"send friend update:",0);
+    LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)(fn_update+lpn_idx), sizeof(mesh_ctl_fri_update_t),"send friend update:",0);
     mesh_tx_cmd_layer_upper_ctl_FN(CMD_CTL_UPDATE, (u8 *)(fn_update+lpn_idx), sizeof(mesh_ctl_fri_update_t), fn_other_par[lpn_idx].LPNAdr);
 }
 
 void friend_cmd_send_clear_conf(u16 adr_dst, u8 *par, u32 len)
 {
-	LOG_MSG_INFO(TL_LOG_FRIEND,par, len,"send friend clear confirm:",0);
+	LOG_MSG_LIB(TL_LOG_FRIEND,par, len,"send friend clear confirm:",0);
     mesh_tx_cmd_layer_upper_ctl_FN(CMD_CTL_CLR_CONF, par, len, adr_dst);	
 }
 
 void friend_cmd_send_subsc_conf(u16 adr_dst, u8 transNo)
 {
-	LOG_MSG_INFO(TL_LOG_FRIEND, (u8 *)&transNo, 1,"send friend sub list confirm:",0);
+	LOG_MSG_LIB(TL_LOG_FRIEND, (u8 *)&transNo, 1,"send friend sub list confirm:",0);
     use_mesh_adv_fifo_fn2lpn = 1;
     mesh_tx_cmd_layer_upper_ctl_FN(CMD_CTL_SUBS_LIST_CONF, (u8 *)&transNo, 1, adr_dst);
     use_mesh_adv_fifo_fn2lpn = 0;
@@ -471,7 +471,7 @@ void mesh_friend_ship_clear_FN(u8 lpn_idx)
 
 void friend_ship_disconnect_fn(u8 lpn_idx, int type)
 {
-    LOG_MSG_INFO(TL_LOG_FRIEND,0, 0,"Friend ship disconnect, LPN addr:0x%04x, type: %d ", fn_other_par[lpn_idx].LPNAdr, type);
+    LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"Friend ship disconnect, LPN addr:0x%04x, type: %d ", fn_other_par[lpn_idx].LPNAdr, type);
     friend_ship_disconnect_cb_fn(lpn_idx, type);
     mesh_friend_ship_clear_FN(lpn_idx);
 }
@@ -563,7 +563,7 @@ void mesh_friend_response_delay_proc_fn(u8 lpn_idx)
             if(p_delay->poll_rsp){
                 mesh_cmd_bear_unseg_t bear_temp;
                 memcpy(&bear_temp, p_delay->poll_rsp, sizeof(mesh_cmd_bear_unseg_t));
-	            //LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)&bear_temp.len, bear_temp.len+1,"Data for poll:",0);
+	            //LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)&bear_temp.len, bear_temp.len+1,"Data for poll:",0);
                 
                 mesh_sec_msg_enc_nw_rf_buf((u8 *)(&bear_temp.nw), mesh_lt_len_get_by_bear(&bear_temp), FRIENDSHIP, lpn_idx,0,fn_other_par[lpn_idx].nk_sel_dec_fn);
                 mesh_tx_cmd_add_packet_fn2lpn((u8 *)&bear_temp);
@@ -654,7 +654,7 @@ void mesh_friend_ship_proc_FN(u8 *bear)
 	            memcpy(&mesh_lpn_debug_req_buf, p_req, sizeof(mesh_ctl_fri_req_t));
 				#endif
 	            if(0 == mesh_friend_request_is_valid(p_req)){
-                    LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_req, sizeof(mesh_ctl_fri_req_t),"Error:rcv Invalid friend request:",0);
+                    LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_req, sizeof(mesh_ctl_fri_req_t),"Error:rcv Invalid friend request:",0);
 	                return ;
 	            }
 				
@@ -673,7 +673,7 @@ void mesh_friend_ship_proc_FN(u8 *bear)
 				#if DEBUG_SUSPEND
 	            static u8 mesh_lpn_debug_req3;mesh_lpn_debug_req3++;
 				#endif
-	            LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_req, sizeof(mesh_ctl_fri_req_t),"rcv friend request:",0);
+	            LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_req, sizeof(mesh_ctl_fri_req_t),"rcv friend request:",0);
 	            fn_other_par[i].LPNAdr = p_nw->src;
 	            fn_other_par[i].FriAdr = ele_adr_primary;
 	            fn_other_par[i].p_cache = &mesh_fri_cache_fifo[i];
@@ -688,7 +688,7 @@ void mesh_friend_ship_proc_FN(u8 *bear)
 	        }else if(CMD_CTL_POLL == op){
 	            mesh_ctl_fri_poll_t *p_poll = (mesh_ctl_fri_poll_t *)(p_lt_ctl_unseg->data);
 	            if(0 == mesh_friend_poll_is_valid(p_poll)){
-                    LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_poll, sizeof(mesh_ctl_fri_poll_t),"Error:rcv Invalid friend poll:",0);
+                    LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_poll, sizeof(mesh_ctl_fri_poll_t),"Error:rcv Invalid friend poll:",0);
 	                return ;
 	            }
 	            
@@ -703,7 +703,7 @@ void mesh_friend_ship_proc_FN(u8 *bear)
                     return ;
                 }
 				#endif
-	            LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_poll, sizeof(mesh_ctl_fri_poll_t),"rcv friend poll:",0);
+	            LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_poll, sizeof(mesh_ctl_fri_poll_t),"rcv friend poll:",0);
 	            if(proc_fn->offer_tick){
 					fn_other_par[i].link_ok = 1;
 	                mesh_friend_ship_proc_init_fn(i);    // init parameters after establish friend ship
@@ -726,7 +726,7 @@ void mesh_friend_ship_proc_FN(u8 *bear)
 	                }
 	                p_br_cache = mesh_friend_ship_cache_check(f_cache);
 	                if(p_br_cache){
-                        LOG_MSG_INFO(TL_LOG_FRIEND,p_br_cache+1, 16,"FN Cache message of NW(Big endian):",0);
+                        LOG_MSG_LIB(TL_LOG_FRIEND,p_br_cache+1, 16,"FN Cache message of NW(Big endian):",0);
 	                }else{
 	                	#if FN_PRIVATE_SEG_CACHE_EN
 	                    if(is_friend_seg_cache_busy()){
@@ -739,11 +739,10 @@ void mesh_friend_ship_proc_FN(u8 *bear)
 	                    p_br_cache = mesh_friend_ship_cache_check(f_cache);
 	                }
 	            }else{
-                    LOG_MSG_INFO(TL_LOG_FRIEND,0, 0,"FN Cache retry",0);
+                    LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"FN Cache retry",0);
 	            }
 
-                event_adv_report_t *pa = CONTAINER_OF(&p_bear->len,event_adv_report_t,data[0]);
-                adv_report_extend_t *p_extend = (adv_report_extend_t *)(pa->data+(p_bear->len+1));
+                adv_report_extend_t *p_extend = get_adv_report_extend(&p_bear->len);
                 u32 timeStamp = p_extend->timeStamp;
                 #ifndef WIN32
                 if((u32)(clock_time() - timeStamp) > 100*1000*sys_tick_per_us){
@@ -761,7 +760,7 @@ void mesh_friend_ship_proc_FN(u8 *bear)
 	        	mesh_ctl_fri_clear_t *p_fri_clear = (mesh_ctl_fri_clear_t *)p_lt_ctl_unseg->data;
 	            if((fn_other_par[i].LPNAdr == p_fri_clear->LPNAdr)
 	            && (p_fri_clear->LPNCounter - fn_req[i].LPNCounter <= 255)){
-	            	LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_fri_clear, sizeof(mesh_ctl_fri_clear_t),"rcv friend clear:",0);
+	            	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_fri_clear, sizeof(mesh_ctl_fri_clear_t),"rcv friend clear:",0);
 	            	if(fn_other_par[i].LPNAdr == p_nw->src){
                         mesh_friend_set_delay_par(DELAY_CLEAR_CONF, i, p_nw->src, p_fri_clear->LPNCounter);
                         proc_fn->clear_by_lpn_tick = clock_time()|1;
@@ -774,7 +773,7 @@ void mesh_friend_ship_proc_FN(u8 *bear)
 	        }else if(CMD_CTL_CLR_CONF == op){
 	        	mesh_ctl_fri_clear_conf_t *p_clear_conf = (mesh_ctl_fri_clear_conf_t *)p_lt_ctl_unseg->data;
 	            if(proc_fn->clear_poll && (fn_other_par[i].LPNAdr == p_clear_conf->LPNAdr)){
-					LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_clear_conf, sizeof(mesh_ctl_fri_clear_conf_t),"rcv friend clear confirm:",0);
+					LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_clear_conf, sizeof(mesh_ctl_fri_clear_conf_t),"rcv friend clear confirm:",0);
 	                mesh_stop_clear_cmd(i);
 					return ;
 	            }
@@ -787,17 +786,17 @@ void mesh_friend_ship_proc_FN(u8 *bear)
 	                u16 adr[SUB_LIST_MAX_IN_ONE_MSG];
 	                memcpy(adr, p_subsc->adr, sizeof(adr));
 	                if(CMD_CTL_SUBS_LIST_ADD == op){
-						LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_subsc->adr, subsc_cnt*2,"rcv friend sub list add:",0);
+						LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_subsc->adr, subsc_cnt*2,"rcv friend sub list add:",0);
 	                    friend_subsc_list_add_adr((lpn_adr_list_t *)(&fn_other_par[i].SubsList), (lpn_adr_list_t *)adr, subsc_cnt);
 	                }else{  // (CMD_CTL_SUBS_LIST_REMOVE == op)
-	                	LOG_MSG_INFO(TL_LOG_FRIEND,(u8 *)p_subsc->adr, subsc_cnt*2,"rcv friend sub list remove:",0);
+	                	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_subsc->adr, subsc_cnt*2,"rcv friend sub list remove:",0);
 	                    friend_subsc_list_rmv_adr((lpn_adr_list_t *)(&fn_other_par[i].SubsList), (lpn_adr_list_t *)adr, subsc_cnt);
 	                }
 	            //}
 	            mesh_friend_set_delay_par(DELAY_SUBSC_LIST, i, p_nw->src, p_subsc->TransNo);
 	            fn_other_par[i].TransNo = p_subsc->TransNo;
 	        }else{
-                LOG_MSG_INFO(TL_LOG_FRIEND,0, 0,"Error:rcv Invalid op code %2x:",op);
+                LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"Error:rcv Invalid op code %2x:",op);
 	        }
 	    }
 	}

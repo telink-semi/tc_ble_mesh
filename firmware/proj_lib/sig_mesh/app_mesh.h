@@ -432,6 +432,8 @@ extern const u8	const_tbl_scanRsp [9] ;
 
 #define SEC_NW_BC_BROADCAST_DEFAULT     (NW_BEACON_BROADCASTING)	// security network beacon
 
+#define NODE_IDENTITY_TIMEOUT_S         (60)    // should be less than 60 second by spec.
+
 #define MESH_ADV_TYPE_PRO	    (0x29)
 #define MESH_ADV_TYPE_MESSAGE   (0x2A)
 #define MESH_ADV_TYPE_BEACON 	(0x2B)
@@ -1859,6 +1861,12 @@ static inline mesh_cmd_bear_unseg_t *GET_BEAR_FROM_ADV_PAYLOAD (u8 *p_payload){
 
 static inline u8 *GET_ADV_PAYLOAD_FROM_BEAR (mesh_cmd_bear_unseg_t *bear){
 	return (&bear->len);
+}
+
+static inline adv_report_extend_t *get_adv_report_extend (u8 *p_rf_len){
+    event_adv_report_t *pa = CONTAINER_OF(p_rf_len,event_adv_report_t,data[0]);
+    adv_report_extend_t *p_extend = (adv_report_extend_t *)(pa->data+((*p_rf_len)+1));
+    return p_extend;
 }
 
 static inline u8 transmit_cnt_get(u8 tran_val){

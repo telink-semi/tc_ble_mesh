@@ -154,10 +154,10 @@ FLASH_WAKEUP_END:
 COPY_CODE:
 	tcmp        r2, r3
 	tjge        COPY_CODE_END
+	tsub        r1, #4
+	tsub        r3, #4
 	tloadr      r0, [r1, #0]
-	tstorer     r0, [r2, #0]
-	tadd        r1, #4
-	tadd        r2, #4
+	tstorer     r0, [r3, #0]
 	tj          COPY_CODE
 COPY_CODE_END:
 #endif
@@ -347,7 +347,7 @@ NO_RET_BSS_I:
 
 #if __PROJECT_BOOTLOADER__
 COPY_CODE_I:
-    .word   (__RAM_START_ADDR + _vector_end_)
+    .word   (__RAM_START_ADDR + _code_size_)
     .word   (__RAM_START_ADDR + _ram_code_start_)
     .word   (__RAM_START_ADDR + _bootloader_ram_code_end_)
 #endif

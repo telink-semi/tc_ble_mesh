@@ -21,8 +21,10 @@
  *******************************************************************************************************/
 #ifndef APP_PROXY_H
 #define APP_PROXY_H
+#include "app_provison.h"
 #include "../../vendor/common/light.h"
 #include "../../proj_lib/sig_mesh/app_mesh.h"
+
 #define MAX_LIST_LEN 	16
 
 #define ADV_PROXY_TYPE_NET_ID	0

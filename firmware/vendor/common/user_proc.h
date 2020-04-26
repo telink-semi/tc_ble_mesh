@@ -15,7 +15,7 @@ void user_power_on_proc();
 void user_mesh_cps_init();
 void user_set_def_sub_adr();
 void user_system_time_proc();
-void mesh_provision_para_init();
+void mesh_provision_para_init(u8 *p_random);
 void user_prov_multi_oob();
 void user_prov_multi_device_uuid();
 int user_node_rc_link_open_callback();

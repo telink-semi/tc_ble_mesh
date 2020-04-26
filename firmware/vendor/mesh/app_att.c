@@ -241,10 +241,10 @@ int	pb_gatt_Write (void *p)
 	#if FEATURE_PROV_EN
 	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
 	// package the data 
-	if(!pkt_pb_gatt_data(pw,L2CAP_PROVISON_TYPE,para_pro,&para_len)){
+	if(!pkt_pb_gatt_data(pw,L2CAP_PROVISON_TYPE,proxy_para_buf,&proxy_para_len)){
 		return 0;
 	}
-	dispatch_pb_gatt(para_pro ,para_len);
+	dispatch_pb_gatt(proxy_para_buf ,proxy_para_len);
 	#endif 
 	return 1;
 }
@@ -284,22 +284,22 @@ int proxy_gatt_Write(void *p)
 	#if FEATURE_PROXY_EN
 	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
 	pb_gatt_proxy_str *p_gatt = (pb_gatt_proxy_str *)(pw->dat);
-	mesh_cmd_bear_unseg_t *p_bear = (mesh_cmd_bear_unseg_t *)para_pro;
+	mesh_cmd_bear_unseg_t *p_bear = (mesh_cmd_bear_unseg_t *)proxy_para_buf;
 	
 	if(p_gatt->msgType == MSG_PROXY_CONFIG ){
-		if(!pkt_pb_gatt_data(pw,L2CAP_PROXY_TYPE,(u8 *)&p_bear->nw,&para_len)){
+		if(!pkt_pb_gatt_data(pw,L2CAP_PROXY_TYPE,(u8 *)&p_bear->nw,&proxy_para_len)){
 			return 0;
 		}
 		p_bear->trans_par_val=TRANSMIT_DEF_PAR;
-		p_bear->len=para_len+1;
+		p_bear->len=proxy_para_len+1;
 		p_bear->type=MESH_ADV_TYPE_MESSAGE;
 		// different dispatch 
 		//send the data by the SIG MESH layer 
 		if(0 == mesh_rc_data_cfg_gatt((u8 *)p_bear)){
-		    proxy_config_dispatch((u8 *)&p_bear->nw,para_len);
+		    proxy_config_dispatch((u8 *)&p_bear->nw,proxy_para_len);
 		}
 	}else if (p_gatt->msgType == MSG_MESH_BEACON){
-		if(!pkt_pb_gatt_data(pw,L2CAP_BEACON_TYPE,(u8 *)&p_bear->beacon,&para_len)){
+		if(!pkt_pb_gatt_data(pw,L2CAP_BEACON_TYPE,(u8 *)&p_bear->beacon,&proxy_para_len)){
 			return 0;
 		}
 		if(SECURE_BEACON == p_bear->beacon.type){
@@ -313,12 +313,12 @@ int proxy_gatt_Write(void *p)
 			// no handle for other beacon now
 		}
 	}else if(p_gatt->msgType == MSG_NETWORK_PDU){
-		if(!pkt_pb_gatt_data(pw,L2CAP_NETWORK_TYPE,(u8 *)&p_bear->nw,&para_len)){
+		if(!pkt_pb_gatt_data(pw,L2CAP_NETWORK_TYPE,(u8 *)&p_bear->nw,&proxy_para_len)){
 			return 0;
 		}
 		// and then how to use the data ,make a demo to turn on or turn off the light 
 		p_bear->trans_par_val = TRANSMIT_DEF_PAR;
-		p_bear->len=para_len+1;
+		p_bear->len=proxy_para_len+1;
 		p_bear->type=MESH_ADV_TYPE_MESSAGE;
 		mesh_nw_pdu_from_gatt_handle((u8 *)p_bear);
 		#if DF_TEST_MODE_EN
