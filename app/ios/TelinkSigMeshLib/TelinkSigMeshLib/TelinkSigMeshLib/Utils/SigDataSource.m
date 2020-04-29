@@ -60,13 +60,8 @@
         _netKeys = [NSMutableArray array];
         _appKeys = [NSMutableArray array];
         _scanList = [NSMutableArray array];
-        NSArray *Caches = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-        _path = [[Caches objectAtIndex:0] stringByAppendingPathComponent:@"mesh.json"];
 
         _ivIndex = @"11223344";
-        struct ProvisionInfo tem = {{}, {0x00,0x00}, 0, {0x11,0x22,0x33,0x44}, {}};
-        _provsionInfo = tem;
-        _hasWriteDataSourceToLib = NO;
         _encryptedArray = [NSMutableArray array];
         _defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(SIG_MD_G_ONOFF_S),@(SIG_MD_LIGHTNESS_S),@(SIG_MD_LIGHT_CTL_S),@(SIG_MD_LIGHT_CTL_TEMP_S),@(SIG_MD_LIGHT_HSL_S)]];
         _defaultNodeInfos = [NSMutableArray array];
@@ -74,20 +69,20 @@
         DeviceTypeModel *model2 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_CT];
         [_defaultNodeInfos addObject:model1];
         [_defaultNodeInfos addObject:model2];
-//        _defaultFirmwareIDLength = 4;
         SigNetkeyModel *netkey = [[SigNetkeyModel alloc] init];
         netkey.key = @"7dd7364cd842ad18c17c74656c696e6b";
         netkey.index = 0;
         netkey.name = @"netkeyA";
         netkey.minSecurity = @"high";
-        _netKeyA = netkey;
+        _defaultNetKeyA = netkey;
         SigAppkeyModel *appkey = [[SigAppkeyModel alloc] init];
         appkey.key = @"63964771734fbd76e3b474656c696e6b";
         appkey.index = 0;
         appkey.name = @"appkeyA";
         appkey.boundNetKey = 0;
-        _appKeyA = appkey;
-        _ivIndexA = [[SigIvIndex alloc] initWithIndex:0x12345678 updateActive:NO];
+        _defaultAppKeyA = appkey;
+        _defaultIvIndexA = [[SigIvIndex alloc] initWithIndex:0x12345678 updateActive:NO];
+        _needPublishTimeModel = NO;
     }
     return self;
 }
@@ -254,6 +249,138 @@
     }
 }
 
+- (UInt16)provisionAddress{
+    if (!self.curProvisionerModel) {
+        TeLogInfo(@"warning: Abnormal situation, there is not provisioner.");
+        return kLocationAddress;
+    } else {
+        UInt16 maxAddr = self.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
+        NSArray *nodes = [NSArray arrayWithArray:_nodes];
+        for (SigNodeModel *node in nodes) {
+            NSInteger curMax = node.address + node.elements.count - 1;
+            if (curMax > maxAddr) {
+                maxAddr = curMax;
+            }
+        }
+
+        NSMutableDictionary *dict = [[NSUserDefaults standardUserDefaults] objectForKey:kCurrentMeshProvisionAddress_key];
+        if (dict && [dict.allKeys containsObject:self.getCurrentProvisionerUUID]) {
+            maxAddr = [dict[self.getCurrentProvisionerUUID] intValue];
+        }else{
+            if (dict == nil) {
+                [self saveLocationProvisionAddress:maxAddr];
+            }
+        }
+
+        //限制短地址的做法：
+//        if (maxAddr + 1 <= self.curProvisionerModel.allocatedUnicastRange.firstObject.hightIntAddress) {
+//            //Attention: location address is the smallest address of allocatedUnicastRange, app can add new node by use address from smallest address+1.
+//            return maxAddr + 1;
+//        } else {
+//            TeLogInfo(@"warning: Abnormal situation, there is no more address can be use.");
+//            return 0;
+//        }
+        //不限制短地址的做法：
+        return maxAddr + 1;
+    }
+}
+
+- (SigAppkeyModel *)curAppkeyModel{
+    //The default use first appkey temporarily
+    if (SigDataSource.share.appKeys.count > 0) {
+        return SigDataSource.share.appKeys.firstObject;
+    }
+    return nil;
+}
+
+- (SigNetkeyModel *)curNetkeyModel{
+    //The default use first netkey temporarily
+    if (SigDataSource.share.netKeys.count > 0) {
+        return SigDataSource.share.netKeys.firstObject;
+    }
+    return nil;
+}
+
+- (SigProvisionerModel *)curProvisionerModel{
+    //Practice 1. Temporary default to the first provisioner
+//    if (SigDataSource.share.provisioners.count > 0) {
+//        return SigDataSource.share.provisioners.firstObject;
+//    }
+    //Practice 2. get provisioner by location node's uuid.
+    NSString *curUUID = [self getCurrentProvisionerUUID];
+    NSArray *provisioners = [NSArray arrayWithArray: _provisioners];
+    for (SigProvisionerModel *provisioner in provisioners) {
+        if ([provisioner.UUID isEqualToString:curUUID]) {
+            return provisioner;
+        }
+    }
+    return nil;
+}
+
+- (NSData *)curNetKey{
+    if (self.curNetkeyModel) {
+        return [LibTools nsstringToHex:self.curNetkeyModel.key];
+    }
+    return nil;
+}
+
+- (NSData *)curAppKey{
+    if (self.curAppkeyModel) {
+        return [LibTools nsstringToHex:self.curAppkeyModel.key];
+    }
+    return nil;
+}
+
+- (SigNodeModel *)curLocationNodeModel{
+    if (SigDataSource.share.curProvisionerModel) {
+        NSArray *nodes = [NSArray arrayWithArray: self.nodes];
+        for (SigNodeModel *model in nodes) {
+            if ([model.UUID isEqualToString:SigDataSource.share.curProvisionerModel.UUID]) {
+                return model;
+            }
+        }
+    }
+    return nil;
+}
+
+- (NSInteger)getOnlineDevicesNumber{
+    NSInteger count = 0;
+    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
+    for (SigNodeModel *model in curNodes) {
+        if (model.state != DeviceStateOutOfLine) {
+            count ++;
+        }
+    }
+    return count;
+}
+
+- (BOOL)hasNodeExistTimeModelID {
+    BOOL tem = NO;
+    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
+    for (SigNodeModel *node in curNodes) {
+        UInt32 option = SIG_MD_TIME_S;
+        NSArray *elementAddresses = [node getAddressesWithModelID:@(option)];
+        if (elementAddresses.count > 0) {
+            tem = YES;
+            break;
+        }
+    }
+    return tem;
+}
+
+///Special handling: store the uuid of current provisioner.
+- (void)saveCurrentProvisionerUUID:(NSString *)uuid{
+    [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:kCurrenProvisionerUUID_key];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+///Special handling: get the uuid of current provisioner.
+- (NSString *)getCurrentProvisionerUUID{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSString *uuid = [defaults objectForKey:kCurrenProvisionerUUID_key];
+    return uuid;
+}
+
 - (NSData *)getLocationMeshData {
     return [NSUserDefaults.standardUserDefaults objectForKey:kSaveLocationDataKey];
 }
@@ -385,39 +512,7 @@
     [_nodes addObject:node];
 }
 
-/// write SigDataSource To test.bin of lib
-- (void)writeDataSourceToLib{
-//    //1.set netkey and iv_index to test.bin of lib.
-//    provisionLocal([LibTools nsstringToHex:self.curNetkeyModel.key], self.curLocationNodeModel.address,self.curNetkeyModel.index);
-////    TeLogInfo(@"当前APP使用的本地地址为：%d",self.curLocationNodeModel.address);
-//
-//    //2.set appkey to test.bin of lib.
-//    u8 p_appkey[16] = {};
-//    memcpy(&p_appkey, [LibTools nsstringToHex:self.curAppkeyModel.key].bytes, 16);
-//    mesh_app_key_set(APPKEY_ADD, (u8 *)&p_appkey, 0, 0, 1);
-//
-//    //3.set dev_key to test.bin of lib.
-//    for (SigNodeModel *model in self.curNodes) {
-//        u8 dev_key[16] = {};
-//        memcpy(&dev_key, [LibTools nsstringToHex:model.deviceKey].bytes, 16);
-//        //keyBind失败时，device.getElementCount != 0是正确的，device.elements.count=0是正确的。
-//        VC_node_dev_key_save(model.address,(u8 *)&dev_key,model.getElementCount);
-//        VC_node_info_t info = model.nodeInfo;
-//        VC_node_cps_save((mesh_page0_t *)&info.cps.page0_head, model.address, SIZE_OF_PAGE0_LOCAL);
-//    }
-//
-//    //4.clean cache(slove bug of init different meshs that has same address node. )
-//    cache_init(ADR_ALL_NODES);
-//
-//    //5.reset busyTimer
-//    [Bluetooth.share resetMeshBusyTimer];
-//
-//    self.hasWriteDataSourceToLib = YES;
-//    _curNodes = [NSMutableArray array];
-
-}
-
-- (void)removeModelWithDeviceAddress:(UInt16)deviceAddress{
+- (void)deleteNodeFromMeshNetworkWithDeviceAddress:(UInt16)deviceAddress{
     @synchronized(self) {
         NSArray *nodes = [NSArray arrayWithArray:_nodes];
         for (SigNodeModel *model in nodes) {
@@ -428,9 +523,16 @@
         }
         NSArray *scenes = [NSArray arrayWithArray:_scenes];
         for (SigSceneModel *scene in scenes) {
-            for (NSString *actionAddress in scene.addresses) {
-                if (actionAddress.intValue == deviceAddress) {
-                    [scene.addresses removeObject:actionAddress];
+//            for (NSString *actionAddress in scene.addresses) {
+//                if (actionAddress.intValue == deviceAddress) {
+//                    [scene.addresses removeObject:actionAddress];
+//                    break;
+//                }
+//            }
+            NSArray *actionList = [NSArray arrayWithArray:scene.actionList];
+            for (ActionModel *action in actionList) {
+                if (action.address == deviceAddress) {
+                    [scene.actionList removeObject:action];
                     break;
                 }
             }
@@ -460,13 +562,6 @@
             TeLogInfo(@"waring: count of provisioners is bigger than 0x7f, app allocates node address will be error.");
         }
     }
-
-    //update iv_Index to SIGDataSource.provsionInfo
-    NSData *data = [self getIvIndexData];
-    Byte *ivIndexByte = (Byte *)[data bytes];
-    struct ProvisionInfo tem = self.provsionInfo;
-    memcpy(tem.prov_iv_index,ivIndexByte,4);
-    self.provsionInfo = tem;
 }
 
 - (void)changeLocationProvisionerNodeAddressToAddress:(UInt16)address {
@@ -486,22 +581,22 @@
     return count;
 }
 
-- (void)editGroupIDsOfDevice:(BOOL)add device_address:(NSNumber *)device_address group_address:(NSNumber *)group_address{
+- (void)editGroupIDsOfDevice:(BOOL)add unicastAddress:(NSNumber *)unicastAddress groupAddress:(NSNumber *)groupAddress{
     @synchronized(self) {
-        SigNodeModel *model = [self getDeviceWithAddress:[device_address intValue]];
+        SigNodeModel *model = [self getDeviceWithAddress:[unicastAddress intValue]];
         if (model) {
             if (add) {
-                if (![model.getGroupIDs containsObject:group_address]) {
-                    [model addGroupID:group_address];
+                if (![model.getGroupIDs containsObject:groupAddress]) {
+                    [model addGroupID:groupAddress];
                     [self saveLocationData];
                 } else {
                     TeLogInfo(@"add group model fail.");
                 }
             } else {
-                if (![model.getGroupIDs containsObject:group_address]) {
+                if (![model.getGroupIDs containsObject:groupAddress]) {
                     TeLogInfo(@"delete group model fail.");
                 } else {
-                    [model deleteGroupID:group_address];
+                    [model deleteGroupID:groupAddress];
                     [self saveLocationData];
                 }
             }
@@ -511,7 +606,7 @@
     }
 }
 
-- (void)saveDeviceWithDeviceModel:(SigNodeModel *)model{
+- (void)addAndSaveNodeToMeshNetworkWithDeviceModel:(SigNodeModel *)model{
     @synchronized(self) {
         if ([_nodes containsObject:model]) {
             NSInteger index = [_nodes indexOfObject:model];
@@ -532,14 +627,6 @@
         }
     }
 }
-
-//- (BOOL)updateResponseModelWithResponse:(ResponseModel *)response{
-//    SigNodeModel *model = [self getDeviceWithAddress:(UInt16)response.address];
-//    if (model.isKeyBindSuccess) {
-//        return [model update:response];
-//    }
-//    return NO;
-//}
 
 - (void)saveLocationData{
     TeLogDebug(@"");
@@ -589,36 +676,176 @@
     }
 }
 
-///Special handling: update the uuid and MAC mapping relationship.
-- (void)updateScanRspModelToDataSource:(SigScanRspModel *)model{
+- (SigNodeModel *)getDeviceWithAddress:(UInt16)address{
+    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
+    for (SigNodeModel *model in curNodes) {
+        if (model.nodeInfo.element_cnt > 1) {
+            if (model.address <= address && model.address + model.nodeInfo.element_cnt - 1 >= address) {
+                return model;
+            }
+        } else {
+            if (model.address == address) {
+                return model;
+            }
+        }
+    }
+    return nil;
+}
+
+///nodes should show in HomeViewController
+- (NSMutableArray<SigNodeModel *> *)curNodes{
     @synchronized(self) {
-        if (model.uuid) {
-            if ([self.scanList containsObject:model]) {
-                NSInteger index = [self.scanList indexOfObject:model];
-                SigScanRspModel *oldModel = [self.scanList objectAtIndex:index];
-                if (![oldModel.macAddress isEqualToString:model.macAddress]) {
-                    if (!model.macAddress || model.macAddress.length != 6) {
-                        model.macAddress = oldModel.macAddress;
+        if (_curNodes && _curNodes.count == _nodes.count - _provisioners.count) {
+            return _curNodes;
+        } else {
+            _curNodes = [NSMutableArray array];
+            NSArray *nodes = [NSArray arrayWithArray:_nodes];
+            for (SigNodeModel *node in nodes) {
+                BOOL isProvisioner = NO;
+                NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
+                for (SigProvisionerModel *provisioner in provisioners) {
+                    if (node.UUID && [node.UUID isEqualToString:provisioner.UUID]) {
+                        isProvisioner = YES;
+                        break;
                     }
                 }
-                if (oldModel.address != model.address && model.address == 0) {
-                    model.address = oldModel.address;
+                if (isProvisioner) {
+                    continue;
                 }
-                if (model.provisioned) {
-                    if (oldModel.networkIDData && oldModel.networkIDData.length == 8 && (model.networkIDData == nil || model.networkIDData.length != 8)) {
-                        model.networkIDData = oldModel.networkIDData;
-                    }
-                    if (oldModel.nodeIdentityData && oldModel.nodeIdentityData.length == 16 && (model.nodeIdentityData == nil || model.nodeIdentityData.length != 16)) {
-                        model.nodeIdentityData = oldModel.nodeIdentityData;
-                    }
-                }
-                if (![oldModel.macAddress isEqualToString:model.macAddress] || oldModel.address != model.address || ![oldModel.networkIDData isEqualToData:model.networkIDData] || ![oldModel.nodeIdentityData isEqualToData:model.nodeIdentityData]) {
-                    [self.scanList replaceObjectAtIndex:index withObject:model];
-                    [self saveScanList];
-                }
-            } else {
-                [self.scanList addObject:model];
-                [self saveScanList];
+                [_curNodes addObject:node];
+            }
+            return _curNodes;
+        }
+    }
+}
+
+- (void)saveLocationProvisionAddress:(NSInteger)address{
+    NSMutableDictionary *dict = [[NSUserDefaults standardUserDefaults] objectForKey:kCurrentMeshProvisionAddress_key];
+    if (dict == nil) {
+        dict = [NSMutableDictionary dictionary];
+    }else{
+        dict = [NSMutableDictionary dictionaryWithDictionary:dict];
+    }
+    [dict setObject:[NSNumber numberWithInteger:address] forKey:self.getCurrentProvisionerUUID];
+    [[NSUserDefaults standardUserDefaults] setObject:dict forKey:kCurrentMeshProvisionAddress_key];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+- (void)updateNodeStatusWithBaseMeshMessage:(SigBaseMeshMessage *)responseMessage source:(UInt16)source {
+    SigNodeModel *node = [self getDeviceWithAddress:source];
+    if (responseMessage && node) {
+        [node updateNodeStatusWithBaseMeshMessage:responseMessage source:source];
+    }
+}
+
+- (UInt16)getNewSceneAddress{
+    UInt16 address = 1;
+    if (_scenes.count > 0) {
+        [_scenes sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+            return [(SigSceneModel *)obj1 number] > [(SigSceneModel *)obj2 number];
+        }];
+        address = _scenes.lastObject.number + 1;
+    }
+    return address;
+}
+
+- (void)saveSceneModelWithModel:(SigSceneModel *)model{
+    @synchronized(self) {
+        SigSceneModel *scene = [[SigSceneModel alloc] init];
+        scene.number = model.number;
+        scene.name = model.name;
+        scene.actionList = [[NSMutableArray alloc] initWithArray:model.actionList];
+
+        if ([self.scenes containsObject:scene]) {
+            NSInteger index = [self.scenes indexOfObject:scene];
+            self.scenes[index] = scene;
+        } else {
+            [self.scenes addObject:scene];
+        }
+        [self saveLocationData];
+    }
+}
+
+- (void)delectSceneModelWithModel:(SigSceneModel *)model{
+    @synchronized(self) {
+        if ([self.scenes containsObject:model]) {
+            [self.scenes removeObject:model];
+            [self saveLocationData];
+        }
+    }
+}
+
+- (NSData *)getIvIndexData{
+    return [LibTools nsstringToHex:_ivIndex];
+}
+
+- (void)updateIvIndexData:(NSData *)ivIndex{
+    _ivIndex = [LibTools convertDataToHexStr:ivIndex];
+    [self saveLocationData];
+}
+
+- (int)getCurrentProvisionerIntSequenceNumber {
+    if (self.curLocationNodeModel) {
+        return [self getLocationSno];
+    }
+    TeLogInfo(@"get sequence fail.");
+    return 0;
+}
+
+- (void)updateCurrentProvisionerIntSequenceNumber:(int)sequenceNumber {
+    if (sequenceNumber < self.getCurrentProvisionerIntSequenceNumber) {
+//        TeLogVerbose(@"更新sequenceNumber异常=0x%x",sequenceNumber);
+////#warning 2019年12月30日17:11:46，暂时处理：将设备sequenceNumber赋值本地
+////        [self setLocationSno:sequenceNumber];
+////        [self saveLocationData];
+        return;
+    }
+    if (self.curLocationNodeModel && sequenceNumber != self.getCurrentProvisionerIntSequenceNumber) {
+        TeLogVerbose(@"更新，下一个可用的sequenceNumber=0x%x",sequenceNumber);
+        [self setLocationSno:sequenceNumber];
+        //sno无需存储json
+//        if (sequenceNumber >= self.getLocationSno + kSnoIncrement) {
+//            [self saveLocationData];
+//        }
+    }else{
+        TeLogVerbose(@"set sequence=0x%x again.",sequenceNumber);
+    }
+}
+
+- (UInt32)getLocationSno {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSNumber *sno = [defaults objectForKey:kCurrenProvisionerSno_key];
+    if (!sno) {
+        sno = @(0);
+    }
+//    TeLogVerbose(@"sno=0x%x",sno.intValue);
+    return sno.intValue;
+}
+
+- (void)setLocationSno:(UInt32)sno {
+//    TeLogVerbose(@"sno=0x%x",(unsigned int)sno);
+    [[NSUserDefaults standardUserDefaults] setObject:@(sno) forKey:kCurrenProvisionerSno_key];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+- (SigEncryptedModel *)getSigEncryptedModelWithAddress:(UInt16)address {
+    SigEncryptedModel *tem = nil;
+    NSArray *encryptedArray = [NSArray arrayWithArray:_encryptedArray];
+    for (SigEncryptedModel *model in encryptedArray) {
+        if (model.address == address) {
+            return model;
+        }
+    }
+    return tem;
+}
+
+- (void)deleteSigEncryptedModelWithAddress:(UInt16)address {
+    @synchronized(self) {
+        NSArray *encryptedArray = [NSArray arrayWithArray:_encryptedArray];
+        for (SigEncryptedModel *model in encryptedArray) {
+            if (model.address == address) {
+                [_encryptedArray removeObject:model];
+                break;
             }
         }
     }
@@ -705,117 +932,36 @@
     return NO;
 }
 
-///Special handling: store the uuid of current provisioner.
-- (void)saveCurrentProvisionerUUID:(NSString *)uuid{
-    [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:kCurrenProvisionerUUID_key];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-///Special handling: get the uuid of current provisioner.
-- (NSString *)getCurrentProvisionerUUID{
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSString *uuid = [defaults objectForKey:kCurrenProvisionerUUID_key];
-    return uuid;
-}
-
-- (UInt32)getLocationSno {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSNumber *sno = [defaults objectForKey:kCurrenProvisionerSno_key];
-    if (!sno) {
-        sno = @(0);
-    }
-    TeLogVerbose(@"sno=0x%x",sno.intValue);
-    return sno.intValue;
-}
-
-- (void)setLocationSno:(UInt32)sno {
-//    TeLogInfo(@"sno=0x%x",(unsigned int)sno);
-    [[NSUserDefaults standardUserDefaults] setObject:@(sno) forKey:kCurrenProvisionerSno_key];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-- (NSInteger)getOnlineDevicesNumber{
-    NSInteger count = 0;
-    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
-    for (SigNodeModel *model in curNodes) {
-        if (model.state != DeviceStateOutOfLine) {
-            count ++;
-        }
-    }
-    return count;
-}
-
-- (SigNodeModel *)getDeviceWithMacAddress:(NSString *)macAddress{
-    NSArray *nodes = [NSArray arrayWithArray:_nodes];
-    for (SigNodeModel *model in nodes) {
-        //peripheralUUID || location node's uuid
-        if (macAddress && model.macAddress && [model.macAddress.uppercaseString isEqualToString:macAddress.uppercaseString]) {
-            return model;
-        }
-    }
-    return nil;
-}
-
-- (SigNodeModel *)getDeviceWithAddress:(UInt16)address{
-    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
-    for (SigNodeModel *model in curNodes) {
-        if (model.nodeInfo.element_cnt > 1) {
-            if (model.address <= address && model.address + model.nodeInfo.element_cnt - 1 >= address) {
-                return model;
-            }
-        } else {
-            if (model.address == address) {
-                return model;
-            }
-        }
-    }
-    return nil;
-}
-
-- (ModelIDModel *)getModelIDModel:(NSNumber *)modelID{
-    ModelIDs *modelIDs = [[ModelIDs alloc] init];
-    NSArray *all = [NSArray arrayWithArray:modelIDs.modelIDs];
-    for (ModelIDModel *model in all) {
-        if (model.sigModelID == [modelID intValue]) {
-            return model;
-        }
-    }
-    return nil;
-}
-
-- (UInt16)getNewSceneAddress{
-    UInt16 address = 1;
-    if (_scenes.count > 0) {
-        [_scenes sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-            return [(SigSceneModel *)obj1 number] > [(SigSceneModel *)obj2 number];
-        }];
-        address = _scenes.lastObject.number + 1;
-    }
-    return address;
-}
-
-- (void)saveSceneModelWithModel:(SigSceneModel *)model{
+- (void)updateScanRspModelToDataSource:(SigScanRspModel *)model{
     @synchronized(self) {
-        SigSceneModel *scene = [[SigSceneModel alloc] init];
-        scene.number = model.number;
-        scene.name = model.name;
-        scene.actionList = [[NSMutableArray alloc] initWithArray:model.actionList];
-
-        if ([self.scenes containsObject:scene]) {
-            NSInteger index = [self.scenes indexOfObject:scene];
-            self.scenes[index] = scene;
-        } else {
-            [self.scenes addObject:scene];
-        }
-        [self saveLocationData];
-    }
-}
-
-- (void)delectSceneModelWithModel:(SigSceneModel *)model{
-    @synchronized(self) {
-        if ([self.scenes containsObject:model]) {
-            [self.scenes removeObject:model];
-            [self saveLocationData];
+        if (model.uuid) {
+            if ([self.scanList containsObject:model]) {
+                NSInteger index = [self.scanList indexOfObject:model];
+                SigScanRspModel *oldModel = [self.scanList objectAtIndex:index];
+                if (![oldModel.macAddress isEqualToString:model.macAddress]) {
+                    if (!model.macAddress || model.macAddress.length != 12) {
+                        model.macAddress = oldModel.macAddress;
+                    }
+                }
+                if (oldModel.address != model.address && model.address == 0) {
+                    model.address = oldModel.address;
+                }
+                if (model.provisioned) {
+                    if (oldModel.networkIDData && oldModel.networkIDData.length == 8 && (model.networkIDData == nil || model.networkIDData.length != 8)) {
+                        model.networkIDData = oldModel.networkIDData;
+                    }
+                    if (oldModel.nodeIdentityData && oldModel.nodeIdentityData.length == 16 && (model.nodeIdentityData == nil || model.nodeIdentityData.length != 16)) {
+                        model.nodeIdentityData = oldModel.nodeIdentityData;
+                    }
+                }
+                if (![oldModel.macAddress isEqualToString:model.macAddress] || oldModel.address != model.address || ![oldModel.networkIDData isEqualToData:model.networkIDData] || ![oldModel.nodeIdentityData isEqualToData:model.nodeIdentityData]) {
+                    [self.scanList replaceObjectAtIndex:index withObject:model];
+                    [self saveScanList];
+                }
+            } else {
+                [self.scanList addObject:model];
+                [self saveScanList];
+            }
         }
     }
 }
@@ -863,178 +1009,43 @@
     }
 }
 
-- (SigEncryptedModel *)getSigEncryptedModelWithAddress:(UInt16)address {
-    SigEncryptedModel *tem = nil;
-    NSArray *encryptedArray = [NSArray arrayWithArray:_encryptedArray];
-    for (SigEncryptedModel *model in encryptedArray) {
-        if (model.address == address) {
-            return model;
-        }
-    }
-    return tem;
-}
-
-- (void)deleteSigEncryptedModelWithAddress:(UInt16)address {
-    @synchronized(self) {
-        NSArray *encryptedArray = [NSArray arrayWithArray:_encryptedArray];
-        for (SigEncryptedModel *model in encryptedArray) {
-            if (model.address == address) {
-                [_encryptedArray removeObject:model];
-                break;
-            }
-        }
-    }
-}
-
-- (SigNetkeyModel *)curNetkeyModel{
-    //The default use first netkey temporarily
-    if (SigDataSource.share.netKeys.count > 0) {
-        return SigDataSource.share.netKeys.firstObject;
-    }
-    return nil;
-}
-
-- (SigAppkeyModel *)curAppkeyModel{
-    //The default use first appkey temporarily
-    if (SigDataSource.share.appKeys.count > 0) {
-        return SigDataSource.share.appKeys.firstObject;
-    }
-    return nil;
-}
-
-- (SigProvisionerModel *)curProvisionerModel{
-    //Practice 1. Temporary default to the first provisioner
-//    if (SigDataSource.share.provisioners.count > 0) {
-//        return SigDataSource.share.provisioners.firstObject;
-//    }
-    //Practice 2. get provisioner by location node's uuid.
-    NSString *curUUID = [self getCurrentProvisionerUUID];
-    NSArray *provisioners = [NSArray arrayWithArray: _provisioners];
-    for (SigProvisionerModel *provisioner in provisioners) {
-        if ([provisioner.UUID isEqualToString:curUUID]) {
-            return provisioner;
-        }
-    }
-    return nil;
-}
-
-- (SigNodeModel *)curLocationNodeModel{
-    if (SigDataSource.share.curProvisionerModel) {
-        NSArray *nodes = [NSArray arrayWithArray: self.nodes];
-        for (SigNodeModel *model in nodes) {
-            if ([model.UUID isEqualToString:SigDataSource.share.curProvisionerModel.UUID]) {
-                return model;
-            }
-        }
-    }
-    return nil;
-}
-
-- (SigElementModel *)curLocationElementModel {
-    return self.curLocationNodeModel.elements.firstObject;
-}
-
-- (NSData *)curNetKey{
-    if (self.curNetkeyModel) {
-        return [LibTools nsstringToHex:self.curNetkeyModel.key];
-    }
-    return nil;
-}
-
-- (NSData *)curAppKey{
-    if (self.curAppkeyModel) {
-        return [LibTools nsstringToHex:self.curAppkeyModel.key];
-    }
-    return nil;
-}
-
-///nodes should show in HomeViewController
-- (NSMutableArray<SigNodeModel *> *)curNodes{
-    @synchronized(self) {
-        if (_curNodes && _curNodes.count == _nodes.count - _provisioners.count) {
-            return _curNodes;
-        } else {
-            _curNodes = [NSMutableArray array];
-            NSArray *nodes = [NSArray arrayWithArray:_nodes];
-            for (SigNodeModel *node in nodes) {
-                BOOL isProvisioner = NO;
-                NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
-                for (SigProvisionerModel *provisioner in provisioners) {
-                    if (node.UUID && [node.UUID isEqualToString:provisioner.UUID]) {
-                        isProvisioner = YES;
-                        break;
-                    }
-                }
-                if (isProvisioner) {
-                    continue;
-                }
-                [_curNodes addObject:node];
-            }
-            return _curNodes;
-        }
-    }
-}
-
-- (UInt16)provisionAddress{
-    if (!self.curProvisionerModel) {
-        TeLogInfo(@"warning: Abnormal situation, there is not provisioner.");
-        return kLocationAddress;
-    } else {
-        UInt16 maxAddr = self.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
-        NSArray *nodes = [NSArray arrayWithArray:_nodes];
-        for (SigNodeModel *node in nodes) {
-            NSInteger curMax = node.address + node.elements.count - 1;
-            if (curMax > maxAddr) {
-                maxAddr = curMax;
-            }
-        }
-
-        NSMutableDictionary *dict = [[NSUserDefaults standardUserDefaults] objectForKey:kCurrentMeshProvisionAddress_key];
-        if (dict && [dict.allKeys containsObject:self.getCurrentProvisionerUUID]) {
-            maxAddr = [dict[self.getCurrentProvisionerUUID] intValue];
-        }else{
-            if (dict == nil) {
-                [self saveLocationProvisionAddress:maxAddr];
-            }
-        }
-
-        //限制短地址的做法：
-//        if (maxAddr + 1 <= self.curProvisionerModel.allocatedUnicastRange.firstObject.hightIntAddress) {
-//            //Attention: location address is the smallest address of allocatedUnicastRange, app can add new node by use address from smallest address+1.
-//            return maxAddr + 1;
-//        } else {
-//            TeLogInfo(@"warning: Abnormal situation, there is no more address can be use.");
-//            return 0;
-//        }
-        //不限制短地址的做法：
-        return maxAddr + 1;
-    }
-}
-
-- (void)saveLocationProvisionAddress:(NSInteger)address{
-    NSMutableDictionary *dict = [[NSUserDefaults standardUserDefaults] objectForKey:kCurrentMeshProvisionAddress_key];
-    if (dict == nil) {
-        dict = [NSMutableDictionary dictionary];
-    }else{
-        dict = [NSMutableDictionary dictionaryWithDictionary:dict];
-    }
-    [dict setObject:[NSNumber numberWithInteger:address] forKey:self.getCurrentProvisionerUUID];
-    [[NSUserDefaults standardUserDefaults] setObject:dict forKey:kCurrentMeshProvisionAddress_key];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-- (BOOL)hasNodeExistTimeModelID {
-    BOOL tem = NO;
-    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
-    for (SigNodeModel *node in curNodes) {
-        UInt32 option = SIG_MD_TIME_S;
-        NSArray *elementAddresses = [node getAddressesWithModelID:@(option)];
-        if (elementAddresses.count > 0) {
-            tem = YES;
+- (SigNetkeyModel *)getNetkeyModelWithNetworkId:(NSData *)networkId {
+    SigNetkeyModel *tem = nil;
+    NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
+    for (SigNetkeyModel *model in netKeys) {
+        if (model.networkId && [model.networkId isEqualToData:networkId]) {
+            tem = model;
+            break;
+        }else if (model.oldNetworkId && [model.oldNetworkId isEqualToData:networkId]) {
+            tem = model;
             break;
         }
     }
     return tem;
+}
+
+- (SigNetkeyModel *)getNetkeyModelWithNetkeyIndex:(NSInteger)index {
+    SigNetkeyModel *tem = nil;
+    NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
+    for (SigNetkeyModel *model in netKeys) {
+        if (model.index == index) {
+            tem = model;
+            break;
+        }
+    }
+    return tem;
+}
+
+- (SigAppkeyModel *)getAppkeyModelWithAppkeyIndex:(NSInteger)appkeyIndex {
+    SigAppkeyModel *model = nil;
+    NSArray *appKeys = [NSArray arrayWithArray:_appKeys];
+    for (SigAppkeyModel *tem in appKeys) {
+        if (tem.index == appkeyIndex) {
+            model = tem;
+            break;
+        }
+    }
+    return model;
 }
 
 - (SigNodeModel *)getNodeWithUUID:(NSString *)uuid{
@@ -1063,90 +1074,31 @@
     return nil;
 }
 
+- (SigNodeModel *)getDeviceWithMacAddress:(NSString *)macAddress{
+    NSArray *nodes = [NSArray arrayWithArray:_nodes];
+    for (SigNodeModel *model in nodes) {
+        //peripheralUUID || location node's uuid
+        if (macAddress && model.macAddress && [model.macAddress.uppercaseString isEqualToString:macAddress.uppercaseString]) {
+            return model;
+        }
+    }
+    return nil;
+}
+
 - (SigNodeModel *)getCurrentConnectedNode{
     SigNodeModel *node = [self getNodeWithAddress:self.unicastAddressOfConnected];
     return node;
 }
 
-- (NSData *)getIvIndexData{
-    return [LibTools nsstringToHex:_ivIndex];
-}
-
-- (void)updateIvIndexData:(NSData *)ivIndex{
-    _ivIndex = [LibTools convertDataToHexStr:ivIndex];
-    Byte *ivbyte = (Byte *)[ivIndex bytes];
-    struct ProvisionInfo provsionInfo = SigDataSource.share.provsionInfo;
-    memcpy(provsionInfo.prov_iv_index, ivbyte, 4);
-    SigDataSource.share.provsionInfo = provsionInfo;
-
-    [self saveLocationData];
-}
-
-- (int)getCurrentProvisionerIntSequenceNumber {
-    if (self.curLocationNodeModel) {
-        return [self getLocationSno];
-    }
-    TeLogInfo(@"get sequence fail.");
-    return 0;
-}
-
-- (void)updateCurrentProvisionerIntSequenceNumber:(int)sequenceNumber {
-    if (sequenceNumber < self.getCurrentProvisionerIntSequenceNumber) {
-//        TeLogVerbose(@"更新sequenceNumber异常=0x%x",sequenceNumber);
-////#warning 2019年12月30日17:11:46，暂时处理：将设备sequenceNumber赋值本地
-////        [self setLocationSno:sequenceNumber];
-////        [self saveLocationData];
-        return;
-    }
-    if (self.curLocationNodeModel && sequenceNumber != self.getCurrentProvisionerIntSequenceNumber) {
-        TeLogVerbose(@"更新，下一个可用的sequenceNumber=0x%x",sequenceNumber);
-        [self setLocationSno:sequenceNumber];
-        //sno无需存储json
-//        if (sequenceNumber >= self.getLocationSno + kSnoIncrement) {
-//            [self saveLocationData];
-//        }
-    }else{
-        TeLogVerbose(@"set sequence=0x%x again.",sequenceNumber);
-    }
-}
-
-- (SigNetkeyModel *)getNetkeyModelWithNetworkId:(NSData *)networkId {
-    SigNetkeyModel *tem = nil;
-    NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
-    for (SigNetkeyModel *model in netKeys) {
-        if (model.networkId && [model.networkId isEqualToData:networkId]) {
-            tem = model;
-            break;
-        }else if (model.oldNetworkId && [model.oldNetworkId isEqualToData:networkId]) {
-            tem = model;
-            break;
+- (ModelIDModel *)getModelIDModel:(NSNumber *)modelID{
+    ModelIDs *modelIDs = [[ModelIDs alloc] init];
+    NSArray *all = [NSArray arrayWithArray:modelIDs.modelIDs];
+    for (ModelIDModel *model in all) {
+        if (model.sigModelID == [modelID intValue]) {
+            return model;
         }
     }
-    return tem;
-}
-
-- (SigAppkeyModel *)getAppkeyModelWithAppkeyIndex:(NSInteger)appkeyIndex {
-    SigAppkeyModel *model = nil;
-    NSArray *appKeys = [NSArray arrayWithArray:_appKeys];
-    for (SigAppkeyModel *tem in appKeys) {
-        if (tem.index == appkeyIndex) {
-            model = tem;
-            break;
-        }
-    }
-    return model;
-}
-
-- (SigNetkeyModel *)getNetkeyModelWithNetkeyIndex:(NSInteger)index {
-    SigNetkeyModel *tem = nil;
-    NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
-    for (SigNetkeyModel *model in netKeys) {
-        if (model.index == index) {
-            tem = model;
-            break;
-        }
-    }
-    return tem;
+    return nil;
 }
 
 - (SigGroupModel *)getGroupModelWithGroupAddress:(UInt16)groupAddress {
@@ -1159,22 +1111,6 @@
         }
     }
     return tem;
-}
-
-+ (NSDictionary<NSString *,id> *)modelContainerPropertyGenericClass{
-    return @{@"netKeys" : [SigNetkeyModel class], @"provisioners" : [SigProvisionerModel class], @"appKeys" : [SigAppkeyModel class], @"scenes" : [SigSceneModel class], @"groups" : [SigGroupModel class], @"nodes" : [SigNodeModel class]};
-}
-
-// 如果该方法被实现了.那么就不会处理return数组内的以外的字段
-+ (NSArray *)modelPropertyWhitelist {
-    return @[@"meshUUID",@"provisioners",@"nodes",@"groups",@"scenes",@"netKeys",@"$schema",@"version",@"meshName",@"timestamp",@"appKeys",@"ivIndex"];
-}
-
-- (void)updateNodeStatusWithBaseMeshMessage:(SigBaseMeshMessage *)responseMessage source:(UInt16)source {
-    SigNodeModel *node = [self getDeviceWithAddress:source];
-    if (responseMessage && node) {
-        [node updateNodeStatusWithBaseMeshMessage:responseMessage source:source];
-    }
 }
 
 - (DeviceTypeModel *)getNodeInfoWithCID:(UInt16)CID PID:(UInt16)PID {
@@ -1343,11 +1279,6 @@
 
 - (BOOL)isPrimary {
     return _index == 0;
-}
-
-// 如果该方法被实现了.那么就不会处理return数组内的以外的字段
-+ (NSArray *)modelPropertyWhitelist {
-    return @[@"oldKey",@"index",@"phase",@"timestamp",@"key",@"name",@"minSecurity"];
 }
 
 @end
@@ -1640,11 +1571,6 @@
     return nil;
 }
 
-// 如果该方法被实现了.那么就不会处理return数组内的以外的字段
-+ (NSArray *)modelPropertyWhitelist {
-    return @[@"oldKey",@"key",@"name",@"boundNetKey",@"index"];
-}
-
 @end
 
 
@@ -1741,6 +1667,14 @@
 
 @implementation SigGroupModel
 
+- (instancetype)init {
+    if (self = [super init]) {
+        _groupBrightness = 100;
+        _groupTempareture = 100;
+    }
+    return self;
+}
+
 - (NSDictionary *)getDictionaryOfSigGroupModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_name) {
@@ -1769,6 +1703,8 @@
     if ([allKeys containsObject:@"parentAddress"]) {
         _parentAddress = dictionary[@"parentAddress"];
     }
+    _groupBrightness = 100;
+    _groupTempareture = 100;
 }
 
 - (SigMeshAddress *)meshAddress {
@@ -1780,6 +1716,37 @@
 
 - (UInt16)intAddress{
     return [LibTools uint16From16String:self.address];
+}
+
+- (BOOL)isOn{
+    BOOL tem = NO;
+    for (SigNodeModel *model in self.groupDevices) {
+        if (model.state == DeviceStateOn) {
+            tem = YES;
+            break;
+        }
+    }
+    return tem;
+}
+
+- (NSMutableArray <SigNodeModel *>*)groupDevices{
+    NSMutableArray *tem = [[NSMutableArray alloc] init];
+    for (SigNodeModel *model in SigDataSource.share.curNodes) {
+        if ([model.getGroupIDs containsObject:@(self.intAddress)]) {
+            [tem addObject:model];
+        }
+    }
+    return tem;
+}
+
+- (NSMutableArray <SigNodeModel *>*)groupOnlineDevices{
+    NSMutableArray *tem = [[NSMutableArray alloc] init];
+    for (SigNodeModel *model in SigDataSource.share.curNodes) {
+        if ([model.getGroupIDs containsObject:@(self.intAddress)] && model.state != DeviceStateOutOfLine) {
+            [tem addObject:model];
+        }
+    }
+    return tem;
 }
 
 @end
@@ -1932,121 +1899,6 @@
     return [LibTools tempToTemp100:self.temperature];
 }
 
-/////update node status, YES means status had changed, NO means status hadn't changed.
-//- (BOOL)update:(ResponseModel *)m{
-//    Opcode op = m.opcode;
-//    BOOL change = NO;
-//    
-//    Byte *pu = (Byte *)[m.rspData bytes];
-//    UInt16 a=0,b=0,c=0;
-//
-//    switch (op) {
-//        case OpcodeOnOffStatusResponse:
-//        {
-//            DeviceState tem = m.currentState ? DeviceStateOn : DeviceStateOff;
-//            if (self.state != tem) {
-//                self.state = tem;
-//                change = YES;
-//            }
-//        }
-//            break;
-//        case OpcodeBrightnessGetResponse:
-//        {
-//            if (_brightness != m.currentValue) {
-//                _brightness = m.currentValue;
-//                change = YES;
-//            }
-//            DeviceState tem = m.currentState ? DeviceStateOn : DeviceStateOff;
-//            if (_state != tem) {
-//                _state = tem;
-//                change = YES;
-//            }
-//        }
-//            break;
-//        case OpcodeCurrentCTLResponse:
-//        {
-//            if (_brightness != m.currentValue) {
-//                _brightness = m.currentValue;
-//                change = YES;
-//            }
-//            if (_temperature != m.pointValue) {
-//                _temperature = m.pointValue;
-//                change = YES;
-//            }
-//            DeviceState tem = m.currentState ? DeviceStateOn : DeviceStateOff;
-//            if (_state != tem) {
-//                _state = tem;
-//                change = YES;
-//            }
-//        }
-//            break;
-//        case OpcodeChangeLevelResponse:
-//        {
-//            if (m.address == self.address) {
-//                //lum
-//                UInt8 lum = level2lum(m.currentValue);
-//                if (_brightness != lum2_lightness(lum)) {
-//                    _brightness = lum2_lightness(lum);
-//                    change = YES;
-//                }
-//                if (lum > 0) {
-//                    //Attention: node's state is on when lum is bigger than 0.
-//                    _state = DeviceStateOn;
-//                }
-//            } else if (m.address == self.temperatureAddresses.firstObject.intValue){
-//                //temp
-//                //                UInt8 temp = level_to_temp100(m.currentValue);
-//                UInt8 lum = level2lum(m.currentValue);
-//                _temperature = temp100_to_temp(lum);
-//                if (_temperature != temp100_to_temp(lum)) {
-//                    _temperature = temp100_to_temp(lum);
-//                    change = YES;
-//                }
-//                //注意：lum不为0时，灯不一定是开的。
-////                if (lum > 0) {
-////                    _state = DeviceStateOn;
-////                }
-//            }
-//        }
-//            break;
-//        case OpcodeCTLTemperatureStatusResponse:
-//        {
-//            if (_temperature != m.currentValue) {
-//                _temperature = m.currentValue;
-//                change = YES;
-//            }
-//        }
-//            break;
-//        case OpcodeHSLNotifyResponse:
-//        {
-//            if (m.rspData.length >= 14+1) {
-//                memcpy(&a, pu + 8+1, 2);
-//                memcpy(&b, pu + 10+1, 2);
-//                memcpy(&c, pu + 12+1, 2);
-//                if (_HSL_Lightness != a) {
-//                    _HSL_Lightness = a;
-//                    change = YES;
-//                }
-//                if (_HSL_Hue != b) {
-//                    _HSL_Hue = b;
-//                    change = YES;
-//                }
-//                if (_HSL_Saturation != c) {
-//                    _HSL_Saturation = c;
-//                    change = YES;
-//                }
-//            }
-//        }
-//            break;
-//
-//        default:
-//            NSLog(@"opcode:%lu",(unsigned long)op);
-//            saveLogData([NSString stringWithFormat:@"opcode:%lu",(unsigned long)op]);
-//            break;
-//    }
-//    return change;
-//}
-
 - (void)updateOnlineStatusWithDeviceState:(DeviceState)state bright100:(UInt8)bright100 temperature100:(UInt8)temperature100{
     _state = state;
     if (state == DeviceStateOutOfLine) {
@@ -2132,16 +1984,16 @@
 }
 
 ///publish首选SIG_MD_LIGHT_CTL_S，次选SIG_MD_LIGHT_HSL_S，SIG_MD_LIGHTNESS_S，SIG_MD_G_ONOFF_S
-- (UInt32)publishModelID{
-    UInt32 tem = 0;
+- (UInt16)publishModelID{
+    UInt16 tem = 0;
     if ([self getAddressesWithModelID:@(SIG_MD_LIGHT_CTL_S)].count > 0) {
-        tem = (UInt32)SIG_MD_LIGHT_CTL_S;
+        tem = (UInt16)SIG_MD_LIGHT_CTL_S;
     } else if ([self getAddressesWithModelID:@(SIG_MD_LIGHT_HSL_S)].count > 0){
-        tem = (UInt32)SIG_MD_LIGHT_HSL_S;
+        tem = (UInt16)SIG_MD_LIGHT_HSL_S;
     } else if ([self getAddressesWithModelID:@(SIG_MD_LIGHTNESS_S)].count > 0){
-        tem = (UInt32)SIG_MD_LIGHTNESS_S;
+        tem = (UInt16)SIG_MD_LIGHTNESS_S;
     } else if ([self getAddressesWithModelID:@(SIG_MD_G_ONOFF_S)].count > 0){
-        tem = (UInt32)SIG_MD_G_ONOFF_S;
+        tem = (UInt16)SIG_MD_G_ONOFF_S;
     }
     return tem;
 }
@@ -2153,7 +2005,7 @@
             SigElementModel *ele = self.elements[i];
             NSArray *all = [NSArray arrayWithArray:ele.models];
             for (SigModelIDModel *modelID in all) {
-                if (modelID.getIntModelID == sigModelID.intValue) {
+                if (modelID.getIntModelIdentifier == sigModelID.intValue) {
                     [array addObject:@(self.address+i)];
                     break;
                 }
@@ -2309,7 +2161,7 @@
     }
     dict[@"blacklisted"] = [NSNumber numberWithBool:_blacklisted];
     if (_UUID) {
-        dict[@"UUID"] = _UUID;
+        dict[@"UUID"] = [LibTools meshUUIDToUUID:_UUID];
     }
     if (_security) {
         dict[@"security"] = _security;
@@ -2411,7 +2263,7 @@
         _blacklisted = [dictionary[@"blacklisted"] boolValue];
     }
     if ([allKeys containsObject:@"UUID"]) {
-        _UUID = dictionary[@"UUID"];
+        _UUID = [LibTools meshUUIDToUUID:dictionary[@"UUID"]];
     }
     if ([allKeys containsObject:@"security"]) {
         _security = dictionary[@"security"];
@@ -3425,6 +3277,24 @@
     return modelID;
 }
 
+- (UInt16)getIntModelIdentifier {
+    UInt16 tem = 0;
+    if (self.modelId.length == 4) {
+        tem = [LibTools uint16From16String:self.modelId];
+    } else if (self.modelId.length == 8) {
+        tem = [LibTools uint16From16String:[self.modelId substringFromIndex:4]];
+    }
+    return tem;
+}
+
+- (UInt16)getIntCompanyIdentifier {
+    UInt16 tem = 0;
+    if (self.modelId.length == 8) {
+        tem = [LibTools uint16From16String:[self.modelId substringToIndex:4]];
+    }
+    return tem;
+}
+
 - (instancetype)initWithSigModelId:(UInt16)sigModelId {
     return [self initWithVendorModelId:(UInt32)sigModelId];
 }
@@ -3437,25 +3307,6 @@
         _delegate = nil;
     }
     return self;
-}
-
-- (instancetype)initWithVendorModelId:(UInt32)vendorModelId withDelegate:(SigModelDelegate *)delegate {
-    if (self = [super init]) {
-        _modelId = [SigHelper.share getUint32String:vendorModelId];
-        _subscribe = [NSMutableArray array];
-        _bind = [NSMutableArray array];
-        _delegate = delegate;
-    }
-    return self;
-}
-
-- (instancetype)initWithSigModelId:(UInt16)sigModelId companyId:(UInt16)companyId delegate:(SigModelDelegate *)delegate {
-    UInt32 vendorModelId = ((UInt32)companyId << 16) | (UInt32)sigModelId;
-    return [self initWithVendorModelId:vendorModelId withDelegate:delegate];
-}
-
-- (instancetype)initWithSigModelId:(UInt16)sigModelId delegate:(SigModelDelegate *)delegate {
-    return [self initWithVendorModelId:(UInt32)sigModelId withDelegate:delegate];
 }
 
 - (UInt16)modelIdentifier {

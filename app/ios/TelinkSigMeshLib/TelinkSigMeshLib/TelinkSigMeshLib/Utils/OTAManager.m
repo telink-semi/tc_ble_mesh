@@ -44,7 +44,6 @@ typedef enum : NSUInteger {
 @property (nonatomic,strong) SigBearer *bearer;
 @property (nonatomic, weak) id <SigBearerDataDelegate>oldBearerDataDelegate;
 
-//@property (nonatomic,assign) NSTimeInterval connectPeripheralWithUUIDTimeoutInterval;//timeout of connect peripheral
 @property (nonatomic,assign) NSTimeInterval writeOTAInterval;//interval of write ota data, default is 6ms
 @property (nonatomic,assign) NSTimeInterval readTimeoutInterval;//timeout of read OTACharacteristic(write 8 packet, read one time), default is 5s.
 
@@ -87,7 +86,6 @@ typedef enum : NSUInteger {
 - (void)initData{
     _bearer = SigBearer.share;
     
-//    _connectPeripheralWithUUIDTimeoutInterval = 10.0;
     _writeOTAInterval = 0.006;
     _readTimeoutInterval = 5.0;
     
@@ -162,6 +160,7 @@ typedef enum : NSUInteger {
     if (_OTAing) {
         [SigBearer.share stopMeshConnectWithComplete:nil];
     }
+    [SDKLibCommand cancelReadOTACharachteristic];
     _singleSuccessCallBack = nil;
     _singleFailCallBack = nil;
     _singleProgressCallBack = nil;
@@ -182,20 +181,6 @@ typedef enum : NSUInteger {
     } else {
         [self startMeshConnectBeforeGATTOTA];
     }
-//
-//    if (!_currentUUID && _currentUUID.length == 0) {
-//        TeLogInfo(@"还未扫描到设备");
-//        [self startScanNodeIdentityBeforeGATTOTA];
-//    } else {
-//        if ([_bearer.getCurrentPeripheral.identifier.UUIDString isEqualToString:_currentUUID] && _bearer.isOpen) {
-//            [self dalayToSetFilter];
-//        }else{
-//            __weak typeof(self) weakSelf = self;
-//            [_bearer stopMeshConnectWithComplete:^(BOOL successful) {
-//                [weakSelf startConnectForOTA];
-//            }];
-//        }
-//    }
 }
 
 #pragma mark step1:startMeshConnectBeforeGATTOTA
@@ -221,13 +206,8 @@ typedef enum : NSUInteger {
 
 /// OTA前直连设备超时。
 - (void)meshConnectTimeoutBeforeGATTOTA {
-    __weak typeof(self) weakSelf = self;
-    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
-        if (weakSelf.progress == SigGattOTAProgress_step1_startMeshConnectBeforeGATTOTA) {
-            TeLogInfo(@"OTA fail: startMeshConnect Timeout Before GATT OTA.");
-            [weakSelf otaFailAction];
-        }
-    }];
+    TeLogInfo(@"OTA fail: startMeshConnect Timeout Before GATT OTA.");
+    [self otaFailAction];
 }
 
 #pragma mark step2:nodeIdentitySetBeforeGATTOTA
@@ -239,9 +219,10 @@ typedef enum : NSUInteger {
     [oprationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
         __block BOOL hasSuccess = NO;
-        for (SigNodeModel *node in SigDataSource.share.curNodes) {
+        NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+        for (SigNodeModel *node in curNodes) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-            [SDKLibCommand configNodeIdentitySetWithDestination:node.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
+            [SDKLibCommand configNodeIdentitySetWithDestination:node.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
                 TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 if (!error) {
@@ -272,6 +253,7 @@ typedef enum : NSUInteger {
     self.progress = SigGattOTAProgress_step3_startScanNodeIdentityBeforeGATTOTA;
     __weak typeof(self) weakSelf = self;
     [SigBluetooth.share scanProvisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
+//        TeLogInfo(@"peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d",peripheral.identifier.UUIDString,advertisementData,RSSI,unprovisioned);
         if (!unprovisioned) {
             SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
             if (rspModel.nodeIdentityData && rspModel.nodeIdentityData.length == 16) {
@@ -321,13 +303,8 @@ typedef enum : NSUInteger {
 }
 
 - (void)connectCBPeripheralFail {
-    __weak typeof(self) weakSelf = self;
-    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
-        if (weakSelf.progress == SigGattOTAProgress_step4_startConnectCBPeripheral) {
-            TeLogInfo(@"OTA fail: connectCBPeripheral fail Before GATT OTA.");
-            [weakSelf otaFailAction];
-        }
-    }];
+    TeLogInfo(@"OTA fail: connectCBPeripheral fail Before GATT OTA.");
+    [self otaFailAction];
 }
 
 #pragma mark step5:setFilter
@@ -350,73 +327,77 @@ typedef enum : NSUInteger {
 }
 
 - (void)setFilterFail {
-    __weak typeof(self) weakSelf = self;
-    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
-        if (weakSelf.progress == SigGattOTAProgress_step5_setFilter) {
-            TeLogInfo(@"OTA fail: setFilter fail Before GATT OTA.");
-            [weakSelf otaFailAction];
-        }
-    }];
+    TeLogInfo(@"OTA fail: setFilter fail Before GATT OTA.");
+    [self otaFailAction];
 }
 
 #pragma mark step6:startSendGATTOTAPackets
 - (void)startSendGATTOTAPackets {
     TeLogInfo(@"\n\n==========GATT OTA:step6\n\n");
     self.progress = SigGattOTAProgress_step6_startSendGATTOTAPackets;
-    [self sendPartData];
+    if (@available(iOS 11.0, *)) {
+        [self sendPartDataAvailableIOS11];//127KB耗时75秒
+    } else {
+        [self sendPartData];//127KB耗时115~120秒
+    }
 }
 
-//
-//- (void)dalayToSetFilter{
-//    TeLogDebug(@"");
-//    __weak typeof(self) weakSelf = self;
-//    if (_bearer.isOpen) {
-//        SigProvisionerModel *provisioner = SigDataSource.share.curProvisionerModel;
-//        [SDKLibCommand setFilterForProvisioner:provisioner successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-//            [weakSelf startSendGATTOTAPackets];
-//        } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//            TeLogError(@"setFilter fail!!!");
-//            //失败后逻辑：断开连接，扫描，连接(当前直接失败)
-//            [weakSelf connectPeripheralWithUUIDTimeout];
-//        }];
-//    }
-//}
+- (void)sendPartDataAvailableIOS11 {
+    if (self.stopOTAFlag) {
+        return;
+    }
+    if (self.currentModel && _bearer.getCurrentPeripheral && _bearer.getCurrentPeripheral.state == CBPeripheralStateConnected) {
+        NSInteger lastLength = _localData.length - _offset;
+        
+        //OTA 结束包特殊处理
+        if (lastLength == 0) {
+            Byte byte[] = {0x02,0xff};
+            NSData *endData = [NSData dataWithBytes:byte length:2];
+            [self sendOTAEndData:endData index:(int)self.otaIndex complete:nil];
+            self.sendFinish = YES;
+            return;
+        }
+        
+        self.otaIndex ++;
+        //OTA开始包特殊处理
+        if (self.otaIndex == 0) {
+            [self sendReadFirmwareVersionWithComplete:nil];
+            [self sendStartOTAWithComplete:nil];
 
-//- (void)startConnectForOTA {
-//    __weak typeof(self) weakSelf = self;
-//    if (_currentUUID != nil && _currentUUID.length > 0) {
-//        CBPeripheral *p = [SigBluetooth.share getPeripheralWithUUID:_currentUUID];
-//        if (p) {
-//            [_bearer changePeripheral:p result:^(BOOL successful) {
-//                if (successful) {
-//                    TeLogDebug(@"切换设备成功");
-//                    [weakSelf.bearer openWithResult:^(BOOL successful) {
-//                        if (successful) {
-//                            TeLogDebug(@"读服务列表成功");
-//
-//                        } else {
-//                            //失败后逻辑：断开连接，扫描，连接(当前直接失败)
-//                            [weakSelf connectPeripheralWithUUIDTimeout];
-//                        }
-//                    }];
-//                } else {
-//                    //失败后逻辑：断开连接，扫描，连接(当前直接失败)
-//                    [weakSelf connectPeripheralWithUUIDTimeout];
-//                }
+//            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+//            [self sendReadFirmwareVersionWithComplete:^{
+//                dispatch_semaphore_signal(semaphore);
 //            }];
-//        } else {
-//            TeLogInfo(@"get CBPeripheral is nil.");
-//        }
-//    }else{
-//        TeLogInfo(@"error");
-//    }
-//}
-//
-//- (void)connectPeripheralWithUUIDTimeout{
-//    [self otaFailAction];
-//}
+//            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
+//            [self sendStartOTAWithComplete:^{
+//                dispatch_semaphore_signal(semaphore);
+//            }];
+//            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
+        }
+        
+        NSInteger writeLength = (lastLength >= 16) ? 16 : lastLength;
+        NSData *writeData = [self.localData subdataWithRange:NSMakeRange(self.offset, writeLength)];
+        self.offset += writeLength;
+        float progress = (self.offset * 100.0) / self.localData.length;
+        if (self.singleProgressCallBack) {
+            self.singleProgressCallBack(progress);
+        }
+        [self sendOTAData:writeData index:(int)self.otaIndex complete:^{
+            //注意：index=0与index=1之间的时间间隔修改为300ms，让固件有充足的时间进行ota配置。
+            if (self.otaIndex == 0) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:0.3];
+                });
+            } else {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:self.writeOTAInterval];
+                });
+            }
+        }];
+    }
+}
 
-- (void)sendPartData{
+- (void)sendPartData {
     if (self.stopOTAFlag) {
         return;
     }
@@ -432,7 +413,7 @@ typedef enum : NSUInteger {
         if (lastLength == 0) {
             Byte byte[] = {0x02,0xff};
             NSData *endData = [NSData dataWithBytes:byte length:2];
-            [self sendOTAEndData:endData index:(int)self.otaIndex];
+            [self sendOTAEndData:endData index:(int)self.otaIndex complete:nil];
             self.sendFinish = YES;
             return;
         }
@@ -440,13 +421,13 @@ typedef enum : NSUInteger {
         self.otaIndex ++;
         //OTA开始包特殊处理
         if (self.otaIndex == 0) {
-            [self sendReadFirmwareVersion];
-            [self sendStartOTA];
+            [self sendReadFirmwareVersionWithComplete:nil];
+            [self sendStartOTAWithComplete:nil];
         }
         
         NSInteger writeLength = (lastLength >= 16) ? 16 : lastLength;
         NSData *writeData = [self.localData subdataWithRange:NSMakeRange(self.offset, writeLength)];
-        [self sendOTAData:writeData index:(int)self.otaIndex];
+        [self sendOTAData:writeData index:(int)self.otaIndex complete:nil];
         self.offset += writeLength;
         
         float progress = (self.offset * 100.0) / self.localData.length;
@@ -477,12 +458,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)readTimeout{
-    if (_bearer.getCurrentPeripheral) {
-        __weak typeof(self) weakSelf = self;
-        [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
-            [weakSelf otaFailAction];
-        }];
-    }
+    [self otaFailAction];
 }
 
 - (void)otaSuccessAction{
@@ -504,9 +480,11 @@ typedef enum : NSUInteger {
     self.OTAing = NO;
     self.sendFinish = NO;
     self.stopOTAFlag = YES;
+    [SigBluetooth.share cancelReadOTACharachteristic];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
+    [SigBearer.share stopMeshConnectWithComplete:nil];
     if (self.singleFailCallBack) {
         self.singleFailCallBack(self.currentModel);
     }
@@ -549,17 +527,19 @@ typedef enum : NSUInteger {
 - (void)bearer:(SigBearer *)bearer didCloseWithError:(NSError *)error {
     TeLogInfo(@"");
     if ([_bearer.getCurrentPeripheral.identifier.UUIDString isEqualToString:self.currentUUID]) {
-        if (self.sendFinish) {
-            [self otaSuccessAction];
-        } else {
-            [self otaFailAction];
+        if (self.progress != SigGattOTAProgress_step2_nodeIdentitySetBeforeGATTOTA) {
+            if (self.sendFinish) {
+                [self otaSuccessAction];
+            } else {
+                [self otaFailAction];
+            }
         }
     }
 }
 
 #pragma mark - OTA packet
 
-- (void)sendOTAData:(NSData *)data index:(int)index {
+- (void)sendOTAData:(NSData *)data index:(int)index complete:(SendPacketsFinishCallback)complete {
     BOOL isEnd = data.length == 0;
     int countIndex = index;
     Byte *tempBytes = (Byte *)[data bytes];
@@ -571,27 +551,27 @@ typedef enum : NSUInteger {
     uint16_t crc = crc16(resultBytes, isEnd ? 2 : 18);
     memcpy(isEnd ? (resultBytes + 2) : (resultBytes+18), &crc, 2);
     NSData *writeData = [NSData dataWithBytes:resultBytes length:isEnd ? 4 : 20];
-    [_bearer sendOTAData:writeData];
+    [_bearer sendOTAData:writeData complete:complete];
 }
 
-- (void)sendReadFirmwareVersion {
+- (void)sendReadFirmwareVersionWithComplete:(SendPacketsFinishCallback)complete {
     uint8_t buf[2] = {0x00,0xff};
     NSData *writeData = [NSData dataWithBytes:buf length:2];
     TeLogInfo(@"sendReadFirmwareVersion -> length:%lu,%@",(unsigned long)writeData.length,writeData);
-    [_bearer sendOTAData:writeData];
+    [_bearer sendOTAData:writeData complete:complete];
 }
 
-- (void)sendStartOTA {
+- (void)sendStartOTAWithComplete:(SendPacketsFinishCallback)complete {
     uint8_t buf[2] = {0x01,0xff};
     NSData *writeData = [NSData dataWithBytes:buf length:2];
-    TeLogInfo(@"sendReadStartOTA -> length:%lu,%@",(unsigned long)writeData.length,writeData);
-    [_bearer sendOTAData:writeData];
+    TeLogInfo(@"sendStartOTA -> length:%lu,%@",(unsigned long)writeData.length,writeData);
+    [_bearer sendOTAData:writeData complete:complete];
 }
 
 /*
  packet of end OTA 6 bytes structure：1byte:0x02 + 1byte:0xff + 2bytes:index + 2bytes:~index
  */
-- (void)sendOTAEndData:(NSData *)data index:(int)index {
+- (void)sendOTAEndData:(NSData *)data index:(int)index complete:(SendPacketsFinishCallback)complete {
     int negationIndex = ~index;
     Byte *tempBytes = (Byte *)[data bytes];
     Byte resultBytes[6];
@@ -602,7 +582,7 @@ typedef enum : NSUInteger {
     memcpy(resultBytes+4, &negationIndex, 2);
     NSData *writeData = [NSData dataWithBytes:resultBytes length:6];
     TeLogInfo(@"sendOTAEndData -> %04x ,length:%lu,%@", index,(unsigned long)writeData.length,writeData);
-    [_bearer sendOTAData:writeData];
+    [_bearer sendOTAData:writeData complete:complete];
     TeLogInfo(@"\n\n==========GATT OTA:end\n\n");
 }
 

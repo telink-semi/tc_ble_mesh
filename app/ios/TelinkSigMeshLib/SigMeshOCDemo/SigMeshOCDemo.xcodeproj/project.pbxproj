@@ -7,9 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2519E64F24123D870098ABE7 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2519E64D24123D860098ABE7 /* 8269_mesh.bin */; };
+		250663782457BC6300E58315 /* 8258_mesh_for_ota.bin in Resources */ = {isa = PBXBuildFile; fileRef = 250663762457BC6300E58315 /* 8258_mesh_for_ota.bin */; };
+		2506637A2457DD0200E58315 /* 8269_mesh_onlineStatus.bin in Resources */ = {isa = PBXBuildFile; fileRef = 250663792457DD0200E58315 /* 8269_mesh_onlineStatus.bin */; };
 		2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2519E64E24123D870098ABE7 /* 8258_mesh.bin */; };
 		251B2BA2239742270024A48D /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
+		25C07FF72452F1F000796BF9 /* 8258_mesh_0424.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FF52452F1F000796BF9 /* 8258_mesh_0424.bin */; };
+		25C07FF92452F2C500796BF9 /* 8258_mesh_for_ota_V39_0424.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FF82452F2C500796BF9 /* 8258_mesh_for_ota_V39_0424.bin */; };
+		25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FFA24542CF200796BF9 /* 8269_mesh.bin */; };
+		25C07FFD2454410600796BF9 /* 8258_mesh_rp_test.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FFC2454410600796BF9 /* 8258_mesh_rp_test.bin */; };
 		A20C14B72254556700B42909 /* ColorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A20C14B62254556700B42909 /* ColorManager.m */; };
 		A23FE43822CD96760018F090 /* FileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43722CD96760018F090 /* FileChooseVC.m */; };
 		A23FE43F22CDF3230018F090 /* ChooseAndAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43E22CDF3230018F090 /* ChooseAndAddDeviceVC.m */; };
@@ -88,7 +93,6 @@
 		A2AB8F2421100FDD00D73EB4 /* CMDViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A2AB8F1921100FDD00D73EB4 /* CMDViewController.m */; };
 		A2AB8F2521100FDD00D73EB4 /* ReKeyBindViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A2AB8F1A21100FDD00D73EB4 /* ReKeyBindViewController.m */; };
 		A2AB8F2621100FDD00D73EB4 /* SettingViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A2AB8F1C21100FDD00D73EB4 /* SettingViewController.m */; };
-		A2AB8F3B2110112700D73EB4 /* GroupModel.m in Sources */ = {isa = PBXBuildFile; fileRef = A2AB8F3A2110112700D73EB4 /* GroupModel.m */; };
 		A2AB8F442110121300D73EB4 /* HomeItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = A2AB8F432110121300D73EB4 /* HomeItemCell.m */; };
 		A2AB8F472110128F00D73EB4 /* DeviceGroupListCell.m in Sources */ = {isa = PBXBuildFile; fileRef = A2AB8F462110128F00D73EB4 /* DeviceGroupListCell.m */; };
 		A2AB8F4A211012A800D73EB4 /* GroupCell.m in Sources */ = {isa = PBXBuildFile; fileRef = A2AB8F49211012A800D73EB4 /* GroupCell.m */; };
@@ -142,9 +146,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2519E64D24123D860098ABE7 /* 8269_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8269_mesh.bin; sourceTree = "<group>"; };
+		250663762457BC6300E58315 /* 8258_mesh_for_ota.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh_for_ota.bin; sourceTree = "<group>"; };
+		250663792457DD0200E58315 /* 8269_mesh_onlineStatus.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8269_mesh_onlineStatus.bin; sourceTree = "<group>"; };
 		2519E64E24123D870098ABE7 /* 8258_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh.bin; sourceTree = "<group>"; };
 		25B408392396691A00514CB7 /* TelinkSigMeshLib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = TelinkSigMeshLib.xcodeproj; path = ../../../TelinkSigMeshLib/TelinkSigMeshLib.xcodeproj; sourceTree = "<group>"; };
+		25C07FF52452F1F000796BF9 /* 8258_mesh_0424.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh_0424.bin; sourceTree = "<group>"; };
+		25C07FF82452F2C500796BF9 /* 8258_mesh_for_ota_V39_0424.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh_for_ota_V39_0424.bin; sourceTree = "<group>"; };
+		25C07FFA24542CF200796BF9 /* 8269_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8269_mesh.bin; sourceTree = "<group>"; };
+		25C07FFC2454410600796BF9 /* 8258_mesh_rp_test.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh_rp_test.bin; sourceTree = "<group>"; };
 		A20C14B52254556700B42909 /* ColorManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorManager.h; sourceTree = "<group>"; };
 		A20C14B62254556700B42909 /* ColorManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ColorManager.m; sourceTree = "<group>"; };
 		A23FE43622CD96760018F090 /* FileChooseVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileChooseVC.h; sourceTree = "<group>"; };
@@ -297,8 +306,6 @@
 		A2AB8F1B21100FDD00D73EB4 /* ReKeyBindViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReKeyBindViewController.h; sourceTree = "<group>"; };
 		A2AB8F1C21100FDD00D73EB4 /* SettingViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingViewController.m; sourceTree = "<group>"; };
 		A2AB8F1D21100FDD00D73EB4 /* HomeViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HomeViewController.h; sourceTree = "<group>"; };
-		A2AB8F392110112700D73EB4 /* GroupModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GroupModel.h; sourceTree = "<group>"; };
-		A2AB8F3A2110112700D73EB4 /* GroupModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GroupModel.m; sourceTree = "<group>"; };
 		A2AB8F422110121300D73EB4 /* HomeItemCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HomeItemCell.h; sourceTree = "<group>"; };
 		A2AB8F432110121300D73EB4 /* HomeItemCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HomeItemCell.m; sourceTree = "<group>"; };
 		A2AB8F452110128F00D73EB4 /* DeviceGroupListCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceGroupListCell.h; sourceTree = "<group>"; };
@@ -616,7 +623,6 @@
 				A2AB8F8E211060E100D73EB4 /* Control */,
 				A2AB8ED32110052800D73EB4 /* ViewController */,
 				A2AB8ED22110052100D73EB4 /* View */,
-				A2AB8ED12110051800D73EB4 /* Model */,
 				A2AB8ED02110050A00D73EB4 /* Base */,
 				A2AB8ECF211004DE00D73EB4 /* Tools */,
 				A2AB8E9C2110046A00D73EB4 /* AppDelegate.h */,
@@ -656,8 +662,13 @@
 		A2AB8ECE211004B200D73EB4 /* SDK */ = {
 			isa = PBXGroup;
 			children = (
+				25C07FFC2454410600796BF9 /* 8258_mesh_rp_test.bin */,
 				2519E64E24123D870098ABE7 /* 8258_mesh.bin */,
-				2519E64D24123D860098ABE7 /* 8269_mesh.bin */,
+				25C07FF52452F1F000796BF9 /* 8258_mesh_0424.bin */,
+				25C07FF82452F2C500796BF9 /* 8258_mesh_for_ota_V39_0424.bin */,
+				250663762457BC6300E58315 /* 8258_mesh_for_ota.bin */,
+				250663792457DD0200E58315 /* 8269_mesh_onlineStatus.bin */,
+				25C07FFA24542CF200796BF9 /* 8269_mesh.bin */,
 				25B408392396691A00514CB7 /* TelinkSigMeshLib.xcodeproj */,
 				A28CA37F2181E4AB005B1DB6 /* IQKeyboardManager-master */,
 				A2944108216DDC6B0046F65A /* YZDisplayViewController */,
@@ -691,15 +702,6 @@
 				A2AB8EDE2110063700D73EB4 /* BaseViewController.m */,
 			);
 			path = Base;
-			sourceTree = "<group>";
-		};
-		A2AB8ED12110051800D73EB4 /* Model */ = {
-			isa = PBXGroup;
-			children = (
-				A2AB8F392110112700D73EB4 /* GroupModel.h */,
-				A2AB8F3A2110112700D73EB4 /* GroupModel.m */,
-			);
-			path = Model;
 			sourceTree = "<group>";
 		};
 		A2AB8ED22110052100D73EB4 /* View */ = {
@@ -941,6 +943,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				A28968A4216EFE9C003A0A72 /* ActionItemCell.xib in Resources */,
+				2506637A2457DD0200E58315 /* 8269_mesh_onlineStatus.bin in Resources */,
+				25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */,
 				A2AB8EA92110046C00D73EB4 /* LaunchScreen.storyboard in Resources */,
 				A2AB8F4F211012BC00D73EB4 /* ModelIDCell.xib in Resources */,
 				2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */,
@@ -948,16 +952,19 @@
 				A277EB0C215A338A0001116F /* SchedulerCell.xib in Resources */,
 				A28CA3B22181E4AD005B1DB6 /* IQKeyboardManager.bundle in Resources */,
 				A286421D226FFCAA0053B5E4 /* MeshOTAItemCell.xib in Resources */,
+				25C07FF72452F1F000796BF9 /* 8258_mesh_0424.bin in Resources */,
+				25C07FF92452F2C500796BF9 /* 8258_mesh_for_ota_V39_0424.bin in Resources */,
 				A2944105216DDC2B0046F65A /* DeviceSetting.storyboard in Resources */,
 				A2AC67122176CFDD00D9B3A0 /* AddDeviceItemCell.xib in Resources */,
 				A2AB8F54211012D000D73EB4 /* ChooseModelIDCell.xib in Resources */,
+				25C07FFD2454410600796BF9 /* 8258_mesh_rp_test.bin in Resources */,
 				A277EAFB215A29500001116F /* Setting.storyboard in Resources */,
+				250663782457BC6300E58315 /* 8258_mesh_for_ota.bin in Resources */,
 				A2864221226FFCAA0053B5E4 /* MeshOTAVC.xib in Resources */,
 				A2AB8F59211012E400D73EB4 /* ChooseBinCell.xib in Resources */,
 				A2AB8F632110137400D73EB4 /* ShowTipsView.xib in Resources */,
 				A2AB8EA42110046A00D73EB4 /* Main.storyboard in Resources */,
 				A2ADC3D521B0D5A200F3C2E6 /* OnOffItemCell.xib in Resources */,
-				2519E64F24123D870098ABE7 /* 8269_mesh.bin in Resources */,
 				A28D961421912F1900F95001 /* Assets.xcassets in Resources */,
 				A289689F216EEE31003A0A72 /* DeviceStateItemView.xib in Resources */,
 			);
@@ -1098,7 +1105,6 @@
 				A28CA3A72181E4AD005B1DB6 /* IQUITextFieldView+Additions.m in Sources */,
 				A2AB8F0221100B5700D73EB4 /* OTAFileSource.m in Sources */,
 				A277EAFF215A32240001116F /* SceneListViewController.m in Sources */,
-				A2AB8F3B2110112700D73EB4 /* GroupModel.m in Sources */,
 				A29AABD421A256300023F06C /* ScanView.m in Sources */,
 				A2AB8F1E21100FDD00D73EB4 /* HomeViewController.m in Sources */,
 				A28968A3216EFE9C003A0A72 /* ActionItemCell.m in Sources */,
@@ -1293,7 +1299,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
@@ -1328,7 +1334,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;

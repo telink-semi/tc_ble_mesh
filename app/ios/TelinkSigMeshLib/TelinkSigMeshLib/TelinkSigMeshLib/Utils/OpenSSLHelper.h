@@ -39,18 +39,18 @@
 + (OpenSSLHelper *)share;
 
 /// Generates 128-bit random data.
-- (NSData*) generateRandom;
+- (NSData *)generateRandom;
 
 /// Calculates salt over given data.
 /// @param someData A non-zero length octet array or ASCII encoded string.
-- (NSData*) calculateSalt: (NSData*) someData;
+- (NSData *)calculateSalt:(NSData *)someData;
 
 /// Calculates Cipher-based Message Authentication Code (CMAC) that uses
 /// AES-128 as the block cipher function, also known as AES-CMAC.
 /// @param someData Data to be authenticated.
 /// @param key The 128-bit key.
 /// @return The 128-bit authentication code (MAC).
-- (NSData*) calculateCMAC: (NSData*) someData andKey: (NSData*) key;
+- (NSData *)calculateCMAC:(NSData *)someData andKey:(NSData *)key;
 
 /// RFC3610 defines teh AES Counted with CBC-MAC (CCM).
 /// This method generates ciphertext and MIC (Message Integrity Check).
@@ -60,7 +60,7 @@
 /// @param micSize Length of the MIC to be generated, in bytes.
 /// @param aad Additional data to be authenticated.
 /// @return Encrypted data concatenated with MIC of given size.
-- (NSData*) calculateCCM: (NSData*) someData withKey: (NSData*) key nonce: (NSData *) nonce andMICSize: (UInt8) micSize withAdditionalData: (NSData*) aad;
+- (NSData *)calculateCCM:(NSData *)someData withKey:(NSData *)key nonce:(NSData *)nonce andMICSize:(UInt8)micSize withAdditionalData:(NSData *)aad;
 
 /// Decrypts data encrypted with CCM.
 /// @param someData Encrypted data.
@@ -69,7 +69,7 @@
 /// @param mic Message Integrity Check data.
 /// @param aad Additional data to be authenticated.
 /// @return Decrypted data, if decryption is successful and MIC is valid, otherwise `nil`.
-- (NSData*) calculateDecryptedCCM: (NSData*) someData withKey: (NSData*) key nonce: (NSData*) nonce andMIC: (NSData*) mic withAdditionalData: (NSData*) aad;
+- (NSData *)calculateDecryptedCCM:(NSData *)someData withKey:(NSData *)key nonce:(NSData *)nonce andMIC:(NSData *)mic withAdditionalData:(NSData *)aad;
 
 /// Obfuscates given data by XORing it with PECB, which is caluclated by encrypting
 /// Privacy Plaintext (encrypted data (used as Privacy Random) and IV Index)
@@ -79,7 +79,7 @@
 /// @param ivIndex The current IV Index value.
 /// @param privacyKey The 128-bit Privacy Key.
 /// @return Obfuscated data of the same size as input data.
-- (NSData*) obfuscate: (NSData*) data usingPrivacyRandom: (NSData*) privacyRandom ivIndex: (UInt32) ivIndex andPrivacyKey: (NSData*) privacyKey;
+- (NSData *)obfuscate:(NSData *)data usingPrivacyRandom:(NSData *)privacyRandom ivIndex:(UInt32)ivIndex andPrivacyKey:(NSData *)privacyKey;
 
 /// Deobfuscates given data. This method reverses the obfuscation done by method above.
 ///
@@ -87,7 +87,7 @@
 /// @param ivIndex The current IV Index value.
 /// @param privacyKey The 128-bit Privacy Key.
 /// @return Deobfuscated data of the same size as input data.
-- (NSData*) deobfuscate: (NSData*) data ivIndex: (UInt32) ivIndex privacyKey: (NSData*) privacyKey;
+- (NSData *)deobfuscate:(NSData *)data ivIndex:(UInt32)ivIndex privacyKey:(NSData *)privacyKey;
 
 // MARK: - Helpers
 
@@ -100,7 +100,7 @@
 /// @param salt is 128 bits.
 /// @param P is 0 or more octets.
 /// @return 128-bit key.
-- (NSData*) calculateK1WithN: (NSData*) N salt: (NSData*) salt andP: (NSData*) P;
+- (NSData *)calculateK1WithN:(NSData *)N salt:(NSData *)salt andP:(NSData *)P;
 
 /// The network key material derivation function k2 is used to generate
 /// instances of Encryption Key, Privacy Key and NID for use as Master and
@@ -111,7 +111,7 @@
 /// @param N 128-bit key.
 /// @param P 1 or more octets.
 /// @return NID (7 bits), Encryption Key (128 bits) and Privacy Key (128 bits).
-- (NSData*) calculateK2WithN: (NSData*) N andP: (NSData*) P;
+- (NSData *)calculateK2WithN:(NSData *)N andP:(NSData *)P;
 
 /// The derivation function k3 us used to generate a public value of 64 bits
 /// derived from a private key.
@@ -120,7 +120,7 @@
 /// AES-CMAC(T) with 128-bit key T.
 /// @param N 128-bit key.
 /// @return 64 bits of a public value derived from the key.
-- (NSData*) calculateK3WithN: (NSData*) N;
+- (NSData *)calculateK3WithN:(NSData *)N;
 
 /// The derivation function k4 us used to generate a public value of 6 bits
 /// derived from a private key.
@@ -129,13 +129,13 @@
 /// AES-CMAC(T) with 128-bit key T.
 /// @param N 128-bit key.
 /// @return UInt8 with 6 LSB bits of a public value derived from the key.
-- (UInt8) calculateK4WithN: (NSData*) N;
+- (UInt8)calculateK4WithN:(NSData *)N;
 
 /// Encrypts given data using the key.
 /// @param someData Data to be encrypted.
 /// @param key The 128-bit key.
 /// @return A byte array of encrypted data using the key. The size of the returned
 ///         array is equal to the size of input data.
-- (NSData*) calculateEvalueWithData: (NSData*) someData andKey: (NSData*) key;
+- (NSData *)calculateEvalueWithData:(NSData *)someData andKey:(NSData *)key;
 
 @end

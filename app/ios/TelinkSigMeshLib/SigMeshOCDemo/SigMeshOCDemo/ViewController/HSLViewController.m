@@ -58,9 +58,9 @@
     [super normalSetting];
     
     self.title = @"HSL";
-    if (!kControllerInHSL) {
-        self.lightLabel.text = @"V:";
-    }
+//    if (!kControllerInHSL) {
+//        self.lightLabel.text = @"V:";
+//    }
 
     self.currentColorView.layer.cornerRadius = 8;
     self.currentColorView.layer.borderWidth = 1;
@@ -74,9 +74,10 @@
     if (kControllerInHSL) {
         self.colorWheelHSVModel.value = sender.value;
         color = [ColorManager getUIColorWithHSVColor:self.colorWheelHSVModel];
-    }else{
-        color = [UIColor colorWithHue:self.hsvModel.hue saturation:self.hsvModel.saturation brightness:sender.value alpha:self.hsvModel.alpha];
     }
+//    else{
+//        color = [UIColor colorWithHue:self.hsvModel.hue saturation:self.hsvModel.saturation brightness:sender.value alpha:self.hsvModel.alpha];
+//    }
     [self handleColor:color];
     [self refreshRGBSlider];
     [self sendHSLData];
@@ -113,11 +114,12 @@
         self.hslModel = [ColorManager getHSLWithColor:color];
         self.showHSLLabel.text = [NSString stringWithFormat:@"HSL:\n H--%d\n S--%d\n L--%d",(int)(self.hslModel.hue*100),(int)(self.hslModel.saturation*100),(int)(self.hslModel.lightness*100)];
 //        self.brightnessSlider.value = self.hslModel.lightness;
-    } else {
-        self.hsvModel = [ColorManager getHSVWithColor:color];
-        self.showHSLLabel.text = [NSString stringWithFormat:@"HSV:\n H--%d\n S--%d\n V--%d",(int)(self.hsvModel.hue*100),(int)(self.hsvModel.saturation*100),(int)(self.hsvModel.value*100)];
-//        self.brightnessSlider.value = self.hsvModel.value;
     }
+//    else {
+//        self.hsvModel = [ColorManager getHSVWithColor:color];
+//        self.showHSLLabel.text = [NSString stringWithFormat:@"HSV:\n H--%d\n S--%d\n V--%d",(int)(self.hsvModel.hue*100),(int)(self.hsvModel.saturation*100),(int)(self.hsvModel.value*100)];
+////        self.brightnessSlider.value = self.hsvModel.value;
+//    }
     
     self.rgbModel = [ColorManager getRGBWithColor:color];
     self.colorWheelHSVModel = [ColorManager getHSVWithColor:color];
@@ -140,7 +142,7 @@
         int rsp_max=1;
         if (self.isGroup) {
             //组控
-            address = self.groupModel.groupAddress;
+            address = self.groupModel.intAddress;
             rsp_max = (int)self.groupModel.groupOnlineDevices.count;
         } else {
             //单灯
@@ -148,9 +150,10 @@
         }
         if (kControllerInHSL) {
             [DemoCommand changeHSLWithAddress:address hue100:self.hslModel.hue*100 saturation100:self.hslModel.saturation*100 brightness100:self.hslModel.lightness*100 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
-        } else {
-            [DemoCommand changeHSLWithAddress:address hue100:self.hsvModel.hue*100 saturation100:self.hsvModel.saturation*100 brightness100:self.hsvModel.value*100 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
         }
+//        else {
+//            [DemoCommand changeHSLWithAddress:address hue100:self.hsvModel.hue*100 saturation100:self.hsvModel.saturation*100 brightness100:self.hsvModel.value*100 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
+//        }
         self.hasNextCMD = NO;
     } else {
         if (!self.hasNextCMD) {

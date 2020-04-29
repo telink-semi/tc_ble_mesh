@@ -49,8 +49,9 @@
     FileChooseVC *vc = (FileChooseVC *)[UIStoryboard initVC:ViewControllerIdentifiers_FileChooseViewControllerID storybroad:@"Setting"];
     __weak typeof(self) weakSelf = self;
     [vc setBackJsonData:^(NSData * _Nonnull jsonData, NSString * _Nonnull jsonName) {
-        [weakSelf loadJsonData:jsonData jaonName:jsonName];
-        [weakSelf performSelector:@selector(backToMainVC) withObject:nil afterDelay:0.3];
+        [Bluetooth.share cancelAllConnecttionWithComplete:^{
+            [weakSelf loadJsonData:jsonData jaonName:jsonName];
+        }];
     }];
     [self.navigationController pushViewController:vc animated:YES];
 
@@ -70,12 +71,10 @@
         if (result) {
             NSString *tipString = [NSString stringWithFormat:@"import %@ success!",name];
             [weakSelf showTips:tipString];
-            saveLogData(tipString);
             TeLog(@"%@",tipString);
         } else {
             NSString *tipString = [NSString stringWithFormat:@"import %@ fail!",name];
             [weakSelf showTips:tipString];
-            saveLogData(tipString);
             TeLog(@"%@",tipString);
             return;
         }
@@ -89,19 +88,23 @@
                 break;
             }
         }
+        BOOL reStartSequenceNumber = NO;
         if (hasPhoneUUID) {
             // v3.1.0 存在
             BOOL isSameMesh = [SigDataSource.share.meshUUID isEqualToString:oldMeshUUID];
             if (isSameMesh) {
-                // v3.1.0 存在，且为相同mesh网络，覆盖JSON，且使用本地的sno
+                // v3.1.0 存在，且为相同mesh网络，覆盖JSON，且使用本地的sno和kCurrentMeshProvisionAddress_key
                 needChangeProvisionAddress = NO;
+                reStartSequenceNumber = NO;;
             } else {
                 // v3.1.0 存在，但为不同mesh网络，获取provision，修改为新的provisionLocation adress，sno从0开始
                 needChangeProvisionAddress = YES;
+                reStartSequenceNumber = YES;
             }
         } else {
             // v3.1.0 不存在，覆盖并新建provision
             needChangeProvisionAddress = NO;
+            reStartSequenceNumber = YES;
         }
         if (needChangeProvisionAddress) {
             //修改provisionLocation adress
@@ -118,8 +121,10 @@
             TeLog(@"已经使用了address=0x%x作为本地地址",newProvisionAddress);
         } else {
             //新建或者覆盖
-            [[NSUserDefaults standardUserDefaults] removeObjectForKey:kCurrentMeshProvisionAddress_key];
-            [SigDataSource.share setLocationSno:0];
+            if (reStartSequenceNumber) {
+                [[NSUserDefaults standardUserDefaults] removeObjectForKey:kCurrentMeshProvisionAddress_key];
+                [SigDataSource.share setLocationSno:0];
+            }
         }
         [SigDataSource.share checkExistLocationProvisioner];
         [SigDataSource.share writeDataSourceToLib];
@@ -128,14 +133,6 @@
         [SigDataSource.share.noMatchsNodeIdentityArray removeAllObjects];
         init_json();
 //        mesh_flash_retrieve();
-    }];
-}
-
-- (void)backToMainVC{
-    __weak typeof(self) weakSelf = self;
-    [Bluetooth.share cancelAllConnecttionWithComplete:^{
-        weakSelf.navigationController.viewControllers.firstObject.navigationController.tabBarController.selectedIndex = 0;
-        [weakSelf.navigationController popToRootViewControllerAnimated:YES];
     }];
 }
 

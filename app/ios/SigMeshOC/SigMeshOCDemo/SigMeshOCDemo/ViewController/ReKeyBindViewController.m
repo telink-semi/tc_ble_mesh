@@ -117,11 +117,11 @@
 
 - (void)keyBindWithPeripheralUUID:(NSString *)uuid{
     //2.keyBind currentPeripheral
-    saveLogData([NSString stringWithFormat:@"reKeyBind address:%02x uuid:%@",self.model.address,uuid]);
+    TeLog(@"reKeyBind address:%02x uuid:%@",self.model.address,uuid);
     __weak typeof(self) weakSelf = self;
     NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
     [self.ble.commandHandle keyBind:self.model.address appkey:SigDataSource.share.curAppKey appkeyIndex:SigDataSource.share.curAppkeyModel.index netkeyIndex:SigDataSource.share.curNetkeyModel.index keyBindType:type.integerValue keyBindSuccess:^(NSString *identify, UInt16 address) {
-        saveLogData(@"reKeyBind success");
+        TeLog(@"reKeyBind success");
         [ShowTipsHandle.share show:Tip_ReKeyBindDeviceSuccess];
         [ShowTipsHandle.share delayHidden:3.0];
         [weakSelf performSelector:@selector(pop) withObject:nil afterDelay:3.0];
@@ -133,7 +133,7 @@
 }
 
 - (void)showKeyBindFail{
-    saveLogData(@"reKeyBind fail");
+    TeLog(@"reKeyBind fail");
     [ShowTipsHandle.share hidden];
     [self.ble cancelAllConnecttionWithComplete:nil];
     

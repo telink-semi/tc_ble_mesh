@@ -72,7 +72,7 @@
 + (HSVModel *)getHSVWithColor:(UIColor *)color{
     HSVModel *tem = [[HSVModel alloc] init];
     CGFloat h=0,s=0,b=0,a=0;
-    BOOL result = [color getHue:&h saturation:&s brightness:&b alpha:&a];
+    [color getHue:&h saturation:&s brightness:&b alpha:&a];
     tem.hue = h;
     tem.saturation = s;
     tem.value = b;
@@ -92,7 +92,7 @@
 //参考转换原理https://blog.csdn.net/jiangxinyu/article/details/8000999
 + (HSLModel *)getHSLWithColor:(UIColor *)color{
     CGFloat r=0,g=0,b=0,a=0;
-    BOOL result = [color getRed:&r green:&g blue:&b alpha:&a];
+    [color getRed:&r green:&g blue:&b alpha:&a];
     
     CGFloat max = MAX(r, MAX(g, b));
     CGFloat min = MIN(r, MIN(g, b));
@@ -108,7 +108,7 @@
         }
     }else if (max == g) {
         h = 60 * (b - r)/(max - min) + 120;
-    }else if (max == b) {
+    }else {
         h = 60 * (r - g)/(max - min) + 240;
     }
     
@@ -118,7 +118,7 @@
         s = 0;
     }else if (l > 0 && l <= 1/2.0) {
         s = (max - min) / (2 * l);
-    }else if (l > 1/2.0) {
+    }else {
         s = (max - min) / (2 - 2 * l);
     }
     
@@ -206,7 +206,7 @@
 + (RGBModel *)getRGBWithColor:(UIColor *)color{
     RGBModel *tem = [[RGBModel alloc] init];
     CGFloat r=0,g=0,b=0,a=0;
-    BOOL result = [color getRed:&r green:&g blue:&b alpha:&a];
+    [color getRed:&r green:&g blue:&b alpha:&a];
     tem.red = r;
     tem.green = g;
     tem.blud = b;

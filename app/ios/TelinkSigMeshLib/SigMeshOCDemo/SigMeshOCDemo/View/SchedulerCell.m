@@ -53,7 +53,7 @@
 }
 
 - (void)updateContent:(SchedulerModel *)model{
-    _nameLabel.text = [NSString stringWithFormat:@"SchedulerID:0x%X",model.schedulerID];
+    _nameLabel.text = [NSString stringWithFormat:@"SchedulerID:0x%llX",model.schedulerID];
     NSString *year,*month=@"",*day,*hour,*minute,*second,*week=@"",*action;
     //year
     year = [NSString stringWithFormat:@"%llu",model.year];

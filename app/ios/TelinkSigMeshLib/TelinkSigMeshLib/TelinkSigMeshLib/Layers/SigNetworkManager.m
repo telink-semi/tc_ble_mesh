@@ -60,13 +60,13 @@
     return MAX(_manager.incompleteMessageTimeout, 10.0);
 }
 
-- (NSTimeInterval)acknowledgmentMessageTimeout {
-    return MAX(_manager.acknowledgmentMessageTimeout, 30.0);
-}
+//- (NSTimeInterval)acknowledgmentMessageTimeout {
+//    return MAX(_manager.acknowledgmentMessageTimeout, 30.0);
+//}
 
-- (NSTimeInterval)acknowledgmentMessageInterval:(UInt8)ttl segmentCount:(int)segmentCount {
-    return MAX(_manager.acknowledgmentMessageInterval, 2.0) + (double)(ttl) * 0.050 + (double)(segmentCount) * 0.050;
-}
+//- (NSTimeInterval)acknowledgmentMessageInterval:(UInt8)ttl segmentCount:(int)segmentCount {
+//    return MAX(_manager.acknowledgmentMessageInterval, 2.0) + (double)(ttl) * 0.050 + (double)(segmentCount) * 0.050;
+//}
 
 - (NSTimeInterval)acknowledgmentTimerInterval:(UInt8)ttl {
     return MAX(_manager.acknowledgmentTimerInterval, 0.150) + (double)(ttl) * 0.050;

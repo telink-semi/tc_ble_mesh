@@ -34,13 +34,6 @@
 @end
 
 
-@implementation SigTransmitter
-- (void)sendData:(NSData *)data ofType:(SigPduType)type {
-    
-}
-@end
-
-
 @interface SigBearer ()<SigBearerDelegate>
 
 #pragma  mark - Properties
@@ -61,9 +54,9 @@
 @property (nonatomic,copy) stopMeshConnectResultBlock stopMeshConnectCallback;
 
 /// flag current node whether had provisioned.
-@property (nonatomic, assign) BOOL provisioned;//init YES.
+@property (nonatomic, assign) BOOL provisioned;//default is YES.
 @property (nonatomic,strong) BackgroundTimer *autoConnectScanTimer;
-@property (nonatomic, assign) BOOL hasScaned1828;//init NO.
+@property (nonatomic, assign) BOOL hasScaned1828;//default is NO.
 @property (nonatomic,strong) NSMutableDictionary <CBPeripheral *,NSNumber *>*scanedPeripheralDict;
 
 @end
@@ -139,7 +132,7 @@
 #pragma  mark - Private
 
 - (void)blockState {
-    TeLogDebug(@"");
+    TeLogVerbose(@"");
     __weak typeof(self) weakSelf = self;
     [self.ble setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
         if (weakSelf.isOpened) {
@@ -207,7 +200,7 @@
     } else if ([characteristic.UUID.UUIDString isEqualToString:kOnlineStatusCharacteristicsID]) {
         TeLogInfo(@"---> to:OnlineStatusCharacteristic, length:%d,value:%@",data.length,[LibTools convertDataToHexStr:data]);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kOTA_CharacteristicsID]) {
-        TeLogInfo(@"---> to:GATT-OTA, length:%d",data.length);
+        TeLogVerbose(@"---> to:GATT-OTA, length:%d",data.length);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kMeshOTA_CharacteristicsID]) {
         TeLogInfo(@"---> to:MESH-OTA, length:%d",data.length);
     } else {
@@ -267,6 +260,9 @@
     }
     if (self.bearerOpenCallback) {
         self.bearerOpenCallback(isSuccess);
+    }
+    if ([self.dataDelegate respondsToSelector:@selector(bearerDidOpen:)]) {
+        [self.dataDelegate bearerDidOpen:self];
     }
 }
 
@@ -388,15 +384,21 @@
         c = [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral];
     }
     //写法1.只负责压包，运行该函数完成不等于发送完成。
-    [self sentPcakets:packets toCharacteristic:c type:CBCharacteristicWriteWithoutResponse];
+//    [self sentPcakets:packets toCharacteristic:c type:CBCharacteristicWriteWithoutResponse];
     //写法2.等待所有压包都发送完成
-//    for (NSData *pack in packets) {
-//        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-//        [self sentPcakets:@[pack] toCharacteristic:c type:CBCharacteristicWriteWithoutResponse complete:^{
-//            dispatch_semaphore_signal(semaphore);
-//        }];
-//        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-//    }
+    for (NSData *pack in packets) {
+        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+        [self sentPcakets:@[pack] toCharacteristic:c type:CBCharacteristicWriteWithoutResponse complete:^{
+            dispatch_semaphore_signal(semaphore);
+        }];
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    }
+}
+
+- (void)sendOTAData:(NSData *)data complete:(SendPacketsFinishCallback)complete {
+    CBPeripheral *p = SigBearer.share.getCurrentPeripheral;
+    CBCharacteristic *c = [SigBluetooth.share getCharacteristicWithUUIDString:kOTA_CharacteristicsID OfPeripheral:p];
+    [self sentPcakets:@[data] toCharacteristic:c type:CBCharacteristicWriteWithoutResponse complete:complete];
 }
 
 - (void)sendOTAData:(NSData *)data {
@@ -433,7 +435,7 @@
 #pragma  mark - auto reconnect
 
 /// 开始连接SigDataSource这个单列的mesh网络。
-- (void)startMeshConnectWithComplete:(nullable startMeshConnectResultBlock)complete {
+- (void)startMeshConnectWithComplete:(nullable startMeshConnectResultBlock)complete {    
     self.startMeshConnectCallback = complete;
     self.isAutoReconnect = YES;
     if (self.getCurrentPeripheral && self.getCurrentPeripheral.state == CBPeripheralStateConnected && [SigBluetooth.share isWorkNormal] && [SigDataSource.share existPeripheralUUIDString:self.getCurrentPeripheral.identifier.UUIDString]) {
@@ -564,10 +566,10 @@
     __weak typeof(self) weakSelf = self;
     [self changePeripheral:peripheral result:^(BOOL successful) {
         if (successful) {
-            TeLogDebug(@"change to uuid:%@ success.",peripheral.identifier.UUIDString);
+//            TeLogDebug(@"change to uuid:%@ success.",peripheral.identifier.UUIDString);
             [weakSelf openWithResult:^(BOOL successful) {
                 if (successful) {
-                    TeLogDebug(@"read gatt list:%@ success.",peripheral.identifier.UUIDString);
+                    TeLogDebug(@"connected and read gatt list success.");
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                         [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
                             TeLogDebug(@"set filter:%@ success.",peripheral.identifier.UUIDString);
@@ -587,7 +589,7 @@
                 }
             }];
         } else {
-            TeLogDebug(@"change to uuid:%@ fail.",peripheral.identifier.UUIDString);
+//            TeLogDebug(@"change to uuid:%@ fail.",peripheral.identifier.UUIDString);
             [weakSelf startMeshConnectFail];
 //            [weakSelf startAutoConnect];
         }
@@ -595,7 +597,7 @@
 }
 
 - (void)startMeshConnectSuccess {
-    if (SigDataSource.share.hasNodeExistTimeModelID) {
+    if (SigDataSource.share.hasNodeExistTimeModelID && SigDataSource.share.needPublishTimeModel) {
         [SDKLibCommand statusNowTime];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             if (self.startMeshConnectCallback) {

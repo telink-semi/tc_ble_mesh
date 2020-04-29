@@ -65,8 +65,7 @@
 - (IBAction)addNewDevice:(UIBarButtonItem *)sender {
     BOOL isRemoteAdd = [[[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType] boolValue];
     if (isRemoteAdd) {
-        saveLogData(@"click remote add device");
-        
+        TeLog(@"click remote add device");
         RemoteAddVC *vc = (RemoteAddVC *)[UIStoryboard initVC:ViewControllerIdentifiers_RemoteAddVCID];
         [SigDataSource.share setAllDevicesOutline];
         [self.navigationController pushViewController:vc animated:YES];
@@ -77,7 +76,7 @@
             [SigDataSource.share setAllDevicesOutline];
             [self.navigationController pushViewController:vc animated:YES];
         } else {
-            saveLogData(@"click normal add device");
+            TeLog(@"click normal add device");
             
             //自动添加多个设备
             AddDeviceViewController *vc = (AddDeviceViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_AddDeviceViewControllerID];
@@ -171,6 +170,7 @@
 
 - (void)reloadCollectionViewWithItemResponseModel:(ResponseModel *)m{
     UInt16 address = m.address;
+    TeLog(@"refresh UI in HomeVC, address=0x%x",address);
     SigNodeModel *model = [SigDataSource.share getNodeWithAddress:address];
     if (model) {
         @synchronized(self) {
@@ -259,17 +259,20 @@
         __weak typeof(self) weakSelf = self;
         [self.ble.commandHandle startWorkNormalWithComplete:^(NSString *uuidString) {
             TeLog(@"connnect mesh success.");
-            //Demo can show Bluetooth.share.currentPeripheral in HomeViewController when CanControl callback.
-            [weakSelf.collectionView reloadData];
-            //Attention: some block has change when demo call startWorkNormal API, so when SDK callback CanControl, reset block by call blockState.
-            [weakSelf blockState];
-            [weakSelf freshOnline:nil];
+            [weakSelf workNormalWithUuidString:uuidString];
         }];
-        
     }else{
         [Bluetooth.share stopAutoConnect];
         [Bluetooth.share cancelAllConnecttionWithComplete:nil];
     }
+}
+
+- (void)workNormalWithUuidString:(NSString *)uuidString {
+    //Demo can show Bluetooth.share.currentPeripheral in HomeViewController when CanControl callback.
+    [self.collectionView reloadData];
+    //Attention: some block has change when demo call startWorkNormal API, so when SDK callback CanControl, reset block by call blockState.
+    [self blockState];
+    [self freshOnline:nil];
 }
 
 #pragma mark - Life method
@@ -367,6 +370,12 @@
         [SigDataSource.share setAllDevicesOutline];
         [weakSelf reloadCollectionView];
     }];
+    //fast provision or remote provision, this blcok maybe nil.
+    if (self.ble.workWithPeripheralCallBack == nil) {
+        [self.ble setWorkWithPeripheralCallBack:^(NSString *uuidString) {
+            [weakSelf workNormalWithUuidString:uuidString];
+        }];
+    }
 }
 
 - (void)nilBlock{

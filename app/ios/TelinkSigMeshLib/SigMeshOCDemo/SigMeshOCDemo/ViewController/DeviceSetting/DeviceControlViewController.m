@@ -74,6 +74,14 @@
 //保存当前色盘取到的HSV中的HS的值，V值则取L滑竿的值。初始值RGB都是255，HSL值0、0、1，L滑竿值最大，颜色为白色。
 @property (strong, nonatomic) HSVModel *colorWheelHSVModel;
 
+@property (assign, nonatomic) BOOL hadChangeBrightness;
+@property (assign, nonatomic) BOOL hasNextBrightness;
+@property (assign, nonatomic) UInt8 nextBrightness;
+@property (assign, nonatomic) BOOL hadChangeTempareture;
+@property (assign, nonatomic) BOOL hasNextTempareture;
+@property (assign, nonatomic) UInt8 nextTempareture;
+
+
 @end
 
 @implementation DeviceControlViewController
@@ -81,20 +89,68 @@
 #pragma mark - xib event
 - (IBAction)changeBrightness:(UISlider *)sender {
     self.LumLabel.text = [NSString stringWithFormat:@"Lum(%d)(at ele adr:0x%X):",(int)sender.value,self.model.address];
-    [DemoCommand changeBrightnessWithBrightness100:sender.value address:self.model.address responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightLightnessStatus * _Nonnull responseMessage) {
+    if (!self.hadChangeBrightness) {
+        self.nextBrightness = sender.value;
+        [self changeBrightness];
+    } else {
+        self.hasNextBrightness = YES;
+        self.nextBrightness = sender.value;
+    }
+}
+
+- (void)changeBrightnessFinish {
+    self.hadChangeBrightness = NO;
+    if (self.hasNextBrightness) {
+        [self changeBrightness];
+    }
+}
+
+- (void)changeBrightness {
+    self.hadChangeBrightness = YES;
+    self.hasNextBrightness = NO;
+    TeLogInfo(@"self.nextBrightness=%d",self.nextBrightness);
+    [DemoCommand changeBrightnessWithBrightness100:self.nextBrightness address:self.model.address retryCount:0 responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigLightLightnessStatus * _Nonnull responseMessage) {
         
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
         
     }];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeBrightnessFinish) object:nil];
+        [self performSelector:@selector(changeBrightnessFinish) withObject:nil afterDelay:kCommandInterval];
+    });
 }
 
 - (IBAction)changeTempareture:(UISlider *)sender {
     self.TempLabel.text = [NSString stringWithFormat:@"Temp(%d)(at ele adr:0x%X):",(int)sender.value,self.model.temperatureAddresses.firstObject.intValue];
-    [DemoCommand changeTempratureWithTemprature100:sender.value address:[self.model.temperatureAddresses.firstObject intValue] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightCTLTemperatureStatus * _Nonnull responseMessage) {
+    if (!self.hadChangeTempareture) {
+        self.nextTempareture = sender.value;
+        [self changeTempareture];
+    } else {
+        self.hasNextTempareture = YES;
+        self.nextTempareture = sender.value;
+    }
+}
+
+- (void)changeTemparetureFinish {
+    self.hadChangeTempareture = NO;
+    if (self.hasNextTempareture) {
+        [self changeTempareture];
+    }
+}
+
+- (void)changeTempareture {
+    self.hadChangeTempareture = YES;
+    self.hasNextTempareture = NO;
+    [DemoCommand changeTempratureWithTemprature100:self.nextTempareture address:[self.model.temperatureAddresses.firstObject intValue] retryCount:0 responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigLightCTLTemperatureStatus * _Nonnull responseMessage) {
         
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
         
     }];
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeTemparetureFinish) object:nil];
+        [self performSelector:@selector(changeTemparetureFinish) withObject:nil afterDelay:kCommandInterval];
+    });
 }
 
 - (IBAction)changeLight:(UISlider *)sender {
@@ -102,10 +158,11 @@
     if (kControllerInHSL) {
         self.colorWheelHSVModel.value = sender.value;
         color = [ColorManager getUIColorWithHSVColor:self.colorWheelHSVModel];
-    }else{
-        self.hsvModel.value = sender.value;
-        color = [UIColor colorWithHue:self.hsvModel.hue saturation:self.hsvModel.saturation brightness:sender.value alpha:self.hsvModel.alpha];
     }
+//    else{
+//        self.hsvModel.value = sender.value;
+//        color = [UIColor colorWithHue:self.hsvModel.hue saturation:self.hsvModel.saturation brightness:sender.value alpha:self.hsvModel.alpha];
+//    }
 
     [self handleColor:color];
     [self refreshRGBSlider];
@@ -188,10 +245,11 @@
     if (kControllerInHSL) {
         self.hslModel = [ColorManager getHSLWithColor:color];
         self.showHSLLabel.text = [NSString stringWithFormat:@"HSL:\n H--%.2f\n S--%.2f\n L--%.2f",self.hslModel.hue*100,self.hslModel.saturation*100,self.hslModel.lightness*100];
-    } else {
-        self.hsvModel = [ColorManager getHSVWithColor:color];
-        self.showHSLLabel.text = [NSString stringWithFormat:@"HSV:\n H--%.2f\n S--%.2f\n V--%.2f",self.hsvModel.hue*100,self.hsvModel.saturation*100,self.hsvModel.value*100];
     }
+//    else {
+//        self.hsvModel = [ColorManager getHSVWithColor:color];
+//        self.showHSLLabel.text = [NSString stringWithFormat:@"HSV:\n H--%.2f\n S--%.2f\n V--%.2f",self.hsvModel.hue*100,self.hsvModel.saturation*100,self.hsvModel.value*100];
+//    }
     
     self.rgbModel = [ColorManager getRGBWithColor:color];
     self.colorWheelHSVModel = [ColorManager getHSVWithColor:color];
@@ -208,20 +266,21 @@
 - (void)sendHSLData{
     if ([self canSend]) {
         UInt16 address = self.model.address;
-        __weak typeof(self) weakSelf = self;
+//        __weak typeof(self) weakSelf = self;
         if (kControllerInHSL) {
             [DemoCommand changeHSLWithAddress:address hue100:self.hslModel.hue*100 saturation100:self.hslModel.saturation*100 brightness100:self.hslModel.lightness*100 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightHSLStatus * _Nonnull responseMessage) {
                 
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 
             }];
-        } else {
-            [DemoCommand changeHSLWithAddress:address hue100:self.hsvModel.hue*100 saturation100:self.hsvModel.saturation*100 brightness100:self.hsvModel.value*100 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightHSLStatus * _Nonnull responseMessage) {
-                
-            } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                
-            }];
         }
+//        else {
+//            [DemoCommand changeHSLWithAddress:address hue100:self.hsvModel.hue*100 saturation100:self.hsvModel.saturation*100 brightness100:self.hsvModel.value*100 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightHSLStatus * _Nonnull responseMessage) {
+//
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+//
+//            }];
+//        }
         self.hasNextCMD = NO;
     } else {
         if (!self.hasNextCMD) {
@@ -270,6 +329,13 @@
 - (void)normalSetting{
     [super normalSetting];
     
+    self.hadChangeBrightness = NO;
+    self.hasNextBrightness = NO;
+    self.nextBrightness = 0;
+    self.hadChangeTempareture = NO;
+    self.hasNextTempareture = NO;
+    self.nextTempareture = 0;
+
     self.currentColorView.layer.cornerRadius = 8;
     self.currentColorView.layer.borderWidth = 1;
     self.currentColorView.layer.borderColor = [UIColor lightGrayColor].CGColor;
@@ -279,9 +345,9 @@
         [self handleColor:[UIColor whiteColor]];
     }
     
-    if (!kControllerInHSL) {
-        self.lightLabel.text = @"V:";
-    }
+//    if (!kControllerInHSL) {
+//        self.lightLabel.text = @"V:";
+//    }
     self.lumLevelLabel.text = [NSString stringWithFormat:@"Lum Level(at ele adr:0x%X):",self.model.address];
     self.tempLevelLabel.text = [NSString stringWithFormat:@"Temp Level(at ele adr:0x%X):",self.model.temperatureAddresses.firstObject.intValue];
     
@@ -366,9 +432,10 @@
 - (void)HSLCallBack{
     if (kControllerInHSL) {
         [self handleColor:[self getColorWithH:self.model.HSL_Hue100 S:self.model.HSL_Saturation100 L:self.model.HSL_Lightness100]];
-    } else {
-        [self handleColor:[UIColor colorWithHue:self.model.HSL_Hue100/100.0 saturation:self.model.HSL_Saturation100/100.0 brightness:self.model.HSL_Lightness100/100.0 alpha:1.0]];
     }
+//    else {
+//        [self handleColor:[UIColor colorWithHue:self.model.HSL_Hue100/100.0 saturation:self.model.HSL_Saturation100/100.0 brightness:self.model.HSL_Lightness100/100.0 alpha:1.0]];
+//    }
 }
 
 - (UIColor *)getColorWithH:(UInt8)h S:(UInt8)s L:(UInt8)l{
@@ -396,9 +463,10 @@
         self.BSlider.value = self.rgbModel.blud;
         if (kControllerInHSL) {
             self.currentColorView.backgroundColor = [self getColorWithH:self.hslModel.hue*100.0 S:self.hslModel.saturation*100.0 L:self.hslModel.lightness*100.0];
-        } else {
-            self.currentColorView.backgroundColor = [UIColor colorWithHue:self.hsvModel.hue saturation:self.hsvModel.saturation brightness:self.hsvModel.value alpha:1.0];
         }
+//        else {
+//            self.currentColorView.backgroundColor = [UIColor colorWithHue:self.hsvModel.hue saturation:self.hsvModel.saturation brightness:self.hsvModel.value alpha:1.0];
+//        }
     }
     
     if (self.model.onoffAddresses.count == 1) {

@@ -81,23 +81,19 @@
             [weakSelf updateDeviceProvisionSuccess:identify address:address];
             
             TeLog(@"addDevice_provision success : %@->0X%X",identify,address);
-            saveLogData([NSString stringWithFormat:@"add device addDevice_provision success : %@->0X%X",identify,address]);
         }
     } keyBindSuccess:^(NSString *identify, UInt16 address) {
         if (identify && address != 0) {
             [weakSelf updateDeviceKeyBind:identify isSuccess:YES];
             
             TeLog(@"addDevice_keybind success : %@->0X%X",identify,address);
-            saveLogData([NSString stringWithFormat:@"add device addDevice_keybind success : %@->0X%X",identify,address]);
         }
     } fail:^(NSString *errorString) {
         [weakSelf updateDeviceKeyBind:weakSelf.ble.currentPeripheral.identifier.UUIDString isSuccess:NO];
         
-        TeLog(@"errorString:%@",errorString);
-        saveLogData([NSString stringWithFormat:@"provision fail : %@",errorString]);
+        TeLog(@"provision fail :%@",errorString);
     } finish:^{
         TeLog(@"finish provision");
-        saveLogData(@"finish provision");
         
         [weakSelf addDeviceFinish];
     }];
@@ -141,7 +137,11 @@
             if (isSuccess) {
                 model.state = AddDeviceModelStateBindSuccess;
             } else {
-                model.state = AddDeviceModelStateBindFail;
+                if (model.state != AddDeviceModelStateBindSuccess) {
+                    model.state = AddDeviceModelStateBindFail;
+                }else{
+                    TeLog(@"警告：赋值异常，放弃赋值。");
+                }
             }
             break;
         }

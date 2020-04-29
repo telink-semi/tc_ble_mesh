@@ -262,8 +262,8 @@
             [matchingGroups addObject:(SigGroupModel *)[NSNull null]];
         }
         NSMutableArray *temAppKeys = [NSMutableArray arrayWithArray:meshNetwork.appKeys];
-        if (meshNetwork.appKeyA) {
-            [temAppKeys addObject:meshNetwork.appKeyA];
+        if (meshNetwork.defaultAppKeyA) {
+            [temAppKeys addObject:meshNetwork.defaultAppKeyA];
         }
         for (SigAppkeyModel *applicationKey in temAppKeys) {
             for (SigGroupModel *tem in matchingGroups) {
@@ -273,8 +273,8 @@
                 }
                 if (applicationKey.getDataKey && applicationKey.getDataKey.length > 0) {
                     SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:applicationKey.getDataKey forVirtualGroup:group];
-                    if (pdu == nil && meshNetwork.ivIndexA) {
-                        pdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:applicationKey.getDataKey ivIndex:meshNetwork.ivIndexA forVirtualGroup:group];
+                    if (pdu == nil && meshNetwork.defaultIvIndexA) {
+                        pdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:applicationKey.getDataKey ivIndex:meshNetwork.defaultIvIndexA forVirtualGroup:group];
                     }
                     if (aid == applicationKey.aid && pdu) {
                         SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];
@@ -284,7 +284,7 @@
                 if (applicationKey.getDataOldKey && applicationKey.getDataOldKey.length > 0) {
                     SigUpperTransportPdu *oldPdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:applicationKey.getDataOldKey forVirtualGroup:group];
                     if (oldPdu == nil) {
-                        oldPdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:applicationKey.getDataOldKey ivIndex:meshNetwork.ivIndexA forVirtualGroup:group];
+                        oldPdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:applicationKey.getDataOldKey ivIndex:meshNetwork.defaultIvIndexA forVirtualGroup:group];
                     }
                     if (applicationKey.oldAid == applicationKey.aid && oldPdu) {
                         SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];

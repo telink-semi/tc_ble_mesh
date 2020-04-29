@@ -57,7 +57,7 @@
     if (SigBearer.share.isOpen) {
         [self kickoutAction];
     } else {
-        [SigDataSource.share removeModelWithDeviceAddress:self.model.address];
+        [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
         [self pop];
     }
 }
@@ -70,7 +70,7 @@
         [self showTips:@"app is busy now, try again later."];
     } else {
         TeLogInfo(@"send request for kick out address:%d",self.model.address);
-        _messageHandle = [SDKLibCommand resetNodeWithNodeAddress:self.model.address successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
+        _messageHandle = [SDKLibCommand resetNodeWithDestination:self.model.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
             
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             if (isResponseAll) {
@@ -78,7 +78,7 @@
             } else {
                 TeLogDebug(@"kickout fail.");
             }
-            [SigDataSource.share removeModelWithDeviceAddress:weakSelf.model.address];
+            [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:weakSelf.model.address];
             [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
             [weakSelf pop];
         }];
@@ -93,11 +93,20 @@
 }
 
 - (void)pop{
-//    self.ble.commandHandle.delectDeviceCallBack = nil;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [ShowTipsHandle.share hidden];
-        [self.navigationController popViewControllerAnimated:YES];
-    });
+    if (SigDataSource.share.unicastAddressOfConnected == self.model.address) {
+        __weak typeof(self) weakSelf = self;
+        [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [ShowTipsHandle.share hidden];
+                [weakSelf.navigationController popViewControllerAnimated:YES];
+            });
+        }];
+    } else {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ShowTipsHandle.share hidden];
+            [self.navigationController popViewControllerAnimated:YES];
+        });
+    }
 }
 
 - (void)blockState{
@@ -120,7 +129,8 @@
 - (void)normalSetting{
     [super normalSetting];
 //    self.macLabel.hidden = YES;
-    self.macLabel.text = [NSString stringWithFormat:@"MAC:%@",[LibTools getMacStringWithMac:self.model.macAddress]];
+//    self.macLabel.text = [NSString stringWithFormat:@"MAC:%@",[LibTools getMacStringWithMac:self.model.macAddress]];
+    self.macLabel.text = [NSString stringWithFormat:@"UUID:%@",self.model.UUID];
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
 }
 
@@ -174,10 +184,10 @@
             cell.stateSwitch.on = self.model.hasOpenPublish;
             __weak typeof(self) weakSelf = self;
             [cell setChangeStateBlock:^(UISwitch * _Nonnull stateSwitch) {                
-                UInt32 option = weakSelf.model.publishModelID;
+                UInt16 option = weakSelf.model.publishModelID;
                 UInt16 eleAdr = [weakSelf.model.publishAddress.firstObject intValue];
                 /* 周期，20秒上报一次(periodSteps:kPublishInterval,:Range：0x01-0x3F; periodResolution:1) */
-                [DemoCommand editPublishListWithPublishAddress:stateSwitch.isOn ? kMeshAddress_allNodes : kMeshAddress_unassignedAddress nodeAddress:weakSelf.model.address elementAddress:eleAdr modelID:option periodSteps:kPublishInterval periodResolution:SigStepResolution_seconds successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
+                [DemoCommand editPublishListWithPublishAddress:stateSwitch.isOn ? kMeshAddress_allNodes : kMeshAddress_unassignedAddress nodeAddress:weakSelf.model.address elementAddress:eleAdr modelIdentifier:option companyIdentifier:0 periodSteps:kPublishInterval periodResolution:SigStepResolution_seconds retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
                     TeLogDebug(@"editPublishList callback");
                     if (responseMessage.status == SigConfigMessageStatus_success && responseMessage.elementAddress == eleAdr) {
                         if (responseMessage.publish.publicationAddress.address == kMeshAddress_allNodes) {

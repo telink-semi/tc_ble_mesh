@@ -83,6 +83,8 @@
 #define ViewControllerIdentifiers_DeviceSubscriptionListViewControllerID  @"DeviceSubscriptionListViewController"
 #define ViewControllerIdentifiers_SensorVCID  @"SensorVC"
 
+#define kCommandInterval    (0.32)
+
 //TimeOut
 #define TimeOut_KickoutDelayResponseTime    (1.5)
 #define TimeOut_KickoutConnectedDelayResponseTime   (5.0)

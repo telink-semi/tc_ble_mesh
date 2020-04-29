@@ -68,37 +68,6 @@
 
 - (void)nullFunc{}
 
-- (void)receiveBleData:(NSData *)data {
-    TeLogDebug(@"data=%@",data);
-    SigPudModel *model = [self.protocolHandler reassembleData:data];
-    if (!model) {
-        TeLogDebug(@"value is not full, wait next notify.");
-        return;
-    }
-    if (model.pduType == SigPduType_provisioningPdu) {
-        // Try parsing the response.
-        SigProvisioningResponse *response = [[SigProvisioningResponse alloc] initWithData:model.pduData];
-        if (!response) {
-            TeLogDebug(@"parsing the response fail.");
-            return;
-        }
-        
-        if (!response.isValid) {
-            TeLogDebug(@"the response is not valid.");
-            return;
-        }
-        
-        TeLogDebug(@"");
-        if (SigProvisioningManager.share.provisionResponseBlock) {
-            TeLogDebug(@"response=%@",response.responseData);
-            SigProvisioningManager.share.provisionResponseBlock(response);
-        }
-    }else{
-        TeLogDebug(@"pdu is not SigPduType_provisioningPdu.");
-        return;
-    }
-}
-
 - (void)receiveOnlineStatueData:(NSData *)data {
     [self performSelector:@selector(anasislyOnlineStatueDataFromUUID:) onThread:self.receiveThread withObject:data waitUntilDone:NO];
 }
@@ -110,7 +79,7 @@
 //    TeLogInfo(@"onlineStatus解密后=%@",[LibTools convertDataToHexStr:[NSData dataWithBytes:byte length:data.length]]);
     
     //使用OC提供的方法进行解密
-    TeLogInfo(@"onlineStatus解密前=%@",[LibTools convertDataToHexStr:data]);
+//    TeLogInfo(@"onlineStatus解密前=%@,key=%@",[LibTools convertDataToHexStr:data],[LibTools convertDataToHexStr:beaconKey]);
     NSData *beaconKey = SigDataSource.share.curNetkeyModel.keys.beaconKey;
     UInt8 *beaconKeyByte = (UInt8 *)beaconKey.bytes;
     UInt8 *byte = (UInt8 *)data.bytes;

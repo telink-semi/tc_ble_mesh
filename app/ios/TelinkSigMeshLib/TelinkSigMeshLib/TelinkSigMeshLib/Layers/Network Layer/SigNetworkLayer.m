@@ -84,7 +84,7 @@
         case SigPduType_networkPdu:
             {
                 TeLogVerbose(@"receive networkPdu");
-#warning 待完善：两个不同netkey进行解包如何处理比较好。
+                //两个不同netkey进行解包（fast provision需要）:先使用mesh的networkKey进行解密，再使用当前networkLayer特定networkKey和ivIndex进行解密。
                 SigNetworkPdu *networkPdu = [SigNetworkPdu decodePdu:pdu pduType:SigPduType_networkPdu forMeshNetwork:_meshNetwork];
                 if (!networkPdu && _networkKey && _ivIndex) {
                     networkPdu = [SigNetworkPdu decodePdu:pdu pduType:SigPduType_networkPdu usingNetworkKey:_networkKey ivIndex:_ivIndex];
@@ -249,7 +249,6 @@
     TeLogInfo(@"Sending %@%@ from: 0x%x to: 0000",message,message.parameters,source);
     SigControlMessage *pdu = [[SigControlMessage alloc] initFromProxyConfigurationMessage:message sentFromSource:source usingNetworkKey:networkKey];
     pdu.ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
-    TeLogInfo(@"Sending %@%@ from: 0x%x to: 0000",pdu,pdu.transportPdu,source);
     [self sendLowerTransportPdu:pdu ofType:SigPduType_proxyConfiguration withTtl:0];
 }
 

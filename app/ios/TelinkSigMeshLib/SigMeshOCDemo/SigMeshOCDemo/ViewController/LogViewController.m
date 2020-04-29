@@ -65,26 +65,11 @@
 
 - (void)updateContent{
     __weak typeof(self) weakSelf = self;
-    NSLog(@"=======1");
     [self.operation addOperationWithBlock:^{
-        NSLog(@"=======2");
-        NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:SigLogger.share.logFilePath];
-        NSLog(@"=======3");
-        NSData *data = [handle readDataToEndOfFile];
         //日志文件可能比较大，只显示最新的100K的log信息。
-        NSLog(@"=======4");
-        NSString *str = @"";
-        NSInteger showLength = 1024 * 100;
-        if (data.length > showLength) {
-            str = [[NSString alloc] initWithData:[data subdataWithRange:NSMakeRange(data.length - showLength, showLength)] encoding:NSUTF8StringEncoding];
-        } else {
-            str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        }
-        NSLog(@"=======5");
+        NSString *str = [SigLogger.share getLogStringWithLength:1024 * 100];
         dispatch_async(dispatch_get_main_queue(), ^{
-            NSLog(@"=======6");
             weakSelf.contentText.text = str;
-            NSLog(@"=======7");
         });
     }];
 }

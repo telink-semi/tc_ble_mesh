@@ -45,7 +45,6 @@
         [Bluetooth.share.commandHandle getOnlineStatusFromUUIDWithCompletation:complete];
         NSString *logStr = @"send onlinestatus from uuid";
         TeLog(@"%@", logStr);
-        saveLogData(logStr);
         return YES;
     }
     
@@ -56,11 +55,9 @@
     if (result) {
         NSString *logStr = @"send request for onlinestatus";
         TeLog(@"%@", logStr);
-        saveLogData(logStr);
     }else{
         NSString *logStr = @"send request for onlinestatus, but busy now";
         TeLog(@"%@", logStr);
-        saveLogData(logStr);
     }
     return result;
 }
@@ -74,11 +71,9 @@
     if (result) {
         NSString *logStr = @"send request for onlinestatus";
         TeLog(@"%@", logStr);
-        saveLogData(logStr);
     }else{
         NSString *logStr = @"send request for onlinestatus, but busy now";
         TeLog(@"%@", logStr);
-        saveLogData(logStr);
     }
     return result;
 }
@@ -92,11 +87,9 @@
     if (result) {
         NSString *logStr = @"send request for onlinestatus";
         TeLog(@"%@", logStr);
-        saveLogData(logStr);
     }else{
         NSString *logStr = @"send request for onlinestatus, but busy now";
         TeLog(@"%@", logStr);
-        saveLogData(logStr);
     }
     return result;
 }
@@ -108,7 +101,7 @@
         return;
     }
     NSString *logStr = [NSString stringWithFormat:@"%@ node_adr:0x%X ele_adr:0x%X gradd:0x%X option:0x%X",(add?@"Add":@"Del"),nodeAddress,eleAddress,groAdd,(unsigned int)option];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Change publish list
@@ -118,7 +111,7 @@
         return;
     }
     NSString *logStr = [NSString stringWithFormat:@"%@ node_adr:0x%X ele_adr:0x%X pub_adr:0x%X option:0x%X",(@"edit"),nodeAddress,eleAddress,pub_adr,(unsigned int)option];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Get publish address
@@ -128,7 +121,7 @@
         return;
     }
     NSString *logStr = [NSString stringWithFormat:@"%@ node_adr:0x%X ele_adr:0x%X option:0x%X",(@"get publish"),nodeAddress,eleAddress,(unsigned int)option];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Turn on or turn off the lights part
@@ -143,7 +136,7 @@
         return;
     }
     NSString *logStr = [NSString stringWithFormat:@"%@0x%02X device",(on?@"Turn on ":@"Turn off "),address];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Change brightness
@@ -158,7 +151,7 @@
         return;
     }
     NSString *logStr = [NSString stringWithFormat:@"change device :%02x Brightness %f",address,para];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Change temprature
@@ -173,7 +166,7 @@
         return;
     }
     NSString *logStr = [NSString stringWithFormat:@"change device :%02x temprature %f",address,para];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Change HSL
@@ -188,7 +181,7 @@
         return;
     }
     NSString *logStr = [NSString stringWithFormat:@"change device :%02x HSL h:%d s:%d l:%d",address,hue,saturation,brightness];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Change level
@@ -203,76 +196,76 @@
         return;
     }
     NSString *logStr = [NSString stringWithFormat:@"change device :%02x level level:%d ",address,level];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Kick out
 + (void)kickoutDevice:(UInt16)address complete:(resultCallBack)complete{
     [Bluetooth.share.commandHandle kickoutDevice:address complete:complete];
     NSString *logStr = [NSString stringWithFormat:@"kickout Device :%02x",address];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Set all nodes's time to app's time
 + (void)setNowTimeWithComplete:(resultCallBack)complete{
     [Bluetooth.share.commandHandle setNowTimeWithComplete:complete];
     NSString *logStr = @"set now time";
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Save scene
 + (void)saveSceneWithAddress:(u16)address resMax:(u32)resMax sceneId:(u16)sceneId complete:(responseModelCallBack)complete{
     [Bluetooth.share.commandHandle saveSceneWithAddress:address resMax:resMax sceneId:sceneId Completation:complete];
     NSString *logStr = [NSString stringWithFormat:@"save scene:%d address:%02x",sceneId,address];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Recall scene
 + (void)recallSceneWithAddress:(u16)address resMax:(u32)resMax sceneId:(u16)sceneId complete:(responseModelCallBack)complete{
     [Bluetooth.share.commandHandle recallSceneWithAddress:address resMax:resMax sceneId:sceneId Completation:complete];
     NSString *logStr = [NSString stringWithFormat:@"recall scene:%d address:%02x",sceneId,address];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Delete scene
 + (void)delSceneWithAddress:(u16)address resMax:(u32)resMax sceneId:(u16)sceneId complete:(responseModelCallBack)complete{
     [Bluetooth.share.commandHandle delSceneWithAddress:address resMax:resMax sceneId:sceneId Completation:complete];
     NSString *logStr = [NSString stringWithFormat:@"del scene:%d address:%02x",sceneId,address];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Get scene register status
 + (void)getSceneRegisterStatusWithAddress:(u16)address resMax:(u32)resMax Completation:(responseModelCallBack)complete{
     [Bluetooth.share.commandHandle getSceneRegisterStatusWithAddress:address resMax:resMax Completation:complete];
     NSString *logStr = [NSString stringWithFormat:@"get scene register status address:%02x",address];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Set scheduler action
 + (void)setSchedulerActionWithAddress:(u16)address resMax:(u32)resMax schedulerModel:(SchedulerModel *)schedulerModel complete:(responseModelCallBack)complete{
     [Bluetooth.share.commandHandle setSchedulerActionWithAddress:address resMax:resMax schedulerModel:schedulerModel Completation:complete];
     NSString *logStr = [NSString stringWithFormat:@"set scheduler:%d action:%lu sceneId:%llu address:%02x",schedulerModel.schedulerID,(unsigned long)schedulerModel.action,schedulerModel.sceneId,address];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// Get scheduler status
 + (void)getSchedulerStatusWithAddress:(u16)address resMax:(u32)resMax Completation:(responseModelCallBack)complete{
     [Bluetooth.share.commandHandle getSchedulerStatusWithAddress:address resMax:resMax Completation:complete];
     NSString *logStr = [NSString stringWithFormat:@"get scheduler status address:%02x",address];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// get scheduler action
 + (void)getSchedulerActionWithAddress:(u16)address resMax:(u32)resMax schedulerModelID:(u8)schedulerModelID Completation:(responseModelCallBack)complete{
     [Bluetooth.share.commandHandle getSchedulerActionWithAddress:address resMax:resMax schedulerModelID:schedulerModelID Completation:complete];
     NSString *logStr = [NSString stringWithFormat:@"get schedulerID:%hhu address:%02x",schedulerModelID,address];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 
 /// get fw info
 + (void)getFwInfoWithAddress:(u16)address Completation:(responseModelCallBack)complete{
     [Bluetooth.share.commandHandle getFwInfoWithAddress:address Completation:complete];
     NSString *logStr = [NSString stringWithFormat:@"get fw info address:%02x",address];
-    saveLogData(logStr);
+    TeLog(@"%@", logStr);
 }
 @end

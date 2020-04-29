@@ -33,7 +33,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class SigNetworkManager,SigUpperTransportPdu,SigAccessPdu;
 
-//SigModelDelegate
 @interface SigAccessLayer : NSObject
 
 - (instancetype)initWithNetworkManager:(SigNetworkManager *)networkManager;

@@ -263,6 +263,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigModelPublicationSet : SigConfigAnyModelMessage
 @property (nonatomic,strong) SigPublish *publish;
 - (NSData *)parameters;
+- (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithPublish:(SigPublish *)publish toModel:(SigModelIDModel *)model;
 - (instancetype)initWithDisablePublicationForModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -502,7 +503,8 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x8018
 @interface SigConfigModelPublicationGet : SigConfigAnyModelMessage
 - (NSData *)parameters;
-- (instancetype)initWithModel:(SigModelIDModel *)model;
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
+//- (instancetype)initWithModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -529,6 +531,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigModelPublicationVirtualAddressSet : SigConfigAnyModelMessage
 @property (nonatomic,strong) SigPublish *publish;
 - (NSData *)parameters;
+- (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithPublish:(SigPublish *)publish toModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -556,6 +559,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigModelSubscriptionDelete : SigConfigAnyModelMessage
 @property (nonatomic,assign) UInt16 address;
 - (NSData *)parameters;
+- (instancetype)initWithGroupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -568,6 +572,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x801D
 @interface SigConfigModelSubscriptionDeleteAll : SigConfigAnyModelMessage
 - (NSData *)parameters;
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initFromModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -581,6 +586,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigModelSubscriptionOverwrite : SigConfigAnyModelMessage
 @property (nonatomic,assign) UInt16 address;
 - (NSData *)parameters;
+- (instancetype)initWithGroupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -615,6 +621,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Value of the 128-bt Virtual Label UUID.
 @property (nonatomic,strong) CBUUID *virtualLabel;
 - (NSData *)parameters;
+- (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -629,6 +636,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Value of the 128-bt Virtual Label UUID.
 @property (nonatomic,strong,readonly) CBUUID *virtualLabel;
 - (NSData *)parameters;
+- (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -643,6 +651,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Value of the 128-bt Virtual Label UUID.
 @property (nonatomic,strong,readonly) CBUUID *virtualLabel;
 - (NSData *)parameters;
+- (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -780,6 +789,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x8029
 @interface SigConfigSIGModelSubscriptionGet : SigConfigModelMessage
 - (NSData *)parameters;
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initOfModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -801,6 +811,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x802B
 @interface SigConfigVendorModelSubscriptionGet : SigConfigVendorModelMessage
 - (NSData *)parameters;
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initOfModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -884,6 +895,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// The Unicast Address of the Model's parent Element.
 @property (nonatomic,assign,readonly) UInt16 elementAddress;
 - (NSData *)parameters;
+- (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -898,6 +910,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// The 128-bit Application Key data.
 @property (nonatomic,strong) NSData *key;
 - (NSData *)parameters;
+- (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex networkKeyData:(NSData *)networkKeyData;
 - (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -910,6 +923,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x8041
 @interface SigConfigNetKeyDelete : SigConfigNetKeyMessage
 - (NSData *)parameters;
+- (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex;
 - (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -960,6 +974,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// The 128-bit Application Key data.
 @property (nonatomic,strong) NSData *key;
 - (NSData *)parameters;
+- (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex networkKeyData:(NSData *)networkKeyData;
 - (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1042,6 +1057,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x804B
 @interface SigConfigSIGModelAppGet : SigConfigModelMessage
 - (NSData *)parameters;
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1064,6 +1080,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x804D
 @interface SigConfigVendorModelAppGet : SigConfigVendorModelMessage
 - (NSData *)parameters;
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.

@@ -30,7 +30,7 @@
 #import <Foundation/Foundation.h>
 //#import "LibHandle.h"
 
-@class BLEStore,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex;
+@class SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex;
 typedef void(^BeaconBackCallBack)(BOOL available);
 typedef void(^responseAllMessageBlock)(UInt16 source,UInt16 destination,SigMeshMessage *responseMessage);
 
@@ -352,47 +352,6 @@ typedef enum : NSUInteger {
 - (BOOL)isSameActionWithAction:(ActionModel *)action;
 - (NSDictionary *)getDictionaryOfActionModel;
 - (void)setDictionaryToActionModel:(NSDictionary *)dictionary;
-@end
-
-@interface BLEStore : Model
-
-@property (nonatomic,strong) NSMutableArray <CBPeripheral *>*scanedPeripherals;
-@property (nonatomic,strong) CBPeripheral *peripheral; //当前直连的设备
-@property (nonatomic,strong) CBCharacteristic *OTACharacteristic;
-@property (nonatomic,strong) CBCharacteristic *PBGATT_OutCharacteristic;
-@property (nonatomic,strong) CBCharacteristic *PBGATT_InCharacteristic;
-@property (nonatomic,strong) CBCharacteristic *PROXY_OutCharacteristic;
-@property (nonatomic,strong) CBCharacteristic *PROXY_InCharacteristic;
-@property (nonatomic,strong) CBCharacteristic *OnlineStatusCharacteristic;//私有定制，上报节点的状态的特征
-@property (nonatomic,strong) CBCharacteristic *MeshOTACharacteristic;
-@property (nonatomic,copy) BeaconBackCallBack beaconBackCallBack;
-
-- (BOOL)isWorkNormal;
-
-- (void)saveToLocal:(CBPeripheral *)tempPeripheral;
-
-- (void)addRSSIWithPeripheral:(CBPeripheral *)peripheral RSSI:(int)rssi;
-
-- (void)clearRecord;
-
-- (CBPeripheral *)hightestRSSI;
-
-- (void)ressetParameters;
-
-- (void)libBeaconBack:(BOOL)available;
-
-- (void)writeForPROXYIn:(NSData *)d;
-
-- (void)writeForPBGATTIn:(NSData *)d;
-
-- (void)writeForOnlineStatus:(NSData *)d;
-
-- (void)writeOTAData:(NSData *)d;
-
-- (void)writeMeshOTAData:(NSData *)d;
-
-- (void)readOTACharachteristicForContinue;
-
 @end
 
 

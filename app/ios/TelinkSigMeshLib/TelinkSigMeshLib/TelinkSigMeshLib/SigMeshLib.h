@@ -31,7 +31,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigNetworkManager,SigStorage,SigMessageHandle,SigMeshLib,SigMeshAddress,SigProxyConfigurationMessage,SDKLibCommand;
+@class SigNetworkManager,SigMessageHandle,SigMeshLib,SigMeshAddress,SigProxyConfigurationMessage,SDKLibCommand;
 
 @protocol SigMessageDelegate <NSObject>
 @optional
@@ -115,17 +115,20 @@ NS_ASSUME_NONNULL_BEGIN
 /// The `failedToSendMessage:fromLocalElement:toDestination:error:` callback will be called on timeout.
 ///
 /// The acknowledged message timeout should be set to a minimum of 30 seconds.
-@property (nonatomic,assign) NSTimeInterval acknowledgmentMessageTimeout;//30.0
+//@property (nonatomic,assign) NSTimeInterval acknowledgmentMessageTimeout;//30.0
 
 /// The base time after which the acknowledgmed message will be repeated.
 ///
 /// The repeat timer will be set to the base time + 50 * TTL milliseconds + 50 * segment count. The TTL and segment count dependent parts are added automatically, and this value shall specify only the constant part.
-@property (nonatomic,assign) NSTimeInterval acknowledgmentMessageInterval;//2.0
+//@property (nonatomic,assign) NSTimeInterval acknowledgmentMessageInterval;//2.0
 
 /// 4.2.19.2 Network Transmit Interval Steps
 /// - seeAlso: Mesh_v1.0.pdf  (page.151)
 @property (nonatomic,assign) UInt8 networkTransmitIntervalSteps;//defount is 0b1111=31.
 @property (nonatomic,assign,readonly) double networkTransmitInterval;//defount is (0b1111+1)*10=320ms.
+
+@property (nonatomic,assign) int segmentTXTimeout;//15
+@property (nonatomic,assign) int segmentRXTimeout;//15
 
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));

@@ -1,3 +1,24 @@
+/********************************************************************************************************
+* @file     TelinkSigMeshLib.h
+*
+* @brief    for TLSR chips
+*
+* @author     telink
+* @date     Sep. 30, 2010
+*
+* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+*           All rights reserved.
+*
+*             The information contained herein is confidential and proprietary property of Telink
+*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
+*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
+*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
+*           This heading MUST NOT be removed from this file.
+*
+*              Licensees are granted free, non-transferable use of the information in this
+*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+*
+*******************************************************************************************************/
 //
 //  TelinkSigMeshLib.h
 //  TelinkSigMeshLib
@@ -39,14 +60,12 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/SigPublish.h>
 #import <TelinkSigMeshLib/SigNetworkManager.h>
 #import <TelinkSigMeshLib/SigKeySet.h>
-#import <TelinkSigMeshLib/SigStorage.h>
 #import <TelinkSigMeshLib/SigHelper.h>
 #import <TelinkSigMeshLib/SigLowerTransportPdu.h>
 #import <TelinkSigMeshLib/CBUUID+Hex.h>
 #import <TelinkSigMeshLib/SigUpperTransportPdu.h>
 #import <TelinkSigMeshLib/SigAccessPdu.h>
 #import <TelinkSigMeshLib/SigMessageHandle.h>
-#import <TelinkSigMeshLib/SigModelDelegate.h>
 #import <TelinkSigMeshLib/SigUpperTransportLayer.h>
 #import <TelinkSigMeshLib/SigProxyConfigurationMessage.h>
 #import <TelinkSigMeshLib/SigControlMessage.h>
@@ -73,8 +92,6 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/OTAManager.h>
 #import <TelinkSigMeshLib/SigPublishManager.h>
 #import <TelinkSigMeshLib/MeshOTAManager.h>
-#import <TelinkSigMeshLib/TelinkHttpRequest.h>
+#import <TelinkSigMeshLib/TelinkHttpManager.h>
 #import <TelinkSigMeshLib/SigRemoteAddManager.h>
 #import <TelinkSigMeshLib/SigFastProvisionAddManager.h>
-
-#import <TelinkSigMeshLib/PublicHeader.h>

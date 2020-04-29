@@ -1,3 +1,24 @@
+/********************************************************************************************************
+* @file     SigRemoteAddManager.m
+*
+* @brief    for TLSR chips
+*
+* @author     telink
+* @date     Sep. 30, 2010
+*
+* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+*           All rights reserved.
+*
+*             The information contained herein is confidential and proprietary property of Telink
+*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
+*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
+*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
+*           This heading MUST NOT be removed from this file.
+*
+*              Licensees are granted free, non-transferable use of the information in this
+*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+*
+*******************************************************************************************************/
 //
 //  SigRemoteAddManager.m
 //  TelinkSigMeshLib
@@ -78,6 +99,9 @@
 }
 
 - (void)endSingleRemoteProvisionScan {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(endSingleRemoteProvisionScan) object:nil];
+    });
     [self endRemoteProvisionScan];
 }
 
@@ -85,7 +109,7 @@
 - (void)getRemoteProvisioningScanCapabilities {
     TeLogInfo(@"getRemoteProvisioningScanCapabilities address=0x%x",self.currentReportNodeAddress);
     __weak typeof(self) weakSelf = self;
-    [SDKLibCommand remoteProvisioningScanCapabilitiesGetWithDestination:self.currentReportNodeAddress resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanCapabilitiesStatus * _Nonnull responseMessage) {
+    [SDKLibCommand remoteProvisioningScanCapabilitiesGetWithDestination:self.currentReportNodeAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanCapabilitiesStatus * _Nonnull responseMessage) {
 //        if (responseMessage.activeScan) {
             weakSelf.currentMaxScannedItems = responseMessage.maxScannedItems;
             [weakSelf performSelector:@selector(startRemoteProvisioningScan) withObject:nil afterDelay:0.5];
@@ -96,7 +120,7 @@
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
-            TeLogInfo(@"nodeAddress 0x%x get remote provision scan Capabilities timeout, try next address.");
+            TeLogInfo(@"nodeAddress 0x%x get remote provision scan Capabilities timeout.",SigDataSource.share.unicastAddressOfConnected);
             [weakSelf endSingleRemoteProvisionScan];
         }
     }];
@@ -104,7 +128,7 @@
 
 // 2.remoteProvisioningScanStart
 - (void)startRemoteProvisioningScan {
-    [SDKLibCommand remoteProvisioningScanStartWithScannedItemsLimit:self.currentMaxScannedItems timeout:4.0 UUID:nil destination:kMeshAddress_allNodes resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanStatus * _Nonnull responseMessage) {
+    [SDKLibCommand remoteProvisioningScanStartWithDestination:kMeshAddress_allNodes scannedItemsLimit:self.currentMaxScannedItems timeout:4.0 UUID:nil retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanStatus * _Nonnull responseMessage) {
         TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -126,6 +150,12 @@
         model.reportNodeAddress = self.currentReportNodeAddress;
         if (![self.remoteScanRspModels containsObject:model]) {
             [self.remoteScanRspModels addObject:model];
+        } else {
+            NSInteger index = [self.remoteScanRspModels indexOfObject:model];
+            SigRemoteScanRspModel *oldModel = [self.remoteScanRspModels objectAtIndex:index];
+            if (oldModel.RSSI < model.RSSI) {
+                [self.remoteScanRspModels replaceObjectAtIndex:index withObject:model];
+            }
         }
         if (self.reportBlock) {
             self.reportBlock(model);

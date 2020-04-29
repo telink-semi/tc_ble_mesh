@@ -42,8 +42,8 @@
             filePath = "../TelinkSigMeshLib/TelinkSigMeshLib/Add devices Module/SigAddDeviceManager.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "263"
-            endingLineNumber = "263"
+            startingLineNumber = "272"
+            endingLineNumber = "272"
             landmarkName = "-startAddPeripheral:"
             landmarkType = "7">
          </BreakpointContent>

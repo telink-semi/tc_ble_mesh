@@ -39,13 +39,13 @@
 - (IBAction)clear:(UIButton *)sender {
     __weak typeof(self) weakSelf = self;
     [self.operation addOperationWithBlock:^{
-        NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:XHelp.logFilePath];
+        NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:XHelp.share.logFilePath];
         [handle truncateFileAtOffset:0];
         [handle closeFile];
         dispatch_async(dispatch_get_main_queue(), ^{
             weakSelf.contentText.text = nil;
         });
-        saveLogData(@"click clear");
+        TeLog(@"click clear");
     }];
 }
 
@@ -58,19 +58,17 @@
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateContent) name:NotifyUpdateLogContent object:nil];
     [self updateContent];
 }
 
 - (void)viewDidDisappear:(BOOL)animated{
     [super viewDidDisappear:animated];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:NotifyUpdateLogContent object:nil];
 }
 
 - (void)updateContent{
     __weak typeof(self) weakSelf = self;
     [self.operation addOperationWithBlock:^{
-        NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:XHelp.logFilePath];
+        NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:XHelp.share.logFilePath];
         NSData *data = [handle readDataToEndOfFile];
         NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
         dispatch_async(dispatch_get_main_queue(), ^{

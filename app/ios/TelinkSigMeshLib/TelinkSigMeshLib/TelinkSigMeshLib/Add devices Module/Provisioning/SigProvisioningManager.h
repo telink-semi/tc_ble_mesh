@@ -28,7 +28,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "SigProvisionigState.h"
 #import "SigAuthenticationModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -81,7 +80,6 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningResponse * _Nullable resp
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
 - (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
-
 
 /// founcation4: remote provision (SDK need connected provisioned node.)
 /// @param provisionAddress address of new device.
