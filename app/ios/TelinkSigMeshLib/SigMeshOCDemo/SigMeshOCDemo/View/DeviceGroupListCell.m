@@ -115,15 +115,9 @@
             return;
         }
         __block BOOL editSubSuccess = NO;
-        [DemoCommand editSubscribeListWithGroupAddress:weakSelf.groupAddress nodeAddress:weakSelf.model.address elementAddress:eleAddress isAdd:button.isSelected modelID:option successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
+        [DemoCommand editSubscribeListWithWithDestination:weakSelf.model.address isAdd:button.isSelected groupAddress:weakSelf.groupAddress elementAddress:eleAddress modelIdentifier:option companyIdentifier:0 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
             if (weakSelf.isEditing && responseMessage.elementAddress == eleAddress && responseMessage.address == weakSelf.groupAddress) {
-                UInt32 modelId = 0;
-                if (responseMessage.companyIdentifier == 0) {
-                    modelId = responseMessage.modelIdentifier;
-                } else {
-                    modelId = responseMessage.modelIdentifier | (responseMessage.companyIdentifier << 16);
-                }
-                if (modelId == option) {
+                if (responseMessage.modelIdentifier == option) {
                     if (responseMessage.status == SigConfigMessageStatus_success) {
                         editSubSuccess = YES;
                     } else {
@@ -169,7 +163,7 @@
     }
     self.isEditing = NO;
     [ShowTipsHandle.share hidden];
-    [SigDataSource.share editGroupIDsOfDevice:self.subToGroup.isSelected device_address:@(self.model.address) group_address:@(self.groupAddress)];
+    [SigDataSource.share editGroupIDsOfDevice:self.subToGroup.isSelected unicastAddress:@(self.model.address) groupAddress:@(self.groupAddress)];
     self.subToGroup.selected = self.subToGroup.isSelected;
 }
 

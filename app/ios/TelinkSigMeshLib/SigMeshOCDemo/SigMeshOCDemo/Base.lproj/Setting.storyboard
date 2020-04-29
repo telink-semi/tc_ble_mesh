@@ -1974,8 +1974,8 @@
                                     <action selector="clickCopyAppKey:" destination="1B2-IT-sMD" eventType="touchUpInside" id="wrD-QK-daQ"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="fast bind" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0OI-oX-QRz">
-                                <rect key="frame" x="10" y="130" width="56.5" height="20"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="fast bind(Default Bound)" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0OI-oX-QRz">
+                                <rect key="frame" x="10" y="130" width="159" height="20"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="20" id="piN-7V-xyc"/>
                                 </constraints>

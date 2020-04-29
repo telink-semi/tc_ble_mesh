@@ -531,6 +531,21 @@
     return self;
 }
 
+- (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationSet;
+        if ([SigHelper.share isVirtualAddress:[LibTools uint16From16String:publish.address]]) {
+            // ConfigModelPublicationVirtualAddressSet should be used instead.
+            return nil;
+        }
+        _publish = publish;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+        self.companyIdentifier = companyIdentifier;
+    }
+    return self;
+}
+
 - (instancetype)initWithPublish:(SigPublish *)publish toModel:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelPublicationSet;
@@ -1441,15 +1456,25 @@
     return self;
 }
 
-- (instancetype)initWithModel:(SigModelIDModel *)model {
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelPublicationGet;
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+        self.companyIdentifier = companyIdentifier;
     }
     return self;
 }
+
+//- (instancetype)initWithModel:(SigModelIDModel *)model {
+//    if (self = [super init]) {
+//        self.opCode = SigOpCode_configModelPublicationGet;
+//        self.elementAddress = model.parentElement.unicastAddress;
+//        self.modelIdentifier = model.modelIdentifier;
+//        self.companyIdentifier = model.companyIdentifier;
+//    }
+//    return self;
+//}
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
@@ -1640,6 +1665,21 @@
 - (instancetype)init {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelPublicationVirtualAddressSet;
+    }
+    return self;
+}
+
+- (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelPublicationVirtualAddressSet;
+        if ([SigHelper.share isVirtualAddress:[LibTools uint16From16String:_publish.address]]) {
+            // ConfigModelPublicationVirtualAddressSet should be used instead.
+            return nil;
+        }
+        _publish = publish;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+        self.companyIdentifier = companyIdentifier;
     }
     return self;
 }
@@ -1857,6 +1897,21 @@
     return self;
 }
 
+- (instancetype)initWithGroupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionDelete;
+        if (![SigHelper.share isGroupAddress:groupAddress]) {
+            // ConfigModelSubscriptionVirtualAddressAdd should be used instead.
+            return nil;
+        }
+        _address = groupAddress;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+        self.companyIdentifier = companyIdentifier;
+    }
+    return self;
+}
+
 - (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionDelete;
@@ -1941,6 +1996,16 @@
     return self;
 }
 
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionDeleteAll;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+        self.companyIdentifier = companyIdentifier;
+    }
+    return self;
+}
+
 - (instancetype)initFromModel:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionDeleteAll;
@@ -2011,6 +2076,21 @@
 - (instancetype)init {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionOverwrite;
+    }
+    return self;
+}
+
+- (instancetype)initWithGroupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionOverwrite;
+        if (![SigHelper.share isGroupAddress:groupAddress]) {
+            // ConfigModelSubscriptionVirtualAddressAdd should be used instead.
+            return nil;
+        }
+        _address = groupAddress;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+        self.companyIdentifier = companyIdentifier;
     }
     return self;
 }
@@ -2261,6 +2341,21 @@
     return self;
 }
 
+- (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressAdd;
+        if (!virtualLabel) {
+            // ConfigModelSubscriptionAdd should be used instead.
+            return nil;
+        }
+        _virtualLabel = virtualLabel;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+        self.companyIdentifier = companyIdentifier;
+    }
+    return self;
+}
+
 - (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionVirtualAddressAdd;
@@ -2343,6 +2438,21 @@
     return self;
 }
 
+- (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressDelete;
+        if (!virtualLabel) {
+            // ConfigModelSubscriptionAdd should be used instead.
+            return nil;
+        }
+        _virtualLabel = virtualLabel;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+        self.companyIdentifier = companyIdentifier;
+    }
+    return self;
+}
+
 - (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionVirtualAddressDelete;
@@ -2421,6 +2531,21 @@
 - (instancetype)init {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionVirtualAddressOverwrite;
+    }
+    return self;
+}
+
+- (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelSubscriptionVirtualAddressOverwrite;
+        if (!virtualLabel) {
+            // ConfigModelSubscriptionAdd should be used instead.
+            return nil;
+        }
+        _virtualLabel = virtualLabel;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+        self.companyIdentifier = companyIdentifier;
     }
     return self;
 }
@@ -2821,6 +2946,19 @@
     return self;
 }
 
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelSubscriptionGet;
+        if (companyIdentifier != 0) {
+            // Use ConfigVendorModelSubscriptionGet instead.
+            return nil;
+        }
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+    }
+    return self;
+}
+
 - (instancetype)initOfModel:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configSIGModelSubscriptionGet;
@@ -2950,6 +3088,20 @@
 - (instancetype)init {
     if (self = [super init]) {
         self.opCode = SigOpCode_configVendorModelSubscriptionGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelSubscriptionGet;
+        if (companyIdentifier == 0) {
+            // Use ConfigSIGModelSubscriptionGet instead.
+            return nil;
+        }
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = modelIdentifier;
+        self.companyIdentifier = companyIdentifier;
     }
     return self;
 }
@@ -3269,6 +3421,17 @@
     return self;
 }
 
+- (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppUnbind;
+        self.applicationKeyIndex = applicationKeyIndex;
+        _elementAddress = elementAddress;
+        _modelIdentifier = modelIdentifier;
+        _companyIdentifier = companyIdentifier;
+    }
+    return self;
+}
+
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelAppUnbind;
@@ -3349,6 +3512,15 @@
     return self;
 }
 
+- (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex networkKeyData:(NSData *)networkKeyData {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyAdd;
+        self.networkKeyIndex = networkKeyIndex;
+        _key = networkKeyData;
+    }
+    return self;
+}
+
 - (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey {
     if (self = [super init]) {
         self.opCode = SigOpCode_configNetKeyAdd;
@@ -3394,6 +3566,14 @@
 - (instancetype)init {
     if (self = [super init]) {
         self.opCode = SigOpCode_configNetKeyDelete;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyDelete;
+        self.networkKeyIndex = networkKeyIndex;
     }
     return self;
 }
@@ -3568,6 +3748,15 @@
 - (instancetype)init {
     if (self = [super init]) {
         self.opCode = SigOpCode_configNetKeyUpdate;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex networkKeyData:(NSData *)networkKeyData {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configNetKeyUpdate;
+        self.networkKeyIndex = networkKeyIndex;
+        _key = networkKeyData;
     }
     return self;
 }
@@ -3827,6 +4016,20 @@
     return self;
 }
 
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configSIGModelAppGet;
+        if (companyIdentifier == 0) {
+            self.elementAddress = elementAddress;
+            self.modelIdentifier = modelIdentifier;
+        } else {
+            // Use ConfigVendorModelAppGet instead.
+            return nil;
+        }
+    }
+    return self;
+}
+
 - (instancetype)initWithModel:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configSIGModelAppGet;
@@ -3957,6 +4160,21 @@
 - (instancetype)init {
     if (self = [super init]) {
         self.opCode = SigOpCode_configVendorModelAppGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configVendorModelAppGet;
+        if (companyIdentifier == 0) {
+            self.elementAddress = elementAddress;
+            self.modelIdentifier = modelIdentifier;
+            self.companyIdentifier = companyIdentifier;
+
+        } else {
+            return nil;
+        }
     }
     return self;
 }

@@ -47,7 +47,7 @@
     if (SigBearer.share.isOpen) {
         [self kickoutAction];
     } else {
-        [SigDataSource.share removeModelWithDeviceAddress:self.model.address];
+        [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
         [self pop];
     }
 }
@@ -80,6 +80,10 @@
             }
             weakSelf.hasClickKeyBind = NO;
         }];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(showKeyBindFail) object:nil];
+            [self performSelector:@selector(showKeyBindFail) withObject:nil afterDelay:10.0];
+        });
     }
     
 }
@@ -100,7 +104,7 @@
 - (void)kickoutConnectPeripheralWithUUIDTimeout{
     self.hasClickKickout = NO;
     [ShowTipsHandle.share hidden];
-    [SigDataSource.share removeModelWithDeviceAddress:self.model.address];
+    [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
     [self pop];
 }
 
@@ -129,7 +133,7 @@
 - (void)kickoutAction{
     TeLogDebug(@"send kickout.");
     __weak typeof(self) weakSelf = self;
-    [DemoCommand kickoutDevice:self.model.address successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
+    [DemoCommand kickoutDevice:self.model.address retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
 
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
         if (isResponseAll) {
@@ -137,7 +141,7 @@
         } else {
             TeLogDebug(@"kickout fail.");
         }
-        [SigDataSource.share removeModelWithDeviceAddress:weakSelf.model.address];
+        [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:weakSelf.model.address];
         [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
         [weakSelf pop];
     }];

@@ -7,28 +7,24 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.ExceptionBreakpoint">
          <BreakpointContent
-            uuid = "5D5E40CB-7A7A-48E0-9082-3B989C0458F4"
+            uuid = "B7B4D0A3-B5AA-42D3-9CC5-090F5D67E670"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
+            breakpointStackSelectionBehavior = "1"
             scope = "1"
             stopOnStyle = "0">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         BreakpointExtensionID = "Xcode.Breakpoint.RuntimeIssueBreakpoint">
          <BreakpointContent
-            uuid = "7E32795F-292E-4C8E-B4BC-CD119E0F9DD3"
+            uuid = "87D0789E-F9FC-4C77-B1F6-433B6115D99A"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "../SigMeshOC/SigMeshOC/src code/SIG_MESH_LIB/ble_lt_mesh/proj_lib/mesh_crypto/mesh_crypto.c"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1805"
-            endingLineNumber = "1805"
-            landmarkName = "online_st_gatt_enc_dec(report, len, enc_flag)"
-            landmarkType = "9">
+            breakpointStackSelectionBehavior = "1"
+            type = "4">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

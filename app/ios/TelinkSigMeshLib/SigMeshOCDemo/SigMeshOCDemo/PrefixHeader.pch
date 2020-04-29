@@ -42,15 +42,6 @@
 //导入TelinkSigMeshLib.xcodeproj工程
 #import "TelinkSigMeshLib.h"
 
-//#import "Model.h"
-//#import "SigDataSource.h"
-//#import "Bluetooth.h"
-//#import "SDKLibCommand.h"
-//#import "BTConst.h"
-//#import "XHelp.h"
-//#import "LibTools.h"
-
 #import "DemoCommand.h"
-//#import "OTAManager.h"
 
 #endif /* PrefixHeader_pch */

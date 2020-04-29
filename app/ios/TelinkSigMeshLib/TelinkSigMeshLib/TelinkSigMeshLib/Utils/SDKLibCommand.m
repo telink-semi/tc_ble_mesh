@@ -28,7 +28,6 @@
 //
 
 #import "SDKLibCommand.h"
-//#import "SigMeshLib.h"
 
 @interface SDKLibCommand ()
 @property (nonatomic,strong) NSTimer *busyTimer;
@@ -43,6 +42,8 @@
         _responseSourceArray = [NSMutableArray array];
         _timeout = kSDKLibCommandTimeout;
         _hadRetryCount = 0;
+        _needTid = NO;
+        _tid = 0;
         _netkeyA = SigDataSource.share.curNetkeyModel;
         _appkeyA = SigDataSource.share.curAppkeyModel;
         _ivIndexA = SigDataSource.share.curNetkeyModel.ivIndex;
@@ -51,573 +52,568 @@
 }
 
 
-
 #pragma mark - config（open API）
-/**
- function 1:AUTO if you need do provision , you should call this method, and it'll call back what you need
- 
- @param address address of new device
- @param networkKey network key, which provsion need, you can see it as password of the mesh
- @param netkeyIndex netkey index
- @param appkeyModel appkey model
- @param unicastAddress address of remote device
- @param uuid uuid of remote device
- @param type KeyBindTpye_Normal是普通添加模式，KeyBindTpye_Quick是快速添加模式
- @param isAuto 添加完成一个设备后，是否自动扫描添加下一个设备
- @param provisionSuccess call back when a device provision successful
- @param provisionFail call back when a device provision fail
- @param keyBindSuccess call back when a device keybind successful
- @param keyBindFail call back when a device keybind fail
- @param finish finish add the available devices list to the mesh
- */
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
-    [SigAddDeviceManager.share startAddDeviceWithNextAddress:address networkKey:networkKey netkeyIndex:netkeyIndex appkeyModel:appkeyModel unicastAddress:unicastAddress uuid:uuid keyBindType:type productID:productID cpsData:cpsData isAutoAddNextDevice:isAuto provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail finish:finish];
-}
 
-/**
-function 1:special if you need do provision , you should call this method, and it'll call back what you need
-
-@param address address of new device
-@param networkKey network key, which provsion need, you can see it as password of the mesh
-@param netkeyIndex netkey index
-@param peripheral device need add to mesh
-@param provisionType ProvisionTpye_NoOOB or ProvisionTpye_StaticOOB.
-@param staticOOBData oob for ProvisionTpye_StaticOOB.
-@param type KeyBindTpye_Normal是普通添加模式，KeyBindTpye_Quick是快速添加模式
-@param provisionSuccess call back when a device provision successful
-@param provisionFail call back when a device provision fail
-@param keyBindSuccess call back when a device keybind successful
-@param keyBindFail call back when a device keybind fail
-*/
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail{
-    [SigAddDeviceManager.share startAddDeviceWithNextAddress:(UInt16)address networkKey:networkKey netkeyIndex:netkeyIndex appkeyModel:appkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:type productID:productID cpsData:cpsData provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail];
-}
-
-+ (SigMessageHandle *)configAppKeyAddWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toAddress:(UInt16)address successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configAppKeyAddWithSigAppkeyModel:appkeyModel toNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configAppKeyAddWithDestination:(UInt16)destination appkeyModel:(SigAppkeyModel *)appkeyModel retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configAppKeyAddWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toNode:(SigNodeModel *)node successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigAppKeyAdd *config = [[SigConfigAppKeyAdd alloc] initWithApplicationKey:appkeyModel];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseAppKeyStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configAppKeyUpdateWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toAddress:(UInt16)address successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configAppKeyUpdateWithSigAppkeyModel:appkeyModel toNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configAppKeyUpdateWithDestination:(UInt16)destination appkeyModel:(SigAppkeyModel *)appkeyModel retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configAppKeyUpdateWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toNode:(SigNodeModel *)node successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigAppKeyUpdate *config = [[SigConfigAppKeyUpdate alloc] initWithApplicationKey:appkeyModel];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseAppKeyStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configAppKeyDeleteWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toAddress:(UInt16)address successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configAppKeyDeleteWithSigAppkeyModel:appkeyModel toNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configAppKeyDeleteWithDestination:(UInt16)destination appkeyModel:(SigAppkeyModel *)appkeyModel retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configAppKeyDeleteWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toNode:(SigNodeModel *)node successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigAppKeyDelete *config = [[SigConfigAppKeyDelete alloc] initWithApplicationKey:appkeyModel];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseAppKeyStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configAppKeyGetWithNetworkKeyIndex:(UInt16)networkKeyIndex toAddress:(UInt16)address successCallback:(responseConfigAppKeyListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configAppKeyGetWithNetworkKeyIndex:networkKeyIndex toNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configAppKeyGetWithDestination:(UInt16)destination networkKeyIndex:(UInt16)networkKeyIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigAppKeyListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configAppKeyGetWithNetworkKeyIndex:(UInt16)networkKeyIndex toNode:(SigNodeModel *)node successCallback:(responseConfigAppKeyListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigAppKeyGet *config = [[SigConfigAppKeyGet alloc] initWithNetworkKeyIndex:networkKeyIndex];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseAppKeyListCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configBeaconGetWithAddress:(UInt16)address successCallback:(responseConfigBeaconStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configBeaconGetWithNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configBeaconGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigBeaconStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configBeaconGetWithNode:(SigNodeModel *)node successCallback:(responseConfigBeaconStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigBeaconGet *config = [[SigConfigBeaconGet alloc] init];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseBeaconStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configBeaconSetWithSigSecureNetworkBeaconState:(SigSecureNetworkBeaconState)secureNetworkBeaconState toAddress:(UInt16)address successCallback:(responseConfigBeaconStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configBeaconSetWithSigSecureNetworkBeaconState:secureNetworkBeaconState toNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configBeaconSetWithDestination:(UInt16)destination secureNetworkBeaconState:(SigSecureNetworkBeaconState)secureNetworkBeaconState retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigBeaconStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configBeaconSetWithSigSecureNetworkBeaconState:(SigSecureNetworkBeaconState)secureNetworkBeaconState toNode:(SigNodeModel *)node successCallback:(responseConfigBeaconStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigBeaconSet *config = [[SigConfigBeaconSet alloc] initWithEnable:secureNetworkBeaconState];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseBeaconStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configCompositionDataGetWithAddress:(UInt16)address successCallback:(responseConfigCompositionDataStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configCompositionDataGetWithNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configCompositionDataGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigCompositionDataStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configCompositionDataGetWithNode:(SigNodeModel *)node successCallback:(responseConfigCompositionDataStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigCompositionDataGet *config = [[SigConfigCompositionDataGet alloc] initWithPage:0xFF];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseCompositionDataStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configDefaultTtlGetWithAddress:(UInt16)address successCallback:(responseConfigDefaultTtlStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configDefaultTtlGetWithNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configDefaultTtlGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigDefaultTtlStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configDefaultTtlGetWithNode:(SigNodeModel *)node successCallback:(responseConfigDefaultTtlStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigDefaultTtlGet *config = [[SigConfigDefaultTtlGet alloc] init];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseDefaultTtlStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configDefaultTtlSetWithTtl:(UInt8)ttl toAddress:(UInt16)address successCallback:(responseConfigDefaultTtlStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configDefaultTtlSetWithTtl:ttl toNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configDefaultTtlSetWithDestination:(UInt16)destination ttl:(UInt8)ttl retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigDefaultTtlStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configDefaultTtlSetWithTtl:(UInt8)ttl toNode:(SigNodeModel *)node successCallback:(responseConfigDefaultTtlStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigDefaultTtlSet *config = [[SigConfigDefaultTtlSet alloc] initWithTtl:ttl];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseDefaultTtlStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configFriendGetWithAddress:(UInt16)address successCallback:(responseConfigFriendStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configFriendGetWithNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configFriendGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigFriendStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configFriendGetWithNode:(SigNodeModel *)node successCallback:(responseConfigFriendStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigFriendGet *config = [[SigConfigFriendGet alloc] init];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFriendStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configFriendSetWithSigNodeFeaturesState:(SigNodeFeaturesState)nodeFeaturesState toAddress:(UInt16)address successCallback:(responseConfigFriendStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configFriendSetWithSigNodeFeaturesState:nodeFeaturesState toNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configFriendSetWithDestination:(UInt16)destination nodeFeaturesState:(SigNodeFeaturesState)nodeFeaturesState retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigFriendStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configFriendSetWithSigNodeFeaturesState:(SigNodeFeaturesState)nodeFeaturesState toNode:(SigNodeModel *)node successCallback:(responseConfigFriendStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigFriendSet *config = [[SigConfigFriendSet alloc] initWithEnable:nodeFeaturesState];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFriendStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configGATTProxyGetWithAddress:(UInt16)address successCallback:(responseConfigGATTProxyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configGATTProxyGetWithNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configGATTProxyGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigGATTProxyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configGATTProxyGetWithNode:(SigNodeModel *)node successCallback:(responseConfigGATTProxyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigGATTProxyGet *config = [[SigConfigGATTProxyGet alloc] init];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseGATTProxyStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configGATTProxySetWithSigNodeGATTProxyState:(SigNodeGATTProxyState)nodeGATTProxyState toAddress:(UInt16)address successCallback:(responseConfigGATTProxyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configGATTProxySetWithSigNodeGATTProxyState:nodeGATTProxyState toNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configGATTProxySetWithDestination:(UInt16)destination nodeGATTProxyState:(SigNodeGATTProxyState)nodeGATTProxyState retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigGATTProxyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configGATTProxySetWithSigNodeGATTProxyState:(SigNodeGATTProxyState)nodeGATTProxyState toNode:(SigNodeModel *)node successCallback:(responseConfigGATTProxyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigGATTProxySet *config = [[SigConfigGATTProxySet alloc] initWithEnable:nodeGATTProxyState];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseGATTProxyStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configModelPublicationGetWithModelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configModelPublicationGetWithDestination:(UInt16)destination elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelPublicationGet *config = [[SigConfigModelPublicationGet alloc] initWithModel:modelIDModel];
+    SigConfigModelPublicationGet *config = [[SigConfigModelPublicationGet alloc] initWithElementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseModelPublicationStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configModelPublicationSetWithSigPublish:(SigPublish *)publish modelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configModelPublicationSetWithDestination:(UInt16)destination publish:(SigPublish *)publish elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelPublicationSet *config = [[SigConfigModelPublicationSet alloc] initWithPublish:publish toModel:modelIDModel];
+    SigConfigModelPublicationSet *config = [[SigConfigModelPublicationSet alloc] initWithPublish:publish toElementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseModelPublicationStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configModelPublicationSetDisableWithModelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configModelPublicationVirtualAddressSetWithDestination:(UInt16)destination publish:(SigPublish *)publish elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelPublicationSet *config = [[SigConfigModelPublicationSet alloc] initWithDisablePublicationForModel:modelIDModel];
+    SigConfigModelPublicationVirtualAddressSet *config = [[SigConfigModelPublicationVirtualAddressSet alloc] initWithPublish:publish toElementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseModelPublicationStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
-}
-
-+ (SigMessageHandle *)configModelPublicationVirtualAddressSetWithSigPublish:(SigPublish *)publish modelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelPublicationVirtualAddressSet *config = [[SigConfigModelPublicationVirtualAddressSet alloc] initWithPublish:publish toModel:modelIDModel];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseModelPublicationStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
 /*
 ---> Sending - Access PDU, source:(0001)->destination: (0008) Op Code: (0000801B), parameters: (080000C000FF), accessPdu=801B080000C000FF
 <--- Response - Access PDU, source:(0008)->destination: (0001) Op Code: (0000801F), parameters: (00080000C000FF), accessPdu=801F00080000C000FF receieved (decrypted using key: <SigDeviceKeySet: 0x282840300>)
 */
-+ (SigMessageHandle *)configModelSubscriptionAddWithGroupAddress:(UInt16)groupAddress toNodeAddress:(UInt16)nodeAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configModelSubscriptionAddWithDestination:(UInt16)destination toGroupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigModelSubscriptionAdd *config = [[SigConfigModelSubscriptionAdd alloc] initWithGroupAddress:groupAddress toNodeElementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseModelSubscriptionStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = 1;
-    command.retryCount = 2;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:nodeAddress command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configModelSubscriptionAddWithSigGroupModel:(SigGroupModel *)groupModel modelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelSubscriptionAdd *config = [[SigConfigModelSubscriptionAdd alloc] initWithGroup:groupModel toModel:modelIDModel];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseModelSubscriptionStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
-}
-
-+ (SigMessageHandle *)configModelSubscriptionDeleteWithSigGroupModel:(SigGroupModel *)groupModel modelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelSubscriptionDelete *config = [[SigConfigModelSubscriptionDelete alloc] initWithGroup:groupModel fromModel:modelIDModel];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseModelSubscriptionStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
-}
-
-+ (SigMessageHandle *)configModelSubscriptionDeleteAllWithSigModelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelSubscriptionDeleteAll *config = [[SigConfigModelSubscriptionDeleteAll alloc] initFromModel:modelIDModel];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseModelSubscriptionStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
-}
-
-+ (SigMessageHandle *)configModelSubscriptionOverwriteWithSigGroupModel:(SigGroupModel *)groupModel modelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelSubscriptionOverwrite *config = [[SigConfigModelSubscriptionOverwrite alloc] initWithGroup:groupModel toModel:modelIDModel];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseModelSubscriptionStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
-}
-
-+ (SigMessageHandle *)configModelSubscriptionVirtualAddressAddWithSigGroupModel:(SigGroupModel *)groupModel modelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelSubscriptionVirtualAddressAdd *config = [[SigConfigModelSubscriptionVirtualAddressAdd alloc] initWithGroup:groupModel toModel:modelIDModel];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseModelSubscriptionStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
-}
-
-+ (SigMessageHandle *)configModelSubscriptionVirtualAddressDeleteWithSigGroupModel:(SigGroupModel *)groupModel modelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelSubscriptionVirtualAddressDelete *config = [[SigConfigModelSubscriptionVirtualAddressDelete alloc] initWithGroup:groupModel fromModel:modelIDModel];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseModelSubscriptionStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
-}
-
-+ (SigMessageHandle *)configModelSubscriptionVirtualAddressOverwriteWithSigGroupModel:(SigGroupModel *)groupModel modelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelSubscriptionVirtualAddressOverwrite *config = [[SigConfigModelSubscriptionVirtualAddressOverwrite alloc] initWithGroup:groupModel fromModel:modelIDModel];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseModelSubscriptionStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
-}
-
-+ (SigMessageHandle *)configNetworkTransmitGetWithAddress:(UInt16)address successCallback:(responseConfigNetworkTransmitStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configNetworkTransmitGetWithNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configModelSubscriptionDeleteWithDestination:(UInt16)destination groupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigModelSubscriptionDelete *config = [[SigConfigModelSubscriptionDelete alloc] initWithGroupAddress:groupAddress elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseModelSubscriptionStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configNetworkTransmitGetWithNode:(SigNodeModel *)node successCallback:(responseConfigNetworkTransmitStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configModelSubscriptionDeleteAllWithDestination:(UInt16)destination elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigModelSubscriptionDeleteAll *config = [[SigConfigModelSubscriptionDeleteAll alloc] initWithElementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseModelSubscriptionStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)configModelSubscriptionOverwriteWithDestination:(UInt16)destination groupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigModelSubscriptionOverwrite *config = [[SigConfigModelSubscriptionOverwrite alloc] initWithGroupAddress:groupAddress elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseModelSubscriptionStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)configModelSubscriptionVirtualAddressAddWithDestination:(UInt16)destination virtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigModelSubscriptionVirtualAddressAdd *config = [[SigConfigModelSubscriptionVirtualAddressAdd alloc] initWithVirtualLabel:virtualLabel elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseModelSubscriptionStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)configModelSubscriptionVirtualAddressDeleteWithDestination:(UInt16)destination virtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigModelSubscriptionVirtualAddressDelete *config = [[SigConfigModelSubscriptionVirtualAddressDelete alloc] initWithVirtualLabel:virtualLabel elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseModelSubscriptionStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)configModelSubscriptionVirtualAddressOverwriteWithDestination:(UInt16)destination virtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigModelSubscriptionVirtualAddressOverwrite *config = [[SigConfigModelSubscriptionVirtualAddressOverwrite alloc] initWithVirtualLabel:virtualLabel elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseModelSubscriptionStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)configNetworkTransmitGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNetworkTransmitStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigNetworkTransmitGet *config = [[SigConfigNetworkTransmitGet alloc] init];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseNetworkTransmitStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configNetworkTransmitSetWithAddress:(UInt16)address networkTransmitCount:(UInt8)networkTransmitCount networkTransmitIntervalSteps:(UInt8)networkTransmitIntervalSteps successCallback:(responseConfigNetworkTransmitStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configNetworkTransmitSetWithNode:node networkTransmitCount:networkTransmitCount networkTransmitIntervalSteps:networkTransmitIntervalSteps successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configNetworkTransmitSetWithDestination:(UInt16)destination networkTransmitCount:(UInt8)networkTransmitCount networkTransmitIntervalSteps:(UInt8)networkTransmitIntervalSteps retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNetworkTransmitStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configNetworkTransmitSetWithNode:(SigNodeModel *)node networkTransmitCount:(UInt8)networkTransmitCount networkTransmitIntervalSteps:(UInt8)networkTransmitIntervalSteps successCallback:(responseConfigNetworkTransmitStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigNetworkTransmitSet *config = [[SigConfigNetworkTransmitSet alloc] initWithCount:networkTransmitCount steps:networkTransmitIntervalSteps];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseNetworkTransmitStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configRelayGetWithAddress:(UInt16)address successCallback:(responseConfigRelayStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configRelayGetWithNode:node successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configRelayGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigRelayStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configRelayGetWithNode:(SigNodeModel *)node successCallback:(responseConfigRelayStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigRelayGet *config = [[SigConfigRelayGet alloc] init];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseRelayStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configRelaySetWithAddress:(UInt16)address relay:(SigNodeRelayState)relay networkTransmitCount:(UInt8)networkTransmitCount networkTransmitIntervalSteps:(UInt8)networkTransmitIntervalSteps successCallback:(responseConfigRelayStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configRelaySetWithNode:node relay:relay networkTransmitCount:networkTransmitCount networkTransmitIntervalSteps:networkTransmitIntervalSteps successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configRelaySetWithDestination:(UInt16)destination relay:(SigNodeRelayState)relay networkTransmitCount:(UInt8)networkTransmitCount networkTransmitIntervalSteps:(UInt8)networkTransmitIntervalSteps retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigRelayStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configRelaySetWithNode:(SigNodeModel *)node relay:(SigNodeRelayState)relay networkTransmitCount:(UInt8)networkTransmitCount networkTransmitIntervalSteps:(UInt8)networkTransmitIntervalSteps successCallback:(responseConfigRelayStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigRelaySet *config = [[SigConfigRelaySet alloc] initWithCount:networkTransmitCount steps:networkTransmitIntervalSteps];
     config.state = relay;
@@ -625,240 +621,301 @@ function 1:special if you need do provision , you should call this method, and i
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseRelayStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configSIGModelSubscriptionGetWithModelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigSIGModelSubscriptionListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configSIGModelSubscriptionGetWithDestination:(UInt16)destination elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigSIGModelSubscriptionListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigSIGModelSubscriptionGet *config = [[SigConfigSIGModelSubscriptionGet alloc] initOfModel:modelIDModel];
+    SigConfigSIGModelSubscriptionGet *config = [[SigConfigSIGModelSubscriptionGet alloc] initWithElementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSIGModelSubscriptionListCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configVendorModelSubscriptionGetWithModelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigVendorModelSubscriptionListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configVendorModelSubscriptionGetWithDestination:(UInt16)destination elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigVendorModelSubscriptionListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigVendorModelSubscriptionGet *config = [[SigConfigVendorModelSubscriptionGet alloc] initOfModel:modelIDModel];
+    SigConfigVendorModelSubscriptionGet *config = [[SigConfigVendorModelSubscriptionGet alloc] initWithElementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseVendorModelSubscriptionListCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configModelAppBindWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier toDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configModelAppBindWithDestination:(UInt16)destination applicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigModelAppBind *config = [[SigConfigModelAppBind alloc] initWithApplicationKeyIndex:applicationKeyIndex elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseModelAppStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
     command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
     return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configModelAppBindWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toModelIDModel:(SigModelIDModel *)modelIDModel toNode:(SigNodeModel *)node successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configModelAppUnbindWithDestination:(UInt16)destination applicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelAppBind *config = [[SigConfigModelAppBind alloc] initWithApplicationKey:appkeyModel toModel:modelIDModel];
+    SigConfigModelAppUnbind *config = [[SigConfigModelAppUnbind alloc] initWithApplicationKeyIndex:applicationKeyIndex elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseModelAppStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configModelAppUnbindWithSigAppkeyModel:(SigAppkeyModel *)appkeyModel toModelIDModel:(SigModelIDModel *)modelIDModel toNode:(SigNodeModel *)node successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelAppUnbind *config = [[SigConfigModelAppUnbind alloc] initWithApplicationKey:appkeyModel toModel:modelIDModel];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseModelAppStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
-}
-
-+ (SigMessageHandle *)configNetKeyAddWithAddress:(UInt16)address networkKey:(SigNetkeyModel *)networkKey successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configNetKeyAddWithNode:node networkKey:networkKey successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configNetKeyAddWithDestination:(UInt16)destination NetworkKeyIndex:(UInt16)networkKeyIndex networkKeyData:(NSData *)networkKeyData retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configNetKeyAddWithNode:(SigNodeModel *)node networkKey:(SigNetkeyModel *)networkKey successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigNetKeyAdd *config = [[SigConfigNetKeyAdd alloc] initWithNetworkKey:networkKey];
+    SigConfigNetKeyAdd *config = [[SigConfigNetKeyAdd alloc] initWithNetworkKeyIndex:networkKeyIndex networkKeyData:networkKeyData];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseNetKeyStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configNetKeyDeleteWithAddress:(UInt16)address networkKey:(SigNetkeyModel *)networkKey successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configNetKeyDeleteWithNode:node networkKey:networkKey successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configNetKeyDeleteWithDestination:(UInt16)destination NetworkKeyIndex:(UInt16)networkKeyIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configNetKeyDeleteWithNode:(SigNodeModel *)node networkKey:(SigNetkeyModel *)networkKey successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigNetKeyDelete *config = [[SigConfigNetKeyDelete alloc] initWithNetworkKey:networkKey];
+    SigConfigNetKeyDelete *config = [[SigConfigNetKeyDelete alloc] initWithNetworkKeyIndex:networkKeyIndex];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseNetKeyStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configNetKeyGetWithAddress:(UInt16)address networkKey:(SigNetkeyModel *)networkKey successCallback:(responseConfigNetKeyListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configNetKeyGetWithNode:node networkKey:networkKey successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configNetKeyGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNetKeyListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configNetKeyGetWithNode:(SigNodeModel *)node networkKey:(SigNetkeyModel *)networkKey successCallback:(responseConfigNetKeyListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigNetKeyGet *config = [[SigConfigNetKeyGet alloc] init];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseNetKeyListCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configNetKeyUpdateWithAddress:(UInt16)address networkKey:(SigNetkeyModel *)networkKey successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-    if (node) {
-        return [self configNetKeyUpdateWithNode:node networkKey:networkKey successCallback:successCallback resultCallback:resultCallback];
-    } else {
-        TeLogError(@"there has not a node that address is 0x%x",address);
++ (SigMessageHandle *)configNetKeyUpdateWithDestination:(UInt16)destination networkKeyIndex:(UInt16)networkKeyIndex networkKeyData:(NSData *)networkKeyData retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
         if (resultCallback) {
-            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",address] code:0 userInfo:nil];
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
             resultCallback(NO,error);
         }
         return nil;
     }
-}
-
-+ (SigMessageHandle *)configNetKeyUpdateWithNode:(SigNodeModel *)node networkKey:(SigNetkeyModel *)networkKey successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigNetKeyUpdate *config = [[SigConfigNetKeyUpdate alloc] initWithNetworkKey:networkKey];
+    SigConfigNetKeyUpdate *config = [[SigConfigNetKeyUpdate alloc] initWithNetworkKeyIndex:networkKeyIndex networkKeyData:networkKeyData];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseNetKeyStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configNodeIdentityGetWithDestination:(UInt16)destination netKeyIndex:(UInt16)netKeyIndex resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseConfigNodeIdentityStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configNodeIdentityGetWithDestination:(UInt16)destination netKeyIndex:(UInt16)netKeyIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNodeIdentityStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SigConfigNodeIdentityGet *config = [[SigConfigNodeIdentityGet alloc] initWithNetKeyIndex:netKeyIndex];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseNodeIdentityStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configNodeIdentitySetWithDestination:(UInt16)destination netKeyIndex:(UInt16)netKeyIndex identity:(SigNodeIdentityState)identity resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseConfigNodeIdentityStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configNodeIdentitySetWithDestination:(UInt16)destination netKeyIndex:(UInt16)netKeyIndex identity:(SigNodeIdentityState)identity retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNodeIdentityStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SigConfigNodeIdentitySet *config = [[SigConfigNodeIdentitySet alloc] initWithNetKeyIndex:netKeyIndex identity:identity];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseNodeIdentityStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)resetNodeWithNodeAddress:(UInt16)nodeAddress successCallback:(responseConfigNodeResetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)resetNodeWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNodeResetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigNodeReset *config = [[SigConfigNodeReset alloc] init];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseNodeResetStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:nodeAddress command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)resetNode:(SigNodeModel *)node successCallback:(responseConfigNodeResetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configSIGModelAppGetWithDestination:(UInt16)destination elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigSIGModelAppListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigNodeReset *config = [[SigConfigNodeReset alloc] init];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseNodeResetStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:node.address command:command];
-}
-
-+ (SigMessageHandle *)configSIGModelAppGetWithModelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigSIGModelAppListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigSIGModelAppGet *config = [[SigConfigSIGModelAppGet alloc] initWithModel:modelIDModel];
+    SigConfigSIGModelAppGet *config = [[SigConfigSIGModelAppGet alloc] initWithElementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSIGModelAppListCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
-+ (SigMessageHandle *)configVendorModelAppGetWithModelIDModel:(SigModelIDModel *)modelIDModel successCallback:(responseConfigVendorModelAppListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)configVendorModelAppGetWithDestination:(UInt16)destination elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigVendorModelAppListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigVendorModelAppGet *config = [[SigConfigVendorModelAppGet alloc] initWithModel:modelIDModel];
+    SigConfigVendorModelAppGet *config = [[SigConfigVendorModelAppGet alloc] initWithElementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseVendorModelAppListCallBack = successCallback;
     command.resultCallback = resultCallback;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:modelIDModel.parentElement.parentNode.address command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
 
 #pragma mark - control and access（open API）
 
-+ (SigMessageHandle *)genericOnOffGetWithDestination:(UInt16)destination resMax:(int)resMax successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericOnOffGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigGenericOnOffGet *message = [[SigGenericOnOffGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseOnOffStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericOnOffGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self genericOnOffGetWithDestination:node.address resMax:resMax successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)genericOnOffSetWithIsOn:(BOOL)isOn toDestination:(UInt16)destination resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericOnOffSetWithDestination:(UInt16)destination isOn:(BOOL)isOn retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigGenericOnOffSet *message = [[SigGenericOnOffSet alloc] initWithIsOn:isOn];
@@ -877,15 +934,12 @@ function 1:special if you need do provision , you should call this method, and i
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseOnOffStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericOnOffSet:(BOOL)isOn withNode:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self genericOnOffSet:isOn withNode:node transitionTime:nil delay:0 resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)genericOnOffSet:(BOOL)isOn withNode:(SigNodeModel *)node transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericOnOffSetDestination:(UInt16)destination isOn:(BOOL)isOn transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigGenericOnOffSet *message = [[SigGenericOnOffSet alloc] initWithIsOn:isOn];
@@ -903,40 +957,29 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_ONOFF_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseOnOffStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericLevelGetWithDestination:(UInt16)destination resMax:(int)resMax successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericLevelGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigGenericLevelGet *message = [[SigGenericLevelGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLevelStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericLevelGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigGenericLevelGet *message = [[SigGenericLevelGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_LEVEL_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseLevelStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-}
-
-+ (SigMessageHandle *)genericLevelSet:(UInt16)level toDestination:(UInt16)destination transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericLevelSetWithDestination:(UInt16)destination level:(UInt16)level transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigGenericLevelSet *message = [[SigGenericLevelSet alloc] initWithLevel:level];
@@ -959,75 +1002,16 @@ function 1:special if you need do provision , you should call this method, and i
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLevelStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericLevelSet:(UInt16)level withNode:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self genericLevelSet:level withNode:node transitionTime:nil delay:0 resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
++ (SigMessageHandle *)genericLevelSetWithDestination:(UInt16)destination level:(UInt16)level retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self genericLevelSetWithDestination:destination level:level transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
 }
 
-+ (SigMessageHandle *)genericLevelSet:(UInt16)level withNode:(SigNodeModel *)node transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigMeshMessage *msg;
-    if (ack) {
-        SigGenericLevelSet *message = [[SigGenericLevelSet alloc] initWithLevel:level];
-        message.transitionTime = transitionTime;
-        message.delay = delay;
-        msg = message;
-    } else {
-        SigGenericLevelSetUnacknowledged *message = [[SigGenericLevelSetUnacknowledged alloc] initWithLevel:level];
-        message.transitionTime = transitionTime;
-        message.delay = delay;
-        msg = message;
-        if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
-            successCallback = nil;
-            resultCallback = nil;
-        }
-    }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_LEVEL_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = msg;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseLevelStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-}
-
-+ (SigMessageHandle *)genericDeltaSet:(UInt32)delta withNode:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self genericDeltaSet:delta withNode:node transitionTime:nil delay:0 resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)genericDeltaSet:(UInt32)delta withNode:(SigNodeModel *)node transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigMeshMessage *msg;
-    if (ack) {
-        SigGenericDeltaSet *message = [[SigGenericDeltaSet alloc] initWithDelta:delta];
-        message.transitionTime = transitionTime;
-        message.delay = delay;
-        msg = message;
-    } else {
-        SigGenericDeltaSetUnacknowledged *message = [[SigGenericDeltaSetUnacknowledged alloc] initWithDelta:delta];
-        message.transitionTime = transitionTime;
-        message.delay = delay;
-        msg = message;
-        if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
-            successCallback = nil;
-            resultCallback = nil;
-        }
-    }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_LEVEL_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = msg;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseLevelStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-}
-
-+ (SigMessageHandle *)genericDeltaSet:(UInt32)delta toDestination:(UInt16)destination transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericDeltaSetWithDestination:(UInt16)destination delta:(UInt32)delta transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigGenericDeltaSet *message = [[SigGenericDeltaSet alloc] initWithDelta:delta];
@@ -1050,15 +1034,16 @@ function 1:special if you need do provision , you should call this method, and i
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLevelStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericMoveSet:(UInt16)deltaLevel withNode:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self genericMoveSet:deltaLevel withNode:node transitionTime:nil delay:0 resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
++ (SigMessageHandle *)genericDeltaSetWithDestination:(UInt16)destination delta:(UInt32)delta retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self genericDeltaSetWithDestination:destination delta:delta transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
 }
 
-+ (SigMessageHandle *)genericMoveSet:(UInt16)deltaLevel withNode:(SigNodeModel *)node transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericMoveSetWithDestination:(UInt16)destination deltaLevel:(UInt16)deltaLevel transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigGenericMoveSet *message = [[SigGenericMoveSet alloc] initWithDeltaLevel:deltaLevel];
@@ -1076,35 +1061,39 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_LEVEL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLevelStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericDefaultTransitionTimeGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseGenericDefaultTransitionTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericMoveSetWithDestination:(UInt16)destination deltaLevel:(UInt16)deltaLevel retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self genericMoveSetWithDestination:destination deltaLevel:deltaLevel transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+}
+
++ (SigMessageHandle *)genericDefaultTransitionTimeGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseGenericDefaultTransitionTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigGenericDefaultTransitionTimeGet *message = [[SigGenericDefaultTransitionTimeGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_DEF_TRANSIT_TIME_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseDefaultTransitionTimeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericDefaultTransitionTimeSet:(nonnull SigTransitionTime *)transitionTime withNode:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericDefaultTransitionTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericDefaultTransitionTimeSetWithDestination:(UInt16)destination defaultTransitionTime:(nonnull SigTransitionTime *)defaultTransitionTime retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericDefaultTransitionTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
-        SigGenericDefaultTransitionTimeSet *message = [[SigGenericDefaultTransitionTimeSet alloc] initWithTransitionTime:transitionTime];
+        SigGenericDefaultTransitionTimeSet *message = [[SigGenericDefaultTransitionTimeSet alloc] initWithTransitionTime:defaultTransitionTime];
         msg = message;
     } else {
-        SigGenericDefaultTransitionTimeSetUnacknowledged *message = [[SigGenericDefaultTransitionTimeSetUnacknowledged alloc] initWithTransitionTime:transitionTime];
+        SigGenericDefaultTransitionTimeSetUnacknowledged *message = [[SigGenericDefaultTransitionTimeSetUnacknowledged alloc] initWithTransitionTime:defaultTransitionTime];
         msg = message;
         if (successCallback != nil || resultCallback != nil) {
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
@@ -1112,30 +1101,29 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_DEF_TRANSIT_TIME_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseDefaultTransitionTimeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericOnPowerUpGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseGenericOnPowerUpStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericOnPowerUpGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseGenericOnPowerUpStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigGenericOnPowerUpGet *message = [[SigGenericOnPowerUpGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_POWER_ONOFF_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseOnPowerUpStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericOnPowerUpSet:(SigOnPowerUp)onPowerUp withNode:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericOnPowerUpStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericOnPowerUpSetWithDestination:(UInt16)destination onPowerUp:(SigOnPowerUp)onPowerUp retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericOnPowerUpStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigGenericOnPowerUpSet *message = [[SigGenericOnPowerUpSet alloc] initWithState:onPowerUp];
@@ -1149,37 +1137,29 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_POWER_ONOFF_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseOnPowerUpStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:msg fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericPowerLevelGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseGenericPowerLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericPowerLevelGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseGenericPowerLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigGenericPowerLevelGet *message = [[SigGenericPowerLevelGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_POWER_LEVEL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responsePowerLevelStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericPowerLevelSet:(UInt16)power withNode:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self genericPowerLevelSet:power withNode:node transitionTime:nil delay:0 resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)genericPowerLevelSet:(UInt16)power withNode:(SigNodeModel *)node transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericPowerLevelSetWithDestination:(UInt16)destination power:(UInt16)power transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigGenericPowerLevelSet *message = [[SigGenericPowerLevelSet alloc] initWithPower:power];
@@ -1197,61 +1177,57 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_POWER_LEVEL_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLevelStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:msg fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericPowerLastGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseGenericPowerLastStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericPowerLevelSetWithDestination:(UInt16)destination power:(UInt16)power retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericLevelStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self genericPowerLevelSetWithDestination:destination power:power transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+}
+
++ (SigMessageHandle *)genericPowerLastGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseGenericPowerLastStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigGenericPowerLastGet *message = [[SigGenericPowerLastGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_POWER_LEVEL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responsePowerLastStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericPowerDefaultGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseGenericPowerDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericPowerDefaultGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseGenericPowerDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigGenericPowerDefaultGet *message = [[SigGenericPowerDefaultGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_POWER_LEVEL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responsePowerDefaultStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericPowerRangeGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseGenericPowerRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericPowerRangeGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseGenericPowerRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigGenericPowerRangeGet *message = [[SigGenericPowerRangeGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_POWER_LEVEL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responsePowerRangeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericPowerDefaultSet:(UInt16)power withNode:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericPowerDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericPowerDefaultSetWithDestination:(UInt16)destination power:(UInt16)power retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericPowerDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigGenericPowerDefaultSet *message = [[SigGenericPowerDefaultSet alloc] initWithPower:power];
@@ -1265,19 +1241,17 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_POWER_LEVEL_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responsePowerDefaultStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:msg fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericPowerRangeSetWithRangeMin:(UInt16)rangeMin rangeMax:(UInt16)rangeMax node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseGenericPowerRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericPowerRangeSetWithDestination:(UInt16)destination rangeMin:(UInt16)rangeMin rangeMax:(UInt16)rangeMax retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseGenericPowerRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigGenericPowerRangeSet *message = [[SigGenericPowerRangeSet alloc] initWithRangeMin:rangeMin rangeMax:rangeMax];
@@ -1291,131 +1265,113 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_POWER_LEVEL_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responsePowerRangeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:msg fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)genericBatteryGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseGenericBatteryStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)genericBatteryGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseGenericBatteryStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigGenericBatteryGet *message = [[SigGenericBatteryGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_G_BAT_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseBatteryStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sensorDescriptorGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSensorDescriptorStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sensorDescriptorGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSensorDescriptorStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSensorDescriptorGet *message = [[SigSensorDescriptorGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SENSOR_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSensorDescriptorStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sensorDescriptorGetWithPropertyID:(UInt16)propertyID node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSensorDescriptorStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sensorDescriptorGetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSensorDescriptorStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSensorDescriptorGet *message = [[SigSensorDescriptorGet alloc] initWithPropertyID:propertyID];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SENSOR_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSensorDescriptorStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sensorGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSensorStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sensorGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSensorStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSensorGet *message = [[SigSensorGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SENSOR_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSensorStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sensorGetWithPropertyID:(UInt16)propertyID node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSensorStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sensorGetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSensorStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSensorGet *message = [[SigSensorGet alloc] initWithPropertyID:propertyID];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SENSOR_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSensorStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sensorColumnGetWithPropertyID:(UInt16)propertyID rawValueX:(NSData *)rawValueX node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSensorColumnStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sensorColumnGetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID rawValueX:(NSData *)rawValueX retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSensorColumnStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSensorColumnGet *message = [[SigSensorColumnGet alloc] initWithPropertyID:propertyID rawValueX:rawValueX];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SENSOR_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSensorColumnStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sensorSeriesGetWithPropertyID:(UInt16)propertyID rawValueX1Data:(NSData *)rawValueX1Data rawValueX2Data:(NSData *)rawValueX2Data node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSensorSeriesStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sensorSeriesGetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID rawValueX1Data:(NSData *)rawValueX1Data rawValueX2Data:(NSData *)rawValueX2Data retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSensorSeriesStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSensorSeriesGet *message = [[SigSensorSeriesGet alloc] initWithPropertyID:propertyID rawValueX1Data:rawValueX1Data rawValueX2Data:rawValueX2Data];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SENSOR_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSensorSeriesStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sensorCadenceGetWithPropertyID:(UInt16)propertyID node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSensorCadenceStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sensorCadenceGetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSensorCadenceStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSensorCadenceGet *message = [[SigSensorCadenceGet alloc] initWithPropertyID:propertyID];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SENSOR_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSensorCadenceStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sensorCadenceSetWithPropertyID:(UInt16)propertyID cadenceData:(NSData *)cadenceData node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseSensorCadenceStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sensorCadenceSetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID cadenceData:(NSData *)cadenceData retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseSensorCadenceStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigSensorCadenceSet *message = [[SigSensorCadenceSet alloc] init];
@@ -1431,47 +1387,41 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SENSOR_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSensorCadenceStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sensorSettingsGetWithPropertyID:(UInt16)propertyID node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSensorSettingsStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sensorSettingsGetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSensorSettingsStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSensorSettingsGet *message = [[SigSensorSettingsGet alloc] initWithPropertyID:propertyID];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SENSOR_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSensorSettingsStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sensorSettingGetWithPropertyID:(UInt16)propertyID settingPropertyID:(UInt16)settingPpropertyID node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSensorSettingStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sensorSettingGetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID settingPropertyID:(UInt16)settingPpropertyID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSensorSettingStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSensorSettingGet *message = [[SigSensorSettingGet alloc] initWithPropertyID:propertyID settingPropertyID:settingPpropertyID];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SENSOR_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSensorSettingStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sensorSettingSetWithPropertyID:(UInt16)propertyID settingPropertyID:(UInt16)settingPpropertyID settingRaw:(NSData *)settingRaw node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseSensorSettingStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sensorSettingSetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID settingPropertyID:(UInt16)settingPpropertyID settingRaw:(NSData *)settingRaw retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseSensorSettingStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigSensorSettingSet *message = [[SigSensorSettingSet alloc] initWithPropertyID:propertyID settingPropertyID:settingPpropertyID settingRaw:settingRaw];
@@ -1485,58 +1435,41 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SENSOR_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSensorSettingStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)timeGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)timeGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigTimeGet *message = [[SigTimeGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_TIME_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseTimeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)timeSetWithSigTimeModel:(SigTimeModel *)timeModel toDestination:(UInt16)destination resMax:(int)resMax successCallback:(responseTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigTimeSet *message = [[SigTimeSet alloc] initWithTimeModel:timeModel];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseTimeStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)timeSetWithSigTimeModel:(SigTimeModel *)timeModel node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)timeSetWithDestination:(UInt16)destination timeModel:(SigTimeModel *)timeModel retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigTimeSet *message = [[SigTimeSet alloc] initWithTimeModel:timeModel];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_TIME_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseTimeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)timeStatusWithSigTimeModel:(SigTimeModel *)timeModel toDestination:(UInt16)destination resMax:(int)resMax successCallback:(_Nullable responseTimeStatusMessageBlock)successCallback resultCallback:(_Nullable resultBlock)resultCallback {
++ (SigMessageHandle *)timeStatusWithDestination:(UInt16)destination timeModel:(SigTimeModel *)timeModel retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(_Nullable responseTimeStatusMessageBlock)successCallback resultCallback:(_Nullable resultBlock)resultCallback {
     SigTimeStatus *message = [[SigTimeStatus alloc] init];
     message.timeModel = timeModel;
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -1544,128 +1477,96 @@ function 1:special if you need do provision , you should call this method, and i
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseTimeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)timeStatusWithSigTimeModel:(SigTimeModel *)timeModel node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseTimeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigTimeStatus *message = [[SigTimeStatus alloc] init];
-    message.timeModel = timeModel;
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_TIME_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseTimeStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)timeRoleGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseTimeRoleStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)timeRoleGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseTimeRoleStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigTimeRoleGet *message = [[SigTimeRoleGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_TIME_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseTimeRoleStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)timeRoleSetWithNode:(SigNodeModel *)node timeRole:(SigTimeRole)timeRole resMax:(int)resMax successCallback:(responseTimeRoleStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)timeRoleSetWithDestination:(UInt16)destination timeRole:(SigTimeRole)timeRole retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseTimeRoleStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigTimeRoleSet *message = [[SigTimeRoleSet alloc] initWithTimeRole:timeRole];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_TIME_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseTimeRoleStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)timeZoneGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseTimeZoneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)timeZoneGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseTimeZoneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigTimeZoneGet *message = [[SigTimeZoneGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_TIME_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseTimeZoneStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)timeZoneSetWithTimeZoneOffsetNew:(UInt8)timeZoneOffsetNew TAIOfZoneChange:(UInt64)TAIOfZoneChange node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseTimeZoneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)timeZoneSetWithDestination:(UInt16)destination timeZoneOffsetNew:(UInt8)timeZoneOffsetNew TAIOfZoneChange:(UInt64)TAIOfZoneChange retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseTimeZoneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigTimeZoneSet *message = [[SigTimeZoneSet alloc] initWithTimeZoneOffsetNew:timeZoneOffsetNew TAIOfZoneChange:TAIOfZoneChange];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_TIME_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseTimeZoneStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)TAI_UTC_DeltaGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseTAI_UTC_DeltaStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)TAI_UTC_DeltaGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseTAI_UTC_DeltaStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigTAI_UTC_DeltaGet *message = [[SigTAI_UTC_DeltaGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_TIME_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseTAI_UTC_DeltaStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)TAI_UTC_DeltaSetWithTAI_UTC_DeltaNew:(UInt16)TAI_UTC_DeltaNew padding:(UInt8)padding TAIOfDeltaChange:(UInt64)TAIOfDeltaChange node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseTAI_UTC_DeltaStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)TAI_UTC_DeltaSetWithDestination:(UInt16)destination TAI_UTC_DeltaNew:(UInt16)TAI_UTC_DeltaNew padding:(UInt8)padding TAIOfDeltaChange:(UInt64)TAIOfDeltaChange retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseTAI_UTC_DeltaStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigTAI_UTC_DeltaSet *message = [[SigTAI_UTC_DeltaSet alloc] initWithTAI_UTC_DeltaNew:TAI_UTC_DeltaNew padding:padding TAIOfDeltaChange:TAIOfDeltaChange];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_TIME_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseTAI_UTC_DeltaStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sceneGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSceneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sceneGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSceneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSceneGet *message = [[SigSceneGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SCENE_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSceneStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sceneRecallWithSceneNumber:(UInt16)sceneNumber node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseSceneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self sceneRecallWithSceneNumber:sceneNumber transitionTime:nil delay:0 node:node resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)sceneRecallWithSceneNumber:(UInt16)sceneNumber transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay toDestination:(UInt16)destination resMax:(int)resMax ack:(BOOL)ack successCallback:(responseSceneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sceneRecallWithDestination:(UInt16)destination sceneNumber:(UInt16)sceneNumber transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseSceneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigSceneRecall *message = [[SigSceneRecall alloc] initWithSceneNumber:sceneNumber transitionTime:transitionTime delay:delay];
@@ -1684,62 +1585,28 @@ function 1:special if you need do provision , you should call this method, and i
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSceneStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sceneRecallWithSceneNumber:(UInt16)sceneNumber transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseSceneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigMeshMessage *msg;
-    if (ack) {
-        SigSceneRecall *message = [[SigSceneRecall alloc] initWithSceneNumber:sceneNumber transitionTime:transitionTime delay:delay];
-        msg = message;
-    } else {
-        SigSceneRecallUnacknowledged *message = [[SigSceneRecallUnacknowledged alloc] initWithSceneNumber:sceneNumber transitionTime:transitionTime delay:delay];
-        msg = message;
-        if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
-            successCallback = nil;
-            resultCallback = nil;
-        }
-    }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SCENE_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = msg;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseSceneStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
++ (SigMessageHandle *)sceneRecallWithDestination:(UInt16)destination sceneNumber:(UInt16)sceneNumber retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseSceneStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self sceneRecallWithDestination:destination sceneNumber:sceneNumber transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
 }
 
-+ (SigMessageHandle *)sceneRegisterGetWithDestination:(UInt16)destination resMax:(int)resMax successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sceneRegisterGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSceneRegisterGet *message = [[SigSceneRegisterGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSceneRegisterStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sceneRegisterGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigSceneRegisterGet *message = [[SigSceneRegisterGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SCENE_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseSceneRegisterStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)sceneStoreWithSceneNumber:(UInt16)sceneNumber toDestination:(UInt16)destination resMax:(int)resMax ack:(BOOL)ack successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sceneStoreWithDestination:(UInt16)destination sceneNumber:(UInt16)sceneNumber retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigSceneStore *message = [[SigSceneStore alloc] initWithSceneNumber:sceneNumber];
@@ -1758,37 +1625,12 @@ function 1:special if you need do provision , you should call this method, and i
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSceneRegisterStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sceneStoreWithSceneNumber:(UInt16)sceneNumber node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigMeshMessage *msg;
-    if (ack) {
-        SigSceneStore *message = [[SigSceneStore alloc] initWithSceneNumber:sceneNumber];
-        msg = message;
-    } else {
-        SigSceneStoreUnacknowledged *message = [[SigSceneStoreUnacknowledged alloc] initWithSceneNumber:sceneNumber];
-        msg = message;
-        if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
-            successCallback = nil;
-            resultCallback = nil;
-        }
-    }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SCENE_SETUP_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = msg;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseSceneRegisterStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)sceneDeleteWithSceneNumber:(UInt16)sceneNumber toDestination:(UInt16)destination resMax:(int)resMax ack:(BOOL)ack successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)sceneDeleteWithDestination:(UInt16)destination sceneNumber:(UInt16)sceneNumber retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigSceneDelete *message = [[SigSceneDelete alloc] initWithSceneNumber:sceneNumber];
@@ -1807,87 +1649,36 @@ function 1:special if you need do provision , you should call this method, and i
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSceneRegisterStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)sceneDeleteWithSceneNumber:(UInt16)sceneNumber node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseSceneRegisterStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigMeshMessage *msg;
-    if (ack) {
-        SigSceneDelete *message = [[SigSceneDelete alloc] initWithSceneNumber:sceneNumber];
-        msg = message;
-    } else {
-        SigSceneDeleteUnacknowledged *message = [[SigSceneDeleteUnacknowledged alloc] initWithSceneNumber:sceneNumber];
-        msg = message;
-        if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
-            successCallback = nil;
-            resultCallback = nil;
-        }
-    }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SCENE_SETUP_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = msg;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseSceneRegisterStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)schedulerActionGetWithSchedulerIndex:(UInt8)schedulerIndex toDestination:(UInt16)destination resMax:(int)resMax successCallback:(responseSchedulerActionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)schedulerActionGetWithDestination:(UInt16)destination schedulerIndex:(UInt8)schedulerIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSchedulerActionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSchedulerActionGet *message = [[SigSchedulerActionGet alloc] initWithIndex:schedulerIndex];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSchedulerActionStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)schedulerActionGetWithSchedulerIndex:(UInt8)schedulerIndex node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSchedulerActionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigSchedulerActionGet *message = [[SigSchedulerActionGet alloc] initWithIndex:schedulerIndex];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SCHED_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseSchedulerActionStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)schedulerActionGetWithDestination:(UInt16)destination resMax:(int)resMax successCallback:(responseSchedulerStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)schedulerGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSchedulerStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigSchedulerGet *message = [[SigSchedulerGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSchedulerStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)schedulerActionGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseSchedulerStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigSchedulerGet *message = [[SigSchedulerGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SCHED_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseSchedulerStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)schedulerActionSetWithSchedulerModel:(SchedulerModel *)schedulerModel toDestination:(UInt16)destination resMax:(int)resMax ack:(BOOL)ack successCallback:(responseSchedulerActionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)schedulerActionSetWithDestination:(UInt16)destination schedulerModel:(SchedulerModel *)schedulerModel retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseSchedulerActionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigSchedulerActionSet *message = [[SigSchedulerActionSet alloc] initWithSchedulerModel:schedulerModel];
@@ -1906,81 +1697,24 @@ function 1:special if you need do provision , you should call this method, and i
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseSchedulerActionStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)schedulerActionSetWithSchedulerModel:(SchedulerModel *)schedulerModel node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseSchedulerActionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigMeshMessage *msg;
-    if (ack) {
-        SigSchedulerActionSet *message = [[SigSchedulerActionSet alloc] initWithSchedulerModel:schedulerModel];
-        msg = message;
-    } else {
-        SigSchedulerActionSetUnacknowledged *message = [[SigSchedulerActionSetUnacknowledged alloc] initWithSchedulerModel:schedulerModel];
-        msg = message;
-        if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
-            successCallback = nil;
-            resultCallback = nil;
-        }
-    }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_SCHED_SETUP_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = msg;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseSchedulerActionStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)lightLightnessGetWithDestination:(UInt16)destination resMax:(int)resMax successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLightnessGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightLightnessGet *message = [[SigLightLightnessGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLightnessStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLightnessGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self lightLightnessGetWithDestination:node.address resMax:resMax successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)lightLightnessSetWithLightness:(UInt16)lightness toDestination:(UInt16)destination resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigMeshMessage *msg;
-    if (ack) {
-        SigLightLightnessSet *message = [[SigLightLightnessSet alloc] init];
-        message.lightness = lightness;
-        msg = message;
-    } else {
-        SigLightLightnessSetUnacknowledged *message = [[SigLightLightnessSetUnacknowledged alloc] init];
-        message.lightness = lightness;
-        msg = message;
-        if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
-            successCallback = nil;
-            resultCallback = nil;
-        }
-    }
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = msg;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseLightLightnessStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-}
-
-+ (SigMessageHandle *)lightLightnessSetWithLightness:(UInt16)lightness node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self lightLightnessSetWithLightness:lightness transitionTime:nil delay:0 node:node resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)lightLightnessSetWithLightness:(UInt16)lightness transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLightnessSetWithDestination:(UInt16)destination lightness:(UInt16)lightness transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightLightnessSet *message = [[SigLightLightnessSet alloc] initWithLightness:lightness transitionTime:transitionTime delay:delay];
@@ -1994,37 +1728,33 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHTNESS_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLightnessStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLightnessLinearGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightLightnessLinearStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLightnessSetWithDestination:(UInt16)destination lightness:(UInt16)lightness retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self lightLightnessSetWithDestination:destination lightness:lightness transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+}
+
++ (SigMessageHandle *)lightLightnessLinearGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightLightnessLinearStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightLightnessLinearGet *message = [[SigLightLightnessLinearGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHTNESS_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLightnessLinearStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLightnessLinearSetWithLightness:(UInt16)lightness node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLightnessLinearStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self lightLightnessLinearSetWithLightness:lightness transitionTime:nil delay:0 node:node resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)lightLightnessLinearSetWithLightness:(UInt16)lightness transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLightnessLinearStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLightnessLinearSetWithDestination:(UInt16)destination lightness:(UInt16)lightness transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLightnessLinearStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightLightnessLinearSet *message = [[SigLightLightnessLinearSet alloc] initWithLightness:lightness transitionTime:transitionTime delay:delay];
@@ -2038,61 +1768,57 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHTNESS_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLightnessLinearStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLightnessLastGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightLightnessLastStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLightnessLinearSetWithDestination:(UInt16)destination lightness:(UInt16)lightness retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLightnessLinearStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self lightLightnessLinearSetWithDestination:destination lightness:lightness transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+}
+
++ (SigMessageHandle *)lightLightnessLastGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightLightnessLastStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightLightnessLastGet *message = [[SigLightLightnessLastGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHTNESS_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLightnessLastStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLightnessDefaultGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightLightnessDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLightnessDefaultGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightLightnessDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightLightnessDefaultGet *message = [[SigLightLightnessDefaultGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHTNESS_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLightnessDefaultStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLightnessRangeGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightLightnessRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLightnessRangeGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightLightnessRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightLightnessRangeGet *message = [[SigLightLightnessRangeGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHTNESS_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLightnessRangeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLightnessDefaultSetWithLightness:(UInt16)lightness node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLightnessDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLightnessDefaultSetWithDestination:(UInt16)destination lightness:(UInt16)lightness retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLightnessDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightLightnessDefaultSet *message = [[SigLightLightnessDefaultSet alloc] initWithLightness:lightness];
@@ -2106,19 +1832,17 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHTNESS_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLightnessDefaultStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLightnessRangeSetWithRangeMin:(UInt16)rangeMin rangeMax:(UInt16)rangeMax node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLightnessRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLightnessRangeSetWithDestination:(UInt16)destination rangeMin:(UInt16)rangeMin rangeMax:(UInt16)rangeMax retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLightnessRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightLightnessRangeSet *message = [[SigLightLightnessRangeSet alloc] initWithRangeMin:rangeMin rangeMax:rangeMax];
@@ -2132,48 +1856,29 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHTNESS_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLightnessRangeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightCTLGetWithDestination:(UInt16)destination resMax:(int)resMax successCallback:(responseLightCTLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightCTLGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightCTLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightCTLGet *message = [[SigLightCTLGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightCTLStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightCTLGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightCTLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigLightCTLGet *message = [[SigLightCTLGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_CTL_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseLightCTLStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)lightCTLSetWithLightness:(UInt16)lightness temperature:(UInt16)temperature deltaUV:(UInt16)deltaUV node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightCTLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self lightCTLSetWithLightness:lightness temperature:temperature deltaUV:deltaUV transitionTime:nil delay:0 node:node resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)lightCTLSetWithLightness:(UInt16)lightness temperature:(UInt16)temperature deltaUV:(UInt16)deltaUV transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightCTLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightCTLSetWithDestination:(UInt16)destination lightness:(UInt16)lightness temperature:(UInt16)temperature deltaUV:(UInt16)deltaUV transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightCTLSet *message = [[SigLightCTLSet alloc] initWithCTLLightness:lightness CTLTemperature:temperature CTLDeltaUV:deltaUV transitionTime:transitionTime delay:delay];
@@ -2187,88 +1892,45 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_CTL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightCTLStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightCTLTemperatureGetWithDestination:(UInt16)destination resMax:(int)resMax successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightCTLSetWithDestination:(UInt16)destination lightness:(UInt16)lightness temperature:(UInt16)temperature deltaUV:(UInt16)deltaUV retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self lightCTLSetWithDestination:destination lightness:lightness temperature:temperature deltaUV:deltaUV transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+}
+
++ (SigMessageHandle *)lightCTLTemperatureGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightCTLTemperatureGet *message = [[SigLightCTLTemperatureGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightCTLTemperatureStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightCTLTemperatureGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigLightCTLTemperatureGet *message = [[SigLightCTLTemperatureGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_CTL_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseLightCTLTemperatureStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)lightCTLTemperatureRangeGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightCTLTemperatureRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightCTLTemperatureRangeGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightCTLTemperatureRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightCTLTemperatureRangeGet *message = [[SigLightCTLTemperatureRangeGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_CTL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightCTLTemperatureRangeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightCTLTemperatureSetWithTemperature:(UInt16)temperature deltaUV:(UInt16)deltaUV node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self lightCTLTemperatureSetWithTemperature:temperature deltaUV:deltaUV transitionTime:nil delay:0 node:node resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)lightCTLTemperatureSetWithTemperature:(UInt16)temperature deltaUV:(UInt16)deltaUV transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigMeshMessage *msg;
-    if (ack) {
-        SigLightCTLTemperatureSet *message = [[SigLightCTLTemperatureSet alloc] initWithCTLTemperature:temperature CTLDeltaUV:deltaUV transitionTime:transitionTime delay:delay];
-        msg = message;
-    } else {
-        SigLightCTLTemperatureSetUnacknowledged *message = [[SigLightCTLTemperatureSetUnacknowledged alloc] initWithCTLTemperature:temperature CTLDeltaUV:deltaUV transitionTime:transitionTime delay:delay];
-        msg = message;
-        if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
-            successCallback = nil;
-            resultCallback = nil;
-        }
-    }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_CTL_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = msg;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseLightCTLTemperatureStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)lightCTLTemperatureSetWithTemperature:(UInt16)temperature deltaUV:(UInt16)deltaUV transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay toDestination:(UInt16)destination resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightCTLTemperatureSetWithDestination:(UInt16)destination temperature:(UInt16)temperature deltaUV:(UInt16)deltaUV transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightCTLTemperatureSet *message = [[SigLightCTLTemperatureSet alloc] initWithCTLTemperature:temperature CTLDeltaUV:deltaUV transitionTime:transitionTime delay:delay];
@@ -2287,25 +1949,28 @@ function 1:special if you need do provision , you should call this method, and i
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightCTLTemperatureStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightCTLDefaultGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightCTLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightCTLTemperatureSetWithDestination:(UInt16)destination temperature:(UInt16)temperature deltaUV:(UInt16)deltaUV retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self lightCTLTemperatureSetWithDestination:destination temperature:temperature deltaUV:deltaUV transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+}
+
++ (SigMessageHandle *)lightCTLDefaultGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightCTLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightCTLDefaultGet *message = [[SigLightCTLDefaultGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_CTL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightCTLDefaultStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightCTLDefaultSetWithLightness:(UInt16)lightness temperature:(UInt16)temperature deltaUV:(UInt16)deltaUV node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightCTLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightCTLDefaultSetWithDestination:(UInt16)destination lightness:(UInt16)lightness temperature:(UInt16)temperature deltaUV:(UInt16)deltaUV retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightCTLDefaultSet *message = [[SigLightCTLDefaultSet alloc] initWithLightness:lightness temperature:temperature deltaUV:deltaUV];
@@ -2319,19 +1984,17 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_CTL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightCTLDefaultStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightCTLTemperatureRangeSetWithRangeMin:(UInt16)rangeMin rangeMax:(UInt16)rangeMax node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightCTLTemperatureRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightCTLTemperatureRangeSetWithDestination:(UInt16)destination rangeMin:(UInt16)rangeMin rangeMax:(UInt16)rangeMax retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLTemperatureRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightCTLTemperatureRangeSet *message = [[SigLightCTLTemperatureRangeSet alloc] initWithRangeMin:rangeMin rangeMax:rangeMax];
@@ -2345,62 +2008,41 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_CTL_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightCTLTemperatureRangeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightHSLGetWithDestination:(UInt16)destination resMax:(int)resMax successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightHSLGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightHSLGet *message = [[SigLightHSLGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightHSLStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightHSLGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigLightHSLGet *message = [[SigLightHSLGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_HSL_S];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseLightHSLStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)lightHSLHueGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightHSLHueStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightHSLHueGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightHSLHueStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightHSLHueGet *message = [[SigLightHSLHueGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_HSL_HUE_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightHSLHueStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightHSLHueSetWithHue:(UInt16)hue node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightHSLHueStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self lightHSLHueSetWithHue:hue transitionTime:nil delay:0 node:node resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)lightHSLHueSetWithHue:(UInt16)hue transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightHSLHueStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightHSLHueSetWithDestination:(UInt16)destination hue:(UInt16)hue transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLHueStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightHSLHueSet *message = [[SigLightHSLHueSet alloc] initWithHue:hue transitionTime:transitionTime delay:delay];
@@ -2414,37 +2056,33 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_HSL_HUE_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightHSLHueStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightHSLSaturationGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightHSLSaturationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightHSLHueSetWithDestination:(UInt16)destination hue:(UInt16)hue retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLHueStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self lightHSLHueSetWithDestination:destination hue:hue transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+}
+
++ (SigMessageHandle *)lightHSLSaturationGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightHSLSaturationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightHSLSaturationGet *message = [[SigLightHSLSaturationGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_HSL_SAT_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightHSLSaturationStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightHSLSaturationSetWithHue:(UInt16)saturation node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightHSLSaturationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self lightHSLSaturationSetWithHue:saturation transitionTime:nil delay:0 node:node resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)lightHSLSaturationSetWithHue:(UInt16)saturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightHSLSaturationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightHSLSaturationSetWithDestination:(UInt16)destination saturation:(UInt16)saturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLSaturationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightHSLSaturationSet *message = [[SigLightHSLSaturationSet alloc] initWithSaturation:saturation transitionTime:transitionTime delay:delay];
@@ -2458,46 +2096,21 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_HSL_SAT_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightHSLSaturationStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
-}
-
-+ (SigMessageHandle *)lightHSLSetWithHSLLight:(UInt16)HSLLight HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self lightHSLSetWithHSLLight:HSLLight HSLHue:HSLHue HSLSaturation:HSLSaturation transitionTime:nil delay:0 node:node resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)lightHSLSetWithHSLLight:(UInt16)HSLLight HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay toDestination:(UInt16)destination resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigMeshMessage *msg;
-    if (ack) {
-        SigLightHSLSet *message = [[SigLightHSLSet alloc] initWithHSLLightness:HSLLight HSLHue:HSLHue HSLSaturation:HSLSaturation transitionTime:transitionTime delay:delay];
-        msg = message;
-    } else {
-        SigLightHSLSetUnacknowledged *message = [[SigLightHSLSetUnacknowledged alloc] initWithHSLLightness:HSLLight HSLHue:HSLHue HSLSaturation:HSLSaturation transitionTime:transitionTime delay:delay];
-        msg = message;
-        if (successCallback != nil || resultCallback != nil) {
-            TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
-            successCallback = nil;
-            resultCallback = nil;
-        }
-    }
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = msg;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseLightHSLStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightHSLSetWithHSLLight:(UInt16)HSLLight HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightHSLSaturationSetWithDestination:(UInt16)destination saturation:(UInt16)saturation retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLSaturationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self lightHSLSaturationSetWithDestination:destination saturation:saturation transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+}
+
++ (SigMessageHandle *)lightHSLSetWithDestination:(UInt16)destination HSLLight:(UInt16)HSLLight HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightHSLSet *message = [[SigLightHSLSet alloc] initWithHSLLightness:HSLLight HSLHue:HSLHue HSLSaturation:HSLSaturation transitionTime:transitionTime delay:delay];
@@ -2511,61 +2124,57 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_HSL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightHSLStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightHSLTargetGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightHSLTargetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightHSLSetWithDestination:(UInt16)destination HSLLight:(UInt16)HSLLight HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self lightHSLSetWithDestination:destination HSLLight:HSLLight HSLHue:HSLHue HSLSaturation:HSLSaturation transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+}
+
++ (SigMessageHandle *)lightHSLTargetGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightHSLTargetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightHSLTargetGet *message = [[SigLightHSLTargetGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_HSL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightHSLTargetStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightHSLDefaultGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightHSLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightHSLDefaultGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightHSLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightHSLDefaultGet *message = [[SigLightHSLDefaultGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_HSL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightHSLDefaultStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightHSLRangeGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightHSLRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightHSLRangeGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightHSLRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightHSLRangeGet *message = [[SigLightHSLRangeGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_HSL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightHSLRangeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightHSLDefaultSetWithLight:(UInt16)light hue:(UInt16)hue saturation:(UInt16)saturation node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightHSLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightHSLDefaultSetWithDestination:(UInt16)destination light:(UInt16)light hue:(UInt16)hue saturation:(UInt16)saturation retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightHSLDefaultSet *message = [[SigLightHSLDefaultSet alloc] initWithLightness:light hue:hue saturation:saturation];
@@ -2579,19 +2188,17 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_HSL_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightHSLDefaultStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightHSLRangeSetWithHueRangeMin:(UInt16)hueRangeMin hueRangeMax:(UInt16)hueRangeMax saturationRangeMin:(UInt16)saturationRangeMin saturationRangeMax:(UInt16)saturationRangeMax node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightHSLRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightHSLRangeSetWithDestination:(UInt16)destination hueRangeMin:(UInt16)hueRangeMin hueRangeMax:(UInt16)hueRangeMax saturationRangeMin:(UInt16)saturationRangeMin saturationRangeMax:(UInt16)saturationRangeMax retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightHSLRangeSet *message = [[SigLightHSLRangeSet alloc] initWithHueRangeMin:hueRangeMin hueRangeMax:hueRangeMax saturationRangeMin:saturationRangeMin saturationRangeMax:saturationRangeMax];
@@ -2605,37 +2212,29 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_HSL_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightHSLRangeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightXyLGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightXyLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightXyLGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightXyLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightXyLGet *message = [[SigLightXyLGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_XYL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightXyLStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightXyLSetWithXyLLightness:(UInt16)xyLLightness xyLx:(UInt16)xyLx xyLy:(UInt16)xyLy node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightXyLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self lightXyLSetWithXyLLightness:xyLLightness xyLx:xyLx xyLy:xyLy transitionTime:nil delay:0 node:node resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)lightXyLSetWithXyLLightness:(UInt16)xyLLightness xyLx:(UInt16)xyLx xyLy:(UInt16)xyLy transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightXyLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightXyLSetWithDestination:(UInt16)destination xyLLightness:(UInt16)xyLLightness xyLx:(UInt16)xyLx xyLy:(UInt16)xyLy transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightXyLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightXyLSet *message = [[SigLightXyLSet alloc] initWithXyLLightness:xyLLightness xyLX:xyLx xyLY:xyLy transitionTime:transitionTime delay:delay];
@@ -2649,61 +2248,57 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_XYL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightXyLStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightXyLTargetGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightXyLTargetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightXyLSetWithDestination:(UInt16)destination xyLLightness:(UInt16)xyLLightness xyLx:(UInt16)xyLx xyLy:(UInt16)xyLy retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightXyLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self lightXyLSetWithDestination:destination xyLLightness:xyLLightness xyLx:xyLx xyLy:xyLy transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+}
+
++ (SigMessageHandle *)lightXyLTargetGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightXyLTargetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightXyLTargetGet *message = [[SigLightXyLTargetGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_XYL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightXyLTargetStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightXyLDefaultGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightXyLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightXyLDefaultGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightXyLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightXyLDefaultGet *message = [[SigLightXyLDefaultGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_XYL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightXyLDefaultStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightXyLRangeGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightXyLRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightXyLRangeGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightXyLRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightXyLRangeGet *message = [[SigLightXyLRangeGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_XYL_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightXyLRangeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightXyLDefaultSetWithLightness:(UInt16)lightness xyLx:(UInt16)xyLx xyLy:(UInt16)xyLy node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightXyLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightXyLDefaultSetWithDestination:(UInt16)destination lightness:(UInt16)lightness xyLx:(UInt16)xyLx xyLy:(UInt16)xyLy retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightXyLDefaultStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightXyLDefaultSet *message = [[SigLightXyLDefaultSet alloc] initWithLightness:lightness xyLX:xyLx xyLY:xyLy];
@@ -2717,19 +2312,17 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_XYL_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightXyLDefaultStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightXyLRangeSetWithXyLxRangeMin:(UInt16)xyLxRangeMin xyLxRangeMax:(UInt16)xyLxRangeMax xyLyRangeMin:(UInt16)xyLyRangeMin xyLyRangeMax:(UInt16)xyLyRangeMax node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightXyLRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightXyLRangeSetWithDestination:(UInt16)destination xyLxRangeMin:(UInt16)xyLxRangeMin xyLxRangeMax:(UInt16)xyLxRangeMax xyLyRangeMin:(UInt16)xyLyRangeMin xyLyRangeMax:(UInt16)xyLyRangeMax retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightXyLRangeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightXyLRangeSet *message = [[SigLightXyLRangeSet alloc] initWithXyLXRangeMin:xyLxRangeMin xyLXRangeMax:xyLxRangeMax xyLYRangeMin:xyLyRangeMin xyLYRangeMax:xyLyRangeMax];
@@ -2743,33 +2336,29 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_XYL_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightXyLRangeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLCModeGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightLCModeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLCModeGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightLCModeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightLCModeGet *message = [[SigLightLCModeGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_LC_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLCModeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLCModeSetWithModeEnable:(BOOL)enable node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLCModeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLCModeSetWithDestination:(UInt16)destination enable:(BOOL)enable retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLCModeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightLCModeSet *message = [[SigLightLCModeSet alloc] initWithMode:enable?0x01:0x00];
@@ -2783,33 +2372,29 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_LC_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLCModeStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLCOMGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightLCOMStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLCOMGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightLCOMStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightLCOMGet *message = [[SigLightLCOMGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_LC_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLCOMStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLCOMSetWithModeEnable:(BOOL)enable node:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLCOMStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLCOMSetWithDestination:(UInt16)destination enable:(BOOL)enable retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLCOMStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightLCOMSet *message = [[SigLightLCOMSet alloc] initWithMode:enable?0x01:0x00];
@@ -2823,37 +2408,29 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_LC_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLCOMStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLCLightOnOffGetWithNode:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightLCLightOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLCLightOnOffGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightLCLightOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightLCLightOnOffGet *message = [[SigLightLCLightOnOffGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_LC_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLCLightOnOffStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLCLightOnOffSet:(BOOL)isOn withNode:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLCLightOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    return [self lightLCLightOnOffSet:isOn withNode:node transitionTime:nil delay:0 resMax:resMax ack:ack successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (SigMessageHandle *)lightLCLightOnOffSet:(BOOL)isOn withNode:(SigNodeModel *)node transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLCLightOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLCLightOnOffSetWithDestination:(UInt16)destination isOn:(BOOL)isOn transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLCLightOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightLCLightOnOffSet *message = [[SigLightLCLightOnOffSet alloc] init];
@@ -2873,33 +2450,33 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_LC_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLCLightOnOffStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLCPropertyGetWithPropertyID:(UInt16)propertyID node:(SigNodeModel *)node resMax:(int)resMax successCallback:(responseLightLCPropertyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLCLightOnOffSetWithDestination:(UInt16)destination isOn:(BOOL)isOn retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLCLightOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    return [self lightLCLightOnOffSetWithDestination:destination isOn:isOn transitionTime:nil delay:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+}
+
++ (SigMessageHandle *)lightLCPropertyGetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseLightLCPropertyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigLightLCPropertyGet *message = [[SigLightLCPropertyGet alloc] init];
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_LC_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLCPropertyStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)lightLCPropertySetWithPropertyID:(UInt16)propertyID propertyValue:(NSData *)propertyValue withNode:(SigNodeModel *)node resMax:(int)resMax ack:(BOOL)ack successCallback:(responseLightLCPropertyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)lightLCPropertySetWithDestination:(UInt16)destination propertyID:(UInt16)propertyID propertyValue:(NSData *)propertyValue retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLCPropertyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigMeshMessage *msg;
     if (ack) {
         SigLightLCPropertySet *message = [[SigLightLCPropertySet alloc] initWithLightLCPropertyID:propertyID lightLCPropertyValue:propertyValue];
@@ -2913,22 +2490,16 @@ function 1:special if you need do provision , you should call this method, and i
             resultCallback = nil;
         }
     }
-//    SigModelIDModel *model = [node getModelIDModelWithModelID:SIG_MD_LIGHT_LC_SETUP_S];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseLightLCPropertyStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
-        return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-
-//    return [SigMeshLib.share sendSigMeshMessage:message fromLocalElement:nil toModelIDModel:model command:command];
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendMeshMessage:msg fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-/// Sets the Filter Type on the connected GATT Proxy Node.
-/// The filter will be emptied.
-///
-/// - parameter type: The new proxy filter type.
 + (void)setType:(SigProxyFilerType)type successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback {
     SigSetFilterType *message = [[SigSetFilterType alloc] initWithType:type];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -2940,7 +2511,6 @@ function 1:special if you need do provision , you should call this method, and i
     [SigMeshLib.share sendSigProxyConfigurationMessage:message command:command];
 }
 
-/// Resets the filter to an empty whitelist filter.
 + (void)resetFilterWithSuccessCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback {
     SigSetFilterType *message = [[SigSetFilterType alloc] initWithType:SigProxyFilerType_whitelist];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -2951,16 +2521,6 @@ function 1:special if you need do provision , you should call this method, and i
     [SigMeshLib.share sendSigProxyConfigurationMessage:message command:command];
 }
 
-/// Adds the given Address to the active filter.
-///
-/// - parameter address: The address to add to the filter.
-+ (void)addAddressToFilterWithAddress:(UInt16)address successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback {
-    [self addAddressesToFilterWithAddresses:@[@(address)] successCallback:successCallback failCallback:failCallback];
-}
-
-/// Adds the given Addresses to the active filter.
-///
-/// - parameter addresses: The addresses to add to the filter.
 + (void)addAddressesToFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback {
     SigAddAddressesToFilter *message = [[SigAddAddressesToFilter alloc] initWithAddresses:addresses];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -2972,16 +2532,6 @@ function 1:special if you need do provision , you should call this method, and i
     [SigMeshLib.share sendSigProxyConfigurationMessage:message command:command];
 }
 
-/// Removes the given Address from the active filter.
-///
-/// - parameter address: The address to remove from the filter.
-+ (void)removeAddressFromFilterWithAddress:(NSNumber *)address successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback {
-    [self removeAddressesFromFilterWithAddresses:@[address] successCallback:successCallback failCallback:failCallback];
-}
-
-/// Removes the given Addresses from the active filter.
-///
-/// - parameter addresses: The addresses to remove from the filter.
 + (void)removeAddressesFromFilterWithAddresses:(NSArray <NSNumber *>*)addresses successCallback:(responseFilterStatusMessageBlock)successCallback failCallback:(resultBlock)failCallback {
     SigRemoveAddressesFromFilter *message = [[SigRemoveAddressesFromFilter alloc] initWithAddresses:addresses];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -2992,8 +2542,6 @@ function 1:special if you need do provision , you should call this method, and i
     [SigMeshLib.share sendSigProxyConfigurationMessage:message command:command];
 }
 
-/// Adds all the addresses the Provisioner is subscribed to to the
-/// Proxy Filter.
 + (void)setFilterForProvisioner:(SigProvisionerModel *)provisioner successCallback:(responseFilterStatusMessageBlock)successCallback finishCallback:(resultBlock)failCallback {
     SigNodeModel *node = provisioner.node;
     if (!node) {
@@ -3070,8 +2618,10 @@ function 1:special if you need do provision , you should call this method, and i
             }
         }];
     } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        if (failCallback) {
-            failCallback(error==nil,error);
+        if (error != nil) {
+            if (failCallback) {
+                failCallback(NO,error);
+            }
         }
     }];
 }
@@ -3084,14 +2634,14 @@ function 1:special if you need do provision , you should call this method, and i
  ---> Sending - Access PDU, source:(0001)->destination: (0002) Op Code: (0xB601), accessPdu=B6010001
  <--- Response - Access PDU, source:(0002)->destination: (0001) Op Code: (0xB602), accessPdu=B60201000611020100333100
  */
-+ (SigMessageHandle *)firmwareUpdateInformationGetWithDestination:(UInt16)destination firstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)firmwareUpdateInformationGetWithDestination:(UInt16)destination firstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigFirmwareUpdateInformationGet *message = [[SigFirmwareUpdateInformationGet alloc] initWithFirstIndex:firstIndex entriesLimit:entriesLimit];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFirmwareInformationStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
@@ -3100,14 +2650,14 @@ function 1:special if you need do provision , you should call this method, and i
 ---> Sending - Access PDU, source:(0001)->destination: (0002) Op Code: (0xB603), accessPdu=B6030000000000
 <--- Response - Access PDU, source:(0002)->destination: (0001) Op Code: (0xB604), accessPdu=B6040000
 */
-+ (SigMessageHandle *)firmwareUpdateFirmwareMetadataCheckWithDestination:(UInt16)destination updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex incomingFirmwareMetadata:(nullable NSData *)incomingFirmwareMetadata resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateFirmwareMetadataStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)firmwareUpdateFirmwareMetadataCheckWithDestination:(UInt16)destination updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex incomingFirmwareMetadata:(nullable NSData *)incomingFirmwareMetadata retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareUpdateFirmwareMetadataStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigFirmwareUpdateFirmwareMetadataCheck *message = [[SigFirmwareUpdateFirmwareMetadataCheck alloc] initWithUpdateFirmwareImageIndex:updateFirmwareImageIndex incomingFirmwareMetadata:incomingFirmwareMetadata];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFirmwareUpdateFirmwareMetadataStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
@@ -3116,43 +2666,42 @@ function 1:special if you need do provision , you should call this method, and i
 ---> Sending - Access PDU, source:(0001)->destination: (0012) Op Code: (0xB605), accessPdu=B605
 <--- Response - Access PDU, source:(0012)->destination: (0001) Op Code: (0000B609), accessPdu=B6090002ff00001122334455667788110201003331
 */
-+ (SigMessageHandle *)firmwareUpdateGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)firmwareUpdateGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigFirmwareUpdateGet *message = [[SigFirmwareUpdateGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFirmwareUpdateStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-#warning 2020年04月16日09:31:37，已经修改，待更新log
 /*
 ---> Sending - Access PDU, source:(0001)->destination: (0002) Op Code: (0xB606), accessPdu=B606FF000011223344556677880000000000
-<--- Response - Access PDU, source:(0002)->destination: (0001) Op Code: (0xB609), accessPdu=B60920FF000000112233445566778800
+<--- Response - Access PDU, source:(0002)->destination: (0001) Op Code: (0xB609), accessPdu=B60940FF000000112233445566778800
 */
-+ (SigMessageHandle *)firmwareUpdateStartWithDestination:(UInt16)destination updateTTL:(UInt8)updateTTL updateTimeoutBase:(UInt16)updateTimeoutBase updateBLOBID:(UInt64)updateBLOBID updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex incomingFirmwareMetadata:(nullable NSData *)incomingFirmwareMetadata resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)firmwareUpdateStartWithDestination:(UInt16)destination updateTTL:(UInt8)updateTTL updateTimeoutBase:(UInt16)updateTimeoutBase updateBLOBID:(UInt64)updateBLOBID updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex incomingFirmwareMetadata:(nullable NSData *)incomingFirmwareMetadata retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigFirmwareUpdateStart *message = [[SigFirmwareUpdateStart alloc] initWithUpdateTTL:updateTTL updateTimeoutBase:updateTimeoutBase updateBLOBID:updateBLOBID updateFirmwareImageIndex:updateFirmwareImageIndex incomingFirmwareMetadata:incomingFirmwareMetadata];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFirmwareUpdateStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)firmwareUpdateCancelWithDestination:(UInt16)destination companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)firmwareUpdateCancelWithDestination:(UInt16)destination companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigFirmwareUpdateCancel *message = [[SigFirmwareUpdateCancel alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFirmwareUpdateStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
@@ -3161,38 +2710,38 @@ function 1:special if you need do provision , you should call this method, and i
 ---> Sending - Access PDU, source:(0001)->destination: (0012) Op Code: (0xB608), accessPdu=B608
 <--- Response - Access PDU, source:(0012)->destination: (0001) Op Code: (0000B609), accessPdu=B6090000ff00001122334455667788110201003331
 */
-+ (SigMessageHandle *)firmwareUpdateApplyWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)firmwareUpdateApplyWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigFirmwareUpdateApply *message = [[SigFirmwareUpdateApply alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFirmwareUpdateStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)firmwareDistributionGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)firmwareDistributionGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigFirmwareDistributionGet *message = [[SigFirmwareDistributionGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFirmwareDistributionStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)firmwareDistributionStartWithDestination:(UInt16)destination distributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(BOOL)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex distributionMulticastAddress:(NSData *)distributionMulticastAddress resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)firmwareDistributionStartWithDestination:(UInt16)destination distributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(BOOL)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex distributionMulticastAddress:(NSData *)distributionMulticastAddress retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigFirmwareDistributionStart *message = [[SigFirmwareDistributionStart alloc] initWithDistributionAppKeyIndex:distributionAppKeyIndex distributionTTL:distributionTTL distributionTimeoutBase:distributionTimeoutBase distributionTransferMode:distributionTransferMode updatePolicy:updatePolicy RFU:RFU distributionFirmwareImageIndex:distributionFirmwareImageIndex distributionMulticastAddress:distributionMulticastAddress];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFirmwareDistributionStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
@@ -3201,40 +2750,40 @@ function 1:special if you need do provision , you should call this method, and i
 ---> Sending - Access PDU, source:(0001)->destination: (0001) Op Code: (0xB60C), accessPdu=B60C
 <--- Response - 
 */
-+ (SigMessageHandle *)firmwareDistributionCancelWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)firmwareDistributionCancelWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigFirmwareDistributionCancel *message = [[SigFirmwareDistributionCancel alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFirmwareDistributionStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-//+ (SigMessageHandle *)firmwareDistributionDetailsGetWithDestination:(UInt16)destination status:(SigFirmwareDistributionStatusType)status companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseFirmwareDistributionDetailsListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+//+ (SigMessageHandle *)firmwareDistributionDetailsGetWithDestination:(UInt16)destination status:(SigFirmwareDistributionStatusType)status companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionDetailsListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
 //    SigFirmwareDistributionDetailsGet *message = [[SigFirmwareDistributionDetailsGet alloc] initWithStatus:status companyID:companyID firmwareID:firmwareID];
 //    SDKLibCommand *command = [[SDKLibCommand alloc] init];
 //    command.curMeshMessage = message;
 //    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
 //    command.responseFirmwareDistributionDetailsListCallBack = successCallback;
 //    command.resultCallback = resultCallback;
-//    command.responseMaxCount = resMax;
+//    command.responseMaxCount = responseMaxCount;
 //    command.retryCount = retryCount;
 //    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 //}
 
 /* BLOB Transfer Messages */
 
-+ (SigMessageHandle *)BLOBTransferGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)BLOBTransferGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigBLOBTransferGet *message = [[SigBLOBTransferGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseBLOBTransferStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
@@ -3243,26 +2792,26 @@ function 1:special if you need do provision , you should call this method, and i
 ---> Sending - Access PDU,  source:(0001)->destination: (0002) Op Code: (0xB702), accessPdu=B702401122334455667788C41100000C7C01
 <--- Response - Access PDU, source:(0002)->destination: (0001) Op Code: (0xB704), accessPdu=B7044001
 */
-+ (SigMessageHandle *)BLOBTransferStartWithDestination:(UInt16)destination transferMode:(SigTransferModeState)transferMode BLOBID:(UInt64)BLOBID BLOBSize:(UInt32)BLOBSize BLOBBlockSizeLog:(UInt8)BLOBBlockSizeLog MTUSize:(UInt16)MTUSize resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)BLOBTransferStartWithDestination:(UInt16)destination transferMode:(SigTransferModeState)transferMode BLOBID:(UInt64)BLOBID BLOBSize:(UInt32)BLOBSize BLOBBlockSizeLog:(UInt8)BLOBBlockSizeLog MTUSize:(UInt16)MTUSize retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigBLOBTransferStart *message = [[SigBLOBTransferStart alloc] initWithTransferMode:transferMode BLOBID:BLOBID BLOBSize:BLOBSize BLOBBlockSizeLog:BLOBBlockSizeLog MTUSize:MTUSize];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseBLOBTransferStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)BLOBTransferAbortWithDestination:(UInt16)destination BLOBID:(UInt64)BLOBID resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)BLOBTransferAbortWithDestination:(UInt16)destination BLOBID:(UInt64)BLOBID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigObjectTransferCancel *message = [[SigObjectTransferCancel alloc] initWithBLOBID:BLOBID];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseBLOBTransferStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
@@ -3271,24 +2820,24 @@ function 1:special if you need do provision , you should call this method, and i
 ---> Sending - Access PDU, source:(0001)->destination: (0012) Op Code: (0xB705), accessPdu=B70500000001
 <--- Response - Access PDU, source:(0012)->destination: (0001) Op Code: (0000007E), accessPdu=7E0000000001
 */
-+ (SigMessageHandle *)BLOBBlockStartWithBlockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize toDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)BLOBBlockStartWithDestination:(UInt16)destination blockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigBLOBBlockStart *message = [[SigBLOBBlockStart alloc] initWithBlockNumber:blockNumber chunkSize:chunkSize];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseBLOBBlockStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)BLOBChunkTransferWithDestination:(UInt16)destination chunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)BLOBChunkTransferWithDestination:(UInt16)destination chunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount resultCallback:(resultBlock)resultCallback {
     SigBLOBChunkTransfer *message = [[SigBLOBChunkTransfer alloc] initWithChunkNumber:chunkNumber chunkData:chunkData];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     command.timeout = 10.0;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
@@ -3298,14 +2847,14 @@ function 1:special if you need do provision , you should call this method, and i
 ---> Sending - Access PDU, source:(0001)->destination: (0012) Op Code: (0xB707), accessPdu=B707
 <--- Response - Access PDU, source:(0012)->destination: (0001) Op Code: (0000007E), accessPdu=7E4000000001
 */
-+ (SigMessageHandle *)BLOBBlockGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)BLOBBlockGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigBLOBBlockGet *message = [[SigBLOBBlockGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseBLOBBlockStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
@@ -3314,129 +2863,126 @@ function 1:special if you need do provision , you should call this method, and i
 ---> Sending - Access PDU, source:(0001)->destination: (0002) Op Code: (0xB70A), accessPdu=B70A
 <--- Response - Access PDU, Access PDU, source:(0002)->destination: (0001) Op Code: (0xB70B), accessPdu=B70B0C0C10000001000003007C0101
 */
-+ (SigMessageHandle *)BLOBInformationGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseBLOBInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)BLOBInformationGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigBLOBInformationGet *message = [[SigBLOBInformationGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseBLOBInformationStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
 #pragma mark - Remote Provision
 
-+ (SigMessageHandle *)remoteProvisioningScanCapabilitiesGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningScanCapabilitiesStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)remoteProvisioningScanCapabilitiesGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningScanCapabilitiesStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigRemoteProvisioningScanCapabilitiesGet *message = [[SigRemoteProvisioningScanCapabilitiesGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseRemoteProvisioningScanCapabilitiesStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)remoteProvisioningScanGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)remoteProvisioningScanGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigRemoteProvisioningScanGet *message = [[SigRemoteProvisioningScanGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseRemoteProvisioningScanStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)remoteProvisioningScanStartWithScannedItemsLimit:(UInt8)scannedItemsLimit timeout:(UInt8)timeout UUID:(nullable NSData *)UUID destination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)remoteProvisioningScanStartWithDestination:(UInt16)destination scannedItemsLimit:(UInt8)scannedItemsLimit timeout:(UInt8)timeout UUID:(nullable NSData *)UUID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigRemoteProvisioningScanStart *message = [[SigRemoteProvisioningScanStart alloc] initWithScannedItemsLimit:scannedItemsLimit timeout:timeout UUID:UUID];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseRemoteProvisioningScanStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)remoteProvisioningScanStopWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)remoteProvisioningScanStopWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigRemoteProvisioningScanStop *message = [[SigRemoteProvisioningScanStop alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseRemoteProvisioningScanStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)remoteProvisioningExtendedScanStartWithADTypeFilterCount:(UInt8)ADTypeFilterCount ADTypeFilter:(nullable NSData *)ADTypeFilter UUID:(nullable NSData *)UUID timeout:(UInt8)timeout destination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)remoteProvisioningExtendedScanStartWithDestination:(UInt16)destination ADTypeFilterCount:(UInt8)ADTypeFilterCount ADTypeFilter:(nullable NSData *)ADTypeFilter UUID:(nullable NSData *)UUID timeout:(UInt8)timeout retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount resultCallback:(resultBlock)resultCallback {
     SigRemoteProvisioningExtendedScanStart *message = [[SigRemoteProvisioningExtendedScanStart alloc] initWithADTypeFilterCount:ADTypeFilterCount ADTypeFilter:ADTypeFilter UUID:UUID timeout:timeout];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)remoteProvisioningLinkGetWithDestination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)remoteProvisioningLinkGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigRemoteProvisioningLinkGet *message = [[SigRemoteProvisioningLinkGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseRemoteProvisioningLinkStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)remoteProvisioningLinkOpenWithUUID:(nullable NSData *)UUID destination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)remoteProvisioningLinkOpenWithDestination:(UInt16)destination UUID:(nullable NSData *)UUID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigRemoteProvisioningLinkOpen *message = [[SigRemoteProvisioningLinkOpen alloc] initWithUUID:UUID];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseRemoteProvisioningLinkStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)remoteProvisioningLinkCloseWithReason:(SigRemoteProvisioningLinkCloseStatus)reason destination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)remoteProvisioningLinkCloseWithDestination:(UInt16)destination reason:(SigRemoteProvisioningLinkCloseStatus)reason retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigRemoteProvisioningLinkClose *message = [[SigRemoteProvisioningLinkClose alloc] initWithReason:reason];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseRemoteProvisioningLinkStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)remoteProvisioningPDUSendWithOutboundPDUNumber:(UInt8)outboundPDUNumber provisioningPDU:(NSData *)provisioningPDU destination:(UInt16)destination resMax:(NSInteger)resMax retryCount:(NSInteger)retryCount resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)remoteProvisioningPDUSendWithDestination:(UInt16)destination OutboundPDUNumber:(UInt8)outboundPDUNumber provisioningPDU:(NSData *)provisioningPDU retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount resultCallback:(resultBlock)resultCallback {
     SigRemoteProvisioningPDUSend *message = [[SigRemoteProvisioningPDUSend alloc] initWithOutboundPDUNumber:outboundPDUNumber provisioningPDU:provisioningPDU];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.resultCallback = resultCallback;
-    command.responseMaxCount = resMax;
+    command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
 
-
 #pragma mark - API by Telink
-
-/// Get Online device, private use OnlineStatusCharacteristic(获取当前mesh网络的所有设备的在线、开关、亮度、色温状态（私有定制，需要特定的OnlineStatusCharacteristic）)
 
 + (nullable NSError *)telinkApiGetOnlineStatueFromUUIDWithResponseMaxCount:(int)responseMaxCount successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigGenericOnOffGet *message = [[SigGenericOnOffGet alloc] init];
@@ -3458,7 +3004,6 @@ function 1:special if you need do provision , you should call this method, and i
 }
 
 + (nullable NSError *)sendIniCommandModel:(IniCommandModel *)model successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    #warning 2019年12月20日09:51:19，待完善ini接口
     NSError *err = nil;
     UInt16 op = model.opcode;
     if (model.opcode > 0xff) {
@@ -3481,6 +3026,14 @@ function 1:special if you need do provision , you should call this method, and i
     SigIniMeshMessage *message = [[SigIniMeshMessage alloc] initWithParameters:model.commandData];
     if (model.vendorId) {
         message.opCode = (op << 16) | ((model.vendorId & 0xff) << 8) | (model.vendorId >> 8);
+        //vendor的控制指令的tid特殊处理:添加tid在commandData后面。
+        if (model.needTid) {
+            NSMutableData *mData = [NSMutableData dataWithData:model.commandData];
+            UInt8 tid = model.tid;
+            NSData *tidData = [NSData dataWithBytes:&tid length:1];
+            [mData appendData:tidData];
+            message.parameters = mData;
+        }
     } else {
         message.opCode = op;
     }
@@ -3503,6 +3056,8 @@ function 1:special if you need do provision , you should call this method, and i
     command.appkeyA = model.appkeyA;
     command.ivIndexA = model.ivIndexA;
     command.hadRetryCount = 0;
+    command.needTid = model.needTid;
+    command.tid = model.tid;
     if (model.timeout) {
         command.timeout = model.timeout;
     }
@@ -3520,10 +3075,6 @@ function 1:special if you need do provision , you should call this method, and i
     model.appkeyA = SigDataSource.share.curAppkeyModel;
     model.ivIndexA = SigDataSource.share.curNetkeyModel.ivIndex;
     return [self sendIniCommandModel:model successCallback:successCallback resultCallback:resultCallback];
-}
-
-+ (void)sendOpByINI:(UInt8 *)iniBuf length:(UInt32)length successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    [self sendOpINIData:[NSData dataWithBytes:iniBuf length:length] successCallback:successCallback resultCallback:resultCallback];
 }
 
 + (BOOL)isReliableCommandWithOpcode:(UInt16)opcode vendorOpcodeResponse:(UInt32)vendorOpcodeResponse {
@@ -3550,11 +3101,11 @@ function 1:special if you need do provision , you should call this method, and i
         TeLogInfo(@"finish init SigBluetooth.");
         [SigMeshLib share];
         [SigMeshLib.share setNetworkManager:SigNetworkManager.share];
-        [SigMeshLib.share setAcknowledgmentMessageInterval:5.0];
-        [SigMeshLib.share setAcknowledgmentMessageTimeout:40.0];
+//        [SigMeshLib.share setAcknowledgmentMessageInterval:5.0];
+//        [SigMeshLib.share setAcknowledgmentMessageTimeout:40.0];
     }];
     
-//    ///默认为NO，连接速度更加快。设置为YES，表示扫描到的设备必须包含MacAddress，有些客户在添加流程需要通过MacAddress获取三元组信息。
+//    ///默认为NO，连接速度更加快。设置为YES，表示扫描到的设备必须包含MacAddress，有些客户在添加流程需要通过MacAddress获取三元组信息，需要使用YES。
 //    [SigBluetooth.share setWaitScanRseponseEnabel:YES];
 }
 
@@ -3579,7 +3130,7 @@ function 1:special if you need do provision , you should call this method, and i
     UInt8 zoneOffset = (UInt8)(offset/60/15+64);//时区=分/15+64
 //    TeLogInfo(@"设置秒数：%llu，时区：%d",seconds,zoneOffset);
     SigTimeModel *timeModel = [[SigTimeModel alloc] initWithTAISeconds:seconds subSeconds:0 uncertainty:0 timeAuthority:1 TAI_UTC_Delta:0 timeZoneOffset:zoneOffset];
-    [self timeStatusWithSigTimeModel:timeModel toDestination:kMeshAddress_allNodes resMax:0 successCallback:nil resultCallback:nil];
+    [self timeStatusWithDestination:kMeshAddress_allNodes timeModel:timeModel retryCount:0 responseMaxCount:0 successCallback:nil resultCallback:nil];
 }
 
 + (void)publishNodeTimeModelWithNodeAddress:(UInt16)address successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
@@ -3603,7 +3154,7 @@ function 1:special if you need do provision , you should call this method, and i
             SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:2 intervalSteps:5];
             SigPublish *publish = [[SigPublish alloc] initWithDestination:kMeshAddress_allNodes withKeyIndex:SigDataSource.share.curAppkeyModel.index friendshipCredentialsFlag:0 ttl:0xff periodSteps:kTimePublishInterval periodResolution:1 retransmit:retransmit];
             SigModelIDModel *modelID = [node getModelIDModelWithModelID:option andElementAddress:eleAdr];
-            [SDKLibCommand configModelPublicationSetWithSigPublish:publish modelIDModel:modelID successCallback:successCallback resultCallback:resultCallback] ;
+            [SDKLibCommand configModelPublicationSetWithDestination:address publish:publish elementAddress:eleAdr modelIdentifier:modelID.modelIdentifier companyIdentifier:modelID.companyIdentifier retryCount:2 responseMaxCount:1 successCallback:successCallback resultCallback:resultCallback];
         });
     }else{
         TeLogError(@"there has not a time model of node that address is 0x%x",address);
@@ -3615,6 +3166,49 @@ function 1:special if you need do provision , you should call this method, and i
     }
 }
 
+
+/**
+ function 1:AUTO if you need do provision , you should call this method, and it'll call back what you need
+ 
+ @param address address of new device
+ @param networkKey network key, which provsion need, you can see it as password of the mesh
+ @param netkeyIndex netkey index
+ @param appkeyModel appkey model
+ @param unicastAddress address of remote device
+ @param uuid uuid of remote device
+ @param type KeyBindTpye_Normal是普通添加模式，KeyBindTpye_Quick是快速添加模式
+ @param isAuto 添加完成一个设备后，是否自动扫描添加下一个设备
+ @param provisionSuccess call back when a device provision successful
+ @param provisionFail call back when a device provision fail
+ @param keyBindSuccess call back when a device keybind successful
+ @param keyBindFail call back when a device keybind fail
+ @param finish finish add the available devices list to the mesh
+ */
++ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
+    [SigAddDeviceManager.share startAddDeviceWithNextAddress:address networkKey:networkKey netkeyIndex:netkeyIndex appkeyModel:appkeyModel unicastAddress:unicastAddress uuid:uuid keyBindType:type productID:productID cpsData:cpsData isAutoAddNextDevice:isAuto provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail finish:finish];
+}
+
+
+/**
+function 1:special if you need do provision , you should call this method, and it'll call back what you need
+
+@param address address of new device
+@param networkKey network key, which provsion need, you can see it as password of the mesh
+@param netkeyIndex netkey index
+@param peripheral device need add to mesh
+@param provisionType ProvisionTpye_NoOOB or ProvisionTpye_StaticOOB.
+@param staticOOBData oob for ProvisionTpye_StaticOOB.
+@param type KeyBindTpye_Normal是普通添加模式，KeyBindTpye_Quick是快速添加模式
+@param provisionSuccess call back when a device provision successful
+@param provisionFail call back when a device provision fail
+@param keyBindSuccess call back when a device keybind successful
+@param keyBindFail call back when a device keybind fail
+*/
++ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail{
+    [SigAddDeviceManager.share startAddDeviceWithNextAddress:(UInt16)address networkKey:networkKey netkeyIndex:netkeyIndex appkeyModel:appkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:type productID:productID cpsData:cpsData provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail];
+}
+
+
 /// Add Single Device (provision+keyBind)
 /// @param configModel all config message of add device.
 /// @param provisionSuccess callback when provision success.
@@ -3624,6 +3218,7 @@ function 1:special if you need do provision , you should call this method, and i
 - (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
     [SigAddDeviceManager.share startAddDeviceWithSigAddConfigModel:configModel provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail];
 }
+
 
 /// provision
 /// @param peripheral CBPeripheral of CoreBluetooth will be provision.
@@ -3645,6 +3240,7 @@ function 1:special if you need do provision , you should call this method, and i
         TeLogError(@"unsupport provision type.");
     }
 }
+
 
 /// keybind
 /// @param peripheral CBPeripheral of CoreBluetooth will be keybind.

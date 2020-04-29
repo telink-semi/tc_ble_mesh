@@ -658,8 +658,12 @@
         }];
         int low = (int)(floor(0.2 * (double)(sortRSSIs.count)));
         int hight = (int)(floor(0.1 * (double)(sortRSSIs.count)));
-        [sortRSSIs removeObjectsInRange:NSMakeRange(0, low)];
-        [sortRSSIs removeObjectsInRange:NSMakeRange(sortRSSIs.count - hight, hight)];
+        if (sortRSSIs && sortRSSIs.count >= low) {
+            [sortRSSIs removeObjectsInRange:NSMakeRange(0, low)];
+        }
+        if (sortRSSIs && sortRSSIs.count >= hight) {
+            [sortRSSIs removeObjectsInRange:NSMakeRange(sortRSSIs.count - hight, hight)];
+        }
         int rv = 0;
         for (NSNumber *r in sortRSSIs) {
             rv += r.intValue;
@@ -696,7 +700,7 @@
 
 - (void)writeForPROXYIn:(NSData *)d{
     if (self.PROXY_InCharacteristic) {
-        TeLog(@"app PROXY writeValue:%@",d);
+        TeLog(@"---> to:PROXY, length:%d",d.length);
         [self.peripheral writeValue:d forCharacteristic:self.PROXY_InCharacteristic type:CBCharacteristicWriteWithoutResponse];
     }else{
         TeLog(@"app don't found PROXY_InCharacteristic");
@@ -705,7 +709,7 @@
 
 - (void)writeForPBGATTIn:(NSData *)d{
     if (self.PBGATT_InCharacteristic) {
-        TeLog(@"app PBGATT writeValue:%@",d);
+        TeLog(@"---> to:GATT, length:%d,value:%@",d.length,[LibTools convertDataToHexStr:d]);
         [self.peripheral writeValue:d forCharacteristic:self.PBGATT_InCharacteristic type:CBCharacteristicWriteWithoutResponse];
     }else{
         TeLog(@"app don't found PBGATT_InCharacteristic");
@@ -714,7 +718,7 @@
 
 - (void)writeForOnlineStatus:(NSData *)d{
     if (self.OnlineStatusCharacteristic) {
-        TeLog(@"app's OnlineStatusCharacteristic writeValue:%@",d);
+        TeLog(@"---> to:OnlineStatusCharacteristic, length:%d,value:%@",d.length,[LibTools convertDataToHexStr:d]);
         [self.peripheral writeValue:d forCharacteristic:self.OnlineStatusCharacteristic type:CBCharacteristicWriteWithResponse];
     }else{
         TeLog(@"app don't found OnlineStatusCharacteristic");

@@ -1,3 +1,24 @@
+/********************************************************************************************************
+* @file     SigFastProvisionAddManager.m
+*
+* @brief    for TLSR chips
+*
+* @author     telink
+* @date     Sep. 30, 2010
+*
+* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+*           All rights reserved.
+*
+*             The information contained herein is confidential and proprietary property of Telink
+*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
+*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
+*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
+*           This heading MUST NOT be removed from this file.
+*
+*              Licensees are granted free, non-transferable use of the information in this
+*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+*
+*******************************************************************************************************/
 //
 //  SigFastProvisionAddManager.m
 //  TelinkSigMeshLib
@@ -277,7 +298,7 @@
     TeLogInfo(@"\n\n==========fast provision:step7\n\n");
     self.fastProvisionStatus = SigFastProvisionStatus_confirmOk;
     UInt16 delayMillisecond = 1000;
-    __weak typeof(self) weakSelf = self;
+//    __weak typeof(self) weakSelf = self;
     [self fastProvisionCompleteWithDelayMillisecond:delayMillisecond successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
 //        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
@@ -301,8 +322,8 @@
         [model setAddSigAppkeyModelSuccess:SigDataSource.share.curAppkeyModel];
         [model setCompositionData:self.page0];
         model.deviceKey = [LibTools convertDataToHexStr:fastModel.deviceKey];
+        model.UUID = [LibTools convertDataToHexStr:fastModel.deviceKey];
         model.peripheralUUID = nil;
-        model.UUID = nil;
         model.macAddress = [LibTools convertDataToHexStr:[LibTools turnOverData:fastModel.macAddress]];
         if ([SigDataSource.share.nodes containsObject:model]) {
             NSInteger index = [SigDataSource.share.nodes indexOfObject:model];
@@ -359,11 +380,11 @@
 - (void)fastProvisionResetNetworkWithDelayMillisecond:(UInt16)delayMillisecond successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     UInt16 tem = delayMillisecond;
     NSData *temData = [NSData dataWithBytes:&tem length:2];
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.netKeyA.index appkeyIndex:SigDataSource.share.appKeyA.index retryCount:2 responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshResetNetwork vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:temData];
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:2 responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshResetNetwork vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:temData];
     if (self.currentConnectedNodeIsUnprovisioned) {
-        model.netkeyA = SigDataSource.share.netKeyA;
-        model.appkeyA = SigDataSource.share.appKeyA;
-        model.ivIndexA = SigDataSource.share.ivIndexA;
+        model.netkeyA = SigDataSource.share.defaultNetKeyA;
+        model.appkeyA = SigDataSource.share.defaultAppKeyA;
+        model.ivIndexA = SigDataSource.share.defaultIvIndexA;
     } else {
         model.netkeyA = SigDataSource.share.curNetkeyModel;
         model.appkeyA = SigDataSource.share.curAppkeyModel;
@@ -379,10 +400,10 @@
 - (void)fastProvisionGetAddressWithProductId:(UInt16)productId successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     UInt16 tem = productId;
     NSData *temData = [NSData dataWithBytes:&tem length:2];
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.netKeyA.index appkeyIndex:SigDataSource.share.appKeyA.index retryCount:0 responseMax:0xFF address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshAddressGet vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshAddressGetStatus needTid:NO tid:0 commandData:temData];
-    model.netkeyA = SigDataSource.share.netKeyA;
-    model.appkeyA = SigDataSource.share.appKeyA;
-    model.ivIndexA = SigDataSource.share.ivIndexA;
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:0 responseMax:0xFF address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshAddressGet vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshAddressGetStatus needTid:NO tid:0 commandData:temData];
+    model.netkeyA = SigDataSource.share.defaultNetKeyA;
+    model.appkeyA = SigDataSource.share.defaultAppKeyA;
+    model.ivIndexA = SigDataSource.share.defaultIvIndexA;
     model.timeout = 2.0;
     [SDKLibCommand sendIniCommandModel:model successCallback:successCallback resultCallback:resultCallback];
 }
@@ -399,10 +420,10 @@
     NSMutableData *mData = [NSMutableData data];
     [mData appendData:macAddressData];
     [mData appendData:temData];
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.netKeyA.index appkeyIndex:SigDataSource.share.appKeyA.index retryCount:2 responseMax:1 address:destination opcode:SigOpCode_VendorID_MeshAddressSet vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshAddressSetStatus needTid:NO tid:0 commandData:mData];
-    model.netkeyA = SigDataSource.share.netKeyA;
-    model.appkeyA = SigDataSource.share.appKeyA;
-    model.ivIndexA = SigDataSource.share.ivIndexA;
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:2 responseMax:1 address:destination opcode:SigOpCode_VendorID_MeshAddressSet vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshAddressSetStatus needTid:NO tid:0 commandData:mData];
+    model.netkeyA = SigDataSource.share.defaultNetKeyA;
+    model.appkeyA = SigDataSource.share.defaultAppKeyA;
+    model.ivIndexA = SigDataSource.share.defaultIvIndexA;
     [SDKLibCommand sendIniCommandModel:model successCallback:successCallback resultCallback:resultCallback];
 }
 
@@ -419,10 +440,10 @@
     tem = provisionAddress;
     temData = [NSData dataWithBytes:&tem length:2];
     [mData appendData:temData];
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.netKeyA.index appkeyIndex:SigDataSource.share.appKeyA.index retryCount:0 responseMax:0xFF address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshAddressGet vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshAddressGetStatus needTid:NO tid:0 commandData:mData];
-    model.netkeyA = SigDataSource.share.netKeyA;
-    model.appkeyA = SigDataSource.share.appKeyA;
-    model.ivIndexA = SigDataSource.share.ivIndexA;
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:0 responseMax:0xFF address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshAddressGet vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshAddressGetStatus needTid:NO tid:0 commandData:mData];
+    model.netkeyA = SigDataSource.share.defaultNetKeyA;
+    model.appkeyA = SigDataSource.share.defaultAppKeyA;
+    model.ivIndexA = SigDataSource.share.defaultIvIndexA;
     [SDKLibCommand sendIniCommandModel:model successCallback:successCallback resultCallback:resultCallback];
 }
 
@@ -481,10 +502,10 @@
     [mData appendData:temData];
     [mData appendData:SigDataSource.share.curAppKey];
     
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.netKeyA.index appkeyIndex:SigDataSource.share.appKeyA.index retryCount:2 responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionDataSet vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:mData];
-    model.netkeyA = SigDataSource.share.netKeyA;
-    model.appkeyA = SigDataSource.share.appKeyA;
-    model.ivIndexA = SigDataSource.share.ivIndexA;
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:2 responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionDataSet vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:mData];
+    model.netkeyA = SigDataSource.share.defaultNetKeyA;
+    model.appkeyA = SigDataSource.share.defaultAppKeyA;
+    model.ivIndexA = SigDataSource.share.defaultIvIndexA;
     [SDKLibCommand sendIniCommandModel:model successCallback:successCallback resultCallback:resultCallback];
 }
 
@@ -492,10 +513,10 @@
 
 /// 向设备确认是否收到了新网络参数。（Confirm发送一次retry两次，如果设备返回SigOpCode_VendorID_MeshProvisionConfirmStatus 表示这个设备在SetNetworkInfo设置mesh info失败了，重复执行SetNetworkInfo；如果APP未收到表示SigOpCode_VendorID_MeshProvisionConfirmStatus则表示所有设备都完成了SetNetworkInfo。）
 - (void)fastProvisionConfirmWithSuccessCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.netKeyA.index appkeyIndex:SigDataSource.share.appKeyA.index retryCount:2 responseMax:1 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionConfirm vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshProvisionConfirmStatus needTid:NO tid:0 commandData:nil];
-    model.netkeyA = SigDataSource.share.netKeyA;
-    model.appkeyA = SigDataSource.share.appKeyA;
-    model.ivIndexA = SigDataSource.share.ivIndexA;
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:2 responseMax:1 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionConfirm vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshProvisionConfirmStatus needTid:NO tid:0 commandData:nil];
+    model.netkeyA = SigDataSource.share.defaultNetKeyA;
+    model.appkeyA = SigDataSource.share.defaultAppKeyA;
+    model.ivIndexA = SigDataSource.share.defaultIvIndexA;
     [SDKLibCommand sendIniCommandModel:model successCallback:successCallback resultCallback:resultCallback];
 }
 
@@ -506,10 +527,10 @@
 - (void)fastProvisionCompleteWithDelayMillisecond:(UInt16)delayMillisecond successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     UInt16 tem = delayMillisecond;
     NSData *temData = [NSData dataWithBytes:&tem length:2];
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.netKeyA.index appkeyIndex:SigDataSource.share.appKeyA.index retryCount:2 responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionComplete vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:temData];
-    model.netkeyA = SigDataSource.share.netKeyA;
-    model.appkeyA = SigDataSource.share.appKeyA;
-    model.ivIndexA = SigDataSource.share.ivIndexA;
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:2 responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionComplete vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:temData];
+    model.netkeyA = SigDataSource.share.defaultNetKeyA;
+    model.appkeyA = SigDataSource.share.defaultAppKeyA;
+    model.ivIndexA = SigDataSource.share.defaultIvIndexA;
     [SDKLibCommand sendIniCommandModel:model successCallback:successCallback resultCallback:resultCallback];
 }
 

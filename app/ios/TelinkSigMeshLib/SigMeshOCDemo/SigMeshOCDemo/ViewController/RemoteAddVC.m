@@ -30,6 +30,9 @@
 #import "RemoteAddVC.h"
 #import "AddDeviceItemCell.h"
 
+//优先添加大于阈值的设备
+#define kRSSIThresholdValue (-70)
+
 /*
  Developer can get more detail by read doucment named "SIG Mesh iOS APP(OC版本)使用以及开发手册.docx".
  */
@@ -132,6 +135,20 @@
         } else {
             if (weakSelf.remoteSource && weakSelf.remoteSource.count > 0) {
                 //remote扫描到设备，开始添加
+                //优化：先过滤阈值的设备，提高添加成功率。
+                if (weakSelf.remoteSource.count > 1) {
+                    NSArray *oldSource = [NSArray arrayWithArray:weakSelf.remoteSource];
+                    NSMutableArray *newSource = [NSMutableArray array];
+                    for (SigRemoteScanRspModel *tem in oldSource) {
+                        if (tem.RSSI >= kRSSIThresholdValue) {
+                            [newSource addObject:tem];
+                        }
+                    }
+                    if (newSource.count == 0) {
+                        [newSource addObject:oldSource.firstObject];
+                    }
+                    weakSelf.remoteSource = [NSMutableArray arrayWithArray:newSource];
+                }
                 [weakSelf addNodeByRemoteProvision];
             } else {
                 //remote未扫描到设备
@@ -152,11 +169,7 @@
     if (self.remoteSource && self.remoteSource.count > 0) {
         //存在remote扫描到的设备，开始添加
         SigRemoteScanRspModel *model = self.remoteSource.firstObject;
-        AddDeviceModel *tem = [self getAddDeviceModelWithPeripheralUUID:model.macAddress];
-        if (tem) {
-            tem.state = AddDeviceModelStateProvisioning;
-            [self.collectionView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-        }
+        [self updateUIOfStartProvisionWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:SigDataSource.share.provisionAddress];
         [self remoteProvisionNodeWithRemoteScanRspModel:model];
     } else {
         //不存在remote扫描到的设备，继续扫描
@@ -185,6 +198,7 @@
         [weakSelf remoteAddSingleDeviceFinish];
         [weakSelf updateWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:provisionAddress provisionResult:NO];
         TeLogInfo(@"RP-Remote:provision fail, error=%@",error);
+        [weakSelf addNodeByRemoteProvision];
     }];
 }
 
@@ -204,6 +218,7 @@
             [weakSelf remoteAddSingleDeviceFinish];
             [weakSelf updateWithPeripheralUUID:model.scanRspModel.uuid macAddress:model.scanRspModel.macAddress address:node.address keyBindResult:NO];
             TeLogInfo(@"RP-Remote:keybind fail, error:%@",error);
+            [weakSelf addNodeByRemoteProvision];
         }];
     }
 }
@@ -237,38 +252,45 @@
 #pragma mark - UI refresh
 
 - (void)addAndShowSigRemoteScanRspModelToUI:(SigRemoteScanRspModel *)scanRemoteModel {
-    AddDeviceModel *addModel = [[AddDeviceModel alloc] initWithRemoteScanRspModel:scanRemoteModel];
-    BOOL needReload = NO;
     if (![self.remoteSource containsObject:scanRemoteModel]) {
         [self.remoteSource addObject:scanRemoteModel];
-        [self.source addObject:addModel];
-        needReload = YES;
     } else {
         NSInteger index = [self.remoteSource indexOfObject:scanRemoteModel];
         SigRemoteScanRspModel *tem = [self.remoteSource objectAtIndex:index];
         if (tem.RSSI < scanRemoteModel.RSSI) {
             [self.remoteSource replaceObjectAtIndex:index withObject:scanRemoteModel];
-            [self.source replaceObjectAtIndex:index withObject:addModel];
-            needReload = YES;
         }
     }
-    if (needReload) {
-        [self.collectionView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-    }
+    [self.remoteSource sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+        return [(SigRemoteScanRspModel *)obj1 RSSI] < [(SigRemoteScanRspModel *)obj2 RSSI];
+    }];
+}
+
+- (void)updateUIOfStartProvisionWithPeripheralUUID:(NSString *)peripheralUUID macAddress:(NSString *)macAddress address:(UInt16)address {
+    [self checkExistAddModelWithPeripheralUUID:peripheralUUID macAddress:macAddress address:address];
+    AddDeviceModel *model = [self getAddDeviceModelWithPeripheralUUID:peripheralUUID];
+    model.state = AddDeviceModelStateProvisioning;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+    });
 }
 
 - (void)updateWithPeripheralUUID:(NSString *)peripheralUUID macAddress:(NSString *)macAddress address:(UInt16)address provisionResult:(BOOL)provisionResult {
     [self checkExistAddModelWithPeripheralUUID:peripheralUUID macAddress:macAddress address:address];
     AddDeviceModel *model = [self getAddDeviceModelWithPeripheralUUID:peripheralUUID];
     model.state = provisionResult ? AddDeviceModelStateBinding : AddDeviceModelStateProvisionFail;
-    [self.collectionView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+    });
 }
 
 - (void)updateWithPeripheralUUID:(NSString *)peripheralUUID macAddress:(NSString *)macAddress address:(UInt16)address keyBindResult:(BOOL)keyBindResult {
     [self checkExistAddModelWithPeripheralUUID:peripheralUUID macAddress:macAddress address:address];
     AddDeviceModel *model = [self getAddDeviceModelWithPeripheralUUID:peripheralUUID];
     model.state = keyBindResult ? AddDeviceModelStateBindSuccess : AddDeviceModelStateBindFail;
-    [self.collectionView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+    });
 }
 
 - (void)remoteAddSingleDeviceFinish {
@@ -306,8 +328,8 @@
     
     [self.collectionView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceItemCellID bundle:nil] forCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID];
     
-    self.refreshItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(startAddDevice)];
-    self.navigationItem.rightBarButtonItem = self.refreshItem;
+//    self.refreshItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(startAddDevice)];
+//    self.navigationItem.rightBarButtonItem = self.refreshItem;
     self.title = @"Device Scan(Remote)";
     
     self.source = [[NSMutableArray alloc] init];
@@ -330,7 +352,8 @@
 
 - (void)checkExistAddModelWithPeripheralUUID:(NSString *)peripheralUUID macAddress:(NSString *)macAddress address:(UInt16)address {
     BOOL tem = NO;
-    for (AddDeviceModel *model in self.source) {
+    NSArray *source = [NSArray arrayWithArray:self.source];
+    for (AddDeviceModel *model in source) {
         if ([model.scanRspModel.uuid isEqualToString:peripheralUUID]) {
             model.scanRspModel.address = address;
             model.scanRspModel.macAddress = macAddress;
@@ -357,7 +380,8 @@
 
 - (AddDeviceModel *)getAddDeviceModelWithPeripheralUUID:(NSString *)peripheralUUID {
     AddDeviceModel *tem = nil;
-    for (AddDeviceModel *model in self.source) {
+    NSArray *source = [NSArray arrayWithArray:self.source];
+    for (AddDeviceModel *model in source) {
         if ([model.scanRspModel.uuid isEqualToString:peripheralUUID]) {
             tem = model;
             break;
@@ -368,7 +392,8 @@
 
 - (AddDeviceModel *)getAddDeviceModelWithMacAddress:(NSString *)macAddress {
     AddDeviceModel *tem = nil;
-    for (AddDeviceModel *model in self.source) {
+    NSArray *source = [NSArray arrayWithArray:self.source];
+    for (AddDeviceModel *model in source) {
         if ([model.scanRspModel.macAddress isEqualToString:macAddress]) {
             tem = model;
             break;

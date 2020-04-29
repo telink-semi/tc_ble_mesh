@@ -103,11 +103,11 @@
         [self.iconSource addObject:@"ic_mesh_ota"];
         [self.vcIdentifiers addObject:@"no found"];
     }
-    if (kShowDebug) {
-        [self.source addObject:@"Debug"];
-        [self.iconSource addObject:@"ic_model"];
-        [self.vcIdentifiers addObject:ViewControllerIdentifiers_DebugViewControllerID];
-    }
+//    if (kShowDebug) {
+//        [self.source addObject:@"Debug"];
+//        [self.iconSource addObject:@"ic_model"];
+//        [self.vcIdentifiers addObject:ViewControllerIdentifiers_DebugViewControllerID];
+//    }
     if (kshowLog) {
         [self.source addObject:@"Log"];
         [self.iconSource addObject:@"ic_model"];

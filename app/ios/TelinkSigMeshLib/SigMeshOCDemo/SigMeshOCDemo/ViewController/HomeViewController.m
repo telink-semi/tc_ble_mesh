@@ -291,50 +291,19 @@
     [SigPublishManager.share setDiscoverOnlineNodeCallback:^(NSNumber * _Nonnull unicastAddress) {
         [weakSelf reloadCollectionView];
     }];
-//    self.ble.bleFinishScanedCharachteristicCallBack = ^(CBPeripheral *peripheral) {
-//        if (weakSelf.ble.state == StateNormal) {
-//            [weakSelf freshOnline:nil];
-//        }
-//    };
-//    self.ble.bleCentralUpdateStateCallBack = ^(CBCentralManagerState state) {
-//        if (weakSelf.ble.state == StateNormal) {
-//            switch (state) {
-//                case CBCentralManagerStatePoweredOn:
-//                    [weakSelf workNormal];
-//                    break;
-//                case CBCentralManagerStatePoweredOff:
-//                    [SigDataSource.share setAllDevicesOutline];
-//                    [weakSelf reloadCollectionView];
-//                    break;
-//                default:
-//                    break;
-//            }
-//        }
-//    };
-//    //node notify publish status data when publish sig modelid is 0x1303.(if developer use other modelid to set publish, developer need fix the opcode.)
-//    [self.ble.commandHandle setNotifyPublishStatusCallBack:^(ResponseModel *m) {
-//        [weakSelf reloadCollectionView];
-//    }];
-//    [self.ble setBleDisconnectOrConnectFailCallBack:^(CBPeripheral *peripheral) {
-//        [SigDataSource.share setAllDevicesOutline];
-//        [weakSelf reloadCollectionView];
-//    }];
-}
-
-- (void)nilBlock{
-    [super nilBlock];
-//    self.ble.bleDisconnectOrConnectFailCallBack = nil;
-//    self.ble.bleFinishScanedCharachteristicCallBack = nil;
 }
 
 #pragma  mark - SigBearerDataDelegate
 - (void)bearerDidOpen:(SigBearer *)bearer {
-    TeLogVerbose(@"");
-    [self freshOnline:nil];
+    TeLogInfo(@"SigBearerDataDelegate1");
+//    [self blockState];
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//        [self freshOnline:nil];
+//    });
 }
 
 - (void)bearer:(SigBearer *)bearer didCloseWithError:(NSError *)error {
-    TeLogVerbose(@"");
+    TeLogInfo(@"SigBearerDataDelegate2");
     self.shouldSetAllOffline = NO;
     [SigDataSource.share setAllDevicesOutline];
     [self reloadCollectionView];

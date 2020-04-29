@@ -116,6 +116,7 @@ static NSTimeInterval commentTime;
 
 #pragma mark - CBCentralManagerDelegate
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central{
+    TeLog(@"当前手机蓝牙状态为%@",[self getStateString:central]);
     if (self.manager.state == CBCentralManagerStatePoweredOn) {
         if (_isInitFinish) {
             [self startAutoConnect];
@@ -173,6 +174,12 @@ static NSTimeInterval commentTime;
             BOOL isExist = [SigDataSource.share existScanRspModel:scanRspModel];
             if (!isExist) {
                 return;
+            }
+            if (scanRspModel.address == 0) {
+                SigEncryptedModel *encryptedModel = [SigDataSource.share getSigEncryptedModelWithPeripheralUUID:peripheral.identifier.UUIDString];
+                if (encryptedModel && encryptedModel.address) {
+                    scanRspModel.address = encryptedModel.address;
+                }
             }
         }
         NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
@@ -295,7 +302,11 @@ static NSTimeInterval commentTime;
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error{
     if ([characteristic.UUID.UUIDString isEqualToString:kPROXY_Out_CharacteristicsID] || [characteristic.UUID.UUIDString isEqualToString:kPBGATT_Out_CharacteristicsID]) {
-        TeLog(@"app didUpdateValueFor:%@",characteristic.value);
+        if ([characteristic.UUID.UUIDString isEqualToString:kPROXY_Out_CharacteristicsID]) {
+            TeLog(@"<--- from:PROXY, length:%d",characteristic.value.length);
+        } else {
+            TeLog(@"<--- from:GATT, length:%d, value:%@",characteristic.value.length,[LibTools convertDataToHexStr:characteristic.value]);
+        }
         dealNotifyData(characteristic.value);
     }
     if ([characteristic.UUID.UUIDString isEqualToString:kOTA_CharacteristicsID]) {
@@ -368,6 +379,33 @@ static NSTimeInterval commentTime;
 }
 
 #pragma mark - API Private
+- (NSString *)getStateString:(CBCentralManager *)central {
+    NSString *tem = @"";
+    switch (central.state) {
+        case CBManagerStateUnknown:
+            tem = @"CBManagerStateUnknown";
+            break;
+        case CBManagerStateResetting:
+            tem = @"CBManagerStateResetting";
+            break;
+        case CBManagerStateUnsupported:
+            tem = @"CBManagerStateUnsupported";
+            break;
+        case CBManagerStateUnauthorized:
+            tem = @"CBManagerStateUnauthorized";
+            break;
+        case CBManagerStatePoweredOff:
+            tem = @"CBManagerStatePoweredOff";
+            break;
+        case CBManagerStatePoweredOn:
+            tem = @"CBManagerStatePoweredOn";
+            break;
+        default:
+            break;
+    }
+    return tem;;
+}
+
 - (void)disconnectOrConnectFailDo:(CBPeripheral *)peripheral{
     [self.store ressetParameters];
     if (self.bleDisconnectOrConnectFailCallBack) {
@@ -586,6 +624,7 @@ static NSTimeInterval commentTime;
                 //response of access_cmd_onoff_get()
             case OpcodeOnOffStatusResponse:
             {
+                TeLog(@"OpcodeOnOffStatusResponse,address=0x%x,pointState=%d",m.address,m.pointState);
                 tempResponseModel.currentState = m.currentState;
                 tempResponseModel.pointState = m.pointState;
                 if (self.commandHandle.switchOnOffCallBack) {
@@ -599,6 +638,10 @@ static NSTimeInterval commentTime;
                     dispatch_async(dispatch_get_main_queue(), ^{
                         self.commandHandle.getOnlineStatusCallBack(tempResponseModel);
                     });
+                }
+                SigNodeModel *device = [SigDataSource.share getNodeWithAddress:m.address];
+                if (device) {
+                    [self startCheckOfflineTimerWithAddress:@(device.address)];
                 }
             }
                 break;
@@ -813,8 +856,7 @@ static NSTimeInterval commentTime;
             }
                 break;
             default:
-                NSLog(@"that response data isn't anasisly，OPCode:%d",tempResponseModel.opcode);
-                saveLogData([NSString stringWithFormat:@"that response data isn't anasisly，OPCode:%d",tempResponseModel.opcode]);
+                TeLog(@"%@",[NSString stringWithFormat:@"that response data isn't anasisly，OPCode:%d",tempResponseModel.opcode]);
                 break;
         }
         //Attention: all responseModel need update to SigDataSource. eg: group onoff response data will update to SigDataSource in the following code.
@@ -1026,8 +1068,6 @@ static NSTimeInterval commentTime;
         if (device.hasPublishFunction && device.hasOpenPublish) {
             TeLog(@"setDeviceOffline:0x%02X",adr);
             device.state = DeviceStateOutOfLine;
-            NSString *str = [NSString stringWithFormat:@"======================device offline:0x%02X======================",adr];
-            saveLogData(str);
             if (self.commandHandle.checkOfflineCallBack) {
                 self.commandHandle.checkOfflineCallBack(@(adr));
             }
@@ -1066,7 +1106,9 @@ static NSTimeInterval commentTime;
         }
         if (weakSelf.manager.state == CBCentralManagerStateUnknown) {
             TeLog(@"startScan afterDelay:0.1");
-            [weakSelf performSelector:@selector(startScan) withObject:nil afterDelay:0.1];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf performSelector:@selector(startScan) withObject:nil afterDelay:0.1];
+            });
         }else if (weakSelf.manager.state == CBCentralManagerStatePoweredOn){
             TeLog(@"scanForPeripheralsWithServices");
             [weakSelf.manager scanForPeripheralsWithServices:@[[CBUUID UUIDWithString:kPBGATTService],[CBUUID UUIDWithString:kPROXYService]] options:@{CBCentralManagerScanOptionAllowDuplicatesKey:@YES}];

@@ -88,6 +88,9 @@
 
     //离线与关闭，亮度色温显示0
     self.stateLabel.text = [NSString stringWithFormat:@"adr:0x%X\non/off:%@",model.address,state];
+    if (node && node.sceneAddress.count == 0) {
+        self.stateLabel.text = [NSString stringWithFormat:@"adr:0x%X\n%@",model.address,@"Not support scene register."];
+    }
 //    self.stateLabel.text = [NSString stringWithFormat:@"adr:0x%X\non/off:%@ lum:%d temp:%d",model.address,state,model.state == DeviceStateOn ? model.trueBrightness : 0 ,model.state == DeviceStateOn ? model.trueTemperature : 0];
 }
 

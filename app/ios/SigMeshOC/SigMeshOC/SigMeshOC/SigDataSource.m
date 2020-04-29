@@ -525,6 +525,7 @@
 
 - (void)setAllDevicesOutline{
     @synchronized(self) {
+        _curNodes = nil;
         for (SigNodeModel *model in _nodes) {
             model.state = DeviceStateOutOfLine;
         }
@@ -636,7 +637,7 @@
 //            if (add) {
                 [self.scanList addObject:model];
                 [self saveScanList];
-                TeLog(@"新增缓存UUID=%@ address=%d macAddress=%@ self.scanList.count=%lu",model.uuid,model.address,model.macAddress,(unsigned long)self.scanList.count);
+            TeLog(@"新增缓存UUID=%@ address=%d macAddress=%@ self.scanList.count=%lu,advertisementData=%@",model.uuid,model.address,model.macAddress,(unsigned long)self.scanList.count,model.advertisementData);
 //            }
         }
     }
@@ -906,6 +907,16 @@
     SigEncryptedModel *tem = nil;
     for (SigEncryptedModel *model in _matchsNodeIdentityArray) {
         if (model.address == address) {
+            return model;
+        }
+    }
+    return tem;
+}
+
+- (SigEncryptedModel *)getSigEncryptedModelWithPeripheralUUID:(NSString *)peripheralUUID {
+    SigEncryptedModel *tem = nil;
+    for (SigEncryptedModel *model in _matchsNodeIdentityArray) {
+        if ([model.peripheralUUID isEqualToString:peripheralUUID]) {
             return model;
         }
     }
@@ -1876,8 +1887,6 @@
 
         default:
             TeLog(@"opcode:0x%x",op);
-//            NSLog(@"opcode:%lu",(unsigned long)op);
-//            saveLogData([NSString stringWithFormat:@"opcode:%lu",(unsigned long)op]);
             break;
     }
     return change;

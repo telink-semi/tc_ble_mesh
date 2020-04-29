@@ -33,7 +33,7 @@
 @property (weak, nonatomic) IBOutlet UILabel *groupID;
 @property (weak, nonatomic) IBOutlet UISwitch *sw;
 @property (assign, nonatomic) UInt16 groupAddress;
-@property (strong, nonatomic) GroupModel *model;
+@property (strong, nonatomic) SigGroupModel *model;
 @end
 
 @implementation GroupCell
@@ -44,10 +44,10 @@
     self.groupAddress = 0;
 }
 
-- (void)updateContent:(GroupModel *)model{
+- (void)updateContent:(SigGroupModel *)model{
     self.model = model;
-    self.groupID.text = model.groupName;
-    self.groupAddress = model.groupAddress;
+    self.groupID.text = model.name;
+    self.groupAddress = model.intAddress;
     self.sw.on = model.isOn;
 }
 

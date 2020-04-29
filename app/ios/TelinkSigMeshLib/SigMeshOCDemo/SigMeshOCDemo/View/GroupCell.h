@@ -28,10 +28,9 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "GroupModel.h"
 
 @interface GroupCell : UITableViewCell
 
-- (void)updateContent:(GroupModel *)model;
+- (void)updateContent:(SigGroupModel *)model;
 
 @end

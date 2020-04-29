@@ -110,7 +110,7 @@
     });
     TeLogDebug(@"getCompositionData 0x%02x",self.address);
     __weak typeof(self) weakSelf = self;
-    self.messageHandle = [SDKLibCommand configCompositionDataGetWithAddress:self.address successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
+    self.messageHandle = [SDKLibCommand configCompositionDataGetWithDestination:self.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
         TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         weakSelf.page = ((SigConfigCompositionDataStatus *)responseMessage).page;
         [weakSelf appkeyAdd];
@@ -147,7 +147,7 @@
         [self performSelector:@selector(addAppkeyTimeOut) withObject:nil afterDelay:self.appkeyAddTimeOut];
     });
     __weak typeof(self) weakSelf = self;
-    self.messageHandle = [SDKLibCommand configAppKeyAddWithSigAppkeyModel:self.appkeyModel toAddress:self.address successCallback:^(UInt16 source, UInt16 destination, SigConfigAppKeyStatus * _Nonnull responseMessage) {
+    self.messageHandle = [SDKLibCommand configAppKeyAddWithDestination:self.address appkeyModel:self.appkeyModel retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigAppKeyStatus * _Nonnull responseMessage) {
         TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (((SigConfigAppKeyStatus *)responseMessage).status == SigConfigMessageStatus_success) {
             if (self.type == KeyBindTpye_Normal) {
@@ -159,6 +159,10 @@
                     deviceType = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:weakSelf.fastKeybindProductID];
                 } else {
                     deviceType = [SigDataSource.share getNodeInfoWithCID:[LibTools uint16From16String:weakSelf.node.cid] PID:[LibTools uint16From16String:weakSelf.node.pid]];
+                }
+                if (deviceType == nil) {
+                    TeLogError(@"this node not support fast bind!!!");
+                    deviceType = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:weakSelf.fastKeybindProductID];
                 }
                 weakSelf.page = [[SigPage0 alloc] initWithParameters:deviceType.defaultCompositionData];
                 [weakSelf keyBindSuccessAction];
@@ -231,7 +235,7 @@
 //                }];
                 
                 // 写法2：判断modelID
-                self.messageHandle = [SDKLibCommand configModelAppBindWithApplicationKeyIndex:weakSelf.appkeyModel.index elementAddress:modelID.parentElement.unicastAddress modelIdentifier:modelID.modelIdentifier companyIdentifier:modelID.companyIdentifier toDestination:weakSelf.address resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelAppStatus * _Nonnull responseMessage) {
+                self.messageHandle = [SDKLibCommand configModelAppBindWithDestination:weakSelf.address applicationKeyIndex:weakSelf.appkeyModel.index elementAddress:modelID.parentElement.unicastAddress modelIdentifier:modelID.modelIdentifier companyIdentifier:modelID.companyIdentifier retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelAppStatus * _Nonnull responseMessage) {
                     TeLogVerbose(@"SigConfigModelAppStatus.parameters=%@",responseMessage.parameters);
                     if (responseMessage.status == SigConfigMessageStatus_success && responseMessage.modelIdentifier == modelID.modelIdentifier && responseMessage.companyIdentifier == modelID.companyIdentifier && responseMessage.elementAddress == modelID.parentElement.unicastAddress) {
                         isFail = NO;
@@ -300,8 +304,7 @@
     //publish time model
     UInt32 option = SIG_MD_TIME_S;
     NSArray *elementAddresses = [self.node getAddressesWithModelID:@(option)];
-    if (NO) {
-//    if (elementAddresses.count > 0) {
+    if (elementAddresses.count > 0 && SigDataSource.share.needPublishTimeModel) {
         TeLog(@"SDK need publish time");
         __weak typeof(self) weakSelf = self;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -310,7 +313,7 @@
             SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:2 intervalSteps:5];
             SigPublish *publish = [[SigPublish alloc] initWithDestination:kMeshAddress_allNodes withKeyIndex:SigDataSource.share.curAppkeyModel.index friendshipCredentialsFlag:0 ttl:0xff periodSteps:kTimePublishInterval periodResolution:1 retransmit:retransmit];
             SigModelIDModel *modelID = [weakSelf.node getModelIDModelWithModelID:option andElementAddress:eleAdr];
-            [SDKLibCommand configModelPublicationSetWithSigPublish:publish modelIDModel:modelID successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
+            [SDKLibCommand configModelPublicationSetWithDestination:self.address publish:publish elementAddress:eleAdr modelIdentifier:modelID.modelIdentifier companyIdentifier:modelID.companyIdentifier retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
                 TeLog(@"publish time callback");
                 if (responseMessage.elementAddress == eleAdr) {
                     if (responseMessage.status == SigConfigMessageStatus_success && [LibTools uint16From16String:responseMessage.publish.address] == kMeshAddress_allNodes) {

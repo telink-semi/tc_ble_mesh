@@ -1,3 +1,24 @@
+/********************************************************************************************************
+* @file     SigLowerTransportLayer.h
+*
+* @brief    for TLSR chips
+*
+* @author     telink
+* @date     Sep. 30, 2010
+*
+* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+*           All rights reserved.
+*
+*             The information contained herein is confidential and proprietary property of Telink
+*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
+*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
+*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
+*           This heading MUST NOT be removed from this file.
+*
+*              Licensees are granted free, non-transferable use of the information in this
+*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+*
+*******************************************************************************************************/
 //
 //  SigLowerTransportLayer.h
 //  TelinkSigMeshLib
@@ -22,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,NSMutableArray <SigSegmentedMessage *>*>*outgoingSegments;
 /// 缓存APP端发送Segment数据包列表的定时器。The key is the `sequenceZero` of the message.（用于判断outgoingSegments的数据包是否有发送失败的，失败则再发送一次。）
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*segmentTransmissionTimers;
-/// 缓存重发segment数据包的定时器。(设备端不返回这个Segment长包的接收情况，该定时器就会进行segment数据包outgoingSegments的重发。)
+/// 缓存重发segment数据包的定时器。(设备端不返回这个Segment长包的接收情况，该定时器是segment发包和重发包的总超时定时器，该定时器执行则表示该segment包发送失败，设备端没收全APP发送的segment包。)
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*incompleteTimers;
 /// An item is removed when a next message has been received from the same Node.
 /// 缓存接收到的Segment Acknowlegment Messages。（设备端返回这个APP发送的Segment长包的接收情况，APP需要补充丢失的包或者停止重发segment数据包的定时器incompleteTimers）

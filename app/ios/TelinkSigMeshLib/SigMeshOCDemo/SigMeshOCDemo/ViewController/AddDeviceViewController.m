@@ -52,12 +52,7 @@
 }
 
 #pragma mark - Event
-- (void)startAddDevice{
-//    self.ble.commandHandle.responseVendorIDCallBack = nil;
-//    [Bluetooth.share stopAutoConnect];
-//    [Bluetooth.share cancelAllConnecttionWithComplete:nil];
-//    [Bluetooth.share clearCachelist];
-    
+- (void)startAddDevice{    
     self.refreshItem.enabled = NO;
     self.goBackButton.enabled = NO;
     [self.goBackButton setBackgroundColor:[UIColor lightGrayColor]];

@@ -28,10 +28,10 @@
 //
 
 #import "XHelp.h"
+#import <sys/time.h>
 
 #define kTelinkSDKDebugLogData @"TelinkSDKDebugLogData"
 #define kTelinkSDKMeshJsonData @"TelinkSDKMeshJsonData"
-NSString *const NotifyUpdateLogContent = @"UpdateLogContent";
 
 @implementation XHelp
 
@@ -47,16 +47,16 @@ NSString *const NotifyUpdateLogContent = @"UpdateLogContent";
 
 - (void)initFile{
     NSFileManager *manager = [[NSFileManager alloc] init];
-    if (![manager fileExistsAtPath:XHelp.logFilePath]) {
-        BOOL ret = [manager createFileAtPath:XHelp.logFilePath contents:nil attributes:nil];
+    if (![manager fileExistsAtPath:self.logFilePath]) {
+        BOOL ret = [manager createFileAtPath:self.logFilePath contents:nil attributes:nil];
         if (ret) {
             NSLog(@"%@",@"creat TelinkSDKDebugLogData success");
         } else {
             NSLog(@"%@",@"creat TelinkSDKDebugLogData failure");
         }
     }
-    if (![manager fileExistsAtPath:XHelp.meshJsonFilePath]) {
-        BOOL ret = [manager createFileAtPath:XHelp.meshJsonFilePath contents:nil attributes:nil];
+    if (![manager fileExistsAtPath:self.meshJsonFilePath]) {
+        BOOL ret = [manager createFileAtPath:self.meshJsonFilePath contents:nil attributes:nil];
         if (ret) {
             NSLog(@"%@",@"creat TelinkSDKMeshJsonData success");
         } else {
@@ -65,19 +65,75 @@ NSString *const NotifyUpdateLogContent = @"UpdateLogContent";
     }
 }
 
-+ (NSString *)logFilePath {
+- (NSString *)logFilePath {
     return [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject stringByAppendingPathComponent:kTelinkSDKDebugLogData];
 }
 
-+ (NSString *)meshJsonFilePath {
+- (NSString *)meshJsonFilePath {
     return [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject stringByAppendingPathComponent:kTelinkSDKMeshJsonData];
 }
 
 - (void)setSaveTelinkSDKDebugLogEnable:(BOOL)saveTelinkSDKDebugLogEnable{
     _saveTelinkSDKDebugLogEnable = saveTelinkSDKDebugLogEnable;
     if (saveTelinkSDKDebugLogEnable) {
-        saveLogData([NSString stringWithFormat:@"\n\n\n\n\t打开APP，初始化TelinkSigMesh %@日志模块\n\n\n",kTelinkSigMeshLibVersion]);
+        [self enableLogger];
     }
+}
+
+- (void)enableLogger{
+    TelinkLogWithFile([NSString stringWithFormat:@"\n\n\n\n\t打开APP，初始化TelinkSigMesh %@日志模块\n\n\n",kTelinkSigMeshLibVersion]);
+}
+
+static NSFileHandle *TelinkLogFileHandle()
+{
+    static NSFileHandle *fileHandle = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSFileManager *manager = [[NSFileManager alloc] init];
+        if (![manager fileExistsAtPath:XHelp.share.logFilePath]) {
+            BOOL ret = [manager createFileAtPath:XHelp.share.logFilePath contents:nil attributes:nil];
+            if (ret) {
+                NSLog(@"%@",@"creat success");
+            } else {
+                NSLog(@"%@",@"creat failure");
+            }
+        }
+        fileHandle = [NSFileHandle fileHandleForUpdatingAtPath:XHelp.share.logFilePath];
+        [fileHandle seekToEndOfFile];
+    });
+    return fileHandle;
+}
+void TelinkLogWithFile(NSString *format, ...) {
+    va_list L;
+    va_start(L, format);
+    NSString *message = [[NSString alloc] initWithFormat:format arguments:L];
+//    if (DEBUG) {
+        NSLog(@"%@", message);
+//    }
+    // 开启异步子线程，将打印写入文件
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSFileHandle *output = TelinkLogFileHandle();
+        if (output != nil) {
+            time_t rawtime;
+            struct tm timeinfo;
+            char buffer[64];
+            time(&rawtime);
+            localtime_r(&rawtime, &timeinfo);
+            struct timeval curTime;
+            gettimeofday(&curTime, NULL);
+            int milliseconds = curTime.tv_usec / 1000;
+            strftime(buffer, 64, "%Y-%m-%d %H:%M", &timeinfo);
+            char fullBuffer[128] = { 0 };
+            snprintf(fullBuffer, 128, "%s:%2d.%.3d ", buffer, timeinfo.tm_sec, milliseconds);
+            [output writeData:[[[NSString alloc] initWithCString:fullBuffer encoding:NSASCIIStringEncoding] dataUsingEncoding:NSUTF8StringEncoding]];
+            [output writeData:[message dataUsingEncoding:NSUTF8StringEncoding]];
+            static NSData *returnData = nil;
+            if (returnData == nil)
+                returnData = [@"\n" dataUsingEncoding:NSUTF8StringEncoding];
+            [output writeData:returnData];
+        }
+    });
+    va_end(L);
 }
 
 void saveLogData(id data){
@@ -88,7 +144,7 @@ void saveLogData(id data){
         f.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"zh_CN"];
         NSString *dstr = [f stringFromDate:date];
         
-        NSFileHandle *handle = [NSFileHandle fileHandleForUpdatingAtPath:[XHelp logFilePath]];
+        NSFileHandle *handle = [NSFileHandle fileHandleForUpdatingAtPath:XHelp.share.logFilePath];
         [handle seekToEndOfFile];
         if ([data isKindOfClass:[NSData class]]) {
             NSString *tempString = [[NSString alloc] initWithFormat:@"%@ : Response-> %@\n",dstr,data];
@@ -101,13 +157,12 @@ void saveLogData(id data){
             [handle writeData:tempData];
         }
         [handle closeFile];
-        [NSNotificationCenter.defaultCenter postNotificationName:(NSString *)NotifyUpdateLogContent object:nil];
     }
 }
 
 void saveMeshJsonData(id data){
     if (XHelp.share.saveTelinkSDKDebugLogEnable) {
-        NSFileHandle *handle = [NSFileHandle fileHandleForUpdatingAtPath:[XHelp meshJsonFilePath]];
+        NSFileHandle *handle = [NSFileHandle fileHandleForUpdatingAtPath:XHelp.share.meshJsonFilePath];
         [handle truncateFileAtOffset:0];
         if ([data isKindOfClass:[NSData class]]) {
             [handle writeData:(NSData *)data];

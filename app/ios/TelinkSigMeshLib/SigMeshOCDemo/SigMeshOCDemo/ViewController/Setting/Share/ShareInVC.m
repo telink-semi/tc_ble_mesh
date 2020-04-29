@@ -57,7 +57,7 @@
     [self.navigationController pushViewController:vc animated:YES];
 }
 
-///加载json文件到本地(json data->SigDataSource，核心接口writeDataSourceToLib。)
+///加载json文件到本地(json data->SigDataSource。)
 - (void)loadJsonData:(NSData *)data jaonName:(NSString *)name{
     NSOperationQueue *operation = [[NSOperationQueue alloc] init];
     __weak typeof(self) weakSelf = self;

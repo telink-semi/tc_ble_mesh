@@ -88,7 +88,7 @@ typedef enum : NSUInteger {
     [self userAbled:NO];
     __weak typeof(self) weakSelf = self;
     [self.ble.commandHandle startScanWithProvisionAble:YES timeout:5.0 discoverDevice:^(CBPeripheral *peripheral, SigScanRspModel *model, BOOL provisionAble) {
-        TeLog(@"peripheral=%@,model=%@,provisionAble=%@",peripheral,model,provisionAble?@"Add":@"Normal");
+//        TeLog(@"peripheral=%@,model=%@,provisionAble=%@",peripheral,model,provisionAble?@"Add":@"Normal");
         if (provisionAble) {
             AddDeviceStateModel *model = [[AddDeviceStateModel alloc] init];
             model.peripheral = peripheral;

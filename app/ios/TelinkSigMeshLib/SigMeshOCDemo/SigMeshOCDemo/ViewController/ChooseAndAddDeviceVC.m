@@ -114,11 +114,6 @@ typedef enum : NSUInteger {
         return;
     }
     self.selectDevices = [NSMutableArray arrayWithArray:unprovisionList];
-
-//    self.ble.commandHandle.responseVendorIDCallBack = nil;
-//    [Bluetooth.share stopAutoConnect];
-//    [Bluetooth.share cancelAllConnecttionWithComplete:nil];
-//    [Bluetooth.share clearCachelist];
     
     [self userAbled:NO];
     NSData *key = [SigDataSource.share curNetKey];
@@ -169,14 +164,7 @@ typedef enum : NSUInteger {
     }];
 }
 
-//- (void)cancelAll{
-//    [Bluetooth.share cancelAllConnecttionWithComplete:^{
-//        TeLogDebug(@"cancel all success");
-//    }];
-//}
-
 - (void)scanFinish{
-//    [Bluetooth.share setNormalState];
     [SigBluetooth.share stopScan];
     [self userAbled:YES];
 }
@@ -200,25 +188,7 @@ typedef enum : NSUInteger {
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(scanFinish) object:nil];
     });
-//    [Bluetooth.share setNormalState];
     [SigBluetooth.share stopScan];
-}
-
-- (void)blockState{
-    [super blockState];
-    
-    __weak typeof(self) weakSelf = self;
-//    [Bluetooth.share setBleScanNewDeviceCallBack:^(CBPeripheral *peripheral, BOOL provisioned) {
-//        if (provisioned) {
-//            AddDeviceStateModel *model = [[AddDeviceStateModel alloc] init];
-//            model.peripheral = peripheral;
-//            model.state = AddStateScan;
-//            if (![weakSelf.allDevices containsObject:model]) {
-//                [weakSelf.allDevices addObject:model];
-//                [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-//            }
-//        }
-//    }];
 }
 
 - (void)userAbled:(BOOL)able{

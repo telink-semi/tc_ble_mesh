@@ -44,11 +44,12 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     ActionItemCell *cell = (ActionItemCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_ActionItemCellID forIndexPath:indexPath];
     ActionModel *model = self.allActions[indexPath.row];
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:model.address];
     [cell updateContent:model];
     cell.selectButton.selected = [self.selectActions containsObject:model];
     __weak typeof(self) weakSelf = self;
     [cell setClickSelectBlock:^{
-        if (model.state != DeviceStateOutOfLine) {
+        if (model.state != DeviceStateOutOfLine && node && node.sceneAddress.count > 0) {
             if ([weakSelf.selectActions containsObject:model]) {
                 [weakSelf.selectActions removeObject:model];
             } else {
@@ -74,6 +75,16 @@
     //        [weakSelf reloadView];
     //    }];
     //    [self.navigationController pushViewController:vc animated:YES];
+    
+    //===========test==========//
+//    ActionModel *model = self.allActions[indexPath.row];
+//    TeLogDebug(@"getCompositionData 0x%02x",model.address);
+//    [SDKLibCommand configCompositionDataGetWithDestination:model.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
+//        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+//        TeLogDebug(@"finish.");
+//    }];
+    //===========test==========//
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
@@ -131,7 +142,7 @@
     NSMutableArray *saveArray = [[NSMutableArray alloc] init];
     for(ActionModel *action in self.selectActions){
         SigNodeModel *device = [[SigDataSource share] getNodeWithAddress:action.address];
-        if(device.state != DeviceStateOutOfLine){
+        if(device && device.state != DeviceStateOutOfLine){
             if ([self.model.actionList containsObject:action]) {
                 //address of change action't node
                 for (ActionModel *oldAction in self.model.actionList) {
@@ -179,15 +190,17 @@
             ActionModel *curAction = saveArray.firstObject;
             [DemoCommand getSceneRegisterStatusWithAddress:curAction.address responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                 TeLogDebug(@"getSceneRegisterStatusWithAddress ResponseModel=%@",responseMessage);
-                [DemoCommand saveSceneWithAddress:curAction.address sceneId:weakSelf.model.number responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
-                    TeLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage);
-                    [saveArray removeObject:curAction];
-                    dispatch_semaphore_signal(semaphore);
-                } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                    
-                }];
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                
+                if (error == nil) {
+                    [DemoCommand saveSceneWithAddress:curAction.address sceneId:weakSelf.model.number responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+                        TeLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage);
+                    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+                        if (error == nil) {
+                            [saveArray removeObject:curAction];
+                            dispatch_semaphore_signal(semaphore);
+                        }
+                    }];
+                }
             }];
             dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         }
@@ -197,10 +210,11 @@
             ActionModel *curAction = delArray.firstObject;
             [DemoCommand delSceneWithAddress:curAction.address sceneId:weakSelf.model.number responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                 TeLogDebug(@"delSceneWithAddress ResponseModel=%@",responseMessage);
-                [delArray removeObject:curAction];
-                dispatch_semaphore_signal(semaphore);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                
+                if (error == nil) {
+                    [delArray removeObject:curAction];
+                    dispatch_semaphore_signal(semaphore);
+                }
             }];
             dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         }
