@@ -156,7 +156,7 @@ void set_ct_mode(u8 mode)
 
 /**
  * @brief  Save Generic OnOff States for next power-on.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @param  onoff: OnOff States.
  *     @arg G_OFF: Off state.
@@ -502,7 +502,7 @@ void light_res_sw_g_level_last_set(int idx, int st_trans_type)
 
 /**
  * @brief  Set Generic Level parameters(Global variables) for light.
- * @param  idx: Light index.
+ * @param  idx: Light Count index.
  * @param  level: General Level value.
  * @param  init_time_flag: Reset transition parameter flag.
  *     @arg 0: Don't reset transition parameter.
@@ -535,7 +535,7 @@ void light_res_sw_g_level_target_set(int idx, s16 level, int st_trans_type)	// o
 /**
  * @brief  Refresh the light status through the global variables 
  *   that have been set.
- * @param  idx: Light index.
+ * @param  idx: Light Count index.
  * @retval None
  */
 void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
@@ -629,7 +629,7 @@ void get_light_pub_list(int st_trans_type, s16 present_level, s16 target_level, 
 
 /**
  * @brief  Set Generic Level for light.
- * @param  idx: Light index.
+ * @param  idx: Light Count index.
  * @param  level: General Level value.
  * @param  init_time_flag: Reset transition parameter flag.
  *     @arg 0: Don't reset transition parameter.
@@ -689,7 +689,7 @@ int light_g_level_get(u8 *rsp, int idx, int st_trans_type)
 
 /**
  * @brief  Get Light CTL Default Value.
- * @param  idx: Element(Light) index.
+ * @param  idx: Light Count index.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Light CTL Default Value.
  */
@@ -704,7 +704,7 @@ s16 light_g_level_def_get(int idx, int st_trans_type)
 
 /**
  * @brief  Get Light CTL Default Value.
- * @param  idx: Element(Light) index.
+ * @param  idx: Light Count index.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Light CTL Default Value.
  */
@@ -716,7 +716,7 @@ u16 light_g_level_def_get_u16(int idx, int st_trans_type)
 /**
  * @brief  Set Light CTL Default Value.
  * @param  val: Light CTL Default Value.
- * @param  idx: Element(Light) index.
+ * @param  idx: Light Count index.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -736,7 +736,7 @@ int light_g_level_def_set(s16 val, int idx, int st_trans_type)
 /**
  * @brief  Set Light CTL Default Value.
  * @param  val: Light CTL Default Value.
- * @param  idx: Element(Light) index.
+ * @param  idx: Light Count index.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -749,7 +749,7 @@ int light_g_level_def_set_u16(u16 val, int idx, int st_trans_type)
 /**
  * @brief  Get level range value.
  * @param  p_range: Point to Light Range value.
- * @param  idx: Element(Light) index.
+ * @param  idx: Light Count index.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -771,7 +771,7 @@ int light_g_level_range_get(light_range_s16_t *p_range, int idx, int st_trans_ty
 /**
  * @brief  Get Light CTL Temperature Range value.
  * @param  p_range: Point to Light CTL Temperature Range value.
- * @param  idx: Element(Light) index.
+ * @param  idx: Light Count index.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -790,7 +790,7 @@ int light_g_level_range_get_u16(light_range_u16_t *p_range, int idx, int st_tran
  * @brief  Set Light (Lightness/CTL Temperature/HSL/xyL) Range value.
  * @param  min: Range Min.
  * @param  max: Range Max.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
@@ -810,7 +810,7 @@ int light_g_level_range_set(u16 min, u16 max, int idx, int st_trans_type)
 
 /**
  * @brief  Get light target level value.
- * @param  idx: Element(Light) index.
+ * @param  idx: Light Count index.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval light target level value.
  */
@@ -826,7 +826,7 @@ s16 light_g_level_target_get(int idx, int st_trans_type)
 
 /**
  * @brief  Get light present level value.
- * @param  idx: Element(Light) index.
+ * @param  idx: Light Count index.
  * @param  st_trans_type: A value in the enumeration type ST_TRANS_TYPE.
  * @retval light present level value.
  */
@@ -984,7 +984,7 @@ int light_onoff_idx(int idx, int on, int init_time_flag){
 
 /**
  * @brief  Set Generic Level for light by index.
- * @param  idx: Light index.
+ * @param  idx: Light Count index.
  * @param  level: General Level value.
  * @param  init_time_flag: Reset transition parameter flag.
  *     @arg 0: Don't reset transition parameter.

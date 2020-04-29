@@ -33,6 +33,26 @@ extern "C" {
 #define _USER_CONFIG_DEFINED_	1	// must define this macro to make others known
 #define	__LOG_RT_ENABLE__		0
 //#define	__DEBUG_PRINT__			0
+
+#if DUAL_MESH_ZB_BL_EN
+#define FLASH_1M_ENABLE         1
+#elif DUAL_VENDOR_EN
+#define FLASH_1M_ENABLE         0
+#else
+#define FLASH_1M_ENABLE         0
+#endif
+
+#if FLASH_1M_ENABLE
+#if DUAL_MESH_ZB_BL_EN
+#define PINGPONG_OTA_DISABLE    1 // it can disable only when 1M flash.
+#else
+#define PINGPONG_OTA_DISABLE    0 // it can disable only when 1M flash.
+#endif
+#if	PINGPONG_OTA_DISABLE
+#define SWITCH_FW_ENABLE		0 // set to 0, just for particular customer 
+#endif
+#endif
+
 //////////// product  Information  //////////////////////////////
 #define ID_VENDOR				0x248a			// for report
 #define ID_PRODUCT_BASE			0x880C
@@ -71,6 +91,15 @@ extern "C" {
 #define ADC_MODE		ADC_VBAT_MODE
 #define ADC_CHNM_ANA_INPUT 		GPIO_PB3 // one of ADC_GPIO_tab[]
 #define ADC_PRESCALER	ADC_PRESCALER_1F8
+#endif
+
+#if DUAL_MESH_ZB_BL_EN
+#define DUAL_MODE_ADAPT_EN 			1   // dual mode as master with Zigbee
+#else
+#define DUAL_MODE_ADAPT_EN 			0   // dual mode as master with Zigbee
+#endif
+#if (0 == DUAL_MODE_ADAPT_EN)
+#define DUAL_MODE_WITH_TLK_MESH_EN  0   // dual mode as slave with Telink mesh
 #endif
 
 /////////////////// mesh project config /////////////////////////////////
@@ -148,8 +177,12 @@ extern "C" {
 /////////////////// Clock  /////////////////////////////////
 #define	USE_SYS_TICK_PER_US
 #define CLOCK_SYS_TYPE  		CLOCK_TYPE_PLL	//  one of the following:  CLOCK_TYPE_PLL, CLOCK_TYPE_OSC, CLOCK_TYPE_PAD, CLOCK_TYPE_ADC
-#define CLOCK_SYS_CLOCK_HZ  	16000000
 
+#if DUAL_MESH_ZB_BL_EN // keep same with zb
+#define CLOCK_SYS_CLOCK_HZ  	32000000
+#else
+#define CLOCK_SYS_CLOCK_HZ  	16000000
+#endif
 //////////////////Extern Crystal Type///////////////////////
 #define CRYSTAL_TYPE			XTAL_12M		//  extern 12M crystal
 

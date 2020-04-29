@@ -1470,7 +1470,7 @@ int app_advertise_prepare_handler (rf_packet_adv_t * p)
                 #if DEBUG_MESH_DONGLE_IN_VC_EN
                 debug_mesh_report_one_pkt_completed();
                 #else
-                irq_ev_one_pkt_completed = 1;	// don't do much function in irq, because irq stack.
+                irq_ev_one_pkt_completed = 1;	// don't do too much function in irq, because irq stack.
                 #endif
             }
             
@@ -1637,9 +1637,14 @@ void set_random_enable(u8 en)
 #if MD_SERVER_EN
 void publish_when_powerup()
 {
-#if SEND_STATUS_WHEN_POWER_ON
+#if (MI_API_ENABLE && STEP_PUB_MODE_EN)
+    mi_pub_clear_trans_flag();
+    mi_pub_vd_sig_para_init();
+    mi_pub_send_all_status();
+#else
+    #if SEND_STATUS_WHEN_POWER_ON
     user_power_on_proc();
-#endif
+    #endif
 
     st_pub_list_t pub_list = {{0}};
     foreach_arr(i,pub_list.st){
@@ -1650,6 +1655,7 @@ void publish_when_powerup()
 	mesh_publish_all_manual(&pub_list, SIG_MD_G_ONOFF_S, 1);
 	mesh_publish_all_manual(&pub_list, SIG_MD_LIGHT_CTL_TEMP_S, 1);
 	#endif
+#endif
 }
 #endif
 
@@ -1659,7 +1665,11 @@ void mesh_vd_init()
 	light_res_sw_load();
 	light_pwm_init();
 	#if !WIN32
+	    #if (FEATURE_LOWPOWER_EN)
+	publish_when_powerup();
+	    #else
 	publish_powerup_random_ms = rand() % 1500;  // 0--1500ms
+	    #endif
 	#endif
 	#if STEP_PUB_MODE_EN
 	mi_pub_vd_sig_para_init();
@@ -2075,7 +2085,7 @@ int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_
         }
     }
     #endif
-    LOG_MSG_LIB(TL_LOG_NODE_SDK,params, log_len,"rcv access layer,retransaction:%d,ttl:%d,src:0x%4x,dst:0x%4x op:0x%04x,par_len:%d,par:",
+    LOG_MSG_LIB(TL_LOG_NODE_SDK,params, log_len,"rcv access layer,retransaction:%d,ttl:%d,src:0x%04x,dst:0x%04x op:0x%04x,par_len:%d,par:",
             cb_par->retransaction,cb_par->p_nw->ttl,cb_par->adr_src,cb_par->adr_dst, cb_par->op, par_len);
 
 	mesh_op_resource_t *p_res = (mesh_op_resource_t *)cb_par->res;

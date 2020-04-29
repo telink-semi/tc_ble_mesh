@@ -25,7 +25,6 @@
 #include "../../proj_lib/rf_drv.h"
 #include "../../proj_lib/ble/blt_config.h"
 
-#if(MCU_CORE_TYPE == MCU_CORE_8269)
 rf_pa_callback_t  blc_rf_pa_cb = NULL;
 
 void app_rf_pa_handler(int type)
@@ -51,14 +50,13 @@ void app_rf_pa_handler(int type)
 	}
 #endif
 }
-#endif
 
 void rf_pa_init(void)
 {
 #if(PA_ENABLE)
     extern u8 my_rf_power_index;
 	rf_set_power_level_index (my_rf_power_index);
-#if(MCU_CORE_TYPE == MCU_CORE_8269)
+#if(1)
     gpio_set_func(PA_TXEN_PIN, AS_GPIO);
     gpio_set_output_en(PA_TXEN_PIN, 1);
     gpio_write(PA_TXEN_PIN, 0);

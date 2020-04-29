@@ -38,8 +38,6 @@ u32 mesh_md_property_addr = FLASH_ADR_MD_PROPERTY;
 #define PROP_ID_TEST_PTS    (0x004E)        // comfirm later
 #define PROP_HEAD_LEN       (OFFSETOF(mesh_property_t,val) - 1)
 
-STATIC_ASSERT(((MD_SENSOR_EN == 0) && (MD_BATTERY_EN == 0) && (MD_LOCATION_EN == 0)) || (FLASH_ADR_MD_SENSOR != FLASH_ADR_MD_PROPERTY));   // because use same flash sector to save
-
 void mesh_property_global_init()
 {
     foreach(i,MESH_PROPERTY_CNT_MAX){

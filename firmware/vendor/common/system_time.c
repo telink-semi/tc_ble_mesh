@@ -152,13 +152,7 @@ void system_time_run(){
         #if MD_SERVER_EN
 	    if(publish_powerup_random_ms && clock_time_exceed_ms(0, publish_powerup_random_ms)){
 	        publish_powerup_random_ms = 0;
-			#if STEP_PUB_MODE_EN
-			mi_pub_clear_trans_flag();
-			mi_pub_vd_sig_para_init();
-			mi_pub_send_all_status();
-			#else
 			publish_when_powerup();
-			#endif
 	    }
 	    #endif
     #endif

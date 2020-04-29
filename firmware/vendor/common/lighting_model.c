@@ -247,7 +247,7 @@ void model_pub_check_set_bind_all(st_pub_list_t *pub_list, mesh_cb_fun_par_t *cb
  *   (mesh_cmd_g_level_delta_t or mesh_cmd_g_level_set_t).
  * @param  par_len: The length of the parameter p_set.
  * @param  op: Opcode.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @param  retransaction: Retransmission flag.
  *     @arg 0: Non-retransmission.
  *     @arg 1: Retransmission.
@@ -390,7 +390,7 @@ s16 get_val_with_check_range(s32 level_target, s16 min, s16 max, int st_trans_ty
  * @param  par: Pointer to the set parameter structure.
  * @param  par_len: The length of the parameter p_set.
  * @param  op: Opcode.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @param  retransaction: Retransmission flag.
  *     @arg 0: Non-retransmission.
  *     @arg 1: Retransmission.
@@ -542,7 +542,7 @@ int level_u16_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx,
  *   (mesh_cmd_lightness_set_t).
  * @param  par_len: The length of the parameter p_set.
  * @param  op: Opcodes.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @param  retransaction: Retransmission flag.
  *     @arg 0: Non-retransmission.
  *     @arg 1: Retransmission.
@@ -734,7 +734,7 @@ int mesh_cmd_sig_lightness_last_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 /**
  * @brief  Fill in the parameters of the structure mesh_cmd_light_ctl_st_t.
  * @param  rsp: Pointer to structure mesh_cmd_light_ctl_st_t.
- * @param  idx: Element(Light) index.
+ * @param  idx: Light Count index.
  * @retval None
  */
 void mesh_light_ctl_st_rsp_par_fill(mesh_cmd_light_ctl_st_t *rsp, u8 idx)
@@ -755,7 +755,7 @@ void mesh_light_ctl_st_rsp_par_fill(mesh_cmd_light_ctl_st_t *rsp, u8 idx)
 
 /**
  * @brief  Send Light CTL Status message.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @param  ele_adr: Element address.
  * @param  dst_adr: Destination address.
  * @param  uuid: When publishing, and the destination address is a virtual 
@@ -780,7 +780,7 @@ int mesh_tx_cmd_light_ctl_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_c
 
 /**
  * @brief  Publish Light CTL Status.
- * @param  idx: Element(Light) index.
+ * @param  idx: Light Count index.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
  */
@@ -856,7 +856,7 @@ s16 get_level_from_ctl_temp_light_idx(u16 temp, int light_idx)
  *   (mesh_cmd_light_ctl_set_t).
  * @param  par_len: The length of the parameter p_set.
  * @param  op: Opcodes.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @param  retransaction: Retransmission flag.
  *     @arg 0: Non-retransmission.
  *     @arg 1: Retransmission.
@@ -1049,7 +1049,7 @@ int mesh_cmd_sig_light_ctl_temp_range_set(u8 *par, int par_len, mesh_cb_fun_par_
 /**
  * @brief  Fill in the parameters of the structure mesh_cmd_light_ctl_temp_st_t.
  * @param  rsp: Pointer to structure mesh_cmd_light_ctl_temp_st_t.
- * @param  idx: Element(Light) index.
+ * @param  idx: Light Count index.
  * @retval None
  */
 void mesh_light_ctl_temp_st_rsp_par_fill(mesh_cmd_light_ctl_temp_st_t *rsp, u8 idx)
@@ -1067,7 +1067,7 @@ void mesh_light_ctl_temp_st_rsp_par_fill(mesh_cmd_light_ctl_temp_st_t *rsp, u8 i
 
 /**
  * @brief  Send Light CTL Temperature Status message.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @param  ele_adr: Element address.
  * @param  dst_adr: Destination address.
  * @param  uuid: When publishing, and the destination address is a virtual 

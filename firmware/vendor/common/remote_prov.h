@@ -221,7 +221,7 @@ typedef struct{
 #define REMOTE_PROV_SERVER_CMD_FLAG         0x80
 #define REMOTE_PROV_SERVER_OUTBOUND_FLAG    0x40
 
-#define REMOTE_PROV_SERVER_RETRY_INTER  3000*1000
+#define REMOTE_PROV_SERVER_RETRY_INTER  4000*1000
 typedef struct{
     u8 retry_flag;
     u32 tick;
@@ -370,7 +370,7 @@ void remote_prov_capa_sts_cb(u8 max_item,u8 active_scan);
 void mesh_rp_pdu_retry_clear();
 void mesh_rp_server_pdu_reset();
 void mesh_rp_server_prov_end_cb();
-
+void mesh_rp_ser_tick_reset();
 
 #endif
 

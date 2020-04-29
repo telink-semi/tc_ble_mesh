@@ -322,13 +322,15 @@ int mesh_cmd_sig_rp_link_open(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
         return -1;
     }
     // link sts proc 
-    mesh_rp_server_set_link_sts(STS_PR_LINK_OPEN);
-    // not use the provision state ,just use the bearer part 
-    mesh_adv_prov_link_open(p_link_open->uuid);
-    rp_mag.link_adr = cb_par->adr_src;
-    mesh_rp_server_set_sts(RP_SER_LINK_OPEN_ACK);
-	rp_mag.rp_scan_en = 0;// disable sending part 
-	mesh_cmd_sig_rsp_scan_init();// if we receive link open ,we should stop the rp scan part 
+    if(rp_mag.rp_link.RPState == RP_SER_IDLE){
+		mesh_rp_server_set_link_sts(STS_PR_LINK_OPEN);
+	    // not use the provision state ,just use the bearer part 
+	    mesh_adv_prov_link_open(p_link_open->uuid);
+	    rp_mag.link_adr = cb_par->adr_src;
+	    mesh_rp_server_set_sts(RP_SER_LINK_OPEN_ACK);
+		rp_mag.rp_scan_en = 0;// disable sending part 
+		mesh_cmd_sig_rsp_scan_init();// if we receive link open ,we should stop the rp scan part 
+	}
     return 1;
 }
 
@@ -346,7 +348,8 @@ int mesh_cmd_sig_rp_link_close(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     mesh_send_provison_data(BEARS_CTL,LINK_CLOSE,0,0);
     mesh_send_provison_data(BEARS_CTL,LINK_CLOSE,0,0);
     mesh_send_provison_data(BEARS_CTL,LINK_CLOSE,0,0);
-    mesh_rp_server_pdu_reset();
+    mesh_rp_server_prov_end_cb();
+	mesh_rp_ser_tick_reset();
     return mesh_cmd_sig_rp_send_link_sts(cb_par);
 }
 
@@ -387,6 +390,7 @@ void mesh_rp_ser_tick_loop()
 {
 #if !WIN32
     if(mesh_rp_ser_tick && clock_time_exceed(mesh_rp_ser_tick,MAX_REMOTE_PROV_TIME)){
+		mesh_rp_ser_tick =0;
 		prov_para.link_id_filter = 0;
         mesh_rp_ser_tick_reset();
         mesh_rp_server_pdu_reset();
@@ -498,6 +502,17 @@ void mesh_prov_pdu_send_retry_proc()
     }
 }
 
+void mesh_prov_pdu_link_open_sts_proc()
+{
+	remote_proc_pdu_sts_str *p_pdu_sts = &(rp_mag.rp_pdu);
+	static u32 link_open_retry_tick =0;
+	if(p_pdu_sts->sts == RP_SER_INVITE_SEND && clock_time_exceed(link_open_retry_tick,1*1000*1000)){
+		link_open_retry_tick = clock_time();
+		mesh_cmd_sig_rp_send_link_open_sts();//need to loop send link open sts 	
+	}
+}
+
+
 void mesh_prov_pdu_send_retry_set(pro_PB_ADV *p_adv,u8 flag)
 {
     remote_prov_retry_str *p_retry = &(rp_mag.rp_pdu.re_send);
@@ -524,7 +539,7 @@ void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv)
             if( p_adv->transBear.bearAck.header.GPCF == BEARS_CTL &&
 				p_adv->transBear.bearAck.header.BearCtl == LINK_ACK){
 				LAYER_PARA_DEBUG(A_DEBUG_LINK_OPEN_ACK);
-				mesh_cmd_sig_rp_send_link_open_sts();
+				mesh_cmd_sig_rp_send_link_open_sts();//need to loop send link open sts 
                 mesh_adv_prov_link_open_ack(p_adv);
 				disable_mesh_adv_filter();
                 mesh_rp_server_set_sts(RP_SER_INVITE_SEND); 
@@ -775,6 +790,7 @@ int mesh_remote_prov_st_publish(u8 idx)
 
 void mesh_cmd_sig_rp_server_loop_proc()
 {
+	mesh_prov_pdu_link_open_sts_proc();
     mesh_prov_pdu_send_retry_proc();
     mesh_cmd_sig_rp_scan_proc();
     mesh_cmd_sig_rp_scan_extend_proc();

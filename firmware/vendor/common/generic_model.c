@@ -70,7 +70,7 @@ int is_valid_transition_step(u8 transit_t)
 /**
  * @brief  Fill in the parameters of the structure mesh_cmd_g_onoff_st_t.
  * @param  rsp: Pointer to structure mesh_cmd_g_onoff_st_t.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @retval None
  */
 void mesh_g_onoff_st_rsp_par_fill(mesh_cmd_g_onoff_st_t *rsp, u8 idx)
@@ -91,7 +91,7 @@ u16 mesh_rsp_rec_addr;
 
 /**
  * @brief  Send General Onoff Status message.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @param  ele_adr: Element address.
  * @param  dst_adr: Destination address.
  * @param  uuid: When publishing, and the destination address is a virtual 
@@ -157,7 +157,7 @@ int mesh_g_onoff_st_publish_ll(u8 idx, u16 op_rsp)
 
 /**
  * @brief  Publish Generic OnOff Status.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
  */
@@ -168,7 +168,7 @@ int mesh_g_onoff_st_publish(u8 idx)
 
 /**
  * @brief  Publish Light LC Light OnOff Status.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
  */
@@ -201,7 +201,7 @@ int mesh_cmd_sig_g_onoff_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
  *     @arg 0: from last state when light on or from Non-volatile storage 
  *             when light off.
  *     @arg 1: Force from last state.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @param  retransaction: Retransmission flag.
  *     @arg 0: Non-retransmission.
  *     @arg 1: Retransmission.
@@ -307,7 +307,7 @@ void mesh_g_level_st_rsp_par_fill(mesh_cmd_g_level_st_t *rsp, u8 model_idx)
 
 /**
  * @brief  Send General Level Status message.
- * @param  idx: Element index.
+ * @param  idx: Light Count index.
  * @param  ele_adr: Element address.
  * @param  dst_adr: Destination address.
  * @param  uuid: When publishing, and the destination address is a virtual 
@@ -585,7 +585,7 @@ int mesh_cmd_sig_g_power_range_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 
 //battery model
 #if(MD_BATTERY_EN)
-STATIC_ASSERT((MD_LOCATION_EN == 0) && (MD_PROPERTY_EN == 0));   // because use same flash sector to save
+STATIC_ASSERT(MD_LOCATION_EN == 0);// because use same flash sector to save in mesh_save_map, and should be care of OTA new firmware which add MD_SENSOR_EN
 
 int mesh_tx_cmd_battery_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *uuid, model_common_t *pub_md)
 {
@@ -613,7 +613,7 @@ int mesh_cmd_sig_g_battery_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 //location model
 #if(MD_LOCATION_EN)
-STATIC_ASSERT((MD_SENSOR_EN == 0) && (MD_PROPERTY_EN == 0));   // because use same flash sector to save
+STATIC_ASSERT((MD_SENSOR_EN == 0) && (MD_BATTERY_EN== 0));// because use same flash sector to save, and should be care of OTA new firmware which add MD_SENSOR_EN
 
 mesh_generic_location_t mesh_generic_location = {
 {0x80000000, 0x80000000, 0x7fff},

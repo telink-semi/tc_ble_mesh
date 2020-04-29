@@ -29,6 +29,7 @@
 #include "bsp.h"
 #include "compiler.h"
 #include "gpio_8278.h"
+#include "proj/drivers/rf_pa.h"
 
 #define RF_CHN_TABLE 		0x8000
 
@@ -578,6 +579,7 @@ static inline void rf_rx_finish_clear_flag(void)
  */
 static inline void rf_set_rxmode (void)
 {
+	if(blc_rf_pa_cb){   blc_rf_pa_cb(PA_TYPE_RX_ON);  }
 	write_reg8 (0x800f02, RF_TRX_OFF);
     write_reg8 (0x800428, RF_TRX_MODE | BIT(0));	//rx enable
     write_reg8 (0x800f02, RF_TRX_OFF | BIT(5));	// RX enable

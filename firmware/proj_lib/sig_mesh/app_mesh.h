@@ -829,6 +829,7 @@ typedef struct{
 	u16 seqzero     :13;
 	u16 rfu         :3;
 	u8 tx_segO_next;
+	u8 cmd_cnt_in_buf;  // get the command count in the buffer when push the last segment packet.
 	u8 ack_received;
 	u8 ctl;
 	u8 busy;

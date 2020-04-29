@@ -352,7 +352,7 @@ void mesh_provision_para_reset()
         return ;// remote prov cannot clear the para for the remoteprov server part 
     }
     #endif
-	LOG_MSG_INFO(TL_LOG_PROVISION,0, 0 ,"mesh_provision_para_reset",0);	
+	//LOG_MSG_INFO(TL_LOG_PROVISION,0, 0 ,"mesh_provision_para_reset",0);	
 	memset((u8 *)(&prov_para),0,OFFSETOF(prov_para_proc_t, rsp_ack_transnum));
 	prov_para.provison_send_state = LINK_UNPROVISION_STATE;
 	prov_para.provison_rcv_state= LINK_UNPROVISION_STATE;
@@ -3191,6 +3191,7 @@ u8 VC_node_cps_save(mesh_page0_t * p_page0,u16 unicast, u32 len_cps)
 				p_info->element_cnt = cps_ele_cnt;
 			}else if (cps_ele_cnt != p_info->element_cnt){
     			p_info->element_cnt =0;
+                LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"element count error!",0);
     		}
 		}
         #endif
