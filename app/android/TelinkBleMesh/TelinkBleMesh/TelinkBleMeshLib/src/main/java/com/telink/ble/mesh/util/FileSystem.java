@@ -84,7 +84,7 @@ public abstract class FileSystem {
 
     public static File getSettingPath() {
         File root = Environment.getExternalStorageDirectory();
-        return new File(root.getAbsolutePath() + File.separator + "TelinkSigMeshSetting");
+        return new File(root.getAbsolutePath() + File.separator + "TelinkBleMesh");
     }
 
     //
@@ -112,10 +112,6 @@ public abstract class FileSystem {
 
 
     public static String readString(File file) {
-//        File root = Environment.getExternalStorageDirectory();
-//        File dir = new File(root.getAbsolutePath() + File.separator + "TelinkSigMeshSetting");
-//        File file = new File(dir, fileName);
-
         if (!file.exists())
             return "";
         try {

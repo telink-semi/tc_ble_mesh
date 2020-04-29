@@ -136,7 +136,6 @@ public class NodeInfo implements Serializable {
 
     public void setOnOff(int onOff) {
         this.onOff = onOff;
-//        TelinkApplication.getInstance().saveLog("device on off status change : " + onOff + " adr -- " + meshAddress + " mac -- " + macAddress);
         if (publishModel != null) {
             Handler handler = TelinkMeshApplication.getInstance().getOfflineCheckHandler();
             handler.removeCallbacks(offlineCheckTask);

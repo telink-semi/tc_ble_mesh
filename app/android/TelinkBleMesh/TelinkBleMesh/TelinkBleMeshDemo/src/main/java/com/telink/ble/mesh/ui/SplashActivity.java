@@ -10,13 +10,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 
-import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.foundation.MeshConfiguration;
-import com.telink.ble.mesh.foundation.MeshService;
-import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
-
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -39,6 +34,18 @@ public class SplashActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        Intent intent = getIntent();
+        if (!this.isTaskRoot()) {
+            if (intent != null) {
+                String action = intent.getAction();
+                if (intent.hasCategory(Intent.CATEGORY_LAUNCHER)
+                        && Intent.ACTION_MAIN.equals(action)) {
+                    finish();
+                    return;
+                }
+            }
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
     }

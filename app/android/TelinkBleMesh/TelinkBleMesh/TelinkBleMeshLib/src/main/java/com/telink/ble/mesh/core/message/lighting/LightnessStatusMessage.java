@@ -14,7 +14,7 @@ import java.nio.ByteOrder;
 
 public class LightnessStatusMessage extends StatusMessage implements Parcelable {
 
-    private static final int DATA_LEN_COMPLETE = 3;
+    private static final int DATA_LEN_COMPLETE = 5;
 
     private int presentLightness;
 

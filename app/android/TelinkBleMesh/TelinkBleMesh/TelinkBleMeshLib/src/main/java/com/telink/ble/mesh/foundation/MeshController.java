@@ -920,6 +920,12 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                                 }
                             }
                             break;
+
+                        case MODE_REMOTE_PROVISION:
+                            RemoteProvisioningDevice device = mRemoteProvisioningController.getProvisioningDevice();
+                            mRemoteProvisioningController.clear();
+                            onRemoteProvisioningComplete(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_FAIL, device, "connection interrupt");
+                            break;
                     }
                 }
             }, 500);
@@ -1235,7 +1241,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 //            if (!device.getAddress().toUpperCase().equals("A4:C1:38:3F:4C:05")) return;
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
-//            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD:51")) return;
+//            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD:09")) return;
 //            if (!device.getAddress().toUpperCase().contains("FF:EE:EE:EE")) return;
 //            if (!device.getAddress().contains("33:22:11")) return;
             onScanFilter(device, rssi, scanRecord);
@@ -1598,6 +1604,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     public void switchNetworking(boolean pvComplete) {
         log("switch networking: " + pvComplete);
         if (pvComplete) {
+            log("setup config back: " + this.meshConfiguration.ivIndex);
             mNetworkingController.setup(this.meshConfiguration);
         } else {
             FastProvisioningConfiguration configuration = mFastProvisioningController.getConfiguration();
@@ -1613,6 +1620,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                     configuration.getDefaultAppKeyIndex(), configuration.getDefaultAppKey()
             );
             meshConfiguration.localAddress = this.meshConfiguration.localAddress;
+            log("setup config fast: " + meshConfiguration.ivIndex);
             mNetworkingController.setup(meshConfiguration);
         }
     }

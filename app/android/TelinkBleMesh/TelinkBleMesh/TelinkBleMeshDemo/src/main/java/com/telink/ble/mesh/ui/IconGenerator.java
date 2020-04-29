@@ -1,6 +1,7 @@
 package com.telink.ble.mesh.ui;
 
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.model.NodeInfo;
 
 /**
  * Created by kee on 2018/9/29.
@@ -17,9 +18,9 @@ public class IconGenerator {
         if (type == 1){
             return R.drawable.ic_low_power;
         }else {
-            if (onOff == -1) {
+            if (onOff == NodeInfo.ON_OFF_STATE_OFFLINE) {
                 return R.drawable.ic_bulb_offline;
-            } else if (onOff == 0) {
+            } else if (onOff == NodeInfo.ON_OFF_STATE_OFF) {
                 return R.drawable.ic_bulb_off;
             } else {
             /*if (deviceInfo.lum == 100) {

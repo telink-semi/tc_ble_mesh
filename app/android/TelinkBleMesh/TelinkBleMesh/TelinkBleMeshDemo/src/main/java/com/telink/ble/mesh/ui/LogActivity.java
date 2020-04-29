@@ -102,7 +102,7 @@ public class LogActivity extends BaseActivity {
                     @Override
                     public void run() {
                         dismissWaitingDialog();
-                        Toast.makeText(LogActivity.this, "fileName saved", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LogActivity.this, fileName+ " saved", Toast.LENGTH_SHORT).show();
                     }
                 });
             }

@@ -487,7 +487,7 @@ public class ProvisioningController {
 
         mProvisioningDevice.setDeviceKey(Encipher.aesCmac(Encipher.PRDK, t));
         log("device key: " + Arrays.bytesToHexString(mProvisioningDevice.getDeviceKey(), ":"));
-
+        log("provisioning data prepare: " + mProvisioningDevice.toString());
         byte[] provisioningData = mProvisioningDevice.generateProvisioningData();
 
         log("unencrypted provision data: " + Arrays.bytesToHexString(provisioningData, ":"));

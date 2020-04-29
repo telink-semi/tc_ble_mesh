@@ -59,7 +59,7 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
 //        holder.tv_name.setText(mDevices.get(position).getAddress());
         String deviceDesc = mContext.getString(R.string.device_prov_desc, String.format("%04X", device.meshAddress), Arrays.bytesToHexString(device.deviceUUID));
         if (!TextUtils.isEmpty(device.macAddress)) {
-            deviceDesc += "\nmac: " + device.macAddress;
+            deviceDesc += " - mac: " + device.macAddress;
         }
         holder.tv_device_info.setText(deviceDesc);
         holder.tv_state.setText(device.getStateDesc());

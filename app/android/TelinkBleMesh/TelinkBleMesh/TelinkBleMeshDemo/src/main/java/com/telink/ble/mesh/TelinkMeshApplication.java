@@ -10,6 +10,7 @@ import com.telink.ble.mesh.core.message.StatusMessage;
 import com.telink.ble.mesh.core.message.generic.LevelStatusMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlStatusMessage;
+import com.telink.ble.mesh.core.message.lighting.CtlTemperatureStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
 import com.telink.ble.mesh.entity.OnlineStatusInfo;
 import com.telink.ble.mesh.foundation.MeshApplication;
@@ -136,8 +137,8 @@ public class TelinkMeshApplication extends MeshApplication {
                     if (nodeInfo.meshAddress == message.getSrc()) {
                         if (nodeInfo.getOnOff() != onOff) {
                             statusChangedNode = nodeInfo;
-                            nodeInfo.setOnOff(onOff);
                         }
+                        nodeInfo.setOnOff(onOff);
                         break;
                     }
                 }
@@ -191,6 +192,18 @@ public class TelinkMeshApplication extends MeshApplication {
                         break;
                     }
                 }
+            }else if (message.getStatusMessage() instanceof CtlTemperatureStatusMessage){
+                CtlTemperatureStatusMessage ctlTemp = (CtlTemperatureStatusMessage) statusMessage;
+                int srcAdr = message.getSrc();
+                for (NodeInfo onlineDevice : meshInfo.nodes) {
+                    if (onlineDevice.meshAddress == srcAdr) {
+                        int temp = ctlTemp.isComplete() ? ctlTemp.getTargetTemperature() : ctlTemp.getPresentTemperature();
+                        if (onTempStatus(onlineDevice, UnitConvert.lightness2lum(temp))) {
+                            statusChangedNode = onlineDevice;
+                        }
+                        break;
+                    }
+                }
             }
 
             if (statusChangedNode != null) {
@@ -205,11 +218,20 @@ public class TelinkMeshApplication extends MeshApplication {
         int tarOnOff = lum > 0 ? 1 : 0;
         if (nodeInfo.getOnOff() != tarOnOff) {
             statusChanged = true;
-            nodeInfo.setOnOff(tarOnOff);
         }
+        nodeInfo.setOnOff(tarOnOff);
         if (nodeInfo.lum != lum) {
             statusChanged = true;
             nodeInfo.lum = lum;
+        }
+        return statusChanged;
+    }
+
+    private boolean onTempStatus(NodeInfo nodeInfo, int temp) {
+        boolean statusChanged = false;
+        if (nodeInfo.temp != temp) {
+            statusChanged = true;
+            nodeInfo.temp = temp;
         }
         return statusChanged;
     }
@@ -248,8 +270,8 @@ public class TelinkMeshApplication extends MeshApplication {
                 }*/
                 if (deviceInfo.getOnOff() != onOff) {
                     statusChangedNode = deviceInfo;
-                    deviceInfo.setOnOff(onOff);
                 }
+                deviceInfo.setOnOff(onOff);
                 if (deviceInfo.lum != onlineStatusInfo.status[0]) {
                     statusChangedNode = deviceInfo;
                     deviceInfo.lum = onlineStatusInfo.status[0];
