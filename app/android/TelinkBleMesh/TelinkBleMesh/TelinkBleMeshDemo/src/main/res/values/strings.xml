@@ -40,7 +40,7 @@
 
     <string name="device_state_desc_mesh_ota">Adr: 0x%s\nPid:%s</string>
 
-    <string name="device_prov_desc">adr: 0x%s\nuuid:%s</string>
+    <string name="device_prov_desc">adr: 0x%s - uuid:%s</string>
 
 
     <string name="publication_setting">Publication (ele : %s model: %s)</string>
@@ -85,14 +85,14 @@
 
 
     <string name="share_tip">
-        1. On phone[1] click [EXPORT] to  export storage as json file to sdcard/TelinkSigMeshSetting directory\n\n
+        1. On phone[1] click [EXPORT] to  export storage as json file to sdcard/TelinkBleMesh directory\n\n
         2. Copy json file to phone[2]\'s sdcard\n\n
         3. Click [select file] to select json file , then click [IMPORT] to load json file and sync storage\n\n
         4. Back to home page, and waiting for mesh reconnect\n\n
     </string>
 
     <string-array name="share_flow">
-        <item>1. On phone[1] click [EXPORT] to  export storage as json file to sdcard/TelinkSigMeshSetting directory </item>
+        <item>1. On phone[1] click [EXPORT] to  export storage as json file to sdcard/TelinkBleMesh directory </item>
         <item>2. Copy json file to phone[2]\'s sdcard</item>
         <item>3. Click [select file] to select json file , then click [IMPORT] to load json file and sync storage</item>
         <item>4. Back to home page, and waiting for mesh reconnect </item>

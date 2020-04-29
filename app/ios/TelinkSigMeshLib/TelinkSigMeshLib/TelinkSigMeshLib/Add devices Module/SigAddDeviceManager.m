@@ -169,7 +169,16 @@ typedef enum : NSUInteger {
     [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
         TeLogInfo(@"start keyBind.");
         weakSelf.addStatus = SigAddStatusKeyBinding;
-        [SigKeyBindManager.share keyBind:weakSelf.unicastAddress appkeyModel:weakSelf.appkeyModel keyBindType:weakSelf.keyBindType productID:weakSelf.fastKeybindProductID cpsData:weakSelf.fastKeybindCpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+        KeyBindTpye currentKeyBindType = KeyBindTpye_Normal;
+        if (weakSelf.keyBindType == KeyBindTpye_Fast) {
+            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:weakSelf.unicastAddress];
+            if ([LibTools uint16From16String:node.pid] == weakSelf.fastKeybindProductID) {
+                currentKeyBindType = KeyBindTpye_Fast;
+            }else{
+                TeLogInfo(@"fast bind no support, bind Normal!!!");
+            }
+        }
+        [SigKeyBindManager.share keyBind:weakSelf.unicastAddress appkeyModel:weakSelf.appkeyModel keyBindType:currentKeyBindType productID:weakSelf.fastKeybindProductID cpsData:weakSelf.fastKeybindCpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             if (weakSelf.keyBindSuccessBlock) {
                 weakSelf.keyBindSuccessBlock(identify, address);
             }

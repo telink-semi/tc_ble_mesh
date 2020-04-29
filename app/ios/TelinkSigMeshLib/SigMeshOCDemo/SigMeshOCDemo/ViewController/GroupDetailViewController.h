@@ -28,10 +28,9 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "GroupModel.h"
 
 @interface GroupDetailViewController : BaseViewController
 
-@property (nonatomic,strong) GroupModel *model;
+@property (nonatomic,strong) SigGroupModel *model;
 
 @end

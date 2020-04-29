@@ -43,8 +43,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (SigDataHandler *)share;
 
-- (void)receiveBleData:(NSData *)data;
-
 - (void)receiveOnlineStatueData:(NSData *)data;
 
 @end

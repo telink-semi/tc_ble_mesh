@@ -61,8 +61,7 @@
             return;
         }
     }
-    
-    saveLogData(@"clickStartOTA");
+    TeLog(@"clickStartOTA");
     self.OTAing = YES;
     self.otaButton.backgroundColor = self.unableColor;
     self.tableView.userInteractionEnabled = NO;
@@ -129,7 +128,7 @@
     self.tableView.userInteractionEnabled = YES;
     [self showOTATips:@"OTA success"];
     [self.ble setNormalState];
-    saveLogData(@"otaSuccess");
+    TeLog(@"otaSuccess");
 }
 
 - (void)otaFailAction{
@@ -142,7 +141,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
-    saveLogData(@"otaFail");
+    TeLog(@"otaFail");
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{

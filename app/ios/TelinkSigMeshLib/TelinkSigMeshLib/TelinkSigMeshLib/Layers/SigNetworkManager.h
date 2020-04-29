@@ -48,15 +48,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Computed properties
 
-- (SigDataSource *)meshNetwork;
+//- (SigDataSource *)meshNetwork;
 
 - (UInt8)defaultTtl;
 
 - (NSTimeInterval)incompleteMessageTimeout;
 
-- (NSTimeInterval)acknowledgmentMessageTimeout;
+//- (NSTimeInterval)acknowledgmentMessageTimeout;
 
-- (NSTimeInterval)acknowledgmentMessageInterval:(UInt8)ttl segmentCount:(int)segmentCount;
+//- (NSTimeInterval)acknowledgmentMessageInterval:(UInt8)ttl segmentCount:(int)segmentCount;
 
 - (NSTimeInterval)acknowledgmentTimerInterval:(UInt8)ttl;
 

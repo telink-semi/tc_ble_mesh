@@ -5,6 +5,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningCapabilityPDU;
+import com.telink.ble.mesh.util.Arrays;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -237,5 +238,21 @@ public class ProvisioningDevice implements Parcelable {
         dest.writeByteArray(authValue);
         dest.writeInt(provisioningState);
         dest.writeByteArray(deviceKey);
+    }
+
+    @Override
+    public String toString() {
+        return "ProvisioningDevice{" +
+                "deviceUUID=" + Arrays.bytesToHexString(deviceUUID) +
+                ", networkKey=" + Arrays.bytesToHexString(networkKey) +
+                ", networkKeyIndex=" + networkKeyIndex +
+                ", keyRefreshFlag=" + keyRefreshFlag +
+                ", ivUpdateFlag=" + ivUpdateFlag +
+                ", ivIndex=0x" + Long.toHexString(ivIndex) +
+                ", unicastAddress=0x" + Integer.toHexString(unicastAddress) +
+                ", authValue=" + Arrays.bytesToHexString(authValue) +
+                ", provisioningState=" + provisioningState +
+                ", deviceKey=" + Arrays.bytesToHexString(deviceKey) +
+                '}';
     }
 }

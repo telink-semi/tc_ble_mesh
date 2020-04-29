@@ -351,7 +351,7 @@ public class MeshStorageService {
                 if (!isProvisionerNode(meshStorage, node)) {
                     deviceInfo = new NodeInfo();
                     deviceInfo.meshAddress = Integer.valueOf(node.unicastAddress, 16);
-                    deviceInfo.deviceUUID = (Arrays.hexToBytes(node.UUID.replace(":", "")));
+                    deviceInfo.deviceUUID = (Arrays.hexToBytes(node.UUID.replace(":", "").replace("-", "")));
                     deviceInfo.elementCnt = node.elements == null ? 0 : node.elements.size();
                     deviceInfo.deviceKey = Arrays.hexToBytes(node.deviceKey);
 

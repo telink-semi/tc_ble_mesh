@@ -1,3 +1,24 @@
+/********************************************************************************************************
+* @file     SigProxyConfigurationMessage.h
+*
+* @brief    for TLSR chips
+*
+* @author     telink
+* @date     Sep. 30, 2010
+*
+* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+*           All rights reserved.
+*
+*             The information contained herein is confidential and proprietary property of Telink
+*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
+*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
+*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
+*           This heading MUST NOT be removed from this file.
+*
+*              Licensees are granted free, non-transferable use of the information in this
+*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+*
+*******************************************************************************************************/
 //
 //  SigProxyConfigurationMessage.h
 //  TelinkSigMeshLib
@@ -44,70 +65,49 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
+/// 6.5.1 Set Filter Type
+/// - seeAlso: Mesh_v1.0.pdf (page.263)
 @interface SigSetFilterType : SigStaticAcknowledgedProxyConfigurationMessage
 /// The new filter type.
 @property (nonatomic,assign) SigProxyFilerType filterType;
 
-/// Creates a new Set Filter Type message.
-///
-/// This message can be used to set the proxy filter type and
-/// clear the proxy filter list.
-///
-/// - parameter type: The new filter type. Setting the same
-///                   filter type as was set before will clear
-///                   the filter.
 - (instancetype)initWithType:(SigProxyFilerType)type;
-
 - (instancetype)initWithParameters:(NSData *)parameters;
-
 @end
 
 
+/// 6.5.2 Add Addresses to Filter
+/// - seeAlso: Mesh_v1.0.pdf (page.264)
 @interface SigAddAddressesToFilter : SigStaticAcknowledgedProxyConfigurationMessage
-/// Arrays of addresses to be added to the proxy filter.
+/// List of addresses where N is the number of addresses in this message.
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*addresses;
 
-/// Creates the Add Addresses To Filter message.
-///
-/// - parameter addresses: The array of addresses to be added
-///                        to the current filter.
 - (instancetype)initWithAddresses:(NSArray <NSNumber *>*)addresses;
-
 - (instancetype)initWithParameters:(NSData *)parameters;
-
 @end
 
 
+/// 6.5.3 Remove Addresses from Filter
+/// - seeAlso: Mesh_v1.0.pdf (page.264)
 @interface SigRemoveAddressesFromFilter : SigStaticAcknowledgedProxyConfigurationMessage
-/// Arrays of addresses to be added to the proxy filter.
+/// List of addresses where N is the number of addresses in this message.
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*addresses;
 
-/// Creates the Add Addresses To Filter message.
-///
-/// - parameter addresses: The array of addresses to be added
-///                        to the current filter.
 - (instancetype)initWithAddresses:(NSArray <NSNumber *>*)addresses;
-
 - (instancetype)initWithParameters:(NSData *)parameters;
-
 @end
 
 
+/// 6.5.4 Filter Status
+/// - seeAlso: Mesh_v1.0.pdf (page.264)
 @interface SigFilterStatus : SigStaticProxyConfigurationMessage
-/// The new filter type.
+/// White list or black list.
 @property (nonatomic,assign) SigProxyFilerType filterType;
 /// Number of addresses in the proxy filter list.
 @property (nonatomic,assign) UInt16 listSize;
 
-/// Creates a new Filter Status message.
-///
-/// - parameter type: The current filter type.
-/// - parameter listSize: Number of addresses in the proxy
-///                       filter list.
 - (instancetype)initWithType:(SigProxyFilerType)type listSize:(UInt16)listSize;
-
 - (instancetype)initWithParameters:(NSData *)parameters;
-
 @end
 
 

@@ -131,17 +131,18 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)sendRemoteProvisionPDUWithOutboundPDUNumber:(UInt8)outboundPDUNumber provisioningPDU:(NSData *)provisioningPDU retryCount:(NSInteger)retryCount complete:(RemotePDUResultCallBack)complete {
-    [SDKLibCommand remoteProvisioningPDUSendWithOutboundPDUNumber:outboundPDUNumber provisioningPDU:provisioningPDU destination:self.reportNodeAddress resMax:0 retryCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+    [SDKLibCommand remoteProvisioningPDUSendWithDestination:self.reportNodeAddress OutboundPDUNumber:outboundPDUNumber provisioningPDU:provisioningPDU retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         
     }];
     __block NSInteger blockRetryCount = retryCount;
+    __weak typeof(self) weakSelf = self;
     if (blockRetryCount) {
         BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:1.0 repeats:YES block:^(BackgroundTimer * _Nonnull t) {
             if (blockRetryCount) {
                 TeLogDebug(@"BackgroundTimer,retry count=%d",blockRetryCount);
                 blockRetryCount --;
-                [SDKLibCommand remoteProvisioningPDUSendWithOutboundPDUNumber:outboundPDUNumber provisioningPDU:provisioningPDU destination:self.reportNodeAddress resMax:0 retryCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                [SDKLibCommand remoteProvisioningPDUSendWithDestination:weakSelf.reportNodeAddress OutboundPDUNumber:outboundPDUNumber provisioningPDU:provisioningPDU retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 }];
             }
@@ -161,7 +162,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     if (self.isRemoteProvision) {
         identify = [LibTools convertDataToHexStr:_reportNodeUUID];
     } else {
-        identify = self.unprovisionedDevice.uuid;
+        identify = [LibTools meshUUIDToUUID:self.unprovisionedDevice.uuid];
     }
     UInt8 ele_count = self.provisioningCapabilities.numberOfElements;
     [SigDataSource.share saveLocationProvisionAddress:address+ele_count-1];
@@ -191,7 +192,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         model.macAddress = self.unprovisionedDevice.macAddress;
     }
     model.nodeInfo = info;
-    [SigDataSource.share saveDeviceWithDeviceModel:model];
+    [SigDataSource.share addAndSaveNodeToMeshNetworkWithDeviceModel:model];
 }
 
 /// This method should be called when the OOB value has been received
@@ -212,7 +213,9 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)sendPdu:(SigProvisioningPdu *)pdu {
-    [SigBearer.share sendBlePdu:pdu ofType:SigPduType_provisioningPdu];
+    dispatch_async(SigMeshLib.share.queue, ^{
+        [SigBearer.share sendBlePdu:pdu ofType:SigPduType_provisioningPdu];
+    });
 }
 
 /// Resets the provisioning properties and state.
@@ -408,7 +411,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         }
     }];
     
-    [SDKLibCommand remoteProvisioningLinkOpenWithUUID:reportNodeUUID destination:reportNodeAddress resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
+    [SDKLibCommand remoteProvisioningLinkOpenWithDestination:reportNodeAddress UUID:reportNodeUUID retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
         TeLogInfo(@"linkOpen responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigRemoteProvisioningStatus_success) {
             [weakSelf getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningResponse * _Nullable response) {
@@ -574,8 +577,8 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     }
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
-        [self performSelector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) withObject:nil afterDelay:timeout];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
+        [self performSelector:@selector(sentProvisionRandomPduTimeout) withObject:nil afterDelay:timeout];
     });
 }
 
@@ -597,10 +600,10 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)getCapabilitiesResultWithResponse:(SigProvisioningResponse *)response {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
+    });
     if (response.type == SigProvisioningPduType_capabilities) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
-        });
         [self showCapabilitiesLog:response.capabilities];
         struct ProvisioningCapabilities capabilities = response.capabilities;
         self.provisioningCapabilities = capabilities;
@@ -630,9 +633,6 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             }
         }
     }else if (!response || response.type == SigProvisioningPduType_failed) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
-        });
         self.state = ProvisionigState_fail;
         TeLogDebug(@"getCapabilities error = %lu",(unsigned long)response.error);
     }else{
@@ -641,6 +641,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)getCapabilitiesTimeout {
+    TeLogInfo(@"getCapabilitiesTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
     });
@@ -650,11 +651,11 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)sentStartProvisionPduAndPublicKeyPduWithResponse:(SigProvisioningResponse *)response {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
+    });
     TeLogInfo(@"device public key back:%@",response.responseData);
     if (response.type == SigProvisioningPduType_publicKey) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
-        });
         [self.provisioningData accumulatePduData:[response.responseData subdataWithRange:NSMakeRange(1, response.responseData.length - 1)]];
         [self.provisioningData provisionerDidObtainWithDevicePublicKey:response.publicKey];
         if (self.provisioningData.sharedSecret && self.provisioningData.sharedSecret.length > 0) {
@@ -668,9 +669,6 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             self.state = ProvisionigState_fail;
         }
     }else if (!response || response.type == SigProvisioningPduType_failed) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
-        });
         self.state = ProvisionigState_fail;
         TeLogDebug(@"sentStartProvisionPduAndPublicKeyPdu error = %lu",(unsigned long)response.error);
     }else{
@@ -679,6 +677,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)sentStartProvisionPduAndPublicKeyPduTimeout {
+    TeLogInfo(@"sentStartProvisionPduAndPublicKeyPduTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
     });
@@ -688,12 +687,11 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)sentProvisionConfirmationPduWithResponse:(SigProvisioningResponse *)response {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
+    });
     TeLogInfo(@"device confirmation back:%@",response.responseData);
     if (response.type == SigProvisioningPduType_confirmation) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
-        });
-        
         [self.provisioningData provisionerDidObtainWithDeviceConfirmation:response.confirmation];
         __weak typeof(self) weakSelf = self;
         [self sentProvisionRandomPduWithTimeout:kProvisionRandomTimeout callback:^(SigProvisioningResponse * _Nullable response) {
@@ -711,6 +709,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)sentProvisionConfirmationPduTimeout {
+    TeLogInfo(@"sentProvisionConfirmationPduTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
     });
@@ -720,11 +719,11 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)sentProvisionRandomPduWithResponse:(SigProvisioningResponse *)response {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
+    });
     TeLogInfo(@"device random back:%@",response.responseData);
     if (response.type == SigProvisioningPduType_random) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
-        });
         [self.provisioningData provisionerDidObtainWithDeviceRandom:response.random];
         if (![self.provisioningData validateConfirmation]) {
             TeLogDebug(@"validate Confirmation fail");
@@ -736,9 +735,6 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             [weakSelf sentProvisionEncryptedDataWithMicPduWithResponse:response];
         }];
     }else if (!response || response.type == SigProvisioningPduType_failed) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
-        });
         self.state = ProvisionigState_fail;
         TeLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)response.error);
     }else{
@@ -747,6 +743,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)sentProvisionRandomPduTimeout {
+    TeLogInfo(@"sentProvisionRandomPduTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
     });
@@ -758,10 +755,10 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 - (void)sentProvisionEncryptedDataWithMicPduWithResponse:(SigProvisioningResponse *)response {
     TeLogInfo(@"\n\n==========provision end.\n\n");
     TeLogInfo(@"device provision result back:%@",response.responseData);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) object:nil];
+    });
     if (response.type == SigProvisioningPduType_complete) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) object:nil];
-        });
         [self provisionSuccess];
         [SigBearer.share setBearerProvisioned:YES];
         if (self.provisionSuccessBlock) {
@@ -771,9 +768,6 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             SigMeshLib.share.delegateForDeveloper = self.oldDelegateForDeveloper;
         }
     }else if (!response || response.type == SigProvisioningPduType_failed) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) object:nil];
-        });
         self.state = ProvisionigState_fail;
         TeLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)response.error);
     }else{
@@ -783,6 +777,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 - (void)sentProvisionEncryptedDataWithMicPduTimeout {
+    TeLogInfo(@"sentProvisionEncryptedDataWithMicPduTimeout");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) object:nil];
     });

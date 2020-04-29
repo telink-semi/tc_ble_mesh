@@ -1,3 +1,24 @@
+/********************************************************************************************************
+* @file     SigLowerTransportLayer.m
+*
+* @brief    for TLSR chips
+*
+* @author     telink
+* @date     Sep. 30, 2010
+*
+* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+*           All rights reserved.
+*
+*             The information contained herein is confidential and proprietary property of Telink
+*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
+*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
+*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
+*           This heading MUST NOT be removed from this file.
+*
+*              Licensees are granted free, non-transferable use of the information in this
+*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+*
+*******************************************************************************************************/
 //
 //  SigLowerTransportLayer.m
 //  TelinkSigMeshLib
@@ -175,6 +196,9 @@
     }
     /// Last 13 bits of the sequence number are known as seqZero.
     UInt16 sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
+    //==========telink need this==========//
+    [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
+    //==========telink need this==========//
     /// Number of segments to be sent.
     NSInteger count = (pdu.transportPdu.length + 11) / 12;
     // Create all segments to be sent.
@@ -203,6 +227,9 @@
     }
     /// Last 13 bits of the sequence number are known as seqZero.
     UInt16 sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
+    //==========telink need this==========//
+    [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
+    //==========telink need this==========//
     /// Number of segments to be sent.
     NSInteger count = (pdu.transportPdu.length + 11) / 12;
     // Create all segments to be sent.
@@ -419,22 +446,27 @@
                 TeLogDebug(@"networkPdu.destination != provisionerNode.address");
                 return nil;
             }
-            // If the Lower Transport Layer receives any segment while the incomplete
-            // timer is active, the timer shall be restarted.
-            BackgroundTimer *timer1 = [_incompleteTimers objectForKey:@(key)];
-            [timer1 invalidate];
             __weak typeof(self) weakSelf = self;
-            BackgroundTimer *timer2 = [BackgroundTimer scheduledTimerWithTimeInterval:_networkManager.incompleteMessageTimeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
-                TeLogDebug(@"Incomplete message timeout: cancelling message (src: 0x%x, seqZero: 0x%x)",(UInt16)(key >> 16),(UInt16)(key & 0x1FFF));
-                BackgroundTimer *timer1 = [weakSelf.incompleteTimers objectForKey:@(key)];
-                [timer1 invalidate];
-                [weakSelf.incompleteTimers removeObjectForKey:@(key)];
-                BackgroundTimer *timer2 = [weakSelf.acknowledgmentTimers objectForKey:@(key)];
-                [timer2 invalidate];
-                [weakSelf.acknowledgmentTimers removeObjectForKey:@(key)];
-                [weakSelf.incompleteSegments removeObjectForKey:@(key)];
-            }];
-            _incompleteTimers[@(key)] = timer2;
+
+            //==========telink not need this==========//
+//            // If the Lower Transport Layer receives any segment while the incomplete
+//            // timer is active, the timer shall be restarted.
+//            BackgroundTimer *timer1 = [_incompleteTimers objectForKey:@(key)];
+//            [timer1 invalidate];
+//            __weak typeof(self) weakSelf = self;
+//            BackgroundTimer *timer2 = [BackgroundTimer scheduledTimerWithTimeInterval:_networkManager.incompleteMessageTimeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+//                TeLogDebug(@"Incomplete message timeout: cancelling message (src: 0x%x, seqZero: 0x%x)",(UInt16)(key >> 16),(UInt16)(key & 0x1FFF));
+//                BackgroundTimer *timer1 = [weakSelf.incompleteTimers objectForKey:@(key)];
+//                [timer1 invalidate];
+//                [weakSelf.incompleteTimers removeObjectForKey:@(key)];
+//                BackgroundTimer *timer2 = [weakSelf.acknowledgmentTimers objectForKey:@(key)];
+//                [timer2 invalidate];
+//                [weakSelf.acknowledgmentTimers removeObjectForKey:@(key)];
+//                [weakSelf.incompleteSegments removeObjectForKey:@(key)];
+//            }];
+//            _incompleteTimers[@(key)] = timer2;
+            //==========telink not need this==========//
+
             // If the Lower Transport Layer receives any segment while the acknowlegment
             // timer is inactive, it shall restart the timer. Active timer should not be restarted.
             if (_acknowledgmentTimers[@(key)] == nil) {
@@ -458,6 +490,37 @@
             return nil;
         }
     }
+}
+
+- (void)startTXTimeoutWithAddress:(UInt16)address sequenceZero:(UInt16)sequenceZero {
+    UInt32 key = (UInt32)[self getKeyForAddress:address sequenceZero:sequenceZero];
+    // If the Lower Transport Layer receives any segment while the incomplete
+    // timer is active, the timer shall be restarted.
+    BackgroundTimer *timer1 = [_incompleteTimers objectForKey:@(key)];
+    [timer1 invalidate];
+    __weak typeof(self) weakSelf = self;
+    BackgroundTimer *timer2 = [BackgroundTimer scheduledTimerWithTimeInterval:_networkManager.incompleteMessageTimeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+        TeLogDebug(@"Incomplete message timeout: cancelling message (src: 0x%x, seqZero: 0x%x)",(UInt16)(key >> 16),(UInt16)(key & 0x1FFF));
+        BackgroundTimer *timer1 = [weakSelf.incompleteTimers objectForKey:@(key)];
+        [timer1 invalidate];
+        [weakSelf.incompleteTimers removeObjectForKey:@(key)];
+        BackgroundTimer *timer2 = [weakSelf.acknowledgmentTimers objectForKey:@(key)];
+        [timer2 invalidate];
+        [weakSelf.acknowledgmentTimers removeObjectForKey:@(key)];
+        [weakSelf.incompleteSegments removeObjectForKey:@(key)];
+        
+        // A limit has been reached and some segments were not ACK.
+        NSArray *segments = weakSelf.outgoingSegments[@(sequenceZero)];
+        SigSegmentedMessage *segment = [weakSelf firstNotAcknowledgedFrom:segments];
+        if (segment) {
+            if (segment.userInitiated && !segment.message.isAcknowledged) {
+                [weakSelf.networkManager notifyAboutError:[NSError errorWithDomain:@"LowerTransportError.timeout" code:SigLowerTransportError_timeout userInfo:nil] duringSendingMessage:segment.message fromLocalElement:segment.localElement toDestination:segment.destination];
+            }
+            [weakSelf.networkManager.upperTransportLayer lowerTransportLayerDidSendSegmentedUpperTransportPduToDestination:segment.destination];
+        }
+        [weakSelf.outgoingSegments removeObjectForKey:@(sequenceZero)];
+    }];
+    _incompleteTimers[@(key)] = timer2;
 }
 
 /// This method handles the Segment Acknowledgment Message.
@@ -492,6 +555,11 @@
     // If all the segments were acknowledged, notify the manager.
     if ([self segmentsArrayHasMore:_outgoingSegments[@(ack.sequenceZero)]] == NO) {
         TeLogInfo(@"node response SegmentAcknowledgmentMessage,all the segments were acknowledged.ack.blockAck=0x%x",ack.blockAck);
+        UInt32 key = (UInt32)[self getKeyForAddress:ack.source sequenceZero:ack.sequenceZero];
+        BackgroundTimer *timer1 = [self.incompleteTimers objectForKey:@(key)];
+        [timer1 invalidate];
+        [self.incompleteTimers removeObjectForKey:@(key)];
+
         [_outgoingSegments removeObjectForKey:@(ack.sequenceZero)];
         [_networkManager notifyAboutDeliveringMessage:segment.message fromLocalElement:segment.localElement toDestination:segment.destination];
         [_networkManager.upperTransportLayer lowerTransportLayerDidSendSegmentedUpperTransportPduToDestination:segment.destination];
@@ -542,6 +610,7 @@
 ///
 /// - parameter sequenceZero: The key to get segments from the map.
 - (void)sendSegmentsForSequenceZero:(UInt16)sequenceZero limit:(int)limit {
+    TeLogInfo(@"limit=%d",limit);
     NSArray *array = _outgoingSegments[@(sequenceZero)];
     NSInteger count = array.count;
     UInt8 ttl = (UInt8)[_segmentTtl[@(sequenceZero)] intValue];
@@ -563,7 +632,6 @@
                 destination = segment.destination;
             }
             ackExpected = [SigHelper.share isUnicastAddress:segment.destination];
-//            [_networkManager.networkLayer sendLowerTransportPdu:segment ofType:SigPduType_networkPdu withTtl:ttl];
             [_networkManager.networkLayer sendLowerTransportPdu:segment ofType:SigPduType_networkPdu withTtl:ttl ivIndex:segment.ivIndex];
             //==========test==========//
             //因为非直连设备地址的segment包需要在mesh网络m内部进行转发，且设备不一定存在ack返回。（BLOBChunkTransfer）

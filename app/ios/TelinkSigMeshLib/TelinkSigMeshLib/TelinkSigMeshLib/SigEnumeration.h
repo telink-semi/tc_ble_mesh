@@ -1,3 +1,24 @@
+/********************************************************************************************************
+* @file     SigStruct.h
+*
+* @brief    for TLSR chips
+*
+* @author     telink
+* @date     Sep. 30, 2010
+*
+* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+*           All rights reserved.
+*
+*             The information contained herein is confidential and proprietary property of Telink
+*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
+*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
+*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
+*           This heading MUST NOT be removed from this file.
+*
+*              Licensees are granted free, non-transferable use of the information in this
+*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+*
+*******************************************************************************************************/
 //
 //  SigEnumeration.h
 //  SigMeshLib
@@ -8,6 +29,17 @@
 
 #ifndef SigEnumeration_h
 #define SigEnumeration_h
+
+typedef enum : UInt8 {
+    /// - seeAlso: 3.4.4 Network PDU of Mesh_v1.0.pdf  (page.43)
+    SigPduType_networkPdu = 0,
+    /// - seeAlso: 3.9 Mesh beacons of Mesh_v1.0.pdf  (page.117)
+    SigPduType_meshBeacon = 1,
+    /// - seeAlso: 6.5 Proxy configuration messages of Mesh_v1.0.pdf  (page.262)
+    SigPduType_proxyConfiguration = 2,
+    /// - seeAlso: 5.4.1 Provisioning PDUs of Mesh_v1.0.pdf  (page.237)
+    SigPduType_provisioningPdu = 3,
+} SigPduType;
 
 typedef enum : NSUInteger {
     ProvisionTpye_NoOOB,//普通添加模式
@@ -963,15 +995,9 @@ typedef enum : UInt8 {
 /// Table 6.7: FilterType Values
 /// - seeAlso: Mesh_v1.0.pdf  (page.263)
 typedef enum : UInt8 {
-    /// A white list filter has an associated white list, which is a list of
-    /// destination addresses that are of interest for the Proxy Client.
-    /// The white list filter blocks all destination addresses except those
-    /// that have been added to the white list.
+    /// A white list filter has an associated white list, which is a list of destination addresses that are of interest for the Proxy Client. The white list filter blocks all destination addresses except those that have been added to the white list.
     SigProxyFilerType_whitelist = 0x00,
-    /// A black list filter has an associated black list, which is a list of
-    /// destination addresses that the Proxy Client does not want to receive.
-    /// The black list filter accepts all destination addresses except those
-    /// that have been added to the black list.
+    /// A black list filter has an associated black list, which is a list of destination addresses that the Proxy Client does not want to receive. The black list filter accepts all destination addresses except those that have been added to the black list.
     SigProxyFilerType_blacklist = 0x01,
 } SigProxyFilerType;
 

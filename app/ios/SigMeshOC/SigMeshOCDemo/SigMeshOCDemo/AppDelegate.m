@@ -92,8 +92,7 @@ static Byte TemByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x00, (By
 //    NSData *nodeInfoData = [NSData dataWithBytes:TemByte length:76];
 //    [model setDefultNodeInfoData:nodeInfoData];
 //    [SigDataSource.share.defaultNodeInfos addObject:model];
-    
-    
+        
     return YES;
 }
 

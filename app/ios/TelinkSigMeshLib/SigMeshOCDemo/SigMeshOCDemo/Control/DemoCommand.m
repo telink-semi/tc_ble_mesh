@@ -60,7 +60,7 @@
             return NO;
         } else {
             TeLogInfo(@"send request for onlinestatus");
-            [SDKLibCommand genericOnOffGetWithDestination:kMeshAddress_allNodes resMax:responseMaxCount successCallback:successCallback resultCallback:resultCallback ];
+            [SDKLibCommand genericOnOffGetWithDestination:kMeshAddress_allNodes retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
             return YES;
         }
     }
@@ -77,7 +77,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get lim");
-        [SDKLibCommand lightLightnessGetWithDestination:nodeAddress resMax:responseMacCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand lightLightnessGetWithDestination:nodeAddress retryCount:2 responseMaxCount:responseMacCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -93,13 +93,13 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get CTL");
-        [SDKLibCommand lightCTLGetWithDestination:nodeAddress resMax:responseMacCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand lightCTLGetWithDestination:nodeAddress retryCount:2 responseMaxCount:responseMacCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
 
 ///change subscribe list（develop can see mesh_node.h line129 to get more detail of option）
-+ (BOOL)editSubscribeListWithGroupAddress:(UInt16)groupAddress nodeAddress:(UInt16)nodeAddress elementAddress:(UInt16)elementAddress isAdd:(BOOL)isAdd modelID:(UInt32)modelID successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (BOOL)editSubscribeListWithWithDestination:(UInt16)destination isAdd:(BOOL)isAdd groupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for edit subscribe list, but busy now.");
         if (resultCallback) {
@@ -117,8 +117,8 @@
             }
             return NO;
         }
-        SigNodeModel *node = [SigDataSource.share getNodeWithAddress:nodeAddress];
-        SigModelIDModel *modelIDModel = [node getModelIDModelWithModelID:modelID andElementAddress:elementAddress];
+        SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+        SigModelIDModel *modelIDModel = [node getModelIDModelWithModelID:modelIdentifier andElementAddress:elementAddress];
         if (!modelIDModel) {
             TeLogInfo(@"send request for edit subscribe list, but modelID is not exist.");
             if (resultCallback) {
@@ -130,16 +130,16 @@
 
         TeLogInfo(@"send request for edit subscribe list");
         if (isAdd) {
-            [SDKLibCommand configModelSubscriptionAddWithSigGroupModel:group modelIDModel:modelIDModel successCallback:successCallback resultCallback:resultCallback];
+            [SDKLibCommand configModelSubscriptionAddWithDestination:destination toGroupAddress:groupAddress elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:retryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         } else {
-            [SDKLibCommand configModelSubscriptionDeleteWithSigGroupModel:group modelIDModel:modelIDModel successCallback:successCallback resultCallback:resultCallback];
+            [SDKLibCommand configModelSubscriptionDeleteWithDestination:destination groupAddress:groupAddress elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:retryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         }
         return YES;
     }
 }
 
 /// Change publish list
-+ (BOOL)editPublishListWithPublishAddress:(UInt16)publishAddress nodeAddress:(UInt16)nodeAddress elementAddress:(UInt16)elementAddress modelID:(UInt32)modelID periodSteps:(UInt8)periodSteps periodResolution:(SigStepResolution)periodResolution successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (BOOL)editPublishListWithPublishAddress:(UInt16)publishAddress nodeAddress:(UInt16)nodeAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier periodSteps:(UInt8)periodSteps periodResolution:(SigStepResolution)periodResolution retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for edit publish list, but busy now.");
         if (resultCallback) {
@@ -149,7 +149,7 @@
         return NO;
     } else {
         SigNodeModel *node = [SigDataSource.share getNodeWithAddress:nodeAddress];
-        SigModelIDModel *modelIDModel = [node getModelIDModelWithModelID:modelID andElementAddress:elementAddress];
+        SigModelIDModel *modelIDModel = [node getModelIDModelWithModelID:modelIdentifier andElementAddress:elementAddress];
         if (!modelIDModel) {
             TeLogInfo(@"send request for edit publish list, but modelID is not exist.");
             if (resultCallback) {
@@ -162,13 +162,13 @@
         TeLogInfo(@"send request for edit publish list");
         SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:2 intervalSteps:5];
         SigPublish *publish = [[SigPublish alloc] initWithDestination:publishAddress withKeyIndex:SigDataSource.share.curAppkeyModel.index friendshipCredentialsFlag:0 ttl:0xff periodSteps:periodSteps periodResolution:periodResolution retransmit:retransmit];//ttl=0xFF(表示采用节点默认参数)
-        [SDKLibCommand configModelPublicationSetWithSigPublish:publish modelIDModel:modelIDModel successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand configModelPublicationSetWithDestination:nodeAddress publish:publish elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:retryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
 
 /// Get publish address
-+ (BOOL)getPublishAddressWithNodeAddress:(UInt16)nodeAddress elementAddress:(UInt16)elementAddress modelID:(UInt32)modelID successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (BOOL)getPublishAddressWithNodeAddress:(UInt16)nodeAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for edit publish list, but busy now.");
         if (resultCallback) {
@@ -178,7 +178,7 @@
         return NO;
     } else {
         SigNodeModel *node = [SigDataSource.share getNodeWithAddress:nodeAddress];
-        SigModelIDModel *modelIDModel = [node getModelIDModelWithModelID:modelID andElementAddress:elementAddress];
+        SigModelIDModel *modelIDModel = [node getModelIDModelWithModelID:modelIdentifier andElementAddress:elementAddress];
         if (!modelIDModel) {
             TeLogInfo(@"send request for edit publish list, but modelID is not exist.");
             if (resultCallback) {
@@ -189,7 +189,7 @@
         }
 
         TeLogInfo(@"send request for edit publish list");
-        [SDKLibCommand configModelPublicationGetWithModelIDModel:modelIDModel successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand configModelPublicationGetWithDestination:nodeAddress elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:retryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -205,15 +205,13 @@
         return NO;
     } else {
         TeLogInfo(@"send request for switch onoff value:%d",isOn);
-        [SDKLibCommand genericOnOffSetWithIsOn:isOn toDestination:address resMax:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
-//        SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-//        [SDKLibCommand genericOnOffSet:isOn withNode:node resMax:1 ack:YES successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand genericOnOffSetWithDestination:address isOn:isOn retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
 
 /// Change brightness100
-+ (BOOL)changeBrightnessWithBrightness100:(UInt8)brightness100 address:(UInt16)address responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (BOOL)changeBrightnessWithBrightness100:(UInt8)brightness100 address:(UInt16)address retryCount:(NSInteger)retryCount responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightLightnessStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for change brightness100, but busy now.");
         if (resultCallback) {
@@ -224,13 +222,13 @@
     } else {
         UInt16 lightness = [SigHelper.share getUint16LightnessFromUInt8Lum:brightness100];
         TeLogInfo(@"send request for change brightness100 value:%d,UInt16 lightness=%d",brightness100,lightness);
-        [SDKLibCommand lightLightnessSetWithLightness:lightness toDestination:address resMax:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand lightLightnessSetWithDestination:address lightness:lightness retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
 
 /// Change temprature
-+ (BOOL)changeTempratureWithTemprature100:(UInt8)temprature100 address:(UInt16)address responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (BOOL)changeTempratureWithTemprature100:(UInt8)temprature100 address:(UInt16)address retryCount:(NSInteger)retryCount responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for change temprature100, but busy now.");
         if (resultCallback) {
@@ -241,13 +239,13 @@
     } else {
         UInt16 temperature = [SigHelper.share getUint16TemperatureFromUInt8Temperature100:temprature100];
         TeLogInfo(@"send request for change temprature100 value:%d,UInt16 temperature=%d",temprature100,temperature);
-        [SDKLibCommand lightCTLTemperatureSetWithTemperature:temperature deltaUV:0 transitionTime:nil delay:0 toDestination:address resMax:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];// deltaUV comfirm later
+        [SDKLibCommand lightCTLTemperatureSetWithDestination:address temperature:temperature deltaUV:0 retryCount:retryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];// deltaUV comfirm later
         return YES;
     }
 }
 
 /// Get temprature
-+ (BOOL)getTempratureWithAddress:(UInt16)address responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (BOOL)getTempratureWithAddress:(UInt16)address retryCount:(NSInteger)retryCount responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for get temprature100, but busy now.");
         if (resultCallback) {
@@ -257,7 +255,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get temprature100");
-        [SDKLibCommand lightCTLTemperatureGetWithDestination:address resMax:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand lightCTLTemperatureGetWithDestination:address retryCount:retryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -276,7 +274,7 @@
         UInt16 saturation = [SigHelper.share getUint16LightnessFromUInt8Lum:saturation100];
         UInt16 brightness = [SigHelper.share getUint16LightnessFromUInt8Lum:brightness100];
         TeLogInfo(@"send request for change HSL100 h100:%d,s100:%d,l100:%d,UInt16 hue=0x%x,saturation=0x%x,brightness=0x%x",hue100,saturation100,brightness100,hue,saturation,brightness);
-        [SDKLibCommand lightHSLSetWithHSLLight:brightness HSLHue:hue HSLSaturation:saturation transitionTime:nil delay:0 toDestination:address resMax:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand lightHSLSetWithDestination:address HSLLight:brightness HSLHue:hue HSLSaturation:saturation retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -292,7 +290,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get HSL");
-        [SDKLibCommand lightHSLGetWithDestination:address resMax:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand lightHSLGetWithDestination:address retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -308,8 +306,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for change level value:%d",level);
-        [SDKLibCommand genericDeltaSet:level toDestination:address transitionTime:nil delay:0 resMax:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
-//        [SDKLibCommand genericLevelSet:level toDestination:address transitionTime:nil delay:0 resMax:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand genericDeltaSetWithDestination:address delta:level retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -325,13 +322,13 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get level address:%d",address);
-        [SDKLibCommand genericLevelGetWithDestination:address resMax:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand genericLevelGetWithDestination:address retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
 
 /// Kick out
-+ (BOOL)kickoutDevice:(UInt16)address successCallback:(responseConfigNodeResetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (BOOL)kickoutDevice:(UInt16)address retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNodeResetStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for kick out, but busy now.");
         if (resultCallback) {
@@ -341,7 +338,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for kick out address:%d",address);
-        [SDKLibCommand resetNodeWithNodeAddress:address successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand resetNodeWithDestination:address retryCount:retryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -362,7 +359,7 @@
         UInt8 zone_offset = offset/60/15+64;//时区=分/15+64
         TeLogInfo(@"send request for set time, address=0x%04x,second=%llu,zone_offset=%d.",address,second,zone_offset);
         SigTimeModel *timeModel = [[SigTimeModel alloc] initWithTAISeconds:second subSeconds:0 uncertainty:0 timeAuthority:0 TAI_UTC_Delta:0 timeZoneOffset:zone_offset];
-        [SDKLibCommand timeSetWithSigTimeModel:timeModel toDestination:address resMax:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand timeSetWithDestination:address timeModel:timeModel retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -383,7 +380,7 @@
         UInt8 zone_offset = offset/60/15+64;//时区=分/15+64
         TeLogInfo(@"send request for status time, address=0x%04x,second=%llu,zone_offset=%d.",address,second,zone_offset);
         SigTimeModel *timeModel = [[SigTimeModel alloc] initWithTAISeconds:second subSeconds:0 uncertainty:0 timeAuthority:0 TAI_UTC_Delta:0 timeZoneOffset:zone_offset];
-        [SDKLibCommand timeStatusWithSigTimeModel:timeModel toDestination:address resMax:0 successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand timeStatusWithDestination:address timeModel:timeModel retryCount:0 responseMaxCount:0 successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -399,7 +396,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for save scene, address=0x%04x, sceneId:%d",address,sceneId);
-        [SDKLibCommand sceneStoreWithSceneNumber:sceneId toDestination:address resMax:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand sceneStoreWithDestination:address sceneNumber:sceneId retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -415,7 +412,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for recall scene, address=0x%04x, sceneId:%d",address,sceneId);
-        [SDKLibCommand sceneRecallWithSceneNumber:sceneId transitionTime:nil delay:0 toDestination:address resMax:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand sceneRecallWithDestination:address sceneNumber:sceneId transitionTime:nil delay:0 retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -431,7 +428,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for delete scene, address=0x%04x, sceneId:%d",address,sceneId);
-        [SDKLibCommand sceneDeleteWithSceneNumber:sceneId toDestination:address resMax:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand sceneDeleteWithDestination:address sceneNumber:sceneId retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -447,7 +444,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get scene register status, address=0x%04x",address);
-        [SDKLibCommand sceneRegisterGetWithDestination:address resMax:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand sceneRegisterGetWithDestination:address retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -463,7 +460,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get Scheduler Status, address=0x%04x",address);
-        [SDKLibCommand schedulerActionGetWithDestination:address resMax:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand schedulerGetWithDestination:address retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -479,7 +476,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for set Scheduler Action, address=0x%04x, schedulerModel.schedulerData:%@",address,[SigHelper.share getUint64String:schedulerModel.schedulerData]);
-        [SDKLibCommand schedulerActionSetWithSchedulerModel:schedulerModel toDestination:address resMax:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand schedulerActionSetWithDestination:address schedulerModel:schedulerModel retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -495,7 +492,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get Scheduler Action, address=0x%04x,schedulerModelID=%d",address,schedulerModelID);
-        [SDKLibCommand schedulerActionGetWithSchedulerIndex:schedulerModelID toDestination:address resMax:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand schedulerActionGetWithDestination:address schedulerIndex:schedulerModelID retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }

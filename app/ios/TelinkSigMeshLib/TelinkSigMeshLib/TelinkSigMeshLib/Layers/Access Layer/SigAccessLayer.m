@@ -30,7 +30,6 @@
 #import "SigAccessLayer.h"
 #import "SigAccessPdu.h"
 #import "SigUpperTransportLayer.h"
-//#import "SigModelDelegate.h"
 
 /// The transaction object is used for Transaction Messages,
 /// for example `GenericLevelSet`.
@@ -129,7 +128,6 @@
 /// for acknowledged mesh messages that have been sent, and for which
 /// the response has not been received yet.
 @property (nonatomic,strong) NSMutableArray <SigAcknowledgmentContext *>*reliableMessageContexts;
-//@property (nonatomic,weak) id <SigModelDelegate>modelDelegate;
 @end
 
 @implementation SigAccessLayer
@@ -195,6 +193,9 @@
     SigMeshMessage *m = message;
     if ([message isKindOfClass:[SigGenericMessage class]]) {
         SigGenericMessage *genericMessage = (SigGenericMessage *)message;
+        if (command.needTid && command.tid != 0) {
+            genericMessage.tid = command.tid;
+        }
         if ([genericMessage isTransactionMessage] && genericMessage.tid == 0) {
             // Ensure there is a transaction for our destination.
             UInt32 k = [self getKeyForElement:element andDestination:destination];
@@ -208,7 +209,7 @@
             }
             m = genericMessage;
         }
-        TeLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
+        TeLogInfo(@"sending message TID=0x%x",genericMessage.tid);
     }
     TeLogVerbose(@"Sending %@ from: %@, to: 0x%x",m,element,destination.address);
     SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:m sentFromLocalElement:element toDestination:destination userInitiated:YES];
@@ -275,7 +276,7 @@
 }
 
 - (void)sendSigConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt16)initialTtl {
-    SigElementModel *element = SigDataSource.share.curLocationElementModel;
+    SigElementModel *element = SigDataSource.share.curLocationNodeModel.elements.firstObject;
     SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
     SigNetkeyModel *networkKey = node.getNetworkKeys.firstObject;
     if (networkKey == nil) {
@@ -363,7 +364,6 @@
     }
     
     SigMeshMessage *receiveMessage = [self decodeSigAccessPdu:accessPdu];
-
     if (receiveMessage == nil) {
         SigUnknownMessage *unknownMessage = [[SigUnknownMessage alloc] initWithParameters:accessPdu.parameters];
         unknownMessage.opCode = accessPdu.opCode;
@@ -376,36 +376,36 @@
     return (UInt32)((element.unicastAddress) << 16) | (UInt32)(destination.address);
 }
 
-- (void)createReliableContextForSigAccessPdu:(SigAccessPdu *)pdu sentFromElement:(SigElementModel *)element withTtl:(UInt8)initialTtl usingKeySet:(SigKeySet *)keySet {
-    SigAcknowledgedMeshMessage *request = (SigAcknowledgedMeshMessage *)pdu.message;
-    if ((request && [request isKindOfClass:[SigAcknowledgedMeshMessage class]]) || [SigHelper.share isAcknowledgedMessage:pdu.message]) {
-        /// The TTL with which the request will be sent.
-        UInt8 ttl = element.parentNode.defaultTTL;
-        if (![SigHelper.share isRelayedTTL:ttl]) {
-            ttl = _networkManager.defaultTtl;
-        }
-
-        /// The delay after which the local Element will try to resend the
-        /// request. When the response isn't received after the first retry,
-        /// it will try again every time doubling the last delay until the
-        /// time goes out.
-        NSTimeInterval initialDelay = [_networkManager acknowledgmentMessageInterval:ttl segmentCount:pdu.segmentsCount];
-        /// The timeout before which the response should be received.
-        NSTimeInterval timeout = _networkManager.acknowledgmentMessageTimeout;
-
-        __weak typeof(self) weakSelf = self;
-        SigAcknowledgmentContext *ack = [[SigAcknowledgmentContext alloc] initForRequest:request sentFromSource:pdu.source toDestination:pdu.destination.address repeatAfterDelay:initialDelay repeatBlock:^{
-            TeLogInfo(@"Resending %@",pdu);
-            [weakSelf.networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet];
-        } timeout:timeout timeoutBlock:^{
-            TeLogInfo(@"Response to %@ not received %f",pdu,timeout);
-            TeLogInfo(@"%@ sent from: 0x%x, to: 0x%x timed out",request,pdu.source,pdu.destination.address);
-            [weakSelf removeAllTimeoutTimerInreliableMessageContexts];
-            [weakSelf.networkManager notifyAboutError:[NSError errorWithDomain:AccessError_timeout code:0 userInfo:nil] duringSendingMessage:request fromLocalElement:element toDestination:pdu.destination.address];
-        }];
-        [_reliableMessageContexts addObject:ack];
-    }
-}
+//- (void)createReliableContextForSigAccessPdu:(SigAccessPdu *)pdu sentFromElement:(SigElementModel *)element withTtl:(UInt8)initialTtl usingKeySet:(SigKeySet *)keySet {
+//    SigAcknowledgedMeshMessage *request = (SigAcknowledgedMeshMessage *)pdu.message;
+//    if ((request && [request isKindOfClass:[SigAcknowledgedMeshMessage class]]) || [SigHelper.share isAcknowledgedMessage:pdu.message]) {
+//        /// The TTL with which the request will be sent.
+//        UInt8 ttl = element.parentNode.defaultTTL;
+//        if (![SigHelper.share isRelayedTTL:ttl]) {
+//            ttl = _networkManager.defaultTtl;
+//        }
+//
+//        /// The delay after which the local Element will try to resend the
+//        /// request. When the response isn't received after the first retry,
+//        /// it will try again every time doubling the last delay until the
+//        /// time goes out.
+//        NSTimeInterval initialDelay = [_networkManager acknowledgmentMessageInterval:ttl segmentCount:pdu.segmentsCount];
+//        /// The timeout before which the response should be received.
+//        NSTimeInterval timeout = _networkManager.acknowledgmentMessageTimeout;
+//
+//        __weak typeof(self) weakSelf = self;
+//        SigAcknowledgmentContext *ack = [[SigAcknowledgmentContext alloc] initForRequest:request sentFromSource:pdu.source toDestination:pdu.destination.address repeatAfterDelay:initialDelay repeatBlock:^{
+//            TeLogInfo(@"Resending %@",pdu);
+//            [weakSelf.networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet];
+//        } timeout:timeout timeoutBlock:^{
+//            TeLogInfo(@"Response to %@ not received %f",pdu,timeout);
+//            TeLogInfo(@"%@ sent from: 0x%x, to: 0x%x timed out",request,pdu.source,pdu.destination.address);
+//            [weakSelf removeAllTimeoutTimerInreliableMessageContexts];
+//            [weakSelf.networkManager notifyAboutError:[NSError errorWithDomain:AccessError_timeout code:0 userInfo:nil] duringSendingMessage:request fromLocalElement:element toDestination:pdu.destination.address];
+//        }];
+//        [_reliableMessageContexts addObject:ack];
+//    }
+//}
 
 - (void)removeAllTimeoutTimerInreliableMessageContexts {
     TeLogInfo(@"============9.3.AccessError.timeout");
@@ -1242,14 +1242,14 @@
             case SigOpCode_FirmwareUpdateInformationStatus:
                 messageType = [SigFirmwareUpdateInformationStatus class];
                 break;
-            case SigOpCode_FirmwareUpdateGet:
-                messageType = [SigFirmwareUpdateGet class];
-                break;
             case SigOpCode_FirmwareUpdateFirmwareMetadataCheck:
                 messageType = [SigFirmwareUpdateFirmwareMetadataCheck class];
                 break;
             case SigOpCode_FirmwareUpdateFirmwareMetadataStatus:
                 messageType = [SigFirmwareUpdateFirmwareMetadataStatus class];
+                break;
+            case SigOpCode_FirmwareUpdateGet:
+                messageType = [SigFirmwareUpdateGet class];
                 break;
             case SigOpCode_FirmwareUpdateStart:
                 messageType = [SigFirmwareUpdateStart class];
@@ -1271,6 +1271,9 @@
                 break;
             case SigOpCode_FirmwareDistributionCancel:
                 messageType = [SigFirmwareDistributionCancel class];
+                break;
+            case SigOpCode_FirmwareDistributionApply:
+                messageType = [SigFirmwareDistributionApply class];
                 break;
             case SigOpCode_FirmwareDistributionStatus:
                 messageType = [SigFirmwareDistributionStatus class];
@@ -1342,7 +1345,6 @@
 //    }
 //}
 
-#pragma mark - SigModelDelegate
 /// This method tries to decode the Access PDU into a Message.
 ///
 /// The Model Handler must support the opcode and specify to

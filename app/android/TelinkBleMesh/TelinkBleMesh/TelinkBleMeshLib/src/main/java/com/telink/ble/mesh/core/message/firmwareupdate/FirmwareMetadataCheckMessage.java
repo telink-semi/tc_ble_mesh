@@ -51,7 +51,7 @@ public class FirmwareMetadataCheckMessage extends UpdatingMessage {
 
         int metadataLen = (incomingFirmwareMetadata == null || incomingFirmwareMetadata.length <= 0) ? 0 : incomingFirmwareMetadata.length;
 
-        final int len = 3 + metadataLen;
+        final int len = 1 + metadataLen;
         ByteBuffer buffer = ByteBuffer.allocate(len).order(ByteOrder.LITTLE_ENDIAN)
                 .put((byte) updateFirmwareImageIndex);
 

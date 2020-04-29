@@ -88,11 +88,9 @@ typedef void(^bleDidUpdateValueForCharacteristicCallback)(CBPeripheral *peripher
 - (void)changeNotifyToState:(BOOL)state Peripheral:(CBPeripheral *)peripheral characteristic:(CBCharacteristic *)characteristic timeout:(NSTimeInterval)timeout resultBlock:(bleChangeNotifyCallback)block;
 
 - (void)cancelAllConnecttionWithComplete:(bleCancelAllConnectCallback)complete;
-
 - (void)cancelConnectionPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleCancelConnectCallback)block;
 
 - (void)readOTACharachteristicWithTimeout:(NSTimeInterval)timeout complete:(bleReadOTACharachteristicCallback)complete;
-
 - (void)cancelReadOTACharachteristic;
 
 - (CBPeripheral *)getPeripheralWithUUID:(NSString *)uuidString;

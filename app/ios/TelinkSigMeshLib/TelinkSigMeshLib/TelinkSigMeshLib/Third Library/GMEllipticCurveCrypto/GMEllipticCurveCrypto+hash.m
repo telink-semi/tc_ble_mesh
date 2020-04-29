@@ -35,7 +35,7 @@
 #import <CommonCrypto/CommonDigest.h>
 
 NSData *derEncodeInteger(NSData *value) {
-    int length = [value length];
+    int length = (int)[value length];
     const unsigned char *data = [value bytes];
 
     int outputIndex = 0;
@@ -63,7 +63,7 @@ NSData *derEncodeInteger(NSData *value) {
 
 NSData *derEncodeSignature(NSData *signature) {
 
-    int length = [signature length];
+    int length = (int)[signature length];
     if (length % 2) { return nil; }
 
     NSData *rValue = derEncodeInteger([signature subdataWithRange:NSMakeRange(0, length / 2)]);
@@ -130,7 +130,7 @@ NSRange derDecodeInteger(const unsigned char *bytes, int length, int index) {
 }
 
 NSData *derDecodeSignature(NSData *der, int keySize) {
-    NSInteger length = [der length];
+    int length = (int)[der length];
     const unsigned char *data = [der bytes];
 
     // Make sure we have a sequence
@@ -138,11 +138,11 @@ NSData *derDecodeSignature(NSData *der, int keySize) {
     if (sequence.location == NSNotFound) { return nil; }
 
     // Extract the r value (first item)
-    NSRange rValue = derDecodeInteger(data, length, sequence.location);
+    NSRange rValue = derDecodeInteger(data, length, (int)sequence.location);
     if (rValue.location == NSNotFound || rValue.length > keySize) { return nil; }
 
     // Extract the s value (second item)
-    int sStart = rValue.location + rValue.length;
+    int sStart = (int)rValue.location + (int)rValue.length;
     NSRange sValue = derDecodeInteger(data, length, sStart);
     if (sValue.location == NSNotFound || sValue.length > keySize) { return nil; }
 

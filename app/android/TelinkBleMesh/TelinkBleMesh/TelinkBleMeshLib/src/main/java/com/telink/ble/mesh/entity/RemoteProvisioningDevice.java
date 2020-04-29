@@ -12,19 +12,23 @@ import com.telink.ble.mesh.util.Arrays;
 // advertisingDevice is null
 public class RemoteProvisioningDevice extends ProvisioningDevice {
 
+    private byte rssi;
+
     private byte[] uuid = null;
 
     // proxy address
     private int serverAddress;
 
 
-    public RemoteProvisioningDevice(ScanReportStatusMessage scanReportStatusMessage, int serverAddress) {
-        this.uuid = scanReportStatusMessage.getUuid();
+    public RemoteProvisioningDevice(byte rssi, byte[] uuid, int serverAddress) {
+        this.rssi = rssi;
+        this.uuid = uuid;
         this.serverAddress = serverAddress;
     }
 
     protected RemoteProvisioningDevice(Parcel in) {
         super(in);
+        rssi = in.readByte();
         uuid = in.createByteArray();
         serverAddress = in.readInt();
     }
@@ -32,6 +36,7 @@ public class RemoteProvisioningDevice extends ProvisioningDevice {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
+        dest.writeByte(rssi);
         dest.writeByteArray(uuid);
         dest.writeInt(serverAddress);
     }
@@ -53,12 +58,28 @@ public class RemoteProvisioningDevice extends ProvisioningDevice {
         }
     };
 
+    public byte getRssi() {
+        return rssi;
+    }
+
     public byte[] getUuid() {
         return uuid;
     }
 
     public int getServerAddress() {
         return serverAddress;
+    }
+
+    public void setRssi(byte rssi) {
+        this.rssi = rssi;
+    }
+
+    public void setUuid(byte[] uuid) {
+        this.uuid = uuid;
+    }
+
+    public void setServerAddress(int serverAddress) {
+        this.serverAddress = serverAddress;
     }
 
     @Override

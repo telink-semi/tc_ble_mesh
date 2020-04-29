@@ -152,7 +152,7 @@
             [cell setChangeStateBlock:^(UISwitch * _Nonnull stateSwitch) {
                 UInt32 option = weakSelf.model.publishModelID;
                 UInt16 eleAdr = [weakSelf.model.publishAddress.firstObject intValue];
-                //周期，5秒上报一次。
+                //周期，20秒上报一次。
                 mesh_pub_period_t period;
                 period.steps = kPublishInterval;//Range：0x01-0x3F
                 period.res = 1;

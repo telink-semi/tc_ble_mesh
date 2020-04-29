@@ -320,7 +320,7 @@ public class ProvisioningController {
         updateProvisioningState(STATE_PUB_KEY_RECEIVED, "Public Key received");
         log("pub key received: " + Arrays.bytesToHexString(pubKeyData, ":"));
         devicePubKeyPDU = ProvisioningPubKeyPDU.fromBytes(pubKeyData);
-        deviceECDHSecret = Encipher.generateSharedECDHSecret(pubKeyData, provisionerKeyPair.getPrivate());
+        deviceECDHSecret = Encipher.generateECDH(pubKeyData, provisionerKeyPair.getPrivate());
         log("get secret: " + Arrays.bytesToHexString(deviceECDHSecret, ":"));
         sendConfirm();
     }
@@ -487,7 +487,7 @@ public class ProvisioningController {
 
         mProvisioningDevice.setDeviceKey(Encipher.aesCmac(Encipher.PRDK, t));
         log("device key: " + Arrays.bytesToHexString(mProvisioningDevice.getDeviceKey(), ":"));
-
+        log("provisioning data prepare: " + mProvisioningDevice.toString());
         byte[] provisioningData = mProvisioningDevice.generateProvisioningData();
 
         log("unencrypted provision data: " + Arrays.bytesToHexString(provisioningData, ":"));

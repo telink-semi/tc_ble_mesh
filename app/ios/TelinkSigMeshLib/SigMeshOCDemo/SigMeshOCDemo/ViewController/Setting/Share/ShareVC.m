@@ -134,7 +134,7 @@
 - (void)clickExportByQRCode {
     __weak typeof(self) weakSelf = self;
     //设置有效时间5分钟
-    [TelinkHttpRequest uploadJsonDictionary:[SigDataSource.share getDictionaryFromDataSource] timeout:60 * 5 didLoadData:^(id  _Nonnull result, NSError * _Nonnull err) {
+    [TelinkHttpManager.share uploadJsonDictionary:[SigDataSource.share getDictionaryFromDataSource] timeout:60 * 5 didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (err) {
                 NSString *errstr = [NSString stringWithFormat:@"%@",err];
@@ -182,7 +182,7 @@
 
 - (void)getTelinkJsonWithUUID:(NSString *)uuid {
     __weak typeof(self) weakSelf = self;
-    [TelinkHttpRequest downloadJsonDictionaryWithUUID:uuid didLoadData:^(id  _Nonnull result, NSError * _Nonnull err) {
+    [TelinkHttpManager.share downloadJsonDictionaryWithUUID:uuid didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (err) {
                 NSString *errstr = [NSString stringWithFormat:@"%@",err];
@@ -284,7 +284,6 @@
         }
     }
     [SigDataSource.share checkExistLocationProvisioner];
-    [SigDataSource.share writeDataSourceToLib];
     [SigDataSource.share.scanList removeAllObjects];
 }
 

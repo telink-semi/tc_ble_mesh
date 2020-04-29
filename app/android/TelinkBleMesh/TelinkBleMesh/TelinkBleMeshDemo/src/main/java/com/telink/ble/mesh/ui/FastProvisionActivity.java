@@ -119,7 +119,7 @@ public class FastProvisionActivity extends BaseActivity implements View.OnClickL
 
         nodeInfo.deviceUUID = new byte[16];
         System.arraycopy(fastProvisioningDevice.getMac(), 0, nodeInfo.deviceUUID, 0, 6);
-
+        nodeInfo.macAddress = Arrays.bytesToHexString(fastProvisioningDevice.getMac(), ":");
         nodeInfo.deviceKey = fastProvisioningDevice.getDeviceKey();
         nodeInfo.elementCnt = fastProvisioningDevice.getElementCount();
         nodeInfo.compositionData = getCompositionData(fastProvisioningDevice.getPid());

@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /*
-log 写法3.1：测试验证线程
+log 写法1：测试验证线程
 */
 //# define TeLog(fmt, ...) TelinkLogWithFile((@"[%@][%s Line %d] " fmt), [NSThread currentThread], __func__, __LINE__, ##__VA_ARGS__);
 //
@@ -60,7 +60,7 @@ log 写法3.1：测试验证线程
 
 
 /*
-log 写法3.2：
+log 写法2：
 */
 # define TeLog(fmt, ...) TelinkLogWithFile((@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);
 
@@ -141,7 +141,6 @@ typedef enum : NSUInteger {
 
 @interface SigLogger : NSObject
 @property (assign,nonatomic,readonly) SigLogLevel logLevel;
-@property (strong,nonatomic,readonly) NSString *logFilePath;
 
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -152,14 +151,9 @@ typedef enum : NSUInteger {
 
 - (void)setSDKLogLevel:(SigLogLevel)logLevel;
 
-/**
- log
- 
- @param data The log that save location, data is always NSString.
- */
-void saveLogData(id data);
-
 - (void)clearAllLog;
+
+- (NSString *)getLogStringWithLength:(NSInteger)length;
 
 void saveMeshJsonData(id data);
 

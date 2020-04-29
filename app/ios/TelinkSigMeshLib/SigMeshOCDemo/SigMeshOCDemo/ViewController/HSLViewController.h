@@ -28,12 +28,11 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "GroupModel.h"
 
 @interface HSLViewController : BaseViewController
 
 @property (nonatomic,assign) BOOL isGroup;
 @property (nonatomic,strong) SigNodeModel *model;
-@property (nonatomic,strong) GroupModel *groupModel;
+@property (nonatomic,strong) SigGroupModel *groupModel;
 
 @end

@@ -107,6 +107,8 @@ public class MeshMessage {
      */
     protected int tidPosition = -1;
 
+    protected boolean isSegmented = false;
+
     /**
      * if true, message will be cached and checked completion by message response or retryCnt == 0
      * if false, message will not be cached and checked
@@ -231,5 +233,13 @@ public class MeshMessage {
 
     public void setAppKeyIndex(int appKeyIndex) {
         this.appKeyIndex = appKeyIndex;
+    }
+
+    public boolean isSegmented() {
+        return isSegmented;
+    }
+
+    public void setSegmented(boolean segmented) {
+        isSegmented = segmented;
     }
 }

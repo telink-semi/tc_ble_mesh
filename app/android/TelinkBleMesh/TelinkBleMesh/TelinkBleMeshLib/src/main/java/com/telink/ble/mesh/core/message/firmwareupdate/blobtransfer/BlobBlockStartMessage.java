@@ -49,7 +49,7 @@ public class BlobBlockStartMessage extends UpdatingMessage {
 
     @Override
     public byte[] getParams() {
-        return ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN)
+        return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN)
                 .putShort((short) blockNumber)
                 .putShort((short) chunkSize).array();
     }

@@ -39,8 +39,8 @@ public class ProvisioningPduSendMessage extends UpdatingMessage {
 
     @Override
     public int getResponseOpcode() {
-//        return OPCODE_INVALID;
-        return Opcode.REMOTE_PROV_PDU_OUTBOUND_REPORT.value;
+        return OPCODE_INVALID;
+//        return Opcode.REMOTE_PROV_PDU_OUTBOUND_REPORT.value;
     }
 
     @Override

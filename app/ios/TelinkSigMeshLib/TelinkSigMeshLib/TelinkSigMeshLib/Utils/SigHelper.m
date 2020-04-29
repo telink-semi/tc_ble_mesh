@@ -178,7 +178,7 @@
     if(temperature > CTL_TEMP_MAX){
         temperature = CTL_TEMP_MAX;
     }
-    u32 fix_1p2 = (CTL_TEMP_MAX - CTL_TEMP_MIN)/100/2;    // fix decimals
+    UInt32 fix_1p2 = (CTL_TEMP_MAX - CTL_TEMP_MIN)/100/2;    // fix decimals
     return (((temperature - CTL_TEMP_MIN + fix_1p2)*100)/(CTL_TEMP_MAX - CTL_TEMP_MIN));   // temp100 can be zero.
 }
 

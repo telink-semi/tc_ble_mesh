@@ -9,7 +9,6 @@ import android.util.SparseLongArray;
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
-import com.telink.ble.mesh.core.message.OpcodeType;
 import com.telink.ble.mesh.core.networking.beacon.MeshBeaconPDU;
 import com.telink.ble.mesh.core.networking.beacon.SecureNetworkBeacon;
 import com.telink.ble.mesh.core.networking.transport.lower.LowerTransportPDU;
@@ -39,7 +38,6 @@ import java.util.Locale;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -186,7 +184,7 @@ public class NetworkingController {
 
     private static final int BLOCK_ACK_WAITING_TIMEOUT = 15 * 1000;
 
-    private AtomicBoolean segmentedBusy = new AtomicBoolean(false);
+    private boolean segmentedBusy = false;
 
     private Runnable segmentedMessageTimeoutTask = new SegmentedMessageTimeoutTask();
 
@@ -198,7 +196,10 @@ public class NetworkingController {
      */
     private MeshMessage mSendingReliableMessage;
 
-    private AtomicBoolean reliableBusy = new AtomicBoolean(false);
+    private boolean reliableBusy = false;
+
+    // reliable
+    private final Object RELIABLE_SEGMENTED_LOCK = new Object();
 
     private static final int RELIABLE_MESSAGE_TIMEOUT = 960; // 2 * 1000
 
@@ -259,8 +260,8 @@ public class NetworkingController {
         }
 
         this.networkingBusy = false;
-        this.segmentedBusy.set(false);
-        this.reliableBusy.set(false);
+        this.segmentedBusy = false;
+        this.reliableBusy = false;
         this.mNetworkingQueue.clear();
         this.lastSeqAuth = 0;
         this.lastSegSrc = 0;
@@ -300,8 +301,8 @@ public class NetworkingController {
     public void onGattDisconnected() {
         this.mDelayHandler.removeCallbacksAndMessages(null);
         this.networkingBusy = false;
-        this.segmentedBusy.set(false);
-        this.reliableBusy.set(false);
+        this.segmentedBusy = false;
+        this.reliableBusy = false;
         this.directAddress = 0;
         this.receivedSegmentedMessageBuffer.clear();
         this.sentSegmentedMessageBuffer.clear();
@@ -355,10 +356,15 @@ public class NetworkingController {
             }
         } else if (dVal > 0) {
             log("larger iv index received");
-            this.isIvUpdating = updating;
-            this.ivIndex = remoteIvIndex;
+            if (dVal <= 42) {
+                this.isIvUpdating = updating;
+                this.ivIndex = remoteIvIndex;
 
-            this.onIvUpdated(updating ? remoteIvIndex - 1 : remoteIvIndex);
+                this.onIvUpdated(updating ? remoteIvIndex - 1 : remoteIvIndex);
+            } else {
+                log("iv index dVal greater than 42");
+            }
+
         } else {
             log(" smaller iv index received", MeshLogger.LEVEL_WARN);
         }
@@ -400,13 +406,16 @@ public class NetworkingController {
             return false;
         }
         meshMessage.setAccessKey(encryptionKey);
-        return postMeshMessage(meshMessage);
+
+
+        return postMeshMessage(meshMessage, false);
     }
+
 
     /**
      * @return if message will be sent
      */
-    private boolean postMeshMessage(MeshMessage meshMessage) {
+    private boolean postMeshMessage(MeshMessage meshMessage, boolean retry) {
         int dst = meshMessage.getDestinationAddress();
         int src = localAddress;
         int aszmic = meshMessage.getSzmic();
@@ -422,8 +431,8 @@ public class NetworkingController {
 
         final byte[] params = meshMessage.getParams();
         final int tidPos = meshMessage.getTidPosition();
-        if (params != null && tidPos > 0 && params.length > tidPos) {
-            params[tidPos] = (byte) this.tid.getAndIncrement();
+        if (params != null && tidPos >= 0 && params.length > tidPos) {
+            params[tidPos] = retry ? (byte) this.tid.get() : (byte) this.tid.incrementAndGet();
         }
 
         AccessLayerPDU accessPDU = new AccessLayerPDU(meshMessage.getOpcode(), params);
@@ -431,10 +440,13 @@ public class NetworkingController {
         byte[] accessPduData = accessPDU.toByteArray();
 
         boolean segmented = accessPduData.length > UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH;
+        meshMessage.setSegmented(segmented);
         if (segmented) {
-            if (segmentedBusy.get()) {
-                log("segment message send err: segmented busy");
-                return false;
+            synchronized (RELIABLE_SEGMENTED_LOCK) {
+                if (segmentedBusy) {
+                    log("segment message send err: segmented busy");
+                    return false;
+                }
             }
         }
 
@@ -456,16 +468,7 @@ public class NetworkingController {
         log("upper transport pdu: " + Arrays.bytesToHexString(upperPDU.getEncryptedPayload(), ""));
 
         // check message reliable
-        boolean reliable = meshMessage.isReliable();
-        if (reliable) {
-            if (reliableBusy.get()) {
-                log("reliable message send err: busy", MeshLogger.LEVEL_WARN);
-                return false;
-            } else {
-                reliableBusy.set(true);
-                mSendingReliableMessage = meshMessage;
-            }
-        }
+        final boolean reliable = meshMessage.isReliable();
 
         // upperPDU.getEncryptedPayload().length <= UNSEGMENTED_TRANSPORT_PAYLOAD_MAX_LENGTH
         //
@@ -475,8 +478,15 @@ public class NetworkingController {
          */
         if (!segmented) {
             log("send unsegmented access message");
+
             if (reliable) {
-                restartReliableMessageTimeoutTask(false);
+                if (reliableBusy) {
+                    log("unsegmented reliable message send err: busy", MeshLogger.LEVEL_WARN);
+                    return false;
+                }
+                reliableBusy = true;
+                mSendingReliableMessage = meshMessage;
+                restartReliableMessageTimeoutTask();
             }
 
             UnsegmentedAccessMessagePDU unsegmentedMessagePDU = createUnsegmentedAccessMessage(upperPDU.getEncryptedPayload(), akf, aid);
@@ -484,35 +494,36 @@ public class NetworkingController {
                     meshMessage.getCtl(), meshMessage.getTtl(), src, dst, ivIndex, sequenceNumber);
             sendNetworkPdu(networkPDU);
         } else {
-            SparseArray<SegmentedAccessMessagePDU> segmentedAccessMessages = createSegmentedAccessMessage(upperPDU.getEncryptedPayload(), akf, aid, aszmic, sequenceNumber);
-            if (segmentedAccessMessages.size() == 0) return false;
+            synchronized (RELIABLE_SEGMENTED_LOCK) {
+                if (reliable) {
+                    if (reliableBusy) {
+                        log("segmented reliable message send err: busy", MeshLogger.LEVEL_WARN);
+                        return false;
+                    }
+                    reliableBusy = true;
+                    mSendingReliableMessage = meshMessage;
+//                    restartReliableMessageTimeoutTask(false);
+                }
+                SparseArray<SegmentedAccessMessagePDU> segmentedAccessMessages = createSegmentedAccessMessage(upperPDU.getEncryptedPayload(), akf, aid, aszmic, sequenceNumber);
+                if (segmentedAccessMessages.size() == 0) return false;
 
-            log("send segmented access message");
-            List<NetworkLayerPDU> networkLayerPduList = new ArrayList<>();
-            for (int i = 0; i < segmentedAccessMessages.size(); i++) {
-                byte[] lowerTransportPdu = segmentedAccessMessages.get(i).toByteArray();
-                NetworkLayerPDU networkPDU = createNetworkPDU(lowerTransportPdu,
-                        meshMessage.getCtl(), meshMessage.getTtl(), src, dst, ivIndex, sequenceNumber + i);
-                networkLayerPduList.add(networkPDU);
+                log("send segmented access message");
+                List<NetworkLayerPDU> networkLayerPduList = new ArrayList<>();
+                for (int i = 0; i < segmentedAccessMessages.size(); i++) {
+                    byte[] lowerTransportPdu = segmentedAccessMessages.get(i).toByteArray();
+                    NetworkLayerPDU networkPDU = createNetworkPDU(lowerTransportPdu,
+                            meshMessage.getCtl(), meshMessage.getTtl(), src, dst, ivIndex, sequenceNumber + i);
+                    networkLayerPduList.add(networkPDU);
+                }
+                if (MeshUtils.validUnicastAddress(dst)) {
+                    this.sentSegmentedMessageBuffer = segmentedAccessMessages.clone();
+                    startSegmentedMessageTimeoutCheck();
+                    startSegmentedBlockAckWaiting(meshMessage.getCtl(), meshMessage.getTtl(), src, dst);
+                }
+                sendNetworkPduList(networkLayerPduList);
             }
-            sendNetworkPduList(networkLayerPduList);
-            if (MeshUtils.validUnicastAddress(dst)) {
-                this.sentSegmentedMessageBuffer = segmentedAccessMessages.clone();
-                startSegmentedMessageTimeoutCheck();
-                startSegmentedBlockAckWaiting(meshMessage.getCtl(), meshMessage.getTtl(), src, dst);
-            }
-
         }
-
         return true;
-    }
-
-    private boolean isSegmentMessage(MeshMessage meshMessage) {
-        final int opcode = meshMessage.getOpcode();
-        final byte[] params = meshMessage.getParams();
-        if (params == null) return false;
-        int opcodeLen = OpcodeType.getByFirstByte((byte) opcode).length;
-        return params.length > UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH;
     }
 
     /**
@@ -566,7 +577,7 @@ public class NetworkingController {
 
 
     private void startSegmentedMessageTimeoutCheck() {
-        segmentedBusy.set(true);
+        segmentedBusy = true;
         mDelayHandler.removeCallbacks(segmentedMessageTimeoutTask);
         mDelayHandler.postDelayed(segmentedMessageTimeoutTask, BLOCK_ACK_WAITING_TIMEOUT);
     }
@@ -600,17 +611,22 @@ public class NetworkingController {
      */
     private void onSegmentedMessageComplete(boolean success) {
         log("segmented message complete, success? : " + success);
-        segmentedBusy.set(false);
+        segmentedBusy = false;
         mDelayHandler.removeCallbacks(segmentedMessageTimeoutTask);
 
         sentSegmentedMessageBuffer.clear();
 
-        if (reliableBusy.get()) {
+        if (reliableBusy) {
             /*
             if segmented message sent success, check response after #RELIABLE_MESSAGE_TIMEOUT
             else if segmented message timeout, retry immediately
              */
-            restartReliableMessageTimeoutTask(!success);
+            if (success) {
+                restartReliableMessageTimeoutTask();
+            } else {
+                // if segment timeout , no need to resend reliable message
+                onReliableMessageComplete(false);
+            }
         }
     }
 
@@ -799,7 +815,7 @@ public class NetworkingController {
         );
         if (networkLayerPDU.parse(payload)) {
             if (!validateSequenceNumber(networkLayerPDU)) {
-                log("sequence number check err", MeshLogger.LEVEL_WARN);
+                log("network pdu sequence number check err", MeshLogger.LEVEL_WARN);
                 return;
             }
             if (networkLayerPDU.getCtl() == MeshMessage.CTL_ACCESS) {
@@ -821,7 +837,7 @@ public class NetworkingController {
         );
         if (proxyNetworkPdu.parse(payload)) {
             if (!validateSequenceNumber(proxyNetworkPdu)) {
-                log("sequence number check err", MeshLogger.LEVEL_WARN);
+                log("proxy config pdu sequence number check err", MeshLogger.LEVEL_WARN);
                 return;
             }
             log(String.format("proxy network pdu src: %04X dst: %04X", proxyNetworkPdu.getSrc(), proxyNetworkPdu.getDst()));
@@ -882,6 +898,7 @@ public class NetworkingController {
             if (pduSequenceNumber > deviceSequenceNumber) {
                 this.deviceSequenceNumberMap.put(src, pduSequenceNumber);
             } else {
+                log(String.format("validate sequence number error  src: %04X -- pdu-sno: %06X -- dev-sno: %06X", src, pduSequenceNumber, deviceSequenceNumber));
                 pass = false;
             }
         }
@@ -921,7 +938,7 @@ public class NetworkingController {
      */
     private void onSegmentAckMessageReceived(SegmentAcknowledgmentMessage segmentAckMessage) {
         log("onSegmentAckMessageReceived: " + segmentAckMessage.toString());
-        if (segmentedBusy.get()) {
+        if (segmentedBusy) {
             resendSegmentedMessages(segmentAckMessage.getSeqZero(), segmentAckMessage.getBlockAck());
         } else {
             log("Segment Acknowledgment Message err: segmented messages not sending", MeshLogger.LEVEL_WARN);
@@ -1013,9 +1030,9 @@ public class NetworkingController {
         AccessLayerPDU accessPDU;
         if (seg == 1) {
             log("parse segmented access message");
-            if (reliableBusy.get()) {
+            /*if (reliableBusy) {
                 restartReliableMessageTimeoutTask(false);
-            }
+            }*/
             accessPDU = parseSegmentedAccessMessage(networkLayerPDU);
 
         } else {
@@ -1041,16 +1058,14 @@ public class NetworkingController {
         if (mNetworkingBridge != null) {
             mNetworkingBridge.onMeshMessageReceived(src, dst, accessPDU.opcode, accessPDU.params);
         }
-
-
     }
 
     private void updateReliableMessage(int src, AccessLayerPDU accessLayerPDU) {
-        if (!reliableBusy.get()) return;
+        if (!reliableBusy) return;
         if (mSendingReliableMessage != null && mSendingReliableMessage.getResponseOpcode() == accessLayerPDU.opcode) {
             mResponseMessageBuffer.add(src);
             if (mResponseMessageBuffer.size() >= mSendingReliableMessage.getResponseMax()) {
-                mDelayHandler.removeCallbacks(reliableMessageTimeoutTask);
+
                 onReliableMessageComplete(true);
             }
         }
@@ -1062,14 +1077,20 @@ public class NetworkingController {
      * @param success if command response received
      */
     private void onReliableMessageComplete(boolean success) {
+        mDelayHandler.removeCallbacks(reliableMessageTimeoutTask);
         int opcode = mSendingReliableMessage.getOpcode();
         int rspMax = mSendingReliableMessage.getResponseMax();
         int rspCount = mResponseMessageBuffer.size();
         log(String.format("Reliable Message Complete: %06X success?: %b", opcode, success));
         mResponseMessageBuffer.clear();
-        reliableBusy.set(false);
-        if (isSegmentMessage(mSendingReliableMessage)) {
-            stopSegmentedBlockAckWaiting(true, true);
+        synchronized (RELIABLE_SEGMENTED_LOCK) {
+            reliableBusy = false;
+            if (success) {
+                if (segmentedBusy && mSendingReliableMessage.isSegmented()) {
+                    segmentedBusy = false;
+                    mDelayHandler.removeCallbacks(mSegmentBlockWaitingTask);
+                }
+            }
         }
         if (mNetworkingBridge != null) {
             mNetworkingBridge.onReliableMessageComplete(success, opcode, rspMax, rspCount);
@@ -1078,29 +1099,39 @@ public class NetworkingController {
 
     /**
      * start or refresh tick
-     *
-     * @param immediate set command timeout now
      */
-    private void restartReliableMessageTimeoutTask(boolean immediate) {
-        log("restart reliable message timeout task, immediate: " + immediate);
+    private void restartReliableMessageTimeoutTask() {
+        log("restart reliable message timeout task, immediate");
         mDelayHandler.removeCallbacks(reliableMessageTimeoutTask);
-        mDelayHandler.postDelayed(reliableMessageTimeoutTask, immediate ? 0 : getReliableMessageTimeout());
+        mDelayHandler.postDelayed(reliableMessageTimeoutTask, getReliableMessageTimeout());
     }
 
     private Runnable reliableMessageTimeoutTask = new Runnable() {
         @Override
         public void run() {
-            MeshMessage meshMessage = mSendingReliableMessage;
+            final MeshMessage meshMessage = mSendingReliableMessage;
             if (meshMessage != null) {
-                log(String.format(Locale.getDefault(), "reliable message retry? retryCnt: %d opcode: %06X", meshMessage.getRetryCnt(), meshMessage.getOpcode()));
-                if (meshMessage.getRetryCnt() <= 0) {
-                    onReliableMessageComplete(false);
+                log(String.format(Locale.getDefault(), "reliable message retry segmentRxComplete? %B retryCnt: %d %s opcode: %06X", lastSegComplete, meshMessage.getRetryCnt(), meshMessage.getClass().getSimpleName(), meshMessage.getOpcode()));
+                if (lastSegComplete) {
+                    if (meshMessage.getRetryCnt() <= 0) {
+                        onReliableMessageComplete(false);
+                    } else {
+                        // resend mesh message
+                        meshMessage.setRetryCnt(meshMessage.getRetryCnt() - 1);
+                        synchronized (RELIABLE_SEGMENTED_LOCK) {
+                            reliableBusy = false;
+                            if (segmentedBusy && meshMessage.isSegmented()) {
+                                stopSegmentedBlockAckWaiting(true, false);
+                            }
+                        }
+                        postMeshMessage(meshMessage, true);
+                    }
                 } else {
-                    // resend mesh message
-                    meshMessage.setRetryCnt(meshMessage.getRetryCnt() - 1);
-                    reliableBusy.set(false);
-                    postMeshMessage(meshMessage);
+                    // receiving rx segment packet
+                    restartReliableMessageTimeoutTask();
                 }
+
+
             }
         }
     };
@@ -1148,6 +1179,11 @@ public class NetworkingController {
     }
 
     private void checkSegmentBlock(boolean immediate, int ttl, int src) {
+        if (immediate) {
+            stopSegmentTimeoutTask();
+        } else {
+            restartSegmentTimeoutTask();
+        }
         mDelayHandler.removeCallbacks(mAccessSegCheckTask);
         long timeout = immediate ? 0 : getSegmentedTimeout(ttl, false);
         mAccessSegCheckTask.src = src;
@@ -1202,6 +1238,31 @@ public class NetworkingController {
         int ivIndex = getTransmitIvIndex();
         NetworkLayerPDU networkPDU = createNetworkPDU(data, ctl, ttl, src, dst, ivIndex, mSequenceNumber.get());
         sendNetworkPdu(networkPDU);
+    }
+
+    /**
+     * not receive any segment with current segAuth
+     */
+    private static final long SEG_TIMEOUT = 10 * 1000;
+    private Runnable segmentTimeoutTask = new Runnable() {
+        @Override
+        public void run() {
+            log(String.format(Locale.getDefault(), "segment timeout : lastSeqAuth: 0x%014X -- src: %02d",
+                    lastSeqAuth,
+                    lastSegSrc));
+            lastSegComplete = true;
+            lastSegSrc = 0;
+            lastSeqAuth = 0;
+        }
+    };
+
+    private void restartSegmentTimeoutTask() {
+        mDelayHandler.removeCallbacks(segmentTimeoutTask);
+        mDelayHandler.postDelayed(segmentTimeoutTask, SEG_TIMEOUT);
+    }
+
+    private void stopSegmentTimeoutTask() {
+        mDelayHandler.removeCallbacks(segmentTimeoutTask);
     }
 
     /**

@@ -147,7 +147,7 @@ public class BindingController {
 
     private void onMeshMessagePrepared(MeshMessage meshMessage) {
         if (accessBridge != null) {
-            if (isGattBearer()) {
+            if (!isGattBearer()) {
                 meshMessage.setRetryCnt(8);
             }
             boolean isMessageSent = accessBridge.onAccessMessagePrepared(meshMessage, AccessBridge.MODE_BINDING);

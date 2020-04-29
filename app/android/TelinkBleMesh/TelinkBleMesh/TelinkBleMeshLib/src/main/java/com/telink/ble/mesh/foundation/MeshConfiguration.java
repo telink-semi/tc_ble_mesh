@@ -2,6 +2,8 @@ package com.telink.ble.mesh.foundation;
 
 import android.util.SparseArray;
 
+import java.util.Arrays;
+
 /**
  * Mesh info use when provisioning/binding/auto connecting
  * NO variable can be NULL
@@ -52,5 +54,4 @@ public class MeshConfiguration {
     public byte[] getDefaultAppKey() {
         return appKeyMap.size() > 0 ? appKeyMap.valueAt(0) : null;
     }
-
 }

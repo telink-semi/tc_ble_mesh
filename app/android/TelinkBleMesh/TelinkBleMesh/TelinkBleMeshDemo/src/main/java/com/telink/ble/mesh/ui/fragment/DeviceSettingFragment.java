@@ -49,7 +49,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
     private CheckBox cb_pub, cb_relay;
     private PublishModel pubModel;
     private TextView tv_pub;
-    private static final int PUB_INTERVAL = 5 * 1000;
+    private static final int PUB_INTERVAL = 20 * 1000;
 
     private static final int PUB_ADDRESS = 0xFFFF;
 

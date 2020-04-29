@@ -216,9 +216,10 @@ extern void provision_end_callback(u8 reason) {
             info.cps.page0_head.cid = scanModel.CID;
             info.cps.page0_head.pid = scanModel.PID;
             model.macAddress = scanModel.macAddress;
+            model.UUID = identify;
         }
         model.nodeInfo = info;
-        model.UUID = identify;
+//        model.UUID = identify;
         [SigDataSource.share saveDeviceWithDeviceModel:model];
         
         if (Bluetooth.share.commandHandle.isSingleProvision) {
@@ -341,7 +342,7 @@ extern int App_key_bind_end_callback(u8 event) {
     }
     if (SigDataSource.share.time > 0) {
         NSString *str = [NSString stringWithFormat:@"====================provision+keybind time:%f====================",[[NSDate date] timeIntervalSince1970]-SigDataSource.share.time];
-        saveLogData(str);
+        TeLog(@"%@",str);
         SigDataSource.share.time = 0;
     }
     return 0;
@@ -427,10 +428,6 @@ int gatt_write_transaction_callback(u8 *p, u16 len, u8 msg_type) {
 
 /// doKeyBind add new parameter isFastBind, 0 means default key bound, 1 means fast bound.
 void doKeyBind(u16 address, NSData *appKey, u16 appkeyIndex ,u16 netkeyIndex ,u8 isFastBind) {
-    //    refreshKeyBindModelID();
-    NSString *str = [NSString stringWithFormat:@"doKeyBind,address:%d,isFastBind=%d",address,isFastBind];
-    saveLogData(str);
-    
     NSData *data = appKey;
     TeLog(@"doKeyBind,address:%d,appkey:%@,isFastBind=%d",address,data,isFastBind);
     if (data.length == 0) {
@@ -960,7 +957,6 @@ int LogMsgModuleDlg_and_buf(u8 *pbuf,int len,char *log_str,char *format, va_list
     
     buff[buf_idx]=':';
     memcpy(buff+buf_idx+1,str,len_buf);
-    //    g_module_dlg->LogMsg("%s\r\n", buff);
     TeLog(@"%s\r\n", buff);
     return 0;
 }

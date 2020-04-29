@@ -124,7 +124,7 @@
     __weak typeof(self) weakSelf = self;
     
     //2.firmwareUpdateInformationGet
-    [SDKLibCommand firmwareUpdateInformationGetWithDestination:kMeshAddress_allNodes firstIndex:0 entriesLimit:1 resMax:SigMeshLib.share.dataSource.getOnlineDevicesNumber retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
+    [SDKLibCommand firmwareUpdateInformationGetWithDestination:kMeshAddress_allNodes firstIndex:0 entriesLimit:1 retryCount:2 responseMaxCount:SigMeshLib.share.dataSource.getOnlineDevicesNumber successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
         if (responseMessage.firmwareInformationListCount > 0) {
             /*
              responseMessage.firmwareInformationList.firstObject.currentFirmwareID.length = 4: 2 bytes pid(设备类型) + 2 bytes vid(版本id).
@@ -148,12 +148,13 @@
     //1.configModelSubscriptionAdd
 //    for (SigNodeModel *node in self.selectItemArray) {
 //        if (node.state != DeviceStateOutOfLine) {
-//            UInt16 modelID = 0xFF00;
+////            UInt16 modelID = 0xFF00;
+//            UInt16 modelID = 0x1000;
 //            UInt16 groupAddress = 0xc000;
 //            NSArray *addressArray = [node getAddressesWithModelID:@(modelID)];
 //            if (addressArray && addressArray.count > 0) {
 //                UInt16 eleAddress = [addressArray.firstObject intValue];
-//                [DemoCommand editSubscribeListWithGroupAddress:groupAddress nodeAddress:node.address elementAddress:eleAddress isAdd:YES modelID:modelID successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
+//                [DemoCommand editSubscribeListWithWithDestination:node.address isAdd:YES groupAddress:groupAddress elementAddress:eleAddress modelIdentifier:modelID companyIdentifier:0 retryCount:0 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
 //                    if (responseMessage.elementAddress == eleAddress && responseMessage.address == groupAddress) {
 //                        UInt32 modelId = 0;
 //                        if (responseMessage.companyIdentifier == 0) {
@@ -319,7 +320,7 @@
 //            UInt16 cid = 0x0211;
 //            UInt32 firmwareID = 0xff000021;
 //            NSData *firmwareIDData = [NSData dataWithBytes:&firmwareID length:4];
-//            [SDKLibCommand firmwareDistributionCancelWithDestination:node.address companyID:cid firmwareID:firmwareIDData resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+//            [SDKLibCommand firmwareDistributionCancelWithDestination:node.address companyID:cid firmwareID:firmwareIDData retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
 //                TeLogDebug(@"firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
 //            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -337,7 +338,7 @@
             NSData *otaData = [OTAFileSource.share getDataWithBinName:@"8258_mesh"];
             UInt32 objectSize = (UInt32)otaData.length;//bin文件的总字节数
             UInt8 blockSizeLog = 0x0C;//10^12=4096，表示meshOTA的一个block应该传递的最大bin文件字节数。
-            [SDKLibCommand BLOBTransferStartWithDestination:node.address transferMode:SigTransferModeState_pushBLOBTransferMode BLOBID:objID BLOBSize:objectSize BLOBBlockSizeLog:blockSizeLog MTUSize:380 resMax:1 retryCount:2 successCallback:^(UInt16 source, UInt16 destination, SigBLOBTransferStatus * _Nonnull responseMessage) {
+            [SDKLibCommand BLOBTransferStartWithDestination:node.address transferMode:SigTransferModeState_pushBLOBTransferMode BLOBID:objID BLOBSize:objectSize BLOBBlockSizeLog:blockSizeLog MTUSize:380 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBLOBTransferStatus * _Nonnull responseMessage) {
                 TeLogDebug(@"BLOBTransferStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -408,7 +409,15 @@
             if ([self.allItemVIDDict.allKeys containsObject:@(model.address)]) {
                 vid = [self.allItemVIDDict[@(model.address)] intValue];
             }
-            itemCell.titleLabel.text = [NSString stringWithFormat:@"adr:0x%X PID:0x%@    VID:%c%c",model.address,model.pid,vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+            UInt16 modelIdentifier = SIG_MD_BLOB_TRANSFER_S;
+            NSArray *addressArray = [model getAddressesWithModelID:@(modelIdentifier)];
+            if (addressArray && addressArray.count > 0) {
+                itemCell.titleLabel.text = [NSString stringWithFormat:@"adr:0x%X PID:0x%@    VID:%c%c",model.address,model.pid,vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+            } else {
+                vid = [LibTools uint16From16String:model.vid];
+                itemCell.titleLabel.text = [NSString stringWithFormat:@"adr:0x%X PID:0x%@    VID:%c%c Not support",model.address,model.pid,vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+            }
+            
             if (self.selectItemArray.count > 0) {
                 itemCell.selectButton.selected = [self.selectItemArray containsObject:model];
             } else {

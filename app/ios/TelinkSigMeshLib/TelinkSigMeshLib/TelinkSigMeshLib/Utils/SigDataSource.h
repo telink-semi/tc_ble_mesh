@@ -28,18 +28,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Model.h"
-#import "SigEnumeration.h"
 
-@class SigDataSource,SigNetkeyModel,SigNetkeyDerivaties,SigProvisionerModel,SigRangeModel,SigSceneRangeModel,SigAppkeyModel,SigSceneModel,SigGroupModel,SigNodeModel,SigRelayretransmitModel,SigNetworktransmitModel,SigFeatureModel,SigNodeKeyModel,SigElementModel,SigModelIDModel,SigPublishModel,SigRetransmitModel, Groups, OpenSSLHelper,SigIvIndex,SigModelDelegate,SigMeshAddress,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPage0,SigNodeFeatures,SigBaseMeshMessage;
-
-struct ProvisionInfo {
-    Byte prov_newkey[16];
-    Byte prov_key_index[2];
-    Byte flag;
-    Byte prov_iv_index[4];
-    Byte prov_unicast_address[2];
-};
+@class SigDataSource,SigNetkeyModel,SigNetkeyDerivaties,SigProvisionerModel,SigRangeModel,SigSceneRangeModel,SigAppkeyModel,SigSceneModel,SigGroupModel,SigNodeModel,SigRelayretransmitModel,SigNetworktransmitModel,SigFeatureModel,SigNodeKeyModel,SigElementModel,SigModelIDModel,SigPublishModel,SigRetransmitModel, Groups, OpenSSLHelper,SigIvIndex,SigMeshAddress,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPage0,SigNodeFeatures,SigBaseMeshMessage;
 
 /// 唯一标识符为identityData，且只存储本地json存在的identityData不为空的SigEncryptedModel。设备断电后会改变identityData，出现相同的address的SigEncryptedModel时，需要replace旧的。
 @interface SigEncryptedModel : NSObject
@@ -77,15 +67,22 @@ struct ProvisionInfo {
 
 @property (nonatomic, copy) NSString *ivIndex;
 
-@property (assign, nonatomic) struct ProvisionInfo provsionInfo;
-
 @property (nonatomic,strong) NSMutableArray <SigEncryptedModel *>*encryptedArray;
 
-/* config value */
-//@property (nonatomic,assign) UInt8 defaultFirmwareIDLength;//default is 4.
-@property (nonatomic, strong) SigNetkeyModel *netKeyA;
-@property (nonatomic, strong) SigAppkeyModel *appKeyA;
-@property (nonatomic, strong) SigIvIndex *ivIndexA;
+/* default config value */
+@property (nonatomic, strong) SigNetkeyModel *defaultNetKeyA;
+@property (nonatomic, strong) SigAppkeyModel *defaultAppKeyA;
+@property (nonatomic, strong) SigIvIndex *defaultIvIndexA;
+/* cache value */
+@property (nonatomic, strong) NSMutableArray<SigScanRspModel *> *scanList;
+/// nodes should show in HomeViewController
+@property (nonatomic,strong) NSMutableArray <SigNodeModel *>*curNodes;
+//There is the modelID that show in ModelIDListViewController, it is using when app use whiteList at keybind.
+@property (nonatomic,strong) NSMutableArray <NSNumber *>*keyBindModelIDs;
+@property (nonatomic, strong) NSMutableArray <NSNumber *>*defaultGroupSubscriptionModels;//modelID of subscription group
+@property (nonatomic, strong) NSMutableArray <DeviceTypeModel *>*defaultNodeInfos;// default nodeInfo for fast bind.
+@property (nonatomic, assign) UInt16 unicastAddressOfConnected;//get from source address of `setFilterForProvisioner:`
+@property (nonatomic, assign) BOOL needPublishTimeModel;
 
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -97,108 +94,76 @@ struct ProvisionInfo {
 - (NSDictionary *)getDictionaryFromDataSource;
 - (void)setDictionaryToDataSource:(NSDictionary *)dictionary;
 
-@property (nonatomic, strong) NSMutableArray<SigScanRspModel *> *scanList;
-@property (nonatomic,assign) UInt16 provisionAddress;
-///TimeInterval from call provision to keyBind_callback
-@property (nonatomic, assign) NSTimeInterval time;
-
-@property (nonatomic, strong) SigAppkeyModel *curAppkeyModel;
-@property (nonatomic, strong) SigNetkeyModel *curNetkeyModel;
-@property (nonatomic, strong) SigProvisionerModel *curProvisionerModel;
-@property (nonatomic, strong) SigNodeModel *curLocationNodeModel;
-@property (nonatomic, strong) SigElementModel *curLocationElementModel;
-///nodes should show in HomeViewController
-@property (nonatomic,strong) NSMutableArray <SigNodeModel *>*curNodes;
-
-//path of mesh.json in location
-@property (nonatomic,strong) NSString *path;
-//There is the modelID that show in ModelIDListViewController, it is using when app use whiteList at keybind.
-@property (nonatomic,strong) NSMutableArray <NSNumber *>*keyBindModelIDs;
-@property (nonatomic, strong) NSData *curNetKey;
-@property (nonatomic, strong) NSData *curAppKey;
-//flag for app is or not write JSON data to test.bin of lib on open app.
-@property (nonatomic, assign) BOOL hasWriteDataSourceToLib;
-@property (nonatomic, strong) NSMutableArray <NSNumber *>*defaultGroupSubscriptionModels;//modelID of subscription group
-@property (nonatomic, strong) NSMutableArray <DeviceTypeModel *>*defaultNodeInfos;// default nodeInfo for fast bind.
-@property (nonatomic, assign) UInt16 unicastAddressOfConnected;//get from source address of `setFilterForProvisioner:`
+- (UInt16)provisionAddress;
+- (SigAppkeyModel *)curAppkeyModel;
+- (SigNetkeyModel *)curNetkeyModel;
+- (SigProvisionerModel *)curProvisionerModel;
+- (NSData *)curNetKey;
+- (NSData *)curAppKey;
+- (SigNodeModel *)curLocationNodeModel;
+- (NSInteger)getOnlineDevicesNumber;
+- (BOOL)hasNodeExistTimeModelID;
+///Special handling: get the uuid of current provisioner.
+- (NSString *)getCurrentProvisionerUUID;
 
 /// Init SDK location Data(include create mesh.json, check provisioner, provisionLocation)
 - (void)configData;
-
-/// write SigDataSource To test.bin of lib
-- (void)writeDataSourceToLib;
 
 /// check SigDataSource.provisioners, this api will auto create a provisioner when SigDataSource.provisioners hasn't provisioner corresponding to app's UUID.
 - (void)checkExistLocationProvisioner;
 
 - (void)changeLocationProvisionerNodeAddressToAddress:(UInt16)address;
 
-- (void)saveDeviceWithDeviceModel:(SigNodeModel *)model;
+- (void)addAndSaveNodeToMeshNetworkWithDeviceModel:(SigNodeModel *)model;
 
-- (void)removeModelWithDeviceAddress:(UInt16)deviceAddress;
+- (void)deleteNodeFromMeshNetworkWithDeviceAddress:(UInt16)deviceAddress;
 
-- (void)editGroupIDsOfDevice:(BOOL)add device_address:(NSNumber *)device_address group_address:(NSNumber *)group_address;
-
+- (void)editGroupIDsOfDevice:(BOOL)add unicastAddress:(NSNumber *)unicastAddress groupAddress:(NSNumber *)groupAddress;
 
 - (void)setAllDevicesOutline;
 
-//- (BOOL)updateResponseModelWithResponse:(ResponseModel *)response;
-
 - (void)saveLocationData;
-
-- (NSInteger)getOnlineDevicesNumber;
-
-- (UInt16)provisionAddress;
-
 - (void)saveLocationProvisionAddress:(NSInteger)address;
 
-- (BOOL)hasNodeExistTimeModelID;
-
-- (SigNodeModel *)getNodeWithUUID:(NSString *)uuid;
-
-- (SigNodeModel *)getDeviceWithMacAddress:(NSString *)macAddress;
-
-- (SigNodeModel *)getNodeWithAddress:(UInt16)address;
-
-- (SigNodeModel *)getCurrentConnectedNode;
-
-- (ModelIDModel *)getModelIDModel:(NSNumber *)modelID;
+- (void)updateNodeStatusWithBaseMeshMessage:(SigBaseMeshMessage *)responseMessage source:(UInt16)source;
 
 - (UInt16)getNewSceneAddress;
-
 - (void)saveSceneModelWithModel:(SigSceneModel *)model;
-
 - (void)delectSceneModelWithModel:(SigSceneModel *)model;
-
-- (SigScanRspModel *)getScanRspModelWithUUID:(NSString *)uuid;
-- (SigScanRspModel *)getScanRspModelWithMac:(NSString *)mac;
-- (SigScanRspModel *)getScanRspModelWithAddress:(UInt16)address;
-- (void)deleteScanRspModelWithAddress:(UInt16)address;
-- (SigEncryptedModel *)getSigEncryptedModelWithAddress:(UInt16)address;
-- (void)updateScanRspModelToDataSource:(SigScanRspModel *)model;
-///Special handling: determine model whether exist current meshNetwork
-- (BOOL)existScanRspModelOfCurrentMeshNetwork:(SigScanRspModel *)model;
-///Special handling: determine peripheralUUIDString whether exist current meshNetwork
-- (BOOL)existPeripheralUUIDString:(NSString *)peripheralUUIDString;
 
 - (NSData *)getIvIndexData;
 - (void)updateIvIndexData:(NSData *)ivIndex;
 
 - (int)getCurrentProvisionerIntSequenceNumber;
 - (void)updateCurrentProvisionerIntSequenceNumber:(int)sequenceNumber;
-
-- (SigNetkeyModel *)getNetkeyModelWithNetworkId:(NSData *)networkId;
-- (SigAppkeyModel *)getAppkeyModelWithAppkeyIndex:(NSInteger)appkeyIndex;
-- (SigNetkeyModel *)getNetkeyModelWithNetkeyIndex:(NSInteger)index;
-
-- (SigGroupModel *)getGroupModelWithGroupAddress:(UInt16)groupAddress;
-
-///Special handling: get the uuid of current provisioner.
-- (NSString *)getCurrentProvisionerUUID;
-- (UInt32)getLocationSno;
 - (void)setLocationSno:(UInt32)sno;
 
-- (void)updateNodeStatusWithBaseMeshMessage:(SigBaseMeshMessage *)responseMessage source:(UInt16)source;
+- (SigEncryptedModel *)getSigEncryptedModelWithAddress:(UInt16)address;
+///Special handling: determine model whether exist current meshNetwork
+- (BOOL)existScanRspModelOfCurrentMeshNetwork:(SigScanRspModel *)model;
+///Special handling: determine peripheralUUIDString whether exist current meshNetwork
+- (BOOL)existPeripheralUUIDString:(NSString *)peripheralUUIDString;
+
+///Special handling: update the uuid and MAC mapping relationship.
+- (void)updateScanRspModelToDataSource:(SigScanRspModel *)model;
+- (SigScanRspModel *)getScanRspModelWithUUID:(NSString *)uuid;
+- (SigScanRspModel *)getScanRspModelWithMac:(NSString *)mac;
+- (SigScanRspModel *)getScanRspModelWithAddress:(UInt16)address;
+- (void)deleteScanRspModelWithAddress:(UInt16)address;
+
+- (SigNetkeyModel *)getNetkeyModelWithNetworkId:(NSData *)networkId;
+- (SigNetkeyModel *)getNetkeyModelWithNetkeyIndex:(NSInteger)index;
+
+- (SigAppkeyModel *)getAppkeyModelWithAppkeyIndex:(NSInteger)appkeyIndex;
+
+- (SigNodeModel *)getNodeWithUUID:(NSString *)uuid;
+- (SigNodeModel *)getNodeWithAddress:(UInt16)address;
+- (SigNodeModel *)getDeviceWithMacAddress:(NSString *)macAddress;
+- (SigNodeModel *)getCurrentConnectedNode;
+
+- (ModelIDModel *)getModelIDModel:(NSNumber *)modelID;
+
+- (SigGroupModel *)getGroupModelWithGroupAddress:(UInt16)groupAddress;
 
 - (DeviceTypeModel *)getNodeInfoWithCID:(UInt16)CID PID:(UInt16)PID;
 
@@ -373,6 +338,14 @@ struct ProvisionInfo {
 - (NSDictionary *)getDictionaryOfSigGroupModel;
 - (void)setDictionaryToSigGroupModel:(NSDictionary *)dictionary;
 
+//临时缓存groupBrightness、groupTempareture，关闭APP后就丢失。
+@property (nonatomic,assign) UInt8 groupBrightness;
+@property (nonatomic,assign) UInt8 groupTempareture;
+
+- (BOOL)isOn;
+- (NSMutableArray <SigNodeModel *>*)groupDevices;
+- (NSMutableArray <SigNodeModel *>*)groupOnlineDevices;
+
 @end
 
 ///Attention: Boolean type should use bool not BOOL.
@@ -440,7 +413,7 @@ struct ProvisionInfo {
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*schedulerAddress;//element addresses of scheduler
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*sceneAddress;//element addresses of scene
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*publishAddress;//element addresses of publish
-@property (nonatomic,assign) UInt32 publishModelID;//modelID of set publish
+@property (nonatomic,assign) UInt16 publishModelID;//modelID of set publish
 @property (nonatomic,strong) NSString *peripheralUUID;
 
 ///return node true brightness, range is 0~100
@@ -646,16 +619,12 @@ struct ProvisionInfo {
 
 ///返回整形的modelID
 - (int)getIntModelID;
+- (UInt16)getIntModelIdentifier;
+- (UInt16)getIntCompanyIdentifier;
 
 - (instancetype)initWithSigModelId:(UInt16)sigModelId;
 
 - (instancetype)initWithVendorModelId:(UInt32)vendorModelId;
-
-- (instancetype)initWithVendorModelId:(UInt32)vendorModelId withDelegate:(SigModelDelegate *)delegate;
-
-- (instancetype)initWithSigModelId:(UInt16)sigModelId companyId:(UInt16)companyId delegate:(SigModelDelegate *)delegate;
-
-- (instancetype)initWithSigModelId:(UInt16)sigModelId delegate:(SigModelDelegate *)delegate;
 
 /// Bluetooth SIG or vendor-assigned model identifier.
 - (UInt16)modelIdentifier;

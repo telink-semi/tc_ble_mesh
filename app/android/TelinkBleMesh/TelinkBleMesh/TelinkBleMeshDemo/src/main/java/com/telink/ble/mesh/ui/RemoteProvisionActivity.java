@@ -78,6 +78,8 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     private Button btn_back;
 
+    private static final byte THRESHOLD_REMOTE_RSSI = -85;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -140,6 +142,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
 
     private void enableUI(boolean enable) {
+        MeshLogger.d("remote - enable ui: " + enable);
         btn_back.setEnabled(enable);
     }
 
@@ -147,7 +150,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
      * normal provisioning
      ******************************************************************************/
     private void startScan() {
-        ScanParameters parameters = ScanParameters.getDefault(false, true);
+        ScanParameters parameters = ScanParameters.getDefault(false, false);
         parameters.setScanTimeout(10 * 1000);
         MeshService.getInstance().startScan(parameters);
     }
@@ -190,6 +193,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         if (MeshService.getInstance().startProvisioning(provisioningParameters)) {
             NodeInfo nodeInfo = new NodeInfo();
             nodeInfo.meshAddress = address;
+            nodeInfo.macAddress = advertisingDevice.device.getAddress();
             nodeInfo.deviceUUID = deviceUUID;
             nodeInfo.state = NodeInfo.STATE_PROVISIONING;
             devices.add(nodeInfo);
@@ -275,18 +279,19 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
     private void startRemoteScan() {
         // scan for max 2 devices
         final byte SCAN_LIMIT = 2;
-        // scan for 3 seconds
-        final byte SCAN_TIMEOUT = 8;
+        // scan for 5 seconds
+        final byte SCAN_TIMEOUT = 5;
         final int SERVER_ADDRESS = 0xFFFF;
 
         ScanStartMessage remoteScanMessage = ScanStartMessage.getSimple(SERVER_ADDRESS, meshInfo.getDefaultAppKeyIndex(),
                 1, SCAN_LIMIT, SCAN_TIMEOUT);
         MeshService.getInstance().sendMeshMessage(remoteScanMessage);
-
+        delayHandler.removeCallbacksAndMessages(null);
         delayHandler.postDelayed(remoteScanTimeoutTask, (SCAN_TIMEOUT + 5) * 1000);
     }
 
     private void onRemoteComplete() {
+        MeshLogger.d("remote prov - remote complete : rest - " + remoteDevices.size());
         if (!MeshService.getInstance().isProxyLogin()) {
             enableUI(true);
             return;
@@ -298,6 +303,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         if (remoteDevices.size() == 0) {
             startRemoteScan();
         } else {
+            delayHandler.removeCallbacksAndMessages(null);
             delayHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -317,9 +323,15 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
     }
 
     private void onRemoteDeviceScanned(int src, ScanReportStatusMessage scanReportStatusMessage) {
-//        MeshLogger.log("on remote device found: " + Arrays.bytesToHexString(scanReportStatusMessage.getUuid(), ":"));
-        RemoteProvisioningDevice remoteProvisioningDevice = new RemoteProvisioningDevice(scanReportStatusMessage, src);
-//        if (!remoteProvisioningDevice.getMac().contains("11:22:33:11:22")) return;
+        final byte rssi = scanReportStatusMessage.getRssi();
+        final byte[] uuid = scanReportStatusMessage.getUuid();
+        MeshLogger.log("remote device found: " + Integer.toHexString(src) + " -- " + Arrays.bytesToHexString(uuid) + " -- rssi: " + rssi);
+        /*if (rssi < THRESHOLD_REMOTE_RSSI) {
+            MeshLogger.log("scan report ignore because of RSSI limit");
+            return;
+        }*/
+        RemoteProvisioningDevice remoteProvisioningDevice = new RemoteProvisioningDevice(rssi, uuid, src);
+//        if (!Arrays.bytesToHexString(remoteProvisioningDevice.getUuid(), ":").contains("DD:CC:BB:FF:FF")) return;
 
         // check if device exists
         NodeInfo nodeInfo = getNodeByUUID(remoteProvisioningDevice.getUuid());
@@ -328,8 +340,26 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             return;
         }
 
-        MeshLogger.log("remote device found: " + Arrays.bytesToHexString(remoteProvisioningDevice.getUuid()));
-        remoteDevices.add(remoteProvisioningDevice);
+
+        int index = remoteDevices.indexOf(remoteProvisioningDevice);
+        boolean replaced = false;
+        if (index >= 0) {
+            // exists
+            RemoteProvisioningDevice device = remoteDevices.valueAt(index);
+            if (device != null) {
+                if (device.getRssi() < remoteProvisioningDevice.getRssi() && device.getServerAddress() != remoteProvisioningDevice.getServerAddress()) {
+                    replaced = true;
+                    device.setRssi(remoteProvisioningDevice.getRssi());
+                    device.setServerAddress(device.getServerAddress());
+                }
+            }
+        }
+        if (replaced) {
+            MeshLogger.log("remote device replaced");
+        } else {
+            MeshLogger.log("remote device add");
+            remoteDevices.add(remoteProvisioningDevice);
+        }
     }
 
 
@@ -345,6 +375,12 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         device.setUnicastAddress(address);
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.deviceUUID = device.getUuid();
+
+        byte[] macBytes = new byte[6];
+        System.arraycopy(nodeInfo.deviceUUID, 10, macBytes, 0, macBytes.length);
+        macBytes = Arrays.reverse(macBytes);
+        nodeInfo.macAddress = Arrays.bytesToHexString(macBytes, ":").toUpperCase();
+
         nodeInfo.meshAddress = address;
         nodeInfo.state = NodeInfo.STATE_PROVISIONING;
         devices.add(nodeInfo);
@@ -443,6 +479,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         int appKeyIndex = meshInfo.getDefaultAppKeyIndex();
         final BindingDevice bindingDevice = new BindingDevice(nodeInfo.meshAddress, nodeInfo.deviceUUID, appKeyIndex);
         bindingDevice.setBearer(BindingBearer.Any);
+        delayHandler.removeCallbacksAndMessages(null);
         delayHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -454,7 +491,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     private void onRemoteProvisioningFail(RemoteProvisioningEvent event) {
         //
-        MeshLogger.log("remote act fail: " + event.getRemoteProvisioningDevice().getUuid());
+        MeshLogger.log("remote act fail: " + Arrays.bytesToHexString(event.getRemoteProvisioningDevice().getUuid()));
 
         RemoteProvisioningDevice deviceInfo = event.getRemoteProvisioningDevice();
         NodeInfo pvDevice = getProcessingNode();

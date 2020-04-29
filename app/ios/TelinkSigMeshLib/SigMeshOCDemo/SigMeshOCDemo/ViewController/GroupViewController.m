@@ -28,13 +28,12 @@
 //
 
 #import "GroupViewController.h"
-#import "GroupModel.h"
 #import "GroupDetailViewController.h"
 #import "GroupCell.h"
 
 @interface GroupViewController()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
-@property (nonatomic, strong) NSMutableArray <GroupModel *>*source;
+@property (nonatomic, strong) NSMutableArray <SigGroupModel *>*source;
 @end
 
 @implementation GroupViewController
@@ -65,15 +64,10 @@
 }
 
 - (void)updateData{
-    [self.source removeAllObjects];
-    for (int i=0; i<SigDataSource.share.groups.count; i++) {
-        SigGroupModel *g = SigDataSource.share.groups[i];
-        GroupModel *model = [[GroupModel alloc] init];
-        model.groupAddress = [LibTools uint16From16String:g.address];
-        model.groupName = g.name;
-        [self.source addObject:model];
-    }
-    [self.tableView reloadData];
+    self.source = [NSMutableArray arrayWithArray:SigDataSource.share.groups];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView reloadData];
+    });
 }
 
 #pragma  mark LongPressGesture
@@ -81,7 +75,7 @@
     if (sender.state == UIGestureRecognizerStateBegan) {
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
-            GroupModel *model = self.source[indexPath.item];
+            SigGroupModel *model = self.source[indexPath.item];
             GroupDetailViewController *vc = (GroupDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_GroupDetailViewControllerID];
             vc.model = model;
             [self.navigationController pushViewController:vc animated:YES];

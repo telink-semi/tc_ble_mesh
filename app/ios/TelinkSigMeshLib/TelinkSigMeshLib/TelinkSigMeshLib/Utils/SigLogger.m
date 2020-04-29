@@ -100,37 +100,6 @@
     }
 }
 
-
-void saveLogData(id data){
-    if (SigLogger.share.logLevel > 0) {
-        @synchronized (SigLogger.share) {
-            [SigLogger.share saveLogOnThread:data];
-        }
-    }
-}
-
-- (void)saveLogOnThread:(id)data {
-    NSDate *date = [NSDate date];
-    NSDateFormatter *f = [[NSDateFormatter alloc] init];
-    f.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
-    f.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"zh_CN"];
-    NSString *dstr = [f stringFromDate:date];
-    
-    NSFileHandle *handle = [NSFileHandle fileHandleForUpdatingAtPath:SigLogger.share.logFilePath];
-    [handle seekToEndOfFile];
-    if ([data isKindOfClass:[NSData class]]) {
-        NSString *tempString = [[NSString alloc] initWithFormat:@"%@ : Response-> %@\n",dstr,data];
-        NSData *tempData = [tempString dataUsingEncoding:NSUTF8StringEncoding];
-        [handle writeData:tempData];
-        
-    }else{
-        NSString *tempString = [[NSString alloc] initWithFormat:@"%@ : %@\n",dstr,data];
-        NSData *tempData = [tempString dataUsingEncoding:NSUTF8StringEncoding];
-        [handle writeData:tempData];
-    }
-    [handle closeFile];
-}
-
 static NSFileHandle *TelinkLogFileHandle()
 {
     static NSFileHandle *fileHandle = nil;
@@ -150,6 +119,7 @@ static NSFileHandle *TelinkLogFileHandle()
     });
     return fileHandle;
 }
+
 void TelinkLogWithFile(NSString *format, ...) {
     va_list L;
     va_start(L, format);
@@ -187,6 +157,19 @@ void TelinkLogWithFile(NSString *format, ...) {
     NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:SigLogger.share.logFilePath];
     [handle truncateFileAtOffset:0];
     [handle closeFile];
+}
+
+- (NSString *)getLogStringWithLength:(NSInteger)length {
+    NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:SigLogger.share.logFilePath];
+    NSData *data = [handle readDataToEndOfFile];
+    NSString *str = @"";
+    if (data.length > length) {
+        str = [[NSString alloc] initWithData:[data subdataWithRange:NSMakeRange(data.length - length, length)] encoding:NSUTF8StringEncoding];
+    } else {
+        str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    }
+    [handle closeFile];
+    return str;
 }
 
 void saveMeshJsonData(id data){

@@ -44,15 +44,13 @@
 #pragma mark - xib event
 - (IBAction)changeBrightness:(UISlider *)sender {
     self.LumLabel.text = [NSString stringWithFormat:@"Lum(%d)",(int)sender.value];
-    [DemoCommand changeBrightnessWithBrightness100:sender.value address:self.model.address responseMaxCount:1 ack:NO successCallback:nil resultCallback:nil];
-//    [DemoCommand changeBrightness:YES address:self.model.address para:sender.value isGet:NO respondMax:1 complete:nil];
+    [DemoCommand changeBrightnessWithBrightness100:sender.value address:self.model.address retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
 }
 
 - (IBAction)changeTempareture:(UISlider *)sender {
     SigNodeModel *device = [SigDataSource.share getNodeWithAddress:self.model.address];
     self.TempLabel.text = [NSString stringWithFormat:@"Temp(%d)",(int)sender.value];
-    [DemoCommand changeTempratureWithTemprature100:sender.value address:[device.temperatureAddresses.firstObject intValue] responseMaxCount:1 ack:NO successCallback:nil resultCallback:nil];
-//    [DemoCommand changeTemprature:YES address:[device.temperatureAddresses.firstObject intValue] para:sender.value isGet:NO respondMax:1 complete:nil];
+    [DemoCommand changeTempratureWithTemprature100:sender.value address:[device.temperatureAddresses.firstObject intValue] retryCount:0 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
 }
 
 - (IBAction)clickHSL:(UIButton *)sender {

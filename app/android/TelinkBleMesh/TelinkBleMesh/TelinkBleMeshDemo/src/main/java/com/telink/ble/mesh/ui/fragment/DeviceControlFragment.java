@@ -14,8 +14,12 @@ import android.widget.TextView;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.generic.DeltaSetMessage;
+import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
+import com.telink.ble.mesh.core.message.lighting.CtlGetMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlTemperatureSetMessage;
+import com.telink.ble.mesh.core.message.lighting.HslGetMessage;
 import com.telink.ble.mesh.core.message.lighting.HslSetMessage;
+import com.telink.ble.mesh.core.message.lighting.LightnessGetMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessSetMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
@@ -86,6 +90,8 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
 
         TelinkMeshApplication.getInstance().addEventListener(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
+
+        getNodeStatus();
     }
 
     private void initView(View view) {
@@ -137,6 +143,42 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         view.findViewById(R.id.iv_lum_minus).setOnClickListener(this);
         view.findViewById(R.id.iv_temp_add).setOnClickListener(this);
         view.findViewById(R.id.iv_temp_minus).setOnClickListener(this);
+    }
+
+    private void getNodeStatus() {
+        if (deviceInfo.compositionData.lowPowerSupport()) {
+            //skip lpn
+            return;
+        }
+        int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+        int modelId = MeshSigModel.SIG_MD_LIGHT_CTL_S.modelId;
+        int modelEleAdr = deviceInfo.getTargetEleAdr(modelId);
+        String desc = null;
+
+        if (modelEleAdr != -1) {
+            MeshService.getInstance().sendMeshMessage(CtlGetMessage.getSimple(modelEleAdr, appKeyIndex, 0));
+            return;
+        }
+
+        modelId = MeshSigModel.SIG_MD_LIGHT_HSL_S.modelId;
+        modelEleAdr = deviceInfo.getTargetEleAdr(modelId);
+        if (modelEleAdr != -1) {
+            MeshService.getInstance().sendMeshMessage(HslGetMessage.getSimple(modelEleAdr, appKeyIndex, 0));
+            return;
+        }
+
+        modelId = MeshSigModel.SIG_MD_LIGHTNESS_S.modelId;
+        modelEleAdr = deviceInfo.getTargetEleAdr(modelId);
+        if (modelEleAdr != -1) {
+            MeshService.getInstance().sendMeshMessage(LightnessGetMessage.getSimple(modelEleAdr, appKeyIndex, 0));
+            return;
+        }
+
+        modelId = MeshSigModel.SIG_MD_G_ONOFF_S.modelId;
+        modelEleAdr = deviceInfo.getTargetEleAdr(modelId);
+        if (modelEleAdr != -1) {
+            MeshService.getInstance().sendMeshMessage(OnOffGetMessage.getSimple(modelEleAdr, appKeyIndex, 0));
+        }
     }
 
 
@@ -243,8 +285,10 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
                     color_panel.setVisibility(visibility, immediate);
                 }
             } else if (seekBar == sb_lum || seekBar == sb_temp) {
+
                 long currentTime = System.currentTimeMillis();
                 if (seekBar == sb_lum) {
+                    deviceInfo.lum = progress;
                     tv_lum.setText(getString(R.string.lum_progress, Math.max(1, progress), Integer.toHexString(lumEleInfo.keyAt(0))));
                     if ((currentTime - preTime) >= DELAY_TIME || immediate) {
                         preTime = currentTime;
@@ -252,10 +296,11 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
                         LightnessSetMessage message = LightnessSetMessage.getSimple(lumEleInfo.keyAt(0),
                                 meshInfo.getDefaultAppKeyIndex(),
                                 UnitConvert.lum2lightness(progress),
-                                true, 0);
+                                false, 0);
                         MeshService.getInstance().sendMeshMessage(message);
                     }
                 } else if (seekBar == sb_temp) {
+                    deviceInfo.temp = progress;
                     tv_temp.setText(getString(R.string.temp_progress, progress, Integer.toHexString(tempEleInfo.keyAt(0))));
                     if ((currentTime - preTime) >= DELAY_TIME || immediate) {
                         preTime = currentTime;
@@ -263,7 +308,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
                         CtlTemperatureSetMessage temperatureSetMessage =
                                 CtlTemperatureSetMessage.getSimple(tempEleInfo.keyAt(0),
                                         meshInfo.getDefaultAppKeyIndex(), UnitConvert.temp100ToTemp(progress),
-                                        0, true, 0);
+                                        0, false, 0);
                         MeshService.getInstance().sendMeshMessage(temperatureSetMessage);
                     }
                 }

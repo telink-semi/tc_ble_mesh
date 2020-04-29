@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.access.BindingBearer;
 import com.telink.ble.mesh.core.message.config.NodeResetMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
 import com.telink.ble.mesh.demo.R;
@@ -130,7 +131,7 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
                 mesh.getDefaultAppKeyIndex());
 //        KeyBindParameters parameters = KeyBindParameters.getDefault(targetDevice,
 //                mesh.appKey, mesh.appKeyIndex, mesh.netKeyIndex, false);
-
+        bindingDevice.setBearer(BindingBearer.Any);
         MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
         showWaitingDialog("binding...");
     }

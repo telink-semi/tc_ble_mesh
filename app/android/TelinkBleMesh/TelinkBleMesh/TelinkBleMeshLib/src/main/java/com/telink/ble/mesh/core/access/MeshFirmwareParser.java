@@ -91,7 +91,8 @@ public class MeshFirmwareParser {
     public boolean validateProgress() {
         // Math.ceil(mBlockSize/mChunkSize)
         float chunkNumberOffset = curBlockIndex * (mBlockSize / mChunkSize) + (curChunkIndex + 1);
-        int progress = (int) (chunkNumberOffset * 100 / totalChunkNumber);
+        // max 99
+        int progress = (int) (chunkNumberOffset * 99 / totalChunkNumber);
         if (progress <= this.progress) {
             return false;
         }

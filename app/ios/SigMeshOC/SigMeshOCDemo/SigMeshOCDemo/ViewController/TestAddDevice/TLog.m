@@ -96,7 +96,6 @@ void saveTestLogData(id data){
         [handle writeData:tempData];
     }
     [handle closeFile];
-    [NSNotificationCenter.defaultCenter postNotificationName:(NSString *)NotifyUpdateLogContent object:nil];
 }
 
 @end
