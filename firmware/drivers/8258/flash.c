@@ -50,7 +50,7 @@ Flash_CapacityDef flash_get_capacity(void)
 void blc_readFlashSize_autoConfigCustomFlashSector(void)
 {
 #if (((MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269)) \
-    || (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE))
+    || (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE) || DUAL_MESH_ZB_BL_EN)
     // always use fixed customized address
 #else
 	u8 temp_buf[4];

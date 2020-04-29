@@ -339,7 +339,7 @@ typedef enum{
     RP_PROV_COMPLETE_RSP,
 }RP_PROV_CMD_ENUM;
 
-#define REMOTE_PROV_PDU_CLI_INTER  2000*1000
+#define REMOTE_PROV_PDU_CLI_INTER  5000*1000
 
 int mesh_cmd_sig_rp_cli_send_capa(u16 node_adr);
 int mesh_cmd_sig_rp_cli_send_scan_get(u16 node_adr);

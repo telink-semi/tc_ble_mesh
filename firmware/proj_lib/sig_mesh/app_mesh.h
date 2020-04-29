@@ -72,12 +72,13 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define ADR_LPN1        0x1201
 #define ADR_LPN2		0x1210
 
-#define ADR_UNASSIGNED  		(0)
-#define ADR_FIXED_GROUP_START 	(0xFF00)
-#define ADR_ALL_PROXY 			(0xFFFC)
-#define ADR_ALL_FRIEND 			(0xFFFD)
-#define ADR_ALL_RELAY 			(0xFFFE)
-#define ADR_ALL_NODES   		(0xFFFF)
+#define ADR_UNASSIGNED  			(0)
+#define ADR_FIXED_GROUP_START 		(0xFF00)
+#define ADR_ALL_DIRECTED_FORWARD	(0xFFFB)
+#define ADR_ALL_PROXY 				(0xFFFC)
+#define ADR_ALL_FRIEND 				(0xFFFD)
+#define ADR_ALL_RELAY 				(0xFFFE)
+#define ADR_ALL_NODES   			(0xFFFF)
 #define SPECIAL_INTERNAL_UNICAST_ADR	0x7f00
 #define PROXY_CONFIG_FILTER_DST_ADR 0x0000
 
@@ -234,6 +235,62 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define G_LOCATION_GLOBAL_SET_NOACK		0x42
 #define G_LOCATION_LOCAL_SET			0x2882
 #define G_LOCATION_LOCAL_SET_NOACK		0x2982
+
+// directed forwarding
+#define DIRECTED_CONTROL_GET						0x30bf
+#define DIRECTED_CONTROL_SET						0x31bf
+#define DIRECTED_CONTROL_STATUS						0x32bf
+#define PATH_METRIC_GET								0x33bf
+#define PATH_METRIC_SET								0x34bf		
+#define PATH_METRIC_STATUS							0x35bf
+#define DISCOVERY_TABLE_CAPABILITIES_GET  			0x36bf
+#define DISCOVERY_TABLE_CAPABILITIES_SET  			0x37bf
+#define DISCOVERY_TABLE_CAPABILITIES_STATUS  		0x38bf
+#define FORWARDING_TABLE_ADD  						0x39bf
+#define FORWARDING_TABLE_DELETE  					0x3abf
+#define FORWARDING_TABLE_STATUS  					0x3bbf
+#define FORWARDING_TABLE_DEPENDENTS_ADD  			0x3cbf
+#define FORWARDING_TABLE_DEPENDENTS_DELETE  		0x3dbf
+#define FORWARDING_TABLE_DEPENDENTS_STATUS			0x3ebf
+#define FORWARDING_TABLE_DEPENDENTS_GET  			0x3fbf
+#define FORWARDING_TABLE_DEPENDENTS_GET_STATUS  	0x40bf
+#define FORWARDING_TABLE_ENTRIES_COUNT_GET  		0x41bf
+#define FORWARDING_TABLE_ENTRIES_COUNT_STATUS  		0x42bf
+#define FORWARDING_TABLE_ENTRIES_GET  				0x43bf
+#define FORWARDING_TABLE_ENTRIES_STATUS  			0x44bf
+#define WANTED_LANES_GET							0x45bf
+#define WANTED_LANES_SET							0x46bf
+#define WANTED_LANES_STATUS							0x47bf
+#define TWO_WAY_PATH_GET							0x48bf
+#define TWO_WAY_PATH_SET							0x49bf
+#define	TWO_WAY_PATH_STATUS							0x4abf
+#define PATH_ECHO_INTERVAL_GET						0x4bbf
+#define	PATH_ECHO_INTERVAL_SET						0x4cbf
+#define	PATH_ECHO_INTERVAL_STATUS					0x4dbf
+#define DIRECTED_NETWORK_TRANSMIT_GET				0x4ebf
+#define DIRECTED_NETWORK_TRANSMIT_SET				0x4fbf
+#define DIRECTED_NETWORK_TRANSMIT_STATUS			0x50bf
+#define DIRECTED_RELAY_RETRANSMIT_GET  				0x51bf
+#define DIRECTED_RELAY_RETRANSMIT_SET  				0x52bf
+#define DIRECTED_RELAY_RETRANSMIT_STATUS  			0x53bf
+#define RSSI_THRESHOLD_GET							0x54bf
+#define RSSI_THRESHOLD_SET							0x55bf
+#define RSSI_THRESHOLD_STATUS						0x56bf
+#define DIRECTED_PATHS_GET							0x57bf
+#define DIRECTED_PATHS_STATUS						0x58bf
+#define DIRECTED_PUBLISH_POLICY_GET   				0x59bf
+#define DIRECTED_PUBLISH_POLICY_SET  				0x5abf
+#define DIRECTED_PUBLISH_POLICY_STATUS  			0x5bbf
+#define PATH_DISCOVERY_TIMING_CONTROL_GET			0x5cbf
+#define PATH_DISCOVERY_TIMING_CONTROL_SET			0x5dbf
+#define PATH_DISCOVERY_TIMING_CONTROL_STATUS		0x5ebf
+#define DIRECTED_CONTROL_NETWORK_TRANSMIT_GET		0x5fbf
+#define DIRECTED_CONTROL_NETWORK_TRANSMIT_SET		0x60bf
+#define DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS	0x61bf
+#define DIRECTED_CONTROL_RELAY_RETRANSMIT_GET		0x62bf
+#define DIRECTED_CONTROL_RELAY_RETRANSMIT_SET		0x63bf
+#define DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS	0x64bf
+
 //----------------------------------- status code
 #define ST_SUCCESS		                (0)
 #define ST_INVALID_ADR		            (1)
@@ -253,7 +310,12 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define ST_CAN_NOT_SET		            (0x0F)
 #define ST_UNSPEC_ERR		            (0x10)
 #define ST_INVALID_BIND		            (0x11)
-//----0x12~0xFF reserve for future use
+#define ST_INVALID_PATH_ENTRY			(0x12)
+#define ST_NODE_NOT_QUALIFIED			(0x13)
+#define ST_CANNOT_GET					(0x14)
+#define ST_OBSOLETE_INFO				(0x15)
+#define ST_INVALID_BEARER				(0x16)
+//----0x17~0xFF reserve for future use
 //----------------------------------- parameter setting
 #if WIN32
 #define MESH_ELE_MAX_NUM        MESH_NODE_MAX_NUM
@@ -397,6 +459,12 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define GET_SEG_SZMIC(szmic)    (szmic ? SZMIC_TRNS_SEG64 : SZMIC_TRNS_SEG32)
 
 enum{
+	MASTER, 
+	FRIENDSHIP,
+	DIRECTED,
+};
+
+enum{
 	SEG_RX_STATE_ING		= 0,
 	SEG_RX_STATE_COMPLETED	= 1,
 	SEG_RX_STATE_TIMEOUT	= 2,
@@ -441,6 +509,7 @@ typedef struct{
 	u32 rsp_max;
 	u32 op_rsp;     // include vendor id
 	u16 op;
+	u8 sec_type;
 	u8 nk_array_idx;
 	u8 ak_array_idx;
 	u8 seg_must;   // 1:  force use segment flow to tx short messages.
@@ -522,6 +591,17 @@ typedef struct{
     u8 data[ACCESS_WITH_MIC_LEN_MAX - 3];    // max: payload 0 ~ 377Byte
 }mesh_cmd_ac_vd_t;
 
+typedef struct{
+	union{
+		struct{
+			u16 length_present:1;
+			u16 range_start:15;			
+			u8 	range_length;
+		};
+		u16 multicast_destination;
+	};
+}addr_range_little_endian_t;
+
 //----------------------------------- upper transport layer
 typedef struct{
     u8 data[15];    // max: payload + TransportMIC(4)
@@ -530,6 +610,17 @@ typedef struct{
 typedef struct{
     u8 data[1];    // max: payload + TransportMIC:  (1--(380+4)Byte) // can not use to creat a object, just for rx
 }mesh_cmd_ut_seg_t;
+
+typedef struct{
+	union{
+		struct{			
+			u16 range_start:15;	
+			u16 length_present:1;
+			u8 	range_length;
+		};
+		u16 multicast_destination;
+	};
+}addr_range_big_endian_t;
 
 //----------------------------------- lower transport layer
 // max size of segmented or unsegmented message is 16Byte
@@ -776,6 +867,13 @@ extern mesh_rx_seg_par_t mesh_rx_seg_par;
 #define CMD_CTL_SUBS_LIST_REMOVE    (0x08)	//using the friendship security credentials in V1.0
 #define CMD_CTL_SUBS_LIST_CONF      (0x09)	//using the friendship security credentials in V1.0
 #define CMD_CTL_HEARTBEAT			(0x0a)
+#define CMD_CTL_PATH_REQUEST				(0x0b)
+#define CMD_CTL_PATH_REPLY					(0x0c)
+#define CMD_CTL_PATH_CONFIRMATION			(0x0d)
+#define CMD_CTL_PATH_ECHO_REQUEST			(0x0e)
+#define CMD_CTL_PATH_ECHO_REPLY				(0x0f)
+#define CMD_CTL_DEPENDENT_NODE_UPDATE		(0x10)
+#define CMD_CTL_PATH_REQUEST_SOLICITATION	(0x11)
 
 #define CMD_ST_NORMAL_UNSEG         (0xFFF0)
 #define CMD_ST_NORMAL_SEG           (0xFFF1)
@@ -814,7 +912,7 @@ extern mesh_rx_seg_par_t mesh_rx_seg_par;
 #else
 #define FRI_ESTABLISH_WIN_MS        (1000)	// must 1000ms, define by spec
 #endif
-#define FRI_ESTABLISH_PERIOD_MS     (FRI_ESTABLISH_REC_DELAY_MS + lpn_establish_win_ms)
+#define FRI_ESTABLISH_PERIOD_MS     (FRI_ESTABLISH_REC_DELAY_MS + FRI_ESTABLISH_WIN_MS)
 #define FRI_ESTABLISH_OFFER_MS      (1000+100) //FN use only, spec define, don't modify //
 #define FRI_FIRST_CLR_INTERVAL_100MS	(10)
 #define FRI_LPN_WAIT_FN_NW_TRANSMIT_MS	(200)	// 
@@ -827,8 +925,9 @@ extern mesh_rx_seg_par_t mesh_rx_seg_par;
 #define FRI_REQ_TIMEOUT_MS          (2000)  // must larger than 1100ms
 #define FRI_REQ_RETRY_IDLE_MS       (FRI_REQ_TIMEOUT_MS - FRI_ESTABLISH_PERIOD_MS)	// auto trigger next FRI_REQ_RETRY_MAX request interval 
 
-#define LPN_SCAN_PROVISION_START_TIMEOUT_MS   (60*1000)   // from power up to this time, if didn't receive provision start command, LPN will auto enter sleep.
-#define LPN_WORKING_TIMEOUT_MS   	(60*1000) // Prevent abnormal working time.
+#define LPN_SCAN_PROVISION_START_TIMEOUT_MS (60*1000)   // from power up to this time, if didn't receive provision start command, LPN will auto enter sleep.
+#define LPN_WORKING_TIMEOUT_MS   	        (60*1000)   // Prevent abnormal working time.
+#define LPN_START_REQUEST_AFTER_BIND_MS     (3*1000)    // 
 
 #define LPN_ADV_EN                  0
 #define LPN_ADV_INTERVAL_MS         (2000)
@@ -995,6 +1094,49 @@ typedef struct{
     u8 link_ok;
 }mesh_lpn_par_t;
 
+//--------------directed forwarding-------------------//
+typedef struct{
+	u8 prohibited:1;
+	u8 discovery_interval:1;
+	u8 path_lifetime:2;
+	u8 path_metric_type:3;
+	u8 on_behalf_of_dependent_origin:1;	
+	u8 forwarding_number;
+	u8 origin_path_metric;
+	u16 destination;
+	u8 addr_par[6]; // path origin and dependent path origin
+}mesh_ctl_path_req_t;
+
+typedef struct{
+	u8 prohibit:5;
+	u8 confirmation_request:1;
+	u8 on_behalf_of_dependent_target:1;
+	u8 unicast_destination:1;	
+	u16 path_origin;
+	u8 forwarding_number;
+	u8 addr_par[6]; // path target and dependent target
+}mesh_ctl_path_reply_t;
+
+typedef struct{
+	u16 path_origin;
+	u16 path_target;
+}mesh_ctl_path_confirmation_t;
+
+typedef struct{
+	u16 destination;
+}mesh_ctl_path_echo_reply_t;
+
+typedef struct{
+	u8 type:1;
+	u8 prohibited:7;
+	u16 path_endpoint;
+	addr_range_big_endian_t  dependent_addr; 
+}mesh_ctl_dependent_node_update_t;
+
+typedef struct{
+	u16 addr_list[1];
+}mesh_ctl_path_request_solication_t;
+
 //---------------------
 #define ELE_CNT_MAX_LIB     (8)
 typedef struct{
@@ -1080,6 +1222,12 @@ void iv_update_set_with_update_flag_ture(u8 *iv_idx, u32 search_mode);
 int iv_update_key_refresh_rx_handle(mesh_ctl_fri_update_flag_t *p_flag, u8 *iv_idx);
 u32 get_poll_timeout_fn(u16 lpn_adr);
 void mesh_friend_response_delay_proc_fn(u8 lpn_idx);
+mesh_fri_ship_other_t * mesh_fri_cmd2cache(u8 *p_bear_big, u8 len_nw, u8 adv_type, u8 trans_par_val, u16 F2L_bit);
+void mesh_rc_segment_handle_fn(mesh_match_type_t *p_match_type, mesh_cmd_nw_t *p_nw);
+#if FEATURE_FRIEND_EN
+int mesh_cmd_action_need_friend(mesh_match_type_t *p_match_type);
+#endif
+void mesh_rc_segment2friend_cache(mesh_cmd_nw_t *p_nw_rc, u16 F2L_bit);
 
 // key refresh CFG client flow
 enum{
@@ -1108,6 +1256,8 @@ typedef struct{
 	u16 ak_idx;
 	u8 ele_bind_index;
 	u8 model_bind_index;
+	u32 model_id;
+	u8 is_new_model;
 	u16 node_adr;
 	u8 st;
 	u8 next_st_flag;
@@ -1284,6 +1434,7 @@ void keyboard_handle_mesh();
 int mesh_tx_cmd_layer_acccess(u8 *p_ac_hci, u32 len_ac, u16 adr_src, u16 adr_dst, int reliable, mesh_match_type_t *p_match_type);
 void mesh_match_group_mac(mesh_match_type_t *p_match_type, u16 adr_dst, u32 op_ut, int app_tx, u16 adr_src);
 u16 mesh_mac_match_friend(u16 adr);
+u16 mesh_group_match_friend(u16 adr);
 u8 get_tx_nk_arr_idx_friend(u16 adr, u16 op);
 u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, int sig_model, u8 *idx_out, int set_flag);
 u8 find_ele_support_model_and_match_dst(mesh_adr_list_t *adr_list, u16 adr_dst, u32 model_id, int sig_model);
@@ -1372,7 +1523,7 @@ u8  cal_node_identity_by_proxy_sts(u8 proxy_sts);
 int mesh_tx_cmd_reliable(material_tx_cmd_t *p);
 int mesh_tx_cmd(material_tx_cmd_t *p);
 int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *uuid, model_common_t *pub_md);
-void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 retry_cnt, int rsp_max, u8 *uuid, u8 nk_array_idx, u8 ak_array_idx, model_common_t *pub_md);
+void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 retry_cnt, int rsp_max, u8 *uuid, u8 nk_array_idx, u8 ak_array_idx, model_common_t *pub_md, u8 sec_type);
 int mesh_tx_cmd2normal(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, int rsp_max);
 int mesh_tx_cmd2normal_primary(u16 op, u8 *par, u32 par_len, u16 adr_dst, int rsp_max);
 int mesh_tx_cmd2uuid(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, int rsp_max, u8 *uuid);
@@ -1435,6 +1586,9 @@ int mesh_health_cur_sts_publish(u8 idx);
 void mesh_kc_cfgcl_mode_para(u16 apk_idx,u8 *p_appkey);
 void mesh_kc_cfgcl_mode_para_set(u16 apk_idx,u8 *p_appkey,u16 unicast,u16 nk_idx,u8 fast_bind);
 void mesh_fast_prov_start(u16 pid);
+
+int is_busy_tx_segment_flow();
+int is_busy_rx_segment_flow();
 
 
 // mesh and VC common
@@ -1533,6 +1687,7 @@ typedef enum{
 	TL_LOG_NODE_SDK		= 9,
 	TL_LOG_NODE_BASIC   = 10,
 	TL_LOG_REMOTE_PROV  = 11,
+	TL_LOG_DIRECTED_FORWARDING = 12,
 	TL_LOG_CMD_RSP		,
 	TL_LOG_COMMON		,
 	TL_LOG_CMD_NAME		,
@@ -1563,6 +1718,7 @@ typedef enum{
 #define TL_LOG_SEL_VAL  ((BIT(TL_LOG_USER))|(BIT(TL_LOG_NODE_SDK)))//|BIT(TL_LOG_FRIEND)|BIT(TL_LOG_IV_UPDATE)) // |BIT(TL_LOG_NODE_SDK_NW_UT)
 		#else
 #define TL_LOG_SEL_VAL  (BIT(TL_LOG_USER))//(BIT(TL_LOG_NODE_SDK)|BIT(TL_LOG_FRIEND)|BIT(TL_LOG_IV_UPDATE)) // |BIT(TL_LOG_NODE_SDK_NW_UT)
+//	#define TL_LOG_SEL_VAL  ((BIT(TL_LOG_USER))|(BIT(TL_LOG_NODE_SDK))|(BIT(TL_LOG_GATT_PROVISION)))
 		#endif
 	#else
 #define TL_LOG_SEL_VAL  (BIT(TL_LOG_USER)|BIT(TL_LOG_PROVISION)|BIT(TL_LOG_FRIEND)|BIT(TL_LOG_NODE_SDK)|BIT(TL_LOG_NODE_BASIC))
@@ -1573,37 +1729,39 @@ typedef enum{
 #define LOG_GET_MODULE(level_module)            (level_module & 0x1F)
 #define LOG_GET_LEVEL(level_module)             ((level_module >> 5) & 0x07)
 
-#if HCI_LOG_FW_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_USER)
+#define LOG_FW_FUNC_EN      1 // (__LIB_EN__ || HCI_LOG_FW_EN) // if use __LIB_EN__, it will be different between src and release version.
+
+#if (LOG_FW_FUNC_EN && HCI_LOG_FW_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_USER))
 #define LOG_USER_MSG_INFO(pbuf,len,format,...)  tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_USER,TL_LOG_USER),pbuf,len,format,__VA_ARGS__)
 #else
 #define LOG_USER_MSG_INFO(pbuf,len,format,...)
 #endif
 
-#if (TL_LOG_LEVEL >= TL_LOG_LEVEL_LIB)
+#if (LOG_FW_FUNC_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_LIB))
 #define LOG_MSG_LIB(module,pbuf,len,format,...)  tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_LIB,module),pbuf,len,format,__VA_ARGS__)
 #else
 #define LOG_MSG_LIB(module,pbuf,len,format,...) 
 #endif 
 
-#if (TL_LOG_LEVEL >= TL_LOG_LEVEL_ERROR)
+#if (LOG_FW_FUNC_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_ERROR))
 #define LOG_MSG_ERR(module,pbuf,len,format,...)  tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_ERROR,module),pbuf,len,format,__VA_ARGS__)
 #else
 #define LOG_MSG_ERR(module,pbuf,len,format,...) 
 #endif 
 
-#if (TL_LOG_LEVEL >= TL_LOG_LEVEL_WARNING)
+#if (LOG_FW_FUNC_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_WARNING))
 #define LOG_MSG_WARN(module,pbuf,len,format,...) tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_WARNING,module),pbuf,len,format,__VA_ARGS__)
 #else
 #define LOG_MSG_WARN(module,pbuf,len,format,...) 
 #endif 
 
-#if (TL_LOG_LEVEL >= TL_LOG_LEVEL_INFO)
+#if (LOG_FW_FUNC_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_INFO))
 #define LOG_MSG_INFO(module,pbuf,len,format,...) tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_INFO,module),pbuf,len,format,__VA_ARGS__)
 #else
 #define LOG_MSG_INFO(module,pbuf,len,format,...) 
 #endif
 
-#if (TL_LOG_LEVEL >= TL_LOG_LEVEL_DEBUG)
+#if (LOG_FW_FUNC_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_DEBUG))
 #define LOG_MSG_DBG(module,pbuf,len,format,...)	tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_DEBUG,module),pbuf,len,format,__VA_ARGS__)
 #else
 #define LOG_MSG_DBG(module,pbuf,len,format,...) 
@@ -1671,10 +1829,20 @@ void check_mesh_kr_cfgcl_timeout();
 u8 gateway_keybind_rsp_cmd(u8 opcode );
 int mesh_construct_adv_bear_with_bc(u8 *bear, u8 *nw, u8 len_nw);
 int mesh_rsp_sub_status(u8 st, mesh_cfg_model_sub_set_t *p_set, int sig_model, u16 adr_dst);
+void mesh_friend_logmsg(mesh_cmd_bear_unseg_t *p_bear_big, u8 len);
+void friend_subsc_list_add_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr_list_add, u32 cnt);
+void friend_subsc_list_rmv_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr_list_rmv, u32 cnt);
 
 
 static inline u8 mesh_nw_len_get_by_bear (mesh_cmd_bear_unseg_t *p_br){
     return (p_br->len - 1);	// 1 : sizeof(p_br->type)
+}
+
+static inline u8 mesh_lt_len_get_by_bear (mesh_cmd_bear_unseg_t *p_br)
+{
+    mesh_cmd_nw_t *p_nw = &p_br->nw;
+    int len_nw = mesh_nw_len_get_by_bear(p_br);
+    return (len_nw - OFFSETOF(mesh_cmd_nw_t, data)- (p_nw->ctl ? SZMIC_NW64 : SZMIC_NW32));
 }
 
 static inline u8 mesh_bear_len_get (mesh_cmd_bear_unseg_t *p_br){	// exclude trans_par_val

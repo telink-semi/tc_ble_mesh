@@ -801,6 +801,10 @@ u8 dual_mode_proc()
 				// restore
 				REG_ADDR8(0xf04) = val_settle;
 				blc_app_loadCustomizedParameters();
+					#if ADC_ENABLE
+				// rf_drv_init_() modified the regs of adc module, so adc module must be re-initialed.
+				adc_drv_init();
+					#endif
 				static u8 dual_mode_A_1;dual_mode_A_1++;
 				#endif
 			}

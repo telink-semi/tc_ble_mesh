@@ -28,6 +28,10 @@
 #include "../../vendor/mesh_provision/app.h"
 #include "../../vendor/mesh_switch/app.h"
 
+
+#define LONG_PRESS_TRIGGER_MS       (3000)
+#define KEY_SCAN_INTERVAL_MS        (40)
+
 #if LPN_DEBUG_PIN_EN
 void lpn_debug_set_current_pin(u8 level);
 void lpn_debug_set_debug_pin(u8 level);
@@ -84,5 +88,4 @@ extern u8 mesh_lpn_rx_master_key;
 extern u8 send_gatt_adv_now_flag;
 extern u8 fri_request_retry_max;
 extern u8 lpn_deep_retention_en;
-extern u16 lpn_establish_win_ms;
 extern u32 lpn_wakeup_tick;

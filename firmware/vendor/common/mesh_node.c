@@ -26,6 +26,7 @@
 #include "../../vendor/common/fast_provision_model.h"
 #include "../../vendor/common/app_heartbeat.h"
 #include "../../vendor/common/app_health.h"
+#include "../../vendor/common/directed_forwarding.h"
 #include "version.h"
 
 #if (ALI_MD_TIME_EN)
@@ -38,6 +39,10 @@
 #define MESH_CMD_SNO_SAVE_DELTA             (0x80)
 #endif
 
+model_sig_cfg_s_t 		model_sig_cfg_s;  // configuration server model
+#if MD_CFG_CLIENT_EN
+model_client_common_t   model_sig_cfg_c;
+#endif
 /** @addtogroup Mesh_Common
   * @{
   */
@@ -74,6 +79,9 @@ friend_key_t mesh_fri_key_lpn[NET_KEY_MAX][2];
 #else
 friend_key_t mesh_fri_key_fn[MAX_LPN_NUM][2];
 #endif
+#if DIRECTED_FORWARDING_MODULE_EN
+directed_key_t directed_key[NET_KEY_MAX][2];
+#endif
 mesh_tid_t mesh_tid;
 u8 switch_project_flag = 0;
 
@@ -103,6 +111,7 @@ STATIC_ASSERT(sizeof(mesh_app_key_t) % 4 == 0);
 STATIC_ASSERT(ARRAY_SIZE(mesh_key.net_key) == ARRAY_SIZE(mesh_fri_key_lpn));
 STATIC_ASSERT(ARRAY_SIZE(mesh_key.net_key[0]) == ARRAY_SIZE(mesh_fri_key_lpn[0]));
 STATIC_ASSERT(ARRAY_SIZE(mesh_key.net_key[0]) == ARRAY_SIZE(mesh_fri_key_fn[0]));
+STATIC_ASSERT(ARRAY_SIZE(mesh_key.net_key[0]) == ARRAY_SIZE(directed_key[0]));
 STATIC_ASSERT(NET0 == 0);
 STATIC_ASSERT(ELE_CNT <= ELE_CNT_MAX_LIB);  // don't cancle this assert
 STATIC_ASSERT((NET_KEY_MAX <= 255) && (APP_KEY_MAX <= 255));          // only one byte for array index
@@ -169,20 +178,20 @@ STATIC_ASSERT((BUILD_VERSION & 0x00FF0000) != 0x00A50000);  // because ram[84000
 #endif
 #define MD_ID_ARRAY_VENDOR_SERVER       MD_ID_ARRAY_VENDOR_SERVER1  MD_ID_ARRAY_VENDOR2
 
-#if MD_CLIENT_EN
-#define MD_ID_ARRAY_MESH_OTA_CLIENT     SIG_MD_FW_DISTRIBUT_C,
-#else
-#define MD_ID_ARRAY_MESH_OTA_CLIENT  
-#endif
 #if MD_MESH_OTA_EN
     #if DISTRIBUTOR_UPDATE_CLIENT_EN
-#define MD_ID_ARRAY_MESH_OTA_DISTRIBUTE       SIG_MD_FW_DISTRIBUT_S,
+#define MD_ID_ARRAY_MESH_OTA_CLIENT     SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, \
+                                        SIG_MD_FW_UPDATE_C, SIG_MD_BLOB_TRANSFER_C,
     #else
-#define MD_ID_ARRAY_MESH_OTA_DISTRIBUTE       
+#define MD_ID_ARRAY_MESH_OTA_CLIENT  
     #endif
-#define MD_ID_ARRAY_MESH_OTA    SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C,     \
-                                MD_ID_ARRAY_MESH_OTA_DISTRIBUTE  MD_ID_ARRAY_MESH_OTA_CLIENT \
-                                SIG_MD_OBJ_TRANSFER_S, SIG_MD_OBJ_TRANSFER_C,
+    #if 1 // MD_SERVER_EN gateway also need OTA
+#define MD_ID_ARRAY_MESH_OTA_SERVER     SIG_MD_FW_UPDATE_S,SIG_MD_BLOB_TRANSFER_S,
+    #else
+#define MD_ID_ARRAY_MESH_OTA_SERVER       
+    #endif
+#define MD_ID_ARRAY_MESH_OTA    MD_ID_ARRAY_MESH_OTA_SERVER  MD_ID_ARRAY_MESH_OTA_CLIENT
+                                
 #endif
 
 #if MD_SERVER_EN
@@ -1255,6 +1264,18 @@ mesh_net_key_t * is_mesh_net_key_exist(u16 key_idx)
     return 0;
 }
 
+int get_mesh_net_key_offset(u16 key_idx)
+{
+	int offset = -1;
+	foreach(i,NET_KEY_MAX){
+		mesh_net_key_t *p_netkey = &mesh_key.net_key[i][0];
+		if((p_netkey->valid)&&(key_idx == p_netkey->index)){
+			return i;
+		}
+	}
+    return offset;
+}
+
 int is_net_key_save()
 {
 	u32 val = 0;
@@ -1266,6 +1287,7 @@ void net_key_set2(mesh_net_key_t *key, const u8 *nk, u16 key_idx, int save)
 {
 	memcpy(key->key, nk, 16);
 	mesh_sec_get_nid_ek_pk_master(&key->nid_m, key->ek_m, key->pk_m, key->key);
+	mesh_sec_get_nid_ek_pk_directed(&key->nid_d, key->ek_d, key->pk_d, key->key);
 	mesh_sec_get_network_id(key->nw_id, key->key);
 	mesh_sec_get_identity_key (key->idk, key->key);
 	mesh_sec_get_beacon_key (key->bk, key->key);
@@ -1273,7 +1295,7 @@ void net_key_set2(mesh_net_key_t *key, const u8 *nk, u16 key_idx, int save)
 	
 	key->index = key_idx;
 	key->valid = KEY_VALID;
-	key->node_identity = model_sig_cfg_s.node_identity_def;
+	caculate_proxy_adv_hash(key);
 	
 	if(save){
 		mesh_key_save();
@@ -1352,6 +1374,26 @@ void mesh_net_key_add_by_provision(u8 *nk, u16 key_index, u8 key_fresh_flag)
 #endif
 }
 
+void mesh_sec_get_nid_ek_pk_friend(u8 lpn_idx, u8 *nid, u8 *ek, u8 *pk, u8 *nk)
+{
+    //k2(NetKey, 0x01 || LPNAddress || FriendAddress || LPNCounter || FriendCounter) // big endianness
+    mesh_fri_sec_par_t fri_sec_par;
+    fri_sec_par.flag = 1;
+    #if FEATURE_LOWPOWER_EN
+    fri_sec_par.LPNAdr = mesh_lpn_par.LPNAdr;
+    fri_sec_par.FriAdr = mesh_lpn_par.FriAdr;
+    fri_sec_par.LPNCounter = mesh_lpn_par.req.LPNCounter;
+    fri_sec_par.FriCounter = mesh_lpn_par.offer.FriCounter;
+    #elif FEATURE_FRIEND_EN
+    fri_sec_par.LPNAdr = fn_other_par[lpn_idx].LPNAdr;
+    fri_sec_par.FriAdr = fn_other_par[lpn_idx].FriAdr;
+    fri_sec_par.LPNCounter = fn_req[lpn_idx].LPNCounter;
+    fri_sec_par.FriCounter = fn_offer[lpn_idx].FriCounter;
+    #endif
+    endianness_swap_fri_sec_par((u8 *)&fri_sec_par);
+    mesh_sec_func_k2 (nid, ek, pk, nk, &fri_sec_par.flag, 9);
+}
+
 u8 GetNKArrayIdxByPointer(mesh_net_key_t *key)
 {
     u8 nk_arry_idx = (((((u32)key)-((u32)&mesh_key.net_key))/sizeof(mesh_net_key_t))/2)%NET_KEY_MAX;
@@ -1360,7 +1402,10 @@ u8 GetNKArrayIdxByPointer(mesh_net_key_t *key)
 
 void mesh_friend_key_refresh(mesh_net_key_t *new_key)
 {
+#if FEATURE_FRIEND_EN || FEATURE_LOWPOWER_EN
     u8 nk_array_idx = GetNKArrayIdxByPointer(new_key);
+#endif
+
 #if FEATURE_LOWPOWER_EN
     if(is_friend_ship_link_ok_lpn()){
         friend_key_t * p_fri_key = &mesh_fri_key_lpn[nk_array_idx][1];
@@ -1429,7 +1474,9 @@ void mesh_seg_ack_poll_tx()
 
 void mesh_friend_key_RevokingOld(mesh_net_key_t *new_key)
 {
+    #if FEATURE_FRIEND_EN || FEATURE_LOWPOWER_EN
     u8 nk_array_idx = GetNKArrayIdxByPointer(new_key);
+    #endif
     foreach(i,MAX_LPN_NUM){
         #if FEATURE_FRIEND_EN
         if(nk_array_idx == fn_other_par[i].nk_sel_dec_fn)
@@ -2085,7 +2132,7 @@ int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *
 	
 //	LOG_MSG_LIB(TL_LOG_NODE_SDK,par,par_len,"cmd data rsp: adr_src0x%04x,dst adr 0x%04x ",adr_src,adr_dst);
 	
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, 0, uuid, mesh_key.netkey_sel_dec, ak_array_idx, pub_md);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, 0, uuid, mesh_key.netkey_sel_dec, ak_array_idx, pub_md, mesh_key.sec_type_sel);
 	return mesh_tx_cmd_unreliable(&mat);
 }
 
@@ -2095,7 +2142,7 @@ int mesh_tx_cmd_rsp_cfg_model(u16 op, u8 *par, u32 par_len, u16 adr_dst)
         return 0;
     }
 	material_tx_cmd_t mat;
-	set_material_tx_cmd(&mat, op, par, par_len, ele_adr_primary, adr_dst, g_reliable_retry_cnt_def, 0, 0, mesh_key.netkey_sel_dec, -1, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, ele_adr_primary, adr_dst, g_reliable_retry_cnt_def, 0, 0, mesh_key.netkey_sel_dec, -1, 0, mesh_key.sec_type_sel);
 	return mesh_tx_cmd_unreliable(&mat);
 }
 
@@ -2156,7 +2203,7 @@ mesh_md_adr_map_t mesh_md_adr_map[] = {
 	{1, {SIG_MD_G_ONOFF_S, SIG_MD_G_ONOFF_C, SIG_MD_G_LEVEL_S, SIG_MD_G_LEVEL_C, -1, -1}, FLASH_ADR_MD_G_ONOFF_LEVEL},
 	{1, {SIG_MD_TIME_S, SIG_MD_TIME_C, SIG_MD_TIME_SETUP_S, SIG_MD_SCHED_S, SIG_MD_SCHED_C, SIG_MD_SCHED_SETUP_S}, FLASH_ADR_MD_TIME_SCHEDULE},
 	{1, {SIG_MD_SCENE_S, SIG_MD_SCENE_C, SIG_MD_SCENE_SETUP_S, -1, -1, -1}, FLASH_ADR_MD_SCENE},
-    {1, {SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, SIG_MD_OBJ_TRANSFER_S, SIG_MD_OBJ_TRANSFER_C}, FLASH_ADR_MD_MESH_OTA},
+    {1, {SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, SIG_MD_BLOB_TRANSFER_S, SIG_MD_BLOB_TRANSFER_C}, FLASH_ADR_MD_MESH_OTA},
 	{1, {SIG_MD_G_POWER_ONOFF_S, SIG_MD_G_POWER_ONOFF_C, SIG_MD_G_POWER_ONOFF_SETUP_S, SIG_MD_G_DEF_TRANSIT_TIME_S, SIG_MD_G_DEF_TRANSIT_TIME_C, -1}, FLASH_ADR_MD_G_POWER_ONOFF},
 #if MD_REMOTE_PROV
     {1, {SIG_MD_REMOTE_PROV_SERVER, SIG_MD_REMOTE_PROV_CLIENT, -1, -1, -1, -1}, FLASH_ADR_MD_REMOTE_PROV},
@@ -2689,6 +2736,76 @@ void mesh_key_flash_sector_init()
 	flash_erase_sector(FLASH_ADR_MESH_KEY);
 	memset(mesh_key.net_key, 0, sizeof(mesh_key_t)-OFFSETOF(mesh_key_t,net_key));
 }
+#define MAX_SWITCH_IDENTITY_TIME_S 60
+void mesh_key_node_identity_init() // after power on ,we need to detect the flag ,and set timer part 
+{
+	foreach(i,NET_KEY_MAX){
+		mesh_net_key_t *p_in = &mesh_key.net_key[i][0];
+		if(p_in->valid){
+			if(p_in->node_identity == NODE_IDENTITY_SUB_NET_RUN){
+				p_in->start_identity_s = clock_time_s();
+			}
+		}
+	}
+	return ;
+}
+
+void mesh_key_node_identity_set_prov_set()// after gatt provision ,use this fun for setting part 
+{
+	u8 identity_trigger =0;
+	foreach(i,NET_KEY_MAX){
+		mesh_net_key_t *p_in = &mesh_key.net_key[i][0];
+		if(p_in->valid){
+			p_in->start_identity_s = clock_time_s();
+			if(p_in->node_identity != NODE_IDENTITY_SUB_NET_RUN){
+				p_in->node_identity = NODE_IDENTITY_SUB_NET_RUN;
+				identity_trigger++;
+			}
+		}
+	}
+	if(identity_trigger){
+		mesh_key_save();
+	}
+	return ;
+}
+
+/*
+void mesh_key_node_identity_prov_set(u8 identity,u8 netkey_idx)// client send node identity cfg cmd to set 
+{
+	foreach(i,NET_KEY_MAX){
+		mesh_net_key_t *p_in = &mesh_key.net_key[i][0];
+		if(p_in->valid && (p_in->index == netkey_idx)){
+			if(identity == NODE_IDENTITY_SUB_NET_RUN){
+				p_in->start_identity_s = clock_time_s();
+			}
+			if(p_in->node_identity != identity){
+				p_in->node_identity = identity;
+				mesh_key_save();	
+			}	
+			return ;	
+		}
+	}
+	return ;
+}
+*/
+void mesh_switch_identity_proc()// run in loop
+{
+	u8 identity_trigger =0;
+	foreach(i,NET_KEY_MAX){
+		mesh_net_key_t *p_in = &mesh_key.net_key[i][0];
+		if(p_in->valid && p_in->node_identity == NODE_IDENTITY_SUB_NET_RUN){
+			if(clock_time_exceed_s(p_in->start_identity_s,MAX_SWITCH_IDENTITY_TIME_S)){
+				identity_trigger++;
+				p_in->node_identity =0;
+			}
+		}
+	}
+	if(identity_trigger){
+		mesh_key_save();
+	}
+	return ;
+}
+
 
 void mesh_key_save()
 {
@@ -2993,6 +3110,10 @@ int relay_adv_prepare_handler(rf_packet_adv_t * p)  // no random for relay trans
             p_relay->valid = 0;
             if((u8 *)p_relay == my_fifo_get(p_fifo)){
                 my_fifo_pop(p_fifo);
+				#if DF_TEST_MODE_EN
+				extern void cfg_led_event (u32 e);
+				cfg_led_event(LED_EVENT_FLASH_2HZ_2S);
+				#endif
                 #if WIN32
                 LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0, "Relay buffer pop", 0);
                 #endif
@@ -3299,12 +3420,13 @@ void mesh_loop_process()
     // remote prov proc
     mesh_cmd_sig_rp_loop_proc();
     #endif
+	// node identity proc 
+	mesh_switch_identity_proc();
     // provision loop proc
 	mesh_prov_proc_loop();
 	// mesh beacon proc 
 	mesh_beacon_send_proc();
 	// mesh proxy proc 
-	caculate_proxy_adv_hash_task();
 	mesh_proxy_sar_timeout_terminate();
 	// node reset 
 	proc_node_reset();
@@ -3323,7 +3445,9 @@ void mesh_loop_process()
 	mesh_kr_cfgcl_proc();
 	check_mesh_kr_cfgcl_timeout();
 	#endif
-	
+	#if DIRECTED_FORWARDING_MODULE_EN
+	mesh_directed_forwarding_proc(NULL, ADV_FROM_MESH);
+	#endif
 	// mesh proc 
 	#if (!(DEBUG_MESH_DONGLE_IN_VC_EN && (!IS_VC_PROJECT)))
 	mesh_seg_ack_poll();
@@ -3395,6 +3519,7 @@ void mesh_init_all()
 	init_heartbeat_str();
     // read parameters
     mesh_flash_retrieve();	// should be first, get unicast addr from config modle.
+    mesh_key_node_identity_init();// should be after key retrieve .
     provision_random_data_init();
 	mesh_provision_para_init();
 	//unprovision beacon send part 
@@ -3412,6 +3537,7 @@ void mesh_init_all()
 #if TEST_CASE_HBS_BV_05_EN
 	friend_add_special_grp_addr();
 #endif
+
     mesh_init_flag = 0;
 }
 
@@ -3818,7 +3944,15 @@ void mesh_kr_cfgcl_status_update(mesh_rc_rsp_t *rsp)
 			if(MODE_APP_STATUS == op){
 				mesh_kr_cfgcl_retry_init();
 				if(KR_CFGCL_BIND_DEFAULT_APPKEY == p->next_st_flag){
-					key_refresh_cfgcl_proc.model_bind_index++;
+					mesh_app_bind_status_t *p_bind_rsp = (mesh_app_bind_status_t *)(rsp->data+2);
+					
+					int par_len = rsp->len - (OFFSETOF(mesh_rc_rsp_t,data) - OFFSETOF(mesh_rc_rsp_t,src)) - 2;
+					int sig_model = (sizeof(mesh_app_bind_status_t) - 2 == par_len);
+					u32 model_id = sig_model ? (p_bind_rsp->bind.model_id & 0xFFFF) : p_bind_rsp->bind.model_id;
+					if((model_id == p->model_id) && p->is_new_model){
+						p->is_new_model = 0;
+						p->model_bind_index++;
+					}
 				}
 				else{
 					p->st = KR_CFGCL_NORMAL;

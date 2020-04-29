@@ -137,7 +137,13 @@
 #define LEVEL_OFF				(-32768)
 #define LUM_OFF					(0)
 
-#define POWER_MODEL_EN			1
+#if (FEATURE_LOWPOWER_EN)
+#define ONPOWER_UP_SELECT       ONPOWER_UP_DEFAULT
+#elif (LIGHT_TYPE_SEL == TYPE_TOOTH_BRUSH)
+#define ONPOWER_UP_SELECT       ONPOWER_UP_OFF
+#else
+#define ONPOWER_UP_SELECT       ONPOWER_UP_DEFAULT // ONPOWER_UP_STORE // 
+#endif
 
 enum ST_TRANS_TYPE{
 	ST_TRANS_LIGHTNESS  	= 0,	// share with power level
@@ -155,6 +161,9 @@ enum ST_TRANS_TYPE{
     #if (LIGHT_TYPE_CT_EN)
 	ST_TRANS_CTL_D_UV,              // no level model related, assign at the end should be better.
     #endif
+	#if (MI_API_ENABLE)
+	ST_TRANS_MI_VENDOR_STS,
+	#endif
 	ST_TRANS_MAX,
     ST_TRANS_PUB_ONOFF = ST_TRANS_MAX,  // just use for publish,
 };

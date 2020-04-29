@@ -81,7 +81,7 @@ typedef struct{
 }proxy_config_pdu_sr;
 typedef enum{
 	PROXY_FILTER_SET_TYPE =0,
-	PROXY_FILTER_ADDR_ADR,
+	PROXY_FILTER_ADD_ADR,
 	PROXY_FILTER_RM_ADR,
 	PROXY_FILTER_STATUS,
 }proxy_opcode_str;
@@ -123,9 +123,10 @@ extern proxy_config_mag_str proxy_mag;
 extern int is_valid_adv_with_proxy_filter(u16 src);
 extern void proxy_cfg_list_init_upon_connection();
 extern void set_proxy_initial_mode(u8 special_mode);
-extern void caculate_proxy_adv_hash_task();
 extern void set_pair_login_ok(u8 val);
 extern u8 proxy_proc_filter_mesh_cmd(u16 src);
+void caculate_proxy_adv_hash(mesh_net_key_t *p_netkey );
+
 
 #endif 
 

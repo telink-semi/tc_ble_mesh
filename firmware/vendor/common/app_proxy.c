@@ -272,7 +272,7 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 			proxy_sts =1;
 			pair_login_ok = 1;
 			break;
-		case PROXY_FILTER_ADDR_ADR:
+		case PROXY_FILTER_ADD_ADR:
 			// we suppose the num is 2
 			// 18 means nid(1)ttl(1) sno(3) src(2) dst(2) opcode(1) encpryt(8)
 			para_len = len-18;
@@ -326,31 +326,24 @@ int cal_proxy_adv_with_node_identity(u8 random[8],u8 node_key[16],u16 ele_adr,u8
 	return 1;
 }
 
-void caculate_proxy_adv_hash()
+void caculate_proxy_adv_hash(mesh_net_key_t *p_netkey )
 {
 	foreach(i,NET_KEY_MAX){
-		mesh_net_key_t *p_netkey = &mesh_key.net_key[i][0];
-		u8 *p_node_identity_random = &mesh_key.node_identity_hash[i][0];
-		if(p_netkey->valid){
-			cal_proxy_adv_with_node_identity(prov_para.random,p_netkey->idk,ele_adr_primary,p_node_identity_random);
+		mesh_net_key_t *p_netkey_com = &mesh_key.net_key[i][0];
+		// find the netkey idx 
+		if(p_netkey == p_netkey_com && p_netkey->valid){
+			u8 *p_node_hash = &mesh_key.node_identity_hash[i][0];
+			cal_proxy_adv_with_node_identity(prov_para.random,p_netkey->idk,ele_adr_primary,p_node_hash);	
+			return;
 		}
 	}
+	return;
 }
-
-void caculate_proxy_adv_hash_task()
-{
-	static u32 tick_proxy_hash =0;
-	if(clock_time_exceed(tick_proxy_hash,500*1000)){
-		tick_proxy_hash = clock_time();
-		caculate_proxy_adv_hash();
-	}
-}
-
 
 
 u8 set_proxy_adv_pkt(u8 *p ,u8 flags,u8 *pHash,u8 *pRandom,mesh_net_key_t *p_netkey)
 {
-	u8 node_identity_flag = (p_netkey->node_identity == NODE_IDENTITY_SUBNET_SUPPORT_ENABLE);
+	u8 node_identity_flag = (p_netkey->node_identity == NODE_IDENTITY_SUB_NET_RUN);
 	proxy_adv_node_identity * p_proxy ;
 	u8 temp_uuid[2] = SIG_MESH_PROXY_SERVICE;
 	p_proxy = (proxy_adv_node_identity *)p;

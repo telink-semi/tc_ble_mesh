@@ -31,7 +31,7 @@
 
 #define VERSION_GET(low, high)      ((low)|(high << 8))
 
-#define FW_VERSION_TELINK_RELEASE   (VERSION_GET(0x33, 0x31))       // user can't modify
+#define FW_VERSION_TELINK_RELEASE   (VERSION_GET(0x33, 0x32))       // user can't modify
 
 #define PID_UNKNOW              (0x0000)
 // ------ light ------
@@ -106,4 +106,9 @@ format: please refer to spec "4.2.1.1 Composition Data Page 0"
 #endif
 #define MCU_RUN_SRAM_EN                 0   // manual set data address in boot.link.can't read flash by pointer 
 
+#if (MI_SWITCH_LPN_EN || __PROJECT_MESH_LPN__ || __PROJECT_SPIRIT_LPN__ || __PROJECT_MESH_SWITCH__)
+#define MCU_STACK_INIT_EN               (0) // because stack may be in retention RAM HW, and also to decrease time cost of wake up.
+#else
+#define MCU_STACK_INIT_EN               (1)
+#endif
 

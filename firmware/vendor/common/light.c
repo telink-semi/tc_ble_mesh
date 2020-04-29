@@ -241,11 +241,7 @@ void mesh_global_var_init_light_sw()
 			p_trans->present = p_trans->target = get_on_power_up_last(p_save);
 		}
 
-        #if FEATURE_LOWPOWER_EN
-        ONPOWER_UP_VAL(i) = ONPOWER_UP_OFF;
-        #else
-		ONPOWER_UP_VAL(i) = ONPOWER_UP_DEFAULT; // ONPOWER_UP_STORE; // 
-		#endif
+		ONPOWER_UP_VAL(i) = ONPOWER_UP_SELECT;
 		g_def_trans_time_val(i) = PTS_TEST_EN ? 0 : TRANSITION_TIME_DEFAULT_VAL;
 	}
 }

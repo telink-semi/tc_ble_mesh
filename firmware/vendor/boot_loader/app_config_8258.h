@@ -100,22 +100,10 @@ extern "C" {
 #endif
 
 /////////////////// mesh project config /////////////////////////////////
-#if (MESH_RX_TEST || (!MD_DEF_TRANSIT_TIME_EN))
 #define TRANSITION_TIME_DEFAULT_VAL (0)
-#else
-	#if MI_API_ENABLE
-#define TRANSITION_TIME_DEFAULT_VAL	0
-	#else
-#define TRANSITION_TIME_DEFAULT_VAL (GET_TRANSITION_TIME_WITH_STEP(1, TRANSITION_STEP_RES_1S)) // (0x41)  // 0x41: 1 second // 0x00: means no default transition time
-	#endif
-#endif
 
 /////////////////// MODULE /////////////////////////////////
-#if MI_SWITCH_LPN_EN
-#define BLE_REMOTE_PM_ENABLE			1
-#else
 #define BLE_REMOTE_PM_ENABLE			0
-#endif
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
 #define BLE_SIG_MESH_CERTIFY_ENABLE 	0
@@ -124,11 +112,8 @@ extern "C" {
 #define BLT_SOFTWARE_TIMER_ENABLE		0
 #endif
 
-#if MI_SWITCH_LPN_EN
-#define PM_DEEPSLEEP_RETENTION_ENABLE   1
-#else
 #define PM_DEEPSLEEP_RETENTION_ENABLE   0
-#endif
+
 //////////////////////////// KEYSCAN/MIC  GPIO //////////////////////////////////
 #define	MATRIX_ROW_PULL					PM_PIN_PULLDOWN_100K
 #define	MATRIX_COL_PULL					PM_PIN_PULLUP_10K
