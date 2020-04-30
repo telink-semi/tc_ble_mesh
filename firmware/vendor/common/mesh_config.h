@@ -161,7 +161,7 @@ extern "C" {
 #define AIS_ENABLE					1
 #define PROVISION_FLOW_SIMPLE_EN    1
 #define ALI_MD_TIME_EN				0
-#define ALI_NEW_PROTO_EN			1
+#define ALI_NEW_PROTO_EN			0
 #elif(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
 #define SUBSCRIPTION_SHARE_EN		1
 #define VENDOR_ID 					SHA256_BLE_MESH_PID
