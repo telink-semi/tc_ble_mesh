@@ -309,7 +309,7 @@ static SigMeshLib *shareLib = nil;
 - (void)handleResponseMaxCommands {
     NSArray *commands = [NSArray arrayWithArray:_commands];
     for (SDKLibCommand *com in commands) {
-        if (com.responseMaxCount == 0) {
+        if (com.responseMaxCount == 0 || com.responseMaxCount == 0xFF) {
             [self.commands removeObject:com];
         }
     }

@@ -63,6 +63,8 @@
 @property (nonatomic, assign) UInt16 provisionAddress;
 @property (nonatomic, assign) UInt16 productId;
 @property (nonatomic, strong) SigPage0 *page0;
+@property (nonatomic,copy) ScanCallbackOfFastProvisionCallBack scanResponseBlock;
+@property (nonatomic,copy) StartProvisionCallbackOfFastProvisionCallBack startProvisionBlock;
 @property (nonatomic,copy) AddSingleDeviceSuccessOfFastProvisionCallBack singleSuccessBlock;
 @property (nonatomic,copy) ErrorBlock finishBlock;
 @property (nonatomic, strong) NSData *compositionData;
@@ -88,9 +90,11 @@
 /// @param productId  product id of unprovision device, 0xffff means provision all unprovision device, but develop can't use 0xffff in this api.
 /// @param compositionData compositionData of node in this productId.
 /// @param unprovisioned current Connected Node Is Unprovisioned?
+/// @param scanResponseBlock callback when SDK scaned unprovision devcie successful.
+/// @param startProvisionBlock callback when SDK start provision devcie.
 /// @param singleSuccess callback when SDK add single devcie successful.
 /// @param finish callback when fast provision finish, fast provision successful when error is nil.
-- (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productId:(UInt16)productId compositionData:(NSData *)compositionData currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish {
+- (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productId:(UInt16)productId compositionData:(NSData *)compositionData currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned scanResponseCallback:(ScanCallbackOfFastProvisionCallBack)scanResponseBlock startProvisionCallback:(StartProvisionCallbackOfFastProvisionCallBack)startProvisionBlock addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish {
     if (self.fastProvisionStatus != SigFastProvisionStatus_idle) {
         NSString *errstr = [NSString stringWithFormat:@"fastProvisionStatus is %d, needn't call again.",self.fastProvisionStatus];
         TeLogError(@"%@",errstr);
@@ -111,6 +115,8 @@
     [mData appendData:[NSData dataWithBytes:&page0 length:1]];
     [mData appendData:compositionData];
     self.page0 = [[SigPage0 alloc] initWithParameters:mData];
+    self.scanResponseBlock = scanResponseBlock;
+    self.startProvisionBlock = startProvisionBlock;
     self.singleSuccessBlock = singleSuccess;
     self.finishBlock = finish;
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -144,7 +150,7 @@
     self.scanMacAddressList = [NSMutableArray array];
     __weak typeof(self) weakSelf = self;
     [self fastProvisionGetAddressWithProductId:self.productId successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TeLogVerbose(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (((responseMessage.opCode >> 16) & 0xFF) == SigOpCode_VendorID_MeshAddressGetStatus) {
             SigFastProvisionModel *model = [[SigFastProvisionModel alloc] init];
             if (responseMessage.parameters.length >= 8) {
@@ -155,10 +161,13 @@
                 memcpy(&tem, dataByte+6, 2);
                 model.productId = tem;
                 [weakSelf.scanMacAddressList addObject:model];
+                if (weakSelf.scanResponseBlock) {
+                    weakSelf.scanResponseBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], 0, model.productId);
+                }
             }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-//        TeLogVerbose(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//        TeLogDebug(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(checkScanMacAddressList) object:nil];
@@ -170,7 +179,7 @@
     if (self.scanMacAddressList.count) {
         [self setAddress];
     } else {
-        [self getAddressRetry];
+        [self performSelector:@selector(getAddressRetry) withObject:nil afterDelay:0.5];
     }
 }
 
@@ -233,6 +242,9 @@
                 memcpy(&tem, dataByte+6, 2);
                 model.productId = tem;
                 [weakSelf.scanMacAddressList addObject:model];
+                if (weakSelf.scanResponseBlock) {
+                    weakSelf.scanResponseBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], 0, model.productId);
+                }
             }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
@@ -263,6 +275,9 @@
 - (void)setNetworkInfo {
     TeLogInfo(@"\n\n==========fast provision:step5\n\n");
     self.fastProvisionStatus = SigFastProvisionStatus_setNetworkInfo;
+    if (self.startProvisionBlock) {
+        self.startProvisionBlock();
+    }
     __weak typeof(self) weakSelf = self;
     [self fastProvisionSetNetworkInfoWithSuccessCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
 //        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
@@ -366,9 +381,12 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
     self.fastProvisionStatus = SigFastProvisionStatus_idle;
-    if (self.finishBlock) {
-        self.finishBlock(error);
-    }
+    __weak typeof(self) weakSelf = self;
+    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        if (weakSelf.finishBlock) {
+            weakSelf.finishBlock(error);
+        }
+    }];
 }
 
 #pragma mark - command
@@ -502,7 +520,7 @@
     [mData appendData:temData];
     [mData appendData:SigDataSource.share.curAppKey];
     
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:2 responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionDataSet vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:mData];
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:0 responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionDataSet vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:mData];
     model.netkeyA = SigDataSource.share.defaultNetKeyA;
     model.appkeyA = SigDataSource.share.defaultAppKeyA;
     model.ivIndexA = SigDataSource.share.defaultIvIndexA;

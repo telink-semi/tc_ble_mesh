@@ -188,7 +188,7 @@ UInt8 const kStartProvisionAndPublicKeyTimeout = 5;
 UInt8 const kProvisionConfirmationTimeout = 5;
 UInt8 const kProvisionRandomTimeout = 5;
 UInt8 const kSentProvisionEncryptedDataWithMicTimeout = 5;
-UInt8 const kStartMeshConnectTimeout = 5;
+UInt8 const kStartMeshConnectTimeout = 10;
 
 //publish设置的上报周期
 UInt8 const kPublishInterval = 20;

@@ -7,14 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		250663782457BC6300E58315 /* 8258_mesh_for_ota.bin in Resources */ = {isa = PBXBuildFile; fileRef = 250663762457BC6300E58315 /* 8258_mesh_for_ota.bin */; };
-		2506637A2457DD0200E58315 /* 8269_mesh_onlineStatus.bin in Resources */ = {isa = PBXBuildFile; fileRef = 250663792457DD0200E58315 /* 8269_mesh_onlineStatus.bin */; };
 		2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2519E64E24123D870098ABE7 /* 8258_mesh.bin */; };
 		251B2BA2239742270024A48D /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
-		25C07FF72452F1F000796BF9 /* 8258_mesh_0424.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FF52452F1F000796BF9 /* 8258_mesh_0424.bin */; };
-		25C07FF92452F2C500796BF9 /* 8258_mesh_for_ota_V39_0424.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FF82452F2C500796BF9 /* 8258_mesh_for_ota_V39_0424.bin */; };
 		25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FFA24542CF200796BF9 /* 8269_mesh.bin */; };
-		25C07FFD2454410600796BF9 /* 8258_mesh_rp_test.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FFC2454410600796BF9 /* 8258_mesh_rp_test.bin */; };
 		A20C14B72254556700B42909 /* ColorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A20C14B62254556700B42909 /* ColorManager.m */; };
 		A23FE43822CD96760018F090 /* FileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43722CD96760018F090 /* FileChooseVC.m */; };
 		A23FE43F22CDF3230018F090 /* ChooseAndAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43E22CDF3230018F090 /* ChooseAndAddDeviceVC.m */; };
@@ -146,14 +141,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		250663762457BC6300E58315 /* 8258_mesh_for_ota.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh_for_ota.bin; sourceTree = "<group>"; };
-		250663792457DD0200E58315 /* 8269_mesh_onlineStatus.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8269_mesh_onlineStatus.bin; sourceTree = "<group>"; };
 		2519E64E24123D870098ABE7 /* 8258_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh.bin; sourceTree = "<group>"; };
 		25B408392396691A00514CB7 /* TelinkSigMeshLib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = TelinkSigMeshLib.xcodeproj; path = ../../../TelinkSigMeshLib/TelinkSigMeshLib.xcodeproj; sourceTree = "<group>"; };
-		25C07FF52452F1F000796BF9 /* 8258_mesh_0424.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh_0424.bin; sourceTree = "<group>"; };
-		25C07FF82452F2C500796BF9 /* 8258_mesh_for_ota_V39_0424.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh_for_ota_V39_0424.bin; sourceTree = "<group>"; };
 		25C07FFA24542CF200796BF9 /* 8269_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8269_mesh.bin; sourceTree = "<group>"; };
-		25C07FFC2454410600796BF9 /* 8258_mesh_rp_test.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh_rp_test.bin; sourceTree = "<group>"; };
 		A20C14B52254556700B42909 /* ColorManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorManager.h; sourceTree = "<group>"; };
 		A20C14B62254556700B42909 /* ColorManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ColorManager.m; sourceTree = "<group>"; };
 		A23FE43622CD96760018F090 /* FileChooseVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileChooseVC.h; sourceTree = "<group>"; };
@@ -662,12 +652,7 @@
 		A2AB8ECE211004B200D73EB4 /* SDK */ = {
 			isa = PBXGroup;
 			children = (
-				25C07FFC2454410600796BF9 /* 8258_mesh_rp_test.bin */,
 				2519E64E24123D870098ABE7 /* 8258_mesh.bin */,
-				25C07FF52452F1F000796BF9 /* 8258_mesh_0424.bin */,
-				25C07FF82452F2C500796BF9 /* 8258_mesh_for_ota_V39_0424.bin */,
-				250663762457BC6300E58315 /* 8258_mesh_for_ota.bin */,
-				250663792457DD0200E58315 /* 8269_mesh_onlineStatus.bin */,
 				25C07FFA24542CF200796BF9 /* 8269_mesh.bin */,
 				25B408392396691A00514CB7 /* TelinkSigMeshLib.xcodeproj */,
 				A28CA37F2181E4AB005B1DB6 /* IQKeyboardManager-master */,
@@ -943,7 +928,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				A28968A4216EFE9C003A0A72 /* ActionItemCell.xib in Resources */,
-				2506637A2457DD0200E58315 /* 8269_mesh_onlineStatus.bin in Resources */,
 				25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */,
 				A2AB8EA92110046C00D73EB4 /* LaunchScreen.storyboard in Resources */,
 				A2AB8F4F211012BC00D73EB4 /* ModelIDCell.xib in Resources */,
@@ -952,14 +936,10 @@
 				A277EB0C215A338A0001116F /* SchedulerCell.xib in Resources */,
 				A28CA3B22181E4AD005B1DB6 /* IQKeyboardManager.bundle in Resources */,
 				A286421D226FFCAA0053B5E4 /* MeshOTAItemCell.xib in Resources */,
-				25C07FF72452F1F000796BF9 /* 8258_mesh_0424.bin in Resources */,
-				25C07FF92452F2C500796BF9 /* 8258_mesh_for_ota_V39_0424.bin in Resources */,
 				A2944105216DDC2B0046F65A /* DeviceSetting.storyboard in Resources */,
 				A2AC67122176CFDD00D9B3A0 /* AddDeviceItemCell.xib in Resources */,
 				A2AB8F54211012D000D73EB4 /* ChooseModelIDCell.xib in Resources */,
-				25C07FFD2454410600796BF9 /* 8258_mesh_rp_test.bin in Resources */,
 				A277EAFB215A29500001116F /* Setting.storyboard in Resources */,
-				250663782457BC6300E58315 /* 8258_mesh_for_ota.bin in Resources */,
 				A2864221226FFCAA0053B5E4 /* MeshOTAVC.xib in Resources */,
 				A2AB8F59211012E400D73EB4 /* ChooseBinCell.xib in Resources */,
 				A2AB8F632110137400D73EB4 /* ShowTipsView.xib in Resources */,
