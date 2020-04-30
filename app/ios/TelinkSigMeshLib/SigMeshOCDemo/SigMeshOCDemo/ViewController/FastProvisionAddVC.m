@@ -91,7 +91,7 @@
                                     if (successful) {
                                         [weakSelf startFastProvision];
                                     } else {
-                                        NSString *str = @"open fail.";
+                                        NSString *str = @"connect fail.";
                                         TeLogError(@"%@",str);
                                         [weakSelf showTips:str];
                                         [weakSelf userAbled:YES];
@@ -127,7 +127,11 @@
 - (void)startFastProvision {
     UInt16 provisionAddress = SigDataSource.share.provisionAddress;
     __weak typeof(self) weakSelf = self;
-    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:76] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:76] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+        [weakSelf updateScanedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+    } startProvisionCallback:^{
+        [weakSelf updateStartProvision];
+    } addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
         TeLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
         [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
     } finish:^(NSError * _Nullable error) {
@@ -135,6 +139,14 @@
         [weakSelf userAbled:YES];
         weakSelf.isAdding = NO;
     }];
+//    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:76] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+//        TeLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
+//        [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+//    } finish:^(NSError * _Nullable error) {
+//        TeLogInfo(@"error=%@",error);
+//        [weakSelf userAbled:YES];
+//        weakSelf.isAdding = NO;
+//    }];
 }
 
 - (void)userAbled:(BOOL)able{
@@ -153,6 +165,35 @@
     });
 }
 
+- (void)updateScanedDeviceWithDeviceKey:(NSData *)deviceKey macAddress:(NSString *)macAddress address:(UInt16)address pid:(UInt16)pid {
+    AddDeviceModel *model = [[AddDeviceModel alloc] init];
+    SigScanRspModel *scanModel = [[SigScanRspModel alloc] init];
+    scanModel.macAddress = macAddress;
+    model.scanRspModel = scanModel;
+    model.scanRspModel.address = address;
+    model.state = AddDeviceModelStateScaned;
+    if (![self.source containsObject:model]) {
+        [self.source addObject:model];
+    } else {
+        [self.source replaceObjectAtIndex:[self.source indexOfObject:model] withObject:model];
+    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+        [self scrollowToBottom];
+    });
+}
+
+- (void)updateStartProvision {
+    NSArray *array = [NSArray arrayWithArray:self.source];
+    for (AddDeviceModel *model in array) {
+        model.state = AddDeviceModelStateProvisioning;
+    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+        [self scrollowToBottom];
+    });
+}
+
 - (void)updateDeviceSuccessWithDeviceKey:(NSData *)deviceKey macAddress:(NSString *)macAddress address:(UInt16)address pid:(UInt16)pid {
     AddDeviceModel *model = [[AddDeviceModel alloc] init];
     SigScanRspModel *scanModel = [[SigScanRspModel alloc] init];
@@ -162,6 +203,8 @@
     model.state = AddDeviceModelStateBindSuccess;
     if (![self.source containsObject:model]) {
         [self.source addObject:model];
+    } else {
+        [self.source replaceObjectAtIndex:[self.source indexOfObject:model] withObject:model];
     }
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];
@@ -176,23 +219,31 @@
 }
 
 - (IBAction)clickGoBack:(UIButton *)sender {
-    __weak typeof(self) weakSelf = self;
-    SigProvisionerModel *provisioner = SigDataSource.share.curProvisionerModel;
-    [SDKLibCommand setFilterForProvisioner:provisioner successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [weakSelf.navigationController popViewControllerAnimated:YES];
-        });
-    } finishCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        if (error) {
-            TeLogError(@"setFilter fail!!!");
-            //失败后逻辑：断开连接，再返回
-            [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [weakSelf.navigationController popViewControllerAnimated:YES];
-                });
+    if (SigBearer.share.isOpen) {
+            __weak typeof(self) weakSelf = self;
+            SigProvisionerModel *provisioner = SigDataSource.share.curProvisionerModel;
+            [SDKLibCommand setFilterForProvisioner:provisioner successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+        //        dispatch_async(dispatch_get_main_queue(), ^{
+        //            [weakSelf.navigationController popViewControllerAnimated:YES];
+        //        });
+            } finishCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+                if (error) {
+                    TeLogError(@"setFilter fail!!!");
+                    //失败后逻辑：断开连接，再返回
+                    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [weakSelf.navigationController popViewControllerAnimated:YES];
+                        });
+                    }];
+                } else {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [weakSelf.navigationController popViewControllerAnimated:YES];
+                    });
+                }
             }];
-        }
-    }];
+    } else {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
 }
 
 #pragma mark - Life method

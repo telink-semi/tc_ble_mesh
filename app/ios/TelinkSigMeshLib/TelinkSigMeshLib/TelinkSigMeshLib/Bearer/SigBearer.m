@@ -213,7 +213,8 @@
 - (void)openWithResult:(bearerOperationResultCallback)block {
     self.bearerOpenCallback = block;
     __weak typeof(self) weakSelf = self;
-    TeLogDebug(@"start connected.");
+    SigNodeModel *node = [SigDataSource.share getNodeWithUUID:self.peripheral.identifier.UUIDString];
+    TeLogDebug(@"start connected macAddress=%@",node.macAddress);
     [self.ble connectPeripheral:self.peripheral timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
 //        TeLogDebug(@"callback connected peripheral=%@,successful=%d",peripheral,successful);
         if (successful) {

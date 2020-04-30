@@ -70,7 +70,7 @@
         [self showTips:@"app is busy now, try again later."];
     } else {
         TeLogInfo(@"send request for kick out address:%d",self.model.address);
-        _messageHandle = [SDKLibCommand resetNodeWithDestination:self.model.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
+        _messageHandle = [SDKLibCommand resetNodeWithDestination:self.model.address retryCount:0 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
             
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             if (isResponseAll) {
@@ -82,6 +82,10 @@
             [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
             [weakSelf pop];
         }];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(resetNodeTimeout) object:nil];
+            [self performSelector:@selector(resetNodeTimeout) withObject:nil afterDelay:5.0];
+        });
     }
     
 //    if (self.model && [self.model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
@@ -90,6 +94,12 @@
 //        //if node isn't Bluetooth.share.currentPeripheral, delay 5s and pop.
 //        [self performSelector:@selector(pop) withObject:nil afterDelay:TimeOut_KickoutConnectedDelayResponseTime];
 //    }
+}
+
+- (void)resetNodeTimeout {
+    [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
+    [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    [self pop];
 }
 
 - (void)pop{
