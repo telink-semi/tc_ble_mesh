@@ -31,6 +31,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
     private MeshInfo mesh;
     private TextView tv_online_status;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,11 +89,12 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
         findViewById(R.id.iv_copy_net_key).setOnClickListener(this);
         findViewById(R.id.iv_copy_app_key).setOnClickListener(this);
-        findViewById(R.id.iv_edit_net_key).setOnClickListener(this);
-        findViewById(R.id.iv_edit_app_key).setOnClickListener(this);
         findViewById(R.id.btn_reset_mesh).setOnClickListener(this);
 
         findViewById(R.id.iv_tip_remote_prov).setOnClickListener(this);
+
+        findViewById(R.id.tv_select_database).setOnClickListener(this);
+
         et_net_key = findViewById(R.id.et_net_key);
         et_app_key = findViewById(R.id.et_app_key);
         showMeshInfo();
@@ -100,11 +102,10 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         tv_online_status.setText(AppSettings.ONLINE_STATUS_ENABLE ? R.string.online_status_enabled : R.string.online_status_disabled);
     }
 
-    private void showMeshInfo(){
+    private void showMeshInfo() {
         mesh = TelinkMeshApplication.getInstance().getMeshInfo();
         et_net_key.setText(Arrays.bytesToHexString(mesh.networkKey, ""));
         et_app_key.setText(Arrays.bytesToHexString(mesh.appKeyList.get(0).key, ""));
-
     }
 
     @Override
@@ -127,16 +128,16 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                 }
                 break;
 
-            case R.id.iv_edit_net_key:
-                break;
-            case R.id.iv_edit_app_key:
-                break;
 
             case R.id.iv_tip_remote_prov:
                 startActivity(
                         new Intent(this, ShareTipActivity.class)
                                 .putExtra(ShareTipActivity.INTENT_KEY_TIP_RES_ID, R.string.remote_prov_tip)
                 );
+                break;
+
+            case R.id.tv_select_database:
+                startActivity(new Intent(this, OOBInfoActivity.class));
                 break;
 
             case R.id.btn_reset_mesh:
@@ -151,11 +152,10 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                         showMeshInfo();
                     }
                 });
-
-
                 break;
         }
     }
+
 
     private boolean copyTextToClipboard(String text) {
         ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
@@ -166,7 +166,6 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         } else {
             return false;
         }
-
     }
 
 }

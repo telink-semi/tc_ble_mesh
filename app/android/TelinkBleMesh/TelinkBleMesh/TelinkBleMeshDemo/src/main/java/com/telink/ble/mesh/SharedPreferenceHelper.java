@@ -104,4 +104,5 @@ public class SharedPreferenceHelper {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_FAST_PROVISION, enable).apply();
     }
+
 }

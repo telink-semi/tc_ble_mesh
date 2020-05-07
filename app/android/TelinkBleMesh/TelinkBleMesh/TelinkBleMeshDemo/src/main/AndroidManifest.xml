@@ -146,7 +146,7 @@
         <activity
             android:name="com.telink.ble.mesh.ui.qrcode.QRCodeScanActivity"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateAlwaysHidden"/>
+            android:windowSoftInputMode="stateAlwaysHidden" />
 
         <activity
             android:name="com.telink.ble.mesh.ui.file.FileSelectActivity"
@@ -162,6 +162,11 @@
             android:name="com.telink.ble.mesh.ui.CompositionDataActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity
+            android:name="com.telink.ble.mesh.ui.OOBInfoActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity android:name="com.telink.ble.mesh.ui.OOBEditActivity" />
 
     </application>
 

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
 import com.telink.ble.mesh.demo.R;
@@ -44,8 +45,17 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        startMeshService();
         setContentView(R.layout.activity_main);
+        initBottomNav();
+        startMeshService();
+        resetNodeState();
+        TelinkMeshApplication.getInstance().addEventListener(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN, this);
+        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
+        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_EMPTY, this);
+
+    }
+
+    private void initBottomNav() {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
         fm = getSupportFragmentManager();
@@ -56,7 +66,15 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 .add(R.id.fl_container, deviceFragment).add(R.id.fl_container, groupFragment).add(R.id.fl_container, settingFragment)
                 .show(deviceFragment).hide(groupFragment).hide(settingFragment)
                 .commit();
+    }
 
+    private void startMeshService() {
+        MeshService.getInstance().init(this, TelinkMeshApplication.getInstance());
+        MeshConfiguration meshConfiguration = TelinkMeshApplication.getInstance().getMeshInfo().convertToConfiguration();
+        MeshService.getInstance().setupMeshNetwork(meshConfiguration);
+    }
+
+    private void resetNodeState() {
         MeshInfo mesh = TelinkMeshApplication.getInstance().getMeshInfo();
         if (mesh.nodes != null) {
             for (NodeInfo deviceInfo : mesh.nodes) {
@@ -65,18 +83,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 deviceInfo.temp = 0;
             }
         }
-
-        TelinkMeshApplication.getInstance().addEventListener(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN, this);
-        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
-
-        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_EMPTY, this);
-    }
-
-
-    private void startMeshService() {
-        MeshService.getInstance().init(this, TelinkMeshApplication.getInstance());
-        MeshConfiguration meshConfiguration = TelinkMeshApplication.getInstance().getMeshInfo().convertToConfiguration();
-        MeshService.getInstance().setupMeshNetwork(meshConfiguration);
     }
 
     @Override

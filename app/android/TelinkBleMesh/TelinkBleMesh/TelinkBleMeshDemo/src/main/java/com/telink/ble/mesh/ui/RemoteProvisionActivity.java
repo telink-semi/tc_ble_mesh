@@ -184,11 +184,12 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice.device, deviceUUID, address);
 
-        // for static oob test
-        /*provisioningDevice.setAuthValue(new byte[]{
-                0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
-        });*/
+        // check if oob exists
+        byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
+        if (oob != null){
+            provisioningDevice.setAuthValue(oob);
+        }
+
         ProvisioningParameters provisioningParameters = new ProvisioningParameters(provisioningDevice);
         if (MeshService.getInstance().startProvisioning(provisioningParameters)) {
             NodeInfo nodeInfo = new NodeInfo();
@@ -372,6 +373,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             enableUI(true);
             return;
         }
+
         device.setUnicastAddress(address);
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.deviceUUID = device.getUuid();
@@ -385,6 +387,12 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         nodeInfo.state = NodeInfo.STATE_PROVISIONING;
         devices.add(nodeInfo);
         mListAdapter.notifyDataSetChanged();
+
+        // check if oob exists -- remote support
+        byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(device.getUuid());
+        if (oob != null){
+            device.setAuthValue(oob);
+        }
 
         MeshService.getInstance().startRemoteProvisioning(device);
     }

@@ -25,6 +25,7 @@ import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
+import com.telink.ble.mesh.ui.widget.HexFormatTextWatcher;
 import com.telink.ble.mesh.util.Arrays;
 
 import java.text.SimpleDateFormat;
@@ -108,7 +109,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         et_name = findViewById(R.id.et_name);
         ll_name = findViewById(R.id.ll_name);
         et_params = findViewById(R.id.et_params);
-        et_params.addTextChangedListener(new FormatTextWatcher(et_params));
+        et_params.addTextChangedListener(new HexFormatTextWatcher(tv_params_preview));
         et_actions = findViewById(R.id.et_actions);
         et_actions.setOnClickListener(this);
 
@@ -383,37 +384,6 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
             int opcode = notificationMessage.getOpcode();
             logHandler.obtainMessage(MSG_APPEND_LOG, String.format("Unknown status notify opcode:%04X", opcode) + " -- params:" + Arrays.bytesToHexString(notificationMessage.getParams())).sendToTarget();
-        }
-    }
-
-    class FormatTextWatcher implements TextWatcher {
-        EditText editText;
-
-        FormatTextWatcher(EditText editText) {
-            this.editText = editText;
-        }
-
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            dealInput(s.toString());
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-        }
-    }
-
-    private void dealInput(String input) {
-
-        byte[] params = Arrays.hexToBytes(input);
-        if (params != null) {
-            tv_params_preview.setText(Arrays.bytesToHexString(params, " "));
-        } else {
-            tv_params_preview.setText("");
         }
     }
 

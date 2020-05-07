@@ -55,6 +55,10 @@
 
     <string name="enable_fast_provision">Fast Provision</string>
 
+    <string name="oob_database">OOB Database</string>
+
+    <string name="oob_info">UUID: %s\nOOB : %s\n(%s)</string>
+
     <string name="hex_input">0123456789abcdefABCDEF</string>
 
     <string name="number_input">0123456789</string>
@@ -71,6 +75,7 @@
 
     <string name="message_retry_cnt_hint">Max retry count for reliable message</string>
     <string name="message_rsp_max_hint">Expected response count for reliable message</string>
+
 
     <string-array name="group_name">
         <item>Living room</item>
@@ -106,6 +111,17 @@
         3. Some remote devices info will be upload;\n\n
         4. Check and do provision one by one;\n\n
     </string>
+
+    <string name="oob_database_tip">
+        Database file should be formatted as:\n
+        [uuid0] [oob0]\n
+        [uuid1] [oob1]\n
+        [uuid2] [oob2]\n
+        \.\.\.\n\n
+        (uuid and oob array length should be 16)\n
+    </string>
+
+
 
 
     <string name="online_status_enabled">Online Status: ENABLED</string>

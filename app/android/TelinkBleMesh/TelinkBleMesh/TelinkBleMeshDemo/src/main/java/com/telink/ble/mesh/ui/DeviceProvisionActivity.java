@@ -142,6 +142,11 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice.device, deviceUUID, address);
 
+        // check if oob exists
+        byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
+        if (oob != null){
+            provisioningDevice.setAuthValue(oob);
+        }
         // for static oob test
         /*provisioningDevice.setAuthValue(new byte[]{
                 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,

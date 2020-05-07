@@ -23,13 +23,14 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:padding="8dp">
+                android:padding="4dp">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/enable_log" />
+                    android:text="@string/enable_log"
+                    android:textSize="12sp" />
 
                 <Switch
                     android:id="@+id/switch_log"
@@ -49,13 +50,14 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:padding="8dp">
+                android:padding="4dp">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/private_mode" />
+                    android:text="@string/private_mode"
+                    android:textSize="12sp" />
 
                 <Switch
                     android:id="@+id/switch_private_mode"
@@ -75,19 +77,20 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:padding="8dp">
+                android:padding="4dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/enable_remote_provision" />
+                    android:text="@string/enable_remote_provision"
+                    android:textSize="12sp" />
 
                 <ImageView
                     android:id="@+id/iv_tip_remote_prov"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="8dp"
+                    android:padding="4dp"
                     android:src="@drawable/ic_tip"
                     android:tint="@color/grey" />
 
@@ -114,19 +117,20 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:padding="8dp">
+                android:padding="4dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/enable_fast_provision" />
+                    android:text="@string/enable_fast_provision"
+                    android:textSize="12sp" />
 
                 <ImageView
                     android:id="@+id/iv_tip_fast_prov"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="8dp"
+                    android:padding="4dp"
                     android:src="@drawable/ic_tip"
                     android:tint="@color/grey" />
 
@@ -170,16 +174,6 @@
                     android:src="@drawable/ic_copy"
                     android:tint="@color/grey" />
 
-                <ImageView
-                    android:id="@+id/iv_edit_net_key"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="8dp"
-                    android:src="@drawable/ic_edit"
-                    android:tint="@color/grey"
-                    android:visibility="gone" />
-
             </LinearLayout>
 
             <EditText
@@ -188,8 +182,8 @@
                 android:layout_height="wrap_content"
                 android:digits="@string/hex_input"
                 android:enabled="false"
-                android:padding="8dp"
-                android:textSize="14dp"
+                android:padding="2dp"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
             <View
@@ -221,16 +215,6 @@
                     android:src="@drawable/ic_copy"
                     android:tint="@color/grey" />
 
-                <ImageView
-                    android:id="@+id/iv_edit_app_key"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="8dp"
-                    android:src="@drawable/ic_edit"
-                    android:tint="@color/grey"
-                    android:visibility="gone" />
-
             </LinearLayout>
 
 
@@ -240,11 +224,37 @@
                 android:layout_height="wrap_content"
                 android:digits="@string/hex_input"
                 android:enabled="false"
-                android:padding="8dp"
-                android:textSize="14dp"
+                android:padding="2dp"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
 
+            <!-- static oob database -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_margin="4dp"
+                android:background="@color/gray" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="4dp">
+
+                <TextView
+                    android:id="@+id/tv_select_database"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableRight="@drawable/ic_arrow_right"
+                    android:drawableTint="@color/grey"
+                    android:text="@string/oob_database"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+
+            <!-- online status -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
@@ -264,6 +274,12 @@
                     android:text="Online-Status: "
                     android:textSize="12sp" />
             </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_margin="4dp"
+                android:background="@color/gray" />
 
             <Button
                 android:id="@+id/btn_reset_mesh"

@@ -82,6 +82,8 @@ public class MeshInfo implements Serializable, Cloneable {
 
     public List<GroupInfo> groups = new ArrayList<>();
 
+    public List<OOBPair> oobPairs = new ArrayList<>();
+
     public int getDefaultAppKeyIndex() {
         if (appKeyList.size() == 0) {
             return 0;
@@ -233,6 +235,18 @@ public class MeshInfo implements Serializable, Cloneable {
             return -1;
         }
         return id + 1;
+    }
+
+    /**
+     * get oob
+     */
+    public byte[] getOOBByDeviceUUID(byte[] deviceUUID) {
+        for (OOBPair pair : oobPairs) {
+            if (Arrays.equals(pair.deviceUUID, deviceUUID)) {
+                return pair.oob;
+            }
+        }
+        return null;
     }
 
 

@@ -81,12 +81,11 @@ public class FileSelectActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_select);
         initTitle();
-        initView();
-
         Intent intent = getIntent();
         if (intent.hasExtra(KEY_SUFFIX)) {
             fileSuffix = intent.getStringExtra(KEY_SUFFIX);
         }
+        initView();
         getCacheDirPath();
         update();
     }
