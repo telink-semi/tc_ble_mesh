@@ -35,6 +35,7 @@
 @property (weak, nonatomic) IBOutlet UILabel *detailLabel;
 @property (weak, nonatomic) IBOutlet UIButton *kickOutButton;
 @property (weak, nonatomic) IBOutlet UIButton *keindyButton;
+@property (nonatomic, strong) SigMessageHandle *messageHandle;
 @end
 
 @implementation ReKeyBindViewController
@@ -133,9 +134,9 @@
 - (void)kickoutAction{
     TeLogDebug(@"send kickout.");
     __weak typeof(self) weakSelf = self;
-    [DemoCommand kickoutDevice:self.model.address retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
-
-    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+    _messageHandle = [SDKLibCommand resetNodeWithDestination:self.model.address retryCount:0 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
+        
+    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         if (isResponseAll) {
             TeLogDebug(@"kickout success.");
         } else {
@@ -145,13 +146,23 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
         [weakSelf pop];
     }];
-    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(resetNodeTimeout) object:nil];
+        [self performSelector:@selector(resetNodeTimeout) withObject:nil afterDelay:5.0];
+    });
+
 //    if (self.model && [self.model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
 //        //if node is Bluetooth.share.currentPeripheral, wait node didDisconnectPeripheral, delay 1.5s and pop.
 //    } else {
 //        //if node isn't Bluetooth.share.currentPeripheral, delay 5s and pop.
 //        [self performSelector:@selector(pop) withObject:nil afterDelay:TimeOut_KickoutConnectedDelayResponseTime];
 //    }
+}
+
+- (void)resetNodeTimeout {
+    [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
+    [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    [self pop];
 }
 
 - (void)pop{
@@ -211,6 +222,9 @@
 - (void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    if (_messageHandle) {
+        [_messageHandle cancel];
+    }
 }
 
 -(void)dealloc{

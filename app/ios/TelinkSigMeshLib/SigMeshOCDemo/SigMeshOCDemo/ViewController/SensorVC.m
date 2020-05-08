@@ -57,7 +57,8 @@
 }
 
 - (IBAction)clickGetSensorStatus:(UIButton *)sender {
-    NSString *str = @"a3 ff 00 00 00 00 00 00 02 00 e0 11 02 e1 02 00 00";
+//    NSString *str = @"a3 ff 00 00 00 00 00 00 02 00 e0 11 02 e1 02 00 00";
+    NSString *str = @"a3 ff 00 00 00 00 00 00 02 00 82 01";
     NSString *string = [str.uppercaseString removeAllSapceAndNewlines];
     NSData *data = [LibTools nsstringToHex:string];
     

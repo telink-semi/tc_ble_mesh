@@ -31,6 +31,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef void(^ScanCallbackOfFastProvisionCallBack)(NSData *deviceKey,NSString *macAddress,UInt16 address,UInt16 pid);
+typedef void(^StartProvisionCallbackOfFastProvisionCallBack)(void);
 typedef void(^AddSingleDeviceSuccessOfFastProvisionCallBack)(NSData *deviceKey,NSString *macAddress,UInt16 address,UInt16 pid);
 
 @interface SigFastProvisionAddManager : NSObject
@@ -48,9 +50,11 @@ typedef void(^AddSingleDeviceSuccessOfFastProvisionCallBack)(NSData *deviceKey,N
 /// @param productId  product id of unprovision device, 0xffff means provision all unprovision device, but develop can't use 0xffff in this api.
 /// @param compositionData compositionData of node in this productId.
 /// @param unprovisioned current Connected Node Is Unprovisioned?
+/// @param scanResponseBlock callback when SDK scaned unprovision devcie successful.
+/// @param startProvisionBlock callback when SDK start provision devcie.
 /// @param singleSuccess callback when SDK add single devcie successful.
 /// @param finish callback when fast provision finish, fast provision successful when error is nil.
-- (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productId:(UInt16)productId compositionData:(NSData *)compositionData currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish;
+- (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productId:(UInt16)productId compositionData:(NSData *)compositionData currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned scanResponseCallback:(ScanCallbackOfFastProvisionCallBack)scanResponseBlock startProvisionCallback:(StartProvisionCallbackOfFastProvisionCallBack)startProvisionBlock addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish;
 
 #pragma mark - command
 

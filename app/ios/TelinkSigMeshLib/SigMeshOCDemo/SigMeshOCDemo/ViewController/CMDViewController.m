@@ -51,16 +51,16 @@
             self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c2 11 02 c4 02 01 00";
             break;
         case 2:
-            self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c2 11 02 c4 02 00 00";
+            self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c2 11 02 c4 02 00 01";
             break;
         case 3:
-            self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c1 11 02 c4 00";
+            self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c1 11 02 c4 02";
             break;
         case 4:
-            self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c3 11 02 00 02 01 00";
+            self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c3 11 02 00 02 01 03";
             break;
         case 5:
-            self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c3 11 02 00 02 00 00";
+            self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c3 11 02 00 02 00 04";
             break;
         case 6:
             self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff 82 02 01 00";

@@ -27,7 +27,7 @@
 #define SIMU_BAUD_1M        1000000
 
 #define BAUD_USE    SIMU_BAUD_1M
-#define SIMU_UART_IRQ_EN    1
+#define SIMU_UART_IRQ_EN    (1&&!blcOta.ota_start_flag)
 
 
 extern  void uart_simu_send_bytes(u8 *p,int len);

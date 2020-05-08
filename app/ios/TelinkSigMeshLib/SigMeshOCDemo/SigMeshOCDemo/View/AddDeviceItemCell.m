@@ -51,6 +51,9 @@
         case AddDeviceModelStateBinding:
             _stateLabel.text = @"BINDING";
             break;
+        case AddDeviceModelStateProvisionFail:
+            _stateLabel.text = @"Provision Fail";
+            break;
         case AddDeviceModelStateBindSuccess:
             _stateLabel.text = @"BOUND";
             break;

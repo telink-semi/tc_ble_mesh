@@ -29,7 +29,11 @@
 
 #include "tl_common.h"
 #if (BLT_SOFTWARE_TIMER_ENABLE && (MCU_CORE_TYPE != MCU_CORE_8269))
+#if(MCU_CORE_TYPE == MCU_CORE_8258)
 #include "stack/ble/ble.h"
+#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+#include "stack/ble_8278/ble.h"
+#endif
 #include "blt_soft_timer.h"
 
 _attribute_data_retention_	blt_soft_timer_t	blt_timer;

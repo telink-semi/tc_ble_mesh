@@ -165,7 +165,12 @@
 }
 
 - (IBAction)clickGoBack:(UIButton *)sender {
-    [self.navigationController popViewControllerAnimated:YES];
+    __weak typeof(self) weakSelf = self;
+    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.navigationController popViewControllerAnimated:YES];
+        });
+    }];
 }
 
 #pragma mark - Life method

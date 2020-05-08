@@ -20,6 +20,8 @@
  *           
  *******************************************************************************************************/
 #include "../../proj/tl_common.h"  
+#include "proj_lib/ble/service/ble_ll_ota.h"
+
 #if PRINT_DEBUG_INFO
 
 #include "myprintf.h"
@@ -113,13 +115,14 @@ _attribute_ram_code_ static void uart_put_char(u8 byte){
 
 	/*! Minimize the time for interrupts to close and ensure timely 
 	    response after interrupts occur. */
-#if SIMU_UART_IRQ_EN
-	u8 r = irq_disable();
-#endif
+	u8 r = 0;
+	if(SIMU_UART_IRQ_EN){
+		r = irq_disable();
+	}
 	uart_do_put_char(pcTxReg, bit);
-#if SIMU_UART_IRQ_EN
-	irq_restore(r);
-#endif
+	if(SIMU_UART_IRQ_EN){
+		irq_restore(r);
+	}
 }
 
 /**
