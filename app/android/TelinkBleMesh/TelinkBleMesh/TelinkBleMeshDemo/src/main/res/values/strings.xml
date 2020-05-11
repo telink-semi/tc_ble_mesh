@@ -76,6 +76,7 @@
     <string name="message_retry_cnt_hint">Max retry count for reliable message</string>
     <string name="message_rsp_max_hint">Expected response count for reliable message</string>
 
+    <string name="message_location_disabled_warning">No bluetooth device found, enable location and retry?</string>
 
     <string-array name="group_name">
         <item>Living room</item>

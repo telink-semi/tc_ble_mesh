@@ -4,12 +4,20 @@ import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.telink.ble.mesh.SharedPreferenceHelper;
+import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.foundation.Event;
+import com.telink.ble.mesh.foundation.EventListener;
+import com.telink.ble.mesh.foundation.MeshController;
+import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.foundation.event.ScanEvent;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import androidx.appcompat.app.AlertDialog;
@@ -20,13 +28,15 @@ import androidx.appcompat.widget.Toolbar;
 /**
  * Created by Administrator on 2017/2/21.
  */
-public class BaseActivity extends AppCompatActivity {
+public class BaseActivity extends AppCompatActivity implements EventListener<String> {
 
     private AlertDialog.Builder confirmDialogBuilder;
     protected Toast toast;
     protected final String TAG = getClass().getSimpleName();
     private AlertDialog mWaitingDialog;
     private TextView waitingTip;
+
+    private AlertDialog locationWarningDialog;
 
 
     @Override
@@ -35,6 +45,7 @@ public class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         MeshLogger.w(TAG + " onCreate");
         this.toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
+        TelinkMeshApplication.getInstance().addEventListener(ScanEvent.EVENT_TYPE_SCAN_LOCATION_WARNING, this);
     }
 
     protected boolean validateNormalStart(Bundle savedInstanceState) {
@@ -52,7 +63,7 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
+        TelinkMeshApplication.getInstance().removeEventListener(ScanEvent.EVENT_TYPE_SCAN_LOCATION_WARNING, this);
         MeshLogger.w(TAG + " onDestroy");
         this.toast.cancel();
         this.toast = null;
@@ -99,6 +110,39 @@ public class BaseActivity extends AppCompatActivity {
         confirmDialogBuilder.show();
     }
 
+    public void showLocationDialog() {
+        if (locationWarningDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setCancelable(true);
+            builder.setTitle("Warning");
+            builder.setMessage(R.string.message_location_disabled_warning);
+            builder.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivityForResult(enableLocationIntent, 1);
+                }
+            });
+            builder.setNegativeButton("Ignore", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            builder.setNeutralButton("Never Mind", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    SharedPreferenceHelper.setLocationIgnore(BaseActivity.this, true);
+                    dialog.dismiss();
+                }
+            });
+            locationWarningDialog = builder.create();
+            locationWarningDialog.show();
+        } else if (!locationWarningDialog.isShowing()) {
+            locationWarningDialog.show();
+        }
+    }
+
 
     public void showWaitingDialog(String tip) {
         if (mWaitingDialog == null) {
@@ -140,5 +184,27 @@ public class BaseActivity extends AppCompatActivity {
             toolbar.setNavigationIcon(null);
         }
 
+    }
+
+    @Override
+    public void performed(Event<String> event) {
+        if (event.getType().equals(ScanEvent.EVENT_TYPE_SCAN_LOCATION_WARNING)) {
+            if (!SharedPreferenceHelper.isLocationIgnore(this)) {
+                boolean showDialog;
+                if (this instanceof MainActivity) {
+                    showDialog = MeshService.getInstance().getCurrentMode() == MeshController.Mode.MODE_AUTO_CONNECT;
+                } else {
+                    showDialog = true;
+                }
+                if (showDialog) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showLocationDialog();
+                        }
+                    });
+                }
+            }
+        }
     }
 }

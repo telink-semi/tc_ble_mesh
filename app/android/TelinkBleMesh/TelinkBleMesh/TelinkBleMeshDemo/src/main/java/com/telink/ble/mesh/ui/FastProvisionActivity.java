@@ -149,6 +149,7 @@ public class FastProvisionActivity extends BaseActivity implements View.OnClickL
 
     @Override
     public void performed(final Event<String> event) {
+        super.performed(event);
         String eventType = event.getType();
 
         if (eventType.equals(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET)) {

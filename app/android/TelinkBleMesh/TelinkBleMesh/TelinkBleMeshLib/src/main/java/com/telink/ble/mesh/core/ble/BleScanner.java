@@ -47,6 +47,12 @@ public class BleScanner {
 
     private long mLastScanStartTime = 0;
 
+    /**
+     * check is any device found by scanning
+     * if false && location not enable, show
+     */
+    private boolean anyDeviceFound = false;
+
     private BleScanner() {
     }
 
@@ -85,6 +91,7 @@ public class BleScanner {
 
             @Override
             public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+                anyDeviceFound = true;
                 if (mLeScanFilter != null) {
                     final LeScanFilter filter = mLeScanFilter;
                     if (filter.macExclude != null && filter.macExclude.length != 0) {
@@ -136,6 +143,7 @@ public class BleScanner {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
                 super.onScanResult(callbackType, result);
+                anyDeviceFound = true;
                 BluetoothDevice device = result.getDevice();
                 byte[] scanRecord = result.getScanRecord().getBytes();
                 int rssi = result.getRssi();
@@ -207,6 +215,7 @@ public class BleScanner {
         if (isScanning) {
             stopScan();
         }
+        anyDeviceFound = false;
         isScanning = true;
         this.mLeScanFilter = leScanFilter;
         if (leScanSetting == null) {
@@ -242,7 +251,7 @@ public class BleScanner {
         public void run() {
             stopScan();
             if (mScannerCallback != null) {
-                mScannerCallback.onScanTimeout();
+                mScannerCallback.onScanTimeout(anyDeviceFound);
             }
         }
     };
@@ -409,6 +418,6 @@ public class BleScanner {
 
         void onStoppedScan();
 
-        void onScanTimeout();
+        void onScanTimeout(boolean anyDeviceFound);
     }
 }

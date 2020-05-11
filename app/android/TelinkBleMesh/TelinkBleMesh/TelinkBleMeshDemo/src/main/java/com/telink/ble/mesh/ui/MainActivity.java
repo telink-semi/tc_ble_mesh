@@ -112,6 +112,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
     @Override
     public void performed(Event<String> event) {
+        super.performed(event);
         if (event.getType().equals(MeshEvent.EVENT_TYPE_MESH_EMPTY)) {
             MeshLogger.log(TAG + "#EVENT_TYPE_MESH_EMPTY");
         } else if (event.getType().equals(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN)) {

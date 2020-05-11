@@ -147,9 +147,14 @@ public class NetworkingController {
     private static final int SEQ_AUTH_BUF_CAPACITY = 10;
 
     /**
-     *
+     * segment completed auth buffer
      */
     private SparseLongArray completedSeqAuthBuffer = new SparseLongArray();
+
+    /**
+     * segment busy auth buffer
+     */
+    private SparseLongArray busySeqAuthBuffer = new SparseLongArray();
 
     /**
      * sent segmented message buffer
@@ -285,15 +290,25 @@ public class NetworkingController {
     private synchronized void saveCompletedSeqAuth(int src, long seqAuth) {
         log(String.format(Locale.getDefault(), "save complete seqAuth src: 0x%04X -- seqAuth: 0x%014X", src, seqAuth));
         this.completedSeqAuthBuffer.put(src, seqAuth);
-        if (this.completedSeqAuthBuffer.size() > SEQ_AUTH_BUF_CAPACITY) {
+        /*if (this.completedSeqAuthBuffer.size() > SEQ_AUTH_BUF_CAPACITY) {
             log("remove buffer");
             this.completedSeqAuthBuffer.removeAt(SEQ_AUTH_BUF_CAPACITY);
-        }
+        }*/
     }
 
-    private boolean isSeqAuthExists(int src, long seqAuth) {
+    private boolean isCompleteAuthExists(int src, long seqAuth) {
         return this.completedSeqAuthBuffer.get(src, 0) == seqAuth;
     }
+
+    private synchronized void saveBusySeqAuth(int src, long seqAuth) {
+        log(String.format(Locale.getDefault(), "save busy seqAuth src: 0x%04X -- seqAuth: 0x%014X", src, seqAuth));
+        this.busySeqAuthBuffer.put(src, seqAuth);
+    }
+
+    private boolean isBusyAuthExists(int src, long seqAuth) {
+        return this.busySeqAuthBuffer.get(src, 0) == seqAuth;
+    }
+
 
     /**
      * when gatt disconnected, remove all timer, reset all busy state, clear buffers
@@ -1187,12 +1202,17 @@ public class NetworkingController {
         mDelayHandler.removeCallbacks(mAccessSegCheckTask);
         long timeout = immediate ? 0 : getSegmentedTimeout(ttl, false);
         mAccessSegCheckTask.src = src;
+        mAccessSegCheckTask.ttl = ttl;
         log("check segment block: immediate-" + immediate + " ttl-" + ttl + " src-" + src + " timeout-" + timeout);
         mDelayHandler.postDelayed(mAccessSegCheckTask, timeout);
     }
 
+    private void stopSegmentBlockAckTask() {
+        mDelayHandler.removeCallbacks(mAccessSegCheckTask);
+    }
 
-    private void sendSegmentBlockAck(int src) {
+
+    private void sendSegmentBlockAck(int src, int ttl) {
         log("send segment block ack:" + src);
         final SparseArray<SegmentedAccessMessagePDU> messages = receivedSegmentedMessageBuffer.clone();
         if (messages.size() > 0) {
@@ -1200,10 +1220,14 @@ public class NetworkingController {
             int seqZero = -1;
             int blockAck = 0;
             int segO;
+            int segN = -1;
             SegmentedAccessMessagePDU message;
             for (int i = 0; i < messages.size(); i++) {
                 segO = messages.keyAt(i);
                 message = messages.get(segO);
+                if (segN == -1) {
+                    segN = message.getSegN();
+                }
                 if (seqZero == -1) {
                     seqZero = message.getSeqZero();
                 }
@@ -1212,14 +1236,22 @@ public class NetworkingController {
 
             SegmentAcknowledgmentMessage segmentAckMessage = new SegmentAcknowledgmentMessage(seqZero, blockAck);
             sendSegmentAckMessage(segmentAckMessage, src);
+
+            boolean complete = messages.size() == (segN + 1);
+            if (!complete) {
+                mDelayHandler.removeCallbacks(mAccessSegCheckTask);
+                long timeout = getSegmentedTimeout(ttl, false);
+                mDelayHandler.postDelayed(mAccessSegCheckTask, timeout);
+            }
         }
     }
 
     /**
      * send segment busy
      */
-    private void sendSegmentBlockBusyAck(int src, int seqZero) {
+    private void sendSegmentBlockBusyAck(int src, int seqZero, long seqAuth) {
         log("send segment block busy ack:" + src);
+        saveBusySeqAuth(src, seqAuth);
         SegmentAcknowledgmentMessage segmentAckMessage = new SegmentAcknowledgmentMessage(seqZero, 0);
         sendSegmentAckMessage(segmentAckMessage, src);
     }
@@ -1247,6 +1279,7 @@ public class NetworkingController {
     private Runnable segmentTimeoutTask = new Runnable() {
         @Override
         public void run() {
+            stopSegmentBlockAckTask();
             log(String.format(Locale.getDefault(), "segment timeout : lastSeqAuth: 0x%014X -- src: %02d",
                     lastSeqAuth,
                     lastSegSrc));
@@ -1263,6 +1296,15 @@ public class NetworkingController {
 
     private void stopSegmentTimeoutTask() {
         mDelayHandler.removeCallbacks(segmentTimeoutTask);
+    }
+
+    private void sendSegmentCompleteBlockAck(int src, int segN, int seqZero) {
+        int blockAck = 0;
+        for (int i = 0; i < segN + 1; i++) {
+            blockAck |= (1 << i);
+        }
+        SegmentAcknowledgmentMessage segmentAckMessage = new SegmentAcknowledgmentMessage(seqZero, blockAck);
+        sendSegmentAckMessage(segmentAckMessage, src);
     }
 
     /**
@@ -1302,8 +1344,20 @@ public class NetworkingController {
                 lastSeqAuth,
                 segO,
                 segN));
-        AccessLayerPDU accessPDU = null;
 
+        if (isBusyAuthExists(src, seqAuth)) {
+            log("busy auth exists");
+            sendSegmentBlockBusyAck(src, seqZero, seqAuth);
+            return null;
+        }
+
+        if (isCompleteAuthExists(src, seqAuth)) {
+            log("complete auth exists");
+            sendSegmentCompleteBlockAck(src, segN, seqZero);
+            return null;
+        }
+
+        AccessLayerPDU accessPDU = null;
         if (seqAuth != lastSeqAuth || lastSegSrc != src) {
             if (lastSegComplete) {
                 log("last segment complete");
@@ -1317,13 +1371,13 @@ public class NetworkingController {
                 receivedSegmentedMessageBuffer.put(segO, message);
                 checkSegmentBlock(false, ttl, src);
             } else {
-                sendSegmentBlockBusyAck(src, seqZero);
+                sendSegmentBlockBusyAck(src, seqZero, seqAuth);
             }
         } else {
             receivedSegmentedMessageBuffer.put(segO, message);
 
             int messageCnt = receivedSegmentedMessageBuffer.size();
-            log("Received segment message count: " + messageCnt);
+            log("received segment message count: " + messageCnt);
 
             if (messageCnt != segN + 1) {
                 lastSeqAuth = seqAuth;
@@ -1331,7 +1385,7 @@ public class NetworkingController {
             } else {
                 lastSegComplete = true;
                 checkSegmentBlock(true, ttl, src);
-                if (isSeqAuthExists(src, seqAuth)) {
+                if (isCompleteAuthExists(src, seqAuth)) {
                     log(" seqAuth already received: " + seqAuth);
                     lastSeqAuth = 0;
                     return null;
@@ -1362,30 +1416,6 @@ public class NetworkingController {
                 }
             }
         }
-
-
-        /*if (lastSeqAuth == 0) {
-            // new segment message
-            lastSeqAuth = seqAuth;
-            receivedSegmentedMessageBuffer.clear();
-            receivedSegmentedMessageBuffer.put(segO, message);
-            checkSegmentBlock(false, ttl, src);
-
-        } else {
-
-
-
-
-
-            if (lastSeqAuth != seqAuth) {
-                // send segment busy
-                sendSegmentBlockBusyAck(src, seqZero);
-            } else {
-
-            }
-        }*/
-
-
         return accessPDU;
     }
 
@@ -1502,10 +1532,11 @@ public class NetworkingController {
 
     private class SegmentAckMessageSentTask implements Runnable {
         private int src;
+        private int ttl;
 
         @Override
         public void run() {
-            sendSegmentBlockAck(src);
+            sendSegmentBlockAck(src, ttl);
         }
     }
 

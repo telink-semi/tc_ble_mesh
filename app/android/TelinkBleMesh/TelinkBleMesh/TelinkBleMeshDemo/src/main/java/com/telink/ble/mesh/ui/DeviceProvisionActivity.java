@@ -198,6 +198,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
     @Override
     public void performed(final Event<String> event) {
+        super.performed(event);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

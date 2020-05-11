@@ -65,6 +65,7 @@ import com.telink.ble.mesh.foundation.parameter.Parameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
 import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.ContextUtil;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.Iterator;
@@ -246,6 +247,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             handlerThread.quitSafely();
             handlerThread = null;
         }
+    }
+
+    Mode getMode() {
+        return actionMode;
     }
 
 
@@ -652,7 +657,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         log("send mesh message: " + meshMessage.getClass().getSimpleName()
                 + String.format(" opcode: 0x%04X -- dst: 0x%04X", meshMessage.getOpcode(), meshMessage.getDestinationAddress())
                 + " isReliable: " + meshMessage.isReliable()
-                + " retryCnt: " + meshMessage.getRetryCnt());
+                + " retryCnt: " + meshMessage.getRetryCnt()
+                + " rspMax: " + meshMessage.getResponseMax());
         return mNetworkingController.sendMeshMessage(meshMessage);
     }
 
@@ -1039,7 +1045,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         onEventPrepared(scanEvent);
     }
 
-    private void onScanTimeout() {
+    private void onScanTimeout(boolean anyDeviceFound) {
         log("scanning timeout: " + actionMode);
         switch (actionMode) {
             case MODE_SCAN:
@@ -1062,6 +1068,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 this.onFastProvisioningComplete(false, "no unprovisioned device found");
                 break;
         }
+        if (!anyDeviceFound && !ContextUtil.isLocationEnable(mContext)) {
+            onLocationDisableWarning();
+        }
+
     }
 
     private Runnable restartScanTask = new Runnable() {
@@ -1075,6 +1085,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     private void onScanTimeoutEvent() {
         idle(false);
         ScanEvent scanEvent = new ScanEvent(this, ScanEvent.EVENT_TYPE_SCAN_TIMEOUT, null);
+        onEventPrepared(scanEvent);
+    }
+
+    private void onLocationDisableWarning() {
+        ScanEvent scanEvent = new ScanEvent(this, ScanEvent.EVENT_TYPE_SCAN_LOCATION_WARNING, null);
         onEventPrepared(scanEvent);
     }
 
@@ -1241,7 +1256,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 //            if (!device.getAddress().toUpperCase().equals("A4:C1:38:3F:4C:05")) return;
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
-//            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD:09")) return;
+//            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
 //            if (!device.getAddress().toUpperCase().contains("FF:EE:EE:EE")) return;
 //            if (!device.getAddress().contains("33:22:11")) return;
             onScanFilter(device, rssi, scanRecord);
@@ -1264,8 +1279,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         }
 
         @Override
-        public void onScanTimeout() {
-            MeshController.this.onScanTimeout();
+        public void onScanTimeout(boolean anyDeviceFound) {
+            MeshController.this.onScanTimeout(anyDeviceFound);
         }
     };
 
@@ -1634,7 +1649,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         void onEventPrepared(Event<String> event);
     }
 
-    enum Mode {
+    public enum Mode {
         /*
          * Action modes
          *

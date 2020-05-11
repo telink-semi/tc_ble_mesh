@@ -18,6 +18,8 @@ public class ScanEvent extends Event<String> implements Parcelable {
 
     public static final String EVENT_TYPE_SCAN_FAIL = "com.telink.ble.mesh.EVENT_TYPE_SCAN_FAIL";
 
+    public static final String EVENT_TYPE_SCAN_LOCATION_WARNING = "com.telink.ble.mesh.EVENT_TYPE_SCAN_LOCATION_WARNING";
+
     private AdvertisingDevice advertisingDevice;
 
     public ScanEvent(Object sender, String type, AdvertisingDevice advertisingDevice) {

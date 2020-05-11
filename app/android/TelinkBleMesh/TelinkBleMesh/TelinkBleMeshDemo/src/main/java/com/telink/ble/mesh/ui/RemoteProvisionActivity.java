@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.appcompat.widget.Toolbar;
-import androidx.collection.ArraySet;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -70,7 +69,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
     /**
      * scanned devices timeout remote-scanning
      */
-    private ArraySet<RemoteProvisioningDevice> remoteDevices = new ArraySet<>();
+    private ArrayList<RemoteProvisioningDevice> remoteDevices = new ArrayList<>();
 
     private Handler delayHandler = new Handler();
 
@@ -186,7 +185,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
         // check if oob exists
         byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
-        if (oob != null){
+        if (oob != null) {
             provisioningDevice.setAuthValue(oob);
         }
 
@@ -279,7 +278,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
      ******************************************************************************/
     private void startRemoteScan() {
         // scan for max 2 devices
-        final byte SCAN_LIMIT = 2;
+        final byte SCAN_LIMIT = 1;
         // scan for 5 seconds
         final byte SCAN_TIMEOUT = 5;
         final int SERVER_ADDRESS = 0xFFFF;
@@ -298,7 +297,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             return;
         }
         if (remoteDevices.size() > 0) {
-            remoteDevices.removeAt(0);
+            remoteDevices.remove(0);
         }
 
         if (remoteDevices.size() == 0) {
@@ -308,7 +307,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             delayHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    provisionNextRemoteDevice(remoteDevices.valueAt(0));
+                    provisionNextRemoteDevice(remoteDevices.get(0));
                 }
             }, 500);
 
@@ -343,24 +342,21 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
 
         int index = remoteDevices.indexOf(remoteProvisioningDevice);
-        boolean replaced = false;
         if (index >= 0) {
             // exists
-            RemoteProvisioningDevice device = remoteDevices.valueAt(index);
+            RemoteProvisioningDevice device = remoteDevices.get(index);
             if (device != null) {
                 if (device.getRssi() < remoteProvisioningDevice.getRssi() && device.getServerAddress() != remoteProvisioningDevice.getServerAddress()) {
-                    replaced = true;
+                    MeshLogger.log("remote device replaced");
                     device.setRssi(remoteProvisioningDevice.getRssi());
                     device.setServerAddress(device.getServerAddress());
                 }
             }
-        }
-        if (replaced) {
-            MeshLogger.log("remote device replaced");
         } else {
             MeshLogger.log("remote device add");
             remoteDevices.add(remoteProvisioningDevice);
         }
+
     }
 
 
@@ -390,7 +386,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
         // check if oob exists -- remote support
         byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(device.getUuid());
-        if (oob != null){
+        if (oob != null) {
             device.setAuthValue(oob);
         }
 
@@ -405,7 +401,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
                 enableUI(true);
             } else {
                 MeshLogger.log("remote devices scanned: " + remoteDevices.size());
-                provisionNextRemoteDevice(remoteDevices.valueAt(0));
+                provisionNextRemoteDevice(remoteDevices.get(0));
             }
         }
     };
@@ -420,6 +416,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     @Override
     public void performed(final Event<String> event) {
+        super.performed(event);
         String eventType = event.getType();
         if (eventType.equals(ScanReportStatusMessage.class.getName())) {
             NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();

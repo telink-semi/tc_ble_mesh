@@ -47,9 +47,9 @@ public class SharedPreferenceHelper {
         return sharedPreferences.getBoolean(KEY_LOCATION_IGNORE, false);
     }
 
-    public static void setLocationIgnore(Context context, boolean isFirst) {
+    public static void setLocationIgnore(Context context, boolean ignore) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        sharedPreferences.edit().putBoolean(KEY_LOCATION_IGNORE, isFirst).apply();
+        sharedPreferences.edit().putBoolean(KEY_LOCATION_IGNORE, ignore).apply();
     }
 
     public static boolean isLogEnable(Context context) {

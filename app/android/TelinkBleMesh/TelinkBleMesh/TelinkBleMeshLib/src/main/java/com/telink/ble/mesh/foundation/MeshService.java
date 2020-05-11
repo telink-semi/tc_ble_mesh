@@ -79,6 +79,10 @@ public class MeshService implements MeshController.EventCallback {
         mController.removeDevice(meshAddress);
     }
 
+    public MeshController.Mode getCurrentMode(){
+        return mController.getMode();
+    }
+
     /********************************************************************************
      * mesh api
      ********************************************************************************/
