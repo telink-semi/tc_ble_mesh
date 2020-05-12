@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "252894542468F13400E590F9"
-               BuildableName = "TelinkSigMeshLibB.framework"
-               BlueprintName = "TelinkSigMeshLibB"
+               BuildableName = "TelinkSigMeshLibExtensions.framework"
+               BlueprintName = "TelinkSigMeshLibExtensions"
                ReferencedContainer = "container:TelinkSigMeshLib.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -51,8 +51,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "252894542468F13400E590F9"
-            BuildableName = "TelinkSigMeshLibB.framework"
-            BlueprintName = "TelinkSigMeshLibB"
+            BuildableName = "TelinkSigMeshLibExtensions.framework"
+            BlueprintName = "TelinkSigMeshLibExtensions"
             ReferencedContainer = "container:TelinkSigMeshLib.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

@@ -41,7 +41,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 
 /*注意：
  1.注释‘#define kExist’则生成不包含MeshOTA、remote provision代码的库TelinkSigMeshLib.framework，demo需要导入头文件‘#import "TelinkSigMeshLib.h"’
- 2.不注释‘#define kExist’则生成包含MeshOTA、remote provision代码的库TelinkSigMeshLibB.framework，demo需要导入头文件‘#import "TelinkSigMeshLib.h"’
+ 2.不注释‘#define kExist’则生成包含MeshOTA、remote provision代码的库TelinkSigMeshLibExtensions.framework，demo需要导入头文件‘#import "TelinkSigMeshLib.h"’
  3.default release TelinkSigMeshLib.framework.
  */
 //#define kExist
@@ -116,61 +116,61 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #define kExistMeshOTA   (YES)
 /*是否存在remote provision功能*/
 #define kExistRemoteProvision   (YES)
-#import <TelinkSigMeshLibB/SigConst.h>
-#import <TelinkSigMeshLibB/SigStruct.h>
-#import <TelinkSigMeshLibB/SigEnumeration.h>
-#import <TelinkSigMeshLibB/SigLogger.h>
-#import <TelinkSigMeshLibB/Model.h>
-#import <TelinkSigMeshLibB/OpenSSLHelper.h>
-#import <TelinkSigMeshLibB/SigEncryptionHelper.h>
-#import <TelinkSigMeshLibB/BackgroundTimer.h>
-#import <TelinkSigMeshLibB/SigBluetooth.h>
-#import <TelinkSigMeshLibB/SigBearer.h>
-#import <TelinkSigMeshLibB/SigDataSource.h>
-#import <TelinkSigMeshLibB/SDKLibCommand.h>
-#import <TelinkSigMeshLibB/SigProvisioningManager.h>
-#import <TelinkSigMeshLibB/SigIvIndex.h>
-#import <TelinkSigMeshLibB/SigConfigMessage.h>
-#import <TelinkSigMeshLibB/SigMeshMessage.h>
-#import <TelinkSigMeshLibB/SigMeshLib.h>
-#import <TelinkSigMeshLibB/SigTransitionTime.h>
-#import <TelinkSigMeshLibB/SigPublish.h>
-#import <TelinkSigMeshLibB/SigNetworkManager.h>
-#import <TelinkSigMeshLibB/SigKeySet.h>
-#import <TelinkSigMeshLibB/SigHelper.h>
-#import <TelinkSigMeshLibB/SigLowerTransportPdu.h>
-#import <TelinkSigMeshLibB/CBUUID+Hex.h>
-#import <TelinkSigMeshLibB/SigUpperTransportPdu.h>
-#import <TelinkSigMeshLibB/SigAccessPdu.h>
-#import <TelinkSigMeshLibB/SigMessageHandle.h>
-#import <TelinkSigMeshLibB/SigUpperTransportLayer.h>
-#import <TelinkSigMeshLibB/SigProxyConfigurationMessage.h>
-#import <TelinkSigMeshLibB/SigControlMessage.h>
-#import <TelinkSigMeshLibB/SigProvisioningData.h>
-#import <TelinkSigMeshLibB/LibTools.h>
-#import <TelinkSigMeshLibB/SigGenericMessage.h>
-#import <TelinkSigMeshLibB/SigAddDeviceManager.h>
-#import <TelinkSigMeshLibB/SigKeyBindManager.h>
-#import <TelinkSigMeshLibB/SigTimeModel.h>
-#import <TelinkSigMeshLibB/SigSensorDescriptorModel.h>
-#import <TelinkSigMeshLibB/SigDataHandler.h>
-#import <TelinkSigMeshLibB/SigNetworkLayer.h>
-#import <TelinkSigMeshLibB/SigHearbeatMessage.h>
-#import <TelinkSigMeshLibB/SigSegmentAcknowledgmentMessage.h>
-#import <TelinkSigMeshLibB/ProxyProtocolHandler.h>
-#import <TelinkSigMeshLibB/SigAccessLayer.h>
-#import <TelinkSigMeshLibB/SigAccessMessage.h>
-#import <TelinkSigMeshLibB/SigLowerTransportLayer.h>
-#import <TelinkSigMeshLibB/SigSegmentedControlMessage.h>
-#import <TelinkSigMeshLibB/SigSegmentedMessage.h>
-#import <TelinkSigMeshLibB/SigMeshAddress.h>
-#import <TelinkSigMeshLibB/SigSegmentedAccessMessage.h>
-#import <TelinkSigMeshLibB/SigAutoConnectManager.h>
-#import <TelinkSigMeshLibB/OTAManager.h>
-#import <TelinkSigMeshLibB/SigPublishManager.h>
-#import <TelinkSigMeshLibB/TelinkHttpManager.h>
-#import <TelinkSigMeshLibB/SigFastProvisionAddManager.h>
-#import <TelinkSigMeshLibB/MeshOTAManager.h>
-#import <TelinkSigMeshLibB/SigRemoteAddManager.h>
+#import <TelinkSigMeshLibExtensions/SigConst.h>
+#import <TelinkSigMeshLibExtensions/SigStruct.h>
+#import <TelinkSigMeshLibExtensions/SigEnumeration.h>
+#import <TelinkSigMeshLibExtensions/SigLogger.h>
+#import <TelinkSigMeshLibExtensions/Model.h>
+#import <TelinkSigMeshLibExtensions/OpenSSLHelper.h>
+#import <TelinkSigMeshLibExtensions/SigEncryptionHelper.h>
+#import <TelinkSigMeshLibExtensions/BackgroundTimer.h>
+#import <TelinkSigMeshLibExtensions/SigBluetooth.h>
+#import <TelinkSigMeshLibExtensions/SigBearer.h>
+#import <TelinkSigMeshLibExtensions/SigDataSource.h>
+#import <TelinkSigMeshLibExtensions/SDKLibCommand.h>
+#import <TelinkSigMeshLibExtensions/SigProvisioningManager.h>
+#import <TelinkSigMeshLibExtensions/SigIvIndex.h>
+#import <TelinkSigMeshLibExtensions/SigConfigMessage.h>
+#import <TelinkSigMeshLibExtensions/SigMeshMessage.h>
+#import <TelinkSigMeshLibExtensions/SigMeshLib.h>
+#import <TelinkSigMeshLibExtensions/SigTransitionTime.h>
+#import <TelinkSigMeshLibExtensions/SigPublish.h>
+#import <TelinkSigMeshLibExtensions/SigNetworkManager.h>
+#import <TelinkSigMeshLibExtensions/SigKeySet.h>
+#import <TelinkSigMeshLibExtensions/SigHelper.h>
+#import <TelinkSigMeshLibExtensions/SigLowerTransportPdu.h>
+#import <TelinkSigMeshLibExtensions/CBUUID+Hex.h>
+#import <TelinkSigMeshLibExtensions/SigUpperTransportPdu.h>
+#import <TelinkSigMeshLibExtensions/SigAccessPdu.h>
+#import <TelinkSigMeshLibExtensions/SigMessageHandle.h>
+#import <TelinkSigMeshLibExtensions/SigUpperTransportLayer.h>
+#import <TelinkSigMeshLibExtensions/SigProxyConfigurationMessage.h>
+#import <TelinkSigMeshLibExtensions/SigControlMessage.h>
+#import <TelinkSigMeshLibExtensions/SigProvisioningData.h>
+#import <TelinkSigMeshLibExtensions/LibTools.h>
+#import <TelinkSigMeshLibExtensions/SigGenericMessage.h>
+#import <TelinkSigMeshLibExtensions/SigAddDeviceManager.h>
+#import <TelinkSigMeshLibExtensions/SigKeyBindManager.h>
+#import <TelinkSigMeshLibExtensions/SigTimeModel.h>
+#import <TelinkSigMeshLibExtensions/SigSensorDescriptorModel.h>
+#import <TelinkSigMeshLibExtensions/SigDataHandler.h>
+#import <TelinkSigMeshLibExtensions/SigNetworkLayer.h>
+#import <TelinkSigMeshLibExtensions/SigHearbeatMessage.h>
+#import <TelinkSigMeshLibExtensions/SigSegmentAcknowledgmentMessage.h>
+#import <TelinkSigMeshLibExtensions/ProxyProtocolHandler.h>
+#import <TelinkSigMeshLibExtensions/SigAccessLayer.h>
+#import <TelinkSigMeshLibExtensions/SigAccessMessage.h>
+#import <TelinkSigMeshLibExtensions/SigLowerTransportLayer.h>
+#import <TelinkSigMeshLibExtensions/SigSegmentedControlMessage.h>
+#import <TelinkSigMeshLibExtensions/SigSegmentedMessage.h>
+#import <TelinkSigMeshLibExtensions/SigMeshAddress.h>
+#import <TelinkSigMeshLibExtensions/SigSegmentedAccessMessage.h>
+#import <TelinkSigMeshLibExtensions/SigAutoConnectManager.h>
+#import <TelinkSigMeshLibExtensions/OTAManager.h>
+#import <TelinkSigMeshLibExtensions/SigPublishManager.h>
+#import <TelinkSigMeshLibExtensions/TelinkHttpManager.h>
+#import <TelinkSigMeshLibExtensions/SigFastProvisionAddManager.h>
+#import <TelinkSigMeshLibExtensions/MeshOTAManager.h>
+#import <TelinkSigMeshLibExtensions/SigRemoteAddManager.h>
 
 #endif

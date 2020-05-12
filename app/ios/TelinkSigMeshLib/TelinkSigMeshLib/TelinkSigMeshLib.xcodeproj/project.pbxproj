@@ -422,7 +422,7 @@
 		25151BF92362F2AC00967668 /* SigMessageHandle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigMessageHandle.m; sourceTree = "<group>"; };
 		251B2BA82397A8290024A48D /* SigAutoConnectManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigAutoConnectManager.h; sourceTree = "<group>"; };
 		251B2BA92397A8290024A48D /* SigAutoConnectManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigAutoConnectManager.m; sourceTree = "<group>"; };
-		252895292468F13400E590F9 /* TelinkSigMeshLibB.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TelinkSigMeshLibB.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		252895292468F13400E590F9 /* TelinkSigMeshLibExtensions.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TelinkSigMeshLibExtensions.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2528952A2468F13400E590F9 /* TelinkSigMeshLib copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "TelinkSigMeshLib copy-Info.plist"; path = "/Users/liangjiazhi/Downloads/源码/私有仓库/TelinkSigMeshLib/TelinkSigMeshLib/TelinkSigMeshLib copy-Info.plist"; sourceTree = "<absolute>"; };
 		2528952D2468F6F200E590F9 /* SigRemoteAddManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigRemoteAddManager.m; sourceTree = "<group>"; };
 		252895312468F6F200E590F9 /* MeshOTAManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MeshOTAManager.m; sourceTree = "<group>"; };
@@ -1036,7 +1036,7 @@
 			isa = PBXGroup;
 			children = (
 				25C0AFD9235D597400846CFB /* TelinkSigMeshLib.framework */,
-				252895292468F13400E590F9 /* TelinkSigMeshLibB.framework */,
+				252895292468F13400E590F9 /* TelinkSigMeshLibExtensions.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1381,9 +1381,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		252894542468F13400E590F9 /* TelinkSigMeshLibB */ = {
+		252894542468F13400E590F9 /* TelinkSigMeshLibExtensions */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 252895262468F13400E590F9 /* Build configuration list for PBXNativeTarget "TelinkSigMeshLibB" */;
+			buildConfigurationList = 252895262468F13400E590F9 /* Build configuration list for PBXNativeTarget "TelinkSigMeshLibExtensions" */;
 			buildPhases = (
 				252894552468F13400E590F9 /* Headers */,
 				252894E52468F13400E590F9 /* Sources */,
@@ -1394,9 +1394,9 @@
 			);
 			dependencies = (
 			);
-			name = TelinkSigMeshLibB;
+			name = TelinkSigMeshLibExtensions;
 			productName = TelinkSigMeshLib;
-			productReference = 252895292468F13400E590F9 /* TelinkSigMeshLibB.framework */;
+			productReference = 252895292468F13400E590F9 /* TelinkSigMeshLibExtensions.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		25C0AFD8235D597400846CFB /* TelinkSigMeshLib */ = {
@@ -1446,7 +1446,7 @@
 			projectRoot = "";
 			targets = (
 				25C0AFD8235D597400846CFB /* TelinkSigMeshLib */,
-				252894542468F13400E590F9 /* TelinkSigMeshLibB */,
+				252894542468F13400E590F9 /* TelinkSigMeshLibExtensions */,
 			);
 		};
 /* End PBXProject section */
@@ -1865,7 +1865,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		252895262468F13400E590F9 /* Build configuration list for PBXNativeTarget "TelinkSigMeshLibB" */ = {
+		252895262468F13400E590F9 /* Build configuration list for PBXNativeTarget "TelinkSigMeshLibExtensions" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				252895272468F13400E590F9 /* Debug */,
