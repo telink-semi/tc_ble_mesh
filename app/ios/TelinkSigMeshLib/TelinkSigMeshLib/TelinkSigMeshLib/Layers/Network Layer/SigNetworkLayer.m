@@ -59,7 +59,6 @@
 }
 
 - (void)handleIncomingPdu:(NSData *)pdu ofType:(SigPduType)type {
-//    TeLogDebug(@"================1.pdu=%@,type=0x%lx",pdu,(unsigned long)type);
     if (_networkManager.manager.dataSource == nil) {
         TeLogError(@"this networkManager has not data.");
         return;
@@ -83,13 +82,12 @@
     switch (type) {
         case SigPduType_networkPdu:
             {
-                TeLogVerbose(@"receive networkPdu");
+                TeLogDebug(@"receive networkPdu");
                 //两个不同netkey进行解包（fast provision需要）:先使用mesh的networkKey进行解密，再使用当前networkLayer特定networkKey和ivIndex进行解密。
                 SigNetworkPdu *networkPdu = [SigNetworkPdu decodePdu:pdu pduType:SigPduType_networkPdu forMeshNetwork:_meshNetwork];
                 if (!networkPdu && _networkKey && _ivIndex) {
                     networkPdu = [SigNetworkPdu decodePdu:pdu pduType:SigPduType_networkPdu usingNetworkKey:_networkKey ivIndex:_ivIndex];
                 }
-//                TeLogDebug(@"================2.networkPdu=%@,type=0x%lx,networkPdu.pduData=%@",networkPdu,SigPduType_networkPdu,networkPdu.pduData);
                 if (networkPdu == nil) {
                     TeLogDebug(@"decodePdu fail.");
                     return;

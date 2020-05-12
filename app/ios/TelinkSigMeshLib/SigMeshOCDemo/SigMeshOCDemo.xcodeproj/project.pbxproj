@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2519E64E24123D870098ABE7 /* 8258_mesh.bin */; };
-		251B2BA2239742270024A48D /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FFA24542CF200796BF9 /* 8269_mesh.bin */; };
+		25C30DCF246A2E9C00F06076 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		A20C14B72254556700B42909 /* ColorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A20C14B62254556700B42909 /* ColorManager.m */; };
 		A23FE43822CD96760018F090 /* FileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43722CD96760018F090 /* FileChooseVC.m */; };
 		A23FE43F22CDF3230018F090 /* ChooseAndAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43E22CDF3230018F090 /* ChooseAndAddDeviceVC.m */; };
@@ -117,6 +117,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		2528953A2468FB1400E590F9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 25B408392396691A00514CB7 /* TelinkSigMeshLib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 252895292468F13400E590F9;
+			remoteInfo = "TelinkSigMeshLib copy";
+		};
 		25B4083D2396691A00514CB7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 25B408392396691A00514CB7 /* TelinkSigMeshLib.xcodeproj */;
@@ -349,7 +356,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				251B2BA2239742270024A48D /* TelinkSigMeshLib.framework in Frameworks */,
+				25C30DCF246A2E9C00F06076 /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -381,6 +388,7 @@
 			isa = PBXGroup;
 			children = (
 				25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */,
+				2528953B2468FB1400E590F9 /* TelinkSigMeshLibB.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -913,6 +921,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		2528953B2468FB1400E590F9 /* TelinkSigMeshLibB.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = TelinkSigMeshLibB.framework;
+			remoteRef = 2528953A2468FB1400E590F9 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
@@ -1298,7 +1313,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.2.1;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"$(inherited)",
@@ -1332,7 +1347,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.2.1;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"$(inherited)",

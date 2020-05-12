@@ -37,10 +37,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Message Op Code.
 @property (nonatomic,assign) UInt8 opCode;
-/// Flag set to `true` if the message was sent by a Friend
-/// on behalf of a Low Power node.
+/// The OBO field shall be set to 0 by a node that is directly addressed by the received message and shall be set to 1 by a Friend node that is acknowledging this message on behalf of a Low Power node.
 @property (nonatomic,assign) BOOL isOnBehalfOfLowPowerNode;
-/// Block acknowledgment for segments, bit field.
+/// The BlockAck field shall be set to indicate the segments received. The least significant bit, bit 0, shall represent segment 0; and the most significant bit, bit 31, shall represent segment 31. If bit n is set to 1, then segment n is being acknowledged. If bit n is set to 0, then segment n is not being acknowledged. Any bits for segments larger than SegN shall be set to 0 and ignored upon receipt.
 @property (nonatomic,assign) UInt32 blockAck;
 @property (nonatomic,assign) UInt16 sequenceZero;
 @property (nonatomic,assign) UInt8 segmentOffset;

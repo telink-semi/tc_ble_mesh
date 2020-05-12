@@ -295,6 +295,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)addPeripheralFail:(CBPeripheral *)peripheral {
+    TeLogInfo(@"addPeripheralFail,uuid=%@",peripheral.identifier.UUIDString);
     NSString *uuid = peripheral.identifier.UUIDString;
     if (![self.tempProvisionFailList containsObject:uuid]) {
         [self.tempProvisionFailList addObject:uuid];

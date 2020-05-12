@@ -194,7 +194,7 @@
 
 - (void)showSendData:(NSData *)data forCharacteristic:(CBCharacteristic *)characteristic {
     if ([characteristic.UUID.UUIDString isEqualToString:kPBGATT_In_CharacteristicsID]) {
-        TeLogInfo(@"---> to:GATT, length:%d,value:%@",data.length,[LibTools convertDataToHexStr:data]);
+        TeLogInfo(@"---> to:GATT, length:%d",data.length);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kPROXY_In_CharacteristicsID]) {
         TeLogInfo(@"---> to:PROXY, length:%d",data.length);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kOnlineStatusCharacteristicsID]) {
@@ -214,7 +214,12 @@
     self.bearerOpenCallback = block;
     __weak typeof(self) weakSelf = self;
     SigNodeModel *node = [SigDataSource.share getNodeWithUUID:self.peripheral.identifier.UUIDString];
-    TeLogDebug(@"start connected macAddress=%@",node.macAddress);
+    if (node == nil) {
+        SigScanRspModel *scanModel = [SigDataSource.share getScanRspModelWithUUID:self.peripheral.identifier.UUIDString];
+        TeLogDebug(@"start connected scanModel.macAddress=%@",scanModel.macAddress);
+    } else {
+        TeLogDebug(@"start connected node.macAddress=%@",node.macAddress);
+    }
     [self.ble connectPeripheral:self.peripheral timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
 //        TeLogDebug(@"callback connected peripheral=%@,successful=%d",peripheral,successful);
         if (successful) {
@@ -248,8 +253,8 @@
 - (void)closeWithResult:(bearerOperationResultCallback)block {
     self.bearerCloseCallback = block;
     __weak typeof(self) weakSelf = self;
-    [self.ble cancelConnectionPeripheral:self.peripheral timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
-        TeLogDebug(@"callback disconnected peripheral=%@,successful=%d",peripheral,successful);
+    [self.ble cancelConnectionPeripheral:self.peripheral timeout:2.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
+        TeLogVerbose(@"callback disconnected peripheral=%@,successful=%d",peripheral,successful);
         [weakSelf closeResult:successful];
     }];
     _isOpened = NO;
@@ -276,6 +281,7 @@
 - (void)connectAndReadServicesWithPeripheral:(CBPeripheral *)peripheral result:(bearerOperationResultCallback)result {
     __weak typeof(self) weakSelf = self;
     if ([self.getCurrentPeripheral.identifier.UUIDString isEqualToString:peripheral.identifier.UUIDString] && peripheral.state == CBPeripheralStateConnected) {
+        TeLogVerbose(@"peripheral.state = CBPeripheralStateConnected.");
         if (result) {
             result(YES);
         }
@@ -373,8 +379,8 @@
         return;
     }
     
-//    NSInteger mtu = [self.getCurrentPeripheral maximumWriteValueLengthForType:CBCharacteristicWriteWithoutResponse];
-    NSInteger mtu = 20;
+    NSInteger mtu = [self.getCurrentPeripheral maximumWriteValueLengthForType:CBCharacteristicWriteWithoutResponse];
+//    NSInteger mtu = 20;
     NSArray *packets = [self.protocolHandler segmentWithData:pdu.pduData messageType:type mtu:mtu];
     TeLogVerbose(@"pdu.pduData.length=%d,sentPcakets:%@",pdu.pduData.length,packets);
 
@@ -435,9 +441,11 @@
 
 #pragma  mark - auto reconnect
 
-/// 开始连接SigDataSource这个单列的mesh网络。
-- (void)startMeshConnectWithComplete:(nullable startMeshConnectResultBlock)complete {    
-    self.startMeshConnectCallback = complete;
+/// 开始连接SigDataSource这个单例的mesh网络。
+- (void)startMeshConnectWithComplete:(nullable startMeshConnectResultBlock)complete {
+    if (complete) {
+        self.startMeshConnectCallback = complete;
+    }
     self.isAutoReconnect = YES;
     if (self.getCurrentPeripheral && self.getCurrentPeripheral.state == CBPeripheralStateConnected && [SigBluetooth.share isWorkNormal] && [SigDataSource.share existPeripheralUUIDString:self.getCurrentPeripheral.identifier.UUIDString]) {
         [self startMeshConnectSuccess];

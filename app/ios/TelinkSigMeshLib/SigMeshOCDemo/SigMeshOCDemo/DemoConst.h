@@ -123,7 +123,6 @@
 #define kshowLog        (YES)
 #define kshowShare    (YES)
 #define kshowMeshInfo    (YES)
-#define kshowMeshOTA    (YES)
 #define kshowChooseAdd    (YES)
 
 //HSL发送数据包是使用RGB转HSL的模式

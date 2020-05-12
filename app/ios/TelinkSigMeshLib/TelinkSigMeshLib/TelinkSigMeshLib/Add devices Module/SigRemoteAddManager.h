@@ -31,9 +31,31 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+#define kRemoteProgressRetryCount   (5)
+#define kRemoteProgressTimeout   (60)
+#define kScannedItemsLimit   (2)
+#define kScannedItemsTimeout   (5)
+
 typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanRemoteModel);
 
 @interface SigRemoteAddManager : NSObject
+@property (nonatomic, assign) AuthenticationMethod authenticationMethod;
+@property (nonatomic, strong) SigAuthenticationModel *authenticationModel;
+@property (nonatomic, strong) SigProvisioningData *provisioningData;
+
+#pragma mark - Public properties
+
+/// The provisioning capabilities of the device. This information
+/// is retrieved from the remote device during identification process.
+@property (nonatomic, assign) struct ProvisioningCapabilities provisioningCapabilities;
+
+/// The Network Key to be sent to the device during provisioning.
+/// Setting this proeprty is mandatory before calling
+/// `provision(usingAlgorithm:publicKey:authenticationMethod)`.
+@property (nonatomic, strong) SigNetkeyModel *networkKey;
+
+/// The current state of the provisioning process.
+@property (nonatomic, assign) ProvisionigState state;//init with ready
 
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -43,6 +65,18 @@ typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanR
 + (SigRemoteAddManager *)share;
 
 - (void)startRemoteProvisionScanWithReportCallback:(remoteProvisioningScanReportCallBack)reportCallback resultCallback:(resultBlock)resultCallback;
+
+/// founcation4: remote provision (SDK need connected provisioned node.)
+/// @param provisionAddress address of new device.
+/// @param reportNodeAddress address of node that report this uuid
+/// @param reportNodeUUID identify node that need to provision.
+/// @param networkKey networkKey
+/// @param netkeyIndex netkeyIndex
+/// @param provisionType ProvisionTpye_NoOOB means oob data is 16 bytes zero data, ProvisionTpye_StaticOOB means oob data is get from HTTP API.
+/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionTpye_StaticOOB.
+/// @param provisionSuccess callback when provision success.
+/// @param fail callback when provision fail.
+- (void)remoteProvisionWithNextProvisionAddress:(UInt16)provisionAddress reportNodeAddress:(UInt16)reportNodeAddress reportNodeUUID:(NSData *)reportNodeUUID networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 @end
 

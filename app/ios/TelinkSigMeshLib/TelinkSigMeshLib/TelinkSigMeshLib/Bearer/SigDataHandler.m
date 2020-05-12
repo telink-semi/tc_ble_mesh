@@ -29,6 +29,7 @@
 
 #import "SigDataHandler.h"
 #import "ProxyProtocolHandler.h"
+#import "SigEncryptionHelper.h"
 
 @interface SigDataHandler ()
 @property (nonatomic, strong) NSThread *receiveThread;

@@ -113,7 +113,6 @@
     self.messageHandle = [SDKLibCommand configCompositionDataGetWithDestination:self.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
         TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         weakSelf.page = ((SigConfigCompositionDataStatus *)responseMessage).page;
-        [weakSelf appkeyAdd];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCompositionDataTimeOut) object:nil];
@@ -124,6 +123,8 @@
             if (weakSelf.failBlock) {
                 weakSelf.failBlock(error);
             }
+        } else {
+            [weakSelf appkeyAdd];
         }
     }];
 }

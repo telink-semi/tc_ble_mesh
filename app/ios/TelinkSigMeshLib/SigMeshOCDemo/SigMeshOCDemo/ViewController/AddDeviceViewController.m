@@ -88,6 +88,7 @@
                 TeLogInfo(@"addDevice keybind fail error:%@",error);
             } finish:^{
                 TeLogInfo(@"addDevice finish.");
+                [SigBearer.share startMeshConnectWithComplete:nil];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [weakSelf addDeviceFinish];
                 });

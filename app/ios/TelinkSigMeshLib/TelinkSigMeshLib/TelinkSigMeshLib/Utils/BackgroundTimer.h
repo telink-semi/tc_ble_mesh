@@ -21,7 +21,7 @@
 *******************************************************************************************************/
 //
 //  BackgroundTimer.h
-//  TelinkSigMeshDemo
+//  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/11/27.
 //  Copyright © 2019 梁家誌. All rights reserved.
