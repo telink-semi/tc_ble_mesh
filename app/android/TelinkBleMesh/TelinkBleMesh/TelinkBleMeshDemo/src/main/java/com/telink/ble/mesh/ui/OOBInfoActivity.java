@@ -161,6 +161,7 @@ public class OOBInfoActivity extends BaseActivity {
                 meshInfo.oobPairs.clear();
                 meshInfo.saveOrUpdate(OOBInfoActivity.this);
                 toastMsg("Wipe oob info success");
+                mAdapter.notifyDataSetChanged();
             }
         });
     }

@@ -56,8 +56,8 @@ public class MeshMessage {
     /**
      * access typeValue
      *
-     * @see com.telink.ble.mesh.core.networking.AccessType#DEVICE for config message
-     * @see com.telink.ble.mesh.core.networking.AccessType#APPLICATION for common message
+     * @see AccessType#DEVICE for config message
+     * @see AccessType#APPLICATION for common message
      */
     protected AccessType accessType = AccessType.APPLICATION;
 

@@ -2,7 +2,8 @@
 version record
 
 V3.2.1
-1. support static oob database importing
+1. support static oob database importing;
+2. delete mesh OTA and remote provision;
 
 ----------------
 

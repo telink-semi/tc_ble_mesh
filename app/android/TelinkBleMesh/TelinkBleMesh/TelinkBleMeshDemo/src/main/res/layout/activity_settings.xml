@@ -67,12 +67,14 @@
             </LinearLayout>
 
             <View
+                android:id="@+id/line_rp"
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
                 android:layout_margin="4dp"
                 android:background="@color/gray" />
 
             <LinearLayout
+                android:id="@+id/ll_rp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -145,6 +147,33 @@
                     android:layout_height="wrap_content" />
 
             </LinearLayout>
+
+
+            <!-- static oob database -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_margin="4dp"
+                android:background="@color/gray" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="4dp">
+
+                <TextView
+                    android:id="@+id/tv_select_database"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableRight="@drawable/ic_arrow_right"
+                    android:drawableTint="@color/grey"
+                    android:text="@string/oob_database"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+
 
             <View
                 android:layout_width="match_parent"
@@ -228,30 +257,6 @@
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
-
-            <!-- static oob database -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_margin="4dp"
-                android:background="@color/gray" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="4dp">
-
-                <TextView
-                    android:id="@+id/tv_select_database"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawableRight="@drawable/ic_arrow_right"
-                    android:drawableTint="@color/grey"
-                    android:text="@string/oob_database"
-                    android:textSize="12sp" />
-
-            </LinearLayout>
 
 
             <!-- online status -->

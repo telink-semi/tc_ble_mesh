@@ -303,7 +303,7 @@ public class MeshInfo implements Serializable, Cloneable {
 
         meshConfiguration.appKeyMap = new SparseArray<>();
         if (appKeyList != null) {
-            for (MeshInfo.AppKey appKey :
+            for (AppKey appKey :
                     appKeyList) {
                 meshConfiguration.appKeyMap.put(appKey.index, appKey.key);
             }
@@ -337,7 +337,7 @@ public class MeshInfo implements Serializable, Cloneable {
         meshInfo.netKeyIndex = 0x00;
         meshInfo.appKeyList = new ArrayList<>();
 //        meshInfo.appKeyList.add(new MeshInfo.AppKey(0x00, APP_KEY));
-        meshInfo.appKeyList.add(new MeshInfo.AppKey(0x00, MeshUtils.generateRandom(16)));
+        meshInfo.appKeyList.add(new AppKey(0x00, MeshUtils.generateRandom(16)));
         meshInfo.ivIndex = 0;
         meshInfo.sequenceNumber = 0;
         meshInfo.nodes = new ArrayList<>();
