@@ -27,8 +27,6 @@
 //  Copyright © 2019 梁家誌. All rights reserved.
 //
 
-#import <TelinkSigMeshLib/TelinkSigMeshLib.h>
-
 NS_ASSUME_NONNULL_BEGIN
 
 @class SigGenericPowerRangeSet,SigGenericPowerRangeSetUnacknowledged,SigTimeModel,SchedulerModel,SigSensorDescriptorModel;

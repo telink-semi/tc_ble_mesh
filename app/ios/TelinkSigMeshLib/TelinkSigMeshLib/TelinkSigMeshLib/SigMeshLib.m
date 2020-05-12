@@ -116,6 +116,9 @@ static SigMeshLib *shareLib = nil;
     if (shouldCallback && command && command.responseAllMessageCallBack) {
         command.responseAllMessageCallBack(address,_dataSource.curLocationNodeModel.address,message);
     }
+    if (SigPublishManager.share.discoverOutlineNodeCallback) {
+        SigPublishManager.share.discoverOutlineNodeCallback(@(address));
+    }
 }
 
 #pragma mark - Send Mesh Messages
@@ -148,12 +151,11 @@ static SigMeshLib *shareLib = nil;
         return nil;
     }
     
-    command.source = localElement;
+    command.source = source;
     command.destination = destination;
     command.initialTtl = initialTtl;
     command.appkeyA = applicationKey;
     command.commandType = SigCommandType_meshMessage;
-    
     __weak typeof(self) weakSelf = self;
     dispatch_async(_queue, ^{
         if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
@@ -166,7 +168,9 @@ static SigMeshLib *shareLib = nil;
             [weakSelf.networkManager sendMeshMessage:message fromElement:source toDestination:destination withTtl:initialTtl usingApplicationKey:applicationKey];
         }
     });
-    return [[SigMessageHandle alloc] initForMessage:message sentFromSource:source.unicastAddress toDestination:destination.address usingManager:self];
+    SigMessageHandle *messageHandle = [[SigMessageHandle alloc] initForMessage:message sentFromSource:source.unicastAddress toDestination:destination.address usingManager:self];
+    command.messageHandle = messageHandle;
+    return messageHandle;
 }
 
 - (SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination command:(SDKLibCommand *)command {
@@ -208,7 +212,9 @@ static SigMeshLib *shareLib = nil;
         [weakSelf addCommandToCacheListWithCommand:command];
         [weakSelf.networkManager sendConfigMessage:message toDestination:destination withTtl:initialTtl];
     });
-    return [[SigMessageHandle alloc] initForMessage:message sentFromSource:source toDestination:destination usingManager:self];
+    SigMessageHandle *messageHandle = [[SigMessageHandle alloc] initForMessage:message sentFromSource:source toDestination:destination usingManager:self];
+    command.messageHandle = messageHandle;
+    return messageHandle;
 }
 
 - (void)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command {
@@ -300,6 +306,10 @@ static SigMeshLib *shareLib = nil;
     if (command.retryTimer) {
         [command.retryTimer invalidate];
     }
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(weakSelf.queue, ^{
+        [weakSelf.networkManager cancelSigMessageHandle:command.messageHandle];
+    });
     [self.commands removeObject:command];
     if (self.commands.count == 0) {
         [self isBusyNow];
@@ -554,6 +564,9 @@ static SigMeshLib *shareLib = nil;
             if (command.hadRetryCount < command.retryCount) {
                 command.hadRetryCount ++;
                 TeLogDebug(@"command.curMeshMessage=%@,retry count=%d",command.curMeshMessage,command.hadRetryCount);
+                dispatch_async(weakSelf.queue, ^{
+                    [weakSelf.networkManager cancelSigMessageHandle:command.messageHandle];
+                });
                 if (command.commandType == SigCommandType_meshMessage) {
                     if (command.appkeyA) {
                         [weakSelf.networkManager sendMeshMessage:(SigMeshMessage *)command.curMeshMessage fromElement:command.source toDestination:command.destination withTtl:command.initialTtl usingApplicationKey:command.appkeyA command:command];

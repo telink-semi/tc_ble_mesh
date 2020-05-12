@@ -209,12 +209,12 @@
             }
             m = genericMessage;
         }
-        TeLogInfo(@"sending message TID=0x%x",genericMessage.tid);
+        TeLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
     }
     TeLogVerbose(@"Sending %@ from: %@, to: 0x%x",m,element,destination.address);
     SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:m sentFromLocalElement:element toDestination:destination userInitiated:YES];
     SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];
-    TeLogInfo(@"Sending %@",pdu);
+    TeLogInfo(@"Sending message:%@->%@",message.class,pdu);
     
     // Set timers for the acknowledged messages.
 //    #warning 2019年11月10日23:44:04，类型可能不太匹配，待完善

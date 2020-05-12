@@ -4809,7 +4809,7 @@
 
 - (instancetype)initWithReason:(SigRemoteProvisioningLinkCloseStatus)reason {
     if (self = [super init]) {
-        self.opCode = SigOpCode_remoteProvisioningLinkOpen;
+        self.opCode = SigOpCode_remoteProvisioningLinkClose;
         _reason = reason;
     }
     return self;

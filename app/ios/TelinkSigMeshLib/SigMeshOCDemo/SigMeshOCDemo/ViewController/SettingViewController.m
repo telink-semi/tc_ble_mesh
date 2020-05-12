@@ -98,7 +98,7 @@
         [self.iconSource addObject:@"ic_model"];
         [self.vcIdentifiers addObject:ViewControllerIdentifiers_ShareViewControllerID];
     }
-    if (kshowMeshOTA) {
+    if (kExistMeshOTA) {
         [self.source addObject:@"Mesh OTA"];
         [self.iconSource addObject:@"ic_mesh_ota"];
         [self.vcIdentifiers addObject:@"no found"];

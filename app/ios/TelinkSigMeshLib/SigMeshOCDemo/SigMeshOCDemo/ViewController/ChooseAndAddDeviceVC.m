@@ -153,6 +153,7 @@ typedef enum : NSUInteger {
                     }];
                     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
                 }
+                [SigBearer.share startMeshConnectWithComplete:nil];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [weakSelf userAbled:YES];
                 });

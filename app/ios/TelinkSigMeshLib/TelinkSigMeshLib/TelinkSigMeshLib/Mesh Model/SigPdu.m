@@ -415,7 +415,6 @@ struct EncryptedDataWithMicPdu {
             _ttl = ttl;
             _sequence = sequence;
 //            TeLogVerbose(@"返回蓝牙包的sequence=0x%x",(unsigned int)sequence);
-//            [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence+1];
             _source = source;
             UInt8 decryptedData0 = 0,decryptedData1 = 0;
             Byte *decryptedDataByte = (Byte *)decryptedData.bytes;
@@ -423,7 +422,6 @@ struct EncryptedDataWithMicPdu {
             memcpy(&decryptedData1, decryptedDataByte+1, 1);
             _destination = (UInt16)decryptedData0 << 8 | (UInt16)decryptedData1;
             _transportPdu = [decryptedData subdataWithRange:NSMakeRange(2, decryptedData.length-2)];
-//            TeLogDebug(@"================1.1._transportPdu=%@,ttl=0x%hhx,sequence=0x%x,decryptedData=0x%@",_transportPdu,_ttl,_sequence,decryptedData);
             return self;
         }
     }

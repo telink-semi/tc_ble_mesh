@@ -79,7 +79,12 @@
                     [weakSelf performSelector:@selector(scanSingleUnProvisionNodeTimeout) withObject:nil afterDelay:5.0];
                 });
                 [SigBluetooth.share scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
-                    if (unprovisioned && RSSI.intValue > -50) {
+                        if (unprovisioned) {
+                            //=================test==================//
+//                            if (RSSI.intValue <= -50) {
+//                                return;
+//                            }
+                            //=================test==================//
                         TeLogInfo(@"advertisementData=%@,rssi=%@,unprovisioned=%@",advertisementData,RSSI,unprovisioned?@"没有入网":@"已经入网");
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanSingleUnProvisionNodeTimeout) object:nil];
@@ -136,6 +141,7 @@
         [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
     } finish:^(NSError * _Nullable error) {
         TeLogInfo(@"error=%@",error);
+        [SigBearer.share startMeshConnectWithComplete:nil];
         [weakSelf userAbled:YES];
         weakSelf.isAdding = NO;
     }];

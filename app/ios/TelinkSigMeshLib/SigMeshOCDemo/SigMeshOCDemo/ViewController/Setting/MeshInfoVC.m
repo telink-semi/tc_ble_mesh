@@ -30,6 +30,8 @@
 #import "MeshInfoVC.h"
 
 @interface MeshInfoVC ()
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *RPLabelTopLayout;
+@property (weak, nonatomic) IBOutlet UILabel *remoteProvisionLabel;
 @property (weak, nonatomic) IBOutlet UILabel *netKeyLabel;
 @property (weak, nonatomic) IBOutlet UILabel *appKeyLabel;
 @property (weak, nonatomic) IBOutlet UISwitch *addTypeSwitch;
@@ -48,12 +50,16 @@
     self.appKeyLabel.text = [LibTools convertDataToHexStr:SigDataSource.share.curAppKey];
     NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
     self.addTypeSwitch.on = type.integerValue == KeyBindTpye_Fast;
-    NSNumber *remote = [[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType];
-    self.remoteSwitch.on = remote.boolValue;
     NSNumber *fastProvision = [[NSUserDefaults standardUserDefaults] valueForKey:kFastAddType];
     self.fastProvisionSwitch.on = fastProvision.boolValue;
     NSNumber *online = [[NSUserDefaults standardUserDefaults] valueForKey:kGetOnlineStatusType];
     self.onlineStatusSwitch.on = online.boolValue;
+
+    NSNumber *remote = [[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType];
+    self.remoteSwitch.on = remote.boolValue;
+    self.remoteProvisionLabel.hidden = !kExistRemoteProvision;
+    self.remoteSwitch.hidden = !kExistRemoteProvision;
+    self.RPLabelTopLayout.constant = kExistRemoteProvision == YES ? 30 : -30;
 }
 
 - (void)viewWillAppear:(BOOL)animated{

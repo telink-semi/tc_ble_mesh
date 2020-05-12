@@ -28,6 +28,7 @@
 //
 
 #import "SDKLibCommand.h"
+#import "SigEncryptionHelper.h"
 
 @interface SDKLibCommand ()
 @property (nonatomic,strong) NSTimer *busyTimer;
@@ -2956,6 +2957,7 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
+    command.timeout = 2.0;//link open 超时为2秒。
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
@@ -2968,6 +2970,7 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
+    command.timeout = 2.0;//link close 超时为2秒。
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
@@ -2978,6 +2981,7 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
+    command.timeout = 5.0;//PDUSend 超时为5秒。
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 

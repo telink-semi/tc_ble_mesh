@@ -248,21 +248,22 @@
     //get status of node
     SigBearer.share.dataDelegate = self;
     if (SigBearer.share.isOpen) {
+        [self blockState];
         [self getOnlineState];
     } else {
         [self workNormal];
     }
-    __weak typeof(self) weakSelf = self;
-    [SigBluetooth.share setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
-        TeLogVerbose(@"setBluetoothCentralUpdateStateCallback state=%ld",(long)state);
-        if (state == CBCentralManagerStatePoweredOn) {
-            [weakSelf workNormal];
-        } else {
-            weakSelf.shouldSetAllOffline = NO;
-            [SigDataSource.share setAllDevicesOutline];
-            [weakSelf reloadCollectionView];
-        }
-    }];
+//    __weak typeof(self) weakSelf = self;
+//    [SigBluetooth.share setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
+//        TeLogVerbose(@"setBluetoothCentralUpdateStateCallback state=%ld",(long)state);
+//        if (state == CBCentralManagerStatePoweredOn) {
+//            [weakSelf workNormal];
+//        } else {
+//            weakSelf.shouldSetAllOffline = NO;
+//            [SigDataSource.share setAllDevicesOutline];
+//            [weakSelf reloadCollectionView];
+//        }
+//    }];
 }
 
 - (void)viewWillDisappear:(BOOL)animated{
@@ -290,6 +291,16 @@
     //Power off and power on electricity directly connected devices, returns response of opcode 0x4E82 packets.
     [SigPublishManager.share setDiscoverOnlineNodeCallback:^(NSNumber * _Nonnull unicastAddress) {
         [weakSelf reloadCollectionView];
+    }];
+    [SigBluetooth.share setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
+        TeLogVerbose(@"setBluetoothCentralUpdateStateCallback state=%ld",(long)state);
+        if (state == CBCentralManagerStatePoweredOn) {
+            [weakSelf workNormal];
+        } else {
+            weakSelf.shouldSetAllOffline = NO;
+            [SigDataSource.share setAllDevicesOutline];
+            [weakSelf reloadCollectionView];
+        }
     }];
 }
 

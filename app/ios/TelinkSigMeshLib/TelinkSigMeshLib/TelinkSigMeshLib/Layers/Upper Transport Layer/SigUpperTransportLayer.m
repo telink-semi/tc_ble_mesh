@@ -233,7 +233,7 @@
     if (_queues[@(pdu.destination)].count == 1) {
         [self sendNextToDestination:pdu.destination];
     }else{
-        TeLogWarn(@"异常逻辑，待完善。");
+        TeLogWarn(@"异常逻辑，待完善。_queues[@(pdu.destination)]=%@",_queues[@(pdu.destination)]);
     }
 }
 
@@ -260,7 +260,7 @@
     if (_queues[@(pdu.destination)].count == 1) {
         [self sendNextToDestination:pdu.destination];
     }else{
-        TeLogWarn(@"异常逻辑，待完善。");
+        TeLogWarn(@"异常逻辑，待完善。_queues[@(pdu.destination)]=%@",_queues[@(pdu.destination)]);
     }
 }
 

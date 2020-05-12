@@ -65,6 +65,7 @@
 }
 
 - (void)handleNetworkPdu:(SigNetworkPdu *)networkPdu {
+    TeLogDebug(@"receive networkPdu=%@,%@,%d",networkPdu,networkPdu.pduData,networkPdu.isSegmented);
     @synchronized(self) {
         // Some validation, just to be sure. This should pass for sure.
         if (networkPdu.transportPdu.length <= 1) {
@@ -327,7 +328,6 @@
     // acknowledged message, send the same ACK immediately.
     SigSegmentAcknowledgmentMessage *lastAck = _acknowledgments[@(segment.source)];
     if (lastAck && lastAck.sequenceZero == segment.sequenceZero) {
-//        TeLogInfo(@"================1.4.lastAck=%@,lastAck.sequenceZero=0x%x",lastAck,lastAck.sequenceZero);
         SigNodeModel *provisionerNode = SigDataSource.share.curLocationNodeModel;
         if (provisionerNode) {
             TeLogInfo(@"Message already acknowledged, sending ACK again.");
@@ -356,7 +356,6 @@
         } else {
             message = [[SigControlMessage alloc] initFromSegments:@[(SigSegmentedAccessMessage *)segment]];
         }
-//        TeLogInfo(@"================1.5. %@ received",message);
         // A single segment message may immediately be acknowledged.
         SigNodeModel *provisionerNode = SigDataSource.share.curLocationNodeModel;
         if (provisionerNode == nil) {
@@ -411,7 +410,6 @@
                 TeLogError(@"curLocationNodeModel = nil.");
                 return nil;
             }
-//            TeLogInfo(@"================1.7.all segments were received,networkPdu.destination=0x%x,provisionerNode.address=0x%x,message.upperTransportPdu=%@,message.upperTransportPdu.length=0x%lx",networkPdu.destination,provisionerNode.address,message.upperTransportPdu,message.upperTransportPdu.length);
             if (networkPdu.destination == provisionerNode.address) {
                 // ...invalidate timers...
                 BackgroundTimer *timer1 = [_incompleteTimers objectForKey:@(key)];
@@ -431,10 +429,8 @@
                 }
                 [self sendAckForSegments:allSegments withTtl:ttl];
             }
-//            TeLogInfo(@"================1.8.all segments were received,networkPdu.destination=0x%x,provisionerNode.address=0x%x,message.upperTransportPdu=%@,message.upperTransportPdu.length=0x%lx",networkPdu.destination,provisionerNode.address,message.upperTransportPdu,(unsigned long)message.upperTransportPdu.length);
             return message;
         } else {
-//            TeLogInfo(@"================1.7.wait segment.");
             // The Provisioner shall send block acknowledgment only if the message was
             // send directly to it's Unicast Address.
             SigNodeModel *provisionerNode = SigDataSource.share.curLocationNodeModel;
@@ -554,7 +550,7 @@
     }
     // If all the segments were acknowledged, notify the manager.
     if ([self segmentsArrayHasMore:_outgoingSegments[@(ack.sequenceZero)]] == NO) {
-        TeLogInfo(@"node response SegmentAcknowledgmentMessage,all the segments were acknowledged.ack.blockAck=0x%x",ack.blockAck);
+        TeLogInfo(@"node response SegmentAcknowledgmentMessage,all the segments were acknowledged. ack.sequenceZero = 0x%x, ack.blockAck=0x%x",ack.sequenceZero,ack.blockAck);
         UInt32 key = (UInt32)[self getKeyForAddress:ack.source sequenceZero:ack.sequenceZero];
         BackgroundTimer *timer1 = [self.incompleteTimers objectForKey:@(key)];
         [timer1 invalidate];
@@ -610,7 +606,7 @@
 ///
 /// - parameter sequenceZero: The key to get segments from the map.
 - (void)sendSegmentsForSequenceZero:(UInt16)sequenceZero limit:(int)limit {
-    TeLogInfo(@"limit=%d",limit);
+    TeLogVerbose(@"sequenceZero=0x%x,limit=%d",sequenceZero,limit);
     NSArray *array = _outgoingSegments[@(sequenceZero)];
     NSInteger count = array.count;
     UInt8 ttl = (UInt8)[_segmentTtl[@(sequenceZero)] intValue];
@@ -646,7 +642,6 @@
 
     //==========telink need this==========//
     if (!ackExpected && destination) {
-        TeLogWarn(@"lowerTransportLayerDidSendSegmentedUpperTransportPduToDestination");
         [weakSelf.networkManager.upperTransportLayer lowerTransportLayerDidSendSegmentedUpperTransportPduToDestination:destination];
     }
     //==========telink not need this==========//

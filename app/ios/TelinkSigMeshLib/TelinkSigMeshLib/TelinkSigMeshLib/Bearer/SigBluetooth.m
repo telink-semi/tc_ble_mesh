@@ -515,6 +515,11 @@
     if (RSSI.intValue >=0) {
         return;
     }
+    //=================test==================//
+//    if (RSSI.intValue < -50) {
+//        return;
+//    }
+    //=================test==================//
 
     if (![advertisementData.allKeys containsObject:CBAdvertisementDataServiceUUIDsKey]) {
         return;
@@ -541,14 +546,14 @@
     if (self.scanServiceUUID && [self.scanServiceUUID isEqualToString:kPROXYService] && provisionAble) {
         return;
     }
-
+    
+    SigScanRspModel *scanRspModel = [[SigScanRspModel alloc] initWithPeripheral:peripheral advertisementData:advertisementData];
     //=================test==================//
-//    if (RSSI.intValue < -50) {
+//    if (![scanRspModel.macAddress isEqualToString:@"ABCDE30B2F6B"]) {
 //        return;
 //    }
     //=================test==================//
-    
-    SigScanRspModel *scanRspModel = [[SigScanRspModel alloc] initWithPeripheral:peripheral advertisementData:advertisementData];
+
     TeLogInfo(@"discover mac：%@ state=%@ advertisementData=%@",scanRspModel.macAddress,provisionAble?@"1827":@"1828",advertisementData);
     BOOL shouldDelay = scanRspModel.macAddress == nil || scanRspModel.macAddress.length == 0;
     if (shouldDelay && self.waitScanRseponseEnabel) {
@@ -651,7 +656,7 @@
         if ([characteristic.UUID.UUIDString isEqualToString:kPROXY_Out_CharacteristicsID]) {
             TeLogInfo(@"<--- from:PROXY, length:%d",characteristic.value.length);
         } else {
-            TeLogInfo(@"<--- from:GATT, length:%d, value:%@",characteristic.value.length,[LibTools convertDataToHexStr:characteristic.value]);
+            TeLogInfo(@"<--- from:GATT, length:%d",characteristic.value.length);
         }
         if (self.bluetoothDidUpdateValueForCharacteristicCallback) {
             self.bluetoothDidUpdateValueForCharacteristicCallback(peripheral, characteristic);

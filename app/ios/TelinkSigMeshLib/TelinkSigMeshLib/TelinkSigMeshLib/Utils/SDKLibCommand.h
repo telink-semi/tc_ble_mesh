@@ -152,6 +152,7 @@ typedef enum : UInt8 {
 @property (nonatomic,strong) SigMeshAddress *destination;
 @property (nonatomic,assign) UInt8 initialTtl;
 @property (nonatomic,assign) SigCommandType commandType;
+@property (nonatomic,strong) SigMessageHandle *messageHandle;
 
 @property (nonatomic,assign) NSInteger responseMaxCount;
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*responseSourceArray;

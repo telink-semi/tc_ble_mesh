@@ -27,8 +27,6 @@
 //  Copyright © 2019 梁家誌. All rights reserved.
 //
 
-#import <TelinkSigMeshLib/TelinkSigMeshLib.h>
-
 NS_ASSUME_NONNULL_BEGIN
 
 ///more detail:  Mesh_v1.0.pdf section 6.4~6.7

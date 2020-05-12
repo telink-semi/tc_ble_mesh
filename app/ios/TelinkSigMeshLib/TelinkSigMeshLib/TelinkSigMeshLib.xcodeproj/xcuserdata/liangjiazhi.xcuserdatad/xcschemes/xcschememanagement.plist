@@ -4,6 +4,11 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>TelinkSigMeshLib copy.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
 		<key>TelinkSigMeshLib.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
@@ -12,6 +17,11 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>252894542468F13400E590F9</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>25C0AFD8235D597400846CFB</key>
 		<dict>
 			<key>primary</key>
