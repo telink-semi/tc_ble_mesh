@@ -27,10 +27,12 @@ u8 telink_ble_mi_app_event(u8 sub_code , u8 *p, int n)
 		}else{
 			p_report->addr_type = MIBLE_ADDRESS_TYPE_PUBLIC;
 		}
-		if(pa->event_type == ADV_REPORT_EVENT_TYPE_NONCONN_IND){
+		if(pa->event_type == LL_TYPE_ADV_NONCONN_IND){
 			p_report->adv_type = ADV_DATA;
-		}else if(pa->event_type == ADV_REPORT_EVENT_TYPE_SCAN_IND){
+		}else if(pa->event_type == LL_TYPE_SCAN_REQ){
 			p_report->adv_type = SCAN_RSP_DATA;
+		}else{
+		    return 1;
 		}
 		memcpy(p_report->peer_addr,pa->mac,sizeof(pa->mac));
 		// memcpy adv data 

@@ -27,7 +27,7 @@
 #include "../ble_common.h"
 #include "../blt_config.h"
 #include "../hci/hci_const.h"
-//#include "../hci/hci_event.h"
+//#include "../hci/hci_event.h" // comment by weixiong in mesh
 #include "../hci/hci_cmd.h"
 #include "ll_adv.h"
 #include "ll_encrypt.h"

@@ -30,7 +30,7 @@ _attribute_data_retention_	unsigned int rnd_m_w = 0;
 _attribute_data_retention_	unsigned int rnd_m_z = 0;
 
 
-#if  RANDOM_NEW_MODE
+#if  TRNG_MODE_ENABLE
 
 /**
  * @brief     This function performs to get one random number.If chip in suspend TRNG module should be close.
@@ -41,41 +41,27 @@ _attribute_data_retention_	unsigned int rnd_m_z = 0;
 void random_generator_init(void)
 {
 
-	unsigned char done=0;
-	unsigned char cnt=0;
-	unsigned char time_out=0;
-	unsigned char con=0;
-
-	//For TRNG 0x62<BIT3->0> enable TRNG module;  0x65<BIT3->1>turn on TRNG clock
-	write_reg8(0x62, 0x00);
-	write_reg8(0x65, 0xff);
+	//0x62<BIT3->0>Not Reset TRNG module.0x65<BIT3->1>turn on TRNG clock
+	write_reg8(0x62, read_reg8(0x62) & 0xf7);
+	write_reg8(0x65, read_reg8(0x65) | 0x08);
 
 	write_reg8(0x4400,read_reg8(0x4400)&0xfe);//disable
 	write_reg32(0x4404,0x0);//TCR MSEL
-	write_reg8(0x4400,read_reg8(0x4400) | 0x1f);//enable
+	write_reg8(0x4400,read_reg8(0x4400) | 0x1);//enable
 
-	done=(read_reg8(0x4408) & 0x01);
-	con = done || time_out;
 
-	while(con==0)
-	{
-		done=(read_reg8(0x4408) & 0x01);
-		cnt+=1;
-		if(cnt>100)
-		{
-			time_out=1;
-		}
-		con = done || time_out;
-	}
+	while(!(read_reg8(0x4408) & 0x01));
 	rnd_m_w = read_reg32(0x440c);
+
+	while(!(read_reg8(0x4408) & 0x01));
 	rnd_m_z = read_reg32(0x440c);
 
-	//For TRNG 0x62<BIT3->0> RESET TRNG module;  0x65<BIT3->1>turn off TRNG clock
-	write_reg8(0x62, 0x08);
-	write_reg8(0x65, 0xf7);
+
+	//0x62<BIT3->1>Reset TRNG module,0x65<BIT3->0>turn off TRNG clock
+	write_reg8(0x62, read_reg8(0x62) | 0x08);
+	write_reg8(0x65, read_reg8(0x65) & 0xf7);
 
 	write_reg8(0x4400,read_reg8(0x4400)&0xe0);//disable
-
 }
 
 /**
@@ -249,7 +235,7 @@ _attribute_ram_code_ unsigned int rand(void)  //16M clock, code in flash 23us, c
 
 #endif
 
-#if 0
+#if 0 // add by weixiong in mesh
 /**
  * @brief      This function performs to get a serial of random number.
  * @param[in]  len- the length of random number
@@ -271,5 +257,19 @@ void generateRandomNum(int len, unsigned char *data)
 	}
 }
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

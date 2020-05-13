@@ -596,6 +596,7 @@ static inline int is_transition_need(u8 transit_t, u8 delay)
 typedef struct{
 	s16 target_val;		// include onoff and level
 	s16 present_val;
+	u32 lc_prop_time_ms;    // light control onoff prop time, unit ms.
 	s16 level_move;     //
 	u8 transit_t;
 	u8 delay;
@@ -1028,10 +1029,32 @@ typedef struct{
 typedef struct{
 	u16 len;        // exclude len
 	u16 id;
-	u8 val[3];		// confirm later
-}light_lc_property_t;
+	u8 val[4];      // max 3
+}lc_prop_head_t;
 
-#define LEN_LC_PROP_MAX		(sizeof(light_lc_property_t)-OFFSETOF(light_lc_property_t,id))
+typedef struct{
+	u16 len;        // exclude len
+	u16 id;
+	void *p_val;
+	u16 len_p_val;
+	u16 type/*lc_prop_type_t*/;     // 4byte align
+	u32 val_init;   // max 3 byte
+}lc_prop_info_t;
+
+typedef struct{
+	u32 val     :24;    // unit: ms
+}lc_prop_u24_t;     // property time            // Note: sizeof(bit-field 24) is 7 for eclipse, but 8 for VC.
+#define LEN_LC_PROP_TIME            (3+2)   // sizeof(bit-field) error // sizeof(id + val)
+#define LEN_LC_PROP_LIGHTNESS       (2+2)   // sizeof(id + val)
+
+typedef struct{
+	u32 val     :24;    
+}lc_prop_luxlevel_t;
+#define LEN_LC_PROP_LUXLEVEL        (3+2)   // sizeof(24bit) error for VC
+#define LEN_LC_PROP_REGULATOR       (4+2)
+#define LEN_LC_PROP_ACCURACY        (1+2)
+
+#define LEN_LC_PROP_MAX		(sizeof(lc_prop_head_t)-OFFSETOF(lc_prop_head_t,id))
 
 typedef struct{
 #if MD_SERVER_EN
@@ -1042,9 +1065,28 @@ typedef struct{
 	model_client_common_t clnt[1];		        // client
 #endif
 #if MD_SERVER_EN
-	light_lc_property_t prop[LIGHT_CNT];
+	lc_prop_luxlevel_t LuxLevelOn[LIGHT_CNT];       // confirm 2 or 3 byte later
+	lc_prop_luxlevel_t LuxLevelProlong[LIGHT_CNT];
+	lc_prop_luxlevel_t LuxLevelStandby[LIGHT_CNT];
+	u16 LightnessOn[LIGHT_CNT];
+	u16 LightnessProlong[LIGHT_CNT];
+	u16 LightnessStandby[LIGHT_CNT];
+	u8  RegAccuracy[LIGHT_CNT];
+	float RegKid[LIGHT_CNT];
+	float RegKiu[LIGHT_CNT];
+	float RegKpd[LIGHT_CNT];
+	float RegKpu[LIGHT_CNT];
+	lc_prop_u24_t TimeOccupancyDelay[LIGHT_CNT];
+	lc_prop_u24_t TimeFadeOn[LIGHT_CNT];
+	lc_prop_u24_t TimeRunOn[LIGHT_CNT];
+	lc_prop_u24_t TimeFade[LIGHT_CNT];
+	lc_prop_u24_t TimeProlong[LIGHT_CNT];
+	lc_prop_u24_t TimeStandbyAuto[LIGHT_CNT];
+	lc_prop_u24_t TimeStandbyManual[LIGHT_CNT];
 	u8 mode[LIGHT_CNT];
 	u8 om[LIGHT_CNT];
+	u8 onoff[LIGHT_CNT];
+	u8 rsv[LIGHT_CNT][4];
 #endif
 }model_light_lc_t;
 
@@ -1103,7 +1145,7 @@ typedef struct{
 #endif
 #if MD_LIGHT_CONTROL_EN //
     u8 lc_mode;
-    light_lc_property_t lc_propty;
+    u8 lc_onoff;
 #endif
 #if LIGHT_TYPE_CT_EN
     u8 ct_flag;
@@ -1544,6 +1586,8 @@ int is_pkt_notify_only(u16 dst_adr, int relay_flag);
 u32 get_reliable_interval_ms_min();
 u32 get_reliable_interval_ms_max();
 void prov_random_proc(u8 *p_random);
+void mesh_node_refresh_binding_tick();
+u64 mul32x32_64(u32 a, u32 b);
 
 
 extern u16 ele_adr_primary;

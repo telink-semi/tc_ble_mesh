@@ -180,7 +180,7 @@ void model_pub_check_set_bind_all(st_pub_list_t *pub_list, mesh_cb_fun_par_t *cb
 #endif
 #if MD_LIGHT_CONTROL_EN
         model_pub_check_set(level_set_st, (u8 *)(&(model_sig_light_lc.srv[light_idx])), SIG_MD_LIGHT_LC_S == p_res->id);
-        if(is_light_lc_op(cb_par->op)){
+        if(is_light_lc_onoff(cb_par->op)){
             model_pub_st_cb_re_init_lc_srv(&mesh_lc_onoff_st_publish);    // re-init
         }
 #endif
@@ -303,12 +303,6 @@ int g_level_set(u8 *par, int par_len, u16 op, int idx, u8 retransaction, int st_
 			}
 			set_trans.delay = p_set->delay;
 			p_set_trans = &set_trans;
-			#if MD_LIGHT_CONTROL_EN    // for PTS LC server : MMDL / SR / LLC / BV04
-            extern u8 lc_onoff_flag;
-            if(lc_onoff_flag){          // comfirm later
-			    model_sig_g_power_onoff.trans_time[0].val = set_trans.transit_t; // need save ?
-			}
-			#endif
 		}
 	}
 
@@ -317,12 +311,23 @@ int g_level_set(u8 *par, int par_len, u16 op, int idx, u8 retransaction, int st_
 			p_set_trans = 0;
 		}
 	}else{
-		u8 def_transit_t = g_def_trans_time_val(idx);
-		if(GET_TRANSITION_STEP(def_transit_t)){
-			set_trans.transit_t = def_transit_t;
-			set_trans.delay = 0;
-			par_len = sizeof(mesh_cmd_g_level_delta_t);
-			p_set_trans = &set_trans;
+        #if MD_LIGHT_CONTROL_EN
+        if(pub_list->op_lc_onoff_type){
+            set_trans.lc_prop_time_ms = get_lc_onoff_prop_time_ms(idx, pub_list->op_lc_onoff_type);
+            if(set_trans.lc_prop_time_ms){
+    			set_trans.transit_t = set_trans.delay = 0; // clear
+    			p_set_trans = &set_trans;
+            }
+        }else
+        #endif
+        {
+    		u8 def_transit_t = g_def_trans_time_val(idx);
+    		if(GET_TRANSITION_STEP(def_transit_t)){
+    			set_trans.transit_t = def_transit_t;
+    			set_trans.delay = 0;
+    			par_len = sizeof(mesh_cmd_g_level_delta_t);
+    			p_set_trans = &set_trans;
+    		}
 		}
 	}
 

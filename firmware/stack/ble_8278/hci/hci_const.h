@@ -78,7 +78,7 @@
 #define HCI_SUB_EVT_LE_SCAN_TIMEOUT                                  0x11   //core_5.0 - LE Scan Timeout Event - [5] 7.7.65.17
 #define HCI_SUB_EVT_LE_ADVERTISING_SET_TERMINATED                    0x12   //core_5.0 - LE Advertising Set Terminated Event - [5]7.7.65.18
 #define HCI_SUB_EVT_LE_SCAN_REQUEST_RECEIVED                         0x13   //core_5.0 - LE Scan Request Received Event - [5]7.7.65.19
-#define HCI_SUB_EVT_LE_LE_CHANNEL_SELECTION_ALGORITHM                0x14   //core_5.0 - LE Channel Selection Algorithm Event - [5]7.7.65.20
+#define HCI_SUB_EVT_LE_CHANNEL_SELECTION_ALGORITHM                0x14   //core_5.0 - LE Channel Selection Algorithm Event - [5]7.7.65.20
 
 #define HCI_SUB_EVT_LE_CONNECTION_ESTABLISH					         0x20   //telink private
 

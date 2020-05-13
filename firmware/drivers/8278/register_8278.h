@@ -733,7 +733,7 @@ enum{
 
 
 /*******************************      timer registers: 0x620      ******************************/
-
+#define WATCHDOG_TIMEOUT_COEFF	18		//  check register definiton, 0x622
 #define reg_tmr_ctrl			REG_ADDR32(0x620)
 #define reg_tmr_ctrl16			REG_ADDR16(0x620)
 #define reg_tmr_ctrl8			REG_ADDR8(0x620)
@@ -751,9 +751,10 @@ enum{
 	FLD_TMR2_STA =				BIT(26),
 	FLD_CLR_WD =				BIT(27),
 };
-	
-#define WATCHDOG_TIMEOUT_COEFF	18		//  check register definiton, 0x622
+
+#if 1 // add by weixiong in mesh
 #define WATCHDOG_DISABLE	( reg_tmr_ctrl &= ~FLD_TMR_WD_EN )
+#endif
 
 #define reg_tmr_sta				REG_ADDR8(0x623)
 enum{
@@ -795,7 +796,7 @@ enum{
 	FLD_IRQ_EP_DATA_EN =		BIT(12),  FLD_IRQ_IRQ4_EN = BIT(12),
 	FLD_IRQ_ZB_RT_EN =			BIT(13),
 	FLD_IRQ_SW_PWM_EN =			BIT(14),  //irq_software | irq_pwm
-    //	RSVD 		=			BIT(15),
+	FLD_IRQ_PKE_EN =			BIT(15),//	RSVD 		=			BIT(15),
 
 	FLD_IRQ_USB_250US_EN =		BIT(16),
 	FLD_IRQ_USB_RST_EN =		BIT(17),
@@ -1011,11 +1012,6 @@ enum{
 	MIC_VOL_CONTROL_42DB  =     	0x3c,
 };
 
-#define	 reg_dfifo_manual_mode	REG_ADDR8(0xb2c)
-enum{
-	FLD_AUU_FIFO_AUTO_MODE 		    = BIT(1),
-	FLD_AUU_FIFO_MANUAL_MODE 		= BIT_RNG(0,1),
-};
 
 #define reg_set_filter_para     REG_ADDR8(0xb80)
 
@@ -1049,7 +1045,7 @@ enum{
 #define reg_dfifo1_num			REG_ADDR16(0xb24)
 #define reg_dfifo2_num			REG_ADDR16(0xb28)
 
-#define reg_dfifo0_manual		REG_ADDR8(0xb2c)
+#define reg_dfifo_manual_mode		REG_ADDR8(0xb2c)
 enum{
 	FLD_DFIFO_MANUAL_MODE_EN	= BIT(0),
 };
@@ -1239,6 +1235,42 @@ enum{
 	FLD_RF_IRQ_ALL =            0X1FFF,
 };
 
+/*******************************      pke registers: 0x2000      ******************************/
+#define reg_pke_ctrl             REG_ADDR32(0x2000)
+enum{
+	FLD_PKE_CTRL_START = 		 BIT(0),
+	FLD_PKE_CTRL_STOP = 		 BIT(16),
+};
+
+#define reg_pke_conf             REG_ADDR32(0x2004)
+enum{
+	FLD_PKE_CONF_IRQ_EN = 		 BIT(8),
+	FLD_PKE_CONF_PARTIAL_RADIX = BIT_RNG(16,23),
+	FLD_PKE_CONF_BASE_RADIX	=    BIT_RNG(24,26),
+};
+
+#define reg_pke_mc_ptr           REG_ADDR32(0x2010)
+
+#define reg_pke_stat             REG_ADDR32(0x2020)
+enum{
+	FLD_PKE_STAT_DONE = 		 BIT(0),
+};
+
+#define reg_pke_rt_code          REG_ADDR32(0x2024)
+enum{
+	FLD_PKE_RT_CODE_STOP_LOG =	 BIT_RNG(0,3),
+};
+
+#define reg_pke_exe_conf         REG_ADDR32(0x2050)
+enum{
+	FLD_PKE_EXE_CONF_IAFF_R0 = 	 BIT(0),
+	FLD_PKE_EXE_CONF_IMON_R0 = 	 BIT(1),
+	FLD_PKE_EXE_CONF_IAFF_R1 = 	 BIT(2),
+	FLD_PKE_EXE_CONF_IMON_R1 = 	 BIT(3),
+	FLD_PKE_EXE_CONF_OAFF = 	 BIT(4),
+	FLD_PKE_EXE_CONF_OMON = 	 BIT(5),
+	FLD_PKE_EXE_CONF_ME_SCA_EN = BIT_RNG(8,9),
+};
 
 /********************************************************************************************
  *****|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|*****
@@ -1267,10 +1299,10 @@ enum{
 
 #define mdec_rst_addr                   0x16
 enum{
-//	FLD_SELE_PA0 = 				BIT(0),  //not support now
+	FLD_SELE_PA0 = 				BIT(0),
 	FLD_SELE_PB7 = 				BIT(1),
 	FLD_SELE_PC4 = 			    BIT(2),
-//	FLD_SELE_PD0 = 				BIT(3),  //not support now
+	FLD_SELE_PD0 = 				BIT(3),
 	FLD_RST_MDEC =              BIT(4),
 	FLD_CLS_MDEC = 				BIT_RNG(0,4),
 };
@@ -1323,6 +1355,7 @@ enum{
 #define codec_ana_cfg2				   0xe6
 #define codec_ana_cfg3                 0xe7
 #define codec_ana_cfg4                 0xe8
+
 #define pga_audio_enable               0x34
 
 

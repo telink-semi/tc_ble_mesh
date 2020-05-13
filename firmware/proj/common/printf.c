@@ -263,9 +263,11 @@ extern unsigned char  mi_ota_is_busy();
 int my_printf_uart_hexdump(unsigned char *p_buf,int len )
 {
     #if HCI_LOG_FW_EN
+        #if MI_API_ENABLE
 	if(mi_ota_is_busy()){
 		return 1;
 	}
+	    #endif
 	int dump_len ;
 	dump_len = printf_Bin2Text(hex_dump_buf, sizeof(hex_dump_buf), (char*)p_buf,len);
     uart_simu_send_bytes((unsigned char *)hex_dump_buf,dump_len);
@@ -280,9 +282,11 @@ int my_printf_uart_hexdump(unsigned char *p_buf,int len )
 
 int my_printf_uart(const char *format,...){
     #if HCI_LOG_FW_EN
+        #if MI_API_ENABLE
 	if(mi_ota_is_busy()){
 		return 1;
 	}
+	    #endif
 	va_list args;
 	unsigned char **pp_buf;
 	unsigned char *p_buf;

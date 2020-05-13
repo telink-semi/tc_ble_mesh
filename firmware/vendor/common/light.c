@@ -666,7 +666,7 @@ u8 light_remain_time_get(st_transition_t *p_trans)
 	u32 remain_ms = p_trans->remain_t_ms;
 	u32 delay_ms = p_trans->delay_ms;
 
-	u8 remain_t = get_transition_step_res(remain_ms/100);
+	u8 remain_t = get_transition_step_res((remain_ms+99)/100);
 	if(0 == remain_t){
 		remain_t = get_transition_step_res((delay_ms+99)/100);
 	}
@@ -1013,7 +1013,12 @@ void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type)
 		if(0x3F == (p_set->transit_t & 0x3F)){
 			p_trans->remain_t_ms = -1;
 		}else{
-			p_trans->remain_t_ms = 100 * get_transition_100ms((trans_time_t *)&p_set->transit_t);
+		    if(p_set->lc_prop_time_ms){
+			    p_trans->remain_t_ms = p_set->lc_prop_time_ms;
+			}else{
+                p_trans->remain_t_ms = 100 * get_transition_100ms((trans_time_t *)&p_set->transit_t);
+			}
+			
 			if(p_trans->remain_t_ms){
                 if(is_level_move_set_op(p_set->op)){
                     // have been make sure (target_val != present_val) and (level_move != 0) before.

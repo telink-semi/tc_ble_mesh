@@ -75,6 +75,7 @@ typedef enum {
 typedef enum{
 	UART_TX_PA2 = GPIO_PA2,
 	UART_TX_PB1 = GPIO_PB1,
+	UART_TX_PC2 = GPIO_PC2,
 	UART_TX_PD0 = GPIO_PD0,
 	UART_TX_PD3 = GPIO_PD3,
 	UART_TX_PD7 = GPIO_PD7,
@@ -261,8 +262,8 @@ extern volatile unsigned char uart_send_byte(unsigned char byte);
  * @param[in] RecvBufLen - length in byte of the receiving buffer
  * @return    none
  */
-
-extern void uart_recbuff_init(unsigned char *RecvAddr, unsigned short RecvBufLen, unsigned char *txAddr);
+// modify by weixiong in mesh: add par
+extern void uart_recbuff_init(unsigned char *RecvAddr, unsigned short RecvBufLen, unsigned char *txAddr); // modify by weixiong in mesh
 
 
 
@@ -278,6 +279,13 @@ extern unsigned char uart_is_parity_error(void);
  * @brief     This function clears parity error status once when it occurs.
  * @param[in] none
  * @return    none
+ *
+ * Note:
+ *(1)DMA mode
+ * RX FIFO will also be cleared when parity error flag is cleared .
+ *(2)NON-DMA mode
+ * When parity error occurs, clear parity error flag after UART receives the data.
+ * Cycle the four registers (0x90 0x91 0x92 0x93) from register "0x90" to get data when UART receives the data next time.
  */
 extern void  uart_clear_parity_error(void);
 
@@ -320,6 +328,12 @@ extern void uart_set_cts(unsigned char Enable, unsigned char Select,UART_CtsPinD
 */
 extern void uart_gpio_set(UART_TxPinDef tx_pin,UART_RxPinDef rx_pin);
 
+/**
+ * @brief   This function enables the irq when UART module receives error data.
+ * @param[in] none
+ * @return    none
+ */
+extern void uart_mask_error_irq_enable(void);
 
 #endif
 

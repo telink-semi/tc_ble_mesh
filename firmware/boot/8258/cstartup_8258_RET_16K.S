@@ -1,3 +1,24 @@
+/********************************************************************************************************
+ * @file     8258_cstartup_RET_16K.S
+ *
+ * @brief    This is the boot file for TLSR8278
+ *
+ * @author   public@telink-semi.com;
+ * @date     May 8, 2018
+ *
+ * @par      Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *
+ *           The information contained herein is confidential property of Telink
+ *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
+ *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
+ *           Co., Ltd. and the licensee or the terms described here-in. This heading
+ *           MUST NOT be removed from this file.
+ *
+ *           Licensees are granted free, non-transferable use of the information in this
+ *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *
+ *******************************************************************************************************/
 
 #ifdef MCU_STARTUP_8258_RET_16K
 
@@ -80,6 +101,7 @@ __start:					@ MUST,  referenced by boot.link
 
 	.org 0x20
 	.align 4
+#if (MCU_CORE_TYPE == MCU_CORE_8258)
 	.global start_suspend
 	.thumb_func
 	.type start_suspend, %function
@@ -113,7 +135,7 @@ start_suspend:
 
 __suspend_data:
 	.word   (0x80006f)
-
+#endif
 
 
 __reset:
@@ -145,6 +167,17 @@ TNOP:
 	tmov		r1,#1
 	tstorerb    r1,[r0,#1]
 FLASH_WAKEUP_END:
+
+#if (MCU_CORE_TYPE == MCU_CORE_8278)
+@ efuse load need delay about 18us
+	tmov		r2,#0
+	tmov        r3,#110
+EFUSE_DELAY:
+	tadd        r2,#1
+	tcmp        r2,r3
+	tjle        EFUSE_DELAY
+EFUSE_DELAY_END:
+#endif
 
 #if __PROJECT_BOOTLOADER__
     @ bootloader copy code mode
@@ -219,11 +252,19 @@ SET_BOOT: @because no load ramcode when boot from retention, so must set boot ar
 	tcmp        r0, r1
 	tjne        SET_BOOT_END    @power up
 
+    #if (MCU_CORE_TYPE == MCU_CORE_8278)
+	tmov        r2, #2
+	tloadrh     r1, [r2]        @read form core_840002_840003
+	tloadr      r0, BOOT_SEL_D
+	tstorerh    r1, [r0, #0]
+	tj          COPY_DATA_END   @wake up from retention deep
+    #else
 	tmov        r2, #5
 	tloadrb     r1, [r2]        @read form core_840005
 	tloadr      r0, BOOT_SEL_D
 	tstorerb    r1, [r0, #0]
 	tj          COPY_DATA_END   @wake up from retention deep
+    #endif
 SET_BOOT_END:
 
 #if RUN_254K_IN_20000_EN // run 254K in 0x20000, default disable to save RAM.

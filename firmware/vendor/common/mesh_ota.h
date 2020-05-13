@@ -495,6 +495,7 @@ void get_fw_id();
 u32 get_fw_len();
 void mesh_ota_master_ack_timeout_handle();
 u8 get_ota_check_type();
+u32 get_total_crc_type1_new_fw();
 int is_valid_ota_check_type1();
 u32 get_blk_crc_tlk_type1(u8 *data, u32 len, u32 addr);
 int ota_file_check();
@@ -505,4 +506,10 @@ void APP_set_mesh_ota_pause_flag(u8 val);
 int is_mesh_ota_and_only_VC_update();
 u32 soft_crc32_ota_flash(u32 addr, u32 len, u32 crc_init,u32 *out_crc_type1_blk);
 int mesh_ota_slave_need_ota(fw_metadata_t *p_metadata, int len);
+unsigned short crc16(unsigned char *pD, int len);
+void mesh_ota_read_data(u32 adr, u32 len, u8 * buf);
+
+extern u32	ota_program_offset;
+
+
 

@@ -208,11 +208,11 @@ extern "C" {
 #define SUBSCRIPTION_SHARE_EN		1
 #define AIS_ENABLE					0
 #define PROVISION_FLOW_SIMPLE_EN    0
-#if __PROJECT_BOOTLOADER__
+    #if __PROJECT_BOOTLOADER__
 #define FW_START_BY_BOOTLOADER_EN   0
-#else
+    #else
 #define FW_START_BY_BOOTLOADER_EN   1
-#endif
+    #endif
 #define DUAL_MESH_ZB_BL_EN          1
 #endif
 
@@ -337,7 +337,11 @@ extern "C" {
 #define MESH_RX_TEST	(0&&(!WIN32))
 #define MESH_DELAY_TEST_EN		0
 #if (__PROJECT_MESH_PRO__)   // app & gateway
+    #if WIN32
 #define MD_MESH_OTA_EN				1
+    #else // gateway
+#define MD_MESH_OTA_EN				0   // dufault disable before released by SIG.
+    #endif
 #else
 	#if ((MESH_USER_DEFINE_MODE == MESH_MI_ENABLE) || (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL) || __PROJECT_MESH_LPN__ || SPIRIT_PRIVATE_LPN_EN || (LIGHT_TYPE_SEL == TYPE_TOOTH_BRUSH))
 #define MD_MESH_OTA_EN				0   // must 0

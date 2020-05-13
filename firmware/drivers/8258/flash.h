@@ -61,15 +61,23 @@ typedef enum{
 	FLASH_TYPE_PUYA
 }Flash_TypeDef;
 
+/**
+ * @brief     flash capacity definition
+ * Call flash_read_mid function to get the size of flash capacity.
+ * Example is as follows:
+ * unsigned char temp_buf[4];
+ * flash_read_mid(temp_buf);
+ * The value of temp_buf[2] reflects flash capacity.
+ */
 typedef enum {
-	FLASH_SIZE_64K 	= 0x10,
-	FLASH_SIZE_128K = 0x11,
-	FLASH_SIZE_256K = 0x12,
-	FLASH_SIZE_512K = 0x13,
-	FLASH_SIZE_1M 	= 0x14,
-	FLASH_SIZE_2M 	= 0x15,
-	FLASH_SIZE_4M 	= 0x16,
-	FLASH_SIZE_8M 	= 0x17,
+    FLASH_SIZE_64K     = 0x10,
+    FLASH_SIZE_128K    = 0x11,
+    FLASH_SIZE_256K    = 0x12,
+    FLASH_SIZE_512K    = 0x13,
+    FLASH_SIZE_1M      = 0x14,
+    FLASH_SIZE_2M      = 0x15,
+    FLASH_SIZE_4M      = 0x16,
+    FLASH_SIZE_8M      = 0x17,
 } Flash_CapacityDef;
 
 /**
@@ -107,12 +115,13 @@ unsigned long flash_subregion_write_val (unsigned long adr, unsigned long flag_i
 unsigned long flash_subregion_read_val (unsigned long adr, unsigned long flag_invalid, unsigned long num);
 #endif
 
-/***********************************
- * @brief	  This function serves to read MID of flash
- * @param[in] buf - store MID of flash
- * @return    none.
+/**
+ * @brief This function write the status of flash.
+ * @param[in]  the value of status
+ * @return status
  */
 void flash_read_mid(unsigned char *buf);
+
 
 /* according to your appliaction */
 #if 0

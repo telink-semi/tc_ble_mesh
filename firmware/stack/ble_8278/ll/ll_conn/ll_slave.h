@@ -143,7 +143,7 @@ extern _attribute_aligned_(4) st_ll_conn_slave_t		bltc;
 
 
 
-
+//extern u8 blt_connected_send_adv_flag; // comment by weixiong in mesh
 /************************************ User Interface  ******************************************************/
 void 		blc_ll_initSlaveRole_module(void);
 
@@ -159,6 +159,7 @@ u16			bls_ll_getConnectionTimeout(void);	 // if return 0, means not in connectio
 int			bls_ll_requestConnBrxEventDisable(void);
 void		bls_ll_disableConnBrxEvent(void);
 void		bls_ll_restoreConnBrxEvent(void);
+//void        blt_send_adv2scan_mode(int tx_adv); // comment by weixiong in mesh
 
 
 
@@ -215,7 +216,7 @@ static inline void	blt_restore_snnesn()
 }
 
 /////////////////////// DMA Tx fifo rptr /////////////////////////////////////////////
-extern 	u8 blt_dma_tx_rptr;//not need store in deep retention section.
+extern 	u8 blt_dma_tx_rptr;//not need store in deep retention section. // add comment by weixiong in mesh
 
 static inline void	blt_save_dma_tx_rptr()
 {

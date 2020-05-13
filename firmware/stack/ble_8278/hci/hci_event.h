@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -29,8 +29,8 @@
 #ifndef HCI_EVENT_H_
 #define HCI_EVENT_H_
 
-#include "hci.h"
-#include "../ble_common.h"
+#include "hci.h" 			// modify by weixiong in mesh
+#include "../ble_common.h" 	// modofy by weixiong in mesh
 
 /**
  *  @brief  Definition for general HCI event packet
@@ -41,15 +41,6 @@ typedef struct {
 	u8         paraLen;
 	u8         parameters[1];
 } hci_event_t;
-
-
-
-typedef struct {
-	u8         status;
-	u16        connHandle;
-	u8         reason;
-} hci_disconnectionCompleteEvt_t;
-
 
 
 typedef struct {
@@ -76,6 +67,38 @@ typedef struct {
 	u8         subEventCode;
 	u8         parameters[1];
 } hci_le_metaEvt_t;
+
+
+
+
+
+
+
+
+
+
+
+/**
+ *  @brief  Event Parameters for "HCI LE Meta Event: LE Advertising Report Event"
+ */
+// Advertise report event type
+typedef enum {
+	ADV_REPORT_EVENT_TYPE_ADV_IND 		= 0x00,
+	ADV_REPORT_EVENT_TYPE_DIRECT_IND 	= 0x01,
+	ADV_REPORT_EVENT_TYPE_SCAN_IND 		= 0x02,
+	ADV_REPORT_EVENT_TYPE_NONCONN_IND 	= 0x03,
+	ADV_REPORT_EVENT_TYPE_SCAN_RSP 		= 0x04,
+} advReportEventType_t;
+
+
+
+
+
+typedef struct {
+	u8         status;
+	u16        connHandle;
+	u8         reason;
+} hci_disconnectionCompleteEvt_t;
 
 
 typedef struct {

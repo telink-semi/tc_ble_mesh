@@ -34,6 +34,7 @@
 #define DEV_NAME                        "tModule"
 #endif
 
+#if 1 // add by weixiong in mesh
 /*
  * only 1 can be set
  */
@@ -58,9 +59,7 @@ static inline void blc_app_loadCustomizedParameters(void)
 		 }
 	 }
 }
-
-
-
+#endif
 
 
 
@@ -87,27 +86,22 @@ static inline void blc_app_loadCustomizedParameters(void)
 
 
 
-#ifndef  LL_MULTI_MASTER_SINGLE_SLAVE_ENABLE
-#define  LL_MULTI_MASTER_SINGLE_SLAVE_ENABLE				0
-#endif
-
-
-#if (LL_MULTI_MASTER_SINGLE_SLAVE_ENABLE)
-
-	#define BLE_CORE42_DATA_LENGTH_EXTENSION_ENABLE			0  // process later
-	#define	FIX_HW_CRC24_EN						            0
-	#define BLUETOOTH_VER									BLUETOOTH_VER_4_2
-#endif
-
-
-
-
 #ifndef		BLS_ADV_INTERVAL_CHECK_ENABLE
 #define		BLS_ADV_INTERVAL_CHECK_ENABLE					0
 #endif
 
+#if 1 // add by weixiong
+/////////////////  scan mode config  //////////////////////////
+#if LIB_TELINK_MESH_SCAN_MODE_ENABLE
+#define		BLS_TELINK_MESH_SCAN_MODE_ENABLE				1
+#define 	BLS_TELINK_WHITE_LIST_ENABLE					0
+#define 	RAMCODE_OPTIMIZE_CONN_POWER_NEGLECT_ENABLE		1
+#endif
 
-
+#ifndef		BLS_TELINK_MESH_SCAN_MODE_ENABLE
+#define		BLS_TELINK_MESH_SCAN_MODE_ENABLE				0
+#endif
+#endif
 
 #define	BLS_BLE_RF_IRQ_TIMING_EXTREMELY_SHORT_EN			0
 
@@ -115,7 +109,7 @@ static inline void blc_app_loadCustomizedParameters(void)
 
 //conn param update/map update
 #ifndef	BLS_PROC_MASTER_UPDATE_REQ_IN_IRQ_ENABLE
-#define BLS_PROC_MASTER_UPDATE_REQ_IN_IRQ_ENABLE			0
+#define BLS_PROC_MASTER_UPDATE_REQ_IN_IRQ_ENABLE			1
 #endif
 
 

@@ -27,8 +27,7 @@
 #define BSP_H_
 
 #include "compiler.h"
-#include "proj/common/compatibility.h"
-
+#include "proj/common/compatibility.h" // add by weixiong in mesh
 /**
  *  define BIT operations
  */
@@ -105,13 +104,15 @@
 #define REG_ADDR16(a)			(*(volatile unsigned short*)(REG_BASE_ADDR + (a)))
 #define REG_ADDR32(a)			(*(volatile unsigned long*) (REG_BASE_ADDR + (a)))
 
-//#define write_reg8(addr,v)		(*(volatile unsigned char*)  (REG_BASE_ADDR + (addr)) = (unsigned char)(v))
-//#define write_reg16(addr,v)		(*(volatile unsigned short*) (REG_BASE_ADDR + (addr)) = (unsigned short)(v))
-//#define write_reg32(addr,v)		(*(volatile unsigned long*)  (REG_BASE_ADDR + (addr)) = (v))
+#if 0 // add by weixiong in mesh
+#define write_reg8(addr,v)		(*(volatile unsigned char*)  (REG_BASE_ADDR + (addr)) = (unsigned char)(v))
+#define write_reg16(addr,v)		(*(volatile unsigned short*) (REG_BASE_ADDR + (addr)) = (unsigned short)(v))
+#define write_reg32(addr,v)		(*(volatile unsigned long*)  (REG_BASE_ADDR + (addr)) = (v))
 
-//#define read_reg8(addr)			(*(volatile unsigned char*) (REG_BASE_ADDR + (addr)))
-//#define read_reg16(addr)		(*(volatile unsigned short*)(REG_BASE_ADDR + (addr)))
-//#define read_reg32(addr)		(*(volatile unsigned long*) (REG_BASE_ADDR + (addr)))
+#define read_reg8(addr)			(*(volatile unsigned char*) (REG_BASE_ADDR + (addr)))
+#define read_reg16(addr)		(*(volatile unsigned short*)(REG_BASE_ADDR + (addr)))
+#define read_reg32(addr)		(*(volatile unsigned long*) (REG_BASE_ADDR + (addr)))
+#endif
 
 #define WRITE_REG8				write_reg8
 #define WRITE_REG16				write_reg16
@@ -131,7 +132,7 @@
 #define TCMD_WAIT				0x7
 #define TCMD_WAREG				0x8
 
-#if 0
+#if 0 // add by weixiong in mesh
 /**
  *  command table for special registers
  */

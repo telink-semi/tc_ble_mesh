@@ -34,6 +34,7 @@ typedef signed short int s16;
 
 typedef int s32;
 typedef unsigned int u32;
+typedef int bool4;
 
 typedef long long s64;
 typedef unsigned long long u64;

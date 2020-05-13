@@ -50,6 +50,54 @@
 
 //------------------vendor op end-------------------
 
+//------------------ LC property id number
+#define LC_PROP_ID_LuxLevelOn               0x002B
+#define LC_PROP_ID_LuxLevelProlong          0x002C
+#define LC_PROP_ID_LuxLevelStandby          0x002D
+#define LC_PROP_ID_LightnessOn              0x002E
+#define LC_PROP_ID_LightnessProlong         0x002F
+#define LC_PROP_ID_LightnessStandby         0x0030
+#define LC_PROP_ID_RegulatorAccuracy        0x0031
+#define LC_PROP_ID_RegulatorKid             0x0032
+#define LC_PROP_ID_RegulatorKiu             0x0033
+#define LC_PROP_ID_RegulatorKpd             0x0034
+#define LC_PROP_ID_RegulatorKpu             0x0035
+#define LC_PROP_ID_TimeFade                 0x0036
+#define LC_PROP_ID_TimeFadeOn               0x0037
+#define LC_PROP_ID_TimeFadeStandbyAuto      0x0038
+#define LC_PROP_ID_TimeFadeStandbyManual    0x0039
+#define LC_PROP_ID_TimeOccupancyDelay       0x003A
+#define LC_PROP_ID_TimeProlong              0x003B
+#define LC_PROP_ID_TimeRunOn                0x003C
+
+// lc_prop_type_t
+#define LC_PROP_TYPE_LUXLEVEL       (0)
+#define LC_PROP_TYPE_LIGHTNESS      (1)
+#define LC_PROP_TYPE_ACCURACY       (2)
+#define LC_PROP_TYPE_REGULATOR      (3)
+#define LC_PROP_TYPE_TIME           (4)
+
+
+//------------------ LC property id parameter
+#define LC_PROP_VAL_LuxLevelOn              (0) // confirm later
+#define LC_PROP_VAL_LuxLevelProlong         (0) // confirm later
+#define LC_PROP_VAL_LuxLevelStandby         (0) // confirm later
+#define LC_PROP_VAL_LightnessOn             (LIGHTNESS_MAX)
+#define LC_PROP_VAL_LightnessProlong        (LIGHTNESS_MAX / 2)
+#define LC_PROP_VAL_LightnessStandby        (LIGHTNESS_MAX / 10)
+#define LC_PROP_VAL_RegulatorAccuracy       (0) // confirm later
+#define LC_PROP_VAL_RegulatorKid            (0) // confirm later
+#define LC_PROP_VAL_RegulatorKiu            (0) // confirm later
+#define LC_PROP_VAL_RegulatorKpd            (0) // confirm later
+#define LC_PROP_VAL_RegulatorKpu            (0) // confirm later
+#define LC_PROP_VAL_TimeFade                (2*1000)    // unit: ms
+#define LC_PROP_VAL_TimeFadeOn              (2*1000)    // unit: ms
+#define LC_PROP_VAL_TimeFadeStandbyAuto     (2*1000)    // unit: ms
+#define LC_PROP_VAL_TimeFadeStandbyManual   (2*1000)    // unit: ms
+#define LC_PROP_VAL_TimeOccupancyDelay      (2*1000)    // unit: ms
+#define LC_PROP_VAL_TimeProlong             (2*1000)    // unit: ms
+#define LC_PROP_VAL_TimeRunOn               (2*1000)    // unit: ms
+
 enum{
     LC_MODE_OFF = 0,
     LC_MODE_ON,
@@ -62,11 +110,31 @@ enum{
     LC_OM_MAX,
 };
 
+typedef struct{
+	u16 id;
+	u8 val[4];      // max 4: LEN_LC_PROP_MAX
+}lc_prop_set_t;
+
+enum{
+    //LC_STATE_OFF    = 0, // use lc mode enable instead of.
+    LC_STATE_STANDBY = 0,   // should be 0
+    LC_STATE_FADE_ON,
+    LC_STATE_RUN,
+    LC_STATE_FADE,
+    LC_STATE_PROLONG,
+    LC_STATE_FADE_STANDBY_AUTO,
+    LC_STATE_FADE_STANDBY_MANUAL,
+    LC_STATE_MAX,
+};
+
 // -----------
-int is_light_lc_op(u16 op);
+int is_light_lc_onoff(u16 op);
+u32 get_lc_onoff_prop_time_ms(int light_idx, int op_lc_onoff_type);
 void scene_get_lc_par(scene_data_t *p_scene, int light_idx);
 void scene_load_lc_par(scene_data_t *p_scene, int light_idx);
 void LC_property_tick_set(int idx);
+void LC_property_st_and_tick_set(int light_idx, u8 st);
+void LC_property_light_onoff(int light_idx, u8 onoff);
 void LC_property_proc();
 void light_LC_global_init();
 int mesh_lc_prop_st_publish(u8 idx);

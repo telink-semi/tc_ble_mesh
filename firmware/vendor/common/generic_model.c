@@ -227,9 +227,6 @@ int g_onoff_set(mesh_cmd_g_onoff_set_t *p_set, int par_len, int force_last, int 
 	return err;
 }
 
-#if MD_LIGHT_CONTROL_EN
-u8 lc_onoff_flag = 0;   // comfirm later
-#endif
 
 /**
  * @brief  When the Generic OnOff Set or Generic OnOff Set Unacknowledged 
@@ -243,6 +240,7 @@ u8 lc_onoff_flag = 0;   // comfirm later
 int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
+    mesh_cmd_g_onoff_set_t *p_set = (mesh_cmd_g_onoff_set_t *)par;
 #if MESH_RX_TEST
 	if(par_len>sizeof(mesh_cmd_g_onoff_set_t)){
 		memcpy(&mesh_rcv_cmd.send_tick, par+4, 4);
@@ -257,28 +255,39 @@ int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 #endif
 
     st_pub_list_t pub_list = {{0}};
-    #if MD_LIGHT_CONTROL_EN
-    lc_onoff_flag = is_light_lc_op(cb_par->op);
-    #endif
-	err = g_onoff_set((mesh_cmd_g_onoff_set_t *)par, par_len, 0, cb_par->model_idx, cb_par->retransaction, &pub_list);
-    #if MD_LIGHT_CONTROL_EN
-    if(!err && lc_onoff_flag){
-        LC_property_tick_set(cb_par->model_idx);
+#if MD_LIGHT_CONTROL_EN
+    int lc_onoff_flag = is_light_lc_onoff(cb_par->op);
+    if(lc_onoff_flag){
+        if(model_sig_light_lc.mode[cb_par->model_idx] != LC_MODE_ON){
+            return 0;
+        }
+        
+        if(G_ON == p_set->onoff){
+            pub_list.op_lc_onoff_type = OP_LC_ONOFF_TYPE_ON;
+        }else if(G_OFF == p_set->onoff){
+            pub_list.op_lc_onoff_type = OP_LC_ONOFF_TYPE_OFF;
+        }
     }
-	lc_onoff_flag = 0;
-	#endif
+#endif
+
+	err = g_onoff_set(p_set, par_len, 0, cb_par->model_idx, cb_par->retransaction, &pub_list);
+#if MD_LIGHT_CONTROL_EN
+    if(!err && lc_onoff_flag){
+        LC_property_light_onoff(cb_par->model_idx, p_set->onoff);
+    }
+#endif
 	if(err){
 		return err;
 	}
-	#if MI_API_ENABLE
-		// have transmit and delay 
-		mesh_cmd_g_onoff_set_t *p_set = (mesh_cmd_g_onoff_set_t *)par;
-		if(par_len == sizeof(mesh_cmd_g_onoff_set_t)){
-			mi_pub_sigmodel_inter(p_set->transit_t,p_set->delay,1);
-		}else{
-			mi_pub_sigmodel_inter(0,0,0);
-		}
-	#endif
+	
+#if MI_API_ENABLE
+	// have transmit and delay 
+	if(par_len == sizeof(mesh_cmd_g_onoff_set_t)){
+		mi_pub_sigmodel_inter(p_set->transit_t,p_set->delay,1);
+	}else{
+		mi_pub_sigmodel_inter(0,0,0);
+	}
+#endif
 
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_g_onoff_st_rsp(cb_par);
@@ -2107,7 +2116,7 @@ void model_pub_check_set(int level_set_st, u8 *model, int priority)
 
         #if MD_LEVEL_EN
         if(!update_online_data_flag){
-            foreach(i,ELE_CNT){
+            foreach(i,g_ele_cnt){
                 if((u32)model == (u32)(&(model_sig_g_onoff_level.level_srv[i]))){
                     update_online_data_flag = 1;
                     break;

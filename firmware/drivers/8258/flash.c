@@ -692,14 +692,22 @@ _attribute_ram_code_ int flash_read_mid_uid_with_check( unsigned int *flash_mid 
 	  flash_read_mid((unsigned char*)&mid);
 	  mid = mid&0xffff;
 	  *flash_mid  = mid;
-	 //     	  		 CMD        MID
-	 //  GD25LD40C 		 0x4b     0x60c8
-	 //  GD25LD05C  	 0x4b 	  0x60c8
-	 //  P25Q40L   		 0x4b     0x6085
-	 //  MD25D40DGIG	 0x4b     0x4051
+	  /*
+	   Flash Type    CMD        MID      Company
+	   GD25LD40C 	 0x4b     0x60C8     GD
+	   GD25LD05C  	 0x4b 	  0x60C8     GD
+	   P25Q40L   	 0x4b     0x6085     PUYA
+	   MD25D40DGIG	 0x4b     0x4051     GD
+	   GD25D10C      0x4b     0x40C8     GD
+	   PN25F04C      0x5a     0x311C     XTX
+	  */
 	  if( (mid == 0x60C8) || (mid == 0x6085) ||(mid == 0x4051)){
 		  flash_read_uid(FLASH_GD_PUYA_READ_UID_CMD,(unsigned char *)flash_uid);
-	  }else{
+	  }
+	  else if(mid==0x311C){
+		  flash_read_uid(FLASH_XTX_READ_UID_CMD	,(unsigned char *)flash_uid);
+	  }
+	  else{
 		  return 0;
 	  }
 	  for(i=0;i<16;i++){

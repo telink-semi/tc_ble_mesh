@@ -282,6 +282,7 @@ void blc_l2cap_register_pre_handler(void *p);
 uint32_t soft_crc32_telink(const void *buf, size_t size, uint32_t crc);
 #endif
 void vendor_md_cb_pub_st_set2ali();
+int pre_set_beacon_to_adv(rf_packet_adv_t *p);
 
 
 /**

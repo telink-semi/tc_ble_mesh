@@ -21,7 +21,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
+#include "proj/tl_common.h" // modify by weixiong in mesh
 
 
 
@@ -75,7 +75,7 @@
 
 
 
-#if 0 // re-define
+#if 0 // add by weixiong in mesh // re-define
 typedef enum {
 	Gap_Role_Broadcaster  = 0,
 	Gap_Role_Observer     = 1,
@@ -100,7 +100,6 @@ void 		blc_gap_central_init(void);
 
 
 
-void 		blms_gap_init(void);
 
 
 

@@ -42,35 +42,7 @@
 
 
 
-//scan_enable_t
-typedef enum {
-	BLC_SCAN_DISABLE = 0x00,
-	BLC_SCAN_ENABLE  = 0x01,
-} scan_en_t;
 
-
-//duplicate_filter_enable_t
-typedef enum {
-	DUP_FILTER_DISABLE = 0x00,
-	DUP_FILTER_ENABLE  = 0x01,
-} dupFilter_en_t;
-
-
-typedef enum {
-	SCAN_TYPE_PASSIVE = 0x00,
-	SCAN_TYPE_ACTIVE  = 0x01,
-} scan_type_t;
-
-
-
-// Advertise report event type
-typedef enum {
-	ADV_REPORT_EVENT_TYPE_ADV_IND = 0x00,
-	ADV_REPORT_EVENT_TYPE_DIRECT_IND = 0x01,
-	ADV_REPORT_EVENT_TYPE_SCAN_IND = 0x02,
-	ADV_REPORT_EVENT_TYPE_NONCONN_IND = 0x03,
-	ADV_REPORT_EVENT_TYPE_SCAN_RSP = 0x04,
-} advReportEventType_t;
 
 
 

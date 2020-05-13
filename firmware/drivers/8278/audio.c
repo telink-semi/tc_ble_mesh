@@ -65,13 +65,14 @@ enum {
                        }while(0)
 
 /**
- * 	@brief     audio amic initial function. configure ADC corresponding parameters. set hpf,lpf and decimation ratio.
+ * 	@brief     audio amic initial function. configure ADC,PGA corresponding parameters. set decimation ratio.
+ * 	           The configuration of the MIC_VOL_CONTROL_m16DB can optimize the audio related parameters such as RMS and CLIPPING.
  * 	@param[in] Audio_Rate - audio rate value
  * 	@return    none
  */
 void audio_amic_init(AudioRate_Typedef Audio_Rate)
 {
-	if((analog_read(pga_audio_enable) && 0x04) == 0x04)
+	if((analog_read(pga_audio_enable) && 0x04) == 0x04) // check pga audio enable
 	{
 		analog_write(pga_audio_enable,analog_read(pga_audio_enable) & 0xFB);
 	}
@@ -79,11 +80,11 @@ void audio_amic_init(AudioRate_Typedef Audio_Rate)
 	set_pga_input_vol();
 
 	//enable fifo auto mode,operate 0xb2c:BIT(0) to select auto/manual mode.1--manual mode,0--auto mode.
-	reg_dfifo_manual_mode = FLD_AUU_FIFO_AUTO_MODE;
+	reg_dfifo_manual_mode = FLD_DFIFO_MANUAL_MODE_EN;
 
 	reg_dfifo_mode = FLD_AUD_DFIFO0_IN;
 
-	//ain0_sel sel i2s as input
+	//Configure the sampling time and the number of data bits in the FIFO.
 	reg_dfifo_ain = 	  MASK_VAL( FLD_AUD_SAMPLE_TIME_CONFIG,      	0x01,\
 			                        FLD_AUD_FIFO0_INPUT_SELECT, 		AUDIO_FIFO0_INPUT_SELECT_16BIT, \
 			                        FLD_AUD_FIFO1_INPUT_SELECT, 		AUDIO_FIFO1_INPUT_SELECT_USB, \
@@ -95,25 +96,9 @@ void audio_amic_init(AudioRate_Typedef Audio_Rate)
 			                    FLD_AUD_MIC_MONO_EN, 	        1, \
 			                    FLD_AUD_AMIC_DMIC_SELECT,    	0 );
 
-	if(Audio_Rate==AUDIO_48K)
-	{
-		reg_dfifo_dec_ratio = CODEC_CIC_Rate[AUDIO_48K];
-	}
-	else
-	{
-		if(Audio_Rate==AUDIO_32K)
-		{
-			reg_dfifo_dec_ratio = CODEC_CIC_Rate[AUDIO_32K];//32k
-		}
-		else if(Audio_Rate==AUDIO_16K)
-		{
-			reg_dfifo_dec_ratio = CODEC_CIC_Rate[AUDIO_16K];//16k
-		}
-		else if(Audio_Rate==AUDIO_8K)
-		{
-			reg_dfifo_dec_ratio = CODEC_CIC_Rate[AUDIO_8K];//16k
-		}
-	}
+
+	//Here is the configuration down_sampling rate (By lirui).
+	reg_dfifo_dec_ratio = CODEC_CIC_Rate[Audio_Rate];
 
 	//enable codec
 	reg_codec_dec_en = FLD_AUD_CODEC_DEC_EN;
@@ -122,7 +107,7 @@ void audio_amic_init(AudioRate_Typedef Audio_Rate)
 	audio_set_codec_clk(0x81,0x02);
 
 	//this value is fixed
-	reg_set_filter_para = 0x07;// [0]:hpf_en, codec digital clock switch
+	reg_set_filter_para = 0x07;
 }
 
 /**
@@ -189,34 +174,16 @@ void audio_dmic_init(AudioRate_Typedef Audio_Rate)
 			                    FLD_AUD_MIC_MONO_EN, 	        1, \
 			                    FLD_AUD_AMIC_DMIC_SELECT,    	1 );
 
-	if(Audio_Rate==AUDIO_48K)
-	{
-		reg_dfifo_dec_ratio = CODEC_CIC_Rate[AUDIO_48K];
-	}
-	else
-	{
-		if(Audio_Rate==AUDIO_32K)
-		{
-			reg_dfifo_dec_ratio = CODEC_CIC_Rate[AUDIO_32K];//32k
-		}
-		else if(Audio_Rate==AUDIO_16K)
-		{
-			reg_dfifo_dec_ratio = CODEC_CIC_Rate[AUDIO_16K];//16k
-		}
-		else if(Audio_Rate==AUDIO_8K)
-		{
-			reg_dfifo_dec_ratio = CODEC_CIC_Rate[AUDIO_8K];//16k
-		}
-	}
+	//Here is the configuration down_sampling rate (By lirui)
+	reg_dfifo_dec_ratio = CODEC_CIC_Rate[Audio_Rate];
 
 	reg_codec_dec_en = FLD_AUD_CODEC_DEC_EN;
-
 
 	//set codec clk;is fixd=24MHz  codec_clk=48M*codec_step[6:0]/codec_mod[7:0]
 	audio_set_codec_clk(0x81,0x02);
 
 	//this value is fixed
-	reg_set_filter_para = 0x07;// [0]:hpf_en, codec digital clock switch
+	reg_set_filter_para = 0x07;
 
 }
 
@@ -250,7 +217,7 @@ void audio_usb_init(AudioRate_Typedef Audio_Rate)
 	audio_set_codec_clk(0x81,0x02);
 
 	//this value is fixed
-	reg_set_filter_para = 0x07;// [0]:hpf_en, codec digital clock switch
+	reg_set_filter_para = 0x07;
 
 }
 
@@ -277,27 +244,33 @@ void audio_buff_init(AudioRate_Typedef Audio_Rate)
 	/*******1.Dmic setting for audio input**************************/
 	reg_audio_ctrl = AUDIO_OUTPUT_OFF;
 
-//	audio_set_dmic_clk(0x81,0x18);     //16K*2*64=2.048M, since now DMIC clock is not get!
-
 }
 
- /**
- *	@brief	   sdm setting function, enable or disable the sdm output, configure SDM output paramaters.
- *	@param[in]	InType -	  SDM input type, such as AMIC,DMIC,I2S_IN,USB_IN.
- *	@param[in]	Audio_Rate - audio sampling rate, such as 16K,32k etc.
- *	@param[in]	audio_out_en - audio output enable or disable set, '1' enable audio output; '0' disable output.
- *	@return	none
- */
-void audio_set_sdm_output(AudioInput_Typedef InType,AudioRate_Typedef Audio_Rate,unsigned char audio_out_en)
+/**
+*	@brief	    sdm setting function, enable or disable the sdm output, configure SDM output paramaters.
+*	@param[in]  OutPin - SDM Output pin.
+*	@param[in]	InType -	  SDM input type, such as AMIC,DMIC,I2S_IN,USB_IN.
+*	@param[in]	Audio_Rate - audio sampling rate, such as 16K,32k etc.
+*	@param[in]	audio_out_en - audio output enable or disable set, '1' enable audio output; '0' disable output.
+*	@return	none
+*/
+void audio_set_sdm_output(Audio_SDM_OutPut_Pin OutPin,AudioInput_Typedef InType,AudioRate_Typedef Audio_Rate,unsigned char audio_out_en)
 {
 	if(audio_out_en)
 	{
-		//SDM0  EVB(C1T139A30_V1.2) not used
-//		gpio_set_func(GPIO_PB4, AS_SDM);
-//		gpio_set_func(GPIO_PB5, AS_SDM);
+
+		//SDM0
+		if(OutPin==GPIO_PB4_PB5)
+		{
+			gpio_set_func(GPIO_PB4, AS_SDM);
+			gpio_set_func(GPIO_PB5, AS_SDM);
+		}
 		//SDM1
-		gpio_set_func(GPIO_PB6, AS_SDM);
-		gpio_set_func(GPIO_PB7, AS_SDM);
+		else if(OutPin==GPIO_PB6_PB7)
+		{
+			gpio_set_func(GPIO_PB6, AS_SDM);
+			gpio_set_func(GPIO_PB7, AS_SDM);
+		}
 
 		reg_pwm_ctrl = MASK_VAL( 	FLD_PWM_MULTIPLY2,			0,\
 									FLD_PWM_ENABLE,				0,\
@@ -407,11 +380,14 @@ unsigned char I2S_To_HPout_CMD_TAB[9][2] ={	{WM8731_RESET_CTRL, 				0x00},
  * @param[in] sysclk - system clock.
  * @return    none.
  */
-void audio_set_codec(I2C_GPIO_SdaTypeDef sda_pin,I2C_GPIO_SclTypeDef scl_pin, CodecMode_Typedef CodecMode,unsigned sysclk)
+// add by weixiong in mesh: add void
+void audio_set_codec(I2C_GPIO_SdaTypeDef sda_pin,I2C_GPIO_SclTypeDef scl_pin, CodecMode_Typedef CodecMode,unsigned sysclk) // add by weixiong in mesh: add void
+
 {
 
 	unsigned char i = 0;
 	//I2C pin set
+
 	i2c_gpio_set(sda_pin,scl_pin);//SDA/CK : A3/A4
 	i2c_master_init(0x34, (unsigned char)(sysclk/(4*200000)) );		//i2c clock 200K, only master need set i2c clock
 
@@ -507,7 +483,7 @@ void audio_i2s_init(void)
 void audio_set_i2s_output(AudioInput_Typedef InType,AudioRate_Typedef Audio_Rate)
 {
 
-//	volatile unsigned int i;
+//	volatile unsigned int i; // clean by weixiong in mesh.
 	//if system clock=24M_Crystal. PWM0 2 frequency division output, for 12Mhz to offer the MCLK of CORDEC. select pd5 as PWM0 output.
 	sub_wr(0x5af, 0x0, 3, 2); //PD5=0
 	sub_wr(0x59e, 0x0, 5, 5); //PD5=0

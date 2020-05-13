@@ -202,6 +202,10 @@ void spi_read(unsigned char *Cmd, int CmdLen, unsigned char *Data, int DataLen, 
 
     /***read data***/
     for (i = 0; i < DataLen; i++) {
+    	if(i==(DataLen-1))
+    	{
+    	   reg_spi_ctrl &= ~FLD_SPI_RD;//when last byte,disable RD function.
+    	}
         Data[i] = reg_spi_data; //take 8 clock cycles
         while(reg_spi_ctrl & FLD_SPI_BUSY ); //wait reading finished
     }

@@ -28,7 +28,7 @@
 #include "clock.h"
 #include "analog.h"
 #include "timer.h"
-#include "proj/common/compatibility.h"
+#include "proj/common/compatibility.h" // add by weixiong in mesh.
 /**
  * @brief      This function performs a series of operations of writing digital or analog registers
  *             according to a command table
@@ -36,7 +36,7 @@
  * @param[in]  size  - number of commands in the table
  * @return     number of commands are carried out
  */
-#if 0
+#if 0 // add by weixiong in mesh.
 int LoadTblCmdSet(const TBLCMDSET * pt, int size)
 {
 	int l=0;
@@ -63,7 +63,7 @@ int LoadTblCmdSet(const TBLCMDSET * pt, int size)
 	return size;
 
 }
-#endif
+#endif // add by weixiong in mesh.
 /**
  * @brief      This function writes a byte data to analog register
  * @param[in]  addr - the address of the analog register needs to write
