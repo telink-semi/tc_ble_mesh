@@ -33,7 +33,7 @@
 #include "drivers/8278/irq.h"
 #include "drivers/8278/clock.h"
 #include "drivers/8278/random.h"
-#include "drivers/8258/flash.h"
+#include "drivers/8258/flash.h" // modify by weixiong in mesh
 #include "drivers/8278/rf_drv.h"
 #include "drivers/8278/pm.h"
 #include "drivers/8278/audio.h"
@@ -52,4 +52,8 @@
 #include "drivers/8278/s7816.h"
 #include "drivers/8278/qdec.h"
 #include "drivers/8278/lpc.h"
+
+
+//#include "drivers/8278/rf_pa.h" // remove by weixiong in mesh
+
 

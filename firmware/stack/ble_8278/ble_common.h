@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -53,7 +53,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-//#define         VENDOR_ID                       0x0211
+//#define         VENDOR_ID                       0x0211 // comment by weixiong in mesh
 #define         VENDOR_ID_HI_B                  U16_HI(VENDOR_ID)
 #define         VENDOR_ID_LO_B                  U16_LO(VENDOR_ID)
 
@@ -62,7 +62,7 @@
 #define			BLUETOOTH_VER_4_2				8
 #define			BLUETOOTH_VER_5_0				9
 
-#define			BLUETOOTH_VER					BLUETOOTH_VER_4_2
+#define			BLUETOOTH_VER					BLUETOOTH_VER_4_2 // add by weixiong in mesh
 
 #ifndef 		BLUETOOTH_VER
 #define			BLUETOOTH_VER					BLUETOOTH_VER_5_0
@@ -94,10 +94,10 @@
 
 #elif (BLUETOOTH_VER == BLUETOOTH_VER_4_2)
 
-	#define LL_FEATURE_ENABLE_LE_ENCRYPTION								1
-	#define	LL_FEATURE_ENABLE_EXTENDED_REJECT_INDICATION				1
-	#define	LL_FEATURE_ENABLE_SLAVE_INITIATED_FEATURES_EXCHANGE			1
-	#define	LL_FEATURE_ENABLE_LE_PING									1
+	#define LL_FEATURE_ENABLE_LE_ENCRYPTION								0 // modify by weixiong
+	#define	LL_FEATURE_ENABLE_EXTENDED_REJECT_INDICATION				0 // modify by weixiong
+	#define	LL_FEATURE_ENABLE_SLAVE_INITIATED_FEATURES_EXCHANGE			0 // modify by weixiong
+	#define	LL_FEATURE_ENABLE_LE_PING									0 // modify by weixiong
 	#define	LL_FEATURE_ENABLE_LE_DATA_LENGTH_EXTENSION					BLE_CORE42_DATA_LENGTH_EXTENSION_ENABLE
 
 	#define LL_CMD_MAX						  							LL_LENGTH_RSP
@@ -258,91 +258,6 @@ extern u32 LL_FEATURE_MASK_0;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#define 		ADV_INTERVAL_3_125MS                        5
-#define 		ADV_INTERVAL_3_75MS                         6
-#define 		ADV_INTERVAL_10MS                           16
-#define 		ADV_INTERVAL_15MS                           24
-#define 		ADV_INTERVAL_20MS                           32
-#define 		ADV_INTERVAL_25MS                           40
-#define 		ADV_INTERVAL_30MS                           48
-#define 		ADV_INTERVAL_35MS                           56
-#define 		ADV_INTERVAL_40MS                           64
-#define 		ADV_INTERVAL_45MS                           72
-#define 		ADV_INTERVAL_50MS                           80
-#define 		ADV_INTERVAL_55MS                           88
-#define 		ADV_INTERVAL_60MS                           96
-#define 		ADV_INTERVAL_70MS                           112
-#define 		ADV_INTERVAL_80MS                           128
-#define 		ADV_INTERVAL_90MS							144
-#define 		ADV_INTERVAL_100MS                          160
-#define 		ADV_INTERVAL_105MS                          168
-#define 		ADV_INTERVAL_200MS                          320
-#define 		ADV_INTERVAL_205MS                          328
-#define 		ADV_INTERVAL_300MS                          480
-#define 		ADV_INTERVAL_305MS                          488
-#define 		ADV_INTERVAL_400MS                          640
-#define 		ADV_INTERVAL_405MS                          648
-#define 		ADV_INTERVAL_500MS                          800
-#define 		ADV_INTERVAL_505MS                          808
-
-#define 		ADV_INTERVAL_1S                          	1600
-#define 		ADV_INTERVAL_1S5                          	2400
-#define 		ADV_INTERVAL_2S                          	3200
-#define 		ADV_INTERVAL_1_28_S                         0x0800
-#define			ADV_INTERVAL_2_56_S							0x1000
-#define 		ADV_INTERVAL_10_24S                         16384
-
-
-
-#define 		SCAN_INTERVAL_10MS                           16
-#define 		SCAN_INTERVAL_30MS                           48
-#define 		SCAN_INTERVAL_50MS                           80
-#define 		SCAN_INTERVAL_60MS                           96
-#define 		SCAN_INTERVAL_90MS                           144
-#define 		SCAN_INTERVAL_100MS                          160
-#define 		SCAN_INTERVAL_200MS                          320
-#define 		SCAN_INTERVAL_300MS                          480
-
-
-#define 		CONN_INTERVAL_7P5MS                          6
-#define 		CONN_INTERVAL_10MS                           8
-#define 		CONN_INTERVAL_15MS                           12
-#define 		CONN_INTERVAL_18P75MS                        15
-#define 		CONN_INTERVAL_20MS                           16
-#define 		CONN_INTERVAL_30MS                           24
-#define 		CONN_INTERVAL_31P25MS                        25
-#define 		CONN_INTERVAL_38P75MS                        31
-#define 		CONN_INTERVAL_40MS                           32
-#define 		CONN_INTERVAL_48P75MS                        39
-#define 		CONN_INTERVAL_50MS                           40
-#define 		CONN_INTERVAL_100MS                          80
-
-
-#define 		CONN_TIMEOUT_500MS							 50
-#define 		CONN_TIMEOUT_1S							 	 100
-#define 		CONN_TIMEOUT_4S							 	 400
-#define 		CONN_TIMEOUT_10S							 1000
-#define 		CONN_TIMEOUT_20S							 2000
-
-
-/*********************************************************************
- * ENUMS
- */
 typedef enum {
     BLE_SUCCESS = 0,
 
@@ -446,8 +361,8 @@ typedef enum {
 	//GAP status
 	GAP_ERR_INVALID_PARAMETER 								   	   = 0xC0,
 
-	SLAVE_TERMINATE_CONN_ACKED = 0xF0,
-	SLAVE_TERMINATE_CONN_TIMEOUT    = 0xF1,
+	SLAVE_TERMINATE_CONN_ACKED = 0xF0, 			// add by weixiong in mesh
+	SLAVE_TERMINATE_CONN_TIMEOUT    = 0xF1, 	// add by weixiong in mesh
 } ble_sts_t;
 
 
@@ -455,15 +370,17 @@ typedef enum {
 
 
 
-// l2cap pb flag type
-#define L2CAP_FRIST_PKT_H2C              0x00
-#define L2CAP_CONTINUING_PKT             0x01
-#define L2CAP_FIRST_PKT_C2H              0x02
 
 
 
 
 
+
+
+/******************************************** Link Layer **************************************************************/
+
+
+/////////////////////////////// BLE  MAC ADDRESS //////////////////////////////////////////////
 #define BLE_ADDR_PUBLIC                  0
 #define BLE_ADDR_RANDOM                  1
 #define BLE_ADDR_INVALID                 0xff
@@ -499,859 +416,279 @@ typedef enum {
 
 
 
-typedef enum{
-	OWN_ADDRESS_PUBLIC = 0,
-	OWN_ADDRESS_RANDOM = 1,
-	OWN_ADDRESS_RESOLVE_PRIVATE_PUBLIC = 2,
-	OWN_ADDRESS_RESOLVE_PRIVATE_RANDOM = 3,
-}own_addr_type_t;
 
 
 
-
-
-
-
-
-
-typedef struct {
-	u8 type   :4;
-	u8 rfu1   :1;
-	u8 chan_sel:1;
-	u8 txAddr :1;
-	u8 rxAddr :1;
-}rf_adv_head_t;
-
-
-
-typedef struct {
-    u8 llid   :2;
-    u8 nesn   :1;
-    u8 sn     :1;
-    u8 md     :1;
-    u8 rfu1   :3;
-}rf_data_head_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RA(1)_TA(1)_RFU(2)_TYPE(4)
-	u8  rf_len;				//LEN(6)_RFU(2)
-}rf_packet_head_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RA(1)_TA(1)_RFU(2)_TYPE(4)
-	u8  rf_len;				//LEN(6)_RFU(2)
-}rf_packet_auto_reply_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-
-	rf_adv_head_t  header;
-	u8  rf_len;				//LEN(6)_RFU(2)
-
-	u8	advA[6];			//address
-	u8	data[31];			//0-31 byte
-}rf_packet_adv_t;
-
-
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	rf_adv_head_t  header;	//RA(1)_TA(1)_RFU(2)_TYPE(4)
-	u8  rf_len;				//LEN(6)_RFU(2)
-
-	u8	scanA[6];			//
-	u8	advA[6];			//
-}rf_packet_scan_req_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	rf_adv_head_t  header;				//RA(1)_TA(1)_RFU(2)_TYPE(4)
-	u8  rf_len;				//LEN(6)_RFU(2)
-
-	u8	advA[6];			//address
-	u8	data[31];			//0-31 byte
-}rf_packet_scan_rsp_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-
-	u8 type   :4;
-	u8 rfu1   :1;
-	u8 chan_sel:1;
-	u8 txAddr :1;
-	u8 rxAddr :1;
-
-	u8  rf_len;				//LEN(6)_RFU(2)
-	u8	initA[6];			//scanA
-	u8	advA[6];			//
-	u8	accessCode[4];		// access code
-	u8	crcinit[3];
-	u8	winSize;
-	u16	winOffset;
-	u16 interval;
-	u16 latency;
-	u16 timeout;
-	u8	chm[5];
-	u8	hop;				//sca(3)_hop(5)
-}rf_packet_connect_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	rf_adv_head_t  header;				//RA(1)_TA(1)_RFU(2)_TYPE(4): connect request PDU
-	u8  rf_len;				//LEN(6)_RFU(2)
-	u8	scanA[6];			//
-	u8	advA[6];			//
-	u8	aa[4];				// access code
-	u8	crcinit[3];
-	u8	wsize;
-	u16	woffset;
-	u16 interval;
-	u16 latency;
-	u16 timeout;
-	u8	chm[5];
-	u8	hop;				//sca(3)_hop(5)
-}rf_packet_ll_init_t;
-
-typedef struct {
-	u8	type;
-	u8  rf_len;
-	u8 	opcode;
-	u8 	winSize;
-	u16 winOffset;
-	u16 interval;
-	u16 latency;
-	u16 timeout;
-	u16 instant;
-} rf_packet_ll_updateConnPara_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RA(1)_TA(1)_RFU(2)_TYPE(4): connect request PDU
-	u8  rf_len;				//LEN(6)_RFU(2)
-
-	u8	scanA[6];			//
-	u8	advA[6];			//
-	u8	aa[4];				// access code
-	u8	crcinit[3];
-	u8	wsize;
-	u16	woffset;
-	u16 interval;
-	u16 latency;
-	u16 timeout;
-	u8	chm[5];
-	u8	hop;				//sca(3)_hop(5)
-}rf_packet_relay_t;
-
-
-typedef struct {
-	u16 intervalMin;      // Minimum advertising interval for non-directed advertising, time = N * 0.625ms
-	u16 intervalMax;      // Maximum advertising interval for non-directed advertising, time = N * 0.625ms
-	u8  advType;          // Advertising
-	u8  ownAddrType;
-	u8  peerAddrType;
-	u8  peerAddr[BLE_ADDR_LEN];
-	u8  advChannelMap;
-	u8  advFilterPolicy;
-} adv_para_t;
-
-typedef struct {
-	u16 connHandle;
-	u16 connIntervalMin;
-	u16 connIntervalMax;
-	u16 connLatency;
-	u16 supervisionTimeout;
-	u16 minCELen;
-	u16 maxCELen;
-} conn_para_t;
-
-
-
-/*
-LLID(2) - NESN(1) - SN(1) - MD(1) - RFU(3) - Length(5) - RFU(3)
-*/
-
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RA(1)_TA(1)_RFU(2)_TYPE(4)
-	u8  rf_len;				//LEN(6)_RFU(2)
-	u16	l2capLen;
-	u16	chanId;
-}rf_packet_l2cap_head_t;
-
-
-typedef struct{
-	rf_data_head_t	header;
-	u8  rf_len;
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 data[1];
-}rf_packet_l2cap_t;
-
-
-typedef struct{
-	rf_data_head_t	header;
-	u8  rf_len;
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8  handle0;
-	u8  handle1;
-	u8	dat[20];
-}rf_packet_att_t;
-
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 data[1];
-}rf_packet_l2cap_req_t;
-
-
-typedef struct{
-	u32 dma_len;
-	u8	type;
-	u8  rf_len;
-	u16	l2capLen;
-	u16	chanId;
-	u8  code;
-	u8  id;
-	u16 dataLen;
-	u16  result;
-}rf_pkt_l2cap_sig_connParaUpRsp_t;
-
-
-typedef struct{
-	u8	type;
-	u8  rf_len;
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 data[1];
-}rf_pkt_l2cap_req_t;
-
-
-typedef struct{
-	u8	llid;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8	id;
-	u16 data_len;
-	u16 min_interval;
-	u16 max_interval;
-	u16 latency;
-	u16 timeout;
-}rf_packet_l2cap_connParaUpReq_t;
-
-
-typedef struct{
-	u8	llid;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8	id;
-	u16 data_len;
-	u16 result;
-}rf_packet_l2cap_connParaUpRsp_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u8	data;
-}rf_packet_l2cap_cust_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 	errOpcode;
-	u16 errHandle;
-	u8  errReason;
-}rf_packet_att_errRsp_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8	startingHandle;
-	u8	startingHandle1;
-	u8	endingHandle;
-	u8	endingHandle1;
-	u8	attType[2];				//
-}rf_packet_att_readByType_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8	startingHandle;
-	u8	startingHandle1;
-	u8	endingHandle;
-	u8	endingHandle1;
-	u8	attType[2];
-	u8  attValue[2];
-}rf_packet_att_findByTypeReq_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u16 	data[1];
-}rf_packet_att_findByTypeRsp_t;
-
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 handle;
-	u8 handle1;
-}rf_packet_att_read_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 handle;
-	u8 handle1;
-	u8 offset0;
-	u8 offset1;
-}rf_packet_att_readBlob_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 	value[22];
-}rf_packet_att_readRsp_t;
-
-
-typedef struct{
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8  datalen;
-	u8  data[1];			// character_handle / property / value_handle / value
-}rf_pkt_att_readByTypeRsp_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8  datalen;
-	u8  data[1];			// character_handle / property / value_handle / value
-}rf_packet_att_readByTypeRsp_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8  datalen;
-	u16  data[3];
-}rf_packet_att_readByGroupTypeRsp_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8  format;
-	u8  data[1];			// character_handle / property / value_handle / value
-}rf_packet_att_findInfoReq_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 flags;
-}rf_packet_att_executeWriteReq_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 handle;
-	u8 handle1;
-	u8 value;
-}rf_packet_att_write_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 handle[2];
-	u8 data;
-}rf_packet_att_notification_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-
-	u16	l2cap;				//0x17
-	u16	chanid;				//0x04,
-
-	u8	att;				//0x12 for master; 0x1b for slave
-	u8	hl;					// assigned by master
-	u8	hh;					//
-	u8	sno;
-
-	u8	ctype;
-	u8	cmd[18];				//byte
-}rf_packet_ll_write_data_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 mtu[2];
-}rf_packet_att_mtu_t;
-
-typedef struct{
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 mtu[2];
-}rf_packet_att_mtu_exchange_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-}rf_packet_att_writeRsp_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RA(1)_TA(1)_RFU(2)_TYPE(4)
-	u8  rf_len;				//LEN(6)_RFU(2)
-	u8 	opcode;
-	u8	data[8];
-}rf_packet_feature_rsp_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RA(1)_TA(1)_RFU(2)_TYPE(4)
-	u8  rf_len;				//LEN(6)_RFU(2)
-	u8 	opcode;
-	u8  mainVer;
-	u16 vendor;
-	u16 subVer;
-}rf_packet_version_ind_t;
-
-typedef struct {
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8 	type;
-	u8  rf_len;
-	u8 	opcode;
-	u8 	winSize;
-	u16 winOffset;
-	u16 interval;
-	u16 latency;
-	u16 timeout;
-	u16 instant;
-}rf_packet_connect_upd_req_t;
-
-typedef struct {
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8 	type;
-	u8  rf_len;
-	u8 	opcode;
-	u8 	chm[5];
-	u16 instant;
-} rf_packet_chm_upd_req_t;
-
-
-typedef struct {
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-	u8	type;				//RA(1)_TA(1)_RFU(2)_TYPE(4)
-	u8  rf_len;				//LEN(6)_RFU(2)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8  id;
-	u16 siglen;
-    u16 min_interval;
-    u16 max_interval;
-    u16 latency;
-    u16 timeout;
-}rf_packet_connParUpReq_t;
-
-typedef struct {
-	u8  valid;
-	u8 	winSize;
-	u16 winOffset;
-	u16 interval;
-	u16 latency;
-	u16 timeout;
-	u16 instant;
-}connect_upd_data_t;
-
-typedef struct {
-	u8  valid;
-	u8 	chm[5];
-	u16 instant;
-}connect_chm_upd_data_t;
-
-
-typedef struct{
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-
-	u8	opcode;				//
-	u8	reason;				//
-}rf_packet_ll_terminate_t;
-
-
-typedef struct{
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-
-	u8	opcode;				//
-	u8	dat[1];				//
-}rf_packet_ll_control_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2cap;
-	u16	chanid;
-
-	u8	att;
-	u8	hl;					// assigned by master
-	u8	hh;					//
-
-	u8	dat[20];
-
-}rf_packet_att_data_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	flag;
-
-	u32	src_id;
-
-	u8	att;				//0x12 for master; 0x1b for slave
-	u8	hl;					// assigned by master
-	u8	hh;					//
-	u8	sno;
-
-	u16	nid;				// network ID
-	u16	group;
-
-	u32	dst_id;
-
-	u8	cmd[11];			//byte
-							// 10 xx xx xx xx xx xx		=> light on
-							// 11 xx xx xx xx xx xx		=> light off
-							// 12 rr gg bb ww uu vv		=> set
-
-	//u32	mic[4];			//optional
-}rf_packet_ll_rc_data_t;
-
-typedef struct{
-	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-
-	u16	l2capLen;			// can be src_id
-	u16	chanId;
-
-	u8	att;				//0x12 for master; 0x1b for slave
-	u8	hl;					// assigned by master
-	u8	hh;					//
-	u8	sno;
-
-	u16	mic;				// network ID
-	u16	group;
-
-	u8	dst_id[4];
-
-	u8	cmd[11];			//byte
-							// 10 xx xx xx xx xx xx		=> light on
-							// 11 xx xx xx xx xx xx		=> light off
-							// 12 rr gg bb ww uu vv		=> set
-
-	//u32	mic[4];			//optional
-}rf_packet_mesh_data_phone_t;
-
-typedef struct{
-    u8 sno[3];
-    u8 src[2];
-    u8 dst[2];
-    u8 op_para[13];
- //   u8 ttl;
- //   u8 hop;
-}rf_packet_mesh_nwk_t;
-
-
-typedef struct{
-	u32 dma_len;            //29
-
-	u8	rf_len;				//28
-	u8  type;				//LEN(5)_RFU(3)
-
-	u8	src_id[4];			// src_id
-
-	u8	ttl;				// time to live
-	u8	hl;					// assigned by master
-	u8	hh;					//
-	u8	sno;
-
-	u16	mic;				// network ID
-	u16	group;
-
-	u8	dst_id[4];
-
-	u8	cmd[11];			//byte
-							// 10 xx xx xx xx xx xx		=> light on
-							// 11 xx xx xx xx xx xx		=> light off
-							// 12 rr gg bb ww uu vv		=> set
-
-	//u32	mic[4];			//optional
-}rf_packet_mesh_data_t1;
-
-typedef struct{
-	u32 dma_len;            //29
-
-	u8	rf_len;				//28
-	u8  type;				//LEN(5)_RFU(3)
-
-	u16	l2cap;				// l2cap length
-	u16	chan;				// channel ID
-
-	u8	ttl;				// time to live
-	u8	hl;					// assigned by master
-	u8	hh;					//
-	rf_packet_mesh_nwk_t	c;
-
-}rf_packet_mesh_phone_t;
-
-typedef struct{
-	u32 dma_len;            //29
-
-	u8	rf_len;				//28
-	u8  type;				//LEN(5)_RFU(3)
-
-	u16	l2cap;				// l2cap length
-	u16	chan;				// channel ID
-
-	u8	ttl;				// time to live
-	u8	hl;					// assigned by master
-	u8	hh;					//
-	rf_packet_mesh_nwk_t	c;
-	u8 rsv[6];
-
-}rf_packet_mesh_data_t;
-
-typedef struct{
-	u32 dma_len;            //39
-
-	u8	rf_len;				//38
-	u8  type;				//LEN(5)_RFU(3)
-
-	u16	l2cap;				// l2cap length
-	u16	chan;				// channel ID
-
-	u8	ttl;				// time to live
-	u8	hl;					// assigned by master
-	u8	hh;					//
-	u8	dat[30];
-
-}rf_packet_mesh_status_t;
-
-typedef struct{
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8  datalen;
-	u8  data[1];			// character_handle / property / value_handle / value
-}att_readByTypeRsp_t;
-
-typedef struct{
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8  format;
-	u8  data[1];			// character_handle / property / value_handle / value
-}att_findInfoRsp_t;
-
-typedef struct{
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8 	value[22];
-}att_readRsp_t;
-
-typedef struct{
-	u8	type;				//RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-	u8  rf_len;				//LEN(5)_RFU(3)
-	u16	l2capLen;
-	u16	chanId;
-	u8  opcode;
-	u8	handle;
-	u8	hh;
-	u8 	value[1];
-}att_notify_t;
-
-typedef struct {
-	u8 type;
-	u8 address[BLE_ADDR_LEN];
-} addr_t;
-
-typedef struct {
-	u8 address[BLE_ADDR_LEN];
-} public_addr_t;
-
-
-////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-typedef struct {
-	u8	num;
-	u8	property;
-	u16	handle;
-	u16	uuid;
-	u16 ref;
-} att_db_uuid16_t;			//8-byte
-
-
-typedef struct {
-	u8	num;
-	u8	property;
-	u16	handle;
-	u8	uuid[16];
-} att_db_uuid128_t;			//20-byte
-
-//-------------   event --------------------------------
-typedef struct {
-	u8	status;
-	u8	handle;
-	u8	hh;
-	u8	reason;
-} event_disconnection_t;			//20-byte
-
-typedef struct {
-	u8	subcode;
-	u8	nreport;
-	u8	event_type;
-	u8	adr_type;
-	u8	mac[6];
-	u8	len;
-	u8	data[1];
-} event_adv_report_t;			//20-byte
-
-typedef struct {
-	u8	subcode;
-	u8	status;
-	u16	handle;
-	u8	role;
-	u8	peer_adr_type;
-	u8	mac[6];
-	u16	interval;
-	u16	latency;
-	u16	timeout;
-	u8	accuracy;
-} event_connection_complete_t;			//20-byte
-
-typedef struct {
-	u8	subcode;
-	u8	status;
-	u16	handle;
-	u16	interval;
-	u16	latency;
-	u16	timeout;
-} event_connection_update_t;			//20-byte
-
-typedef struct {
-	u8	status;
-	u16	handle;
-	u8  enc_enable;
-} event_enc_change_t;
-
-typedef struct {
-	u8	status;
-	u16	handle;
-} event_enc_refresh_t;
+
+///////////////// ADV Interval/Scan Interval/Scan Window/Connection Interval  /////////////////
+#define 		ADV_INTERVAL_3_125MS                        5
+#define 		ADV_INTERVAL_3_75MS                         6
+#define 		ADV_INTERVAL_10MS                           16
+#define 		ADV_INTERVAL_15MS                           24
+#define 		ADV_INTERVAL_20MS                           32
+#define 		ADV_INTERVAL_25MS                           40
+#define 		ADV_INTERVAL_30MS                           48
+#define 		ADV_INTERVAL_35MS                           56
+#define 		ADV_INTERVAL_40MS                           64
+#define 		ADV_INTERVAL_45MS                           72
+#define 		ADV_INTERVAL_50MS                           80
+#define 		ADV_INTERVAL_55MS                           88
+#define 		ADV_INTERVAL_60MS                           96
+#define 		ADV_INTERVAL_70MS                           112
+#define 		ADV_INTERVAL_80MS                           128
+#define 		ADV_INTERVAL_90MS							144
+#define 		ADV_INTERVAL_100MS                          160
+#define 		ADV_INTERVAL_105MS                          168
+#define 		ADV_INTERVAL_200MS                          320
+#define 		ADV_INTERVAL_205MS                          328
+#define 		ADV_INTERVAL_300MS                          480
+#define 		ADV_INTERVAL_305MS                          488
+#define 		ADV_INTERVAL_400MS                          640
+#define 		ADV_INTERVAL_405MS                          648
+#define 		ADV_INTERVAL_500MS                          800
+#define 		ADV_INTERVAL_505MS                          808
+
+#define 		ADV_INTERVAL_1S                          	1600
+#define 		ADV_INTERVAL_1S5                          	2400
+#define 		ADV_INTERVAL_2S                          	3200
+#define 		ADV_INTERVAL_1_28_S                         0x0800
+#define 		ADV_INTERVAL_10_24S                         16384
+
+
+
+#define 		SCAN_INTERVAL_10MS                          16
+#define 		SCAN_INTERVAL_30MS                          48
+#define 		SCAN_INTERVAL_50MS                          80
+#define 		SCAN_INTERVAL_60MS                          96
+#define 		SCAN_INTERVAL_90MS                          144
+#define 		SCAN_INTERVAL_100MS                         160
+#define 		SCAN_INTERVAL_200MS                         320
+#define 		SCAN_INTERVAL_300MS                         480
+#define 		SCAN_INTERVAL_400MS                         640
+#define 		SCAN_INTERVAL_500MS                         800
+
+
+#define 		CONN_INTERVAL_7P5MS                          6
+#define 		CONN_INTERVAL_10MS                           8
+#define 		CONN_INTERVAL_11P25MS                        9
+#define 		CONN_INTERVAL_15MS                           12
+#define 		CONN_INTERVAL_16P25MS                        13
+#define 		CONN_INTERVAL_18P75MS                        15
+#define 		CONN_INTERVAL_20MS                           16
+#define 		CONN_INTERVAL_30MS                           24
+#define 		CONN_INTERVAL_31P25MS                        25
+#define 		CONN_INTERVAL_38P75MS                        31
+#define 		CONN_INTERVAL_40MS                           32
+#define 		CONN_INTERVAL_48P75MS                        39
+#define 		CONN_INTERVAL_50MS                           40
+#define 		CONN_INTERVAL_100MS                          80
+
+
+#define 		CONN_TIMEOUT_500MS							 50
+#define 		CONN_TIMEOUT_1S							 	 100
+#define 		CONN_TIMEOUT_4S							 	 400
+#define 		CONN_TIMEOUT_10S							 1000
+#define 		CONN_TIMEOUT_20S							 2000
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+#define 				LLID_RESERVED				0x00
+#define 				LLID_DATA_CONTINUE			0x01
+#define 				LLID_DATA_START				0x02
+#define 				LLID_CONTROL				0x03
+
+/////////////////////////////////////////////////////////////////////////////
+																				// rf_len without MIC
+#define					LL_CONNECTION_UPDATE_REQ	0x00							// 12
+#define					LL_CHANNEL_MAP_REQ			0x01							//	8
+#define					LL_TERMINATE_IND			0x02							//	2
+
+#define					LL_ENC_REQ					0x03	// encryption			// 23
+#define					LL_ENC_RSP					0x04	// encryption			// 13
+#define					LL_START_ENC_REQ			0x05	// encryption			//	1
+#define					LL_START_ENC_RSP			0x06	// encryption			//	1
+
+#define					LL_UNKNOWN_RSP				0x07							//	2
+#define 				LL_FEATURE_REQ              0x08							//	9
+#define 				LL_FEATURE_RSP              0x09							//	9
+
+#define					LL_PAUSE_ENC_REQ			0x0A	// encryption			//	1
+#define					LL_PAUSE_ENC_RSP			0x0B	// encryption			//	1
+
+#define 				LL_VERSION_IND              0x0C							//	6
+#define 				LL_REJECT_IND         		0x0D							//	2
+#define 				LL_SLAVE_FEATURE_REQ        0x0E	//core_4.1				//	9
+#define 				LL_CONNECTION_PARAM_REQ		0x0F	//core_4.1				// 24
+#define 				LL_CONNECTION_PARAM_RSP		0x10	//core_4.1				// 24
+#define					LL_REJECT_IND_EXT			0x11	//core_4.1				//	3
+#define 				LL_PING_REQ					0x12    //core_4.1				//	1
+#define					LL_PING_RSP					0x13    //core_4.1				//	1
+#define 				LL_LENGTH_REQ				0x14    //core_4.2				//	9
+#define					LL_LENGTH_RSP				0x15    //core_4.2				//	9
+#define 				LL_PHY_REQ					0x16	//core_5.0				//	3
+#define 				LL_PHY_RSP					0x17	//core_5.0				//	3
+#define 				LL_PHY_UPDATE_IND			0x18	//core_5.0				//	5
+#define 				LL_MIN_USED_CHN_IND			0x19	//core_5.0				//	3
+
+#define 				LL_CTE_REQ					0x1A	//core_5.1				//	2
+#define 				LL_CTE_RSP					0x1B	//core_5.1				//	2
+#define 				LL_PERIODIC_SYNC_IND		0x1C	//core_5.1				// 35
+#define 				LL_CLOCK_ACCURACY_REQ		0x1D	//core_5.1				//	2
+#define 				LL_CLOCK_ACCURACY_RSP		0x1E	//core_5.1				//	2
+
+
+#define 				LL_CIS_REQ					0x1F	//core_5.2				//	36
+#define 				LL_CIS_RSP					0x20	//core_5.2				//	9
+#define 				LL_CIS_IND					0x21	//core_5.2				//  16
+#define 				LL_CIS_TERMINATE_IND		0x22	//core_5.2				//	4
+#define 				LL_POWER_CONTROL_REQ		0x23	//core_5.2				//	4
+#define 				LL_POWER_CONTROL_RSP		0x24	//core_5.2				//	5
+#define 				LL_POWER_CHANGE_IND			0x25	//core_5.2				//	5
+
+/////////////////////////////// Link Layer: ADV //////////////////////////////////////////////
+
+// Advertise channel PDU Type
+typedef enum advChannelPDUType_e {
+	LL_TYPE_ADV_IND 		 = 0x00,
+	LL_TYPE_ADV_DIRECT_IND 	 = 0x01,
+	LL_TYPE_ADV_NONCONN_IND  = 0x02,
+	LL_TYPE_SCAN_REQ 		 = 0x03,		LL_TYPE_AUX_SCAN_REQ 	 = 0x03,
+	LL_TYPE_SCAN_RSP 		 = 0x04,
+	LL_TYPE_CONNNECT_REQ 	 = 0x05,		LL_TYPE_AUX_CONNNECT_REQ = 0x05,
+	LL_TYPE_ADV_SCAN_IND 	 = 0x06,
+
+	LL_TYPE_ADV_EXT_IND		 = 0x07,		LL_TYPE_AUX_ADV_IND 	 = 0x07,	LL_TYPE_AUX_SCAN_RSP = 0x07,	LL_TYPE_AUX_SYNC_IND = 0x07,	LL_TYPE_AUX_CHAIN_IND = 0x07,
+	LL_TYPE_AUX_CONNNECT_RSP = 0x08,
+} advChannelPDUType_t;
+
+
+
+
+
+
+
+
+
+
+
+/******************************************** HCI **************************************************************/
+/**
+ *  @brief  Definition for HCI request type
+ */
+#if 0 // comment by qifa in mesh: define in hci.h
+typedef enum hci_type_e {
+	HCI_TYPE_CMD = 0x01,
+	HCI_TYPE_ACL_DATA,
+	HCI_TYPE_SCO_DATA,
+	HCI_TYPE_EVENT,
+} hci_type_t;
+#endif
+
+
+#define 		HCI_FIRST_NAF_PACKET             			0x00	//LE Host to Controller
+#define 		HCI_CONTINUING_PACKET             			0x01	//LE Host to Controller / Controller to Host
+#define 		HCI_FIRST_AF_PACKET               			0x02	//LE 					  Controller to Host
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/******************************************** L2CAP **************************************************************/
+
+
+
+// l2cap pb flag type
+#define L2CAP_FRIST_PKT_H2C              0x00
+#define L2CAP_CONTINUING_PKT             0x01
+#define L2CAP_FIRST_PKT_C2H              0x02
+
+
+// define the l2cap CID for BLE
+#define L2CAP_CID_NULL                   0x0000
+#define L2CAP_CID_ATTR_PROTOCOL          0x0004
+#define L2CAP_CID_SIG_CHANNEL            0x0005
+#define L2CAP_CID_SMP                    0x0006
+#define L2CAP_CID_GENERIC                0x0007
+#define L2CAP_CID_DYNAMIC                0x0040
+
+
+//signal packet formats of code define
+#define L2CAP_CMD_REJECT                 0x01
+#define L2CAP_CMD_DISC_CONN_REQ          0x06
+#define L2CAP_CMD_DISC_CONN_RESP         0x07
+#define L2CAP_CMD_CONN_UPD_PARA_REQ      0x12
+#define L2CAP_CMD_CONN_UPD_PARA_RESP     0x13
+#define L2CAP_CMD_CONN_REQ               0x14
+#define L2CAP_CMD_CONN_RESP              0x15
+#define L2CAP_CMD_FLOW_CTRL_CRED         0x16
+
+
+#define L2CAP_SIGNAL_MSG_TYPE            1
+#define L2CAP_DATA_MSG_TYPE              2
+#define L2CAP_REJECT_CMD_NOT_UNDERSTOOD  0
+#define L2CAP_REJECT_SIGNAL_MTU_EXCEED   1
+#define L2CAP_REJECT_INVALID_CID         2
+
+
+
+
+
+
+/******************************************** ATT ***************************************************************/
+
+
+
+
+
+
+
+
+
+/******************************************** GATT **************************************************************/
+
+
+
+
+
+
+/******************************************** GAP ***************************************************************/
+
+// https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile/
+// EIR Data Type, Advertising Data Type (AD Type) and OOB Data Type Definitions
+
+typedef enum {
+	DT_FLAGS								= 0x01,		//	Flag
+	DT_INCOMPLT_LIST_16BIT_SERVICE_UUID		= 0x02,		//	Incomplete List of 16-bit Service Class UUIDs
+	DT_COMPLETE_LIST_16BIT_SERVICE_UUID	    = 0x03,		//	Complete List of 16-bit Service Class UUIDs
+	DT_INCOMPLT_LIST_32BIT_SERVICE_UUID    	= 0x04,		//	Incomplete List of 32-bit Service Class UUIDs
+	DT_COMPLETE_LIST_32BIT_SERVICE_UUID		= 0x05,		//	Complete List of 32-bit Service Class UUIDs
+	DT_INCOMPLT_LIST_128BIT_SERVICE_UUID   	= 0x06,		//	Incomplete List of 128-bit Service Class UUIDs
+	DT_COMPLETE_LIST_128BIT_SERVICE_UUID	= 0x07,		//	Complete List of 128-bit Service Class UUIDs
+	DT_SHORTENED_LOCAL_NAME					= 0x08,		//	Shortened Local Name
+	DT_COMPLETE_LOCAL_NAME					= 0x09,		//	Complete Local Name
+	DT_TX_POWER_LEVEL						= 0x0A,		//	Tx Power Level
+
+	DT_CLASS_OF_DEVICE						= 0x0D,		//	Class of Device
+
+	DT_APPEARANCE							= 0x19,		//	Appearance
+
+	DT_BIGINFO								= 0x2C,		//	BIGInfo
+	DT_BROADCAST_CODE						= 0x2D,		// 	Broadcast_Code
+	DT_3D_INFORMATION_DATA					= 0x3D,		//	3D Information Data
+
+	DATA_TYPE_MANUFACTURER_SPECIFIC_DATA 	= 0xFF,     //	Manufacturer Specific Data
+}data_type_t;
 
 
 #endif

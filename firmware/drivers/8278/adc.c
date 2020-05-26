@@ -33,11 +33,11 @@
 _attribute_data_retention_
 adc_vref_ctr_t adc_vref_cfg = {
 	.adc_vref 		= 1175, //default ADC ref voltage (unit:mV)
-	.adc_calib_en	= 0, 	//default disable
+	.adc_calib_en	= 1, 	//default disable
 };
 
 volatile unsigned short	adc_code;
-
+unsigned char   adc_pre_scale;
 
 GPIO_PinTypeDef ADC_GPIO_tab[10] = {
 		GPIO_PB0,GPIO_PB1,
@@ -96,6 +96,7 @@ void adc_set_ref_voltage(ADC_RefVolTypeDef v_ref)
 		//Vref buffer bias current trimming: 		100%
 		//Comparator preamp bias current trimming:  100%
 		analog_write( areg_ain_scale  , (analog_read( areg_ain_scale  )&(0xC0)) | 0x15 );
+		adc_vref_cfg.adc_vref=900;// v_ref=ADC_VREF_0P9V,
 	}
 }
 
@@ -145,7 +146,6 @@ void adc_set_ain_channel_differential_mode(ADC_InputPchTypeDef InPCH,ADC_InputNc
 	adc_set_input_mode_chn_misc(DIFFERENTIAL_MODE);
 }
 
-
 /**
  * @brief This function serves to set pre_scaling.
  * @param[in]  v_scl - enum variable of ADC pre_scaling factor.
@@ -170,6 +170,7 @@ void adc_set_ain_pre_scaler(ADC_PreScalingTypeDef v_scl)
 		tmp = tmp&0xcf;
 		analog_write (0xF9, tmp);
 	}
+	adc_pre_scale = 1<<(unsigned char)v_scl;
 }
 
 /**
@@ -401,11 +402,10 @@ unsigned int adc_sample_and_get_result(void)
 	adc_code=adc_result = adc_average;
 
 	 //////////////// adc sample data convert to voltage(mv) ////////////////
-	//                          (Vref, 1/8 scaler)   (BIT<12~0> valid data)
-	//			 =  adc_result * Vref * 8 / 0x2000
-	//           =  adc_result * Vref >>10
-
-	adc_vol_mv  = (adc_result * adc_vref_cfg.adc_vref)>>10;
+	//                          (Vref, adc_pre_scale)   (BIT<12~0> valid data)
+	//			 =  adc_result * Vref * adc_pre_scale / 0x2000
+	//           =  adc_result * Vref*adc_pre_scale >>13
+	adc_vol_mv  = (adc_result*adc_pre_scale*adc_vref_cfg.adc_vref)>>13;
 
 	return adc_vol_mv;
 }
@@ -469,7 +469,7 @@ unsigned short adc_temp_result(void)
  * @param[in]  none.
  * @return none.
  */
-#if ADC_ENABLE
+#if ADC_ENABLE // add by weixiong in mesh.
 void adc_drv_init(){
 	adc_init();
 	#if(ADC_MODE==ADC_BASE_MODE)

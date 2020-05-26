@@ -22,11 +22,8 @@
 
 #pragma once
 
-
-
-#define  RANDOM_OLD_MODE          0 //This macro definition is only turned on when using the random number module of the ADC.
-#define  RANDOM_NEW_MODE          1 //This is the random number of the TRNG module
-
+//(By lirui)
+#define  TRNG_MODE_ENABLE           1
 
 
 

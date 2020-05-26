@@ -22,7 +22,7 @@
 #pragma  once
 
 
-#include "../ble_common.h"
+#include "../ble_common.h" // modify by weixiong in mesh
 
 typedef int (*blc_hci_rx_handler_t) (void);
 typedef int (*blc_hci_tx_handler_t) (void);
@@ -52,25 +52,6 @@ extern blc_hci_handler_t			blc_master_handler;
 #define 		HCI_MAX_DATA_BUFFERS_MASTER              	8
 
 
-#define 		HCI_FIRST_NAF_PACKET             			0x00
-#define 		HCI_CONTINUING_PACKET             			0x01
-#define 		HCI_FIRST_AF_PACKET               			0x02
-
-
-/*********************************************************************
- * ENUMS
- */
-
-
-/**
- *  @brief  Definition for HCI request type
- */
-typedef enum hci_type_e {
-	HCI_TYPE_CMD = 0x01,
-	HCI_TYPE_ACL_DATA,
-	HCI_TYPE_SCO_DATA,
-	HCI_TYPE_EVENT,
-} hci_type_t;
 
 
 
@@ -78,8 +59,8 @@ typedef enum hci_type_e {
 extern u32		hci_eventMask;
 extern u32		hci_le_eventMask;
 ble_sts_t 		blc_hci_setEventMask_cmd(u32 evtMask);      //eventMask: BT/EDR
-ble_sts_t 		blc_hci_le_setEventMask_cmd(u32 evtMask);   //eventMask: LE
-
+ble_sts_t 		blc_hci_le_setEventMask_cmd(u32 evtMask);       //eventMask: LE event  0~31
+ble_sts_t 		blc_hci_le_setEventMask_2_cmd(u32 evtMask_2);   //eventMask: LE event 32~63
 
 // Controller event handler
 typedef int (*hci_event_handler_t) (u32 h, u8 *para, int n);

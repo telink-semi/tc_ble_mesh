@@ -129,7 +129,7 @@ static inline void pwm_set_cycle_and_duty(pwm_id id, unsigned short cycle_tick, 
 	reg_pwm_cycle(id) = MASK_VAL(FLD_PWM_CMP, cmp_tick, FLD_PWM_MAX, cycle_tick);
 }
 
-#define pwm_set(a, b, c)	(pwm_set_cycle_and_duty(a, b, c))
+#define pwm_set(a, b, c)	(pwm_set_cycle_and_duty(a, b, c)) // add by weixiong in mesh
 
 /**
  * @brief     This fuction servers to set pwm cycle time & count status.

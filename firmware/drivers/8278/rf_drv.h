@@ -29,12 +29,12 @@
 #include "bsp.h"
 #include "compiler.h"
 #include "gpio_8278.h"
-#include "proj/drivers/rf_pa.h"
+#include "proj/drivers/rf_pa.h" // add by weixiong
 
 #define RF_CHN_TABLE 		0x8000
 
-#define FRE_OFFSET 	0
-#define MAX_RF_CHANNEL  16
+#define FRE_OFFSET 	0		// add by weixiong in mesh
+#define MAX_RF_CHANNEL  16	// add by weixiong in mesh
 
 /**
  *  @brief  Define RF mode
@@ -275,6 +275,13 @@ static inline void rf_set_rxpara(void)
 
 extern void rf_drv_init (RF_ModeTypeDef rf_mode);
 
+/**
+*	@brief     This function serves to initiate the mode of RF
+*	@param[in] rf_mode  -  mode of RF
+*	@return	   none.
+*/
+
+extern void rf_multi_mode_drv_init(RF_ModeTypeDef rf_mode);
 /**
  * @brief   	This function serves to set RF power level index.
  * @param[in]   RF_PowerTypeDef - the RF power types.
@@ -579,7 +586,7 @@ static inline void rf_rx_finish_clear_flag(void)
  */
 static inline void rf_set_rxmode (void)
 {
-	if(blc_rf_pa_cb){   blc_rf_pa_cb(PA_TYPE_RX_ON);  }
+	if(blc_rf_pa_cb){   blc_rf_pa_cb(PA_TYPE_RX_ON);  }		// add by weixiong
 	write_reg8 (0x800f02, RF_TRX_OFF);
     write_reg8 (0x800428, RF_TRX_MODE | BIT(0));	//rx enable
     write_reg8 (0x800f02, RF_TRX_OFF | BIT(5));	// RX enable

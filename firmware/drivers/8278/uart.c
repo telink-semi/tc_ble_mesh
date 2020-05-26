@@ -26,7 +26,7 @@
 #include "uart.h"
 #include "gpio.h"
 #include "compiler.h"
-#include "proj/tl_common.h"
+#include "proj/tl_common.h" // add by weixiong in mesh
 
 /**
  * @brief     This function is used to look for the prime.if the prime is finded,it will
@@ -322,6 +322,7 @@ void uart_ndma_send_byte(unsigned char uartData)
 	uart_TxIndex &= 0x03;// cycle the four register 0x90 0x91 0x92 0x93.
 }
 
+#if 1 // add by weixiong in mesh
 /**
  * @brief     uart send data function, this  function tell the DMA to get data from the RAM and start
  *            the DMA transmission
@@ -347,6 +348,7 @@ unsigned char uart_Send(unsigned char* data, unsigned int len){
 	return 0;
 
 }
+#endif
 
 /**
  * @brief     uart send data function, this  function tell the DMA to get data from the RAM and start
@@ -401,7 +403,7 @@ volatile unsigned char uart_send_byte(unsigned char byte)
  * @return    none
  */
 
-void uart_recbuff_init(unsigned char *RecvAddr, unsigned short RecvBufLen, unsigned char *txAddr)
+void uart_recbuff_init(unsigned char *RecvAddr, unsigned short RecvBufLen, unsigned char *txAddr) // modify by weixiong in mesh
 {
     unsigned char bufLen;
     unsigned int addr;
@@ -416,7 +418,7 @@ void uart_recbuff_init(unsigned char *RecvAddr, unsigned short RecvBufLen, unsig
     reg_dma0_mode = FLD_DMA_WR_MEM;   //set DMA 0 mode to 0x01 for receive
 
 	if(txAddr){
-    	tx_buff = txAddr;
+    	tx_buff = txAddr; // add by weixiong in mesh
     }
 }
 
@@ -435,6 +437,13 @@ unsigned char uart_is_parity_error(void)
  * @brief     This function clears parity error status once when it occurs.
  * @param[in] none
  * @return    none
+ *
+ * Note:
+ *(1)DMA mode
+ * RX FIFO will also be cleared when parity error flag is cleared .
+ *(2)NON-DMA mode
+ * When parity error occurs, clear parity error flag after UART receives the data.
+ * Cycle the four registers (0x90 0x91 0x92 0x93) from register "0x90" to get data when UART receives the data next time.
  */
 void uart_clear_parity_error(void)
 {
@@ -557,7 +566,18 @@ void uart_gpio_set(UART_TxPinDef tx_pin,UART_RxPinDef rx_pin)
 	gpio_set_input_en(rx_pin, 1);  //
 
 }
+/**
+ * @brief   This function enables the irq when UART module receives error data.
+ * @param[in] none
+ * @return    none
+ */
+void uart_mask_error_irq_enable(void)
+{
 
+	reg_uart_rx_timeout1|= FLD_UART_MASK_ERR_IRQ;
+	reg_irq_mask |= FLD_IRQ_UART_EN;
+
+}
 
 
 

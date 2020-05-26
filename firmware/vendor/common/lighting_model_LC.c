@@ -35,20 +35,72 @@
 #if (MD_LIGHT_CONTROL_EN)
 model_light_lc_t       model_sig_light_lc;
 u32 mesh_md_light_lc_addr = FLASH_ADR_MD_LIGHT_LC;
+u16 prop_publish_id_sel = LC_PROP_ID_LightnessOn;
+
 #if MD_SERVER_EN
+
+#define GET_LC_PROP_LEN(type)   \
+    ((LC_PROP_TYPE_LUXLEVEL == type) ? LEN_LC_PROP_LUXLEVEL :\
+       ((LC_PROP_TYPE_LIGHTNESS == type) ? LEN_LC_PROP_LIGHTNESS :\
+          ((LC_PROP_TYPE_ACCURACY == type) ? LEN_LC_PROP_ACCURACY :\
+            ((LC_PROP_TYPE_REGULATOR == type) ? LEN_LC_PROP_REGULATOR :\
+              ((LC_PROP_TYPE_TIME == type) ? LEN_LC_PROP_TIME :0)))))
+
+#define INIT_LC_PROP_ARRAY(id,member,type,val)    \
+{GET_LC_PROP_LEN(type),id,&model_sig_light_lc.member,sizeof(model_sig_light_lc.member[0]),type,val}
+
+const lc_prop_info_t lc_prop_info[] = {
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_LuxLevelOn,LuxLevelOn,LC_PROP_TYPE_LUXLEVEL,LC_PROP_VAL_LuxLevelOn),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_LuxLevelProlong,LuxLevelProlong,LC_PROP_TYPE_LUXLEVEL,LC_PROP_VAL_LuxLevelProlong),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_LuxLevelStandby,LuxLevelStandby,LC_PROP_TYPE_LUXLEVEL,LC_PROP_VAL_LuxLevelStandby),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_LightnessOn,LightnessOn,LC_PROP_TYPE_LIGHTNESS,LC_PROP_VAL_LightnessOn),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_LightnessProlong,LightnessProlong,LC_PROP_TYPE_LIGHTNESS,LC_PROP_VAL_LightnessProlong),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_LightnessStandby,LightnessStandby,LC_PROP_TYPE_LIGHTNESS,LC_PROP_VAL_LightnessStandby),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_RegulatorAccuracy,RegAccuracy,LC_PROP_TYPE_ACCURACY,LC_PROP_VAL_RegulatorAccuracy),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_RegulatorKid,RegKid,LC_PROP_TYPE_REGULATOR,LC_PROP_VAL_RegulatorKid),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_RegulatorKiu,RegKiu,LC_PROP_TYPE_REGULATOR,LC_PROP_VAL_RegulatorKiu),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_RegulatorKpd,RegKpd,LC_PROP_TYPE_REGULATOR,LC_PROP_VAL_RegulatorKpd),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_RegulatorKpu,RegKpu,LC_PROP_TYPE_REGULATOR,LC_PROP_VAL_RegulatorKpu),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_TimeOccupancyDelay,TimeOccupancyDelay,LC_PROP_TYPE_TIME,LC_PROP_VAL_TimeOccupancyDelay),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_TimeFadeOn,TimeFadeOn,LC_PROP_TYPE_TIME,LC_PROP_VAL_TimeOccupancyDelay),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_TimeRunOn,TimeRunOn,LC_PROP_TYPE_TIME,LC_PROP_VAL_TimeRunOn),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_TimeFade,TimeFade,LC_PROP_TYPE_TIME,LC_PROP_VAL_TimeFade),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_TimeProlong,TimeProlong,LC_PROP_TYPE_TIME,LC_PROP_VAL_TimeProlong),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_TimeFadeStandbyAuto,TimeStandbyAuto,LC_PROP_TYPE_TIME,LC_PROP_VAL_TimeFadeStandbyAuto),
+    INIT_LC_PROP_ARRAY(LC_PROP_ID_TimeFadeStandbyManual,TimeStandbyManual,LC_PROP_TYPE_TIME,LC_PROP_VAL_TimeFadeStandbyManual),
+};
+
+static inline void * get_lc_val(const lc_prop_info_t *p_prop, int light_idx)
+{
+    return ((u8 *)p_prop->p_val + light_idx * p_prop->len_p_val);
+}
+static inline void set_lc_val(const lc_prop_info_t *p_prop, int light_idx, const void *val)
+{
+    memcpy(get_lc_val(p_prop, light_idx), val, p_prop->len - 2);
+}
 
 void light_LC_global_init()
 {
-    foreach_arr(i,model_sig_light_lc.prop){
-        light_lc_property_t *p_prop = &model_sig_light_lc.prop[i];
-        p_prop->id = 0;
-        u8 val[sizeof(p_prop->val)] = {0x00,0x00,0x00};
-        p_prop->len = LEN_LC_PROP_MAX;
-        memcpy(p_prop->val, val, sizeof(p_prop->val));
+    foreach(i,LIGHT_CNT){
+        foreach_arr(k,lc_prop_info){
+            const lc_prop_info_t *p_prop = &lc_prop_info[k];
+            set_lc_val(p_prop, i, &p_prop->val_init);
+        }
     }
 }
 
-int is_light_lc_op(u16 op)
+const lc_prop_info_t * get_lc_prop_info(u16 id)    // get pointer
+{
+    foreach_arr(i,lc_prop_info){
+        const lc_prop_info_t * p_prop = &lc_prop_info[i];
+        if(p_prop->id == id){
+            return p_prop;
+        }
+    }
+    return 0;
+}
+
+int is_light_lc_onoff(u16 op)
 {
     return ((LIGHT_LC_ONOFF_SET == op)||(LIGHT_LC_ONOFF_SET_NOACK == op));
 }
@@ -77,7 +129,8 @@ int mesh_lc_mode_st_publish(u8 idx)
 void scene_get_lc_par(scene_data_t *p_scene, int light_idx)
 {
     p_scene->lc_mode = model_sig_light_lc.mode[light_idx];
-    memcpy(&p_scene->lc_propty, &model_sig_light_lc.prop[light_idx], sizeof(p_scene->lc_propty));
+    p_scene->lc_onoff = model_sig_light_lc.onoff[light_idx];
+    //memcpy(&p_scene->lc_propty, &model_sig_light_lc.prop[light_idx], sizeof(p_scene->lc_propty));
 }
 
 void scene_load_lc_par(scene_data_t *p_scene, int light_idx)
@@ -86,12 +139,16 @@ void scene_load_lc_par(scene_data_t *p_scene, int light_idx)
         model_sig_light_lc.mode[light_idx] = p_scene->lc_mode;
         mesh_lc_mode_st_publish(light_idx);
     }
+    
+    model_sig_light_lc.onoff[light_idx] = p_scene->lc_onoff;
 
+#if 0
     light_lc_property_t *p_prop = &model_sig_light_lc.prop[light_idx];
     if(memcmp(&p_scene->lc_propty, p_prop, sizeof(p_scene->lc_propty))){
         memcpy(p_prop, &p_scene->lc_propty, sizeof(p_scene->lc_propty));
         mesh_lc_prop_st_publish(light_idx);
     }
+#endif
 }
 
 int mesh_lc_mode_st_rsp(mesh_cb_fun_par_t *cb_par)
@@ -111,7 +168,7 @@ int mesh_cmd_sig_lc_mode_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     u8 mode_new = par[0];
     u8 *p_mode = &model_sig_light_lc.mode[cb_par->model_idx];
     if( mode_new < LC_MODE_MAX){
-    	if((*p_mode != mode_new) || PTS_TEST_EN){
+    	if(*p_mode != mode_new){
 			*p_mode = mode_new;
 			mesh_model_store(1, SIG_MD_LIGHT_LC_S);
             model_pub_check_set(ST_G_LEVEL_SET_PUB_NOW, cb_par->model, 1);
@@ -166,7 +223,7 @@ int mesh_cmd_sig_lc_om_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
             model_pub_check_set(ST_G_LEVEL_SET_PUB_NOW, cb_par->model, 1);
             model_pub_st_cb_re_init_lc_srv(&mesh_lc_om_st_publish);    // re-init
 		}
-        LC_property_tick_set(cb_par->model_idx);
+        //LC_property_tick_set(cb_par->model_idx);  // why set tick here ?
 	
 		if(cb_par->op_rsp != STATUS_NONE){
 			err = mesh_lc_om_st_rsp(cb_par);
@@ -177,16 +234,16 @@ int mesh_cmd_sig_lc_om_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 int mesh_tx_cmd_lc_prop_st(u8 idx, u16 id_get, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md)
 {
-	light_lc_property_t *p_prop = &model_sig_light_lc.prop[idx];
-	light_lc_property_t rsp_prop = {0};
-	rsp_prop.id = id_get;
-	u32 len_rsp = LEN_LC_PROP_MAX;
-	if(p_prop->id == id_get){       // also response when not found,  MMDL-SR-LLCS-BV01
-		memcpy(&rsp_prop.id, &p_prop->id, p_prop->len);
-		len_rsp = p_prop->len;
+	lc_prop_head_t rsp_prop = {0};
+	const lc_prop_info_t * p_info = get_lc_prop_info(id_get);
+	if(p_info && (p_info->len <= LEN_LC_PROP_MAX)){
+	    rsp_prop.len = p_info->len;
+        rsp_prop.id = id_get;
+	    memcpy(rsp_prop.val, get_lc_val(p_info, idx), p_info->len);
+        return mesh_tx_cmd_rsp(LIGHT_LC_PROPERTY_STATUS, (u8 *)&rsp_prop.id, rsp_prop.len, ele_adr, dst_adr, uuid, pub_md);
 	}
 
-	return mesh_tx_cmd_rsp(LIGHT_LC_PROPERTY_STATUS, (u8 *)&rsp_prop.id, len_rsp, ele_adr, dst_adr, uuid, pub_md);
+	return 0;
 }
 
 int mesh_lc_prop_st_publish(u8 idx)
@@ -198,16 +255,13 @@ int mesh_lc_prop_st_publish(u8 idx)
 		return -1;
 	}
 	u8 *uuid = get_virtual_adr_uuid(pub_adr, p_com_md);
-	return mesh_tx_cmd_lc_prop_st(idx, model_sig_light_lc.prop[idx].id, ele_adr, pub_adr, uuid, p_com_md);
+	
+	return mesh_tx_cmd_lc_prop_st(idx, prop_publish_id_sel, ele_adr, pub_adr, uuid, p_com_md);
 }
 
 int mesh_cmd_sig_lc_prop_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	u16 id_get = par[0]+(par[1]<<8);
-	if(0 == id_get){
-		return 0;
-	}
-	
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
     return mesh_tx_cmd_lc_prop_st(cb_par->model_idx, id_get, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
@@ -216,54 +270,125 @@ int mesh_cmd_sig_lc_prop_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     // MMDL-SR-LLC-BV06 / 07 will be set value 2bytes.
     // MMDL-SR-LLCS-BI01 require egnore 1bytes.
-	if((par_len <= LEN_LC_PROP_MAX) && (par_len >= (2+2))){
-		u16 id = par[0]+(par[1]<<8);
-		if(0 == id){
-			return 0;
-		}
-		
-		light_lc_property_t *p_prop = &model_sig_light_lc.prop[cb_par->model_idx];
-		memcpy(&p_prop->id, par, par_len);
-		p_prop->len = par_len;
-		
+    lc_prop_set_t *p_set = (lc_prop_set_t *)par;
+	const lc_prop_info_t * p_prop = get_lc_prop_info(p_set->id);
+	if(p_prop && (p_prop->len == par_len)){
+        set_lc_val(p_prop, cb_par->model_idx, p_set->val);
 		mesh_model_store(1, SIG_MD_LIGHT_LC_S);
+		prop_publish_id_sel = p_set->id;
         model_pub_check_set(ST_G_LEVEL_SET_PUB_NOW, cb_par->model, 0);
 		if(cb_par->op_rsp != STATUS_NONE){
 			return mesh_cmd_sig_lc_prop_get(par, par_len, cb_par);
 		}
 	}
+
 	return 0;
 }
 
 typedef struct{
-    u32 tick;
+    u32 tick_ms;
+    u8 st;
 }lc_property_proc_t;
 
-lc_property_proc_t g_lc_prop_proc[ARRAY_SIZE(model_sig_light_lc.prop)];
+lc_property_proc_t g_lc_prop_proc[LIGHT_CNT];
 
-void LC_property_tick_set(int idx)
+u32 get_lc_onoff_prop_time_ms(int light_idx, int op_lc_onoff_type)
 {
-    if(idx < ARRAY_SIZE(g_lc_prop_proc)){
-        g_lc_prop_proc[idx].tick = clock_time() | 1;
+    if(OP_LC_ONOFF_TYPE_ON == op_lc_onoff_type){
+        return model_sig_light_lc.TimeFadeOn[light_idx].val;
+    }else if(OP_LC_ONOFF_TYPE_OFF == op_lc_onoff_type){
+        return model_sig_light_lc.TimeStandbyManual[light_idx].val;
+    }
+
+    return 0;
+}
+
+void LC_property_tick_set(int light_idx)
+{
+    if(light_idx < ARRAY_SIZE(g_lc_prop_proc)){
+        g_lc_prop_proc[light_idx].tick_ms = clock_time_ms();
+    }
+}
+
+void LC_property_st_and_tick_set(int light_idx, u8 st)
+{
+    if(light_idx < ARRAY_SIZE(g_lc_prop_proc)){
+        g_lc_prop_proc[light_idx].st = st;
+        g_lc_prop_proc[light_idx].tick_ms = clock_time_ms();
+    }
+}
+
+void LC_property_light_onoff(int light_idx, u8 onoff)
+{
+    if(light_idx < ARRAY_SIZE(g_lc_prop_proc)){
+        lc_property_proc_t *p_proc = &g_lc_prop_proc[light_idx];
+        if(LC_MODE_ON == model_sig_light_lc.mode[light_idx]){ // lc mode = 1
+            if(G_ON == onoff){
+                if(LC_STATE_FADE_ON == p_proc->st){
+                    // nothing ?
+                }else if(LC_STATE_RUN == p_proc->st){
+                    // nothing ?
+                }else{
+                    LC_property_st_and_tick_set(light_idx, LC_STATE_FADE_ON);
+                }
+            }else if(G_OFF == onoff){
+                if(LC_STATE_STANDBY == p_proc->st){
+                    // nothing ?
+                }else if(LC_STATE_FADE_STANDBY_MANUAL == p_proc->st){
+                    // nothing ?
+                }else{
+                    LC_property_st_and_tick_set(light_idx, LC_STATE_FADE_STANDBY_MANUAL);
+                }
+            }
+        }
     }
 }
 
 void LC_property_proc()
 {
-    foreach_arr(i,g_lc_prop_proc){
-        light_lc_property_t *p_prop = &model_sig_light_lc.prop[i];
-        lc_property_proc_t *p_proc = &g_lc_prop_proc[i];
-        if(0x0030 == p_prop->id){   // Light LC Lightness Standby state: MMDL-SR-LLC-BV06 / BV07
-            if(p_proc->tick && clock_time_exceed(p_proc->tick, 4000*1000)){ // comfirm later
-                p_proc->tick = 0;
-                #if (PTS_TEST_EN)
-    			mesh_cmd_g_level_set_t level_set_tmp = {0};
-    			int len_tmp = GET_LEVEL_PAR_LEN(0);
-                u16 lightness = p_prop->val[0]+(p_prop->val[1]<<8);
-    			level_set_tmp.level = u16_to_s16(lightness);
-                st_pub_list_t pub_list = {{0}};
-    			g_level_set_and_update_last((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, i, 0, ST_TRANS_LIGHTNESS, 0, &pub_list);
-    			#endif
+    foreach_arr(light_idx,g_lc_prop_proc){
+        lc_property_proc_t *p_proc = &g_lc_prop_proc[light_idx];
+        if(LC_MODE_ON == model_sig_light_lc.mode[light_idx]){
+            switch(p_proc->st){
+                case LC_STATE_STANDBY:
+                    // wait for light on or occupancy on
+                    break;
+                case LC_STATE_FADE_ON:{
+                    lc_prop_u24_t *p_val = &model_sig_light_lc.TimeFadeOn[light_idx];
+                    //const lc_prop_info_t * p_info = get_lc_prop_info(LC_PROP_ID_TimeFadeOn);
+                    if(clock_time_exceed_ms(p_proc->tick_ms, p_val->val)){
+                        LC_property_st_and_tick_set(light_idx, LC_STATE_RUN);
+                    }
+                    break;
+                }case LC_STATE_RUN:{
+                    lc_prop_u24_t *p_val = &model_sig_light_lc.TimeRunOn[light_idx];
+                    if(clock_time_exceed_ms(p_proc->tick_ms, p_val->val)){
+                        LC_property_st_and_tick_set(light_idx, LC_STATE_RUN);
+                    }
+                    break;
+                }case LC_STATE_FADE:
+                    break;
+                case LC_STATE_PROLONG:
+                    break;
+                case LC_STATE_FADE_STANDBY_AUTO:
+                    break;
+                case LC_STATE_FADE_STANDBY_MANUAL:
+                    break;
+                default:
+                    break;
+                #if 0
+                if(p_proc->tick && clock_time_exceed(p_proc->tick, 4000*1000)){ // comfirm later
+                    p_proc->tick = 0;
+                    #if (PTS_TEST_EN)
+        			mesh_cmd_g_level_set_t level_set_tmp = {0};
+        			int len_tmp = GET_LEVEL_PAR_LEN(0);
+                    u16 lightness = p_prop->val[0]+(p_prop->val[1]<<8);
+        			level_set_tmp.level = u16_to_s16(lightness);
+                    st_pub_list_t pub_list = {{0}};
+        			g_level_set_and_update_last((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, i, 0, ST_TRANS_LIGHTNESS, 0, &pub_list);
+        			#endif
+                }
+                #endif
             }
         }
     }

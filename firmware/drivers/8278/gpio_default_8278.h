@@ -22,8 +22,7 @@
 
 #pragma once
 
-#include "proj/config/user_config.h"
-
+#include "proj/config/user_config.h" // modify by weixiong in mesh
 
 #ifndef PA0_INPUT_ENABLE
 #define PA0_INPUT_ENABLE	0

@@ -1235,9 +1235,11 @@ u8 gatt_adv_send_flag = 1;
 
 int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
 {
+#if FEATURE_RELAY_EN
     if(relay_adv_prepare_handler(p)){
         return 1;
     }
+#endif
 
     int ret = 0;
 #if __PROJECT_MESH_SWITCH__
@@ -1246,13 +1248,13 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
     }
 #endif
     
-    if(is_provision_working() || (!gatt_adv_send_flag)){
+    if(is_provision_working()){
         return 0;
     }
     
     // dispatch gatt part 
 #if   !__PROJECT_MESH_PRO__
-    if((blt_state!=BLS_LINK_STATE_CONN)
+    if(gatt_adv_send_flag && (blt_state!=BLS_LINK_STATE_CONN)
     #if FEATURE_LOWPOWER_EN
     && ((!is_lpn_support_and_en))
     #endif
@@ -1333,16 +1335,16 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
             }
             #endif
         }
-#if(BEACON_ENABLE)
         else{
-        	#if(BEACON_ENABLE)
-        	extern int pre_set_beacon_to_adv(rf_packet_adv_t *p);
-        	ret = pre_set_beacon_to_adv(p);
-        	#endif
         }
-#endif
     }
 #endif 
+
+#if(BEACON_ENABLE)
+    if(0 == ret){   // priority is lowest
+        ret = pre_set_beacon_to_adv(p);
+    }
+#endif
 
     return ret;
 }
@@ -1762,7 +1764,11 @@ void mesh_global_var_init()
 	#endif
 #else
 	#if (NODE_CAN_SEND_ADV_FLAG)
+		#if MI_API_ENABLE // beacauses mi mode have many mode ,it hard to distingwish the mode .
+	model_sig_cfg_s.frid = FRIEND_NOT_SUPPORT;
+		#else
 	model_sig_cfg_s.frid = FEATURE_FRIEND_EN ? FRIEND_SUPPORT_ENABLE : FRIEND_NOT_SUPPORT;
+		#endif
 	#else
 	model_sig_cfg_s.frid = FEATURE_FRIEND_EN ? FRIEND_SUPPORT_DISABLE : FRIEND_NOT_SUPPORT;
 	#endif

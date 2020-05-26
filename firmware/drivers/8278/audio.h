@@ -45,6 +45,16 @@ typedef enum{
 	RATE_SIZE
 }AudioRate_Typedef;
 
+
+/**
+ * define audio output type.
+ */
+typedef enum{
+	GPIO_PB4_PB5,
+	GPIO_PB6_PB7,
+}Audio_SDM_OutPut_Pin;
+
+
 /**
  * define audio input type.
  */
@@ -101,7 +111,6 @@ static inline void audio_set_i2s_clk(unsigned char step,unsigned char mod)
 	reg_i2s_step = step|FLD_I2S_CLK_EN;
 	reg_i2s_mod = mod;
 }
-
 /**
  * @brief      This function performs to read pointer/write pointer location.
  * @param[in]  none.
@@ -111,7 +120,6 @@ static inline unsigned short get_mic_wr_ptr (void)
 {
 	return reg_audio_wptr >>1;
 }
-
 /**
  * 	@brief     audio amic initial function. configure ADC corresponding parameters. set hpf,lpf and decimation ratio.
  * 	@param[in] Audio_Rate - audio rate value
@@ -133,7 +141,6 @@ void audio_codec_and_pga_disable(void);
  * 	@return    none.
  */
 void audio_dmic_init(AudioRate_Typedef Audio_Rate);
-
 /**
  * 	@brief     audio USB init function, config the speed of DMIC and downsample audio data to required speed.
  *            actually audio data is dmic_speed/d_samp.
@@ -148,7 +155,6 @@ void audio_usb_init(AudioRate_Typedef Audio_Rate);
  * @param[in] Audio_Rate  - audio rate.
  * @return    none.
  */
-
 void audio_buff_init(AudioRate_Typedef Audio_Rate);
 
 /**
@@ -156,26 +162,24 @@ void audio_buff_init(AudioRate_Typedef Audio_Rate);
  * 	@param[in] none.
  * 	@return    none.
  */
-
 void audio_i2s_init(void);
 
 
 /**
 *	@brief	   sdm setting function, enable or disable the sdm output, configure SDM output paramaters.
+*	@param[in]  OutPin - SDM Output pin.
 *	@param[in]	InType -	  SDM input type, such as AMIC,DMIC,I2S_IN,USB_IN.
 *	@param[in]	Audio_Rate - audio sampling rate, such as 16K,32k etc.
 *	@param[in]	audio_out_en - audio output enable or disable set, '1' enable audio output; '0' disable output.
 *	@return	none
 */
-
-void audio_set_sdm_output(AudioInput_Typedef InType,AudioRate_Typedef Audio_Rate,unsigned char audio_out_en);
+void audio_set_sdm_output(Audio_SDM_OutPut_Pin OutPin,AudioInput_Typedef InType,AudioRate_Typedef Audio_Rate,unsigned char audio_out_en);
 
 /**
  * @brief     This function servers to set USB input/output.
  * @param[in] none.
  * @return    none.
  */
-
 void audio_set_usb_output(void);
 
 /**
@@ -184,7 +188,6 @@ void audio_set_usb_output(void);
  * 	@param[in] 	Audio_Rate 	- select audio rate, which will decide on which adc sampling rate and relative decimation configuration will be chosen.
  * 	@return	  	none
  */
-
 void audio_set_i2s_output(AudioInput_Typedef InType,AudioRate_Typedef Audio_Rate);
 
 /**

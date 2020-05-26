@@ -32,9 +32,6 @@ char con_sec_data[32];
 #define  SIZE_CON_SEC_DATA  32
 
 #elif((MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE) || (MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE))
-
-#define AIS_SAFE_CERTIFY_THREE_PAR_EN	 0// in Ali demo environment,use this three par to test safe certify
-#if !AIS_SAFE_CERTIFY_THREE_PAR_EN
 u32 con_product_id=0x00000002;// little endiness 
 #if(MESH_USER_DEFINE_MODE != MESH_MI_SPIRIT_ENABLE)
 const
@@ -46,14 +43,6 @@ u8 con_sec_data[16]={ 0x04,0x6e,0x68,0x11,0x27,0xed,0xe6,0x70,
     #else
 u8 con_sec_data[16];
     #endif
-#else
-u32 con_product_id = 602;
-#if(MESH_USER_DEFINE_MODE != MESH_MI_SPIRIT_ENABLE)
-const
-#endif
-u8 con_mac_address[6]= {0xa8, 0x1c, 0xc1, 0x07, 0xda, 0x78};
-u8 con_sec_data[16] = {0x15, 0x65, 0xd0, 0x49, 0x74, 0x00, 0xc9, 0x99, 0xe9, 0x84, 0xcf, 0xfa, 0x4d, 0xa4, 0xfd, 0xf9};
-#endif
 #define SIZE_CON_SEC_DATA   (sizeof(con_sec_data))
 	#endif
 #endif
@@ -63,12 +52,12 @@ u8 con_sec_data[16] = {0x15, 0x65, 0xd0, 0x49, 0x74, 0x00, 0xc9, 0x99, 0xe9, 0x8
 void mesh_ais_global_var_set()
 {
     vendor_id_check_and_update();
-
+	#if 0 // can't change mac to ensure reconnect
 	memcpy(tbl_mac, con_mac_address, 6);
 	extern rf_packet_scan_rsp_t	pkt_scan_rsp;
 	memcpy(pkt_adv.advA, tbl_mac, BLE_ADDR_LEN);
 	memcpy(pkt_scan_rsp.advA, tbl_mac, BLE_ADDR_LEN);
-
+	#endif
 	model_sig_cfg_s.nw_transmit.count = AIS_TRANSMIT_CNT_DEF;
 	model_sig_cfg_s.nw_transmit.invl_steps = AIS_TRANSMIT_INVL_STEPS_DEF;
 	model_sig_cfg_s.relay_retransmit.count = AIS_TRANSMIT_CNT_DEF_RELAY;

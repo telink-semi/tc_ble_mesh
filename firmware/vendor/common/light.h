@@ -175,9 +175,16 @@ enum{
 	ST_PUB_TRANS_MAX,
 };
 
+enum{
+	OP_LC_ONOFF_TYPE_NONE   = 0,    // must 0
+	OP_LC_ONOFF_TYPE_ON,
+	OP_LC_ONOFF_TYPE_OFF,
+};
+
 typedef struct{
-	u8 st[ST_TRANS_MAX + 1];  // + 1: for onoff publish flag
-	u8 no_dim_refresh_flag;
+	u8 st[ST_TRANS_MAX + 1];    // + 1: for onoff publish flag
+	u8 no_dim_refresh_flag;     // input parameter
+	u8 op_lc_onoff_type;        // input parameter; receive command type 
 }st_pub_list_t;  // st_level_set_pub_list_t
 
 typedef struct{

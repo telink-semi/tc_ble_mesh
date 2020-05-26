@@ -29,23 +29,12 @@
 #ifndef LL_ADV_H_
 #define LL_ADV_H_
 
-
+#include "../ble_format.h"
 #include "ll_whitelist.h"
 
 /* Advertising Maximum data length */
 #define 		ADV_MAX_DATA_LEN                    31
 
-#define			BLT_ENABLE_ADV_37			BIT(0)
-#define			BLT_ENABLE_ADV_38			BIT(1)
-#define			BLT_ENABLE_ADV_39			BIT(2)
-#define			BLT_ENABLE_ADV_ALL			(BLT_ENABLE_ADV_37 | BLT_ENABLE_ADV_38 | BLT_ENABLE_ADV_39)
-
-
-
-typedef enum {
-	BLC_ADV_DISABLE = 0x00,
-	BLC_ADV_ENABLE  = 0x01,
-} ll_adv_en_t;
 
 #define			BLS_FLAG_ADV_IN_SLAVE_MODE			BIT(6)
 
@@ -55,34 +44,6 @@ typedef enum {
 
 
 
-
-
-/* Advertisement Type */
-typedef enum{
-  ADV_TYPE_CONNECTABLE_UNDIRECTED             = 0x00,  // ADV_IND
-  ADV_TYPE_CONNECTABLE_DIRECTED_HIGH_DUTY     = 0x01,  // ADV_INDIRECT_IND (high duty cycle)
-  ADV_TYPE_SCANNABLE_UNDIRECTED               = 0x02 , // ADV_SCAN_IND
-  ADV_TYPE_NONCONNECTABLE_UNDIRECTED          = 0x03 , // ADV_NONCONN_IND
-  ADV_TYPE_CONNECTABLE_DIRECTED_LOW_DUTY      = 0x04,  // ADV_INDIRECT_IND (low duty cycle)
-}adv_type_t;
-
-
-
-
-
-// Advertise channel PDU Type
-typedef enum advChannelPDUType_e {
-	LL_TYPE_ADV_IND 		 = 0x00,
-	LL_TYPE_ADV_DIRECT_IND 	 = 0x01,
-	LL_TYPE_ADV_NONCONN_IND  = 0x02,
-	LL_TYPE_SCAN_REQ 		 = 0x03,		LL_TYPE_AUX_SCAN_REQ 	 = 0x03,
-	LL_TYPE_SCAN_RSP 		 = 0x04,
-	LL_TYPE_CONNNECT_REQ 	 = 0x05,		LL_TYPE_AUX_CONNNECT_REQ = 0x05,
-	LL_TYPE_ADV_SCAN_IND 	 = 0x06,
-
-	LL_TYPE_ADV_EXT_IND		 = 0x07,		LL_TYPE_AUX_ADV_IND 	 = 0x07,	LL_TYPE_AUX_SCAN_RSP = 0x07,	LL_TYPE_AUX_SYNC_IND = 0x07,	LL_TYPE_AUX_CHAIN_IND = 0x07,
-	LL_TYPE_AUX_CONNNECT_RSP = 0x08,
-} advChannelPDUType_t;
 
 
 
@@ -140,27 +101,26 @@ ble_sts_t   bls_ll_setAdvEnable(int adv_enable);
 
 u8 			blt_set_adv_direct_init_addrtype(u8* cmdPara);
 
-ble_sts_t   bls_ll_setAdvParam( u16 intervalMin,  u16 intervalMax,  adv_type_t advType,  		 own_addr_type_t ownAddrType,  \
-							     u8 peerAddrType, u8  *peerAddr,    u8 		   adv_channelMap,   adv_fp_type_t   advFilterPolicy);
-
+ble_sts_t   bls_ll_setAdvParam( u16 intervalMin,  u16 intervalMax,  adv_type_t advType,  		 	  own_addr_type_t ownAddrType,  \
+							     u8 peerAddrType, u8  *peerAddr,    adv_chn_map_t 	adv_channelMap,   adv_fp_type_t   advFilterPolicy);
 
 ble_sts_t 	bls_ll_setAdvInterval(u16 intervalMin, u16 intervalMax);
-ble_sts_t 	bls_ll_setAdvChannelMap(u8 adv_channelMap);
+ble_sts_t 	bls_ll_setAdvChannelMap(adv_chn_map_t adv_channelMap);
 ble_sts_t 	bls_ll_setAdvFilterPolicy(adv_fp_type_t advFilterPolicy);
 
 ble_sts_t   bls_ll_setAdvDuration (u32 duration_us, u8 duration_en);
 
 
 void 		blc_ll_setAdvCustomedChannel (u8 chn0, u8 chn1, u8 chn2);
-void        blt_send_adv2scan_mode(int tx_adv);
+void        blt_send_adv2scan_mode(int tx_adv); // add by weixiong in mesh
 
 
 
 
 ble_sts_t   blc_ll_addAdvertisingInConnSlaveRole(void);
 ble_sts_t   blc_ll_removeAdvertisingFromConnSLaveRole(void);
-ble_sts_t 	blc_ll_setAdvParamInConnSlaveRole( u8 		  *adv_data,  u8              advData_len, u8 *scanRsp_data,  u8 scanRspData_len,
-											   adv_type_t  advType,   own_addr_type_t ownAddrType, u8 adv_channelMap, adv_fp_type_t advFilterPolicy);
+ble_sts_t 	blc_ll_setAdvParamInConnSlaveRole( u8 		  *adv_data,  u8              advData_len, u8 *scanRsp_data,  			 u8 scanRspData_len,
+											   adv_type_t  advType,   own_addr_type_t ownAddrType, adv_chn_map_t adv_channelMap, adv_fp_type_t advFilterPolicy);
 
 
 static inline u32 	bls_ll_getConnectionCreateTime(void)

@@ -25,14 +25,15 @@
  *******************************************************************************************************/
 
 #include "bsp.h"
-#include "proj/common/compatibility.h"
-#include "proj/common/static_assert.h"
+#include "proj/common/compatibility.h" // add by weixiong in mesh
+#include "proj/common/static_assert.h" // add by weixiong in mesh
 #include "compiler.h"
 #include "register.h"
 #include "analog.h"
 
 #include "gpio.h"
 
+#if 1 // add by weixiong in mesh
 #ifdef PWM_FUNC_R
 STATIC_ASSERT((PWM_FUNC_R == AS_PWM)||((PWM_FUNC_R == AS_PWM_SECOND)&&((PWM_R==GPIO_PC1)||(PWM_R==GPIO_PC4)||(PWM_R==GPIO_PD5))));
 #endif
@@ -44,6 +45,7 @@ STATIC_ASSERT((PWM_FUNC_B == AS_PWM)||((PWM_FUNC_B == AS_PWM_SECOND)&&((PWM_B==G
 #endif
 #ifdef PWM_FUNC_W
 STATIC_ASSERT((PWM_FUNC_W == AS_PWM)||((PWM_FUNC_W == AS_PWM_SECOND)&&((PWM_W==GPIO_PC1)||(PWM_W==GPIO_PC4)||(PWM_W==GPIO_PD5))));
+#endif
 #endif
 /**
  * @brief      This function servers to initiate pull up-down resistor of all gpio.
@@ -102,7 +104,13 @@ static void gpio_analog_resistance_init(void)
  *                    0: not set analog register
  * @return     none.
  */
-#if (BLC_PM_DEEP_RETENTION_MODE_EN)
+/**Processing methods of unused GPIO
+ * Set it to high resistance state and set it to open pull-up or pull-down resistance to
+ * let it be in the determined state.When GPIO uses internal pull-up or pull-down resistance,
+ * do not use pull-up or pull-down resistance on the board in the process of practical
+ * application because it may have the risk of electric leakage .
+ */
+#if (BLC_PM_DEEP_RETENTION_MODE_EN) // add by weixiong in mesh
 _attribute_ram_code_
 #endif
 void gpio_init(int anaRes_init_en)
@@ -209,7 +217,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			mask = (unsigned char)~(BIT(1)|BIT(0));
 			if(func == AS_DMIC){
 
-			}else if(func == AS_PWM){
+			}else if(func == AS_PWM){ // modify by weixiong in mesh
 				val = BIT(0);
 			}
 			else if(func == AS_UART){
@@ -248,7 +256,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			}else if(func == AS_UART){
 				val = BIT(4);
 			}
-			else if(func == AS_PWM){
+			else if(func == AS_PWM){ // modify by weixiong in mesh
 				val = BIT(5);
 			}
 		}
@@ -267,7 +275,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			else if(func == AS_UART){
 				val = BIT(6);
 			}
-			else if(func == AS_PWM){
+			else if(func == AS_PWM){ // modify by weixiong in mesh
 				val = BIT(7);
 			}
 		}
@@ -286,7 +294,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			else if(func == AS_UART){
 				val = BIT(0);
 			}
-			else if(func == AS_PWM){
+			else if(func == AS_PWM){ // modify by weixiong in mesh
 				val = BIT(1);
 			}
 		}
@@ -324,7 +332,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//1. UART_RX
 			//2. ATSEL1
 			mask = (unsigned char)~(BIT(1)|BIT(0));
-			if(func == AS_PWM){
+			if(func == AS_PWM){ // modify by weixiong in mesh
 
 			}else if(func == AS_UART){
 				val = BIT(0);
@@ -343,7 +351,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//1. UART_TX
 			//2. ATSEL2
 			mask = (unsigned char)~(BIT(3)|BIT(2));
-			if(func == AS_PWM){
+			if(func == AS_PWM){ // modify by weixiong in mesh
 
 			}else if(func == AS_UART){
 				val = BIT(2);
@@ -362,7 +370,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//1. UART_CTS
 			//2. RX_CYC2LNA
 			mask = (unsigned char)~(BIT(5)|BIT(4));
-			if(func == AS_PWM){
+			if(func == AS_PWM){ // modify by weixiong in mesh
 
 			}else if(func == AS_UART){
 				val = BIT(4);
@@ -381,7 +389,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//1. UART_RTS
 			//2. TX_CYC2PA
 			mask = (unsigned char)~(BIT(7)|BIT(6));
-			if(func == AS_PWM){
+			if(func == AS_PWM){ // modify by weixiong in mesh
 
 			}else if(func == AS_UART){
 				val = BIT(6);
@@ -402,7 +410,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			mask = (unsigned char)~(BIT(1)|BIT(0));
 			if(func == AS_SDM){
 
-			}else if(func == AS_PWM){
+			}else if(func == AS_PWM){ // modify by weixiong in mesh
 				val = BIT(0);
 			}
 			else if(func == AS_CMP){
@@ -421,7 +429,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			mask = (unsigned char)~(BIT(3)|BIT(2));
 			if(func == AS_SDM){
 
-			}else if(func == AS_PWM){
+			}else if(func == AS_PWM){ // modify by weixiong in mesh
 				val = BIT(2);
 			}
 			else if(func == AS_CMP){
@@ -479,7 +487,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			mask = (unsigned char)~(BIT(1)|BIT(0));
 			if(func == AS_I2C){
 
-			}else if(func == AS_PWM){
+			}else if(func == AS_PWM){ // modify by weixiong in mesh
 				val = BIT(0);
 			}
 			else if(func == AS_UART){
@@ -497,10 +505,10 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//2. PWM0
 			mask = (unsigned char)~(BIT(3)|BIT(2));
 			if(func == AS_I2C){
-			}else if(func == AS_PWM_SECOND){// GPIO_PWM1NC1
+			}else if(func == AS_PWM_SECOND){// GPIO_PWM1NC1 // modify by weixiong in mesh
 				val = BIT(2);
 			}
-			else if(func == AS_PWM){        // GPIO_PWM0C1
+			else if(func == AS_PWM){        // GPIO_PWM0C1 // modify by weixiong in mesh
 				val = BIT(3);
 			}
 		}
@@ -514,7 +522,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//1. 7816_TRX
 			//2. I2C_SDA
 			mask = (unsigned char)~(BIT(5)|BIT(4));
-			if(func == AS_PWM){
+			if(func == AS_PWM){ // modify by weixiong in mesh
 
 			}
 			else if(func == AS_UART){
@@ -534,7 +542,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//1. UART_RX
 			//2. I2C_SCK
 			mask = (unsigned char)~(BIT(7)|BIT(6));
-			if(func == AS_PWM){
+			if(func == AS_PWM){ // modify by weixiong in mesh
 
 			}else if(func == AS_UART){
 				val = BIT(6);
@@ -553,12 +561,12 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//1. UART_CTS
 			//2. PWM0_N
 			mask = (unsigned char)~(BIT(1)|BIT(0));
-			if(func == AS_PWM){             // GPIO_PWM2C4
+			if(func == AS_PWM){             // GPIO_PWM2C4 // modify by weixiong in mesh
 
 			}else if(func == AS_UART){
 				val = BIT(0);
 			}
-			else if(func == AS_PWM_SECOND){ // GPIO_PWM0NC4
+			else if(func == AS_PWM_SECOND){ // GPIO_PWM0NC4 // modify by weixiong in mesh
 				val = BIT(1);
 			}
 		}
@@ -572,7 +580,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//1. UART_RX
 			//2. ATSEL_0
 			mask = (unsigned char)~(BIT(3)|BIT(2));
-			if(func == AS_PWM){
+			if(func == AS_PWM){ // modify by weixiong in mesh
 
 			}else if(func == AS_UART){
 				val = BIT(2);
@@ -595,7 +603,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			if(func == AS_ATS){
 				val = BIT(4);
 			}
-			else if(func == AS_PWM){
+			else if(func == AS_PWM){ // modify by weixiong in mesh
 				val = BIT(5);
 			}
 
@@ -614,7 +622,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			if(func == AS_ATS){
 				val = BIT(6);
 			}
-			else if(func == AS_PWM){
+			else if(func == AS_PWM){ // modify by weixiong in mesh
 				val = BIT(7);
 			}
 		}
@@ -670,7 +678,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			else if(func == AS_I2S){
 				val = BIT(4);
 			}
-			else if(func == AS_PWM){
+			else if(func == AS_PWM){ // modify by weixiong in mesh
 				val = BIT(5);
 			}
 		}
@@ -684,7 +692,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//1. I2S_SDI
 			//2. UART_TX£¨7816£©
 			mask = (unsigned char)~(BIT(7)|BIT(6));
-			if(func == AS_PWM){
+			if(func == AS_PWM){ // modify by weixiong in mesh
 
 			}
 			else if(func == AS_I2S){
@@ -710,7 +718,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			else if(func == AS_I2S){
 				val = BIT(0);
 			}
-			else if(func == AS_PWM){
+			else if(func == AS_PWM){ // modify by weixiong in mesh
 				val = BIT(1);
 			}
 		}
@@ -724,13 +732,13 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//1. CMP_D
 			//2. PWM0_N
 			mask = (unsigned char)~(BIT(3)|BIT(2));
-			if(func == AS_PWM){             // GPIO_PWM0D5
+			if(func == AS_PWM){             // GPIO_PWM0D5 // modify by weixiong in mesh
 
 			}
 			else if(func == AS_CMP){
 				val = BIT(2);
 			}
-			else if(func == AS_PWM_SECOND){ // GPIO_PWM0ND5
+			else if(func == AS_PWM_SECOND){ // GPIO_PWM0ND5 // modify by weixiong in mesh
 				val = BIT(3);
 			}
 		}
@@ -792,19 +800,24 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
  * @param[in]  func - the function of GPIO.
  * @return     none.
  */
+/**Steps to set GPIO as a multiplexing function is as follows.
+ * Step 1: Set GPIO as a multiplexing function.
+ * Step 2: Disable GPIO function.
+ * NOTE: Failure to follow the above steps may result in risks.
+ */
 void gpio_set_func(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 {
+	unsigned char	bit = pin & 0xff;
 	if(func > AS_GPIO){
 		gpio_set_mux(pin, func);
 	}
-	
-	unsigned char	bit = pin & 0xff;
 	if(func == AS_GPIO){
 		BM_SET(reg_gpio_func(pin), bit);
 		return;
 	}else{
 		BM_CLR(reg_gpio_func(pin), bit);
 	}
+
 }
 /**
  * @brief      This function set the input function of a pin.
@@ -963,6 +976,7 @@ void gpio_shutdown(GPIO_PinTypeDef pin)
 	}
 }
 
+#if 1 // add by weixiong in mesh
 void gpio_set_wakeup(GPIO_PinTypeDef pin, GPIO_LevelTypeDef level, int en)
 {
 	unsigned char bit = pin & 0xff;
@@ -1018,4 +1032,5 @@ void gpio_set_interrupt_init(u32 pin, u32 up_down, u32 falling, u32 irq_mask)
 		gpio_en_interrupt_risc1(pin, 1);
 	}
 }
+#endif
 

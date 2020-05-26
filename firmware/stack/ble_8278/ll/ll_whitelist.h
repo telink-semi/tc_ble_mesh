@@ -201,8 +201,8 @@ u8 * ll_searchAddr_in_WhiteList_and_ResolvingList(u8 type, u8 *addr);
 bool smp_quickResolvPrivateAddr(u8 *key, u8 *addr);
 
 
-extern ll_whiteListTbl_t	ll_whiteList_tbl;
-extern ll_ResolvingListTbl_t	ll_resolvingList_tbl;
+extern ll_whiteListTbl_t	ll_whiteList_tbl; // modify by weixiong
+extern ll_ResolvingListTbl_t	ll_resolvingList_tbl; // modify by weixiong
 
 
 

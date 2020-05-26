@@ -64,7 +64,7 @@ extern unsigned char system_clk_type;
 typedef enum{
 	LDO_MODE 		=0x40,	//LDO mode
 	DCDC_MODE		=0x43,	//DCDC mode (16pin is not suported this mode.)
-	DCDC_LDO_MODE	=0x45,	//DCDC_LDO mode (synchronize mode,Use the asynchronize 
+	DCDC_LDO_MODE	=0x41,	//DCDC_LDO mode (synchronize mode,Use the asynchronize 
 								//mode with DCDC_LDO may cause the current abnormal(A0 version))
 }POWER_MODE_TypeDef;
 /**
@@ -146,4 +146,10 @@ void rc_48m_cal (void);
  */
 void rc_32k_cal (void);
 
+/**
+ * @brief     This function performs to select 24M/2 RC as source of DMIC.
+ * @param[in] source clock to provide DMIC.
+ * @return    none.
+ */
+void dmic_prob_48M_rc(void);
 

@@ -32,7 +32,7 @@
 
 
 /**
- *  @brief  Define GPIO types
+ *  @brief  Define GPIO types. 
  */
 
 typedef enum{
@@ -107,7 +107,7 @@ typedef enum{
 	AS_CMP		= 12,
 	AS_ATS		= 13,
 
-#if 0
+#if 0 // modify by weixiong in mesh
 	AS_PWM0 	= 20,
 	AS_PWM1		= 21,
 	AS_PWM2 	= 22,
@@ -120,12 +120,13 @@ typedef enum{
 	AS_PWM3_N	= 29,
 	AS_PWM4_N	= 30,
 	AS_PWM5_N	= 31,
-#else
+#else // modify by weixiong in mesh
     AS_PWM          = 40,
     AS_PWM_SECOND   = 41,   // only valid for PC1, PC4, PD5.  for other gpio, forbidden for others.
 #endif
 }GPIO_FuncTypeDef;
 
+#if 1 // add by weixiong in mesh
 #define GET_PWMID(gpio, func)     ((gpio==GPIO_PA0) ? 0 : (  \
                      (gpio==GPIO_PA2) ? 0 : (  \
                      (gpio==GPIO_PA3) ? 1 : (  \
@@ -161,7 +162,7 @@ typedef enum{
                      (gpio==GPIO_PD3) ||        \
                      (gpio==GPIO_PD4) ||        \
                      ((gpio==GPIO_PD5) && (func==AS_PWM_SECOND)))
-
+#endif
 
 typedef enum{
 	Level_Low=0,
@@ -188,6 +189,7 @@ typedef enum {
 	PM_PIN_PULLUP_10K 		= 3,
 }GPIO_PullTypeDef;
 
+#if 1 // add by weixiong in mesh
 #define reg_gpio_wakeup_irq  REG_ADDR8(0x5b5)
 
 static inline void gpio_core_wakeup_enable_all (int en)
@@ -209,10 +211,17 @@ static inline void gpio_core_irq_enable_all (int en)
         BM_CLR(reg_gpio_wakeup_irq, FLD_GPIO_CORE_INTERRUPT_EN);
     }
 }
+#endif
 /**
  * @brief      This function servers to initialization all gpio.
  * @param[in]  en  -  if mcu wake up from deep retention mode, it is NOT necessary to reset analog register
  * @return     none.
+ */
+/**Processing methods of unused GPIO
+ * Set it to high resistance state and set it to open pull-up or pull-down resistance to
+ * let it be in the determined state.When GPIO uses internal pull-up or pull-down resistance,
+ * do not use pull-up or pull-down resistance on the board in the process of practical
+ * application because it may have the risk of electric leakage .
  */
 void gpio_init(int anaRes_init_en);
 
@@ -221,6 +230,11 @@ void gpio_init(int anaRes_init_en);
  * @param[in]  pin - the special pin.
  * @param[in]  func - the function of GPIO.
  * @return     none.
+ */
+/**Steps to set GPIO as a multiplexing function is as follows.
+ * Step 1: Set GPIO as a multiplexing function.
+ * Step 2: Disable GPIO function.
+ * NOTE: Failure to follow the above steps may result in risks.
  */
 void gpio_set_func(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func);
 
@@ -265,6 +279,7 @@ static inline int gpio_is_output_en(GPIO_PinTypeDef pin)
  * @return    1: the pin's input function is enabled ;
  *            0: the pin's input function is disabled
  */
+
 static inline int gpio_is_input_en(GPIO_PinTypeDef pin)
 {
 	return BM_IS_SET(reg_gpio_ie(pin), pin & 0xff);
@@ -379,13 +394,16 @@ static inline void gpio_set_interrupt(GPIO_PinTypeDef pin, GPIO_PolTypeDef falli
 {
 	unsigned char	bit = pin & 0xff;
 	BM_SET(reg_gpio_irq_wakeup_en(pin), bit);
-	reg_irq_mask |= FLD_IRQ_GPIO_EN;
+
 	reg_gpio_wakeup_irq |= FLD_GPIO_CORE_INTERRUPT_EN;
 	if(falling){
 		BM_SET(reg_gpio_pol(pin), bit);
 	}else{
 		BM_CLR(reg_gpio_pol(pin), bit);
 	}
+/*clear gpio interrupt sorce (after setting gpio polarity,before enable interrupt)to avoid unexpected interrupt. confirm by minghai*/
+	reg_irq_src |= FLD_IRQ_GPIO_EN|FLD_IRQ_GPIO_RISC0_EN|FLD_IRQ_GPIO_RISC1_EN;
+	reg_irq_mask |= FLD_IRQ_GPIO_EN;
 }
 
 /**
@@ -414,12 +432,14 @@ static inline void gpio_en_interrupt(GPIO_PinTypeDef pin, int en)   // reg_irq_m
 static inline void gpio_set_interrupt_risc0(GPIO_PinTypeDef pin, GPIO_PolTypeDef falling){
 	unsigned char	bit = pin & 0xff;
 	BM_SET(reg_gpio_irq_risc0_en(pin), bit);
-	reg_irq_mask |= FLD_IRQ_GPIO_RISC0_EN;
 	if(falling){
 		BM_SET(reg_gpio_pol(pin), bit);
 	}else{
 		BM_CLR(reg_gpio_pol(pin), bit);
 	}
+/*clear gpio interrupt sorce (after setting gpio polarity,before enable interrupt)to avoid unexpected interrupt. confirm by minghai*/
+	reg_irq_src |= FLD_IRQ_GPIO_EN|FLD_IRQ_GPIO_RISC0_EN|FLD_IRQ_GPIO_RISC1_EN;
+	reg_irq_mask |= FLD_IRQ_GPIO_RISC0_EN;
 }
 
 
@@ -451,12 +471,15 @@ static inline void gpio_set_interrupt_risc1(GPIO_PinTypeDef pin, GPIO_PolTypeDef
 {
 	unsigned char	bit = pin & 0xff;
 	BM_SET(reg_gpio_irq_risc1_en(pin), bit);
-	reg_irq_mask |= FLD_IRQ_GPIO_RISC1_EN;
+
 	if(falling){
 		BM_SET(reg_gpio_pol(pin), bit);
 	}else{
 		BM_CLR(reg_gpio_pol(pin), bit);
 	}
+/*clear gpio interrupt sorce (after setting gpio polarity,before enable interrupt)to avoid unexpected interrupt. confirm by minghai*/
+	reg_irq_src |= FLD_IRQ_GPIO_EN|FLD_IRQ_GPIO_RISC0_EN|FLD_IRQ_GPIO_RISC1_EN;
+	reg_irq_mask |= FLD_IRQ_GPIO_RISC1_EN;
 }
 
 /**
@@ -524,5 +547,5 @@ static inline void usb_set_pin_en(void)
 	usb_dp_pullup_en (1);
 }
 
-void gpio_set_wakeup(GPIO_PinTypeDef pin, GPIO_LevelTypeDef level, int en);
-void gpio_set_interrupt_init(u32 pin, u32 up_down, u32 falling, u32 irq_mask);
+void gpio_set_wakeup(GPIO_PinTypeDef pin, GPIO_LevelTypeDef level, int en); // add by weixiong in mesh
+void gpio_set_interrupt_init(u32 pin, u32 up_down, u32 falling, u32 irq_mask); // add by weixiong in mesh

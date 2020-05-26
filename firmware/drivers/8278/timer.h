@@ -62,6 +62,7 @@ enum{
 	CLOCK_16M_SYS_TIMER_CLK_1US = 16,
 };
 
+#if 1 // add by weixiong in mesh
 #define CLOCK_SYS_CLOCK_1S		CLOCK_16M_SYS_TIMER_CLK_1S
 #define CLOCK_SYS_CLOCK_1MS		CLOCK_16M_SYS_TIMER_CLK_1MS
 #define CLOCK_SYS_CLOCK_1US		CLOCK_16M_SYS_TIMER_CLK_1US
@@ -74,6 +75,7 @@ enum{
 
 #define 	sys_tick_per_us					16
 #define		CLOCK_SYS_CLOCK_1250US			(1250 * sys_tick_per_us)
+#endif
 
 /**
  * @brief     This function performs to gets system timer0 address.
@@ -93,20 +95,22 @@ static inline unsigned long clock_time(void)
  */
 static inline void systimer_set_capture_tick(unsigned long tick)
 {
-	//0x744 bit[2:0] is always 0, to ensure system timer can be trigger correctly, bit[2:0] of the setting tick should
+	//0x744 bit[2:0] is always 0, to ensure system timer can be trigger correctly, bit[2:0] of the setting tick should 
 	//set to 0 to match the value of 0x744
 	reg_system_tick_irq = (tick & (~((unsigned long)0x07)));
 }
+
 
 /**
  * @brief     This function performs to set sleep us.
  * @param[in] us - microseconds need to delay.
  * @return    none
  */
+
 extern void sleep_us(unsigned long us);
 
 #define ClockTime			clock_time
-//#define WaitUs				sleep_us
+//#define WaitUs				sleep_us // comment by weixiong in mesh
 #define WaitMs(t)			sleep_us((t)*1000)
 #define sleep_ms(t)			sleep_us((t)*1000)
 
@@ -116,6 +120,7 @@ extern void sleep_us(unsigned long us);
  * @param[in] span_us - Variable of span us.
  * @return    the exceed.
  */
+
 static inline unsigned int clock_time_exceed(unsigned int ref, unsigned int us)
 {
 	return ((unsigned int)(clock_time() - ref) > us * 16);

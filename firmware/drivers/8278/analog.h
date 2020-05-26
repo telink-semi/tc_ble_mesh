@@ -63,6 +63,6 @@ void analog_read_buff(unsigned char addr, unsigned char *buff, int len);
 void analog_write_buff(unsigned char addr, unsigned char *buff, int len);
 
 
-//#define  WriteAnalogReg  analog_write
-//#define  ReadAnalogReg   analog_read
+//#define  WriteAnalogReg  analog_write // comment by weixiong in mesh
+//#define  ReadAnalogReg   analog_read 	// comment by weixiong in mesh
 

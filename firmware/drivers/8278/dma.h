@@ -161,6 +161,7 @@ static inline void dma_set_buff_size(DMA_chn_Typdef chn,unsigned int size)
 	reg_dma_size(chn) = (unsigned char)(size/16);
 }
 
+#if 1 // add by weixiong in mesh
 static inline void dma_channel_enable_all(){
 	reg_dma_chn_en = 0xff;
 }
@@ -168,5 +169,5 @@ static inline void dma_channel_enable_all(){
 static inline void dma_channel_disable_all(){
 	reg_dma_chn_en = 0;
 }
-
+#endif
 #endif /* DMA_H_ */

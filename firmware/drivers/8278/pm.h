@@ -29,7 +29,7 @@
 #include "bsp.h"
 #include "gpio.h"
 
-#define PM_LONG_SUSPEND_EN					1
+#define PM_LONG_SUSPEND_EN					1 // modify by weixiong, sig mesh need suspend time longer than 16 second.
 
 #ifndef PM_TIM_RECOVER_MODE
 #define PM_TIM_RECOVER_MODE			    	1
@@ -38,11 +38,12 @@
 
 #define XTAL_READY_CHECK_TIMING_OPTIMIZE	1
 
+#define	RAM_CRC_EN							0
 
 
 //when timer wakeup,the DCDC delay time is accurate,but other wake-up sources wake up,
 //this time is ((PM_DCDC_DELAY_CYCLE+1)*2-1)*32us ~ (PM_DCDC_DELAY_CYCLE+1)*2*32us
-#define PM_DCDC_DELAY_DURATION     					62   // delay_time_us = (PM_DCDC_DELAY_CYCLE+1)*2*32us
+#define PM_DCDC_DELAY_DURATION     					187   // delay_time_us = (PM_DCDC_DELAY_CYCLE+1)*2*32us
 												  // 2 * 1/16k = 125 uS, 3 * 1/16k = 187.5 uS  4*1/16k = 250 uS
 
 #define PM_XTAL_MANUAL_MODE_DELAY		    200  //150  200
@@ -57,9 +58,14 @@
 #define PM_DCDC_DELAY_CYCLE		3
 #endif
 
-
-#define EARLYWAKEUP_TIME_US_SUSPEND 		(PM_DCDC_DELAY_DURATION + PM_XTAL_MANUAL_MODE_DELAY + 175)  //100: code running time margin
-#define EARLYWAKEUP_TIME_US_DEEP    		(PM_DCDC_DELAY_DURATION  + 32)
+#define SOFT_START_DELAY					0x08
+#define EARLYWAKEUP_TIME_US_SUSPEND 		(PM_DCDC_DELAY_DURATION + PM_XTAL_MANUAL_MODE_DELAY + 200)  //100: code running time margin
+#define EARLYWAKEUP_TIME_US_DEEP_RET    	(PM_DCDC_DELAY_DURATION  + 64)
+#if 1 // add by weixiong
+#define EARLYWAKEUP_TIME_US_DEEP    		(0) // start_reboot_ is 1ms deepsleep, so can't set early wakeup.
+#else
+#define EARLYWAKEUP_TIME_US_DEEP    		(PM_DCDC_DELAY_DURATION  + 32 + SOFT_START_DELAY*62)
+#endif
 #define EMPTYRUN_TIME_US       	    		(EARLYWAKEUP_TIME_US_SUSPEND + 200)
 
 
@@ -101,7 +107,7 @@
 
 #define	ZB_POWER_DOWN						1 //weather to power down the RF before suspend
 #define	AUDIO_POWER_DOWN					1 //weather to power down the AUDIO before suspend
-#define	USB_POWER_DOWN						1 //weather to power down the USB before suspend
+#define	USB_POWER_DOWN						1 //weather to power down the USB before suspend  //PA5/PA6 pad low wakeup need USB power on
 
 /**
  * @brief sleep mode.
@@ -192,6 +198,24 @@ extern  suspend_handler_t 		 func_before_suspend;
 typedef void (*check_32k_clk_handler_t)(void);
 extern  check_32k_clk_handler_t  pm_check_32k_clk_stable;
 
+/**
+ * @brief      This function serves to enable dp and dm deep gpio low level wakeup. if enable, current will
+ * 						add about 0.1uA
+ * @param[in]  none.
+ * @return     none.
+ */
+extern unsigned char PA5_PA6_DEEPSLEEP_LOW_LEVEL_WAKEUP_EN;
+static inline void deepsleep_dp_dm_gpio_low_wake_enable(void)
+{
+	PA5_PA6_DEEPSLEEP_LOW_LEVEL_WAKEUP_EN = 0;			//weather to power down the USB before suspend
+}
+
+static inline void deepsleep_dp_dm_gpio_low_wake_disable(void)
+{
+	PA5_PA6_DEEPSLEEP_LOW_LEVEL_WAKEUP_EN = 1;
+}
+
+void pm_wait_bbpll_done(void);
 
 void bls_pm_registerFuncBeforeSuspend (suspend_handler_t func );
 

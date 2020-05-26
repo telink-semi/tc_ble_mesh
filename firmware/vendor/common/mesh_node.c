@@ -27,6 +27,7 @@
 #include "../../vendor/common/app_heartbeat.h"
 #include "../../vendor/common/app_health.h"
 #include "../../vendor/common/directed_forwarding.h"
+#include "../../vendor/common/mesh_ota.h"
 #include "version.h"
 
 #if (ALI_MD_TIME_EN)
@@ -93,7 +94,11 @@ u8 my_rf_power_index = MY_RF_POWER_INDEX;   // use in library
 u8 pts_test_en = PTS_TEST_EN;
 
 MYFIFO_INIT(mesh_adv_cmd_fifo, sizeof(mesh_cmd_bear_unseg_t), MESH_ADV_CMD_BUF_CNT);
+#if (FEATURE_RELAY_EN || WIN32)
 MYFIFO_INIT_NO_RET(mesh_adv_fifo_relay, sizeof(mesh_relay_buf_t), MESH_ADV_BUF_RELAY_CNT);
+#else // for compile, delete later
+MYFIFO_INIT_NO_RET(mesh_adv_fifo_relay, sizeof(mesh_relay_buf_t), 1);
+#endif
 #if !__PROJECT_MESH_PRO__
 #if __PROJECT_SPIRIT_LPN__
 MYFIFO_INIT_NO_RET(blt_notify_fifo, 36, 64);//save retention
@@ -1563,6 +1568,16 @@ int is_valid_cfg_op_when_factory_test(u16 op)
     return 1;
 }
 
+void mesh_node_refresh_binding_tick()
+{
+	#if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
+    if(!lpn_provision_ok)
+    #endif
+    {
+        node_binding_tick = clock_time() | 1;
+    }
+}
+
 void factory_test_key_bind(int bind_flag)
 {
 	u16 ak_idx = 0;
@@ -1747,20 +1762,14 @@ u8 mesh_app_key_set(u16 op, const u8 *ak, u16 app_key_idx, u16 net_key_idx, int 
 					mesh_app_key_t * p_ak_empty = mesh_app_key_empty_search(p_netkey);
 					if(p_ak_empty){
 						app_key_set2(p_ak_empty, ak, app_key_idx, save);
+				        mesh_node_refresh_binding_tick();
 					#if PROVISION_FLOW_SIMPLE_EN
 						#if DUAL_VENDOR_EN
 						if(DUAL_VENDOR_ST_ALI == provision_mag.dual_vendor_st)
 						#endif
 						{
     						if(!mesh_init_flag){
-    						    if(get_all_appkey_cnt() == 1){
-                                    #if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
-                                    if(!lpn_provision_ok)
-                                    #endif
-    						        {
-    						            node_binding_tick = clock_time() | 1;
-    						        }
-    						        
+    						    if(get_all_appkey_cnt() == 1){    						        
                                     ev_handle_traversal_cps(EV_TRAVERSAL_BIND_APPKEY, (u8 *)&app_key_idx);
                                     #if MD_SERVER_EN
                                     // bind share model 
@@ -1988,7 +1997,6 @@ u8 mesh_provision_and_bind_self(u8 *p_prov_data, u8 *p_dev_key, u16 appkey_idx, 
 	cache_init(ADR_ALL_NODES);
 	
 	//add appkey and bind it to models
-	node_binding_tick = clock_time()|1;
 	return mesh_app_key_set_and_bind(p_net->key_index, p_app_key, appkey_idx, 1);	
 }
 
@@ -2035,7 +2043,7 @@ int is_ele_in_node(u16 ele_adr, u16 node_adr, u32 cnt)  // use for provisioner.
 
 int is_own_ele(u16 adr)
 {
-    return ((adr >= ele_adr_primary)&&(adr < ele_adr_primary + ELE_CNT));   // is_ele_in_node_()
+    return ((adr >= ele_adr_primary)&&(adr < ele_adr_primary + g_ele_cnt));   // is_ele_in_node_()
 }
 
 #define IV_UPDATE_START_SNO             (0xC00000)  // margin should be enough, because sometimes can't keep 96 hour powered. so, should be enough margin to restart iv update flow next power up. 
@@ -3480,7 +3488,9 @@ void mesh_loop_process()
 	mesh_pub_period_proc();
     // keybind part 
 	#if ((WIN32) || GATEWAY_ENABLE)
+	    #if MD_MESH_OTA_EN
 	mesh_ota_master_proc();
+	    #endif
 	mesh_kr_cfgcl_proc();
 	check_mesh_kr_cfgcl_timeout();
 	#endif
@@ -4038,6 +4048,109 @@ void mesh_kr_cfgcl_status_update(mesh_rc_rsp_t *rsp)
 #endif
 #endif
 //--------------------app key bind flow end------------------------------//
+
+#if 1 // move from mesh_ota.c
+#if (0 == DISTRIBUTOR_UPDATE_CLIENT_EN)
+void mesh_ota_master_ack_timeout_handle(){}
+#endif
+
+void mesh_ota_read_data(u32 adr, u32 len, u8 * buf)
+{
+#if WIN32
+    #if DISTRIBUTOR_UPDATE_CLIENT_EN
+    extern u8 fw_ota_data_rx[];
+    memcpy(buf, fw_ota_data_rx + adr, len);
+    #endif
+#else
+	flash_read_page(ota_program_offset + adr, len, buf);
+#endif
+}
+
+u32 get_fw_len()
+{
+	u32 fw_len = 0;
+	mesh_ota_read_data(0x18, 4, (u8 *)&fw_len);	// use flash read should be better
+	return fw_len;
+}
+
+u8 get_ota_check_type()
+{
+    u8 ota_type[2] = {0};
+    mesh_ota_read_data(6, sizeof(ota_type), ota_type);
+	if(ota_type[0] == 0x5D){
+		return ota_type[1];
+	}
+	return OTA_CHECK_TYPE_NONE;
+}
+
+u32 get_total_crc_type1_new_fw()
+{
+	u32 crc = 0;
+	u32 len = get_fw_len();
+	mesh_ota_read_data(len - 4, 4, (u8 *)&crc);
+    return crc;
+}
+
+#define OTA_DATA_LEN_1      (16)    
+
+int is_valid_ota_check_type1()
+{	
+	u32 crc_org = 0;
+	u32 len = get_fw_len();
+	mesh_ota_read_data(len - 4, 4, (u8 *)&crc_org);
+
+    u8 buf[2 + OTA_DATA_LEN_1];
+    u32 num = (len - 4 + (OTA_DATA_LEN_1 - 1))/OTA_DATA_LEN_1;
+	u32 crc_new = 0;
+    for(u32 i = 0; i < num; ++i){
+    	buf[0] = i & 0xff;
+    	buf[1] = (i>>8) & 0xff;
+        mesh_ota_read_data((i * OTA_DATA_LEN_1), OTA_DATA_LEN_1, buf+2);
+        if(!i){     // i == 0
+             buf[2+8] = 0x4b;	// must
+        }
+        
+        crc_new += crc16(buf, sizeof(buf));
+        if(0 == (i & 0x0fff)){
+			// about take 88ms for 10k firmware;
+			#if (MODULE_WATCHDOG_ENABLE&&!WIN32)
+			wd_clear();
+			#endif
+        }
+    }
+    
+    return (crc_org == crc_new);
+}
+
+u32 get_blk_crc_tlk_type1(u8 *data, u32 len, u32 addr)
+{	
+    u8 buf[2 + OTA_DATA_LEN_1];
+    u32 num = len / OTA_DATA_LEN_1; // sizeof firmware data which exclude crc, is always 16byte aligned.
+    //int end_flag = ((len % OTA_DATA_LEN_1) != 0);
+	u32 crc = 0;
+    for(u32 i = 0; i < num; ++i){
+        u32 line = (addr / 16) + i;
+    	buf[0] = line & 0xff;
+    	buf[1] = (line>>8) & 0xff;
+    	memcpy(buf+2, data + (i * OTA_DATA_LEN_1), OTA_DATA_LEN_1);
+        
+        crc += crc16(buf, sizeof(buf));
+    }
+    return crc;
+}
+#endif
+
+#if (0 == DIRECTED_FORWARDING_MODULE_EN)    // for compile
+int is_directed_forwarding_en(u16 netkey_offset){return 0;}
+int is_directed_relay_en(u16 netkey_offset){return 0;}
+int is_directed_proxy_en(u16 netkey_offset){return 0;}
+int is_directed_friend_en(u16 netkey_offset){return 0;}
+int is_directed_forwarding_op(u16 op){return 0;}
+void mesh_directed_forwarding_proc(u8 *bear, int src_type){}
+forwarding_entry_par_t * get_forwarding_entry(u16 netkey_offset, u16 src_address, u16 destination, u8 entry_type){return 0;}
+int is_address_in_dependent_list(forwarding_table_entry_t *p_fwd_entry, u16 addr){return 0;}
+int directed_forwarding_initial_start(u16 netkey_offset, u16 destination, addr_range_big_endian_t *p_dependent_origin){return 0;}
+#endif
 
 #if (SLEEP_FUNCTION_DISABLE && ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)))
 /*

@@ -436,7 +436,7 @@ void mesh_feature_set_lpn(){
     p_req->RecDelay = FRI_REC_DELAY_MS;
     p_req->PollTimeout = LPN_POLL_TIMEOUT_100MS;  // 0x057e40 = 10*3600 second
     p_req->PreAdr = 0;
-    p_req->NumEle = ELE_CNT;
+    p_req->NumEle = g_ele_cnt;
     p_req->LPNCounter = 0 - 1;  // increase counter later
     #endif
 }
@@ -993,7 +993,7 @@ void mesh_lpn_proc_suspend ()
     	        }
 	        }
 	    }else{
-    	    if(node_binding_tick && clock_time_exceed(node_binding_tick, LPN_START_REQUEST_AFTER_BIND_MS*1000)){
+    	    if((!lpn_provision_ok) && node_binding_tick && clock_time_exceed(node_binding_tick, LPN_START_REQUEST_AFTER_BIND_MS*1000)){
     	        start_reboot();//lpn_provision_ok = 1;
     	    }
 	    }

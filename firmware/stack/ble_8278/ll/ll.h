@@ -26,7 +26,7 @@
 #include "../ble_common.h"
 #include "proj_lib/ble/blt_config.h"
 #include "../hci/hci_const.h"
-//#include "../hci/hci_event.h"
+//#include "../hci/hci_event.h" // comment by weixiong in mesh
 #include "../hci/hci_cmd.h"
 #include "ll_adv.h"
 #include "ll_encrypt.h"
@@ -42,45 +42,7 @@
 #include "drivers.h"
 
 
-/////////////////////////////////////////////////////////////////////////////
 
-#define 				LLID_RESERVED				0x00
-#define 				LLID_DATA_CONTINUE			0x01
-#define 				LLID_DATA_START				0x02
-#define 				LLID_CONTROL				0x03
-
-/////////////////////////////////////////////////////////////////////////////
-
-#define					LL_CONNECTION_UPDATE_REQ	0x00
-#define					LL_CHANNEL_MAP_REQ			0x01
-#define					LL_TERMINATE_IND			0x02
-
-#define					LL_UNKNOWN_RSP				0x07
-#define 				LL_FEATURE_REQ              0x08
-#define 				LL_FEATURE_RSP              0x09
-
-#define 				LL_VERSION_IND              0x0C
-#define 				LL_REJECT_IND         		0x0D
-#define 				LL_SLAVE_FEATURE_REQ        0x0E	//core_4.1
-#define 				LL_CONNECTION_PARAM_REQ		0x0F	//core_4.1
-#define 				LL_CONNECTION_PARAM_RSP		0x10	//core_4.1
-#define					LL_REJECT_IND_EXT			0x11	//core_4.1
-#define 				LL_PING_REQ					0x12    //core_4.1
-#define					LL_PING_RSP					0x13    //core_4.1
-#define 				LL_LENGTH_REQ				0x14    //core_4.2
-#define					LL_LENGTH_RSP				0x15    //core_4.2
-#define 				LL_PHY_REQ					0x16	//core_5.0
-#define 				LL_PHY_RSP					0x17	//core_5.0
-#define 				LL_PHY_UPDATE_IND			0x18	//core_5.0
-#define 				LL_MIN_USED_CHN_IND			0x19	//core_5.0
-
-#define					LL_ENC_REQ					0x03
-#define					LL_ENC_RSP					0x04
-#define					LL_START_ENC_REQ			0x05
-#define					LL_START_ENC_RSP			0x06
-
-#define					LL_PAUSE_ENC_REQ			0x0A
-#define					LL_PAUSE_ENC_RSP			0x0B
 
 
 
@@ -90,12 +52,12 @@
 //TX settle time
 
 #define			LL_ADV_TX_SETTLE				81
-#define 		LL_SCAN_TX_SETTLE				56
+#define 		LL_SCAN_TX_SETTLE				56 // modofy by weixiong in mesh: 62->56
 #define 		LL_SLAVE_TX_SETTLE				82
 #define 		LL_MASTER_TX_SETTLE				83
 
-#define			LL_ADV_TX_STL_2M				84
-#define			LL_ADV_TX_STL_CODED				116
+#define			LL_ADV_TX_STL_2M				84 // modofy by weixiong in mesh: 87->84
+#define			LL_ADV_TX_STL_CODED				116 // modofy by weixiong in mesh: 119->116
 
 #define 		LL_SLAVE_TX_STL_2M				89
 #define 		LL_SLAVE_TX_STL_CODED			121
@@ -302,6 +264,7 @@ void 		blc_ll_registerConnectionTerminateHandler(ll_conn_terminate_handler_t  ha
 
 
 typedef int (*blt_LTK_req_callback_t)(u16 handle, u8* rand, u16 ediv);
+//typedef int (*blt_update_err_callback_t)(u8 *); // comment by weixiong in mesh
 
 
 
@@ -357,6 +320,7 @@ void 		blc_ll_recoverDeepRetention(void);
 bool 		blc_ll_isBrxBusy (void);
 
 void 		blc_ll_init_max_md_nums(u8 num);
+//u8 			adv_filter_proc(u8 *raw_pkt ,u8 blt_sts); // comment by weixiong in mesh
 
 
 static inline void  blc_ll_set_CustomedAdvScanAccessCode(u32 accss_code)
@@ -373,7 +337,7 @@ ble_sts_t 		blc_hci_le_getLocalSupportedFeatures(u8 *features);
 
 ble_sts_t 		blc_hci_le_readBufferSize_cmd(u8 *pData);
 
-void 			blt_adjust_systick_capt(u32 sys_timer_tick);
+
 int 			blc_ll_encrypted_data(u8*key, u8*plaintextData, u8* encrypteTextData);
 
 //core4.2 data extension

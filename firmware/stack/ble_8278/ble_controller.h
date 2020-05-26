@@ -26,7 +26,7 @@
 
 #include "proj_lib/ble/blt_config.h"
 #include "ble_common.h"
-
+#include "ble_format.h"
 
 #include "phy/phy.h"
 #include "phy/phy_test.h"
@@ -58,14 +58,6 @@
 
 
 
-#include "llms/llms.h"
-#include "llms/llms_slot.h"
-#include "llms/llms_adv.h"
-#include "llms/llms_scan.h"
-#include "llms/llms_init.h"
-#include "llms/llms_slave.h"
-#include "llms/llms_master.h"
-#include "llms/llms_conn.h"
 
 
 #include "bqb/bqb_ll.h"

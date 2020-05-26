@@ -686,7 +686,7 @@ unsigned short adc_temp_result(void);
  * @param[in]  none.
  * @return none.
  */
-void adc_drv_init();
+void adc_drv_init(); // add by weixiong in mesh
 
 
 

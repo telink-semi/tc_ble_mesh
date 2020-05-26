@@ -61,14 +61,6 @@
 #define 		FLG_RF_CONN_DONE 		 				(FLD_RF_IRQ_CMD_DONE | FLD_RF_IRQ_FSM_TIMEOUT | FLD_RF_IRQ_FIRST_TIMEOUT | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_RX_CRC_2)
 
 
-typedef struct{
-	u8	llid;
-	u8  rf_len;
-	u8 	opcode;
-	u8	CtrData;
-}rf_pkt_ll_unknown_rsp_t;
-
-
 
 
 

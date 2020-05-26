@@ -880,8 +880,16 @@ __WEAK mible_status_t mible_nvm_init(void)
  * */
 __WEAK mible_status_t mible_nvm_read(void * p_data, uint32_t length, uint32_t address)
 {
-	flash_read_page(address,length,(u8 *)p_data);
-	return MI_SUCCESS;
+	if(NULL == p_data){
+       return MI_ERR_INVALID_PARAM;
+    }
+   	
+    flash_read_page(address,length,(u8 *)p_data);
+    if(address == ota_program_offset){
+		u8 *p_buf = (u8 *)(p_data);
+		p_buf[8]=0x4b; // if the ota flag is unbusy ,it will use 4b to caulate the crc 
+	}
+    return MI_SUCCESS;
 }
 
 /**
@@ -894,8 +902,23 @@ __WEAK mible_status_t mible_nvm_read(void * p_data, uint32_t length, uint32_t ad
  * */
 __WEAK mible_status_t mible_nvm_write(void * p_data, uint32_t length, uint32_t address)
 {
+    if(NULL == p_data){
+       return MI_ERR_INVALID_PARAM;
+    }
+	u8 *p_buf = (u8 *)(p_data);
+	// if the address is the sector start (4k size align ),we need to erase first 
+	/*
+	if(address %0x1000 == 0){ // wait for test ,and add mainly for test when power off ,and continue to test 
+		flash_erase_sector(address);
+	}*/
+	if(address == ota_program_offset){
+		p_buf[8]=0xff;// change it to unvalid flag
+	}
 	telink_mible_nvm_write((u8 *)p_data,length,address);
-	return MI_SUCCESS;
+    if(address == ota_program_offset){
+		p_buf[8]=0x4b;// rooback the value 
+	}
+    return MI_SUCCESS;
 }
 
 __WEAK mible_status_t mible_upgrade_firmware(void)
