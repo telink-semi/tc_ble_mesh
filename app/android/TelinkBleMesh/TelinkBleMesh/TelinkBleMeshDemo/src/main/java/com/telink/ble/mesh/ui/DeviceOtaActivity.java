@@ -9,34 +9,37 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.MeshUtils;
+import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.GattOtaEvent;
 import com.telink.ble.mesh.foundation.parameter.GattOtaParameters;
-
-import com.telink.ble.mesh.util.MeshLogger;
+import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
+import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteOrder;
 
 /**
+ *
  */
 
 public class DeviceOtaActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
 
 //    private Button btn_back;
 
-    private TextView selectFile, info, progress, tv_version_info;
-    private Button startOta;
+    private TextView tv_select_file, tv_log, tv_progress, tv_version_info, tv_info;
+    private Button btn_start_ota;
 
-    //    private String mPath;
     private byte[] mFirmware;
-    private int meshAddress;
+    private NodeInfo mNodeInfo;
 
     private final static int REQUEST_CODE_GET_FILE = 1;
     private final static int MSG_PROGRESS = 11;
@@ -48,9 +51,9 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if (msg.what == MSG_PROGRESS) {
-                progress.setText(msg.obj + "%");
+                tv_progress.setText(msg.obj + "%");
             } else if (msg.what == MSG_INFO) {
-                info.append("\n" + msg.obj);
+                tv_log.append("\n" + msg.obj);
             }
         }
     };
@@ -64,17 +67,17 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
         setContentView(R.layout.activity_device_ota);
         setTitle("OTA");
         enableBackNav(true);
-        initViews();
 
         Intent intent = getIntent();
         if (intent.hasExtra("meshAddress")) {
-            meshAddress = intent.getIntExtra("meshAddress", -1);
+            int meshAddress = intent.getIntExtra("meshAddress", -1);
+            mNodeInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(meshAddress);
         } else {
             toastMsg("device error");
             finish();
             return;
         }
-
+        initViews();
         TelinkMeshApplication.getInstance().addEventListener(GattOtaEvent.EVENT_TYPE_OTA_SUCCESS, this);
         TelinkMeshApplication.getInstance().addEventListener(GattOtaEvent.EVENT_TYPE_OTA_PROGRESS, this);
         TelinkMeshApplication.getInstance().addEventListener(GattOtaEvent.EVENT_TYPE_OTA_FAIL, this);
@@ -84,16 +87,30 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
 
 
     private void initViews() {
-        selectFile = findViewById(R.id.selectFile);
-        info = findViewById(R.id.log);
-        progress = findViewById(R.id.progress);
+        tv_info = findViewById(R.id.tv_info);
+        tv_info.setText(String.format("Node Info\naddress: %04X \nUUID: %s", mNodeInfo.meshAddress, Arrays.bytesToHexString(mNodeInfo.deviceUUID)));
+        tv_select_file = findViewById(R.id.tv_select_file);
+        tv_log = findViewById(R.id.log);
+        tv_progress = findViewById(R.id.progress);
         tv_version_info = findViewById(R.id.tv_version_info);
         tv_version_info.setText(getString(R.string.version, "null"));
+        if (mNodeInfo.compositionData != null) {
+            int vid = mNodeInfo.compositionData.vid;
+            byte[] vb = MeshUtils.integer2Bytes(vid, 2, ByteOrder.LITTLE_ENDIAN);
 
-        startOta = findViewById(R.id.startOta);
+            int pid = mNodeInfo.compositionData.pid;
+            byte[] pb = MeshUtils.integer2Bytes(pid, 2, ByteOrder.LITTLE_ENDIAN);
+            tv_info.append("\n");
+            tv_info.append(getString(R.string.node_version, Arrays.bytesToHexString(pb, ":"), Arrays.bytesToHexString(vb, ":")));
+        } else {
+            tv_info.append("\n");
+            tv_info.append(getString(R.string.node_version, "--", "--"));
+        }
 
-        selectFile.setOnClickListener(this);
-        startOta.setOnClickListener(this);
+        btn_start_ota = findViewById(R.id.btn_start_ota);
+
+        tv_select_file.setOnClickListener(this);
+        btn_start_ota.setOnClickListener(this);
 
     }
 
@@ -108,24 +125,21 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
 
-            case R.id.startOta:
+            case R.id.btn_start_ota:
 
                 if (mFirmware == null) {
-//                    toastMsg("firmware error");
                     toastMsg("select firmware!");
                     return;
                 }
 
-                info.setText("start OTA");
-
-                progress.setText("");
-                startOta.setEnabled(false);
-                GattOtaParameters parameters = new GattOtaParameters(meshAddress, mFirmware);
+                tv_log.setText("start OTA");
+                tv_progress.setText("");
+                btn_start_ota.setEnabled(false);
+                GattOtaParameters parameters = new GattOtaParameters(mNodeInfo.meshAddress, mFirmware);
                 MeshService.getInstance().startGattOta(parameters);
-//                mDevice.startGattOta(firmware);
                 break;
 
-            case R.id.selectFile:
+            case R.id.tv_select_file:
                 startActivityForResult(new Intent(this, FileSelectActivity.class).putExtra(FileSelectActivity.KEY_SUFFIX, ".bin"), REQUEST_CODE_GET_FILE);
                 break;
         }
@@ -135,7 +149,7 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                startOta.setEnabled(true);
+                btn_start_ota.setEnabled(true);
             }
         });
     }
@@ -176,12 +190,12 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
             System.arraycopy(mFirmware, 2, version, 0, 4);
             String firmVersion = new String(version);
             tv_version_info.setText(getString(R.string.version, firmVersion));
-            selectFile.setText(fileName);
+            tv_select_file.setText(fileName);
         } catch (IOException e) {
             e.printStackTrace();
             mFirmware = null;
             tv_version_info.setText(getString(R.string.version, "null"));
-            selectFile.setText("file error");
+            tv_select_file.setText("file error");
         }
     }
 

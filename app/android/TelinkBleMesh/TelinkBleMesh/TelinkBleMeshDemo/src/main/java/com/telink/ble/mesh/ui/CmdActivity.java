@@ -4,9 +4,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -139,8 +137,12 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
                     try {
                         MeshMessage meshMessage = assembleMessage();
                         if (meshMessage != null) {
-                            MeshService.getInstance().sendMeshMessage(meshMessage);
-                            logHandler.obtainMessage(MSG_APPEND_LOG, String.format("send message opcode: %04X", meshMessage.getOpcode())).sendToTarget();
+                            boolean msgSent = MeshService.getInstance().sendMeshMessage(meshMessage);
+                            String info = String.format("send message: opcode -- %04X params -- %s", meshMessage.getOpcode(), Arrays.bytesToHexString(meshMessage.getParams()));
+                            if (!msgSent) {
+                                info += " -> failed";
+                            }
+                            logHandler.obtainMessage(MSG_APPEND_LOG, info).sendToTarget();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();

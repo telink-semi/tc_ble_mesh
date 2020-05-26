@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.MenuItem;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
 import com.telink.ble.mesh.demo.R;
@@ -40,7 +39,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     private DeviceFragment deviceFragment;
     private Fragment groupFragment;
     private SettingFragment settingFragment;
-    private AlertDialog.Builder mDialogBuilder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +50,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         TelinkMeshApplication.getInstance().addEventListener(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_EMPTY, this);
-
     }
 
     private void initBottomNav() {
@@ -96,9 +93,9 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     @Override
     protected void onResume() {
         super.onResume();
-        if (!MeshService.getInstance().isBluetoothEnabled()) {
+        /*if (!MeshService.getInstance().isBluetoothEnabled()) {
             showBleOpenDialog();
-        }
+        }*/
         this.autoConnect();
     }
 
@@ -146,29 +143,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         }
         return true;
-    }
-
-
-    private void showBleOpenDialog() {
-        if (mDialogBuilder == null) {
-            mDialogBuilder = new AlertDialog.Builder(this);
-            mDialogBuilder.setCancelable(false);
-            mDialogBuilder.setMessage("Enable Bluetooth!");
-            mDialogBuilder.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                }
-            });
-            mDialogBuilder.setPositiveButton("enable", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    MeshService.getInstance().enableBluetooth();
-                }
-            });
-        }
-
-        mDialogBuilder.show();
     }
 
 }

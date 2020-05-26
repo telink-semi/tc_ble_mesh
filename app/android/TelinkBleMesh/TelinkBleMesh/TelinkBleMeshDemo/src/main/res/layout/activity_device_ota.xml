@@ -10,37 +10,15 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="8dp">
+        android:orientation="vertical">
 
         <TextView
+            android:id="@+id/tv_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="OTA"
-            android:textSize="20sp"
+            android:padding="4dp"
+            android:textSize="14sp"
             android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/selectFile"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawableRight="@drawable/icon_right"
-            android:padding="10dp"
-            android:text="select file"
-            android:textSize="15sp" />
-
-        <TextView
-            android:id="@+id/tv_version_info"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="@color/red"
-            android:textSize="13sp" />
-
-        <TextView
-            android:id="@+id/progress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="13sp" />
 
         <ScrollView
             android:layout_width="match_parent"
@@ -55,14 +33,38 @@
 
         </ScrollView>
 
+
+        <TextView
+            android:id="@+id/progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="13sp" />
+
+
+        <TextView
+            android:id="@+id/tv_version_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/red"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tv_select_file"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableRight="@drawable/icon_right"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="select file"
+            android:textSize="15sp" />
+
         <Button
-            android:id="@+id/startOta"
+            android:id="@+id/btn_start_ota"
+            style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="start"
-            android:theme="@style/AccentButton"
-            style="@style/Widget.AppCompat.Button.Colored"/>
-
+            android:theme="@style/AccentButton" />
 
     </LinearLayout>
 </LinearLayout>

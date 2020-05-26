@@ -1,6 +1,7 @@
 package com.telink.ble.mesh.ui;
 
 import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,6 +18,7 @@ import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshController;
 import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.foundation.event.BluetoothEvent;
 import com.telink.ble.mesh.foundation.event.ScanEvent;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -38,6 +40,8 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
 
     private AlertDialog locationWarningDialog;
 
+    private AlertDialog bleStateDialog;
+
 
     @Override
     @SuppressLint("ShowToast")
@@ -46,6 +50,7 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
         MeshLogger.w(TAG + " onCreate");
         this.toast = Toast.makeText(this, "", Toast.LENGTH_SHORT);
         TelinkMeshApplication.getInstance().addEventListener(ScanEvent.EVENT_TYPE_SCAN_LOCATION_WARNING, this);
+        TelinkMeshApplication.getInstance().addEventListener(BluetoothEvent.EVENT_TYPE_BLUETOOTH_STATE_CHANGE, this);
     }
 
     protected boolean validateNormalStart(Bundle savedInstanceState) {
@@ -64,6 +69,7 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
     protected void onDestroy() {
         super.onDestroy();
         TelinkMeshApplication.getInstance().removeEventListener(ScanEvent.EVENT_TYPE_SCAN_LOCATION_WARNING, this);
+        TelinkMeshApplication.getInstance().removeEventListener(BluetoothEvent.EVENT_TYPE_BLUETOOTH_STATE_CHANGE, this);
         MeshLogger.w(TAG + " onDestroy");
         this.toast.cancel();
         this.toast = null;
@@ -143,6 +149,44 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
         }
     }
 
+    private void showBleStateDialog() {
+        if (bleStateDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setCancelable(true);
+            builder.setTitle("Warning");
+            builder.setMessage(R.string.message_ble_state_disabled);
+            builder.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    MeshService.getInstance().enableBluetooth();
+                }
+            });
+            builder.setNegativeButton("Ignore", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            builder.setNeutralButton("Go-Setting", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent enableLocationIntent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+                    startActivityForResult(enableLocationIntent, 1);
+                }
+            });
+            bleStateDialog = builder.create();
+            bleStateDialog.show();
+        } else if (!bleStateDialog.isShowing()) {
+            bleStateDialog.show();
+        }
+    }
+
+    private void dismissBleStateDialog() {
+        if (bleStateDialog != null && bleStateDialog.isShowing()) {
+            bleStateDialog.dismiss();
+        }
+    }
+
 
     public void showWaitingDialog(String tip) {
         if (mWaitingDialog == null) {
@@ -204,6 +248,13 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
                         }
                     });
                 }
+            }
+        } else if (event.getType().equals(BluetoothEvent.EVENT_TYPE_BLUETOOTH_STATE_CHANGE)) {
+            int state = ((BluetoothEvent) event).getState();
+            if (state == BluetoothAdapter.STATE_OFF) {
+                showBleStateDialog();
+            } else if (state == BluetoothAdapter.STATE_ON) {
+                dismissBleStateDialog();
             }
         }
     }

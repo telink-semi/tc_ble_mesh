@@ -79,7 +79,7 @@ public class MeshService implements MeshController.EventCallback {
         mController.removeDevice(meshAddress);
     }
 
-    public MeshController.Mode getCurrentMode(){
+    public MeshController.Mode getCurrentMode() {
         return mController.getMode();
     }
 
@@ -164,13 +164,12 @@ public class MeshService implements MeshController.EventCallback {
      * Besides, message.responseMax is suggested to be valued by expected response count,
      * for example, 3 nodes in group(0xC001), 3 is the best value for responseMax when get group status
      * 2. if message is with tid (for example: OnOffSetMessage {@link com.telink.ble.mesh.core.message.generic.OnOffSetMessage})
-     * and App do not want to manage tid, message.isContainsTid should be valued by TRUE
+     * and App do not want to manage tid, valid message.tidPosition should be valued
      * otherwise tid in message will be sent,
      *
      * @param meshMessage message
      */
     public boolean sendMeshMessage(MeshMessage meshMessage) {
-        if (mController == null) return false;
         return mController.sendMeshMessage(meshMessage);
     }
 

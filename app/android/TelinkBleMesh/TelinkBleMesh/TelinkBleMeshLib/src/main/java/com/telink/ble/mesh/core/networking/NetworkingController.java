@@ -172,7 +172,7 @@ public class NetworkingController {
 
     private int lastSegSrc = 0;
 
-    // if last segment packets complete
+    // if last RX segment packets complete
     private boolean lastSegComplete = true;
 
 
@@ -270,11 +270,14 @@ public class NetworkingController {
         this.mNetworkingQueue.clear();
         this.lastSeqAuth = 0;
         this.lastSegSrc = 0;
+        this.directAddress = 0;
         this.lastSegComplete = true;
         this.deviceSequenceNumberMap.clear();
-        if (receivedSegmentedMessageBuffer != null) {
-            receivedSegmentedMessageBuffer.clear();
-        }
+         this.receivedSegmentedMessageBuffer.clear();
+        this.sentSegmentedMessageBuffer.clear();
+        this.mResponseMessageBuffer.clear();
+        this.isIvUpdating = false;
+        this.lastSegComplete = true;
     }
 
     public void addDeviceKey(int unicastAddress, byte[] deviceKey) {
@@ -323,7 +326,7 @@ public class NetworkingController {
         this.sentSegmentedMessageBuffer.clear();
         this.mResponseMessageBuffer.clear();
         this.isIvUpdating = false;
-
+        this.lastSegComplete = true;
     }
 
     /**
@@ -1339,9 +1342,12 @@ public class NetworkingController {
         int segO = message.getSegO();
         int segN = message.getSegN();
 
-        log(String.format(Locale.getDefault(), "seqAuth: 0x%014X -- lastSeqAuth: 0x%014X -- seg0: %02d -- segN: %02d",
+        log(String.format(Locale.getDefault(), "lastComplete? :%B -- seqAuth: 0x%014X -- lastSeqAuth: 0x%014X -- src: 0x%04X -- lastSrc: 0x%04X -- seg0: %02d -- segN: %02d",
+                lastSegComplete,
                 seqAuth,
                 lastSeqAuth,
+                src,
+                lastSegSrc,
                 segO,
                 segN));
 

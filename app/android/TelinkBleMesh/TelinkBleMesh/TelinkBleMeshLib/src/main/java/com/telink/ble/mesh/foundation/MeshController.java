@@ -1,8 +1,12 @@
 package com.telink.ble.mesh.foundation;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattService;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.ParcelUuid;
@@ -46,6 +50,7 @@ import com.telink.ble.mesh.entity.ProvisioningDevice;
 import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
 import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
 import com.telink.ble.mesh.foundation.event.BindingEvent;
+import com.telink.ble.mesh.foundation.event.BluetoothEvent;
 import com.telink.ble.mesh.foundation.event.FastProvisioningEvent;
 import com.telink.ble.mesh.foundation.event.FirmwareUpdatingEvent;
 import com.telink.ble.mesh.foundation.event.GattOtaEvent;
@@ -187,6 +192,13 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private int directDeviceAddress = 0;
 
+    /**
+     * OTA reconnect
+     * used when ota target device's advertising identification Type is NetworkID,
+     * set to node identity when first connect mesh network, and reconnect by node identity
+     */
+    private boolean isOTAReconnect;
+
 
     void start(Context context) {
 
@@ -201,7 +213,42 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         initProvisioningController(handlerThread);
         initNetworkingController(handlerThread);
         initAccessController(handlerThread);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        mContext.registerReceiver(mBluetoothReceiver, filter);
     }
+
+
+    private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action == null) return;
+            if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)) {
+                int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0);
+                String stateInfo;
+                switch (state) {
+                    case BluetoothAdapter.STATE_OFF:
+                        stateInfo = ("bluetooth disabled");
+                        break;
+                    case BluetoothAdapter.STATE_ON:
+                        stateInfo = ("bluetooth enabled");
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_OFF:
+                        stateInfo = ("bluetooth turning off");
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_ON:
+                        stateInfo = ("bluetooth turning on");
+                        break;
+                    default:
+                        stateInfo = "unknown";
+                        break;
+                }
+                onBluetoothEvent(state, stateInfo);
+            }
+        }
+    };
 
     void stop() {
         this.actionMode = Mode.MODE_IDLE;
@@ -247,6 +294,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             handlerThread.quitSafely();
             handlerThread = null;
         }
+
+        mContext.unregisterReceiver(mBluetoothReceiver);
     }
 
     Mode getMode() {
@@ -608,6 +657,14 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         return true;
     }
 
+    private void onBluetoothEvent(int state, String desc) {
+        log("bluetooth event: " + state + " -- " + desc);
+        BluetoothEvent event = new BluetoothEvent(this, BluetoothEvent.EVENT_TYPE_BLUETOOTH_STATE_CHANGE);
+        event.setState(state);
+        event.setDesc(desc);
+        onEventPrepared(event);
+    }
+
     private void onMeshEvent(String eventType, String desc) {
         MeshEvent meshEvent = new MeshEvent(this, eventType, desc);
         onEventPrepared(meshEvent);
@@ -741,15 +798,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             }
         }
     }
-
-
-    //
-    /**
-     * OTA reconnect
-     * used when ota target device advertising identification Type is Network ID,
-     * set node identity when first connect mesh network, and reconnect by node identity
-     */
-    private boolean isOTAReconnect;
 
     private void setNodeIdentity(int targetAddress) {
         log(String.format("set node for %04X", targetAddress));
@@ -885,7 +933,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     private void onGattDisconnected() {
         mDelayHandler.removeCallbacksAndMessages(null);
         onMeshEvent(MeshEvent.EVENT_TYPE_DISCONNECTED, "disconnected when: " + actionMode);
-        mNetworkingController.onGattDisconnected();
+        mNetworkingController.clear();
         if (isDisconnectWaiting) {
             isDisconnectWaiting = false;
             connectRetry = -1;

@@ -10,8 +10,8 @@ import java.util.List;
 
 public enum MeshSigModel implements Serializable {
 
-    SIG_MD_CFG_SERVER(0x0000, "", "", true),
-    SIG_MD_CFG_CLIENT(0x0001, "", "", true),
+    SIG_MD_CFG_SERVER(0x0000, "config server", "", true),
+    SIG_MD_CFG_CLIENT(0x0001, "config client", "", true),
     SIG_MD_HEALTH_SERVER(0x0002, "health server", "health server", true),
 
     // out of default

@@ -177,7 +177,30 @@ public class RemoteProvisioningController implements ProvisioningBridge {
     }
 
     private void onOutboundReport(ProvisioningPDUOutboundReportMessage outboundReportMessage) {
+        int outboundPDUNumber = outboundReportMessage.getOutboundPDUNumber() & 0xFF;
+        log("outbound report message received: " + outboundPDUNumber + " waiting? " + this.outboundReportWaiting);
+        if (this.outboundNumber == outboundPDUNumber) {
+            synchronized (WAITING_LOCK) {
+                delayHandler.removeCallbacks(resendProvisionPduTask);
+                transmittingPdu = null;
+                outboundReportWaiting = false;
+                log("stop outbound waiting: " + this.outboundNumber);
+                this.outboundNumber++;
+                if (this.cachePdu != null) {
+                    this.onCommandPrepared(ProxyPDU.TYPE_PROVISIONING_PDU, this.cachePdu);
+                    this.cachePdu = null;
+                } else {
+                    log("no cached provisioning pdu: waiting for provisioning response");
+                }
+            }
 
+        } else if (outboundReportWaiting) {
+            log("outbound number not pair");
+            /*outboundReportWaiting = false;
+            if (this.transmittingPdu != null) {
+                this.onCommandPrepared(ProxyPDU.TYPE_PROVISIONING_PDU, this.transmittingPdu);
+            }*/
+        }
     }
 
     public void onMessageNotification(NotificationMessage message) {
@@ -307,7 +330,33 @@ public class RemoteProvisioningController implements ProvisioningBridge {
      */
     @Override
     public void onCommandPrepared(byte type, byte[] data) {
+        if (type != ProxyPDU.TYPE_PROVISIONING_PDU) return;
 
+        synchronized (WAITING_LOCK) {
+            if (outboundReportWaiting) {
+                if (cachePdu == null) {
+                    cachePdu = data;
+                } else {
+                    log("cache pdu already exists");
+                }
+                return;
+            }
+        }
+
+        transmittingPdu = data.clone();
+
+        ProvisioningPduSendMessage provisioningPduSendMessage = ProvisioningPduSendMessage.getSimple(
+                provisioningDevice.getServerAddress(),
+                appKeyIndex,
+                0,
+                (byte) this.outboundNumber,
+                transmittingPdu
+        );
+        provisioningPduSendMessage.setRetryCnt(8);
+//        delayHandler.removeCallbacks(provisioningPduTimeoutTask);
+//        delayHandler.postDelayed(provisioningPduTimeoutTask, OUTBOUND_WAITING_TIMEOUT);
+        log("send provisioning pdu: " + this.outboundNumber);
+        onMeshMessagePrepared(provisioningPduSendMessage);
     }
 
 
