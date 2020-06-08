@@ -21,13 +21,14 @@
  *******************************************************************************************************/
 //
 //  SigAddDeviceManager.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/4.
+//  Created by 梁家誌 on 2019/9/4.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import "SigAddDeviceManager.h"
+#import "SigKeyBindManager.h"
 
 typedef enum : NSUInteger {
     SigAddStatusScanning,
@@ -54,7 +55,7 @@ typedef enum : NSUInteger {
 @property (nonatomic,copy) ErrorBlock keyBindFailBlock;
 @property (nonatomic,copy) AddDeviceFinishCallBack finishBlock;
 @property (nonatomic,assign) SigAddStatus addStatus;
-// it is need to call start scan after add one node successful. default is NO.
+//it is need to call start scan after add one node successful. default is NO.
 @property (nonatomic,assign) BOOL isAutoAddDevice;
 //contains provsion fail list
 @property (nonatomic,strong) NSMutableArray <NSString *>*tempProvisionFailList;
@@ -154,6 +155,12 @@ typedef enum : NSUInteger {
         if (unprovisioned) {
             weakSelf.addStatus = SigAddStatusConnectFirst;
             [SigBluetooth.share stopScan];
+            //自动添加新增逻辑：判断本地是否存在该UUID的OOB数据，存在则缓存到self.staticOOBData中。
+            SigScanRspModel *model = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
+            SigOOBModel *oobModel = [SigDataSource.share getSigOOBModelWithUUID:model.advUuid];
+            if (oobModel && oobModel.OOBString && oobModel.OOBString.length == 32) {
+                self.staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
+            }
             [weakSelf startAddPeripheral:peripheral];
         }
     }];

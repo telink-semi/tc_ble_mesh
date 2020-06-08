@@ -23,7 +23,7 @@
 //  SettingViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -76,8 +76,8 @@
     return 51.0;
 }
 
-- (void)viewWillAppear:(BOOL)animated{
-    [super viewWillAppear:animated];
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
     self.tabBarController.tabBar.hidden = NO;
 }
 
@@ -98,11 +98,13 @@
         [self.iconSource addObject:@"ic_model"];
         [self.vcIdentifiers addObject:ViewControllerIdentifiers_ShareViewControllerID];
     }
+    #ifdef kExist
     if (kExistMeshOTA) {
         [self.source addObject:@"Mesh OTA"];
         [self.iconSource addObject:@"ic_mesh_ota"];
         [self.vcIdentifiers addObject:@"no found"];
     }
+    #endif
 //    if (kShowDebug) {
 //        [self.source addObject:@"Debug"];
 //        [self.iconSource addObject:@"ic_model"];

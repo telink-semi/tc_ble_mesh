@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigNetworkLayer.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/9.
+//  Created by 梁家誌 on 2019/9/9.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -32,6 +32,7 @@
 #import "SigMeshLib.h"
 #import "SigLowerTransportLayer.h"
 #import "SigLowerTransportPdu.h"
+#import "SigControlMessage.h"
 
 @interface SigNetworkLayer ()
 @property (nonatomic,assign) NSInteger networkTransmitCount;
@@ -53,7 +54,7 @@
         _networkManager = networkManager;
         _meshNetwork = networkManager.manager.dataSource;
         _defaults = [[NSUserDefaults alloc] initWithSuiteName:_meshNetwork.meshUUID];
-        _networkMessageCache = [[NSCache alloc] init];
+//        _networkMessageCache = [[NSCache alloc] init];
     }
     return self;
 }
@@ -68,15 +69,15 @@
         return;
     }
     
-    // Secure Network Beacons can repeat whenever the device connects to a new Proxy.
-    if (type != SigPduType_meshBeacon) {
-        // Ensure the PDU has not been handled already.
-        if ([_networkMessageCache objectForKey:pdu] != nil) {
-            TeLogDebug(@"PDU has already been handled.");
-            return;
-        }
-        [_networkMessageCache setObject:[[NSNull alloc] init] forKey:pdu];
-    }
+//    // Secure Network Beacons can repeat whenever the device connects to a new Proxy.
+//    if (type != SigPduType_meshBeacon) {
+//        // Ensure the PDU has not been handled already.
+//        if ([_networkMessageCache objectForKey:pdu] != nil) {
+//            TeLogDebug(@"PDU has already been handled.");
+//            return;
+//        }
+//        [_networkMessageCache setObject:[[NSNull alloc] init] forKey:pdu];
+//    }
     
     // Try decoding the PDU.
     switch (type) {
@@ -262,12 +263,8 @@
     // TODO: Handle Unprovisioned Device Beacon.
 }
 
-/// This method handles the Secure Network Beacon.
-/// It will set the proper IV Index and IV Update Active flag for the Network Key
-/// that matches Network ID and change the Key Refresh Phase based on the
-/// key refresh flag specified in the beacon.
-///
-/// - parameter secureNetworkBeacon: The Secure Network Beacon received.
+/// This method handles the Secure Network Beacon. It will set the proper IV Index and IV Update Active flag for the Network Key that matches Network ID and change the Key Refresh Phase based on the key refresh flag specified in the beacon.
+/// @param secureNetworkBeacon The Secure Network Beacon received.
 - (void)handleSecureNetworkBeacon:(SigSecureNetworkBeacon *)secureNetworkBeacon {
     SigNetkeyModel *networkKey = secureNetworkBeacon.networkKey;
     if (secureNetworkBeacon.ivIndex < networkKey.ivIndex.index) {
@@ -277,7 +274,7 @@
     SigIvIndex *ivIndex = [[SigIvIndex alloc] initWithIndex:secureNetworkBeacon.ivIndex updateActive:secureNetworkBeacon.ivUpdateActive];
     networkKey.ivIndex = ivIndex;
     //==========test=========//
-    TeLogVerbose(@"==========ivIndex=0x%x",ivIndex.index);
+    TeLogVerbose(@"==========receive secure Network Beacon, ivIndex=0x%x",ivIndex.index);
     //==========test=========//
 
     // If the Key Refresh Procedure is in progress, and the new Network Key
@@ -290,6 +287,19 @@
     if (networkKey.phase == finalizing && !secureNetworkBeacon.keyRefreshFlag) {
         networkKey.oldKey = nil;//This will set the phase to .normalOperation.
     }
+    
+    //===========telink==========//
+    SigDataSource.share.curNetkeyModel.ivIndex.updateActive = secureNetworkBeacon.ivUpdateActive;
+    SigDataSource.share.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex;
+    [SigDataSource.share setIvIndex:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex]];
+    //===========telink==========//
+    if (secureNetworkBeacon.keyRefreshFlag) {
+        SigDataSource.share.curNetkeyModel.key = secureNetworkBeacon.networkKey.key;
+    }
+    if ([_networkManager.manager.delegate respondsToSelector:@selector(didReceiveSigSecureNetworkBeaconMessage:)]) {
+        [_networkManager.manager.delegate didReceiveSigSecureNetworkBeaconMessage:secureNetworkBeacon];
+    }
+
 //    [self updateProxyFilterUsingNetworkKey:networkKey];
 }
 

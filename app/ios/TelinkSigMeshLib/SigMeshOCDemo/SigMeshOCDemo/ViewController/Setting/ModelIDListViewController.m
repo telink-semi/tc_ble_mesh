@@ -23,7 +23,7 @@
 //  ModelIDListViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/9/25.
+//  Created by 梁家誌 on 2018/9/25.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -76,7 +76,8 @@
 
 - (void)reloadSelectModelID{
     [self.source removeAllObjects];
-    for (NSNumber *modelID in SigDataSource.share.keyBindModelIDs) {
+    NSArray *keyBindModelIDs = [NSArray arrayWithArray:SigDataSource.share.keyBindModelIDs];
+    for (NSNumber *modelID in keyBindModelIDs) {
         ModelIDModel *model = [SigDataSource.share getModelIDModel:modelID];
         if (model) {
             [self.source addObject:model];

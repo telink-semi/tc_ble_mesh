@@ -23,7 +23,7 @@
 //  SchedulerListViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/9/25.
+//  Created by 梁家誌 on 2018/9/25.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 

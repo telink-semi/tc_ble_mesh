@@ -23,7 +23,7 @@
 //  SigLogger.h
 //  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/16.
+//  Created by 梁家誌 on 2019/8/16.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -149,13 +149,19 @@ typedef enum : NSUInteger {
 
 + (SigLogger *)share;
 
+/// 设置log等级，debug模式设置为SigLogLevelDebug即可，上架推荐使用SigLogLevelOff。
 - (void)setSDKLogLevel:(SigLogLevel)logLevel;
 
+/// 清除所有log
 - (void)clearAllLog;
 
+/// 获取特定长度的log字符串
 - (NSString *)getLogStringWithLength:(NSInteger)length;
 
+/// 缓存加密的json数据于iTunes中
 void saveMeshJsonData(id data);
+/// 解密iTunes中缓存的加密的json数据
+- (NSString *)getDecryptTelinkSDKMeshJsonData;
 
 /**
  自定义打印，会自动写文件

@@ -23,7 +23,7 @@
 //  DemoCommand.h
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -64,7 +64,7 @@
 + (BOOL)getTempratureWithAddress:(UInt16)address retryCount:(NSInteger)retryCount responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightCTLTemperatureStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 /// Change HSL
-+ (BOOL)changeHSLWithAddress:(UInt16)address hue100:(UInt8)hue100 saturation100:(UInt8)saturation100 brightness100:(UInt8)brightness100 responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (BOOL)changeHSLWithAddress:(UInt16)address hue:(float)hue saturation:(float)saturation brightness:(float)brightness responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (BOOL)getHSLWithAddress:(UInt16)address responseMaxCount:(int)responseMaxCount successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 /// Change level

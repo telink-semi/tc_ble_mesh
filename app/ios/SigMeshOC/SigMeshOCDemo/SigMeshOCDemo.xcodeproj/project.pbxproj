@@ -12,7 +12,7 @@
 		2543B68223D16345003241C7 /* TLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 2543B67A23D16345003241C7 /* TLog.m */; };
 		2543B69723D16416003241C7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2543B69323D16415003241C7 /* 8258_mesh.bin */; };
 		2543B69B23D16416003241C7 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2543B69523D16416003241C7 /* 8269_mesh.bin */; };
-		256A68CA24598A1400131CC4 /* SigMeshOC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 256A68C924598A1400131CC4 /* SigMeshOC.framework */; };
+		2559472B248E2F93003E8597 /* SigMeshOC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2559472A248E2F93003E8597 /* SigMeshOC.framework */; };
 		A20C14B72254556700B42909 /* ColorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A20C14B62254556700B42909 /* ColorManager.m */; };
 		A23FE43822CD96760018F090 /* FileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43722CD96760018F090 /* FileChooseVC.m */; };
 		A23FE43F22CDF3230018F090 /* ChooseAndAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43E22CDF3230018F090 /* ChooseAndAddDeviceVC.m */; };
@@ -146,7 +146,7 @@
 		2543B67A23D16345003241C7 /* TLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TLog.m; sourceTree = "<group>"; };
 		2543B69323D16415003241C7 /* 8258_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh.bin; sourceTree = "<group>"; };
 		2543B69523D16416003241C7 /* 8269_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8269_mesh.bin; sourceTree = "<group>"; };
-		256A68C924598A1400131CC4 /* SigMeshOC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SigMeshOC.framework; sourceTree = "<group>"; };
+		2559472A248E2F93003E8597 /* SigMeshOC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SigMeshOC.framework; sourceTree = "<group>"; };
 		A20C14B52254556700B42909 /* ColorManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorManager.h; sourceTree = "<group>"; };
 		A20C14B62254556700B42909 /* ColorManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ColorManager.m; sourceTree = "<group>"; };
 		A23FE43622CD96760018F090 /* FileChooseVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileChooseVC.h; sourceTree = "<group>"; };
@@ -357,7 +357,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				256A68CA24598A1400131CC4 /* SigMeshOC.framework in Frameworks */,
+				2559472B248E2F93003E8597 /* SigMeshOC.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -390,10 +390,18 @@
 			path = TestAddDevice;
 			sourceTree = "<group>";
 		};
-		256A68C824598A1400131CC4 /* Release-iphoneos */ = {
+		25594728248E2F93003E8597 /* SigMeshOC */ = {
 			isa = PBXGroup;
 			children = (
-				256A68C924598A1400131CC4 /* SigMeshOC.framework */,
+				25594729248E2F93003E8597 /* Release-iphoneos */,
+			);
+			path = SigMeshOC;
+			sourceTree = "<group>";
+		};
+		25594729248E2F93003E8597 /* Release-iphoneos */ = {
+			isa = PBXGroup;
+			children = (
+				2559472A248E2F93003E8597 /* SigMeshOC.framework */,
 			);
 			path = "Release-iphoneos";
 			sourceTree = "<group>";
@@ -660,7 +668,7 @@
 		A2AB8ECE211004B200D73EB4 /* SDK */ = {
 			isa = PBXGroup;
 			children = (
-				A2ABB13823A8DF0800C35D8E /* SigMeshOC */,
+				25594728248E2F93003E8597 /* SigMeshOC */,
 				2543B69323D16415003241C7 /* 8258_mesh.bin */,
 				2543B69523D16416003241C7 /* 8269_mesh.bin */,
 				A28CA37F2181E4AB005B1DB6 /* IQKeyboardManager-master */,
@@ -814,14 +822,6 @@
 				A2AB8F902110612700D73EB4 /* DemoCommand.m */,
 			);
 			path = Control;
-			sourceTree = "<group>";
-		};
-		A2ABB13823A8DF0800C35D8E /* SigMeshOC */ = {
-			isa = PBXGroup;
-			children = (
-				256A68C824598A1400131CC4 /* Release-iphoneos */,
-			);
-			path = SigMeshOC;
 			sourceTree = "<group>";
 		};
 		A2D8B0D421B5071A004F0C6A /* ZIP */ = {
@@ -1321,7 +1321,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.2.2;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"$(inherited)",
@@ -1355,7 +1355,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.2.2;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"$(inherited)",

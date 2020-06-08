@@ -435,9 +435,14 @@ static NSTimeInterval commentTime;
             //change since v3.1.0
             if (SigDataSource.share.hasNodeExistTimeModelID) {
                 [weakSelf.commandHandle statusNowTime];
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    [weakSelf delayWriteForProvision];
+                    weakSelf.setFilterResponseCallBack = nil;
+                });
+            } else {
+                [weakSelf delayWriteForProvision];
+                weakSelf.setFilterResponseCallBack = nil;
             }
-            [weakSelf delayWriteForProvision];
-            weakSelf.setFilterResponseCallBack = nil;
         }
     }fail:^{
         TeLog(@"setFilter fail.");
@@ -1589,10 +1594,16 @@ static NSTimeInterval commentTime;
                 //change since v3.1.0
                 if (SigDataSource.share.hasNodeExistTimeModelID) {
                     [weakSelf.commandHandle statusNowTime];
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        [weakSelf cancelSetFilterWithLocationAddressTimeout];
+                        [weakSelf delayAfterSetFilter];
+                        weakSelf.setFilterResponseCallBack = nil;
+                    });
+                } else {
+                    [weakSelf cancelSetFilterWithLocationAddressTimeout];
+                    [weakSelf delayAfterSetFilter];
+                    weakSelf.setFilterResponseCallBack = nil;
                 }
-                [weakSelf cancelSetFilterWithLocationAddressTimeout];
-                [weakSelf delayAfterSetFilter];
-                weakSelf.setFilterResponseCallBack = nil;
             }
         }fail:^{
             TeLog(@"setFilter fail.");

@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigKeyBindManager.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/4.
+//  Created by 梁家誌 on 2019/9/4.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -38,7 +38,7 @@
 @property (nonatomic,assign) KeyBindTpye type;
 @property (nonatomic,strong) SigCompositionDataPage *page;
 @property (nonatomic,strong) SigNodeModel *node;
-@property (nonatomic, assign) BOOL isKeybinding;
+@property (nonatomic,assign) BOOL isKeybinding;
 
 @property (nonatomic,assign) UInt16 fastKeybindProductID;
 @property (nonatomic,strong) NSData *fastKeybindCpsData;
@@ -165,7 +165,7 @@
                     TeLogError(@"this node not support fast bind!!!");
                     deviceType = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:weakSelf.fastKeybindProductID];
                 }
-                weakSelf.page = [[SigPage0 alloc] initWithParameters:deviceType.defaultCompositionData];
+                weakSelf.page = deviceType.defaultCompositionData;
                 [weakSelf keyBindSuccessAction];
             }else{
                 TeLogError(@"KeyBindTpye is error");
@@ -214,9 +214,11 @@
     [oprationQueue addOperationWithBlock:^{
         __block BOOL isFail = NO;
         SigPage0 *page0 = (SigPage0 *)weakSelf.page;
-        for (SigElementModel *element in page0.elements) {
+        NSArray *elements = [NSArray arrayWithArray:page0.elements];
+        for (SigElementModel *element in elements) {
             element.parentNode = weakSelf.node;
-            for (SigModelIDModel *modelID in element.models) {
+            NSArray *models = [NSArray arrayWithArray:element.models];
+            for (SigModelIDModel *modelID in models) {
                 if (modelID.isConfigurationServer) {
                     TeLogVerbose(@"app needn't Bind modelID=%@",modelID.modelId);
                     continue;

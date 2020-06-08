@@ -23,7 +23,7 @@
 //  DemoCommand.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -34,7 +34,7 @@
 /// Is get online status from private uuid, YES main callback onoffCallback、brighrnessCallback、tempratureCallback、HSLCallback、levelCallback from OnlineStatusCharacteristic.
 + (BOOL)isPrivatelyGetOnlineStatus {
     NSNumber *online = [[NSUserDefaults standardUserDefaults] valueForKey:kGetOnlineStatusType];
-    BOOL hasOTACharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kOnlineStatusCharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] != nil;
+    BOOL hasOTACharacteristic = [SDKLibCommand getCharacteristicWithUUIDString:kOnlineStatusCharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] != nil;
     return online.boolValue && hasOTACharacteristic;
 }
 
@@ -261,7 +261,7 @@
 }
 
 /// Change HSL
-+ (BOOL)changeHSLWithAddress:(UInt16)address hue100:(UInt8)hue100 saturation100:(UInt8)saturation100 brightness100:(UInt8)brightness100 responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (BOOL)changeHSLWithAddress:(UInt16)address hue:(float)hue saturation:(float)saturation brightness:(float)brightness responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for change HSL100, but busy now.");
         if (resultCallback) {
@@ -270,10 +270,7 @@
         }
         return NO;
     } else {
-        UInt16 hue = [SigHelper.share getUint16LightnessFromUInt8Lum:hue100];
-        UInt16 saturation = [SigHelper.share getUint16LightnessFromUInt8Lum:saturation100];
-        UInt16 brightness = [SigHelper.share getUint16LightnessFromUInt8Lum:brightness100];
-        TeLogInfo(@"send request for change HSL100 h100:%d,s100:%d,l100:%d,UInt16 hue=0x%x,saturation=0x%x,brightness=0x%x",hue100,saturation100,brightness100,hue,saturation,brightness);
+        TeLogInfo(@"send request for change HSL100 h100:%d,s100:%d,l100:%d,UInt16 hue=0x%x,saturation=0x%x,brightness=0x%x",(int)hue*100,(int)saturation*100,(int)brightness*100,(int)hue*0xFFFF,(int)saturation*0xFFFF,(int)brightness*0xFFFF);
         [SDKLibCommand lightHSLSetWithDestination:address HSLLight:brightness HSLHue:hue HSLSaturation:saturation retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }

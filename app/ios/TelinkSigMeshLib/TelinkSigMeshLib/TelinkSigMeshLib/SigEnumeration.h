@@ -21,14 +21,159 @@
 *******************************************************************************************************/
 //
 //  SigEnumeration.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/6.
+//  Created by 梁家誌 on 2019/9/6.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
 #ifndef SigEnumeration_h
 #define SigEnumeration_h
+
+/// Table 5.14: Provisioning PDU types.
+/// - seeAlso: Mesh_v1.0.pdf  (page.238)
+typedef enum : UInt8 {
+    /// Invites a device to join a mesh network
+    SigProvisioningPduType_invite = 0,
+    /// Indicates the capabilities of the device
+    SigProvisioningPduType_capabilities = 1,
+    /// Indicates the provisioning method selected by the Provisioner based on the capabilities of the device
+    SigProvisioningPduType_start = 2,
+    /// Contains the Public Key of the device or the Provisioner
+    SigProvisioningPduType_publicKey = 3,
+    /// Indicates that the user has completed inputting a value
+    SigProvisioningPduType_inputComplete = 4,
+    /// Contains the provisioning confirmation value of the device or the Provisioner
+    SigProvisioningPduType_confirmation = 5,
+    /// Contains the provisioning random value of the device or the Provisioner
+    SigProvisioningPduType_random = 6,
+    /// Includes the assigned unicast address of the primary element, a network key, NetKey Index, Flags and the IV Index
+    SigProvisioningPduType_data = 7,
+    /// Indicates that provisioning is complete
+    SigProvisioningPduType_complete = 8,
+    /// Indicates that provisioning was unsuccessful
+    SigProvisioningPduType_failed = 9,
+    /// RFU, Reserved for Future Use, 0x0A–0xFF.
+} SigProvisioningPduType;
+
+typedef enum : UInt16 {
+    MeshAddress_unassignedAddress = 0x0000,
+    MeshAddress_minUnicastAddress = 0x0001,
+    MeshAddress_maxUnicastAddress = 0x7FFF,
+    MeshAddress_minVirtualAddress = 0x8000,
+    MeshAddress_maxVirtualAddress = 0xBFFF,
+    MeshAddress_minGroupAddress   = 0xC000,
+    MeshAddress_maxGroupAddress   = 0xFEFF,
+    MeshAddress_allProxies        = 0xFFFC,
+    MeshAddress_allFriends        = 0xFFFD,
+    MeshAddress_allRelays         = 0xFFFE,
+    MeshAddress_allNodes          = 0xFFFF,
+} MeshAddress;
+
+typedef enum : UInt8 {
+    DeviceStateOn,
+    DeviceStateOff,
+    DeviceStateOutOfLine,
+} DeviceState;//设备状态
+
+typedef enum : NSUInteger {
+    OOBSourceTpyeManualInput,
+    OOBSourceTpyeImportFromFile,
+} OOBSourceTpye;
+
+/// Table 6.2: SAR field values.
+/// - seeAlso: Mesh_v1.0.pdf  (page.261)
+typedef enum : UInt8 {
+    /// Data field contains a complete message
+    SAR_completeMessage  = 0b00,
+    /// Data field contains the first segment of a message
+    SAR_firstSegment     = 0b01,
+    /// Data field contains a continuation segment of a message
+    SAR_continuation     = 0b10,
+    /// Data field contains the last segment of a message
+    SAR_lastSegment      = 0b11,
+} SAR;
+
+/// Table 5.12: Action field values.
+/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.141)
+typedef enum : UInt8 {
+    SchedulerTypeOff      = 0x0,
+    SchedulerTypeOn       = 0x1,
+    SchedulerTypeScene    = 0x2,
+    SchedulerTypeNoAction = 0xF,
+} SchedulerType;//闹钟类型
+
+typedef enum : UInt8 {
+    AddDeviceModelStateProvisionFail,
+    AddDeviceModelStateBinding,
+    AddDeviceModelStateBindSuccess,
+    AddDeviceModelStateBindFail,
+    AddDeviceModelStateScaned,
+    AddDeviceModelStateProvisioning,
+} AddDeviceModelState;//添加的设备的状态
+
+/// Table 5.18: Algorithms field values.
+/// - seeAlso: Mesh_v1.0.pdf  (page.239)
+typedef enum : UInt8 {
+    /// FIPS P-256 Elliptic Curve algorithm will be used to calculate the shared secret.
+    Algorithm_fipsP256EllipticCurve = 0,
+    /// Reserved for Future Use: 1~15
+} Algorithm;
+
+/// Table 5.19: Public Key Type field values
+/// - seeAlso: Mesh_v1.0.pdf  (page.239)
+typedef enum : UInt8 {
+    /// No OOB Public Key is used.
+    PublicKeyType_noOobPublicKey = 0,
+    /// OOB Public Key is used. The key must contain the full value of the Public Key, depending on the chosen algorithm.
+    PublicKeyType_oobPublicKey = 1,
+} PublicKeyType;
+
+/// The authentication method chosen for provisioning.
+/// Table 5.28: Authentication Method field values
+/// - seeAlso: Mesh_v1.0.pdf  (page.241)
+typedef enum : UInt8 {
+    /// No OOB authentication is used.
+    AuthenticationMethod_noOob = 0,
+    /// Static OOB authentication is used.
+    AuthenticationMethod_staticOob = 1,
+    /// Output OOB authentication is used. Size must be in range 1...8.
+    AuthenticationMethod_outputOob = 2,
+    /// Input OOB authentication is used. Size must be in range 1...8.
+    AuthenticationMethod_inputOob = 3,
+    /// Prohibited, 0x04–0xFF.
+} AuthenticationMethod;
+
+/// The output action will be displayed on the device. For example, the device may use its LED to blink number of times. The mumber of blinks will then have to be entered to the Provisioner Manager.
+/// Table 5.22: Output OOB Action field values
+/// - seeAlso: Mesh_v1.0.pdf  (page.240)
+typedef enum : UInt8 {
+    OutputAction_blink = 0,
+    OutputAction_beep = 1,
+    OutputAction_vibrate = 2,
+    OutputAction_outputNumeric = 3,
+    OutputAction_outputAlphanumeric = 4
+    /// Reserved for Future Use, 5–15.
+} OutputAction;
+
+/// The user will have to enter the input action on the device. For example, if the device supports `.push`, user will be asked to press a button on the device required number of times.
+/// Table 5.24: Input OOB Action field values
+/// - seeAlso: Mesh_v1.0.pdf  (page.240)
+typedef enum : UInt8 {
+    InputAction_push = 0,
+    InputAction_twist = 1,
+    InputAction_inputNumeric = 2,
+    InputAction_inputAlphanumeric = 3,
+    /// Reserved for Future Use, 4–15.
+} InputAction;
+
+/// Table 3.52: Beacon Type values
+/// - seeAlso: Mesh_v1.0.pdf  (page.118)
+typedef enum : UInt8 {
+    SigBeaconType_unprovisionedDevice = 0,
+    SigBeaconType_secureNetwork = 1,
+    /// Reserved for Future Use, 0x02–0xFF.
+} SigBeaconType;
 
 typedef enum : UInt8 {
     /// - seeAlso: 3.4.4 Network PDU of Mesh_v1.0.pdf  (page.43)
@@ -41,19 +186,23 @@ typedef enum : UInt8 {
     SigPduType_provisioningPdu = 3,
 } SigPduType;
 
-typedef enum : NSUInteger {
+/// Table 5.20: Static OOB Type field values
+/// - seeAlso: Mesh_v1.0.pdf  (page.239)
+typedef enum : UInt8 {
     ProvisionTpye_NoOOB,//普通添加模式
     ProvisionTpye_StaticOOB,//云端校验添加模式（阿里的天猫精灵设备、小米的小爱同学设备）
     ProvisionTpye_Reserved,//预留
 } ProvisionTpye;
 
-typedef enum : NSUInteger {
+typedef enum : UInt8 {
     KeyBindTpye_Normal,//普通添加模式
     KeyBindTpye_Fast,//快速添加模式
     KeyBindTpye_Reserved,//预留
 } KeyBindTpye;
 
-typedef enum : NSUInteger {
+/// The Step Resolution field enumerates the resolution of the Number of Steps field and the values are defined in Table 4.6.
+/// - seeAlso: Mesh_v1.0.pdf  (page.137)
+typedef enum : UInt8 {
     SigStepResolution_hundredsOfMilliseconds = 0b00,
     SigStepResolution_seconds                = 0b01,
     SigStepResolution_tensOfSeconds          = 0b10,
@@ -479,7 +628,7 @@ typedef enum : UInt8 {
     SigLowerTransportPduType_controlMessage = 1,
 } SigLowerTransportPduType;
 
-typedef enum : NSUInteger {
+typedef enum : UInt8 {
     /// Provisioning Manager is ready to start.
     ProvisionigState_ready,
     /// The manager is requesting Provisioioning Capabilities from the device.
@@ -494,32 +643,28 @@ typedef enum : NSUInteger {
     ProvisionigState_fail,
 } ProvisionigState;
 
-typedef enum : NSUInteger {
-    /// Thrown when the ProvisioningManager is in invalid state.
-    ProvisioningError_invalidState,
-    /// The received PDU is invalid.
-    ProvisioningError_invalidPdu,
-    /// Thrown when an unsupported algorighm has been selected for provisioning.
-    ProvisioningError_unsupportedAlgorithm,
-    /// Thrown when the Unprovisioned Device is not supported by the manager.
-    ProvisioningError_unsupportedDevice,
-    /// Thrown when the provided alphanumberic value could not be converted into
-    /// bytes using ASCII encoding.
-    ProvisioningError_invalidOobValueFormat,
-    /// Thrown when no available Unicast Address was found in the Provisioner's
-    /// range that could be allocated for the device.
-    ProvisioningError_noAddressAvailable,
-    /// Throws when the Unicast Address has not been set.
-    ProvisioningError_addressNotSpecified,
-    /// Throws when the Network Key has not been set.
-    ProvisioningError_networkKeyNotSpecified,
-    /// Thrown when confirmation value received from the device does not match
-    /// calculated value. Authentication failed.
-    ProvisioningError_confirmationFailed,
-    /// Thrown when the remove device sent a failure indication.
-    ProvisioningError_remoteError,
-    /// Thrown when the key pair generation has failed.
-    ProvisioningError_keyGenerationFailed,
+/// Table 5.38: Provisioning error codes.
+/// - seeAlso: Mesh_v1.0.pdf  (page.244)
+typedef enum : UInt8 {
+    /// Prohibited.
+    ProvisioningError_prohibited = 0,
+    /// The provisioning protocol PDU is not recognized by the device.
+    ProvisioningError_invalidPdu = 1,
+    /// The arguments of the protocol PDUs are outside expected values or the length of the PDU is different than expected.
+    ProvisioningError_invalidFormat = 2,
+    /// The PDU received was not expected at this moment of the procedure.
+    ProvisioningError_unexpectedPDU = 3,
+    /// The computed confirmation value was not successfully verified.
+    ProvisioningError_confirmationFailed = 4,
+    /// The provisioning protocol cannot be continued due to insufficient resources in the device.
+    ProvisioningError_outOfResources = 5,
+    /// The Data block was not successfully decrypted.
+    ProvisioningError_decryptionFailed = 6,
+    /// An unexpected error occurred that may not be recoverable.
+    ProvisioningError_unexpectedError = 7,
+    /// The device cannot assign consecutive unicast addresses to all elements.
+    ProvisioningError_cannotAssignAddresses = 8,
+    /// RFU, Reserved for Future Use, 0x09–0xFF.
 } ProvisioningError;
 
 typedef enum : NSUInteger {
@@ -829,43 +974,78 @@ typedef enum : UInt16 {
     SigLocation_upper                        = 0x0104,
 } SigLocation;
 
+/// Table 3.6: Generic OnPowerUp states.
+/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.31)
 typedef enum : UInt8 {
+    /// Off. After being powered up, the element is in an off state.
     SigOnPowerUpOff                            = 0x00,
+    /// Default. After being powered up, the element is in an On state and uses default state values.
     SigOnPowerUpDefault                        = 0x01,
+    /// Restore. If a transition was in progress when powered down, the element restores the target state when powered up. Otherwise the element restores the state it was in when powered down.
     SigOnPowerUpRestore                        = 0x02,
 } SigOnPowerUp;
 
+/// Table 7.2: Summary of status codes.
+/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.303)
 typedef enum : UInt8 {
+    /// Command successfully processed.
     SigGenericMessageStatusSuccess             = 0x00,
+    /// The provided value for Range Min cannot be set.
     SigGenericMessageStatusCannotSetRangeMin   = 0x01,
+    /// The provided value for Range Max cannot be set.
     SigGenericMessageStatusCannotSetRangeMax   = 0x02,
+    /// Reserved for Future Use, RFU, 0x03–0xFF.
 } SigGenericMessageStatus;
 
+/// Table 3.15: Generic Battery Flags Presence states.
+/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.35)
 typedef enum : UInt8 {
+    /// The battery is not present.
     SigBatteryPresenceNotPresent               = 0b00,
+    /// The battery is present and is removable.
     SigBatteryPresenceRemovable                = 0b01,
+    /// The battery is present and is non-removable.
     SigBatteryPresenceNotRemovable             = 0b10,
+    /// The battery presence is unknown.
     SigBatteryPresenceUnknown                  = 0b11,
 } SigBatteryPresence;
 
+/// Table 3.16: Generic Battery Flags Indicator states.
+/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.35)
 typedef enum : UInt8 {
+    /// The battery charge is Critically Low Level.
     SigBatteryIndicatorCritiallyLow            = 0b00,
+    /// The battery charge is Low Level.
     SigBatteryIndicatorLow                     = 0b01,
+    /// The battery charge is Good Level.
     SigBatteryIndicatorGood                    = 0b10,
+    /// The battery charge is unknown.
     SigBatteryIndicatorUnknown                 = 0b11,
 } SigBatteryIndicator;
 
+/// Table 3.17: Generic Battery Flags Charging states.
+/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.35)
 typedef enum : UInt8 {
+    /// The battery is not chargeable.
     SigBatteryChargingStateNotChargable        = 0b00,
+    /// The battery is chargeable and is not charging.
     SigBatteryChargingStateNotCharging         = 0b01,
+    /// The battery is chargeable and is charging.
     SigBatteryChargingStateCharging            = 0b10,
+    /// The battery charging state is unknown.
     SigBatteryChargingStateUnknown             = 0b11,
 } SigBatteryChargingState;
 
+/// Table 3.18: Generic Battery Flags Serviceability states.
+/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.35)
 typedef enum : UInt8 {
-    SigBatteryServiceabilityReserved           = 0b00,
+    /// Reserved for Future Use
+    SigBatteryServiceabilityReservedForFutureUse           = 0b00,
+    /// The battery does not require service.
     SigBatteryServiceabilityServiceNotRequired = 0b01,
+    /// The battery requires service.
     SigBatteryServiceabilityServiceRequired    = 0b10,
+    /// The battery serviceability is unknown.
     SigBatteryServiceabilityUnknown            = 0b11,
 } SigBatteryServiceability;
 
@@ -885,9 +1065,13 @@ typedef enum : UInt8 {
 /// 5.2.2.11 Summary of status codes
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.149)
 typedef enum : UInt8 {
+    /// Success
     SigSceneResponseStatus_success           = 0x00,
+    /// Scene Register Full
     SigSceneResponseStatus_sceneRegisterFull = 0x01,
+    /// Scene Not Found
     SigSceneResponseStatus_sceneNotFound     = 0x02,
+    /// Reserved for Future Use, 0x03–0xFF.
 } SigSceneResponseStatus;
 
 /// 4.1.1.4 Sensor Sampling Function
@@ -1054,21 +1238,6 @@ typedef enum : UInt8 {
     /// Company ID and Firmware ID combination temporary rejected, node is not able to accept new firmware now, try again later
     SigFirmwareUpdateStatusType_combinationTempReject = 0x05,
 } SigFirmwareUpdateStatusType;
-
-///// Phase Values
-///// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.28)
-//typedef enum : UInt8 {
-//    /// No DFU update in progress
-//    SigFirmwareUpdatePhaseType_idle = 0x00,
-//    /// DFU update is prepared and awaiting start
-//    SigFirmwareUpdatePhaseType_prepare = 0x01,
-//    /// DFU update is in progress
-//    SigFirmwareUpdatePhaseType_inProgress = 0x02,
-//    /// DFU upload is finished and waiting to be applied
-//    SigFirmwareUpdatePhaseType_DFUReady = 0x03,
-//    /// just use internal
-//    SigFirmwareUpdatePhaseType_applyOk = 0x07,
-//} SigFirmwareUpdatePhaseType;
 
 /// The Block Checksum Algorithm values
 /// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.31)
@@ -1296,8 +1465,6 @@ typedef enum : UInt8 {
     SigDistributionPhaseState_cancelingUpdate = 0x06,
     /// Prohibited: 0x07–0xFF
 } SigDistributionPhaseState;
-
-
 
 /// Table 4.22 defines status codes for Remote Provisioning Server messages that contain a status code.
 /// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.27)

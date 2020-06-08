@@ -26,25 +26,9 @@
             filePath = "../TelinkSigMeshLib/TelinkSigMeshLib/Layers/Network Layer/SigNetworkLayer.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "208"
-            endingLineNumber = "208"
+            startingLineNumber = "209"
+            endingLineNumber = "209"
             landmarkName = "-sendLowerTransportPdu:ofType:withTtl:"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "368A8B69-836E-4B56-B559-0AE448B64FAA"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "../TelinkSigMeshLib/TelinkSigMeshLib/Utils/SDKLibCommand.m"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "3023"
-            endingLineNumber = "3023"
-            landmarkName = "+sendIniCommandModel:successCallback:resultCallback:"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -58,9 +42,41 @@
             filePath = "../TelinkSigMeshLib/TelinkSigMeshLib/Add devices Module/SigAddDeviceManager.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "272"
-            endingLineNumber = "272"
+            startingLineNumber = "279"
+            endingLineNumber = "279"
             landmarkName = "-startAddPeripheral:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "4C49AFA1-3001-41D6-B0AB-D61C3D86D6A5"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../TelinkSigMeshLib/TelinkSigMeshLib/SigMeshLib.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "153"
+            endingLineNumber = "153"
+            landmarkName = "-sendMeshMessage:fromLocalElement:toDestination:withTtl:usingApplicationKey:command:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "9DA876AC-712B-4C63-B65F-E01E194A78FF"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../TelinkSigMeshLib/TelinkSigMeshLib/Layers/Upper Transport Layer/SigUpperTransportPdu.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "124"
+            endingLineNumber = "124"
+            landmarkName = "-initFromLowerTransportAccessMessage:key:forVirtualGroup:"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

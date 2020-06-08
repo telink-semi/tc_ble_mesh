@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigPdu.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/9.
+//  Created by 梁家誌 on 2019/9/9.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -85,6 +85,7 @@ struct EncryptedDataWithMicPdu {
     }
     return self;
 }
+
 - (instancetype)initProvisioningstartPduWithAlgorithm:(Algorithm)algorithm publicKeyType:(PublicKeyType)publicKeyType authenticationMethod:(AuthenticationMethod)method authenticationAction:(UInt8)authenticationAction authenticationSize:(UInt8)authenticationSize {
     if (self = [super init]) {
         self.pduData = [self getProvisioningstartPduWithAlgorithm:algorithm publicKeyType:publicKeyType authenticationMethod:method authenticationAction:authenticationAction authenticationSize:authenticationSize];
@@ -136,7 +137,7 @@ struct EncryptedDataWithMicPdu {
     }
 }
 
-///document in Mesh_v1.0.pdf 5.4.1 Page 238.
+/// document in Mesh_v1.0.pdf 5.4.1 Page 238.
 - (NSData *)getProvisioningInvitePduWithAttentionTimer:(UInt8)timer {
     //SigProvisioningPduType_invite + timer
     struct InvitePdu pdu = {};
@@ -146,7 +147,7 @@ struct EncryptedDataWithMicPdu {
     return pduData;
 }
 
-///document in Mesh_v1.0.pdf 5.4.1.3 Page 241.
+/// document in Mesh_v1.0.pdf 5.4.1.3 Page 241.
 - (NSData *)getProvisioningstartPduWithAlgorithm:(Algorithm)algorithm publicKeyType:(PublicKeyType)publicKeyType authenticationMethod:(AuthenticationMethod)method authenticationAction:(UInt8)authenticationAction authenticationSize:(UInt8)authenticationSize{
     //SigProvisioningPduType_start + Algorithm + Public Key type + authenticationMethod + authenticationAction + authenticationSize
     struct StartPdu pdu = {};
@@ -159,7 +160,7 @@ struct EncryptedDataWithMicPdu {
     return pduData;
 }
 
-///document in Mesh_v1.0.pdf 5.4.1.4 Page 243.
+/// document in Mesh_v1.0.pdf 5.4.1.4 Page 243.
 - (NSData *)getProvisioningPublicKeyPduWithPublicKey:(NSData *)publicKey {
     struct PublicKeyPdu pdu = {};
     pdu.type = SigProvisioningPduType_publicKey;
@@ -169,7 +170,7 @@ struct EncryptedDataWithMicPdu {
     return pduData;
 }
 
-///document in Mesh_v1.0.pdf 5.4.1.6 Page 243.
+/// document in Mesh_v1.0.pdf 5.4.1.6 Page 243.
 - (NSData *)getProvisioningConfirmationPduWithConfirmation:(NSData *)confirmation {
     struct ConfirmationPdu pdu = {};
     pdu.type = SigProvisioningPduType_confirmation;
@@ -179,7 +180,7 @@ struct EncryptedDataWithMicPdu {
     return pduData;
 }
 
-///document in Mesh_v1.0.pdf 5.4.1.7 Page 243.
+/// document in Mesh_v1.0.pdf 5.4.1.7 Page 243.
 - (NSData *)getProvisioningRandomPduWithRandom:(NSData *)random {
     struct RandomPdu pdu = {};
     pdu.type = SigProvisioningPduType_random;
@@ -189,7 +190,7 @@ struct EncryptedDataWithMicPdu {
     return pduData;
 }
 
-///document in Mesh_v1.0.pdf 5.4.1.8 Page 244.
+/// document in Mesh_v1.0.pdf 5.4.1.8 Page 244.
 - (NSData *)getProvisioningEncryptedDataWithMicPduWithEncryptedData:(NSData *)encryptedData {
     struct EncryptedDataWithMicPdu pdu = {};
     pdu.type = SigProvisioningPduType_data;
@@ -223,8 +224,7 @@ struct EncryptedDataWithMicPdu {
         _ivi  = tem >> 7;
         _nid  = tem & 0x7F;
         // The NID must match.
-        // If the Key Refresh procedure is in place, the received packet might have been
-        // encrypted using an old key. We have to try both.
+        // If the Key Refresh procedure is in place, the received packet might have been encrypted using an old key. We have to try both.
         NSMutableArray <SigNetkeyDerivaties *>*keySets = [NSMutableArray array];
         if (_nid == networkKey.nid) {
             [keySets addObject:networkKey.keys];
@@ -237,8 +237,7 @@ struct EncryptedDataWithMicPdu {
         }
         
         // IVI should match the LSB bit of current IV Index.
-        // If it doesn't, and the IV Update procedure is active, the PDU will be
-        // deobfuscated and decoded with IV Index decremented by 1.
+        // If it doesn't, and the IV Update procedure is active, the PDU will be deobfuscated and decoded with IV Index decremented by 1.
         UInt32 index = ivIndex.index;
         if (_ivi != (index & 0x01)) {
             if (ivIndex.updateActive && index > 1) {
@@ -312,13 +311,12 @@ struct EncryptedDataWithMicPdu {
     return nil;
 }
 
-/// Creates Network PDU object from received PDU. The initiator tries
-/// to deobfuscate and decrypt the data using given Network Key and IV Index.
+/// Creates Network PDU object from received PDU. The initiator tries to deobfuscate and decrypt the data using given Network Key and IV Index.
 ///
 /// - parameter pdu:        The data received from mesh network.
+/// - parameter pduType:    The type of the PDU: `.networkPdu` of `.proxyConfiguration`.
 /// - parameter networkKey: The Network Key to decrypt the PDU.
-/// - returns: The deobfuscated and decided Network PDU object, or `nil`,
-///            if the key or IV Index don't match.
+/// - returns: The deobfuscated and decided Network PDU object, or `nil`, if the key or IV Index don't match.
 - (instancetype)initWithDecodePduData:(NSData *)pdu pduType:(SigPduType)pduType usingNetworkKey:(SigNetkeyModel *)networkKey {
     if (self = [super init]) {
         if (pduType != SigPduType_networkPdu && pduType != SigPduType_proxyConfiguration) {
@@ -338,8 +336,7 @@ struct EncryptedDataWithMicPdu {
         _ivi  = tem >> 7;
         _nid  = tem & 0x7F;
         // The NID must match.
-        // If the Key Refresh procedure is in place, the received packet might have been
-        // encrypted using an old key. We have to try both.
+        // If the Key Refresh procedure is in place, the received packet might have been encrypted using an old key. We have to try both.
         NSMutableArray <SigNetkeyDerivaties *>*keySets = [NSMutableArray array];
         if (_nid == networkKey.nid) {
             [keySets addObject:networkKey.keys];
@@ -352,11 +349,10 @@ struct EncryptedDataWithMicPdu {
         }
         
         // IVI should match the LSB bit of current IV Index.
-        // If it doesn't, and the IV Update procedure is active, the PDU will be
-        // deobfuscated and decoded with IV Index decremented by 1.
+        // If it doesn't, and the IV Update procedure is active, the PDU will be deobfuscated and decoded with IV Index decremented by 1.
         UInt32 index = networkKey.ivIndex.index;
         if (_ivi != (index & 0x01)) {
-            if (_networkKey.ivIndex.updateActive && index > 1) {
+            if (networkKey.ivIndex.updateActive && index > 1) {
                 index -= 1;
             } else {
                 return nil;
@@ -490,12 +486,11 @@ struct EncryptedDataWithMicPdu {
     return self;
 }
 
-/// Creates the Network PDU. This method enctypts and obfuscates data
-/// that are to be send to the mesh network.
+/// Creates the Network PDU. This method enctypts and obfuscates data that are to be send to the mesh network.
 ///
 /// - parameter lowerTransportPdu: The data received from higher layer.
-/// - parameter sequence: The SEQ number of the PDU. Each PDU between the source
-///                       and destination must have strictly increasing sequence number.
+/// - parameter pduType:  The type of the PDU: `.networkPdu` of `.proxyConfiguration`.
+/// - parameter sequence: The SEQ number of the PDU. Each PDU between the source and destination must have strictly increasing sequence number.
 /// - parameter ttl: Time To Live.
 /// - returns: The Network PDU object.
 - (instancetype)initWithEncodeLowerTransportPdu:(SigLowerTransportPdu *)lowerTransportPdu pduType:(SigPduType)pduType withSequence:(UInt32)sequence andTtl:(UInt8)ttl {
@@ -564,16 +559,15 @@ struct EncryptedDataWithMicPdu {
     return [[SigNetworkPdu alloc] initWithDecodePduData:pdu pduType:pduType usingNetworkKey:networkKey ivIndex:ivIndex];
 }
 
-/// This method goes over all Network Keys in the mesh network and tries
-/// to deobfuscate and decode the network PDU.
+/// This method goes over all Network Keys in the mesh network and tries to deobfuscate and decode the network PDU.
 ///
 /// - parameter pdu:         The received PDU.
+/// - parameter type:        The type of the PDU: `.networkPdu` of `.proxyConfiguration`.
 /// - parameter meshNetwork: The mesh network for which the PDU should be decoded.
-/// - returns: The deobfuscated and decoded Network PDU, or `nil` if the PDU was not
-///            signed with any of the Network Keys, the IV Index was not valid, or the
-///            PDU was invalid.
+/// - returns: The deobfuscated and decoded Network PDU, or `nil` if the PDU was not signed with any of the Network Keys, the IV Index was not valid, or the PDU was invalid.
 + (SigNetworkPdu *)decodePdu:(NSData *)pdu pduType:(SigPduType)pduType forMeshNetwork:(SigDataSource *)meshNetwork {
-    for (SigNetkeyModel *networkKey in meshNetwork.netKeys) {
+    NSArray *netKeys = [NSArray arrayWithArray:meshNetwork.netKeys];
+    for (SigNetkeyModel *networkKey in netKeys) {
         SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithDecodePduData:pdu pduType:pduType usingNetworkKey:networkKey];
         if (networkPdu) {
             return networkPdu;
@@ -632,7 +626,7 @@ struct EncryptedDataWithMicPdu {
     NSInteger encryptedDataSize = self.pduData.length - micSize - 9;
     NSData *encryptedData = [self.pduData subdataWithRange:NSMakeRange(9, encryptedDataSize)];
     NSData *mic = [self.pduData subdataWithRange:NSMakeRange(9+encryptedDataSize,self.pduData.length - 9- encryptedDataSize)];
-    return[NSString stringWithFormat:@"Network PDU (ivi: 0x%x, nid: 0x%x, ctl: 0x%x, ttl: 0x%x, seq: 0x%x, src: 0x%x, dst: 0x%x, transportPdu: %@, netMic: %@)",_ivi,_nid,_type,_ttl,_sequence,_source,_destination,encryptedData,mic];
+    return[NSString stringWithFormat:@"Network PDU (ivi: 0x%x, nid: 0x%x, ctl: 0x%x, ttl: 0x%x, seq: 0x%x, src: 0x%x, dst: 0x%x, transportPdu: %@, netMic: %@)",_ivi,_nid,_type,_ttl,(unsigned int)_sequence,_source,_destination,encryptedData,mic];
 }
 
 @end
@@ -646,8 +640,50 @@ struct EncryptedDataWithMicPdu {
 
 @end
 
-
+/// 3.9.3 Secure Network beacon
+/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.120)
 @implementation SigSecureNetworkBeacon
+
+- (NSDictionary *)getDictionaryOfSecureNetworkBeacon {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    if (_networkKey && _networkKey.key) {
+        dict[@"networkKey"] = _networkKey.key;
+    }
+    dict[@"keyRefreshFlag"] = [NSNumber numberWithBool:_keyRefreshFlag];
+    dict[@"ivUpdateActive"] = [NSNumber numberWithBool:_ivUpdateActive];
+    if (_networkId) {
+        dict[@"networkId"] = _networkId;
+    }
+    dict[@"ivIndex"] = [NSNumber numberWithInt:_ivIndex];
+    return dict;
+}
+
+- (void)setDictionaryToSecureNetworkBeacon:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:@"networkKey"]) {
+        for (SigNetkeyModel *model in SigDataSource.share.netKeys) {
+            if ([model.key isEqualToString:dictionary[@"networkKey"]]) {
+                _networkKey = model;
+                break;
+            }
+        }
+    }
+    if ([allKeys containsObject:@"keyRefreshFlag"]) {
+        _keyRefreshFlag = [dictionary[@"keyRefreshFlag"] boolValue];
+    }
+    if ([allKeys containsObject:@"ivUpdateActive"]) {
+        _ivUpdateActive = [dictionary[@"ivUpdateActive"] boolValue];
+    }
+    if ([allKeys containsObject:@"networkId"]) {
+        _networkId = dictionary[@"networkId"];
+    }
+    if ([allKeys containsObject:@"ivIndex"]) {
+        _ivIndex = [dictionary[@"ivIndex"] intValue];
+    }
+}
 
 - (instancetype)init {
     if (self = [super init]) {
@@ -677,7 +713,7 @@ struct EncryptedDataWithMicPdu {
         _ivUpdateActive = (tem & 0x02) != 0;
         _networkId = [pdu subdataWithRange:NSMakeRange(2, 8)];
         UInt32 tem10 = 0;
-        memcpy(&tem10, &pduByte + 10, 4);
+        memcpy(&tem10, pduByte + 10, 4);
         _ivIndex = CFSwapInt32HostToBig(tem10);
         // Authenticate beacon using given Network Key.
         if ([_networkId isEqualToData:networkKey.networkId]) {
@@ -701,10 +737,6 @@ struct EncryptedDataWithMicPdu {
     return self;
 }
 
-/// 3.9.3 Secure Network beacon
-/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.120)
-
-
 - (instancetype)initWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive networkId:(NSData *)networkId ivIndex:(UInt32)ivIndex usingNetworkKey:(SigNetkeyModel *)networkKey {
     if (self = [super init]) {
         [super setBeaconType:SigBeaconType_secureNetwork];
@@ -717,12 +749,11 @@ struct EncryptedDataWithMicPdu {
     return self;
 }
 
-/// This method goes over all Network Keys in the mesh network and tries
-/// to parse the beacon.
+/// Creates USecure Network beacon PDU object from received PDU.
 ///
-/// - parameter pdu:         The received PDU.
-/// - parameter meshNetwork: The mesh network for which the PDU should be decoded.
-/// - returns: The beacon object.
+/// - parameter pdu: The data received from mesh network.
+/// - parameter networkKey: The Network Key to validate the beacon.
+/// - returns: The beacon object, or `nil` if the data are invalid.
 + (SigSecureNetworkBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork {
     if (pdu == nil || pdu.length <= 1) {
         TeLogError(@"decodePdu length is less than 1.");
@@ -733,7 +764,8 @@ struct EncryptedDataWithMicPdu {
     memcpy(&tem, pduByte, 1);
     SigBeaconType beaconType = tem;
     if (beaconType == SigBeaconType_secureNetwork) {
-        for (SigNetkeyModel *networkKey in meshNetwork.netKeys) {
+        NSArray *netKeys = [NSArray arrayWithArray:meshNetwork.netKeys];
+        for (SigNetkeyModel *networkKey in netKeys) {
             SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithDecodePdu:pdu usingNetworkKey:networkKey];
             if (beacon) {
                 return beacon;

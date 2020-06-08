@@ -23,7 +23,7 @@
 //  SigAccessLayer.m
 //  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/16.
+//  Created by 梁家誌 on 2019/9/16.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -152,7 +152,8 @@
 - (void)dealloc {
     TeLogWarn(@"_reliableMessageContexts=%@",_reliableMessageContexts);
     [_transactions removeAllObjects];
-    for (SigAcknowledgmentContext *model in _reliableMessageContexts) {
+    NSArray *reliableMessageContexts = [NSArray arrayWithArray:_reliableMessageContexts];
+    for (SigAcknowledgmentContext *model in reliableMessageContexts) {
         [model invalidate];
     }
     [_reliableMessageContexts removeAllObjects];
@@ -181,10 +182,8 @@
         request = context.request;
         [context invalidate];
         [_reliableMessageContexts removeObjectAtIndex:index];
-        TeLogDebug(@"============8.Response %@ receieved (decrypted using key: %@),_reliableMessageContexts=%@",accessPdu,keySet,_reliableMessageContexts);
-    } else {
-        TeLogInfo(@"%@ receieved (decrypted using key: %@)",accessPdu,keySet);
     }
+    TeLogInfo(@"receieved:%@",accessPdu);
     [self handleAccessPdu:accessPdu sendWithSigKeySet:keySet asResponseToRequest:request];
 }
 
@@ -345,7 +344,8 @@
 
 - (void)cancelSigMessageHandle:(SigMessageHandle *)handle {
     TeLogInfo(@"Cancelling messages with op code:0x%x, sent from:0x%x to:0x%x",(unsigned int)handle.opCode,handle.source,handle.destination);
-    for (SigAcknowledgmentContext *model in _reliableMessageContexts) {
+    NSArray *reliableMessageContexts = [NSArray arrayWithArray:_reliableMessageContexts];
+    for (SigAcknowledgmentContext *model in reliableMessageContexts) {
         if (model.request.opCode == handle.opCode && model.source == handle.source &&
         model.destination == handle.destination) {
             [model invalidate];
@@ -409,8 +409,8 @@
 
 - (void)removeAllTimeoutTimerInreliableMessageContexts {
     TeLogInfo(@"============9.3.AccessError.timeout");
-    NSArray *tem = [NSArray arrayWithArray:_reliableMessageContexts];
-    for (SigAcknowledgmentContext *context in tem) {
+    NSArray *reliableMessageContexts = [NSArray arrayWithArray:_reliableMessageContexts];
+    for (SigAcknowledgmentContext *context in reliableMessageContexts) {
         if (context.timeoutTimer == nil) {
             [_reliableMessageContexts removeObject:context];
         }

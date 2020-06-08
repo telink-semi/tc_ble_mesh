@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/11/12.
-//  Copyright © 2019 梁家誌. All rights reserved.
+//  Copyright © 2019 Telink. All rights reserved.
 //
 
 NS_ASSUME_NONNULL_BEGIN

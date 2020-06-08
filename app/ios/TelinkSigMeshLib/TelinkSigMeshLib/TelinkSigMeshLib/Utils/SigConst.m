@@ -24,14 +24,14 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/11/27.
-//  Copyright © 2019 梁家誌. All rights reserved.
+//  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import "SigConst.h"
 
 #pragma mark - Const string
 
-NSString * const kTelinkSigMeshLibVersion = @"v3.2.1";
+NSString * const kTelinkSigMeshLibVersion = @"v3.2.2";
 
 NSString * const kNotifyCommandIsBusyOrNot = @"CommandIsBusyOrNot";
 NSString * const kCommandIsBusyKey = @"IsBusy";
@@ -78,6 +78,12 @@ NSString * const kSigScanRspModel_networkIDData_key = @"sigScanRspModel_networkI
 NSString * const kSaveMeshOTADictKey = @"kSaveMeshOTADictKey";
 /*存储在本地的数据的key，不再存储在cache中，以为苹果设备的存储快满的时候，系统会删除cache文件夹的数据*/
 NSString * const kSaveLocationDataKey = @"mesh.json";
+//oob
+NSString * const kSigOOBModel_sourceType_key = @"kSigOOBModel_sourceType_key";
+NSString * const kSigOOBModel_UUIDString_key = @"kSigOOBModel_UUIDString_key";
+NSString * const kSigOOBModel_OOBString_key = @"kSigOOBModel_OOBString_key";
+NSString * const kSigOOBModel_lastEditTimeString_key = @"kSigOOBModel_lastEditTimeString_key";
+NSString * const kOOBStoreKey = @"kOOBStoreKey";
 
 #pragma mark - Const bool
 
@@ -188,7 +194,7 @@ UInt8 const kStartProvisionAndPublicKeyTimeout = 5;
 UInt8 const kProvisionConfirmationTimeout = 5;
 UInt8 const kProvisionRandomTimeout = 5;
 UInt8 const kSentProvisionEncryptedDataWithMicTimeout = 5;
-UInt8 const kStartMeshConnectTimeout = 10;
+UInt8 const kStartMeshConnectTimeout = 5;
 
 //publish设置的上报周期
 UInt8 const kPublishInterval = 20;

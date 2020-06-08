@@ -23,7 +23,7 @@
 //  SceneListViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/9/25.
+//  Created by 梁家誌 on 2018/9/25.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -124,7 +124,8 @@
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete scene:0x%X",(int)model.number];
             if (model.actionList) {
                 BOOL hasOutLine = NO;
-                for (ActionModel *action in model.actionList) {
+                NSArray *actionList = [NSArray arrayWithArray:model.actionList];
+                for (ActionModel *action in actionList) {
                     SigNodeModel *device = [SigDataSource.share getNodeWithAddress:action.address];
                     if (device.state == DeviceStateOutOfLine) {
                         hasOutLine = YES;

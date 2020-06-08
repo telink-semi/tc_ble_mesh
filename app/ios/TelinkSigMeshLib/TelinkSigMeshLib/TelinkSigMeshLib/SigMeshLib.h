@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigMeshLib.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/15.
+//  Created by 梁家誌 on 2019/8/15.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -31,7 +31,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigNetworkManager,SigMessageHandle,SigMeshLib,SigMeshAddress,SigProxyConfigurationMessage,SDKLibCommand;
+@class SigMessageHandle,SigMeshAddress,SigProxyConfigurationMessage,SDKLibCommand,SigSecureNetworkBeacon;
 
 @protocol SigMessageDelegate <NSObject>
 @optional
@@ -59,6 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)failedToSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination error:(NSError *)error;
 
 - (void)didReceiveSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination;
+- (void)didReceiveSigSecureNetworkBeaconMessage:(SigSecureNetworkBeacon *)message;
 
 @end
 
@@ -66,8 +67,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigMeshLib : NSObject
 /// command list cache.
 @property (nonatomic,strong) NSMutableArray <SDKLibCommand *>*commands;
-/// The Network Layer handler.
-@property (nonatomic,strong) SigNetworkManager *networkManager;
 /// A queue to handle incoming and outgoing messages.
 @property (nonatomic,strong) dispatch_queue_t queue;
 /// A queue to call delegate methods on.
@@ -78,8 +77,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// The sender object should send PDUs created by the manager using any Bearer.
 @property (nonatomic,strong) SigBearer *bearer;
 
-/// The delegate will receive callbacks whenever a complete
-/// Mesh Message has been received and reassembled.
+/// The delegate will receive callbacks whenever a complete Mesh Message has been received and reassembled.
 @property (nonatomic, weak, readonly) id <SigMessageDelegate>delegate;
 @property (nonatomic, weak, readwrite) id <SigMessageDelegate>delegateForDeveloper;
 
@@ -136,10 +134,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 + (SigMeshLib *)share;
-
-#pragma mark - Computed properties
-
-- (void)setNetworkManager:(SigNetworkManager *)networkManager;
 
 #pragma mark - Receive Mesh Messages
 

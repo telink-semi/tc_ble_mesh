@@ -21,17 +21,17 @@
  *******************************************************************************************************/
 //
 //  SigProvisioningData.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/22.
+//  Created by 梁家誌 on 2019/8/22.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
 #import "SigProvisioningData.h"
-#import "Model.h"
+#import "SigModel.h"
 #import "OpenSSLHelper.h"
 #import "ec.h"
-#import "SigEncryptionHelper.h"
+#import "SigECCEncryptHelper.h"
 
 NSString *const sessionKeyOfCalculateKeys = @"sessionKeyOfCalculateKeys";
 NSString *const sessionNonceOfCalculateKeys = @"sessionNonceOfCalculateKeys";
@@ -45,9 +45,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 @property (nonatomic, strong) NSData *deviceConfirmation;
 @property (nonatomic, strong) NSData *deviceRandom;
 
-/// The Confirmation Inputs is built over the provisioning process.
-/// It is composed for: Provisioning Invite PDU, Provisioning Capabilities PDU,
-/// Provisioning Start PDU, Provisioner's Public Key and device's Public Key.
+/// The Confirmation Inputs is built over the provisioning process. It is composed for: Provisioning Invite PDU, Provisioning Capabilities PDU, Provisioning Start PDU, Provisioner's Public Key and device's Public Key.
 @property (nonatomic, strong) NSData *confirmationInputs;//1 + 11 + 5 + 64 + 64
 
 @end
@@ -71,9 +69,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     _unicastAddress = unicastAddress;
 }
 
-/// This method adds the given PDU to the Provisioning Inputs.
-/// Provisioning Inputs are used for authenticating the Provisioner
-/// and the Unprovisioned Device.
+/// This method adds the given PDU to the Provisioning Inputs. Provisioning Inputs are used for authenticating the Provisioner and the Unprovisioned Device.
 ///
 /// This method must be called (in order) for:
 /// * Provisioning Invite
@@ -87,18 +83,14 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     self.confirmationInputs = tem;
 }
 
-/// Call this method when the device Public Key has been
-/// obtained. This must be called after generating keys.
-///
-/// - parameter key: The device Public Key.
-/// - throws: This method throws when generating ECDH Secure
-///           Secret failed.
+/// Call this method when the device Public Key has been obtained. This must be called after generating keys.
+/// @param data The device Public Key.
 - (void)provisionerDidObtainWithDevicePublicKey:(NSData *)data {
     if (data == nil || data.length == 0) {
         TeLogError(@"current piblickey isn't specified.");
         return;
     }
-    self.sharedSecret = [SigEncryptionHelper.share getSharedSecretWithDevicePublicKey:data];
+    self.sharedSecret = [SigECCEncryptHelper.share getSharedSecretWithDevicePublicKey:data];
 }
 
 /// Call this method when the Auth Value has been obtained.
@@ -106,24 +98,17 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     self.authValue = data;
 }
 
-/// Call this method when the device Provisioning Confirmation
-/// has been obtained.
+/// Call this method when the device Provisioning Confirmation has been obtained.
 - (void)provisionerDidObtainWithDeviceConfirmation:(NSData *)data {
     self.deviceConfirmation = data;
 }
 
-/// Call this method when the device Provisioning Random
-/// has been obtained.
+/// Call this method when the device Provisioning Random has been obtained.
 - (void)provisionerDidObtainWithDeviceRandom:(NSData *)data {
     self.deviceRandom = data;
 }
 
-/// This method validates the received Provisioning Confirmation and
-/// matches it with one calculated locally based on the Provisioning
-/// Random received from the device and Auth Value.
-///
-/// - throws: The method throws when the validation failed, or
-///           it was called before all data were ready.
+/// This method validates the received Provisioning Confirmation and matches it with one calculated locally based on the Provisioning Random received from the device and Auth Value.
 - (BOOL)validateConfirmation {
     if (!self.deviceRandom || self.deviceRandom.length == 0 || !self.authValue || self.authValue.length == 0 || !self.sharedSecret || self.sharedSecret.length == 0) {
         TeLogDebug(@"provision info is lack.");
@@ -137,15 +122,12 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     return YES;
 }
 
-/// Returns the Provisioner Confirmation value. The Auth Value
-/// must be set prior to calling this method.
+/// Returns the Provisioner Confirmation value. The Auth Value must be set prior to calling this method.
 - (NSData *)provisionerConfirmation {
     return [self calculateConfirmationWithRandom:self.provisionerRandom authValue:self.authValue];
 }
 
-/// Returns the encrypted Provisioning Data together with MIC.
-/// Data will be encrypted using Session Key and Session Nonce.
-/// For that, all properties should be set when this method is called.
+/// Returns the encrypted Provisioning Data together with MIC. Data will be encrypted using Session Key and Session Nonce. For that, all properties should be set when this method is called.
 /// Returned value is 25 + 8 bytes long, where the MIC is the last 8 bytes.
 - (NSData *)encryptedProvisioningDataWithMic {
     NSDictionary *dict = [self calculateKeys];
@@ -186,11 +168,10 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 
 - (void)generateProvisionerRandomAndProvisionerPublicKey {
     _provisionerRandom = [LibTools createRandomDataWithLength:16];
-    _provisionerPublicKey = [SigEncryptionHelper.share getPublicKeyData];
+    _provisionerPublicKey = [SigECCEncryptHelper.share getPublicKeyData];
 }
 
-/// This method calculates the Provisioning Confirmation based on the
-/// Confirmation Inputs, 16-byte Random and 16-byte AuthValue.
+/// This method calculates the Provisioning Confirmation based on the Confirmation Inputs, 16-byte Random and 16-byte AuthValue.
 ///
 /// - parameter random:    An array of 16 random bytes.
 /// - parameter authValue: The Auth Value calculated based on the Authentication Method.
@@ -210,8 +191,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     return resultData;
 }
 
-/// This method calculates the Session Key, Session Nonce and the Device Key based
-/// on the Confirmation Inputs, 16-byte Provisioner Random and 16-byte device Random.
+/// This method calculates the Session Key, Session Nonce and the Device Key based on the Confirmation Inputs, 16-byte Provisioner Random and 16-byte device Random.
 ///
 /// - returns: The Session Key, Session Nonce and the Device Key.
 - (NSDictionary *)calculateKeys {

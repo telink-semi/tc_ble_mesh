@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigMeshMessage.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/15.
+//  Created by 梁家誌 on 2019/8/15.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 

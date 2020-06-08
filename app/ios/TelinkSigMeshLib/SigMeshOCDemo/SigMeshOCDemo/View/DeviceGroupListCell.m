@@ -23,7 +23,7 @@
 //  DeviceGroupListCell.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -55,7 +55,8 @@
     sender.selected = !sender.isSelected;
     //标准做法，配置多项。
     self.temOptions = [[NSMutableArray alloc] init];
-    for (NSNumber *option in self.options) {
+    NSArray *options = [NSArray arrayWithArray:self.options];
+    for (NSNumber *option in options) {
         NSArray *addresses = [self.model getAddressesWithModelID:option];
         if (addresses && addresses.count > 0) {
             [self.temOptions addObject:option];
@@ -79,7 +80,8 @@
     
     // 根据defaultGroupSubscriptionModels过滤出当前设备存在的modelID，只绑定存在的modelID。
     NSMutableArray *temArray = [NSMutableArray array];
-    for (NSNumber *modelID in SigDataSource.share.defaultGroupSubscriptionModels) {
+    NSArray *defaultGroupSubscriptionModels = [NSArray arrayWithArray:SigDataSource.share.defaultGroupSubscriptionModels];
+    for (NSNumber *modelID in defaultGroupSubscriptionModels) {
         NSArray *addArray = [self.model getAddressesWithModelID:modelID];
         if (addArray && addArray.count > 0) {
             [temArray addObject:modelID];

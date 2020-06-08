@@ -32,28 +32,6 @@
 #import <CoreFoundation/CoreFoundation.h>
 #import <CoreBluetooth/CoreBluetooth.h>
 
-// base controller api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/proj_lib/sig_mesh/interface.h"
-// scene api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/scene.h"
-// time api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/time_model.h"
-// HSL api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/lighting_model_HSL.h"
-// scheduler api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/scheduler.h"
-// remote add devices api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/remote_prov.h"
-// fast provision api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/fast_provision_model.h"
-// mesh ota api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/mesh_ota.h"
-// SendOpParaDebug
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/mesh_common.h"
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/app_heartbeat.h"
-// static oob
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/proj_lib/mesh_crypto/le_crypto.h"
-
 typedef void(^provisionResultCallBack)(BOOL isSuccess);
 typedef void(^keybindResultCallBack)(BOOL isSuccess);
 

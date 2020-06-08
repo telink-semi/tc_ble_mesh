@@ -23,8 +23,8 @@
 //  DTColorPickerImageView.m
 //  ColorPicker
 //
-//  Created by Darktt on 2015/3/19.
-//  Copyright (c) 2015年 Darktt. All rights reserved.
+//  Created by 梁家誌 on 2015/3/19.
+//  Copyright (c) 2015年 Telink. All rights reserved.
 //
 
 #import "DTColorPickerImageView.h"

@@ -23,7 +23,7 @@
 //  FastProvisionAddVC.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2019/9/19.
+//  Created by 梁家誌 on 2019/9/19.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -78,7 +78,7 @@
                     [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanSingleUnProvisionNodeTimeout) object:nil];
                     [weakSelf performSelector:@selector(scanSingleUnProvisionNodeTimeout) withObject:nil afterDelay:5.0];
                 });
-                [SigBluetooth.share scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
+                [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
                         if (unprovisioned) {
                             //=================test==================//
 //                            if (RSSI.intValue <= -50) {
@@ -89,7 +89,7 @@
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanSingleUnProvisionNodeTimeout) object:nil];
                         });
-                        [SigBluetooth.share stopScan];
+                        [SDKLibCommand stopScan];
                         [SigBearer.share changePeripheral:peripheral result:^(BOOL successful) {
                             if (successful) {
                                 [SigBearer.share openWithResult:^(BOOL successful) {
@@ -141,6 +141,7 @@
         [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
     } finish:^(NSError * _Nullable error) {
         TeLogInfo(@"error=%@",error);
+        [weakSelf addFinish];
         [SigBearer.share startMeshConnectWithComplete:nil];
         [weakSelf userAbled:YES];
         weakSelf.isAdding = NO;
@@ -216,6 +217,23 @@
         [self.collectionView reloadData];
         [self scrollowToBottom];
     });
+}
+
+- (void)addFinish {
+    BOOL needRefresh = NO;
+    NSArray *array = [NSArray arrayWithArray:self.source];
+    for (AddDeviceModel *model in array) {
+        if (model.state != AddDeviceModelStateBindSuccess) {
+            model.state = AddDeviceModelStateProvisionFail;
+            needRefresh = YES;
+        }
+    }
+    if (needRefresh) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.collectionView reloadData];
+            [self scrollowToBottom];
+        });
+    }
 }
 
 - (void)scrollowToBottom{

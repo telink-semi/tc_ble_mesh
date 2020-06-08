@@ -23,7 +23,7 @@
 //  HSLViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/8/27.
+//  Created by 梁家誌 on 2018/8/27.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -149,7 +149,7 @@
             address = self.model.address;
         }
         if (kControllerInHSL) {
-            [DemoCommand changeHSLWithAddress:address hue100:self.hslModel.hue*100 saturation100:self.hslModel.saturation*100 brightness100:self.hslModel.lightness*100 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
+            [DemoCommand changeHSLWithAddress:address hue:self.hslModel.hue saturation:self.hslModel.saturation brightness:self.hslModel.lightness responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
         }
 //        else {
 //            [DemoCommand changeHSLWithAddress:address hue100:self.hsvModel.hue*100 saturation100:self.hsvModel.saturation*100 brightness100:self.hsvModel.value*100 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];

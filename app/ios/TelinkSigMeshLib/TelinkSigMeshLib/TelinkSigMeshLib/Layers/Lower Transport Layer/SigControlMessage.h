@@ -23,7 +23,7 @@
 //  SigControlMessage.h
 //  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/16.
+//  Created by 梁家誌 on 2019/9/16.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -31,7 +31,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigSegmentedAccessMessage;
+@class SigSegmentedAccessMessage,SigNetworkPdu;
 
 @interface SigControlMessage : SigLowerTransportPdu
 

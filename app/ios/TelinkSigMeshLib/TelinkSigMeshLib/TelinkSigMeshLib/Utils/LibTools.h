@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  LibTools.h
-//  SigMeshOC
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2018/10/12.
+//  Created by 梁家誌 on 2018/10/12.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -58,12 +58,15 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (NSInteger )secondsFrome2000;
 
-///返回手机当前时间的时区
+/// 返回手机当前时间的时区
 + (NSInteger)currentTimeZoon;
 
 + (NSString *)getNowTimeTimestamp;
 
 + (NSString *)getNowTimeTimestampFrome2000;
+
+/// 返回当前时间字符串格式："yyyy-MM-dd HH:mm:ss"
++ (NSString *)getNowTimeTimeString;
 
 + (NSData *)createNetworkKey;
 
@@ -75,40 +78,40 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (long long)NSDataToUInt:(NSData *)data;
 
-///返回带冒号的mac
+/// 返回带冒号的mac
 + (NSString *)getMacStringWithMac:(NSString *)mac;
 
-///NSData转Uint8
+/// NSData转Uint8
 + (UInt8)uint8FromBytes:(NSData *)fData;
 
-//NSData转Uint16
+/// NSData转Uint16
 + (UInt16)uint16FromBytes:(NSData *)fData;
 
-///NSData转Uint32
+/// NSData转Uint32
 + (UInt32)uint32FromBytes:(NSData *)fData;
 
-///NSData转Uint64
+/// NSData转Uint64
 + (UInt64)uint64FromBytes:(NSData *)fData;
 
-///16进制NSString转Uint8
+/// 16进制NSString转Uint8
 + (UInt8)uint8From16String:(NSString *)string;
 
-///16进制NSString转Uint16
+/// 16进制NSString转Uint16
 + (UInt16)uint16From16String:(NSString *)string;
 
-///16进制NSString转Uint32
+/// 16进制NSString转Uint32
 + (UInt32)uint32From16String:(NSString *)string;
 
-///16进制NSString转Uint64
+/// 16进制NSString转Uint64
 + (UInt64)uint64From16String:(NSString *)string;
 
-///D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8 -> D7C5BD184282F31A0CE00468BC0B8DE8
+/// D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8 -> D7C5BD184282F31A0CE00468BC0B8DE8
 + (NSString *)meshUUIDToUUID:(NSString *)uuid;
 
-///D7C5BD184282F31A0CE00468BC0B8DE8 -> D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8
+/// D7C5BD184282F31A0CE00468BC0B8DE8 -> D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8
 + (NSString *)UUIDToMeshUUID:(NSString *)meshUUID;
 
-//SDK的版本号
+/// SDK的版本号
 + (NSString *)getSDKVersion;
 
 + (float)floatWithdecimalNumber:(double)num;
@@ -168,11 +171,48 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - CRC相关
 
+unsigned short crc16 (unsigned char *pD, int len);
+
 + (UInt32)getCRC32OfData:(NSData *)data;
+
+#pragma mark - AES相关
+
+//加密
+int aes128_ecb_encrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData);
+
+//解密
+int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData);
+
+#pragma mark - base64加解密
+
+#define __BASE64( text )        [LibTools base64StringFromText:text]
+#define __TEXT( base64 )        [LibTools textFromBase64String:base64]
+
+/******************************************************************************
+ 函数名称 : + (NSString *)base64StringFromText:(NSString *)text
+ 函数描述 : 将文本转换为base64格式字符串
+ 输入参数 : (NSString *)text    文本
+ 输出参数 : N/A
+ 返回参数 : (NSString *)    base64格式字符串
+ 备注信息 :
+ ******************************************************************************/
++ (NSString *)base64StringFromText:(NSString *)text;
+
+/******************************************************************************
+ 函数名称 : + (NSString *)textFromBase64String:(NSString *)base64
+ 函数描述 : 将base64格式字符串转换为文本
+ 输入参数 : (NSString *)base64  base64格式字符串
+ 输出参数 : N/A
+ 返回参数 : (NSString *)    文本
+ 备注信息 :
+ ******************************************************************************/
++ (NSString *)textFromBase64String:(NSString *)base64;
 
 #pragma mark - 正则表达式相关
 
 + (BOOL)validateUUID:(NSString *)uuidString;
+
++ (BOOL)validateHex:(NSString *)uuidString;
 
 @end
 

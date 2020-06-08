@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  ProxyProtocolHandler.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/28.
+//  Created by 梁家誌 on 2019/8/28.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -77,12 +77,9 @@
     return (UInt8)(sar << 6);
 }
 
-/// Segments the given data with given message type to 1+ messages
-/// where all but the last one are of the MTU size and the last one
-/// is MTU size or smaller.
+/// Segments the given data with given message type to 1+ messages where all but the last one are of the MTU size and the last one is MTU size or smaller.
 ///
-/// This method implements the Proxy Protocol from Bluetooth Mesh
-/// specification.
+/// This method implements the Proxy Protocol from Bluetooth Mesh specification.
 ///
 /// - parameters:
 ///   - data:        The data to be semgneted.
@@ -125,18 +122,13 @@
     return packets;
 }
 
-/// This method consumes the given data. If the data were segmented,
-/// they are buffored until the last segment is received.
-/// This method returns the message and its type when the last segment
-/// (or the only one) has been received, otherwise it returns `nil`.
+/// This method consumes the given data. If the data were segmented, they are buffored until the last segment is received.
+/// This method returns the message and its type when the last segment (or the only one) has been received, otherwise it returns `nil`.
 ///
-/// The packets must be delivered in order. If a new message is
-/// received while the previous one is still reassembled, the old
-/// one will be disregarded. Invalid messages are disregarded.
+/// The packets must be delivered in order. If a new message is received while the previous one is still reassembled, the old one will be disregarded. Invalid messages are disregarded.
 ///
 /// - parameter data: The data received.
-/// - returns: The message and its type, or `nil`, if more data
-///            are expected.
+/// - returns: The message and its type, or `nil`, if more data are expected.
 - (SigPudModel *)reassembleData:(NSData *)data {
     if (!data || data.length == 0) {
         return nil;
@@ -145,20 +137,17 @@
     SAR sar = [self getSAPFromeData:data];
     SigPduType messageType = [self getPduTypeFromeData:data];
     
-    // Ensure, that only complete message or the first segment may be
-    // processed if the buffer is empty.
+    // Ensure, that only complete message or the first segment may be processed if the buffer is empty.
     if ((_buffer == nil || _buffer.length == 0) && sar != SAR_completeMessage && sar != SAR_firstSegment) {
         return nil;
     }
 
-    // If the new packet is a continuation/lastSegment, it should have the
-    // same message type as the current buffer.
+    // If the new packet is a continuation/lastSegment, it should have the same message type as the current buffer.
     if (_bufferType != messageType && sar != SAR_completeMessage && sar != SAR_firstSegment) {
         return nil;
     }
     
-    // If a new message was received while the old one was
-    // processed, disregard the old one.
+    // If a new message was received while the old one was processed, disregard the old one.
     if (_buffer != nil && (sar == SAR_completeMessage || sar == SAR_firstSegment)) {
         _buffer = nil;
         _bufferType = 0;

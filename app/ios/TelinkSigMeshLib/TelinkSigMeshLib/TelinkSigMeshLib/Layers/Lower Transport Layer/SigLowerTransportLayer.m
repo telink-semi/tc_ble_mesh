@@ -23,7 +23,7 @@
 //  SigLowerTransportLayer.m
 //  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/16.
+//  Created by 梁家誌 on 2019/9/16.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -38,7 +38,6 @@
 #import "SigControlMessage.h"
 #import "SigSegmentedControlMessage.h"
 #import "SigNetworkManager.h"
-#import "SigPdu.h"
 
 @interface SigLowerTransportLayer ()
 @property (nonatomic,strong) NSUserDefaults *defaults;
@@ -65,7 +64,7 @@
 }
 
 - (void)handleNetworkPdu:(SigNetworkPdu *)networkPdu {
-    TeLogDebug(@"receive networkPdu=%@,%@,%d",networkPdu,networkPdu.pduData,networkPdu.isSegmented);
+    TeLogVerbose(@"receive:%@,%@,%d",networkPdu,networkPdu.pduData,networkPdu.isSegmented);
     @synchronized(self) {
         // Some validation, just to be sure. This should pass for sure.
         if (networkPdu.transportPdu.length <= 1) {

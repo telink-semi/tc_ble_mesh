@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/11/12.
-//  Copyright © 2019 梁家誌. All rights reserved.
+//  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import "SigGenericMessage.h"
@@ -2267,7 +2267,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
-    for (SigSensorDescriptorModel *model in _descriptorModels) {
+    NSArray *descriptorModels = [NSArray arrayWithArray:_descriptorModels];
+    for (SigSensorDescriptorModel *model in descriptorModels) {
         [mData appendData:model.getDescriptorParameters];
     }
     return mData;
@@ -4257,7 +4258,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
     UInt16 tem16 = 0;
-    for (NSNumber *num in _schedulers) {
+    NSArray *schedulers = [NSArray arrayWithArray:_schedulers];
+    for (NSNumber *num in schedulers) {
         UInt16 schedulerID = (UInt16)num.intValue;
         tem16 |= (1 << (0xF-schedulerID));
     }

@@ -23,7 +23,7 @@
 //  ReKeyBindViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -65,7 +65,7 @@
     __weak typeof(self) weakSelf = self;
     if (SigBearer.share.isOpen) {
         NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
-        [SigKeyBindManager.share keyBind:self.model.address appkeyModel:SigDataSource.share.curAppkeyModel keyBindType:type.integerValue productID:0 cpsData:nil keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+        [SDKLibCommand keyBind:self.model.address appkeyModel:SigDataSource.share.curAppkeyModel keyBindType:type.integerValue productID:0 cpsData:nil keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             [weakSelf performSelectorOnMainThread:@selector(showKeyBindSuccess) withObject:nil waitUntilDone:YES];
             weakSelf.hasClickKeyBind = NO;
         } fail:^(NSError * _Nonnull error) {

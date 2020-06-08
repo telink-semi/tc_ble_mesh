@@ -23,7 +23,7 @@
 //  HomeItemCell.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -69,10 +69,10 @@
         tempAddress = [NSString stringWithFormat:@"%04X",deviceAddress];
     }
     NSString *tempType = @"";
-    if (btModel.nodeInfo.cps.page0_head.cid == 0x0211) {
-        tempType = [NSString stringWithFormat:@"Pid-%02X",btModel.nodeInfo.cps.page0_head.pid];
+    if ([LibTools uint16From16String:btModel.cid] == kCompanyID) {
+        tempType = [NSString stringWithFormat:@"Pid-%02X",[LibTools uint16From16String:btModel.pid]];
     }else{
-        tempType = [NSString stringWithFormat:@"Cid-%04X",btModel.nodeInfo.cps.page0_head.cid];
+        tempType = [NSString stringWithFormat:@"Cid-%04X",[LibTools uint16From16String:btModel.cid]];
     }
     
     //原做法：显示短地址+亮度+色温

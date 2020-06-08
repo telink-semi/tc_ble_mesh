@@ -23,7 +23,7 @@
 //  ShareVC.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2019/1/24.
+//  Created by 梁家誌 on 2019/1/24.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -239,7 +239,8 @@
     BOOL needChangeProvisionAddress = NO;
     BOOL hasPhoneUUID = NO;
     NSString *curPhoneUUID = [SigDataSource.share getCurrentProvisionerUUID];
-    for (SigProvisionerModel *provision in SigDataSource.share.provisioners) {
+    NSArray *provisioners = [NSArray arrayWithArray:SigDataSource.share.provisioners];
+    for (SigProvisionerModel *provision in provisioners) {
         if ([provision.UUID isEqualToString:curPhoneUUID]) {
             hasPhoneUUID = YES;
             break;
@@ -266,7 +267,8 @@
     if (needChangeProvisionAddress) {
         //修改provisionLocation adress
         UInt16 maxAddr = SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
-        for (SigNodeModel *node in SigDataSource.share.nodes) {
+        NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.nodes];
+        for (SigNodeModel *node in nodes) {
             NSInteger curMax = node.address + node.elements.count - 1;
             if (curMax > maxAddr) {
                 maxAddr = curMax;

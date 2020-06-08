@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2020/4/2.
-//  Copyright © 2020 梁家誌. All rights reserved.
+//  Copyright © 2020 Telink. All rights reserved.
 //
 
 #import "SigFastProvisionAddManager.h"
@@ -36,7 +36,10 @@
 @property (nonatomic, assign) UInt16 address;
 @property (nonatomic, strong) NSData *deviceKey;
 @end
+
+
 @implementation SigFastProvisionModel
+
 - (NSData *)deviceKey {
     if (!_deviceKey && _macAddress && _macAddress.length) {
         Byte byte[10];
@@ -49,6 +52,7 @@
     }
     return _deviceKey;;
 }
+
 - (BOOL)isEqual:(id)object{
     if ([object isKindOfClass:[SigFastProvisionModel class]]) {
         return [_macAddress isEqualToData:[(SigFastProvisionModel *)object macAddress]];
@@ -56,21 +60,23 @@
         return NO;
     }
 }
+
 @end
+
 
 @interface SigFastProvisionAddManager ()
 @property (nonatomic, assign) SigFastProvisionStatus  fastProvisionStatus;
 @property (nonatomic, assign) UInt16 provisionAddress;
 @property (nonatomic, assign) UInt16 productId;
 @property (nonatomic, strong) SigPage0 *page0;
-@property (nonatomic,copy) ScanCallbackOfFastProvisionCallBack scanResponseBlock;
-@property (nonatomic,copy) StartProvisionCallbackOfFastProvisionCallBack startProvisionBlock;
-@property (nonatomic,copy) AddSingleDeviceSuccessOfFastProvisionCallBack singleSuccessBlock;
-@property (nonatomic,copy) ErrorBlock finishBlock;
+@property (nonatomic, copy) ScanCallbackOfFastProvisionCallBack scanResponseBlock;
+@property (nonatomic, copy) StartProvisionCallbackOfFastProvisionCallBack startProvisionBlock;
+@property (nonatomic, copy) AddSingleDeviceSuccessOfFastProvisionCallBack singleSuccessBlock;
+@property (nonatomic, copy) ErrorBlock finishBlock;
 @property (nonatomic, strong) NSData *compositionData;
 @property (nonatomic, strong) NSMutableArray <SigFastProvisionModel *>*scanMacAddressList;
 @property (nonatomic, strong) NSMutableArray <SigFastProvisionModel *>*setAddressList;
-@property (nonatomic,assign) BOOL currentConnectedNodeIsUnprovisioned;
+@property (nonatomic, assign) BOOL currentConnectedNodeIsUnprovisioned;
 
 @end
 
@@ -190,7 +196,7 @@
     SigFastProvisionModel *model = self.scanMacAddressList.firstObject;
     __weak typeof(self) weakSelf = self;
     [self fastProvisionSetAddressWithProvisionAddress:self.provisionAddress macAddressData:model.macAddress toDestination:model.sourceUnicastAddress successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (((responseMessage.opCode >> 16) & 0xFF) == SigOpCode_VendorID_MeshAddressSetStatus) {
             if (responseMessage.parameters.length >= 8) {
                 NSData *mac = [responseMessage.parameters subdataWithRange:NSMakeRange(0, 6)];
@@ -263,10 +269,18 @@
         if (self.setAddressList.count) {
             [self setNetworkInfo];
         } else {
-            NSString *errstr = @"SigFastProvisionAddManager scaned unprovision device fail.";
-            TeLogError(@"%@",errstr);
-            NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
-            [self callbackFastProvisionError:err];
+            __weak typeof(self) weakSelf = self;
+            UInt16 delayMillisecond = 100;
+            [self fastProvisionCompleteWithDelayMillisecond:delayMillisecond successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
+                
+            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                NSString *errstr = @"SigFastProvisionAddManager scaned unprovision device fail.";
+                TeLogError(@"%@",errstr);
+                NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf performSelector:@selector(callbackFastProvisionError:) withObject:err afterDelay:0.3];
+                });
+            }];
         }
     }
 }
@@ -331,7 +345,8 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
     self.fastProvisionStatus = SigFastProvisionStatus_complete;
-    for (SigFastProvisionModel *fastModel in self.setAddressList) {
+    NSArray *setAddressList = [NSArray arrayWithArray:self.setAddressList];
+    for (SigFastProvisionModel *fastModel in setAddressList) {
         SigNodeModel *model = [[SigNodeModel alloc] init];
         [model setAddress:fastModel.address];
         [model setAddSigAppkeyModelSuccess:SigDataSource.share.curAppkeyModel];
@@ -350,7 +365,7 @@
     [SigDataSource.share saveLocationData];
     [SigDataSource.share saveLocationProvisionAddress:self.provisionAddress-1];
 
-    for (SigFastProvisionModel *model in self.setAddressList) {
+    for (SigFastProvisionModel *model in setAddressList) {
         if (self.singleSuccessBlock) {
             self.singleSuccessBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], model.address, model.productId);
         }
@@ -367,13 +382,20 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
     self.fastProvisionStatus = SigFastProvisionStatus_timeout;
-    if (self.finishBlock) {
-        NSString *errstr = [NSString stringWithFormat:@"Fast provision is timeout, current status is %d.",self.fastProvisionStatus];
-        TeLogError(@"%@",errstr);
-        NSError *err = [NSError errorWithDomain:errstr code:-self.fastProvisionStatus userInfo:nil];
-        self.finishBlock(err);
-    }
-    self.fastProvisionStatus = SigFastProvisionStatus_idle;
+    
+    __weak typeof(self) weakSelf = self;
+    UInt16 delayMillisecond = 100;
+    [self fastProvisionCompleteWithDelayMillisecond:delayMillisecond successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
+        
+    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        if (weakSelf.finishBlock) {
+            NSString *errstr = [NSString stringWithFormat:@"Fast provision is timeout:60s, current status is %d.",weakSelf.fastProvisionStatus];
+            TeLogError(@"%@",errstr);
+            NSError *err = [NSError errorWithDomain:errstr code:-weakSelf.fastProvisionStatus userInfo:nil];
+            weakSelf.finishBlock(err);
+        }
+        weakSelf.fastProvisionStatus = SigFastProvisionStatus_idle;
+    }];
 }
 
 - (void)callbackFastProvisionError:(NSError *)error {

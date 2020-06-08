@@ -21,30 +21,15 @@
  *******************************************************************************************************/
 //
 //  SigBluetooth.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/16.
+//  Created by 梁家誌 on 2019/8/16.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
-
-typedef void(^bleInitSuccessCallback)(CBCentralManager *central);
-typedef void(^bleCentralUpdateStateCallback)(CBCentralManagerState state);
-typedef void(^bleEnableCallback)(CBCentralManager *central,BOOL enable);
-typedef void(^bleScanPeripheralCallback)(CBPeripheral *peripheral, NSDictionary<NSString *, id> *advertisementData, NSNumber *RSSI, BOOL unprovisioned);
-typedef void(^bleScanSpecialPeripheralCallback)(CBPeripheral *peripheral, NSDictionary<NSString *, id> *advertisementData, NSNumber *RSSI, BOOL successful);
-typedef void(^bleConnectPeripheralCallback)(CBPeripheral *peripheral,BOOL successful);
-typedef void(^bleDiscoverServicesCallback)(CBPeripheral *peripheral,BOOL successful);
-typedef void(^bleChangeNotifyCallback)(CBPeripheral *peripheral,BOOL isNotifying);
-typedef void(^bleReadOTACharachteristicCallback)(CBCharacteristic *characteristic,BOOL successful);
-typedef void(^bleCancelConnectCallback)(CBPeripheral *peripheral,BOOL successful);
-typedef void(^bleCancelAllConnectCallback)(void);
-typedef void(^bleDisconnectCallback)(CBPeripheral *peripheral,NSError *error);
-typedef void(^bleIsReadyToSendWriteWithoutResponseCallback)(CBPeripheral *peripheral);
-typedef void(^bleDidUpdateValueForCharacteristicCallback)(CBPeripheral *peripheral,CBCharacteristic *characteristic);
 
 @interface SigBluetooth : NSObject
 /// Default is NO.
@@ -67,7 +52,7 @@ typedef void(^bleDidUpdateValueForCharacteristicCallback)(CBPeripheral *peripher
 
 - (void)setBluetoothCentralUpdateStateCallback:(bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback;
 
-- (void)setBluetoothDisconnectCallback:(bleDisconnectCallback)bluetoothDisconnectCallback;
+- (void)setBluetoothDisconnectCallback:(_Nullable bleDisconnectCallback)bluetoothDisconnectCallback;
 
 - (void)scanUnprovisionedDevicesWithResult:(bleScanPeripheralCallback)result;
 
@@ -76,6 +61,8 @@ typedef void(^bleDidUpdateValueForCharacteristicCallback)(CBPeripheral *peripher
 - (void)setBluetoothIsReadyToSendWriteWithoutResponseCallback:(bleIsReadyToSendWriteWithoutResponseCallback)bluetoothIsReadyToSendWriteWithoutResponseCallback;
 
 - (void)setBluetoothDidUpdateValueForCharacteristicCallback:(bleDidUpdateValueForCharacteristicCallback)bluetoothDidUpdateValueForCharacteristicCallback;
+
+- (void)setBluetoothDidUpdateOnlineStatusValueCallback:(bleDidUpdateValueForCharacteristicCallback)bluetoothDidUpdateOnlineStatusValueCallback;
 
 - (void)scanMeshNodeWithPeripheralUUID:(NSString *)peripheralUUID timeout:(NSTimeInterval)timeout resultBlock:(bleScanSpecialPeripheralCallback)block;
 

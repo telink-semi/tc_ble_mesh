@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/11/27.
-//  Copyright © 2019 梁家誌. All rights reserved.
+//  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import "BackgroundTimer.h"
@@ -79,4 +79,5 @@
 - (void)dealloc {
     [self invalidate];
 }
+
 @end

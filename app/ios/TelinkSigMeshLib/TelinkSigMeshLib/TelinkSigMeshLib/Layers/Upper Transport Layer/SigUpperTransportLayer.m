@@ -23,7 +23,7 @@
 //  SigUpperTransportLayer.m
 //  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/16.
+//  Created by 梁家誌 on 2019/9/16.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -36,6 +36,7 @@
 #import "SigControlMessage.h"
 #import "SigLowerTransportLayer.h"
 #import "SigMeshLib.h"
+#import "SigAccessPdu.h"
 
 @interface SigUpperTransportModel : NSObject
 @property (nonatomic,strong) SigUpperTransportPdu *pdu;
@@ -158,7 +159,7 @@
     // handler data. If so, cancel it.
     NSMutableArray *array = _queues[@(handle.destination)];
     if (array == nil || array.count == 0) {
-        TeLogDebug(@"array == nil || array.count == 0");
+//        TeLogDebug(@"array == nil || array.count == 0");
         return;
     }
     SigUpperTransportModel *model = array.firstObject;

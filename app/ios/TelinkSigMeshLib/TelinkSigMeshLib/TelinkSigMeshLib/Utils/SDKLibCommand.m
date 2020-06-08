@@ -21,14 +21,15 @@
  *******************************************************************************************************/
 //
 //  SDKLibCommand.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/4.
+//  Created by 梁家誌 on 2019/9/4.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import "SDKLibCommand.h"
-#import "SigEncryptionHelper.h"
+#import "SigECCEncryptHelper.h"
+#import "SigKeyBindManager.h"
 
 @interface SDKLibCommand ()
 @property (nonatomic,strong) NSTimer *busyTimer;
@@ -2550,14 +2551,17 @@
         return;
     }
     NSMutableArray *addresses = [NSMutableArray array];
-    for (SigElementModel *element in node.elements) {
+    NSArray *elements = [NSArray arrayWithArray:node.elements];
+    for (SigElementModel *element in elements) {
         element.parentNode = node;
         // Add Unicast Addresses of all Elements of the Provisioner's Node.
         [addresses addObject:@(element.unicastAddress)];
         // Add all addresses that the Node's Models are subscribed to.
-        for (SigModelIDModel *model in element.models) {
+        NSArray *models = [NSArray arrayWithArray:element.models];
+        for (SigModelIDModel *model in models) {
             if (model.subscribe && model.subscribe.count > 0) {
-                for (NSString *addr in model.subscribe) {
+                NSArray *subscribe = [NSArray arrayWithArray:model.subscribe];
+                for (NSString *addr in subscribe) {
                     UInt16 indAddr = [LibTools uint16From16String:addr];
                     [addresses addObject:@(indAddr)];
                 }
@@ -3095,7 +3099,7 @@
     [SigDataSource.share configData];
 
     //初始化ECC算法的公钥
-    [SigEncryptionHelper.share eccInit];
+    [SigECCEncryptHelper.share eccInit];
     
     //初始化添加设备的参数
     [SigAddDeviceManager.share setNeedDisconnectBetweenProvisionToKeyBind:NO];
@@ -3104,7 +3108,6 @@
     [[SigBluetooth share] bleInit:^(CBCentralManager * _Nonnull central) {
         TeLogInfo(@"finish init SigBluetooth.");
         [SigMeshLib share];
-        [SigMeshLib.share setNetworkManager:SigNetworkManager.share];
 //        [SigMeshLib.share setAcknowledgmentMessageInterval:5.0];
 //        [SigMeshLib.share setAcknowledgmentMessageTimeout:40.0];
     }];
@@ -3126,13 +3129,28 @@
     [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
 }
 
++ (void)updateIvIndexWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive networkId:(NSData *)networkId ivIndex:(UInt32)ivIndex usingNetworkKey:(SigNetkeyModel *)networkKey {
+    SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:keyRefreshFlag ivUpdateActive:ivUpdateActive networkId:networkId ivIndex:ivIndex usingNetworkKey:networkKey];
+    //==========test=========//
+    TeLogVerbose(@"==========updateIvIndex=0x%x",ivIndex);
+    //==========test=========//
+    TeLogInfo(@"send updateIvIndex SecureNetworkBeacon=%@",[LibTools convertDataToHexStr:beacon.pduData]);
+    if (NSThread.currentThread.isMainThread) {
+        NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
+        [oprationQueue addOperationWithBlock:^{
+            //这个block语句块在子线程中执行
+            NSLog(@"oprationQueue");
+            [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
+        }];
+    }
+}
+
 + (void)statusNowTime {
     //time_auth = 1;//每次无条件接受这个时间指令。
     UInt64 seconds = (UInt64)[LibTools secondsFrome2000];
     [NSTimeZone resetSystemTimeZone]; // 重置手机系统的时区
     NSInteger offset = [NSTimeZone localTimeZone].secondsFromGMT;
     UInt8 zoneOffset = (UInt8)(offset/60/15+64);//时区=分/15+64
-//    TeLogInfo(@"设置秒数：%llu，时区：%d",seconds,zoneOffset);
     SigTimeModel *timeModel = [[SigTimeModel alloc] initWithTAISeconds:seconds subSeconds:0 uncertainty:0 timeAuthority:1 TAI_UTC_Delta:0 timeZoneOffset:zoneOffset];
     [self timeStatusWithDestination:kMeshAddress_allNodes timeModel:timeModel retryCount:0 responseMaxCount:0 successCallback:nil resultCallback:nil];
 }
@@ -3169,7 +3187,6 @@
         return;
     }
 }
-
 
 /**
  function 1:AUTO if you need do provision , you should call this method, and it'll call back what you need
@@ -3219,7 +3236,7 @@ function 1:special if you need do provision , you should call this method, and i
 /// @param provisionFail callback when provision fail.
 /// @param keyBindSuccess callback when keybind success.
 /// @param keyBindFail callback when keybind fail.
-- (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
++ (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
     [SigAddDeviceManager.share startAddDeviceWithSigAddConfigModel:configModel provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail];
 }
 
@@ -3233,7 +3250,7 @@ function 1:special if you need do provision , you should call this method, and i
 /// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionTpye_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)startProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
++ (void)startProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     if (provisionType == ProvisionTpye_NoOOB) {
         TeLogVerbose(@"start noOob provision.");
         [SigProvisioningManager.share provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex provisionSuccess:provisionSuccess fail:fail];
@@ -3257,7 +3274,7 @@ function 1:special if you need do provision , you should call this method, and i
 /// @param cpsData the elements info need to save in node when keyBindType is KeyBindTpye_Fast.
 /// @param keyBindSuccess callback when keybind success.
 /// @param fail callback when provision fail.
-- (void)startKeyBindWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress appKey:(NSData *)appkey appkeyIndex:(UInt16)appkeyIndex netkeyIndex:(UInt16)netkeyIndex keyBindType:(KeyBindTpye)keyBindType productID:(UInt16)productID cpsData:(NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail {
++ (void)startKeyBindWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress appKey:(NSData *)appkey appkeyIndex:(UInt16)appkeyIndex netkeyIndex:(UInt16)netkeyIndex keyBindType:(KeyBindTpye)keyBindType productID:(UInt16)productID cpsData:(NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail {
     [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
         if (successful) {
             SigAppkeyModel *appkeyModel = [SigDataSource.share getAppkeyModelWithAppkeyIndex:appkeyIndex];
@@ -3277,6 +3294,36 @@ function 1:special if you need do provision , you should call this method, and i
             }
         }
     }];
+}
+
+/// Do key bound(纯keyBind接口)
++ (void)keyBind:(UInt16)address appkeyModel:(SigAppkeyModel *)appkeyModel keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail {
+    [SigKeyBindManager.share keyBind:address appkeyModel:appkeyModel keyBindType:type productID:productID cpsData:cpsData keyBindSuccess:keyBindSuccess fail:fail];
+}
+
++ (CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral {
+    return [SigBluetooth.share getCharacteristicWithUUIDString:uuid OfPeripheral:peripheral];
+}
+
++ (void)setBluetoothCentralUpdateStateCallback:(bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback {
+    [SigBluetooth.share setBluetoothCentralUpdateStateCallback:bluetoothCentralUpdateStateCallback];
+}
+
+#pragma mark Scan API
++ (void)scanUnprovisionedDevicesWithResult:(bleScanPeripheralCallback)result {
+    [SigBluetooth.share scanUnprovisionedDevicesWithResult:result];
+}
+
++ (void)scanProvisionedDevicesWithResult:(bleScanPeripheralCallback)result {
+    [SigBluetooth.share scanProvisionedDevicesWithResult:result];
+}
+
++ (void)scanMeshNodeWithPeripheralUUID:(NSString *)peripheralUUID timeout:(NSTimeInterval)timeout resultBlock:(bleScanSpecialPeripheralCallback)block {
+    [SigBluetooth.share scanMeshNodeWithPeripheralUUID:peripheralUUID timeout:timeout resultBlock:block];
+}
+
++ (void)stopScan {
+    [SigBluetooth.share stopScan];
 }
 
 @end

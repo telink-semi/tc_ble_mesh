@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/11/27.
-//  Copyright © 2019 梁家誌. All rights reserved.
+//  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -39,27 +39,19 @@ UIKIT_EXTERN NSString * const kTelinkSigMeshLibVersion;
 UIKIT_EXTERN NSString * const kNotifyCommandIsBusyOrNot;
 UIKIT_EXTERN NSString * const kCommandIsBusyKey;
 
-/// Error thrown when the local Provisioner does not have
-/// a Unicast Address specified and is not able to send
-/// requested message.
+/// Error thrown when the local Provisioner does not have a Unicast Address specified and is not able to send requested message.
 UIKIT_EXTERN NSString * const AccessError_invalidSource;
-/// Thrown when trying to send a message using an Element
-/// that does not belong to the local Provisioner's Node.
+/// Thrown when trying to send a message using an Element that does not belong to the local Provisioner's Node.
 UIKIT_EXTERN NSString * const AccessError_invalidElement;
-/// Throwm when the given TTL is not valid. Valid TTL must
-/// be 0 or in range 2...127.
+/// Throwm when the given TTL is not valid. Valid TTL must be 0 or in range 2...127.
 UIKIT_EXTERN NSString * const AccessError_invalidTtl;
-/// Thrown when the destination Address is not known and the
-/// library cannot determine the Network Key to use.
+/// Thrown when the destination Address is not known and the library cannot determine the Network Key to use.
 UIKIT_EXTERN NSString * const AccessError_invalidDestination;
-/// Thrown when trying to send a message from a Model that
-/// does not have any Application Key bound to it.
+/// Thrown when trying to send a message from a Model that does not have any Application Key bound to it.
 UIKIT_EXTERN NSString * const AccessError_modelNotBoundToAppKey;
-/// Error thrown when the Provisioner is trying to delete
-/// the last Network Key from the Node.
+/// Error thrown when the Provisioner is trying to delete the last Network Key from the Node.
 UIKIT_EXTERN NSString * const AccessError_cannotDelete;
-/// Thrown, when the acknowledgment has not been received until
-/// the time run out.
+/// Thrown, when the acknowledgment has not been received until the time run out.
 UIKIT_EXTERN NSString * const AccessError_timeout;
 
 
@@ -95,14 +87,20 @@ UIKIT_EXTERN NSString * const kSigScanRspModel_nodeIdentityData_key;
 UIKIT_EXTERN NSString * const kSigScanRspModel_networkIDData_key;
 //meshOTA
 UIKIT_EXTERN NSString * const kSaveMeshOTADictKey;
-/*存储在本地的数据的key，不再存储在cache中，以为苹果设备的存储快满的时候，系统会删除cache文件夹的数据*/
+/*存储在本地的数据的key，不再存储在cache中，因为苹果设备的存储快满的时候，系统会删除cache文件夹的数据*/
 UIKIT_EXTERN NSString * const kSaveLocationDataKey;//@"mesh.json"
+//oob
+UIKIT_EXTERN NSString * const kSigOOBModel_sourceType_key;
+UIKIT_EXTERN NSString * const kSigOOBModel_UUIDString_key;
+UIKIT_EXTERN NSString * const kSigOOBModel_OOBString_key;
+UIKIT_EXTERN NSString * const kSigOOBModel_lastEditTimeString_key;
+UIKIT_EXTERN NSString * const kOOBStoreKey;
 
 #pragma mark - Const bool
 
-//标记是否添加未广播蓝牙mac地址的设备，默认不添加
+/// 标记是否添加未广播蓝牙mac地址的设备，默认不添加
 UIKIT_EXTERN BOOL const kAddNotAdvertisementMac;
-//json中是否保存MacAddress，默认保存
+/// json中是否保存MacAddress，默认保存
 UIKIT_EXTERN BOOL const kSaveMacAddressToJson;
 
 
@@ -110,7 +108,7 @@ UIKIT_EXTERN BOOL const kSaveMacAddressToJson;
 
 UIKIT_EXTERN UInt16 const CTL_TEMP_MIN;// 800
 UIKIT_EXTERN UInt16 const CTL_TEMP_MAX;// 20000
-UIKIT_EXTERN UInt8 const TTL_DEFAULT;// 5, max relay count = TTL_DEFAULT - 1
+UIKIT_EXTERN UInt8 const TTL_DEFAULT;// 10, max relay count = TTL_DEFAULT - 1
 UIKIT_EXTERN UInt16 const LEVEL_OFF;// -32768
 UIKIT_EXTERN UInt16 const LUM_OFF;// 0
 
@@ -212,25 +210,25 @@ UIKIT_EXTERN UInt8 const kProvisionRandomTimeout;// 5
 UIKIT_EXTERN UInt8 const kSentProvisionEncryptedDataWithMicTimeout;// 5
 UIKIT_EXTERN UInt8 const kStartMeshConnectTimeout;// 10
 
-//publish设置的上报周期
+/// publish设置的上报周期
 UIKIT_EXTERN UInt8 const kPublishInterval;// 20
-//time model设置的上报周期
+/// time model设置的上报周期
 UIKIT_EXTERN UInt8 const kTimePublishInterval;// 20
-//离线检测的时长
+/// 离线检测的时长
 UIKIT_EXTERN UInt8 const kOfflineInterval;// = (kPublishInterval * 3 + 1)
 
-//SIGParameters
+/// SIGParameters
 UIKIT_EXTERN UInt8 const kSigmodel_SIGParameters;// 1
-//kCmdReliable_SIGParameters: 1 means send reliable cmd ,and the node will send rsp ,0 means unreliable ,will not send
+/// kCmdReliable_SIGParameters: 1 means send reliable cmd ,and the node will send rsp ,0 means unreliable ,will not send
 UIKIT_EXTERN UInt8 const kCmdReliable_SIGParameters;// 1
 UIKIT_EXTERN UInt8 const kCmdUnReliable_SIGParameters;// 0
 
-//Telink默认的企业id
+/// Telink默认的企业id
 UIKIT_EXTERN UInt16 const kCompanyID;// 0x0211
 
-//json数据导入本地，本地地址
+/// json数据导入本地，本地地址
 UIKIT_EXTERN UInt8 const kLocationAddress;// 1
-//json数据生成，生成默认的短地址范围、组地址范围、场景id范围(当前默认一个provisioner，且所有平台使用同一个provisioner)
+/// json数据生成，生成默认的短地址范围、组地址范围、场景id范围(当前默认一个provisioner，且所有平台使用同一个provisioner)
 UIKIT_EXTERN UInt8 const kAllocatedUnicastRangeLowAddress;// 1
 UIKIT_EXTERN UInt8 const kAllocatedUnicastRangeHighAddress;// 0xff
 
@@ -240,7 +238,7 @@ UIKIT_EXTERN UInt16 const kAllocatedGroupRangeHighAddress;// 0xC0ff
 UIKIT_EXTERN UInt8 const kAllocatedSceneRangeLowAddress;// 1
 UIKIT_EXTERN UInt8 const kAllocatedSceneRangeHighAddress;// 0xf
 
-//需要response的指令的默认重试次数，默认为3，客户可修改
+/// 需要response的指令的默认重试次数，默认为3，客户可修改
 UIKIT_EXTERN UInt8 const kAcknowledgeMessageDefaultRetryCount;// 0x3
 
 /*SDK的command list存在需要response的指令，正在等待response或者等待超时。*/

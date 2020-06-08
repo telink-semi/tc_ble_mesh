@@ -21,13 +21,14 @@
  *******************************************************************************************************/
 //
 //  SigConfigMessage.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/15.
+//  Created by 梁家誌 on 2019/8/15.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
 #import "SigConfigMessage.h"
+#import "CBUUID+Hex.h"
 
 @implementation SigConfigMessage
 
@@ -307,7 +308,8 @@
     [mData appendData:[NSData dataWithBytes:&tem2 length:2]];
     tem2 = self.features.rawValue;
     [mData appendData:[NSData dataWithBytes:&tem2 length:2]];
-    for (SigElementModel *elementModel in self.elements) {
+    NSArray *elements = [NSArray arrayWithArray:self.elements];
+    for (SigElementModel *elementModel in elements) {
         [mData appendData:elementModel.getElementData];
     }
     return mData;
@@ -3072,7 +3074,8 @@
     tem = self.modelIdentifier;
     data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
-    for (NSNumber *addressNumber in self.addresses) {
+    NSArray *addresses = [NSArray arrayWithArray:self.addresses];
+    for (NSNumber *addressNumber in addresses) {
         UInt16 address = addressNumber.intValue;
         data = [NSData dataWithBytes:&address length:2];
         [mData appendData:data];
@@ -3231,7 +3234,8 @@
     tem = self.modelIdentifier;
     data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
-    for (NSNumber *addressNumber in self.addresses) {
+    NSArray *addresses = [NSArray arrayWithArray:self.addresses];
+    for (NSNumber *addressNumber in addresses) {
         UInt16 address = addressNumber.intValue;
         data = [NSData dataWithBytes:&address length:2];
         [mData appendData:data];

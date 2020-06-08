@@ -23,7 +23,7 @@
 //  ChooseAndAddDeviceVC.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2019/7/4.
+//  Created by 梁家誌 on 2019/7/4.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -76,7 +76,7 @@ typedef enum : NSUInteger {
     [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
             TeLogDebug(@"close success.");
-            [SigBluetooth.share scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
+            [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
                 if (unprovisioned) {
                     AddDeviceStateModel *model = [[AddDeviceStateModel alloc] init];
                     model.peripheral = peripheral;
@@ -104,7 +104,8 @@ typedef enum : NSUInteger {
         return;
     }
     NSMutableArray *unprovisionList = [NSMutableArray array];
-    for (AddDeviceStateModel *model in self.selectDevices) {
+    NSArray *selectDevices = [NSArray arrayWithArray:self.selectDevices];
+    for (AddDeviceStateModel *model in selectDevices) {
         if (model.state == AddStateScan) {
             [unprovisionList addObject:model];
         }
@@ -123,7 +124,7 @@ typedef enum : NSUInteger {
         if (successful) {
             NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
             [oprationQueue addOperationWithBlock:^{
-                for (AddDeviceStateModel *model in weakSelf.selectDevices) {
+                for (AddDeviceStateModel *model in selectDevices) {
                     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                     CBPeripheral *peripheral = model.peripheral;
                     UInt16 provisionAddress = [SigDataSource.share provisionAddress];
@@ -135,7 +136,18 @@ typedef enum : NSUInteger {
                     NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
                     model.state = AddStateProvisioning;
                     [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                    [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:ProvisionTpye_NoOOB staticOOBData:nil keyBindType:type.integerValue productID:0 cpsData:nil provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+                    
+                    //选择添加新增逻辑：判断本地是否存在该UUID的OOB数据，存在则使用static OOB添加，不存在则使用no OOB添加。
+                    SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
+                    SigOOBModel *oobModel = [SigDataSource.share getSigOOBModelWithUUID:rspModel.advUuid];
+                    ProvisionTpye provisionType = ProvisionTpye_NoOOB;
+                    NSData *staticOOBData = nil;
+                    if (oobModel && oobModel.OOBString && oobModel.OOBString.length == 32) {
+                        provisionType = ProvisionTpye_StaticOOB;
+                        staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
+                    }
+                    
+                    [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:type.integerValue productID:0 cpsData:nil provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                         model.state = AddStateKeybinding;
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
                     } provisionFail:^(NSError * _Nonnull error) {
@@ -166,7 +178,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)scanFinish{
-    [SigBluetooth.share stopScan];
+    [SDKLibCommand stopScan];
     [self userAbled:YES];
 }
 
@@ -189,7 +201,7 @@ typedef enum : NSUInteger {
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(scanFinish) object:nil];
     });
-    [SigBluetooth.share stopScan];
+    [SDKLibCommand stopScan];
 }
 
 - (void)userAbled:(BOOL)able{

@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/10/22.
-//  Copyright © 2019 梁家誌. All rights reserved.
+//  Copyright © 2019 Telink. All rights reserved.
 //
 
 #ifndef TelinkSigMeshLibPrefixHeader_pch
@@ -36,45 +36,29 @@
 #import <CoreBluetooth/CoreBluetooth.h>
 
 #import "SigConst.h"
-#import "SigLogger.h"
 #import "SigEnumeration.h"
-#import "Model.h"
-#import "SigIvIndex.h"
+#import "SigStruct.h"
+#import "SigLogger.h"
+#import "SigPdu.h"
+#import "SigModel.h"
 #import "BackgroundTimer.h"
 #import "SigBluetooth.h"
 #import "LibTools.h"
 #import "SigDataSource.h"
-#import "SigDataHandler.h"
-#import "SigPdu.h"
 #import "SigBearer.h"
-#import "SigStruct.h"
 #import "SDKLibCommand.h"
 #import "SigProvisioningManager.h"
-#import "SigProvisioningData.h"
-#import "SigKeyBindManager.h"
 #import "SigAddDeviceManager.h"
-#import "SigPublish.h"
-#import "SigConfigMessage.h"
 #import "SigMeshMessage.h"
-#import "SigTransitionTime.h"
 #import "SigNetworkManager.h"
 #import "SigKeySet.h"
 #import "SigMeshLib.h"
 #import "SigHelper.h"
-#import "SigLowerTransportPdu.h"
-#import "CBUUID+Hex.h"
+#import "SigConfigMessage.h"
 #import "SigUpperTransportPdu.h"
-#import "SigAccessPdu.h"
 #import "SigMessageHandle.h"
-#import "SigMeshAddress.h"
-#import "SigUpperTransportLayer.h"
 #import "SigProxyConfigurationMessage.h"
-#import "SigControlMessage.h"
-#import "SigProvisioningData.h"
 #import "SigGenericMessage.h"
-#import "SigTimeModel.h"
-#import "SigSensorDescriptorModel.h"
-#import "SigAutoConnectManager.h"
 #import "OTAManager.h"
 #import "SigPublishManager.h"
 

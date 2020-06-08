@@ -21,10 +21,10 @@
  *******************************************************************************************************/
 //
 //  MeshOTAItemCell.h
-//  TelinkBlueDemo
+//  SigMeshOCDemo
 //
-//  Created by Arvin on 2018/4/17.
-//  Copyright © 2018年 Green. All rights reserved.
+//  Created by 梁家誌 on 2018/4/17.
+//  Copyright © 2018年 Telink. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>

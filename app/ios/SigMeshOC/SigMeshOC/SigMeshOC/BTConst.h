@@ -30,7 +30,7 @@
 #ifndef BTConst_h
 #define BTConst_h
 
-#define kTelinkSigMeshLibVersion    @"v3.2.0"
+#define kTelinkSigMeshLibVersion    @"v3.2.2"
 
 #define kLoopTimeInterval                           (0.002)
 #define kLoopWriteForBeaconDelayTime    (0.5)

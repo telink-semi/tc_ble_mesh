@@ -23,7 +23,7 @@
 //  SensorVC.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2019/3/14.
+//  Created by 梁家誌 on 2019/3/14.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 

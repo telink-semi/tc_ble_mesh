@@ -23,43 +23,37 @@
 //  MeshInfoVC.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2019/1/24.
+//  Created by 梁家誌 on 2019/1/24.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
 #import "MeshInfoVC.h"
+#import "OOBListVC.h"
+#import "InfoSwitchCell.h"
+#import "InfoNextCell.h"
+#import "InfoButtonCell.h"
 
-@interface MeshInfoVC ()
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *RPLabelTopLayout;
-@property (weak, nonatomic) IBOutlet UILabel *remoteProvisionLabel;
-@property (weak, nonatomic) IBOutlet UILabel *netKeyLabel;
-@property (weak, nonatomic) IBOutlet UILabel *appKeyLabel;
-@property (weak, nonatomic) IBOutlet UISwitch *addTypeSwitch;
-@property (weak, nonatomic) IBOutlet UISwitch *remoteSwitch;
-@property (weak, nonatomic) IBOutlet UISwitch *fastProvisionSwitch;
-@property (weak, nonatomic) IBOutlet UISwitch *onlineStatusSwitch;
-
+@interface MeshInfoVC ()<UITableViewDataSource,UITableViewDelegate>
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (nonatomic, strong) NSMutableArray <NSString *>*source;
+@property (assign, nonatomic) UInt32 ivIndex;
 @end
 
 @implementation MeshInfoVC
 
 - (void)viewDidLoad{
     [super viewDidLoad];
-    self.title = @"Mesh Info";
-    self.netKeyLabel.text = [LibTools convertDataToHexStr:SigDataSource.share.curNetKey];
-    self.appKeyLabel.text = [LibTools convertDataToHexStr:SigDataSource.share.curAppKey];
-    NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
-    self.addTypeSwitch.on = type.integerValue == KeyBindTpye_Fast;
-    NSNumber *fastProvision = [[NSUserDefaults standardUserDefaults] valueForKey:kFastAddType];
-    self.fastProvisionSwitch.on = fastProvision.boolValue;
-    NSNumber *online = [[NSUserDefaults standardUserDefaults] valueForKey:kGetOnlineStatusType];
-    self.onlineStatusSwitch.on = online.boolValue;
+    self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+    [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_InfoSwitchCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_InfoSwitchCellID];
+    [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_InfoNextCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_InfoNextCellID];
+    [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_InfoButtonCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_InfoButtonCellID];
 
-    NSNumber *remote = [[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType];
-    self.remoteSwitch.on = remote.boolValue;
-    self.remoteProvisionLabel.hidden = !kExistRemoteProvision;
-    self.remoteSwitch.hidden = !kExistRemoteProvision;
-    self.RPLabelTopLayout.constant = kExistRemoteProvision == YES ? 30 : -30;
+    self.title = @"Mesh Info";
+    _ivIndex = [LibTools uint32From16String:SigDataSource.share.ivIndex];
+    [self refreshSourceAndUI];
+//    #ifdef kExist
+//    self.RPLabelTopLayout.constant = kExistRemoteProvision == YES ? 30 : -30;
+//    #endif
 }
 
 - (void)viewWillAppear:(BOOL)animated{
@@ -67,48 +61,126 @@
     self.tabBarController.tabBar.hidden = YES;
 }
 
-- (IBAction)clickSwitch:(UISwitch *)sender {
+- (void)refreshSourceAndUI {
+    NSMutableArray *array = [NSMutableArray array];
+    [array addObject:@"remote provision"];
+    [array addObject:@"fast provision"];
+    [array addObject:@"fast bind(Default Bound)"];
+    [array addObject:@"online status from uuid"];
+    [array addObject:@"Add staticOOB device by noOOB provision"];
+    [array addObject:@"OOB Database"];
+    [array addObject:[NSString stringWithFormat:@"netKey:%@",SigDataSource.share.curNetkeyModel.key]];
+    [array addObject:[NSString stringWithFormat:@"appKey:%@",SigDataSource.share.curAppkeyModel.key]];
+    [array addObject:[NSString stringWithFormat:@"ivIndex: 0x%x",(unsigned int)_ivIndex]];
+    _source = array;
+    [self.tableView reloadData];
+}
+
+- (void)clickRemoteSwitch:(UISwitch *)sender {
+    NSNumber *type = [NSNumber numberWithBool:sender.on];
+    [[NSUserDefaults standardUserDefaults] setValue:type forKey:kRemoteAddType];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    NSNumber *fastProvision = [[NSUserDefaults standardUserDefaults] valueForKey:kFastAddType];
+    if (sender.on && fastProvision.boolValue) {
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:kFastAddType];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        [self refreshSourceAndUI];
+    }
+}
+
+- (void)clickSwitch:(UISwitch *)sender {
     NSNumber *type = [NSNumber numberWithInteger:sender.on == YES ? KeyBindTpye_Fast : KeyBindTpye_Normal];
     [[NSUserDefaults standardUserDefaults] setValue:type forKey:kKeyBindType];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
-- (IBAction)clickRemoteSwitch:(UISwitch *)sender {
-    NSNumber *type = [NSNumber numberWithBool:sender.on];
-    [[NSUserDefaults standardUserDefaults] setValue:type forKey:kRemoteAddType];
-    if (sender.on && _fastProvisionSwitch.on) {
-        _fastProvisionSwitch.on = NO;
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:kFastAddType];
-    }
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
-- (IBAction)clickFastProvisionSwitch:(UISwitch *)sender {
+- (void)clickFastProvisionSwitch:(UISwitch *)sender {
     NSNumber *type = [NSNumber numberWithBool:sender.on];
     [[NSUserDefaults standardUserDefaults] setValue:type forKey:kFastAddType];
-    if (sender.on && _remoteSwitch.on) {
-        _remoteSwitch.on = NO;
-        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:kRemoteAddType];
-    }
     [[NSUserDefaults standardUserDefaults] synchronize];
+    NSNumber *remote = [[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType];
+    if (sender.on && remote.boolValue) {
+        [[NSUserDefaults standardUserDefaults] setValue:[NSNumber numberWithBool:NO] forKey:kRemoteAddType];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        [self refreshSourceAndUI];
+    }
 }
 
-- (IBAction)clickOnlineStatusSwitch:(UISwitch *)sender {
+- (void)clickOnlineStatusSwitch:(UISwitch *)sender {
     NSNumber *type = [NSNumber numberWithBool:sender.on];
     [[NSUserDefaults standardUserDefaults] setValue:type forKey:kGetOnlineStatusType];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
-- (IBAction)clickCopyNetKey:(UIButton *)sender {
+- (void)clickAddStaticOOBDevcieByNoOOBEnableSwitch:(UISwitch *)sender {
+    SigDataSource.share.addStaticOOBDevcieByNoOOBEnable = sender.on;
+    NSNumber *type = [NSNumber numberWithBool:sender.on];
+    [[NSUserDefaults standardUserDefaults] setValue:type forKey:kAddStaticOOBDevcieByNoOOBEnable];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+- (void)clickOOBButton {
+    OOBListVC *vc = [[OOBListVC alloc] init];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)clickCopyNetKey:(UIButton *)sender {
     UIPasteboard*pasteboard = [UIPasteboard generalPasteboard];
-    pasteboard.string=self.netKeyLabel.text;
+    pasteboard.string = SigDataSource.share.curNetkeyModel.key;
     [self showTips:@"copy netKey success"];
 }
 
-- (IBAction)clickCopyAppKey:(UIButton *)sender {
+- (void)clickCopyAppKey:(UIButton *)sender {
     UIPasteboard*pasteboard = [UIPasteboard generalPasteboard];
-    pasteboard.string=self.appKeyLabel.text;
+    pasteboard.string = SigDataSource.share.curAppkeyModel.key;
     [self showTips:@"copy appKey success"];
+}
+
+- (void)clickIvUpdate:(UIButton *)sender {
+    if (!SigBearer.share.isOpen) {
+        [self showTips:@"Mesh is disconnected."];
+        return;
+    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSString *t = @"sending ivUpdate...";
+        [ShowTipsHandle.share show:t];
+    });
+
+    if (SigDataSource.share.getCurrentProvisionerIntSequenceNumber < 0xc10000) {
+        [SigDataSource.share setLocationSno:0xc10000];
+    }
+    
+    __weak typeof(self) weakSelf = self;
+    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
+    [oprationQueue addOperationWithBlock:^{
+        //这个block语句块在子线程中执行
+        NSLog(@"oprationQueue");
+        [SDKLibCommand updateIvIndexWithKeyRefreshFlag:NO ivUpdateActive:YES networkId:SigDataSource.share.curNetkeyModel.networkId ivIndex:weakSelf.ivIndex + 1 usingNetworkKey:SigDataSource.share.curNetkeyModel];
+        
+        [NSThread sleepForTimeInterval:2.0];
+        
+        [SigDataSource.share setLocationSno:0x01];
+        [SDKLibCommand updateIvIndexWithKeyRefreshFlag:NO ivUpdateActive:NO networkId:SigDataSource.share.curNetkeyModel.networkId ivIndex:weakSelf.ivIndex + 1 usingNetworkKey:SigDataSource.share.curNetkeyModel];
+
+        [SigDataSource.share updateIvIndexString:[NSString stringWithFormat:@"%08X",weakSelf.ivIndex+1]];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ShowTipsHandle.share delayHidden:0.5];
+            SigDataSource.share.curNetkeyModel.ivIndex.index = weakSelf.ivIndex + 1;
+            SigDataSource.share.curNetkeyModel.ivIndex.updateActive = YES;
+            [weakSelf refreshSourceAndUI];
+            [weakSelf showTips:@"ivUpdate success."];
+        });
+
+    }];
+
+}
+
+- (void)ivUpdateTimeout {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [ShowTipsHandle.share hidden];
+        [self showTips:@"ivUpdate fail."];
+    });
 }
 
 - (void)showTips:(NSString *)tips{
@@ -119,6 +191,74 @@
         }]];
         [self presentViewController:alertController animated:YES completion:nil];
     });
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    if (indexPath.row <= 4) {
+        InfoSwitchCell *cell = (InfoSwitchCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoSwitchCellID forIndexPath:indexPath];
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.showLabel.text = _source[indexPath.row];
+        if (indexPath.row == 0) {
+            NSNumber *remote = [[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType];
+            cell.showSwitch.on = remote.boolValue;
+            [cell.showSwitch addTarget:self action:@selector(clickRemoteSwitch:) forControlEvents:UIControlEventValueChanged];
+        } else if (indexPath.row == 1) {
+            NSNumber *fastProvision = [[NSUserDefaults standardUserDefaults] valueForKey:kFastAddType];
+            cell.showSwitch.on = fastProvision.boolValue;
+            [cell.showSwitch addTarget:self action:@selector(clickFastProvisionSwitch:) forControlEvents:UIControlEventValueChanged];
+        } else if (indexPath.row == 2) {
+            NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
+            cell.showSwitch.on = type.boolValue;
+            [cell.showSwitch addTarget:self action:@selector(clickSwitch:) forControlEvents:UIControlEventValueChanged];
+        } else if (indexPath.row == 3) {
+            NSNumber *online = [[NSUserDefaults standardUserDefaults] valueForKey:kGetOnlineStatusType];
+            cell.showSwitch.on = online.boolValue;
+            [cell.showSwitch addTarget:self action:@selector(clickOnlineStatusSwitch:) forControlEvents:UIControlEventValueChanged];
+        } else if (indexPath.row == 4) {
+            NSNumber *addStaticOOBDevcieByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDevcieByNoOOBEnable];
+            cell.showSwitch.on = addStaticOOBDevcieByNoOOBEnable.boolValue;
+            [cell.showSwitch addTarget:self action:@selector(clickAddStaticOOBDevcieByNoOOBEnableSwitch:) forControlEvents:UIControlEventValueChanged];
+        }
+        return cell;
+    } else if (indexPath.row == 5) {
+        InfoNextCell *cell = (InfoNextCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoNextCellID forIndexPath:indexPath];
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.showLabel.text = _source[indexPath.row];
+        return cell;
+    } else if (indexPath.row > 5) {
+        InfoButtonCell *cell = (InfoButtonCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoButtonCellID forIndexPath:indexPath];
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.showLabel.text = _source[indexPath.row];
+        if (indexPath.row == 6) {
+            [cell.showButton setTitle:@"copy" forState:UIControlStateNormal];
+            [cell.showButton addTarget:self action:@selector(clickCopyNetKey:) forControlEvents:UIControlEventTouchUpInside];
+        } else if (indexPath.row == 7) {
+            [cell.showButton setTitle:@"copy" forState:UIControlStateNormal];
+            [cell.showButton addTarget:self action:@selector(clickCopyAppKey:) forControlEvents:UIControlEventTouchUpInside];
+        } else if (indexPath.row == 8) {
+            [cell.showButton setTitle:@"+1" forState:UIControlStateNormal];
+            [cell.showButton addTarget:self action:@selector(clickIvUpdate:) forControlEvents:UIControlEventTouchUpInside];
+        }
+        return cell;
+    }
+    return nil;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    if (indexPath.row == 5) {
+        [self clickOOBButton];
+    }
+    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    cell.selected = NO;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return self.source.count;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    return 51.0;
 }
 
 @end

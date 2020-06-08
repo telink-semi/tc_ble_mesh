@@ -23,7 +23,7 @@
 //  OTAManager.m
 //  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2018/7/18.
+//  Created by 梁家誌 on 2018/7/18.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -253,7 +253,6 @@ typedef enum : NSUInteger {
     self.progress = SigGattOTAProgress_step3_startScanNodeIdentityBeforeGATTOTA;
     __weak typeof(self) weakSelf = self;
     [SigBluetooth.share scanProvisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
-//        TeLogInfo(@"peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d",peripheral.identifier.UUIDString,advertisementData,RSSI,unprovisioned);
         if (!unprovisioned) {
             SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
             if (rspModel.nodeIdentityData && rspModel.nodeIdentityData.length == 16) {
@@ -336,9 +335,11 @@ typedef enum : NSUInteger {
     TeLogInfo(@"\n\n==========GATT OTA:step6\n\n");
     self.progress = SigGattOTAProgress_step6_startSendGATTOTAPackets;
     if (@available(iOS 11.0, *)) {
-        [self sendPartDataAvailableIOS11];//127KB耗时75秒
+        //ios11.0及以上，6ms发送一个包，SendPacketsFinishCallback这个block返回则发送下一个包，不需要read。127KB耗时75秒
+        [self sendPartDataAvailableIOS11];
     } else {
-        [self sendPartData];//127KB耗时115~120秒
+        //ios11.0以下，6ms发送一个包，发送8个包read异常OTA特征，read返回则发送下一组8个包。127KB耗时115~120秒
+        [self sendPartData];
     }
 }
 
@@ -363,16 +364,6 @@ typedef enum : NSUInteger {
         if (self.otaIndex == 0) {
             [self sendReadFirmwareVersionWithComplete:nil];
             [self sendStartOTAWithComplete:nil];
-
-//            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-//            [self sendReadFirmwareVersionWithComplete:^{
-//                dispatch_semaphore_signal(semaphore);
-//            }];
-//            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
-//            [self sendStartOTAWithComplete:^{
-//                dispatch_semaphore_signal(semaphore);
-//            }];
-//            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
         }
         
         NSInteger writeLength = (lastLength >= 16) ? 16 : lastLength;

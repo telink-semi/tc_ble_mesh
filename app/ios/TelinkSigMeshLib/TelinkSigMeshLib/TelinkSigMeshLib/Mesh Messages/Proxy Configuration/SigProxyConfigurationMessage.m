@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/10/30.
-//  Copyright © 2019 梁家誌. All rights reserved.
+//  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import "SigProxyConfigurationMessage.h"
@@ -141,7 +141,8 @@
 
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
-    for (NSNumber *bigNum in _addresses) {
+    NSArray *addresses = [NSArray arrayWithArray:_addresses];
+    for (NSNumber *bigNum in addresses) {
         UInt16 bigTem = CFSwapInt16HostToBig((UInt16)bigNum.intValue);
 //        UInt16 bigTem = (UInt16)bigNum.intValue;
         NSData *temData = [NSData dataWithBytes:&bigTem length:2];
@@ -200,7 +201,8 @@
 
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
-    for (NSNumber *bigNum in _addresses) {
+    NSArray *addresses = [NSArray arrayWithArray:_addresses];
+    for (NSNumber *bigNum in addresses) {
         UInt16 bigTem = CFSwapInt16HostToBig((UInt16)bigNum.intValue);
 //        UInt16 bigTem = (UInt16)bigNum.intValue;
         NSData *temData = [NSData dataWithBytes:&bigTem length:2];

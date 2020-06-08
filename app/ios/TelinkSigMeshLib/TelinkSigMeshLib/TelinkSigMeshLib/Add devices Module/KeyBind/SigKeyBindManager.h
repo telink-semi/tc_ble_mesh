@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigKeyBindManager.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/4.
+//  Created by 梁家誌 on 2019/9/4.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 

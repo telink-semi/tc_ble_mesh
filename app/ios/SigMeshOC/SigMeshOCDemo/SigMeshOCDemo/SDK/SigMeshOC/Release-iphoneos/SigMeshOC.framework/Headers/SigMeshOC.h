@@ -16,39 +16,45 @@ FOUNDATION_EXPORT const unsigned char SigMeshOCVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <SigMeshOC/PublicHeader.h>
 
-#import "BTConst.h"
-#import "SDKLibCommand.h"
-#import "SigDataSource.h"
-#import "Bluetooth.h"
-#import "BLECallBackAPI.h"
-#import "BLEProperties.h"
-#import "LibHandle.h"
-#import "LibTools.h"
-#import "MeshOTAManager.h"
-#import "Model.h"
-#import "OpenSSLHelper.h"
-#import "OTAManager.h"
-#import "TransmitJsonManager.h"
-#import "XHelp.h"
+// C file header
+#import <SigMeshOC/types.h>
+#import <SigMeshOC/ble_common.h>
+#import <SigMeshOC/bit.h>
+#import <SigMeshOC/mesh_config.h>
+#import <SigMeshOC/mesh_node.h>
+#import <SigMeshOC/tutility.h>
+#import <SigMeshOC/cmd_interface.h>
+#import <SigMeshOC/light.h>
+#import <SigMeshOC/blt_config.h>
+#import <SigMeshOC/app_mesh.h>
+#import <SigMeshOC/app_provison.h>
+#import <SigMeshOC/interface.h>
+#import <SigMeshOC/time_model.h>
+#import <SigMeshOC/lighting_model_HSL.h>
+#import <SigMeshOC/scheduler.h>
+#import <SigMeshOC/remote_prov.h>
+#import <SigMeshOC/fast_provision_model.h>
+#import <SigMeshOC/mesh_ota.h>
+#import <SigMeshOC/mesh_common.h>
+#import <SigMeshOC/app_heartbeat.h>
+#import <SigMeshOC/le_crypto.h>
+#import <SigMeshOC/app_proxy.h>
+#import <SigMeshOC/gatt_provision.h>
+#import <SigMeshOC/app_beacon.h>
+#import <SigMeshOC/hci.h>
 
-// base controller api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/proj_lib/sig_mesh/interface.h"
-// scene api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/scene.h"
-// time api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/time_model.h"
-// HSL api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/lighting_model_HSL.h"
-// scheduler api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/scheduler.h"
-// remote add devices api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/remote_prov.h"
-// fast provision api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/fast_provision_model.h"
-// mesh ota api
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/mesh_ota.h"
-// SendOpParaDebug
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/mesh_common.h"
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/vendor/common/app_heartbeat.h"
-// static oob
-#import "sig_mesh_lib/SIG_MESH_header_file/ble_lt_mesh/proj_lib/mesh_crypto/le_crypto.h"
+//OC file header
+#import <SigMeshOC/BTConst.h>
+#import <SigMeshOC/SDKLibCommand.h>
+#import <SigMeshOC/SigDataSource.h>
+#import <SigMeshOC/Bluetooth.h>
+#import <SigMeshOC/BLECallBackAPI.h>
+#import <SigMeshOC/BLEProperties.h>
+#import <SigMeshOC/LibHandle.h>
+#import <SigMeshOC/LibTools.h>
+#import <SigMeshOC/MeshOTAManager.h>
+#import <SigMeshOC/Model.h>
+#import <SigMeshOC/OpenSSLHelper.h>
+#import <SigMeshOC/OTAManager.h>
+#import <SigMeshOC/TransmitJsonManager.h>
+#import <SigMeshOC/XHelp.h>

@@ -23,7 +23,7 @@
 //  DemoConst.h
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -44,6 +44,9 @@
 #define CellIdentifiers_ActionItemCellID  @"ActionItemCell"
 #define CellIdentifiers_AddDeviceItemCellID  @"AddDeviceItemCell"
 #define CellIdentifiers_OnOffItemCellID  @"OnOffItemCell"
+#define CellIdentifiers_InfoSwitchCellID  @"InfoSwitchCell"
+#define CellIdentifiers_InfoNextCellID  @"InfoNextCell"
+#define CellIdentifiers_InfoButtonCellID  @"InfoButtonCell"
 
 //ViewControllerIdentifiers
 #define ViewControllerIdentifiers_LogViewControllerID   @"LogViewController"
@@ -134,6 +137,8 @@
 #define kRemoteAddType  @"kRemoteAddType"
 #define kFastAddType  @"kFastAddType"
 #define kGetOnlineStatusType  @"kGetOnlineStatusType"
+#define kAddStaticOOBDevcieByNoOOBEnable  @"kAddStaticOOBDevcieByNoOOBEnable"
+
 
 //app通用蓝色
 #define kDefultColor [UIColor colorWithRed:0x4A/255.0 green:0x87/255.0 blue:0xEE/255.0 alpha:1]

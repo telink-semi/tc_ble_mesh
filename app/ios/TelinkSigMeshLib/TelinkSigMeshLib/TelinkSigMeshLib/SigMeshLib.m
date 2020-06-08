@@ -21,15 +21,18 @@
  *******************************************************************************************************/
 //
 //  SigMeshLib.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/15.
+//  Created by 梁家誌 on 2019/8/15.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
 #import "SigMeshLib.h"
+#import "SDKLibCommand.h"
 
 @interface SigMeshLib ()<SigMessageDelegate>
+/// The Network Layer handler.
+@property (nonatomic,strong) SigNetworkManager *networkManager;
 @end
 
 @implementation SigMeshLib
@@ -52,15 +55,15 @@ static SigMeshLib *shareLib = nil;
     _delegate = shareLib;
 }
 
-- (void)setNetworkManager:(SigNetworkManager *)networkManager {
-    _networkManager = networkManager;
-}
-
 - (instancetype)init{
     if (self = [super init]) {
         [self config];
     }
     return self;
+}
+
+- (SigNetworkManager *)networkManager {
+    return SigNetworkManager.share;
 }
 
 - (void)config{
@@ -91,8 +94,8 @@ static SigMeshLib *shareLib = nil;
 #pragma mark - Receive Mesh Messages
 
 - (void)bearerDidDeliverData:(NSData *)data type:(SigPduType)type {
-    if (_networkManager == nil) {
-        TeLogDebug(@"_networkManager == nil");
+    if (self.networkManager == nil) {
+        TeLogDebug(@"self.networkManager == nil");
         return;
     }
     __weak typeof(self) weakSelf = self;
@@ -126,13 +129,13 @@ static SigMeshLib *shareLib = nil;
 - (SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
     UInt8 ttl = localElement.parentNode.defaultTTL;
     if (![SigHelper.share isRelayedTTL:ttl]) {
-        ttl = _networkManager.defaultTtl;
+        ttl = self.networkManager.defaultTtl;
     }
     return [self sendMeshMessage:message fromLocalElement:localElement toDestination:destination withTtl:ttl usingApplicationKey:applicationKey command:command];
 }
 
 - (SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
-    if (_networkManager == nil || SigDataSource.share == nil) {
+    if (self.networkManager == nil || SigDataSource.share == nil) {
         TeLogError(@"Mesh Network not created");
         return nil;
     }
@@ -176,7 +179,7 @@ static SigMeshLib *shareLib = nil;
 - (SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination command:(SDKLibCommand *)command {
     UInt8 ttl = self.dataSource.curLocationNodeModel.defaultTTL;
     if (![SigHelper.share isRelayedTTL:ttl]) {
-        ttl = _networkManager.defaultTtl;
+        ttl = self.networkManager.defaultTtl;
     }
     return [self sendConfigMessage:message toDestination:destination withTtl:ttl command:command];
 }
@@ -269,7 +272,7 @@ static SigMeshLib *shareLib = nil;
 }
 
 - (void)cancelSigMessageHandle:(SigMessageHandle *)messageId {
-    if (_networkManager == nil) {
+    if (self.networkManager == nil) {
         TeLogError(@"Error: Mesh Network not created.");
         return;
     }
@@ -296,7 +299,7 @@ static SigMeshLib *shareLib = nil;
 - (void)commandTimeoutWithCommand:(SDKLibCommand *)command {
     [self commandResponseFinishWithCommand:command];
     if (command.resultCallback) {
-        TeLogDebug(@"timeout command:%@",command);
+        TeLogDebug(@"timeout command:%@-%@",command.curMeshMessage,command.curMeshMessage.parameters);
         NSError *error = [NSError errorWithDomain:kSigMeshLibCommandTimeoutErrorMessage code:kSigMeshLibCommandTimeoutErrorCode userInfo:nil];
         command.resultCallback(NO, error);
     }
@@ -359,6 +362,8 @@ static SigMeshLib *shareLib = nil;
         shouldCallback = YES;
         //node may delete from SigDataSource, but no reset from mesh network.
         if (node) {
+            [command.responseSourceArray addObject:@(source)];
+        } else if (message.opCode > 0xFFFF) {//vendor model
             [command.responseSourceArray addObject:@(source)];
         }
     }

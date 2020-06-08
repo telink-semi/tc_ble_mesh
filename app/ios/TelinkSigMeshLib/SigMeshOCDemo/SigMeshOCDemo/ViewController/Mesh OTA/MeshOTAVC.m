@@ -21,10 +21,10 @@
  *******************************************************************************************************/
 //
 //  MeshOTAVC.m
-//  TelinkBlueDemo
+//  SigMeshOCDemo
 //
-//  Created by Arvin on 2018/4/17.
-//  Copyright © 2018年 Green. All rights reserved.
+//  Created by 梁家誌 on 2018/4/17.
+//  Copyright © 2018年 Telink. All rights reserved.
 //
 
 #import "MeshOTAVC.h"
@@ -64,9 +64,11 @@
     self.binStringArray = [NSMutableArray arrayWithArray:OTAFileSource.share.getAllBinFile];
     self.allItemVIDDict = [NSMutableDictionary dictionary];
     
+    #ifdef kExist
     if (kExistMeshOTA) {
         [MeshOTAManager.share saveIsMeshOTAing:NO];
     }
+    #endif
 }
 
 - (void)updateNodeModelVidWithAddress:(UInt16)address vid:(UInt16)vid{
@@ -90,12 +92,15 @@
 - (void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
     
+    #ifdef kExist
     //界面可手动返回的情况，需要手动调用stopMeshOTA
     if (kExistMeshOTA) {
         if (MeshOTAManager.share.isMeshOTAing) {
             [MeshOTAManager.share stopMeshOTA];
         }
     }
+    #endif
+
 }
 
 - (void)viewDidDisappear:(BOOL)animated{
@@ -148,6 +153,7 @@
 }
 
 - (IBAction)clickStartMeshOTA:(UIButton *)sender {
+    #ifdef kExist
     if (kExistMeshOTA) {
         if (![MeshOTAManager share].isMeshOTAing) {
             [self startMeshOTA];
@@ -155,6 +161,7 @@
             [self showTips:@"Device is meshOTAing, needn't call repeat."];
         }
     }
+    #endif
 }
 
 - (void)showTips:(NSString *)tips{
@@ -193,7 +200,8 @@
             itemCell.selectButton.selected = self.selectItemArray.count == self.allItemArray.count;
             [itemCell.selectButton addAction:^(UIButton *button) {
                 if (!button.selected) {
-                    for (SigNodeModel *model in weakSelf.allItemArray) {
+                    NSArray *allItemArray = [NSArray arrayWithArray:weakSelf.allItemArray];
+                    for (SigNodeModel *model in allItemArray) {
                         if (model.state != DeviceStateOutOfLine) {
                             if (![weakSelf.selectItemArray containsObject:model]) {
                                 [weakSelf.selectItemArray addObject:model];
@@ -265,7 +273,8 @@
             __weak typeof(self) weakSelf = self;
             MeshOTAItemCell *itemCell = [tableView cellForRowAtIndexPath:indexPath];
             if (!itemCell.selectButton.selected) {
-                for (SigNodeModel *model in self.allItemArray) {
+                NSArray *allItemArray = [NSArray arrayWithArray:self.allItemArray];
+                for (SigNodeModel *model in allItemArray) {
                     if (model.state != DeviceStateOutOfLine) {
                         if (![weakSelf.selectItemArray containsObject:model]) {
                             [weakSelf.selectItemArray addObject:model];
@@ -295,6 +304,7 @@
 }
 
 - (void)startMeshOTA{
+    #ifdef kExist
     if (kExistMeshOTA) {
         if (self.selectItemArray.count == 0) {
             [self showTips:@"Please choose some devices for mesh OTA."];
@@ -312,7 +322,8 @@
             return;
         }
         NSMutableArray *tem = [NSMutableArray array];
-        for (SigNodeModel *model in self.selectItemArray) {
+        NSArray *selectItemArray = [NSArray arrayWithArray:self.selectItemArray];
+        for (SigNodeModel *model in selectItemArray) {
             [tem addObject:@(model.address)];
         }
         
@@ -343,6 +354,7 @@
             [SigBearer.share startMeshConnectWithComplete:nil];
         }];
     }
+    #endif
 }
 
 - (void)userAbled:(BOOL)able{

@@ -23,7 +23,7 @@
 //  AppDelegate.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -72,7 +72,15 @@
         fastAddType = [NSNumber numberWithBool:NO];
         [[NSUserDefaults standardUserDefaults] setValue:fastAddType forKey:kFastAddType];
     }
-    
+
+    //demo v3.2.2新增staticOOB设备添加的兼容模式，demo默认使用不兼容模式（即staticOOB设备必须通过staticOOB provision的方式进行添加）。
+    NSNumber *addStaticOOBDevcieByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDevcieByNoOOBEnable];
+    if (addStaticOOBDevcieByNoOOBEnable == nil) {
+        addStaticOOBDevcieByNoOOBEnable = [NSNumber numberWithBool:NO];
+        [[NSUserDefaults standardUserDefaults] setValue:fastAddType forKey:kAddStaticOOBDevcieByNoOOBEnable];
+    }
+    SigDataSource.share.addStaticOOBDevcieByNoOOBEnable = addStaticOOBDevcieByNoOOBEnable.boolValue;
+
     //demo中setting界面显示的log信息，客户开发到后期，APP稳定后可以不集成该功能，且上架最好关闭log保存功能。(客户发送iTunes中的日志文件“TelinkSDKDebugLogData”给泰凌微即可)
     [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
 //    [SigLogger.share setSDKLogLevel:SigLogLevelAll];

@@ -21,36 +21,32 @@
  *******************************************************************************************************/
 //
 //  SigProvisioningManager.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/19.
+//  Created by 梁家誌 on 2019/8/19.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import "SigAuthenticationModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigProvisioningData;
+@class SigProvisioningData,SigProvisioningResponse,SigAuthenticationModel;
 
 typedef void(^prvisionResponseCallBack)(SigProvisioningResponse * _Nullable response);
 
 @interface SigProvisioningManager : NSObject
-@property (nonatomic, assign) AuthenticationMethod authenticationMethod;
-@property (nonatomic, strong) SigAuthenticationModel *authenticationModel;
-@property (nonatomic, strong) SigProvisioningData *provisioningData;
+@property (nonatomic,assign) AuthenticationMethod authenticationMethod;
+@property (nonatomic,strong) SigAuthenticationModel *authenticationModel;
+@property (nonatomic,strong) SigProvisioningData *provisioningData;
 @property (nonatomic,copy,nullable) prvisionResponseCallBack provisionResponseBlock;
 
 #pragma mark - Public properties
 
-/// The provisioning capabilities of the device. This information
-/// is retrieved from the remote device during identification process.
+/// The provisioning capabilities of the device. This information is retrieved from the remote device during identification process.
 @property (nonatomic, assign) struct ProvisioningCapabilities provisioningCapabilities;
 
 /// The Network Key to be sent to the device during provisioning.
-/// Setting this proeprty is mandatory before calling
-/// `provision(usingAlgorithm:publicKey:authenticationMethod)`.
 @property (nonatomic, strong) SigNetkeyModel *networkKey;
 
 /// The current state of the provisioning process.

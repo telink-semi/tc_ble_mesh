@@ -21,14 +21,13 @@
  *******************************************************************************************************/
 //
 //  SigAuthenticationModel.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/23.
+//  Created by 梁家誌 on 2019/8/23.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import "SigPdu.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -38,12 +37,9 @@ typedef NSData *_Nonnull(^provideStaticKeyCallback)(void);
 typedef int (^provideNumericCallback)(UInt8 maximumNumberOfDigits,OutputAction outputAction);
 /// The user shall provide an alphanumeric text.
 typedef NSString *_Nonnull(^provideAlphanumericCallback)(UInt8 maximumNumberOfCharacters);
-/// The application should display this number to the user.
-/// User should perform selected action given number of times,
-/// or enter the number on the remote device.
+/// The application should display this number to the user. User should perform selected action given number of times, or enter the number on the remote device.
 typedef void (^displayNumberCallback)(int value,InputAction inputAction);
-/// The application should display the text to the user.
-/// User should enter the text on the provisioning device.
+/// The application should display the text to the user. User should enter the text on the provisioning device.
 typedef void (^displayAlphanumericCallback)(NSString *text);
 
 @interface SigAuthenticationModel : NSObject
