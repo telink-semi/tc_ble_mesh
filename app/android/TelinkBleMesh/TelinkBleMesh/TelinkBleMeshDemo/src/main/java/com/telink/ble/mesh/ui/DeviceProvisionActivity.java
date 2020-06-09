@@ -144,8 +144,11 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         // check if oob exists
         byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
-        if (oob != null){
+        if (oob != null) {
             provisioningDevice.setAuthValue(oob);
+        } else {
+            final boolean autoUseNoOOB = SharedPreferenceHelper.isNoOOBEnable(this);
+            provisioningDevice.setAutoUseNoOOB(autoUseNoOOB);
         }
         // for static oob test
         /*provisioningDevice.setAuthValue(new byte[]{

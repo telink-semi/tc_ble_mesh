@@ -9,6 +9,7 @@ import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.Scheduler;
+import com.telink.ble.mesh.entity.TransitionTime;
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
@@ -377,13 +378,14 @@ public class MeshStorageService {
                                     MeshStorage.Publish publish = model.publish;
                                     int pubAddress = Integer.valueOf(publish.address, 16);
                                     // pub address from vc-tool， default is 0
-                                    if (pubAddress != 0 && publish.period != 0) {
+                                    if (pubAddress != 0 && publish.period != null) {
                                         int elementAddress = element.index + Integer.valueOf(node.unicastAddress, 16);
                                         int transmit = publish.retransmit.count | (publish.retransmit.interval << 3);
+                                        int periodTime = publish.period.numberOfSteps * publish.period.resolution;
                                         publishModel = new PublishModel(elementAddress,
                                                 Integer.valueOf(model.modelId, 16),
                                                 Integer.valueOf(publish.address, 16),
-                                                publish.period,
+                                                periodTime,
                                                 publish.ttl,
                                                 publish.credentials,
                                                 transmit);
@@ -503,7 +505,12 @@ public class MeshStorageService {
                                 publish.index = 0;
 
                                 publish.ttl = publishModel.ttl;
-                                publish.period = publishModel.period;
+                                TransitionTime transitionTime = TransitionTime.fromTime(publishModel.period);
+                                MeshStorage.PublishPeriod period = new MeshStorage.PublishPeriod();
+                                period.numberOfSteps = transitionTime.getNumber() & 0xFF;
+                                period.resolution = transitionTime.getResolution();
+//                                publish.period = publishModel.period;
+                                publish.period = period;
                                 publish.credentials = publishModel.credential;
                                 publish.retransmit = new MeshStorage.Transmit(publishModel.getTransmitCount()
                                         , publishModel.getTransmitInterval());

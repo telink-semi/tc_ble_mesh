@@ -283,9 +283,9 @@ public class ProvisioningController {
     }
 
 
-    private void provisionStart() {
-        startPDU = ProvisioningStartPDU.getSimple(pvCapability.staticOOBSupported());
-        updateProvisioningState(STATE_START, "Start");
+    private void provisionStart(boolean isStaticOOB) {
+        startPDU = ProvisioningStartPDU.getSimple(isStaticOOB);
+        updateProvisioningState(STATE_START, "Start - use static oob?" + isStaticOOB);
         sendProvisionPDU(startPDU);
     }
 
@@ -303,11 +303,17 @@ public class ProvisioningController {
         updateProvisioningState(STATE_CAPABILITY, "Capability Received");
         pvCapability = ProvisioningCapabilityPDU.fromBytes(capData);
         mProvisioningDevice.setDeviceCapability(pvCapability);
-        if (pvCapability.staticOOBSupported() && mProvisioningDevice.getAuthValue() == null) {
-            onProvisionFail("authValue not found when device static oob supported!");
-            return;
+        boolean useStaticOOB = pvCapability.staticOOBSupported();
+        if (useStaticOOB && mProvisioningDevice.getAuthValue() == null) {
+            if (mProvisioningDevice.isAutoUseNoOOB()) {
+                // use no oob
+                useStaticOOB = false;
+            } else {
+                onProvisionFail("authValue not found when device static oob supported!");
+                return;
+            }
         }
-        provisionStart();
+        provisionStart(useStaticOOB);
         provisionSendPubKey();
     }
 

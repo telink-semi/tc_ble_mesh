@@ -62,6 +62,11 @@ public class ProvisioningDevice implements Parcelable {
      */
     protected byte[] authValue = null;
 
+    /**
+     * auto use no-OOB if auth value is null
+     */
+    protected boolean autoUseNoOOB = false;
+
 //    private ProvisioningParams provisioningParams;
 
     protected int provisioningState;
@@ -219,6 +224,13 @@ public class ProvisioningDevice implements Parcelable {
         this.unicastAddress = unicastAddress;
     }
 
+    public boolean isAutoUseNoOOB() {
+        return autoUseNoOOB;
+    }
+
+    public void setAutoUseNoOOB(boolean autoUseNoOOB) {
+        this.autoUseNoOOB = autoUseNoOOB;
+    }
 
     @Override
     public int describeContents() {
@@ -251,8 +263,10 @@ public class ProvisioningDevice implements Parcelable {
                 ", ivIndex=0x" + Long.toHexString(ivIndex) +
                 ", unicastAddress=0x" + Integer.toHexString(unicastAddress) +
                 ", authValue=" + Arrays.bytesToHexString(authValue) +
+                ", autoUseNoOOB=" + autoUseNoOOB +
                 ", provisioningState=" + provisioningState +
                 ", deviceKey=" + Arrays.bytesToHexString(deviceKey) +
+
                 '}';
     }
 }

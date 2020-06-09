@@ -312,23 +312,6 @@ public class NetworkingController {
         return this.busySeqAuthBuffer.get(src, 0) == seqAuth;
     }
 
-
-    /**
-     * when gatt disconnected, remove all timer, reset all busy state, clear buffers
-     */
-    public void onGattDisconnected() {
-        this.mDelayHandler.removeCallbacksAndMessages(null);
-        this.networkingBusy = false;
-        this.segmentedBusy = false;
-        this.reliableBusy = false;
-        this.directAddress = 0;
-        this.receivedSegmentedMessageBuffer.clear();
-        this.sentSegmentedMessageBuffer.clear();
-        this.mResponseMessageBuffer.clear();
-        this.isIvUpdating = false;
-        this.lastSegComplete = true;
-    }
-
     /**
      * check SequenceNumber when proxy connected
      * sendIvUpdatingBeacon

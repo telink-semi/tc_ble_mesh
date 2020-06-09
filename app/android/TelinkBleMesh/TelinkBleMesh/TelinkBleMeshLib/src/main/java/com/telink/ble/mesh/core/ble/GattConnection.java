@@ -149,7 +149,8 @@ public class GattConnection extends BluetoothGattCallback {
      * @param data data excluding type
      */
     public void sendMeshData(byte type, byte[] data) {
-        final int mtu = this.mtu;
+        // opcode: 1 byte, handle: 2 bytes
+        final int mtu = this.mtu - 3;
         final boolean isProvisioningPdu = type == ProxyPDU.TYPE_PROVISIONING_PDU;
         if (data.length > mtu - 1) {
             double ceil = Math.ceil(((double) data.length) / (mtu - 1));

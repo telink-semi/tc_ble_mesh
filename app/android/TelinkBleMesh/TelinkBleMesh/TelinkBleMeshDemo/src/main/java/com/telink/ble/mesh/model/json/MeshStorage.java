@@ -7,6 +7,9 @@ import java.util.List;
 
 /**
  * Created by kee on 2018/9/10.
+ *
+ * change type of period in publish from integer to object
+ * add HeartbeatPublication and HeartbeatSubscription
  */
 
 public class MeshStorage {
@@ -139,6 +142,12 @@ public class MeshStorage {
         public List<Element> elements;
         public boolean blacklisted;
 
+        // heartbeatPub
+        public HeartbeatPublication heartbeatPub;
+        // heartbeatSub
+        public List<HeartbeatSubscription> heartbeatSub;
+
+
         // custom data for scheduler
         public List<NodeScheduler> schedulers;
     }
@@ -232,10 +241,39 @@ public class MeshStorage {
         public String address;
         public int index;
         public int ttl;
-        public int period;
+        public PublishPeriod period;
         public int credentials;
         public Transmit retransmit;
     }
+
+    public static class PublishPeriod {
+        /**
+         * The numberOfStepa property contains an integer from 0 to 63 that represents the number of steps used
+         * to calculate the publish period .
+         */
+        public int numberOfSteps;
+
+        /**
+         * The resolution property contains an integer that represents the publish step resolution in milliseconds.
+         * The allowed values are: 100, 1000, 10000, and 600000.
+         */
+        public int resolution;
+    }
+
+    public static class HeartbeatPublication {
+        public String address;
+        public int period;
+        public int ttl;
+        public int index;
+        public List<String> features;
+    }
+
+    public static class HeartbeatSubscription {
+        public String source;
+        public String destination;
+        public int period;
+    }
+
 
     public static class Group {
         public String name;

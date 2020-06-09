@@ -187,6 +187,9 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
         if (oob != null) {
             provisioningDevice.setAuthValue(oob);
+        } else {
+            final boolean autoUseNoOOB = SharedPreferenceHelper.isNoOOBEnable(this);
+            provisioningDevice.setAutoUseNoOOB(autoUseNoOOB);
         }
 
         ProvisioningParameters provisioningParameters = new ProvisioningParameters(provisioningDevice);
@@ -388,6 +391,9 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(device.getUuid());
         if (oob != null) {
             device.setAuthValue(oob);
+        } else {
+            final boolean autoUseNoOOB = SharedPreferenceHelper.isNoOOBEnable(this);
+            device.setAutoUseNoOOB(autoUseNoOOB);
         }
 
         MeshService.getInstance().startRemoteProvisioning(device);

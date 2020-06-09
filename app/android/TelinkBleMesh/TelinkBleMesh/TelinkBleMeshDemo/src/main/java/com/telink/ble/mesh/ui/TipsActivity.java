@@ -9,8 +9,8 @@ import com.telink.ble.mesh.demo.R;
 /**
  * tips
  */
-public class ShareTipActivity extends BaseActivity {
-    public static final String INTENT_KEY_TIP_RES_ID = "ShareTipActivity.TIP_RES_ID";
+public class TipsActivity extends BaseActivity {
+    public static final String INTENT_KEY_TIP_RES_ID = "TipsActivity.TIP_RES_ID";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

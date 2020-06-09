@@ -26,7 +26,7 @@ import com.telink.ble.mesh.util.MeshLogger;
  */
 public class SettingsActivity extends BaseActivity implements View.OnClickListener {
 
-    private Switch switch_log, switch_private, switch_remote_prov, switch_fast_prov;
+    private Switch switch_log, switch_private, switch_remote_prov, switch_fast_prov, switch_no_oob;
     private EditText et_net_key, et_app_key;
     private MeshInfo mesh;
     private TextView tv_online_status;
@@ -85,6 +85,15 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
             }
         });
 
+        switch_no_oob = findViewById(R.id.switch_no_oob);
+        switch_no_oob.setChecked(SharedPreferenceHelper.isNoOOBEnable(this));
+        switch_no_oob.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SharedPreferenceHelper.setNoOOBEnable(SettingsActivity.this, isChecked);
+            }
+        });
+
 
         enableBackNav(true);
 
@@ -95,6 +104,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
         findViewById(R.id.iv_tip_remote_prov).setOnClickListener(this);
 
+        findViewById(R.id.iv_tip_no_oob).setOnClickListener(this);
         findViewById(R.id.tv_select_database).setOnClickListener(this);
 
         et_net_key = findViewById(R.id.et_net_key);
@@ -133,8 +143,15 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
             case R.id.iv_tip_remote_prov:
                 startActivity(
-                        new Intent(this, ShareTipActivity.class)
-                                .putExtra(ShareTipActivity.INTENT_KEY_TIP_RES_ID, R.string.remote_prov_tip)
+                        new Intent(this, TipsActivity.class)
+                                .putExtra(TipsActivity.INTENT_KEY_TIP_RES_ID, R.string.remote_prov_tip)
+                );
+                break;
+
+            case R.id.iv_tip_no_oob:
+                startActivity(
+                        new Intent(this, TipsActivity.class)
+                                .putExtra(TipsActivity.INTENT_KEY_TIP_RES_ID, R.string.use_no_oob_tip)
                 );
                 break;
 

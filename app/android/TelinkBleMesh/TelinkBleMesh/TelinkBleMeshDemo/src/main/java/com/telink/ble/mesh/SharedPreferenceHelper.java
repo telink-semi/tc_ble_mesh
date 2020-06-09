@@ -31,6 +31,8 @@ public class SharedPreferenceHelper {
 
     private static final String KEY_FAST_PROVISION = "com.telink.bluetooth.light.KEY_FAST_PROVISION";
 
+    private static final String KEY_NO_OOB = "com.telink.bluetooth.light.KEY_NO_OOB";
+
     public static boolean isFirstLoad(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(KEY_FIRST_LOAD, true);
@@ -103,6 +105,17 @@ public class SharedPreferenceHelper {
     public static void setFastProvisionEnable(Context context, boolean enable) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_FAST_PROVISION, enable).apply();
+    }
+
+
+    public static boolean isNoOOBEnable(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KEY_NO_OOB, true);
+    }
+
+    public static void setNoOOBEnable(Context context, boolean enable) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putBoolean(KEY_NO_OOB, enable).apply();
     }
 
 }

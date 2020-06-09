@@ -43,7 +43,7 @@ public class ShareActivity extends BaseActivity {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 if (item.getItemId() == R.id.item_tip) {
-                    startActivity(new Intent(ShareActivity.this, ShareTipActivity.class));
+                    startActivity(new Intent(ShareActivity.this, TipsActivity.class));
                 } else if (item.getItemId() == R.id.item_qrcode) {
                     showActionSelectDialog();
                 }
