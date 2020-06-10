@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2519E64E24123D870098ABE7 /* 8258_mesh.bin */; };
-		2559471D248E2C47003E8597 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
+		255396B124907D2A0095B499 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		258E2B8A248A24A20078DA7C /* InfoSwitchCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B88248A24A20078DA7C /* InfoSwitchCell.m */; };
 		258E2B8B248A24A20078DA7C /* InfoSwitchCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B89248A24A20078DA7C /* InfoSwitchCell.xib */; };
 		258E2B8F248A24B50078DA7C /* InfoNextCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B8D248A24B50078DA7C /* InfoNextCell.m */; };
@@ -391,7 +391,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2559471D248E2C47003E8597 /* TelinkSigMeshLib.framework in Frameworks */,
+				255396B124907D2A0095B499 /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
