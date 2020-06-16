@@ -21,33 +21,32 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		258E2BEE248A46200078DA7C /* libsig_mesh_lib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 258E2BE2248A46200078DA7C /* libsig_mesh_lib.a */; };
-		258E2F7C248A4F020078DA7C /* time_model.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F71248A4F020078DA7C /* time_model.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F7D248A4F020078DA7C /* fast_provision_model.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F72248A4F020078DA7C /* fast_provision_model.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F7E248A4F020078DA7C /* scheduler.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F73248A4F020078DA7C /* scheduler.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F7F248A4F020078DA7C /* lighting_model_HSL.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F74248A4F020078DA7C /* lighting_model_HSL.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F80248A4F020078DA7C /* interface.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F75248A4F020078DA7C /* interface.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F81248A4F020078DA7C /* le_crypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F76248A4F020078DA7C /* le_crypto.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F82248A4F020078DA7C /* remote_prov.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F77248A4F020078DA7C /* remote_prov.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F83248A4F020078DA7C /* mesh_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F78248A4F020078DA7C /* mesh_common.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F84248A4F020078DA7C /* app_heartbeat.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F79248A4F020078DA7C /* app_heartbeat.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F85248A4F020078DA7C /* mesh_ota.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F7A248A4F020078DA7C /* mesh_ota.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F86248A4F020078DA7C /* scene.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F7B248A4F020078DA7C /* scene.h */; };
-		258E2F8A248A5BEE0078DA7C /* mesh_node.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F89248A5BEE0078DA7C /* mesh_node.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F8C248A5C710078DA7C /* types.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F8B248A5C710078DA7C /* types.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F8E248A5CF40078DA7C /* bit.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F8D248A5CF40078DA7C /* bit.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F90248A5D710078DA7C /* mesh_config.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F8F248A5D710078DA7C /* mesh_config.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F92248A5E020078DA7C /* app_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F91248A5E010078DA7C /* app_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F94248A5EA60078DA7C /* tutility.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F93248A5EA60078DA7C /* tutility.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F96248A600D0078DA7C /* app_provison.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F95248A600D0078DA7C /* app_provison.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F9B248DD4410078DA7C /* app_proxy.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F9A248DD4410078DA7C /* app_proxy.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F9D248DD63A0078DA7C /* gatt_provision.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F9C248DD63A0078DA7C /* gatt_provision.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2F9F248DD7240078DA7C /* cmd_interface.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2F9E248DD7240078DA7C /* cmd_interface.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2FA1248DD9BE0078DA7C /* app_beacon.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2FA0248DD9BE0078DA7C /* app_beacon.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2FA3248DDA0B0078DA7C /* hci.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2FA2248DDA0B0078DA7C /* hci.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2FAF248DEA9A0078DA7C /* light.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2FAE248DEA990078DA7C /* light.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2FB1248DEC7B0078DA7C /* blt_config.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2FB0248DEC7B0078DA7C /* blt_config.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		258E2FB3248DED3C0078DA7C /* ble_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 258E2FB2248DED3C0078DA7C /* ble_common.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60B324977B4B0076603E /* app_beacon.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F609924977B4A0076603E /* app_beacon.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60B424977B4B0076603E /* mesh_node.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F609A24977B4A0076603E /* mesh_node.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60B524977B4B0076603E /* time_model.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F609B24977B4A0076603E /* time_model.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60B624977B4B0076603E /* fast_provision_model.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F609C24977B4A0076603E /* fast_provision_model.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60B724977B4B0076603E /* app_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F609D24977B4A0076603E /* app_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60B824977B4B0076603E /* gatt_provision.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F609E24977B4A0076603E /* gatt_provision.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60B924977B4B0076603E /* light.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F609F24977B4A0076603E /* light.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60BA24977B4B0076603E /* hci.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60A024977B4A0076603E /* hci.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60BB24977B4B0076603E /* types.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60A124977B4A0076603E /* types.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60BC24977B4B0076603E /* scheduler.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60A224977B4A0076603E /* scheduler.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60BD24977B4B0076603E /* bit.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60A324977B4A0076603E /* bit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60BE24977B4B0076603E /* mesh_config.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60A424977B4A0076603E /* mesh_config.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60BF24977B4B0076603E /* lighting_model_HSL.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60A524977B4A0076603E /* lighting_model_HSL.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60C024977B4B0076603E /* tutility.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60A624977B4A0076603E /* tutility.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60C124977B4B0076603E /* interface.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60A724977B4A0076603E /* interface.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60C224977B4B0076603E /* blt_config.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60A824977B4A0076603E /* blt_config.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60C324977B4B0076603E /* app_provison.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60A924977B4A0076603E /* app_provison.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60C424977B4B0076603E /* le_crypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60AA24977B4A0076603E /* le_crypto.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60C524977B4B0076603E /* remote_prov.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60AB24977B4A0076603E /* remote_prov.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60C624977B4B0076603E /* ble_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60AC24977B4A0076603E /* ble_common.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60C724977B4B0076603E /* mesh_common.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60AD24977B4A0076603E /* mesh_common.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60C824977B4B0076603E /* cmd_interface.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60AE24977B4A0076603E /* cmd_interface.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60C924977B4B0076603E /* app_proxy.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60AF24977B4B0076603E /* app_proxy.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60CA24977B4B0076603E /* app_heartbeat.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60B024977B4B0076603E /* app_heartbeat.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60CB24977B4B0076603E /* mesh_ota.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60B124977B4B0076603E /* mesh_ota.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		251F60CC24977B4B0076603E /* scene.h in Headers */ = {isa = PBXBuildFile; fileRef = 251F60B224977B4B0076603E /* scene.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25946957248E27280011792F /* pem2.h in Headers */ = {isa = PBXBuildFile; fileRef = 25946901248E27270011792F /* pem2.h */; };
 		25946958248E27280011792F /* pem.h in Headers */ = {isa = PBXBuildFile; fileRef = 25946902248E27270011792F /* pem.h */; };
 		25946959248E27280011792F /* ssl3.h in Headers */ = {isa = PBXBuildFile; fileRef = 25946903248E27270011792F /* ssl3.h */; };
@@ -161,38 +160,38 @@
 		25C40DD023A219CD00FD144F /* OTAManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C40DB623A219CD00FD144F /* OTAManager.m */; };
 		25C40F6C23A24B1900FD144F /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25C40F6B23A24B1900FD144F /* CoreBluetooth.framework */; };
 		25C40F6E23A24C2900FD144F /* SigMeshOC-PrefixHeader.pch in Headers */ = {isa = PBXBuildFile; fileRef = 25C40F6D23A24C2900FD144F /* SigMeshOC-PrefixHeader.pch */; };
+		25ED16A6249869B800D283D9 /* libsig_mesh_lib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 25ED16A5249869B800D283D9 /* libsig_mesh_lib.a */; };
 		25FFB86E23A0D94A00334698 /* SigMeshOC.h in Headers */ = {isa = PBXBuildFile; fileRef = 25FFB86C23A0D94A00334698 /* SigMeshOC.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25FFB8A423A0DA3A00334698 /* BTConst.h in Headers */ = {isa = PBXBuildFile; fileRef = 25FFB88623A0DA3900334698 /* BTConst.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		258E2BE2248A46200078DA7C /* libsig_mesh_lib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libsig_mesh_lib.a; sourceTree = "<group>"; };
-		258E2F71248A4F020078DA7C /* time_model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = time_model.h; sourceTree = "<group>"; };
-		258E2F72248A4F020078DA7C /* fast_provision_model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fast_provision_model.h; sourceTree = "<group>"; };
-		258E2F73248A4F020078DA7C /* scheduler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = scheduler.h; sourceTree = "<group>"; };
-		258E2F74248A4F020078DA7C /* lighting_model_HSL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lighting_model_HSL.h; sourceTree = "<group>"; };
-		258E2F75248A4F020078DA7C /* interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interface.h; sourceTree = "<group>"; };
-		258E2F76248A4F020078DA7C /* le_crypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = le_crypto.h; sourceTree = "<group>"; };
-		258E2F77248A4F020078DA7C /* remote_prov.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = remote_prov.h; sourceTree = "<group>"; };
-		258E2F78248A4F020078DA7C /* mesh_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_common.h; sourceTree = "<group>"; };
-		258E2F79248A4F020078DA7C /* app_heartbeat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = app_heartbeat.h; sourceTree = "<group>"; };
-		258E2F7A248A4F020078DA7C /* mesh_ota.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_ota.h; sourceTree = "<group>"; };
-		258E2F7B248A4F020078DA7C /* scene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = scene.h; sourceTree = "<group>"; };
-		258E2F89248A5BEE0078DA7C /* mesh_node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_node.h; sourceTree = "<group>"; };
-		258E2F8B248A5C710078DA7C /* types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
-		258E2F8D248A5CF40078DA7C /* bit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bit.h; sourceTree = "<group>"; };
-		258E2F8F248A5D710078DA7C /* mesh_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_config.h; sourceTree = "<group>"; };
-		258E2F91248A5E010078DA7C /* app_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = app_mesh.h; sourceTree = "<group>"; };
-		258E2F93248A5EA60078DA7C /* tutility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tutility.h; sourceTree = "<group>"; };
-		258E2F95248A600D0078DA7C /* app_provison.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = app_provison.h; sourceTree = "<group>"; };
-		258E2F9A248DD4410078DA7C /* app_proxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = app_proxy.h; sourceTree = "<group>"; };
-		258E2F9C248DD63A0078DA7C /* gatt_provision.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gatt_provision.h; sourceTree = "<group>"; };
-		258E2F9E248DD7240078DA7C /* cmd_interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cmd_interface.h; sourceTree = "<group>"; };
-		258E2FA0248DD9BE0078DA7C /* app_beacon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = app_beacon.h; sourceTree = "<group>"; };
-		258E2FA2248DDA0B0078DA7C /* hci.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hci.h; sourceTree = "<group>"; };
-		258E2FAE248DEA990078DA7C /* light.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = light.h; sourceTree = "<group>"; };
-		258E2FB0248DEC7B0078DA7C /* blt_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blt_config.h; sourceTree = "<group>"; };
-		258E2FB2248DED3C0078DA7C /* ble_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ble_common.h; sourceTree = "<group>"; };
+		251F609924977B4A0076603E /* app_beacon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = app_beacon.h; sourceTree = "<group>"; };
+		251F609A24977B4A0076603E /* mesh_node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_node.h; sourceTree = "<group>"; };
+		251F609B24977B4A0076603E /* time_model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = time_model.h; sourceTree = "<group>"; };
+		251F609C24977B4A0076603E /* fast_provision_model.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fast_provision_model.h; sourceTree = "<group>"; };
+		251F609D24977B4A0076603E /* app_mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = app_mesh.h; sourceTree = "<group>"; };
+		251F609E24977B4A0076603E /* gatt_provision.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gatt_provision.h; sourceTree = "<group>"; };
+		251F609F24977B4A0076603E /* light.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = light.h; sourceTree = "<group>"; };
+		251F60A024977B4A0076603E /* hci.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hci.h; sourceTree = "<group>"; };
+		251F60A124977B4A0076603E /* types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
+		251F60A224977B4A0076603E /* scheduler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = scheduler.h; sourceTree = "<group>"; };
+		251F60A324977B4A0076603E /* bit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bit.h; sourceTree = "<group>"; };
+		251F60A424977B4A0076603E /* mesh_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_config.h; sourceTree = "<group>"; };
+		251F60A524977B4A0076603E /* lighting_model_HSL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lighting_model_HSL.h; sourceTree = "<group>"; };
+		251F60A624977B4A0076603E /* tutility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tutility.h; sourceTree = "<group>"; };
+		251F60A724977B4A0076603E /* interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = interface.h; sourceTree = "<group>"; };
+		251F60A824977B4A0076603E /* blt_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blt_config.h; sourceTree = "<group>"; };
+		251F60A924977B4A0076603E /* app_provison.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = app_provison.h; sourceTree = "<group>"; };
+		251F60AA24977B4A0076603E /* le_crypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = le_crypto.h; sourceTree = "<group>"; };
+		251F60AB24977B4A0076603E /* remote_prov.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = remote_prov.h; sourceTree = "<group>"; };
+		251F60AC24977B4A0076603E /* ble_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ble_common.h; sourceTree = "<group>"; };
+		251F60AD24977B4A0076603E /* mesh_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_common.h; sourceTree = "<group>"; };
+		251F60AE24977B4A0076603E /* cmd_interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cmd_interface.h; sourceTree = "<group>"; };
+		251F60AF24977B4B0076603E /* app_proxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = app_proxy.h; sourceTree = "<group>"; };
+		251F60B024977B4B0076603E /* app_heartbeat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = app_heartbeat.h; sourceTree = "<group>"; };
+		251F60B124977B4B0076603E /* mesh_ota.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh_ota.h; sourceTree = "<group>"; };
+		251F60B224977B4B0076603E /* scene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = scene.h; sourceTree = "<group>"; };
 		25946901248E27270011792F /* pem2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem2.h; sourceTree = "<group>"; };
 		25946902248E27270011792F /* pem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem.h; sourceTree = "<group>"; };
 		25946903248E27270011792F /* ssl3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssl3.h; sourceTree = "<group>"; };
@@ -307,6 +306,7 @@
 		25C40F6B23A24B1900FD144F /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		25C40F6D23A24C2900FD144F /* SigMeshOC-PrefixHeader.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SigMeshOC-PrefixHeader.pch"; sourceTree = "<group>"; };
 		25C40F7623A3356900FD144F /* Script.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = Script.sh; sourceTree = "<group>"; };
+		25ED16A5249869B800D283D9 /* libsig_mesh_lib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libsig_mesh_lib.a; sourceTree = "<group>"; };
 		25FFB86923A0D94A00334698 /* SigMeshOC.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SigMeshOC.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		25FFB86C23A0D94A00334698 /* SigMeshOC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigMeshOC.h; sourceTree = "<group>"; };
 		25FFB86D23A0D94A00334698 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -318,8 +318,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				25ED16A6249869B800D283D9 /* libsig_mesh_lib.a in Frameworks */,
 				259469AA248E27280011792F /* libssl.a in Frameworks */,
-				258E2BEE248A46200078DA7C /* libsig_mesh_lib.a in Frameworks */,
 				25C40F6C23A24B1900FD144F /* CoreBluetooth.framework in Frameworks */,
 				259469A9248E27280011792F /* libcrypto.a in Frameworks */,
 			);
@@ -328,54 +328,46 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		251F609824977B4A0076603E /* c_lib_header */ = {
+			isa = PBXGroup;
+			children = (
+				251F609924977B4A0076603E /* app_beacon.h */,
+				251F609A24977B4A0076603E /* mesh_node.h */,
+				251F609B24977B4A0076603E /* time_model.h */,
+				251F609C24977B4A0076603E /* fast_provision_model.h */,
+				251F609D24977B4A0076603E /* app_mesh.h */,
+				251F609E24977B4A0076603E /* gatt_provision.h */,
+				251F609F24977B4A0076603E /* light.h */,
+				251F60A024977B4A0076603E /* hci.h */,
+				251F60A124977B4A0076603E /* types.h */,
+				251F60A224977B4A0076603E /* scheduler.h */,
+				251F60A324977B4A0076603E /* bit.h */,
+				251F60A424977B4A0076603E /* mesh_config.h */,
+				251F60A524977B4A0076603E /* lighting_model_HSL.h */,
+				251F60A624977B4A0076603E /* tutility.h */,
+				251F60A724977B4A0076603E /* interface.h */,
+				251F60A824977B4A0076603E /* blt_config.h */,
+				251F60A924977B4A0076603E /* app_provison.h */,
+				251F60AA24977B4A0076603E /* le_crypto.h */,
+				251F60AB24977B4A0076603E /* remote_prov.h */,
+				251F60AC24977B4A0076603E /* ble_common.h */,
+				251F60AD24977B4A0076603E /* mesh_common.h */,
+				251F60AE24977B4A0076603E /* cmd_interface.h */,
+				251F60AF24977B4B0076603E /* app_proxy.h */,
+				251F60B024977B4B0076603E /* app_heartbeat.h */,
+				251F60B124977B4B0076603E /* mesh_ota.h */,
+				251F60B224977B4B0076603E /* scene.h */,
+			);
+			path = c_lib_header;
+			sourceTree = "<group>";
+		};
 		258E2BD4248A46200078DA7C /* sig_mesh_lib */ = {
 			isa = PBXGroup;
 			children = (
-				258E2F70248A4F020078DA7C /* c_lib_header */,
-				258E2BE1248A46200078DA7C /* Release-iphoneos */,
+				25ED16A4249869B800D283D9 /* Release-iphoneos */,
+				251F609824977B4A0076603E /* c_lib_header */,
 			);
 			path = sig_mesh_lib;
-			sourceTree = "<group>";
-		};
-		258E2BE1248A46200078DA7C /* Release-iphoneos */ = {
-			isa = PBXGroup;
-			children = (
-				258E2BE2248A46200078DA7C /* libsig_mesh_lib.a */,
-			);
-			path = "Release-iphoneos";
-			sourceTree = "<group>";
-		};
-		258E2F70248A4F020078DA7C /* c_lib_header */ = {
-			isa = PBXGroup;
-			children = (
-				258E2FB2248DED3C0078DA7C /* ble_common.h */,
-				258E2FB0248DEC7B0078DA7C /* blt_config.h */,
-				258E2FAE248DEA990078DA7C /* light.h */,
-				258E2FA2248DDA0B0078DA7C /* hci.h */,
-				258E2FA0248DD9BE0078DA7C /* app_beacon.h */,
-				258E2F9E248DD7240078DA7C /* cmd_interface.h */,
-				258E2F9C248DD63A0078DA7C /* gatt_provision.h */,
-				258E2F9A248DD4410078DA7C /* app_proxy.h */,
-				258E2F95248A600D0078DA7C /* app_provison.h */,
-				258E2F93248A5EA60078DA7C /* tutility.h */,
-				258E2F91248A5E010078DA7C /* app_mesh.h */,
-				258E2F8F248A5D710078DA7C /* mesh_config.h */,
-				258E2F8D248A5CF40078DA7C /* bit.h */,
-				258E2F8B248A5C710078DA7C /* types.h */,
-				258E2F89248A5BEE0078DA7C /* mesh_node.h */,
-				258E2F71248A4F020078DA7C /* time_model.h */,
-				258E2F72248A4F020078DA7C /* fast_provision_model.h */,
-				258E2F73248A4F020078DA7C /* scheduler.h */,
-				258E2F74248A4F020078DA7C /* lighting_model_HSL.h */,
-				258E2F75248A4F020078DA7C /* interface.h */,
-				258E2F76248A4F020078DA7C /* le_crypto.h */,
-				258E2F77248A4F020078DA7C /* remote_prov.h */,
-				258E2F78248A4F020078DA7C /* mesh_common.h */,
-				258E2F79248A4F020078DA7C /* app_heartbeat.h */,
-				258E2F7A248A4F020078DA7C /* mesh_ota.h */,
-				258E2F7B248A4F020078DA7C /* scene.h */,
-			);
-			path = c_lib_header;
 			sourceTree = "<group>";
 		};
 		259468FE248E27270011792F /* OpenSSL */ = {
@@ -502,6 +494,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		25ED16A4249869B800D283D9 /* Release-iphoneos */ = {
+			isa = PBXGroup;
+			children = (
+				25ED16A5249869B800D283D9 /* libsig_mesh_lib.a */,
+			);
+			path = "Release-iphoneos";
+			sourceTree = "<group>";
+		};
 		25FFB85F23A0D94A00334698 = {
 			isa = PBXGroup;
 			children = (
@@ -568,48 +568,52 @@
 			files = (
 				2594696F248E27280011792F /* x509v3.h in Headers */,
 				25946960248E27280011792F /* engine.h in Headers */,
-				258E2F8C248A5C710078DA7C /* types.h in Headers */,
-				258E2F8E248A5CF40078DA7C /* bit.h in Headers */,
-				258E2F8A248A5BEE0078DA7C /* mesh_node.h in Headers */,
 				25946987248E27280011792F /* md4.h in Headers */,
-				258E2F90248A5D710078DA7C /* mesh_config.h in Headers */,
 				25946997248E27280011792F /* modes.h in Headers */,
-				258E2F92248A5E020078DA7C /* app_mesh.h in Headers */,
 				2594696C248E27280011792F /* dh.h in Headers */,
-				258E2F94248A5EA60078DA7C /* tutility.h in Headers */,
 				25946974248E27280011792F /* md5.h in Headers */,
 				25946998248E27280011792F /* ssl2.h in Headers */,
-				258E2F9F248DD7240078DA7C /* cmd_interface.h in Headers */,
-				258E2F96248A600D0078DA7C /* app_provison.h in Headers */,
 				25946983248E27280011792F /* srp.h in Headers */,
-				258E2F7C248A4F020078DA7C /* time_model.h in Headers */,
-				258E2F80248A4F020078DA7C /* interface.h in Headers */,
-				258E2F7F248A4F020078DA7C /* lighting_model_HSL.h in Headers */,
 				25946984248E27280011792F /* camellia.h in Headers */,
-				258E2F7E248A4F020078DA7C /* scheduler.h in Headers */,
 				259469A6248E27280011792F /* lhash.h in Headers */,
-				258E2F82248A4F020078DA7C /* remote_prov.h in Headers */,
 				259469A5248E27280011792F /* idea.h in Headers */,
-				258E2F85248A4F020078DA7C /* mesh_ota.h in Headers */,
+				251F60CA24977B4B0076603E /* app_heartbeat.h in Headers */,
+				251F60BE24977B4B0076603E /* mesh_config.h in Headers */,
+				251F60C924977B4B0076603E /* app_proxy.h in Headers */,
+				251F60BF24977B4B0076603E /* lighting_model_HSL.h in Headers */,
+				251F60C324977B4B0076603E /* app_provison.h in Headers */,
+				251F60C224977B4B0076603E /* blt_config.h in Headers */,
+				251F60B524977B4B0076603E /* time_model.h in Headers */,
+				251F60BC24977B4B0076603E /* scheduler.h in Headers */,
+				251F60C424977B4B0076603E /* le_crypto.h in Headers */,
+				251F60C824977B4B0076603E /* cmd_interface.h in Headers */,
+				251F60B724977B4B0076603E /* app_mesh.h in Headers */,
+				251F60C524977B4B0076603E /* remote_prov.h in Headers */,
+				251F60B424977B4B0076603E /* mesh_node.h in Headers */,
+				251F60B824977B4B0076603E /* gatt_provision.h in Headers */,
+				251F60B924977B4B0076603E /* light.h in Headers */,
+				251F60C724977B4B0076603E /* mesh_common.h in Headers */,
+				251F60BD24977B4B0076603E /* bit.h in Headers */,
+				251F60B624977B4B0076603E /* fast_provision_model.h in Headers */,
+				251F60C124977B4B0076603E /* interface.h in Headers */,
+				251F60C024977B4B0076603E /* tutility.h in Headers */,
+				251F60B324977B4B0076603E /* app_beacon.h in Headers */,
+				251F60C624977B4B0076603E /* ble_common.h in Headers */,
+				251F60CB24977B4B0076603E /* mesh_ota.h in Headers */,
+				251F60BB24977B4B0076603E /* types.h in Headers */,
 				25946968248E27280011792F /* asn1.h in Headers */,
 				25946971248E27280011792F /* ssl23.h in Headers */,
 				25946992248E27280011792F /* rand.h in Headers */,
+				251F60BA24977B4B0076603E /* hci.h in Headers */,
+				251F60CC24977B4B0076603E /* scene.h in Headers */,
 				2594695E248E27280011792F /* blowfish.h in Headers */,
 				25946967248E27280011792F /* symhacks.h in Headers */,
-				258E2F7D248A4F020078DA7C /* fast_provision_model.h in Headers */,
 				25946994248E27280011792F /* pqueue.h in Headers */,
 				25946970248E27280011792F /* opensslconf-armv7s.h in Headers */,
 				25946966248E27280011792F /* sha.h in Headers */,
 				2594699D248E27280011792F /* whrlpool.h in Headers */,
-				258E2F81248A4F020078DA7C /* le_crypto.h in Headers */,
 				2594698E248E27280011792F /* des.h in Headers */,
 				25946990248E27280011792F /* ec.h in Headers */,
-				258E2FA1248DD9BE0078DA7C /* app_beacon.h in Headers */,
-				258E2F84248A4F020078DA7C /* app_heartbeat.h in Headers */,
-				258E2F83248A4F020078DA7C /* mesh_common.h in Headers */,
-				258E2FA3248DDA0B0078DA7C /* hci.h in Headers */,
-				258E2F9D248DD63A0078DA7C /* gatt_provision.h in Headers */,
-				258E2F9B248DD4410078DA7C /* app_proxy.h in Headers */,
 				2594698B248E27280011792F /* cast.h in Headers */,
 				2594698C248E27280011792F /* rc4.h in Headers */,
 				2594698F248E27280011792F /* ocsp.h in Headers */,
@@ -623,15 +627,12 @@
 				25946996248E27280011792F /* seed.h in Headers */,
 				2594696E248E27280011792F /* ui_compat.h in Headers */,
 				25946973248E27280011792F /* opensslconf-x86_64.h in Headers */,
-				258E2FB1248DEC7B0078DA7C /* blt_config.h in Headers */,
 				25946991248E27280011792F /* ecdh.h in Headers */,
 				2594695D248E27280011792F /* bn.h in Headers */,
 				2594699E248E27280011792F /* tls1.h in Headers */,
 				25946961248E27280011792F /* conf_api.h in Headers */,
 				25946982248E27280011792F /* ssl.h in Headers */,
 				259469A7248E27280011792F /* shim.h in Headers */,
-				258E2FB3248DED3C0078DA7C /* ble_common.h in Headers */,
-				258E2FAF248DEA9A0078DA7C /* light.h in Headers */,
 				25C40DBD23A219CD00FD144F /* Bluetooth.h in Headers */,
 				25946988248E27280011792F /* hmac.h in Headers */,
 				25946999248E27280011792F /* rsa.h in Headers */,
@@ -674,7 +675,6 @@
 				25946965248E27280011792F /* kssl.h in Headers */,
 				25C40DCB23A219CD00FD144F /* BLEProperties.h in Headers */,
 				2594696A248E27280011792F /* bio.h in Headers */,
-				258E2F86248A4F020078DA7C /* scene.h in Headers */,
 				2594699A248E27280011792F /* krb5_asn.h in Headers */,
 				2594697F248E27280011792F /* pkcs7.h in Headers */,
 				25946978248E27280011792F /* opensslconf-i386.h in Headers */,
@@ -719,7 +719,7 @@
 		25FFB86023A0D94A00334698 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1130;
+				LastUpgradeCheck = 1150;
 				ORGANIZATIONNAME = "梁家誌";
 				TargetAttributes = {
 					25FD996C23A4C6AA0050FAB4 = {
@@ -966,10 +966,6 @@
 		25FFB87223A0D94A00334698 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					"$(ARCHS_STANDARD)",
-					armv7s,
-				);
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
@@ -994,10 +990,6 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/SigMeshOC/OpenSSL/lib",
 					"$(PROJECT_DIR)/SigMeshOC/sig_mesh_lib/Release-iphoneos",
-					"$(PROJECT_DIR)/SigMeshOC/sig_mesh_lib\\ copy/Release-iphoneos",
-					"$(PROJECT_DIR)/SigMeshOC/sig_mesh_lib/vendor/common/mi_api/certi/third_party/micro-ecc",
-					"$(PROJECT_DIR)/SigMeshOC/sig_mesh_lib/proj_lib",
-					"$(PROJECT_DIR)/SigMeshOC/OpenSSL/lib",
 				);
 				MACH_O_TYPE = staticlib;
 				MARKETING_VERSION = 3.2.2;
@@ -1012,10 +1004,6 @@
 		25FFB87323A0D94A00334698 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					"$(ARCHS_STANDARD)",
-					armv7s,
-				);
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
@@ -1045,10 +1033,6 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/SigMeshOC/OpenSSL/lib",
 					"$(PROJECT_DIR)/SigMeshOC/sig_mesh_lib/Release-iphoneos",
-					"$(PROJECT_DIR)/SigMeshOC/sig_mesh_lib\\ copy/Release-iphoneos",
-					"$(PROJECT_DIR)/SigMeshOC/sig_mesh_lib/vendor/common/mi_api/certi/third_party/micro-ecc",
-					"$(PROJECT_DIR)/SigMeshOC/sig_mesh_lib/proj_lib",
-					"$(PROJECT_DIR)/SigMeshOC/OpenSSL/lib",
 				);
 				MACH_O_TYPE = staticlib;
 				MARKETING_VERSION = 3.2.2;

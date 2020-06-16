@@ -24,9 +24,9 @@
 //#include "../../vendor/common/light.h"
 //#include "../../proj_lib/sig_mesh/app_mesh.h"
 
-//#if WIN32
-//#pragma pack(1)
-//#endif
+#if WIN32
+#pragma pack(1)
+#endif
 
 typedef struct {
 	u8 len;

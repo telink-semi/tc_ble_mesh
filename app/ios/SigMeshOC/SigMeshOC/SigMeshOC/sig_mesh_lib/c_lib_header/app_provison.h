@@ -57,24 +57,6 @@ typedef enum{
 	LINK_RFU,
 }TRANS_LINK_OPERATION;
 
-typedef struct{
-    u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-
-    u8    type;                //RFU(3)_MD(1)_SN(1)_NESN(1)-LLID(2)
-    u8  rf_len;                //LEN(5)_RFU(3)
-    u16    l2cap;
-    u16    chanid;
-
-    u8    att;
-    u8    hl;                    // assigned by master
-    u8    hh;                    //
-
-    u8    dat[20];
-
-}rf_packet_att_data_t;
-
-
-
 typedef struct {
 	u8 GPCF:2;
 	u8 BearCtl:6;

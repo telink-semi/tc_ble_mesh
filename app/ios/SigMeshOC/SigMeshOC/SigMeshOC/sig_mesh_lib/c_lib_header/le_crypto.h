@@ -23,9 +23,6 @@
 #ifndef TN_DTLS_H
 #define TN_DTLS_H
 
-//#include "../../proj/tl_common.h"
-//#include <memory.h>
-
 #define		biL			32
 
 #define BITS_TO_LIMBS(i)  ( (i) / 32 + ( (i) % 32 != 0 ) )
@@ -95,7 +92,7 @@ int tn_mpi_mul_int_modp( tn_mpi *X, const tn_mpi *A,  int n );
 int tn_mpi_add_mpi_modp( tn_mpi *X, const tn_mpi *A, const tn_mpi *B );
 int tn_mpi_sub_mpi_modp( tn_mpi *X, const tn_mpi *A, const tn_mpi *B );
 int tn_mpi_sub_mpi_modn( tn_mpi *X, const tn_mpi *A, const tn_mpi *B );
-int tn_mpi_shift_l_modp( tn_mpi *X, size_t count );
+int tn_mpi_shift_l_modp( tn_mpi *X, int count );
 int tn_mpi_add_mpi( tn_mpi *X, const tn_mpi *A, const tn_mpi *B );
 int tn_mpi_sub_mpi( tn_mpi *X, const tn_mpi *A, const tn_mpi *B );
 int tn_mpi_cmp_int( tn_mpi *X, int z );
@@ -118,8 +115,8 @@ int tn_ecp_muladd( tn_ecp_point *R, const tn_mpi *m, const tn_ecp_point *P, cons
 
 extern void tn_ecp_gen_keypair (tn_mpi *d, tn_ecp_point *Q);
 extern void tn_p256_keypair (unsigned char *s, unsigned char *x, unsigned char *y);
+extern void tn_p256_keypair_sk(unsigned char *s,unsigned char *x,unsigned char *y);
 extern void tn_p256_dhkey (unsigned char *r, unsigned char *s, unsigned char * x, unsigned char *y);
-extern void tn_p256_keypair_mac (unsigned char *s, unsigned char *x, unsigned char *y,u8 *mac,u8 len );
 
 extern void tn_aes_128(unsigned char *key, unsigned char *plaintext, unsigned char *result);
 extern void tn_aes_cmac ( unsigned char *key, unsigned char *input, int length,
@@ -134,7 +131,5 @@ extern int tn_crypto_h6 (unsigned char *r, unsigned char key[16], unsigned char 
 
 extern int test_crypto_func ();
 extern int test_dhkey ();
-extern int test_const_sk_calc();
-extern void tn_p256_keypair_sk(unsigned char *s,unsigned char *x,unsigned char *y);
 
 #endif 

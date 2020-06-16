@@ -20,15 +20,15 @@
  *           
  *******************************************************************************************************/
 
-//#pragma once
+#pragma once
 ////#include "../../proj/tl_common.h"
 //#if NL_API_ENABLE
 ////#include "nl_api/nl_model_schedules.h"
 //#endif
-//
-//#if WIN32
-//#pragma pack(1)
-//#endif
+
+#if WIN32
+#pragma pack(1)
+#endif
 
 typedef struct{
 	u16 md_id; 

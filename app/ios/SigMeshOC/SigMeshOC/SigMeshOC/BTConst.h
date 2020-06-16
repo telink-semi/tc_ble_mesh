@@ -60,6 +60,8 @@
 #define kSubscriptionModels @[@(SIG_MD_G_ONOFF_S),@(SIG_MD_LIGHTNESS_S),@(SIG_MD_LIGHT_CTL_S),@(SIG_MD_LIGHT_CTL_TEMP_S),@(SIG_MD_LIGHT_HSL_S)]
 //Telink默认的企业id
 #define kCompanyID  (0x0211)
+//默认的IvIndex
+#define kDefaultIvIndex  (0x0)
 
 //SIGCharacteristicsIDs
 #define kPBGATT_Out_CharacteristicsID  @"2ADC"

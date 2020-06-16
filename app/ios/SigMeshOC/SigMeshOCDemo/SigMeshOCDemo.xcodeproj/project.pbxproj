@@ -12,7 +12,7 @@
 		2543B68223D16345003241C7 /* TLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 2543B67A23D16345003241C7 /* TLog.m */; };
 		2543B69723D16416003241C7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2543B69323D16415003241C7 /* 8258_mesh.bin */; };
 		2543B69B23D16416003241C7 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2543B69523D16416003241C7 /* 8269_mesh.bin */; };
-		2559472B248E2F93003E8597 /* SigMeshOC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2559472A248E2F93003E8597 /* SigMeshOC.framework */; };
+		25ED16A924986DEE00D283D9 /* SigMeshOC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25ED16A824986DEE00D283D9 /* SigMeshOC.framework */; };
 		A20C14B72254556700B42909 /* ColorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A20C14B62254556700B42909 /* ColorManager.m */; };
 		A23FE43822CD96760018F090 /* FileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43722CD96760018F090 /* FileChooseVC.m */; };
 		A23FE43F22CDF3230018F090 /* ChooseAndAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43E22CDF3230018F090 /* ChooseAndAddDeviceVC.m */; };
@@ -146,7 +146,7 @@
 		2543B67A23D16345003241C7 /* TLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TLog.m; sourceTree = "<group>"; };
 		2543B69323D16415003241C7 /* 8258_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh.bin; sourceTree = "<group>"; };
 		2543B69523D16416003241C7 /* 8269_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8269_mesh.bin; sourceTree = "<group>"; };
-		2559472A248E2F93003E8597 /* SigMeshOC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SigMeshOC.framework; sourceTree = "<group>"; };
+		25ED16A824986DEE00D283D9 /* SigMeshOC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SigMeshOC.framework; sourceTree = "<group>"; };
 		A20C14B52254556700B42909 /* ColorManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorManager.h; sourceTree = "<group>"; };
 		A20C14B62254556700B42909 /* ColorManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ColorManager.m; sourceTree = "<group>"; };
 		A23FE43622CD96760018F090 /* FileChooseVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileChooseVC.h; sourceTree = "<group>"; };
@@ -357,7 +357,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2559472B248E2F93003E8597 /* SigMeshOC.framework in Frameworks */,
+				25ED16A924986DEE00D283D9 /* SigMeshOC.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -388,22 +388,6 @@
 				2543B67A23D16345003241C7 /* TLog.m */,
 			);
 			path = TestAddDevice;
-			sourceTree = "<group>";
-		};
-		25594728248E2F93003E8597 /* SigMeshOC */ = {
-			isa = PBXGroup;
-			children = (
-				25594729248E2F93003E8597 /* Release-iphoneos */,
-			);
-			path = SigMeshOC;
-			sourceTree = "<group>";
-		};
-		25594729248E2F93003E8597 /* Release-iphoneos */ = {
-			isa = PBXGroup;
-			children = (
-				2559472A248E2F93003E8597 /* SigMeshOC.framework */,
-			);
-			path = "Release-iphoneos";
 			sourceTree = "<group>";
 		};
 		A277EAFC215A31E10001116F /* Setting */ = {
@@ -668,7 +652,7 @@
 		A2AB8ECE211004B200D73EB4 /* SDK */ = {
 			isa = PBXGroup;
 			children = (
-				25594728248E2F93003E8597 /* SigMeshOC */,
+				25ED16A824986DEE00D283D9 /* SigMeshOC.framework */,
 				2543B69323D16415003241C7 /* 8258_mesh.bin */,
 				2543B69523D16416003241C7 /* 8269_mesh.bin */,
 				A28CA37F2181E4AB005B1DB6 /* IQKeyboardManager-master */,
@@ -1306,7 +1290,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/SigMeshOCDemo/SDK/SigMeshOC/Release-iphoneos";
+				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/SigMeshOCDemo/SDK";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/SigMeshOCDemo/PrefixHeader.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1341,7 +1325,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/SigMeshOCDemo/SDK/SigMeshOC/Release-iphoneos";
+				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/SigMeshOCDemo/SDK";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/SigMeshOCDemo/PrefixHeader.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (

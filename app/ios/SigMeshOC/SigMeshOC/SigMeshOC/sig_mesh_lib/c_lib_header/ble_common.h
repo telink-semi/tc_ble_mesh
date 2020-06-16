@@ -24,11 +24,11 @@
 //#include "proj/mcu/config.h"
 //#include "proj/tl_common.h"
 //#endif
-#if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258))
-//#include "stack/ble/ble_common.h"
-#elif(MCU_CORE_TYPE == MCU_CORE_8278)
-//#include "stack/ble_8278/ble_common.h"
-#else
+//#if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258))
+////#include "stack/ble/ble_common.h"
+//#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+////#include "stack/ble_8278/ble_common.h"
+//#else
 
 /*********************************************************************
  * CONSTANTS
@@ -1296,7 +1296,7 @@ typedef struct {
 	u8	status;
 	u16	handle;
 } event_enc_refresh_t;
-#endif
+//#endif
 
 typedef struct {
 	s8	rssi;       // have been -110

@@ -396,30 +396,6 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define SZMIC_SEG_FLAG          (0)     // 0 means to use SZMIC_TRNS_SEG32, 1 means to use SZMIC_TRNS_SEG64.
 #define GET_SEG_SZMIC(szmic)    (szmic ? SZMIC_TRNS_SEG64 : SZMIC_TRNS_SEG32)
 
-typedef struct {
-    u8 type   :4;
-    u8 rfu1   :2;
-    u8 txAddr :1;
-    u8 rxAddr :1;
-}rf_adv_head_t;
-
-typedef struct{
-    u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
-
-    rf_adv_head_t  header;    //RA(1)_TA(1)_RFU(2)_TYPE(4)
-    u8  rf_len;                //LEN(6)_RFU(2)
-
-    u8    advA[6];            //address
-#if (TEST_LONG_ADV_PACKET)
-    u8    data[80];
-#else
-    u8    data[31];            //0-31 byte
-#endif
-}rf_packet_adv_t;
-
-
-
-
 enum{
 	SEG_RX_STATE_ING		= 0,
 	SEG_RX_STATE_COMPLETED	= 1,
