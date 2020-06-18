@@ -58,6 +58,7 @@ import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.foundation.event.OnlineStatusEvent;
 import com.telink.ble.mesh.foundation.event.ProvisioningEvent;
+import com.telink.ble.mesh.foundation.event.ReliableMessageProcessEvent;
 import com.telink.ble.mesh.foundation.event.RemoteProvisioningEvent;
 import com.telink.ble.mesh.foundation.event.ScanEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
@@ -503,7 +504,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         }
         this.actionMode = Mode.MODE_REMOTE_PROVISION;
         rebuildProvisioningDevice(remoteProvisioningDevice);
-        mRemoteProvisioningController.begin(this.mProvisioningController, meshConfiguration.getDefaultAppKeyIndex(), remoteProvisioningDevice);
+        mRemoteProvisioningController.begin(this.mProvisioningController, remoteProvisioningDevice);
     }
 
     void startFastProvision(FastProvisioningParameters parameters) {
@@ -670,6 +671,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         onEventPrepared(meshEvent);
     }
 
+    private void onReliableMessageProcessEvent(String eventType, boolean success, int opcode, int rspMax, int rspCount, String desc) {
+        ReliableMessageProcessEvent event = new ReliableMessageProcessEvent(this, eventType, success, opcode, rspMax, rspCount, desc);
+        onEventPrepared(event);
+    }
+
     private void onEventPrepared(Event event) {
         if (eventCallback != null) {
             eventCallback.onEventPrepared(event);
@@ -716,7 +722,27 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 + " isReliable: " + meshMessage.isReliable()
                 + " retryCnt: " + meshMessage.getRetryCnt()
                 + " rspMax: " + meshMessage.getResponseMax());
-        return mNetworkingController.sendMeshMessage(meshMessage);
+        final boolean sent = mNetworkingController.sendMeshMessage(meshMessage);
+        if (meshMessage.isReliable()) {
+            if (sent) {
+                // sent
+                onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESSING,
+                        false,
+                        meshMessage.getOpcode(),
+                        meshMessage.getResponseMax(),
+                        0,
+                        "mesh message processing");
+            } else {
+                // busy
+                onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_BUSY,
+                        false,
+                        meshMessage.getOpcode(),
+                        meshMessage.getResponseMax(),
+                        0,
+                        "mesh message send fail: busy");
+            }
+        }
+        return sent;
     }
 
     private void proxyFilterInit() {
@@ -1454,6 +1480,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         } else if (actionMode == Mode.MODE_FAST_PROVISION) {
             mFastProvisioningController.onFastProvisioningCommandComplete(success, opcode, rspMax, rspCount);
         }
+        onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_COMPLETE,
+                success, opcode, rspMax, rspCount, "mesh message send complete");
     }
 
     // , int src, int dst, int opcode, byte[] params

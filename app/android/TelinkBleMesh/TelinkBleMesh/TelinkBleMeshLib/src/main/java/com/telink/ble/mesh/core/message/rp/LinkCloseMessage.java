@@ -4,7 +4,7 @@ import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
 
 
-public class LinkCloseMessage extends UpdatingMessage {
+public class LinkCloseMessage extends RemoteProvisionMessage {
 
 
     public static final byte REASON_SUCCESS = 0x00;
@@ -18,15 +18,15 @@ public class LinkCloseMessage extends UpdatingMessage {
      */
     private byte reason;
 
-    public static LinkCloseMessage getSimple(int destinationAddress, int appKeyIndex, int rspMax, byte reason) {
-        LinkCloseMessage message = new LinkCloseMessage(destinationAddress, appKeyIndex);
+    public static LinkCloseMessage getSimple(int destinationAddress, int rspMax, byte reason) {
+        LinkCloseMessage message = new LinkCloseMessage(destinationAddress);
         message.setResponseMax(rspMax);
         message.reason = reason;
         return message;
     }
 
-    public LinkCloseMessage(int destinationAddress, int appKeyIndex) {
-        super(destinationAddress, appKeyIndex);
+    public LinkCloseMessage(int destinationAddress) {
+        super(destinationAddress);
     }
 
     @Override

@@ -1,0 +1,1223 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#",
+  "version": "1.0.0",
+  "meshUUID": "72C6BE40444D2081BEAADDAD4E3CC21C",
+  "meshName": "Brian and Mary's House",
+  "timestamp": "2018-12-23T11:45:22-08:00",
+  "netKeys": [
+    {
+      "name": "Home Network",
+      "index": 0,
+      "key": "5543950C57EDCC38E442964065720A8B",
+      "phase": 0,
+      "minSecurity": "secure",
+      "timestamp": "2018-11-20T10:05:20-08:00"
+    },
+    {
+      "name": "Molly's Network",
+      "index": 1,
+      "key": "6D4B5D861F6C7304C039FD846231E84D",
+      "oldKey": "610BB4B4BEC1A5630D6712DE06B95B20",
+      "phase": 1,
+      "minSecurity": "insecure",
+      "timestamp": "2018-10-10T06:22:34-08:00"
+    }
+  ],
+  "appKeys": [
+    {
+      "name": "Home Automation",
+      "index": 0,
+      "boundNetKey": 0,
+      "key": "3FA985DA6D4CA22DA05C7E7A1F11C783"
+    },
+    {
+      "name": "Door Bell",
+      "index": 2,
+      "boundNetKey": 0,
+      "key": "20283753615B66E63D34AF4A4A4E7336"
+    },
+    {
+      "name": "Cat Flap",
+      "index": 3,
+      "boundNetKey": 1,
+      "key": "958CED9C76F1F23A60746F9384CF1E5B",
+      "oldKey": "C337ACF959314D9D06C8419158F04617"
+    },
+    {
+      "name": "Home Automation Setup",
+      "index": 1200,
+      "boundNetKey": 0,
+      "key": "A327BB410CF137455A4F234DF8134C78"
+    }
+  ],
+  "provisioners": [
+    {
+      "provisionerName": "Brian's Phone",
+      "UUID": "70CF7C9732A345B691494810D2E9CBF4",
+      "allocatedGroupRange": [
+        {
+          "highAddress": "C1FF",
+          "lowAddress": "C100"
+        }
+      ],
+      "allocatedUnicastRange": [
+        {
+          "lowAddress": "0001",
+          "highAddress": "00FF"
+        },
+        {
+          "lowAddress": "0301",
+          "highAddress": "03FF"
+        }
+      ],
+      "allocatedSceneRange": []
+    },
+    {
+      "provisionerName": "Mary's Phone",
+      "UUID": "577C2832B345A6944A4810D2C9DFE456",
+      "allocatedGroupRange": [
+        {
+          "highAddress": "C0FF",
+          "lowAddress": "C000"
+        },
+        {
+          "highAddress": "C2FF",
+          "lowAddress": "C200"
+        }
+      ],
+      "allocatedUnicastRange": [
+        {
+          "highAddress": "01FF",
+          "lowAddress": "0100"
+        }
+      ],
+      "allocatedSceneRange": [
+        {
+          "firstScene": "0001",
+          "lastScene": "0040"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "UUID": "559B8C9732A345B691494865D288CBF3",
+      "name": "Bedroom Light Switch",
+      "deviceKey": "0FE48D03E41D26E5C5EA327A55E8A218",
+      "unicastAddress": "0002",
+      "security": "high",
+      "cid": "0003",
+      "pid": "0003",
+      "vid": "0003",
+      "crpl": "0003",
+      "features": {
+        "relay": 2,
+        "proxy": 2,
+        "friend": 2,
+        "lowPower": 1
+      },
+      "elements": [
+        {
+          "index": 0,
+          "location": "0001",
+          "models": [
+            {
+              "modelId": "0000",
+              "bind": [],
+              "subscribe": []
+            },
+            {
+              "modelId": "0002",
+              "bind": [],
+              "subscribe": []
+            },
+            {
+              "modelId": "0004",
+              "publish": {
+                "address": "C023",
+                "index": 0,
+                "ttl": 7,
+                "period": {
+                  "numberOfSteps": 9,
+                  "resolution": 10000
+                },
+                "retransmit": {
+                  "count": 2,
+                  "interval": 250
+                },
+                "credentials": 1
+              },
+              "bind": [
+                0
+              ],
+              "subscribe": []
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "location": "0002",
+          "models": [
+            {
+              "modelId": "0004",
+              "publish": {
+                "address": "C024",
+                "index": 0,
+                "ttl": 7,
+                "period": {
+                  "numberOfSteps": 9,
+                  "resolution": 10000
+                },
+                "retransmit": {
+                  "count": 2,
+                  "interval": 100
+                },
+                "credentials": 1
+              },
+              "bind": [
+                0
+              ],
+              "subscribe": []
+            }
+          ]
+        }
+      ],
+      "configComplete": true,
+      "netKeys": [
+        {
+          "index": 0,
+          "updated": false
+        }
+      ],
+      "appKeys": [
+        {
+          "index": 0,
+          "updated": false
+        }
+      ],
+      "networkTransmit": {
+        "count": 2,
+        "interval": 20
+      },
+      "defaultTTL": 3,
+      "blacklisted": false
+    },
+    {
+      "UUID": "347F8A9732D345E79149486AA2887983",
+      "name": "Bedroom Light",
+      "unicastAddress": "0004",
+      "cid": "0011",
+      "pid": "0004",
+      "vid": "0001",
+      "crpl": "0020",
+      "features": {
+        "relay": 1,
+        "proxy": 2,
+        "friend": 1,
+        "lowPower": 2
+      },
+      "elements": [
+        {
+          "index": 0,
+          "location": "0106",
+          "models": [
+            {
+              "modelId": "0000",
+              "bind": [],
+              "subscribe": []
+            },
+            {
+              "modelId": "0002",
+              "bind": [],
+              "subscribe": []
+            },
+            {
+              "modelId": "1203",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1204",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1206",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1207",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1204",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            },
+            {
+              "modelId": "1206",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1207",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            },
+            {
+              "modelId": "1000",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1004",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1006",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1007",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            },
+            {
+              "modelId": "1002",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1301",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1302",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            },
+            {
+              "modelId": "1307",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1308",
+              "subscribe": [
+                "C023"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "location": "0106",
+          "models": [
+            {
+              "modelId": "1002",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "130a",
+              "subscribe": [],
+              "bind": []
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "location": "0106",
+          "models": [
+            {
+              "modelId": "1002",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "130b",
+              "subscribe": [],
+              "bind": []
+            }
+          ]
+        }
+      ],
+      "deviceKey": "89DDEFD69B45AEC29DFD545E901CEE64",
+      "security": "high",
+      "configComplete": true,
+      "netKeys": [
+        {
+          "index": 0,
+          "updated": false
+        }
+      ],
+      "appKeys": [
+        {
+          "index": 0,
+          "updated": false
+        },
+        {
+          "index": 1200,
+          "updated": false
+        }
+      ],
+      "relayRetransmit": {
+        "count": 3,
+        "interval": 60
+      },
+      "defaultTTL": 4,
+      "blacklisted": false
+    },
+    {
+      "UUID": "345E82273DD345CC41494865D2334545",
+      "name": "Bedside Light (Brian)",
+      "deviceKey": "AAA4B4CA3AD5C6D6BE1A8D455EC40BE0",
+      "unicastAddress": "0007",
+      "security": "high",
+      "cid": "000A",
+      "pid": "1204",
+      "vid": "0041",
+      "crpl": "0020",
+      "features": {
+        "relay": 1,
+        "proxy": 2,
+        "friend": 0,
+        "lowPower": 2
+      },
+      "configComplete": true,
+      "netKeys": [
+        {
+          "index": 0,
+          "updated": false
+        }
+      ],
+      "appKeys": [
+        {
+          "index": 0,
+          "updated": false
+        },
+        {
+          "index": 1200,
+          "updated": false
+        }
+      ],
+      "elements": [
+        {
+          "index": 0,
+          "location": "0001",
+          "models": [
+            {
+              "modelId": "0000",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "0002",
+              "bind": [],
+              "subscribe": []
+            },
+            {
+              "modelId": "1203",
+              "subscribe": [
+                "C023",
+                "C024"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1204",
+              "subscribe": [
+                "C023",
+                "C024"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            },
+            {
+              "modelId": "1206",
+              "subscribe": [
+                "C023",
+                "C024"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1207",
+              "subscribe": [
+                "C023",
+                "C024"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            },
+            {
+              "modelId": "1000",
+              "subscribe": [
+                "C023",
+                "C024"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1004",
+              "subscribe": [
+                "C023",
+                "C024"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1006",
+              "subscribe": [
+                "C023",
+                "C024"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1007",
+              "subscribe": [
+                "C023",
+                "C024"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            },
+            {
+              "modelId": "1002",
+              "subscribe": [
+                "C023",
+                "C024"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1301",
+              "subscribe": [
+                "C023",
+                "C024"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1302",
+              "subscribe": [
+                "C023",
+                "C024"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            }
+          ]
+        }
+      ],
+      "blacklisted": false
+    },
+    {
+      "UUID": "268E8CA732A345B69149AA44BAAD2346",
+      "name": "Bedside Light (Mary)",
+      "deviceKey": "B619F5BA671AF2548BA219760294063B",
+      "unicastAddress": "0105",
+      "security": "high",
+      "cid": "000A",
+      "pid": "1204",
+      "vid": "0041",
+      "crpl": "0020",
+      "features": {
+        "relay": 0,
+        "proxy": 2,
+        "friend": 1,
+        "lowPower": 2
+      },
+      "secureNetworkBeacon": true,
+      "configComplete": true,
+      "netKeys": [
+        {
+          "index": 0,
+          "updated": false
+        }
+      ],
+      "appKeys": [
+        {
+          "index": 0,
+          "updated": false
+        },
+        {
+          "index": 1200,
+          "updated": false
+        }
+      ],
+      "elements": [
+        {
+          "index": 0,
+          "location": "0001",
+          "models": [
+            {
+              "modelId": "0000",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "0002",
+              "bind": [],
+              "subscribe": []
+            },
+            {
+              "modelId": "0005",
+              "subscribe": [
+                "C023",
+                "C025"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1204",
+              "subscribe": [
+                "C023",
+                "C025"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            },
+            {
+              "modelId": "1206",
+              "subscribe": [
+                "C023",
+                "C025"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1207",
+              "subscribe": [
+                "C023",
+                "C025"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            },
+            {
+              "modelId": "1000",
+              "subscribe": [
+                "C023",
+                "C025"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1004",
+              "subscribe": [
+                "C023",
+                "C025"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1006",
+              "subscribe": [
+                "C023",
+                "C025"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1007",
+              "subscribe": [
+                "C023",
+                "C025"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            },
+            {
+              "modelId": "1002",
+              "subscribe": [
+                "C023",
+                "C025"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1301",
+              "subscribe": [
+                "C023",
+                "C025"
+              ],
+              "bind": [
+                0
+              ]
+            },
+            {
+              "modelId": "1302",
+              "subscribe": [
+                "C023",
+                "C025"
+              ],
+              "bind": [
+                0,
+                1200
+              ]
+            }
+          ]
+        }
+      ],
+      "blacklisted": false
+    },
+    {
+      "UUID": "CBFA8C9732E345B691494822D28856FF",
+      "name": "Molly's Access Tag",
+      "deviceKey": "C7F91F91AB79F445925BC9B568CA53A9",
+      "unicastAddress": "0109",
+      "security": "low",
+      "cid": "003F",
+      "pid": "0001",
+      "vid": "0001",
+      "crpl": "0008",
+      "features": {
+        "relay": 2,
+        "proxy": 2,
+        "friend": 2,
+        "lowPower": 2
+      },
+      "configComplete": true,
+      "netKeys": [
+        {
+          "index": 1,
+          "updated": true
+        }
+      ],
+      "appKeys": [
+        {
+          "index": 3,
+          "updated": false
+        }
+      ],
+      "elements": [
+        {
+          "index": 0,
+          "location": "0100",
+          "models": [
+            {
+              "modelId": "0000",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "0002",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "003F002A",
+              "publish": {
+                "address": "EA57D9F1975D4EBDA78A37D189AC58F4",
+                "index": 3,
+                "ttl": 0,
+                "period": {
+                  "numberOfSteps": 2,
+                  "resolution": 600000
+                },
+                "retransmit": {
+                  "count": 2,
+                  "interval": 150
+                },
+                "credentials": 0
+              },
+              "subscribe": [],
+              "bind": [
+                3
+              ]
+            }
+          ]
+        }
+      ],
+      "blacklisted": false
+    },
+    {
+      "UUID": "45708C9732A345B5E149486AB247C4EE",
+      "name": "Cat Flap",
+      "deviceKey": "CA1C7F26BB557BD609777575CEF8E599",
+      "unicastAddress": "010A",
+      "security": "low",
+      "cid": "000C",
+      "pid": "0002",
+      "vid": "0000",
+      "crpl": "0008",
+      "features": {
+        "relay": 2,
+        "proxy": 2,
+        "friend": 2,
+        "lowPower": 2
+      },
+      "secureNetworkBeacon": false,
+      "configComplete": true,
+      "netKeys": [
+        {
+          "index": 1,
+          "updated": true
+        }
+      ],
+      "appKeys": [
+        {
+          "index": 3,
+          "updated": true
+        }
+      ],
+      "elements": [
+        {
+          "index": 0,
+          "location": "0000",
+          "models": [
+            {
+              "modelId": "0000",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "0002",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "0015",
+              "subscribe": [
+                "EA57D9F1975D4EBDA78A37D189AC58F4"
+              ],
+              "bind": [
+                3
+              ]
+            }
+          ]
+        }
+      ],
+      "blacklisted": false
+    },
+    {
+      "UUID": "27668C9732A345B561494865E288CBC2",
+      "name": "Door Bell",
+      "deviceKey": "FC846BF0D85AC4D9CEF63AA04E5507CE",
+      "unicastAddress": "0103",
+      "security": "high",
+      "cid": "0007",
+      "pid": "0019",
+      "vid": "0000",
+      "crpl": "0010",
+      "features": {
+        "relay": 2,
+        "proxy": 2,
+        "friend": 2,
+        "lowPower": 1
+      },
+      "configComplete": true,
+      "netKeys": [
+        {
+          "index": 0,
+          "updated": false
+        }
+      ],
+      "appKeys": [
+        {
+          "index": 2,
+          "updated": false
+        }
+      ],
+      "defaultTTL": 9,
+      "elements": [
+        {
+          "index": 0,
+          "location": "0100",
+          "models": [
+            {
+              "modelId": "0000",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "0002",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "1001",
+              "publish": {
+                "address": "C103",
+                "index": 2,
+                "ttl": 9,
+                "period": {
+                  "numberOfSteps": 1,
+                  "resolution": 1000
+                },
+                "retransmit": {
+                  "count": 3,
+                  "interval": 150
+                },
+                "credentials": 0
+              },
+              "subscribe": [],
+              "bind": [
+                2
+              ]
+            }
+          ]
+        }
+      ],
+      "blacklisted": false
+    },
+    {
+      "UUID": "EAA389973B4345B691494865D2885555",
+      "name": "Bell",
+      "deviceKey": "31743AFD08DBACECBBA1297BDD0AAEFE",
+      "unicastAddress": "0104",
+      "security": "high",
+      "cid": "0007",
+      "pid": "001A",
+      "vid": "0003",
+      "crpl": "0100",
+      "features": {
+        "relay": 0,
+        "proxy": 1,
+        "friend": 0,
+        "lowPower": 2
+      },
+      "configComplete": true,
+      "netKeys": [
+        {
+          "index": 0,
+          "updated": false
+        }
+      ],
+      "appKeys": [
+        {
+          "index": 2,
+          "updated": false
+        }
+      ],
+      "defaultTTL": 9,
+      "elements": [
+        {
+          "index": 0,
+          "location": "010C",
+          "models": [
+            {
+              "modelId": "0000",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "0002",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "1000",
+              "subscribe": [
+                "C103"
+              ],
+              "bind": [
+                2
+              ]
+            }
+          ]
+        }
+      ],
+      "blacklisted": false
+    },
+    {
+      "UUID": "70CF7C9732A345B691494810D2E9CBF4",
+      "name": "Brian��s phone",
+      "cid": "0008",
+      "pid": "032B",
+      "vid": "0005",
+      "crpl": "0100",
+      "features": {
+        "relay": 0,
+        "proxy": 0,
+        "friend": 0,
+        "lowPower": 2
+      },
+      "deviceKey": "27653BFE0EEEA5ECBBA68975DD0A0244",
+      "unicastAddress": "0001",
+      "security": "high",
+      "configComplete": true,
+      "netKeys": [
+        {
+          "index": 0,
+          "updated": false
+        },
+        {
+          "index": 1,
+          "updated": true
+        }
+      ],
+      "appKeys": [
+        {
+          "index": 0,
+          "updated": false
+        },
+        {
+          "index": 2,
+          "updated": false
+        },
+        {
+          "index": 3,
+          "updated": true
+        },
+        {
+          "index": 1200,
+          "updated": false
+        }
+      ],
+      "elements": [
+        {
+          "index": 0,
+          "location": "0000",
+          "models": [
+            {
+              "modelId": "0000",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "0002",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "0001",
+              "subscribe": [],
+              "bind": []
+            }
+          ]
+        }
+      ],
+      "blacklisted": false
+    },
+    {
+      "UUID": "577C2832B345A6944A4810D2C9DFE456",
+      "name": "Mary��s phone",
+      "cid": "0001",
+      "pid": "011a",
+      "vid": "0004",
+      "crpl": "0100",
+      "features": {
+        "relay": 0,
+        "proxy": 0,
+        "friend": 0,
+        "lowPower": 2
+      },
+      "deviceKey": "CCA28B400D49ABECBBA33975F7665628",
+      "unicastAddress": "01FF",
+      "security": "high",
+      "configComplete": true,
+      "netKeys": [
+        {
+          "index": 0,
+          "updated": false
+        },
+        {
+          "index": 1,
+          "updated": true
+        }
+      ],
+      "appKeys": [
+        {
+          "index": 0,
+          "updated": false
+        },
+        {
+          "index": 2,
+          "updated": false
+        },
+        {
+          "index": 3,
+          "updated": true
+        },
+        {
+          "index": 1200,
+          "updated": false
+        }
+      ],
+      "elements": [
+        {
+          "index": 0,
+          "location": "0000",
+          "models": [
+            {
+              "modelId": "0000",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "0002",
+              "subscribe": [],
+              "bind": []
+            },
+            {
+              "modelId": "0001",
+              "subscribe": [],
+              "bind": []
+            }
+          ]
+        }
+      ],
+      "blacklisted": false
+    }
+  ],
+  "groups": [
+    {
+      "name": "Bedroom",
+      "address": "C023",
+      "parentAddress": "0000"
+    },
+    {
+      "name": "Bedside (Brian)",
+      "address": "C024",
+      "parentAddress": "C023"
+    },
+    {
+      "name": "Bedside (Mary)",
+      "address": "C025",
+      "parentAddress": "C023"
+    },
+    {
+      "name": "Doorbell",
+      "address": "C103",
+      "parentAddress": "0000"
+    },
+    {
+      "name": "Cat Flap",
+      "address": "EA57D9F1975D4EBDA78A37D189AC58F4",
+      "parentAddress": "0000"
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Go to sleep",
+      "addresses": [
+        "C023"
+      ],
+      "number": "0007"
+    },
+    {
+      "name": "Wakeup",
+      "addresses": [
+        "C023"
+      ],
+      "number": "0002"
+    }
+  ]
+}

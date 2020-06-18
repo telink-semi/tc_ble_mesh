@@ -4,22 +4,22 @@ import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.generic.GenericMessage;
 
 
-public class LinkOpenMessage extends GenericMessage {
+public class LinkOpenMessage extends RemoteProvisionMessage {
 
     /**
      * 16 bytes
      */
     private byte[] uuid;
 
-    public static LinkOpenMessage getSimple(int destinationAddress, int appKeyIndex, int rspMax, byte[] uuid) {
-        LinkOpenMessage message = new LinkOpenMessage(destinationAddress, appKeyIndex);
+    public static LinkOpenMessage getSimple(int destinationAddress, int rspMax, byte[] uuid) {
+        LinkOpenMessage message = new LinkOpenMessage(destinationAddress);
         message.setResponseMax(rspMax);
         message.uuid = uuid;
         return message;
     }
 
-    public LinkOpenMessage(int destinationAddress, int appKeyIndex) {
-        super(destinationAddress, appKeyIndex);
+    public LinkOpenMessage(int destinationAddress) {
+        super(destinationAddress);
     }
 
     @Override

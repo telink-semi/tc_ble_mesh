@@ -1,13 +1,11 @@
 package com.telink.ble.mesh.core.message.rp;
 
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
-
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class ScanStartMessage extends UpdatingMessage {
+public class ScanStartMessage extends RemoteProvisionMessage {
 
     /**
      * 1 bytes
@@ -24,16 +22,16 @@ public class ScanStartMessage extends UpdatingMessage {
      */
     private byte[] uuid;
 
-    public static ScanStartMessage getSimple(int destinationAddress, int appKeyIndex, int rspMax, byte scannedItemsLimit, byte timeout) {
-        ScanStartMessage message = new ScanStartMessage(destinationAddress, appKeyIndex);
+    public static ScanStartMessage getSimple(int destinationAddress, int rspMax, byte scannedItemsLimit, byte timeout) {
+        ScanStartMessage message = new ScanStartMessage(destinationAddress);
         message.setResponseMax(rspMax);
         message.scannedItemsLimit = scannedItemsLimit;
         message.timeout = timeout;
         return message;
     }
 
-    public ScanStartMessage(int destinationAddress, int appKeyIndex) {
-        super(destinationAddress, appKeyIndex);
+    public ScanStartMessage(int destinationAddress) {
+        super(destinationAddress);
     }
 
     @Override

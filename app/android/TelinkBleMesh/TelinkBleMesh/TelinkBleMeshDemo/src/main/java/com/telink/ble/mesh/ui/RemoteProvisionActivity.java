@@ -39,6 +39,7 @@ import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import androidx.appcompat.widget.Toolbar;
@@ -284,11 +285,18 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         final byte SCAN_LIMIT = 1;
         // scan for 5 seconds
         final byte SCAN_TIMEOUT = 5;
-        final int SERVER_ADDRESS = 0xFFFF;
+//        final int SERVER_ADDRESS = 0xFFFF;
 
-        ScanStartMessage remoteScanMessage = ScanStartMessage.getSimple(SERVER_ADDRESS, meshInfo.getDefaultAppKeyIndex(),
-                1, SCAN_LIMIT, SCAN_TIMEOUT);
-        MeshService.getInstance().sendMeshMessage(remoteScanMessage);
+        HashSet<Integer> serverAddresses = getAvailableServerAddresses();
+        if (serverAddresses.size() == 0) {
+            MeshLogger.e("no Available server address");
+            return;
+        }
+        for (int address : serverAddresses) {
+            ScanStartMessage remoteScanMessage = ScanStartMessage.getSimple(address, 1, SCAN_LIMIT, SCAN_TIMEOUT);
+            MeshService.getInstance().sendMeshMessage(remoteScanMessage);
+        }
+
         delayHandler.removeCallbacksAndMessages(null);
         delayHandler.postDelayed(remoteScanTimeoutTask, (SCAN_TIMEOUT + 5) * 1000);
     }
@@ -522,5 +530,19 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             }
         }
         return null;
+    }
+
+    private HashSet<Integer> getAvailableServerAddresses() {
+        HashSet<Integer> serverAddresses = new HashSet<>();
+        for (NodeInfo nodeInfo : meshInfo.nodes) {
+            if (nodeInfo.getOnOff() != NodeInfo.ON_OFF_STATE_OFFLINE) {
+                serverAddresses.add(nodeInfo.meshAddress);
+            }
+        }
+
+        for (NodeInfo nodeInfo : devices) {
+            serverAddresses.add(nodeInfo.meshAddress);
+        }
+        return serverAddresses;
     }
 }

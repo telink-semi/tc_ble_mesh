@@ -6,7 +6,7 @@ import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
 
 import java.nio.ByteBuffer;
 
-public class ProvisioningPduSendMessage extends UpdatingMessage {
+public class ProvisioningPduSendMessage extends RemoteProvisionMessage {
 
     private byte outboundPDUNumber;
 
@@ -18,18 +18,18 @@ public class ProvisioningPduSendMessage extends UpdatingMessage {
     /**
      * @param destinationAddress server address
      */
-    public static ProvisioningPduSendMessage getSimple(int destinationAddress, int appKeyIndex, int rspMax,
+    public static ProvisioningPduSendMessage getSimple(int destinationAddress, int rspMax,
                                                        byte outboundPDUNumber,
                                                        byte[] provisioningPDU) {
-        ProvisioningPduSendMessage message = new ProvisioningPduSendMessage(destinationAddress, appKeyIndex);
+        ProvisioningPduSendMessage message = new ProvisioningPduSendMessage(destinationAddress);
         message.setResponseMax(rspMax);
         message.outboundPDUNumber = outboundPDUNumber;
         message.provisioningPDU = provisioningPDU;
         return message;
     }
 
-    public ProvisioningPduSendMessage(int destinationAddress, int appKeyIndex) {
-        super(destinationAddress, appKeyIndex);
+    public ProvisioningPduSendMessage(int destinationAddress) {
+        super(destinationAddress);
     }
 
     @Override
