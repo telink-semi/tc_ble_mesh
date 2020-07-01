@@ -41,7 +41,8 @@ public class ScanStartMessage extends RemoteProvisionMessage {
 
     @Override
     public int getResponseOpcode() {
-        return Opcode.REMOTE_PROV_SCAN_STS.value;
+//        return Opcode.REMOTE_PROV_SCAN_STS.value;
+        return super.getResponseOpcode();
     }
 
     @Override

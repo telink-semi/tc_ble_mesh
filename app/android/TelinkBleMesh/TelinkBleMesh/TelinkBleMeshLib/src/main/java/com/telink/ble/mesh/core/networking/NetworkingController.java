@@ -273,7 +273,7 @@ public class NetworkingController {
         this.directAddress = 0;
         this.lastSegComplete = true;
         this.deviceSequenceNumberMap.clear();
-         this.receivedSegmentedMessageBuffer.clear();
+        this.receivedSegmentedMessageBuffer.clear();
         this.sentSegmentedMessageBuffer.clear();
         this.mResponseMessageBuffer.clear();
         this.isIvUpdating = false;
@@ -766,7 +766,7 @@ public class NetworkingController {
         SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.from(payload);
         // validate beacon data
         if (networkBeacon != null) {
-            log(networkBeacon.toString());
+            log("SecureNetworkBeacon received: " + networkBeacon.toString());
             if (networkBeacon.validateAuthValue(networkId, networkBeaconKey)) {
                 int ivIndex = networkBeacon.getIvIndex();
                 boolean isIvUpdating = networkBeacon.isIvUpdating();
@@ -874,6 +874,7 @@ public class NetworkingController {
     private Runnable proxyFilterInitTimeoutTask = new Runnable() {
         @Override
         public void run() {
+            log("filter init timeout");
             onProxyInitComplete(false);
         }
     };

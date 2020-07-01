@@ -724,7 +724,8 @@ public class FirmwareUpdatingController {
             } else {
                 final UpdatePhase phase = UpdatePhase.valueOf(firmwareUpdateStatusMessage.getPhase() & 0xFF);
                 if (step == STEP_UPDATE_APPLY) {
-                    if (phase == UpdatePhase.VERIFICATION_SUCCESS) {
+                    if (phase == UpdatePhase.VERIFICATION_SUCCESS
+                    || phase == UpdatePhase.APPLYING_UPDATE) {
                         onDeviceSuccess(nodes.get(nodeIndex));
                     } else {
                         onDeviceFail(nodes.get(nodeIndex), "phase error when update apply");

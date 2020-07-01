@@ -746,6 +746,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     private void proxyFilterInit() {
+        log("filter init start");
         mNetworkingController.proxyFilterInit();
     }
 
@@ -1331,7 +1332,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 //            if (!device.getAddress().toUpperCase().equals("A4:C1:38:3F:4C:05")) return;
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
 //            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
-//            if (!device.getAddress().toUpperCase().contains("FF:EE:EE:EE")) return;
+//            if (!device.getAddress().toUpperCase().contains("20:20")) return;
 //            if (!device.getAddress().contains("33:22:11")) return;
             onScanFilter(device, rssi, scanRecord);
         }
@@ -1454,7 +1455,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     @Override
     public void onProxyInitComplete(boolean success, int address) {
-
+        log("filter init complete, success? " + success);
         if (success) {
             this.directDeviceAddress = address;
             onProxyLoginSuccess();

@@ -137,11 +137,13 @@ public class GattConnection extends BluetoothGattCallback {
     public void proxyInit() {
         enableNotifications();
         writeCCCForPx();
+//        writeCCCForPv();
     }
 
     public void provisionInit() {
         enableNotifications();
         writeCCCForPv();
+        writeCCCForPx();
     }
 
     /**

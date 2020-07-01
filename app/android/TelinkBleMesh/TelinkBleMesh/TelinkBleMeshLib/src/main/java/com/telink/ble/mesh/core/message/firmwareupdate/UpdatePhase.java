@@ -14,7 +14,7 @@ public enum UpdatePhase {
 
     VERIFICATION_FAILED(0x05, "The Verify Firmware procedure failed."),
 
-    APPLY_ACTIVE(0x06, "The Apply New Firmware procedure is being executed."),
+    APPLYING_UPDATE(0x06, "The Apply New Firmware procedure is being executed."),
 
     UNKNOWN_ERROR(0xFF, "unknown error");
 
