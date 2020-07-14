@@ -65,6 +65,8 @@
 
     <string name="hex_input">0123456789abcdefABCDEF</string>
 
+    <string name="decimal_number_input">0123456789.</string>
+
     <string name="number_input">0123456789</string>
 
     <string name="send">Send</string>
