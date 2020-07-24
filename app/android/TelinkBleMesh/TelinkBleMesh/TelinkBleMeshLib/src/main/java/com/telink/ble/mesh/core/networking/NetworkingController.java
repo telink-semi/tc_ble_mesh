@@ -656,7 +656,8 @@ public class NetworkingController {
         synchronized (mNetworkingQueue) {
             queueSize = mNetworkingQueue.size();
         }
-        long timeout = 960 + queueSize * NETWORKING_INTERVAL;
+        // 960
+        long timeout = 1280 + queueSize * NETWORKING_INTERVAL;
         log("reliable message timeout:" + timeout);
         return timeout;
     }
@@ -1032,8 +1033,13 @@ public class NetworkingController {
         AccessLayerPDU accessPDU;
         if (seg == 1) {
             log("parse segmented access message");
+
+            /*
+             * tick refresh if received segment busy
+             */
             /*if (reliableBusy) {
-                restartReliableMessageTimeoutTask(false);
+                log("refresh reliable tick because of segment network pdu received");
+                restartReliableMessageTimeoutTask();
             }*/
             accessPDU = parseSegmentedAccessMessage(networkLayerPDU);
 

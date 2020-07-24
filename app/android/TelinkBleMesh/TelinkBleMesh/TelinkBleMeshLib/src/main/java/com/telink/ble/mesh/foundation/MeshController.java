@@ -1282,34 +1282,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             } else if (actionMode == Mode.MODE_FAST_PROVISION) {
                 connectIntent = true;
             } else if (actionMode == Mode.MODE_SCAN) {
-//                connectIntent = false;
-                LeScanFilter filter = (LeScanFilter) mActionParams.get(Parameters.SCAN_FILTERS);
-                if (filter.macExclude != null && filter.macExclude.length != 0) {
-                    for (String mac : filter.macExclude) {
-                        if (mac.toUpperCase().equals(device.getAddress().toUpperCase())) {
-                            return;
-                        }
-                    }
+                boolean single = mActionParams.getBool(Parameters.SCAN_SINGLE_MODE, false);
+                if (single) {
+                    stopScan();
                 }
-
-                boolean isTarget = true;
-                if (filter.macInclude != null && filter.macInclude.length != 0) {
-                    isTarget = false;
-                    for (String mac : filter.macInclude) {
-                        if (mac.toUpperCase().equals(device.getAddress().toUpperCase())) {
-                            isTarget = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (isTarget) {
-                    boolean single = mActionParams.getBool(Parameters.SCAN_SINGLE_MODE, false);
-                    if (single) {
-                        stopScan();
-                    }
-                    onDeviceFound(new AdvertisingDevice(device, rssi, scanRecord));
-                }
+                onDeviceFound(new AdvertisingDevice(device, rssi, scanRecord));
             }
 
             if (connectIntent) {
@@ -1333,7 +1310,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
 //            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
 //            if (!device.getAddress().toUpperCase().contains("20:20")) return;
-//            if (!device.getAddress().contains("33:22:11")) return;
+//            if (!device.getAddress().contains("20:20")) return;
             onScanFilter(device, rssi, scanRecord);
         }
 

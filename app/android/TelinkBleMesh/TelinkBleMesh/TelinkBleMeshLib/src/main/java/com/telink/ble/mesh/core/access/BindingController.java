@@ -287,16 +287,17 @@ public class BindingController {
                 }
                 ModelAppStatusMessage appStatus = ((ModelAppStatusMessage) message.getStatusMessage());
                 if (bindingModels.size() > modelIndex) {
-                    int modelId = bindingModels.get(modelIndex).modelId;
-                    if (appStatus.getStatus() == 0) {
-                        if (modelId == appStatus.getModelIdentifier()) {
+                    final int modelId = bindingModels.get(modelIndex).modelId;
+                    final boolean sig = bindingModels.get(modelIndex).sig;
+                    if (modelId == appStatus.getModelIdentifier()) {
+                        if (!sig || appStatus.getStatus() == 0) {
                             modelIndex++;
                             bindNextModel();
                         } else {
-                            log("model id error");
+                            onBindFail("mode app status error");
                         }
                     } else {
-                        onBindFail("mode app status error");
+                        log("model id error");
                     }
                 }
                 break;

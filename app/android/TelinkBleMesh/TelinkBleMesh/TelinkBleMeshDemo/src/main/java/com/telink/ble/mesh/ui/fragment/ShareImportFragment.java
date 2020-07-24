@@ -76,6 +76,10 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
                 String jsonData = FileSystem.readString(file);
                 MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
                 MeshInfo newMesh = MeshStorageService.getInstance().importExternal(jsonData, localMesh);
+                if (newMesh == null){
+                    toastMsg("import failed");
+                    return;
+                }
                 newMesh.saveOrUpdate(getActivity());
                 MeshService.getInstance().idle(true);
                 TelinkMeshApplication.getInstance().setupMesh(newMesh);

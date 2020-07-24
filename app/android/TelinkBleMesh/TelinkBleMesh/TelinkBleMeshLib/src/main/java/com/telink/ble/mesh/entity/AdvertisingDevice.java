@@ -55,4 +55,9 @@ public class AdvertisingDevice implements Parcelable {
     public boolean equals(Object obj) {
         return obj instanceof AdvertisingDevice && ((AdvertisingDevice) obj).device.equals(device);
     }
+
+    @Override
+    public int hashCode() {
+        return device.hashCode();
+    }
 }
