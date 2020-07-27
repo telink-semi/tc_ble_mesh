@@ -5,8 +5,8 @@ package com.telink.ble.mesh.model.json;
  */
 
 public enum MeshSecurity {
-    Low("low"),
-    High("high");
+    Secure("secure"),
+    Insecure("insecure");
 
 
     private String desc;

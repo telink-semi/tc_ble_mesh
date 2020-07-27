@@ -29,7 +29,12 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Telinkg Mesh App
@@ -47,9 +52,8 @@ public class TelinkMeshApplication extends MeshApplication {
     public void onCreate() {
         super.onCreate();
         mThis = this;
-
-        MeshLogger.d("app start");
-
+        // 2018-11-20T10:05:20-08:00
+        // 2020-07-27T15:15:29+0800
         HandlerThread offlineCheckThread = new HandlerThread("offline check thread");
         offlineCheckThread.start();
         mOfflineCheckHandler = new Handler(offlineCheckThread.getLooper());

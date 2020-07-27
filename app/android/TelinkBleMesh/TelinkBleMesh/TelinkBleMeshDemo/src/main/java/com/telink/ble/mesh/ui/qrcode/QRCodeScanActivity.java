@@ -155,7 +155,19 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
 
     private void onDownloadSuccess(final String meshJson) {
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-        final MeshInfo result = MeshStorageService.getInstance().importExternal(meshJson, meshInfo);
+        final MeshInfo result;
+        try {
+            result = MeshStorageService.getInstance().importExternal(meshJson, meshInfo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    toastMsg("import failed");
+                }
+            });
+            return;
+        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

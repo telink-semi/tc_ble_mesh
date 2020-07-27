@@ -3,6 +3,7 @@ package com.telink.ble.mesh.model.json;
 
 import com.telink.ble.mesh.entity.Scheduler;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,14 +16,23 @@ import java.util.List;
 public class MeshStorage {
 
     interface Defaults {
-        String Schema = "telink-semi.com";
-        String Version = "V0.0.1";
+        String Schema = "http://json-schema.org/draft-04/schema#";
+        String Version = "1.0.0";
+        String Id = "http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#";
         String MeshName = "Telink-Sig-Mesh";
 
         int IV_INDEX = 0;
+
+        String KEY_INVALID = "00000000000000000000000000000000";
+
+        String ADDRESS_INVALID = "0000";
+
+        String LOCAL_DEVICE_KEY = "00112233445566778899AABBCCDDEEFF";
     }
 
     public String $schema = Defaults.Schema;
+
+    public String id = Defaults.Id;
 
     public String version = Defaults.Version;
 
@@ -72,13 +82,13 @@ public class MeshStorage {
         }
 
         public static class SceneRange {
-            public SceneRange(int firstScene, int lastScene) {
+            public SceneRange(String firstScene, String lastScene) {
                 this.firstScene = firstScene;
                 this.lastScene = lastScene;
             }
 
-            public int firstScene;
-            public int lastScene;
+            public String firstScene;
+            public String lastScene;
         }
     }
 
@@ -92,7 +102,7 @@ public class MeshStorage {
         public int phase;
         public String key;
         public String minSecurity;
-        public String oldKey;
+        public String oldKey = Defaults.KEY_INVALID;
         public String timestamp;
     }
 
@@ -101,7 +111,7 @@ public class MeshStorage {
         public int index;
         public int boundNetKey;
         public String key;
-        public String oldKey;
+        public String oldKey = Defaults.KEY_INVALID;
     }
 
     /**
@@ -232,7 +242,7 @@ public class MeshStorage {
 
     public static class Model {
         public String modelId;
-        public List<String> subscribe;
+        public List<String> subscribe = new ArrayList<>();
         public Publish publish;
         public List<Integer> bind;
     }
@@ -278,7 +288,7 @@ public class MeshStorage {
     public static class Group {
         public String name;
         public String address;
-        public String parentAddress;
+        public String parentAddress = Defaults.ADDRESS_INVALID;
     }
 
     public static class Scene {

@@ -4,6 +4,7 @@ import android.os.ParcelUuid;
 
 import com.telink.ble.mesh.core.ble.MeshScanRecord;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
+import com.telink.ble.mesh.util.Arrays;
 
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
@@ -159,6 +160,15 @@ public final class MeshUtils {
             }
         }
         return re;
+    }
+
+    /**
+     * @param hex input
+     * @return int value
+     */
+    public static int hexString2Int(String hex, ByteOrder order) {
+        byte[] buf = Arrays.hexToBytes(hex);
+        return bytes2Integer(buf, order);
     }
 
     public static byte[] sequenceNumber2Buffer(int sequenceNumber) {
