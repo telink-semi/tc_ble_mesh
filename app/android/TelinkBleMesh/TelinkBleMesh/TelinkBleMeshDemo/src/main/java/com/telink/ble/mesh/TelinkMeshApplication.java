@@ -29,12 +29,7 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * Telinkg Mesh App
@@ -173,6 +168,7 @@ public class TelinkMeshApplication extends MeshApplication {
                 }
             } else if (message.getStatusMessage() instanceof CtlStatusMessage) {
                 CtlStatusMessage ctlStatusMessage = (CtlStatusMessage) statusMessage;
+                MeshLogger.d("ctl : " + ctlStatusMessage.toString());
                 int srcAdr = message.getSrc();
                 for (NodeInfo onlineDevice : meshInfo.nodes) {
                     if (onlineDevice.meshAddress == srcAdr) {
@@ -180,7 +176,11 @@ public class TelinkMeshApplication extends MeshApplication {
                         if (onLumStatus(onlineDevice, UnitConvert.lightness2lum(lum))) {
                             statusChangedNode = onlineDevice;
                         }
-//                        onlineDevice.temp = ctlInfo.temp;
+
+                        int temp = ctlStatusMessage.isComplete() ? ctlStatusMessage.getTargetTemperature() : ctlStatusMessage.getPresentTemperature();
+                        if (onTempStatus(onlineDevice, UnitConvert.tempToTemp100(temp))) {
+                            statusChangedNode = onlineDevice;
+                        }
                         break;
                     }
                 }
@@ -196,7 +196,7 @@ public class TelinkMeshApplication extends MeshApplication {
                         break;
                     }
                 }
-            }else if (message.getStatusMessage() instanceof CtlTemperatureStatusMessage){
+            } else if (message.getStatusMessage() instanceof CtlTemperatureStatusMessage) {
                 CtlTemperatureStatusMessage ctlTemp = (CtlTemperatureStatusMessage) statusMessage;
                 int srcAdr = message.getSrc();
                 for (NodeInfo onlineDevice : meshInfo.nodes) {

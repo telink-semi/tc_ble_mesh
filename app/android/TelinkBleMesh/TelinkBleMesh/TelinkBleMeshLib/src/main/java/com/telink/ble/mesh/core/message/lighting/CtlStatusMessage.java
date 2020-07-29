@@ -117,4 +117,16 @@ public class CtlStatusMessage extends StatusMessage implements Parcelable {
     public boolean isComplete() {
         return isComplete;
     }
+
+    @Override
+    public String toString() {
+        return "CtlStatusMessage{" +
+                "presentLightness=" + presentLightness +
+                ", presentTemperature=" + presentTemperature +
+                ", targetLightness=" + targetLightness +
+                ", targetTemperature=" + targetTemperature +
+                ", remainingTime=" + remainingTime +
+                ", isComplete=" + isComplete +
+                '}';
+    }
 }

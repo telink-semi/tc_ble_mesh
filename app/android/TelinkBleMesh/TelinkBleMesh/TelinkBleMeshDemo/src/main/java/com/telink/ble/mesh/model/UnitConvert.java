@@ -1,7 +1,6 @@
 package com.telink.ble.mesh.model;
 
 
-
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.Calendar;
@@ -49,6 +48,12 @@ public final class UnitConvert {
             temp100 = 100;
         }
         return (800 + ((20000 - 800) * temp100) / 100);
+    }
+
+    public static int tempToTemp100(int temp) {
+        if (temp < 800) return 0;
+        if (temp > 20000) return 100;
+        return (temp - 800) * 100 / (20000 - 800);
     }
 
 

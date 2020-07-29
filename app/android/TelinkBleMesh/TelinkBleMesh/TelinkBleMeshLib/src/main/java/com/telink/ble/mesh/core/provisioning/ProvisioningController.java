@@ -257,7 +257,7 @@ public class ProvisioningController {
     }
 
     private byte[] getAuthValue() {
-        if (pvCapability.staticOOBSupported()) {
+        if (pvCapability.staticOOBSupported() && mProvisioningDevice.getAuthValue() != null) {
             return mProvisioningDevice.getAuthValue();
         } else {
             return AUTH_NO_OOB;
@@ -346,7 +346,6 @@ public class ProvisioningController {
 
         provisionerRandom = Arrays.generateRandom(16);
         byte[] authValue = getAuthValue();
-
 
         byte[] confirmData = new byte[provisionerRandom.length + authValue.length];
         System.arraycopy(provisionerRandom, 0, confirmData, 0, provisionerRandom.length);

@@ -1310,7 +1310,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
 //            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
 //            if (!device.getAddress().toUpperCase().contains("20:20")) return;
-//            if (!device.getAddress().contains("20:20")) return;
+//            if (!device.getAddress().contains("30:08")) return;
             onScanFilter(device, rssi, scanRecord);
         }
 
