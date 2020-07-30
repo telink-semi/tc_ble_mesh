@@ -4,6 +4,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 
+import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.StatusMessage;
@@ -23,6 +24,7 @@ import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.UnitConvert;
+import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.FileSystem;
 import com.telink.ble.mesh.util.MeshLogger;
 

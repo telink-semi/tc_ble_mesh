@@ -294,7 +294,7 @@ public class MeshStorage {
     public static class Scene {
         public String name;
         public List<String> addresses;
-        public int number;
+        public String number;
     }
 
 }

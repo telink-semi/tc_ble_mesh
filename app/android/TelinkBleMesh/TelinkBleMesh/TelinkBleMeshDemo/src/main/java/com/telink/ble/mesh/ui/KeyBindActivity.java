@@ -157,14 +157,13 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
 
     private void kickOut() {
         // send reset message
-        MeshService.getInstance().sendMeshMessage(new NodeResetMessage(targetDevice.meshAddress));
+        boolean cmdSent = MeshService.getInstance().sendMeshMessage(new NodeResetMessage(targetDevice.meshAddress));
         kickDirect = targetDevice.meshAddress == (MeshService.getInstance().getDirectConnectedNodeAddress());
         showWaitingDialog("kick out processing");
-        if (!kickDirect) {
+        if (!cmdSent || !kickDirect) {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-
                     onKickOutFinish();
                 }
             }, 3 * 1000);
