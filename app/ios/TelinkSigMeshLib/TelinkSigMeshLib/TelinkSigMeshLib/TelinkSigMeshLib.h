@@ -44,7 +44,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
  2.不注释‘#define kExist’则生成包含MeshOTA、remote provision代码的库TelinkSigMeshLibExtensions.framework，demo需要导入头文件‘#import "TelinkSigMeshLib.h"’
  3.default release TelinkSigMeshLib.framework.
  */
-//#define kExist
+#define kExist
 #ifndef kExist
 
 // 1.该部分为不包含MeshOTA、remote provision代码的公开头文件
