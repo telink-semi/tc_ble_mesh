@@ -1,3 +1,24 @@
+/********************************************************************************************************
+ * @file     MeshController.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.foundation;
 
 import android.bluetooth.BluetoothAdapter;
@@ -58,6 +79,7 @@ import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.foundation.event.OnlineStatusEvent;
 import com.telink.ble.mesh.foundation.event.ProvisioningEvent;
+import com.telink.ble.mesh.foundation.event.ReliableMessageProcessEvent;
 import com.telink.ble.mesh.foundation.event.RemoteProvisioningEvent;
 import com.telink.ble.mesh.foundation.event.ScanEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
@@ -503,7 +525,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         }
         this.actionMode = Mode.MODE_REMOTE_PROVISION;
         rebuildProvisioningDevice(remoteProvisioningDevice);
-        mRemoteProvisioningController.begin(this.mProvisioningController, meshConfiguration.getDefaultAppKeyIndex(), remoteProvisioningDevice);
+        mRemoteProvisioningController.begin(this.mProvisioningController, remoteProvisioningDevice);
     }
 
     void startFastProvision(FastProvisioningParameters parameters) {
@@ -670,6 +692,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         onEventPrepared(meshEvent);
     }
 
+    private void onReliableMessageProcessEvent(String eventType, boolean success, int opcode, int rspMax, int rspCount, String desc) {
+        ReliableMessageProcessEvent event = new ReliableMessageProcessEvent(this, eventType, success, opcode, rspMax, rspCount, desc);
+        onEventPrepared(event);
+    }
+
     private void onEventPrepared(Event event) {
         if (eventCallback != null) {
             eventCallback.onEventPrepared(event);
@@ -716,10 +743,31 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 + " isReliable: " + meshMessage.isReliable()
                 + " retryCnt: " + meshMessage.getRetryCnt()
                 + " rspMax: " + meshMessage.getResponseMax());
-        return mNetworkingController.sendMeshMessage(meshMessage);
+        final boolean sent = mNetworkingController.sendMeshMessage(meshMessage);
+        if (meshMessage.isReliable()) {
+            if (sent) {
+                // sent
+                onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESSING,
+                        false,
+                        meshMessage.getOpcode(),
+                        meshMessage.getResponseMax(),
+                        0,
+                        "mesh message processing");
+            } else {
+                // busy
+                onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_BUSY,
+                        false,
+                        meshMessage.getOpcode(),
+                        meshMessage.getResponseMax(),
+                        0,
+                        "mesh message send fail: busy");
+            }
+        }
+        return sent;
     }
 
     private void proxyFilterInit() {
+        log("filter init start");
         mNetworkingController.proxyFilterInit();
     }
 
@@ -1255,34 +1303,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             } else if (actionMode == Mode.MODE_FAST_PROVISION) {
                 connectIntent = true;
             } else if (actionMode == Mode.MODE_SCAN) {
-//                connectIntent = false;
-                LeScanFilter filter = (LeScanFilter) mActionParams.get(Parameters.SCAN_FILTERS);
-                if (filter.macExclude != null && filter.macExclude.length != 0) {
-                    for (String mac : filter.macExclude) {
-                        if (mac.toUpperCase().equals(device.getAddress().toUpperCase())) {
-                            return;
-                        }
-                    }
+                boolean single = mActionParams.getBool(Parameters.SCAN_SINGLE_MODE, false);
+                if (single) {
+                    stopScan();
                 }
-
-                boolean isTarget = true;
-                if (filter.macInclude != null && filter.macInclude.length != 0) {
-                    isTarget = false;
-                    for (String mac : filter.macInclude) {
-                        if (mac.toUpperCase().equals(device.getAddress().toUpperCase())) {
-                            isTarget = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (isTarget) {
-                    boolean single = mActionParams.getBool(Parameters.SCAN_SINGLE_MODE, false);
-                    if (single) {
-                        stopScan();
-                    }
-                    onDeviceFound(new AdvertisingDevice(device, rssi, scanRecord));
-                }
+                onDeviceFound(new AdvertisingDevice(device, rssi, scanRecord));
             }
 
             if (connectIntent) {
@@ -1305,8 +1330,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 //            if (!device.getAddress().toUpperCase().equals("A4:C1:38:3F:4C:05")) return;
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
 //            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
-//            if (!device.getAddress().toUpperCase().contains("FF:EE:EE:EE")) return;
-//            if (!device.getAddress().contains("33:22:11")) return;
+//            if (!device.getAddress().toUpperCase().contains("20:20")) return;
+//            if (!device.getAddress().contains("30:08")) return;
             onScanFilter(device, rssi, scanRecord);
         }
 
@@ -1428,7 +1453,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     @Override
     public void onProxyInitComplete(boolean success, int address) {
-
+        log("filter init complete, success? " + success);
         if (success) {
             this.directDeviceAddress = address;
             onProxyLoginSuccess();
@@ -1454,6 +1479,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         } else if (actionMode == Mode.MODE_FAST_PROVISION) {
             mFastProvisioningController.onFastProvisioningCommandComplete(success, opcode, rspMax, rspCount);
         }
+        onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_COMPLETE,
+                success, opcode, rspMax, rspCount, "mesh message send complete");
     }
 
     // , int src, int dst, int opcode, byte[] params

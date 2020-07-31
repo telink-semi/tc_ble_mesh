@@ -1,3 +1,24 @@
+/********************************************************************************************************
+ * @file     RemoteProvisionActivity.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
 import android.os.Bundle;
@@ -39,6 +60,7 @@ import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import androidx.appcompat.widget.Toolbar;
@@ -187,6 +209,9 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
         if (oob != null) {
             provisioningDevice.setAuthValue(oob);
+        } else {
+            final boolean autoUseNoOOB = SharedPreferenceHelper.isNoOOBEnable(this);
+            provisioningDevice.setAutoUseNoOOB(autoUseNoOOB);
         }
 
         ProvisioningParameters provisioningParameters = new ProvisioningParameters(provisioningDevice);
@@ -281,11 +306,18 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         final byte SCAN_LIMIT = 1;
         // scan for 5 seconds
         final byte SCAN_TIMEOUT = 5;
-        final int SERVER_ADDRESS = 0xFFFF;
+//        final int SERVER_ADDRESS = 0xFFFF;
 
-        ScanStartMessage remoteScanMessage = ScanStartMessage.getSimple(SERVER_ADDRESS, meshInfo.getDefaultAppKeyIndex(),
-                1, SCAN_LIMIT, SCAN_TIMEOUT);
-        MeshService.getInstance().sendMeshMessage(remoteScanMessage);
+        HashSet<Integer> serverAddresses = getAvailableServerAddresses();
+        if (serverAddresses.size() == 0) {
+            MeshLogger.e("no Available server address");
+            return;
+        }
+        for (int address : serverAddresses) {
+            ScanStartMessage remoteScanMessage = ScanStartMessage.getSimple(address, 1, SCAN_LIMIT, SCAN_TIMEOUT);
+            MeshService.getInstance().sendMeshMessage(remoteScanMessage);
+        }
+
         delayHandler.removeCallbacksAndMessages(null);
         delayHandler.postDelayed(remoteScanTimeoutTask, (SCAN_TIMEOUT + 5) * 1000);
     }
@@ -388,6 +420,9 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(device.getUuid());
         if (oob != null) {
             device.setAuthValue(oob);
+        } else {
+            final boolean autoUseNoOOB = SharedPreferenceHelper.isNoOOBEnable(this);
+            device.setAutoUseNoOOB(autoUseNoOOB);
         }
 
         MeshService.getInstance().startRemoteProvisioning(device);
@@ -516,5 +551,19 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             }
         }
         return null;
+    }
+
+    private HashSet<Integer> getAvailableServerAddresses() {
+        HashSet<Integer> serverAddresses = new HashSet<>();
+        for (NodeInfo nodeInfo : meshInfo.nodes) {
+            if (nodeInfo.getOnOff() != NodeInfo.ON_OFF_STATE_OFFLINE) {
+                serverAddresses.add(nodeInfo.meshAddress);
+            }
+        }
+
+        for (NodeInfo nodeInfo : devices) {
+            serverAddresses.add(nodeInfo.meshAddress);
+        }
+        return serverAddresses;
     }
 }

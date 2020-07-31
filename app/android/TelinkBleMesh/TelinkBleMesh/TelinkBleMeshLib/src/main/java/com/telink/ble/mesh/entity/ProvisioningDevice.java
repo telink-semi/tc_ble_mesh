@@ -1,3 +1,24 @@
+/********************************************************************************************************
+ * @file     ProvisioningDevice.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.entity;
 
 import android.bluetooth.BluetoothDevice;
@@ -61,6 +82,11 @@ public class ProvisioningDevice implements Parcelable {
      * {@link com.telink.ble.mesh.core.provisioning.AuthenticationMethod#StaticOOB}
      */
     protected byte[] authValue = null;
+
+    /**
+     * auto use no-OOB if auth value is null
+     */
+    protected boolean autoUseNoOOB = false;
 
 //    private ProvisioningParams provisioningParams;
 
@@ -219,6 +245,13 @@ public class ProvisioningDevice implements Parcelable {
         this.unicastAddress = unicastAddress;
     }
 
+    public boolean isAutoUseNoOOB() {
+        return autoUseNoOOB;
+    }
+
+    public void setAutoUseNoOOB(boolean autoUseNoOOB) {
+        this.autoUseNoOOB = autoUseNoOOB;
+    }
 
     @Override
     public int describeContents() {
@@ -251,8 +284,10 @@ public class ProvisioningDevice implements Parcelable {
                 ", ivIndex=0x" + Long.toHexString(ivIndex) +
                 ", unicastAddress=0x" + Integer.toHexString(unicastAddress) +
                 ", authValue=" + Arrays.bytesToHexString(authValue) +
+                ", autoUseNoOOB=" + autoUseNoOOB +
                 ", provisioningState=" + provisioningState +
                 ", deviceKey=" + Arrays.bytesToHexString(deviceKey) +
+
                 '}';
     }
 }

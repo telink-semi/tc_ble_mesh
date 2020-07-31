@@ -1,6 +1,12 @@
 
 version record
 
+
+1. fix device provision timeout if device static-oob data not found when device support static-oob
+2. update json storage format
+
+----------------
+
 V3.2.1
 1. support static oob database importing;
 2. delete mesh OTA and remote provision;

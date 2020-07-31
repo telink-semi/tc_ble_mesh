@@ -1,8 +1,27 @@
+/********************************************************************************************************
+ * @file     MeshSigModel.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.core.message;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by kee on 2018/6/6.
@@ -12,10 +31,21 @@ public enum MeshSigModel implements Serializable {
 
     SIG_MD_CFG_SERVER(0x0000, "config server", "", true),
     SIG_MD_CFG_CLIENT(0x0001, "config client", "", true),
-    SIG_MD_HEALTH_SERVER(0x0002, "health server", "health server", true),
 
-    // out of default
-    SIG_MD_HEALTH_CLIENT(0x0003, "health client", "health client", true),
+
+    SIG_MD_HEALTH_SERVER(0x0002, "health server", "health server", false),
+    SIG_MD_HEALTH_CLIENT(0x0003, "health client", "health client", false),
+
+
+    SIG_MD_REMOTE_PROV_SERVER(0x0004, "rp", "", true),
+    SIG_MD_REMOTE_PROV_CLIENT(0x0005, "rp", "", true),
+    SIG_MD_DF_CFG_S(0x0006, "", "cfg server", true),
+    SIG_MD_DF_CFG_C(0x0007, "", "cfg client", true),
+    SIG_MD_BRIDGE_CFG_SERVER(0x0008, "", "", true),
+    SIG_MD_BRIDGE_CFG_CLIENT(0x0009, "", "", true),
+
+    SIG_MD_PRIVATE_BEACON_SERVER(0x000a, "", "", true),
+    SIG_MD_PRIVATE_BEACON_CLIENT(0x000b, "", "", true),
 
 
     SIG_MD_G_ONOFF_S(0x1000, "Generic OnOff Server", "Generic"),
@@ -82,7 +112,8 @@ public enum MeshSigModel implements Serializable {
     SIG_MD_FW_DISTRIBUT_S(0xFE02, "firmware distribute server", "OTA"),
     SIG_MD_FW_DISTRIBUT_C(0xFE03, "firmware distribute client", "OTA"),
     SIG_MD_OBJ_TRANSFER_S(0xFF00, "object transfer server", "OTA"),
-    SIG_MD_OBJ_TRANSFER_C(0xFF01, "object transfer client", "OTA"),;
+    SIG_MD_OBJ_TRANSFER_C(0xFF01, "object transfer client", "OTA"),
+    ;
 
     /**
      * sig model id
@@ -107,11 +138,11 @@ public enum MeshSigModel implements Serializable {
         this(modelId, modelName, group, false);
     }
 
-    MeshSigModel(int modelId, String modelName, String group, boolean enable) {
+    MeshSigModel(int modelId, String modelName, String group, boolean isConfigModel) {
         this.modelId = modelId;
         this.modelName = modelName;
         this.group = group;
-        this.isConfigModel = enable;
+        this.isConfigModel = isConfigModel;
     }
 
     public static boolean isConfigurationModel(int modelId) {
@@ -134,6 +165,40 @@ public enum MeshSigModel implements Serializable {
         return null;
     }
 
+
+    /*public static MeshSigModel[] getConfigSimilarity() {
+        return new MeshSigModel[]{
+                SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,
+                SIG_MD_REMOTE_PROV_SERVER, SIG_MD_REMOTE_PROV_CLIENT,
+                SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,
+                SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,
+                SIG_MD_PRIVATE_BEACON_SERVER, SIG_MD_PRIVATE_BEACON_CLIENT
+        };
+    }*/
+
+    /*
+    const u32 MODEL_ID_DEV_KEY[] = {
+    SIG_MD_CFG_SERVER,              SIG_MD_CFG_CLIENT,
+    SIG_MD_REMOTE_PROV_SERVER,      SIG_MD_REMOTE_PROV_CLIENT,
+ SIG_MD_DF_CFG_S,                SIG_MD_DF_CFG_C,
+ SIG_MD_BRIDGE_CFG_SERVER,       SIG_MD_BRIDGE_CFG_CLIENT,
+ SIG_MD_PRIVATE_BEACON_SERVER,   SIG_MD_PRIVATE_BEACON_CLIENT
+};
+
+#define SIG_MD_CFG_SERVER               0x0000  // for test high byte
+#define SIG_MD_CFG_CLIENT               0x0001
+//#define SIG_MD_HEALTH_SERVER            0x0002
+//#define SIG_MD_HEALTH_CLIENT            0x0003
+#define SIG_MD_REMOTE_PROV_SERVER       0x0004
+#define SIG_MD_REMOTE_PROV_CLIENT       0x0005
+#define SIG_MD_DF_CFG_S     0x0006
+#define SIG_MD_DF_CFG_C     0x0007
+#define SIG_MD_BRIDGE_CFG_SERVER  0x0008
+#define SIG_MD_BRIDGE_CFG_CLIENT  0x0009
+#define SIG_MD_PRIVATE_BEACON_SERVER  0x000a
+#define SIG_MD_PRIVATE_BEACON_CLIENT 0x000b
+
+     */
 
 }
 

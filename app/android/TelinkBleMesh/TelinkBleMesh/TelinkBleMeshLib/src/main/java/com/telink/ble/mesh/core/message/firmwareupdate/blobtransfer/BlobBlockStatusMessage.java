@@ -1,3 +1,24 @@
+/********************************************************************************************************
+ * @file     BlobBlockStatusMessage.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer;
 
 import android.os.Parcel;
@@ -50,7 +71,8 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
     /**
      * Transfer phase
      */
-    private int transferPhase;
+    // remote in R06 -- 20200618
+//    private int transferPhase;
 
     /**
      * Block number of the current block
@@ -83,7 +105,7 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
     protected BlobBlockStatusMessage(Parcel in) {
         status = in.readInt();
         format = in.readInt();
-        transferPhase = in.readInt();
+//        transferPhase = in.readInt();
         blockNumber = in.readInt();
         chunkSize = in.readInt();
         missingChunks = new ArrayList<>();
@@ -109,7 +131,7 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
         int index = 0;
         this.status = params[index] & 0x0F;
         this.format = (params[index++] >> 6) & 0x03;
-        transferPhase = params[index++] & 0xFF;
+//        transferPhase = params[index++] & 0xFF;
         this.blockNumber = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
         index += 2;
         this.chunkSize = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
@@ -137,7 +159,7 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(status);
         dest.writeInt(format);
-        dest.writeInt(transferPhase);
+//        dest.writeInt(transferPhase);
         dest.writeInt(blockNumber);
         dest.writeInt(chunkSize);
         dest.writeList(missingChunks);
@@ -150,10 +172,6 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
 
     public int getFormat() {
         return format;
-    }
-
-    public int getTransferPhase() {
-        return transferPhase;
     }
 
     public int getBlockNumber() {

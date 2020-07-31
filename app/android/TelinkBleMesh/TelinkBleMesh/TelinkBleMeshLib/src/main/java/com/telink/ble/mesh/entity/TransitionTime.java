@@ -1,3 +1,24 @@
+/********************************************************************************************************
+ * @file     TransitionTime.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.entity;
 
 /**
@@ -7,7 +28,7 @@ package com.telink.ble.mesh.entity;
 public class TransitionTime {
 
     // 6 bits
-    byte number;
+    private byte number;
 
     /**
      * 2 bits
@@ -20,7 +41,7 @@ public class TransitionTime {
      * 0b11
      * The Default Transition Step Resolution is 10 minutes
      */
-    byte step;
+    private byte step;
     // 0b111111
     private static final int MAX_STEP_VALUE = 0x3F;
 
@@ -62,5 +83,30 @@ public class TransitionTime {
 
     public byte getValue() {
         return (byte) ((step << 6) | number);
+    }
+
+    public byte getNumber() {
+        return number;
+    }
+
+    public byte getStep() {
+        return step;
+    }
+
+    public int getResolution() {
+        switch (step) {
+            case STEP_RESOLUTION_100_MILL:
+                return PERIOD_STEP_100_MILL;
+
+            case STEP_RESOLUTION_1_SECOND:
+                return PERIOD_STEP_1_SECOND;
+
+            case STEP_RESOLUTION_10_SECOND:
+                return PERIOD_STEP_10_SECOND;
+
+            case STEP_RESOLUTION_10_MINUTE:
+                return PERIOD_STEP_10_MINUTE;
+        }
+        return 0;
     }
 }

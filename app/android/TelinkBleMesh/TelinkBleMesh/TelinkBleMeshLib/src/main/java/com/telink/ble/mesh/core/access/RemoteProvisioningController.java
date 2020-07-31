@@ -1,3 +1,24 @@
+/********************************************************************************************************
+ * @file     RemoteProvisioningController.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.core.access;
 
 import android.os.Handler;
@@ -48,7 +69,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
 
     private AccessBridge accessBridge;
 
-    private int appKeyIndex;
+//    private int appKeyIndex;
 
     private static final int OUTBOUND_INIT_VALUE = 1;
 
@@ -85,7 +106,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
         this.accessBridge = accessBridge;
     }
 
-    public void begin(ProvisioningController provisioningController, int appKeyIndex, RemoteProvisioningDevice remoteProvisioningDevice) {
+    public void begin(ProvisioningController provisioningController, RemoteProvisioningDevice remoteProvisioningDevice) {
         log(String.format("remote provisioning begin: server -- %04X  uuid -- %s",
                 remoteProvisioningDevice.getServerAddress(),
                 Arrays.bytesToHexString(remoteProvisioningDevice.getUuid())));
@@ -96,7 +117,6 @@ public class RemoteProvisioningController implements ProvisioningBridge {
         this.provisionSuccess = false;
         state = STATE_INIT;
         this.provisioningController = provisioningController;
-        this.appKeyIndex = appKeyIndex;
         this.provisioningDevice = remoteProvisioningDevice;
         linkOpen();
     }
@@ -130,7 +150,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
     private void linkOpen() {
         int serverAddress = provisioningDevice.getServerAddress();
         byte[] uuid = provisioningDevice.getUuid();
-        MeshMessage linkOpenMessage = LinkOpenMessage.getSimple(serverAddress, appKeyIndex, 1, uuid);
+        MeshMessage linkOpenMessage = LinkOpenMessage.getSimple(serverAddress, 1, uuid);
         linkOpenMessage.setRetryCnt(8);
         this.state = STATE_LINK_OPENING;
         this.onMeshMessagePrepared(linkOpenMessage);
@@ -140,7 +160,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
         this.state = STATE_LINK_CLOSING;
         int serverAddress = provisioningDevice.getServerAddress();
         byte reason = success ? LinkCloseMessage.REASON_SUCCESS : LinkCloseMessage.REASON_FAIL;
-        LinkCloseMessage linkCloseMessage = LinkCloseMessage.getSimple(serverAddress, appKeyIndex, 1, reason);
+        LinkCloseMessage linkCloseMessage = LinkCloseMessage.getSimple(serverAddress, 1, reason);
         this.onMeshMessagePrepared(linkCloseMessage);
     }
 
@@ -347,7 +367,6 @@ public class RemoteProvisioningController implements ProvisioningBridge {
 
         ProvisioningPduSendMessage provisioningPduSendMessage = ProvisioningPduSendMessage.getSimple(
                 provisioningDevice.getServerAddress(),
-                appKeyIndex,
                 0,
                 (byte) this.outboundNumber,
                 transmittingPdu

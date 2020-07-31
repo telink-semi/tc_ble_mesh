@@ -1,3 +1,24 @@
+/********************************************************************************************************
+ * @file     SettingsActivity.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
 import android.content.ClipData;
@@ -26,7 +47,7 @@ import com.telink.ble.mesh.util.MeshLogger;
  */
 public class SettingsActivity extends BaseActivity implements View.OnClickListener {
 
-    private Switch switch_log, switch_private, switch_remote_prov, switch_fast_prov;
+    private Switch switch_log, switch_private, switch_remote_prov, switch_fast_prov, switch_no_oob;
     private EditText et_net_key, et_app_key;
     private MeshInfo mesh;
     private TextView tv_online_status;
@@ -85,6 +106,15 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
             }
         });
 
+        switch_no_oob = findViewById(R.id.switch_no_oob);
+        switch_no_oob.setChecked(SharedPreferenceHelper.isNoOOBEnable(this));
+        switch_no_oob.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SharedPreferenceHelper.setNoOOBEnable(SettingsActivity.this, isChecked);
+            }
+        });
+
 
         enableBackNav(true);
 
@@ -95,6 +125,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
         findViewById(R.id.iv_tip_remote_prov).setOnClickListener(this);
 
+        findViewById(R.id.iv_tip_no_oob).setOnClickListener(this);
         findViewById(R.id.tv_select_database).setOnClickListener(this);
 
         et_net_key = findViewById(R.id.et_net_key);
@@ -133,8 +164,15 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
             case R.id.iv_tip_remote_prov:
                 startActivity(
-                        new Intent(this, ShareTipActivity.class)
-                                .putExtra(ShareTipActivity.INTENT_KEY_TIP_RES_ID, R.string.remote_prov_tip)
+                        new Intent(this, TipsActivity.class)
+                                .putExtra(TipsActivity.INTENT_KEY_TIP_RES_ID, R.string.remote_prov_tip)
+                );
+                break;
+
+            case R.id.iv_tip_no_oob:
+                startActivity(
+                        new Intent(this, TipsActivity.class)
+                                .putExtra(TipsActivity.INTENT_KEY_TIP_RES_ID, R.string.use_no_oob_tip)
                 );
                 break;
 

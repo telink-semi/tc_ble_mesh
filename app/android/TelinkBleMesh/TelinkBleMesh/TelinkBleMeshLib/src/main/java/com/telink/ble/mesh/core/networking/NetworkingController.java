@@ -1,3 +1,24 @@
+/********************************************************************************************************
+ * @file     NetworkingController.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.core.networking;
 
 import android.os.Handler;
@@ -273,7 +294,7 @@ public class NetworkingController {
         this.directAddress = 0;
         this.lastSegComplete = true;
         this.deviceSequenceNumberMap.clear();
-         this.receivedSegmentedMessageBuffer.clear();
+        this.receivedSegmentedMessageBuffer.clear();
         this.sentSegmentedMessageBuffer.clear();
         this.mResponseMessageBuffer.clear();
         this.isIvUpdating = false;
@@ -310,23 +331,6 @@ public class NetworkingController {
 
     private boolean isBusyAuthExists(int src, long seqAuth) {
         return this.busySeqAuthBuffer.get(src, 0) == seqAuth;
-    }
-
-
-    /**
-     * when gatt disconnected, remove all timer, reset all busy state, clear buffers
-     */
-    public void onGattDisconnected() {
-        this.mDelayHandler.removeCallbacksAndMessages(null);
-        this.networkingBusy = false;
-        this.segmentedBusy = false;
-        this.reliableBusy = false;
-        this.directAddress = 0;
-        this.receivedSegmentedMessageBuffer.clear();
-        this.sentSegmentedMessageBuffer.clear();
-        this.mResponseMessageBuffer.clear();
-        this.isIvUpdating = false;
-        this.lastSegComplete = true;
     }
 
     /**
@@ -673,7 +677,8 @@ public class NetworkingController {
         synchronized (mNetworkingQueue) {
             queueSize = mNetworkingQueue.size();
         }
-        long timeout = 960 + queueSize * NETWORKING_INTERVAL;
+        // 960
+        long timeout = 1280 + queueSize * NETWORKING_INTERVAL;
         log("reliable message timeout:" + timeout);
         return timeout;
     }
@@ -783,7 +788,7 @@ public class NetworkingController {
         SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.from(payload);
         // validate beacon data
         if (networkBeacon != null) {
-            log(networkBeacon.toString());
+            log("SecureNetworkBeacon received: " + networkBeacon.toString());
             if (networkBeacon.validateAuthValue(networkId, networkBeaconKey)) {
                 int ivIndex = networkBeacon.getIvIndex();
                 boolean isIvUpdating = networkBeacon.isIvUpdating();
@@ -891,6 +896,7 @@ public class NetworkingController {
     private Runnable proxyFilterInitTimeoutTask = new Runnable() {
         @Override
         public void run() {
+            log("filter init timeout");
             onProxyInitComplete(false);
         }
     };
@@ -1048,8 +1054,13 @@ public class NetworkingController {
         AccessLayerPDU accessPDU;
         if (seg == 1) {
             log("parse segmented access message");
+
+            /*
+             * tick refresh if received segment busy
+             */
             /*if (reliableBusy) {
-                restartReliableMessageTimeoutTask(false);
+                log("refresh reliable tick because of segment network pdu received");
+                restartReliableMessageTimeoutTask();
             }*/
             accessPDU = parseSegmentedAccessMessage(networkLayerPDU);
 

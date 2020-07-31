@@ -97,7 +97,7 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden" />
         <activity
-            android:name="com.telink.ble.mesh.ui.ShareTipActivity"
+            android:name="com.telink.ble.mesh.ui.TipsActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden" />
         <activity
@@ -167,6 +167,9 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden" />
         <activity android:name="com.telink.ble.mesh.ui.OOBEditActivity" />
+        <activity
+            android:name="com.telink.ble.mesh.ui.test.OnOffTestActivity"
+            android:windowSoftInputMode="stateAlwaysHidden" />
 
     </application>
 

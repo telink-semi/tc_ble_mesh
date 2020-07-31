@@ -1,25 +1,59 @@
+/********************************************************************************************************
+ * @file     MeshStorage.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.model.json;
 
 
 import com.telink.ble.mesh.entity.Scheduler;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by kee on 2018/9/10.
+ *
+ * change type of period in publish from integer to object
+ * add HeartbeatPublication and HeartbeatSubscription
  */
 
 public class MeshStorage {
 
     interface Defaults {
-        String Schema = "telink-semi.com";
-        String Version = "V0.0.1";
+        String Schema = "http://json-schema.org/draft-04/schema#";
+        String Version = "1.0.0";
+        String Id = "http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#";
         String MeshName = "Telink-Sig-Mesh";
 
         int IV_INDEX = 0;
+
+        String KEY_INVALID = "00000000000000000000000000000000";
+
+        String ADDRESS_INVALID = "0000";
+
+        String LOCAL_DEVICE_KEY = "00112233445566778899AABBCCDDEEFF";
     }
 
     public String $schema = Defaults.Schema;
+
+    public String id = Defaults.Id;
 
     public String version = Defaults.Version;
 
@@ -69,13 +103,13 @@ public class MeshStorage {
         }
 
         public static class SceneRange {
-            public SceneRange(int firstScene, int lastScene) {
+            public SceneRange(String firstScene, String lastScene) {
                 this.firstScene = firstScene;
                 this.lastScene = lastScene;
             }
 
-            public int firstScene;
-            public int lastScene;
+            public String firstScene;
+            public String lastScene;
         }
     }
 
@@ -89,7 +123,7 @@ public class MeshStorage {
         public int phase;
         public String key;
         public String minSecurity;
-        public String oldKey;
+        public String oldKey = Defaults.KEY_INVALID;
         public String timestamp;
     }
 
@@ -98,7 +132,7 @@ public class MeshStorage {
         public int index;
         public int boundNetKey;
         public String key;
-        public String oldKey;
+        public String oldKey = Defaults.KEY_INVALID;
     }
 
     /**
@@ -138,6 +172,12 @@ public class MeshStorage {
         public List<NodeKey> appKeys;
         public List<Element> elements;
         public boolean blacklisted;
+
+        // heartbeatPub
+        public HeartbeatPublication heartbeatPub;
+        // heartbeatSub
+        public List<HeartbeatSubscription> heartbeatSub;
+
 
         // custom data for scheduler
         public List<NodeScheduler> schedulers;
@@ -223,7 +263,7 @@ public class MeshStorage {
 
     public static class Model {
         public String modelId;
-        public List<String> subscribe;
+        public List<String> subscribe = new ArrayList<>();
         public Publish publish;
         public List<Integer> bind;
     }
@@ -232,21 +272,50 @@ public class MeshStorage {
         public String address;
         public int index;
         public int ttl;
-        public int period;
+        public PublishPeriod period;
         public int credentials;
         public Transmit retransmit;
     }
 
+    public static class PublishPeriod {
+        /**
+         * The numberOfStepa property contains an integer from 0 to 63 that represents the number of steps used
+         * to calculate the publish period .
+         */
+        public int numberOfSteps;
+
+        /**
+         * The resolution property contains an integer that represents the publish step resolution in milliseconds.
+         * The allowed values are: 100, 1000, 10000, and 600000.
+         */
+        public int resolution;
+    }
+
+    public static class HeartbeatPublication {
+        public String address;
+        public int period;
+        public int ttl;
+        public int index;
+        public List<String> features;
+    }
+
+    public static class HeartbeatSubscription {
+        public String source;
+        public String destination;
+        public int period;
+    }
+
+
     public static class Group {
         public String name;
         public String address;
-        public String parentAddress;
+        public String parentAddress = Defaults.ADDRESS_INVALID;
     }
 
     public static class Scene {
         public String name;
         public List<String> addresses;
-        public int number;
+        public String number;
     }
 
 }

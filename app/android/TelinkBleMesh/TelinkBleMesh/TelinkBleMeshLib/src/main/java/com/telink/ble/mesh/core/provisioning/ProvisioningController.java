@@ -1,3 +1,24 @@
+/********************************************************************************************************
+ * @file     ProvisioningController.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.core.provisioning;
 
 import android.os.Handler;
@@ -257,7 +278,7 @@ public class ProvisioningController {
     }
 
     private byte[] getAuthValue() {
-        if (pvCapability.staticOOBSupported()) {
+        if (pvCapability.staticOOBSupported() && mProvisioningDevice.getAuthValue() != null) {
             return mProvisioningDevice.getAuthValue();
         } else {
             return AUTH_NO_OOB;
@@ -283,9 +304,9 @@ public class ProvisioningController {
     }
 
 
-    private void provisionStart() {
-        startPDU = ProvisioningStartPDU.getSimple(pvCapability.staticOOBSupported());
-        updateProvisioningState(STATE_START, "Start");
+    private void provisionStart(boolean isStaticOOB) {
+        startPDU = ProvisioningStartPDU.getSimple(isStaticOOB);
+        updateProvisioningState(STATE_START, "Start - use static oob?" + isStaticOOB);
         sendProvisionPDU(startPDU);
     }
 
@@ -303,11 +324,17 @@ public class ProvisioningController {
         updateProvisioningState(STATE_CAPABILITY, "Capability Received");
         pvCapability = ProvisioningCapabilityPDU.fromBytes(capData);
         mProvisioningDevice.setDeviceCapability(pvCapability);
-        if (pvCapability.staticOOBSupported() && mProvisioningDevice.getAuthValue() == null) {
-            onProvisionFail("authValue not found when device static oob supported!");
-            return;
+        boolean useStaticOOB = pvCapability.staticOOBSupported();
+        if (useStaticOOB && mProvisioningDevice.getAuthValue() == null) {
+            if (mProvisioningDevice.isAutoUseNoOOB()) {
+                // use no oob
+                useStaticOOB = false;
+            } else {
+                onProvisionFail("authValue not found when device static oob supported!");
+                return;
+            }
         }
-        provisionStart();
+        provisionStart(useStaticOOB);
         provisionSendPubKey();
     }
 
@@ -340,7 +367,6 @@ public class ProvisioningController {
 
         provisionerRandom = Arrays.generateRandom(16);
         byte[] authValue = getAuthValue();
-
 
         byte[] confirmData = new byte[provisionerRandom.length + authValue.length];
         System.arraycopy(provisionerRandom, 0, confirmData, 0, provisionerRandom.length);

@@ -57,11 +57,15 @@
 
     <string name="enable_fast_provision">Fast Provision</string>
 
+    <string name="enable_no_oob">Use No-OOB automatically</string>
+
     <string name="oob_database">OOB Database</string>
 
     <string name="oob_info">UUID: %s\nOOB : %s\n(%s)</string>
 
     <string name="hex_input">0123456789abcdefABCDEF</string>
+
+    <string name="decimal_number_input">0123456789.</string>
 
     <string name="number_input">0123456789</string>
 
@@ -126,8 +130,9 @@
         (uuid and oob array length should be 16)\n
     </string>
 
-
-
+    <string name="use_no_oob_tip">
+        Use No-OOB if device UUID not found when device is static-OOB supported
+    </string>
 
     <string name="online_status_enabled">Online Status: ENABLED</string>
 

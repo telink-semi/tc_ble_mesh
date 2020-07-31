@@ -1,13 +1,32 @@
+/********************************************************************************************************
+ * @file     ScanStartMessage.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.rp;
 
 import com.telink.ble.mesh.core.message.Opcode;
-import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
-
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class ScanStartMessage extends UpdatingMessage {
+public class ScanStartMessage extends RemoteProvisionMessage {
 
     /**
      * 1 bytes
@@ -24,16 +43,16 @@ public class ScanStartMessage extends UpdatingMessage {
      */
     private byte[] uuid;
 
-    public static ScanStartMessage getSimple(int destinationAddress, int appKeyIndex, int rspMax, byte scannedItemsLimit, byte timeout) {
-        ScanStartMessage message = new ScanStartMessage(destinationAddress, appKeyIndex);
+    public static ScanStartMessage getSimple(int destinationAddress, int rspMax, byte scannedItemsLimit, byte timeout) {
+        ScanStartMessage message = new ScanStartMessage(destinationAddress);
         message.setResponseMax(rspMax);
         message.scannedItemsLimit = scannedItemsLimit;
         message.timeout = timeout;
         return message;
     }
 
-    public ScanStartMessage(int destinationAddress, int appKeyIndex) {
-        super(destinationAddress, appKeyIndex);
+    public ScanStartMessage(int destinationAddress) {
+        super(destinationAddress);
     }
 
     @Override
@@ -43,7 +62,8 @@ public class ScanStartMessage extends UpdatingMessage {
 
     @Override
     public int getResponseOpcode() {
-        return Opcode.REMOTE_PROV_SCAN_STS.value;
+//        return Opcode.REMOTE_PROV_SCAN_STS.value;
+        return super.getResponseOpcode();
     }
 
     @Override
