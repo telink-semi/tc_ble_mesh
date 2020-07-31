@@ -67,7 +67,7 @@
     [array addObject:@"fast provision"];
     [array addObject:@"fast bind(Default Bound)"];
     [array addObject:@"online status from uuid"];
-    [array addObject:@"Add staticOOB device by noOOB provision"];
+    [array addObject:@"try add staticOOB device by noOOB provision"];
     [array addObject:@"OOB Database"];
     [array addObject:[NSString stringWithFormat:@"netKey:%@",SigDataSource.share.curNetkeyModel.key]];
     [array addObject:[NSString stringWithFormat:@"appKey:%@",SigDataSource.share.curAppkeyModel.key]];
