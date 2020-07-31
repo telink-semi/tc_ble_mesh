@@ -86,8 +86,11 @@
         _appKeys = [NSMutableArray array];
         _scanList = [NSMutableArray array];
         
-        _ivIndex = @"11223344";
-        struct ProvisionInfo tem = {{}, {0x00,0x00}, 0, {0x11,0x22,0x33,0x44}, {}};
+        _ivIndex = [NSString stringWithFormat:@"%08X",kDefaultIvIndex];
+        NSData *data = [self getIvIndexData];
+        Byte *ivIndexByte = (Byte *)[data bytes];
+        struct ProvisionInfo tem = {{}, {0x00,0x00}, 0, {0x0,0x00,0x00,0x00}, {}};
+        memcpy(tem.prov_iv_index,ivIndexByte,4);
         _provsionInfo = tem;
         _hasWriteDataSourceToLib = NO;
         _matchsNodeIdentityArray = [NSMutableArray array];
@@ -292,9 +295,9 @@
         NSData *data = [self getLocationMeshData];
         NSDictionary *meshDict = [LibTools getDictionaryWithJSONData:data];
         [SigDataSource.share setDictionaryToDataSource:meshDict];
-        //Attention: it will set _ivIndex to @"11223344" when mesh.json hasn't the key @"ivIndex"
+        //Attention: it will set _ivIndex to kDefaultIvIndex when mesh.json hasn't the key @"ivIndex"
         if (!_ivIndex || _ivIndex.length == 0) {
-            _ivIndex = @"11223344";
+            _ivIndex = [NSString stringWithFormat:@"%08X",kDefaultIvIndex];
             [self saveLocationData];
         }
     }
@@ -346,6 +349,11 @@
         [_groups addObject: group];
     }
     
+    _ivIndex = [NSString stringWithFormat:@"%08X",kDefaultIvIndex];
+    NSData *data = [self getIvIndexData];
+    Byte *ivIndexByte = (Byte *)[data bytes];
+    struct ProvisionInfo tem = self.provsionInfo;
+    memcpy(tem.prov_iv_index,ivIndexByte,4);
     _meshUUID = netkey.key;
     _$schema = @"telink-semi.com";
     _meshName = @"Telink-Sig-Mesh";
@@ -449,7 +457,7 @@
 - (void)checkExistLocationProvisioner{
     if (self.curProvisionerModel) {
         TeLog(@"exist location provisioner, needn't create");
-    }else{
+    } else {
         //don't exist location provisioner, create and add to SIGDataSource.provisioners, then save location.
         //Attention: the max location address is 0x7fff, so max provisioner's allocatedUnicastRange highAddress cann't bigger than 0x7fff.
         if (self.provisioners.count <= 0x7f) {

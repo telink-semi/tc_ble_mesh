@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/10/16.
-//  Copyright © 2019 梁家誌. All rights reserved.
+//  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -72,8 +72,7 @@
 - (NSData *)calculateDecryptedCCM:(NSData *)someData withKey:(NSData *)key nonce:(NSData *)nonce andMIC:(NSData *)mic withAdditionalData:(NSData *)aad;
 
 /// Obfuscates given data by XORing it with PECB, which is caluclated by encrypting
-/// Privacy Plaintext (encrypted data (used as Privacy Random) and IV Index)
-/// using the given key.
+/// Privacy Plaintext (encrypted data (used as Privacy Random) and IV Index) using the given key.
 /// @param data The data to obfuscate.
 /// @param privacyRandom Data used as Privacy Random.
 /// @param ivIndex The current IV Index value.
@@ -91,42 +90,33 @@
 
 // MARK: - Helpers
 
-/// THe network key material derivation function k1 is used to generate
-/// instances of Identity Key and Beacon Key.
+/// THe network key material derivation function k1 is used to generate instances of Identity Key and Beacon Key.
 ///
-/// The definition of this derivation function makes use of the MAC function
-/// AES-CMAC(T) with 128-bit key T.
+/// The definition of this derivation function makes use of the MAC function AES-CMAC(T) with 128-bit key T.
 /// @param N is 0 or more octets.
 /// @param salt is 128 bits.
 /// @param P is 0 or more octets.
 /// @return 128-bit key.
 - (NSData *)calculateK1WithN:(NSData *)N salt:(NSData *)salt andP:(NSData *)P;
 
-/// The network key material derivation function k2 is used to generate
-/// instances of Encryption Key, Privacy Key and NID for use as Master and
-/// Private Low Power node communication. This method returns 33 byte data.
+/// The network key material derivation function k2 is used to generate instances of Encryption Key, Privacy Key and NID for use as Master and Private Low Power node communication. This method returns 33 byte data.
 ///
-/// The definition of this derivation function makes use of the MAC function
-/// AES-CMAC(T) with 128-bit key T.
+/// The definition of this derivation function makes use of the MAC function AES-CMAC(T) with 128-bit key T.
 /// @param N 128-bit key.
 /// @param P 1 or more octets.
 /// @return NID (7 bits), Encryption Key (128 bits) and Privacy Key (128 bits).
 - (NSData *)calculateK2WithN:(NSData *)N andP:(NSData *)P;
 
-/// The derivation function k3 us used to generate a public value of 64 bits
-/// derived from a private key.
+/// The derivation function k3 us used to generate a public value of 64 bits derived from a private key.
 ///
-/// The definition of this derivation function makes use of the MAC function
-/// AES-CMAC(T) with 128-bit key T.
+/// The definition of this derivation function makes use of the MAC function AES-CMAC(T) with 128-bit key T.
 /// @param N 128-bit key.
 /// @return 64 bits of a public value derived from the key.
 - (NSData *)calculateK3WithN:(NSData *)N;
 
-/// The derivation function k4 us used to generate a public value of 6 bits
-/// derived from a private key.
+/// The derivation function k4 us used to generate a public value of 6 bits derived from a private key.
 ///
-/// The definition of this derivation function makes use of the MAC function
-/// AES-CMAC(T) with 128-bit key T.
+/// The definition of this derivation function makes use of the MAC function AES-CMAC(T) with 128-bit key T.
 /// @param N 128-bit key.
 /// @return UInt8 with 6 LSB bits of a public value derived from the key.
 - (UInt8)calculateK4WithN:(NSData *)N;
@@ -134,8 +124,7 @@
 /// Encrypts given data using the key.
 /// @param someData Data to be encrypted.
 /// @param key The 128-bit key.
-/// @return A byte array of encrypted data using the key. The size of the returned
-///         array is equal to the size of input data.
+/// @return A byte array of encrypted data using the key. The size of the returned  array is equal to the size of input data.
 - (NSData *)calculateEvalueWithData:(NSData *)someData andKey:(NSData *)key;
 
 @end

@@ -21,14 +21,16 @@
  *******************************************************************************************************/
 //
 //  SigProvisioningManager.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/19.
+//  Created by 梁家誌 on 2019/8/19.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
 #import "SigProvisioningManager.h"
 #import "SigBluetooth.h"
+#import "SigProvisioningData.h"
+#import "SigAuthenticationModel.h"
 
 @interface SigProvisioningManager ()
 @property (nonatomic, assign) UInt16 unicastAddress;
@@ -80,10 +82,13 @@
     _state = state;
     if (state == ProvisionigState_fail) {
         [self reset];
-        if (self.failBlock) {
-            NSError *err = [NSError errorWithDomain:@"provision fail." code:-1 userInfo:nil];
-            self.failBlock(err);
-        }
+        __weak typeof(self) weakSelf = self;
+        [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+            if (weakSelf.failBlock) {
+                NSError *err = [NSError errorWithDomain:@"provision fail." code:-1 userInfo:nil];
+                weakSelf.failBlock(err);
+            }
+        }];
     }
 }
 
@@ -95,10 +100,7 @@
     return self.provisioningCapabilities.algorithms.fipsP256EllipticCurve == 1;
 }
 
-/// This method sends the provisioning request to the device
-/// over the Bearer specified in the init. Additionally, it
-/// adds the request payload to given inputs. Inputs are
-/// required in device authorization.
+/// This method sends the provisioning request to the device over the Bearer specified in the init. Additionally, it adds the request payload to given inputs. Inputs are required in device authorization.
 ///
 /// - parameter request: The request to be sent.
 /// - parameter inputs:  The Provisioning Inputs.
@@ -111,7 +113,6 @@
 
 - (void)provisionSuccess{
     UInt16 address = self.provisioningData.unicastAddress;
-    NSString *identify = [LibTools meshUUIDToUUID:self.unprovisionedDevice.uuid];
     UInt8 ele_count = self.provisioningCapabilities.numberOfElements;
     [SigDataSource.share saveLocationProvisionAddress:address+ele_count-1];
     NSData *devKeyData = self.provisioningData.deviceKey;
@@ -122,22 +123,29 @@
     
     SigNodeModel *model = [[SigNodeModel alloc] init];
     [model setAddress:address];
-    VC_node_info_t info = model.nodeInfo;
-    info.element_cnt = ele_count;
     model.deviceKey = [LibTools convertDataToHexStr:devKeyData];
     model.peripheralUUID = nil;
+    model.UUID = self.unprovisionedDevice.advUuid;
     //Attention: There isn't scanModel at remote add, so develop need add macAddress in provisionSuccessCallback.
-    info.cps.page0_head.cid = self.unprovisionedDevice.CID;
-    info.cps.page0_head.pid = self.unprovisionedDevice.PID;
-    model.UUID = identify;
     model.macAddress = self.unprovisionedDevice.macAddress;
-    model.nodeInfo = info;
+    
+    SigPage0 *compositionData = [[SigPage0 alloc] init];
+    compositionData.companyIdentifier = self.unprovisionedDevice.CID;
+    compositionData.productIdentifier = self.unprovisionedDevice.PID;
+    NSMutableArray *elements = [NSMutableArray array];
+    if (ele_count) {
+        for (int i=0; i<ele_count; i++) {
+            SigElementModel *ele = [[SigElementModel alloc] init];
+            [elements addObject:ele];
+        }
+    }
+    compositionData.elements = elements;
+    model.compositionData = compositionData;
+    
     [SigDataSource.share addAndSaveNodeToMeshNetworkWithDeviceModel:model];
 }
 
-/// This method should be called when the OOB value has been received
-/// and Auth Value has been calculated.
-/// It computes and sends the Provisioner Confirmation to the device.
+/// This method should be called when the OOB value has been received and Auth Value has been calculated. It computes and sends the Provisioner Confirmation to the device.
 ///
 /// - parameter value: The 16 byte long Auth Value.
 - (void)authValueReceivedData:(NSData *)data {
@@ -180,7 +188,8 @@
     self.failBlock = fail;
     self.unprovisionedDevice = [SigDataSource.share getScanRspModelWithUUID:[SigBearer.share getCurrentPeripheral].identifier.UUIDString];
     SigNetkeyModel *provisionNet = nil;
-    for (SigNetkeyModel *net in SigDataSource.share.netKeys) {
+    NSArray *netKeys = [NSArray arrayWithArray:SigDataSource.share.netKeys];
+    for (SigNetkeyModel *net in netKeys) {
         if ([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] && netkeyIndex == net.index) {
             provisionNet = net;
             break;
@@ -197,6 +206,7 @@
     __weak typeof(self) weakSelf = self;
     TeLogInfo(@"start provision.");
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
+        [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
             if (weakSelf.isProvisionning) {
                 TeLog(@"disconnect in provisioning，provision fail.");
@@ -220,7 +230,8 @@
     self.failBlock = fail;
     self.unprovisionedDevice = [SigDataSource.share getScanRspModelWithUUID:[SigBearer.share getCurrentPeripheral].identifier.UUIDString];
     SigNetkeyModel *provisionNet = nil;
-    for (SigNetkeyModel *net in SigDataSource.share.netKeys) {
+    NSArray *netKeys = [NSArray arrayWithArray:SigDataSource.share.netKeys];
+    for (SigNetkeyModel *net in netKeys) {
         if ([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] && netkeyIndex == net.index) {
             provisionNet = net;
             break;
@@ -237,6 +248,7 @@
     __weak typeof(self) weakSelf = self;
     TeLogInfo(@"start provision.");
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
+        [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
             if (weakSelf.isProvisionning) {
                 TeLog(@"disconnect in provisioning，provision fail.");
@@ -451,20 +463,30 @@
             self.state = ProvisionigState_fail;
         }else{
             __weak typeof(self) weakSelf = self;
-            if (self.staticOobData) {
-                //当前设置为static oob provision
-                if (self.provisioningCapabilities.staticOobType.staticOobInformationAvailable == 1) {
-                    TeLogVerbose(@"static oob provision, staticOobData=%@",self.staticOobData);
+            if (self.provisioningCapabilities.staticOobType.staticOobInformationAvailable == 1) {
+                //设备端支持staticOOB
+                if (self.staticOobData) {
+                    TeLogVerbose(@"static OOB device, do static OOB provision, staticOobData=%@",self.staticOobData);
                     [self sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:self.staticOobData timeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningResponse * _Nullable response) {
                         [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
                     }];
                 } else {
-                    //设备不支持则直接provision fail
-                    TeLogError(@"This device is not support static oob.");
-                    self.state = ProvisionigState_fail;
+                    if (SigDataSource.share.addStaticOOBDevcieByNoOOBEnable) {
+                        //SDK当前设置了兼容模式（即staticOOB设备可以通过noOOB provision的方式进行添加）
+                        TeLogVerbose(@"static OOB device,do no OOB provision");
+                        [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                            [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
+                        }];
+                    } else {
+                        //SDK当前未设置兼容模式（即staticOOB设备必须通过staticOOB provision的方式进行添加）
+                        //设备不支持则直接provision fail
+                        TeLogError(@"SDK not find static OOB data, not support static OOB.");
+                        self.state = ProvisionigState_fail;
+                    }
                 }
-            }else{
-                //当前设置为no oob provision
+            } else {
+                //设备端不支持staticOOB
+                TeLogVerbose(@"no OOB device,do no OOB provision");
                 [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningResponse * _Nullable response) {
                     [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
                 }];

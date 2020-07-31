@@ -72,15 +72,16 @@ enum {
  */
 void audio_amic_init(AudioRate_Typedef Audio_Rate)
 {
-	if((analog_read(pga_audio_enable) && 0x04) == 0x04) // check pga audio enable
-	{
-		analog_write(pga_audio_enable,analog_read(pga_audio_enable) & 0xFB);
-	}
 
-	set_pga_input_vol();
+	//codec_ana_cfg2:The configuration here can make the current of PGA and ADC increase 2.5mA.(by lingyu and libiao),but can improve SNR.
+	//The configuration of the PGA_GAIN_VOL_15_0DB can optimize the audio related parameters such as RMS and CLIPPING.
+	analog_write(codec_ana_cfg2,analog_read(codec_ana_cfg2) | 0x0a);
+	analog_write(codec_ana_cfg3,analog_read(codec_ana_cfg3) & 0x00);
+	analog_write(codec_ana_cfg4,(analog_read(codec_ana_cfg4) & 0x00) | PGA_GAIN_VOL_15_0DB);//For user config for input the PGAVOL.
+
 
 	//enable fifo auto mode,operate 0xb2c:BIT(0) to select auto/manual mode.1--manual mode,0--auto mode.
-	reg_dfifo_manual_mode = FLD_DFIFO_MANUAL_MODE_EN;
+	reg_dfifo_manual_mode = ~FLD_DFIFO_MANUAL_MODE_EN;
 
 	reg_dfifo_mode = FLD_AUD_DFIFO0_IN;
 
@@ -169,8 +170,8 @@ void audio_dmic_init(AudioRate_Typedef Audio_Rate)
 			                        FLD_AUD_MIC_LEFT_CHN_SELECT, 	1, \
 			                        FLD_AUD_MIC_RIGHT_CHN_SELECT,	1 );
 
-    //open for user , [5:0] mic vol control. default:MIC_VOL_CONTROL_0DB
-	reg_mic_ctrl =    MASK_VAL( FLD_AUD_MIC_VOL_CONTROL,      	MIC_VOL_CONTROL_m6DB,\
+    //shuzi  open for user , [5:0] mic vol control
+	reg_mic_ctrl =    MASK_VAL( FLD_AUD_MIC_VOL_CONTROL,      	MIC_VOL_CONTROL_0DB,\
 			                    FLD_AUD_MIC_MONO_EN, 	        1, \
 			                    FLD_AUD_AMIC_DMIC_SELECT,    	1 );
 
@@ -230,6 +231,16 @@ void audio_usb_init(AudioRate_Typedef Audio_Rate)
  */
 void audio_buff_init(AudioRate_Typedef Audio_Rate)
 {
+
+
+//	Normally, PGA should not be configured here,So commented out.(By lirui)
+
+	//codec_ana_cfg2:The configuration here can make the current of PGA and ADC increase 2.5mA.(by lingyu and libiao),but can improve SNR.
+	//The configuration of the PGA_GAIN_VOL_15_0DB can optimize the audio related parameters such as RMS and CLIPPING.
+//	analog_write(codec_ana_cfg2,analog_read(codec_ana_cfg2) | 0x0a);
+//	analog_write(codec_ana_cfg3,analog_read(codec_ana_cfg3) & 0x00);
+//	analog_write(codec_ana_cfg4,(analog_read(codec_ana_cfg4) & 0x00) | PGA_GAIN_VOL_15_0DB);//For user config for input the PGAVOL.
+
 	//1. Dfifo setting
 	reg_clk_en2 |= FLD_CLK2_DFIFO_EN; //enable dfifo clock, this will be initialed in cpu_wakeup_int()
 	reg_dfifo_mode = FLD_AUD_DFIFO0_IN | FLD_AUD_DFIFO0_L_INT;
@@ -438,7 +449,7 @@ void audio_i2s_init(void)
 	/*******1.I2S setting for audio input**************************/
 	reg_audio_ctrl = AUDIO_OUTPUT_OFF;
 
-	//if system clock=24M_Crystal. PWM0 2 frequency division output, for 12Mhz to offer the MCLK of CORDEC. select pd5 as PWM0 output.
+	//if system clock=24M_Crystal. PWM0 2 frequency division output£¬for 12Mhz to offer the MCLK of CORDEC. select pd5 as PWM0 output.
 	sub_wr(0x5af, 0x0, 3, 2); //PD5=0
 	sub_wr(0x59e, 0x0, 5, 5); //PD5=0
 	write_reg16(0x796,0x02);//TMAX0 continue mode

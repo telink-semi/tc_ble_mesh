@@ -23,7 +23,7 @@
 //  DemoConst.h
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -44,6 +44,9 @@
 #define CellIdentifiers_ActionItemCellID  @"ActionItemCell"
 #define CellIdentifiers_AddDeviceItemCellID  @"AddDeviceItemCell"
 #define CellIdentifiers_OnOffItemCellID  @"OnOffItemCell"
+#define CellIdentifiers_InfoSwitchCellID  @"InfoSwitchCell"
+#define CellIdentifiers_InfoNextCellID  @"InfoNextCell"
+#define CellIdentifiers_InfoButtonCellID  @"InfoButtonCell"
 
 //ViewControllerIdentifiers
 #define ViewControllerIdentifiers_LogViewControllerID   @"LogViewController"
@@ -64,6 +67,7 @@
 #define ViewControllerIdentifiers_SceneDetailViewControllerID  @"SceneDetailViewController"
 #define ViewControllerIdentifiers_ChooseActionViewControllerID  @"ChooseActionViewController"
 #define ViewControllerIdentifiers_ActionViewControllerID  @"ActionViewController"
+#define ViewControllerIdentifiers_DeviceCompositionDataVCID @"DeviceCompositionDataVC"
 #define ViewControllerIdentifiers_SchedulerListViewControllerID  @"SchedulerListViewController"
 #define ViewControllerIdentifiers_SchedulerDetailViewControllerID  @"SchedulerDetailViewController"
 #define ViewControllerIdentifiers_EditModelIDsViewControllerID  @"EditModelIDsViewController"
@@ -115,6 +119,10 @@
 #define Tip_DeleteSceneSuccess   @"delete scene success ..."
 #define Tip_SelectScene   @"select at least one item!"
 
+#define Tip_GetComposition   @"get composition ..."
+#define Tip_GetCompositionFail   @"get composition fail ..."
+#define Tip_GetCompositionSuccess   @"get composition success ..."
+
 //分享使用方式(是否使用蓝牙点对点传输，YES为二维码加蓝牙点对点，NO为存二维码)
 #define kShareWithBluetoothPointToPoint (YES)
 //setting界面显示
@@ -134,6 +142,8 @@
 #define kRemoteAddType  @"kRemoteAddType"
 #define kFastAddType  @"kFastAddType"
 #define kGetOnlineStatusType  @"kGetOnlineStatusType"
+#define kAddStaticOOBDevcieByNoOOBEnable  @"kAddStaticOOBDevcieByNoOOBEnable"
+
 
 //app通用蓝色
 #define kDefultColor [UIColor colorWithRed:0x4A/255.0 green:0x87/255.0 blue:0xEE/255.0 alpha:1]
@@ -146,5 +156,8 @@
 #define SCREENBOUNDS [UIScreen mainScreen].bounds
 #define SCREEN_WIDTH CGRectGetWidth([UIScreen mainScreen].bounds)
 #define SCREEN_HEIGHT CGRectGetHeight([UIScreen mainScreen].bounds)
+
+//默认指令的重试次数
+#define kDefaultRetryCount  (2)
 
 #endif /* DemoConst_h */

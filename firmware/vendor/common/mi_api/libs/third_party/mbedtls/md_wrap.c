@@ -64,15 +64,10 @@ static int sha224_finish_wrap( void *ctx, unsigned char *output )
     return( mbedtls_sha256_finish_ret( (mbedtls_sha256_context *) ctx,
                                        output ) );
 }
-static mbedtls_sha256_context ctx_str;
+
 static void *sha224_ctx_alloc( void )
 {
-	#if 0
     void *ctx = mbedtls_calloc( 1, sizeof( mbedtls_sha256_context ) );
-	#else
-	memset(&ctx_str,0,sizeof(ctx_str));
-    void *ctx = (void *)(&ctx_str);
-	#endif
 
     if( ctx != NULL )
         mbedtls_sha256_init( (mbedtls_sha256_context *) ctx );

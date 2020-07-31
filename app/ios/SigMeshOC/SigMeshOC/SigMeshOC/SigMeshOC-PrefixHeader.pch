@@ -32,6 +32,43 @@
 
 #import <CoreBluetooth/CoreBluetooth.h>
 
+#import "types.h"
+#import "ble_common.h"
+#import "bit.h"
+#import "mesh_config.h"
+#import "mesh_node.h"
+// base controller api
+#import "tutility.h"
+#import "cmd_interface.h"
+#import "light.h"
+#import "blt_config.h"
+#import "app_mesh.h"
+#import "app_provison.h"
+#import "interface.h"
+// scene api
+#import "scene.h"
+// time api
+#import "time_model.h"
+// HSL api
+#import "lighting_model_HSL.h"
+// scheduler api
+#import "scheduler.h"
+// remote add devices api
+#import "remote_prov.h"
+// fast provision api
+#import "fast_provision_model.h"
+// mesh ota api
+#import "mesh_ota.h"
+// SendOpParaDebug
+#import "mesh_common.h"
+#import "app_heartbeat.h"
+// static oob
+#import "le_crypto.h"
+#import "app_proxy.h"
+#import "gatt_provision.h"
+#import "app_beacon.h"
+#import "hci.h"
+
 #import "XHelp.h"
 #import "BTConst.h"
 #import "LibTools.h"

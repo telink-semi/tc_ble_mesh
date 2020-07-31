@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigBearer.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/23.
+//  Created by 梁家誌 on 2019/8/23.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -88,7 +88,7 @@ typedef void(^SendPacketsFinishCallback)(void);
 - (BOOL)isProvisioned;
 - (CBPeripheral *)getCurrentPeripheral;
 
-- (void)changePeripheral:(CBPeripheral *)peripheral result:(bearerChangePeripheralCallback)block;
+- (void)changePeripheral:(CBPeripheral *)peripheral result:(_Nullable bearerChangePeripheralCallback)block;
 
 - (void)changePeripheralIdentifierUuid:(NSString *)uuid result:(bearerChangePeripheralCallback)block;
 

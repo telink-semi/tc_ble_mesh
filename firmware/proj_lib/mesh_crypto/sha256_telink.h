@@ -49,6 +49,9 @@ typedef struct
 mbedtls_sha256_context;
 
 uint32_t soft_crc32_telink(const void *buf, size_t size, uint32_t crc);
+
+void mbedtls_zeroize( void *v, size_t n );
+
 /**
  * \brief          Initialize SHA-256 context
  *

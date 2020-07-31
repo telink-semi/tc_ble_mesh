@@ -23,7 +23,7 @@
 //  DemoCommand.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -34,7 +34,7 @@
 /// Is get online status from private uuid, YES main callback onoffCallback、brighrnessCallback、tempratureCallback、HSLCallback、levelCallback from OnlineStatusCharacteristic.
 + (BOOL)isPrivatelyGetOnlineStatus {
     NSNumber *online = [[NSUserDefaults standardUserDefaults] valueForKey:kGetOnlineStatusType];
-    BOOL hasOTACharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kOnlineStatusCharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] != nil;
+    BOOL hasOTACharacteristic = [SDKLibCommand getCharacteristicWithUUIDString:kOnlineStatusCharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] != nil;
     return online.boolValue && hasOTACharacteristic;
 }
 
@@ -60,7 +60,7 @@
             return NO;
         } else {
             TeLogInfo(@"send request for onlinestatus");
-            [SDKLibCommand genericOnOffGetWithDestination:kMeshAddress_allNodes retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+            [SDKLibCommand genericOnOffGetWithDestination:kMeshAddress_allNodes retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
             return YES;
         }
     }
@@ -77,7 +77,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get lim");
-        [SDKLibCommand lightLightnessGetWithDestination:nodeAddress retryCount:2 responseMaxCount:responseMacCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand lightLightnessGetWithDestination:nodeAddress retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMacCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -93,7 +93,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get CTL");
-        [SDKLibCommand lightCTLGetWithDestination:nodeAddress retryCount:2 responseMaxCount:responseMacCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand lightCTLGetWithDestination:nodeAddress retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMacCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -160,7 +160,7 @@
         }
 
         TeLogInfo(@"send request for edit publish list");
-        SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:2 intervalSteps:5];
+        SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:5 intervalSteps:2];
         SigPublish *publish = [[SigPublish alloc] initWithDestination:publishAddress withKeyIndex:SigDataSource.share.curAppkeyModel.index friendshipCredentialsFlag:0 ttl:0xff periodSteps:periodSteps periodResolution:periodResolution retransmit:retransmit];//ttl=0xFF(表示采用节点默认参数)
         [SDKLibCommand configModelPublicationSetWithDestination:nodeAddress publish:publish elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:retryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
@@ -205,7 +205,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for switch onoff value:%d",isOn);
-        [SDKLibCommand genericOnOffSetWithDestination:address isOn:isOn retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand genericOnOffSetWithDestination:address isOn:isOn retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -261,7 +261,7 @@
 }
 
 /// Change HSL
-+ (BOOL)changeHSLWithAddress:(UInt16)address hue100:(UInt8)hue100 saturation100:(UInt8)saturation100 brightness100:(UInt8)brightness100 responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (BOOL)changeHSLWithAddress:(UInt16)address hue:(float)hue saturation:(float)saturation brightness:(float)brightness responseMaxCount:(int)responseMaxCount ack:(BOOL)ack successCallback:(responseLightHSLStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for change HSL100, but busy now.");
         if (resultCallback) {
@@ -270,11 +270,8 @@
         }
         return NO;
     } else {
-        UInt16 hue = [SigHelper.share getUint16LightnessFromUInt8Lum:hue100];
-        UInt16 saturation = [SigHelper.share getUint16LightnessFromUInt8Lum:saturation100];
-        UInt16 brightness = [SigHelper.share getUint16LightnessFromUInt8Lum:brightness100];
-        TeLogInfo(@"send request for change HSL100 h100:%d,s100:%d,l100:%d,UInt16 hue=0x%x,saturation=0x%x,brightness=0x%x",hue100,saturation100,brightness100,hue,saturation,brightness);
-        [SDKLibCommand lightHSLSetWithDestination:address HSLLight:brightness HSLHue:hue HSLSaturation:saturation retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        TeLogInfo(@"send request for change HSL100 h100:%d,s100:%d,l100:%d,UInt16 hue=0x%x,saturation=0x%x,brightness=0x%x",(int)(hue*100),(int)(saturation*100),(int)(brightness*100),(UInt16)(hue*0xFFFF),(UInt16)(saturation*0xFFFF),(UInt16)(brightness*0xFFFF));
+        [SDKLibCommand lightHSLSetWithDestination:address HSLLight:(UInt16)(brightness*0xFFFF) HSLHue:(UInt16)(hue*0xFFFF) HSLSaturation:(UInt16)(saturation*0xFFFF) retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -290,7 +287,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get HSL");
-        [SDKLibCommand lightHSLGetWithDestination:address retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand lightHSLGetWithDestination:address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -306,7 +303,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for change level value:%d",level);
-        [SDKLibCommand genericDeltaSetWithDestination:address delta:level retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand genericDeltaSetWithDestination:address delta:level retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -322,7 +319,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get level address:%d",address);
-        [SDKLibCommand genericLevelGetWithDestination:address retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand genericLevelGetWithDestination:address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -359,7 +356,7 @@
         UInt8 zone_offset = offset/60/15+64;//时区=分/15+64
         TeLogInfo(@"send request for set time, address=0x%04x,second=%llu,zone_offset=%d.",address,second,zone_offset);
         SigTimeModel *timeModel = [[SigTimeModel alloc] initWithTAISeconds:second subSeconds:0 uncertainty:0 timeAuthority:0 TAI_UTC_Delta:0 timeZoneOffset:zone_offset];
-        [SDKLibCommand timeSetWithDestination:address timeModel:timeModel retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand timeSetWithDestination:address timeModel:timeModel retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -396,7 +393,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for save scene, address=0x%04x, sceneId:%d",address,sceneId);
-        [SDKLibCommand sceneStoreWithDestination:address sceneNumber:sceneId retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand sceneStoreWithDestination:address sceneNumber:sceneId retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -412,7 +409,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for recall scene, address=0x%04x, sceneId:%d",address,sceneId);
-        [SDKLibCommand sceneRecallWithDestination:address sceneNumber:sceneId transitionTime:nil delay:0 retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand sceneRecallWithDestination:address sceneNumber:sceneId transitionTime:nil delay:0 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -428,7 +425,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for delete scene, address=0x%04x, sceneId:%d",address,sceneId);
-        [SDKLibCommand sceneDeleteWithDestination:address sceneNumber:sceneId retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand sceneDeleteWithDestination:address sceneNumber:sceneId retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -444,7 +441,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get scene register status, address=0x%04x",address);
-        [SDKLibCommand sceneRegisterGetWithDestination:address retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand sceneRegisterGetWithDestination:address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -460,7 +457,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get Scheduler Status, address=0x%04x",address);
-        [SDKLibCommand schedulerGetWithDestination:address retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand schedulerGetWithDestination:address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -476,7 +473,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for set Scheduler Action, address=0x%04x, schedulerModel.schedulerData:%@",address,[SigHelper.share getUint64String:schedulerModel.schedulerData]);
-        [SDKLibCommand schedulerActionSetWithDestination:address schedulerModel:schedulerModel retryCount:2 responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand schedulerActionSetWithDestination:address schedulerModel:schedulerModel retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount ack:ack successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }
@@ -492,7 +489,7 @@
         return NO;
     } else {
         TeLogInfo(@"send request for get Scheduler Action, address=0x%04x,schedulerModelID=%d",address,schedulerModelID);
-        [SDKLibCommand schedulerActionGetWithDestination:address schedulerIndex:schedulerModelID retryCount:2 responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
+        [SDKLibCommand schedulerActionGetWithDestination:address schedulerIndex:schedulerModelID retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMaxCount successCallback:successCallback resultCallback:resultCallback];
         return YES;
     }
 }

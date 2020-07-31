@@ -23,16 +23,14 @@
 //  SigUpperTransportPdu.m
 //  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/16.
+//  Created by 梁家誌 on 2019/9/16.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import "SigUpperTransportPdu.h"
 #import "SigAccessMessage.h"
 #import "OpenSSLHelper.h"
-#import "SigKeySet.h"
 #import "SigAccessPdu.h"
-#import "SigMeshAddress.h"
 #import "CBUUID+Hex.h"
 
 @implementation SigUpperTransportPdu
@@ -251,7 +249,8 @@
         NSMutableArray <SigGroupModel *>*matchingGroups = [NSMutableArray array];
         if ([SigHelper.share isVirtualAddress:accessMessage.destination]) {
             // Find all groups with matching Virtual Address.
-            for (SigGroupModel *group in meshNetwork.groups) {
+            NSArray *groups = [NSArray arrayWithArray:meshNetwork.groups];
+            for (SigGroupModel *group in groups) {
                 if (group.intAddress == accessMessage.destination) {
                     [matchingGroups addObject:group];
                     break;
@@ -319,7 +318,7 @@
 }
 
 - (NSString *)description {
-    return[NSString stringWithFormat:@"<%p> - Upper Transport PDU, source:(%04X)->destination: (%04X) Seq: (%08X), accessPdu: (%@), MIC size: (%d)bytes", self, _source,_destination,_sequence,[LibTools convertDataToHexStr:_accessPdu],_transportMicSize];
+    return[NSString stringWithFormat:@"<%p> - Upper Transport PDU, source:(%04X)->destination: (%04X) Seq: (%08X), accessPdu: (%@), MIC size: (%d)bytes", self, _source,_destination,(unsigned int)_sequence,[LibTools convertDataToHexStr:_accessPdu],_transportMicSize];
 }
 
 @end

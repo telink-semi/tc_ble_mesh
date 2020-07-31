@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigConfigMessage.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/15.
+//  Created by 梁家誌 on 2019/8/15.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -264,8 +264,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigPublish *publish;
 - (NSData *)parameters;
 - (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithPublish:(SigPublish *)publish toModel:(SigModelIDModel *)model;
-- (instancetype)initWithDisablePublicationForModel:(SigModelIDModel *)model;
+- (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress model:(SigModelIDModel *)model;
+- (instancetype)initWithDisablePublicationForModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -504,7 +504,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigModelPublicationGet : SigConfigAnyModelMessage
 - (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-//- (instancetype)initWithModel:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -532,7 +531,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigPublish *publish;
 - (NSData *)parameters;
 - (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithPublish:(SigPublish *)publish toModel:(SigModelIDModel *)model;
+- (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress model:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -545,8 +544,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigModelSubscriptionAdd : SigConfigAnyModelMessage
 @property (nonatomic,assign) UInt16 address;
 - (NSData *)parameters;
-- (instancetype)initWithGroupAddress:(UInt16)groupAddress toNodeElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model;
+- (instancetype)initWithGroupAddress:(UInt16)groupAddress toElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
+- (instancetype)initWithGroup:(SigGroupModel *)group toElementAddress:(UInt16)elementAddress model:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -560,7 +559,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 address;
 - (NSData *)parameters;
 - (instancetype)initWithGroupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model;
+- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -573,7 +572,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigModelSubscriptionDeleteAll : SigConfigAnyModelMessage
 - (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initFromModel:(SigModelIDModel *)model;
+- (instancetype)initFromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -587,7 +586,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 address;
 - (NSData *)parameters;
 - (instancetype)initWithGroupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model;
+- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -609,9 +608,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initResponseToSigConfigModelPublicationStatus:(SigConfigModelPublicationStatus *)request withStatus:(SigConfigMessageStatus *)status;
 - (instancetype)initResponseToSigConfigAnyModelMessage:(SigConfigAnyModelMessage *)request withStatus:(SigConfigMessageStatus)status;
 - (instancetype)initResponseToSigConfigModelSubscriptionDeleteAll:(SigConfigModelSubscriptionDeleteAll *)request withStatus:(SigConfigMessageStatus)status;
-- (instancetype)initWithConfirmAddingGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model withStatus:(SigConfigMessageStatus)status;
-- (instancetype)initWithConfirmDeletingAddress:(UInt16)address fromModel:(SigModelIDModel *)model withStatus:(SigConfigMessageStatus)status;
-- (instancetype)initWithConfirmDeletingAllFromModel:(SigModelIDModel *)model;
+- (instancetype)initWithConfirmAddingGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress withStatus:(SigConfigMessageStatus)status;
+- (instancetype)initWithConfirmDeletingAddress:(UInt16)address fromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress withStatus:(SigConfigMessageStatus)status;
+- (instancetype)initWithConfirmDeletingAllFromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -622,7 +621,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) CBUUID *virtualLabel;
 - (NSData *)parameters;
 - (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model;
+- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -637,7 +636,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong,readonly) CBUUID *virtualLabel;
 - (NSData *)parameters;
 - (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model;
+- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -652,7 +651,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong,readonly) CBUUID *virtualLabel;
 - (NSData *)parameters;
 - (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model;
+- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -790,7 +789,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigSIGModelSubscriptionGet : SigConfigModelMessage
 - (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initOfModel:(SigModelIDModel *)model;
+- (instancetype)initOfModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -803,7 +802,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigSIGModelSubscriptionList : SigConfigModelSubscriptionList
 @property (nonatomic,assign) UInt16 elementAddress;
 - (NSData *)parameters;
-- (instancetype)initForModel:(SigModelIDModel *)model addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status;
+- (instancetype)initForModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -812,7 +811,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigVendorModelSubscriptionGet : SigConfigVendorModelMessage
 - (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initOfModel:(SigModelIDModel *)model;
+- (instancetype)initOfModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -826,7 +825,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) SigConfigMessageStatus status;
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*addresses;//[Address]
 - (NSData *)parameters;
-- (instancetype)initForModel:(SigModelIDModel *)model addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status;
+- (instancetype)initForModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -850,7 +849,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSData *)parameters;
 - (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model;
+- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -875,8 +874,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign,readonly) SigConfigMessageStatus status;
 
 - (NSData *)parameters;
-- (instancetype)initWithConfirmBindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model status:(SigConfigMessageStatus)status;
-- (instancetype)initWithConfirmUnbindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model status:(SigConfigMessageStatus)status;
+- (instancetype)initWithConfirmBindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress status:(SigConfigMessageStatus)status;
+- (instancetype)initWithConfirmUnbindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress status:(SigConfigMessageStatus)status;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -896,7 +895,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign,readonly) UInt16 elementAddress;
 - (NSData *)parameters;
 - (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model;
+- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1058,7 +1057,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigSIGModelAppGet : SigConfigModelMessage
 - (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithModel:(SigModelIDModel *)model;
+- (instancetype)initWithModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1081,7 +1080,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigVendorModelAppGet : SigConfigVendorModelMessage
 - (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
-- (instancetype)initWithModel:(SigModelIDModel *)model;
+- (instancetype)initWithModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1095,7 +1094,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 elementAddress;
 @property (nonatomic,assign) UInt16 companyIdentifier;
 - (NSData *)parameters;
-- (instancetype)initWithModel:(SigModelIDModel *)model applicationKeys:(NSArray <SigAppkeyModel *>*)applicationKeys status:(SigConfigMessageStatus)status;
+- (instancetype)initWithModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress applicationKeys:(NSArray <SigAppkeyModel *>*)applicationKeys status:(SigConfigMessageStatus)status;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 

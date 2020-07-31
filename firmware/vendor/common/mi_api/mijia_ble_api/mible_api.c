@@ -15,7 +15,7 @@
 #include "mible_api.h"
 #include "mible_port.h"
 #include "mible_type.h"
-
+#include "../i2c_msc.h"
 #ifndef MIBLE_MAX_USERS
 #define MIBLE_MAX_USERS 4
 #endif
@@ -786,9 +786,24 @@ __WEAK void mible_tasks_exec(void)
 	telink_mi_task_exec();
 }
 
-/**
- *        IIC APIs
- */
+#if HAVE_MSC
+static mible_handler_t handler_iic_callback = 0;
+
+//i2c need init,after wakeup form deepsleep mode
+_attribute_no_retention_bss_ uint8_t  i2c_init_flag = 0;
+
+static uint8_t        msc_addr;
+I2C_GPIO_GroupTypeDef msc_iic_group;
+static uint16_t       msc_iic_freq;
+void msc_iic_init(void)
+{
+    if(i2c_init_flag == 0){
+        i2c_master_init(msc_addr,msc_iic_freq); 
+        i2c_gpio_set(msc_iic_group);
+      
+        i2c_init_flag = 1;
+    }
+}
 
 /**
  * @brief   Function for initializing the IIC driver instance.
@@ -798,11 +813,32 @@ __WEAK void mible_tasks_exec(void)
  *          MI_ERR_INVALID_PARAM    p_config or handler is a NULL pointer.
  *              
  * */
+
 __WEAK mible_status_t mible_iic_init(const iic_config_t * p_config,
         mible_handler_t handler)
 {
-    return MI_SUCCESS;
+    u8 ret = IIC_EVT_XFER_DONE;
+
+    handler_iic_callback = handler;
+    
+    msc_iic_freq = p_config->freq;
+    if((p_config->scl_pin == GPIO_PA4)&&(p_config->sda_pin == GPIO_PA3)){
+        msc_iic_group = I2C_GPIO_GROUP_A3A4;
+    }
+    else if((p_config->scl_pin == GPIO_PD7)&&(p_config->sda_pin == GPIO_PB6)){
+        msc_iic_group = I2C_GPIO_GROUP_B6D7;
+    }    
+    else if((p_config->scl_pin == GPIO_PC1)&&(p_config->sda_pin == GPIO_PC0)){
+        msc_iic_group = I2C_GPIO_GROUP_C0C1;
+    } 
+    else if((p_config->scl_pin == GPIO_PC3)&&(p_config->sda_pin == GPIO_PC2)){
+        msc_iic_group = I2C_GPIO_GROUP_C2C3;
+    }    
+    msc_iic_init();
+   
+    return ret;
 }
+#endif
 
 /**
  * @brief   Function for uninitializing the IIC driver instance.
@@ -828,14 +864,31 @@ __WEAK void mible_iic_uninit(void)
  *          When tx procedure complete, the handler provided by mible_iic_init() should be called,
  * and the iic event should be passed as a argument. 
  * */
-__WEAK mible_status_t mible_iic_tx(uint8_t addr, uint8_t * p_out, uint16_t len,
-bool no_stop)
+__WEAK mible_status_t mible_iic_tx(uint8_t addr, uint8_t * p_out, uint16_t len,uint8_t no_stop)
 {
-    return MI_SUCCESS;
+	#if HAVE_MSC
+    u8 ret = IIC_EVT_XFER_DONE;
+    unsigned char r = irq_disable();
+    
+    msc_addr = addr;
+
+    msc_iic_init();
+        
+    ret = i2c_write_series_for_msc(msc_addr,0,0,p_out,len,no_stop);
+    
+    if(handler_iic_callback != NULL){
+        handler_iic_callback(&ret);
+    }
+    irq_restore(r);
+
+    return ret;
+	#else
+	return 0;
+	#endif
 }
 
 /**
- * @brief   Function for receiving data from a IIC slave.
+ * @brief   Function for reciving data to a IIC slave.
  * @param   [in] addr:   Address of a specific slave device (only 7 LSB).
  *          [out] p_in:  Pointer to rx data
  *          [in] len:    Data length
@@ -848,7 +901,25 @@ bool no_stop)
  * */
 __WEAK mible_status_t mible_iic_rx(uint8_t addr, uint8_t * p_in, uint16_t len)
 {
-    return MI_SUCCESS;
+	#if HAVE_MSC
+    u8 ret = IIC_EVT_XFER_DONE;
+    unsigned char r = irq_disable();
+
+    msc_addr = addr;
+
+    msc_iic_init();
+         
+    ret = i2c_read_series_msc(msc_addr,0,0,p_in,len);
+
+    if(handler_iic_callback != NULL){
+        handler_iic_callback(&ret);
+    }
+    irq_restore(r);
+
+    return ret;
+	#else
+	return 0;
+	#endif
 }
 
 /**
@@ -858,10 +929,11 @@ __WEAK mible_status_t mible_iic_rx(uint8_t addr, uint8_t * p_in, uint16_t len)
  * @return  1: High (Idle)
  *          0: Low (Busy)
  * */
-__WEAK int mible_iic_scl_pin_read(uint8_t port, uint8_t pin)
+__WEAK int mible_iic_scl_pin_read(uint8_t port, uint16_t pin)
 {
-    return 0;
+    return MI_SUCCESS;
 }
+
 extern u32		ota_program_offset;
 
 __WEAK mible_status_t mible_nvm_init(void)

@@ -23,7 +23,7 @@
 //  DeviceControlViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/10/10.
+//  Created by 梁家誌 on 2018/10/10.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -268,7 +268,7 @@
         UInt16 address = self.model.address;
 //        __weak typeof(self) weakSelf = self;
         if (kControllerInHSL) {
-            [DemoCommand changeHSLWithAddress:address hue100:self.hslModel.hue*100 saturation100:self.hslModel.saturation*100 brightness100:self.hslModel.lightness*100 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightHSLStatus * _Nonnull responseMessage) {
+            [DemoCommand changeHSLWithAddress:address hue:self.hslModel.hue saturation:self.hslModel.saturation brightness:self.hslModel.lightness responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightHSLStatus * _Nonnull responseMessage) {
                 
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 

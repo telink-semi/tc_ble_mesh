@@ -235,28 +235,9 @@ _attribute_ram_code_ unsigned int rand(void)  //16M clock, code in flash 23us, c
 
 #endif
 
-#if 0 // add by weixiong in mesh
-/**
- * @brief      This function performs to get a serial of random number.
- * @param[in]  len- the length of random number
- * @param[in]  data - the first address of buffer store random number in
- * @return     the result of a serial of random number..
- */
-void generateRandomNum(int len, unsigned char *data)
-{
-	int i;
-	unsigned int randNums = 0;
-    /* if len is odd */
-	for (i=0; i<len; i++ ) {
-		if( (i & 3) == 0 ){
-			randNums = rand();
-		}
 
-		data[i] = randNums & 0xff;
-		randNums >>=8;
-	}
-}
-#endif
+
+
 
 
 

@@ -22,15 +22,17 @@
 
 #pragma once
 
-#include "../../proj/tl_common.h"
-#include "../../vendor/mesh/app.h"
-#include "../../vendor/mesh_lpn/app.h"
-#include "../../vendor/mesh_provision/app.h"
-#include "../../vendor/mesh_switch/app.h"
+#include "proj/tl_common.h"
+#include "vendor/mesh/app.h"
+#include "vendor/mesh_lpn/app.h"
+#include "vendor/mesh_provision/app.h"
+#include "vendor/mesh_switch/app.h"
 
 
 #define LONG_PRESS_TRIGGER_MS       (3000)
 #define KEY_SCAN_INTERVAL_MS        (40)
+
+#define LPN_GATT_OTA_ADV_STATE_MAX_TIME_MS      (60*1000)
 
 #if LPN_DEBUG_PIN_EN
 void lpn_debug_set_current_pin(u8 level);
@@ -62,6 +64,7 @@ void suspend_handle_wakeup_rx(int handle_type);
 void mesh_friend_ship_retry();
 void send_gatt_adv_right_now();
 u8 lpn_get_poll_retry_max();
+void lpn_mode_set(int mode);
 
 enum{
     HANDLE_NONE                     = 0,
@@ -77,6 +80,17 @@ enum{
     LPN_SUSPEND_EVENT_WAKEUP_RX     = 2,
 };
 
+enum{
+    KEY_PRESSED_IDLE    = 0,
+    KEY_PRESSED_SHORT   = 1,
+    KEY_PRESSED_LONG    = 2,
+};
+
+enum{
+    LPN_MODE_NORMAL         = 0,
+    LPN_MODE_GATT_OTA       = 1,
+};
+
 typedef struct {
 	u8 type;
 	u8 event;
@@ -89,3 +103,6 @@ extern u8 send_gatt_adv_now_flag;
 extern u8 fri_request_retry_max;
 extern u8 lpn_deep_retention_en;
 extern u32 lpn_wakeup_tick;
+extern u8 lpn_mode;
+extern u32 lpn_mode_tick;
+

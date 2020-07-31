@@ -176,11 +176,11 @@ para:
 	ele_adr: the model's adr part 
 	sub_adr: the adr used to add the remove for the addr list 
 	md_id: the special model id 
-	sig_model: the sig_model used to operate 
+	sig_model: it is bool, 1 means "md_id" is a SIG model, 0 means "md_id" is a vendor model.
 ret: 0  means OK 
 	-1 or other value means err
 ****************************************************************************/
-int cfg_cmd_sub_set(u16 op, u16 node_adr, u16 ele_adr, u16 sub_adr, u32 md_id, int sig_model);
+int cfg_cmd_sub_set(u16 op, u16 node_adr, u16 ele_adr, u16 sub_adr, u32 md_id, bool4 sig_model);
 
 
 
@@ -191,11 +191,11 @@ para:
 	node_adr: the node's element addr .
 	ele_adr: the model's adr part 
 	md_id: the special model id 
-	sig_model: the sig_model used to operate 
+	sig_model: it is bool, 1 means "md_id" is a SIG model, 0 means "md_id" is a vendor model.
 ret: 0  means OK 
 	-1 or other value means err
 ****************************************************************************/
-int cfg_cmd_pub_get(u16 node_adr, u16 ele_adr, u32 md_id, int sig_model);
+int cfg_cmd_pub_get(u16 node_adr, u16 ele_adr, u32 md_id, bool4 sig_model);
 
 
 
@@ -208,11 +208,11 @@ para:
 	ele_adr: the model's adr part 
 	pub_adr: the adr used to set for the pub addr 
 	md_id: the special model id 
-	sig_model: the sig_model used to operate 
+	sig_model: it is bool, 1 means "md_id" is a SIG model, 0 means "md_id" is a vendor model.
 ret: 0  means OK 
 	-1 or other value means err
 ****************************************************************************/
-int cfg_cmd_pub_set(u16 node_adr, u16 ele_adr, u16 pub_adr, mesh_model_pub_par_t *pub_par, u32 md_id, int sig_model);
+int cfg_cmd_pub_set(u16 node_adr, u16 ele_adr, u16 pub_adr, mesh_model_pub_par_t *pub_par, u32 md_id, bool4 sig_model);
 
 
 /**************************cfg_cmd_sec_nw_bc_get**************************
@@ -304,7 +304,7 @@ para:
 ret: 0  means OK 
 	-1 or other value means err
 ****************************************************************************/
-int cfg_cmd_relay_set(u16 node_adr, u8 val);
+int cfg_cmd_relay_set(u16 node_adr, mesh_cfg_model_relay_set_t relay_set);
 
 
 
@@ -579,7 +579,7 @@ para:
 ret: 0  means OK 
 	-1 or other value means err
 ****************************************************************************/
-int cfg_cmd_ak_bind(u16 node_adr, u16 ele_adr, u16 ak_idx, u32 md_id, int sig_model);
+int cfg_cmd_ak_bind(u16 node_adr, u16 ele_adr, u16 ak_idx, u32 md_id, bool4 sig_model);
 
 
 
@@ -616,12 +616,23 @@ ret: 0  means OK
 int mesh_proxy_filter_remove_adr(u16 adr);
 
 
-
 // basic interface ,not need to notice this ,status handle(reference only)
 int cfg_cmd_nk_set(u16 op, u16 node_adr, u16 nk_idx, u8 *key);
 int mesh_proxy_set_filter_cmd(u8 opcode,u8 filter_type, u8 * dat,u8 len );
 int mesh_proxy_set_filter_init(u16 self_adr);
 #if WIN32
+/**************************mesh_directed_proxy_control_set**************************
+function :set whether or not the Directed Proxy Server uses directed forwarding for Directed Proxy Client messages for a specified
+			range of unicast addresses 
+para:
+	use_directed: use directed or not   
+	range_start: unicast addresses to use directed
+	range_len:element count of the unicast addresses
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_len);
+
 /*******************json_get_net_info****************************
 use to get the provision information form the stack ,it can call in the provision end callback fun
 p_netkey_val:network key 16 bytes 

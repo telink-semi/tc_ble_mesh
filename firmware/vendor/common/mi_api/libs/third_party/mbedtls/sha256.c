@@ -31,9 +31,7 @@
 #endif
 #include "mible_port.h"
 
-
 #if defined(MBEDTLS_SHA256_C)
-
 
 #include "sha256.h"
 
@@ -42,7 +40,6 @@
 #if defined(MBEDTLS_SELF_TEST)
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
-
 #else
 #include <stdio.h>
 #include <stdlib.h>
@@ -170,7 +167,13 @@ static const uint32_t K[] =
 };
 
 #define  SHR(x,n) ((x & 0xFFFFFFFF) >> n)
-#define ROTR(x,n) (SHR(x,n) | (x << (32 - n)))
+//#define ROTR(x,n) (SHR(x,n) | (x << (32 - n)))
+static int ROTR(int x,int n){
+	volatile int tmp =0;
+	tmp = SHR(x,n);
+	tmp |=(x << (32 - n));
+	return tmp;
+}
 
 #define S0(x) (ROTR(x, 7) ^ ROTR(x,18) ^  SHR(x, 3))
 #define S1(x) (ROTR(x,17) ^ ROTR(x,19) ^  SHR(x,10))

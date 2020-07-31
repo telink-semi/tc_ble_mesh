@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2020/4/2.
-//  Copyright © 2020 梁家誌. All rights reserved.
+//  Copyright © 2020 Telink. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>

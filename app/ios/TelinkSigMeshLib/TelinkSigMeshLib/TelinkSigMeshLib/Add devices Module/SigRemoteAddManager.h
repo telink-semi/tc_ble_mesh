@@ -24,18 +24,22 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2020/3/26.
-//  Copyright © 2020 梁家誌. All rights reserved.
+//  Copyright © 2020 Telink. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-#define kRemoteProgressRetryCount   (5)
+/*总超时kRemoteProgressTimeout为60秒，每个小步骤都重试kRemoteProgressRetryCount即0xFF次，除非直连灯断开连接，否则remote provision最大耗时为60秒。*/
+#define kRemoteProgressRetryCount   (0xFF)
 #define kRemoteProgressTimeout   (60)
 #define kScannedItemsLimit   (2)
+#define kScanCapabilitiesTimeout   (5)
+#define kSendOneNodeScanTimeout   (3)
 #define kScannedItemsTimeout   (5)
 
+@class SigProvisioningData,SigAuthenticationModel;
 typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanRemoteModel);
 
 @interface SigRemoteAddManager : NSObject
@@ -45,13 +49,10 @@ typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanR
 
 #pragma mark - Public properties
 
-/// The provisioning capabilities of the device. This information
-/// is retrieved from the remote device during identification process.
+/// The provisioning capabilities of the device. This information is retrieved from the remote device during identification process.
 @property (nonatomic, assign) struct ProvisioningCapabilities provisioningCapabilities;
 
 /// The Network Key to be sent to the device during provisioning.
-/// Setting this proeprty is mandatory before calling
-/// `provision(usingAlgorithm:publicKey:authenticationMethod)`.
 @property (nonatomic, strong) SigNetkeyModel *networkKey;
 
 /// The current state of the provisioning process.

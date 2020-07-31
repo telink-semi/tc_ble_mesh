@@ -45,28 +45,8 @@ unsigned int rand(void);
 
 
 
-/**
- * @brief This function serves to set adc sampling and get results.
- * @param[in]  none.
- * @return the result of sampling.
- */
-unsigned short adc_rng_result(void);
-
-
-/**
- * @brief This function is used for ADC configuration of ADC supply voltage sampling.
- * @return none
- */
-void rng_init(void);
 
 
 
-/**
- * @brief      This function performs to get a serial of random number.
- * @param[in]  len- the length of random number
- * @param[in]  data - the first address of buffer store random number in
- * @return     the result of a serial of random number..
- */
-void generateRandomNum(int len, unsigned char *data);
 
 

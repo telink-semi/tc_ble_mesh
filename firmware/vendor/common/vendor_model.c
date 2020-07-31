@@ -53,80 +53,155 @@ STATIC_ASSERT((VENDOR_MD_LIGHT_S2 && 0xffff0000) == (MIOT_VENDOR_MD_SER && 0xfff
 #if DEBUG_VENDOR_CMD_EN
 u8 vd_onoff_state[ELE_CNT] = {0};
 
-int vd_light_onoff_idx(int idx, int on)
+
+
+// --------- vendor onoff --------
+int vd_group_g_light_onoff(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-    light_onoff_all(on);     // not must, just for indication
-    if(vd_onoff_state[idx] != on){
-        vd_onoff_state[idx] = on;
-        return 1;
+    int pub_flag = 0;
+    vd_light_onoff_set_t *p_set = (vd_light_onoff_set_t *)par;
+    int light_idx = cb_par->model_idx;
+    int on = !!p_set->sub_op;   // make sure bool
+    light_onoff_all(on);    // not must, just for LED indication, no adjust global var of lightness.
+    if(vd_onoff_state[light_idx] != on){
+        vd_onoff_state[light_idx] = on;
+        pub_flag = 1;
     }else{
-        return 0;
     }
+    
+    return pub_flag;
 }
 
-void vd_light_onoff_st_rsp_par_fill(vd_light_onoff_st_t *rsp, u8 idx)
-{
-    rsp->present_onoff = vd_onoff_state[idx];
-}
-
-int vd_light_tx_cmd_onoff_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md)
+int vd_light_tx_cmd_onoff_st(u8 light_idx, u8 sub_op, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md)
 {
     vd_light_onoff_st_t rsp;
-    vd_light_onoff_st_rsp_par_fill(&rsp, idx);
-    return mesh_tx_cmd_rsp(VD_LIGHT_ONOFF_STATUS, (u8 *)&rsp, sizeof(rsp), ele_adr, dst_adr, uuid, pub_md);
+    rsp.sub_op = !!vd_onoff_state[light_idx];
+#if DEBUG_CFG_CMD_GROUP_AK_EN
+	rsp.brx_num = blt_rxfifo.num;
+#endif
+    return mesh_tx_cmd_rsp(VD_GROUP_G_STATUS, (u8 *)&rsp, sizeof(rsp), ele_adr, dst_adr, uuid, pub_md);
 }
 
-int vd_light_onoff_st_rsp(mesh_cb_fun_par_t *cb_par)
-{
-    model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
-    return vd_light_tx_cmd_onoff_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
-}
-
-int vd_light_onoff_st_publish(u8 idx)
+int vd_light_onoff_st_publish(u8 light_idx)
 {
 #if DUAL_VENDOR_EN
     return 0;   // not use now.
 #else
-	model_common_t *p_com_md = &model_vd_light.srv[idx].com;
+	model_common_t *p_com_md = &model_vd_light.srv[light_idx].com;
 	u16 ele_adr = p_com_md->ele_adr;
 	u16 pub_adr = p_com_md->pub_adr;
 	if(!pub_adr){
 		return -1;
 	}
 	u8 *uuid = get_virtual_adr_uuid(pub_adr, p_com_md);
-    return vd_light_tx_cmd_onoff_st(idx, ele_adr, pub_adr, uuid, p_com_md);
+    return vd_light_tx_cmd_onoff_st(light_idx, 0, ele_adr, pub_adr, uuid, p_com_md);
 #endif
 }
 
-int cb_vd_light_onoff_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+// --------- vendor LPN GATT ota mode set  --------
+#if FEATURE_LOWPOWER_EN
+int vd_group_g_lpn_gatt_ota_mode_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-    return vd_light_onoff_st_rsp(cb_par);
+    vd_lpn_gatt_ota_mode_set_t *p_set = (vd_lpn_gatt_ota_mode_set_t *)par;
+    lpn_mode_set(p_set->mode);
+    return 0;
 }
 
-int cb_vd_light_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+int vd_group_g_tx_lpn_gatt_ota_mode_st(u8 light_idx, u8 sub_op, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md)
+{
+    vd_lpn_gatt_ota_mode_status_t rsp;
+    rsp.sub_op = sub_op;
+    rsp.mode = lpn_mode;
+    return mesh_tx_cmd_rsp(VD_GROUP_G_STATUS, (u8 *)&rsp, sizeof(rsp), ele_adr, dst_adr, uuid, pub_md);
+}
+#endif
+
+
+// --------- vendor sub op code end  --------
+int cb_vd_group_g_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    u8 sub_op = 0;
+    if(par_len){    // compatible with legacy version that is no par.
+        sub_op = par[0];
+    }
+    
+    model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
+    cb_vd_group_g_sub_tx_st p_cb = (cb_vd_group_g_sub_tx_st)search_vd_group_g_func(sub_op, SEARCH_VD_GROUP_G_FUNC_TYPE_TX_ST);
+    if(p_cb){
+        return p_cb(cb_par->model_idx, sub_op, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
+    }else{
+        return -1;
+    }
+}
+
+int cb_vd_group_g_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = -1;
 	int pub_flag = 0;
     //model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
-    vd_light_onoff_set_t *p_set = (vd_light_onoff_set_t *)par;
+    vd_group_g_set_t *p_set = (vd_group_g_set_t *)par;
+    u8 sub_op = p_set->sub_op;
 
     if(!cb_par->retransaction){
-        if(p_set->onoff < G_ONOFF_RSV){
-            pub_flag = vd_light_onoff_idx(cb_par->model_idx, p_set->onoff);
+        cb_vd_group_g_sub_set p_cb_set = (cb_vd_group_g_sub_set)search_vd_group_g_func(sub_op, SEARCH_VD_GROUP_G_FUNC_TYPE_SET);
+        if(p_cb_set){
+            pub_flag = p_cb_set(par, par_len, cb_par);
+        }else{
+            return -1;
         }
     }
-    
-    if(VD_LIGHT_ONOFF_SET_NOACK != cb_par->op){
-        err = vd_light_onoff_st_rsp(cb_par);
+
+#if DEBUG_CFG_CMD_GROUP_AK_EN
+    if(par_len >= 3){
+    	if(par[2] && (par[2]<=128) && BIT_IS_POW2(par[2])){
+    		blt_rxfifo.num = par[2];
+    	}
+	}
+#endif
+
+    if(VD_GROUP_G_SET_NOACK != cb_par->op){
+        err = cb_vd_group_g_get(par, par_len, cb_par);
     }else{
         err = 0;
     }
 
-    if(pub_flag){
-        model_pub_check_set(ST_G_LEVEL_SET_PUB_NOW, cb_par->model, 1);
+    if(!err && pub_flag){
+        if(is_vd_onoff_op(sub_op)){ // only onoff need publish now
+            model_pub_check_set(ST_G_LEVEL_SET_PUB_NOW, cb_par->model, 1);
+        }
     }
     
     return err;
+}
+
+vd_group_g_func_t vd_group_g_func[] = {
+    /* telink use sub op from 0x00 to 0x7f*/
+    {VD_GROUP_G_OFF, vd_group_g_light_onoff, vd_light_tx_cmd_onoff_st},
+    {VD_GROUP_G_ON, vd_group_g_light_onoff, vd_light_tx_cmd_onoff_st},
+#if FEATURE_LOWPOWER_EN
+    {VD_GROUP_G_LPN_GATT_OTA_MODE, vd_group_g_lpn_gatt_ota_mode_set, vd_group_g_tx_lpn_gatt_ota_mode_st},
+#endif
+
+    /* user use sub op from 0x80 to 0xff*/
+    //{VD_GROUP_G_USER_START, , , },
+};
+
+u8 * search_vd_group_g_func(u32 sub_op, int type)
+{
+    foreach_arr(i,vd_group_g_func){
+        if(sub_op == vd_group_g_func[i].sub_op){
+            if(SEARCH_VD_GROUP_G_FUNC_TYPE_SET == type){
+                return (u8*)vd_group_g_func[i].cb_set;
+            }else if(SEARCH_VD_GROUP_G_FUNC_TYPE_TX_ST == type){
+                return (u8*)vd_group_g_func[i].cb_tx_st;
+            }else if(SEARCH_VD_GROUP_G_FUNC_TYPE_RX_STATUS == type){
+                //return (u8*)vd_group_g_func[i].cb_rx_status;
+            }
+            break;
+        }
+    }
+
+    return 0;
 }
 #endif
 
@@ -138,8 +213,9 @@ vd_msg_attr_t vd_msg_attr[ATTR_TYPE_MAX_NUM]={
 
 //note:there is 1.2s response delay after receive reliable command, refer to MESH_RSP_BASE_DELAY_STEP
 //user should use bls_ll_setAdvParam(...) to set lseep time(adv interval) in soft timer mode, SLEEP_TIME_US is useless.
+//user can set gatt_adv_send_flag = 0 to stop gatt adv and save current
 #define SLEEP_TIME_US 		ADV_INTERVAL_MIN 
-#define RUN_TIME_US			60*1000   	
+#define RUN_TIME_US			(20*1000)
 #define INDICATE_RETRY_CNT 	6
 
 mesh_tx_indication_t mesh_indication_retry;
@@ -167,7 +243,7 @@ int mesh_tx_cmd_indica_retry(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_
 	mesh_match_type_t match_type;
 	u8 nk_array_idx = get_nk_arr_idx_first_valid();
 	u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, MASTER);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, 1);
     mesh_match_group_mac(&match_type, mat.adr_dst, mat.op, 1, mat.adr_src);
 	
 	memcpy(&mesh_indication_retry.mat, &mat, sizeof(material_tx_cmd_t));
@@ -180,7 +256,7 @@ int mesh_tx_cmd_indica_retry(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_
 	retry_interval = (par_len+7)/8 * CMD_INTERVAL_MS;
 	vd_msg_attr_indica_retry_start(retry_interval);
 	u8 tid_pos=0;
-	if(is_cmd_with_tid_vendor(&tid_pos, op, 0)){
+	if(is_cmd_with_tid_vendor(&tid_pos, op, par, 0)){
 		if(mesh_indication_retry.ac_par[tid_pos] == 0){ //if tid par is 0,use internal tid value
 			u32 ele_idx = get_ele_idx(adr_src);
 			mesh_indication_retry.tid = mesh_tid.tx[ele_idx];
@@ -370,6 +446,7 @@ int cb_vd_msg_attr_confirm(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	
 	if(!is_own_ele(cb_par->adr_src) && (mesh_indication_retry.tid == par[0])){
 		vd_msg_attr_indica_retry_stop();
+		mesh_tx_segment_finished();
 	}
 	
     if(cb_par->model){  // model may be Null for status message
@@ -400,8 +477,8 @@ int cb_vd_msg_attr_upd_time_rsp(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 #endif
 #else
-#define cb_vd_light_onoff_get       (0)
-#define cb_vd_light_onoff_set       (0)
+#define cb_vd_group_g_get           (0)
+#define cb_vd_group_g_set           (0)
 #define cb_vd_msg_attr_get          (0)
 #define cb_vd_msg_attr_set          (0)
 #define cb_vd_msg_attr_confirm      (0)
@@ -412,7 +489,7 @@ int cb_vd_msg_attr_upd_time_rsp(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 #endif
 
 #if MD_CLIENT_EN
-int cb_vd_light_onoff_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+int cb_vd_group_g_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
     if(cb_par->model){  // model may be Null for status message
@@ -430,7 +507,7 @@ int cb_vd_msg_attr_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     return err;
 }
 #else
-#define cb_vd_light_onoff_status        (0)
+#define cb_vd_group_g_status            (0)
 #define cb_vd_msg_attr_status           (0)
 #endif
 
@@ -462,6 +539,7 @@ int cb_vd_msg_attr_indication(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 }
 #endif
 
+#if (DEBUG_VENDOR_CMD_EN)
 int cb_vd_key_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     //model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
@@ -534,6 +612,7 @@ int cb_vd_key_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
     return 0;
 }
+#endif
 // ------ end --------
 
 #if (LPN_VENDOR_SENSOR_EN && MD_SERVER_EN)
@@ -714,10 +793,10 @@ const
 mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
 #if (VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_SPIRIT)
     #if 0 // DEBUG_VENDOR_CMD_EN // just for sample, default disable, 
-    {VD_LIGHT_ONOFF_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_light_onoff_set, VD_LIGHT_ONOFF_STATUS},
-	{VD_LIGHT_ONOFF_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_light_onoff_get, VD_LIGHT_ONOFF_STATUS},
-	{VD_LIGHT_ONOFF_SET_NOACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_light_onoff_set, STATUS_NONE},
-    {VD_LIGHT_ONOFF_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_light_onoff_status, STATUS_NONE},
+    {VD_GROUP_G_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, VD_GROUP_G_STATUS},
+	{VD_GROUP_G_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_get, VD_GROUP_G_STATUS},
+	{VD_GROUP_G_SET_NOACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, STATUS_NONE},
+    {VD_GROUP_G_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_group_g_status, STATUS_NONE},
     #endif
     
     #if SPIRIT_VENDOR_EN
@@ -734,13 +813,17 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
     #endif
     
 #elif(VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
+    #if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)
+	{VD_EXTEND_CMD0, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, 0, STATUS_NONE},
+    #elif DRAFT_FEAT_VD_MD_EN
+    // add by user
+    #elif (DEBUG_VENDOR_CMD_EN)
 	{VD_RC_KEY_REPORT, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_key_report, STATUS_NONE},
 	
-    #if (DEBUG_VENDOR_CMD_EN)
-    {VD_LIGHT_ONOFF_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_light_onoff_set, VD_LIGHT_ONOFF_STATUS},
-	{VD_LIGHT_ONOFF_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_light_onoff_get, VD_LIGHT_ONOFF_STATUS},
-	{VD_LIGHT_ONOFF_SET_NOACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_light_onoff_set, STATUS_NONE},
-    {VD_LIGHT_ONOFF_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_light_onoff_status, STATUS_NONE},
+    {VD_GROUP_G_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, VD_GROUP_G_STATUS},
+	{VD_GROUP_G_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_get, VD_GROUP_G_STATUS},
+	{VD_GROUP_G_SET_NOACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, STATUS_NONE},
+    {VD_GROUP_G_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_group_g_status, STATUS_NONE},
     #endif
         
     #if (FAST_PROVISION_ENABLE)
@@ -760,6 +843,8 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
     {VD_LPN_SENSOR_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_lpn_sensor_sts, STATUS_NONE},
     #endif
 #endif
+
+    USER_MESH_CMD_VD_ARRAY
 };
 
 #if WIN32
@@ -799,6 +884,7 @@ int mesh_search_model_id_by_op_vendor(mesh_op_resource_t *op_res, u16 op, u8 tx_
 
 //--vendor command interface-------------------
 #if (VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
+    #if DEBUG_VENDOR_CMD_EN
 int vd_cmd_key_report(u16 adr_dst, u8 key_code)
 {
 	vd_rc_key_report_t key_report = {0};
@@ -807,15 +893,36 @@ int vd_cmd_key_report(u16 adr_dst, u8 key_code)
 	return SendOpParaDebug(adr_dst, 0, VD_RC_KEY_REPORT, (u8 *)&key_report, sizeof(key_report));
 }
 
-    #if DEBUG_VENDOR_CMD_EN
 int vd_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack)
 {
+    if(!is_vd_onoff_op(onoff)){
+        return -1;
+    }
+	
+#if 0 // GATEWAY_ENABLE // use the way of INI to send command for gatway
+	u8 par[32] = {0};
+	mesh_bulk_vd_cmd_par_t *p_bulk_vd_cmd = (mesh_bulk_vd_cmd_par_t *)par;
+	p_bulk_vd_cmd->nk_idx = 0;
+    p_bulk_vd_cmd->ak_idx = 0;
+	p_bulk_vd_cmd->retry_cnt = g_reliable_retry_cnt_def;
+	p_bulk_vd_cmd->rsp_max = rsp_max;
+	p_bulk_vd_cmd->adr_dst = adr_dst;
+	p_bulk_vd_cmd->op = ack ? VD_GROUP_G_SET : VD_GROUP_G_SET_NOACK;
+	p_bulk_vd_cmd->vendor_id = g_vendor_id;
+	p_bulk_vd_cmd->op_rsp = VD_GROUP_G_STATUS;
+	p_bulk_vd_cmd->tid_pos = 2;
+	p_bulk_vd_cmd->par[0] = onoff;
+	u8 par_len = OFFSETOF(mesh_bulk_vd_cmd_par_t, par) + (p_bulk_vd_cmd->tid_pos?2:1);
+	
+	return mesh_bulk_cmd((mesh_bulk_cmd_par_t*)p_bulk_vd_cmd, par_len);
+#else // use default vendor id to send command, include gateway.
 	vd_light_onoff_set_t par = {0};
-	par.onoff = onoff;
+	par.sub_op = onoff;
 	par.tid = 0;
 
-	return SendOpParaDebug(adr_dst, rsp_max, ack ? VD_LIGHT_ONOFF_SET : VD_LIGHT_ONOFF_SET_NOACK, 
+	return SendOpParaDebug(adr_dst, rsp_max, ack ? VD_GROUP_G_SET : VD_GROUP_G_SET_NOACK, 
 						   (u8 *)&par, sizeof(vd_light_onoff_set_t));
+#endif	
 }
     #endif
 #endif
@@ -823,23 +930,29 @@ int vd_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack)
 //--vendor command interface end----------------
 
 
-int is_cmd_with_tid_vendor(u8 *tid_pos_out, u16 op, u8 tid_pos_vendor_app)
+int is_cmd_with_tid_vendor(u8 *tid_pos_out, u16 op, u8 *par, u8 tid_pos_vendor_app)
 {
     int cmd_with_tid = 0;
+    #if DEBUG_VENDOR_CMD_EN
+    u8 sub_op = par[0];
+    #endif
+    
     switch(op){
+        case 0:             // fix compile warning, op will never be '0' here, and will be optimized.
         default:
             break;
-    #if (VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)        
+    #if DEBUG_VENDOR_CMD_EN
 		case VD_RC_KEY_REPORT:
 			break;
-	#endif
-            
-	#if DEBUG_VENDOR_CMD_EN
-        case VD_LIGHT_ONOFF_SET:
-        case VD_LIGHT_ONOFF_SET_NOACK:
-            cmd_with_tid = 1;
-            *tid_pos_out = OFFSETOF(vd_light_onoff_set_t, tid);
+
+        case VD_GROUP_G_SET:
+        case VD_GROUP_G_SET_NOACK:{
+            if(is_vd_onoff_op(sub_op)){
+                cmd_with_tid = 1;
+                *tid_pos_out = OFFSETOF(vd_light_onoff_set_t, tid);
+            }
             break;
+        }
     #endif
 
 	#if SPIRIT_VENDOR_EN
@@ -869,6 +982,12 @@ int is_cmd_with_tid_vendor(u8 *tid_pos_out, u16 op, u8 tid_pos_vendor_app)
             cmd_with_tid = 1;
             *tid_pos_out = tid_pos_vendor_app - 1;
         }
+    }
+    #endif
+
+    #ifdef CB_USER_IS_CMD_WITH_TID_VENDOR
+    if(0 == cmd_with_tid){
+        cmd_with_tid = CB_USER_IS_CMD_WITH_TID_VENDOR(tid_pos_out, op, par);
     }
     #endif
 

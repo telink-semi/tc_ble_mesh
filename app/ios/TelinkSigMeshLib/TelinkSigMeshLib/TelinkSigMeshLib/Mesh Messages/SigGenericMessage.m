@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/11/12.
-//  Copyright © 2019 梁家誌. All rights reserved.
+//  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import "SigGenericMessage.h"
@@ -2267,7 +2267,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
-    for (SigSensorDescriptorModel *model in _descriptorModels) {
+    NSArray *descriptorModels = [NSArray arrayWithArray:_descriptorModels];
+    for (SigSensorDescriptorModel *model in descriptorModels) {
         [mData appendData:model.getDescriptorParameters];
     }
     return mData;
@@ -4249,6 +4250,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
                     [array addObject:@(0xF-i)];
                 }
             }
+            _schedulers = array;
         }
     }
     return self;
@@ -4257,7 +4259,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
     UInt16 tem16 = 0;
-    for (NSNumber *num in _schedulers) {
+    NSArray *schedulers = [NSArray arrayWithArray:_schedulers];
+    for (NSNumber *num in schedulers) {
         UInt16 schedulerID = (UInt16)num.intValue;
         tem16 |= (1 << (0xF-schedulerID));
     }
@@ -10314,7 +10317,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         if (parameters) {
             self.parameters = [NSData dataWithData:parameters];
         }
-        if (parameters == nil || parameters.length < 6) {
+        if (parameters == nil || parameters.length < 5) {
             return nil;
         }
         UInt8 tem8 = 0;
@@ -10323,15 +10326,15 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         _status = tem8 & 0b1111;
         _RFU = (tem8 >> 4) & 0b11;
         _format = (tem8 >> 6) & 0b11;
-        memcpy(&tem8, dataByte+1, 1);
-        _transferPhase = tem8;
+//        memcpy(&tem8, dataByte+1, 1);
+//        _transferPhase = tem8;
         UInt16 tem16 = 0;
-        memcpy(&tem16, dataByte+2, 2);
+        memcpy(&tem16, dataByte+1, 2);
         _blockNumber = tem16;
-        memcpy(&tem16, dataByte+4, 2);
+        memcpy(&tem16, dataByte+3, 2);
         _chunkSize = tem16;
-        if (parameters.length >= 6+2) {
-            memcpy(&tem16, dataByte+6, 2);
+        if (parameters.length >= 5+2) {
+            memcpy(&tem16, dataByte+5, 2);
             UInt16 addressBits = tem16;
             NSMutableArray *array = [NSMutableArray array];
             for (int i=0; i<32; i++) {
@@ -10425,4 +10428,17 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
+@end
+
+
+@implementation SigTelinkOnlineStatusMessage
+- (instancetype)initWithAddress:(UInt16)address state:(DeviceState)state brightness:(UInt8)brightness temperature:(UInt8)temperature {
+    if (self = [super init]) {
+        _address = address;
+        _state = state;
+        _brightness = brightness;
+        _temperature = temperature;
+    }
+    return self;
+}
 @end

@@ -5,7 +5,6 @@
 #define MI_LOG_MODULE_NAME "uECC"
 #include "mible_log.h"
 
-#if (HAVE_MSC==0)
 #include "cryptography/mi_crypto_backend_uECC.h"
 #include "third_party/micro-ecc/uECC.h"
 
@@ -145,4 +144,4 @@ int micro_ecc_verify(void *p_ctx, uint8_t const *p_pk, uint8_t const * p_hash, u
     return 0;
 }
 
-#endif // HAVE_MSC==0
+

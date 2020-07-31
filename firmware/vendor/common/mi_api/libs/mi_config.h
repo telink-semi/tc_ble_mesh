@@ -35,10 +35,21 @@
 #define MIBLE_AUTH_MODE            1
 #define MIBLE_LIB_MAJOR            1
 #define MIBLE_LIB_MINOR            4
-#define MIBLE_LIB_REVISION         0
+#define MIBLE_LIB_REVISION         1
 #else
 #error "No MI_BLE_ENABLED or MI_MESH_ENABLED is defined. Should add one of them in the preprocesser symbols."
 #endif
+
+#if MI_API_ENABLE
+	#if (MSC_TYPE == MSC_MJA1 || MSC_TYPE == MSC_MJSC)
+	#define HAVE_MSC	MSC_TYPE
+	#else
+	#define HAVE_MSC	0
+	#endif
+#else
+	#define HAVE_MSC	0
+#endif
+
 
 #define MIBLE_LIB_AND_DEVELOPER_VERSION CONCAT_VERSION(MIBLE_LIB_MAJOR, MIBLE_LIB_MINOR, MIBLE_LIB_REVISION, DEVELOPER_VERSION)
 

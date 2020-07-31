@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigHelper.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/15.
+//  Created by 梁家誌 on 2019/8/15.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -79,8 +79,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (UInt8)getOnOffFromeSInt16Level:(SInt16)level;
 - (UInt16)getUInt16LightnessFromSInt16Level:(SInt16)level;
 - (SInt16)getSInt16LevelFromUInt16Lightness:(UInt16)lightness;
-
-unsigned short crc16 (unsigned char *pD, int len);
 
 /// response opcode, eg://SigOpCode_configAppKeyGet:0x8001->SigOpCode_configAppKeyList:0x8002
 /// @param sendOpcode opcode of send command.

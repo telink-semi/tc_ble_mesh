@@ -23,7 +23,7 @@
 //  GroupDetailViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -164,7 +164,8 @@
     self.tempratureSlider.value = self.model.groupTempareture;
 
     self.source = [[NSMutableArray alloc] init];
-    for (SigNodeModel *model in self.model.groupDevices) {
+    NSArray *groupDevices = [NSArray arrayWithArray:self.model.groupDevices];
+    for (SigNodeModel *model in groupDevices) {
         [self.source addObject:model];
     }
     [self.source sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {

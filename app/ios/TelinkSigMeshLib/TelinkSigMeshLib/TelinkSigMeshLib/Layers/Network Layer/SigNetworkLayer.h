@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigNetworkLayer.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/9.
+//  Created by 梁家誌 on 2019/9/9.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -31,12 +31,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigLowerTransportPdu;
+@class SigLowerTransportPdu,SigNetworkManager;
 
 @interface SigNetworkLayer : NSObject
 @property (nonatomic,strong) SigNetworkManager *networkManager;
 @property (nonatomic,strong) SigDataSource *meshNetwork;
-@property (nonatomic,strong) NSCache <NSData *, NSNull *>*networkMessageCache;
+//@property (nonatomic,strong) NSCache <NSData *, NSNull *>*networkMessageCache;
 @property (nonatomic,strong) NSUserDefaults *defaults;
 @property (nonatomic,strong) SigIvIndex *ivIndex;
 @property (nonatomic,strong) SigNetkeyModel *networkKey;

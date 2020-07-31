@@ -23,7 +23,7 @@
 //  HomeViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -105,7 +105,8 @@
     }
     
     BOOL hasKeyBindSuccess = NO;
-    for (SigNodeModel *model in SigDataSource.share.curNodes) {
+    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    for (SigNodeModel *model in curNodes) {
         if (model.isKeyBindSuccess && !model.isSensor) {
             hasKeyBindSuccess = YES;
             break;
@@ -124,7 +125,8 @@
     TeLogDebug(@"");
     
     int tem = 0;
-    for (SigNodeModel *node in SigDataSource.share.curNodes) {
+    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    for (SigNodeModel *node in curNodes) {
         if (!node.isSensor && node.isKeyBindSuccess) {
             tem++;
         }
@@ -132,6 +134,7 @@
     __weak typeof(self) weakSelf = self;
     BOOL result = [DemoCommand getOnlineStatusWithResponseMaxCount:tem successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         if (responseMessage) {
+            TeLogInfo(@"getOnlineStatus source=0x%x",source);
             NSDictionary *dict = @{@"source":@(source),@"responseMessage":responseMessage};
             [weakSelf performSelectorInBackground:@selector(reloadCollectionViewWithItemResponseModel:) withObject:dict];
         }
@@ -154,6 +157,8 @@
 
 - (void)reloadCollectionViewWithItemResponseModel:(NSDictionary *)dict{
     UInt16 address = [dict[@"source"] intValue];
+//    TeLogInfo(@"reload address=0x%x",address);
+
     SigNodeModel *model = [SigDataSource.share getNodeWithAddress:address];
     [model updateNodeStatusWithBaseMeshMessage:dict[@"responseMessage"] source:address];
     if (model) {
@@ -161,9 +166,10 @@
             NSInteger index = [self.source indexOfObject:model];
             if (index < self.source.count) {
                 [self.source replaceObjectAtIndex:index withObject:model];
-                NSIndexPath *path = [NSIndexPath indexPathForItem:index inSection:0];
+//                NSIndexPath *path = [NSIndexPath indexPathForItem:index inSection:0];
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.collectionView reloadItemsAtIndexPaths:@[path]];
+                    [self.collectionView reloadData];
+//                    [self.collectionView reloadItemsAtIndexPaths:@[path]];
                 });
             }
         }
@@ -254,7 +260,7 @@
         [self workNormal];
     }
 //    __weak typeof(self) weakSelf = self;
-//    [SigBluetooth.share setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
+//    [SDKLibCommand setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
 //        TeLogVerbose(@"setBluetoothCentralUpdateStateCallback state=%ld",(long)state);
 //        if (state == CBCentralManagerStatePoweredOn) {
 //            [weakSelf workNormal];
@@ -292,7 +298,7 @@
     [SigPublishManager.share setDiscoverOnlineNodeCallback:^(NSNumber * _Nonnull unicastAddress) {
         [weakSelf reloadCollectionView];
     }];
-    [SigBluetooth.share setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
+    [SDKLibCommand setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
         TeLogVerbose(@"setBluetoothCentralUpdateStateCallback state=%ld",(long)state);
         if (state == CBCentralManagerStatePoweredOn) {
             [weakSelf workNormal];
@@ -302,6 +308,8 @@
             [weakSelf reloadCollectionView];
         }
     }];
+    //设置SigBearer的block
+    [SigBearer.share changePeripheral:SigBearer.share.getCurrentPeripheral result:nil];
 }
 
 #pragma  mark - SigBearerDataDelegate

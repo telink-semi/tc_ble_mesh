@@ -127,8 +127,8 @@ typedef struct{
 
 
 // -----------
-int light_hue_set(mesh_cmd_light_hue_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list);
-int light_sat_set(mesh_cmd_light_sat_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list);
+int light_hue_set(mesh_cmd_light_hue_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list);
+int light_sat_set(mesh_cmd_light_sat_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list);
 
 int mesh_light_hsl_st_publish(u8 idx);
 int mesh_light_hue_st_publish(u8 idx);

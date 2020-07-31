@@ -184,6 +184,10 @@ int app_event_handler (u32 h, u8 *p, int n)
 		#endif
 
 		mesh_ble_disconnect_cb();
+		if(LPN_MODE_GATT_OTA == lpn_mode){
+		    lpn_mode_tick = clock_time();
+		    lpn_mode_set(LPN_MODE_NORMAL);
+		}
 	}
 
 	if (send_to_hci)
@@ -325,7 +329,7 @@ void user_init()
 #endif
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
-#if BLT_SOFTWARE_TIMER_ENABLE
+#if BLE_REMOTE_PM_ENABLE
 	blc_ll_initPowerManagement_module();        //pm module:      	 optional
 #endif
 
@@ -414,7 +418,10 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 
 	DBG_CHN0_HIGH;    //debug
 
-	light_pwm_init();
+    if(!is_led_busy()){
+	    light_pwm_init();
+	}
+	
 #if (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();
 #endif

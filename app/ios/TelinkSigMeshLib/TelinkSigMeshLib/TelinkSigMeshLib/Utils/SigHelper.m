@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigHelper.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/15.
+//  Created by 梁家誌 on 2019/8/15.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -74,12 +74,10 @@
         case SigStepResolution_tensOfMinutes:
             return (int)steps * 600000;
             break;
-
         default:
             break;
     }
 }
-
 
 - (NSString *)getNodeAddressString:(UInt16)address {
     return [self getUint16String:address];
@@ -90,7 +88,7 @@
 }
 
 - (NSString *)getUint32String:(UInt32)address {
-    return [NSString stringWithFormat:@"%08X",address];
+    return [NSString stringWithFormat:@"%08X",(unsigned int)address];
 }
 
 - (NSString *)getUint64String:(UInt64)address {
@@ -174,7 +172,6 @@
     if(temperature < CTL_TEMP_MIN){
         temperature = CTL_TEMP_MIN;
     }
-    
     if(temperature > CTL_TEMP_MAX){
         temperature = CTL_TEMP_MAX;
     }
@@ -209,27 +206,6 @@
 - (SInt16)getSInt16LevelFromUInt16Lightness:(UInt16)lightness {
     return [self getSInt16FromUInt16:lightness];
 }
-
-extern unsigned short crc16 (unsigned char *pD, int len) {
-    static unsigned short poly[2]={0, 0xa001};
-    unsigned short crc = 0xffff;
-    int i,j;
-    for(j=len; j>0; j--) {
-        unsigned char ds = *pD++;
-        for(i=0; i<8; i++) {
-            crc = (crc >> 1) ^ poly[(crc ^ ds ) & 1];
-            ds = ds >> 1;
-        }
-    }
-    return crc;
-}
-
-
-//u8 light_lum_get(int idx, int target_flag)
-//{
-//    st_transition_t *p_trans = P_ST_TRANS(idx, ST_TRANS_LIGHTNESS);
-//    return level2lum(target_flag? p_trans->target : p_trans->present);
-//}
 
 //SigOpCode_configAppKeyGet:0x8001->SigOpCode_configAppKeyList:0x8002
 - (int)getResponseOpcodeWithSendOpcode:(int)sendOpcode {

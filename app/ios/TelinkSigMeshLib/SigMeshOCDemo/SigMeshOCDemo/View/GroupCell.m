@@ -23,7 +23,7 @@
 //  GroupCell.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -60,8 +60,13 @@
     [DemoCommand switchOnOffWithIsOn:on address:self.groupAddress responseMaxCount:(int)self.model.groupOnlineDevices.count ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         weakSelf.sw.on = on;
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
+//    [DemoCommand switchOnOffWithIsOn:on address:self.groupAddress responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+//        weakSelf.sw.on = on;
+//    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+//
+//    }];
 }
 
 @end

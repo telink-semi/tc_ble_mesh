@@ -24,11 +24,14 @@
 #include "../../proj/tl_common.h"
 #include "../../proj_lib/sig_mesh/app_mesh.h"
 /****************************************************
-Sensor Property ID
-https://www.bluetooth.com/specifications/gatt/characteristics
+Sensor Property ID: "Mesh Device Properties v1.0.pdf" or later
 *****************************************************/
 
-#define PROP_ID						0x004E		
+#define PROP_ID_PHOTOMETRY_PRESENT_AMBIENT_LIGHT_LEVEL  (0x004E) //Characteristic: Illuminance, uint24
+
+#define PROP_ID_OCCUPANCY_MOTION_SENSED             (0x0042) //Characteristic: Percentage 8, u8
+#define PROP_ID_OCCUPANCY_MOTION_THRESHOLD          (0x0043) //Characteristic: Percentage 8, u8
+#define PROP_ID_OCCUPANCY_PEOPLE_COUNT              (0x004C) //Characteristic: Count 16, u16
 
 //----------------------------------- op code
 // op cmd 0xxxxxxx (SIG)
@@ -65,23 +68,28 @@ typedef struct{
 	u8	update_interval;
 }mesh_cmd_sensor_descript_st_t;
 
+enum{
+	SENSOR_DATA_FORMAT_A = 0,
+	SENSOR_DATA_FORMAT_B = 1,
+};
+
 typedef struct{
 	u16 format:1;  // 0
 	u16 length:4;
 	u16 prop_id:11;
 	u8  raw_value[4];
-}sensor_mpid_a_t;
+}sensor_mpid_A_t;
 
 typedef struct{
  	u8 format:1;   // 1
 	u8 length:7;
 	u16 prop_id;
 	u8 raw_value[4];
- }sensor_mpid_b_t;
+ }sensor_mpid_B_t;
 
 typedef struct{
 	u8 raw_len;
- 	sensor_mpid_b_t sensor_mpid;
+ 	sensor_mpid_B_t sensor_mpid;
  }sensor_mpid_b_st_t;
 
 typedef struct{
@@ -190,7 +198,7 @@ enum{
 void mesh_global_var_init_sensor_descrip();
 int mesh_sensor_st_publish(u8 idx);
 int mesh_sensor_setup_st_publish(u8 idx);
-#if MD_SERVER_EN
+#if MD_SENSOR_SERVER_EN
 int mesh_cmd_sig_sensor_descript_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_sensor_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_sensor_cadence_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -212,7 +220,7 @@ int mesh_cmd_sig_sensor_series_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 #define mesh_cmd_sig_sensor_series_get                  (0)
 #endif
 
-#if MD_CLIENT_EN
+#if MD_SENSOR_CLIENT_EN
 int mesh_cmd_sig_sensor_descript_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_sensor_cadence_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -234,6 +242,7 @@ u32 sensor_measure_proc();
 #if SENSOR_LIGHTING_CTRL_EN
 void sensor_lighting_ctrl_proc();
 #endif
+int access_cmd_sensor_occupancy_motion_sensed(u16 adr_dst, u8 percent);
 
 extern model_sensor_t			model_sig_sensor;
 extern u32 sensure_measure_quantity;

@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigBluetooth.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/16.
+//  Created by 梁家誌 on 2019/8/16.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -59,6 +59,7 @@
 @property (nonatomic,copy) bleDisconnectCallback bluetoothDisconnectCallback;
 @property (nonatomic,copy) bleIsReadyToSendWriteWithoutResponseCallback bluetoothIsReadyToSendWriteWithoutResponseCallback;
 @property (nonatomic,copy) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateValueForCharacteristicCallback;
+@property (nonatomic,copy) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateOnlineStatusValueCallback;
 
 @end
 
@@ -92,7 +93,7 @@
     _bluetoothCentralUpdateStateCallback = bluetoothCentralUpdateStateCallback;
 }
 
-- (void)setBluetoothDisconnectCallback:(bleDisconnectCallback)bluetoothDisconnectCallback {
+- (void)setBluetoothDisconnectCallback:(_Nullable bleDisconnectCallback)bluetoothDisconnectCallback {
     _bluetoothDisconnectCallback = bluetoothDisconnectCallback;
 }
 
@@ -104,13 +105,17 @@
     _bluetoothDidUpdateValueForCharacteristicCallback = bluetoothDidUpdateValueForCharacteristicCallback;
 }
 
+- (void)setBluetoothDidUpdateOnlineStatusValueCallback:(bleDidUpdateValueForCharacteristicCallback)bluetoothDidUpdateOnlineStatusValueCallback {
+    _bluetoothDidUpdateOnlineStatusValueCallback = bluetoothDidUpdateOnlineStatusValueCallback;
+}
+
 - (void)scanUnprovisionedDevicesWithResult:(bleScanPeripheralCallback)result {
-    TeLogInfo(@"");
+//    TeLogInfo(@"");
     [self scanWithServiceUUID:kPBGATTService result:result];
 }
 
 - (void)scanProvisionedDevicesWithResult:(bleScanPeripheralCallback)result {
-    TeLogInfo(@"");
+//    TeLogInfo(@"");
     [self scanWithServiceUUID:kPROXYService result:result];
 }
 
@@ -139,7 +144,7 @@
     [self scanProvisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
         if ([peripheral.identifier.UUIDString isEqualToString:peripheralUUID]) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(scanWithPeripheralUUIDTimeout) object:nil];
+                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanWithPeripheralUUIDTimeout) object:nil];
             });
             [weakSelf stopScan];
             if (block) {
@@ -183,7 +188,7 @@
     [self.manager connectPeripheral:peripheral options:nil];
 }
 
-///if timeout is 0,means will not timeout forever.
+/// if timeout is 0,means will not timeout forever.
 - (void)discoverServicesOfPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleDiscoverServicesCallback)block {
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
         TeLogError(@"Bluetooth is not power on.")
@@ -249,7 +254,7 @@
                 dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
             }
         }
-        if (self.currentPeripheral) {
+        if (weakSelf.currentPeripheral) {
             [weakSelf cancelConnectionPeripheral:weakSelf.currentPeripheral timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
                 [weakSelf ressetParameters];
                 weakSelf.currentPeripheral = nil;
@@ -486,7 +491,7 @@
 #pragma mark - CBCentralManagerDelegate
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
-    TeLogInfo(@"state=%ld",(long)central.state)
+//    TeLogInfo(@"state=%ld",(long)central.state)
     if (self.manager.state == CBCentralManagerStatePoweredOn) {
         if (_isInitFinish) {
             if (self.bluetoothEnableCallback) {
@@ -549,12 +554,12 @@
     
     SigScanRspModel *scanRspModel = [[SigScanRspModel alloc] initWithPeripheral:peripheral advertisementData:advertisementData];
     //=================test==================//
-//    if (![scanRspModel.macAddress isEqualToString:@"ABCDE30B2F6B"]) {
+//    if (![scanRspModel.macAddress isEqualToString:@"FFFF20200722"]) {
 //        return;
 //    }
     //=================test==================//
 
-    TeLogInfo(@"discover mac：%@ state=%@ advertisementData=%@",scanRspModel.macAddress,provisionAble?@"1827":@"1828",advertisementData);
+//    TeLogInfo(@"discover RSSI:%@ uuid:%@ mac：%@ state=%@ advertisementData=%@",RSSI,peripheral.identifier.UUIDString,scanRspModel.macAddress,provisionAble?@"1827":@"1828",advertisementData);
     BOOL shouldDelay = scanRspModel.macAddress == nil || scanRspModel.macAddress.length == 0;
     if (shouldDelay && self.waitScanRseponseEnabel) {
         TeLogVerbose(@"this node uuid=%@ has not MacAddress, dalay and return.",peripheral.identifier.UUIDString);
@@ -574,7 +579,7 @@
         }
     }
 
-//    TeLogInfo(@"discover mac：%@ state=%@ advertisementData=%@",scanRspModel.macAddress,provisionAble?@"1827":@"1828",advertisementData);
+    TeLogInfo(@"discover RSSI:%@ uuid:%@ mac：%@ state=%@ advertisementData=%@",RSSI,peripheral.identifier.UUIDString,scanRspModel.macAddress,provisionAble?@"1827":@"1828",advertisementData);
     [SigDataSource.share updateScanRspModelToDataSource:scanRspModel];
     
     if (self.bluetoothScanPeripheralCallback) {
@@ -585,7 +590,7 @@
 }
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
-    TeLogInfo(@"");
+    TeLogInfo(@"uuid:%@",peripheral.identifier.UUIDString);
     if ([peripheral isEqual:self.currentPeripheral]) {
         [self addConnectedPeripheralToLocations:peripheral];
         [self connectPeripheralFinish];
@@ -604,7 +609,8 @@
         [self connectPeripheralFail];
         [self cancelConnectPeripheralFinish];
         [self removeConnectedPeripheralFromLocations:peripheral];
-        for (SigNodeModel *node in SigDataSource.share.curNodes) {
+        NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+        for (SigNodeModel *node in curNodes) {
             if (node.hasOpenPublish) {
                 [SigPublishManager.share stopCheckOfflineTimerWithAddress:@(node.address)];
             }
@@ -655,6 +661,7 @@
     if (([characteristic.UUID.UUIDString isEqualToString:kPROXY_Out_CharacteristicsID] && SigBearer.share.isProvisioned) || ([characteristic.UUID.UUIDString isEqualToString:kPBGATT_Out_CharacteristicsID] && !SigBearer.share.isProvisioned)) {
         if ([characteristic.UUID.UUIDString isEqualToString:kPROXY_Out_CharacteristicsID]) {
             TeLogInfo(@"<--- from:PROXY, length:%d",characteristic.value.length);
+//            TeLogInfo(@"<--- from:PROXY, length:%d, data:%@",characteristic.value.length,[LibTools convertDataToHexStr:characteristic.value]);
         } else {
             TeLogInfo(@"<--- from:GATT, length:%d",characteristic.value.length);
         }
@@ -670,7 +677,9 @@
     }
     if ([characteristic.UUID.UUIDString isEqualToString:kOnlineStatusCharacteristicsID]) {
         TeLogInfo(@"<--- from:OnlineStatusCharacteristics, length:%d",characteristic.value.length);
-        [[SigDataHandler share] receiveOnlineStatueData:characteristic.value];
+        if (self.bluetoothDidUpdateOnlineStatusValueCallback) {
+            self.bluetoothDidUpdateOnlineStatusValueCallback(peripheral, characteristic);
+        }
     }
 }
 

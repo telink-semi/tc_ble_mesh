@@ -23,7 +23,7 @@
 //  ShareVC.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2019/1/24.
+//  Created by 梁家誌 on 2019/1/24.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -134,7 +134,7 @@
 - (void)clickExportByQRCode {
     __weak typeof(self) weakSelf = self;
     //设置有效时间5分钟
-    [TelinkHttpManager.share uploadJsonDictionary:[SigDataSource.share getDictionaryFromDataSource] timeout:60 * 5 didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+    [TelinkHttpManager.share uploadJsonDictionary:[SigDataSource.share getFormatDictionaryFromDataSource] timeout:60 * 5 didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (err) {
                 NSString *errstr = [NSString stringWithFormat:@"%@",err];
@@ -182,25 +182,28 @@
 
 - (void)getTelinkJsonWithUUID:(NSString *)uuid {
     __weak typeof(self) weakSelf = self;
-    [TelinkHttpManager.share downloadJsonDictionaryWithUUID:uuid didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (err) {
-                NSString *errstr = [NSString stringWithFormat:@"%@",err];
-                TeLogInfo(@"%@",errstr);
-                [weakSelf showTips:errstr];
-                [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
-            } else {
-                TeLogInfo(@"result=%@",result);
-                NSDictionary *dic = (NSDictionary *)result;
-                BOOL isSuccess = [dic[@"isSuccess"] boolValue];
-                if (isSuccess) {
-                    [weakSelf showDownloadJsonSuccess:[LibTools getDictionaryWithJsonString:dic[@"data"]] uuid:uuid];
-                }else{
-                    [weakSelf showTips:dic[@"msg"]];
+    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        TeLogDebug(@"SigBearer close %@",(successful?@"successful":@"fail"));
+        [TelinkHttpManager.share downloadJsonDictionaryWithUUID:uuid didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (err) {
+                    NSString *errstr = [NSString stringWithFormat:@"%@",err];
+                    TeLogInfo(@"%@",errstr);
+                    [weakSelf showTips:errstr];
                     [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                } else {
+                    TeLogInfo(@"result=%@",result);
+                    NSDictionary *dic = (NSDictionary *)result;
+                    BOOL isSuccess = [dic[@"isSuccess"] boolValue];
+                    if (isSuccess) {
+                        [weakSelf showDownloadJsonSuccess:[LibTools getDictionaryWithJsonString:dic[@"data"]] uuid:uuid];
+                    }else{
+                        [weakSelf showTips:dic[@"msg"]];
+                        [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                    }
                 }
-            }
-        });
+            });
+        }];
     }];
 }
 
@@ -239,7 +242,8 @@
     BOOL needChangeProvisionAddress = NO;
     BOOL hasPhoneUUID = NO;
     NSString *curPhoneUUID = [SigDataSource.share getCurrentProvisionerUUID];
-    for (SigProvisionerModel *provision in SigDataSource.share.provisioners) {
+    NSArray *provisioners = [NSArray arrayWithArray:SigDataSource.share.provisioners];
+    for (SigProvisionerModel *provision in provisioners) {
         if ([provision.UUID isEqualToString:curPhoneUUID]) {
             hasPhoneUUID = YES;
             break;
@@ -266,7 +270,8 @@
     if (needChangeProvisionAddress) {
         //修改provisionLocation adress
         UInt16 maxAddr = SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
-        for (SigNodeModel *node in SigDataSource.share.nodes) {
+        NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.nodes];
+        for (SigNodeModel *node in nodes) {
             NSInteger curMax = node.address + node.elements.count - 1;
             if (curMax > maxAddr) {
                 maxAddr = curMax;

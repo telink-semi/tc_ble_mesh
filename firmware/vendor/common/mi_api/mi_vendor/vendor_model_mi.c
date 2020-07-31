@@ -322,7 +322,7 @@ u8 get_new_mi_ssid(u8 ssid,u8 piid)
 	}
 }
 
-int mi_cb_vd_property_change(u16 ele_adr, u16 dst_adr,u8 ssid,u8 piid)
+int mi_cb_vd_property_change(u16 ele_adr, u16 dst_adr,u8 ssid,u8 piid,model_common_t *p_com_md)
 {
 	int err = -1;
 	vd_mi_property_changed_str property_sts ;
@@ -335,11 +335,11 @@ int mi_cb_vd_property_change(u16 ele_adr, u16 dst_adr,u8 ssid,u8 piid)
 	if(p_mi_proper->ver_new){
 		property_sts.tid = get_new_mi_ssid(ssid,piid);
 		err = mesh_tx_cmd_rsp(VD_MI_PROPERTY_STS, (u8 *)&property_sts, sizeof(property_sts), ele_adr, 
-								dst_adr,0, 0);
+								dst_adr,0, p_com_md);
 		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"send property new protocol",0);
 	}else{
 		err = mesh_tx_cmd_rsp(VD_MI_PROPERTY_STS, (u8 *)&property_sts, 6, ele_adr, 
-								dst_adr,0, 0);
+								dst_adr,0, p_com_md);
 		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"send property old protocol",0);
 	}
 	return err;
@@ -358,7 +358,7 @@ int vd_mi_proper_sts_publish(u8 idx)
 		return -1;
 	}
 	u8 *uuid = get_virtual_adr_uuid(pub_adr, p_com_md);
-    return mi_cb_vd_property_change(ele_adr,pub_adr,p_mi_proper->ssid_now,p_mi_proper->piid_now);
+    return mi_cb_vd_property_change(ele_adr,pub_adr,p_mi_proper->ssid_now,p_mi_proper->piid_now,p_com_md);
 #endif
 }
 
@@ -368,7 +368,7 @@ int mi_cb_vd_get_property(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	model_common_t *p_com_md = (model_common_t *)cb_par->model;
 	vd_mi_get_property_str *p_proper = (vd_mi_get_property_str *)par;
 	mi_cb_vd_property_change(p_com_md->ele_adr,cb_par->adr_src,
-							p_proper->mi_head.ssid,p_proper->mi_head.piid);
+							p_proper->mi_head.ssid,p_proper->mi_head.piid,0);
 	return 1;
 }
 
@@ -398,7 +398,7 @@ int mi_cb_vd_set_property(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	vd_mi_set_property_str *p_proper = (vd_mi_set_property_str *)par;
 	set_new_mi_ssid(p_proper->mi_head.ssid,p_proper->mi_head.piid);
 	mi_cb_vd_property_change(p_com_md->ele_adr,cb_par->adr_src,
-				p_proper->mi_head.ssid,p_proper->mi_head.piid);
+				p_proper->mi_head.ssid,p_proper->mi_head.piid,0);
 	return 1;
 }
 

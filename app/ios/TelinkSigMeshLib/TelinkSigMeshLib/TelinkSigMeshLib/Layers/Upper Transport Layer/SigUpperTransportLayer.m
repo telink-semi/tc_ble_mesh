@@ -23,7 +23,7 @@
 //  SigUpperTransportLayer.m
 //  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/16.
+//  Created by 梁家誌 on 2019/9/16.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -36,6 +36,7 @@
 #import "SigControlMessage.h"
 #import "SigLowerTransportLayer.h"
 #import "SigMeshLib.h"
+#import "SigAccessPdu.h"
 
 @interface SigUpperTransportModel : NSObject
 @property (nonatomic,strong) SigUpperTransportPdu *pdu;
@@ -137,12 +138,12 @@
     TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
     BOOL isSegmented = pdu.transportPdu.length > 15 || accessPdu.isSegmented;
     if (isSegmented) {
-        TeLogVerbose(@"sending segment pdu.");
+        TeLogInfo(@"sending segment pdu.");
         // Enqueue the PDU. If the queue was empty, the PDU will be sent
         // immediately.
         [self enqueueSigUpperTransportPdu:pdu initialTtl:initialTtl networkKey:networkKey];
     } else {
-        TeLogVerbose(@"sending unsegment pdu.");
+        TeLogInfo(@"sending unsegment pdu.");
         [_networkManager.lowerTransportLayer sendUnsegmentedUpperTransportPdu:pdu withTtl:initialTtl usingNetworkKey:networkKey];
     }
 }
@@ -158,7 +159,7 @@
     // handler data. If so, cancel it.
     NSMutableArray *array = _queues[@(handle.destination)];
     if (array == nil || array.count == 0) {
-        TeLogDebug(@"array == nil || array.count == 0");
+//        TeLogDebug(@"array == nil || array.count == 0");
         return;
     }
     SigUpperTransportModel *model = array.firstObject;

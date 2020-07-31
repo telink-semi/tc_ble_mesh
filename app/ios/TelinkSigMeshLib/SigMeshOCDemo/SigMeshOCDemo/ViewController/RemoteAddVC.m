@@ -23,7 +23,7 @@
 //  RemoteAddVC.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2019/3/25.
+//  Created by 梁家誌 on 2019/3/25.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -130,6 +130,7 @@
 #pragma mark RP-Remote: remote scan
 - (void)startRemoteProvisionScan {
     TeLogInfo(@"RP-Remote: start scan.");
+    #ifdef kExist
     if (kExistRemoteProvision) {
         __weak typeof(self) weakSelf = self;
         [SigRemoteAddManager.share startRemoteProvisionScanWithReportCallback:^(SigRemoteScanRspModel * _Nonnull scanRemoteModel) {
@@ -171,6 +172,7 @@
             }
         }];
     }
+    #endif
 }
 
 - (void)addNodeByRemoteProvision {
@@ -187,16 +189,17 @@
 
 #pragma mark RP-Remote: start provision
 - (void)remoteProvisionNodeWithRemoteScanRspModel:(SigRemoteScanRspModel *)model {
-    __weak typeof(self) weakSelf = self;
     UInt16 provisionAddress = SigDataSource.share.provisionAddress;
     TeLogInfo(@"RP-Remote: start provision, uuid:%@,macAddress:%@->0x%x.",model.reportNodeUUID,model.macAddress,provisionAddress);
+    #ifdef kExist
+    __weak typeof(self) weakSelf = self;
     if (kExistRemoteProvision) {
         [SigRemoteAddManager.share remoteProvisionWithNextProvisionAddress:provisionAddress reportNodeAddress:model.reportNodeAddress reportNodeUUID:model.reportNodeUUID networkKey:SigDataSource.share.curNetKey netkeyIndex:SigDataSource.share.curNetkeyModel.index provisionType:ProvisionTpye_NoOOB staticOOBData:nil provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             [weakSelf updateWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:provisionAddress provisionResult:YES];
                 TeLogInfo(@"RP-Remote:provision success, %@->0X%X",identify,address);
             SigNodeModel *node = [SigDataSource.share getNodeWithAddress:provisionAddress];
             if (node) {
-                [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_success retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
+                [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_success retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
                     
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     if (error != nil && isResponseAll == NO) {
@@ -212,7 +215,7 @@
             }
         } fail:^(NSError * _Nonnull error) {
             TeLogDebug(@"RP-Remote:provision fail.");
-            [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_fail retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
+            [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_fail retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
                 
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 if (error != nil && isResponseAll == NO) {
@@ -226,6 +229,7 @@
             }];
         }];
     }
+    #endif
 }
 
 #pragma mark RP-Remote: start keybind
@@ -235,7 +239,7 @@
     if (SigBearer.share.isOpen) {
         AddDeviceModel *model = [self getAddDeviceModelWithMacAddress:node.macAddress];
         NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
-        [SigKeyBindManager.share keyBind:node.address appkeyModel:SigDataSource.share.curAppkeyModel keyBindType:type.integerValue productID:0 cpsData:nil keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+        [SDKLibCommand keyBind:node.address appkeyModel:SigDataSource.share.curAppkeyModel keyBindType:type.integerValue productID:0 cpsData:nil keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             [weakSelf remoteAddSingleDeviceFinish];
             [weakSelf updateWithPeripheralUUID:model.scanRspModel.uuid macAddress:model.scanRspModel.macAddress address:node.address keyBindResult:YES];
             TeLogInfo(@"RP-Remote:keybind success, %@->0X%X",model.scanRspModel.uuid,node.address);
@@ -278,6 +282,11 @@
 #pragma mark - UI refresh
 
 - (void)addAndShowSigRemoteScanRspModelToUI:(SigRemoteScanRspModel *)scanRemoteModel {
+    //=================test==================//
+//    if (![scanRemoteModel.macAddress isEqualToString:@"A4C1388595AC"]) {
+//        return;
+//    }
+    //=================test==================//
     if (![self.remoteSource containsObject:scanRemoteModel]) {
         if (![self.failSource containsObject:scanRemoteModel]) {
             [self.remoteSource addObject:scanRemoteModel];
@@ -292,6 +301,16 @@
     [self.remoteSource sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
         return [(SigRemoteScanRspModel *)obj1 RSSI] < [(SigRemoteScanRspModel *)obj2 RSSI];
     }];
+    [self updateUIOfScanResponseWithPeripheralUUID:[LibTools convertDataToHexStr:scanRemoteModel.reportNodeUUID] macAddress:scanRemoteModel.macAddress address:0x0000];
+}
+
+- (void)updateUIOfScanResponseWithPeripheralUUID:(NSString *)peripheralUUID macAddress:(NSString *)macAddress address:(UInt16)address {
+    [self checkExistAddModelWithPeripheralUUID:peripheralUUID macAddress:macAddress address:address];
+    AddDeviceModel *model = [self getAddDeviceModelWithPeripheralUUID:peripheralUUID];
+    model.state = AddDeviceModelStateScaned;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+    });
 }
 
 - (void)updateUIOfStartProvisionWithPeripheralUUID:(NSString *)peripheralUUID macAddress:(NSString *)macAddress address:(UInt16)address {

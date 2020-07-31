@@ -23,7 +23,7 @@
 //  ShareInVC.h
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2019/1/24.
+//  Created by 梁家誌 on 2019/1/24.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 

@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/11/12.
-//  Copyright © 2019 梁家誌. All rights reserved.
+//  Copyright © 2019 Telink. All rights reserved.
 //
 
 NS_ASSUME_NONNULL_BEGIN
@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SigGenericMessage : SigStaticMeshMessage
 
-///tid和continueTransaction为指定类型的SigGenericMessage子类中才有实践意义的（返回是否需要TID）
+/// tid和continueTransaction为指定类型的SigGenericMessage子类中才有实际意义的（返回该指令是否需要TID）
 - (BOOL)isTransactionMessage;
 
 /// Transaction identifier. If not set, this field will automatically be set when the message is being sent or received.
@@ -3484,6 +3484,15 @@ NS_ASSUME_NONNULL_BEGIN
 /// BLOB transfer modes supported by the server
 @property (nonatomic,assign) UInt8 supportedTransferMode;
 - (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+@interface SigTelinkOnlineStatusMessage : SigMeshMessage
+@property (nonatomic,assign) UInt16 address;
+@property (nonatomic,assign) DeviceState state;
+@property (nonatomic,assign) UInt8 brightness;
+@property (nonatomic,assign) UInt8 temperature;
+- (instancetype)initWithAddress:(UInt16)address state:(DeviceState)state brightness:(UInt8)brightness temperature:(UInt8)temperature;
 @end
 
 

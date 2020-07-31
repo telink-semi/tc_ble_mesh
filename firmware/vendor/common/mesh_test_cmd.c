@@ -185,7 +185,7 @@ void keyboard_handle_mesh()
     u8 par[11-3] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08};
     static u8 cnt;
     par[0] = (++cnt) & 1;
-    mesh_tx_cmd2normal_primary(VD_LIGHT_ONOFF_SET, par, 1, adr_dst, 1);
+    mesh_tx_cmd2normal_primary(VD_GROUP_G_SET, par, 1, adr_dst, 1);
 #endif
 }
 #endif

@@ -28,7 +28,7 @@
 #include "app_beacon.h"
 #include "../../vendor/common/app_provison.h"
 #include "../../proj/common/types.h"
-
+#include "app_privacy_beacon.h"
 
 u8  provision_In_ccc[2]={0x01,0x00};// set it can work enable 
 u8  provision_Out_ccc[2]={0x00,0x00}; 
@@ -56,7 +56,7 @@ u8 mesh_beacon_send_proc()
 		if (proxy_Out_ccc[0]==1 && proxy_Out_ccc[1]==0){
 			if(is_provision_success()&& beacon_send.conn_beacon_flag){
 				beacon_send.conn_beacon_flag =0;
-				mesh_tx_sec_nw_beacon_all_net(1);	// send conn beacon to the provisioner 		
+				mesh_tx_sec_private_beacon_proc(1);	// send conn beacon to the provisioner 		
 				return 1;
 			}
 		}else{
@@ -104,7 +104,9 @@ u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info){
 	p_str->bea_data.header.type = MESH_ADV_TYPE_BEACON ;
 	p_str->bea_data.beacon_type = UNPROVISION_BEACON;
 	memcpy(p_str->bea_out_uri.device_uuid,p_uuid,16);
-	memcpy(p_str->bea_out_uri.oob_info,p_info,2);
+	u8 *p_oob = p_str->bea_out_uri.oob_info;
+	p_oob[0] = p_info[1];
+	p_oob[1] = p_info[0];
 	return 1;
 }
 
@@ -114,8 +116,10 @@ u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash){
 	p_str->bea_data.header.type = MESH_ADV_TYPE_BEACON ;
 	p_str->bea_data.beacon_type = UNPROVISION_BEACON;
 	memcpy(p_str->bea_data.device_uuid,p_uuid,16);
-	memcpy(p_str->bea_data.oob_info,p_info,2);
 	memcpy(p_str->bea_data.uri_hash,p_hash,4);
+	u8 *p_oob = p_str->bea_out_uri.oob_info;
+	p_oob[0] = p_info[1];
+	p_oob[1] = p_info[0];
 	return 1;
 }
 
@@ -214,13 +218,25 @@ void mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 
 void mesh_tx_sec_nw_beacon_all_net(u8 blt_sts)
 {
+	if(!is_provision_success()){
+		return ;
+	}
 	foreach(i,NET_KEY_MAX){
 		mesh_net_key_t *p_netkey_base = &mesh_key.net_key[i][0];
 		if(!p_netkey_base->valid){
 			continue;
 		}
-
 		mesh_tx_sec_nw_beacon(p_netkey_base, blt_sts);
 	}
+}
+
+void mesh_tx_sec_private_beacon_proc(u8 blt_sts)
+{
+	mesh_tx_sec_nw_beacon_all_net(blt_sts);
+	#if MD_PRIVACY_BEA
+		#if MD_SERVER_EN
+		mesh_tx_privacy_nw_beacon_all_net(blt_sts);
+		#endif
+	#endif
 }
 

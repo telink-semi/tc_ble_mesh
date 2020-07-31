@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  ProxyProtocolHandler.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/28.
+//  Created by 梁家誌 on 2019/8/28.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
@@ -31,13 +31,6 @@
 #import "SigBearer.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-typedef enum : UInt8 {
-    SAR_completeMessage  = 0b00,
-    SAR_firstSegment     = 0b01,
-    SAR_continuation     = 0b10,
-    SAR_lastSegment      = 0b11,
-} SAR;
 
 @interface ProxyProtocolHandler : NSObject
 

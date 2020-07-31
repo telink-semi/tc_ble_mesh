@@ -351,7 +351,8 @@ return :
 **************************************************************/
 extern u8 temp_to_temp100(u16 temp);
 
-void mesh_rp_start_settings(u16 adr,u8 *p_uuid);
+void mesh_rp_start_settings(u16 adr,u8 *p_uuid,u8 dkri);
+
 
 
 

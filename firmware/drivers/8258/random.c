@@ -159,7 +159,7 @@ void rng_init(void)
  * @return    none.
  */
 
-#if 1 //Old solution
+#if 0 //Old solution
 
 /***********************************ble*******************/
 /**

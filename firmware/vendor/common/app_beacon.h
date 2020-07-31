@@ -23,7 +23,7 @@
 #define APP_BEACON_H
 #include "../../vendor/common/light.h"
 #include "../../proj_lib/sig_mesh/app_mesh.h"
-
+#include "../../vendor/common/app_privacy_beacon.h"
 #if WIN32
 #pragma pack(1)
 #endif
@@ -83,7 +83,7 @@ typedef struct{
 typedef enum{
 	UNPROVISION_BEACON = 0,
 	SECURE_BEACON ,
-
+	PRIVACY_BEACON,
 	BEACON_TESTCASE=0x80,
 	BEACON_RFU,
 }BEACON_ADV_TYPE;
@@ -95,8 +95,8 @@ typedef enum{
 	OOB_NFC,
 	OOB_NUM,
 	OOB_STRING,
-	OOB_RSV1,
-	OOB_RSV2,
+	OOB_CERT_BASE,
+	OOB_PROV_RECORD,
 	OOB_RSV3,
 	OOB_RSV4,
 	OOB_ON_BOX,
@@ -119,6 +119,7 @@ u8 mesh_beacon_send_proc();
 void beacon_str_init();
 int check_pkt_is_unprovision_beacon(u8 *dat);
 extern beacon_send_str beacon_send;
+void mesh_tx_sec_private_beacon_proc(u8 blt_sts);
 
 
 #endif 

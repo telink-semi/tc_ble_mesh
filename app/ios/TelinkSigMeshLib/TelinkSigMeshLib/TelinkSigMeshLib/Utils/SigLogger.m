@@ -23,7 +23,7 @@
 //  SigLogger.m
 //  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/16.
+//  Created by 梁家誌 on 2019/8/16.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -180,11 +180,24 @@ void saveMeshJsonData(id data){
             [handle writeData:(NSData *)data];
         }else{
             NSString *tempString = [[NSString alloc] initWithFormat:@"%@",data];
+            //对缓存于iTunes共享文件夹的json文件进行加密，再保存。解密调用接口__TEXT().
+            tempString = __BASE64(tempString);
             NSData *tempData = [tempString dataUsingEncoding:NSUTF8StringEncoding];
             [handle writeData:tempData];
         }
         [handle closeFile];
     }
+}
+
+/// 用于解密客户上传的加密后的TelinkSDKMeshJsonData文件
+- (NSString *)getDecryptTelinkSDKMeshJsonData {
+    NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:SigLogger.share.meshJsonFilePath];
+    NSData *data = [handle readDataToEndOfFile];
+    NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    //对缓存于iTunes共享文件夹的json文件进行解密。加密调用接口__BASE64().
+    str = __TEXT(str);
+    [handle closeFile];
+    return str;
 }
 
 @end

@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigNetworkManager.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/15.
+//  Created by 梁家誌 on 2019/8/15.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -122,34 +122,37 @@
 #pragma mark - Callbacks
 
 - (void)notifyAboutNewMessage:(SigMeshMessage *)message fromSource:(UInt16)source toDestination:(UInt16)destination {
+    __weak typeof(self) weakSelf = self;
     dispatch_async(self.manager.delegateQueue, ^{
-        if ([self.manager.delegate respondsToSelector:@selector(didReceiveMessage:sentFromSource:toDestination:)]) {
-            [self.manager.delegate didReceiveMessage:message sentFromSource:source toDestination:destination];
+        if ([weakSelf.manager.delegate respondsToSelector:@selector(didReceiveMessage:sentFromSource:toDestination:)]) {
+            [weakSelf.manager.delegate didReceiveMessage:message sentFromSource:source toDestination:destination];
         }
-        if ([self.manager.delegateForDeveloper respondsToSelector:@selector(didReceiveMessage:sentFromSource:toDestination:)]) {
-            [self.manager.delegateForDeveloper didReceiveMessage:message sentFromSource:source toDestination:destination];
+        if ([weakSelf.manager.delegateForDeveloper respondsToSelector:@selector(didReceiveMessage:sentFromSource:toDestination:)]) {
+            [weakSelf.manager.delegateForDeveloper didReceiveMessage:message sentFromSource:source toDestination:destination];
         }
     });
 }
 
 - (void)notifyAboutDeliveringMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination {
+    __weak typeof(self) weakSelf = self;
     dispatch_async(self.manager.delegateQueue, ^{
-        if ([self.manager.delegate respondsToSelector:@selector(didSendMessage:fromLocalElement:toDestination:)]) {
-            [self.manager.delegate didSendMessage:message fromLocalElement:localElement toDestination:destination];
+        if ([weakSelf.manager.delegate respondsToSelector:@selector(didSendMessage:fromLocalElement:toDestination:)]) {
+            [weakSelf.manager.delegate didSendMessage:message fromLocalElement:localElement toDestination:destination];
         }
-        if ([self.manager.delegateForDeveloper respondsToSelector:@selector(didSendMessage:fromLocalElement:toDestination:)]) {
-            [self.manager.delegateForDeveloper didSendMessage:message fromLocalElement:localElement toDestination:destination];
+        if ([weakSelf.manager.delegateForDeveloper respondsToSelector:@selector(didSendMessage:fromLocalElement:toDestination:)]) {
+            [weakSelf.manager.delegateForDeveloper didSendMessage:message fromLocalElement:localElement toDestination:destination];
         }
     });
 }
 
 - (void)notifyAboutError:(NSError *)error duringSendingMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination {
+    __weak typeof(self) weakSelf = self;
     dispatch_async(self.manager.delegateQueue, ^{
-        if ([self.manager.delegate respondsToSelector:@selector(failedToSendMessage:fromLocalElement:toDestination:error:)]) {
-            [self.manager.delegate failedToSendMessage:message fromLocalElement:localElement toDestination:destination error:error];
+        if ([weakSelf.manager.delegate respondsToSelector:@selector(failedToSendMessage:fromLocalElement:toDestination:error:)]) {
+            [weakSelf.manager.delegate failedToSendMessage:message fromLocalElement:localElement toDestination:destination error:error];
         }
-        if ([self.manager.delegateForDeveloper respondsToSelector:@selector(failedToSendMessage:fromLocalElement:toDestination:error:)]) {
-            [self.manager.delegateForDeveloper failedToSendMessage:message fromLocalElement:localElement toDestination:destination error:error];
+        if ([weakSelf.manager.delegateForDeveloper respondsToSelector:@selector(failedToSendMessage:fromLocalElement:toDestination:error:)]) {
+            [weakSelf.manager.delegateForDeveloper failedToSendMessage:message fromLocalElement:localElement toDestination:destination error:error];
         }
     });
 }

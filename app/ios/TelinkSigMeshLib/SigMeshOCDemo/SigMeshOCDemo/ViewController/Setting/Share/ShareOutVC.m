@@ -23,7 +23,7 @@
 //  ShareOutVC.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2019/1/24.
+//  Created by 梁家誌 on 2019/1/24.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -60,7 +60,7 @@
     if (!exist) {
         BOOL ret = [manager createFileAtPath:path contents:nil attributes:nil];
         if (ret) {
-            NSDictionary *jsonDict = [SigDataSource.share getDictionaryFromDataSource];
+            NSDictionary *jsonDict = [SigDataSource.share getFormatDictionaryFromDataSource];
             NSData *tempData = [LibTools getJSONDataWithDictionary:jsonDict];
 //            NSData *tempData = [SigDataSource.share.getJsonStringFromeDataSource dataUsingEncoding:NSUTF8StringEncoding];
             NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:path];

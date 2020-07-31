@@ -96,17 +96,5 @@ enum{
 											}while(0)
 
 
-/**
- * @brief     This function servers to set pga input volume.The configuration of the PGA_GAIN_VOL_15_0DB is the optimal configuration under the UEI standard
- * @param[in] none.
- * @return    none.
- */
-void set_pga_input_vol(void)
-{
-	analog_write(codec_ana_cfg2,analog_read(codec_ana_cfg2) | 0x0a);
-	analog_write(codec_ana_cfg3,analog_read(codec_ana_cfg3) & 0x00);
-	analog_write(codec_ana_cfg4,(analog_read(codec_ana_cfg4) & 0x00) | PGA_GAIN_VOL_15_0DB);//For user config for input the PGAVOL.
-}
-
 
 #endif

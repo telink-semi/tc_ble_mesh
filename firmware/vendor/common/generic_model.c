@@ -42,7 +42,8 @@
 #include "../../vendor/common/mesh_property.h"
 #include "generic_model.h"
 #include "directed_forwarding.h"
-
+#include "app_privacy_beacon.h"
+#include "subnet_bridge.h"
 /** @addtogroup Mesh_Common
   * @{
   */
@@ -136,25 +137,6 @@ int mesh_g_onoff_st_rsp(mesh_cb_fun_par_t *cb_par)
     return mesh_tx_cmd_g_onoff_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, 0, 0, cb_par->op_rsp);
 }
 
-int mesh_g_onoff_st_publish_ll(u8 idx, u16 op_rsp)
-{
-	model_common_t *p_com_md = &model_sig_g_onoff_level.onoff_srv[idx].com;
-	#if MD_LIGHT_CONTROL_EN
-	if(LIGHT_LC_ONOFF_STATUS == op_rsp){
-		p_com_md = &model_sig_light_lc.srv[idx].com;
-	}
-	#endif
-	
-	u16 ele_adr = p_com_md->ele_adr;
-	u16 pub_adr = p_com_md->pub_adr;
-	if(!pub_adr){
-		return -1;
-	}
-	u8 *uuid = get_virtual_adr_uuid(pub_adr, p_com_md);
-	
-    return mesh_tx_cmd_g_onoff_st(idx, ele_adr, pub_adr, uuid, p_com_md, op_rsp);
-}
-
 /**
  * @brief  Publish Generic OnOff Status.
  * @param  idx: Light Count index.
@@ -163,18 +145,15 @@ int mesh_g_onoff_st_publish_ll(u8 idx, u16 op_rsp)
  */
 int mesh_g_onoff_st_publish(u8 idx)
 {
-	return mesh_g_onoff_st_publish_ll(idx, G_ONOFF_STATUS);
-}
-
-/**
- * @brief  Publish Light LC Light OnOff Status.
- * @param  idx: Light Count index.
- * @retval Whether the function executed successfully
- *   (0: success; others: error)
- */
-int mesh_lc_onoff_st_publish(u8 idx)
-{
-	return mesh_g_onoff_st_publish_ll(idx, LIGHT_LC_ONOFF_STATUS);
+	model_common_t *p_com_md = &model_sig_g_onoff_level.onoff_srv[idx].com;	
+	u16 ele_adr = p_com_md->ele_adr;
+	u16 pub_adr = p_com_md->pub_adr;
+	if(!pub_adr){
+		return -1;
+	}
+	u8 *uuid = get_virtual_adr_uuid(pub_adr, p_com_md);
+	
+    return mesh_tx_cmd_g_onoff_st(idx, ele_adr, pub_adr, uuid, p_com_md, G_ONOFF_STATUS);
 }
 
 /**
@@ -188,6 +167,9 @@ int mesh_lc_onoff_st_publish(u8 idx)
  */
 int mesh_cmd_sig_g_onoff_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
+	#if DEBUG_CFG_CMD_GROUP_AK_EN
+	memset(&nw_notify_record, 0x00, sizeof(nw_notify_record));
+	#endif
     return mesh_g_onoff_st_rsp(cb_par);
 }
 
@@ -209,7 +191,7 @@ int mesh_cmd_sig_g_onoff_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
  */
-int g_onoff_set(mesh_cmd_g_onoff_set_t *p_set, int par_len, int force_last, int idx, u8 retransaction, st_pub_list_t *pub_list)
+int g_onoff_set(mesh_cmd_g_onoff_set_t *p_set, int par_len, int force_last, int idx, bool4 retransaction, st_pub_list_t *pub_list)
 {
 	int err = -1;
 	if(p_set->onoff < G_ONOFF_RSV){
@@ -255,27 +237,7 @@ int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 #endif
 
     st_pub_list_t pub_list = {{0}};
-#if MD_LIGHT_CONTROL_EN
-    int lc_onoff_flag = is_light_lc_onoff(cb_par->op);
-    if(lc_onoff_flag){
-        if(model_sig_light_lc.mode[cb_par->model_idx] != LC_MODE_ON){
-            return 0;
-        }
-        
-        if(G_ON == p_set->onoff){
-            pub_list.op_lc_onoff_type = OP_LC_ONOFF_TYPE_ON;
-        }else if(G_OFF == p_set->onoff){
-            pub_list.op_lc_onoff_type = OP_LC_ONOFF_TYPE_OFF;
-        }
-    }
-#endif
-
-	err = g_onoff_set(p_set, par_len, 0, cb_par->model_idx, cb_par->retransaction, &pub_list);
-#if MD_LIGHT_CONTROL_EN
-    if(!err && lc_onoff_flag){
-        LC_property_light_onoff(cb_par->model_idx, p_set->onoff);
-    }
-#endif
+    err = g_onoff_set(p_set, par_len, 0, cb_par->model_idx, cb_par->retransaction, &pub_list);
 	if(err){
 		return err;
 	}
@@ -594,7 +556,9 @@ int mesh_cmd_sig_g_power_range_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 
 //battery model
 #if(MD_BATTERY_EN)
+#if !WIN32
 STATIC_ASSERT(MD_LOCATION_EN == 0);// because use same flash sector to save in mesh_save_map, and should be care of OTA new firmware which add MD_SENSOR_EN
+#endif
 
 int mesh_tx_cmd_battery_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *uuid, model_common_t *pub_md)
 {
@@ -622,7 +586,9 @@ int mesh_cmd_sig_g_battery_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 //location model
 #if(MD_LOCATION_EN)
+#if !WIN32
 STATIC_ASSERT((MD_SENSOR_EN == 0) && (MD_BATTERY_EN== 0));// because use same flash sector to save, and should be care of OTA new firmware which add MD_SENSOR_EN
+#endif
 
 mesh_generic_location_t mesh_generic_location = {
 {0x80000000, 0x80000000, 0x7fff},
@@ -707,9 +673,6 @@ int mesh_cmd_sig_g_onoff_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     int err = 0;
     if(cb_par->model){  // model may be Null for status message
         //model_client_common_t *p_model = (model_client_common_t *)(cb_par->model);
-        if(LIGHT_LC_ONOFF_STATUS == cb_par->op_rsp){
-        }else{
-        }
     }
 #if MESH_RX_TEST
 	u32 tick;
@@ -969,61 +932,75 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
     {HEALTH_ATTENTION_SET_NOACK,0,SIG_MD_HEALTH_CLIENT,SIG_MD_HEALTH_SERVER,mesh_cmd_sig_attention_set_unrel,STATUS_NONE},
     {HEALTH_ATTENTION_STATUS,1,SIG_MD_HEALTH_SERVER,SIG_MD_HEALTH_CLIENT,mesh_cmd_sig_attention_status,STATUS_NONE},
 
-#if DIRECTED_FORWARDING_MODULE_EN
+#if MD_DF_EN
 	// directed forwarding
-	{DIRECTED_CONTROL_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_get,DIRECTED_CONTROL_STATUS},
-	{DIRECTED_CONTROL_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_set,DIRECTED_CONTROL_STATUS},
-    {DIRECTED_CONTROL_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_control_status,STATUS_NONE},
-    {PATH_METRIC_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_metric_get,PATH_METRIC_STATUS},
-    {PATH_METRIC_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_metric_set,PATH_METRIC_STATUS},
-    {PATH_METRIC_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_path_metric_status,STATUS_NONE},
-	{DISCOVERY_TABLE_CAPABILITIES_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_dsc_tbl_capa_get,DISCOVERY_TABLE_CAPABILITIES_STATUS},
-	{DISCOVERY_TABLE_CAPABILITIES_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_dsc_tbl_capa_set,DISCOVERY_TABLE_CAPABILITIES_STATUS},
-    {DISCOVERY_TABLE_CAPABILITIES_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_dsc_tbl_capa_status,STATUS_NONE},
-    {FORWARDING_TABLE_ADD,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_add,FORWARDING_TABLE_STATUS},
-    {FORWARDING_TABLE_DELETE,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_delete,FORWARDING_TABLE_STATUS},
-    {FORWARDING_TABLE_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_forwarding_tbl_status,STATUS_NONE},    
-    {FORWARDING_TABLE_DEPENDENTS_ADD,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_dependents_add,FORWARDING_TABLE_DEPENDENTS_STATUS},
-    {FORWARDING_TABLE_DEPENDENTS_DELETE,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_dependents_delete,FORWARDING_TABLE_DEPENDENTS_STATUS},
-    {FORWARDING_TABLE_DEPENDENTS_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_forwarding_tbl_dependents_status,STATUS_NONE},
-	{FORWARDING_TABLE_DEPENDENTS_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_dependents_get,FORWARDING_TABLE_DEPENDENTS_GET_STATUS},
-   	{FORWARDING_TABLE_DEPENDENTS_GET_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_forwarding_tbl_dependents_get_status,STATUS_NONE},   	
-	{FORWARDING_TABLE_ENTRIES_COUNT_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_entries_count_get,FORWARDING_TABLE_ENTRIES_COUNT_STATUS},
-	{FORWARDING_TABLE_ENTRIES_COUNT_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_forwarding_tbl_entries_count_status,STATUS_NONE},
-	{FORWARDING_TABLE_ENTRIES_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_forwarding_tbl_entries_get,FORWARDING_TABLE_ENTRIES_STATUS},
-	{FORWARDING_TABLE_ENTRIES_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_forwarding_tbl_entries_status,STATUS_NONE},
-	{WANTED_LANES_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_wanted_lanes_get,WANTED_LANES_STATUS},
-	{WANTED_LANES_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_wanted_lanes_set,WANTED_LANES_STATUS},
-    {WANTED_LANES_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_wanted_lanes_status,STATUS_NONE},
-    {TWO_WAY_PATH_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_two_way_path_get,TWO_WAY_PATH_STATUS},
-	{TWO_WAY_PATH_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_two_way_path_set,TWO_WAY_PATH_STATUS},
-    {TWO_WAY_PATH_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_two_way_path_status,STATUS_NONE},
-	{PATH_ECHO_INTERVAL_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_echo_interval_get,PATH_ECHO_INTERVAL_STATUS},
-	{PATH_ECHO_INTERVAL_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_echo_interval_set,PATH_ECHO_INTERVAL_STATUS},
-	{PATH_ECHO_INTERVAL_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_path_echo_interval_status,STATUS_NONE},
-	{DIRECTED_NETWORK_TRANSMIT_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_network_transmit_get,DIRECTED_NETWORK_TRANSMIT_STATUS},
-    {DIRECTED_NETWORK_TRANSMIT_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_network_transmit_set,DIRECTED_NETWORK_TRANSMIT_STATUS},
-    {DIRECTED_NETWORK_TRANSMIT_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_network_transmit_status,STATUS_NONE},
-	{DIRECTED_RELAY_RETRANSMIT_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_relay_retransmit_get,DIRECTED_RELAY_RETRANSMIT_STATUS},
-    {DIRECTED_RELAY_RETRANSMIT_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_relay_retransmit_set,DIRECTED_RELAY_RETRANSMIT_STATUS},
-    {DIRECTED_RELAY_RETRANSMIT_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_relay_retransmit_status,STATUS_NONE},
-	{RSSI_THRESHOLD_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_rssi_threshold_get,RSSI_THRESHOLD_STATUS},
-	{RSSI_THRESHOLD_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_rssi_threshold_set,RSSI_THRESHOLD_STATUS},
-	{RSSI_THRESHOLD_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_rssi_threshold_status,STATUS_NONE}, 
-	{DIRECTED_PATHS_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_paths_get,DIRECTED_PATHS_STATUS},
-    {DIRECTED_PATHS_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_paths_status,STATUS_NONE},
-    {DIRECTED_PUBLISH_POLICY_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_publish_policy_get,DIRECTED_PUBLISH_POLICY_STATUS},
-    {DIRECTED_PUBLISH_POLICY_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_publish_policy_set,DIRECTED_PUBLISH_POLICY_STATUS},
-    {DIRECTED_PUBLISH_POLICY_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_publish_policy_status,STATUS_NONE},
-	{PATH_DISCOVERY_TIMING_CONTROL_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_discovery_timing_control_get,PATH_DISCOVERY_TIMING_CONTROL_STATUS},
-	{PATH_DISCOVERY_TIMING_CONTROL_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_path_discovery_timing_control_set,PATH_DISCOVERY_TIMING_CONTROL_STATUS},
-	{PATH_DISCOVERY_TIMING_CONTROL_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_path_discovery_timing_control_status,STATUS_NONE},
-    {DIRECTED_CONTROL_NETWORK_TRANSMIT_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_network_transmit_get,DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS},
-    {DIRECTED_CONTROL_NETWORK_TRANSMIT_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_network_transmit_set,DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS},
-    {DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_control_network_transmit_status,STATUS_NONE},    
-    {DIRECTED_CONTROL_RELAY_RETRANSMIT_GET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_relay_transmit_get,DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS},
-    {DIRECTED_CONTROL_RELAY_RETRANSMIT_SET,0,SIG_MD_CFG_CLIENT, SIG_MD_CFG_SERVER,mesh_cmd_sig_cfg_directed_control_relay_transmit_set,DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS},
-    {DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS,1,SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,mesh_cmd_sig_cfg_directed_control_relay_transmit_status,STATUS_NONE},      
+	{DIRECTED_CONTROL_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_get,DIRECTED_CONTROL_STATUS},
+	{DIRECTED_CONTROL_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_set,DIRECTED_CONTROL_STATUS},
+    {DIRECTED_CONTROL_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_control_status,STATUS_NONE},
+    {PATH_METRIC_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_metric_get,PATH_METRIC_STATUS},
+    {PATH_METRIC_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_metric_set,PATH_METRIC_STATUS},
+    {PATH_METRIC_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_path_metric_status,STATUS_NONE},
+	{DISCOVERY_TABLE_CAPABILITIES_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_dsc_tbl_capa_get,DISCOVERY_TABLE_CAPABILITIES_STATUS},
+	{DISCOVERY_TABLE_CAPABILITIES_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_dsc_tbl_capa_set,DISCOVERY_TABLE_CAPABILITIES_STATUS},
+    {DISCOVERY_TABLE_CAPABILITIES_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_dsc_tbl_capa_status,STATUS_NONE},
+    {FORWARDING_TABLE_ADD,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_add,FORWARDING_TABLE_STATUS},
+    {FORWARDING_TABLE_DELETE,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_delete,FORWARDING_TABLE_STATUS},
+    {FORWARDING_TABLE_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_status,STATUS_NONE},    
+    {FORWARDING_TABLE_DEPENDENTS_ADD,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_dependents_add,FORWARDING_TABLE_DEPENDENTS_STATUS},
+    {FORWARDING_TABLE_DEPENDENTS_DELETE,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_dependents_delete,FORWARDING_TABLE_DEPENDENTS_STATUS},
+    {FORWARDING_TABLE_DEPENDENTS_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_dependents_status,STATUS_NONE},
+	{FORWARDING_TABLE_DEPENDENTS_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_dependents_get,FORWARDING_TABLE_DEPENDENTS_GET_STATUS},
+   	{FORWARDING_TABLE_DEPENDENTS_GET_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_dependents_get_status,STATUS_NONE},   	
+	{FORWARDING_TABLE_ENTRIES_COUNT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_entries_count_get,FORWARDING_TABLE_ENTRIES_COUNT_STATUS},
+	{FORWARDING_TABLE_ENTRIES_COUNT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_entries_count_status,STATUS_NONE},
+	{FORWARDING_TABLE_ENTRIES_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_forwarding_tbl_entries_get,FORWARDING_TABLE_ENTRIES_STATUS},
+	{FORWARDING_TABLE_ENTRIES_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_forwarding_tbl_entries_status,STATUS_NONE},
+	{WANTED_LANES_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_wanted_lanes_get,WANTED_LANES_STATUS},
+	{WANTED_LANES_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_wanted_lanes_set,WANTED_LANES_STATUS},
+    {WANTED_LANES_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_wanted_lanes_status,STATUS_NONE},
+    {TWO_WAY_PATH_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_two_way_path_get,TWO_WAY_PATH_STATUS},
+	{TWO_WAY_PATH_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_two_way_path_set,TWO_WAY_PATH_STATUS},
+    {TWO_WAY_PATH_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_two_way_path_status,STATUS_NONE},
+	{PATH_ECHO_INTERVAL_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_echo_interval_get,PATH_ECHO_INTERVAL_STATUS},
+	{PATH_ECHO_INTERVAL_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_echo_interval_set,PATH_ECHO_INTERVAL_STATUS},
+	{PATH_ECHO_INTERVAL_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_path_echo_interval_status,STATUS_NONE},
+	{DIRECTED_NETWORK_TRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_network_transmit_get,DIRECTED_NETWORK_TRANSMIT_STATUS},
+    {DIRECTED_NETWORK_TRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_network_transmit_set,DIRECTED_NETWORK_TRANSMIT_STATUS},
+    {DIRECTED_NETWORK_TRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_network_transmit_status,STATUS_NONE},
+	{DIRECTED_RELAY_RETRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_relay_retransmit_get,DIRECTED_RELAY_RETRANSMIT_STATUS},
+    {DIRECTED_RELAY_RETRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_relay_retransmit_set,DIRECTED_RELAY_RETRANSMIT_STATUS},
+    {DIRECTED_RELAY_RETRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_relay_retransmit_status,STATUS_NONE},
+	{RSSI_THRESHOLD_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_rssi_threshold_get,RSSI_THRESHOLD_STATUS},
+	{RSSI_THRESHOLD_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_rssi_threshold_set,RSSI_THRESHOLD_STATUS},
+	{RSSI_THRESHOLD_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_rssi_threshold_status,STATUS_NONE}, 
+	{DIRECTED_PATHS_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_paths_get,DIRECTED_PATHS_STATUS},
+    {DIRECTED_PATHS_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_paths_status,STATUS_NONE},
+    {DIRECTED_PUBLISH_POLICY_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_publish_policy_get,DIRECTED_PUBLISH_POLICY_STATUS},
+    {DIRECTED_PUBLISH_POLICY_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_publish_policy_set,DIRECTED_PUBLISH_POLICY_STATUS},
+    {DIRECTED_PUBLISH_POLICY_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_publish_policy_status,STATUS_NONE},
+	{PATH_DISCOVERY_TIMING_CONTROL_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_discovery_timing_control_get,PATH_DISCOVERY_TIMING_CONTROL_STATUS},
+	{PATH_DISCOVERY_TIMING_CONTROL_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_path_discovery_timing_control_set,PATH_DISCOVERY_TIMING_CONTROL_STATUS},
+	{PATH_DISCOVERY_TIMING_CONTROL_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_path_discovery_timing_control_status,STATUS_NONE},
+    {DIRECTED_CONTROL_NETWORK_TRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_network_transmit_get,DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS},
+    {DIRECTED_CONTROL_NETWORK_TRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_network_transmit_set,DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS},
+    {DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_control_network_transmit_status,STATUS_NONE},    
+    {DIRECTED_CONTROL_RELAY_RETRANSMIT_GET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_relay_transmit_get,DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS},
+    {DIRECTED_CONTROL_RELAY_RETRANSMIT_SET,0,SIG_MD_DF_CFG_C, SIG_MD_DF_CFG_S,mesh_cmd_sig_cfg_directed_control_relay_transmit_set,DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS},
+    {DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_directed_control_relay_transmit_status,STATUS_NONE},      
+#endif
+
+#if MD_SBR_EN
+	// subnet bridge
+	{SUBNET_BRIDGE_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_subnet_bridge_get,SUBNET_BRIDGE_STATUS},
+	{SUBNET_BRIDGE_SET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_subnet_bridge_set,SUBNET_BRIDGE_STATUS},
+    {SUBNET_BRIDGE_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_subnet_bridge_status,STATUS_NONE},    
+    {BRIDGING_TABLE_ADD,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_add,BRIDGING_TABLE_STATUS},
+	{BRIDGING_TABLE_REMOVE,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_remove,BRIDGING_TABLE_STATUS},
+    {BRIDGING_TABLE_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_bridging_tbl_status,STATUS_NONE},
+	{BRIDGED_SUBNETS_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridged_subnets_get,BRIDGED_SUBNETS_LIST},
+    {BRIDGED_SUBNETS_LIST,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_bridged_subnets_list,STATUS_NONE},	
+	{BRIDGING_TABLE_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_get,BRIDGING_TABLE_LIST},
+    {BRIDGING_TABLE_LIST,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_bridging_tbl_list,STATUS_NONE},
 #endif
 
 #if MD_REMOTE_PROV  
@@ -1033,8 +1010,12 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 
     // remote provision scan parameters 
     {REMOTE_PROV_SCAN_GET,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_get,REMOTE_PROV_SCAN_STS},
+    #if WIN32
+	{REMOTE_PROV_SCAN_START,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_start,STATUS_NONE},
+	#else
     {REMOTE_PROV_SCAN_START,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_start,REMOTE_PROV_SCAN_STS},
-    {REMOTE_PROV_SCAN_STOP,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_stop,REMOTE_PROV_SCAN_STS},
+	#endif
+	{REMOTE_PROV_SCAN_STOP,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_stop,REMOTE_PROV_SCAN_STS},
     {REMOTE_PROV_SCAN_STS,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_scan_sts,STATUS_NONE},
     {REMOTE_PROV_SCAN_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_scan_report,STATUS_NONE},
     // remote provision extend scan part 
@@ -1051,6 +1032,21 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
     {REMOTE_PROV_PDU_OUTBOUND_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_pdu_outbound_report,STATUS_NONE},
     {REMOTE_PROV_PDU_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_pdu_report,STATUS_NONE},
 #endif
+
+#if MD_PRIVACY_BEA
+	{PRIVATE_BEACON_GET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_beacon_get,PRIVATE_BEACON_STATUS},
+	{PRIVATE_BEACON_SET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_beacon_set,PRIVATE_BEACON_STATUS},
+	{PRIVATE_BEACON_STATUS,1,SIG_MD_PRIVATE_BEACON_SERVER,SIG_MD_PRIVATE_BEACON_CLIENT,mesh_cmd_sig_beacon_sts,STATUS_NONE},
+
+	{PRIVATE_GATT_PROXY_GET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_gatt_proxy_get,PRIVATE_GATT_PROXY_STATUS},
+	{PRIVATE_GATT_PROXY_SET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_gatt_proxy_set,PRIVATE_GATT_PROXY_STATUS},
+	{PRIVATE_GATT_PROXY_STATUS,1,SIG_MD_PRIVATE_BEACON_SERVER,SIG_MD_PRIVATE_BEACON_CLIENT,mesh_cmd_sig_gatt_proxy_sts,STATUS_NONE},
+
+	{PRIVATE_NODE_IDENTITY_GET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_private_node_identity_get,PRIVATE_NODE_IDENTITY_STATUS},
+	{PRIVATE_NODE_IDENTITY_SET,0,SIG_MD_PRIVATE_BEACON_CLIENT,SIG_MD_PRIVATE_BEACON_SERVER,mesh_cmd_sig_private_node_identity_set,PRIVATE_NODE_IDENTITY_STATUS},
+	{PRIVATE_NODE_IDENTITY_STATUS,1,SIG_MD_PRIVATE_BEACON_SERVER,SIG_MD_PRIVATE_BEACON_CLIENT,mesh_cmd_sig_private_node_identity_sts,STATUS_NONE},
+#endif
+
     // generic
     {G_ONOFF_GET, 0, SIG_MD_G_ONOFF_C, SIG_MD_G_ONOFF_S, mesh_cmd_sig_g_onoff_get, G_ONOFF_STATUS},
     {G_ONOFF_SET, 0, SIG_MD_G_ONOFF_C, SIG_MD_G_ONOFF_S, mesh_cmd_sig_g_onoff_set, G_ONOFF_STATUS},
@@ -1161,15 +1157,17 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
     {FW_UPDATE_METADATA_CHECK_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_update_metadata_check_status, STATUS_NONE},
     {FW_UPDATE_GET, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_get, FW_UPDATE_STATUS},
     {FW_UPDATE_START, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_start, FW_UPDATE_STATUS},
-    {FW_UPDATE_CANCEL, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_control, FW_UPDATE_STATUS},
-    {FW_UPDATE_APPLY, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_control, FW_UPDATE_STATUS},
+    {FW_UPDATE_CANCEL, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_cancel, FW_UPDATE_STATUS},
+    {FW_UPDATE_APPLY, 0, SIG_MD_FW_UPDATE_C, SIG_MD_FW_UPDATE_S, mesh_cmd_sig_fw_update_apply, FW_UPDATE_STATUS},
     {FW_UPDATE_STATUS, 1, SIG_MD_FW_UPDATE_S, SIG_MD_FW_UPDATE_C, mesh_cmd_sig_fw_update_status, STATUS_NONE},
+    #if __PROJECT_MESH_PRO__
     {FW_DISTRIBUT_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_get, FW_DISTRIBUT_STATUS},
     {FW_DISTRIBUT_START, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_start, FW_DISTRIBUT_STATUS},
     {FW_DISTRIBUT_CANCEL, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_cancel, FW_DISTRIBUT_STATUS},
     {FW_DISTRIBUT_STATUS, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_status, STATUS_NONE},
     {FW_DISTRIBUT_DETAIL_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_detail_get, FW_DISTRIBUT_DETAIL_LIST},
     {FW_DISTRIBUT_DETAIL_LIST, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_detail_list, STATUS_NONE},
+    #endif
     {BLOB_TRANSFER_GET, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_get, BLOB_TRANSFER_STATUS},
     {BLOB_TRANSFER_START, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_handle, BLOB_TRANSFER_STATUS},
     {BLOB_TRANSFER_CANCEL, 0, SIG_MD_BLOB_TRANSFER_C, SIG_MD_BLOB_TRANSFER_S, mesh_cmd_sig_blob_transfer_handle, BLOB_TRANSFER_STATUS},
@@ -1215,10 +1213,10 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 	{LIGHT_LC_OM_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_om_set, LIGHT_LC_OM_STATUS},
 	{LIGHT_LC_OM_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_om_set, STATUS_NONE},
 	{LIGHT_LC_OM_STATUS, 1, SIG_MD_LIGHT_LC_S, SIG_MD_LIGHT_LC_C, mesh_cmd_sig_lc_om_status, STATUS_NONE},
-	{LIGHT_LC_ONOFF_GET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_g_onoff_get, LIGHT_LC_ONOFF_STATUS},
-	{LIGHT_LC_ONOFF_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_g_onoff_set, LIGHT_LC_ONOFF_STATUS},
-	{LIGHT_LC_ONOFF_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_g_onoff_set, STATUS_NONE},
-	{LIGHT_LC_ONOFF_STATUS, 1, SIG_MD_LIGHT_LC_S, SIG_MD_LIGHT_LC_C, mesh_cmd_sig_g_onoff_status, STATUS_NONE},
+	{LIGHT_LC_ONOFF_GET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_onoff_get, LIGHT_LC_ONOFF_STATUS},
+	{LIGHT_LC_ONOFF_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_onoff_set, LIGHT_LC_ONOFF_STATUS},
+	{LIGHT_LC_ONOFF_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_S, mesh_cmd_sig_lc_onoff_set, STATUS_NONE},
+	{LIGHT_LC_ONOFF_STATUS, 1, SIG_MD_LIGHT_LC_S, SIG_MD_LIGHT_LC_C, mesh_cmd_sig_lc_onoff_status, STATUS_NONE},
 	{LIGHT_LC_PROPERTY_GET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_SETUP_S, mesh_cmd_sig_lc_prop_get, LIGHT_LC_PROPERTY_STATUS},
 	{LIGHT_LC_PROPERTY_SET, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_SETUP_S, mesh_cmd_sig_lc_prop_set, LIGHT_LC_PROPERTY_STATUS},
 	{LIGHT_LC_PROPERTY_SET_NOACK, 0, SIG_MD_LIGHT_LC_C, SIG_MD_LIGHT_LC_SETUP_S, mesh_cmd_sig_lc_prop_set, STATUS_NONE},
@@ -1335,24 +1333,12 @@ int mesh_search_model_id_by_op(mesh_op_resource_t *op_res, u16 op, u8 tx_flag)
     memset(op_res, 0, sizeof(mesh_op_resource_t));
     
     u8 op_type = GET_OP_TYPE(op);
-    if(OP_TYPE_VENDOR == op_type){
-#if (DUAL_VENDOR_EN)
-        if(VENDOR_ID_MI == g_vendor_id){
-            return mi_mesh_search_model_id_by_op_vendor(op_res, op, tx_flag);
-        }else{
-            return mesh_search_model_id_by_op_vendor(op_res, op, tx_flag);
-        }
-#elif (VENDOR_MD_MI_EN)
-        return mi_mesh_search_model_id_by_op_vendor(op_res, op, tx_flag);
-#else
-        return mesh_search_model_id_by_op_vendor(op_res, op, tx_flag);
-#endif
-    }else{
+    if((OP_TYPE_VENDOR != op_type) || DRAFT_FEAT_VD_MD_EN){ // some vd op of draft feat is defined in sig func.
         foreach_arr(i,mesh_cmd_sig_func){
             if(op == mesh_cmd_sig_func[i].op){
                 op_res->cb = mesh_cmd_sig_func[i].cb;
                 op_res->op_rsp = mesh_cmd_sig_func[i].op_rsp;
-                op_res->sig = 1;
+                op_res->sig = (OP_TYPE_VENDOR == op_type) ? 0 : 1;
                 op_res->status_cmd = mesh_cmd_sig_func[i].status_cmd ? 1 : 0;
                 if(tx_flag){
                     op_res->id = mesh_cmd_sig_func[i].model_id_tx;
@@ -1371,10 +1357,24 @@ int mesh_search_model_id_by_op(mesh_op_resource_t *op_res, u16 op, u8 tx_flag)
         }
     }
 
+    if(OP_TYPE_VENDOR == op_type){
+#if (DUAL_VENDOR_EN)
+        if(VENDOR_ID_MI == g_vendor_id){
+            return mi_mesh_search_model_id_by_op_vendor(op_res, op, tx_flag);
+        }else{
+            return mesh_search_model_id_by_op_vendor(op_res, op, tx_flag);
+        }
+#elif (VENDOR_MD_MI_EN)
+        return mi_mesh_search_model_id_by_op_vendor(op_res, op, tx_flag);
+#else
+        return mesh_search_model_id_by_op_vendor(op_res, op, tx_flag);
+#endif
+    }
+
     return -1;
 }
 
-int is_cmd_with_tid(u8 *tid_pos_out, u16 op, u8 tid_pos_vendor_app)
+int is_cmd_with_tid(u8 *tid_pos_out, u16 op, u8 *par, u8 tid_pos_vendor_app)
 {
     int cmd_with_tid = 0;
 
@@ -1383,12 +1383,12 @@ int is_cmd_with_tid(u8 *tid_pos_out, u16 op, u8 tid_pos_vendor_app)
         if(VENDOR_ID_MI == g_vendor_id){
             cmd_with_tid = is_mi_cmd_with_tid_vendor(tid_pos_out, op, tid_pos_vendor_app);
         }else{
-            cmd_with_tid = is_cmd_with_tid_vendor(tid_pos_out, op, tid_pos_vendor_app);
+            cmd_with_tid = is_cmd_with_tid_vendor(tid_pos_out, op, par, tid_pos_vendor_app);
         }
 #elif (VENDOR_MD_MI_EN)
         cmd_with_tid = is_mi_cmd_with_tid_vendor(tid_pos_out, op, tid_pos_vendor_app);
 #else
-        cmd_with_tid = is_cmd_with_tid_vendor(tid_pos_out, op, tid_pos_vendor_app);
+        cmd_with_tid = is_cmd_with_tid_vendor(tid_pos_out, op, par, tid_pos_vendor_app);
 #endif
     }else{
         switch(op){
@@ -1447,6 +1447,239 @@ int is_cmd_with_tid(u8 *tid_pos_out, u16 op, u8 tid_pos_vendor_app)
 }
 
 // ----------
+#define GET_ARRAR_MODEL_AND_COUNT(model, cb_pub)    (u8 *)&model, cb_pub, sizeof(model[0]), ARRAY_SIZE(model), 1
+#define GET_SINGLE_MODEL_AND_COUNT(model, cb_pub)   (u8 *)&model, cb_pub, sizeof(model),    1,                 0
+
+const mesh_model_resource_t MeshSigModelResource[] = {
+    {SIG_MD_CFG_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
+#if MD_CFG_CLIENT_EN
+    {SIG_MD_CFG_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
+#endif
+    {SIG_MD_HEALTH_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.srv, &mesh_health_cur_sts_publish)},  // change to multy element model later. 
+    {SIG_MD_HEALTH_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.clnt, 0)},  // change to multy element model later. 
+#if MD_DF_EN
+    #if MD_SERVER_EN
+    {SIG_MD_DF_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_df_cfg.srv, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_DF_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_df_cfg.clnt, 0)},
+    #endif
+#endif
+
+#if MD_SBR_EN
+    #if MD_SERVER_EN
+    {SIG_MD_BRIDGE_CFG_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_bridge_cfg.srv, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_BRIDGE_CFG_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_bridge_cfg.clnt, 0)},
+    #endif
+#endif
+
+#if MD_MESH_OTA_EN
+    #if DISTRIBUTOR_UPDATE_CLIENT_EN
+    {SIG_MD_FW_DISTRIBUT_S, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.fw_distr_srv, 0)},
+    {SIG_MD_FW_DISTRIBUT_C, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.fw_distr_clnt, 0)},
+    {SIG_MD_FW_UPDATE_C,    GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.fw_update_clnt, 0)},
+    {SIG_MD_BLOB_TRANSFER_C, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.blob_trans_clnt, 0)},
+    #endif
+    #if MD_SERVER_EN
+    {SIG_MD_FW_UPDATE_S, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.fw_update_srv, 0)},
+    {SIG_MD_BLOB_TRANSFER_S, GET_SINGLE_MODEL_AND_COUNT(model_mesh_ota.blob_trans_srv, 0)},
+    #endif
+#endif
+
+#if MD_REMOTE_PROV
+    #if MD_SERVER_EN
+    {SIG_MD_REMOTE_PROV_SERVER, GET_ARRAR_MODEL_AND_COUNT(model_remote_prov.srv, &mesh_remote_prov_st_publish)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_REMOTE_PROV_CLIENT, GET_ARRAR_MODEL_AND_COUNT(model_remote_prov.client, 0)},
+    #endif
+#endif
+
+#if MD_PRIVACY_BEA
+    #if MD_SERVER_EN
+    {SIG_MD_PRIVATE_BEACON_SERVER, GET_ARRAR_MODEL_AND_COUNT(model_private_beacon.srv, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_PRIVATE_BEACON_CLIENT, GET_ARRAR_MODEL_AND_COUNT(model_private_beacon.client, 0)},
+    #endif
+#endif
+
+#if MD_SERVER_EN
+    {SIG_MD_G_ONOFF_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_g_onoff_level.onoff_srv, &mesh_g_onoff_st_publish)},
+#endif
+#if MD_CLIENT_EN
+    {SIG_MD_G_ONOFF_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_g_onoff_level.onoff_clnt, 0)},
+#endif
+
+#if MD_LEVEL_EN
+    #if MD_SERVER_EN
+    {SIG_MD_G_LEVEL_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_g_onoff_level.level_srv, &mesh_g_level_st_publish)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_G_LEVEL_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_g_onoff_level.level_clnt, 0)},
+    #endif
+#endif
+
+#if MD_DEF_TRANSIT_TIME_EN
+    #if MD_SERVER_EN
+    {SIG_MD_G_DEF_TRANSIT_TIME_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_g_power_onoff.def_trans_time_srv, &mesh_def_trans_time_st_publish)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_G_DEF_TRANSIT_TIME_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_g_power_onoff.def_trans_time_clnt, 0)},
+    #endif
+#endif
+
+#if MD_POWER_ONOFF_EN
+    #if MD_SERVER_EN
+    {SIG_MD_G_POWER_ONOFF_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_g_power_onoff.pw_onoff_srv, &mesh_on_powerup_st_publish)},
+    {SIG_MD_G_POWER_ONOFF_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_g_power_onoff.pw_onoff_setup, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_G_POWER_ONOFF_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_g_power_onoff.pw_onoff_clnt, 0)},
+    #endif
+#endif
+
+#if MD_SCENE_EN
+    #if MD_SERVER_EN
+    {SIG_MD_SCENE_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_scene.srv, &mesh_scene_st_publish)},
+    {SIG_MD_SCENE_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_scene.setup, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_SCENE_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_scene.clnt, 0)},
+    #endif
+#endif
+
+#if MD_TIME_EN
+    #if MD_SERVER_EN
+    {SIG_MD_TIME_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_time_schedule.time_srv, &mesh_time_st_publish)},
+    {SIG_MD_TIME_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_time_schedule.time_setup, &mesh_time_role_st_publish)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_TIME_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_time_schedule.time_clnt, 0)},
+    #endif
+#endif
+
+#if (MD_SCHEDULE_EN)
+    #if MD_SERVER_EN
+    {SIG_MD_SCHED_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_time_schedule.sch_srv, 0)},
+    {SIG_MD_SCHED_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_time_schedule.sch_setup, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_SCHED_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_time_schedule.sch_clnt, 0)},
+    #endif
+#endif
+
+#if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
+    #if MD_SERVER_EN
+    {SIG_MD_G_POWER_LEVEL_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.srv, &mesh_g_power_st_publish)},
+    {SIG_MD_G_POWER_LEVEL_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.setup, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_G_POWER_LEVEL_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.clnt, 0)},
+    #endif
+#elif MD_LIGHTNESS_EN
+    #if MD_SERVER_EN
+    {SIG_MD_LIGHTNESS_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.srv, &mesh_lightness_st_publish)},
+    {SIG_MD_LIGHTNESS_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.setup, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_LIGHTNESS_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_lightness.clnt, 0)},
+    #endif
+#endif
+
+#if MD_LIGHT_CONTROL_EN
+    #if MD_SERVER_EN
+    {SIG_MD_LIGHT_LC_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_lc.srv, &mesh_lc_onoff_st_publish)},
+    {SIG_MD_LIGHT_LC_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_lc.setup, &mesh_lc_prop_st_publish)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_LIGHT_LC_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_lc.clnt, 0)},
+    #endif
+#endif
+
+#if (LIGHT_TYPE_CT_EN)
+    #if MD_SERVER_EN
+    {SIG_MD_LIGHT_CTL_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_ctl.srv, &mesh_light_ctl_st_publish)},
+    {SIG_MD_LIGHT_CTL_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_ctl.setup, 0)},
+    {SIG_MD_LIGHT_CTL_TEMP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_ctl.temp, &mesh_light_ctl_temp_st_publish)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_LIGHT_CTL_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_ctl.clnt, 0)},
+    #endif
+#endif
+
+#if (LIGHT_TYPE_HSL_EN)
+    #if MD_SERVER_EN
+    {SIG_MD_LIGHT_HSL_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_hsl.srv, &mesh_light_hsl_st_publish)},
+    {SIG_MD_LIGHT_HSL_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_hsl.setup, 0)},
+    {SIG_MD_LIGHT_HSL_HUE_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_hsl.hue, &mesh_light_hue_st_publish)},
+    {SIG_MD_LIGHT_HSL_SAT_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_hsl.sat, &mesh_light_sat_st_publish)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_LIGHT_HSL_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_hsl.clnt, 0)},
+    #endif
+#endif
+
+#if (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
+    #if MD_SERVER_EN
+    {SIG_MD_LIGHT_XYL_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_xyl.srv, &mesh_light_xyl_st_publish)},
+    {SIG_MD_LIGHT_XYL_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_xyl.setup, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_LIGHT_XYL_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_light_xyl.clnt, 0)},
+    #endif
+#endif
+
+#if MD_SENSOR_EN
+    #if MD_SENSOR_SERVER_EN
+    {SIG_MD_SENSOR_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_sensor.sensor_srv, &mesh_sensor_st_publish)},
+    {SIG_MD_SENSOR_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_sensor.sensor_setup, &mesh_sensor_setup_st_publish)},
+    #endif
+    #if MD_SENSOR_CLIENT_EN
+    {SIG_MD_SENSOR_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_sensor.sensor_clnt, 0)},
+    #endif
+#endif
+
+#if MD_BATTERY_EN
+    #if MD_SERVER_EN
+    {SIG_MD_G_BAT_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_sensor.battery_srv, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_G_BAT_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_sensor.battery_clnt, 0)},
+    #endif
+#endif
+
+#if MD_LOCATION_EN
+    #if MD_SERVER_EN
+    {SIG_MD_G_LOCATION_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_sensor.location_srv, 0)},
+    {SIG_MD_G_LOCATION_SETUP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_sensor.location_setup, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_G_LOCATION_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_sensor.location_clnt, 0)},
+    #endif
+#endif
+
+#if MD_PROPERTY_EN
+    #if MD_SERVER_EN
+    {SIG_MD_G_ADMIN_PROP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_property.admin_srv, &mesh_property_st_publish_admin)},
+    {SIG_MD_G_MFG_PROP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_property.mfg_srv, &mesh_property_st_publish_mfg)},
+    {SIG_MD_G_USER_PROP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_property.user_srv, &mesh_property_st_publish_user)},
+    {SIG_MD_G_CLIENT_PROP_S, GET_ARRAR_MODEL_AND_COUNT(model_sig_property.client_srv, 0)},
+    #endif
+    #if MD_CLIENT_EN
+    {SIG_MD_G_PROP_C, GET_ARRAR_MODEL_AND_COUNT(model_sig_property.clnt, 0)},
+    #endif
+#endif
+};
+
+#if 0
+const mesh_vendor_model_resource_t MeshVendorModelResource[] = {
+    // because Vendor Model ID and publish is not fixed at some time, so not use array now.
+};
+#endif
+
 #define MODEL_ELE_ADR_INIT(model)	\
 {									\
     foreach_arr(i,model){			\
@@ -1464,10 +1697,13 @@ int is_cmd_with_tid(u8 *tid_pos_out, u16 op, u8 tid_pos_vendor_app)
     }								\
 }
 
+/*because there is no multipy element now*/
 #define MODEL_PUB_ST_CB_INIT_HEALTH(model, cb)	\
 {									\
 	model.com.cb_pub_st = cb;	\
 	model.com.cb_tick_ms = clock_time_ms();	\
+	model.com.pub_trans_flag = 0;\
+	model.com.pub_2nd_state = 0; \
 }
 
 // (0 == model[i].com.ele_adr) means init state.
@@ -1493,236 +1729,36 @@ int is_cmd_with_tid(u8 *tid_pos_out, u16 op, u8 tid_pos_vendor_app)
         }\
     }
 
-u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, int sig_model, u8 *idx_out, int set_flag)
+u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, bool4 sig_model, u8 *idx_out, int set_flag)
 {
     u8 *p_model = 0;
     *idx_out = 0;
-    if(sig_model){
-        switch(model_id){
-            case SIG_MD_CFG_SERVER:
-            	if(ele_adr == ele_adr_primary){
-                	p_model = (u8 *)&model_sig_cfg_s;
+    if(sig_model || DRAFT_FEAT_VD_MD_EN) // some vd op of draft feat is defined in sig func.
+    {
+        foreach_arr(m,MeshSigModelResource){
+            const mesh_model_resource_t *p_source = &MeshSigModelResource[m];
+            if(p_source->model_id == model_id){
+                if(p_source->multy_flag){
+                    foreach(i,p_source->model_cnt){
+                        // member of 'com' always at the first place of p_source->p_model.
+                        model_common_t *p_com = (model_common_t *)((u8 *)p_source->p_model + p_source->size * i);
+                        if((ele_adr == p_com->ele_adr)||(set_flag && (0 == p_com->ele_adr))){
+                            p_model = (u8 *)p_com;
+                            *idx_out = i;
+                            break;
+                        }
+                    }
+                }else{
+                    if(ele_adr == ele_adr_primary){
+                        p_model = p_source->p_model;
+                    }
                 }
-            break;
-
-            #if MD_CFG_CLIENT_EN
-            case SIG_MD_CFG_CLIENT:
-            	if(ele_adr == ele_adr_primary){
-                	p_model = (u8 *)&model_sig_cfg_c;
-                }
-            break;
-            #endif
-
-			case SIG_MD_HEALTH_SERVER:
-				if(ele_adr == ele_adr_primary){		// change to multy element model later. 
-					p_model = (u8 *)&model_sig_health.srv;
-				}
-			break;
-			case SIG_MD_HEALTH_CLIENT:
-				if(ele_adr == ele_adr_primary){		// change to multy element model later. 
-					p_model = (u8 *)&model_sig_health.clnt;
-				}
-			break;
-
-			#if MD_MESH_OTA_EN
-			    #if DISTRIBUTOR_UPDATE_CLIENT_EN
-            case SIG_MD_FW_DISTRIBUT_S:
-                	p_model = (u8 *)&model_mesh_ota.fw_distr_srv;
-            break;
-
-            case SIG_MD_FW_DISTRIBUT_C:
-                	p_model = (u8 *)&model_mesh_ota.fw_distr_clnt;
-            break;
-            
-            case SIG_MD_FW_UPDATE_C:
-                	p_model = (u8 *)&model_mesh_ota.fw_update_clnt;
-            break;
-            
-            case SIG_MD_BLOB_TRANSFER_C:
-                	p_model = (u8 *)&model_mesh_ota.blob_trans_clnt;
-            break;
-                #endif
-
-			    #if MD_SERVER_EN
-            case SIG_MD_FW_UPDATE_S:
-                	p_model = (u8 *)&model_mesh_ota.fw_update_srv;
-            break;
-			
-            case SIG_MD_BLOB_TRANSFER_S:
-                	p_model = (u8 *)&model_mesh_ota.blob_trans_srv;
-            break;
-                #endif
-            #endif
-            #if MD_REMOTE_PROV
-                #if MD_SERVER_EN
-                CASE_BREAK_find_ele_resource(p_model,SIG_MD_REMOTE_PROV_SERVER,model_remote_prov.srv);
-                #endif
-                #if MD_CLIENT_EN
-                CASE_BREAK_find_ele_resource(p_model,SIG_MD_REMOTE_PROV_CLIENT,model_remote_prov.client);
-                #endif
-            #endif
-			#if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_ONOFF_S,model_sig_g_onoff_level.onoff_srv);
-            #endif
-            #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_ONOFF_C,model_sig_g_onoff_level.onoff_clnt);
-            #endif
-            #if MD_LEVEL_EN
-                #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_LEVEL_S,model_sig_g_onoff_level.level_srv);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_LEVEL_C,model_sig_g_onoff_level.level_clnt);
-                #endif
-            #endif
-            #if MD_DEF_TRANSIT_TIME_EN
-                #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_DEF_TRANSIT_TIME_S,model_sig_g_power_onoff.def_trans_time_srv);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_DEF_TRANSIT_TIME_C,model_sig_g_power_onoff.def_trans_time_clnt);
-                #endif
-            #endif
-            #if MD_POWER_ONOFF_EN
-                #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_POWER_ONOFF_S,model_sig_g_power_onoff.pw_onoff_srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_POWER_ONOFF_SETUP_S,model_sig_g_power_onoff.pw_onoff_setup);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_POWER_ONOFF_C,model_sig_g_power_onoff.pw_onoff_clnt);
-                #endif
-            #endif
-            #if MD_SCENE_EN
-                #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_SCENE_S,model_sig_scene.srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_SCENE_SETUP_S,model_sig_scene.setup);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_SCENE_C,model_sig_scene.clnt);
-                #endif
-            #endif
-            #if MD_TIME_EN
-                #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_TIME_S,model_sig_time_schedule.time_srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_TIME_SETUP_S,model_sig_time_schedule.time_setup);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_TIME_C,model_sig_time_schedule.time_clnt);
-                #endif
-            #endif
-            #if (MD_SCHEDULE_EN)
-                #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_SCHED_S,model_sig_time_schedule.sch_srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_SCHED_SETUP_S,model_sig_time_schedule.sch_setup);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_SCHED_C,model_sig_time_schedule.sch_clnt);
-                #endif
-            #endif
-            #if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
-                #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_POWER_LEVEL_S,model_sig_lightness.srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_POWER_LEVEL_SETUP_S,model_sig_lightness.setup);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_POWER_LEVEL_C,model_sig_lightness.clnt);
-                #endif
-            #elif MD_LIGHTNESS_EN
-                #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHTNESS_S,model_sig_lightness.srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHTNESS_SETUP_S,model_sig_lightness.setup);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHTNESS_C,model_sig_lightness.clnt);
-                #endif
-            #endif
-            
-            #if MD_LIGHT_CONTROL_EN
-                #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_LC_S,model_sig_light_lc.srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_LC_SETUP_S,model_sig_light_lc.setup);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_LC_C,model_sig_light_lc.clnt);
-                #endif
-            #endif
-            #if (LIGHT_TYPE_CT_EN)
-                #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_CTL_S,model_sig_light_ctl.srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_CTL_SETUP_S,model_sig_light_ctl.setup);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_CTL_TEMP_S,model_sig_light_ctl.temp);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_CTL_C,model_sig_light_ctl.clnt);
-                #endif
-            #endif
-			#if (LIGHT_TYPE_HSL_EN)
-			    #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_HSL_S,model_sig_light_hsl.srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_HSL_SETUP_S,model_sig_light_hsl.setup);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_HSL_HUE_S,model_sig_light_hsl.hue);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_HSL_SAT_S,model_sig_light_hsl.sat);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_HSL_C,model_sig_light_hsl.clnt);
-                #endif
-            #endif
-			#if (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
-			    #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_XYL_S,model_sig_light_xyl.srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_XYL_SETUP_S,model_sig_light_xyl.setup);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_LIGHT_XYL_C,model_sig_light_xyl.clnt);
-                #endif
-            #endif
-			#if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
-            #endif
-
-			#if MD_SENSOR_EN
-			    #if MD_SERVER_EN
-			CASE_BREAK_find_ele_resource(p_model,SIG_MD_SENSOR_S,model_sig_sensor.sensor_srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_SENSOR_SETUP_S,model_sig_sensor.sensor_setup);
-			    #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_SENSOR_C,model_sig_sensor.sensor_clnt);
-                #endif
-			#endif
-
-			#if MD_BATTERY_EN
-			    #if MD_SERVER_EN
-			CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_BAT_S,model_sig_sensor.battery_srv);
-			    #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_BAT_C,model_sig_sensor.battery_clnt);
-                #endif
-			#endif
-
-			#if MD_LOCATION_EN
-			    #if MD_SERVER_EN
-			CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_LOCATION_S,model_sig_sensor.location_srv);
-			CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_LOCATION_SETUP_S,model_sig_sensor.location_setup);
-			    #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_LOCATION_C,model_sig_sensor.location_clnt);
-                #endif
-			#endif
-            #if MD_PROPERTY_EN
-                #if MD_SERVER_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_ADMIN_PROP_S,model_sig_property.admin_srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_MFG_PROP_S,model_sig_property.mfg_srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_USER_PROP_S,model_sig_property.user_srv);
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_CLIENT_PROP_S,model_sig_property.client_srv);
-                #endif
-                #if MD_CLIENT_EN
-            CASE_BREAK_find_ele_resource(p_model,SIG_MD_G_PROP_C,model_sig_property.clnt);
-                #endif
-            #endif
-            
-			default :
-            break;
+                break;
+            }
         }
-    }else{
+    }
+
+    if(0 == sig_model){
 #if WIN32
     #if MD_SERVER_EN
         IF_find_ele_resource(p_model,g_vendor_md_light_vc_s,model_vd_light.srv);
@@ -1778,166 +1814,18 @@ u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, int sig_model, u8
 
 void mesh_model_ele_adr_init()
 {
-    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_g_onoff_level.onoff_srv);
-	#endif
-	#if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_g_onoff_level.onoff_clnt);
-	#endif
-	#if MD_LEVEL_EN
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_g_onoff_level.level_srv);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_g_onoff_level.level_clnt);
-	    #endif
-	#endif
-	#if MD_DEF_TRANSIT_TIME_EN
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_g_power_onoff.def_trans_time_srv);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_g_power_onoff.def_trans_time_clnt);
-	    #endif
-	#endif
-	#if MD_POWER_ONOFF_EN
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_g_power_onoff.pw_onoff_srv);
-	MODEL_ELE_ADR_INIT(model_sig_g_power_onoff.pw_onoff_setup);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_g_power_onoff.pw_onoff_clnt);
-	    #endif
-	#endif
-	// MODEL_ELE_ADR_INIT(model_mesh_ota.fw_distr_srv);    // no need, because no ele_adr compare in mesh_find_ele_resource_in_model()  
-    #if MD_SCENE_EN
-        #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_scene.srv);
-	MODEL_ELE_ADR_INIT(model_sig_scene.setup);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_scene.clnt);
-	    #endif
-	#endif
-    #if MD_REMOTE_PROV
-         #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_remote_prov.srv);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_remote_prov.client);
-	    #endif
-    #endif
-	#if MD_TIME_EN
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_time_schedule.time_srv);
-	MODEL_ELE_ADR_INIT(model_sig_time_schedule.time_setup);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_time_schedule.time_clnt);
-	    #endif
-	#endif
-	#if (MD_SCHEDULE_EN)
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_time_schedule.sch_srv);
-	MODEL_ELE_ADR_INIT(model_sig_time_schedule.sch_setup);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_time_schedule.sch_clnt);
-	    #endif
-	#endif
-	#if MD_LIGHTNESS_EN
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_lightness.srv);
-	MODEL_ELE_ADR_INIT(model_sig_lightness.setup);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_lightness.clnt);
-	    #endif
-	#endif
-	
-	#if MD_LIGHT_CONTROL_EN
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_light_lc.srv);
-	MODEL_ELE_ADR_INIT(model_sig_light_lc.setup);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_light_lc.clnt);
-	    #endif
-	#endif
-	
-	#if (LIGHT_TYPE_CT_EN)
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_light_ctl.srv);
-	MODEL_ELE_ADR_INIT(model_sig_light_ctl.setup);
-	MODEL_ELE_ADR_INIT(model_sig_light_ctl.temp);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_light_ctl.clnt);
-	    #endif
-	#endif
-	#if (LIGHT_TYPE_HSL_EN)
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_light_hsl.srv);
-	MODEL_ELE_ADR_INIT(model_sig_light_hsl.setup);
-	MODEL_ELE_ADR_INIT(model_sig_light_hsl.hue);
-	MODEL_ELE_ADR_INIT(model_sig_light_hsl.sat);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_light_hsl.clnt);
-	    #endif
-	#endif
-	#if (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_light_xyl.srv);
-	MODEL_ELE_ADR_INIT(model_sig_light_xyl.setup);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_light_xyl.clnt);
-	    #endif
-	#endif
-	#if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
-	#endif
-
-	#if MD_SENSOR_EN
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_sensor.sensor_srv);
-	MODEL_ELE_ADR_INIT(model_sig_sensor.sensor_setup);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_sensor.sensor_clnt);
-	    #endif
-	#endif
-	
-	#if MD_BATTERY_EN
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_sensor.battery_srv);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_sensor.battery_clnt);
-	    #endif
-	#endif
-	
-	#if MD_LOCATION_EN
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_sensor.location_srv);
-	MODEL_ELE_ADR_INIT(model_sig_sensor.location_setup);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_sensor.location_clnt);
-	    #endif
-	#endif
-
-	#if MD_PROPERTY_EN
-	    #if MD_SERVER_EN
-	MODEL_ELE_ADR_INIT(model_sig_property.admin_srv);
-	MODEL_ELE_ADR_INIT(model_sig_property.mfg_srv);
-	MODEL_ELE_ADR_INIT(model_sig_property.user_srv);
-	MODEL_ELE_ADR_INIT(model_sig_property.client_srv);
-	    #endif
-	    #if MD_CLIENT_EN
-	MODEL_ELE_ADR_INIT(model_sig_property.clnt);
-	    #endif
-	#endif
+    foreach_arr(m,MeshSigModelResource){
+        const mesh_model_resource_t *p_source = &MeshSigModelResource[m];
+        if(p_source->multy_flag){
+            foreach(i,p_source->model_cnt){
+                // member of 'com' always at the first place of p_source->p_model.
+                model_common_t *p_com = (model_common_t *)((u8 *)p_source->p_model + p_source->size * i);
+                p_com->ele_adr = 0;
+            }
+        }else{
+            // no need init
+        }
+    }
 	
 	#if MD_SERVER_EN
 	MODEL_ELE_ADR_INIT(model_vd_light.srv);
@@ -1960,7 +1848,7 @@ void model_pub_st_cb_re_init_lc_srv(cb_pub_st_t cb)
 }
     #endif
 
-    #if MD_SENSOR_EN
+    #if MD_SENSOR_SERVER_EN
 void model_pub_st_cb_re_init_sensor_setup(cb_pub_st_t cb)
 {
     foreach_arr(i,model_sig_sensor.sensor_setup){
@@ -1971,69 +1859,25 @@ void model_pub_st_cb_re_init_sensor_setup(cb_pub_st_t cb)
 
 void mesh_model_cb_pub_st_register()
 {
-	MODEL_PUB_ST_CB_INIT(model_sig_g_onoff_level.onoff_srv, &mesh_g_onoff_st_publish);
-	#if MD_LEVEL_EN
-	MODEL_PUB_ST_CB_INIT(model_sig_g_onoff_level.level_srv, &mesh_g_level_st_publish);
-	#endif
-	#if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
-	MODEL_PUB_ST_CB_INIT(model_sig_lightness.srv, &mesh_g_power_st_publish);
-	#elif MD_LIGHTNESS_EN
-	MODEL_PUB_ST_CB_INIT(model_sig_lightness.srv, &mesh_lightness_st_publish);
-	#endif
-	MODEL_PUB_ST_CB_INIT_HEALTH(model_sig_health.srv, &mesh_health_cur_sts_publish);
-	
-	#if MD_LIGHT_CONTROL_EN
-	MODEL_PUB_ST_CB_INIT(model_sig_light_lc.srv, &mesh_lc_onoff_st_publish);
-	MODEL_PUB_ST_CB_INIT(model_sig_light_lc.setup, &mesh_lc_prop_st_publish);
-	#endif
-	
-	#if (LIGHT_TYPE_CT_EN)
-	MODEL_PUB_ST_CB_INIT(model_sig_light_ctl.srv, &mesh_light_ctl_st_publish);
-	MODEL_PUB_ST_CB_INIT(model_sig_light_ctl.temp, &mesh_light_ctl_temp_st_publish);
-	#endif
-	#if (LIGHT_TYPE_HSL_EN)
-	MODEL_PUB_ST_CB_INIT(model_sig_light_hsl.srv, &mesh_light_hsl_st_publish);
-	MODEL_PUB_ST_CB_INIT(model_sig_light_hsl.hue, &mesh_light_hue_st_publish);
-	MODEL_PUB_ST_CB_INIT(model_sig_light_hsl.sat, &mesh_light_sat_st_publish);
-	#endif
-	#if (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
-	MODEL_PUB_ST_CB_INIT(model_sig_light_xyl.srv, &mesh_light_xyl_st_publish);
-	#endif
-	#if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
-	#endif
-
-	#if (MD_DEF_TRANSIT_TIME_EN)
-	MODEL_PUB_ST_CB_INIT(model_sig_g_power_onoff.def_trans_time_srv, &mesh_def_trans_time_st_publish);
-	#endif
-
-	#if (MD_POWER_ONOFF_EN)
-	MODEL_PUB_ST_CB_INIT(model_sig_g_power_onoff.pw_onoff_srv, &mesh_on_powerup_st_publish);
-	#endif
-
-	#if (MD_SCENE_EN)
-	MODEL_PUB_ST_CB_INIT(model_sig_scene.srv, &mesh_scene_st_publish);
-	#endif
-
-	#if (MD_REMOTE_PROV)
-    MODEL_PUB_ST_CB_INIT(model_remote_prov.srv, &mesh_remote_prov_st_publish);
-    #endif
+    foreach_arr(m,MeshSigModelResource){
+        const mesh_model_resource_t *p_source = &MeshSigModelResource[m];
+        foreach(i,p_source->model_cnt){
+            // member of 'com' always at the first place of p_source->p_model.
+            model_common_t *p_com = (model_common_t *)((u8 *)p_source->p_model + p_source->size * i);
+            p_com->cb_pub_st = p_source->cb_pub_st;
+            p_com->cb_tick_ms = clock_time_ms();
+            p_com->pub_trans_flag = 0;
+            p_com->pub_2nd_state = 0;
+        }
+    }
     
-	#if (MD_TIME_EN)
-	MODEL_PUB_ST_CB_INIT(model_sig_time_schedule.time_srv, &mesh_time_st_publish);
-	MODEL_PUB_ST_CB_INIT(model_sig_time_schedule.time_setup, &mesh_time_role_st_publish);
-	#endif
-	
-	#if MD_SENSOR_EN
-	MODEL_PUB_ST_CB_INIT(model_sig_sensor.sensor_srv, &mesh_sensor_st_publish);
-	MODEL_PUB_ST_CB_INIT(model_sig_sensor.sensor_setup, &mesh_sensor_setup_st_publish);
-	#endif	
+#if MD_LIGHT_CONTROL_EN
+	foreach_arr(i,model_sig_light_lc.lc_onoff_target){
+        model_sig_light_lc.lc_onoff_target[i] = 0;    // init, not use data in flash. 
+	}
+#endif
 
-	#if (MD_PROPERTY_EN)
-	MODEL_PUB_ST_CB_INIT(model_sig_property.user_srv, &mesh_property_st_publish_user);
-	MODEL_PUB_ST_CB_INIT(model_sig_property.admin_srv, &mesh_property_st_publish_admin);
-	MODEL_PUB_ST_CB_INIT(model_sig_property.mfg_srv, &mesh_property_st_publish_mfg);
-	#endif
-	
+
     #if DEBUG_VENDOR_CMD_EN
     	#if LPN_VENDOR_SENSOR_EN
 	MODEL_PUB_ST_CB_INIT(model_vd_light.srv, &cb_vd_lpn_sensor_st_publish);
@@ -2052,7 +1896,6 @@ void mesh_model_cb_pub_st_register()
 	        #endif
     	#endif
     #endif
-
 }
 
 #if(DUAL_VENDOR_EN)

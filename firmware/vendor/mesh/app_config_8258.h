@@ -33,10 +33,12 @@ extern "C" {
 #define PCBA_8258_C1T139A30_V1_2        3
 #define PCBA_8258_C1T140A3_V1_1         4   // 32pin
 
+#ifndef PCBA_8258_SEL // user can define in user_app_config.h
 #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 #define PCBA_8258_SEL			PCBA_8258_C1T140A3_V1_1  // PCBA_8258_DONGLE_48PIN   //
 #else
 #define PCBA_8258_SEL			PCBA_8258_DONGLE_48PIN
+#endif
 #endif
 
 
@@ -81,7 +83,7 @@ extern "C" {
 #define HCI_USE_UART	1
 #define HCI_USE_USB		2
 
-#if WIN32
+#if (WIN32 || PTS_TEST_EN)
 #define HCI_ACCESS		HCI_USE_USB
 #else
 #define HCI_ACCESS		HCI_USE_NONE
@@ -92,6 +94,7 @@ extern "C" {
 #define UART_RX_PIN		UART_RX_PB0
 #endif
 
+#ifndef HCI_LOG_FW_EN
 #define HCI_LOG_FW_EN   0
 #if HCI_LOG_FW_EN
 	#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
@@ -100,6 +103,7 @@ extern "C" {
 #define DEBUG_INFO_TX_PIN           		GPIO_PB2
 	#endif
 #define PRINT_DEBUG_INFO                    1
+#endif
 #endif
 
 #define ADC_ENABLE		0
@@ -124,6 +128,7 @@ extern "C" {
 #endif
 
 /////////////////// mesh project config /////////////////////////////////
+#ifndef TRANSITION_TIME_DEFAULT_VAL
 #if (MESH_RX_TEST || (!MD_DEF_TRANSIT_TIME_EN))
 #define TRANSITION_TIME_DEFAULT_VAL (0)
 #else
@@ -133,12 +138,18 @@ extern "C" {
 #define TRANSITION_TIME_DEFAULT_VAL (GET_TRANSITION_TIME_WITH_STEP(1, TRANSITION_STEP_RES_1S)) // (0x41)  // 0x41: 1 second // 0x00: means no default transition time
 	#endif
 #endif
+#endif
 
 /////////////////// MODULE /////////////////////////////////
-#if MI_SWITCH_LPN_EN
+#if (MI_SWITCH_LPN_EN || GATT_LPN_EN)
 #define BLE_REMOTE_PM_ENABLE			1
 #else
 #define BLE_REMOTE_PM_ENABLE			0
+#endif
+#if BLE_REMOTE_PM_ENABLE
+#define PM_DEEPSLEEP_RETENTION_ENABLE   1   // must
+#else
+#define PM_DEEPSLEEP_RETENTION_ENABLE   0
 #endif
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
@@ -148,11 +159,6 @@ extern "C" {
 #define BLT_SOFTWARE_TIMER_ENABLE		0
 #endif
 
-#if MI_SWITCH_LPN_EN
-#define PM_DEEPSLEEP_RETENTION_ENABLE   1
-#else
-#define PM_DEEPSLEEP_RETENTION_ENABLE   0
-#endif
 //////////////////////////// KEYSCAN/MIC  GPIO //////////////////////////////////
 #define	MATRIX_ROW_PULL					PM_PIN_PULLDOWN_100K
 #define	MATRIX_COL_PULL					PM_PIN_PULLUP_10K
@@ -205,7 +211,7 @@ extern "C" {
 #define PB4_OUTPUT_ENABLE       1
 #define PB4_DATA_OUT            0
 #endif
-#else   // PCBA_8258_C1T139A30_V1_0
+#elif(PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_0)    // PCBA_8258_C1T139A30_V1_0
 #define PULL_WAKEUP_SRC_PD2     PM_PIN_PULLUP_1M	//btn
 #define PULL_WAKEUP_SRC_PD1     PM_PIN_PULLUP_1M	//btn
 #define PD2_INPUT_ENABLE		1
@@ -256,15 +262,23 @@ extern "C" {
 #define PWM_INV_B   (GET_PWM_INVERT_VAL(PWM_B, PWM_FUNC_B))
 #define PWM_INV_W   (GET_PWM_INVERT_VAL(PWM_W, PWM_FUNC_W))
 
+#ifndef GPIO_LED
 #define GPIO_LED	PWM_R
-
+#endif
 
 /////////////open SWS digital pullup to prevent MCU err, this is must ////////////
 #define PA7_DATA_OUT			1
 
 //save suspend current
-//#define PA5_FUNC 	AS_GPIO     // USB DM
-//#define PA6_FUNC 	AS_GPIO     // USB DP
+#if BLE_REMOTE_PM_ENABLE
+#define PA5_FUNC 	AS_GPIO     // USB DM
+#define PA6_FUNC 	AS_GPIO     // USB DP
+#elif(HCI_ACCESS == HCI_USE_USB)
+#define PA5_FUNC			AS_USB
+#define PA5_INPUT_ENABLE	1
+#define PA6_FUNC			AS_USB
+#define PA6_INPUT_ENABLE	1
+#endif
 
 /////////////////// Clock  /////////////////////////////////
 #define	USE_SYS_TICK_PER_US
@@ -274,6 +288,8 @@ extern "C" {
 #define CLOCK_SYS_CLOCK_HZ  	32000000
 #elif (MI_API_ENABLE)
 #define CLOCK_SYS_CLOCK_HZ  	48000000
+#elif DEBUG_CFG_CMD_GROUP_AK_EN
+#define CLOCK_SYS_CLOCK_HZ  	32000000
 #else
 #define CLOCK_SYS_CLOCK_HZ  	16000000
 #endif
@@ -288,7 +304,23 @@ extern "C" {
 #define WATCHDOG_INIT_TIMEOUT		2000  //in mi mode the watchdog timeout is 20s
 #endif
 
+#if MI_API_ENABLE && (MSC_TYPE != MSC_NONE)
+/////////////////// MSC //////////////////////////////////
+#define PULL_WAKEUP_SRC_PB4             PM_PIN_PULLUP_10K
+#define GPIO_MSC_RESET                  GPIO_PB4
+#define PB4_FUNC                        AS_GPIO
 
+#define PULL_WAKEUP_SRC_PC2             PM_PIN_PULLUP_10K
+#define GPIO_MSC_SDA                    GPIO_PC2
+
+#define PULL_WAKEUP_SRC_PC3             PM_PIN_PULLUP_10K
+#define GPIO_MSC_SCL                    GPIO_PC3    
+
+//i2c clock = system_clock/(4*DivClock)
+#define I2C_CLOCK_100K                  (CLOCK_SYS_CLOCK_HZ/(4*100000))
+#define I2C_CLOCK_400K                  (CLOCK_SYS_CLOCK_HZ/(4*400000))
+#define I2C_MSC_FREQ                    I2C_CLOCK_400K 
+#endif
 
 /////////////////// set default   ////////////////
 

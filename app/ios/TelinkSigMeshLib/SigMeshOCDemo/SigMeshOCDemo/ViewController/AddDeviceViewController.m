@@ -23,7 +23,7 @@
 //  AddDeviceViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/10/17.
+//  Created by 梁家誌 on 2018/10/17.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -144,7 +144,8 @@
 }
 
 - (void)updateDeviceKeyBind:(NSString *)uuid isSuccess:(BOOL)isSuccess{
-    for (AddDeviceModel *model in self.source) {
+    NSArray *source = [NSArray arrayWithArray:self.source];
+    for (AddDeviceModel *model in source) {
         if ([model.scanRspModel.uuid isEqualToString:uuid]) {
             if (isSuccess) {
                 model.state = AddDeviceModelStateBindSuccess;
@@ -166,12 +167,14 @@
 }
 
 - (IBAction)clickGoBack:(UIButton *)sender {
-    __weak typeof(self) weakSelf = self;
-    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [weakSelf.navigationController popViewControllerAnimated:YES];
-        });
-    }];
+//    __weak typeof(self) weakSelf = self;
+//    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+//        dispatch_async(dispatch_get_main_queue(), ^{
+//            [weakSelf.navigationController popViewControllerAnimated:YES];
+//        });
+//    }];
+    
+    [self.navigationController popViewControllerAnimated:YES];
 }
 
 #pragma mark - Life method

@@ -21,15 +21,18 @@
  *******************************************************************************************************/
 //
 //  SigMeshLib.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/15.
+//  Created by 梁家誌 on 2019/8/15.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
 #import "SigMeshLib.h"
+#import "SDKLibCommand.h"
 
 @interface SigMeshLib ()<SigMessageDelegate>
+/// The Network Layer handler.
+@property (nonatomic,strong) SigNetworkManager *networkManager;
 @end
 
 @implementation SigMeshLib
@@ -40,6 +43,7 @@ static SigMeshLib *shareLib = nil;
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
         shareLib = [[SigMeshLib alloc] init];
+        shareLib.isReceiveSegmentPDUing = NO;
         shareLib.commands = [NSMutableArray array];
         shareLib.dataSource = SigDataSource.share;
         [shareLib config];
@@ -52,15 +56,15 @@ static SigMeshLib *shareLib = nil;
     _delegate = shareLib;
 }
 
-- (void)setNetworkManager:(SigNetworkManager *)networkManager {
-    _networkManager = networkManager;
-}
-
 - (instancetype)init{
     if (self = [super init]) {
         [self config];
     }
     return self;
+}
+
+- (SigNetworkManager *)networkManager {
+    return SigNetworkManager.share;
 }
 
 - (void)config{
@@ -91,8 +95,8 @@ static SigMeshLib *shareLib = nil;
 #pragma mark - Receive Mesh Messages
 
 - (void)bearerDidDeliverData:(NSData *)data type:(SigPduType)type {
-    if (_networkManager == nil) {
-        TeLogDebug(@"_networkManager == nil");
+    if (self.networkManager == nil) {
+        TeLogDebug(@"self.networkManager == nil");
         return;
     }
     __weak typeof(self) weakSelf = self;
@@ -101,8 +105,17 @@ static SigMeshLib *shareLib = nil;
     });
 }
 
+- (void)receiveNetworkPdu:(SigNetworkPdu *)networkPdu {
+    /* 用于接收到segment pdu时，如果存在应用层的重试，则在该地方修正一下重试定时器的时间。注意：当前直接callback解密后的networkPdu，方便后期新增一些优化的逻辑代码 */
+    self.isReceiveSegmentPDUing = networkPdu.isSegmented;
+    if (networkPdu.isSegmented && self.commands && self.commands.count) {
+        SDKLibCommand *command = self.commands.firstObject;
+        [self retrySendSDKLibCommand:command];
+    }
+}
+
 - (void)updateOnlineStatusWithDeviceAddress:(UInt16)address deviceState:(DeviceState)state bright100:(UInt8)bright100 temperature100:(UInt8)temperature100{
-    SigGenericOnOffStatus *message = [[SigGenericOnOffStatus alloc] initWithIsOn:state == DeviceStateOn];
+    SigTelinkOnlineStatusMessage *message = [[SigTelinkOnlineStatusMessage alloc] initWithAddress:address state:state brightness:bright100 temperature:temperature100];
     SDKLibCommand *command = [self getCommandWithReceiveMessage:message];
     BOOL shouldCallback = NO;
     if (![command.responseSourceArray containsObject:@(address)]) {
@@ -114,25 +127,33 @@ static SigMeshLib *shareLib = nil;
     }
     //all response message callback in this code.
     if (shouldCallback && command && command.responseAllMessageCallBack) {
-        command.responseAllMessageCallBack(address,_dataSource.curLocationNodeModel.address,message);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            command.responseAllMessageCallBack(address,SigDataSource.share.curLocationNodeModel.address,message);
+        });
     }
     if (SigPublishManager.share.discoverOutlineNodeCallback) {
-        SigPublishManager.share.discoverOutlineNodeCallback(@(address));
+        dispatch_async(dispatch_get_main_queue(), ^{
+            SigPublishManager.share.discoverOutlineNodeCallback(@(address));
+        });
     }
 }
 
 #pragma mark - Send Mesh Messages
 
 - (SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
-    UInt8 ttl = localElement.parentNode.defaultTTL;
+    UInt8 ttl = localElement.getParentNode.defaultTTL;
     if (![SigHelper.share isRelayedTTL:ttl]) {
-        ttl = _networkManager.defaultTtl;
+        ttl = self.networkManager.defaultTtl;
     }
     return [self sendMeshMessage:message fromLocalElement:localElement toDestination:destination withTtl:ttl usingApplicationKey:applicationKey command:command];
 }
 
 - (SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
-    if (_networkManager == nil || SigDataSource.share == nil) {
+    if (!SigBearer.share.isOpen) {
+        TeLogError(@"bearer is closed.");
+        return nil;
+    }
+    if (self.networkManager == nil || SigDataSource.share == nil) {
         TeLogError(@"Mesh Network not created");
         return nil;
     }
@@ -142,7 +163,7 @@ static SigMeshLib *shareLib = nil;
     }
     SigNodeModel *localNode = SigDataSource.share.curLocationNodeModel;
     SigElementModel *source = localNode.elements.firstObject;
-    if (source.parentNode != localNode) {
+    if (source.getParentNode != localNode) {
         TeLogError(@"The Element does not belong to the local Node.");
         return nil;
     }
@@ -176,12 +197,16 @@ static SigMeshLib *shareLib = nil;
 - (SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination command:(SDKLibCommand *)command {
     UInt8 ttl = self.dataSource.curLocationNodeModel.defaultTTL;
     if (![SigHelper.share isRelayedTTL:ttl]) {
-        ttl = _networkManager.defaultTtl;
+        ttl = self.networkManager.defaultTtl;
     }
     return [self sendConfigMessage:message toDestination:destination withTtl:ttl command:command];
 }
 
 - (SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt8)initialTtl command:(SDKLibCommand *)command {
+    if (!SigBearer.share.isOpen) {
+        TeLogError(@"bearer is closed.");
+        return nil;
+    }
     if (SigDataSource.share == nil) {
         TeLogError(@"Mesh Network not created");
         return nil;
@@ -218,6 +243,10 @@ static SigMeshLib *shareLib = nil;
 }
 
 - (void)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command {
+    if (!SigBearer.share.isOpen) {
+        TeLogError(@"bearer is closed.");
+        return;
+    }
     if (SigDataSource.share == nil) {
         TeLogError(@"Mesh Network not created");
         return;
@@ -236,6 +265,10 @@ static SigMeshLib *shareLib = nil;
 }
 
 - (NSError *)sendTelinkApiGetOnlineStatueFromUUIDWithMessage:(SigMeshMessage *)message command:(SDKLibCommand *)command {
+    if (!SigBearer.share.isOpen) {
+        TeLogError(@"bearer is closed.");
+        return nil;
+    }
     if (SigDataSource.share == nil) {
         TeLogError(@"Mesh Network not created");
         return [NSError errorWithDomain:kSigMeshLibNoCreateMeshNetworkErrorMessage code:kSigMeshLibNoCreateMeshNetworkErrorCode userInfo:nil];
@@ -269,7 +302,7 @@ static SigMeshLib *shareLib = nil;
 }
 
 - (void)cancelSigMessageHandle:(SigMessageHandle *)messageId {
-    if (_networkManager == nil) {
+    if (self.networkManager == nil) {
         TeLogError(@"Error: Mesh Network not created.");
         return;
     }
@@ -296,7 +329,7 @@ static SigMeshLib *shareLib = nil;
 - (void)commandTimeoutWithCommand:(SDKLibCommand *)command {
     [self commandResponseFinishWithCommand:command];
     if (command.resultCallback) {
-        TeLogDebug(@"timeout command:%@",command);
+        TeLogDebug(@"timeout command:%@-%@",command.curMeshMessage,command.curMeshMessage.parameters);
         NSError *error = [NSError errorWithDomain:kSigMeshLibCommandTimeoutErrorMessage code:kSigMeshLibCommandTimeoutErrorCode userInfo:nil];
         command.resultCallback(NO, error);
     }
@@ -305,6 +338,7 @@ static SigMeshLib *shareLib = nil;
 - (void)commandResponseFinishWithCommand:(SDKLibCommand *)command {
     if (command.retryTimer) {
         [command.retryTimer invalidate];
+        command.retryTimer = nil;
     }
     __weak typeof(self) weakSelf = self;
     dispatch_async(weakSelf.queue, ^{
@@ -322,6 +356,15 @@ static SigMeshLib *shareLib = nil;
         if (com.responseMaxCount == 0 || com.responseMaxCount == 0xFF) {
             [self.commands removeObject:com];
         }
+    }
+}
+
+/// cancel all commands and retry of commands and retry of segment PDU.
+- (void)cleanAllCommandsAndRetry {
+    NSArray *commands = [NSArray arrayWithArray:_commands];
+    for (SDKLibCommand *com in commands) {
+        [com.messageHandle cancel];
+        [self.commands removeObject:com];
     }
 }
 
@@ -360,6 +403,8 @@ static SigMeshLib *shareLib = nil;
         //node may delete from SigDataSource, but no reset from mesh network.
         if (node) {
             [command.responseSourceArray addObject:@(source)];
+        } else if (message.opCode > 0xFFFF) {//vendor model
+            [command.responseSourceArray addObject:@(source)];
         }
     }
     //update status to SigDataSource before callback.
@@ -389,6 +434,7 @@ static SigMeshLib *shareLib = nil;
     } else {
         if (command.retryTimer) {
             [command.retryTimer invalidate];
+            command.retryTimer = nil;
         }
     }
 
@@ -559,7 +605,7 @@ static SigMeshLib *shareLib = nil;
         }];
         command.retryTimer = timer;
     } else {
-        // 重试未完成，继续重试
+        // 重试未完成，继续重试。
         BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
             if (command.hadRetryCount < command.retryCount) {
                 command.hadRetryCount ++;

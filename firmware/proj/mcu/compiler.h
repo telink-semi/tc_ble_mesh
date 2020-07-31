@@ -40,6 +40,7 @@
 #define _attribute_custom_code_  	_attribute_session_(".custom") volatile
 #define _attribute_no_inline_   __attribute__((noinline)) 
 // #define _inline_ 				extern __attribute__ ((gnu_inline)) inline
+#define __WEAK                  __attribute__((weak))   // user can define their own function
 
 #include "config.h"
 
@@ -81,4 +82,10 @@
 #ifndef _attribute_no_retention_bss_
 #define _attribute_no_retention_bss_    //
 #endif
+
+#ifndef __WEAK
+#define __WEAK                          //
+#endif
+
+#define _USER_CAN_REDEFINE_             __WEAK // user can re-define function in user_app.c
 

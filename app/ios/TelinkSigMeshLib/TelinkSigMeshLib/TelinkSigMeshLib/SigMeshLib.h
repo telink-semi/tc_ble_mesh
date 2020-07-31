@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 //
 //  SigMeshLib.h
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/15.
+//  Created by 梁家誌 on 2019/8/15.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
@@ -31,7 +31,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigNetworkManager,SigMessageHandle,SigMeshLib,SigMeshAddress,SigProxyConfigurationMessage,SDKLibCommand;
+@class SigMessageHandle,SigMeshAddress,SigProxyConfigurationMessage,SDKLibCommand,SigSecureNetworkBeacon,SigNetworkPdu;
 
 @protocol SigMessageDelegate <NSObject>
 @optional
@@ -59,6 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)failedToSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination error:(NSError *)error;
 
 - (void)didReceiveSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination;
+- (void)didReceiveSigSecureNetworkBeaconMessage:(SigSecureNetworkBeacon *)message;
 
 @end
 
@@ -66,8 +67,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigMeshLib : NSObject
 /// command list cache.
 @property (nonatomic,strong) NSMutableArray <SDKLibCommand *>*commands;
-/// The Network Layer handler.
-@property (nonatomic,strong) SigNetworkManager *networkManager;
 /// A queue to handle incoming and outgoing messages.
 @property (nonatomic,strong) dispatch_queue_t queue;
 /// A queue to call delegate methods on.
@@ -78,8 +77,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// The sender object should send PDUs created by the manager using any Bearer.
 @property (nonatomic,strong) SigBearer *bearer;
 
-/// The delegate will receive callbacks whenever a complete
-/// Mesh Message has been received and reassembled.
+/// The delegate will receive callbacks whenever a complete Mesh Message has been received and reassembled.
 @property (nonatomic, weak, readonly) id <SigMessageDelegate>delegate;
 @property (nonatomic, weak, readwrite) id <SigMessageDelegate>delegateForDeveloper;
 
@@ -130,6 +128,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) int segmentTXTimeout;//15
 @property (nonatomic,assign) int segmentRXTimeout;//15
 
+@property (nonatomic,assign) BOOL isReceiveSegmentPDUing;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -137,16 +136,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (SigMeshLib *)share;
 
-#pragma mark - Computed properties
-
-- (void)setNetworkManager:(SigNetworkManager *)networkManager;
-
 #pragma mark - Receive Mesh Messages
 
 /// This method should be called whenever a PDU has been received from the mesh network using SigBearer. When a complete Mesh Message is received and reassembled, the delegate's `didReceiveMessage:sentFromSource:toDestination:` will be called.
 /// @param data The PDU received.
 /// @param type The PDU type.
 - (void)bearerDidDeliverData:(NSData *)data type:(SigPduType)type;
+
+/// This method should be called whenever a PDU has been decoded from the mesh network using SigNetworkLayer.
+/// @param networkPdu The network pdu in (Mesh_v1.0.pdf 3.4.4 Network PDU).
+- (void)receiveNetworkPdu:(SigNetworkPdu *)networkPdu;
 
 /// This method should be called whenever a PDU has been received from the kOnlineStatusCharacteristicsID.
 /// @param address address of node
@@ -197,6 +196,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Cancels sending the message with the given identifier.
 /// @param messageId The message identifier.
 - (void)cancelSigMessageHandle:(SigMessageHandle *)messageId;
+
+/// cancel all commands and retry of commands and retry of segment PDU.
+- (void)cleanAllCommandsAndRetry;
 
 /// Returns whether SigMeshLib is busy. YES means busy.
 - (BOOL)isBusyNow;

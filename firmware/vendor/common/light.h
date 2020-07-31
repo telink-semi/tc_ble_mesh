@@ -44,7 +44,9 @@
 #define PWM_CLK_DIV_LIGHT   (0)
 #endif
 
+#ifndef PWM_FREQ
 #define PWM_FREQ	        (600)   // unit: Hz
+#endif
 #define PWM_MAX_TICK        ((CLOCK_SYS_CLOCK_HZ / (PWM_CLK_DIV_LIGHT + 1)) / PWM_FREQ)
 //#define PMW_MAX_TICK		PWM_MAX_TICK
 
@@ -63,6 +65,7 @@
 #define	LED_EVENT_FLASH_4HZ_1T				config_led_event(2,2,1,LED_MASK)
 #define	LED_EVENT_FLASH_4HZ_2T				config_led_event(2,2,2,LED_MASK)
 #define	LED_EVENT_FLASH_4HZ_3T				config_led_event(2,2,3,LED_MASK)
+#define	LED_EVENT_FLASH_1HZ_1T				config_led_event(1,15,1,LED_MASK)
 #define	LED_EVENT_FLASH_1HZ_3T				config_led_event(8,8,3,LED_MASK)
 #define	LED_EVENT_FLASH_2HZ_1T				config_led_event(4,4,1,LED_MASK)
 #define	LED_EVENT_FLASH_2HZ_2T				config_led_event(4,4,2,LED_MASK)
@@ -110,6 +113,7 @@
 
 #define LEVEL_MIN      			(-32767)
 #define LEVEL_MAX      			(32767)
+#if (0 == LIGHT_PAR_USER_EN)
 #define LIGHTNESS_MIN      		(1)			// can not set 0
 #define LIGHTNESS_MAX      		(0xFFFF)
 #define CTL_TEMP_MIN			(0x0320)	// 800
@@ -133,6 +137,7 @@
 #define HSL_SAT_DEFAULT   		(HSL_SAT_MAX)
 #define XYL_X_DEFAULT   		(XYL_X_MAX)
 #define XYL_Y_DEFAULT   		(XYL_Y_MAX)
+#endif
 
 #define LEVEL_OFF				(-32768)
 #define LUM_OFF					(0)
@@ -184,7 +189,6 @@ enum{
 typedef struct{
 	u8 st[ST_TRANS_MAX + 1];    // + 1: for onoff publish flag
 	u8 no_dim_refresh_flag;     // input parameter
-	u8 op_lc_onoff_type;        // input parameter; receive command type 
 }st_pub_list_t;  // st_level_set_pub_list_t
 
 typedef struct{
@@ -356,6 +360,7 @@ int set_light_linear_flag(int idx,u16 linear);
 int clear_light_linear_flag(int idx);
 u16 get_light_linear_val(int idx);
 int is_linear_flag(int idx);
+u8 light_remain_time_get(st_transition_t *p_trans);
 
 // led
 #define LGT_CMD_BLE_ADV					0xa0
@@ -393,7 +398,9 @@ int is_linear_flag(int idx);
 void light_dim_refresh(int idx);
 void light_dim_refresh_all();
 void proc_led(void);
+void cfg_led_event (u32 e);
 int is_led_busy();
+void cfg_led_event_stop ();
 void led_onoff_gpio(u32 gpio, u8 on);
 void rf_link_light_event_callback (u8 status);
 void light_ev_with_sleep(u32 count, u32 half_cycle_us);
@@ -403,6 +410,16 @@ void increase_rx_onoff_cnt();
 u16 get_rx_cnts();
 void light_transition_onoff_manual(u8 onoff, u8 transit_t, u8 light_idx);
 
+
+static inline u16 get_lightness_present(int light_idx)
+{
+	return (get_lightness_from_level(light_g_level_present_get(light_idx, ST_TRANS_LIGHTNESS)));
+}
+
+static inline u16 get_lightness_target(int light_idx)
+{
+	return (get_lightness_from_level(light_g_level_target_get(light_idx, ST_TRANS_LIGHTNESS)));
+}
 
 /**
   * @}

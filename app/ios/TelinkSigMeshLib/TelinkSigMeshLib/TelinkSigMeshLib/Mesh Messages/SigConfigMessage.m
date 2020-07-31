@@ -21,13 +21,14 @@
  *******************************************************************************************************/
 //
 //  SigConfigMessage.m
-//  SigMeshLib
+//  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/8/15.
+//  Created by 梁家誌 on 2019/8/15.
 //  Copyright © 2019年 Telink. All rights reserved.
 //
 
 #import "SigConfigMessage.h"
+#import "CBUUID+Hex.h"
 
 @implementation SigConfigMessage
 
@@ -307,7 +308,8 @@
     [mData appendData:[NSData dataWithBytes:&tem2 length:2]];
     tem2 = self.features.rawValue;
     [mData appendData:[NSData dataWithBytes:&tem2 length:2]];
-    for (SigElementModel *elementModel in self.elements) {
+    NSArray *elements = [NSArray arrayWithArray:self.elements];
+    for (SigElementModel *elementModel in elements) {
         [mData appendData:elementModel.getElementData];
     }
     return mData;
@@ -339,12 +341,13 @@
         UInt8 tem = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
         memcpy(&tem, dataByte, 1);
-        if (parameters.length < 11 || tem != 0) {
+        self.page = tem;
+        if (parameters.length < 11) {
+//            if (parameters.length < 11 || tem != 0) {
             return nil;
         }
     }
     if (self = [super init]) {
-        self.page = 0;
         UInt16 tem = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
         memcpy(&tem, dataByte+1, 2);
@@ -498,7 +501,10 @@
             UInt8 tem = 0;
             Byte *dataByte = (Byte *)parameters.bytes;
             memcpy(&tem, dataByte, 1);
-            if (tem == 0) {
+            if (tem != 0) {
+                TeLogError(@"Other Pages are not supoprted.");
+            }
+//            if (tem == 0) {
                 SigPage0 *page0 = [[SigPage0 alloc] initWithParameters:parameters];//001102010033306900070000001101000002000300040000FE01FE00FF01FF001002100410061007100013011303130413110200000000020002100613
                 if (page0) {
                     _page = page0;
@@ -506,10 +512,10 @@
                     TeLogError(@"init page0 fail.");
                     return nil;
                 }
-            } else {
-                TeLogError(@"Other Pages are not supoprted.");
-                return nil;
-            }
+//            } else {
+//                TeLogError(@"Other Pages are not supoprted.");
+//                return nil;
+//            }
         }
     }
     return self;
@@ -546,7 +552,7 @@
     return self;
 }
 
-- (instancetype)initWithPublish:(SigPublish *)publish toModel:(SigModelIDModel *)model {
+- (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress model:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelPublicationSet;
         if ([SigHelper.share isVirtualAddress:[LibTools uint16From16String:publish.address]]) {
@@ -554,20 +560,20 @@
             return nil;
         }
         _publish = publish;
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
 
-- (instancetype)initWithDisablePublicationForModel:(SigModelIDModel *)model {
+- (instancetype)initWithDisablePublicationForModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelPublicationSet;
         _publish = [[SigPublish alloc] init];
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -1466,16 +1472,6 @@
     return self;
 }
 
-//- (instancetype)initWithModel:(SigModelIDModel *)model {
-//    if (self = [super init]) {
-//        self.opCode = SigOpCode_configModelPublicationGet;
-//        self.elementAddress = model.parentElement.unicastAddress;
-//        self.modelIdentifier = model.modelIdentifier;
-//        self.companyIdentifier = model.companyIdentifier;
-//    }
-//    return self;
-//}
-
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelPublicationGet;
@@ -1684,7 +1680,7 @@
     return self;
 }
 
-- (instancetype)initWithPublish:(SigPublish *)publish toModel:(SigModelIDModel *)model {
+- (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress model:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelPublicationVirtualAddressSet;
         if ([SigHelper.share isVirtualAddress:[LibTools uint16From16String:_publish.address]]) {
@@ -1692,9 +1688,9 @@
             return nil;
         }
         _publish = publish;
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -1798,7 +1794,7 @@
     return self;
 }
 
-- (instancetype)initWithGroupAddress:(UInt16)groupAddress toNodeElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
+- (instancetype)initWithGroupAddress:(UInt16)groupAddress toElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionAdd;
         if (![SigHelper.share isGroupAddress:groupAddress]) {
@@ -1813,7 +1809,7 @@
     return self;
 }
 
-- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model {
+- (instancetype)initWithGroup:(SigGroupModel *)group toElementAddress:(UInt16)elementAddress model:(SigModelIDModel *)model {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionAdd;
         if (![SigHelper.share isGroupAddress:group.intAddress]) {
@@ -1821,9 +1817,9 @@
             return nil;
         }
         _address = [LibTools uint16From16String:group.address];
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -1912,7 +1908,7 @@
     return self;
 }
 
-- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model {
+- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionDelete;
         if (![SigHelper.share isGroupAddress:group.intAddress]) {
@@ -1920,9 +1916,9 @@
             return nil;
         }
         _address = [LibTools uint16From16String:group.address];
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -2006,12 +2002,12 @@
     return self;
 }
 
-- (instancetype)initFromModel:(SigModelIDModel *)model {
+- (instancetype)initFromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionDeleteAll;
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -2095,7 +2091,7 @@
     return self;
 }
 
-- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model {
+- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionOverwrite;
         if (![SigHelper.share isGroupAddress:group.intAddress]) {
@@ -2103,9 +2099,9 @@
             return nil;
         }
         _address = [LibTools uint16From16String:group.address];
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -2237,38 +2233,38 @@
     return self;
 }
 
-- (instancetype)initWithConfirmAddingGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model withStatus:(SigConfigMessageStatus)status {
+- (instancetype)initWithConfirmAddingGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress withStatus:(SigConfigMessageStatus)status {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionStatus;
         _status = status;
         _address = [LibTools uint16From16String:group.address];
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
 
-- (instancetype)initWithConfirmDeletingAddress:(UInt16)address fromModel:(SigModelIDModel *)model withStatus:(SigConfigMessageStatus)status {
+- (instancetype)initWithConfirmDeletingAddress:(UInt16)address fromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress withStatus:(SigConfigMessageStatus)status {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionStatus;
         _status = status;
         _address = address;
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
 
-- (instancetype)initWithConfirmDeletingAllFromModel:(SigModelIDModel *)model {
+- (instancetype)initWithConfirmDeletingAllFromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionStatus;
         _status = SigConfigMessageStatus_success;
         _address = MeshAddress_unassignedAddress;
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -2356,7 +2352,7 @@
     return self;
 }
 
-- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model {
+- (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionVirtualAddressAdd;
         if (!group.meshAddress.virtualLabel) {
@@ -2364,9 +2360,9 @@
             return nil;
         }
         _virtualLabel = group.meshAddress.virtualLabel;
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -2453,7 +2449,7 @@
     return self;
 }
 
-- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model {
+- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionVirtualAddressDelete;
         if (!group.meshAddress.virtualLabel) {
@@ -2461,9 +2457,9 @@
             return nil;
         }
         _virtualLabel = group.meshAddress.virtualLabel;
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -2550,7 +2546,7 @@
     return self;
 }
 
-- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model {
+- (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelSubscriptionVirtualAddressOverwrite;
         if (!group.meshAddress.virtualLabel) {
@@ -2558,9 +2554,9 @@
             return nil;
         }
         _virtualLabel = group.meshAddress.virtualLabel;
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -2959,15 +2955,15 @@
     return self;
 }
 
-- (instancetype)initOfModel:(SigModelIDModel *)model {
+- (instancetype)initOfModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configSIGModelSubscriptionGet;
-        if (model.companyIdentifier != 0) {
+        if (model.getIntCompanyIdentifier != 0) {
             // Use ConfigVendorModelSubscriptionGet instead.
             return nil;
         }
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
     }
     return self;
 }
@@ -3019,15 +3015,15 @@
     return self;
 }
 
-- (instancetype)initForModel:(SigModelIDModel *)model addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status {
+- (instancetype)initForModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status {
     if (self = [super init]) {
         self.opCode = SigOpCode_configSIGModelSubscriptionList;
-        if (model.companyIdentifier != 0) {
+        if (model.getIntCompanyIdentifier != 0) {
             // Use ConfigVendorModelSubscriptionList instead.
             return nil;
         }
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
         self.addresses = [NSMutableArray arrayWithArray:addresses];
         self.status = status;
     }
@@ -3072,7 +3068,8 @@
     tem = self.modelIdentifier;
     data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
-    for (NSNumber *addressNumber in self.addresses) {
+    NSArray *addresses = [NSArray arrayWithArray:self.addresses];
+    for (NSNumber *addressNumber in addresses) {
         UInt16 address = addressNumber.intValue;
         data = [NSData dataWithBytes:&address length:2];
         [mData appendData:data];
@@ -3106,16 +3103,16 @@
     return self;
 }
 
-- (instancetype)initOfModel:(SigModelIDModel *)model {
+- (instancetype)initOfModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configVendorModelSubscriptionGet;
-        if (model.companyIdentifier == 0) {
+        if (model.getIntCompanyIdentifier == 0) {
             // Use ConfigSIGModelSubscriptionGet instead.
             return nil;
         }
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -3172,16 +3169,16 @@
     return self;
 }
 
-- (instancetype)initForModel:(SigModelIDModel *)model addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status {
+- (instancetype)initForModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status {
     if (self = [super init]) {
         self.opCode = SigOpCode_configVendorModelSubscriptionList;
-        if (model.companyIdentifier == 0) {
+        if (model.getIntCompanyIdentifier == 0) {
             // Use ConfigSIGModelSubscriptionList instead.
             return nil;
         }
-        self.elementAddress = model.parentElement.unicastAddress;
-        self.modelIdentifier = model.modelIdentifier;
-        self.companyIdentifier = model.companyIdentifier;
+        self.elementAddress = elementAddress;
+        self.modelIdentifier = model.getIntModelIdentifier;
+        self.companyIdentifier = model.getIntCompanyIdentifier;
         self.addresses = [NSMutableArray arrayWithArray:addresses];
         self.status = status;
     }
@@ -3231,7 +3228,8 @@
     tem = self.modelIdentifier;
     data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
-    for (NSNumber *addressNumber in self.addresses) {
+    NSArray *addresses = [NSArray arrayWithArray:self.addresses];
+    for (NSNumber *addressNumber in addresses) {
         UInt16 address = addressNumber.intValue;
         data = [NSData dataWithBytes:&address length:2];
         [mData appendData:data];
@@ -3262,13 +3260,13 @@
     return self;
 }
 
-- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model {
+- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelAppBind;
         self.applicationKeyIndex = applicationKey.index;
-        _elementAddress = model.parentElement.unicastAddress;
-        _modelIdentifier = model.modelIdentifier;
-        _companyIdentifier = model.companyIdentifier;
+        _elementAddress = elementAddress;
+        _modelIdentifier = model.getIntModelIdentifier;
+        _companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -3342,19 +3340,19 @@
     return self;
 }
 
-- (instancetype)initWithConfirmBindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model status:(SigConfigMessageStatus)status {
+- (instancetype)initWithConfirmBindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress status:(SigConfigMessageStatus)status {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelAppStatus;
         self.applicationKeyIndex = applicationKey.index;
-        _elementAddress = model.parentElement.unicastAddress;
-        _modelIdentifier = model.modelIdentifier;
-        _companyIdentifier = model.companyIdentifier;
+        _elementAddress = elementAddress;
+        _modelIdentifier = model.getIntModelIdentifier;
+        _companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
 
-- (instancetype)initWithConfirmUnbindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model status:(SigConfigMessageStatus)status {
-    return [self initWithConfirmBindingApplicationKey:applicationKey toModel:model status:status];
+- (instancetype)initWithConfirmUnbindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress status:(SigConfigMessageStatus)status {
+    return [self initWithConfirmBindingApplicationKey:applicationKey toModel:model elementAddress:elementAddress status:status];
 }
 
 - (instancetype)initWithParameters:(NSData *)parameters {
@@ -3388,8 +3386,11 @@
 
 - (NSData *)parameters {
     NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
     UInt16 tem = _elementAddress;
-    NSData *data = [NSData dataWithBytes:&tem length:2];
+    data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
     tem = self.applicationKeyIndex;
     data = [NSData dataWithBytes:&tem length:2];
@@ -3432,13 +3433,13 @@
     return self;
 }
 
-- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model {
+- (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelAppUnbind;
         self.applicationKeyIndex = applicationKey.index;
-        _elementAddress = model.parentElement.unicastAddress;
-        _modelIdentifier = model.modelIdentifier;
-        _companyIdentifier = model.companyIdentifier;
+        _elementAddress = elementAddress;
+        _modelIdentifier = model.getIntModelIdentifier;
+        _companyIdentifier = model.getIntCompanyIdentifier;
     }
     return self;
 }
@@ -4030,12 +4031,12 @@
     return self;
 }
 
-- (instancetype)initWithModel:(SigModelIDModel *)model {
+- (instancetype)initWithModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configSIGModelAppGet;
-        if (model.companyIdentifier == 0) {
-            self.elementAddress = model.parentElement.unicastAddress;
-            self.modelIdentifier = model.modelIdentifier;
+        if (model.getIntCompanyIdentifier == 0) {
+            self.elementAddress = elementAddress;
+            self.modelIdentifier = model.getIntModelIdentifier;
         } else {
             // Use ConfigVendorModelAppGet instead.
             return nil;
@@ -4179,13 +4180,13 @@
     return self;
 }
 
-- (instancetype)initWithModel:(SigModelIDModel *)model {
+- (instancetype)initWithModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_configVendorModelAppGet;
-        if (model.companyIdentifier == 0) {
-            self.elementAddress = model.parentElement.unicastAddress;
-            self.modelIdentifier = model.modelIdentifier;
-            self.companyIdentifier = model.companyIdentifier;
+        if (model.getIntCompanyIdentifier == 0) {
+            self.elementAddress = elementAddress;
+            self.modelIdentifier = model.getIntModelIdentifier;
+            self.companyIdentifier = model.getIntCompanyIdentifier;
 
         } else {
             return nil;
@@ -4246,13 +4247,13 @@
     return self;
 }
 
-- (instancetype)initWithModel:(SigModelIDModel *)model applicationKeys:(NSArray <SigAppkeyModel *>*)applicationKeys status:(SigConfigMessageStatus)status {
+- (instancetype)initWithModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress applicationKeys:(NSArray <SigAppkeyModel *>*)applicationKeys status:(SigConfigMessageStatus)status {
     if (self = [super init]) {
         self.opCode = SigOpCode_configVendorModelAppList;
-        if (model.companyIdentifier == 0) {
-            _elementAddress = model.parentElement.unicastAddress;
-            self.modelIdentifier = model.modelIdentifier;
-            self.companyIdentifier = model.companyIdentifier;
+        if (model.getIntCompanyIdentifier == 0) {
+            _elementAddress = elementAddress;
+            self.modelIdentifier = model.getIntModelIdentifier;
+            self.companyIdentifier = model.getIntCompanyIdentifier;
             self.status = status;
             self.applicationKeyIndexes = [NSMutableArray array];
             for (SigAppkeyModel *model in applicationKeys) {

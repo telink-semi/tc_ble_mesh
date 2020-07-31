@@ -137,7 +137,7 @@ int cfg_cmd_sub_get(u16 node_adr, u16 ele_adr, u16 md_id)
 int group_status[2][32];
 mesh_cfg_cmd_sub_set_par_t mesh_cfg_cmd_sub_set_par;
 
-int cfg_cmd_sub_set(u16 op, u16 node_adr, u16 ele_adr, u16 sub_adr, u32 md_id, int sig_model)
+int cfg_cmd_sub_set(u16 op, u16 node_adr, u16 ele_adr, u16 sub_adr, u32 md_id, bool4 sig_model)
 {
     LOG_MSG_FUNC_NAME();
     node_adr = get_primary_adr_with_check(node_adr, ele_adr);
@@ -157,7 +157,7 @@ int cfg_cmd_sub_set(u16 op, u16 node_adr, u16 ele_adr, u16 sub_adr, u32 md_id, i
 	return SendOpParaDebug(node_adr, 1, op, (u8 *)&par, par_len); 	// sig model
 }
 
-int cfg_cmd_pub_get(u16 node_adr, u16 ele_adr, u32 md_id, int sig_model)
+int cfg_cmd_pub_get(u16 node_adr, u16 ele_adr, u32 md_id, bool4 sig_model)
 {
     node_adr = get_primary_adr_with_check(node_adr, ele_adr);
     
@@ -169,7 +169,7 @@ int cfg_cmd_pub_get(u16 node_adr, u16 ele_adr, u32 md_id, int sig_model)
 	return SendOpParaDebug (node_adr, 1, CFG_MODEL_PUB_GET,(u8 *)&par, par_len);
 }
 
-int cfg_cmd_pub_set(u16 node_adr, u16 ele_adr, u16 pub_adr, mesh_model_pub_par_t *pub_par, u32 md_id, int sig_model)
+int cfg_cmd_pub_set(u16 node_adr, u16 ele_adr, u16 pub_adr, mesh_model_pub_par_t *pub_par, u32 md_id, bool4 sig_model)
 {
     node_adr = get_primary_adr_with_check(node_adr, ele_adr);
     
@@ -225,9 +225,9 @@ int cfg_cmd_relay_get(u16 node_adr)
 	return SendOpParaDebug (node_adr, 1, CFG_RELAY_GET, par, 0);
 }
 
-int cfg_cmd_relay_set(u16 node_adr, u8 val)
+int cfg_cmd_relay_set(u16 node_adr, mesh_cfg_model_relay_set_t relay_set)
 {
-	return SendOpParaDebug (node_adr, 1, CFG_RELAY_SET, (u8 *)&val, 1);
+	return SendOpParaDebug (node_adr, 1, CFG_RELAY_SET, (u8 *)&relay_set, sizeof(relay_set));
 }
 
 int cfg_cmd_friend_get(u16 node_adr)
@@ -372,7 +372,7 @@ int cfg_cmd_ak_del(u16 node_adr, u16 nk_idx, u16 ak_idx)
 	return SendOpParaDebug(node_adr, 0, APPKEY_DEL, (u8 *)&set, sizeof(set.appkey));
 }
 
-int cfg_cmd_ak_bind(u16 node_adr, u16 ele_adr, u16 ak_idx, u32 md_id, int sig_model)
+int cfg_cmd_ak_bind(u16 node_adr, u16 ele_adr, u16 ak_idx, u32 md_id, bool4 sig_model)
 {
     node_adr = get_primary_adr_with_check(node_adr, ele_adr);
     
@@ -384,9 +384,6 @@ int cfg_cmd_ak_bind(u16 node_adr, u16 ele_adr, u16 ak_idx, u32 md_id, int sig_mo
 	if(sig_model){
 		len -= 2;
 	}
-	#if GATEWAY_ENABLE
-	gateway_model_cmd_rsp((u8 *)&set, len);
-	#endif 
 	return SendOpParaDebug(node_adr, 0, MODE_APP_BIND, (u8 *)&set, len);
 }
 
@@ -423,6 +420,24 @@ int mesh_proxy_filter_remove_adr(u16 adr)
 {
 	return mesh_proxy_set_filter_cmd(PROXY_FILTER_RM_ADR,0,(u8 *)&adr,sizeof(adr));
 }
+
+int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_len)
+{
+	directed_proxy_ctl_t proxy_ctl;
+	memset(&proxy_ctl, 0x00, sizeof(proxy_ctl));
+	proxy_ctl.use_directed = use_directed;
+	proxy_ctl.addr_range.range_start = range_start;
+	if(range_len > 1){
+		proxy_ctl.addr_range.length_present = 1;
+		proxy_ctl.addr_range.range_length = range_len;
+	}
+	u8 par_len = OFFSETOF(directed_proxy_ctl_t, addr_range) + (proxy_ctl.addr_range.length_present?3:2);
+	#if WIN32
+	LOG_MSG_INFO(TL_LOG_NODE_BASIC,(u8 *)&proxy_ctl,par_len ,"mesh_directed_proxy_control_set",0);
+	#endif
+	return mesh_tx_cmd_layer_cfg_primary(DIRECTED_PROXY_CONTROL,(u8 *)&proxy_ctl, par_len,PROXY_CONFIG_FILTER_DST_ADR);;
+}
+
 int mesh_proxy_set_filter_init(u16 self_adr)
 {
 	// add the own white list to the list part 

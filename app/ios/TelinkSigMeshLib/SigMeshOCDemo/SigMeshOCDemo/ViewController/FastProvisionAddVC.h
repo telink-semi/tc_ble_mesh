@@ -23,7 +23,7 @@
 //  FastProvisionAddVC.h
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2019/9/19.
+//  Created by 梁家誌 on 2019/9/19.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 

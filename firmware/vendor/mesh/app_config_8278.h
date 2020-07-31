@@ -115,6 +115,11 @@ extern "C" {
 
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			0
+#if BLE_REMOTE_PM_ENABLE
+#define PM_DEEPSLEEP_RETENTION_ENABLE   1   // must
+#else
+#define PM_DEEPSLEEP_RETENTION_ENABLE   0
+#endif
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
 #define BLE_SIG_MESH_CERTIFY_ENABLE 	0
@@ -123,11 +128,6 @@ extern "C" {
 #define BLT_SOFTWARE_TIMER_ENABLE		0
 #endif
 
-#if MI_SWITCH_LPN_EN
-#define PM_DEEPSLEEP_RETENTION_ENABLE   1
-#else
-#define PM_DEEPSLEEP_RETENTION_ENABLE   0
-#endif
 //////////////////////////// KEYSCAN/MIC  GPIO //////////////////////////////////
 #define	MATRIX_ROW_PULL					PM_PIN_PULLDOWN_100K
 #define	MATRIX_COL_PULL					PM_PIN_PULLUP_10K

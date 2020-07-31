@@ -23,7 +23,7 @@
 //  DeviceGroupViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/10/10.
+//  Created by 梁家誌 on 2018/10/10.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -44,7 +44,8 @@
 
     self.source = [[NSMutableArray alloc] init];
     if (self.model.getGroupIDs) {
-        for (NSNumber *groupID in self.model.getGroupIDs) {
+        NSArray *getGroupIDs = [NSArray arrayWithArray:self.model.getGroupIDs];
+        for (NSNumber *groupID in getGroupIDs) {
             [self.source addObject:groupID];
         }
     }

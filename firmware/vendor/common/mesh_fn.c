@@ -320,8 +320,12 @@ mesh_fri_ship_other_t * mesh_fri_cmd2cache(u8 *p_bear_big, u8 len_nw, u8 adv_typ
 		    // big endianness and not encryption in FIFO
 		    int replace = friend_cache_check_replace(i, p_br_big);
 		    if(0 == replace){
+				int overwrite = (my_fifo_free_cnt_get(p_other->p_cache) == 0);
 		        err = my_fifo_push_adv(p_other->p_cache, (u8 *)p_br_big, mesh_bear_len_get(p_br_big), 1);
 		        if(err){
+		            if(overwrite){
+                        p_other->cache_overwrite = 1;
+		            }
 		            p_other = 0;
 		        }
 		    }
@@ -434,11 +438,32 @@ int mesh_friend_request_is_valid(mesh_ctl_fri_req_t *p_req)
           &&((p_req->PollTimeout >= 0x0A)&&(p_req->PollTimeout <= 0x34BBFF))&&p_req->NumEle);
 }
 
+#if 0
 u32 get_poll_timeout_fn(u16 lpn_adr)
 {
     foreach_arr(i,fn_other_par){
         if(is_friend_ship_link_ok_fn(i) && (lpn_adr == fn_other_par[i].LPNAdr)){
             return fn_req[i].PollTimeout;
+        }
+    }
+    return 0;
+}
+#endif
+
+u32 get_current_poll_timeout_timer_fn(u16 lpn_adr)
+{
+    foreach_arr(i,fn_other_par){
+        if(is_friend_ship_link_ok_fn(i) && (lpn_adr == fn_other_par[i].LPNAdr)){
+            u32 timeout_100ms = fn_req[i].PollTimeout;
+            if (timeout_100ms != 0x000000) {
+            	u32 span_100ms = (clock_time_100ms()|1) - fri_ship_proc_fn[i].poll_tick;
+            	if(timeout_100ms > span_100ms){
+            	    timeout_100ms -= span_100ms;
+            	}else{
+            	    timeout_100ms = 0;
+            	}
+            }
+            return timeout_100ms;
         }
     }
     return 0;
@@ -722,7 +747,11 @@ void mesh_friend_ship_proc_FN(u8 *bear)
 	            if(fn_poll[i].FSN != p_poll->FSN){
 	                fn_poll[i].FSN = p_poll->FSN;
 	                if(p_br_cache){
-	                    my_fifo_pop(f_cache);
+                        if(fn_other_par[i].cache_overwrite){
+                            fn_other_par[i].cache_overwrite = 0;
+                        }else{
+                            my_fifo_pop(f_cache);
+	                    }
 	                }
 	                p_br_cache = mesh_friend_ship_cache_check(f_cache);
 	                if(p_br_cache){
@@ -927,7 +956,7 @@ void mesh_global_var_init_fn_buf()
 #else
     #if (0 == FEATURE_LOWPOWER_EN)
 u8 g_max_lpn_num = 0;   // must 0
-mesh_fri_ship_other_t fn_other_par[MAX_LPN_NUM] = {0};
+mesh_fri_ship_other_t fn_other_par[MAX_LPN_NUM];// = {0};
     #endif
 
 void mesh_iv_update_start_poll_fn(u8 iv_update_by_sno, u8 beacon_iv_update_pkt_flag){}
@@ -946,6 +975,7 @@ u8 get_tx_nk_arr_idx_friend(u16 adr, u16 op){return 0;}
 void mesh_friend_logmsg(mesh_cmd_bear_unseg_t *p_bear_big, u8 len){}
     #endif
 int is_unicast_friend_msg_from_lpn(mesh_cmd_nw_t *p_nw){return 0;}
+u32 get_current_poll_timeout_timer_fn(u16 lpn_adr){return 0;};
 
 #endif
 

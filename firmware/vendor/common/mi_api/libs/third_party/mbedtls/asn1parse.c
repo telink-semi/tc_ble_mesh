@@ -26,6 +26,7 @@
 //#endif
 #define MBEDTLS_ASN1_PARSE_C
 #if defined(MBEDTLS_ASN1_PARSE_C)
+#include "vendor/common/user_config.h"
 
 #include "third_party/mbedtls/asn1.h"
 
@@ -41,9 +42,8 @@
 #include <stdlib.h>
 #define mbedtls_calloc    calloc
 #define mbedtls_free       free
-
 #endif
-
+#if MI_API_ENABLE
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = (unsigned char*)v; while( n-- ) *p++ = 0;
@@ -239,14 +239,6 @@ int mbedtls_asn1_get_bitstring_null( unsigned char **p, const unsigned char *end
 /*
  *  Parses and splits an ASN.1 "SEQUENCE OF <tag>"
  */
-static mbedtls_asn1_sequence asn1;
-mbedtls_asn1_sequence* asn1_calloc()
-{
-	memset(&asn1,0,sizeof(mbedtls_asn1_sequence));
-	return &asn1;
-}
-
-
 int mbedtls_asn1_get_sequence_of( unsigned char **p,
                           const unsigned char *end,
                           mbedtls_asn1_sequence *cur,
@@ -255,7 +247,7 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
     int ret;
     size_t len;
     mbedtls_asn1_buf *buf;
-	
+
     /* Get main sequence tag */
     if( ( ret = mbedtls_asn1_get_tag( p, end, &len,
             MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE ) ) != 0 )
@@ -278,12 +270,9 @@ int mbedtls_asn1_get_sequence_of( unsigned char **p,
         /* Allocate and assign next pointer */
         if( *p < end )
         {
-        	#if 0
             cur->next = (mbedtls_asn1_sequence*)mbedtls_calloc( 1,
                                             sizeof( mbedtls_asn1_sequence ) );
-			#else
-			cur->next = (mbedtls_asn1_sequence*)asn1_calloc();
-			#endif
+
             if( cur->next == NULL )
                 return( MBEDTLS_ERR_ASN1_ALLOC_FAILED );
 
@@ -401,5 +390,5 @@ mbedtls_asn1_named_data *mbedtls_asn1_find_named_data( mbedtls_asn1_named_data *
 
     return( list );
 }
-
+#endif
 #endif /* MBEDTLS_ASN1_PARSE_C */

@@ -107,8 +107,8 @@ typedef struct{
 
 
 // -----------
-int light_x_set(mesh_cmd_light_x_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list);
-int light_y_set(mesh_cmd_light_y_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list);
+int light_x_set(mesh_cmd_light_x_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list);
+int light_y_set(mesh_cmd_light_y_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list);
 
 int mesh_light_xyl_st_publish(u8 idx);
 #if MD_SERVER_EN

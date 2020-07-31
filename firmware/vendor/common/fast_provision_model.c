@@ -377,7 +377,7 @@ void mesh_fast_provision_timeout()
 
 void mesh_fast_prov_proc()
 {
-	if(is_busy_segment_flow()){
+	if(is_busy_segment_or_reliable_flow()){
 		return ;
 	}
 

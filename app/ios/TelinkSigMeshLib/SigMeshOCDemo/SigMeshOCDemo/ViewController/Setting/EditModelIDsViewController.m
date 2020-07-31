@@ -23,7 +23,7 @@
 //  EditModelIDsViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -82,7 +82,8 @@
     self.source = [[NSMutableArray alloc] initWithArray:modelIDs.modelIDs];
     self.selectNumbers = [[NSMutableArray alloc] initWithArray:SigDataSource.share.keyBindModelIDs];
     self.allNumbers = [[NSMutableArray alloc] init];
-    for (ModelIDModel *model in self.source) {
+    NSArray *source = [NSArray arrayWithArray:self.source];
+    for (ModelIDModel *model in source) {
         [self.allNumbers addObject:@(model.sigModelID)];
     }
 }

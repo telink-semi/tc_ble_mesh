@@ -103,6 +103,7 @@ typedef enum hci_type_e {
 	TSCRIPT_MESH_RX_NW 			= 0x90,
 	
 	TSCRIPT_GATEWAY_DIR_RSP 	= 0x91,
+	HCI_GATEWAY_CMD_SAR_MSG		= 0x92, 
 	TSCRIPT_CMD_VC_DEBUG 		= 0xfa,
 	// can't use 0xff,	because of HCI_TYPE_TLK_MODULE
 } hci_type_t;

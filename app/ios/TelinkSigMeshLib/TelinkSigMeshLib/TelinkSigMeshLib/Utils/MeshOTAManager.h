@@ -21,10 +21,10 @@
  *******************************************************************************************************/
 //
 //  MeshOTAManager.h
-//  TelinkBlueDemo
+//  TelinkSigMeshLib
 //
-//  Created by Arvin on 2018/4/24.
-//  Copyright © 2018年 Green. All rights reserved.
+//  Created by 梁家誌 on 2018/4/24.
+//  Copyright © 2018年 Telink. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -32,7 +32,7 @@
 typedef void(^ProgressBlock)(NSInteger progress);
 typedef void(^FinishBlock)(NSArray <NSNumber *>*successAddresses,NSArray <NSNumber *>*failAddresses);
 
-typedef enum : NSUInteger {
+typedef enum : UInt8 {
     SigMeshOTAProgressIdle                                = 0,
     SigMeshOTAProgressFirmwareDistributionStart           = 1,
     SigMeshOTAProgressSubscriptionAdd                     = 2,
@@ -59,12 +59,13 @@ typedef enum : NSUInteger {
 
 + (MeshOTAManager *)share;
 
-///developer call this api to start mesh ota.
+/// developer call this api to start mesh ota.
 - (void)startMeshOTAWithLocationAddress:(int)locationAddress cid:(int)cid deviceAddresses:(NSArray <NSNumber *>*)deviceAddresses otaData:(NSData *)otaData progressHandle:(ProgressBlock)progressBlock finishHandle:(FinishBlock)finishBlock errorHandle:(ErrorBlock)errorBlock;
 
-///stop meshOTA, developer needn't call this api but midway stop mesh ota procress.
+/// stop meshOTA, developer needn't call this api but midway stop mesh ota procress.
 - (void)stopMeshOTA;
 
+/// 查询当前是否处在meshOTA
 - (BOOL)isMeshOTAing;
 
 - (void)saveIsMeshOTAing:(BOOL)isMeshOTAing;

@@ -188,6 +188,17 @@ int is_buf_zero(void *data, unsigned int len){
 	return 1;
 }
 
+int is_buf_all_one(void *data, unsigned int len){
+	u8 *p = (u8*)data;
+	for(unsigned int i = 0; i < len; ++i){
+		if(*p != 0xff){
+			return 0;
+		}
+		++p;
+	}
+	return 1;
+}
+
 int ismemzero4(void *data, unsigned int len){
 	int *p = (int*)data;
 	len = len >> 2;

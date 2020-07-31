@@ -72,14 +72,23 @@ void mesh_sec_get_nid_ek_pk_friend(u8 lpn_idx, u8 *nid, u8 *ek, u8 *pk, u8 *nk);
 void mesh_sec_get_network_id(u8 *nw_id, u8 *nk);
 void mesh_sec_get_identity_key(u8 *id_key, u8 *nk);
 void mesh_sec_get_beacon_key(u8 *bc_key, u8 *nk);
+int mesh_sec_func_k1_pri_beaconkey(u8 *bc_key, u8 *nk);
+void mesh_sec_get_privacy_bacon_key(u8 *pbc_key,u8 *nk);
+
+int mesh_sec_pri_beacon(u8 key_flag,u8 *p_ivi,u8 *p_random,u8 *pri_beacon_key,u8 *pri_bea_adv);
+int mesh_privacy_beacon_dec (unsigned char *m,u8 *key_flag,u8 *ivi_idx);
+
 void endianness_swap_u32(u8 *data);
 void endianness_swap_u16(u8 *data);
 void endianness_swap_u24(u8 *data);
 void endianness_swap_u48(u8 *data);
 void endianness_swap_u64(u8 *data);
 void endianness_swap(u8 *nw, u8 swap_type);
+void endianness_swap_ut(u8 *nw, u8 *par, u32 len);
 void endianness_swap_fri_sec_par(u8 *fri_sec_par);
 void mesh_swap_nw_lt(u8 *nw, u8 swap_type_lt);
+void swap_addr_range2_little_endian(u8 *data);
+void swap_addr_range2_big_endian(u8 *data);
 int test_proxy_adv_with_node_identity();
 
 u8 crc8_rohc(u8 *data,u32 len);

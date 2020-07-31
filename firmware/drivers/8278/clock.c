@@ -74,13 +74,10 @@ void clock_init(SYS_CLK_TypeDef SYS_CLK)
 	reg_clk_sel = (unsigned char)SYS_CLK;
 	system_clk_type = (unsigned char)SYS_CLK;
 
-#if 0 //vulture is normal
-	if(SYS_CLK == SYS_CLK_48M_Crystal)
+#if (SYSCLK_RC_CLOCK_EN)
+	if(SYS_CLK<SYS_CLK_RC_THRES)
 	{
-		/*default c4: dcdc 1.8V  -> GD flash£º 48M clock may error £¬ need higher DCDC voltage
-		          c6: dcdc 1.9V
-		*/
-		analog_write(0x0c, 0xc6);
+		clock_rc_set(SYS_CLK);
 	}
 #endif
 
@@ -93,6 +90,7 @@ void clock_init(SYS_CLK_TypeDef SYS_CLK)
 	if(!(pm_is_MCU_deepRetentionWakeup())){
 		rc_24m_cal();
 	}
+
 }
 
 /**
@@ -269,3 +267,5 @@ void dmic_prob_24M_rc()
 	write_reg8(0x781,0x01);
 	write_reg8(0x59e,0x5b);
 }
+
+

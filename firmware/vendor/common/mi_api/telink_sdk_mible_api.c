@@ -1,5 +1,5 @@
 #include "telink_sdk_mible_api.h"
-#include "../../../proj_lib/ble/ll/ll_whitelist.h"
+#include "proj_lib/ble/ll/ll_whitelist.h"
 #if MI_API_ENABLE
 #include "./libs/mijia_profiles/mi_service_server.h"
 #include "./libs/common/mible_beacon.h"
@@ -599,6 +599,18 @@ void mi_reboot_proc()
 
 void mible_dfu_handler(mible_dfu_state_t state, mible_dfu_param_t *param)
 {   
+#define MIBLE_DFU_STATUS_SUCC                                  0x00
+#define MIBLE_DFU_STATUS_ERR_NO_CMD                            0x01
+#define MIBLE_DFU_STATUS_ERR_AUTH_FAIL                         0x02
+#define MIBLE_DFU_STATUS_ERR_INVALID                           0x03
+#define MIBLE_DFU_STATUS_ERR_NO_MEM                            0x04
+#define MIBLE_DFU_STATUS_ERR_BUSY                              0x05
+#define MIBLE_DFU_STATUS_ERR_UNSIGNED                          0x06
+#define MIBLE_DFU_STATUS_ERR_RX_FAIL                           0x07
+#define MIBLE_DFU_STATUS_ERR_LOW_BATTERY                       0x08
+#define MIBLE_DFU_STATUS_ERR_UNKNOWN                           0xFF
+
+
     if(MIBLE_DFU_STATE_START == state){
         MI_LOG_INFO("state = MIBLE_DFU_STATE_START\n");
 		mi_ota_downing =1;
@@ -607,10 +619,10 @@ void mible_dfu_handler(mible_dfu_state_t state, mible_dfu_param_t *param)
       	MI_LOG_INFO("state = MIBLE_DFU_STATE_VERIFY\n");
 		mi_ota_downing =0;
 		
-       if(MIBLE_DFU_VERIFY_SUCC == param->verify.value){
+       if(MIBLE_DFU_STATUS_SUCC == param->verify.value){
           	MI_LOG_INFO("value = MIBLE_DFU_VERIFY_SUCC\n");
 			// in this mode ,it will control reset automatic
-       }else if(MIBLE_DFU_VERIFY_FAIL == param->verify.value){
+       }else if(MIBLE_DFU_STATUS_ERR_AUTH_FAIL == param->verify.value){
           	MI_LOG_INFO("value = MIBLE_DFU_VERIFY_FAIL\n");
 			// set flag and wait to reset ,when disconnect 
 			reboot_flag =1;
@@ -636,14 +648,47 @@ void stdio_rx_handler(uint8_t* p, uint8_t l)
 	MI_ERR_CHECK(errno);
 }
 
+#if HAVE_MSC
+const iic_config_t iic_config = {
+    .scl_pin  = GPIO_MSC_SCL,
+    .sda_pin  = GPIO_MSC_SDA,
+    .freq     = I2C_MSC_FREQ,
+};
+
+int mijia_secure_chip_power_manage(bool power_stat)
+{
+    if (power_stat == 1) {
+        gpio_write(GPIO_MSC_RESET,1);
+        gpio_set_output_en(GPIO_MSC_RESET,1);   
+    } else {
+        gpio_write(GPIO_MSC_RESET,0);
+        gpio_set_output_en(GPIO_MSC_RESET,1);  
+    }
+    return 0;
+}
+
+mible_libs_config_t msc_config = {
+    .msc_onoff        = mijia_secure_chip_power_manage,
+    .p_msc_iic_config = (void*)&iic_config
+};
+#endif
 
 void telink_mi_vendor_init()
 {
 	stdio_service_init(stdio_rx_handler);
 	init_mi_proper_data();
 	mible_dfu_callback_register(mible_dfu_handler);
+	#if HAVE_MSC
+	mi_scheduler_init(10, mi_schd_event_handler, &msc_config);
+	#else
+	mi_scheduler_init(10, mi_schd_event_handler, NULL);
+	#endif
+	if(is_provision_success()){
+		mi_scheduler_start(SYS_KEY_RESTORE); 
+	}else{
+		mi_scheduler_start(SYS_KEY_DELETE);
+	}
 }
-
 
 u8 telink_write_flash(u32 *p_adr,u8 *p_buf,u8 len )
 {
@@ -989,7 +1034,7 @@ void xiaomi_publish_set_model(u32 model_id,u8 ele_idx,u8 sig_model)
 	pub_set.pub_par.ttl = TTL_DEFAULT;
 	pub_set.pub_par.period.steps = MI_MESH_PUB_STEP;// 60s interval 
 	pub_set.pub_par.period.res = MI_MESH_PUB_VAL;//step is 10s 
-	pub_set.pub_par.transmit.val = TRANSMIT_CNT_DEF|(TRANSMIT_INVL_STEPS_DEF<<3);
+	pub_set.pub_par.transmit.val = PUBLISH_RETRANSMIT_CNT|(PUBLISH_RETRANSMIT_INVL_STEPS<<3);
 	u32 par_len =(sig_model)?sizeof(mesh_cfg_model_pub_set_t)-2:sizeof(mesh_cfg_model_pub_set_t);
 	mesh_tx_cmd2normal_primary(CFG_MODEL_PUB_SET, (u8 *)&pub_set, par_len, ele_adr_primary, 0);
 }

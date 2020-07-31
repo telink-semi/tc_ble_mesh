@@ -23,7 +23,7 @@
 #pragma once
 
 #include "../../proj/tl_common.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 
 //----------------------------------- op code
 // op cmd 0xxxxxxx (SIG)

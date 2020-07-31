@@ -32,6 +32,7 @@
 #include "time_model.h"
 #include "scheduler.h"
 #include "mesh_property.h"
+#include "../../vendor/user_app/user_app.h"
 
 /** @addtogroup Mesh_Common
   * @{
@@ -41,6 +42,13 @@
   * @brief Mesh Common Code.
   * @{
   */
+enum{
+	RIGHT_PACKET_RET,
+	PACKET_WAIT_COMPLETE,
+	ERR_PACKET_RET,
+	ERR_PACKET_LEN,
+	ERR_TYPE_SAR,
+};
 
 #if 1   // test firmware size
 #define NOP_TEST_BYTE_50       \
@@ -58,10 +66,6 @@
     NOP_TEST_BYTE_5K;NOP_TEST_BYTE_5K
 #endif
 
-#ifndef HCI_LOG_FW_EN
-#define HCI_LOG_FW_EN   0
-#endif
-
 #if SPIRIT_PRIVATE_LPN_EN
 #define MESH_RSP_BASE_DELAY_STEP			120  //unit:ADV_INTERVAL_MIN(10ms)
 #else
@@ -70,14 +74,17 @@
 
 #define MESH_POWERUP_BASE_TIME				200
 
+#if (0 == USER_REDEFINE_SCAN_RSP_EN)        // user can define in user_app.h
 typedef struct{
 	u8 len;
 	u8 type;            // 0xFF: manufacture data
+	u16 vendor_id;      // vendor id follow spec
 	u8 mac_adr[6];
 	u16 adr_primary;
-    u8 rsv_telink[10];  // not for user
+    u8 rsv_telink[8];  // not for user
     u8 rsv_user[11];
 }mesh_scan_rsp_t;
+#endif
 
 typedef struct ais_pri_data{
 	u8 length;
@@ -106,6 +113,8 @@ extern u16 g_reliable_retry_interval_max;
 extern u8 pair_login_ok;
 extern u8 mesh_need_random_delay;
 extern const u8 UART_TX_LEN_MAX;
+extern u16 gateway_seg_buf_len;
+extern u8 gateway_seg_buf[];
 
 static inline int is_valid_val_100(u8 val_100)
 {
@@ -153,12 +162,12 @@ int blc_hci_tx_to_uart ();
 void mesh_scan_rsp_init();
 int SendOpParaDebug(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len);
 int SendOpParaDebug_vendor(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len, u8 rsp_op, u8 tid);
-void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_adr, u16 dst_adr,u8 *uuid, u32 model_id, int sig_model);
-void share_model_sub(u16 op, u16 sub_adr, u8 *uuid);
+void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_adr, u16 dst_adr,u8 *uuid, u32 model_id, bool4 sig_model);
+void share_model_sub(u16 op, u16 sub_adr, u8 *uuid, u32 light_idx);
 void APP_reset_vendor_id(u16 vd_id);
 int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_tx_cmd2self_primary(u8 *ac, int len_ac);
-u32 get_mesh_pub_interval_ms(u32 model_id, int sig_model, mesh_pub_period_t *period);
+int mesh_tx_cmd2self_primary(u32 light_idx, u8 *ac, int len_ac);
+u32 get_mesh_pub_interval_ms(u32 model_id, bool4 sig_model, mesh_pub_period_t *period);
 void publish_when_powerup();
 int is_need_response_to_self(u16 adr_dst, u16 op);
 
@@ -172,10 +181,9 @@ extern u16 publish_powerup_random_ms;
 extern u16 sub_adr_onoff ;
 void set_unprov_beacon_para(u8 *p_uuid ,u8 *p_info);
 void set_provision_adv_data(u8 *p_uuid,u8 *oob_info);
-void set_proxy_adv_data(u8 *p_hash,u8 *p_random);
 void bls_set_adv_delay(u8 delay);	// unit : 625us
 void bls_set_adv_retry_cnt(u8 cnt); // default :0
-void set_random_adv_delay_normal_adv(int en );
+void set_random_adv_delay_normal_adv(u32 random_ms);
 
 void set_sec_req_send_flag(u8 flag);// set the sec req send or not 
 ble_sts_t  blc_att_setServerDataPendingTime_upon_ClientCmd(u8 num_10ms);
@@ -183,6 +191,8 @@ void reliable_retry_cnt_def_set(u8 retry_cnt);
 int mesh_rsp_handle_cb(mesh_rc_rsp_t *p_rsp);
 int app_hci_cmd_from_usb (void);
 int app_hci_cmd_from_usb_handle (u8 *buff, int n);
+int gateway_sar_pkt_reassemble(u8 *buf,int len );
+int gateway_sar_pkt_segment(u8 *par,int par_len, u16 valid_fifo_size, u8 *head, u8 head_len);
 
 int mesh_send_cl_proxy_bv03(u16 node_adr);
 int mesh_send_cl_proxy_bv04(u16 node_adr);
@@ -272,10 +282,10 @@ extern int LogMsgModuleDlg_and_buf(u8 *pbuf,int len,char *log_str,char *format, 
 void mesh_node_prov_event_callback(u8 evt_code);
 void wd_clear_lib();
 void bls_ota_set_fwSize_and_fwBootAddr(int firmware_size_k, int boot_addr);
-void mesh_mi_cfg_segmust_set(material_tx_cmd_t *p);
+void mesh_cfg_cmd_force_seg_set(material_tx_cmd_t *p,mesh_match_type_t *p_match_type);
 void mesh_secure_beacon_loop_proc();
 u16 mi_share_model_sub(u16 op,u16 ele_adr,u16 sub_adr,u8 *uuid,u32 model_id);
-int mesh_cmd_sig_cfg_model_sub_cb(u8 st,mesh_cfg_model_sub_set_t * p_sub_set,int sig_model,u16 adr_src);
+int mesh_cmd_sig_cfg_model_sub_cb(u8 st,mesh_cfg_model_sub_set_t * p_sub_set,bool4 sig_model,u16 adr_src);
 void start_reboot(void);
 void blc_l2cap_register_pre_handler(void *p);
 #if!WIN32
@@ -283,6 +293,11 @@ uint32_t soft_crc32_telink(const void *buf, size_t size, uint32_t crc);
 #endif
 void vendor_md_cb_pub_st_set2ali();
 int pre_set_beacon_to_adv(rf_packet_adv_t *p);
+u16 swap_u16_data(u16 swap);
+void mesh_seg_must_en(u8 en);
+int mesh_dev_key_candi_decrypt_cb( u16 src_adr,int dirty_flag ,u8* ac_backup ,unsigned char *r_an, 
+											       unsigned char* ac, int len_ut, int mic_length);
+u8 mesh_pub_retransmit_para_en();
 
 
 /**

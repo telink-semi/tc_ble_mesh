@@ -49,7 +49,7 @@
 #define max3(a,b,c)	max2(max2(a, b), c)
 #endif
 
-#define SIZEOF_MEMBER_(s, m)    (sizeof(((s *)0)->m))
+#define SIZEOF_MEMBER(s, m)     (sizeof(((s *)0)->m))
 #define OFFSETOF(s, m) 			((unsigned int) &((s *)0)->m)
 #ifndef WIN32
 #define CONTAINER_OF(ptr, type, member) ({              \

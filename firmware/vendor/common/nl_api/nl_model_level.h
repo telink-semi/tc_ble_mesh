@@ -1,34 +1,25 @@
-/*
- * Nanoleaf Telink interface specification
+/********************************************************************************************************
+ * @file     nl_model_level.h 
  *
- * *********************
- * NANOLEAF CONFIDENTIAL
- * *********************
- * 
- * Copyright (c) 2019, Doodle Labs, Inc.
- * All rights reserved
+ * @brief    for TLSR chips
  *
- * All information contained herein is, and remains the property of Doodle 
- * Labs, Inc (Nanoleaf). The intellectual and technical concepts contained
- * herein are proprietary to Doodle Labs, Inc and may be covered by Canadian,
- * Chinese, U.S. and Foreign Patents, patents in process, and are protected 
- * by trade secret or copyright law.
- * Dissemination of this information or reproduction of this material
- * is strictly forbidden unless prior written permission is obtained
- * from Doodle Labs, Inc.
- */
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 
-/*     _   __                  __           ____
- *    / | / /___ _____  ____  / /__  ____ _/ __/
- *   /  |/ / __ `/ __ \/ __ \/ / _ \/ __ `/ /_  
- *  / /|  / /_/ / / / / /_/ / /  __/ /_/ / __/  
- * /_/ |_/\__,_/_/ /_/\____/_/\___/\__,_/_/     
- *                                   
- * model_level.h
- * 
- * Created on: 2019-07-03
- *     Author: Doug
- */
 #pragma once
 
 #ifndef WIN32

@@ -29,10 +29,10 @@ echo "======脚本路径=${SCRIPT_DIR}======"
 PROJECT_DIR=$SCRIPT_DIR
 echo "======工程路径=${PROJECT_DIR}======"
 
-#c publish file路径
-#PROJECT_DIR=${SCRIPT_DIR} 和下面写法也样
-C_PROJECT_DIR=$SCRIPT_DIR/${project_name}/sig_mesh_lib/SIG_MESH_header_file
-echo "======c publish file路径=${C_PROJECT_DIR}======"
+##c publish file路径
+##PROJECT_DIR=${SCRIPT_DIR} 和下面写法也样
+#C_PROJECT_DIR=$SCRIPT_DIR/${project_name}/sig_mesh_lib/c_lib_header
+#echo "======c publish file路径=${C_PROJECT_DIR}======"
 
 #build之后的文件夹路径
 build_DIR=$SCRIPT_DIR/Build
@@ -61,11 +61,11 @@ INSTALL_DIR=${build_DIR}/Products/${project_name}
 echo "======SDK的文件夹路径=${INSTALL_DIR}======"
 
 #真机 sdk Headers 路径
-DEVICE_DIR_HEADER=${build_DIR}/${development_mode}-iphoneos/${project_name}.framework/Headers/sig_mesh_lib
+DEVICE_DIR_HEADER=${build_DIR}/${development_mode}-iphoneos/${project_name}.framework/Headers
 echo "======真机sdk Headers路径=${DEVICE_DIR_HEADER}======"
 
 #模拟器 sdk Headers 路径
-SIMULATOR_DIR_HEADER=${build_DIR}/${development_mode}-iphonesimulator/${project_name}.framework/Headers/sig_mesh_lib
+SIMULATOR_DIR_HEADER=${build_DIR}/${development_mode}-iphonesimulator/${project_name}.framework/Headers
 echo "======模拟器sdk Headers路径=${SIMULATOR_DIR_HEADER}======"
 
 
@@ -105,9 +105,9 @@ xcodebuild -target ${target_Name} -configuration ${development_mode} -sdk iphone
 xcodebuild -target ${target_Name} -configuration ${development_mode} -sdk iphoneos
 
 
-cp -R "${C_PROJECT_DIR}" "${SIMULATOR_DIR_HEADER}"
-cp -R "${C_PROJECT_DIR}" "${DEVICE_DIR_HEADER}"
-echo "======copy SIG_MESH_header_file 结束======"
+#cp -R "${C_PROJECT_DIR}" "${SIMULATOR_DIR_HEADER}"
+#cp -R "${C_PROJECT_DIR}" "${DEVICE_DIR_HEADER}"
+#echo "======copy SIG_MESH_header_file 结束======"
 
 cp -R "${DEVICE_DIR_D}" "${INSTALL_DIR}"
 cp -R "${SIMULATOR_DIR_D}" "${INSTALL_DIR}"

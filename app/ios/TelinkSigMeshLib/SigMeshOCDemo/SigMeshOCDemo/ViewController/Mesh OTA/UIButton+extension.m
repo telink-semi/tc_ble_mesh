@@ -21,10 +21,10 @@
  *******************************************************************************************************/
 //
 //  UIButton+extension.m
-//  TelinkBlueDemo
+//  SigMeshOCDemo
 //
-//  Created by Arvin on 2018/4/18.
-//  Copyright © 2018年 Green. All rights reserved.
+//  Created by 梁家誌 on 2018/4/18.
+//  Copyright © 2018年 Telink. All rights reserved.
 //
 
 #import "UIButton+extension.h"

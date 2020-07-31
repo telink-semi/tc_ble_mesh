@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 u8 gateway_cmd_from_host_ctl(u8 *p, u16 len );
 u8 gateway_upload_mac_address(u8 *p_mac,u8 *p_adv);
 void set_gateway_provision_sts(unsigned char en);

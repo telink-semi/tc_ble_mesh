@@ -56,7 +56,11 @@
 #include "../../proj/drivers/uart.h"
 #endif
 
+#if DEBUG_CFG_CMD_GROUP_AK_EN
+MYFIFO_INIT(blt_rxfifo, 64, 128);
+#else
 MYFIFO_INIT(blt_rxfifo, 64, 16);
+#endif
 MYFIFO_INIT(blt_txfifo, 40, 32);
 
 
@@ -511,10 +515,9 @@ void user_init()
 #endif
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
-#if BLT_SOFTWARE_TIMER_ENABLE
+
+#if (BLE_REMOTE_PM_ENABLE)
 	blc_ll_initPowerManagement_module();        //pm module:      	 optional
-#endif
-#if(BLE_REMOTE_PM_ENABLE)	
 	#if MI_SWITCH_LPN_EN
 	bls_pm_setSuspendMask (SUSPEND_DISABLE);
 	#else
@@ -579,9 +582,9 @@ void user_init()
 	
 	bls_ota_registerStartCmdCb(entry_ota_mode);
 	bls_ota_registerResultIndicateCb(show_ota_result);
-
+	#if !GATT_LPN_EN
 	app_enable_scan_all_device ();	// enable scan adv packet 
-
+	#endif
 	// mesh_mode and layer init
 	mesh_init_all();
 
@@ -621,12 +624,7 @@ void user_init()
 	advertise_init();
 	mi_service_init();
 	telink_mi_vendor_init();
-	mi_scheduler_init(20, mi_schd_event_handler, NULL);
-	if(is_provision_success()){
-		mi_scheduler_start(SYS_KEY_RESTORE); 
-	}else{
-		mi_scheduler_start(SYS_KEY_DELETE);
-	}
+	
 	}
 #endif 
 	extern u32 system_time_tick;
@@ -644,6 +642,13 @@ void user_init()
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 200*1000);
 #endif
+#if DEBUG_CFG_CMD_GROUP_AK_EN
+	if(blt_rxfifo.num >64){
+		blt_rxfifo.num = 64;
+	}
+#endif
+
+    CB_USER_INIT();
 }
 
 #if (PM_DEEPSLEEP_RETENTION_ENABLE)

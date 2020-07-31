@@ -35,6 +35,7 @@
 #include "system_time.h"
 #include "fast_provision_model.h"
 #include "app_heartbeat.h"
+#include "directed_forwarding.h"
 #if MI_API_ENABLE
 #include "./mi_api/mijia_pub_proc.h"
 #endif
@@ -80,9 +81,12 @@ void system_timer_handle_100ms()
 #if !WIN32 && SENSOR_LIGHTING_CTRL_EN
     sensor_lighting_ctrl_proc();
 #endif
+#if (MD_DF_EN && MD_SERVER_EN && !WIN32)
+	mesh_directed_forwarding_proc(0, 0, 0, ADV_FROM_MESH);
+#endif
 }
 
-#if FEATURE_LOWPOWER_EN
+#if (FEATURE_LOWPOWER_EN || GATT_LPN_EN)
 _attribute_ram_code_
 #endif
 void system_time_run(){
@@ -96,7 +100,7 @@ void system_time_run(){
             u32 inc_100ms = (system_time_ms % 100 + interval_cnt) / 100;
 			system_time_ms += interval_cnt;
 						
-			if(!(FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN || __PROJECT_MESH_SWITCH__)){ // (!is_lpn_support_and_en){ // it will cost several tens ms from wake up
+			if(!(FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN || GATT_LPN_EN || __PROJECT_MESH_SWITCH__)){ // (!is_lpn_support_and_en){ // it will cost several tens ms from wake up
 			    foreach(i,interval_cnt){
 			        system_timer_handle_ms();
 			    }
@@ -159,7 +163,7 @@ void system_time_run(){
     }
 
 #if MD_SERVER_EN
-    #if(MD_SENSOR_EN)
+    #if(MD_SENSOR_SERVER_EN)
 	sensor_measure_proc();
 	#endif
 #endif

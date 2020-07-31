@@ -623,26 +623,15 @@ EXIT:
     PT_END(pt);
 }
 
-PT_THREAD(rxfer_mng_thd(pt_t *pt, rxfer_cb_t *pxfer, uint8_t cmd, ...))
+
+static int rxfer_tx_mng_cmd(rxfer_cb_t *pxfer, uint8_t cmd, uint8_t arg0, uint8_t arg1)
 {
-    static uint8_t              exchanged_dmtu;
     reliable_xfer_frame_t       frame = {0};
-    uint32_t                    errno;
     uint8_t                     flen;
 
-    va_list ap;
-    va_start(ap, cmd);
-    int arg0 = va_arg(ap, int);
-    int arg1 = va_arg(ap, int);
-    va_end(ap);
-
-    PT_BEGIN(pt);
-
-    {
     frame.ctrl.mode = MNG_CMD;
     frame.ctrl.type = cmd;
     flen = sizeof(frame.sn) + sizeof(frame.ctrl.mode) + sizeof(frame.ctrl.type);
-
 
     if (cmd == M_FEATURE) {
         frame.ctrl.arg[0] = arg0;
@@ -655,8 +644,7 @@ PT_THREAD(rxfer_mng_thd(pt_t *pt, rxfer_cb_t *pxfer, uint8_t cmd, ...))
         flen += dmtu - 2;
     }
 
-
-    errno = mible_gatts_notify_or_indicate(pxfer->conn_handle,
+    uint8_t errno = mible_gatts_notify_or_indicate(pxfer->conn_handle,
                                            pxfer->srv_handle,
                                            pxfer->value_handle,
                                            0,
@@ -666,7 +654,6 @@ PT_THREAD(rxfer_mng_thd(pt_t *pt, rxfer_cb_t *pxfer, uint8_t cmd, ...))
 
     if (errno != MI_SUCCESS) {
         MI_LOG_ERROR("Cann't send MNG %x, error %X\n", cmd, errno);
-        PT_EXIT(pt);
         // TODO : catch the exception.
     } else {
 #if (RXFER_VERBOSE == 1)
@@ -675,8 +662,21 @@ PT_THREAD(rxfer_mng_thd(pt_t *pt, rxfer_cb_t *pxfer, uint8_t cmd, ...))
 #endif
     }
 
-    }
+    return errno;
+}
 
+PT_THREAD(rxfer_mng_thd(pt_t *pt, rxfer_cb_t *pxfer, uint8_t cmd, ...))
+{
+    static uint8_t              exchanged_dmtu;
+
+    va_list ap;
+    va_start(ap, cmd);
+    int arg0 = va_arg(ap, int);
+    int arg1 = va_arg(ap, int);
+    va_end(ap);
+
+    PT_BEGIN(pt);
+    PT_WAIT_UNTIL(pt, rxfer_tx_mng_cmd(pxfer, cmd, arg0, arg1) == MI_SUCCESS);
     pxfer->state = STATE_WAIT_ACK;
     pxfer->ack_type = NIL_TYPE;
     pstimer_set(pxfer->p_timer, MAX_CONSECTIVE_INTERVAL);

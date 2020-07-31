@@ -23,7 +23,7 @@
 //  SceneDetailViewController.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/9/26.
+//  Created by 梁家誌 on 2018/9/26.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -79,7 +79,7 @@
     //===========test==========//
 //    ActionModel *model = self.allActions[indexPath.row];
 //    TeLogDebug(@"getCompositionData 0x%02x",model.address);
-//    [SDKLibCommand configCompositionDataGetWithDestination:model.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
+//    [SDKLibCommand configCompositionDataGetWithDestination:model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
 //        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
 //    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 //        TeLogDebug(@"finish.");
@@ -108,7 +108,8 @@
     
     self.selectActions = [NSMutableArray arrayWithArray:self.model.actionList];
     self.allActions = [NSMutableArray array];
-    for (SigNodeModel *device in SigDataSource.share.curNodes) {
+    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    for (SigNodeModel *device in curNodes) {
         [self.allActions addObject:[[ActionModel alloc] initWithNode:device]];
     }
     
@@ -128,7 +129,8 @@
 - (void)clickSave{
     //Attention: App needn't send packet when node hasn't scene's modelID. App needn't send packet when node hadn't keybound.
     NSMutableArray *temArray = [NSMutableArray array];
-    for (ActionModel *action in self.selectActions) {
+    NSArray *selectActions = [NSArray arrayWithArray:self.selectActions];
+    for (ActionModel *action in selectActions) {
         SigNodeModel *device = [[SigDataSource share] getNodeWithAddress:action.address];
         if (device.isKeyBindSuccess && device.sceneAddress.count > 0) {
             [temArray addObject:action];
@@ -145,7 +147,8 @@
         if(device && device.state != DeviceStateOutOfLine){
             if ([self.model.actionList containsObject:action]) {
                 //address of change action't node
-                for (ActionModel *oldAction in self.model.actionList) {
+                NSArray *actionList = [NSArray arrayWithArray:self.model.actionList];
+                for (ActionModel *oldAction in actionList) {
                     if (oldAction.address == action.address) {
                         if (![action isSameActionWithAction:oldAction]) {
                             [saveArray addObject:action];
@@ -189,11 +192,11 @@
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             ActionModel *curAction = saveArray.firstObject;
             [DemoCommand getSceneRegisterStatusWithAddress:curAction.address responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
-                TeLogDebug(@"getSceneRegisterStatusWithAddress ResponseModel=%@",responseMessage);
+                TeLogDebug(@"getSceneRegisterStatusWithAddress ResponseModel=%@",responseMessage.parameters);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 if (error == nil) {
                     [DemoCommand saveSceneWithAddress:curAction.address sceneId:weakSelf.model.number responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
-                        TeLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage);
+                        TeLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage.parameters);
                     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                         if (error == nil) {
                             [saveArray removeObject:curAction];
@@ -236,7 +239,8 @@
 
 - (IBAction)clickAllButton:(UIButton *)sender {
     sender.selected = !sender.isSelected;
-    for (ActionModel *action in self.allActions) {
+    NSArray *allActions = [NSArray arrayWithArray:self.allActions];
+    for (ActionModel *action in allActions) {
         if (action.state != DeviceStateOutOfLine) {
             if (sender.isSelected) {
                 if (![self.selectActions containsObject:action]) {
@@ -252,7 +256,8 @@
 
 - (void)reloadAllButton{
     NSInteger hasOnlineCount = 0;
-    for (ActionModel *action in self.allActions) {
+    NSArray *allActions = [NSArray arrayWithArray:self.allActions];
+    for (ActionModel *action in allActions) {
         if (action.state != DeviceStateOutOfLine) {
             hasOnlineCount ++;
         }

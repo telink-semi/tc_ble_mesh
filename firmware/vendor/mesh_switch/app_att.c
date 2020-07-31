@@ -309,6 +309,15 @@ int proxy_gatt_Write(void *p)
 			if(err != 100){
                 //LOG_MSG_INFO(TL_LOG_IV_UPDATE,&p_bear->len, p_bear->len+1,"RX GATT beacon,nk arr idx:%d, new:%d, pkt:",mesh_key.netkey_sel_dec,mesh_key.new_netkey_dec);
 			}
+		}else if (PRIVACY_BEACON == p_bear->beacon.type){
+			// no handle for other beacon now
+			#if MD_PRIVACY_BEA
+			p_bear->len =28;
+			int err = mesh_rc_data_beacon_privacy(&p_bear->len, 0);		
+			if(err != 100){
+                LOG_MSG_INFO(TL_LOG_IV_UPDATE,&p_bear->len, p_bear->len+1,"RX prrivacy GATT beacon,nk arr idx:%d, new:%d, pkt:",mesh_key.netkey_sel_dec,mesh_key.new_netkey_dec);
+			}
+			#endif
 		}else{
 			// no handle for other beacon now
 		}

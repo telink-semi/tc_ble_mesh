@@ -24,7 +24,7 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2019/12/20.
-//  Copyright © 2019 梁家誌. All rights reserved.
+//  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import "SigPublishManager.h"
@@ -61,7 +61,7 @@
         if (device.hasPublishFunction && device.hasOpenPublish) {
             device.state = DeviceStateOutOfLine;
             NSString *str = [NSString stringWithFormat:@"======================device offline:0x%02X======================",adr];
-            TeLogInfo(@"setDeviceOffline:0x%02X,%@",adr,str);
+            TeLogInfo(@"%@",str);
             if (self.discoverOutlineNodeCallback) {
                 self.discoverOutlineNodeCallback(@(device.address));
             }
@@ -86,8 +86,9 @@
     if (timer) {
         [_checkOfflineTimerDict removeObjectForKey:address];
     }
-    [timer invalidate];
+    if (timer) {
+        [timer invalidate];
+    }
 }
-
 
 @end

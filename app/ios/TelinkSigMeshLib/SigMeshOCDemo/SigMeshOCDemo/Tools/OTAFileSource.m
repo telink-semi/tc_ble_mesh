@@ -23,7 +23,7 @@
 //  OTAFileSource.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -61,8 +61,8 @@
     NSString *fileLocalPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
     NSArray *fileNames = [mang contentsOfDirectoryAtPath:fileLocalPath error:&error];
     for (NSString *path in fileNames) {
-        //本地512k的存储文件名为“test.bin”，不可用于OTA
-        if ([path containsString:@".bin"] && ![path containsString:@"test.bin"]) {
+        //本地512k的存储文件名为“test.bin”，不可用于OTA。包含空格的bin文件会读取失败。
+        if ([path containsString:@".bin"] && ![path containsString:@"test.bin"] && ![path containsString:@" "]) {
             [self addBinFileWithPath:path];
         }
     }

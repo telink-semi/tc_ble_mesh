@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     vendor_model.c
+ * @file     user_ali_time.c
  *
  * @brief    for TLSR chips
  *
@@ -775,7 +775,7 @@ static void ali_mesh_timing_proc(u32 ali_unix_time)
 					set->onoff = info->op_groups[j].attr_para;
 					set->transit_t = 10;
 					set->delay = 10;
-					mesh_tx_cmd2self_primary(buf, sizeof(buf));
+					mesh_tx_cmd2self_primary(0, buf, sizeof(buf));
 				}
 			}
 

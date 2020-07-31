@@ -25,7 +25,8 @@
 #include "app_beacon.h"
 #include "app_proxy.h"
 #include "../../proj_lib/sig_mesh/app_mesh.h"
-
+#include "app_privacy_beacon.h"
+#include "directed_forwarding.h"
 proxy_config_mag_str proxy_mag;
 mesh_proxy_protocol_sar_t  proxy_sar;
 u8 proxy_filter_initial_mode = FILTER_WHITE_LIST;
@@ -50,6 +51,7 @@ void set_proxy_initial_mode(u8 special_mode)
 
 void proxy_cfg_list_init_upon_connection()
 {
+	memset(&proxy_mag, 0x00, sizeof(proxy_mag));
 	if(proxy_filter_initial_mode == FILTER_WHITE_LIST){
 		proxy_mag.filter_type = FILTER_WHITE_LIST;
 		memset((u8 *)&proxy_mag.white_list,0,sizeof(list_mag_str));	
@@ -57,6 +59,16 @@ void proxy_cfg_list_init_upon_connection()
 		proxy_mag.filter_type = FILTER_BLACK_LIST;
 		memset((u8 *)&proxy_mag.black_list,0,sizeof(list_mag_str));	
 	}
+
+	#if (MD_DF_EN&&MD_SERVER_EN&&!WIN32)
+	proxy_mag.proxy_client_type = UNSET_CLIENT;
+	for(int i=0; i<NET_KEY_MAX; i++){
+		proxy_mag.directed_server[i].use_directed = model_sig_df_cfg.directed_forward.subnet_state[i].directed_control.directed_proxy_use_directed_default;
+		proxy_mag.directed_server[i].client_addr = ADR_UNASSIGNED;
+		proxy_mag.directed_server[i].client_2nd_ele_cnt = 0;			
+		mesh_directed_proxy_capa_report(i);
+	}
+	#endif
 	return ;
 }
 
@@ -255,7 +267,6 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 	list_mag_str *p_list_dst;
 	u8 *p_addr = p_str->para;
 	u8 para_len;
-	u8 proxy_sts =0;
 	u16 proxy_unicast=0;
 	u8 i=0;
 	// if not set ,use the white list 
@@ -269,8 +280,16 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 			proxy_mag.filter_type = p_str->para[0];
 			p_list_dst = get_filter_pointer(proxy_mag.filter_type);
 			memset(p_list_dst,0,sizeof(list_mag_str));
-			proxy_sts =1;
+			send_filter_sts(p_list_dst,p_nw);
 			pair_login_ok = 1;
+			#if MD_DF_EN
+			if(FILTER_BLACK_LIST ==  proxy_mag.filter_type){
+				proxy_mag.proxy_client_type = BLACK_LIST_CLIENT;
+				for(int i=0; i<NET_KEY_MAX; i++){
+					proxy_mag.directed_server[i].use_directed = 0;
+				}
+			}
+			#endif
 			break;
 		case PROXY_FILTER_ADD_ADR:
 			// we suppose the num is 2
@@ -284,7 +303,7 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 				proxy_unicast = p_addr[2*i]+(p_addr[2*i+1]<<8);
 				add_data_to_list(proxy_unicast ,p_list_dst);
 			}
-			proxy_sts =1;
+			send_filter_sts(p_list_dst,p_nw);
 			pair_login_ok = 1;
 			break;
 		case PROXY_FILTER_RM_ADR:
@@ -295,96 +314,247 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 				proxy_unicast = p_addr[2*i]+(p_addr[2*i+1]<<8);
 				delete_data_from_list(proxy_unicast ,p_list_dst);
 			}
-			proxy_sts =1;
+			send_filter_sts(p_list_dst,p_nw);
 			break;
+		#if (MD_DF_EN&&!WIN32)
+		case DIRECTED_PROXY_CONTROL:{
+				directed_proxy_ctl_t *p_directed_ctl = (directed_proxy_ctl_t *)p_str->para;
+				swap_addr_range2_little_endian((u8 *)&p_directed_ctl->addr_range);
+				int key_offset = get_mesh_net_key_offset(mesh_key.netkey_sel_dec);
+				direct_proxy_server_t *p_direct_proxy = &proxy_mag.directed_server[key_offset];
+				if(is_directed_proxy_en(key_offset) && ((UNSET_CLIENT == proxy_mag.proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type))){
+					if(UNSET_CLIENT == proxy_mag.proxy_client_type){					
+						proxy_mag.proxy_client_type = DIRECTED_PROXY_CLIENT;
+						for(int i=0; i<NET_KEY_MAX; i++){
+							proxy_mag.directed_server[i].use_directed = 0;
+						}						
+					}
+					
+					p_direct_proxy->use_directed = p_directed_ctl->use_directed;
+					if(p_directed_ctl->use_directed){
+						p_direct_proxy->client_addr = p_directed_ctl->addr_range.range_start;
+						if(p_directed_ctl->addr_range.length_present){
+							p_direct_proxy->client_2nd_ele_cnt = p_directed_ctl->addr_range.range_length - 1;
+						}
+					}
+
+					mesh_directed_proxy_capa_report(key_offset);
+				}										
+			}
+			break;
+		#endif
 		default:
 			break;
 	}
-	if(proxy_sts){
-		send_filter_sts(p_list_dst,p_nw);
+	#if MD_DF_EN
+	if(UNSET_CLIENT == proxy_mag.proxy_client_type){
+		proxy_mag.proxy_client_type = PROXY_CLIENT; 
 	}
+	#endif
 	return 1;
 
 }
-
-int cal_proxy_adv_with_node_identity(u8 random[8],u8 node_key[16],u16 ele_adr,u8 hash[8])
+extern u8 aes_ecb_encryption(u8 *key, u8 mStrLen, u8 *mStr, u8 *result);
+#if WIN32
+void aes_win32(char *p, int plen, char *key);
+#endif
+int proxy_adv_calc_with_node_identity(u8 random[8],u8 node_key[16],u16 ele_adr,u8 hash[8])
 {
-	extern u8 aes_ecb_encryption(u8 *key, u8 mStrLen, u8 *mStr, u8 *result);
-	u8 adv_hash[16];
 	u8 adv_para[16];
-	memset(adv_hash,0,sizeof(adv_hash));
 	memset(adv_para,0,sizeof(adv_para));
 	endianness_swap_u16((u8 *)&ele_adr);
 	memset(adv_para,0,6);
 	memcpy(adv_para+6,random,8);
 	memcpy(adv_para+14,(u8 *)&ele_adr,2);
 	#if WIN32
+	aes_win32((char *)adv_para,sizeof(adv_para),(char *)node_key);
+	memcpy(hash,adv_para+8,8);
 	#else
+	u8 adv_hash[16];
 	aes_ecb_encryption(node_key,sizeof(adv_para),adv_para,adv_hash);
-	#endif 
 	memcpy(hash,adv_hash+8,8);
+	#endif 
 	return 1;
+}
+
+int proxy_adv_calc_with_private_net_id(u8 random[8],u8 net_id[8],u8 idk[16],u8 hash[8])
+{
+	u8 adv_para[16];
+	memcpy(adv_para,net_id,8);
+	memcpy(adv_para+8,random,8);
+	#if WIN32
+	aes_win32((char *)adv_para,sizeof(adv_para),(char *)idk);
+	memcpy(hash,adv_para+8,8);
+	#else
+	u8 adv_hash[16];
+	aes_ecb_encryption(idk,sizeof(adv_para),adv_para,adv_hash);
+	memcpy(hash,adv_hash+8,8);
+	#endif
+	return 1;
+}
+
+int proxy_adv_calc_with_private_node_identity(u8 random[8],u8 node_key[16],u16 ele_adr,u8 hash[8])
+{
+	u8 adv_para[16];
+	endianness_swap_u16((u8 *)&ele_adr);
+	memset(adv_para,0,5);
+	adv_para[5] = PRIVATE_NODE_IDENTITY_TYPE;
+	memcpy(adv_para+6,random,8);
+	memcpy(adv_para+14,(u8 *)&ele_adr,2);
+	#if WIN32
+	aes_win32((char *)adv_para,sizeof(adv_para),(char *)node_key);
+	memcpy(hash,adv_para+8,8);
+	#else
+	u8 adv_hash[16];
+	aes_ecb_encryption(node_key,sizeof(adv_para),adv_para,adv_hash);
+	memcpy(hash,adv_hash+8,8);
+	#endif
+	return 1;
+
 }
 
 void caculate_proxy_adv_hash(mesh_net_key_t *p_netkey )
 {
-	foreach(i,NET_KEY_MAX){
-		mesh_net_key_t *p_netkey_com = &mesh_key.net_key[i][0];
-		// find the netkey idx 
-		if(p_netkey == p_netkey_com && p_netkey->valid){
-			u8 *p_node_hash = &mesh_key.node_identity_hash[i][0];
-			cal_proxy_adv_with_node_identity(prov_para.random,p_netkey->idk,ele_adr_primary,p_node_hash);	
-			return;
-		}
-	}
+	proxy_adv_calc_with_node_identity(prov_para.random,p_netkey->idk,ele_adr_primary,p_netkey->ident_hash);	
+	proxy_adv_calc_with_private_net_id(prov_para.random,p_netkey->nw_id,p_netkey->idk,p_netkey->priv_net_hash);
+	proxy_adv_calc_with_private_node_identity(prov_para.random,p_netkey->idk,ele_adr_primary,p_netkey->priv_ident_hash);
 	return;
 }
 
-
-u8 set_proxy_adv_pkt(u8 *p ,u8 flags,u8 *pHash,u8 *pRandom,mesh_net_key_t *p_netkey)
+void set_proxy_adv_header(proxy_adv_node_identity * p_proxy)
 {
-	u8 node_identity_flag = (p_netkey->node_identity == NODE_IDENTITY_SUB_NET_RUN);
-	proxy_adv_node_identity * p_proxy ;
-	u8 temp_uuid[2] = SIG_MESH_PROXY_SERVICE;
-	p_proxy = (proxy_adv_node_identity *)p;
 	p_proxy->flag_len = 0x02;
 	p_proxy->flag_type = 0x01;
-	p_proxy->flag_data = flags;
+	p_proxy->flag_data = 0x06;
 	p_proxy->uuid_len = 0x03;
 	p_proxy->uuid_type = 0x03;
-	p_proxy->uuid_data[0]= temp_uuid[0];
-	p_proxy->uuid_data[1]= temp_uuid[1];
+	p_proxy->uuid_data[0]= SIG_MESH_PROXY_SER_VAL &0xff;
+	p_proxy->uuid_data[1]= (SIG_MESH_PROXY_SER_VAL>>8)&0xff;
+
+}
+#if MD_PRIVACY_BEA
+	#if 0
+u8 mesh_enable_private_identity_type(u8 en)
+{
+	for(int i=0;i<NET_KEY_MAX;i++){
+		mesh_net_key_t *p_net = &mesh_key.net_key[i][0];
+		if(p_net->valid){
+			u8 key_phase = p_net->key_phase;
+			if(KEY_REFRESH_PHASE2 == key_phase){
+				p_net += 1;		// use new key
+			}
+			if(en){
+				p_net->node_identity = NODE_IDENTITY_SUB_NET_STOP;
+				p_net->priv_identity = PRIVATE_NODE_IDENTITY_ENABLE;
+			}else{
+				p_net->node_identity = NODE_IDENTITY_SUB_NET_STOP;
+				p_net->priv_identity = PRIVATE_NODE_IDENTITY_DISABLE;
+			}
+		}	
+	}
+}
+u32 A_debug_private_sts =0;
+
+void mesh_private_identity_proc()
+{
+	if(A_debug_private_sts == 1){
+		mesh_enable_private_identity_type(1);
+		A_debug_private_sts =0;
+	}else if (A_debug_private_sts == 2){
+		mesh_enable_private_identity_type(0);
+		A_debug_private_sts =0;
+	}
+}
+	#endif
+
+
+u8 mesh_get_identity_type(mesh_net_key_t *p_netkey)
+{
+#if MD_SERVER_EN
+	u8 gatt_proxy_sts = model_sig_cfg_s.gatt_proxy;
+	u8 priv_proxy_sts = model_private_beacon.srv[0].proxy_sts;
+	u8 node_identi =NODE_IDENTITY_PROHIBIT;
+	if(gatt_proxy_sts == GATT_PROXY_SUPPORT_DISABLE && priv_proxy_sts == PRIVATE_PROXY_ENABLE){
+		node_identi = PRIVATE_NETWORK_ID_TYPE;
+	}else if ( gatt_proxy_sts == GATT_PROXY_SUPPORT_ENABLE &&
+			   (priv_proxy_sts == PRIVATE_PROXY_DISABLE ||priv_proxy_sts == PRIVATE_PROXY_NOT_SUPPORT)){
+		node_identi = NETWORK_ID_TYPE;
+	}else{}
+
+	if(p_netkey->node_identity == NODE_IDENTITY_SUB_NET_STOP && p_netkey->priv_identity == PRIVATE_NODE_IDENTITY_ENABLE){
+		node_identi = PRIVATE_NODE_IDENTITY_TYPE;
+	}else if ( p_netkey->node_identity == NODE_IDENTITY_SUB_NET_RUN &&
+			(p_netkey->priv_identity == PRIVATE_NODE_IDENTITY_NOT_SUPPORT || p_netkey->priv_identity == PRIVATE_NODE_IDENTITY_DISABLE)){
+		node_identi = NODE_IDENTITY_TYPE;
+	}
+	return node_identi;
+#else
+	return 1;
+#endif
+}
+#endif
+
+u8 set_proxy_adv_pkt(u8 *p ,u8 *pRandom,mesh_net_key_t *p_netkey,u8 *p_len)
+{
+	// get the key part 
+	u8 key_phase = p_netkey->key_phase;
+	if(KEY_REFRESH_PHASE2 == key_phase){
+		p_netkey += 1;		// use new key
+	}
+	// get_node_identity type part 
+	u8 node_identity_type =0;
+	#if MD_PRIVACY_BEA
+	node_identity_type = mesh_get_identity_type(p_netkey);
+	if(node_identity_type == NODE_IDENTITY_PROHIBIT){// in some condition it will not allow to send proxy adv
+		return 0;
+	}
+	#else
+	if(p_netkey->node_identity == NODE_IDENTITY_SUB_NET_RUN){
+		node_identity_type = NODE_IDENTITY_TYPE;
+	}else{
+		node_identity_type = NETWORK_ID_TYPE;
+	}
+	#endif
+	// set the base para for the proxy adv 
+	proxy_adv_node_identity * p_proxy = (proxy_adv_node_identity *)p;
+	set_proxy_adv_header(p_proxy);
 	p_proxy->serv_len = 0x14;
 	p_proxy->serv_type = 0x16;
-	p_proxy->serv_uuid[0]= temp_uuid[0];
-	p_proxy->serv_uuid[1]= temp_uuid[1];
-	p_proxy->identify_type= node_identity_flag;
-
-	if(!node_identity_flag){
-		proxy_adv_net_id *p_net_id;
-		p_net_id = (proxy_adv_net_id *)p;
+	p_proxy->identify_type= node_identity_type;
+	if(node_identity_type == NETWORK_ID_TYPE){
+		proxy_adv_net_id *p_net_id = (proxy_adv_net_id *)p;
 		p_net_id->serv_len = 0x0c;
+		p_net_id->serv_type = 0x16;
+		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SER_VAL &0xff;
+		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SER_VAL>>8)&0xff;
 		memcpy(p_net_id->net_id,p_netkey->nw_id,8);
-	}else{
-		// calculate the demo part of the proxy adv 'hash 
-		u8 hash_tmp[8];
-		u8 key_idx =0;
-		foreach(i,NET_KEY_MAX){
-			mesh_net_key_t *p_netkey_com = &mesh_key.net_key[i][0];
-			if(p_netkey_com == p_netkey){
-				key_idx = i;
-				break;
-			}
-		}
+	}else if(node_identity_type == NODE_IDENTITY_TYPE){
+		// calculate the demo part of the proxy adv 'hash
+		p_proxy->serv_len = 0x14;
+		p_proxy->serv_type = 0x16;
+		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SER_VAL &0xff;
+		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SER_VAL>>8)&0xff;
 		memcpy(p_proxy->random,pRandom,8);
-		// calculate the hash part 
-		//cal_proxy_adv_with_node_identity(pRandom,p_netkey->idk,ele_adr_primary,hash_tmp);
-		memcpy(hash_tmp,mesh_key.node_identity_hash[key_idx],8);
-		memcpy(p_proxy->hash,hash_tmp,8);
-		// set the hash for the provision part 
-		memcpy(pHash,hash_tmp,8);
+		memcpy(p_proxy->hash,p_netkey->ident_hash,8);
+	}else if (node_identity_type == PRIVATE_NETWORK_ID_TYPE){
+		// calculate the demo part of the proxy adv 'hash
+		p_proxy->serv_len = 0x14;
+		p_proxy->serv_type = 0x16;
+		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SER_VAL &0xff;
+		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SER_VAL>>8)&0xff;
+		memcpy(p_proxy->random,pRandom,8);
+		memcpy(p_proxy->hash,p_netkey->priv_net_hash,8);
+	}else if (node_identity_type == PRIVATE_NODE_IDENTITY_TYPE){
+		// calculate the demo part of the proxy adv 'hash
+		p_proxy->serv_len = 0x14;
+		p_proxy->serv_type = 0x16;
+		p_proxy->serv_uuid[0]= SIG_MESH_PROXY_SER_VAL &0xff;
+		p_proxy->serv_uuid[1]= (SIG_MESH_PROXY_SER_VAL>>8)&0xff;
+		memcpy(p_proxy->random,pRandom,8);
+		memcpy(p_proxy->hash,p_netkey->priv_ident_hash,8);
 	}
-	return p_proxy->serv_len + 8;
+	*p_len = p_proxy->serv_len + 8;
+	return 1;
 }
 
 void push_proxy_raw_data(u8 *p_unseg){
@@ -423,3 +593,34 @@ u8 set_proxy_pdu_data(proxy_msg_str *p_proxy,u8 msg_type , u8 *para ,u8 para_len
 	}
 	return 1;
 }
+#if 0
+void test_fun_private_node_identity()
+{
+	static u8 A_debug_hash[8];
+	u8 random[8] = {0x34,0xae,0x60,0x8f,0xbb,0xc1,0xf2,0xc6};
+	u8 identity_key[16] = {	0x84,0x39,0x6c,0x43,0x5a,0xc4,0x85,0x60,
+							0xb5,0x96,0x53,0x85,0x25,0x3e,0x21,0x0c};
+	u8 net_id[8]= {0x3e,0xca,0xff,0x67,0x2f,0x67,0x33,0x70};
+	proxy_adv_calc_with_private_net_id(random,net_id,identity_key,A_debug_hash);
+}
+
+void test_fun_private_node_identity1()
+{
+	static u8 A_debug_hash1[8];
+	u8 random[8] = {0x34,0xae,0x60,0x8f,0xbb,0xc1,0xf2,0xc6};
+	u8 identity_key[16] = {	0x84,0x39,0x6c,0x43,0x5a,0xc4,0x85,0x60,
+							0xb5,0x96,0x53,0x85,0x25,0x3e,0x21,0x0c};
+	u16 ele_adr = 0x1201;
+	proxy_adv_calc_with_private_node_identity(random,identity_key, ele_adr,A_debug_hash1);
+}
+void test_fun_private()
+{
+	test_fun_private_node_identity();
+	test_fun_private_node_identity1();
+	irq_disable();
+	while(1);
+}
+#endif
+
+
+

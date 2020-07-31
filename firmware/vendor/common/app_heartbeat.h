@@ -22,9 +22,9 @@
 
 #ifndef APP_HEARTBEAT_H_
 #define APP_HEARTBEAT_H_
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../vendor/common/mesh_node.h"
+#include "proj/tl_common.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "vendor/common/mesh_node.h"
 
 typedef struct{
 	u8 iniTTL:7;

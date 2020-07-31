@@ -23,7 +23,7 @@
 //  OTAManager.m
 //  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2018/7/18.
+//  Created by 梁家誌 on 2018/7/18.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -194,7 +194,11 @@ typedef enum : NSUInteger {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(meshConnectTimeoutBeforeGATTOTA) object:nil];
                 });
-                [weakSelf nodeIdentitySetBeforeGATTOTA];
+                if (SigDataSource.share.unicastAddressOfConnected == self.currentModel.address) {
+                    [self setFilter];
+                } else {
+                    [weakSelf nodeIdentitySetBeforeGATTOTA];
+                }
             }
         }
     }];
@@ -222,7 +226,7 @@ typedef enum : NSUInteger {
         NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
         for (SigNodeModel *node in curNodes) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-            [SDKLibCommand configNodeIdentitySetWithDestination:node.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
+            [SDKLibCommand configNodeIdentitySetWithDestination:node.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
                 TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 if (!error) {
@@ -253,7 +257,6 @@ typedef enum : NSUInteger {
     self.progress = SigGattOTAProgress_step3_startScanNodeIdentityBeforeGATTOTA;
     __weak typeof(self) weakSelf = self;
     [SigBluetooth.share scanProvisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
-//        TeLogInfo(@"peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d",peripheral.identifier.UUIDString,advertisementData,RSSI,unprovisioned);
         if (!unprovisioned) {
             SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
             if (rspModel.nodeIdentityData && rspModel.nodeIdentityData.length == 16) {
@@ -313,7 +316,7 @@ typedef enum : NSUInteger {
     self.progress = SigGattOTAProgress_step5_setFilter;
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TeLogInfo(@"setFilterForProvisioner=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
     } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (weakSelf.progress == SigGattOTAProgress_step5_setFilter) {
@@ -336,9 +339,11 @@ typedef enum : NSUInteger {
     TeLogInfo(@"\n\n==========GATT OTA:step6\n\n");
     self.progress = SigGattOTAProgress_step6_startSendGATTOTAPackets;
     if (@available(iOS 11.0, *)) {
-        [self sendPartDataAvailableIOS11];//127KB耗时75秒
+        //ios11.0及以上，6ms发送一个包，SendPacketsFinishCallback这个block返回则发送下一个包，不需要read。127KB耗时75秒
+        [self sendPartDataAvailableIOS11];
     } else {
-        [self sendPartData];//127KB耗时115~120秒
+        //ios11.0以下，6ms发送一个包，发送8个包read异常OTA特征，read返回则发送下一组8个包。127KB耗时115~120秒
+        [self sendPartData];
     }
 }
 
@@ -363,16 +368,6 @@ typedef enum : NSUInteger {
         if (self.otaIndex == 0) {
             [self sendReadFirmwareVersionWithComplete:nil];
             [self sendStartOTAWithComplete:nil];
-
-//            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-//            [self sendReadFirmwareVersionWithComplete:^{
-//                dispatch_semaphore_signal(semaphore);
-//            }];
-//            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
-//            [self sendStartOTAWithComplete:^{
-//                dispatch_semaphore_signal(semaphore);
-//            }];
-//            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
         }
         
         NSInteger writeLength = (lastLength >= 16) ? 16 : lastLength;
@@ -382,15 +377,16 @@ typedef enum : NSUInteger {
         if (self.singleProgressCallBack) {
             self.singleProgressCallBack(progress);
         }
+        __weak typeof(self) weakSelf = self;
         [self sendOTAData:writeData index:(int)self.otaIndex complete:^{
             //注意：index=0与index=1之间的时间间隔修改为300ms，让固件有充足的时间进行ota配置。
-            if (self.otaIndex == 0) {
+            if (weakSelf.otaIndex == 0) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:0.3];
+                    [weakSelf performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:0.3];
                 });
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:self.writeOTAInterval];
+                    [weakSelf performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:weakSelf.writeOTAInterval];
                 });
             }
         }];

@@ -80,7 +80,11 @@ extern "C" {
 
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			0
+#if BLE_REMOTE_PM_ENABLE
+#define PM_DEEPSLEEP_RETENTION_ENABLE   1   // must
+#else
 #define PM_DEEPSLEEP_RETENTION_ENABLE   1
+#endif
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
 

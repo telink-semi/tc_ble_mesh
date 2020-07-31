@@ -23,13 +23,12 @@
 //  SigAccessPdu.m
 //  TelinkSigMeshLib
 //
-//  Created by Liangjiazhi on 2019/9/16.
+//  Created by 梁家誌 on 2019/9/16.
 //  Copyright © 2019 Telink. All rights reserved.
 //
 
 #import "SigAccessPdu.h"
 #import "SigUpperTransportPdu.h"
-#import "SigMeshAddress.h"
 
 @implementation SigAccessPdu
 
@@ -163,7 +162,7 @@
 }
 
 - (NSString *)description {
-    return[NSString stringWithFormat:@"<%p> - Access PDU, source:(0x%04X)->destination: (0x%04X) Op Code: (0x%X), accessPdu=%@", self, _source,_destination.address, (unsigned int)_opCode,[LibTools convertDataToHexStr:_accessPdu]];
+    return [NSString stringWithFormat:@"Access PDU, source:(0x%04X)->destination: (0x%04X) Op Code: (0x%X), accessPdu=%@", _source, _destination.address, (unsigned int)_opCode,[LibTools convertDataToHexStr:_accessPdu]];
 }
 
 @end

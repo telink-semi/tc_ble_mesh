@@ -19,7 +19,7 @@
 #if MI_API_ENABLE
 #define CRYPTO_REC_ID_BASE   0x40
 
-#if (HAVE_MSC == 0)
+
 static __ALIGN(4) ecc256_sk_t dev_crt_sk;
 static __ALIGN(4) ecc256_sk_t dev_sk;
 static void keygen(uint8_t k[16])
@@ -678,5 +678,5 @@ int mi_crypto_record_delete(uint8_t record_id)
     return (ret == MI_SUCCESS ? PT_ENDED : PT_EXITED);
 #endif
 }
-#endif
+
 #endif

@@ -23,7 +23,7 @@
 //  AppDelegate.m
 //  SigMeshOCDemo
 //
-//  Created by Liangjiazhi on 2018/7/31.
+//  Created by 梁家誌 on 2018/7/31.
 //  Copyright © 2018年 Telink. All rights reserved.
 //
 
@@ -50,6 +50,7 @@
     if (type == nil) {
         type = [NSNumber numberWithInteger:KeyBindTpye_Normal];
         [[NSUserDefaults standardUserDefaults] setValue:type forKey:kKeyBindType];
+        [[NSUserDefaults standardUserDefaults] synchronize];
     }
 
     //demo v2.8.0新增remote添加模式，demo默认使用普通添加模式。
@@ -57,6 +58,7 @@
     if (remoteType == nil) {
         remoteType = [NSNumber numberWithBool:NO];
         [[NSUserDefaults standardUserDefaults] setValue:remoteType forKey:kRemoteAddType];
+        [[NSUserDefaults standardUserDefaults] synchronize];
     }
 
     //demo v2.8.1新增私有定制getOnlinestatus，demo默认使用私有定制获取状态。
@@ -64,6 +66,7 @@
     if (onlineType == nil) {
         onlineType = [NSNumber numberWithBool:YES];
         [[NSUserDefaults standardUserDefaults] setValue:onlineType forKey:kGetOnlineStatusType];
+        [[NSUserDefaults standardUserDefaults] synchronize];
     }
 
     //demo v3.0.0新增fast provision添加模式，demo默认使用普通添加模式。
@@ -71,8 +74,18 @@
     if (fastAddType == nil) {
         fastAddType = [NSNumber numberWithBool:NO];
         [[NSUserDefaults standardUserDefaults] setValue:fastAddType forKey:kFastAddType];
+        [[NSUserDefaults standardUserDefaults] synchronize];
     }
-    
+
+    //demo v3.2.2新增staticOOB设备添加的兼容模式，demo默认使用兼容模式。（兼容模式为staticOOB设备在无OOB数据的情况下通过noOOB provision的方式进行添加;不兼容模式为staticOOB设备必须通过staticOOB provision的方式进行添加）。
+    NSNumber *addStaticOOBDevcieByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDevcieByNoOOBEnable];
+    if (addStaticOOBDevcieByNoOOBEnable == nil) {
+        addStaticOOBDevcieByNoOOBEnable = [NSNumber numberWithBool:YES];
+        [[NSUserDefaults standardUserDefaults] setValue:addStaticOOBDevcieByNoOOBEnable forKey:kAddStaticOOBDevcieByNoOOBEnable];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    }
+    SigDataSource.share.addStaticOOBDevcieByNoOOBEnable = addStaticOOBDevcieByNoOOBEnable.boolValue;
+
     //demo中setting界面显示的log信息，客户开发到后期，APP稳定后可以不集成该功能，且上架最好关闭log保存功能。(客户发送iTunes中的日志文件“TelinkSDKDebugLogData”给泰凌微即可)
     [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
 //    [SigLogger.share setSDKLogLevel:SigLogLevelAll];

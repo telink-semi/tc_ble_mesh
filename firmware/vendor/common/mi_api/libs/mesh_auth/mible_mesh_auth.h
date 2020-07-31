@@ -40,6 +40,7 @@ extern "C" {
 #define SYS_DEV_INFO_GET                    (SYS_TYPE+2)
 #define SYS_LINK_PARAM_CONFIG               (SYS_TYPE+4)
 #define SYS_RXFER_TEST                      (SYS_TYPE+5)
+#define SYS_MSC_SELF_TEST					(SYS_TYPE+6)
 
 #define ERR_TYPE                            0xE0UL
 #define ERR_NOT_REGISTERED                  (ERR_TYPE)

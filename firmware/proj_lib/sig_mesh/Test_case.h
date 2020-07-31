@@ -25,7 +25,8 @@
 
 #define IUT_ADDRESS     0x08e3
 #define LT_ADDRESS      0x08d2
-
+#define PT_ADDR			0x0300
+#define PT2_ADDR		0x0310
 #define MASK_HIGH16(val)		(val & 0xFFFF0000)
 #define MASK_LOW16(val)			(val & 0x0000FFFF)
 
@@ -200,6 +201,20 @@ typedef enum{
 	CL_HM_RFS_BV_01		 = 0x04100206,
 	CL_HM_HPS_BV_01		 = 0x04100302,
 	CL_HM_ATS_BV_01		 = 0x04100402,	
+//directed forwarding
+	NODE_DF_INIT_BV_01		= 0x04110101,
+	NODE_DF_INIT_BV_02		= 0x04110102,
+	NODE_DF_INIT_BV_04		= 0x04110104,
+	NODE_DF_INIT_BV_05		= 0x04110105,
+	NODE_DF_INIT_BV_06		= 0x04110106,
+	NODE_DF_INIT_BV_07		= 0x04110107,
+//directed forwarding model
+	SR_DFM_DFS_BV_01		= 0x04120101,
+	SR_DFM_DFS_BV_04		= 0x04120104,
+	
+	CL_DFM_PMS_BV_01		= 0x04120203,
+	CL_DFM_PMS_BI_01		= 0x04120204,
+	CL_DFM_PMS_BI_02		= 0x04120205,
 //generic client models
 	//generic onoff client
 	CL_GOO_BV_01	= 0x84080101,
