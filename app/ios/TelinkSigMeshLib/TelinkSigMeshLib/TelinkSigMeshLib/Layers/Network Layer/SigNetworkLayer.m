@@ -94,6 +94,7 @@
                     return;
                 }
                 [_networkManager.lowerTransportLayer handleNetworkPdu:networkPdu];
+                [SigMeshLib.share receiveNetworkPdu:networkPdu];
             }
             break;
         case SigPduType_meshBeacon:
@@ -172,7 +173,9 @@
             count -= 1;
             if (count == 0) {
                 [weakSelf.networkTransmitTimers removeObject:t];
-                [t invalidate];
+                if (t) {
+                    [t invalidate];
+                }
             }
         }];
         [self.networkTransmitTimers addObject:timer];
@@ -187,7 +190,10 @@
     
     _ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     _networkKey = pdu.networkKey;
-
+    if (pdu.ivIndex == nil) {
+        pdu.ivIndex = _ivIndex;
+    }
+    
     // Get the current sequence number for local Provisioner's source address.
     UInt32 sequence = (UInt32)[SigDataSource.share getCurrentProvisionerIntSequenceNumber];
     // As the sequnce number was just used, it has to be incremented.
@@ -225,7 +231,9 @@
             count -= 1;
             if (count == 0) {
                 [weakSelf.networkTransmitTimers removeObject:t];
-                [t invalidate];
+                if (t) {
+                    [t invalidate];
+                }
             }
         }];
         [self.networkTransmitTimers addObject:timer];

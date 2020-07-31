@@ -96,6 +96,12 @@ UIKIT_EXTERN NSString * const kSigOOBModel_OOBString_key;
 UIKIT_EXTERN NSString * const kSigOOBModel_lastEditTimeString_key;
 UIKIT_EXTERN NSString * const kOOBStoreKey;
 
+UIKIT_EXTERN NSString * const kFeatureString_relay;
+UIKIT_EXTERN NSString * const kFeatureString_proxy;
+UIKIT_EXTERN NSString * const kFeatureString_friend;
+UIKIT_EXTERN NSString * const kFeatureString_lowPower;
+
+
 #pragma mark - Const bool
 
 /// 标记是否添加未广播蓝牙mac地址的设备，默认不添加
@@ -235,8 +241,8 @@ UIKIT_EXTERN UInt8 const kAllocatedUnicastRangeHighAddress;// 0xff
 UIKIT_EXTERN UInt16 const kAllocatedGroupRangeLowAddress;// 0xC000
 UIKIT_EXTERN UInt16 const kAllocatedGroupRangeHighAddress;// 0xC0ff
 
-UIKIT_EXTERN UInt8 const kAllocatedSceneRangeLowAddress;// 1
-UIKIT_EXTERN UInt8 const kAllocatedSceneRangeHighAddress;// 0xf
+UIKIT_EXTERN UInt8 const kAllocatedSceneRangeFirstAddress;// 1
+UIKIT_EXTERN UInt8 const kAllocatedSceneRangeLastAddress;// 0xf
 
 /// 需要response的指令的默认重试次数，默认为3，客户可修改
 UIKIT_EXTERN UInt8 const kAcknowledgeMessageDefaultRetryCount;// 0x3
@@ -283,6 +289,6 @@ UIKIT_EXTERN float const kSDKLibCommandTimeout;// 1.0
 UIKIT_EXTERN UInt32 const kSnoIncrement;//128
 
 /*初始化json数据时的ivIndex的值*/
-UIKIT_EXTERN UInt32 const kDefaultIvIndex;//0x11223344
+UIKIT_EXTERN UInt32 const kDefaultIvIndex;//0x0
 
 NS_ASSUME_NONNULL_END

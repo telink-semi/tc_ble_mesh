@@ -68,6 +68,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// 返回当前时间字符串格式："yyyy-MM-dd HH:mm:ss"
 + (NSString *)getNowTimeTimeString;
 
+/// 返回当前时间字符串格式："YYYY-MM-ddThh:mm:ssZ"，eg: @"2018-12-23T11:45:22-08:00"
++ (NSString *)getNowTimeStringOfJson;
+
+/// 返回json中的SigStepResolution对应的毫秒数，只有四种值：100,1000,10000,600000.
++ (NSInteger)getSigStepResolutionInMillisecondsOfJson:(SigStepResolution)resolution;
+
 + (NSData *)createNetworkKey;
 
 + (NSData *)initAppKey;

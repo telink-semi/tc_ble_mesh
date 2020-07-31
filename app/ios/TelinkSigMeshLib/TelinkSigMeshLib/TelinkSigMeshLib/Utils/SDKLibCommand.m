@@ -32,7 +32,7 @@
 #import "SigKeyBindManager.h"
 
 @interface SDKLibCommand ()
-@property (nonatomic,strong) NSTimer *busyTimer;
+//@property (nonatomic,strong) NSTimer *busyTimer;
 
 @end
 
@@ -407,7 +407,7 @@
         return nil;
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelSubscriptionAdd *config = [[SigConfigModelSubscriptionAdd alloc] initWithGroupAddress:groupAddress toNodeElementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
+    SigConfigModelSubscriptionAdd *config = [[SigConfigModelSubscriptionAdd alloc] initWithGroupAddress:groupAddress toElementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseModelSubscriptionStatusCallBack = successCallback;
@@ -930,6 +930,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -957,6 +965,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -998,6 +1014,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -1030,6 +1054,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -1061,6 +1093,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -1102,6 +1142,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -1137,6 +1185,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -1177,6 +1233,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -1242,6 +1306,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -1265,6 +1337,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -1388,6 +1468,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -1435,6 +1523,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -1581,6 +1677,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -1621,6 +1725,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -1644,6 +1756,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -1693,6 +1813,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -1728,6 +1856,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -1768,6 +1904,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -1833,6 +1977,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -1856,6 +2008,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -1892,6 +2052,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -1945,6 +2113,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -1985,6 +2161,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -2008,6 +2192,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -2057,6 +2249,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -2097,6 +2297,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -2124,6 +2332,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -2189,6 +2405,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -2212,6 +2436,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -2248,6 +2480,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -2313,6 +2553,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -2336,6 +2584,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -2373,6 +2629,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -2408,6 +2672,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -2451,6 +2723,14 @@
             successCallback = nil;
             resultCallback = nil;
         }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
+        }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = msg;
@@ -2490,6 +2770,14 @@
             TeLogWarn(@"ack is NO, successCallback and failCallback need set to nil.");
             successCallback = nil;
             resultCallback = nil;
+        }
+        if (retryCount != 0) {
+            TeLogWarn(@"ack is NO, retryCount need set to 0.");
+            retryCount = 0;
+        }
+        if (responseMaxCount != 0) {
+            TeLogWarn(@"ack is NO, responseMaxCount need set to 0.");
+            responseMaxCount = 0;
         }
     }
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
@@ -2553,7 +2841,7 @@
     NSMutableArray *addresses = [NSMutableArray array];
     NSArray *elements = [NSArray arrayWithArray:node.elements];
     for (SigElementModel *element in elements) {
-        element.parentNode = node;
+        element.parentNodeAddress = node.address;
         // Add Unicast Addresses of all Elements of the Provisioner's Node.
         [addresses addObject:@(element.unicastAddress)];
         // Add all addresses that the Node's Models are subscribed to.
@@ -2891,7 +3179,7 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
 + (SigMessageHandle *)remoteProvisioningScanGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
@@ -2903,7 +3191,7 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
 + (SigMessageHandle *)remoteProvisioningScanStartWithDestination:(UInt16)destination scannedItemsLimit:(UInt8)scannedItemsLimit timeout:(UInt8)timeout UUID:(nullable NSData *)UUID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
@@ -2915,7 +3203,7 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
 + (SigMessageHandle *)remoteProvisioningScanStopWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningScanStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
@@ -2927,7 +3215,7 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
 + (SigMessageHandle *)remoteProvisioningExtendedScanStartWithDestination:(UInt16)destination ADTypeFilterCount:(UInt8)ADTypeFilterCount ADTypeFilter:(nullable NSData *)ADTypeFilter UUID:(nullable NSData *)UUID timeout:(UInt8)timeout retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount resultCallback:(resultBlock)resultCallback {
@@ -2937,7 +3225,7 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
 + (SigMessageHandle *)remoteProvisioningLinkGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
@@ -2949,7 +3237,7 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
 + (SigMessageHandle *)remoteProvisioningLinkOpenWithDestination:(UInt16)destination UUID:(nullable NSData *)UUID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
@@ -2962,7 +3250,7 @@
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     command.timeout = 2.0;//link open 超时为2秒。
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
 + (SigMessageHandle *)remoteProvisioningLinkCloseWithDestination:(UInt16)destination reason:(SigRemoteProvisioningLinkCloseStatus)reason retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
@@ -2975,7 +3263,7 @@
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     command.timeout = 2.0;//link close 超时为2秒。
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
 + (SigMessageHandle *)remoteProvisioningPDUSendWithDestination:(UInt16)destination OutboundPDUNumber:(UInt8)outboundPDUNumber provisioningPDU:(NSData *)provisioningPDU retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount resultCallback:(resultBlock)resultCallback {
@@ -2986,7 +3274,7 @@
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
     command.timeout = 5.0;//PDUSend 超时为5秒。
-    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
 
@@ -3173,10 +3461,10 @@
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             UInt16 eleAdr = [elementAddresses.firstObject intValue];
             //周期，20秒上报一次。ttl:0xff（表示采用节点默认参数）。
-            SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:2 intervalSteps:5];
+            SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:5 intervalSteps:2];
             SigPublish *publish = [[SigPublish alloc] initWithDestination:kMeshAddress_allNodes withKeyIndex:SigDataSource.share.curAppkeyModel.index friendshipCredentialsFlag:0 ttl:0xff periodSteps:kTimePublishInterval periodResolution:1 retransmit:retransmit];
             SigModelIDModel *modelID = [node getModelIDModelWithModelID:option andElementAddress:eleAdr];
-            [SDKLibCommand configModelPublicationSetWithDestination:address publish:publish elementAddress:eleAdr modelIdentifier:modelID.modelIdentifier companyIdentifier:modelID.companyIdentifier retryCount:2 responseMaxCount:1 successCallback:successCallback resultCallback:resultCallback];
+            [SDKLibCommand configModelPublicationSetWithDestination:address publish:publish elementAddress:eleAdr modelIdentifier:modelID.getIntModelIdentifier companyIdentifier:modelID.getIntCompanyIdentifier retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:successCallback resultCallback:resultCallback];
         });
     }else{
         TeLogError(@"there has not a time model of node that address is 0x%x",address);

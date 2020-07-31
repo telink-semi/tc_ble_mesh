@@ -138,12 +138,12 @@
     TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
     BOOL isSegmented = pdu.transportPdu.length > 15 || accessPdu.isSegmented;
     if (isSegmented) {
-        TeLogVerbose(@"sending segment pdu.");
+        TeLogInfo(@"sending segment pdu.");
         // Enqueue the PDU. If the queue was empty, the PDU will be sent
         // immediately.
         [self enqueueSigUpperTransportPdu:pdu initialTtl:initialTtl networkKey:networkKey];
     } else {
-        TeLogVerbose(@"sending unsegment pdu.");
+        TeLogInfo(@"sending unsegment pdu.");
         [_networkManager.lowerTransportLayer sendUnsegmentedUpperTransportPdu:pdu withTtl:initialTtl usingNetworkKey:networkKey];
     }
 }

@@ -79,6 +79,7 @@ typedef enum : NSUInteger {
         shareManager.retryCount = 3;
         shareManager.addStatus = SigAddStatusScanning;
         shareManager.isAutoAddDevice = NO;
+        shareManager.tempProvisionFailList = [NSMutableArray array];
     });
     return shareManager;
 }
@@ -102,6 +103,7 @@ typedef enum : NSUInteger {
     self.fastKeybindProductID = productID;
     self.provisionType = ProvisionTpye_NoOOB;
     self.staticOOBData = nil;
+    [self.tempProvisionFailList removeAllObjects];
     [self startScan];
 }
 
@@ -126,6 +128,7 @@ typedef enum : NSUInteger {
     if (provisionType == ProvisionTpye_NoOOB) {
         self.staticOOBData = nil;
     }
+    [self.tempProvisionFailList removeAllObjects];
     [self startAddPeripheral:peripheral];
 }
 
@@ -152,7 +155,7 @@ typedef enum : NSUInteger {
     self.addStatus = SigAddStatusScanning;
     __weak typeof(self) weakSelf = self;
     [SigBluetooth.share scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
-        if (unprovisioned) {
+        if (unprovisioned && ![weakSelf.tempProvisionFailList containsObject:peripheral.identifier.UUIDString]) {
             weakSelf.addStatus = SigAddStatusConnectFirst;
             [SigBluetooth.share stopScan];
             //自动添加新增逻辑：判断本地是否存在该UUID的OOB数据，存在则缓存到self.staticOOBData中。
@@ -239,7 +242,8 @@ typedef enum : NSUInteger {
                             if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
                                 weakSelf.addStatus = SigAddStatusConnectSecond;
                                 [SigBearer.share closeWithResult:^(BOOL successful) {
-                                    [weakSelf startAddPeripheral:peripheral];
+//                                    [weakSelf startAddPeripheral:peripheral];
+                                    [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
                                 }];
                             } else {
                                 [weakSelf keybind];
@@ -258,7 +262,8 @@ typedef enum : NSUInteger {
                             if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
                                 weakSelf.addStatus = SigAddStatusConnectSecond;
                                 [SigBearer.share closeWithResult:^(BOOL successful) {
-                                    [weakSelf startAddPeripheral:peripheral];
+//                                    [weakSelf startAddPeripheral:peripheral];
+                                    [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
                                 }];
                             } else {
                                 [weakSelf keybind];
@@ -282,7 +287,8 @@ typedef enum : NSUInteger {
             if (weakSelf.retryCount > 0) {
                 TeLogDebug(@"retry connect peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
                 weakSelf.retryCount --;
-                [weakSelf startAddPeripheral:peripheral];
+//                [weakSelf startAddPeripheral:peripheral];
+                [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
             } else {
                 if (weakSelf.addStatus == SigAddStatusConnectFirst) {
                     if (weakSelf.provisionFailBlock) {

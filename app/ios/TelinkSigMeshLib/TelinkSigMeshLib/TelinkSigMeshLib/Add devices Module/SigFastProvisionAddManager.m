@@ -420,7 +420,7 @@
 - (void)fastProvisionResetNetworkWithDelayMillisecond:(UInt16)delayMillisecond successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     UInt16 tem = delayMillisecond;
     NSData *temData = [NSData dataWithBytes:&tem length:2];
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:2 responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshResetNetwork vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:temData];
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:SigDataSource.share.defaultRetryCount responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshResetNetwork vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:temData];
     if (self.currentConnectedNodeIsUnprovisioned) {
         model.netkeyA = SigDataSource.share.defaultNetKeyA;
         model.appkeyA = SigDataSource.share.defaultAppKeyA;
@@ -460,7 +460,7 @@
     NSMutableData *mData = [NSMutableData data];
     [mData appendData:macAddressData];
     [mData appendData:temData];
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:2 responseMax:1 address:destination opcode:SigOpCode_VendorID_MeshAddressSet vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshAddressSetStatus needTid:NO tid:0 commandData:mData];
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:SigDataSource.share.defaultRetryCount responseMax:1 address:destination opcode:SigOpCode_VendorID_MeshAddressSet vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshAddressSetStatus needTid:NO tid:0 commandData:mData];
     model.netkeyA = SigDataSource.share.defaultNetKeyA;
     model.appkeyA = SigDataSource.share.defaultAppKeyA;
     model.ivIndexA = SigDataSource.share.defaultIvIndexA;
@@ -553,7 +553,7 @@
 
 /// 向设备确认是否收到了新网络参数。（Confirm发送一次retry两次，如果设备返回SigOpCode_VendorID_MeshProvisionConfirmStatus 表示这个设备在SetNetworkInfo设置mesh info失败了，重复执行SetNetworkInfo；如果APP未收到表示SigOpCode_VendorID_MeshProvisionConfirmStatus则表示所有设备都完成了SetNetworkInfo。）
 - (void)fastProvisionConfirmWithSuccessCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:2 responseMax:1 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionConfirm vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshProvisionConfirmStatus needTid:NO tid:0 commandData:nil];
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:SigDataSource.share.defaultRetryCount responseMax:1 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionConfirm vendorId:kCompanyID responseOpcode:SigOpCode_VendorID_MeshProvisionConfirmStatus needTid:NO tid:0 commandData:nil];
     model.netkeyA = SigDataSource.share.defaultNetKeyA;
     model.appkeyA = SigDataSource.share.defaultAppKeyA;
     model.ivIndexA = SigDataSource.share.defaultIvIndexA;
@@ -567,7 +567,7 @@
 - (void)fastProvisionCompleteWithDelayMillisecond:(UInt16)delayMillisecond successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     UInt16 tem = delayMillisecond;
     NSData *temData = [NSData dataWithBytes:&tem length:2];
-    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:2 responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionComplete vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:temData];
+    IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.defaultNetKeyA.index appkeyIndex:SigDataSource.share.defaultAppKeyA.index retryCount:SigDataSource.share.defaultRetryCount responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshProvisionComplete vendorId:kCompanyID responseOpcode:0 needTid:NO tid:0 commandData:temData];
     model.netkeyA = SigDataSource.share.defaultNetKeyA;
     model.appkeyA = SigDataSource.share.defaultAppKeyA;
     model.ivIndexA = SigDataSource.share.defaultIvIndexA;

@@ -79,16 +79,20 @@
 @property (nonatomic, strong) NSMutableArray <SigOOBModel *>*OOBList;
 /// `YES` means SDK will add staticOOB devcie that never input staticOOB data by noOOB provision. `NO` means SDK will not add staticOOB devcie that never input staticOOB data.
 @property (nonatomic, assign) BOOL addStaticOOBDevcieByNoOOBEnable;
+/// default retry count of every command. default is 2.
+@property (nonatomic, assign) UInt8 defaultRetryCount;
 
 
-+ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
-- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
+//取消该限制：因为客户可以init该类型，用于创建一个中间的mesh数据，用于比较前后的mesh信息。
+//+ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
+//- (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
 
 
 + (SigDataSource *)share;
 
 - (NSDictionary *)getDictionaryFromDataSource;
 - (void)setDictionaryToDataSource:(NSDictionary *)dictionary;
+- (NSDictionary *)getFormatDictionaryFromDataSource;
 
 - (UInt16)provisionAddress;
 - (SigAppkeyModel *)curAppkeyModel;

@@ -35,6 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 #define kRemoteProgressRetryCount   (0xFF)
 #define kRemoteProgressTimeout   (60)
 #define kScannedItemsLimit   (2)
+#define kScanCapabilitiesTimeout   (5)
+#define kSendOneNodeScanTimeout   (3)
 #define kScannedItemsTimeout   (5)
 
 @class SigProvisioningData,SigAuthenticationModel;

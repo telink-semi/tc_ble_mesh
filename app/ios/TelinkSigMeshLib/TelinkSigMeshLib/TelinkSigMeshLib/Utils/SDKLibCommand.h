@@ -161,7 +161,7 @@ typedef enum : UInt8 {
 @property (nonatomic,assign) UInt8 hadRetryCount;//default is 0.
 @property (nonatomic, assign) BOOL needTid;//default is NO.
 @property (nonatomic, assign) UInt8 tid;//default is 0.
-@property (nonatomic,strong) BackgroundTimer *retryTimer;
+@property (nonatomic,strong,nullable) BackgroundTimer *retryTimer;
 @property (nonatomic,strong) SigNetkeyModel *netkeyA;
 @property (nonatomic,strong) SigAppkeyModel *appkeyA;
 @property (nonatomic,strong) SigIvIndex *ivIndexA;

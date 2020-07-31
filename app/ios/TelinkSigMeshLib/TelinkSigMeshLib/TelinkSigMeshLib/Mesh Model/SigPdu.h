@@ -51,7 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)analysisProvisioningCapabilities:(struct ProvisioningCapabilities *)provisioningCapabilities withData:(NSData *)data;
 @end
 
-
+/// 3.4.4 Network PDU
+/// - seeAlso: Mesh_v1.0.pdf (page.43)
 @interface SigNetworkPdu : SigPdu
 /// The Network Key used to decode/encode the PDU.
 @property (nonatomic,strong) SigNetkeyModel *networkKey;

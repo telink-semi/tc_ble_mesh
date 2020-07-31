@@ -137,6 +137,41 @@
     return time;
 }
 
+/// 返回当前时间字符串格式："YYYY-MM-ddThh:mm:ssXXX"，eg: @"2018-12-23T11:45:22-08:00"
+/// 返回当前时间字符串格式："YYYY-MM-ddThh:mm:ssZ"，eg: @"2018-12-23T11:45:22-0800"
++ (NSString *)getNowTimeStringOfJson {
+    NSDate *date = [NSDate date];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    formatter.dateFormat = @"YYYY-MM-dd";
+    NSString *time1 = [formatter stringFromDate:date];
+//    formatter.dateFormat = @"hh:mm:ssZ";
+    formatter.dateFormat = @"hh:mm:ssXXX";
+    NSString *time2 = [formatter stringFromDate:date];
+    return [NSString stringWithFormat:@"%@T%@",time1,time2];
+}
+
+/// 返回json中的SigStepResolution对应的毫秒数，只有四种值：100,1000,10000,600000.
++ (NSInteger)getSigStepResolutionInMillisecondsOfJson:(SigStepResolution)resolution {
+    NSInteger tem = 100;
+    switch (resolution) {
+        case SigStepResolution_hundredsOfMilliseconds:
+            tem = 100;
+            break;
+        case SigStepResolution_seconds:
+            tem = 1000;
+            break;
+        case SigStepResolution_tensOfSeconds:
+            tem = 10000;
+            break;
+        case SigStepResolution_tensOfMinutes:
+            tem = 600000;
+            break;
+        default:
+            break;
+    }
+    return tem;
+}
+
 + (NSData *)createNetworkKey{
     //原做法：生成的数据长度不足16，弃用
 //    NSTimeInterval time = [[NSDate date] timeIntervalSince1970];

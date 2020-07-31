@@ -31,7 +31,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigMessageHandle,SigMeshAddress,SigProxyConfigurationMessage,SDKLibCommand,SigSecureNetworkBeacon;
+@class SigMessageHandle,SigMeshAddress,SigProxyConfigurationMessage,SDKLibCommand,SigSecureNetworkBeacon,SigNetworkPdu;
 
 @protocol SigMessageDelegate <NSObject>
 @optional
@@ -128,6 +128,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) int segmentTXTimeout;//15
 @property (nonatomic,assign) int segmentRXTimeout;//15
 
+@property (nonatomic,assign) BOOL isReceiveSegmentPDUing;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -141,6 +142,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param data The PDU received.
 /// @param type The PDU type.
 - (void)bearerDidDeliverData:(NSData *)data type:(SigPduType)type;
+
+/// This method should be called whenever a PDU has been decoded from the mesh network using SigNetworkLayer.
+/// @param networkPdu The network pdu in (Mesh_v1.0.pdf 3.4.4 Network PDU).
+- (void)receiveNetworkPdu:(SigNetworkPdu *)networkPdu;
 
 /// This method should be called whenever a PDU has been received from the kOnlineStatusCharacteristicsID.
 /// @param address address of node
@@ -191,6 +196,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Cancels sending the message with the given identifier.
 /// @param messageId The message identifier.
 - (void)cancelSigMessageHandle:(SigMessageHandle *)messageId;
+
+/// cancel all commands and retry of commands and retry of segment PDU.
+- (void)cleanAllCommandsAndRetry;
 
 /// Returns whether SigMeshLib is busy. YES means busy.
 - (BOOL)isBusyNow;

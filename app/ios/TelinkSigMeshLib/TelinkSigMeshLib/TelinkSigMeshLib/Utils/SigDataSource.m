@@ -51,7 +51,7 @@
         _appKeys = [NSMutableArray array];
         _scanList = [NSMutableArray array];
 
-        _ivIndex = @"11223344";
+        _ivIndex = [NSString stringWithFormat:@"%08X",kDefaultIvIndex];
         _encryptedArray = [NSMutableArray array];
         _defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(SIG_MD_G_ONOFF_S),@(SIG_MD_LIGHTNESS_S),@(SIG_MD_LIGHT_CTL_S),@(SIG_MD_LIGHT_CTL_TEMP_S),@(SIG_MD_LIGHT_HSL_S)]];
         _defaultNodeInfos = [NSMutableArray array];
@@ -63,7 +63,7 @@
         netkey.key = @"7dd7364cd842ad18c17c74656c696e6b";
         netkey.index = 0;
         netkey.name = @"netkeyA";
-        netkey.minSecurity = @"high";
+        netkey.minSecurity = @"secure";
         _defaultNetKeyA = netkey;
         SigAppkeyModel *appkey = [[SigAppkeyModel alloc] init];
         appkey.key = @"63964771734fbd76e3b474656c696e6b";
@@ -88,6 +88,7 @@
             _OOBList = [NSMutableArray array];
         }
         _addStaticOOBDevcieByNoOOBEnable = NO;
+        _defaultRetryCount = 2;
     }
     return self;
 }
@@ -173,6 +174,7 @@
     if (dictionary == nil || dictionary.allKeys.count == 0) {
         return;
     }
+    _curNodes = nil;
     NSArray *allKeys = dictionary.allKeys;
     if ([allKeys containsObject:@"meshUUID"]) {
         _meshUUID = dictionary[@"meshUUID"];
@@ -252,6 +254,84 @@
         }
         _scenes = scenes;
     }
+}
+
+- (NSDictionary *)getFormatDictionaryFromDataSource {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    if (_meshUUID) {
+        dict[@"meshUUID"] = _meshUUID;
+    }
+    if (_meshName) {
+        dict[@"meshName"] = _meshName;
+    }
+    if (_$schema) {
+        dict[@"$schema"] = _$schema;
+    }
+    if (_version) {
+        dict[@"version"] = _version;
+    }
+    if (_timestamp) {
+        dict[@"timestamp"] = _timestamp;
+    }
+    if (_ivIndex) {
+        dict[@"ivIndex"] = _ivIndex;
+    }
+    if (_netKeys) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
+        for (SigNetkeyModel *model in netKeys) {
+            NSDictionary *netkeyDict = [model getDictionaryOfSigNetkeyModel];
+            [array addObject:netkeyDict];
+        }
+        dict[@"netKeys"] = array;
+    }
+    if (_appKeys) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *appKeys = [NSArray arrayWithArray:_appKeys];
+        for (SigAppkeyModel *model in appKeys) {
+            NSDictionary *appkeyDict = [model getDictionaryOfSigAppkeyModel];
+            [array addObject:appkeyDict];
+        }
+        dict[@"appKeys"] = array;
+    }
+    if (_provisioners) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
+        for (SigProvisionerModel *model in provisioners) {
+            NSDictionary *provisionDict = [model getDictionaryOfSigProvisionerModel];
+            [array addObject:provisionDict];
+        }
+        dict[@"provisioners"] = array;
+    }
+    if (_nodes) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *nodes = [NSArray arrayWithArray:_nodes];
+        for (SigNodeModel *model in nodes) {
+            NSDictionary *nodeDict = [model getFormatDictionaryOfSigNodeModel];
+            [array addObject:nodeDict];
+        }
+        dict[@"nodes"] = array;
+    }
+    if (_groups) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *groups = [NSArray arrayWithArray:_groups];
+        for (SigGroupModel *model in groups) {
+            NSDictionary *groupDict = [model getDictionaryOfSigGroupModel];
+            [array addObject:groupDict];
+        }
+        dict[@"groups"] = array;
+    }
+    if (_scenes) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *scenes = [NSArray arrayWithArray:_scenes];
+        for (SigSceneModel *model in scenes) {
+            NSDictionary *sceneDict = [model getFormatDictionaryOfSigSceneModel];
+            [array addObject:sceneDict];
+        }
+        dict[@"scenes"] = array;
+    }
+    dict[@"id"] = @"http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#";
+    return dict;
 }
 
 - (UInt16)provisionAddress{
@@ -409,9 +489,9 @@
         NSData *data = [self getLocationMeshData];
         NSDictionary *meshDict = [LibTools getDictionaryWithJSONData:data];
         [SigDataSource.share setDictionaryToDataSource:meshDict];
-        //Attention: it will set _ivIndex to @"11223344" when mesh.json hasn't the key @"ivIndex"
+        //Attention: it will set _ivIndex to kDefaultIvIndex when mesh.json hasn't the key @"ivIndex"
         if (!_ivIndex || _ivIndex.length == 0) {
-            _ivIndex = @"11223344";
+            _ivIndex = [NSString stringWithFormat:@"%08X",kDefaultIvIndex];
             [self saveLocationData];
         }
     }
@@ -424,21 +504,22 @@
 }
 
 - (void)initMeshData{
-    NSString *timestamp = [LibTools getNowTimeTimestampFrome2000];
+    NSString *timestamp = [LibTools getNowTimeStringOfJson];
     //1.netKeys
     SigNetkeyModel *netkey = [[SigNetkeyModel alloc] init];
     netkey.oldKey = @"";
     netkey.index = 0;
     netkey.phase = 0;
     netkey.timestamp = timestamp;
+    netkey.oldKey = @"00000000000000000000000000000000";
     netkey.key = [LibTools convertDataToHexStr:[LibTools createNetworkKey]];
     netkey.name = @"";
-    netkey.minSecurity = @"high";
+    netkey.minSecurity = @"secure";
     [_netKeys addObject:netkey];
 
     //2.appKeys
     SigAppkeyModel *appkey = [[SigAppkeyModel alloc] init];
-    appkey.oldKey = @"";
+    appkey.oldKey = @"00000000000000000000000000000000";
     appkey.key = [LibTools convertDataToHexStr:[LibTools initAppKey]];
     appkey.name = @"";
     appkey.boundNetKey = 0;
@@ -463,11 +544,12 @@
     }
 
     _meshUUID = netkey.key;
-    _$schema = @"telink-semi.com";
+    _$schema = @"http://json-schema.org/draft-04/schema#";
     _meshName = @"Telink-Sig-Mesh";
-    _version = LibTools.getSDKVersion;
+//    _version = LibTools.getSDKVersion;
+    _version = @"1.0.0";
     _timestamp = timestamp;
-    _ivIndex = @"11223344";
+    _ivIndex = [NSString stringWithFormat:@"%08X",kDefaultIvIndex];
 }
 
 - (void)addLocationNodeWithProvisioner:(SigProvisionerModel *)provisioner{
@@ -481,16 +563,18 @@
     node.features.friendFeature = SigNodeFeaturesState_notEnabled;
     node.features.relayFeature = SigNodeFeaturesState_notSupported;
     node.relayRetransmit.count = 3;
-    node.relayRetransmit.interval = 0;
+    node.relayRetransmit.interval = 10;
+    node.unicastAddress = [NSString stringWithFormat:@"%04X",(UInt16)provisioner.allocatedUnicastRange.firstObject.lowIntAddress];
+    node.name = @"Telink iOS provisioner node";
     
     //添加本地节点的element
     NSMutableArray *elements = [NSMutableArray array];
     SigElementModel *element = [[SigElementModel alloc] init];
     element.name = @"Primary Element";
-    element.location = 0;
+    element.location = @"0000";
     element.index = 0;
     NSMutableArray *models = [NSMutableArray array];
-    NSArray *defaultModelIDs = @[@"0000",@"0001",@"0002",@"0003",@"0005",@"FE00",@"FE01",@"FE02",@"FE03",@"FF00",@"FF01",@"1202",@"1001",@"1003",@"1005",@"1008",@"1205",@"1208",@"1302",@"1305",@"1309",@"1311",@"1015",@"00010000"];
+    NSArray *defaultModelIDs = @[@"0000",@"0001",@"0002",@"0003",@"0005",@"FE00",@"FE01",@"FE02",@"FE03",@"FF00",@"FF01",@"1202",@"1001",@"1003",@"1005",@"1008",@"1205",@"1208",@"1302",@"1305",@"1309",@"1311",@"1015",@"00010211"];
     for (NSString *modelID in defaultModelIDs) {
         SigModelIDModel *modelIDModel = [[SigModelIDModel alloc] init];
         modelIDModel.modelId = modelID;
@@ -499,12 +583,11 @@
         [models addObject:modelIDModel];
     }
     element.models = models;
-    element.parentNode = node;
+    element.parentNodeAddress = node.address;
     [elements addObject:element];
     node.elements = elements;
     
     [self saveCurrentProvisionerUUID:provisioner.UUID];
-    node.unicastAddress = [NSString stringWithFormat:@"%04X",(UInt16)provisioner.allocatedUnicastRange.firstObject.lowIntAddress];
     NSData *devicekeyData = [LibTools createRandomDataWithLength:16];
     node.deviceKey = [LibTools convertDataToHexStr:devicekeyData];
     SigAppkeyModel *appkey = [SigDataSource.share curAppkeyModel];
@@ -561,7 +644,7 @@
             SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerCount:[self getProvisionerCount] andProvisionerUUID:[self getCurrentProvisionerUUID]];
             [_provisioners addObject:provisioner];
             [self addLocationNodeWithProvisioner:provisioner];
-            _timestamp = [LibTools getNowTimeTimestampFrome2000];
+            _timestamp = [LibTools getNowTimeStringOfJson];
             [self saveLocationData];
         }else{
             TeLogInfo(@"waring: count of provisioners is bigger than 0x7f, app allocates node address will be error.");

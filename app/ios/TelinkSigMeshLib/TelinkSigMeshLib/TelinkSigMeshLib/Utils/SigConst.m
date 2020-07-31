@@ -85,6 +85,11 @@ NSString * const kSigOOBModel_OOBString_key = @"kSigOOBModel_OOBString_key";
 NSString * const kSigOOBModel_lastEditTimeString_key = @"kSigOOBModel_lastEditTimeString_key";
 NSString * const kOOBStoreKey = @"kOOBStoreKey";
 
+NSString * const kFeatureString_relay = @"relay";
+NSString * const kFeatureString_proxy = @"proxy";
+NSString * const kFeatureString_friend = @"friend";
+NSString * const kFeatureString_lowPower = @"lowPower";
+
 #pragma mark - Const bool
 
 BOOL const kAddNotAdvertisementMac = NO;
@@ -221,8 +226,8 @@ UInt8 const kAllocatedUnicastRangeHighAddress = 0xff;
 UInt16 const kAllocatedGroupRangeLowAddress = 0xC000;
 UInt16 const kAllocatedGroupRangeHighAddress = 0xC0ff;
 
-UInt8 const kAllocatedSceneRangeLowAddress = 1;
-UInt8 const kAllocatedSceneRangeHighAddress = 0xf;
+UInt8 const kAllocatedSceneRangeFirstAddress = 1;
+UInt8 const kAllocatedSceneRangeLastAddress = 0xf;
 
 //需要response的指令的默认重试次数，默认为2，客户可修改
 UInt8 const kAcknowledgeMessageDefaultRetryCount = 0x2;
@@ -269,4 +274,4 @@ float const kSDKLibCommandTimeout = 1.0;
 UInt32 const kSnoIncrement = 128;
 
 /*初始化json数据时的ivIndex的值*/
-UInt32 const kDefaultIvIndex = 0x11223344;//0x11223344
+UInt32 const kDefaultIvIndex = 0x0;//0x0

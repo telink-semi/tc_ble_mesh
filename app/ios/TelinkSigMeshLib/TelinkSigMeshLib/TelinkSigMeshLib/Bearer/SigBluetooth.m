@@ -144,7 +144,7 @@
     [self scanProvisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
         if ([peripheral.identifier.UUIDString isEqualToString:peripheralUUID]) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(scanWithPeripheralUUIDTimeout) object:nil];
+                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanWithPeripheralUUIDTimeout) object:nil];
             });
             [weakSelf stopScan];
             if (block) {
@@ -254,7 +254,7 @@
                 dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
             }
         }
-        if (self.currentPeripheral) {
+        if (weakSelf.currentPeripheral) {
             [weakSelf cancelConnectionPeripheral:weakSelf.currentPeripheral timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
                 [weakSelf ressetParameters];
                 weakSelf.currentPeripheral = nil;
@@ -554,7 +554,7 @@
     
     SigScanRspModel *scanRspModel = [[SigScanRspModel alloc] initWithPeripheral:peripheral advertisementData:advertisementData];
     //=================test==================//
-//    if (![scanRspModel.macAddress isEqualToString:@"A4C138CF3FDE"]) {
+//    if (![scanRspModel.macAddress isEqualToString:@"FFFF20200722"]) {
 //        return;
 //    }
     //=================test==================//

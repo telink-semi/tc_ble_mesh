@@ -113,7 +113,6 @@
 
 - (void)provisionSuccess{
     UInt16 address = self.provisioningData.unicastAddress;
-    NSString *identify = [LibTools meshUUIDToUUID:self.unprovisionedDevice.uuid];
     UInt8 ele_count = self.provisioningCapabilities.numberOfElements;
     [SigDataSource.share saveLocationProvisionAddress:address+ele_count-1];
     NSData *devKeyData = self.provisioningData.deviceKey;
@@ -126,8 +125,8 @@
     [model setAddress:address];
     model.deviceKey = [LibTools convertDataToHexStr:devKeyData];
     model.peripheralUUID = nil;
+    model.UUID = self.unprovisionedDevice.advUuid;
     //Attention: There isn't scanModel at remote add, so develop need add macAddress in provisionSuccessCallback.
-    model.UUID = identify;
     model.macAddress = self.unprovisionedDevice.macAddress;
     
     SigPage0 *compositionData = [[SigPage0 alloc] init];
@@ -207,6 +206,7 @@
     __weak typeof(self) weakSelf = self;
     TeLogInfo(@"start provision.");
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
+        [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
             if (weakSelf.isProvisionning) {
                 TeLog(@"disconnect in provisioning，provision fail.");
@@ -248,6 +248,7 @@
     __weak typeof(self) weakSelf = self;
     TeLogInfo(@"start provision.");
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
+        [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
             if (weakSelf.isProvisionning) {
                 TeLog(@"disconnect in provisioning，provision fail.");

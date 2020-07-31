@@ -260,6 +260,7 @@
 //        }
 //    }];
     [self.ble setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
+        [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([weakSelf.dataDelegate respondsToSelector:@selector(bearer:didCloseWithError:)]) {
             [weakSelf.dataDelegate bearer:weakSelf didCloseWithError:error];
         }
@@ -319,6 +320,7 @@
 - (void)showSendData:(NSData *)data forCharacteristic:(CBCharacteristic *)characteristic {
     if ([characteristic.UUID.UUIDString isEqualToString:kPBGATT_In_CharacteristicsID]) {
         TeLogInfo(@"---> to:GATT, length:%d",data.length);
+//        TeLogInfo(@"---> to:GATT, length:%d,%@",data.length,[LibTools convertDataToHexStr:data]);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kPROXY_In_CharacteristicsID]) {
         TeLogInfo(@"---> to:PROXY, length:%d",data.length);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kOnlineStatusCharacteristicsID]) {
@@ -391,8 +393,10 @@
     if (self.bearerOpenCallback) {
         self.bearerOpenCallback(isSuccess);
     }
-    if ([self.dataDelegate respondsToSelector:@selector(bearerDidOpen:)]) {
-        [self.dataDelegate bearerDidOpen:self];
+    if (isSuccess) {
+        if ([self.dataDelegate respondsToSelector:@selector(bearerDidOpen:)]) {
+            [self.dataDelegate bearerDidOpen:self];
+        }
     }
 }
 
@@ -584,7 +588,9 @@
     self.isAutoReconnect = NO;
     self.stopMeshConnectCallback = complete;
     [SigBluetooth.share stopScan];
-    [self.autoConnectScanTimer invalidate];
+    if (self.autoConnectScanTimer) {
+        [self.autoConnectScanTimer invalidate];
+    }
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(meshConnectTimeout) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectRssiHightestPeripheral) object:nil];
@@ -649,7 +655,9 @@
 
 /// Stop auto connect(停止自动连接流程)
 - (void)stopAutoConnect {
-    [self.autoConnectScanTimer invalidate];
+    if (self.autoConnectScanTimer) {
+        [self.autoConnectScanTimer invalidate];
+    }
 }
 
 /// 正常扫描流程：3秒内扫描到RSSI大于“-50”的设备，直接连接。

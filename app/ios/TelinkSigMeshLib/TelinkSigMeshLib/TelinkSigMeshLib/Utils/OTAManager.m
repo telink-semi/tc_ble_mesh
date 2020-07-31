@@ -194,7 +194,11 @@ typedef enum : NSUInteger {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(meshConnectTimeoutBeforeGATTOTA) object:nil];
                 });
-                [weakSelf nodeIdentitySetBeforeGATTOTA];
+                if (SigDataSource.share.unicastAddressOfConnected == self.currentModel.address) {
+                    [self setFilter];
+                } else {
+                    [weakSelf nodeIdentitySetBeforeGATTOTA];
+                }
             }
         }
     }];
@@ -222,7 +226,7 @@ typedef enum : NSUInteger {
         NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
         for (SigNodeModel *node in curNodes) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-            [SDKLibCommand configNodeIdentitySetWithDestination:node.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
+            [SDKLibCommand configNodeIdentitySetWithDestination:node.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
                 TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 if (!error) {
@@ -312,7 +316,7 @@ typedef enum : NSUInteger {
     self.progress = SigGattOTAProgress_step5_setFilter;
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TeLogInfo(@"setFilterForProvisioner=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
     } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (weakSelf.progress == SigGattOTAProgress_step5_setFilter) {
@@ -373,15 +377,16 @@ typedef enum : NSUInteger {
         if (self.singleProgressCallBack) {
             self.singleProgressCallBack(progress);
         }
+        __weak typeof(self) weakSelf = self;
         [self sendOTAData:writeData index:(int)self.otaIndex complete:^{
             //注意：index=0与index=1之间的时间间隔修改为300ms，让固件有充足的时间进行ota配置。
-            if (self.otaIndex == 0) {
+            if (weakSelf.otaIndex == 0) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:0.3];
+                    [weakSelf performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:0.3];
                 });
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:self.writeOTAInterval];
+                    [weakSelf performSelector:@selector(sendPartDataAvailableIOS11) withObject:nil afterDelay:weakSelf.writeOTAInterval];
                 });
             }
         }];

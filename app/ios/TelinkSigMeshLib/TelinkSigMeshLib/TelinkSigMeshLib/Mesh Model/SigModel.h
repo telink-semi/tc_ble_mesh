@@ -29,7 +29,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class SigNetkeyDerivaties,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel   ,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0;
+@class SigNetkeyDerivaties,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel   ,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0;
 typedef void(^BeaconBackCallBack)(BOOL available);
 typedef void(^responseAllMessageBlock)(UInt16 source,UInt16 destination,SigMeshMessage *responseMessage);
 
@@ -526,11 +526,9 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic, assign) UInt8 oldNid;
 /// The IV Index for this subnetwork.
 @property (nonatomic, strong) SigIvIndex *ivIndex;
-/// The Network ID derived from this Network Key. This identifier
-/// is public information.
+/// The Network ID derived from this Network Key. This identifier is public information.
 @property (nonatomic, strong) NSData *networkId;
-/// The Network ID derived from the old Network Key. This identifier
-/// is public information. It is set when `oldKey` is set.
+/// The Network ID derived from the old Network Key. This identifier is public information. It is set when `oldKey` is set.
 @property (nonatomic, strong) NSData *oldNetworkId;
 
 - (SigNetkeyDerivaties *)transmitKeys;
@@ -614,9 +612,9 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 @interface SigSceneRangeModel : NSObject
 
-@property (nonatomic, assign) NSInteger lowAddress;
+@property (nonatomic, copy) NSString *firstScene;
 
-@property (nonatomic, assign) NSInteger highAddress;
+@property (nonatomic, copy) NSString *lastScene;
 
 - (NSDictionary *)getDictionaryOfSigSceneRangeModel;
 - (void)setDictionaryToSigSceneRangeModel:(NSDictionary *)dictionary;
@@ -660,6 +658,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 - (NSDictionary *)getDictionaryOfSigSceneModel;
 - (void)setDictionaryToSigSceneModel:(NSDictionary *)dictionary;
+- (NSDictionary *)getFormatDictionaryOfSigSceneModel;
 
 @end
 
@@ -725,9 +724,12 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 @property (nonatomic, copy) NSString *macAddress;//new add the mac to json, get mac from scanResponse's Manufacturer Data.
 
+@property (nonatomic, strong) SigHeartbeatPubModel *heartbeatPub;
+
 @property (nonatomic, strong) NSMutableArray<SigElementModel *> *elements;
 @property (nonatomic, strong) NSMutableArray<SigNodeKeyModel *> *netKeys;
 @property (nonatomic, strong) NSMutableArray<SigNodeKeyModel *> *appKeys;//node isn't unbound when appkeys is empty.
+@property (nonatomic, strong) NSMutableArray<SigHeartbeatSubModel *> *heartbeatSub;
 
 //暂时添加到json数据中
 @property (nonatomic,strong) NSMutableArray <SchedulerModel *>*schedulerList;
@@ -827,6 +829,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 - (NSDictionary *)getDictionaryOfSigNodeModel;
 - (void)setDictionaryToSigNodeModel:(NSDictionary *)dictionary;
+- (NSDictionary *)getFormatDictionaryOfSigNodeModel;
 
 - (void)setAddSigAppkeyModelSuccess:(SigAppkeyModel *)appkey;
 - (void)setCompositionData:(SigPage0 *)compositionData;
@@ -837,9 +840,11 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @end
 
 @interface SigRelayretransmitModel : NSObject
-
+/// Number of retransmissions for relay messages.
+/// The value is in range from 1 to 8.
 @property (nonatomic, assign) NSInteger count;
-
+/// The interval (in milliseconds) between retransmissions
+/// (from 10 to 320 ms in 10 ms steps).
 @property (nonatomic, assign) NSInteger interval;
 /// Number of 10-millisecond steps between transmissions.
 @property (nonatomic, assign) UInt8 steps;
@@ -917,8 +922,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 @property (nonatomic, assign) UInt8 index;
 
-/// Parent Node. This may be `nil` if the Element was obtained in Composition Data and has not yet been added to a Node.
-@property (nonatomic,strong) SigNodeModel *parentNode;
+@property (nonatomic, assign) UInt16 parentNodeAddress;
 
 - (instancetype)initWithLocation:(SigLocation)location;
 
@@ -926,6 +930,8 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 /// Returns the Unicast Address of the Element. For Elements not added to Node this returns the Element index value as `Address`.
 - (UInt16)unicastAddress;
+
+- (SigNodeModel * _Nullable)getParentNode;
 
 - (SigLocation)getSigLocation;
 - (void)setSigLocation:(SigLocation)sigLocation;
@@ -948,8 +954,6 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic, strong) SigPublishModel *publish;
 /// The model message handler. This is non-`nil` for supported local Models and `nil` for Models of remote Nodes.
 @property (nonatomic,weak) id delegate;
-/// Parent Element.
-@property (nonatomic,strong) SigElementModel *parentElement;
 
 ///返回整形的modelID
 - (int)getIntModelID;
@@ -960,10 +964,10 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 - (instancetype)initWithVendorModelId:(UInt32)vendorModelId;
 
-/// Bluetooth SIG or vendor-assigned model identifier.
-- (UInt16)modelIdentifier;
-/// The Company Identifier or `nil`, if the model is Bluetooth SIG-assigned.
-- (UInt16)companyIdentifier;
+///// Bluetooth SIG or vendor-assigned model identifier.
+//- (UInt16)modelIdentifier;
+///// The Company Identifier or `nil`, if the model is Bluetooth SIG-assigned.
+//- (UInt16)companyIdentifier;
 /// Returns `true` for Models with identifiers assigned by Bluetooth SIG,
 /// `false` otherwise.
 - (BOOL)isBluetoothSIGAssigned;
@@ -1006,12 +1010,6 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 /// Removes all subscribtions from this Model.
 - (void)unsubscribeFromAll;
-
-/// List of Application Keys bound to this Model.
-///
-/// The list will not contain unknown Application Keys bound
-/// to this Model, possibly bound by other Provisioner.
-- (NSMutableArray <SigAppkeyModel *>*)boundApplicationKeys;
 
 /// Whether the given Application Key is bound to this Model.
 ///
@@ -1072,7 +1070,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 @property (nonatomic, strong) SigRetransmitModel *retransmit;
 
-@property (nonatomic, assign) NSInteger period;
+@property (nonatomic, strong) SigPeriodModel *period;
 
 @property (nonatomic, copy) NSString *address;
 
@@ -1089,6 +1087,47 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 - (NSDictionary *)getDictionaryOfSigRetransmitModel;
 - (void)setDictionaryToSigRetransmitModel:(NSDictionary *)dictionary;
+
+@end
+
+@interface SigPeriodModel : NSObject
+
+@property (nonatomic, assign) NSInteger numberOfSteps;
+
+@property (nonatomic, assign) NSInteger resolution;
+
+- (NSDictionary *)getDictionaryOfSigPeriodModel;
+- (void)setDictionaryToSigPeriodModel:(NSDictionary *)dictionary;
+
+@end
+
+@interface SigHeartbeatPubModel : NSObject
+
+@property (nonatomic, copy) NSString *address;
+
+@property (nonatomic, assign) NSInteger period;
+
+@property (nonatomic, assign) NSInteger ttl;
+
+@property (nonatomic, assign) NSInteger index;
+
+@property (nonatomic, strong) NSMutableArray <NSString *>*features;
+
+- (NSDictionary *)getDictionaryOfSigHeartbeatPubModel;
+- (void)setDictionaryToSigHeartbeatPubModel:(NSDictionary *)dictionary;
+
+@end
+
+@interface SigHeartbeatSubModel : NSObject
+
+@property (nonatomic, copy) NSString *source;
+
+@property (nonatomic, copy) NSString *destination;
+
+@property (nonatomic, assign) NSInteger period;
+
+- (NSDictionary *)getDictionaryOfSigHeartbeatSubModel;
+- (void)setDictionaryToSigHeartbeatSubModel:(NSDictionary *)dictionary;
 
 @end
 

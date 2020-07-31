@@ -73,7 +73,7 @@
 @property (nonatomic,assign) UInt16 source;
 @property (nonatomic,assign) UInt16 destination;
 @property (nonatomic,strong) BackgroundTimer *timeoutTimer;
-@property (nonatomic,strong) BackgroundTimer *retryTimer;
+@property (nonatomic,strong,nullable) BackgroundTimer *retryTimer;
 @end
 @implementation SigAcknowledgmentContext
 - (instancetype)initForRequest:(SigAcknowledgedMeshMessage *)request sentFromSource:(UInt16)source toDestination:(UInt16)destination repeatAfterDelay:(NSTimeInterval)delay repeatBlock:(void (^ _Nonnull)(void))repeatBlock timeout:(NSTimeInterval)timeout timeoutBlock:(void (^ _Nonnull)(void))timeoutBlock {
@@ -95,15 +95,21 @@
 
 /// Invalidates the timers.
 - (void)invalidate {
-    [_timeoutTimer invalidate];
-    _timeoutTimer = nil;
-    [_retryTimer invalidate];
-    _retryTimer = nil;
+//    if (_timeoutTimer) {
+//        [_timeoutTimer invalidate];
+//    }
+    if (_retryTimer) {
+        [_retryTimer invalidate];
+        _retryTimer = nil;
+    }
 }
 
 - (void)initializeRetryTimerWithDelay:(NSTimeInterval)delay callback:(void (^ _Nonnull)(void))callback {
     __weak typeof(self) weakSelf = self;
-    [_retryTimer invalidate];
+    if (_retryTimer) {
+        [_retryTimer invalidate];
+        _retryTimer = nil;
+    }
     _retryTimer = [BackgroundTimer scheduledTimerWithTimeInterval:delay repeats:NO block:^(BackgroundTimer * _Nonnull t) {
         if (weakSelf.retryTimer) {
             if (callback) {
@@ -330,7 +336,7 @@
     __weak typeof(self) weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         TeLogInfo(@"Sending %@",pdu);
-        UInt8 ttl = element.parentNode.defaultTTL;
+        UInt8 ttl = element.getParentNode.defaultTTL;
         if (![SigHelper.share isRelayedTTL:ttl]) {
             ttl = weakSelf.networkManager.defaultTtl;
         }

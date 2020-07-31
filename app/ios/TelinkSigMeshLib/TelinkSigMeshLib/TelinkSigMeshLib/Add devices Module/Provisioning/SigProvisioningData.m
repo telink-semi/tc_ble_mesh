@@ -63,6 +63,13 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 }
 
 - (void)prepareWithNetwork:(SigDataSource *)network networkKey:(SigNetkeyModel *)networkKey unicastAddress:(UInt16)unicastAddress {
+//    self.sharedSecret = [LibTools nsstringToHex:@"d9d6d598bfd6d858fd0bb63e953699ccdf29476d5fb10a6f041a7557101a6884"];
+//    self.confirmationInputs = [LibTools nsstringToHex:@"0002000100000000000000000000000000C41398C821363D66101F7CF61D8D893D6BD74000ABE3319ABB54474BD401493FE706F293F211F3770484F893A25B6B5B1A2221F63B484A9796577D8CC0202AD0D04AAB0E4B51223486823D16DEC56FE57746306CF0A108F15D5F960C468DF3C3823C6E7D18F4A7CB6AB6DE5B44704748D904ED6A72E1C81BE3F79BD0FB991A3C"];
+//    NSData *deviceRandom = [LibTools nsstringToHex:@"6f012d40a4d305858c859be38629acde"];
+//    NSData *auth = [LibTools nsstringToHex:@"00000000000000000000000000000000"];
+//    NSData *result = [self calculateConfirmationWithRandom:deviceRandom authValue:auth];
+//    TeLogDebug(@"result==========%@",[LibTools convertDataToHexStr:result]);
+
     _network = network;
     _ivIndex = networkKey.ivIndex;
     _networkKey = networkKey;
@@ -178,6 +185,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 /// - returns: The Provisioning Confirmation value.
 - (NSData *)calculateConfirmationWithRandom:(NSData *)data authValue:(NSData *)authValue {
     // Calculate the Confirmation Salt = s1(confirmationInputs).
+//    TeLogDebug(@"confirmationInputs=%@",[LibTools convertDataToHexStr:self.confirmationInputs]);
     NSData *confirmationSalt = [[OpenSSLHelper share] calculateSalt:self.confirmationInputs];
     
     // Calculate the Confirmation Key = k1(ECDH Secret, confirmationSalt, 'prck')

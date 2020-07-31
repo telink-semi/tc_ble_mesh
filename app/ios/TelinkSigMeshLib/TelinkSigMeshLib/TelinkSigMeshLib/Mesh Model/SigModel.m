@@ -331,6 +331,7 @@
  }mesh_scan_rsp_t;
  
  iOS12 实际数据：
+ 固件v3.2.1及之前版本的广播包(kCBAdvDataManufacturerData=mac+address)
  1827 Printing description of advertisementData:
  {
  kCBAdvDataIsConnectable = 1;
@@ -356,6 +357,35 @@
  );
  }
  
+ 固件v3.2.2及之后版本的广播包(kCBAdvDataManufacturerData=CID+mac+address)
+  1827 Printing description of advertisementData={
+      kCBAdvDataIsConnectable = 1;
+      kCBAdvDataManufacturerData = {length = 29, bytes = 0x110228c1 d738c1a4 28410000 00000000 ... 04050607 08090a0b };
+      kCBAdvDataRxPrimaryPHY = 0;
+      kCBAdvDataRxSecondaryPHY = 0;
+      kCBAdvDataServiceData =     {
+          1827 = {length = 18, bytes = 0x446d6f6f098414309e8328c1d738c1a40000};
+      };
+      kCBAdvDataServiceUUIDs =     (
+          1827
+      );
+      kCBAdvDataTimestamp = "617765262.924383";
+  }
+ 
+ 1828 Printing description of advertisementData:={
+     kCBAdvDataIsConnectable = 1;
+     kCBAdvDataManufacturerData = {length = 29, bytes = 0x110228c1 d738c1a4 06000000 00000000 ... 04050607 08090a0b };
+     kCBAdvDataRxPrimaryPHY = 0;
+     kCBAdvDataRxSecondaryPHY = 0;
+     kCBAdvDataServiceData =     {
+         1828 = {length = 9, bytes = 0x007e7a9e258796c955};
+     };
+     kCBAdvDataServiceUUIDs =     (
+         1828
+     );
+     kCBAdvDataTimestamp = "617766058.0931309";
+ }
+
  */
 - (instancetype)initWithPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData{
     self = [super init];
@@ -366,11 +396,18 @@
         if ([advertisementData.allKeys containsObject:CBAdvertisementDataManufacturerDataKey]) {
             NSData *allData = advertisementData[CBAdvertisementDataManufacturerDataKey];
             if (allData) {
-                if (allData.length >= 6) {
-                    _macAddress = [LibTools convertDataToHexStr:[LibTools turnOverData:[allData subdataWithRange:NSMakeRange(0, 6)]]];
+                Byte *byte = (Byte *)allData.bytes;
+                UInt16 tem16 = 0;
+                if (allData.length >= 2) {
+                    memcpy(&tem16, byte, 2);
+                    _CID = tem16;
                 }
                 if (allData.length >= 8) {
-                    _address = [LibTools uint16From16String:[LibTools convertDataToHexStr:[LibTools turnOverData:[allData subdataWithRange:NSMakeRange(6, 2)]]]];
+                    _macAddress = [LibTools convertDataToHexStr:[LibTools turnOverData:[allData subdataWithRange:NSMakeRange(2, 6)]]];
+                }
+                if (allData.length >= 10) {
+                    memcpy(&tem16, byte+8, 2);
+                    _address = tem16;
                 }
             }
         }
@@ -638,14 +675,19 @@
 ////            _defultNodeInfo = node_info;
 
             SigPage0 *compositionData = [[SigPage0 alloc] init];
+            UInt8 temPage = 0;
+            NSData *pageData = [NSData dataWithBytes:&temPage length:1];
+            NSMutableData *mData = [NSMutableData dataWithData:pageData];
             if (pid == 7) {
                 //set default compositionData of panel
                 NSData *data = [NSData dataWithBytes:PanelByte length:sizeof(PanelByte)];
-                compositionData = [[SigPage0 alloc] initWithParameters:data];
+                [mData appendData:data];
+                compositionData = [[SigPage0 alloc] initWithParameters:mData];
             }else if (pid == 1) {
                 //set default compositionData of CT
                 NSData *data = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
-                compositionData = [[SigPage0 alloc] initWithParameters:data];
+                [mData appendData:data];
+                compositionData = [[SigPage0 alloc] initWithParameters:mData];
             }
             _defaultCompositionData = compositionData;
         }
@@ -1461,12 +1503,12 @@
         
         self.allocatedSceneRange = [NSMutableArray array];
         SigSceneRangeModel *range3 = [[SigSceneRangeModel alloc] init];
-        range3.lowAddress = kAllocatedSceneRangeLowAddress;
-        range3.highAddress = kAllocatedSceneRangeHighAddress;
+        range3.firstScene = [NSString stringWithFormat:@"%04lX",(long)kAllocatedSceneRangeFirstAddress];
+        range3.lastScene = [NSString stringWithFormat:@"%04lX",(long)kAllocatedSceneRangeLastAddress];
         [self.allocatedSceneRange addObject:range3];
                 
         self.UUID = provisionerUUID;
-        self.provisionerName = @"";
+        self.provisionerName = @"Telink iOS provisioner";
     }
     return self;
 }
@@ -1528,8 +1570,12 @@
 
 - (NSDictionary *)getDictionaryOfSigSceneRangeModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-    dict[@"lowAddress"] = @(_lowAddress);
-    dict[@"highAddress"] = @(_highAddress);
+    if (_firstScene) {
+        dict[@"firstScene"] = _firstScene;
+    }
+    if (_lastScene) {
+        dict[@"lastScene"] = _lastScene;
+    }
     return dict;
 }
 
@@ -1538,11 +1584,11 @@
         return;
     }
     NSArray *allKeys = dictionary.allKeys;
-    if ([allKeys containsObject:@"lowAddress"]) {
-        _lowAddress = [dictionary[@"lowAddress"] integerValue];
+    if ([allKeys containsObject:@"firstScene"]) {
+        _firstScene = dictionary[@"firstScene"];
     }
-    if ([allKeys containsObject:@"highAddress"]) {
-        _highAddress = [dictionary[@"highAddress"] integerValue];
+    if ([allKeys containsObject:@"lastScene"]) {
+        _lastScene = dictionary[@"lastScene"];
     }
 }
 
@@ -1642,15 +1688,23 @@
 
 @implementation SigSceneModel
 
+- (instancetype)init {
+    if (self = [super init]) {
+        _addresses = [NSMutableArray array];
+        _actionList = [NSMutableArray array];
+    }
+    return self;
+}
+
 - (NSDictionary *)getDictionaryOfSigSceneModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_name) {
         dict[@"name"] = _name;
     }
-    dict[@"number"] = @(_number);
-    if (_addresses) {
+    dict[@"number"] = [NSString stringWithFormat:@"%04lX",(long)_number];
+    if (self.addresses) {
         NSMutableArray *array = [NSMutableArray array];
-        NSMutableArray *addresses = [NSMutableArray arrayWithArray:_addresses];
+        NSMutableArray *addresses = [NSMutableArray arrayWithArray:self.addresses];
         for (NSString *str in addresses) {
             [array addObject:str];
         }
@@ -1677,7 +1731,9 @@
         _name = dictionary[@"name"];
     }
     if ([allKeys containsObject:@"number"]) {
-        _number = [dictionary[@"number"] integerValue];
+        if ([dictionary[@"number"] isKindOfClass:[NSString class]]) {
+            _number = [LibTools uint16From16String:dictionary[@"number"]];
+        }
     }
     if ([allKeys containsObject:@"addresses"]) {
         NSMutableArray *addresses = [NSMutableArray array];
@@ -1696,7 +1752,32 @@
             [actionList addObject:model];
         }
         _actionList = actionList;
+    } else {
+        NSMutableArray *actionList = [NSMutableArray array];
+        for (NSString *numberStr in _addresses) {
+            ActionModel *model = [[ActionModel alloc] init];
+            model.address = [LibTools uint16From16String:numberStr];
+            [actionList addObject:model];
+        }
+        _actionList = actionList;
     }
+}
+
+- (NSDictionary *)getFormatDictionaryOfSigSceneModel {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    if (_name) {
+        dict[@"name"] = _name;
+    }
+    dict[@"number"] = [NSString stringWithFormat:@"%04lX",(long)_number];
+    if (self.addresses) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSMutableArray *addresses = [NSMutableArray arrayWithArray:self.addresses];
+        for (NSString *str in addresses) {
+            [array addObject:str];
+        }
+        dict[@"addresses"] = array;
+    }
+    return dict;
 }
 
 - (BOOL)isEqual:(id)object{
@@ -1838,6 +1919,7 @@
         _state = DeviceStateOutOfLine;
         _macAddress = @"";
         _name = @"";
+        _security = @"secure";
         _features = [[SigNodeFeatures alloc] init];
         _relayRetransmit = [[SigRelayretransmitModel alloc] init];
         _networkTransmit = [[SigNetworktransmitModel alloc] init];
@@ -1851,6 +1933,8 @@
         _HSL_Hue = 0xffff-1;
         _HSL_Saturation = 0xffff;
         _HSL_Lightness = 0xffff;
+        _heartbeatPub = [[SigHeartbeatPubModel alloc] init];
+        _heartbeatSub = [[NSMutableArray alloc] init];
 //        _sno = @"00000000";
     }
     return self;
@@ -1887,6 +1971,8 @@
         _brightness = node.brightness;
         _temperature = node.temperature;
         _schedulerList = [NSMutableArray arrayWithArray:node.schedulerList];
+        _heartbeatPub = node.heartbeatPub;
+        _heartbeatSub = [NSMutableArray arrayWithArray:node.heartbeatSub];
 //        _sno = node.sno;
     }
     return self;
@@ -1920,6 +2006,8 @@
     device.brightness = self.brightness;
     device.temperature = self.temperature;
     device.schedulerList = [NSMutableArray arrayWithArray:self.schedulerList];
+    device.heartbeatPub = self.heartbeatPub;
+    device.heartbeatSub = [NSMutableArray arrayWithArray:self.heartbeatSub];
 //    device.sno = self.sno;
     
     return device;
@@ -1942,7 +2030,8 @@
 }
 
 - (BOOL)isSensor{
-    return [LibTools uint16From16String:self.cid] == 0x201;
+    return self.features.lowPowerFeature == SigNodeFeaturesState_enabled;
+//    return [LibTools uint16From16String:self.cid] == 0x201;
 }
 
 - (UInt8)HSL_Hue100{
@@ -2162,10 +2251,9 @@
     SigModelIDModel *model = nil;
     NSArray *elements = [NSArray arrayWithArray:self.elements];
     for (SigElementModel *element in elements) {
-        element.parentNode = self;
+        element.parentNodeAddress = self.address;
         NSArray *all = [NSArray arrayWithArray:element.models];
         for (SigModelIDModel *tem in all) {
-            tem.parentElement = element;
             if (tem.getIntModelID == modelID) {
                 model = tem;
                 break;
@@ -2182,11 +2270,10 @@
     SigModelIDModel *model = nil;
     NSArray *elements = [NSArray arrayWithArray:self.elements];
     for (SigElementModel *element in elements) {
-        element.parentNode = self;
+        element.parentNodeAddress = self.address;
         if (element.unicastAddress == elementAddress) {
             NSArray *all = [NSArray arrayWithArray:element.models];
             for (SigModelIDModel *tem in all) {
-                tem.parentElement = element;
                 if (tem.getIntModelID == modelID) {
                     model = tem;
                     break;
@@ -2364,7 +2451,7 @@
             if (model.index != elements.count) {
                 model.index = elements.count;
             }
-            model.parentNode = self;
+            model.parentNodeAddress = self.address;
             [elements addObject:model];
         }
         _elements = elements;
@@ -2401,6 +2488,81 @@
     }
 }
 
+- (NSDictionary *)getFormatDictionaryOfSigNodeModel {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    if (_features) {
+        dict[@"features"] = [_features getDictionaryOfSigFeatureModel];
+    }
+    if (_unicastAddress) {
+        dict[@"unicastAddress"] = _unicastAddress;
+    }
+    dict[@"secureNetworkBeacon"] = [NSNumber numberWithBool:_secureNetworkBeacon];
+    if (_relayRetransmit) {
+        dict[@"relayRetransmit"] = [_relayRetransmit getDictionaryOfSigRelayretransmitModel];
+    }
+    if (_networkTransmit) {
+        dict[@"networkTransmit"] = [_networkTransmit getDictionaryOfSigNetworktransmitModel];
+    }
+    dict[@"configComplete"] = [NSNumber numberWithBool:_configComplete];
+    if (_vid) {
+        dict[@"vid"] = _vid;
+    }
+    if (_cid) {
+        dict[@"cid"] = _cid;
+    }
+    dict[@"blacklisted"] = [NSNumber numberWithBool:_blacklisted];
+    if (_UUID) {
+        dict[@"UUID"] = [LibTools meshUUIDToUUID:_UUID];
+    }
+    if (_security) {
+        dict[@"security"] = _security;
+    }
+    if (_crpl) {
+        dict[@"crpl"] = _crpl;
+    }
+    dict[@"defaultTTL"] = @(_defaultTTL);
+    if (_pid) {
+        dict[@"pid"] = _pid;
+    }
+    if (_name) {
+        dict[@"name"] = _name;
+    }
+    if (_deviceKey) {
+        dict[@"deviceKey"] = _deviceKey;
+    }
+//    if (_sno) {
+//        dict[@"sno"] = _sno;
+//    }
+    if (_elements) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *elements = [NSArray arrayWithArray:_elements];
+        for (SigElementModel *model in elements) {
+            NSDictionary *elementDict = [model getDictionaryOfSigElementModel];
+            [array addObject:elementDict];
+        }
+        dict[@"elements"] = array;
+    }
+    if (_netKeys) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *netKeys = [NSArray arrayWithArray:_netKeys];
+        for (SigNodeKeyModel *model in netKeys) {
+            NSDictionary *netkeyDict = [model getDictionaryOfSigNodeKeyModel];
+            [array addObject:netkeyDict];
+        }
+        dict[@"netKeys"] = array;
+    }
+    if (_appKeys) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *appKeys = [NSArray arrayWithArray:_appKeys];
+        for (SigNodeKeyModel *model in appKeys) {
+            NSDictionary *appkeyDict = [model getDictionaryOfSigNodeKeyModel];
+            [array addObject:appkeyDict];
+        }
+        dict[@"appKeys"] = array;
+    }
+    return dict;
+}
+
 - (void)setCompositionData:(SigPage0 *)compositionData {
     self.cid = [SigHelper.share getUint16String:compositionData.companyIdentifier];
     self.pid = [SigHelper.share getUint16String:compositionData.productIdentifier];
@@ -2415,7 +2577,7 @@
     NSMutableArray *array = [NSMutableArray array];
     NSArray *elements = [NSArray arrayWithArray:compositionData.elements];
     for (SigElementModel *element in elements) {
-        element.parentNode = self;
+        element.parentNodeAddress = self.address;
         NSArray *all = [NSArray arrayWithArray:element.models];
         for (SigModelIDModel *modelID in all) {
             [self setBindSigNodeKeyModel:self.appKeys.firstObject toSigModelIDModel:modelID];
@@ -2431,10 +2593,12 @@
     page0.productIdentifier = [LibTools uint16From16String:self.pid];
     page0.versionIdentifier = [LibTools uint16From16String:self.vid];
     page0.minimumNumberOfReplayProtectionList = [LibTools uint16From16String:self.crpl];
-    page0.features.proxyFeature = self.features.proxyFeature;
-    page0.features.friendFeature = self.features.friendFeature;
-    page0.features.relayFeature = self.features.relayFeature;
-    page0.features.lowPowerFeature = self.features.lowPowerFeature;
+    SigNodeFeatures *features = [[SigNodeFeatures alloc] init];
+    features.proxyFeature = self.features.proxyFeature;
+    features.friendFeature = self.features.friendFeature;
+    features.relayFeature = self.features.relayFeature;
+    features.lowPowerFeature = self.features.lowPowerFeature;
+    page0.features = features;
     page0.elements = [NSMutableArray arrayWithArray:self.elements];
     return page0;
 }
@@ -2572,13 +2736,14 @@
                         hasPublish = YES;
                         sigModelIDModel.publish = [[SigPublishModel alloc] init];
                         SigRetransmitModel *retransmit = [[SigRetransmitModel alloc] init];
-                        retransmit.count = 2;
-                        retransmit.interval = 5;
+                        retransmit.count = 5;
+                        retransmit.interval = (2+1)*50;//4.2.2.7 Publish Retransmit Interval Steps
                         sigModelIDModel.publish.index = 0;
                         sigModelIDModel.publish.credentials = 0;
                         sigModelIDModel.publish.ttl = 0xff;
-                        //json数据中，period为publish周期的毫秒数据
-                        sigModelIDModel.publish.period = 1000 * kPublishInterval;
+                        //json数据中，period为publish周期的毫秒数据，默认20秒
+                        sigModelIDModel.publish.period.numberOfSteps = kPublishInterval;
+                        sigModelIDModel.publish.period.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_seconds];
                         sigModelIDModel.publish.retransmit = retransmit;
                         sigModelIDModel.publish.address = [NSString stringWithFormat:@"%04lX",(long)kMeshAddress_allNodes];
                         break;
@@ -2739,6 +2904,11 @@
         self.HSL_Lightness = message.HSLLightness;
         self.HSL_Hue = message.HSLHue;
         self.HSL_Saturation = message.HSLSaturation;
+    } else if ([responseMessage isMemberOfClass:[SigTelinkOnlineStatusMessage class]]) {
+        SigTelinkOnlineStatusMessage *message = (SigTelinkOnlineStatusMessage *)responseMessage;
+        self.state = message.state;
+        self.brightness = [SigHelper.share getUint16LightnessFromUInt8Lum:message.brightness];
+        self.temperature = [SigHelper.share getUint16TemperatureFromUInt8Temperature100:message.temperature];
     } else {
 //        TeLogWarn(@"Node response status Model is Undefined.");
     }
@@ -2771,6 +2941,14 @@
 
 - (UInt8)steps {
     return (UInt8)(_interval / 10) - 1;
+}
+
+- (instancetype)init {
+    if (self = [super init]) {
+        _count = 1;
+        _interval = 10;
+    }
+    return self;
 }
 
 @end
@@ -2806,6 +2984,14 @@
 /// The interval in as `TimeInterval` in seconds.
 - (NSTimeInterval)timeInterval {
     return (NSTimeInterval)_interval / 1000.0;
+}
+
+- (instancetype)init {
+    if (self = [super init]) {
+        _count = 1;
+        _interval = 10;
+    }
+    return self;
 }
 
 - (instancetype)initWithSigConfigNetworkTransmitSet:(SigConfigNetworkTransmitSet *)request {
@@ -2858,10 +3044,10 @@
 
 - (instancetype)initWithRawValue:(UInt16)rawValue {
     if (self = [super init]) {
-        _relayFeature = (rawValue & 0x01) == 0 ? SigNodeFeaturesState_notSupported : SigNodeFeaturesState_notEnabled;
-        _proxyFeature = (rawValue & 0x02) == 0 ? SigNodeFeaturesState_notSupported : SigNodeFeaturesState_notEnabled;
-        _friendFeature = (rawValue & 0x04) == 0 ? SigNodeFeaturesState_notSupported : SigNodeFeaturesState_notEnabled;
-        _lowPowerFeature = (rawValue & 0x08) == 0 ? SigNodeFeaturesState_notSupported : SigNodeFeaturesState_notEnabled;
+        _relayFeature = (rawValue & 0x01) == 0 ? SigNodeFeaturesState_notSupported : SigNodeFeaturesState_enabled;
+        _proxyFeature = (rawValue & 0x02) == 0 ? SigNodeFeaturesState_notSupported : SigNodeFeaturesState_enabled;
+        _friendFeature = (rawValue & 0x04) == 0 ? SigNodeFeaturesState_notSupported : SigNodeFeaturesState_enabled;
+        _lowPowerFeature = (rawValue & 0x08) == 0 ? SigNodeFeaturesState_notSupported : SigNodeFeaturesState_enabled;
     }
     return self;
 }
@@ -3010,7 +3196,6 @@
         for (int i=0; i<numS; i++) {
             memcpy(&tem16, dataByte+*offset+i*2, 2);
             SigModelIDModel *modelID = [[SigModelIDModel alloc] initWithSigModelId:tem16];
-            modelID.parentElement = self;
             [self addModel:modelID];
         }
         *offset += sigModelsByteCount;
@@ -3019,9 +3204,9 @@
             UInt16 companyId = tem16;
             memcpy(&tem16, dataByte+*offset+i*4+2, 2);
             UInt16 modelId = tem16;
-            UInt32 vendorModelId = (UInt32)companyId << 16 | (UInt32)modelId;
+//            UInt32 vendorModelId = (UInt32)companyId << 16 | (UInt32)modelId;
+            UInt32 vendorModelId = (UInt32)modelId << 16 | (UInt32)companyId;
             SigModelIDModel *modelID = [[SigModelIDModel alloc] initWithVendorModelId:vendorModelId];
-            modelID.parentElement = self;
             [self addModel:modelID];
         }
         *offset += vendorModelsByteCount;
@@ -3030,12 +3215,15 @@
 }
 
 - (void)addModel:(SigModelIDModel *)model {
-    model.parentElement = self;
     [_models addObject:model];
 }
 
 - (UInt16)unicastAddress {
-    return (UInt16)_index + _parentNode.address;
+    return (UInt16)_index + _parentNodeAddress;
+}
+
+- (SigNodeModel * _Nullable)getParentNode {
+    return [SigDataSource.share getNodeWithAddress:_parentNodeAddress];
 }
 
 - (SigLocation)getSigLocation {
@@ -3051,9 +3239,7 @@
     if (_name) {
         dict[@"name"] = _name;
     }
-    if (_location) {
-        dict[@"location"] = _location;
-    }
+    dict[@"location"] = _location;
     dict[@"index"] = @(_index);
     if (_models) {
         NSMutableArray *array = [NSMutableArray array];
@@ -3087,7 +3273,6 @@
         for (NSDictionary *modelIDDict in array) {
             SigModelIDModel *model = [[SigModelIDModel alloc] init];
             [model setDictionaryToSigModelIDModel:modelIDDict];
-            model.parentElement = self;
             [models addObject:model];
         }
         _models = models;
@@ -3112,13 +3297,13 @@
     tem8 = (UInt8)vendorModels.count;
     [mData appendData:[NSData dataWithBytes:&tem8 length:1]];
     for (SigModelIDModel *model in sigModels) {
-        tem16 = model.modelIdentifier;
+        tem16 = model.getIntModelIdentifier;
         [mData appendData:[NSData dataWithBytes:&tem16 length:2]];
     }
     for (SigModelIDModel *model in vendorModels) {
-        tem16 = model.companyIdentifier;
+        tem16 = model.getIntCompanyIdentifier;
         [mData appendData:[NSData dataWithBytes:&tem16 length:2]];
-        tem16 = model.modelIdentifier;
+        tem16 = model.getIntModelIdentifier;
         [mData appendData:[NSData dataWithBytes:&tem16 length:2]];
     }
     return mData;
@@ -3150,25 +3335,35 @@
 }
 
 - (UInt16)getIntModelIdentifier {
+    //sig model:1306 vendor mdoel:00010211
     UInt16 tem = 0;
     if (self.modelId.length == 4) {
         tem = [LibTools uint16From16String:self.modelId];
     } else if (self.modelId.length == 8) {
-        tem = [LibTools uint16From16String:[self.modelId substringFromIndex:4]];
-    }
-    return tem;
-}
-
-- (UInt16)getIntCompanyIdentifier {
-    UInt16 tem = 0;
-    if (self.modelId.length == 8) {
+//        tem = [LibTools uint16From16String:[self.modelId substringFromIndex:4]];
         tem = [LibTools uint16From16String:[self.modelId substringToIndex:4]];
     }
     return tem;
 }
 
+- (UInt16)getIntCompanyIdentifier {
+    //sig model:1306 vendor mdoel:00010211
+    UInt16 tem = 0;
+    if (self.modelId.length == 8) {
+//        tem = [LibTools uint16From16String:[self.modelId substringToIndex:4]];
+        tem = [LibTools uint16From16String:[self.modelId substringFromIndex:4]];
+    }
+    return tem;
+}
+
 - (instancetype)initWithSigModelId:(UInt16)sigModelId {
-    return [self initWithVendorModelId:(UInt32)sigModelId];
+    if (self = [super init]) {
+        _modelId = [SigHelper.share getUint16String:sigModelId];
+        _subscribe = [NSMutableArray array];
+        _bind = [NSMutableArray array];
+        _delegate = nil;
+    }
+    return self;
 }
 
 - (instancetype)initWithVendorModelId:(UInt32)vendorModelId {
@@ -3181,23 +3376,30 @@
     return self;
 }
 
-- (UInt16)modelIdentifier {
-    return (UInt16)([self getIntModelID] & 0x0000FFFF);
-}
-
-- (UInt16)companyIdentifier {
-    if ([self getIntModelID] > 0xFFFF) {
-        return (UInt16)([self getIntModelID] >> 16);
-    }
-    return 0;
-}
+//- (UInt16)modelIdentifier {
+//    //sig model:1306 vendor mdoel:00010211
+//    if ([self getIntModelID] > 0xFFFF) {
+//        return (UInt16)(([self getIntModelID] >> 4) & 0x0000FFFF);
+//    } else {
+//        return (UInt16)([self getIntModelID] & 0x0000FFFF);
+//    }
+////    return (UInt16)([self getIntModelID] & 0x0000FFFF);
+//}
+//
+//- (UInt16)companyIdentifier {
+//    //sig model:1306 vendor mdoel:00010211
+//    if ([self getIntModelID] > 0xFFFF) {
+//        return (UInt16)([self getIntModelID] & 0x0000FFFF);
+////        return (UInt16)([self getIntModelID] >> 16);
+//    }
+//    return 0;
+//}
 
 - (BOOL)isBluetoothSIGAssigned {
-    return [self getIntModelID] <= 0xFFFF;
+    return _modelId.length == 4;
 }
 
 - (NSArray <SigGroupModel *>*)subscriptions {
-//    return parentElement.parentNode?.meshNetwork?.groups.filter({ subscribe.contains($0._address )}) ?? []
     return @[];
 }
 
@@ -3283,21 +3485,6 @@
 /// Removes all subscribtions from this Model.
 - (void)unsubscribeFromAll {
     [_subscribe removeAllObjects];
-}
-
-/// List of Application Keys bound to this Model.
-///
-/// The list will not contain unknown Application Keys bound
-/// to this Model, possibly bound by other Provisioner.
-- (NSMutableArray <SigAppkeyModel *>*)boundApplicationKeys {
-    NSMutableArray *tem = [NSMutableArray array];
-    NSArray *appKeys = [NSArray arrayWithArray:self.parentElement.parentNode.appKeys];
-    for (SigAppkeyModel *key in appKeys) {
-        if ([self.bind containsObject:@(key.index)]) {
-            [tem addObject:key];
-        }
-    }
-    return tem;
 }
 
 /// Whether the given Application Key is bound to this Model.
@@ -3435,7 +3622,7 @@
         retransmit.count = 0;
         retransmit.interval = 0;
         _retransmit = retransmit;
-        _period = 0;
+        _period = [[SigPeriodModel alloc] init];
         _address = @"0000";
     }
     return self;
@@ -3449,7 +3636,9 @@
     dict[@"index"] = @(_index);
     dict[@"credentials"] = @(_credentials);
     dict[@"ttl"] = @(_ttl);
-    dict[@"period"] = @(_period);
+    if (_period) {
+        dict[@"period"] = [_period getDictionaryOfSigPeriodModel];
+    }
     if (_retransmit) {
         dict[@"retransmit"] = [_retransmit getDictionaryOfSigRetransmitModel];
     }
@@ -3474,7 +3663,11 @@
         _ttl = [dictionary[@"ttl"] integerValue];
     }
     if ([allKeys containsObject:@"period"]) {
-        _period = [dictionary[@"period"] integerValue];
+        SigPeriodModel *period = [[SigPeriodModel alloc] init];
+        if ([dictionary[@"period"] isKindOfClass:[NSDictionary class]]) {
+            [period setDictionaryToSigPeriodModel:dictionary[@"period"]];
+            _period = period;
+        }
     }
     if ([allKeys containsObject:@"retransmit"]) {
         SigRetransmitModel *retransmit = [[SigRetransmitModel alloc] init];
@@ -3505,6 +3698,105 @@
     }
     if ([allKeys containsObject:@"interval"]) {
         _interval = [dictionary[@"interval"] integerValue];
+    }
+}
+
+@end
+
+
+@implementation SigPeriodModel
+
+- (NSDictionary *)getDictionaryOfSigPeriodModel {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    dict[@"numberOfSteps"] = @(_numberOfSteps);
+    dict[@"resolution"] = @(_resolution);
+    return dict;
+}
+
+- (void)setDictionaryToSigPeriodModel:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:@"numberOfSteps"]) {
+        _numberOfSteps = [dictionary[@"numberOfSteps"] integerValue];
+    }
+    if ([allKeys containsObject:@"resolution"]) {
+        _resolution = [dictionary[@"resolution"] integerValue];
+    }
+}
+
+@end
+
+
+@implementation SigHeartbeatPubModel
+
+- (NSDictionary *)getDictionaryOfSigHeartbeatPubModel {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    if (_address) {
+        dict[@"address"] = _address;
+    }
+    dict[@"period"] = @(_period);
+    dict[@"ttl"] = @(_ttl);
+    dict[@"index"] = @(_index);
+    if (_features) {
+        dict[@"features"] = _features;
+    }
+    return dict;
+}
+
+- (void)setDictionaryToSigHeartbeatPubModel:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:@"address"]) {
+        _address = dictionary[@"address"];
+    }
+    if ([allKeys containsObject:@"period"]) {
+        _period = [dictionary[@"period"] integerValue];
+    }
+    if ([allKeys containsObject:@"ttl"]) {
+        _ttl = [dictionary[@"ttl"] integerValue];
+    }
+    if ([allKeys containsObject:@"index"]) {
+        _index = [dictionary[@"index"] integerValue];
+    }
+    if ([allKeys containsObject:@"features"]) {
+        _features = dictionary[@"features"];
+    }
+}
+
+@end
+
+
+@implementation SigHeartbeatSubModel
+
+- (NSDictionary *)getDictionaryOfSigHeartbeatSubModel {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    if (_source) {
+        dict[@"source"] = _source;
+    }
+    if (_destination) {
+        dict[@"destination"] = _destination;
+    }
+    dict[@"period"] = @(_period);
+    return dict;
+}
+
+- (void)setDictionaryToSigHeartbeatSubModel:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:@"source"]) {
+        _source = dictionary[@"source"];
+    }
+    if ([allKeys containsObject:@"destination"]) {
+        _destination = dictionary[@"destination"];
+    }
+    if ([allKeys containsObject:@"period"]) {
+        _period = [dictionary[@"period"] integerValue];
     }
 }
 

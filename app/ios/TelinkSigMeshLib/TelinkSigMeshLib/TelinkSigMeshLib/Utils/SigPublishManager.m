@@ -86,8 +86,9 @@
     if (timer) {
         [_checkOfflineTimerDict removeObjectForKey:address];
     }
-    [timer invalidate];
+    if (timer) {
+        [timer invalidate];
+    }
 }
-
 
 @end

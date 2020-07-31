@@ -134,4 +134,8 @@
     return mData;
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<%p> - SigSegmentAcknowledgmentMessage, source:(0x%X), destination:(0x%X) type:(%@), sequenceZero:(0x%X), opCode:(0x%X), isOnBehalfOfLowPowerNode:%d,blockAck:(0x%X),segmentOffset:(0x%X),lastSegmentNumber:(0x%X)", self, self.source,self.destination,self.type==SigLowerTransportPduType_accessMessage?@"accessMessage":@"controlMessage",_sequenceZero,_opCode,_isOnBehalfOfLowPowerNode,(unsigned int)_blockAck,_segmentOffset,_lastSegmentNumber];
+}
+
 @end
