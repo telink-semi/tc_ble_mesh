@@ -310,7 +310,8 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
                 long currentTime = System.currentTimeMillis();
                 if (seekBar == sb_lum) {
                     deviceInfo.lum = progress;
-                    tv_lum.setText(getString(R.string.lum_progress, Math.max(1, progress), Integer.toHexString(lumEleInfo.keyAt(0))));
+                    progress = Math.max(1, progress);
+                    tv_lum.setText(getString(R.string.lum_progress, progress, Integer.toHexString(lumEleInfo.keyAt(0))));
                     if ((currentTime - preTime) >= DELAY_TIME || immediate) {
                         preTime = currentTime;
                         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();

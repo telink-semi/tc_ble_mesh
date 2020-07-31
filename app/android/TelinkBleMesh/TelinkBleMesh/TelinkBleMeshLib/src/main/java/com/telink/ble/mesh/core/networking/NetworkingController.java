@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     NetworkingController.java 
+ * @file NetworkingController.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.networking;
 
@@ -1375,7 +1375,24 @@ public class NetworkingController {
         }
 
         AccessLayerPDU accessPDU = null;
+
         if (seqAuth != lastSeqAuth || lastSegSrc != src) {
+            if (lastSegComplete) {
+                log("last segment complete");
+                // save last seqAuth
+                saveCompletedSeqAuth(lastSegSrc, lastSeqAuth);
+                lastSegComplete = false;
+                // new segment message
+                lastSeqAuth = seqAuth;
+                lastSegSrc = src;
+                receivedSegmentedMessageBuffer.clear();
+            }else {
+                sendSegmentBlockBusyAck(src, seqZero, seqAuth);
+                return null;
+            }
+        }
+
+       /* if (seqAuth != lastSeqAuth || lastSegSrc != src) {
             if (lastSegComplete) {
                 log("last segment complete");
                 // save last seqAuth
@@ -1390,7 +1407,7 @@ public class NetworkingController {
             } else {
                 sendSegmentBlockBusyAck(src, seqZero, seqAuth);
             }
-        } else {
+        } else*/ {
             receivedSegmentedMessageBuffer.put(segO, message);
 
             int messageCnt = receivedSegmentedMessageBuffer.size();

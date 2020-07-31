@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     MeshController.java 
+ * @file MeshController.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.foundation;
 
@@ -1327,11 +1327,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     private BleScanner.ScannerCallback scanCallback = new BleScanner.ScannerCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-//            if (!device.getAddress().toUpperCase().equals("A4:C1:38:3F:4C:05")) return;
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
 //            if (!device.getAddress().toUpperCase().contains("FF:FF:BB:CC:DD")) return;
-//            if (!device.getAddress().toUpperCase().contains("20:20")) return;
-//            if (!device.getAddress().contains("30:08")) return;
             onScanFilter(device, rssi, scanRecord);
         }
 
