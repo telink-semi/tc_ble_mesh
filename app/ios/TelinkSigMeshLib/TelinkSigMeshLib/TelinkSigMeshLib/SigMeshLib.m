@@ -340,6 +340,7 @@ static SigMeshLib *shareLib = nil;
         [command.retryTimer invalidate];
         command.retryTimer = nil;
     }
+    command.retryCount = 0;
     __weak typeof(self) weakSelf = self;
     dispatch_async(weakSelf.queue, ^{
         [weakSelf.networkManager cancelSigMessageHandle:command.messageHandle];

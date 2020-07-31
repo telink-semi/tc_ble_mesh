@@ -1,3 +1,24 @@
+/********************************************************************************************************
+ * @file     FirmwareUpdatingController.java 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
 package com.telink.ble.mesh.core.access;
 
 import android.os.Handler;
@@ -35,7 +56,6 @@ import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.TransferStat
 import com.telink.ble.mesh.core.networking.NetworkingController;
 import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
-import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
@@ -549,7 +569,10 @@ public class FirmwareUpdatingController {
                     break;
 
                 case STEP_UPDATE_APPLY:
-                    onMeshMessagePrepared(FirmwareUpdateApplyMessage.getSimple(meshAddress, appKeyIndex));
+                    FirmwareUpdateApplyMessage applyMessage = FirmwareUpdateApplyMessage.getSimple(meshAddress, appKeyIndex);
+                    // for remote reliable apply
+                    applyMessage.setRetryCnt(10);
+                    onMeshMessagePrepared(applyMessage);
                     /*onMeshMessagePrepared(FirmwareUpdateApplyMessage.getSimple(meshAddress,
                             appKeyIndex,
                             1,
@@ -579,6 +602,7 @@ public class FirmwareUpdatingController {
     }
 
     private void onMeshMessagePrepared(MeshMessage meshMessage) {
+        meshMessage.setRetryCnt(10);
         log("mesh message prepared: " + meshMessage.getClass().getSimpleName()
                 + String.format(" opcode: 0x%04X -- dst: 0x%04X", meshMessage.getOpcode(), meshMessage.getDestinationAddress()));
         if (accessBridge != null) {
@@ -711,7 +735,6 @@ public class FirmwareUpdatingController {
         if (status != UpdateStatus.SUCCESS) {
             onDeviceFail(nodes.get(nodeIndex), "firmware update status err");
         } else {
-
             final int step = this.step;
             /*boolean pass = (step == STEP_UPDATE_START && phase == FirmwareUpdateStatusMessage.PHASE_IN_PROGRESS)
                     || (step == STEP_UPDATE_GET && phase == FirmwareUpdateStatusMessage.PHASE_READY)
@@ -722,16 +745,17 @@ public class FirmwareUpdatingController {
             } else {
                 final UpdatePhase phase = UpdatePhase.valueOf(firmwareUpdateStatusMessage.getPhase() & 0xFF);
                 if (step == STEP_UPDATE_APPLY) {
-                    if (phase == UpdatePhase.VERIFICATION_SUCCESS){
+                    if (phase == UpdatePhase.VERIFICATION_SUCCESS
+                    || phase == UpdatePhase.APPLYING_UPDATE) {
                         onDeviceSuccess(nodes.get(nodeIndex));
-                    }else {
+                    } else {
                         onDeviceFail(nodes.get(nodeIndex), "phase error when update apply");
                     }
                 }
             }
-            nodeIndex++;
-            executeUpdatingAction();
         }
+        nodeIndex++;
+        executeUpdatingAction();
 
     }
 
@@ -881,19 +905,41 @@ public class FirmwareUpdatingController {
      * reliable command complete
      */
     public void onUpdatingCommandComplete(boolean success, int opcode, int rspMax, int rspCount) {
-        log(String.format("updating command complete: opcode-%04X success?" + success, opcode));
+        log(String.format("updating command complete: opcode-%04X success?-%b", opcode, success));
         if (!success) {
+
+            /*
+            STEP_SET_SUBSCRIPTION = 1;
+            STEP_GET_FIRMWARE_INFO = 2;
+            STEP_METADATA_CHECK = 3;
+            STEP_UPDATE_START = 4;
+            STEP_BLOB_TRANSFER_GET = 5;
+            STEP_GET_BLOB_INFO = 6;
+            STEP_BLOB_TRANSFER_START = 7;
+            STEP_BLOB_BLOCK_TRANSFER_START = 8;
+            STEP_BLOB_CHUNK_SENDING = 9;
+            STEP_GET_BLOB_BLOCK = 10;
+            STEP_UPDATE_GET = 11;
+            STEP_UPDATE_APPLY = 12;
+            STEP_UPDATE_COMPLETE = 13;
+             */
+
             // command timeout
-            final boolean deviceFailed = (opcode == Opcode.FIRMWARE_UPDATE_INFORMATION_GET.value && step == STEP_GET_FIRMWARE_INFO)
-                    || (opcode == Opcode.CFG_MODEL_SUB_ADD.value && step == STEP_SET_SUBSCRIPTION)
-                    || (opcode == Opcode.BLOB_INFORMATION_GET.value && step == STEP_GET_BLOB_INFO)
-                    || (opcode == Opcode.FIRMWARE_UPDATE_FIRMWARE_METADATA_CHECK.value && step == STEP_METADATA_CHECK)
-                    || (opcode == Opcode.FIRMWARE_UPDATE_START.value && step == STEP_UPDATE_START)
-                    || (opcode == Opcode.BLOB_TRANSFER_START.value && step == STEP_BLOB_TRANSFER_START)
-                    || (opcode == Opcode.BLOB_BLOCK_START.value && step == STEP_BLOB_BLOCK_TRANSFER_START)
-                    || (opcode == Opcode.BLOB_BLOCK_GET.value && step == STEP_GET_BLOB_BLOCK)
-                    || (opcode == Opcode.FIRMWARE_UPDATE_GET.value && step == STEP_UPDATE_GET)
-                    || (opcode == Opcode.FIRMWARE_UPDATE_APPLY.value && step == STEP_UPDATE_APPLY);
+            final boolean deviceFailed =
+                    (opcode ==
+                            Opcode.CFG_MODEL_SUB_ADD.value && step == STEP_SET_SUBSCRIPTION) ||
+                            (opcode == Opcode.FIRMWARE_UPDATE_INFORMATION_GET.value && step == STEP_GET_FIRMWARE_INFO) ||
+                            (opcode == Opcode.FIRMWARE_UPDATE_FIRMWARE_METADATA_CHECK.value && step == STEP_METADATA_CHECK) ||
+                            (opcode == Opcode.FIRMWARE_UPDATE_START.value && step == STEP_UPDATE_START) ||
+                            (opcode == Opcode.BLOB_TRANSFER_GET.value && step == STEP_BLOB_TRANSFER_GET) ||
+
+                            (opcode == Opcode.BLOB_INFORMATION_GET.value && step == STEP_GET_BLOB_INFO) ||
+
+                            (opcode == Opcode.BLOB_TRANSFER_START.value && step == STEP_BLOB_TRANSFER_START) ||
+                            (opcode == Opcode.BLOB_BLOCK_START.value && step == STEP_BLOB_BLOCK_TRANSFER_START)
+                            || (opcode == Opcode.BLOB_BLOCK_GET.value && step == STEP_GET_BLOB_BLOCK)
+                            || (opcode == Opcode.FIRMWARE_UPDATE_GET.value && step == STEP_UPDATE_GET)
+                            || (opcode == Opcode.FIRMWARE_UPDATE_APPLY.value && step == STEP_UPDATE_APPLY);
             if (deviceFailed) {
                 String desc = String.format(Locale.getDefault(), "device failed at step: %02d when sending: 0x%04X", step, opcode);
                 onDeviceFail(nodes.get(nodeIndex), desc);
