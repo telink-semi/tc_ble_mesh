@@ -1,6 +1,6 @@
 # TelinkSigMeshLib
 
-version: v3.2.0
+version: v3.2.2
 
 ## About
 
@@ -72,7 +72,7 @@ bind model to appkey.
 ```Object-C
 - (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productId:(UInt16)productId compositionData:(NSData *)compositionData currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish;
 ```
-* 7. Start connect mesh network(this api will retry connect action every 10 seconds unless connect success or call `stopMeshConnectWithComplete:`)
+* 7. Start connect mesh network(this api will retry connect action every 5 seconds unless connect success or call `stopMeshConnectWithComplete:`)
 
 ```Object-C
 - (void)startMeshConnectWithComplete:(nullable startMeshConnectResultBlock)complete;
