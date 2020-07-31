@@ -349,34 +349,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
      * send provisioning pdu by ProvisioningController
      */
     @Override
-    public void onCommandPrepared(byte type, byte[] data) {
-        if (type != ProxyPDU.TYPE_PROVISIONING_PDU) return;
-
-        synchronized (WAITING_LOCK) {
-            if (outboundReportWaiting) {
-                if (cachePdu == null) {
-                    cachePdu = data;
-                } else {
-                    log("cache pdu already exists");
-                }
-                return;
-            }
-        }
-
-        transmittingPdu = data.clone();
-
-        ProvisioningPduSendMessage provisioningPduSendMessage = ProvisioningPduSendMessage.getSimple(
-                provisioningDevice.getServerAddress(),
-                0,
-                (byte) this.outboundNumber,
-                transmittingPdu
-        );
-        provisioningPduSendMessage.setRetryCnt(8);
-//        delayHandler.removeCallbacks(provisioningPduTimeoutTask);
-//        delayHandler.postDelayed(provisioningPduTimeoutTask, OUTBOUND_WAITING_TIMEOUT);
-        log("send provisioning pdu: " + this.outboundNumber);
-        onMeshMessagePrepared(provisioningPduSendMessage);
-    }
+    public void onCommandPrepared(byte type, byte[] data) {}
 
 
     private void log(String logMessage) {
