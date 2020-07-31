@@ -60,7 +60,7 @@
     if (!exist) {
         BOOL ret = [manager createFileAtPath:path contents:nil attributes:nil];
         if (ret) {
-            NSDictionary *jsonDict = [SigDataSource.share getDictionaryFromDataSource];
+            NSDictionary *jsonDict = [SigDataSource.share getFormatDictionaryFromDataSource];
             NSData *tempData = [LibTools getJSONDataWithDictionary:jsonDict];
 //            NSData *tempData = [SigDataSource.share.getJsonStringFromeDataSource dataUsingEncoding:NSUTF8StringEncoding];
             NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:path];

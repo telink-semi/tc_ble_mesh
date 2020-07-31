@@ -199,7 +199,7 @@
                 TeLogInfo(@"RP-Remote:provision success, %@->0X%X",identify,address);
             SigNodeModel *node = [SigDataSource.share getNodeWithAddress:provisionAddress];
             if (node) {
-                [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_success retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
+                [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_success retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
                     
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     if (error != nil && isResponseAll == NO) {
@@ -215,7 +215,7 @@
             }
         } fail:^(NSError * _Nonnull error) {
             TeLogDebug(@"RP-Remote:provision fail.");
-            [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_fail retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
+            [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_fail retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
                 
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 if (error != nil && isResponseAll == NO) {
@@ -301,6 +301,16 @@
     [self.remoteSource sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
         return [(SigRemoteScanRspModel *)obj1 RSSI] < [(SigRemoteScanRspModel *)obj2 RSSI];
     }];
+    [self updateUIOfScanResponseWithPeripheralUUID:[LibTools convertDataToHexStr:scanRemoteModel.reportNodeUUID] macAddress:scanRemoteModel.macAddress address:0x0000];
+}
+
+- (void)updateUIOfScanResponseWithPeripheralUUID:(NSString *)peripheralUUID macAddress:(NSString *)macAddress address:(UInt16)address {
+    [self checkExistAddModelWithPeripheralUUID:peripheralUUID macAddress:macAddress address:address];
+    AddDeviceModel *model = [self getAddDeviceModelWithPeripheralUUID:peripheralUUID];
+    model.state = AddDeviceModelStateScaned;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+    });
 }
 
 - (void)updateUIOfStartProvisionWithPeripheralUUID:(NSString *)peripheralUUID macAddress:(NSString *)macAddress address:(UInt16)address {

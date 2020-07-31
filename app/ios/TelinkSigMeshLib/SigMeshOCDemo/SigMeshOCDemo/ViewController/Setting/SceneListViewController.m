@@ -109,6 +109,7 @@
 - (void)clickAdd{
     SigSceneModel *model = [[SigSceneModel alloc] init];
     model.number = [[SigDataSource share] getNewSceneAddress];
+    model.name = [NSString stringWithFormat:@"scene:0x%lX",(long)model.number];
     SceneDetailViewController *vc = (SceneDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SceneDetailViewControllerID storybroad:@"Setting"];
     vc.model = model;
     [self.navigationController pushViewController:vc animated:YES];

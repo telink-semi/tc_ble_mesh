@@ -117,7 +117,7 @@
             return;
         }
         __block BOOL editSubSuccess = NO;
-        [DemoCommand editSubscribeListWithWithDestination:weakSelf.model.address isAdd:button.isSelected groupAddress:weakSelf.groupAddress elementAddress:eleAddress modelIdentifier:option companyIdentifier:0 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
+        [DemoCommand editSubscribeListWithWithDestination:weakSelf.model.address isAdd:button.isSelected groupAddress:weakSelf.groupAddress elementAddress:eleAddress modelIdentifier:option companyIdentifier:0 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
             if (weakSelf.isEditing && responseMessage.elementAddress == eleAddress && responseMessage.address == weakSelf.groupAddress) {
                 if (responseMessage.modelIdentifier == option) {
                     if (responseMessage.status == SigConfigMessageStatus_success) {

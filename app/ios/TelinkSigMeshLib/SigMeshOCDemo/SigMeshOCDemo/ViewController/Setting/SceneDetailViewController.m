@@ -79,7 +79,7 @@
     //===========test==========//
 //    ActionModel *model = self.allActions[indexPath.row];
 //    TeLogDebug(@"getCompositionData 0x%02x",model.address);
-//    [SDKLibCommand configCompositionDataGetWithDestination:model.address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
+//    [SDKLibCommand configCompositionDataGetWithDestination:model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
 //        TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
 //    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 //        TeLogDebug(@"finish.");

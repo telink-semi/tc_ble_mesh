@@ -74,7 +74,7 @@
     }];
 }
 
--(void)dealloc{
+- (void)dealloc {
     TeLogInfo(@"");
 }
 

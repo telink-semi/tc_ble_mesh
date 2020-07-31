@@ -6,6 +6,20 @@
 	objectVersion = 50;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		2567D7A324B849B60075E7E8 /* Release_TelinkSigMeshLib */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 2567D7A624B849B60075E7E8 /* Build configuration list for PBXAggregateTarget "Release_TelinkSigMeshLib" */;
+			buildPhases = (
+				2567D7A724B84A5F0075E7E8 /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = Release_TelinkSigMeshLib;
+			productName = Release_TelinkSigMeshLib;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		25151BFA2362F2AC00967668 /* SigMessageHandle.h in Headers */ = {isa = PBXBuildFile; fileRef = 25151BF82362F2AC00967668 /* SigMessageHandle.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25151BFB2362F2AC00967668 /* SigMessageHandle.m in Sources */ = {isa = PBXBuildFile; fileRef = 25151BF92362F2AC00967668 /* SigMessageHandle.m */; };
@@ -516,6 +530,7 @@
 		255394F624907A9B0095B499 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
 		255394F724907A9B0095B499 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libssl.a; sourceTree = "<group>"; };
 		255394F824907A9B0095B499 /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		2567D88524B84BD00075E7E8 /* Script.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Script.sh; sourceTree = "<group>"; };
 		256A68B72459129C00131CC4 /* TelinkHttpManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TelinkHttpManager.h; sourceTree = "<group>"; };
 		256A68B82459129C00131CC4 /* TelinkHttpManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TelinkHttpManager.m; sourceTree = "<group>"; };
 		258A003E23A8BA5A003D2148 /* OTAManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OTAManager.m; sourceTree = "<group>"; };
@@ -954,6 +969,7 @@
 		25C0AFCF235D597400846CFB = {
 			isa = PBXGroup;
 			children = (
+				2567D88524B84BD00075E7E8 /* Script.sh */,
 				25C0AFDB235D597400846CFB /* TelinkSigMeshLib */,
 				25C0AFDA235D597400846CFB /* Products */,
 				2528952A2468F13400E590F9 /* TelinkSigMeshLib copy-Info.plist */,
@@ -1338,6 +1354,9 @@
 				LastUpgradeCheck = 1110;
 				ORGANIZATIONNAME = "梁家誌";
 				TargetAttributes = {
+					2567D7A324B849B60075E7E8 = {
+						CreatedOnToolsVersion = 11.5;
+					};
 					25C0AFD8235D597400846CFB = {
 						CreatedOnToolsVersion = 11.1;
 						LastSwiftMigration = 1110;
@@ -1359,6 +1378,7 @@
 			targets = (
 				25C0AFD8235D597400846CFB /* TelinkSigMeshLib */,
 				252894542468F13400E590F9 /* TelinkSigMeshLibExtensions */,
+				2567D7A324B849B60075E7E8 /* Release_TelinkSigMeshLib */,
 			);
 		};
 /* End PBXProject section */
@@ -1383,6 +1403,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		2567D7A724B84A5F0075E7E8 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n${SRCROOT}/Script.sh TelinkSigMeshLib\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		252894E52468F13400E590F9 /* Sources */ = {
@@ -1574,6 +1614,24 @@
 			};
 			name = Release;
 		};
+		2567D7A424B849B60075E7E8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = J3AJAYU5N6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		2567D7A524B849B60075E7E8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = J3AJAYU5N6;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		25C0AFDF235D597400846CFB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1699,6 +1757,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -1780,6 +1839,15 @@
 			buildConfigurations = (
 				252895272468F13400E590F9 /* Debug */,
 				252895282468F13400E590F9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2567D7A624B849B60075E7E8 /* Build configuration list for PBXAggregateTarget "Release_TelinkSigMeshLib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2567D7A424B849B60075E7E8 /* Debug */,
+				2567D7A524B849B60075E7E8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

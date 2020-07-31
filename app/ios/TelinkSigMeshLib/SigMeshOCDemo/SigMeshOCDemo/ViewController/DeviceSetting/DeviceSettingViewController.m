@@ -34,6 +34,7 @@
 #import "DeviceSubscriptionListViewController.h"
 #import "UIViewController+Message.h"
 #import "SensorVC.h"
+#import "DeviceCompositionDataVC.h"
 
 @interface DeviceSettingViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UILabel *macLabel;
@@ -154,9 +155,9 @@
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     if (self.model.isSensor) {
-        return 5;
+        return 6;
     } else {
-        return 4;
+        return 5;
     }
 }
 
@@ -168,23 +169,29 @@
     switch (indexPath.row) {
         case 0:
         {
+            cell.nameLabel.text = @"Composition Data";
+            cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
+        }
+            break;
+        case 1:
+        {
             cell.nameLabel.text = @"Scheduler Setting";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_alarm"];
         }
             break;
-        case 1:
+        case 2:
         {
             cell.nameLabel.text = @"Subscription Models";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
         }
             break;
-        case 2:
+        case 3:
         {
             cell.nameLabel.text = @"Device OTA";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_update"];
         }
             break;
-        case 3:
+        case 4:
         {
             cell.nameLabel.text = @"Publish Model";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_pub"];
@@ -197,7 +204,7 @@
                 UInt16 option = weakSelf.model.publishModelID;
                 UInt16 eleAdr = [weakSelf.model.publishAddress.firstObject intValue];
                 /* 周期，20秒上报一次(periodSteps:kPublishInterval,:Range：0x01-0x3F; periodResolution:1) */
-                [DemoCommand editPublishListWithPublishAddress:stateSwitch.isOn ? kMeshAddress_allNodes : kMeshAddress_unassignedAddress nodeAddress:weakSelf.model.address elementAddress:eleAdr modelIdentifier:option companyIdentifier:0 periodSteps:kPublishInterval periodResolution:SigStepResolution_seconds retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
+                [DemoCommand editPublishListWithPublishAddress:stateSwitch.isOn ? kMeshAddress_allNodes : kMeshAddress_unassignedAddress nodeAddress:weakSelf.model.address elementAddress:eleAdr modelIdentifier:option companyIdentifier:0 periodSteps:kPublishInterval periodResolution:SigStepResolution_seconds retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
                     TeLogDebug(@"editPublishList callback");
                     if (responseMessage.status == SigConfigMessageStatus_success && responseMessage.elementAddress == eleAdr) {
                         if (responseMessage.publish.publicationAddress.address == kMeshAddress_allNodes) {
@@ -215,7 +222,7 @@
             }];
         }
             break;
-        case 4:
+        case 5:
         {
             cell.nameLabel.text = @"LPN";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_battery-20-bluetooth"];
@@ -235,6 +242,11 @@
     switch (indexPath.row) {
         case 0:
         {
+            [self pushToCompositionDataVC];
+        }
+            break;
+        case 1:
+        {
             if (self.model.schedulerAddress.count > 0) {
                 [self pushToSchedulerVC];
             } else {
@@ -242,24 +254,24 @@
             }
         }
             break;
-        case 1:
+        case 2:
         {
             [self pushToSubscriptionVC];
         }
             break;
-        case 2:
+        case 3:
         {
             [self pushToDeviceOTA];
         }
             break;
-            case 3:
+        case 4:
         {
             if (self.model.publishAddress.count == 0) {
                 [self showTips:@"Node hasn't publish model"];
             }
         }
             break;
-        case 4:
+        case 5:
         {
             [self pushToSensorVC];
         }
@@ -269,6 +281,12 @@
     }
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     cell.selected = NO;
+}
+
+- (void)pushToCompositionDataVC{
+    DeviceCompositionDataVC *vc = (DeviceCompositionDataVC *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceCompositionDataVCID storybroad:@"DeviceSetting"];
+    vc.model = self.model;
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (void)pushToSchedulerVC{

@@ -1339,13 +1339,13 @@ typedef enum : UInt8 {
     /// The Receive Firmware procedure is being executed.
     SigFirmwareUpdatePhaseType_transferActive = 0x02,
     /// The Verify Firmware procedure is being executed.
-    SigFirmwareUpdatePhaseType_verificationActive = 0x03,
+    SigFirmwareUpdatePhaseType_verifyingUpdate = 0x03,
     /// The Verify Firmware procedure completed successfully.
     SigFirmwareUpdatePhaseType_verificationSuccess = 0x04,
     /// The Verify Firmware procedure failed.
     SigFirmwareUpdatePhaseType_verificationFailed = 0x05,
     /// The Apply New Firmware procedure is being executed.
-    SigFirmwareUpdatePhaseType_applyActive = 0x06,
+    SigFirmwareUpdatePhaseType_applyingUpdate = 0x06,
     /// Prohibited.
     SigFirmwareUpdatePhaseType_prohibited = 0x07,
 } SigFirmwareUpdatePhaseType;

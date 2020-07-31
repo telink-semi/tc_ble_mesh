@@ -147,6 +147,26 @@ typedef enum : NSUInteger {
                         staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
                     }
                     
+//                    UInt16 productID = 1;
+//                    DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
+//                    NSData *cpsData = deviceType.defaultCompositionData.parameters;
+//                    [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:KeyBindTpye_Fast productID:productID cpsData:cpsData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+//                        model.state = AddStateKeybinding;
+//                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+//                    } provisionFail:^(NSError * _Nonnull error) {
+//                        model.state = AddStateProvisionFail;
+//                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+//                        dispatch_semaphore_signal(semaphore);
+//                    } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+//                        model.state = AddStateKeybound;
+//                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+//                        dispatch_semaphore_signal(semaphore);
+//                    } keyBindFail:^(NSError * _Nonnull error) {
+//                        model.state = AddStateUnbound;
+//                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+//                        dispatch_semaphore_signal(semaphore);
+//                    }];
+                    
                     [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:type.integerValue productID:0 cpsData:nil provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                         model.state = AddStateKeybinding;
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
@@ -163,6 +183,7 @@ typedef enum : NSUInteger {
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
                         dispatch_semaphore_signal(semaphore);
                     }];
+                    
                     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
                 }
                 [SigBearer.share startMeshConnectWithComplete:nil];
@@ -272,9 +293,9 @@ typedef enum : NSUInteger {
                 break;
         }
         if (rsp.macAddress) {
-            itemCell.titleLabel.text = [NSString stringWithFormat:@"mac:%@ state:%@",rsp.macAddress,state];
+            itemCell.titleLabel.text = [NSString stringWithFormat:@"mac:%@ state:%@\ndeviceUuid:%@",rsp.macAddress,state,rsp.advUuid];
         } else {
-            itemCell.titleLabel.text = [NSString stringWithFormat:@"uuid:%@ state:%@",model.peripheral.identifier.UUIDString,state];
+            itemCell.titleLabel.text = [NSString stringWithFormat:@"uuid:%@ state:%@\ndeviceUuid:%@",model.peripheral.identifier.UUIDString,state,rsp.advUuid];
         }
         if (self.selectDevices.count > 0) {
             itemCell.selectButton.selected = [self.selectDevices containsObject:model];
@@ -298,7 +319,7 @@ typedef enum : NSUInteger {
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    return 44.0;
+    return 55.0;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
