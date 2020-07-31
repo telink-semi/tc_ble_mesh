@@ -34,12 +34,14 @@
 
 #if MD_MESH_OTA_EN
 #if WIN32
+#include "../../proj/common/tstring.h"
+
 u32 	ota_firmware_size_k = FW_SIZE_MAX_K;	// same with pm_8269.c
 #endif
 
 STATIC_ASSERT(FW_SIZE_MAX_K % 4 == 0);  // because ota_firmware_size_k is must 4k aligned.
 STATIC_ASSERT(ACCESS_WITH_MIC_LEN_MAX >= (MESH_OTA_CHUNK_SIZE + 1 + SZMIC_TRNS_SEG64 + 7)); // 1: op code, 7:margin
-STATIC_ASSERT(sizeof(fw_update_metadata_check_t) <= 9); // should not use segment
+STATIC_ASSERT(sizeof(fw_update_metadata_check_t) + SIZE_OF_OP(FW_UPDATE_METADATA_CHECK) <= 11); // use unsegment should be better.
 
 #define BLOCK_CRC32_CHECKSUM_EN     (0)
 
@@ -88,7 +90,7 @@ int is_fwid_match(fw_id_t *id1, fw_id_t *id2)
     return (0 == memcmp(id1, id2, sizeof(fw_id_t)));
 }
 
-int is_blob_id_match(u8 *blob_id1, u8 *blob_id2)
+int is_blob_id_match(const u8 *blob_id1, const u8 *blob_id2)
 {
     return (0 == memcmp(blob_id1, blob_id2, 8));
 }
@@ -170,6 +172,10 @@ fw_distribut_srv_proc_t fw_distribut_srv_proc = {{0}};      // for distributor (
 
 inline void mesh_ota_master_next_st_set(u8 st)
 {
+#if 0 // (WIN32 && DEBUG_SHOW_VC_SELF_EN)
+    LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "OTA master next st: 0x%02x", st);
+#endif
+
     fw_distribut_srv_proc.st = st;
 }
 
@@ -338,6 +344,7 @@ int mesh_cmd_sig_fw_distribut_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
     u32 update_node_cnt = (par_len - OFFSETOF(fw_distribut_start_t,update_list)) / 2;
     
     if(update_node_cnt > MESH_OTA_UPDATE_NODE_MAX || update_node_cnt == 0){
+        LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"update node cnt error: %d", update_node_cnt);
     	st = DISTRIBUT_ST_OUTOF_RESOURCE;
     }else if(fw_distribut_srv_proc.st){   // comfirm later
         #if 0
@@ -549,7 +556,7 @@ int access_cmd_blob_transfer_start(u16 adr_dst, u32 blob_size, u8 bk_size_log)
 {
     LOG_MSG_FUNC_NAME();
     blob_transfer_start_t cmd = {0};
-    cmd.transfer_mode = MESH_OTA_TRANSFER_MODE_PUSH;
+    cmd.transfer_mode = MESH_OTA_TRANSFER_MODE_SEL;
     memcpy(&cmd.blob_id, fw_distribut_srv_proc.blob_id, sizeof(cmd.blob_id));
     cmd.blob_size = fw_distribut_srv_proc.blob_size = blob_size;
     cmd.bk_size_log = fw_distribut_srv_proc.bk_size_log = bk_size_log;
@@ -648,7 +655,7 @@ int is_mesh_ota_and_only_VC_update()
 
 void mesh_ota_master_ack_timeout_handle()
 {
-    if(fw_distribut_srv_proc.st & OTA_WAIT_ACK_MASK){
+    if(is_mesh_ota_master_wait_ack()){
         mesh_ota_master_wait_ack_st_return(0);
     }
 }
@@ -661,6 +668,7 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
     fw_distribut_srv_proc_t *distr_proc = &fw_distribut_srv_proc;
     int adr_match = (rsp->src == master_ota_current_node_adr);
     int next_st = 0;
+    int skip_flag = 0;
     
     if(FW_UPDATE_INFO_STATUS == op){
         if(adr_match && ((MASTER_OTA_ST_FW_UPDATE_INFO_GET | OTA_WAIT_ACK_MASK) == distr_proc->st)){
@@ -689,7 +697,8 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
             fw_update_metadata_check_status_t *p = (fw_update_metadata_check_status_t *)par;
             if((MASTER_OTA_ST_UPDATE_METADATA_CHECK | OTA_WAIT_ACK_MASK) == distr_proc->st){
                 if(UPDATE_ST_SUCCESS != p->st){
-                    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "fw update status error:%d ", p->st);
+                    skip_flag = 1;
+                    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "fw update metada check error:%d ", p->st);
                 }
                 next_st = 1;
             }
@@ -698,7 +707,6 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
     }else if(FW_UPDATE_STATUS == op){
         if(adr_match){
             fw_update_status_t *p = (fw_update_status_t *)par;
-            p->st = p->st;  // TODO
             fw_detail_list_t * p_list = get_fw_node_detail_list(rsp->src);
             p_list->update_phase = p->update_phase;
             // p_list->additional_info = p->additional_info; // optional
@@ -713,7 +721,7 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
 					fw_distribut_srv_proc.list[fw_distribut_srv_proc.node_num].skip_flag = 0;
 				}
 				APP_report_mesh_ota_apply_status(rsp->src, p);
-				if(UPDATE_ST_SUCCESS == p->st && UPDATE_PHASE_VERIFYING_SUCCESS == p->update_phase){
+				if(UPDATE_ST_SUCCESS == p->st && is_apply_phase_success(p->update_phase)){
                     LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"fw update apply sucess!!!",0);
 				}else{
                     LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "------------------------------!!! Firmware update apply ERROR !!!",0);
@@ -721,6 +729,9 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
             }
         
             if(UPDATE_ST_SUCCESS != p->st){
+                if((MASTER_OTA_ST_UPDATE_APPLY | OTA_WAIT_ACK_MASK) != distr_proc->st){
+                    skip_flag = 1;
+                }
                 LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "fw update status error:%d ", p->st);
             }
         }
@@ -728,7 +739,6 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
     }else if(BLOB_TRANSFER_STATUS == op){
         if(adr_match){
             blob_transfer_status_t *p = (blob_transfer_status_t *)par;
-            p->st = p->st;  // TODO
             if((MASTER_OTA_ST_BLOB_TRANSFER_GET | OTA_WAIT_ACK_MASK) == distr_proc->st){
                 next_st = 1;
             }else if((MASTER_OTA_ST_BLOB_TRANSFER_START | OTA_WAIT_ACK_MASK) == distr_proc->st){
@@ -736,6 +746,7 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
             }
         
             if(BLOB_TRANS_ST_SUCCESS != p->st){
+                skip_flag = 1;
                 LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "object transfer status error:%d ", p->st);
             }
         }
@@ -744,7 +755,6 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
         if(adr_match){
             blob_block_status_t *p = (blob_block_status_t *)par;
             if((MASTER_OTA_ST_BLOB_BLOCK_START | OTA_WAIT_ACK_MASK) == distr_proc->st){
-                p->st = p->st;  // TODO
                 if((MASTER_OTA_ST_BLOB_BLOCK_START | OTA_WAIT_ACK_MASK) == distr_proc->st){
                     distr_proc->list[distr_proc->node_num].st_block_start = p->st;
                     next_st = 1;
@@ -753,14 +763,19 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
                 distr_proc->list[distr_proc->node_num].st_block_get = p->format;
                 int miss_chunk_len = par_len - OFFSETOF(blob_block_status_t,miss_chunk);
                 if(miss_chunk_len >= 0 && miss_chunk_len <= sizeof(distr_proc->miss_mask)){
-                    memset(distr_proc->miss_mask, 0, sizeof(distr_proc->miss_mask)); // also have been zero before block get.
+                    // distr_proc->miss_mask[] have been zero before block get and after end of MASTER_OTA_ST_BLOB_CHUNK_START.
                     if(BLOB_BLOCK_FORMAT_NO_CHUNK_MISS == p->format){
                     }else if(BLOB_BLOCK_FORMAT_ALL_CHUNK_MISS == p->format){
                         set_bit_by_cnt(distr_proc->miss_mask, sizeof(distr_proc->miss_mask), distribut_get_fw_chunk_cnt()); // all need send
+                        LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "ALL CHUNK MISS", 0);
                     }else if(BLOB_BLOCK_FORMAT_SOME_CHUNK_MISS == p->format){
-                        memcpy(distr_proc->miss_mask, p->miss_chunk, miss_chunk_len);
+                        for(int i = 0; i < (miss_chunk_len); ++i){
+                            distr_proc->miss_mask[i] |= p->miss_chunk[i];
+                        }
+                        LOG_MSG_LIB (TL_LOG_NODE_BASIC, p->miss_chunk, miss_chunk_len, "SOME MISS CHUNK ", 0);
                     }else if(BLOB_BLOCK_FORMAT_ENCODE_MISS_CHUNK == p->format){
-                        // TODO
+                        // TODO : Note: use "or" but not "memcpy"
+                        // distr_proc->miss_mask[i] |= ??;
                         LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "TODO: BLOB_BLOCK_FORMAT_ENCODE_MISS_CHUNK", 0);
                     }
                 }else{
@@ -770,6 +785,7 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
             }
             
             if(p->st != BLOB_TRANS_ST_SUCCESS){
+                skip_flag = 1;
                 LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "object block status error:%d ", p->st);
             }
         }
@@ -783,7 +799,7 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
     }else if(CFG_MODEL_SUB_STATUS == op){
         if(adr_match && ((MASTER_OTA_ST_SUBSCRIPTION_SET | OTA_WAIT_ACK_MASK) == distr_proc->st)){
             mesh_cfg_model_sub_status_t *p = (mesh_cfg_model_sub_status_t *)par;
-            if(SIG_MD_BLOB_TRANSFER_S == (p->set.model_id & 0xffff)){
+            if(SIG_MD_BLOB_TRANSFER_S == (p->set.model_id & (DRAFT_FEAT_VD_MD_EN ? 0xffffffff : 0xffff))){
                 if(ST_SUCCESS == p->status){
                 }else{
                     LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"set group failed %x",p->set.ele_adr);
@@ -795,16 +811,39 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
     }
 
     if(next_st){
-        mesh_ota_master_wait_ack_st_return(1);
+        mesh_ota_master_wait_ack_st_return(!skip_flag);
     }
     
     return op_handle_ok;
 }
 
+void mesh_ota_tx_fw_data_read(u32 addr, u32 len, u8 *buf_out)
+{
+    #if GATEWAY_ENABLE
+    flash_read_page(ota_program_offset + addr, len, buf_out);
+    #else
+    memcpy(buf_out, (u8 *)fw_ota_data_tx + addr, len);
+    #endif
+}
+
+int get_fw_metadata(fw_metadata_t *metadata_out)
+{
+    mesh_ota_tx_fw_data_read(2, sizeof(fw_metadata_t),(u8 *)metadata_out);
+    return 0;
+}
+
+void check_and_clear_mesh_ota_master_wait_ack()
+{
+    fw_distribut_srv_proc_t *distr_proc = &fw_distribut_srv_proc;
+    if(distr_proc->st & OTA_WAIT_ACK_MASK){
+         distr_proc->st &= ~OTA_WAIT_ACK_MASK;
+    }
+}
+
 void mesh_ota_master_proc()
 {
     fw_distribut_srv_proc_t *distr_proc = &fw_distribut_srv_proc;
-	if(0 == distr_proc->st || is_busy_segment_flow()){
+	if(0 == distr_proc->st || is_busy_segment_or_reliable_flow() || !is_mesh_adv_cmd_fifo_empty()){
 		return ;
 	}
 	
@@ -820,7 +859,7 @@ void mesh_ota_master_proc()
 	&& (distr_proc->st != MASTER_OTA_ST_BLOB_CHUNK_START)){
 	    if(clock_time_exceed(tick_ota_master_proc, 3000*1000)){
     	    tick_ota_master_proc = clock_time();
-            LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"mesh_ota_master_proc state: %d",distr_proc->st);
+            LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"mesh_ota_master_proc state: 0x%02x",distr_proc->st);
         }
 	}else{
 	    tick_ota_master_proc = clock_time();
@@ -834,20 +873,34 @@ void mesh_ota_master_proc()
 		case MASTER_OTA_ST_DISTRIBUT_START:
 		    // FW_DISTRIBUT_START was send by VC
 		    distr_proc->node_num = 0;
-		    if (!is_only_get_fw_info_fw_distribut_srv()){
-    		    mesh_ota_master_next_st_set(MASTER_OTA_ST_SUBSCRIPTION_SET);
-                APP_RefreshProgressBar(0, 0, 0, 0, 0);
-            }else{
+		    if (is_only_get_fw_info_fw_distribut_srv()){ // just for get fw info, not OTA flow.
     		    mesh_ota_master_next_st_set(MASTER_OTA_ST_FW_UPDATE_INFO_GET);
+            }else{
+    		    mesh_ota_master_next_st_set(MASTER_OTA_ST_UPDATE_METADATA_CHECK);
+                APP_RefreshProgressBar(0, 0, 0, 0, 0);
             }
+			break;
+			
+		case MASTER_OTA_ST_UPDATE_METADATA_CHECK:   // it should be better that right after distribute and before other ota command 
+		    if(distr_proc->node_num < distr_proc->node_cnt){
+		        if(mesh_ota_check_skip_current_node()){ break;}
+
+		        fw_metadata_t fw_metadata = {{0}};
+		        get_fw_metadata(&fw_metadata);
+    	        if(0 == access_cmd_fw_update_metadata_check(master_ota_current_node_adr, &fw_metadata)){
+    	            mesh_ota_master_wait_ack_st_set();
+    	        }
+	        }else{
+                distr_proc->node_num = 0;
+    	        mesh_ota_master_next_st_set(MASTER_OTA_ST_SUBSCRIPTION_SET);
+	        }
 			break;
 			
 		case MASTER_OTA_ST_SUBSCRIPTION_SET:
 		    if(distr_proc->node_num < distr_proc->node_cnt){
 		        if(mesh_ota_check_skip_current_node()){ break;}
-		        
     	        if(0 == cfg_cmd_sub_set(CFG_MODEL_SUB_ADD, master_ota_current_node_adr, master_ota_current_node_adr, 
-    	                        fw_distribut_srv_proc.adr_group, SIG_MD_BLOB_TRANSFER_S, 1)){
+    	                        fw_distribut_srv_proc.adr_group, SIG_MD_BLOB_TRANSFER_S, !DRAFT_FEAT_VD_MD_EN)){
     	            mesh_ota_master_wait_ack_st_set();
     	        }
 	        }else{
@@ -868,21 +921,8 @@ void mesh_ota_master_proc()
     	            distribut_srv_proc_init();  // stop
 	            }else{
                     distr_proc->node_num = 0;
-                    mesh_ota_master_next_st_set(MASTER_OTA_ST_UPDATE_METADATA_CHECK);
+                    mesh_ota_master_next_st_set(MASTER_OTA_ST_UPDATE_START);
     	        }
-	        }
-			break;
-			
-		case MASTER_OTA_ST_UPDATE_METADATA_CHECK:
-		    if(distr_proc->node_num < distr_proc->node_cnt){
-		        if(mesh_ota_check_skip_current_node()){ break;}
-		        
-    	        if(0 == access_cmd_fw_update_metadata_check(master_ota_current_node_adr, 0)){
-    	            mesh_ota_master_wait_ack_st_set();
-    	        }
-	        }else{
-                distr_proc->node_num = 0;
-    	        mesh_ota_master_next_st_set(MASTER_OTA_ST_UPDATE_START);
 	        }
 			break;
 			
@@ -890,7 +930,9 @@ void mesh_ota_master_proc()
 		    if(distr_proc->node_num < distr_proc->node_cnt){
 		        if(mesh_ota_check_skip_current_node()){ break;}
 		        
-    	        if(0 == access_cmd_fw_update_start(master_ota_current_node_adr, blob_id_new, 0)){
+		        fw_metadata_t fw_metadata = {{0}};
+		        get_fw_metadata(&fw_metadata);
+    	        if(0 == access_cmd_fw_update_start(master_ota_current_node_adr, blob_id_new, &fw_metadata)){
     	            mesh_ota_master_wait_ack_st_set();
     	        }
 	        }else{
@@ -1017,12 +1059,7 @@ void mesh_ota_master_proc()
 					#endif
 					{
 						fw_pos = distribut_get_fw_data_position(cmd.chunk_num);
-						#if GATEWAY_ENABLE
-						flash_read_page(ota_program_offset+fw_pos,sizeof(cmd.data),cmd.data);
-						#else
-						data = &fw_ota_data_tx[fw_pos];
-						memcpy(cmd.data, data, size);
-						#endif
+                        mesh_ota_tx_fw_data_read(fw_pos, size, cmd.data);
 					}
 					
                     u16 bk_total = distribut_get_fw_block_cnt();
@@ -1094,7 +1131,7 @@ void mesh_ota_master_proc()
 		        p_list->apply_flag = 1;
 		        
 		        u16 op;
-		        if(UPDATE_PHASE_VERIFYING_UPDATE == p_list->update_phase){
+		        if(UPDATE_PHASE_VERIFYING_SUCCESS == p_list->update_phase){
 		            op = FW_UPDATE_APPLY;
 		        }else{
 		            op = FW_UPDATE_CANCEL;
@@ -1161,6 +1198,14 @@ void mesh_ota_master_proc(){}
 ******************************************/
 #if 1
 fw_update_srv_proc_t    fw_update_srv_proc = {0};         // for updater
+#if PTS_TEST_OTA_EN
+u8 A_1_blob_tranfer_BV_19_C_phase_inactive = 0;
+u8 A_2_blob_tranfer_BV_31_C  = 0;
+#endif
+
+#if BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN
+const u8 BLOB_ID_LOCAL[8] = {0x11,0x00,0x00,0x00,0x00,0x00,0x00,0x11};
+#endif
 
 void mesh_ota_save_data(u32 adr, u32 len, u8 * data){
 #if WIN32
@@ -1298,17 +1343,40 @@ inline u32 updater_get_fw_data_position(u16 chunk_num)
     return get_fw_data_position(bk_start->block_num, fw_update_srv_proc.bk_size_log, chunk_num, bk_start->chunk_size);
 }
 
+static u16 updater_get_block_rx_ok_cnt()
+{
+    u16 cnt = fw_update_srv_proc.block_start.block_num;
+    if(fw_update_srv_proc.blob_block_rx_ok){
+        cnt++;
+    }
+    return cnt;
+}
+
 int is_updater_blob_id_match(u8 *blob_id)
 {
     return is_blob_id_match(fw_update_srv_proc.start.blob_id, blob_id);
 }
 
-void fw_update_srv_proc_init_keep_start_par()
+int is_local_blob_id_match(u8 *blob_id)
+{
+#if BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN
+    if(!fw_update_srv_proc.busy){
+        return is_blob_id_match(BLOB_ID_LOCAL, blob_id);
+    }
+#endif
+    return is_updater_blob_id_match(blob_id);
+}
+
+void fw_update_srv_proc_init_keep_start_par_and_crc()
 {
     fw_update_start_t start_backup;
     memcpy(&start_backup, &fw_update_srv_proc.start, sizeof(start_backup));
+    u8 crc_backup = fw_update_srv_proc.bin_crc_done;
     memset(&fw_update_srv_proc, 0, sizeof(fw_update_srv_proc));
     memcpy(&fw_update_srv_proc.start, &start_backup, sizeof(fw_update_srv_proc.start)); // don't clear to handle retransmit here 
+    if(BIN_CRC_DONE_OK == crc_backup){				  // sometimes need to caculate crc twice
+        fw_update_srv_proc.bin_crc_done = crc_backup; // sometimes apply twice
+    }
 }
 
 void blob_block_erase(u16 block_num)
@@ -1316,23 +1384,44 @@ void blob_block_erase(u16 block_num)
     // attention: block size may not integral multiple of 4K,
 }
 
+void mesh_ota_proc()
+{
+#if PTS_TEST_OTA_EN
+    #if MESH_OTA_BLOB_START_TIMEOUT_MS
+    if(fw_update_srv_proc.blob_trans_start_tick
+    && clock_time_exceed(fw_update_srv_proc.blob_trans_start_tick, MESH_OTA_BLOB_START_TIMEOUT_MS * 1000)){
+        fw_update_srv_proc.blob_trans_start_tick = 0;
+        if(BLOB_TRANS_PHASE_WAIT_NEXT_BLOCK == fw_update_srv_proc.blob_trans_phase){
+            fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_SUSPEND;
+            LOG_MSG_ERR(TL_LOG_COMMON,0, 0 ,"blob transfer timeout--",0);
+        }
+    }
+    #endif
+#else
+    // no blob transfer timeout now
+#endif
+}
+
 //---------
 int mesh_cmd_sig_fw_update_info_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     fw_update_info_get_t *p_get = (fw_update_info_get_t *)par;
-    if(p_get->first_index > 0){
-        // return -1;  // only one entry now. confirm later
-    }
-    
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	fw_update_info_status_t rsp = {0};
-	rsp.list_count = 1;
-	rsp.first_index = 0;
-	rsp.fw_id_len = sizeof(rsp.fw_id);
-	memcpy(&rsp.fw_id, &fw_id_local, sizeof(rsp.fw_id));
-    rsp.uri_len = 0;
+	u32 len_rsp = sizeof(rsp);
+    rsp.first_index = p_get->first_index;
+    rsp.list_count = 1;
+    if(0 == p_get->first_index){
+    	rsp.fw_id_len = sizeof(rsp.fw_id);
+    	memcpy(&rsp.fw_id, &fw_id_local, sizeof(rsp.fw_id));
+        rsp.uri_len = 0;
+    }else{
+        // only one entry now. 
+        // Tell client there is no any more firmware entry by setting list count to be 1 and no firmware entry.
+        len_rsp = OFFSETOF(fw_update_info_status_t, fw_id_len);
+    }
 	
-	return mesh_tx_cmd_rsp(FW_UPDATE_INFO_STATUS, (u8 *)&rsp, sizeof(rsp), p_model->com.ele_adr, cb_par->adr_src, 0, 0);
+	return mesh_tx_cmd_rsp(FW_UPDATE_INFO_STATUS, (u8 *)&rsp, len_rsp, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
 
 int mesh_cmd_sig_fw_update_info_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -1346,21 +1435,28 @@ int mesh_cmd_sig_fw_update_info_status(u8 *par, int par_len, mesh_cb_fun_par_t *
 //---------
 int mesh_cmd_sig_fw_update_metadata_check(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-    fw_update_metadata_check_t*p_check = (fw_update_metadata_check_t *)par;
+    fw_update_metadata_check_t *p_check = (fw_update_metadata_check_t *)par;
     u8 st;
-    u8 len_metadata = par_len - OFFSETOF(fw_update_metadata_check_t,metadata);
-    if(mesh_ota_slave_need_ota(&p_check->metadata, len_metadata)){
-        int len = min(sizeof(fw_metadata_t), len_metadata);
-        memcpy(&fw_update_srv_proc.start.metadata, &p_check->metadata, len);
-        st = UPDATE_ST_SUCCESS;
+    if(0 == p_check->image_index){ // only one now
+        u8 metadata_len = par_len - OFFSETOF(fw_update_metadata_check_t,metadata);
+        if(is_valid_metadata_len(metadata_len)
+        && mesh_ota_slave_need_ota(&p_check->metadata, metadata_len)){
+            memcpy(&fw_update_srv_proc.start.metadata, &p_check->metadata, metadata_len);
+            fw_update_srv_proc.metadata_len = metadata_len;
+            // may check meta data again when update start.
+            st = UPDATE_ST_SUCCESS;
+        }else{
+            st = UPDATE_ST_METADATA_CHECK_FAIL;
+        }
     }else{
-        st = UPDATE_ST_METADATA_CHECK_FAIL;
+        st = UPDATE_ST_WRONG_FW_INDEX;
     }
     
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	fw_update_metadata_check_status_t rsp = {0};
 	rsp.st = st;
-	rsp.image_index = 0;
+	rsp.additional_info = ADDITIONAL_CPS_NO_CHANGE; // TBD
+	rsp.image_index = p_check->image_index;
 	
 	return mesh_tx_cmd_rsp(FW_UPDATE_METADATA_CHECK_STATUS, (u8 *)&rsp, sizeof(rsp), p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
@@ -1374,138 +1470,231 @@ int mesh_cmd_sig_fw_update_metadata_check_status(u8 *par, int par_len, mesh_cb_f
 }
 
 // -------
-int mesh_tx_cmd_fw_update_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 st)
+void get_fw_update_rsp_data(fw_update_status_t *p_rsp, fw_update_start_t *p_start)
 {
-	fw_update_status_t rsp = {0};
-	rsp.st = st;
-    rsp.update_phase = fw_update_srv_proc.update_phase;
-    rsp.ttl = fw_update_srv_proc.start.ttl;
-    rsp.additional_info = fw_update_srv_proc.additional_info;
-    rsp.timeout_base = fw_update_srv_proc.start.timeout_base;
-	memcpy(&rsp.blob_id, fw_update_srv_proc.start.blob_id,sizeof(rsp.blob_id));
-	rsp.image_index = 0;
-	u32 rsp_len = sizeof(fw_update_status_t);
-	if(!((UPDATE_ST_SUCCESS == st)/* && (||(UPDATE_PHASE_TRANSFER_ACTIVE == rsp.phase)
-	                                ||(UPDATE_PHASE_VERIFYING_UPDATE == rsp.phase))*/)){
-	    rsp_len -= sizeof(fw_update_status_t) - OFFSETOF(fw_update_status_t,ttl);   // no blob_id
-	}
-
-	return mesh_tx_cmd_rsp(FW_UPDATE_STATUS, (u8 *)&rsp, rsp_len, ele_adr, dst_adr, 0, 0);
+    p_rsp->ttl = p_start->ttl;
+    p_rsp->timeout_base = p_start->timeout_base;
+    memcpy(p_rsp->blob_id, p_start->blob_id,sizeof(p_rsp->blob_id));
+    p_rsp->image_index = p_start->image_index;
 }
 
-int mesh_fw_update_st_rsp(mesh_cb_fun_par_t *cb_par, u8 st)
+/**
+ * @brief  
+ * @par_err: response error data
+ * @retval 
+ */
+int mesh_fw_update_st_rsp(mesh_cb_fun_par_t *cb_par, u8 st, u8 *par_err, int par_len)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
-	return mesh_tx_cmd_fw_update_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, st);
+	fw_update_status_t rsp = {0};
+	fw_update_srv_proc.blob_block_get_retry_flag = 0; // init
+	rsp.st = st;
+    if(fw_update_srv_proc.busy && (fw_update_srv_proc.blob_trans_rx_start_error
+                            || (fw_update_srv_proc.busy && (BLOB_TRANS_PHASE_SUSPEND == fw_update_srv_proc.blob_trans_phase)))){
+        // MMDL/SR/FU/BV-13-C Receive Firmware Update Cancel-Transfer Error Phase
+        rsp.update_phase = UPDATE_PHASE_TRANSFER_ERR;
+    }else{
+        rsp.update_phase = fw_update_srv_proc.update_phase;
+    }
+    
+	u32 rsp_len = sizeof(fw_update_status_t);
+	if((!fw_update_srv_proc.busy) // (UPDATE_ST_SUCCESS != st )
+#if 0 // (0 == PTS_TEST_OTA_EN)
+    // MMDL/SR/FU/BV-03-C Firmware Update-Verification Succeeded: need option par.
+	 || (UPDATE_PHASE_IDLE == rsp.update_phase)
+	 || (UPDATE_PHASE_VERIFYING_SUCCESS == rsp.update_phase) || (UPDATE_PHASE_VERIFYING_FAIL == rsp.update_phase)
+#else
+     // MMDL/SR/FU/BV-03-C Firmware Update-Verification Succeeded: need option par.
+     && (!((UPDATE_PHASE_APPLYING_UPDATE == rsp.update_phase) || (UPDATE_PHASE_VERIFYING_FAIL == rsp.update_phase)))
+#endif
+	 ){
+	    // node will reboot when receive apply, so unsegment status should be better
+	    rsp_len -= sizeof(fw_update_status_t) - OFFSETOF(fw_update_status_t,ttl);   // no blob_id
+	}else{
+	    if(par_err){
+	        if(FW_UPDATE_START == cb_par->op){
+                get_fw_update_rsp_data(&rsp, (fw_update_start_t *)par_err);
+	        }else{
+	            // should not happen here.
+                rsp_len -= sizeof(fw_update_status_t) - OFFSETOF(fw_update_status_t,ttl);
+	        }
+	    }else{
+            get_fw_update_rsp_data(&rsp, &fw_update_srv_proc.start);
+        }
+		rsp.additional_info = fw_update_srv_proc.additional_info;
+	}
+
+	return mesh_tx_cmd_rsp(FW_UPDATE_STATUS, (u8 *)&rsp, rsp_len, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
 }
 
 int mesh_cmd_sig_fw_update_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	u8 st = UPDATE_ST_INTERNAL_ERROR;
+	u8 st = UPDATE_ST_SUCCESS;
 	if(fw_update_srv_proc.busy){
-        if(fw_update_srv_proc.blob_block_trans_num_next == updater_get_fw_block_cnt()){// all block rx ok
-            fw_update_srv_proc.update_phase = UPDATE_PHASE_VERIFYING_UPDATE;
-            st = UPDATE_ST_SUCCESS;
-        }else{
-            st = UPDATE_ST_BLOB_TRANSFER_BUSY;
+	    if(fw_update_srv_proc.blob_trans_rx_start_error || (0 == fw_update_srv_proc.blob_size)){
+	        // 
+	    }else if(updater_get_block_rx_ok_cnt() == updater_get_fw_block_cnt()){// all block rx ok
+            // MMDL/SR/FU/BV-03-C get verify value here, but not apply.
+            int cali_ok = is_valid_mesh_ota_calibrate_val();
+            fw_update_srv_proc.update_phase = cali_ok ? UPDATE_PHASE_VERIFYING_SUCCESS : UPDATE_PHASE_VERIFYING_FAIL;
         }
 	}else{
-	    st = UPDATE_ST_INTERNAL_ERROR;
 	}
-	return mesh_fw_update_st_rsp(cb_par, st);
+	return mesh_fw_update_st_rsp(cb_par, st, 0, 0);
 }
 
 int mesh_ota_slave_need_ota(fw_metadata_t *p_metadata, int len)
 {
+    #if (PTS_TEST_OTA_EN && !WIN32)
+    if(sizeof(BLOB_ID_LOCAL) == len){ // meta data in PTS is set to be same with BLOB ID now.
+        return (0 == memcmp(BLOB_ID_LOCAL, p_metadata, sizeof(BLOB_ID_LOCAL)));
+    }
+    return 0;
+    #else
     if(sizeof(fw_metadata_t) == len){
+        #if 0
         // TBD policy
+        int accept = 0;
+        if(p_metadata->fw_id.pid == fw_id_local.pid){
+            u8 vid_new_1st = p_metadata->fw_id.vid & 0xFF;
+            u8 vid_new_2nd = (p_metadata->fw_id.vid >> 8) & 0xFF;
+            u8 vid_local_1st = fw_id_local.vid & 0xFF;
+            u8 vid_local_2nd = (fw_id_local.vid >> 8) & 0xFF;
+            if((vid_new_1st > vid_local_1st)
+            || ((vid_new_1st == vid_local_1st)&&(vid_new_2nd > vid_local_2nd))){
+                accept = 1;
+            }
+        }
+        return accept;
+        #else
         return 1;
+        #endif
     }else{
         return 1;   // always valid now // return 0;
     }
+    #endif
 }
 
 int mesh_cmd_sig_fw_update_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	u8 st;
     fw_update_start_t *p_start = (fw_update_start_t *)par;
-    if(fw_update_srv_proc.busy){
-        if(!memcmp(&p_start->blob_id, fw_update_srv_proc.start.blob_id, sizeof(p_start->blob_id))
-        && !memcmp(&p_start->metadata, &fw_update_srv_proc.start.metadata, sizeof(p_start->metadata))){
+    u8 *par_err = 0;
+    u8 metadata_len = par_len - OFFSETOF(fw_update_start_t,metadata);
+    int force_flag = (UPDATE_PHASE_VERIFYING_FAIL == fw_update_srv_proc.update_phase);
+    if((!force_flag) && ((fw_update_srv_proc.busy
+          && (!fw_update_srv_proc.blob_trans_rx_start_error)) // MMDL/SR/FU/BV-17-C Receive Firmware Update Start-Transfer Error Phase
+     ||(UPDATE_PHASE_VERIFYING_SUCCESS == fw_update_srv_proc.update_phase)
+     ||(UPDATE_PHASE_APPLYING_UPDATE == fw_update_srv_proc.update_phase))){
+        if((metadata_len != fw_update_srv_proc.metadata_len)
+        || (0 != memcmp(&fw_update_srv_proc.start, par, par_len))){
+        	st = UPDATE_ST_WRONG_PHASE;
+        	par_err = par;
+        }else{
             fw_update_srv_proc.update_phase = UPDATE_PHASE_TRANSFER_ACTIVE;
         	st = UPDATE_ST_SUCCESS;
-    	}else{
+        }
+    }else{
+        fw_update_srv_proc.blob_trans_rx_start_error = 0; // init
+        /* must check again but not just compare meta data with the data reveived in meta data check.
+            because master may skip the meta data check to pass the check*/
+        if((!force_flag) && fw_update_srv_proc.blob_trans_busy){
     	    st = UPDATE_ST_BLOB_TRANSFER_BUSY;
-    	}
-    }else{       
-        u8 len_metadata = par_len - OFFSETOF(fw_update_metadata_check_t,metadata);
-	    if(mesh_ota_slave_need_ota(&p_start->metadata, len_metadata)){
+        }else if(is_valid_metadata_len(metadata_len) // meta data over flow
+	    && mesh_ota_slave_need_ota(&p_start->metadata, metadata_len)){
             #if (DUAL_MODE_ADAPT_EN || DUAL_MODE_WITH_TLK_MESH_EN)
             dual_mode_disable();
             // bls_ota_clearNewFwDataArea(); // may disconnect
             #endif
             memset(&fw_update_srv_proc, 0, sizeof(fw_update_srv_proc));
-            memcpy(&fw_update_srv_proc.start, p_start, sizeof(fw_update_start_t));
-            if(1){//(sizeof(fw_update_start_t) == par_len){
-                fw_update_srv_proc.update_phase = UPDATE_PHASE_TRANSFER_ACTIVE;
-                fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_WAIT_START;
-                fw_update_srv_proc.busy = 1;
-                st = UPDATE_ST_SUCCESS;
-                // OK, TBD
-            }else{
-                // error, can't recognize
-                //memset(&fw_update_srv_proc, 0, sizeof(fw_update_srv_proc));
-                st = UPDATE_ST_METADATA_CHECK_FAIL;
-            }
+            memcpy(&fw_update_srv_proc.start, p_start, sizeof(fw_update_start_t)); // par_len
+            fw_update_srv_proc.metadata_len = metadata_len; // take it as real meta data, but not that in metadata check
+            fw_update_srv_proc.update_phase = UPDATE_PHASE_TRANSFER_ACTIVE;
+            fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_WAIT_START;
+            fw_update_srv_proc.busy = 1;
+            st = UPDATE_ST_SUCCESS;
 	    }else{
     	    st = UPDATE_ST_METADATA_CHECK_FAIL;
 	    }
 	}
 	
-	return mesh_fw_update_st_rsp(cb_par, st);
+	return mesh_fw_update_st_rsp(cb_par, st, par_err, par_len);
 }
 
-int mesh_cmd_sig_fw_update_control(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+int is_fw_update_start_before()
 {
-	u8 st = UPDATE_ST_INTERNAL_ERROR;
-    if(fw_update_srv_proc.busy){
-        if(FW_UPDATE_CANCEL == cb_par->op){
-            fw_update_srv_proc_init_keep_start_par();
-            // fw_update_srv_proc.busy = 0;
-            mesh_ota_reboot_set(OTA_DATA_CRC_ERR);
-            st = UPDATE_ST_SUCCESS;
-        }else if(FW_UPDATE_APPLY == cb_par->op){
-            if((UPDATE_PHASE_VERIFYING_UPDATE == fw_update_srv_proc.update_phase)
-            || (UPDATE_PHASE_VERIFYING_SUCCESS == fw_update_srv_proc.update_phase) // refresh reboot tick
-            || (UPDATE_PHASE_VERIFYING_FAIL == fw_update_srv_proc.update_phase) // refresh reboot tick
-            ){
-                int cali_ok = 0;
-                if(is_valid_mesh_ota_calibrate_val()){
-                    #if DISTRIBUTOR_UPDATE_CLIENT_EN
-					#if VC_APP_ENABLE
-                    fw_ota_data_rx[8] = fw_update_srv_proc.reboot_flag_backup;
-                    new_fw_write_file(fw_ota_data_rx, fw_update_srv_proc.blob_size);
-					#endif
-					#else
-                    mesh_ota_reboot_set((fw_update_srv_proc.blob_size > 256) ? OTA_SUCCESS : OTA_SUCCESS_DEBUG);
-                    #endif
-                    cali_ok = 1;
-                }else{
-                    mesh_ota_reboot_set(OTA_DATA_CRC_ERR);
-                }
-                fw_update_srv_proc_init_keep_start_par();
-                fw_update_srv_proc.update_phase = cali_ok ? UPDATE_PHASE_VERIFYING_SUCCESS : UPDATE_PHASE_VERIFYING_FAIL;
+    if(fw_update_srv_proc.busy || fw_update_srv_proc.bin_crc_done){
+        return 1;
+    }
+    
+    fw_update_start_t zero = {0};
+    return (0 != memcmp(&fw_update_srv_proc.start, &zero, OFFSETOF(fw_update_start_t,metadata)));
+}
+
+int mesh_cmd_sig_fw_update_apply(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	u8 st = UPDATE_ST_WRONG_PHASE;
+    if(is_fw_update_start_before()){
+        if((UPDATE_PHASE_VERIFYING_UPDATE == fw_update_srv_proc.update_phase)
+        || (UPDATE_PHASE_VERIFYING_SUCCESS == fw_update_srv_proc.update_phase) // refresh reboot tick
+        || (UPDATE_PHASE_VERIFYING_FAIL == fw_update_srv_proc.update_phase) // refresh reboot tick
+        || (UPDATE_PHASE_APPLYING_UPDATE == fw_update_srv_proc.update_phase) // refresh reboot tick
+        ){
+            int cali_ok = 0;
+            if((BIN_CRC_DONE_OK == fw_update_srv_proc.bin_crc_done)
+             || is_valid_mesh_ota_calibrate_val()){
+                #if DISTRIBUTOR_UPDATE_CLIENT_EN
+				#if VC_APP_ENABLE
+                fw_ota_data_rx[8] = fw_update_srv_proc.reboot_flag_backup;
+                new_fw_write_file(fw_ota_data_rx, fw_update_srv_proc.blob_size);
+				#endif
+				#else
+                mesh_ota_reboot_set((fw_update_srv_proc.blob_size > 256) ? OTA_SUCCESS : OTA_SUCCESS_DEBUG);
+                #endif
+                cali_ok = 1;
+            }else{
+                mesh_ota_reboot_set(OTA_DATA_CRC_ERR);
+            }
+
+            fw_update_srv_proc_init_keep_start_par_and_crc();
+            
+            if(cali_ok){
+                fw_update_srv_proc.update_phase = UPDATE_PHASE_APPLYING_UPDATE;
                 st = UPDATE_ST_SUCCESS;
             }else{
-                st = UPDATE_ST_INTERNAL_ERROR;
+                fw_update_srv_proc.update_phase = UPDATE_PHASE_VERIFYING_FAIL;
+                st = UPDATE_ST_WRONG_PHASE;
             }
+        }else{
+            st = UPDATE_ST_WRONG_PHASE;
         }
     }else{
-	    st = UPDATE_ST_INTERNAL_ERROR;    // not receive start before
-	    mesh_ota_reboot_check_refresh();
+	    st = UPDATE_ST_WRONG_PHASE; // not receive start before
 	}
 	
-	return mesh_fw_update_st_rsp(cb_par, st);
+    mesh_ota_reboot_check_refresh();
+	return mesh_fw_update_st_rsp(cb_par, st, 0, 0);
+}
+
+int mesh_cmd_sig_fw_update_cancel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	u8 st = UPDATE_ST_INTERNAL_ERROR;
+    if(is_fw_update_start_before()){
+        fw_update_srv_proc_init_keep_start_par_and_crc();
+        // fw_update_srv_proc.busy = 0; // have been clear in init.
+        #if (PTS_TEST_OTA_EN) // PTS send cancel at the beginning of every case, so no need reboot in some case.
+        if(fw_update_srv_proc.blob_trans_busy || fw_update_srv_proc.bin_crc_done)
+        #endif
+        {
+            mesh_ota_reboot_set(OTA_DATA_CRC_ERR);
+        }
+        st = UPDATE_ST_SUCCESS;
+    }else{
+	    st = UPDATE_ST_SUCCESS; // UPDATE_ST_INTERNAL_ERROR;    // not receive start before
+	}
+	
+    mesh_ota_reboot_check_refresh();
+	return mesh_fw_update_st_rsp(cb_par, st, 0, 0);
 }
 
 int mesh_cmd_sig_fw_update_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -1517,6 +1706,52 @@ int mesh_cmd_sig_fw_update_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_pa
 }
 
 //------
+u32 set_bit_buf(u8 *buf, u32 buf_len, u32 start_bit, u32 bit_max)
+{
+    // buf have been set 0 before.
+    u32 i = start_bit / CHAR_BIT;
+    if(start_bit < bit_max){
+        bit_max = min(bit_max, buf_len * 8);
+        u32 bit_start_1st_byte = (start_bit % CHAR_BIT);
+        u32 ns = CHAR_BIT - bit_start_1st_byte; // (addr & 0xff);
+        while(start_bit < bit_max){
+            u32 len = bit_max - start_bit;
+            u32 nw = len > ns ? ns : len;
+            if(bit_start_1st_byte){
+                buf[i] = BIT_RNG(bit_start_1st_byte, bit_start_1st_byte + nw);
+                bit_start_1st_byte = 0;
+            }else{
+                buf[i] = BIT_MASK_LEN(nw);
+            }
+            ns = CHAR_BIT;
+            start_bit += nw;
+            i++;
+        }
+        return i;
+    }else{
+        return min(CEIL_8(bit_max),buf_len);
+    }
+}
+
+static inline int is_blob_st_optional_C2(u8 st)
+{
+    return ((BLOB_TRANS_ST_SUCCESS == st) || (BLOB_TRANS_ST_WRONG_PHASE == st));
+}
+
+int mesh_tx_cmd_blob_transfer_st_C1(mesh_cb_fun_par_t *cb_par, u8 st, u8 *p_blob_id)
+{
+    blob_transfer_status_t rsp = {0};
+    rsp.st = st;
+    // MMDL/SR/BT/BV-27-C: BLOB Transfer Start - Incompatible Parameters
+    rsp.transfer_phase = BLOB_TRANS_PHASE_WAIT_START; //  PTS will discard message if phase is INACTIVE.
+    memcpy(rsp.blob_id, p_blob_id, sizeof(rsp.blob_id)); // BLOB_ID_LOCAL
+    u32 rsp_len = OFFSETOF(blob_transfer_status_t, blob_size); // PTS will discard message if include blob size.
+    model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
+    u16 ele_adr = p_model->com.ele_adr;
+    u16 dst_adr = cb_par->adr_src;
+    return mesh_tx_cmd_rsp(BLOB_TRANSFER_STATUS, (u8 *)&rsp, rsp_len, ele_adr, dst_adr, 0, 0);
+}
+
 int mesh_tx_cmd_blob_transfer_st(mesh_cb_fun_par_t *cb_par, u8 st)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
@@ -1527,22 +1762,24 @@ int mesh_tx_cmd_blob_transfer_st(mesh_cb_fun_par_t *cb_par, u8 st)
 	rsp.st = st;
 	rsp.transfer_mode = fw_update_srv_proc.transfer_mode;
 	rsp.transfer_phase = fw_update_srv_proc.blob_trans_phase;
-	memcpy(&rsp.blob_id, &fw_update_srv_proc.start.blob_id, sizeof(rsp.blob_id));
-	rsp.blob_size = fw_update_srv_proc.blob_size;
-	rsp.bk_size_log = fw_update_srv_proc.bk_size_log;
-	rsp.transfer_mtu_size = MESH_CMD_ACCESS_LEN_MAX;
-	#if 0
-	if(){
-	    rsp.bk_not_receive = ;
-	}
-	#endif
 
     u32 rsp_len = OFFSETOF(blob_transfer_status_t, blob_id);
-    #if 0
-	if((BLOB_TRANS_ST_SUCCESS == st) && bk_not_receive && (BLOB_TRANSFER_GET == cb_par->op_rsp)){
-	    rsp_len = sizeof(rsp)
+    /*MMDL/SR/BT/BV-04-C(BLOB Transfer Timeout), BV-07-C(BLOB Transfer Cancel-IUT in Waiting for Next Block Phase) : no blob id for cancle command*/
+    /*MMDL/SR/BT/BV-29-C(BLOB Transfer Cancel-Invalid Parameters), BLOB_TRANS_ST_WRONG_BLOB_ID need blob id if active before*/
+	if(/*is_blob_st_optional_C2(st) && */(fw_update_srv_proc.blob_trans_busy)){
+	    rsp_len = OFFSETOF(blob_transfer_status_t, bk_not_receive);
+        memcpy(&rsp.blob_id, &fw_update_srv_proc.start.blob_id, sizeof(rsp.blob_id));
+        // If the BLOB ID field is present, then the BLOB Size field may be present; may be but not should be.
+        rsp.blob_size = fw_update_srv_proc.blob_size;
+        rsp.bk_size_log = fw_update_srv_proc.bk_size_log;
+        rsp.transfer_mtu_size = MESH_CMD_ACCESS_LEN_MAX;
+        
+        u32 block_max = CEIL_DIV(rsp.blob_size, (1 << rsp.bk_size_log));
+        u32 block_current = updater_get_block_rx_ok_cnt();
+        rsp_len += set_bit_buf(rsp.bk_not_receive, sizeof(rsp.bk_not_receive),block_current,block_max);
+	}else if(fw_update_srv_proc.busy){
+	    return mesh_tx_cmd_blob_transfer_st_C1(cb_par, st, fw_update_srv_proc.start.blob_id);
 	}
-	#endif
 	
 	return mesh_tx_cmd_rsp(BLOB_TRANSFER_STATUS, (u8 *)&rsp, rsp_len, ele_adr, dst_adr, 0, 0);
 }
@@ -1555,52 +1792,106 @@ int mesh_blob_transfer_st_rsp(mesh_cb_fun_par_t *cb_par, u8 st)
 int mesh_cmd_sig_blob_transfer_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     // blob transfer get should always success.
-    u8 st = BLOB_TRANS_ST_SUCCESS;//fw_update_srv_proc.blob_trans_busy ? BLOB_TRANS_ST_SUCCESS : BLOB_TRANS_ST_INVALID_STATE;
+    u8 st = BLOB_TRANS_ST_SUCCESS;//fw_update_srv_proc.blob_trans_busy ? BLOB_TRANS_ST_SUCCESS : BLOB_TRANS_ST_WRONG_PHASE;
 	
 	return mesh_blob_transfer_st_rsp(cb_par, st);
 }
 
+int is_blob_transfer_start_same(blob_transfer_start_t *p_start)
+{
+    // blob id have been checked before
+    return ((p_start->transfer_mode == fw_update_srv_proc.transfer_mode)
+          &&(p_start->blob_size == fw_update_srv_proc.blob_size)
+          &&(p_start->bk_size_log == fw_update_srv_proc.bk_size_log)
+          &&(p_start->client_mtu_size == fw_update_srv_proc.client_mtu_size));
+}
+
 int mesh_cmd_sig_blob_transfer_handle(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	u8 st = BLOB_TRANS_ST_INVALID_STATE;
-    if(fw_update_srv_proc.busy){
-        if(UPDATE_PHASE_TRANSFER_ACTIVE == fw_update_srv_proc.update_phase){
+	u8 st = BLOB_TRANS_ST_WRONG_PHASE;
+    if(BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN || fw_update_srv_proc.busy){    // can blob start without update start before.
+        if(BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN || UPDATE_PHASE_TRANSFER_ACTIVE == fw_update_srv_proc.update_phase){
             if(BLOB_TRANSFER_START == cb_par->op){
                 blob_transfer_start_t *p_start = (blob_transfer_start_t *)par;
-                if(is_updater_blob_id_match(p_start->blob_id)){
-                    if((p_start->blob_size <= MESH_OTA_BLOB_SIZE_MAX)
-                    && (p_start->bk_size_log >= MESH_OTA_BLOCK_SIZE_LOG_MIN)
-                    && (p_start->bk_size_log <= MESH_OTA_BLOCK_SIZE_LOG_MAX)){
+                if(is_local_blob_id_match(p_start->blob_id)){
+                    #if PTS_TEST_OTA_EN
+                    if(A_1_blob_tranfer_BV_19_C_phase_inactive){ // just for Test now.
+                        // MMDL/SR/BT/BV-19-C: IUT in Inactive Phase
+                        fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_INACTIVE;
+                        st = BLOB_TRANS_ST_WRONG_PHASE;
+                    }else
+                    #endif
+                    {
+                    if(fw_update_srv_proc.blob_trans_busy && !is_blob_transfer_start_same(p_start)){
+                        st = BLOB_TRANS_ST_WRONG_PHASE;//MMDL/SR/BT/BV-14-C start twice; MMDL/SR/BT/BV-28-C use a different par.
+                    }else if(p_start->blob_size > MESH_OTA_BLOB_SIZE_MAX){
+                        st = BLOB_TRANS_ST_BLOB_TOO_LARGE;
+                    }else if(p_start->bk_size_log > MESH_OTA_BLOCK_SIZE_LOG_MAX
+                        || (p_start->bk_size_log < MESH_OTA_BLOCK_SIZE_LOG_MIN)){
+                        st = BLOB_TRANS_ST_INVALID_BK_SIZE;
+                    }else if(p_start->transfer_mode & (~ MESH_OTA_TRANSFER_MODE_SEL)){
+                        if(p_start->transfer_mode & MESH_OTA_TRANSFER_MODE_SEL){
+                            return -1; // should not response: MMDL/SR/BT/BI-02-C Prohibited Transfer Mode
+                        }else{
+                            st = BLOB_TRANS_ST_UNSUPPORT_TRANS_MODE;
+                        }
+                    }else{
+                        #if BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN
+                        if(!fw_update_srv_proc.busy){
+                            memcpy(fw_update_srv_proc.start.blob_id, p_start->blob_id, sizeof(fw_update_srv_proc.start.blob_id));
+                        }
+                        #endif
                         fw_update_srv_proc.transfer_mode = p_start->transfer_mode;
                         fw_update_srv_proc.blob_size = p_start->blob_size;
                         fw_update_srv_proc.bk_size_log = p_start->bk_size_log;
                         fw_update_srv_proc.client_mtu_size = p_start->client_mtu_size;
-                        // fw_update_srv_proc.blob_block_trans_num_next = 0;    // init, no need, because continue OTA
                         fw_update_srv_proc.blob_trans_busy = 1;
-                        fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_WAIT_NEXT_BLOCK;
+                        if((fw_update_srv_proc.blob_trans_phase == BLOB_TRANS_PHASE_WAIT_NEXT_CHUNK)
+                        || (fw_update_srv_proc.blob_trans_phase == BLOB_TRANS_PHASE_COMPLETE)){
+                            // MMDL/SR/BT/BV-15-C (BLOB Transfer Start-IUT in Waiting for Next Chunk Phase): if it's wait Chunk, keep BLOB_TRANS_PHASE_WAIT_NEXT_CHUNK
+                        }else{
+                            fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_WAIT_NEXT_BLOCK;
+                        }
+                        fw_update_srv_proc.blob_trans_start_tick = clock_time()|1;
                         st = BLOB_TRANS_ST_SUCCESS;
-                    }else{
-                        st = BLOB_TRANS_ST_BLOB_TOO_LARGE;
+                    }
                     }
                 }else{
                     st = BLOB_TRANS_ST_WRONG_BLOB_ID;
+                }
+
+                fw_update_srv_proc.blob_trans_rx_start_error = (st != BLOB_TRANS_ST_SUCCESS);
+                if(!is_blob_st_optional_C2(st)){
+                    return mesh_tx_cmd_blob_transfer_st_C1(cb_par, st, p_start->blob_id);
                 }
             }else if(BLOB_TRANSFER_CANCEL == cb_par->op){
                 blob_transfer_cancel_t *p_cancel = (blob_transfer_cancel_t *)par;
                 if(is_updater_blob_id_match(p_cancel->blob_id)){
                     fw_update_srv_proc.blob_trans_busy = 0;
+                    fw_update_srv_proc.blob_trans_rx_start_error = 0;
+                    if(fw_update_srv_proc.busy){
+                        // MMDL/SR/FU/BV-06-C Firmware Update-Cancel BLOB
+                        fw_update_srv_proc.update_phase = UPDATE_PHASE_TRANSFER_ERR;
+                    }
+                    fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_INACTIVE;
+                    fw_update_srv_proc.transfer_mode = 0; // must, MMDL/SR/BT/BV-07-C (BLOB Transfer Cancel-IUT in Waiting for Next Block Phase)
+                    fw_update_srv_proc.blob_trans_start_tick = 0;
                     st = BLOB_TRANS_ST_SUCCESS;
                 }else{
-                    st = BLOB_TRANS_ST_WRONG_BLOB_ID;
+                    if(BLOB_TRANS_PHASE_INACTIVE == fw_update_srv_proc.blob_trans_phase){
+                        st = BLOB_TRANS_ST_SUCCESS;
+                    }else{
+                        st = BLOB_TRANS_ST_WRONG_BLOB_ID;
+                    }
                 }
             }
     	}else{
-    	    st = BLOB_TRANS_ST_INVALID_STATE;    // TODO
+    	    st = BLOB_TRANS_ST_WRONG_PHASE;    // TODO
     	}
     }else{       
-	    st = BLOB_TRANS_ST_INVALID_STATE;    // TODO
+	    st = BLOB_TRANS_ST_WRONG_PHASE;    // TODO
 	}
-	
+
 	return mesh_blob_transfer_st_rsp(cb_par, st);
 }
 
@@ -1613,43 +1904,66 @@ int mesh_cmd_sig_blob_transfer_status(u8 *par, int par_len, mesh_cb_fun_par_t *c
 }
 
 //------
-int mesh_tx_cmd_blob_block_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 st)
+int mesh_tx_cmd_blob_block_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 st, u16 block_num)
 {
 	blob_block_status_t rsp = {0};
 	u32 rsp_len = OFFSETOF(blob_block_status_t, miss_chunk);    // not for block get, so no miss chunk.
 	rsp.st = st;
-	rsp.format = BLOB_BLOCK_FORMAT_ALL_CHUNK_MISS;   // only response for block start now.
+	if(block_num < updater_get_block_rx_ok_cnt()){
+        rsp.format = BLOB_BLOCK_FORMAT_NO_CHUNK_MISS;   // only response for block start now.
+	}else{
+        rsp.format = BLOB_BLOCK_FORMAT_ALL_CHUNK_MISS;  // only response for block start now.
+	}
+	#if (MESH_OTA_V_SEL == MESH_OTA_R04)
 	rsp.transfer_phase = fw_update_srv_proc.blob_trans_phase;
-	rsp.block_num = fw_update_srv_proc.block_start.block_num;
-	rsp.chunk_size = fw_update_srv_proc.block_start.chunk_size;
+	#endif
+	if(0 == fw_update_srv_proc.block_start.chunk_size){
+	    // MMDL/SR/BT/BV-20-C (BLOB Block Start-IUT in Idle Phase): never have received block start before
+    	rsp.block_num = 0xffff;
+    	rsp.chunk_size = 0xffff;
+	}else{
+    	rsp.block_num = fw_update_srv_proc.block_start.block_num;
+    	rsp.chunk_size = fw_update_srv_proc.block_start.chunk_size;
+	}
 	return mesh_tx_cmd_rsp(BLOB_BLOCK_STATUS, (u8 *)&rsp, rsp_len, ele_adr, dst_adr, 0, 0);
 }
 
-int mesh_blob_block_st_rsp(mesh_cb_fun_par_t *cb_par, u8 st)
+int mesh_blob_block_st_rsp(mesh_cb_fun_par_t *cb_par, u8 st, u16 block_num)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
-	return mesh_tx_cmd_blob_block_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, st);
+	return mesh_tx_cmd_blob_block_st(cb_par->model_idx, p_model->com.ele_adr, cb_par->adr_src, st, block_num);
 }
 
 u8 blob_block_start_par_check(blob_block_start_t *p_start)
 {
 	u8 st;// = BLOB_TRANS_ST_INTERNAL_ERROR;
-    if(fw_update_srv_proc.busy){
-        if((UPDATE_PHASE_TRANSFER_ACTIVE == fw_update_srv_proc.update_phase)
+    if(BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN || fw_update_srv_proc.busy){
+        if((BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN || (UPDATE_PHASE_TRANSFER_ACTIVE == fw_update_srv_proc.update_phase))
         && fw_update_srv_proc.blob_trans_busy){
             u16 bk_size_max = (1 << fw_update_srv_proc.bk_size_log);
-            if(get_fw_chunk_cnt(bk_size_max, p_start->chunk_size) <= MESH_OTA_CHUNK_NUM_MAX){ // TODO
+            int block_num_valid = p_start->block_num <= updater_get_block_rx_ok_cnt();
+            if(!block_num_valid && ((fw_update_srv_proc.blob_trans_phase == BLOB_TRANS_PHASE_WAIT_NEXT_CHUNK) // MMDL/SR/BT/BV-21-C, start twice.
+                                    || (fw_update_srv_proc.blob_trans_phase == BLOB_TRANS_PHASE_COMPLETE))){
+                st = BLOB_TRANS_ST_WRONG_PHASE;
+            }else if((p_start->chunk_size > MESH_OTA_CHUNK_SIZE_MAX)
+            || (get_fw_chunk_cnt(bk_size_max, p_start->chunk_size) > MESH_OTA_CHUNK_NUM_MAX)){
+                if(fw_update_srv_proc.blob_trans_phase == BLOB_TRANS_PHASE_WAIT_NEXT_CHUNK){
+                    st = BLOB_TRANS_ST_WRONG_PHASE; // MMDL/SR/BT/BV-30-C: par not be same with before.
+                }else{
+                    st = BLOB_TRANS_ST_INVALID_CHUNK_SIZE;
+                }
+            }else{
                 #if (0 == BLOCK_CRC32_CHECKSUM_EN)
-                if(p_start->block_num <= fw_update_srv_proc.blob_block_trans_num_next){
+                if(block_num_valid){
                     st = BLOB_TRANS_ST_SUCCESS;
                 }else{
                     st = BLOB_TRANS_ST_INVALID_BK_NUM;
                 }
                 #else
                 if(p_start->bk_check_sum_type == BLOB_BLOCK_CHECK_SUM_TYPE_CRC32){
-                    if(p_start->block_num == fw_update_srv_proc.blob_block_trans_num_next){
+                    if(p_start->block_num == updater_get_block_rx_ok_cnt()){
                         st = BLOB_BLOCK_TRANS_ST_ACCEPTED;
-                    }else if(p_start->block_num < fw_update_srv_proc.blob_block_trans_num_next){
+                    }else if(p_start->block_num < updater_get_block_rx_ok_cnt()){
                         st = BLOB_BLOCK_TRANS_ST_ALREADY_RX;
                     }else{
                         st = BLOB_BLOCK_TRANS_ST_INVALID_BK_NUM;
@@ -1658,14 +1972,12 @@ u8 blob_block_start_par_check(blob_block_start_t *p_start)
                     st = BLOB_BLOCK_TRANS_ST_UNKNOWN_CHECK_SUM_TYPE;
                 }
                 #endif
-            }else{
-                st = BLOB_TRANS_ST_INVALID_CHUNK_SIZE;
             }
     	}else{
-    	    st = BLOB_TRANS_ST_INVALID_STATE;    // TODO
+    	    st = BLOB_TRANS_ST_WRONG_PHASE;    // TODO
     	}
     }else{       
-	    st = BLOB_TRANS_ST_INVALID_STATE;    // TODO
+	    st = BLOB_TRANS_ST_WRONG_PHASE;    // TODO
 	}
 
 	return st;
@@ -1677,22 +1989,31 @@ int mesh_cmd_sig_blob_block_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_pa
     fw_update_srv_proc.bk_size_current = updater_get_block_size(p_start->block_num);
     
     u8 st = blob_block_start_par_check(p_start);
-    if(BLOB_TRANS_ST_SUCCESS == st){
+    if((BLOB_TRANS_ST_SUCCESS == st) && (p_start->block_num == updater_get_block_rx_ok_cnt())){
         memcpy(&fw_update_srv_proc.block_start, p_start, sizeof(fw_update_srv_proc.block_start));
         blob_block_erase(p_start->block_num);
-        set_bit_by_cnt(fw_update_srv_proc.miss_mask, sizeof(fw_update_srv_proc.miss_mask), updater_get_fw_chunk_cnt());
-        fw_update_srv_proc.blob_block_trans_accepted = 1;
+        #if 0 // PTS_TEST_OTA_EN// only test for BLOB Transfer Server model, can't enable in FW update serve.
+        if(0 == A_2_blob_tranfer_BV_31_C){ // MMDL/SR/BT/BV-31-C Chunk Transfer-Invalid Parameters must disable.
+            memset(fw_update_srv_proc.miss_mask, 0, sizeof(fw_update_srv_proc.miss_mask));
+        }else
+        #endif
+        {
+            set_bit_by_cnt(fw_update_srv_proc.miss_mask, sizeof(fw_update_srv_proc.miss_mask), updater_get_fw_chunk_cnt());
+        }
+		fw_update_srv_proc.blob_block_rx_ok = 0; // init
         fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_WAIT_NEXT_CHUNK;
+        fw_update_srv_proc.blob_trans_start_tick = 0;
+        fw_update_srv_proc.blob_block_get_retry_flag = 0;
     }
 	
-	return mesh_blob_block_st_rsp(cb_par, st);
+	return mesh_blob_block_st_rsp(cb_par, st, p_start->block_num);
 }
 
 //------
 int is_blob_chunk_transfer_ready()
 {
-    return (fw_update_srv_proc.busy && (UPDATE_PHASE_TRANSFER_ACTIVE == fw_update_srv_proc.update_phase)
-            && fw_update_srv_proc.blob_trans_busy && fw_update_srv_proc.blob_block_trans_accepted);
+    return ((BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN || (fw_update_srv_proc.busy && (UPDATE_PHASE_TRANSFER_ACTIVE == fw_update_srv_proc.update_phase)))
+            && fw_update_srv_proc.blob_trans_busy && (BLOB_TRANS_PHASE_WAIT_NEXT_CHUNK == fw_update_srv_proc.blob_trans_phase));
 }
 
 int mesh_cmd_sig_blob_chunk_transfer(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -1702,11 +2023,18 @@ int mesh_cmd_sig_blob_chunk_transfer(u8 *par, int par_len, mesh_cb_fun_par_t *cb
     
     if(is_blob_chunk_transfer_ready() && ((fw_data_len > 0) && (fw_data_len <= MESH_OTA_CHUNK_SIZE))){
         //u32 bit_chunk = BIT(p_chunk->chunk_num);
-        if(p_chunk->chunk_num <= sizeof(fw_update_srv_proc.miss_mask)*8){
+        //LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0,"chunk_num: 0x%04x",p_chunk->chunk_num);
+        if((p_chunk->chunk_num + 1) * fw_update_srv_proc.block_start.chunk_size > (1 << fw_update_srv_proc.bk_size_log)){
+            #if 0 // no need, just discard message.
+            // MMDL/SR/BT/BV-31-C BLOB Chunk Transfer-Invalid Parameters: discard all that have been received
+            set_bit_by_cnt(fw_update_srv_proc.miss_mask, sizeof(fw_update_srv_proc.miss_mask), updater_get_fw_chunk_cnt());
+            LOG_MSG_ERR(TL_LOG_NODE_BASIC,0, 0,"invalid chunk number:",0);
+            #endif
+        }else if(p_chunk->chunk_num <= sizeof(fw_update_srv_proc.miss_mask)*8){
             #if 1 // VC_DISTRIBUTOR_UPDATE_CLIENT_EN
             #if 0   // test
-            static u8 skip_test = 1;
-            if(skip_test && (p_chunk->chunk_num == 1)){
+            static volatile u8 skip_test = 0;
+            if(skip_test){ // (p_chunk->chunk_num == 1)
                 skip_test = 0;
                 return 0;
             }
@@ -1763,13 +2091,21 @@ int mesh_cmd_sig_blob_block_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	blob_block_status_t rsp = {0};
 	u8 st;
 	u32 rsp_len = OFFSETOF(blob_block_status_t, miss_chunk);
-	if(is_blob_chunk_transfer_ready()){
+	if(is_blob_chunk_transfer_ready() || fw_update_srv_proc.blob_block_get_retry_flag){ // it may retry get command sometimes.
         // TODO fill missing chunk
         if(0 == is_buf_zero(fw_update_srv_proc.miss_mask, sizeof(fw_update_srv_proc.miss_mask))){
             // have been make sure no redundance bit in miss mask in mesh_cmd_sig_blob_block_start_
             memcpy(rsp.miss_chunk, &fw_update_srv_proc.miss_mask, sizeof(rsp.miss_chunk));
-            rsp_len += sizeof(rsp.miss_chunk);
-            rsp.format = BLOB_BLOCK_FORMAT_SOME_CHUNK_MISS;
+            #if PTS_TEST_OTA_EN // always use some chunk miss now
+            if(is_buf_all_one(fw_update_srv_proc.miss_mask, sizeof(fw_update_srv_proc.miss_mask))){
+                rsp.format = BLOB_BLOCK_FORMAT_ALL_CHUNK_MISS;
+                LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0,"all miss:",0);
+            }else
+            #endif
+            {
+                rsp_len += sizeof(rsp.miss_chunk);
+                rsp.format = BLOB_BLOCK_FORMAT_SOME_CHUNK_MISS;
+            }
         }else{
             // also check telink crc 16 total inside.
             #if BLOCK_CRC32_CHECKSUM_EN
@@ -1782,24 +2118,37 @@ int mesh_cmd_sig_blob_block_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
             #endif
             {
                 if(crc_ok){
-                    fw_update_srv_proc.blob_block_trans_num_next++;  // receive ok
+					fw_update_srv_proc.blob_block_rx_ok = 1;
+                    fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_WAIT_NEXT_BLOCK;  // receive ok
                 }
-                if(fw_update_srv_proc.blob_block_trans_num_next == updater_get_fw_block_cnt()){// all block rx ok
+                
+                if(updater_get_block_rx_ok_cnt() == updater_get_fw_block_cnt()){// all block rx ok
                     fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_COMPLETE;
                 }
+                
+                fw_update_srv_proc.blob_block_get_retry_flag = 1;
                 rsp.format = BLOB_BLOCK_FORMAT_NO_CHUNK_MISS;
             }
         }
         st = BLOB_TRANS_ST_SUCCESS;
 	}else{
-	    st = BLOB_TRANS_ST_INVALID_STATE;
+	    st = BLOB_TRANS_ST_WRONG_PHASE;
 	}
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	rsp.st = st;
 	//rsp.format = // have been set before;// miss_cnt ? BLOB_BLOCK_FORMAT_SOME_CHUNK_MISS : BLOB_BLOCK_FORMAT_NO_CHUNK_MISS;
+	#if (MESH_OTA_V_SEL == MESH_OTA_R04)
     rsp.transfer_phase = fw_update_srv_proc.blob_trans_phase;
-	rsp.block_num = fw_update_srv_proc.block_start.block_num;
-	rsp.chunk_size = fw_update_srv_proc.block_start.chunk_size;
+    #endif
+    
+	if(0 == fw_update_srv_proc.block_start.chunk_size){
+	    // MMDL/SR/BT/BV-33-C (BLOB Block Get-IUT in Idle Phase): never have received block start before
+    	rsp.block_num = 0xffff;
+    	rsp.chunk_size = 0xffff;
+	}else{
+    	rsp.block_num = fw_update_srv_proc.block_start.block_num;
+    	rsp.chunk_size = fw_update_srv_proc.block_start.chunk_size;
+	}
 
 	// use mesh_blob_block_st_rsp() later
 	return mesh_tx_cmd_rsp(BLOB_BLOCK_STATUS, (u8 *)&rsp, rsp_len, p_model->com.ele_adr, cb_par->adr_src, 0, 0);
@@ -1823,7 +2172,7 @@ int mesh_cmd_sig_blob_info_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	rsp.chunk_size_max = MESH_OTA_CHUNK_SIZE_MAX;
 	rsp.blob_size_max = MESH_OTA_BLOB_SIZE_MAX;
 	rsp.server_mtu_size = MESH_CMD_ACCESS_LEN_MAX;
-	rsp.transfer_mode = MESH_OTA_TRANSFER_MODE_PUSH;
+	rsp.transfer_mode = MESH_OTA_TRANSFER_MODE_SEL;
 	
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	return mesh_tx_cmd_rsp(BLOB_INFO_STATUS, (u8 *)&rsp, sizeof(rsp), p_model->com.ele_adr, cb_par->adr_src, 0, 0);

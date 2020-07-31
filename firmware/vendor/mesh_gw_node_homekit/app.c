@@ -1223,40 +1223,16 @@ u8 mesh_get_hci_tx_fifo_cnt()
 	return 0;
 #endif
 }
-u8 gateway_common_cmd_rsp(u8 code,u8 *p_par,u8 len )
+int gateway_common_cmd_rsp(u8 code,u8 *p_par,u16 len )
 {
-	u8 head[3] = {TSCRIPT_GATEWAY_DIR_RSP};
+	u8 head[2] = {TSCRIPT_GATEWAY_DIR_RSP};
+	u8 head_len = 2;
 	head[1] = code;
-	if(code == HCI_GATEWAY_CMD_SEND_CPS_INFO){
-		u8 *p_buf;
-		p_buf = p_par;
-		u8 fifo_size;
-		fifo_size = mesh_get_hci_tx_fifo_cnt()-5;
-		if(len < fifo_size){// whole packet 
-			head[2] = SAR_COMPLETE;
-			my_fifo_push_hci_tx_fifo(p_buf,len, head, 3);
-			return 1;
-		}else{// first packet
-			head[2] = SAR_START;
-			my_fifo_push_hci_tx_fifo(p_buf,fifo_size, head, 3);
-			len -= fifo_size;
-			p_buf += fifo_size;
-		}
-		while(len){
-			if(len > fifo_size){//continus packet 
-				head[2] = SAR_CONTINUS;
-				my_fifo_push_hci_tx_fifo(p_buf,fifo_size, head, 3);
-				len -= fifo_size;
-				p_buf += fifo_size;
-				
-			}else{
-				head[2] = SAR_END;// last packet 
-				my_fifo_push_hci_tx_fifo(p_buf,len, head, 3);
-				len =0;
-			}
-		}
-		return 1;
-	}else{
+	u16 valid_fifo_size = mesh_get_hci_tx_fifo_cnt()-2; // 2: length
+	if(len+head_len > valid_fifo_size){
+		return gateway_sar_pkt_segment(p_par, len, valid_fifo_size, head, 2);
+	}
+	else{
 		return my_fifo_push_hci_tx_fifo(p_par,len, head, 2); 
 	}
 }
@@ -1270,7 +1246,7 @@ u8 gateway_keybind_rsp_cmd(u8 opcode )
 	return gateway_common_cmd_rsp(HCI_GATEWAY_KEY_BIND_RSP , (u8*)(&opcode),1);
 }
 
-u8 gateway_model_cmd_rsp(u8 *para,u8 len )
+u8 gateway_model_cmd_rsp(u8 *para,u16 len )
 {
 	return gateway_common_cmd_rsp(HCI_GATEWAY_RSP_OP_CODE , para,len);
 }
@@ -1642,7 +1618,7 @@ void user_init()
 #endif
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
-#if BLT_SOFTWARE_TIMER_ENABLE
+#if BLE_REMOTE_PM_ENABLE
 	blc_ll_initPowerManagement_module();        //pm module:      	 optional
 #endif
 

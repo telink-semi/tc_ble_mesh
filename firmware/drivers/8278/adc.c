@@ -38,7 +38,7 @@ adc_vref_ctr_t adc_vref_cfg = {
 
 volatile unsigned short	adc_code;
 unsigned char   adc_pre_scale;
-
+unsigned char   adc_vbat_divider;
 GPIO_PinTypeDef ADC_GPIO_tab[10] = {
 		GPIO_PB0,GPIO_PB1,
 		GPIO_PB2,GPIO_PB3,
@@ -405,7 +405,7 @@ unsigned int adc_sample_and_get_result(void)
 	//                          (Vref, adc_pre_scale)   (BIT<12~0> valid data)
 	//			 =  adc_result * Vref * adc_pre_scale / 0x2000
 	//           =  adc_result * Vref*adc_pre_scale >>13
-	adc_vol_mv  = (adc_result*adc_pre_scale*adc_vref_cfg.adc_vref)>>13;
+	adc_vol_mv  = (adc_vbat_divider*adc_result*adc_pre_scale*adc_vref_cfg.adc_vref)>>13;
 
 	return adc_vol_mv;
 }
@@ -434,7 +434,7 @@ unsigned short adc_sample_and_get_result_manual_mode(void)
 		adc_misc_data=0;
 	}
 	else{
-		adc_misc_data  = (adc_misc_data * adc_vref_cfg.adc_vref)>>10;
+		
 	}
 	return adc_misc_data;
 }

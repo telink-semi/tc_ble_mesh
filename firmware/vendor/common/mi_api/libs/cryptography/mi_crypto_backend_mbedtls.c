@@ -623,13 +623,13 @@ static size_t base64_decode(const unsigned char * base64, size_t size,
         trans[1] = num_strchr(base64char, base64[i + 1]);
         buf[j++] = ((trans[0] << 2) & 0xfc) | ((trans[1] >> 4) & 0x03);
         if ('=' == base64[i + 2]) {
-            continue;
+            break;
         } else {
             trans[2] = num_strchr(base64char, base64[i + 2]);
         }
         buf[j++] = ((trans[1] << 4) & 0xf0) | ((trans[2] >> 2) & 0x0f);
         if ('=' == base64[i + 3]) {
-            continue;
+            break;
         } else {
             trans[3] = num_strchr(base64char, base64[i + 3]);
         }

@@ -46,10 +46,11 @@
 #if (VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_SPIRIT)
 // all op from 0xC0 to 0xFF
     #if DEBUG_VENDOR_CMD_EN
-#define VD_LIGHT_ONOFF_GET				0xC1
-#define VD_LIGHT_ONOFF_SET				0xC2
-#define VD_LIGHT_ONOFF_SET_NOACK		0xC3
-#define VD_LIGHT_ONOFF_STATUS		    0xC4
+#define VD_RC_KEY_REPORT				0xC0
+#define VD_GROUP_G_GET				    0xC1    // vendor group generic
+#define VD_GROUP_G_SET				    0xC2    // vendor group generic
+#define VD_GROUP_G_SET_NOACK		    0xC3    // vendor group generic
+#define VD_GROUP_G_STATUS		        0xC4    // vendor group generic
     #endif
     
     #if SPIRIT_VENDOR_EN
@@ -67,12 +68,18 @@
 
 #elif(VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
 // ------ 0xC0 to 0xDF for telink used
+    #if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)
+#define VD_EXTEND_CMD0				    0xC0
+    #elif DRAFT_FEAT_VD_MD_EN
+    // add by user
+    #else
 #define VD_RC_KEY_REPORT				0xC0
-    #if DEBUG_VENDOR_CMD_EN
-#define VD_LIGHT_ONOFF_GET				0xC1
-#define VD_LIGHT_ONOFF_SET				0xC2
-#define VD_LIGHT_ONOFF_SET_NOACK		0xC3
-#define VD_LIGHT_ONOFF_STATUS		    0xC4
+        #if DEBUG_VENDOR_CMD_EN
+#define VD_GROUP_G_GET				    0xC1
+#define VD_GROUP_G_SET				    0xC2
+#define VD_GROUP_G_SET_NOACK		    0xC3
+#define VD_GROUP_G_STATUS		        0xC4
+        #endif
     #endif
     
     #if FAST_PROVISION_ENABLE
@@ -105,14 +112,87 @@ typedef struct{
 	u8 rsv[7];
 }vd_rc_key_report_t;
 
+#if DEBUG_VENDOR_CMD_EN
+enum{/*vendor generic group, op code include C1-C4*/
+    /* telink use sub op from 0x00 to 0x7f*/
+    VD_GROUP_G_OFF                      = 0,    // compatible with legacy version, so use 2 sub op for onoff.
+    VD_GROUP_G_ON                       = 1,    // compatible with legacy version, so use 2 sub op for onoff.
+    VD_GROUP_G_LPN_GATT_OTA_MODE        = 2,
+    VD_G_TELINK_END     = 0x7F,
+    /* user use sub op from 0x80 to 0xff*/
+    VD_GROUP_G_USER_START               = 0x80,
+    //VD_G_MAX    = 0x100,
+};
+
+static inline int is_vd_onoff_op(u32 sub_op)
+{
+	return	(VD_GROUP_G_OFF == sub_op || VD_GROUP_G_ON == sub_op);
+}
+
 typedef struct{
-	u8 onoff;
+	u8 sub_op;
+	u8 par[1];
+}vd_group_g_set_t;
+
+typedef struct{
+	u8 sub_op;
+}vd_group_g_st_t;
+
+typedef struct{
+	u8 sub_op;
 	u8 tid;
 }vd_light_onoff_set_t;
 
 typedef struct{
-	u8 present_onoff;
+	u8 sub_op;
+#if	DEBUG_CFG_CMD_GROUP_AK_EN
+	u8 brx_num;
+#endif
 }vd_light_onoff_st_t;
+
+typedef struct{
+	u8 sub_op;
+	u8 mode;
+}vd_lpn_gatt_ota_mode_set_t;
+
+typedef struct{
+	u8 sub_op;
+	u8 mode;
+}vd_lpn_gatt_ota_mode_status_t;
+
+enum{
+    SEARCH_VD_GROUP_G_FUNC_TYPE_SET     = 0,
+    SEARCH_VD_GROUP_G_FUNC_TYPE_TX_ST,
+    SEARCH_VD_GROUP_G_FUNC_TYPE_RX_STATUS,
+};
+
+/**
+ * @brief  cb_vd_group_g_sub_set
+ * @retval publish flag
+ *   (0: no need publish; 1: need publish)
+ */
+typedef int (* cb_vd_group_g_sub_set)(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+typedef int (* cb_vd_group_g_sub_tx_st)(u8 light_idx, u8 sub_op, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md);
+typedef int (* cb_vd_group_g_sub_rx_status)(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+
+typedef struct{
+    u32 sub_op;
+    cb_vd_group_g_sub_set cb_set;
+    cb_vd_group_g_sub_tx_st cb_tx_st;
+    //cb_vd_group_g_sub_rx_status cb_rx_status; // TBD, only client may use.
+}vd_group_g_func_t;
+
+u8 * search_vd_group_g_func(u32 sub_op, int type);
+
+#endif
+
+#if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)
+static inline int is_vendor_extend_op(u16 op)
+{
+    return (VD_EXTEND_CMD0 == op);
+}
+
+#endif
 
 // ------------------
 #if SPIRIT_VENDOR_EN
@@ -231,12 +311,12 @@ void mesh_tx_indication_proc();
 
 int vd_cmd_key_report(u16 adr_dst, u8 key_code);
 int vd_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack);
-int vd_light_onoff_st_publish(u8 idx);
+int vd_light_onoff_st_publish(u8 light_idx);
 int access_cmd_attr_indication(u16 op, u16 adr_dst, u16 attr_type, u8 *attr_par, u8 par_len);
 void APP_set_vd_id_mesh_cmd_vd_func(u16 vd_id);
 
 int mesh_search_model_id_by_op_vendor(mesh_op_resource_t *op_res, u16 op, u8 tx_flag);
-int is_cmd_with_tid_vendor(u8 *tid_pos_out, u16 op, u8 tid_pos_vendor_app);
+int is_cmd_with_tid_vendor(u8 *tid_pos_out, u16 op, u8 *par, u8 tid_pos_vendor_app);
 int cb_app_vendor_all_cmd(mesh_cmd_ac_vd_t *ac, int ac_len, mesh_cb_fun_par_vendor_t *cb_par);
 
 

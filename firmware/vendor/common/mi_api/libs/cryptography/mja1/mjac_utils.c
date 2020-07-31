@@ -1,9 +1,10 @@
 #include "mjac_utils.h"
 #include "third_party/mbedtls/asn1.h"
+#include "vendor/common/version.h"    // include mesh_config.h inside.
 #if MI_API_ENABLE
 /* --------------------------------------------------------------------- crc */
 /* CRC CCITT computed with POLY set to 0x1189. */
-#if defined(CRC_CCCITT_IN_RAM)
+#if (defined(CRC_CCCITT_IN_RAM)&&0)
 static UINT16 crc_ccitt_16[256];
 static void crc_ccitt_16_table_init(void);
 static UINT8 crc_ccitt_16_table_init_done = 0;

@@ -68,7 +68,7 @@
 #define LC_PROP_ID_TimeFadeStandbyManual    0x0039
 #define LC_PROP_ID_TimeOccupancyDelay       0x003A
 #define LC_PROP_ID_TimeProlong              0x003B
-#define LC_PROP_ID_TimeRunOn                0x003C
+#define LC_PROP_ID_TimeRun                  0x003C
 
 // lc_prop_type_t
 #define LC_PROP_TYPE_LUXLEVEL       (0)
@@ -83,20 +83,24 @@
 #define LC_PROP_VAL_LuxLevelProlong         (0) // confirm later
 #define LC_PROP_VAL_LuxLevelStandby         (0) // confirm later
 #define LC_PROP_VAL_LightnessOn             (LIGHTNESS_MAX)
-#define LC_PROP_VAL_LightnessProlong        (LIGHTNESS_MAX / 2)
-#define LC_PROP_VAL_LightnessStandby        (LIGHTNESS_MAX / 10)
+#define LC_PROP_VAL_LightnessProlong        ((LIGHTNESS_MAX + 1) / 4)
+#define LC_PROP_VAL_LightnessStandby        ((LIGHTNESS_MAX + 1) / 20)
 #define LC_PROP_VAL_RegulatorAccuracy       (0) // confirm later
 #define LC_PROP_VAL_RegulatorKid            (0) // confirm later
 #define LC_PROP_VAL_RegulatorKiu            (0) // confirm later
 #define LC_PROP_VAL_RegulatorKpd            (0) // confirm later
 #define LC_PROP_VAL_RegulatorKpu            (0) // confirm later
 #define LC_PROP_VAL_TimeFade                (2*1000)    // unit: ms
+#if PTS_TEST_EN
+#define LC_PROP_VAL_TimeFadeOn              (0*1000)    // unit: ms
+#else
 #define LC_PROP_VAL_TimeFadeOn              (2*1000)    // unit: ms
-#define LC_PROP_VAL_TimeFadeStandbyAuto     (2*1000)    // unit: ms
-#define LC_PROP_VAL_TimeFadeStandbyManual   (2*1000)    // unit: ms
+#endif
+#define LC_PROP_VAL_TimeFadeStandbyAuto     (3*1000)    // unit: ms
+#define LC_PROP_VAL_TimeFadeStandbyManual   (3*1000)    // unit: ms
 #define LC_PROP_VAL_TimeOccupancyDelay      (2*1000)    // unit: ms
-#define LC_PROP_VAL_TimeProlong             (2*1000)    // unit: ms
-#define LC_PROP_VAL_TimeRunOn               (2*1000)    // unit: ms
+#define LC_PROP_VAL_TimeProlong             (4*1000)    // unit: ms
+#define LC_PROP_VAL_TimeRun                 (5*1000)    // unit: ms
 
 enum{
     LC_MODE_OFF = 0,
@@ -111,35 +115,54 @@ enum{
 };
 
 typedef struct{
+	u8 onoff;
+	u8 tid;
+	u8 transit_t;
+	u8 delay;		// unit 5ms
+}mesh_cmd_lc_onoff_set_t;
+
+typedef struct{
+	u8 present_onoff;
+	u8 target_onoff;
+	u8 remain_t;
+}mesh_cmd_lc_onoff_st_t;
+
+typedef struct{
 	u16 id;
 	u8 val[4];      // max 4: LEN_LC_PROP_MAX
 }lc_prop_set_t;
 
 enum{
-    //LC_STATE_OFF    = 0, // use lc mode enable instead of.
-    LC_STATE_STANDBY = 0,   // should be 0
-    LC_STATE_FADE_ON,
-    LC_STATE_RUN,
-    LC_STATE_FADE,
-    LC_STATE_PROLONG,
-    LC_STATE_FADE_STANDBY_AUTO,
-    LC_STATE_FADE_STANDBY_MANUAL,
+    LC_STATE_OFF = 0,   // lc mode is enable and lightness is ON state by manual.
+    LC_STATE_STANDBY,   //  1
+    LC_STATE_FADE_ON,   // 2
+    LC_STATE_RUN,       // 3
+    LC_STATE_FADE,      // 4
+    LC_STATE_PROLONG,   // 5
+    LC_STATE_FADE_STANDBY_AUTO,     // 6
+    LC_STATE_FADE_STANDBY_MANUAL,   // 7
+    LC_STATE_OCCUPANCY_DELAY,       // 8
     LC_STATE_MAX,
 };
 
 // -----------
 int is_light_lc_onoff(u16 op);
-u32 get_lc_onoff_prop_time_ms(int light_idx, int op_lc_onoff_type);
 void scene_get_lc_par(scene_data_t *p_scene, int light_idx);
 void scene_load_lc_par(scene_data_t *p_scene, int light_idx);
 void LC_property_tick_set(int idx);
 void LC_property_st_and_tick_set(int light_idx, u8 st);
-void LC_property_light_onoff(int light_idx, u8 onoff);
 void LC_property_proc();
 void light_LC_global_init();
 int mesh_lc_prop_st_publish(u8 idx);
 int mesh_lc_mode_st_publish(u8 idx);
-int mesh_lc_onoff_st_publish(u8 idx);
+int mesh_lc_onoff_st_publish(u8 light_idx);
+void LC_light_transition_complete_handle(int light_idx);
+void access_cmd_set_LC_lightness(int light_idx, u16 lightness, transition_par_t *trs_par, u32 time_ms);
+void LC_state_check_and_clear_by_user_command(int light_idx);
+int lc_rx_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+
+int access_cmd_lc_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack, transition_par_t *trs_par);
+
 
 #if MD_SERVER_EN
 int mesh_cmd_sig_lc_mode_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -148,6 +171,8 @@ int mesh_cmd_sig_lc_om_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_lc_om_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_lc_prop_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_lc_prop_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_lc_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_lc_onoff_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 #else
 #define mesh_cmd_sig_lc_mode_get                (0)
 #define mesh_cmd_sig_lc_mode_set                (0)
@@ -155,16 +180,22 @@ int mesh_cmd_sig_lc_prop_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 #define mesh_cmd_sig_lc_om_set                  (0)
 #define mesh_cmd_sig_lc_prop_get                (0)
 #define mesh_cmd_sig_lc_prop_set                (0)
+#define mesh_cmd_sig_lc_onoff_set               (0)
+#define mesh_cmd_sig_lc_onoff_get               (0)
 #endif
 
 #if MD_CLIENT_EN
 int mesh_cmd_sig_lc_mode_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_lc_om_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_lc_prop_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_lc_onoff_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 #else
 #define mesh_cmd_sig_lc_mode_status             (0)
 #define mesh_cmd_sig_lc_om_status               (0)
 #define mesh_cmd_sig_lc_prop_status             (0)
+#define mesh_cmd_sig_lc_onoff_status            (0)
 #endif
 
+
+extern u8 set_LC_lightness_flag;
 

@@ -200,13 +200,13 @@ u16 lightness_to_linear(u16 val);
 u16 linear_to_lightness(u16 val);
 int is_valid_lum(u8 lum);
 
-int g_level_set(u8 *par, int par_len, u16 op, int idx, u8 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list);
-int g_level_set_and_update_last(u8 *par, int par_len, u16 op, int idx, u8 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list);
+int g_level_set(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list);
+int g_level_set_and_update_last(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list);
 s16 get_val_with_check_range(s32 level_target, s16 min, s16 max, int st_trans_type);
 void mesh_g_level_st_rsp_par_fill(mesh_cmd_g_level_st_t *rsp, u8 idx);
 int is_valid_transition_step(u8 transit_t);
 void model_pub_check_set_bind_all(st_pub_list_t *pub_flag, mesh_cb_fun_par_t *cb_par, int linear);
-int light_ctl_temp_set(mesh_cmd_light_ctl_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list);
+int light_ctl_temp_set(mesh_cmd_light_ctl_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list);
 s16 get_level_from_ctl_temp_light_idx(u16 temp, int light_idx);
 
 int mesh_lightness_st_publish_ll(u8 idx, u16 op_rsp);
@@ -277,16 +277,18 @@ int mesh_cmd_sig_light_ctl_temp_status(u8 *par, int par_len, mesh_cb_fun_par_t *
 #define mesh_cmd_sig_light_ctl_temp_status      (0)
 #endif
 
-int lightness_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list);
+int lightness_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list);
 int mesh_light_ctl_temp_st_publish(u8 idx);
 int mesh_tx_cmd_lightness_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *uuid, model_common_t *pub_md);
 
-int level_s16_set(mesh_cmd_g_level_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, int st_trans_type, st_pub_list_t *pub_list);
-int level_u16_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, int st_trans_type, st_pub_list_t *pub_list);
+int level_s16_set(mesh_cmd_g_level_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, st_pub_list_t *pub_list);
+int level_u16_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, st_pub_list_t *pub_list);
 u16 get_u16_val_and_remain_time(u8 idx, int st_trans_type, u8 *p_remain_t, int target_flag);
 void mesh_level_u16_st_rsp_par_fill(mesh_cmd_lightness_st_t *rsp, u8 idx, int st_trans_type);
 int mesh_level_def_u16_st_rsp(mesh_cb_fun_par_t *cb_par, int st_trans_type);
 int mesh_range_st_rsp(u8 st, mesh_cb_fun_par_t *cb_par, int st_trans_type);
+void lightness_rsp_data_reformat(mesh_cmd_lightness_st_t *rsp);
+void lightness_set_data_reformat(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction);
 
 
 // access_cmd

@@ -130,7 +130,7 @@ static void gap_event_handler(mible_gap_evt_t evt,
     }
 }
 
-  static void gatts_event_handler(mible_gatts_evt_t evt,
+static void gatts_event_handler(mible_gatts_evt_t evt,
     mible_gatts_evt_param_t* param)
 {
     switch (evt) {

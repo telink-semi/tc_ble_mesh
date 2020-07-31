@@ -77,6 +77,9 @@ u8 ct_flag = 0; // always HSL
 #define RES_HW_PWM_W    {PWM_W, PWMID_W, PWM_INV_W, PWM_FUNC_W}
 #endif
 
+#if LIGHT_RES_HW_USER_EN
+// user define
+#else
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL)
 const light_res_hw_t light_res_hw[LIGHT_CNT][4] = {
 	/*[0] = */{RES_HW_PWM_R, RES_HW_PWM_G, RES_HW_PWM_B, RES_HW_PWM_W}, // vc can't use "[0]="
@@ -108,6 +111,7 @@ const light_res_hw_t light_res_hw[LIGHT_CNT][1] = {
     [3] = {RES_HW_PWM_W},
     #endif
 };
+#endif
 #endif
 
 const u32 GPIO_LED_INDEX = (GPIO_LED == PWM_R) ? 0 : ((GPIO_LED == PWM_G) ? 1 : ((GPIO_LED == PWM_B) ? 2 : ((GPIO_LED == PWM_W) ? 3 : 0)));
@@ -347,7 +351,7 @@ void light_pwm_init()
         #endif
         {
             light_transition_onoff_manual(G_OFF, 0, i);
-            if(onoff_present){
+            if(onoff_present && CB_USER_LIGHT_INIT_ON_CONDITION()){
 				#if !MI_SWITCH_LPN_EN
 				light_transition_onoff_manual(G_ON, (analog_read(DEEP_ANA_REG0)&BIT(OTA_REBOOT_FLAG))?0:edch_is_exist()?g_def_trans_time_val(i):0, i);
 				#endif
@@ -538,7 +542,7 @@ void light_res_sw_g_level_target_set(int idx, s16 level, int st_trans_type)	// o
  * @param  idx: Light Count index.
  * @retval None
  */
-void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
+_USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
 {
 	st_transition_t *p_trans = P_ST_TRANS(idx, ST_TRANS_LIGHTNESS);
 	// u16 lightness = get_lightness_from_level(p_trans->present);
@@ -547,7 +551,7 @@ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
 #endif
     //LOG_MSG_INFO(DEBUG_SHOW_VC_SELF_EN ? TL_LOG_COMMON : TL_LOG_MESH,0,0,"present_lum %d", lum_100);
 	CB_NL_PAR_NUM_3(p_nl_level_state_changed,idx * ELE_CNT_EVERY_LIGHT + ST_TRANS_LIGHTNESS, p_trans->present, p_trans->target);
-#if (FEATURE_LOWPOWER_EN)
+#if (FEATURE_LOWPOWER_EN || GATT_LPN_EN)
     foreach_arr(i,light_res_hw[LIGHT_CNT]){
         const light_res_hw_t *p_hw = &light_res_hw[idx][i];
         led_onoff_gpio(p_hw->gpio, 0 != lum_100);
@@ -1112,8 +1116,9 @@ s16 light_get_next_level(int idx, int st_trans_type)
 
 void light_transition_log(int st_trans_type, s16 present_level)
 {
+#if 0
 	if(ST_TRANS_LIGHTNESS == st_trans_type){
-		LOG_MSG_INFO(TL_LOG_MESH,0,0,"present_level %d", present_level);
+		LOG_MSG_INFO(TL_LOG_NODE_BASIC,0,0,"present_lightness 0x%04x", s16_to_u16(present_level));
 	#if (LIGHT_TYPE_CT_EN)
 	}else if(ST_TRANS_CTL_TEMP == st_trans_type){
 		LOG_MSG_INFO(TL_LOG_MESH,0,0,"present_ctl_temp 0x%04x", s16_to_u16(present_level));
@@ -1135,6 +1140,7 @@ void light_transition_log(int st_trans_type, s16 present_level)
 	}else{
 		LOG_MSG_INFO(TL_LOG_MESH,0,0,"xxxx 0x%04x", s16_to_u16(present_level));
 	}
+#endif
 }
 
 void light_transition_proc()
@@ -1183,6 +1189,12 @@ void light_transition_proc()
                 #if MD_SCENE_EN
 				scene_target_complete_check(i);
 				#endif
+				
+                #if MD_LIGHT_CONTROL_EN
+                if(ST_TRANS_LIGHTNESS == trans_type){
+                    LC_light_transition_complete_handle(i);
+                }
+                #endif
 			}
 		}
 		
@@ -1221,13 +1233,18 @@ void cfg_led_event (u32 e)
 	led_event_pending = e;
 }
 
+void cfg_led_event_stop ()
+{
+	led_event_pending = led_count = 0;
+}
+
 int is_led_busy()
 {
     return (!(!led_count && !led_event_pending));
 }
 
 void led_onoff_gpio(u32 gpio, u8 on){
-#if FEATURE_LOWPOWER_EN
+#if (FEATURE_LOWPOWER_EN || GATT_LPN_EN)
     gpio_set_func (gpio, AS_GPIO);
     gpio_set_output_en (gpio, 0);
     gpio_write(gpio, 0);
@@ -1354,7 +1371,11 @@ void proc_led(void)
 			if( led_off || led_on  ){
                 if (led_sel & BIT(0))
                 {
+                    #ifdef CB_USER_PROC_LED_ONOFF_DRIVER  // user can define in "user_app_config.h"
+                    CB_USER_PROC_LED_ONOFF_DRIVER(led_on);
+                    #else
                     light_dim_set_hw(GPIO_LED_INDEX, 0, LED_INDICATE_VAL * led_on);
+                    #endif
                 }
                 #if 0
                 if (led_sel & BIT(1))
@@ -1372,7 +1393,8 @@ void proc_led(void)
 
 }
 #endif 
-void rf_link_light_event_callback (u8 status)
+
+_USER_CAN_REDEFINE_ void rf_link_light_event_callback (u8 status)
 {
 #ifdef WIN32
 	return ;
@@ -1384,7 +1406,7 @@ void rf_link_light_event_callback (u8 status)
         if(LGT_CMD_FRIEND_SHIP_OK == status){
             cfg_led_event(LED_EVENT_FLASH_4HZ_3T);
         }else{
-            cfg_led_event(0); // LED_EVENT_FLASH_4HZ_2T
+            cfg_led_event_stop(); // LED_EVENT_FLASH_4HZ_2T
         }
 		
         while(is_led_busy()){
@@ -1400,9 +1422,17 @@ void rf_link_light_event_callback (u8 status)
 #endif
 
 	if(status == LGT_CMD_SET_MESH_INFO){
+	    #ifdef CFG_LED_EVENT_SET_MESH_INFO
+	    CFG_LED_EVENT_SET_MESH_INFO;
+	    #else
         cfg_led_event(LED_EVENT_FLASH_1HZ_4S);
+        #endif
     }else if(status == LGT_CMD_SET_SUBSCRIPTION){
+	    #ifdef CFG_LED_EVENT_SET_SUBSCRIPTION
+	    CFG_LED_EVENT_SET_SUBSCRIPTION;
+	    #else
         cfg_led_event(LED_EVENT_FLASH_1HZ_3S);
+        #endif
 #if DEBUG_BLE_EVENT_ENABLE
     }else if(status == LGT_CMD_BLE_ADV){
 		cfg_led_event(LED_EVENT_FLASH_1HZ_2S);
@@ -1453,7 +1483,7 @@ void light_ev_with_sleep(u32 count, u32 half_cycle_us)
 	gpio_write(GPIO_LED, 0);
 }
 
-void show_ota_result(int result)
+_USER_CAN_REDEFINE_ void show_ota_result(int result)
 {
 	if(result == OTA_SUCCESS){
 		light_ev_with_sleep(3, 1000*1000);	//0.5Hz shine for  6 second
@@ -1464,7 +1494,7 @@ void show_ota_result(int result)
 	}
 }
 
-void show_factory_reset()
+_USER_CAN_REDEFINE_ void show_factory_reset()
 {
 	light_ev_with_sleep(8, 500*1000);	//1Hz shine for  8 second
 }

@@ -121,7 +121,11 @@ extern "C" {
 
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			0
+#if BLE_REMOTE_PM_ENABLE
+#define PM_DEEPSLEEP_RETENTION_ENABLE   1   // must
+#else
 #define PM_DEEPSLEEP_RETENTION_ENABLE   1
+#endif
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
 
@@ -166,7 +170,7 @@ extern "C" {
 #define PA1_INPUT_ENABLE		1
 #define	SW1_GPIO				GPIO_PD7
 #define	SW2_GPIO				GPIO_PA1
-#else   // PCBA_8258_C1T139A30_V1_0
+#elif(PCBA_8258_SEL == PCBA_8258_C1T139A30_V1_0)
 #define PULL_WAKEUP_SRC_PD2     PM_PIN_PULLUP_1M	//btn
 #define PULL_WAKEUP_SRC_PD1     PM_PIN_PULLUP_1M	//btn
 #define PD2_INPUT_ENABLE		1

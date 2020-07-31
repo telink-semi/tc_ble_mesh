@@ -57,6 +57,15 @@ typedef struct {
 	u8 hash[8];
 	u8 random[8];
 }proxy_adv_node_identity;
+
+typedef enum{
+	NETWORK_ID_TYPE=0,
+	NODE_IDENTITY_TYPE,
+	PRIVATE_NETWORK_ID_TYPE,
+	PRIVATE_NODE_IDENTITY_TYPE,
+	NODE_IDENTITY_PROHIBIT
+}node_identity_enum_t;
+
 typedef enum{
 	COMPLETE_MSG = 0,
 	FIRST_SEG_MSG,
@@ -86,20 +95,41 @@ typedef enum{
 	PROXY_FILTER_ADD_ADR,
 	PROXY_FILTER_RM_ADR,
 	PROXY_FILTER_STATUS,
+	DIRECTED_PROXY_CAPA_STATUS,
+	DIRECTED_PROXY_CONTROL,
 }proxy_opcode_str;
 typedef enum{
 	FILTER_WHITE_LIST = 0,
 	FILTER_BLACK_LIST,
 	FILTER_RFU,
 }filter_type_str;
+
+enum{
+	UNSET_CLIENT,
+	PROXY_CLIENT,
+	DIRECTED_PROXY_CLIENT,
+	BLACK_LIST_CLIENT,
+};
+
 typedef struct{
 	u16 list_data[MAX_LIST_LEN];
 	u8 list_idx[(MAX_LIST_LEN+7)/8];
 }list_mag_str;
+
+typedef struct{
+	u8 use_directed;
+	u16 client_addr;
+	u8 	client_2nd_ele_cnt;
+}direct_proxy_server_t;
+
 typedef struct{
 	u8 filter_type;
 	list_mag_str white_list;
 	list_mag_str black_list;
+	#if MD_DF_EN
+	u8 proxy_client_type;
+	direct_proxy_server_t directed_server[NET_KEY_MAX];
+	#endif
 }proxy_config_mag_str;
 typedef struct{
 	u8 fil_type;
@@ -118,7 +148,7 @@ extern void proxy_cfg_list_init();
 extern u8 proxy_config_dispatch(u8 *p,u8 len );
 extern u8 proxy_filter_change_by_mesh_net(u16 unicast_adr);
 
-extern u8 set_proxy_adv_pkt(u8 *p ,u8 flags,u8 *pHash,u8 *pRandom,mesh_net_key_t *p_netkey);
+extern u8 set_proxy_adv_pkt(u8 *p ,u8 *pRandom,mesh_net_key_t *p_netkey,u8*p_len);
 
 extern u8 find_data_in_mag_list(u16 src,proxy_config_mag_str *p_mag_list);
 extern proxy_config_mag_str proxy_mag;
@@ -129,6 +159,9 @@ extern void set_pair_login_ok(u8 val);
 extern u8 proxy_proc_filter_mesh_cmd(u16 src);
 void caculate_proxy_adv_hash(mesh_net_key_t *p_netkey );
 
+int proxy_adv_calc_with_node_identity(u8 random[8],u8 node_key[16],u16 ele_adr,u8 hash[8]);
+int proxy_adv_calc_with_private_net_id(u8 random[8],u8 net_id[8],u8 idk[16],u8 hash[8]);
+int proxy_adv_calc_with_private_node_identity(u8 random[8],u8 node_key[16],u16 ele_adr,u8 hash[8]);
 
 #endif 
 

@@ -30,15 +30,16 @@ STATIC_ASSERT(MD_CLIENT_EN && MD_SENSOR_EN && SENSOR_GPIO_PIN && SENSOR_LIGHTING
 #endif
 
 #if(MD_SENSOR_EN)
-#if MD_SERVER_EN
+#if MD_SENSOR_SERVER_EN
+#if !WIN32
 STATIC_ASSERT(MD_LOCATION_EN == 0);// because use same flash sector to save in mesh_save_map, and should be care of OTA new firmware which add MD_BATTERY_EN
-
+#endif
 u32 sensor_measure_ms = 0;
 u32 sensure_measure_quantity = 0;
 
 mesh_cmd_sensor_descript_st_t sensor_descrip[SENSOR_NUMS] = { 
-								{PROP_ID, 0x347, 0x256, 0x02, 0x40, 0x4B},
-							};
+    {PROP_ID_PHOTOMETRY_PRESENT_AMBIENT_LIGHT_LEVEL, 0x347, 0x256, 0x02, 0x40, 0x4B},
+};
 
 u32 get_prop_id_index(u16 prop_id)
 {
@@ -132,10 +133,10 @@ int mesh_cmd_sig_sensor_descript_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 
 int mesh_tx_sensor_st_rsp(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md, u16 op_rsp, u16 prop_id, int par_len)
 {
-	sensor_mpid_b_t rsp[SENSOR_NUMS];
+	sensor_mpid_B_t rsp[SENSOR_NUMS];
 	u8 len = 0;
 	
-	rsp[0].format = 1;
+	rsp[0].format = SENSOR_DATA_FORMAT_B;
 	rsp[0].prop_id = prop_id;
 	rsp[0].length = ARRAY_SIZE(rsp[0].raw_value)-1;     // in PTS, length value decreace 1, confirm later
 	if(par_len){
@@ -144,18 +145,18 @@ int mesh_tx_sensor_st_rsp(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_comm
 			return -1;
 		}
 		else if(id_index != ID_UNKNOWN){
-			len = sizeof(sensor_mpid_b_t);
+			len = sizeof(sensor_mpid_B_t);
 			memcpy(rsp[0].raw_value,&model_sig_sensor.sensor_states[id_index].sensor_data,ARRAY_SIZE(rsp[0].raw_value));
 		}
 		else{
-			len = OFFSETOF(sensor_mpid_b_t,raw_value);
+			len = OFFSETOF(sensor_mpid_B_t,raw_value);
 			memset(rsp, 0xff, len);
 		}
 	}
 	else{// get all property value
 		len = sizeof(rsp);
 		for(u8 i=0; i<SENSOR_NUMS; i++){
-			rsp[i].format = 1;
+			rsp[i].format = SENSOR_DATA_FORMAT_B;
 			rsp[i].length = ARRAY_SIZE(rsp[0].raw_value)-1;
 			rsp[i].prop_id = model_sig_sensor.sensor_states[i].prop_id;			
 			memcpy(rsp[i].raw_value,&model_sig_sensor.sensor_states[i].sensor_data, ARRAY_SIZE(rsp[0].raw_value));
@@ -525,7 +526,7 @@ int mesh_sensor_setup_st_publish(u8 idx)
 	}
 	u8 *uuid = get_virtual_adr_uuid(pub_adr, p_com_md);
 	
-	return mesh_tx_cadence_st_rsp(idx, ele_adr, pub_adr, uuid, p_com_md, SENSOR_CANDECE_STATUS, PROP_ID);
+	return mesh_tx_cadence_st_rsp(idx, ele_adr, pub_adr, uuid, p_com_md, SENSOR_CANDECE_STATUS, PROP_ID_PHOTOMETRY_PRESENT_AMBIENT_LIGHT_LEVEL);
 }
 
 u32 sensor_measure_proc()
@@ -592,7 +593,7 @@ void sensor_lighting_ctrl_proc()
             set->onoff = 1;
             set->transit_t = 10;
             set->delay = 10;
-            mesh_tx_cmd2self_primary(buf, sizeof(buf));
+            mesh_tx_cmd2self_primary(0, buf, sizeof(buf));
         }else{
             if (clock_time_exceed(keep_on_timer, SENSOR_LIGHTING_CTRL_ON_MS*1000)) {
                 u8 buf[sizeof(u16) + sizeof(mesh_cmd_g_onoff_set_t)];
@@ -603,7 +604,7 @@ void sensor_lighting_ctrl_proc()
                 set->onoff = 0;
                 set->transit_t = 10;
                 set->delay = 10;
-                mesh_tx_cmd2self_primary(buf, sizeof(buf));
+                mesh_tx_cmd2self_primary(0, buf, sizeof(buf));
 
                 sensor_set_light_on = false;
             }
@@ -614,7 +615,7 @@ void sensor_lighting_ctrl_proc()
 }
 #endif
 
-#if MD_CLIENT_EN
+#if MD_SENSOR_CLIENT_EN
 int mesh_cmd_sig_sensor_descript_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
@@ -624,14 +625,22 @@ int mesh_cmd_sig_sensor_descript_status(u8 *par, int par_len, mesh_cb_fun_par_t 
 	return err;
 }
 
+int lc_rx_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+
 int mesh_cmd_sig_sensor_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 #if SENSOR_LIGHTING_CTRL_EN
-    sensor_mpid_b_t *sts = (sensor_mpid_b_t *)par;
-
-    if (sts->raw_value[0]) {
-        sensor_lighting_ctrl_set_light_on();
+    sensor_mpid_B_t *p_st_B = (sensor_mpid_B_t *)par;
+    if(SENSOR_DATA_FORMAT_A == p_st_B->format){
+        //sensor_mpid_A_t *p_st_A = (sensor_mpid_A_t *)par;
+        // TODO
+    }else{ // SENSOR_DATA_FORMAT_B
+        if (p_st_B->raw_value[0]) {
+            sensor_lighting_ctrl_set_light_on();
+        }
     }
+#elif (MD_LIGHT_CONTROL_EN && MD_SERVER_EN)
+    lc_rx_sensor_status(par, par_len, cb_par);
 #endif
 	return 0;
 }
@@ -660,5 +669,21 @@ int mesh_cmd_sig_sensor_series_status(u8 *par, int par_len, mesh_cb_fun_par_t *c
 {
 	return 0;
 }
+
+int access_cmd_sensor_occupancy_motion_sensed(u16 adr_dst, u8 percent)
+{
+	sensor_mpid_B_t rsp;
+	memset(&rsp, 0, sizeof(rsp));
+	
+	rsp.format = SENSOR_DATA_FORMAT_B;
+	rsp.prop_id = PROP_ID_OCCUPANCY_MOTION_SENSED;
+	rsp.length = 1;
+	rsp.raw_value[0] = percent;
+	int par_len = OFFSETOF(sensor_mpid_B_t, raw_value) + rsp.length;
+
+	return SendOpParaDebug(adr_dst, 0, SENSOR_STATUS, (u8 *)&rsp, par_len);
+}
+
+
 #endif
 #endif

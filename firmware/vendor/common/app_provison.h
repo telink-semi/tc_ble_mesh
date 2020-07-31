@@ -145,6 +145,10 @@ typedef enum{
 	PRO_DATA,
 	PRO_COMPLETE,
 	PRO_FAIL,
+	PRO_REC_REQ,
+	PRO_REC_RSP,
+	PRO_REC_GET,
+	PRO_REC_LIST,
 	PRO_COMMAND_ACK,
 	PRO_BEARS_CTL,
 	PRO_BEACON,
@@ -268,6 +272,7 @@ typedef struct {
 typedef struct {
 	pro_trans_header header;
 }pro_trans_incomplete;
+
 typedef struct {
 	pro_trans_header header;
 	u8 comfirm[16];
@@ -277,18 +282,49 @@ typedef struct {
 	pro_trans_header header;
 	u8 random[16];
 }pro_trans_random;
+
 typedef struct {
 	pro_trans_header header;
 	u8 encProData[25];
 	u8 proDataMic[8];	
 }pro_trans_data;
+
 typedef struct {
 	pro_trans_header header;
 }pro_trans_complete;
+
 typedef struct {
 	pro_trans_header header;
 	u8 err_code;
 }pro_trans_fail;
+
+#define MAX_PROV_FRAG_SIZE   0x30
+typedef struct{
+	pro_trans_header header;
+	u16 rec_id;
+	u16 frag_off;
+	u16 frag_max_size;
+}pro_trans_record_request;
+
+typedef struct{
+	pro_trans_header header;
+	u8 	sts;
+	u16 rec_id;
+	u16 frag_off;
+	u16 total_len;
+	u8  data[MAX_PROV_FRAG_SIZE];
+}pro_trans_record_rsp;
+
+
+typedef struct{
+	pro_trans_header header; 
+}pro_trans_record_get;
+
+typedef struct{
+	pro_trans_header header;
+	u16 prov_extension;
+	u16 rec_id[15];
+}pro_trans_record_list;
 
 typedef enum{
 	PRO_LINK_CLOSE_SUC =0,
@@ -307,6 +343,7 @@ typedef  enum{
 	DECRYPTION_FAIL,
 	UNEXPECT_ERROR,
 	CANNOT_ASSGIN_ADDR,
+	INVALID_DATA_PROV,
 }TRANS_FAIL_CODE_ENUM;
 #define ELE_LIGHT_MODEL_SIZE  (380-12)	
  typedef struct{
@@ -326,12 +363,15 @@ typedef struct{
 
 #define MODEL_NOT_FOUND         (0xff)
 
-#if DONGLE_PROVISION_EN
+#if DONGLE_PROVISION_EN&&!WIN32
 typedef struct{
     u16 node_adr;    // primary address
     u8 element_cnt;
     u8 rsv;
     u8 dev_key[16];
+	#if MD_REMOTE_PROV
+	u8 dev_key_candi[16];
+	#endif
 }VC_node_info_t;
 #else
 typedef struct{
@@ -340,6 +380,9 @@ typedef struct{
     u8 rsv;
     u8 dev_key[16];
     VC_node_cps_t cps;
+	#if WIN32
+	u8 dev_key_candi[16];
+	#endif
 }VC_node_info_t;    // size is 404(0x194)
 #endif
 typedef struct{
@@ -362,21 +405,29 @@ typedef struct {
 		pro_trans_data		data;
 		pro_trans_complete	complete;
 		pro_trans_fail      fail;
+		pro_trans_record_request rec_req;
+		pro_trans_record_rsp rec_rsp;
+		pro_trans_record_get rec_get;
+		pro_trans_record_list rec_list;
 	};
 }mesh_pro_pdu_content;
 
 typedef struct {
 	union{
-		pro_trans_invite 	invite;
-		pro_trans_capa 		capa;
-		pro_trans_start   	start;
-		pro_trans_pubkey	pubkey;
-		pro_trans_incomplete inComp;
-		pro_trans_comfirm   comfirm;
-		pro_trans_random 	random;
-		pro_trans_data		data;
-		pro_trans_complete	complete;
-		pro_trans_fail      fail;
+			pro_trans_invite 	invite;
+			pro_trans_capa 		capa;
+			pro_trans_start   	start;
+			pro_trans_pubkey	pubkey;
+			pro_trans_incomplete inComp;
+			pro_trans_comfirm   comfirm;
+			pro_trans_random 	random;
+			pro_trans_data		data;
+			pro_trans_complete	complete;
+			pro_trans_fail      fail;
+			pro_trans_record_request rec_req;
+			pro_trans_record_rsp rec_rsp;
+			pro_trans_record_get rec_get;
+			pro_trans_record_list rec_list;
 		};
 }mesh_pro_data_structer;
 
@@ -474,12 +525,17 @@ typedef struct{
 	u8  link_close_flag;
 	u8  link_close_cnt;
 	u8  rsp_ack_transnum;
-	u8  hash[8];
 	u8  random[8];
-	u8  oob_info[2];
+	u32 rand_gen_s;
+	u8  oob_info[2];// the oob info is small endiness, in the unprovision beacon is bigendiness,in the prrovision adv is small endiness
 	u8  device_uuid[16];
+	u8 priv_random[13];
+	u8 cert_base_en;
+	u8 rfu[2];
+	u32 priv_rand_gen_s;
 	u8 ele_cnt;
 	u8 key_bind_lock;
+	u8 dkri;
 }prov_para_proc_t;
 extern prov_para_proc_t prov_para;
 
@@ -501,8 +557,19 @@ typedef struct{
 	u16 unicast_adr_last;
 }pro_para_mag;
 extern u8 prov_link_cls_code;
+extern u8 dev_auth[16]/* = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0}*/;
+extern u8 dev_edch[32];
+extern u8 dev_random[16];
+extern u8 dev_comfirm[16];
+extern u8 dev_input[0x91];
+extern u8 pro_random[16];
+extern u8 dev_pro_comfirm[16];
 
 extern u8 prov_link_uuid[16];
+extern mesh_prov_oob_str prov_oob;
+u8 mesh_node_oob_auth_data(mesh_prov_oob_str *p_prov_oob);
+u8 set_pro_capa_cpy(mesh_pro_data_structer *p_str,mesh_prov_oob_str *p_prov_oob);
+
 enum{
 	GATT_ADV_NORMAL_MODE =0,
 	GATT_PROVISION_MODE ,
@@ -547,6 +614,14 @@ typedef enum{
 	LINK_ESTABLISHED,
 	LINK_ESTABLISHED_ACK,
 	LINK_CLOSE_STATE,
+	STATE_PRO_REC_GET,
+	STATE_PRO_REC_GET_ACK,
+	STATE_DEV_REC_LIST,
+	STATE_DEV_REC_LIST_ACK,
+	STATE_PRO_REC_REQ,
+	STATE_PRO_REC_REQ_ACK,
+	STATE_DEV_REC_RSP,
+	STATE_DEV_REC_RSP_ACK,	
 	STATE_PRO_INVITE,
 	STATE_PRO_INVITE_ACK,
 	STATE_DEV_CAPA,
@@ -656,13 +731,13 @@ extern u8 dev_input[0x91];
 
 u8 set_provision_networkkey_self(u8 *p_key,u8 len );
 void set_provisionee_para(u8 *p_net_key,u16 key_index,u8 flags,u8 *p_ivi,u16 unicast);
-u8 get_ele_offset_by_model_VC_node_info(u16 obj_adr, u32 model_id, int sig_model);
+u8 get_ele_offset_by_model_VC_node_info(u16 obj_adr, u32 model_id, bool4 sig_model);
 VC_node_info_t * get_VC_node_info(u16 obj_adr, int is_must_primary);
 void erase_vc_node_info();
 
 extern void set_pb_gatt_adv(u8 *p,u8 flags);
 extern void set_adv_provision(rf_packet_adv_t * p);
-extern void set_adv_proxy(rf_packet_adv_t * p);
+extern u8 set_adv_proxy(rf_packet_adv_t * p);
 
 
 void set_provision_stop_flag_act(u8 stop_flag);
@@ -686,6 +761,12 @@ extern u8 set_pro_random(mesh_pro_data_structer *p_str,u8 *p_random);
 extern u8 set_pro_data(mesh_pro_data_structer *p_str, u8 *p_data,u8 *p_mic);
 extern u8 set_pro_complete(mesh_pro_data_structer *p_str);
 extern u8 set_pro_fail(mesh_pro_data_structer *p_str ,u8 fail_code);
+
+extern u8 set_pro_record_request(pro_trans_record_request *p_rec_req ,u16 rec_id,u16 frag_offset,u16 max_size);
+extern u8 set_pro_record_rsp(pro_trans_record_rsp *p_rec_rsp,u8 sts,u16 rec_id,u16 frag_offset,u16 total,u8 *p_data);
+extern u8 set_pro_record_get(pro_trans_record_get *p_rec_get);
+extern u8 set_pro_record_list(pro_trans_record_list *p_rec_list , u16 prov_exten, 
+											u16 *p_list,u32 cnt);
 
 extern int mesh_provision_rcv_process (u8 *p_payload, u32 t);
 
@@ -799,7 +880,7 @@ void mesh_adv_prov_comfirm_cmd(mesh_pro_data_structer *p_send_str,u8 *p_comfirm)
 void mesh_adv_prov_link_close();
 void mesh_adv_prov_link_open(u8 *p_uuid);
 void mesh_adv_prov_link_open_ack(pro_PB_ADV *p_adv);
-void mesh_adv_prov_send_invite(mesh_pro_data_structer *p_send_str);
+void mesh_adv_prov_send_invite(mesh_pro_data_structer *p_send_str,u8 dura);
 void mesh_adv_prov_invite_ack(pro_PB_ADV *p_adv);
 void mesh_adv_prov_capa_rcv(pro_PB_ADV *p_adv);
 void mesh_adv_prov_send_start_cmd(mesh_pro_data_structer *p_send_str,pro_trans_start *p_start);
@@ -821,6 +902,9 @@ void mesh_rp_server_set_link_sts(u8 sts);
 void del_vc_node_info_by_unicast(u16 unicast);
 u8 win32_proved_state();
 void mesh_rp_adv_prov_complete_rsp(pro_PB_ADV *p_adv);
+int VC_node_dev_key_save_candi(u16 adr, u8 *dev_key_cadi);
+u8* VC_master_get_other_node_dev_key_candi(u16 adr);
+int VC_node_dev_key_candi_enable(u16 adr);
 
 #endif 
 

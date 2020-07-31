@@ -41,7 +41,7 @@ typedef struct{
 
 typedef struct{
 	u32 id;
-	u8 sig_model;
+	u8 sig_model; // bool
 }mesh_model_id_t;
 
 #if 0	// can not use in VC
@@ -122,7 +122,7 @@ enum{
 	NET0_APP3 = 3,
 };
 
-#define	IV_IDX_CUR		{0x12,0x34,0x56,0x78}
+#define	IV_IDX_CUR		{0x12,0x34,0x56,0x78}	// don't change, because of compatibility in factory mode.
 
 #define DEVKEY_DEF 		{0x9d,0x6d,0xd0,0xe9,0x6e,0xb2,0x5d,0xc1, 0x9a,0x40,0xed,0x99,0x14,0xf8,0xf0,0x3f}
 
@@ -174,8 +174,19 @@ enum{
 #define SIG_MD_CFG_CLIENT               0x0001
 #define SIG_MD_HEALTH_SERVER            0x0002
 #define SIG_MD_HEALTH_CLIENT            0x0003
+#if !DRAFT_FEAT_VD_MD_EN
 #define SIG_MD_REMOTE_PROV_SERVER       0x0004
 #define SIG_MD_REMOTE_PROV_CLIENT       0x0005
+#endif
+#define SIG_MD_DF_CFG_S					0x0006
+#define SIG_MD_DF_CFG_C					0x0007
+#define SIG_MD_BRIDGE_CFG_SERVER		0x0008
+#define SIG_MD_BRIDGE_CFG_CLIENT		0x0009
+#define SIG_MD_PRIVATE_BEACON_SERVER 	0x000a
+#define SIG_MD_PRIVATE_BEACON_CLIENT	0x000b
+
+
+
 
 #define SIG_MD_G_ONOFF_S                0x1000
 #define SIG_MD_G_ONOFF_C                0x1001
@@ -233,12 +244,8 @@ enum{
 #define SIG_MD_LIGHT_LC_SETUP_S        	0x1310
 #define SIG_MD_LIGHT_LC_C              	0x1311
 // --------
-#define SIG_MD_FW_UPDATE_S              0xFE00
-#define SIG_MD_FW_UPDATE_C              0xFE01
-#define SIG_MD_FW_DISTRIBUT_S           0xFE02
-#define SIG_MD_FW_DISTRIBUT_C           0xFE03
-#define SIG_MD_BLOB_TRANSFER_S        	0xFF00
-#define SIG_MD_BLOB_TRANSFER_C         	0xFF01
+
+// --------
 
 
 //--------------------------------------- config model
@@ -358,7 +365,7 @@ typedef struct{
 
 typedef struct{
 	u16 lpn_adr;
-	u32 timeout;
+	u32 timeout; // only use 24-bit
 }mesh_lpn_poll_timeout_status_t;
 
 // publication
@@ -898,10 +905,7 @@ typedef struct{
 	u8 md2app_key_list;	// wait for define struct
 	u8 rfu2[2];
 	mesh_heartbeat_pub_str hb_pub;
-	mesh_heartbeat_sub_str hb_sub;	// wait for define struct
-#if DIRECTED_FORWARDING_MODULE_EN
-	mesh_directed_forward_t directed_forward;
-#endif
+	mesh_heartbeat_sub_str hb_sub;
 }model_sig_cfg_s_t;
 
 typedef struct{
@@ -1078,14 +1082,14 @@ typedef struct{
 	float RegKpu[LIGHT_CNT];
 	lc_prop_u24_t TimeOccupancyDelay[LIGHT_CNT];
 	lc_prop_u24_t TimeFadeOn[LIGHT_CNT];
-	lc_prop_u24_t TimeRunOn[LIGHT_CNT];
+	lc_prop_u24_t TimeRun[LIGHT_CNT];
 	lc_prop_u24_t TimeFade[LIGHT_CNT];
 	lc_prop_u24_t TimeProlong[LIGHT_CNT];
 	lc_prop_u24_t TimeStandbyAuto[LIGHT_CNT];
 	lc_prop_u24_t TimeStandbyManual[LIGHT_CNT];
 	u8 mode[LIGHT_CNT];
 	u8 om[LIGHT_CNT];
-	u8 onoff[LIGHT_CNT];
+	u8 lc_onoff_target[LIGHT_CNT];
 	u8 rsv[LIGHT_CNT][4];
 #endif
 }model_light_lc_t;
@@ -1224,7 +1228,7 @@ typedef struct{
 
 typedef struct{
 #if MD_SERVER_EN
-    #if MD_SENSOR_EN
+    #if MD_SENSOR_SERVER_EN
 	model_g_light_s_t sensor_srv[LIGHT_CNT];			// serve
 	model_g_light_s_t sensor_setup[LIGHT_CNT];			// setup
 	sensor_states_t sensor_states[SENSOR_NUMS];
@@ -1238,15 +1242,15 @@ typedef struct{
     #endif
 #endif
 
-#if MD_CLIENT_EN
-	#if MD_SENSOR_EN
+#if MD_SENSOR_CLIENT_EN
 	model_client_common_t sensor_clnt[1];		        // client
-	#endif
+#endif
+#if MD_CLIENT_EN
 	#if MD_BATTERY_EN
-	model_g_light_s_t battery_clnt[1];			// serve
+	model_client_common_t battery_clnt[1];			// serve
 	#endif
 	#if MD_LOCATION_EN
-	model_g_light_s_t location_clnt[1];			// serve
+	model_client_common_t location_clnt[1];			// serve
 	#endif
 #endif
 }model_sensor_t;
@@ -1323,8 +1327,6 @@ typedef struct{
 	model_health_common_t srv;
 	model_client_common_t clnt;
 }model_health_t;
-
-
 //--------------------VENDOR SERVER MODEL
 
 //----------------------------------- key
@@ -1355,6 +1357,10 @@ typedef struct{
     u8 pk_d[16];	//             Privacy Key
     u8 idk[16];		// identity key
     u8 bk[16];		// beacon key
+    u8 prik[16];    // privacy beacon key 
+	u8 ident_hash[8];// identity hash 
+	u8 priv_net_hash[8];
+	u8 priv_ident_hash[8];
     u8 nw_id[8];    // network_id,    store in big endianness
     u8 nid_m;		// master: map to encryption key
     u8 nid_d;		// directed: map to encryption key
@@ -1362,10 +1368,11 @@ typedef struct{
     u8 valid;
     u8 key_phase;
     u8 node_identity;
-    u8 rfu2[1];		// for 16 align
+    u8 priv_identity;
 	mesh_app_key_t app_key[APP_KEY_MAX];
 	u32 start_identity_s;
-    u8 rfu3[4];		// for 16 align
+	u32 priv_identity_s;
+    u8 rfu3[8];		// for 16 align
 }mesh_net_key_t;
 
 #define DEC_BOTH_TWO_DEV_KEY        (2)    
@@ -1373,7 +1380,6 @@ typedef struct{
 typedef struct{
 	u8 dev_key[16];	// device key, use as app key
 	mesh_net_key_t net_key[NET_KEY_MAX][2];	// one is normal, another is key refresh
-	u8 node_identity_hash[NET_KEY_MAX][8];
 	u8 netkey_sel_dec;	// slecte network key index in array. valid netkey_idx in mesh_sec_msg_dec_apl() 
 	u8 sec_type_sel;// security material: MASTER DIRECTED or DRIENDSHIP
 	u8 appkey_sel_dec;	// slecte app key index in array.
@@ -1385,7 +1391,8 @@ typedef struct{
     u8 valid;
     u16 index;
     u8 node_identity;
-    u8 rfu[12];		// for 16 align
+	u8 priv_identity;
+    u8 rfu[11];		// for 16 align
 	u8 key[16];
 	mesh_app_key_t app_key[APP_KEY_MAX];
 }mesh_net_key_save_t;
@@ -1486,13 +1493,14 @@ int is_ele_in_node(u16 ele_adr, u16 node_adr, u32 cnt);
 int is_retransaction(u16 adr, u8 tid);
 int mesh_provision_par_set(u8 *prov_pars);
 u8 mesh_provision_and_bind_self(u8 *p_prov_data, u8 *p_dev_key, u16 appkey_idx, u8 *p_app_key);
+mesh_net_key_t * mesh_get_netkey_by_idx(u16 key_idx);
 mesh_net_key_t * is_mesh_net_key_exist(u16 key_idx);
 int get_mesh_net_key_offset(u16 key_idx);
 int is_net_key_save();
 void model_pub_st_cb_re_init_lc_srv(cb_pub_st_t cb);
 void model_pub_st_cb_re_init_sensor_setup(cb_pub_st_t cb);
 u8 get_ele_cnt_by_traversal_cps(mesh_page0_t * p_page0, u32 len_page0);
-u8 get_ele_offset_by_model(mesh_page0_t * p_page0, u32 len_page0, u16 node_adr, u16 obj_adr, u32 model_id, int sig_model);
+u8 get_ele_offset_by_model(mesh_page0_t * p_page0, u32 len_page0, u16 node_adr, u16 obj_adr, u32 model_id, bool4 sig_model);
 u16 get_primary_adr(u16 ele_adr);
 u16 get_primary_adr_with_check(u16 node_adr, u16 ele_adr);
 u8 * get_virtual_adr_uuid(u16 pub_adr, model_common_t *p_com_md);
@@ -1504,6 +1512,8 @@ void iv_index_set_keep_time_test();
 void iv_index_set_sno_test();
 void iv_index_test_button_firmware();
 void mesh_receive_ivi_plus_one_in_normal_cb();
+void mesh_tx_reliable_start(u8 retry_cnt);
+void mesh_tx_reliable_tick_refresh();
 
 //--------------- save
 void mesh_flash_save_check();
@@ -1514,9 +1524,9 @@ void mesh_par_store(const u8 *in, u32 *p_adr, u32 adr_base, u32 size);
 int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size);
 int mesh_common_retrieve(u32 adr_base);
 int mesh_common_store(u32 adr_base);
-int mesh_model_retrieve(int sig_model, u32 md_id);
+int mesh_model_retrieve(bool4 sig_model, u32 md_id);
 void mesh_common_save_all_md();
-int mesh_model_store(int sig_model, u32 md_id);
+int mesh_model_store(bool4 sig_model, u32 md_id);
 void mesh_common_retrieve_cb(int err, u32 adr_base);
 void mesh_common_reset_all();
 void factory_test_key_bind(int bind_flag);
@@ -1564,13 +1574,13 @@ int is_mesh_latency_window();
 void proc_node_reset();
 u32 node_reset_start();
 void client_node_reset_cb(u16 adr_dst);
-int is_support_model_dst(u16 dst_adr, u32 model_id, int sig_model);
+int is_support_model_dst(u16 dst_adr, u32 model_id, bool4 sig_model);
 int is_support_op_dst(u16 op, u16 adr_dst);     // provisioner check dst unicast when tx command.
 int is_support_op_dst_VC_APP(u16 op, u16 adr_dst);
 u32 get_random_delay_pub_tick_ms(u32 interval_ms);
 void mesh_pub_period_proc();
 int is_tx_status_cmd2self(u16 op, u16 adr_dst);
-u8 mesh_sub_search_ele_and_set(u16 op, u16 ele_adr, u16 sub_adr, u8 *uuid, u32 model_id, int sig_model);
+u8 mesh_sub_search_ele_and_set(u16 op, u16 ele_adr, u16 sub_adr, u8 *uuid, u32 model_id, bool4 sig_model);
 void mesh_service_change_report();
 #define MESH_PARA_RETRIEVE_VAL      1
 #define MESH_PARA_STORE_VAL         0
@@ -1588,6 +1598,21 @@ u32 get_reliable_interval_ms_max();
 void prov_random_proc(u8 *p_random);
 void mesh_node_refresh_binding_tick();
 u64 mul32x32_64(u32 a, u32 b);
+void mesh_private_identity_change_by_proxy_service(mesh_net_key_t *p_netkey);
+int rf_link_get_op_para(u8 *ac,  int len_ac, u16 *op, u8 **params, int *par_len);
+int rf_link_get_vendor_op_para_extend(u8 *ac,  int len_ac, u16 *op, u8 **params, int *par_len);
+u32 is_op_need_extend_and_fill_op_par(u16 op, u8 *ac_sig_out, u8 *par, u32 par_len);
+u32 is_op_need_extend_and_remove_op_par(u8 *rc_rsp_data, u8 *ac, int len_ac);
+int is_client_tx_extend_model(u16 model);
+u16 get_vendor2sig_op(u16 op, u8 *p_sig_op);
+int is_rx_need_extend_invalid_model(u16 model, int get_op_st);
+u32 get_cps_vendor_op_extend(u8 *cps_out);
+bind_key_t * is_exist_bind_key_extend_op(u16 appkey_idx);
+int is_mesh_adv_cmd_fifo_empty();
+u8 * mesh_cfg_cmd_dev_key_candi_get(const u16 adr);
+void mesh_tx_en_devkey_candi(u8 en);
+u8 mesh_cps_data_page0_page128_is_same();
+u8 mesh_cps_data_update_page0_from_page128();
 
 
 extern u16 ele_adr_primary;
@@ -1625,7 +1650,7 @@ extern model_scene_t			model_sig_scene;
 extern model_time_schedule_t	model_sig_time_schedule;
 extern model_g_power_onoff_trans_time_t    model_sig_g_power_onoff;
 extern model_sensor_t			model_sig_sensor;
-extern model_mesh_ota_t        model_mesh_ota;
+extern model_mesh_ota_t        	model_mesh_ota;
 // extern model_g_power_level_t    model_sig_g_power_level; // share with model_sig_lightness
 
 extern model_vd_light_t       	model_vd_light;

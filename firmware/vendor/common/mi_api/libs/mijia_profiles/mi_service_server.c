@@ -147,7 +147,7 @@ static void on_disconnect(mible_gap_evt_param_t * p_ble_evt)
         mi_srv.handler(0);
 
 #if USE_MIBLE_OTA==1
-    /* If there is a newer firmware, then upgrade */
+    /* If there is a new firmware, then upgrade */
     uint8_t errno = mible_dfu_upgrade();
     MI_ERR_CHECK(errno);
 #endif

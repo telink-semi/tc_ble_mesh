@@ -22,5 +22,5 @@
 
 #pragma once
 
-#include "../../vendor/common/user_config.h"
+#include "vendor/common/user_config.h"
 

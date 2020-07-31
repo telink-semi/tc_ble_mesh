@@ -284,6 +284,8 @@ typedef struct {
 struct pt_sem {
   unsigned int count;
 };
+
+typedef struct pt_sem pt_sem_t;
     
 /**
  * Initialize a semaphore

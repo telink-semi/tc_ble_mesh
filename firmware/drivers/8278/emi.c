@@ -74,7 +74,7 @@ void rf_set_power_level_index_singletone (RF_PowerTypeDef level)
  */
 void rf_emi_single_tone(RF_PowerTypeDef power_level,signed char rf_chn)
 {
-	rf_multi_mode_drv_init(RF_MODE_ZIGBEE_250K);
+	rf_drv_init(RF_MODE_ZIGBEE_250K);
 	rf_set_channel_singletone(rf_chn);//set freq
 	write_reg8 (0xf02, 0x45);  //tx_en
 	rf_set_power_level_index_singletone(power_level);
@@ -106,7 +106,7 @@ void rf_emi_rx(RF_ModeTypeDef mode,signed char rf_chn)
 	write_reg8 (0x405, read_reg8(0x405)|0x80); //trig accesscode
 
 	rf_rx_buffer_set(emi_rx_packet,64,0);
-	rf_multi_mode_drv_init(mode);
+	rf_drv_init(mode);
 	rf_pn_disable();
 	rf_set_channel(rf_chn,0);//set freq
 	rf_set_tx_rx_off();
@@ -244,7 +244,7 @@ void rf_continue_mode_run(void)
  */
 void rf_emi_tx_continue_setup(RF_ModeTypeDef rf_mode,RF_PowerTypeDef power_level,signed char rf_chn,unsigned char pkt_type)
 {
-	rf_multi_mode_drv_init(rf_mode);//RF_MODE_BLE_1M
+	rf_drv_init(rf_mode);//RF_MODE_BLE_1M
 	rf_pn_disable();
 	rf_set_channel(rf_chn,0);
 	write_reg8(0xf02, 0x45);  //tx_en
@@ -303,7 +303,7 @@ void rf_emi_tx_burst_setup(RF_ModeTypeDef rf_mode,RF_PowerTypeDef power_level,si
 	write_reg8 (0x405, read_reg8(0x405)|0x80);
 	write_reg8(0x13c,0x10); // print buffer size set
 	rf_set_channel(rf_chn,0);
-	rf_multi_mode_drv_init(rf_mode);
+	rf_drv_init(rf_mode);
 	rf_pn_disable();
 	rf_set_power_level_index (power_level);
 	if(pkt_type==1)  tx_data = 0x0f;
@@ -314,7 +314,7 @@ void rf_emi_tx_burst_setup(RF_ModeTypeDef rf_mode,RF_PowerTypeDef power_level,si
 	{
 		case RF_MODE_LR_S2_500K:
 		case RF_MODE_LR_S8_125K:
-		case RF_MODE_BLE_1M:
+		case RF_MODE_BLE_1M_NO_PN:
 		case RF_MODE_BLE_2M:
 			emi_ble_tx_packet[4] = pkt_type;//type
 			for( i=0;i<37;i++)
@@ -357,7 +357,7 @@ void rf_emi_tx_brust_setup_ramp(RF_ModeTypeDef rf_mode,RF_PowerTypeDef power_lev
 	write_reg8 (0x405, read_reg8(0x405)|0x80);
 	write_reg8(0x13c,0x10); // print buffer size set
 	rf_set_channel(rf_chn,0);
-	rf_multi_mode_drv_init(rf_mode);
+	rf_drv_init(rf_mode);
 	rf_pn_disable();
 	rf_set_tx_rx_off();
 
@@ -370,7 +370,7 @@ void rf_emi_tx_brust_setup_ramp(RF_ModeTypeDef rf_mode,RF_PowerTypeDef power_lev
 	{
 		case RF_MODE_LR_S2_500K:
 		case RF_MODE_LR_S8_125K:
-		case RF_MODE_BLE_1M:
+		case RF_MODE_BLE_1M_NO_PN:
 		case RF_MODE_BLE_2M:
 			emi_ble_tx_packet[4] = pkt_type;//type
 			for( i=0;i<37;i++)
@@ -408,7 +408,7 @@ void rf_emi_tx_burst_loop_ramp(RF_ModeTypeDef rf_mode,unsigned char pkt_type)
 {
 	write_reg8(0xf00, 0x80); // stop SM
 	int power = (unsigned char)rf_power_Level_list[read_reg8(0x40008)];
-	if((rf_mode==RF_MODE_BLE_1M)||(rf_mode==RF_MODE_BLE_2M)||(rf_mode==RF_MODE_LR_S8_125K)||(rf_mode==RF_MODE_LR_S2_500K))//ble
+	if((rf_mode==RF_MODE_BLE_1M_NO_PN)||(rf_mode==RF_MODE_BLE_2M)||(rf_mode==RF_MODE_LR_S8_125K)||(rf_mode==RF_MODE_LR_S2_500K))//ble
 	{
 		for(int i=0;i<=power;i++)
 		{
@@ -455,7 +455,7 @@ void rf_emi_tx_burst_loop(RF_ModeTypeDef rf_mode,unsigned char pkt_type)
 {
 	write_reg8(0xf00, 0x80); // stop SM
 
-	if((rf_mode==RF_MODE_BLE_1M)||(rf_mode==RF_MODE_BLE_2M))//ble
+	if((rf_mode==RF_MODE_BLE_1M_NO_PN)||(rf_mode==RF_MODE_BLE_2M))//ble
 	{
 
 		rf_start_stx ((void *)emi_ble_tx_packet, read_reg32(0x740) + 10);

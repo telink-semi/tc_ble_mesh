@@ -1,3 +1,25 @@
+/********************************************************************************************************
+ * @file     user_proc.c 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
+
 #include "user_proc.h"
 #include "app_health.h"
 #include "../../proj_lib/sig_mesh/app_mesh.h"
@@ -6,6 +28,7 @@
 #include "fast_provision_model.h"
 #include "../../proj_lib/mesh_crypto/aes_att.h"
 #include "../../proj_lib/mesh_crypto/mesh_md5.h"
+#include "../../vendor/common/certify_base/certify_base_crypto.h"
 
 
 #if(AIS_ENABLE)
@@ -70,6 +93,20 @@ void user_sha256_data_proc()
 
 void user_node_oob_set()
 {
+	#if CERTIFY_BASE_ENABLE
+	if(cert_base_func_init()){
+		set_node_prov_para_pubkey_no_oob();
+		prov_para.cert_base_en =1;
+		// need to set the flag of the certify base flag in the oob part 
+		u16 oob_info_data = BIT(OOB_PROV_RECORD)|BIT(OOB_CERT_BASE);
+		prov_para.oob_info[0] |= (oob_info_data&0xff);
+		prov_para.oob_info[1] |= (oob_info_data>>8);
+		return ;
+	}else{
+		prov_para.cert_base_en =0;
+	}	
+	#endif
+
     if(AIS_ENABLE || (MESH_USER_DEFINE_MODE == MESH_AES_ENABLE)){
         set_node_prov_para_no_pubkey_static_oob();
     }else {
@@ -135,7 +172,9 @@ void user_set_def_sub_adr()
     #if (AIS_ENABLE)
     const u16 group_def_set[] = {0xc000, 0xcfff};
     foreach_arr(i,group_def_set){
-        share_model_sub(CFG_MODEL_SUB_ADD, group_def_set[i], 0);
+        foreach(light_idx, LIGHT_CNT){
+            share_model_sub(CFG_MODEL_SUB_ADD, group_def_set[i], 0, light_idx);
+        }
     }
     #endif
 }
@@ -167,15 +206,14 @@ int user_node_rc_link_open_callback()
 
 void mesh_provision_para_init(u8 *p_random)
 {
-	const u8 hash[8]={0x00,0x86,0x17,0x65,0xae,0xfc,0xc5,0x7b};
 	mesh_provision_para_reset();
 	prov_para.oob_info[0]=0x00;
 	prov_para.oob_info[1]=0x00;
 	provision_mag.pro_stop_flag = 1;// make the provisioner to initial state to stop
-	memcpy(prov_para.hash,hash,sizeof(hash));// hash can caculate automatically 
 	//provision_mag.unicast_adr_last =1;
 	prov_para.ele_cnt =1;
 	memcpy(prov_para.random,p_random,sizeof(prov_para.random));
+	prov_para.rand_gen_s = clock_time_s();
 	#if !WIN32
 	user_prov_multi_device_uuid();// use the mac address part to create the device uuid part
 	#if (!AIS_ENABLE)

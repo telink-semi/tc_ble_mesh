@@ -60,6 +60,8 @@ u8 lpn_provision_ok = 0;
 #endif
 
 #if FEATURE_LOWPOWER_EN
+u8 lpn_mode = LPN_MODE_NORMAL;
+u32 lpn_mode_tick = 0;
 mesh_lpn_sleep_t  lpn_sleep;
 u32 lpn_wakeup_tick = 0;
 
@@ -645,18 +647,20 @@ void lpn_key_factory_reset_check()
 {
     // long press key
     u32 detkey = 0;
-    int long_press = 0;
+    int key_press = 0; // KEY_PRESSED_IDLE
     u32 long_tick = clock_time();
     do{
         detkey = mesh_lpn_wakeup_key_io_get();
         if(MESH_LPN_FACTORY_RESET_KEY == detkey){
             if(clock_time_exceed(long_tick, LONG_PRESS_TRIGGER_MS*1000)){
-                long_press = 1;
+                key_press = KEY_PRESSED_LONG;
                 irq_disable();
                 kick_out(); // reboot inside // show_factory_reset();
                 detkey = 0;
                 
                 break;
+            }else{
+                key_press = KEY_PRESSED_SHORT;
             }
             
             if(blt_state != BLS_LINK_STATE_CONN){
@@ -666,6 +670,14 @@ void lpn_key_factory_reset_check()
             break;
         }
     }while(detkey);
+
+    if(KEY_PRESSED_SHORT == key_press){
+        if(LPN_MODE_GATT_OTA == lpn_mode){
+            lpn_mode_set(LPN_MODE_NORMAL);
+        }else{
+            lpn_mode_set(LPN_MODE_GATT_OTA);
+        }
+    }
 }
 
 #if DEBUG_SUSPEND
@@ -963,6 +975,19 @@ void mesh_lpn_proc_suspend ()
 {
     // don't send command in mesh_lpn_proc_suspend(), if not it will cause nested, because lpn_quick_tx_and_suspend().
     lpn_key_factory_reset_check(); // include mesh_lpn_wakeup_key_io_get_();   // check release
+    if(LPN_MODE_GATT_OTA == lpn_mode){
+        // use BLE PM flow: BLE_REMOTE_PM_ENABLE
+        if(blt_state != BLS_LINK_STATE_CONN){
+            if(clock_time_exceed(lpn_mode_tick, LPN_GATT_OTA_ADV_STATE_MAX_TIME_MS * 1000)){
+                lpn_mode_set(LPN_MODE_NORMAL);
+            }else{
+                if(!is_led_busy()){
+                    cfg_led_event (LED_EVENT_FLASH_1HZ_1T);
+                }
+            }
+        }
+        return ;
+    }
     
 	if(lpn_provision_ok){
 	    #if (FRI_ESTABLISH_WIN_MS > 100)
@@ -1085,6 +1110,40 @@ void lpn_quick_tx_and_suspend(int suspend, u8 op)
         suspend_quick_check(); // tx handle ok
     }
     irq_restore(r);
+}
+
+void lpn_mode_set(int mode)
+{
+    if(LPN_MODE_GATT_OTA == mode){
+        LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"SW1:enter GATT OTA",0);
+        lpn_mode = LPN_MODE_GATT_OTA;
+        #if 1 // BLE
+        bls_ll_setAdvParam_interval(ADV_INTERVAL_MS, ADV_INTERVAL_RANDOM_MS);
+        blc_ll_initPowerManagement_module();        //pm module:         optional
+        #if MCU_CORE_TYPE == MCU_CORE_8269
+		bls_pm_setSuspendMask (SUSPEND_ADV | SUSPEND_CONN);
+		#else
+        bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN);// | DEEPSLEEP_RETENTION_CONN // TBD: retention connect
+		blc_pm_setDeepsleepRetentionThreshold(50, 30);
+        blc_pm_setDeepsleepRetentionEarlyWakeupTiming(400);
+		#endif
+        #endif
+        memset(&lpn_sleep, 0, sizeof(lpn_sleep));   // init
+        mesh_friend_ship_proc_init_lpn();
+        lpn_mode_tick = clock_time();
+    }else if(LPN_MODE_NORMAL == mode){
+        LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"SW1:exit GATT OTA",0);
+        lpn_mode = LPN_MODE_NORMAL;
+        #if 1 // restore BLE parameter
+        bls_ll_setAdvParam_interval(ADV_INTERVAL_MIN, 0);
+        extern ll_module_pm_callback_t  ll_module_pm_cb;
+        ll_module_pm_cb = 0; // blc_ll_initPowerManagement_module();
+        bls_pm_setSuspendMask (SUSPEND_DISABLE);
+        #endif
+        mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);    // start to send friend request flow
+        lpn_mode_tick = 0;
+        cfg_led_event_stop();
+    }
 }
 #else
 void suspend_quick_check(){}

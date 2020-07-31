@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 
-#include "../../proj/mcu/config.h"
+#include "proj/mcu/config.h"
 
 //////////// product  Infomation  //////////////////////////////
 #ifndef ID_VENDOR

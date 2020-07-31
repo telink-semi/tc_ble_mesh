@@ -1,9 +1,25 @@
-/*
- * ble_ll_ota.c
+/********************************************************************************************************
+ * @file     ble_ll_ota.c 
  *
- *  Created on: 2015-7-20
- *      Author: Administrator
- */
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
+
 #include "../../proj/tl_common.h"
 #include "../../proj_lib/ble/ble_common.h"
 #include "../../proj_lib/ble/trace.h"
@@ -142,12 +158,18 @@ void ota_set_flag()
 	__TL_LIB_8269__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8269))
 	u32 flag = 0x4b;
 	flash_write_page(ota_program_offset + 8, 1, (u8 *)&flag);		//Set FW flag
+	#if (PINGPONG_OTA_DISABLE || FW_START_BY_BOOTLOADER_EN)
+	// not set invalid, because it may need to recover to old version when signature failed
+	#else
 	flag = 0;
 	flash_write_page((ota_program_offset ? 0 : 0x40000) + 8, 4, (u8 *)&flag);	//Invalid flag
+	#endif
 #elif(__TL_LIB_8258__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)) //8258
 	u32 flag = 0x4b;
 	flash_write_page(ota_program_offset + 8, 1, (u8 *)&flag);		//Set FW flag
-	#if (!PINGPONG_OTA_DISABLE)
+	#if (PINGPONG_OTA_DISABLE || FW_START_BY_BOOTLOADER_EN)
+	// not set invalid, because it may need to recover to old version when signature failed
+	#else
 	flag = 0;
 	flash_write_page((ota_program_offset ? 0 : ota_program_bootAddr) + 8, 4, (u8 *)&flag);	//Invalid flag
 	#endif
@@ -188,13 +210,19 @@ int otaWrite(void * p)
 	static u16 ota_pkt_total = 0;
 
 	u8 err_flg = OTA_SUCCESS;
+	u16 ota_adr =  req->dat[0] | (req->dat[1]<<8);
+	u16 crc;
+	
+#if DUAL_OTA_NEED_LOGIN_EN
+    if(ota_adr == CMD_OTA_START){
+        cmd_ota_mesh_hk_login_handle(req->dat+2);
+    }
+#endif
 
 	if(!ota_condition_enable()){
 		return 0;
 	}
 	
-	u16 ota_adr =  req->dat[0] | (req->dat[1]<<8);
-	u16 crc;
 	if(ota_adr == CMD_OTA_FW_VERSION){
 		//to be add
 		//log_event(TR_T_ota_version);

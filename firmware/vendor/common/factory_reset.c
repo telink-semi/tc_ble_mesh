@@ -182,11 +182,15 @@ new factory reset:
 user can change any one of factory_reset_serials, and also can change SERIALS_CNT
 *****************************************/
 
-const u8 factory_reset_serials[] = { 0, 3,
-                                     0, 3,
-                                     0, 3,
-                                     3, 30,
-                                     3, 30,};
+#ifndef FACTORY_RESET_SERIALS      // user can define in "user_app_config.h"
+#define FACTORY_RESET_SERIALS      { 0, 3, \
+                                     0, 3, \
+                                     0, 3, \
+                                     3, 30,\
+                                     3, 30,}
+#endif
+
+const u8 factory_reset_serials[] = FACTORY_RESET_SERIALS;
 
 #define RESET_CNT_INVALID               0
 #define RESET_TRIGGER_VAL               (sizeof((factory_reset_serials)))
@@ -358,6 +362,7 @@ int factory_reset() // 1M flash
     }
 	#endif
 	
+	CB_USER_FACTORY_RESET_ADDITIONAL();
     flash_erase_sector(FLASH_ADR_RESET_CNT);    // at last should be better, when power off during factory reset erase.
     irq_restore(r);
 	return 0;
@@ -401,6 +406,7 @@ int factory_reset(){
 	}
 	#endif
 
+	CB_USER_FACTORY_RESET_ADDITIONAL();
     flash_erase_sector(FLASH_ADR_RESET_CNT);    // at last should be better, when power off during factory reset erase.
 
     irq_restore(r);

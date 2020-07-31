@@ -155,6 +155,14 @@ s16 get_target_level_by_op(s16 target_level, s32 level, u16 op, int light_idx, i
     }
 }
 
+static void model_pub_check_set_onoff(int level_set_st, int light_idx, u32 model_id)
+{
+    model_pub_check_set(level_set_st, (u8 *)(&(model_sig_g_onoff_level.onoff_srv[light_idx])), SIG_MD_G_ONOFF_S == model_id);
+#if MD_LIGHT_CONTROL_EN
+    model_pub_check_set(level_set_st, (u8 *)(&(model_sig_light_lc.srv[light_idx])), set_LC_lightness_flag);
+#endif
+}
+
 void model_pub_check_set_bind_all(st_pub_list_t *pub_list, mesh_cb_fun_par_t *cb_par, int linear)
 {
     mesh_op_resource_t *p_res = (mesh_op_resource_t *)cb_par->res;
@@ -166,20 +174,20 @@ void model_pub_check_set_bind_all(st_pub_list_t *pub_list, mesh_cb_fun_par_t *cb
     }
     
     if((!PTS_TEST_EN) && pub_list->st[ST_TRANS_PUB_ONOFF]){
-	    model_pub_check_set(pub_list->st[ST_TRANS_PUB_ONOFF], (u8 *)(&(model_sig_g_onoff_level.onoff_srv[light_idx])), SIG_MD_G_ONOFF_S == p_res->id);
+        model_pub_check_set_onoff(pub_list->st[ST_TRANS_PUB_ONOFF], light_idx, p_res->id);
     }
     
     if(pub_list->st[ST_TRANS_LIGHTNESS]){
+#if MD_LIGHTNESS_EN
         int level_set_st = pub_list->st[ST_TRANS_LIGHTNESS];
         if(PTS_TEST_EN){    // PTS LLN-BV09C: request publish onoff status, even though onoff not change.
-            model_pub_check_set(level_set_st, (u8 *)(&(model_sig_g_onoff_level.onoff_srv[light_idx])), SIG_MD_G_ONOFF_S == p_res->id);
+            model_pub_check_set_onoff(pub_list->st[ST_TRANS_PUB_ONOFF], light_idx, p_res->id);
         }
-#if MD_LIGHTNESS_EN
         model_sig_lightness.srv[light_idx].com.pub_2nd_state = linear;
         model_pub_check_set(level_set_st, (u8 *)(&(model_sig_lightness.srv[light_idx])), SIG_MD_LIGHTNESS_S == p_res->id);
 #endif
-#if MD_LIGHT_CONTROL_EN
-        model_pub_check_set(level_set_st, (u8 *)(&(model_sig_light_lc.srv[light_idx])), SIG_MD_LIGHT_LC_S == p_res->id);
+#if MD_LIGHT_CONTROL_EN // if light control is enable, lightness must be enable.
+        model_pub_check_set(level_set_st, (u8 *)(&(model_sig_light_lc.srv[light_idx])), (0 == set_LC_lightness_flag) && (SIG_MD_LIGHT_LC_S == p_res->id));
         if(is_light_lc_onoff(cb_par->op)){
             model_pub_st_cb_re_init_lc_srv(&mesh_lc_onoff_st_publish);    // re-init
         }
@@ -259,7 +267,7 @@ void model_pub_check_set_bind_all(st_pub_list_t *pub_list, mesh_cb_fun_par_t *cb
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
  */
-int g_level_set(u8 *par, int par_len, u16 op, int idx, u8 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list)
+int g_level_set(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list)
 {
     //model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
 	mesh_set_trans_t set_trans = {0};
@@ -311,23 +319,12 @@ int g_level_set(u8 *par, int par_len, u16 op, int idx, u8 retransaction, int st_
 			p_set_trans = 0;
 		}
 	}else{
-        #if MD_LIGHT_CONTROL_EN
-        if(pub_list->op_lc_onoff_type){
-            set_trans.lc_prop_time_ms = get_lc_onoff_prop_time_ms(idx, pub_list->op_lc_onoff_type);
-            if(set_trans.lc_prop_time_ms){
-    			set_trans.transit_t = set_trans.delay = 0; // clear
-    			p_set_trans = &set_trans;
-            }
-        }else
-        #endif
-        {
-    		u8 def_transit_t = g_def_trans_time_val(idx);
-    		if(GET_TRANSITION_STEP(def_transit_t)){
-    			set_trans.transit_t = def_transit_t;
-    			set_trans.delay = 0;
-    			par_len = sizeof(mesh_cmd_g_level_delta_t);
-    			p_set_trans = &set_trans;
-    		}
+		u8 def_transit_t = g_def_trans_time_val(idx);
+		if(GET_TRANSITION_STEP(def_transit_t)){
+			set_trans.transit_t = def_transit_t;
+			set_trans.delay = 0;
+			par_len = sizeof(mesh_cmd_g_level_delta_t);
+			p_set_trans = &set_trans;
 		}
 	}
 
@@ -354,6 +351,10 @@ int g_level_set(u8 *par, int par_len, u16 op, int idx, u8 retransaction, int st_
         		light_g_level_set_idx(idx, set_trans.target_val, 1, st_trans_type, pub_list);
         	}
         }
+
+        #if (MD_LIGHT_CONTROL_EN && MD_SERVER_EN)
+        LC_state_check_and_clear_by_user_command(idx);
+        #endif
     }
 
 	return 0;
@@ -406,7 +407,7 @@ s16 get_val_with_check_range(s32 level_target, s16 min, s16 max, int st_trans_ty
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
  */
-int g_level_set_and_update_last(u8 *par, int par_len, u16 op, int idx, u8 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list)
+int g_level_set_and_update_last(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list)
 {
 	mesh_cmd_g_level_delta_t set = {0};
 	memcpy(&set, par, sizeof(set));
@@ -471,6 +472,9 @@ int mesh_tx_cmd_lightness_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *u
 		len -= 3;
 	}
 
+#if LIGHTNESS_DATA_REFORMAT_EN
+    lightness_rsp_data_reformat(&rsp);
+#endif
 	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
 }
 
@@ -527,12 +531,12 @@ int mesh_cmd_sig_lightness_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	return mesh_lightness_st_rsp(cb_par);
 }
 
-int level_s16_set(mesh_cmd_g_level_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, int st_trans_type, st_pub_list_t *pub_list)
+int level_s16_set(mesh_cmd_g_level_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, st_pub_list_t *pub_list)
 {
 	return g_level_set_and_update_last((u8 *)&p_set, par_len, G_LEVEL_SET_NOACK, idx, retransaction, st_trans_type, 0, pub_list);
 }
 
-int level_u16_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, int st_trans_type, st_pub_list_t *pub_list)
+int level_u16_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, st_pub_list_t *pub_list)
 {
 	mesh_cmd_g_level_set_t level_set_tmp;
 	memcpy(&level_set_tmp.tid, &p_set->tid, sizeof(mesh_cmd_g_level_set_t) - OFFSETOF(mesh_cmd_g_level_set_t,tid));
@@ -555,8 +559,12 @@ int level_u16_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx,
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
  */
-int lightness_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list)
+int lightness_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list)
 {
+    #if LIGHTNESS_DATA_REFORMAT_EN
+    lightness_set_data_reformat(p_set, par_len, op, idx, retransaction);
+    #endif
+    
 	int err = -1;
 	if(is_valid_lightness(p_set->lightness)){
 		err = level_u16_set(p_set, par_len, op, idx, retransaction, ST_TRANS_LIGHTNESS, pub_list);
@@ -869,7 +877,7 @@ s16 get_level_from_ctl_temp_light_idx(u16 temp, int light_idx)
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
  */
-int light_ctl_temp_set(mesh_cmd_light_ctl_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list)
+int light_ctl_temp_set(mesh_cmd_light_ctl_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list)
 {
 	int err = -1;
 	if(is_valid_ctl_temp(p_set->temp)){

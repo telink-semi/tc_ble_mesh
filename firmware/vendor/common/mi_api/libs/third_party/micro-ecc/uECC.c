@@ -2,8 +2,8 @@
 
 #include "uECC.h"
 #include "uECC_vli.h"
-#include "../../../telink_sdk_mible_api.h"
-#include "../../../../../../proj/mcu/watchdog_i.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
+#include "proj/mcu/watchdog_i.h"
 
 #ifndef NULL
 #define NULL 0

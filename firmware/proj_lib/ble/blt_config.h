@@ -73,6 +73,7 @@ enum{
     TYPE_DUAL_MODE_STANDBY  = 0x00000065,// dual mode state was standby to be selected
 	TYPE_DUAL_MODE_RECOVER 	= 0x00000056,// don't change, must same with zigbee SDK, recover from zigbee.
     TYPE_DUAL_MODE_ZIGBEE_RESET  = 0x00000053,// don't change.
+    TYPE_TLK_HOMEKIT        = 0x00000095,// don't change.
 };
 
 
@@ -203,8 +204,10 @@ typedef struct {
 #define			FLASH_ADR_RESET_CNT			0x3e000
 #if WIN32
 #define			FLASH_ADR_MD_PROPERTY		0x40000
+#define			FLASH_ADR_MD_DF				0x41000 
 #else
 #define			FLASH_ADR_MD_PROPERTY		0x3f000 // just test
+#define			FLASH_ADR_MD_DF				0x3f000 // just test
 #endif
 
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
@@ -225,7 +228,7 @@ typedef struct {
 #define			FLASH_ADR_MESH_TYPE_FLAG	0x73000	// don't change, must same with telink mesh SDK
 #define			FLASH_ADR_MD_MESH_OTA		0x74000
 #define         FLASH_ADR_MD_REMOTE_PROV    0x75000 // remote provision part 
-
+#define 		FLASH_ADR_MD_PRIVATE_BEACON	0x75000
 #define			FLASH_ADR_AREA_2_END		0x76000
 
 
@@ -252,9 +255,9 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #elif(AIS_ENABLE)
 #define 		FLASH_ADR_THREE_PARA_ADR	0x78000
 #define         FLASH_ADR_THREE_PARA_ADR_0x100_0xF00    //please refer to "FLASH_ADR_EDCH_PARA"
-#if (ALI_MD_TIME_EN)
+    #if (ALI_MD_TIME_EN)
 #define 		FLASH_ADR_VD_TIME_INFO		0x79000
-#endif
+    #endif
 #elif(DUAL_MODE_WITH_TLK_MESH_EN)
 #define			FLASH_ADR_DUAL_MODE_4K		0x78000 // backup dual mode 4K firmware
 #endif
@@ -516,7 +519,7 @@ enum{
 	HCI_GATEWAY_CMD_PRO_STS_RSP = 0x8b,
 	HCI_GATEWAY_CMD_SEND_ELE_CNT = 0x8c,
 	HCI_GATEWAY_CMD_SEND_NODE_INFO = 0x8d,
-	HCI_GATEWAY_CMD_SEND_CPS_INFO	= 0x8e,
+	//HCI_GATEWAY_CMD_SEND_CPS_INFO	= 0x8e,
 	HCI_GATEWAY_CMD_HEARTBEAT	= 0x8f,
 	HCI_GATEWAY_CMD_SEND_MESH_OTA_STS	= 0x98,
 	HCI_GATEWAY_CMD_SEND_UUID   = 0x99,
@@ -762,6 +765,8 @@ static inline void blc_app_loadCustomizedParameters(void)
 
 #if DUAL_MESH_ZB_BL_EN
 #define FW_SIZE_MAX_K			    (192) // 192  //192K
+#elif (MESH_USER_DEFINE_MODE == MESH_PIPA_ENABLE)
+#define FW_SIZE_MAX_K			    (184)
 #else
 #define FW_SIZE_MAX_K			    (FLASH_ADR_AREA_FIRMWARE_END / 1024) // 192  //192K
 #endif

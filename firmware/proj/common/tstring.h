@@ -54,6 +54,7 @@ void * 	memchr (register const void * src_void, int c, unsigned int length);
 
 void   	memcpy4(void * dest, const void * src, unsigned int);
 int is_buf_zero(void *data, unsigned int len);
+int is_buf_all_one(void *data, unsigned int len);
 int ismemzero4(void *data, unsigned int len);
 int ismemf4(void *data, unsigned int len);
 void * memset4(void * dest, int val, unsigned int len);

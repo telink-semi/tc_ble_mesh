@@ -25,6 +25,7 @@
 #define MI_LOG_MODULE_NAME "mesh auth"
 #include "mible_log.h"
 #if MI_API_ENABLE
+int msc_self_test(pt_t *pt);
 
 typedef struct {
     uint32_t expire_time;
@@ -54,18 +55,18 @@ typedef struct {
 
 #if (HAVE_MSC)
 static pstimer_t msc_timer;
-#define MSC_POWER_ON()                                                          \
+#define MSC_POWER_ON(pt)                                                          \
 do {                                                                            \
     PT_WAIT_THREAD(pt, msc_power_on());                                         \
 } while(0)
 
-#define MSC_POWER_OFF()                                                         \
+#define MSC_POWER_OFF(pt)                                                         \
 do {                                                                            \
     PT_WAIT_THREAD(pt, msc_power_off());                                        \
 } while(0)
 #else
-#define MSC_POWER_ON()
-#define MSC_POWER_OFF()
+#define MSC_POWER_ON(pt)
+#define MSC_POWER_OFF(pt)
 #endif /* HAVE_MSC */
 
 static struct {
@@ -312,11 +313,6 @@ uint32_t mi_scheduler_init(uint32_t interval, mi_schd_event_handler_t handler,
     int32_t errno;
     tick_interval = interval;
 
-#if (HAVE_MSC)
-    msc_timer.tick_interval_ms = interval;
-    msc_timer.p_curr_tick      = &schd_ticks;
-#endif
-
     errno = mible_timer_create(&schd_tick_timer, schd_tick_timer_handler, MIBLE_TIMER_REPEATED);
     MI_ERR_CHECK(errno);
 
@@ -326,6 +322,8 @@ uint32_t mi_scheduler_init(uint32_t interval, mi_schd_event_handler_t handler,
         m_user_event_handler = handler;
 
 #if (HAVE_MSC)
+    msc_timer.tick_interval_ms = interval;
+    msc_timer.p_curr_tick      = &schd_ticks;
     if (p_config != NULL) {
         errno = mi_msc_config(p_config->msc_onoff, p_config->p_msc_iic_config, &msc_timer);
         MI_ERR_CHECK(errno);
@@ -402,6 +400,11 @@ uint32_t mi_scheduler_start(uint32_t procedure)
 
     memset(&signal, 0, sizeof(signal));
     memset(&need_processing, 0xFF, sizeof(need_processing));
+
+
+#if (HAVE_MSC)
+    mi_msc_config(NULL, NULL, &msc_timer);
+#endif
 
     errno = mible_timer_stop(schd_tick_timer);
     MI_ERR_CHECK(errno);
@@ -536,8 +539,8 @@ static int monitor(pt_t *pt)
         if (schd_is_completed) {
             MI_LOG_WARNING("OPERATION 0x%08X completed.\n", schd_procedure);
             memset(&need_processing, 0, sizeof(need_processing));
-            MSC_POWER_OFF();
             schd_procedure = 0;
+            MSC_POWER_OFF(pt);
             schd_need_exec = false;
             mible_timer_stop(schd_tick_timer);
 
@@ -559,7 +562,7 @@ static int psm_restore(pt_t *pt)
 
     PT_BEGIN(pt);
 
-    MSC_POWER_ON();
+    MSC_POWER_ON(pt);
 
     errno = mible_record_read(RECORD_KEY_INFO, (uint8_t*)&mi_sysinfo, sizeof(mi_sysinfo));
     if (errno == MI_SUCCESS) {
@@ -597,7 +600,7 @@ static int psm_restore(pt_t *pt)
 
     enqueue(&monitor_queue, &event);
 
-    MSC_POWER_OFF();
+    MSC_POWER_OFF(pt);
 
     PT_END(pt);
 }
@@ -611,10 +614,10 @@ static int psm_delete(pt_t *pt)
     errno = mible_record_delete(RECORD_KEY_INFO);
     if (errno == MI_SUCCESS) {
         MI_LOG_INFO("KEYINFO has been deleted! \n" );
-        MSC_POWER_ON();
-        PT_WAIT_THREAD(pt, mi_crypto_record_delete(RECID_MKPK));
-        MSC_POWER_OFF();
         mibeacon_init(NULL, false);
+        MSC_POWER_ON(pt);
+        PT_WAIT_THREAD(pt, mi_crypto_record_delete(RECID_MKPK));
+        MSC_POWER_OFF(pt);
         event = SCHD_EVT_KEY_DEL_SUCC;
     } else {
         MI_LOG_INFO("KEYINFO deleted failed! errno: %d\n", errno);
@@ -710,7 +713,10 @@ static void sys_procedure(uint32_t type)
         if (need_processing.pt1)
             need_processing.pt1 = PT_SCHEDULE(update_link_layer(&pt1));
         break;
-
+	case SYS_MSC_SELF_TEST:
+		if (need_processing.pt1)
+            need_processing.pt1 = PT_SCHEDULE(msc_self_test(&pt1));
+        break;
 #if DEBUG_MIBLE
     case SYS_RXFER_TEST:
         if (need_processing.pt1)
@@ -726,7 +732,7 @@ static int mesh_reg_msc(pt_t *pt)
 
     PT_BEGIN(pt);
 
-    MSC_POWER_ON();
+    MSC_POWER_ON(pt);
 
     TIMING_INIT();
     PT_WAIT_THREAD(pt, stat = mi_crypto_get_crt_len(&dev_cert_len, &manu_cert_len, NULL));
@@ -821,7 +827,7 @@ static int mesh_reg_msc(pt_t *pt)
     PT_WAIT_THREAD(pt, mi_crypto_record_write(RECID_MKPK, (const uint8_t *)&MKPK, 32+4));
     SET_DATA_INVALID(signal.MKPK);
 
-    MSC_POWER_OFF();
+    MSC_POWER_OFF(pt);
     
     PT_END(pt);
 }
@@ -1041,17 +1047,16 @@ static int admin_msc(pt_t *pt)
 {
     PT_BEGIN(pt);
 
-    MSC_POWER_ON();
+    MSC_POWER_ON(pt);
 
     PT_WAIT_THREAD(pt, mi_crypto_ecc_keypair_gen(P256R1, dev_pub));
     SET_DATA_VALID(signal.dev_pub);
 
     PT_WAIT_UNTIL(pt, DATA_IS_VALID_P(signal.app_pub));
-
     PT_WAIT_THREAD(pt, mi_crypto_ecc_shared_secret_compute(P256R1, app_pub, eph_key));
     SET_DATA_VALID(signal.eph_key);
 
-    MSC_POWER_OFF();
+    MSC_POWER_OFF(pt);
 
     PT_END(pt);
 }
@@ -1093,8 +1098,6 @@ static int admin_auth(pt_t *pt)
 
 #if DEBUG_MIBLE
     MI_LOG_INFO(MI_LOG_COLOR_BLUE"LTMK:\n"MI_LOG_COLOR_DEFAULT);
-    MI_LOG_HEXDUMP(LTMK, 32);
-    MI_LOG_INFO(MI_LOG_COLOR_BLUE"GATT LTMK:\n"MI_LOG_COLOR_DEFAULT);
     MI_LOG_HEXDUMP(LTMK, 32);
 #endif
 
@@ -1142,6 +1145,142 @@ static int admin_auth(pt_t *pt)
 
     PT_END(pt);
 }
+
+
+int msc_self_test(pt_t *pt)
+{
+#if 0
+	#define NORMAL_EXIT              PT_ENDED
+	static uint8_t dev_pub[64];
+	static uint8_t dev_cert[512];
+	static uint8_t cert[512];
+	static  uint8_t sha[32];
+	static uint16_t dev_cert_len;
+static uint16_t manu_cert_len;
+static uint16_t root_cert_len;
+    static int errno = 0;
+    uint8_t event;
+    uint8_t *p_root_cert   = cert;
+    uint8_t *p_root_pubkey = dev_pub;
+    uint8_t *p_manu_cert   = cert;
+    uint8_t *p_manu_pubkey = dev_pub;
+    uint8_t *p_dev_cert    = cert;
+    uint8_t *p_dev_pubkey  = dev_pub;
+    const char testpub[]= {0xB6, 0x8A, 0xFC, 0xD3, 0xB6, 0x96, 0xEA,0xA8,
+    0xD3, 0x6D, 0x06, 0x18, 0x3F, 0x60, 0x7D,0x7E,
+    0x5A, 0xBE, 0xF1, 0x74, 0x12, 0x23, 0xCD,0x7B,
+    0x54, 0x52, 0x77, 0x07, 0x0A, 0xF5, 0xA3,0xB1,
+    0xB4, 0x57, 0x91, 0x7F, 0x81, 0x8A, 0x48,0xF3,
+    0x23, 0x01, 0x8C, 0xE2, 0xD5, 0x99, 0x57,0x7E,
+    0xDE, 0x53, 0x38, 0x10, 0x8B, 0x1A, 0x2B,0x9F,
+    0x0B, 0xCB, 0x3A, 0xE0, 0x95, 0x03, 0xD6,0x43};
+    const char testmkpk[] = {0xB6, 0x8A, 0xFC, 0xD3, 0xB6, 0x96, 0xEA,0xA8,
+    0xD3, 0x6D, 0x06, 0x18, 0x3F, 0x60, 0x7D,0x7E,
+    0x5A, 0xBE, 0xF1, 0x74, 0x12, 0x23, 0xCD,0x7B,
+    0x54, 0x52, 0x77, 0x07, 0x0A, 0xF5, 0xA3,0xB1,
+    0x54, 0x52, 0x77, 0x07};
+    uint8_t tmpmkpk[36];
+	
+    PT_BEGIN(pt);
+
+    MSC_POWER_ON(pt);
+    PT_WAIT_THREAD(pt, mi_crypto_get_crt_len(&dev_cert_len, &manu_cert_len, &root_cert_len));
+    MI_LOG_INFO("MSC self test start1: \n");
+    /* read mijia root certificate */
+    PT_WAIT_THREAD(pt, mi_crypto_get_crt_der(MI_ROOT_CERT, p_root_cert, root_cert_len));
+    errno = mi_crypto_crt_parse_der(p_root_cert, root_cert_len, NULL, &crt);
+    if (errno != MI_SUCCESS)
+        goto EXCEPTION_EXIT;
+
+    memcpy(p_root_pubkey, crt.pub.p, 64);
+	MI_LOG_INFO("MSC self test start2: \n");
+    /* read mijia manufacturer certificate */
+    PT_WAIT_THREAD(pt, mi_crypto_get_crt_der(MI_MANU_CERT, p_manu_cert, manu_cert_len));
+    errno = mi_crypto_crt_parse_der(p_manu_cert, manu_cert_len, NULL, &crt);
+    if (errno != MI_SUCCESS)
+        goto EXCEPTION_EXIT;
+	MI_LOG_INFO("MSC self test start3: \n");
+    mi_crypto_sha256(crt.tbs.p, crt.tbs.len, sha);
+    PT_WAIT_THREAD(pt, errno = mi_crypto_ecc_verify(P256R1, p_root_pubkey, sha, crt.sig));
+    if (errno != NORMAL_EXIT) {
+        MI_LOG_ERROR("Manufacturer cert is invalid,0x%x.\n",errno);
+        goto EXCEPTION_EXIT;
+    }
+    memcpy(p_manu_pubkey, crt.pub.p, 64);
+	MI_LOG_INFO("MSC self test start4: \n");
+    /* read device certificate */
+    PT_WAIT_THREAD(pt, mi_crypto_get_crt_der(MI_DEV_CERT, p_dev_cert, dev_cert_len));
+    errno = mi_crypto_crt_parse_der(p_dev_cert, dev_cert_len, NULL, &crt);
+    if (errno != MI_SUCCESS)
+        goto EXCEPTION_EXIT;
+	MI_LOG_INFO("MSC self test start5: \n");
+    mi_crypto_sha256(crt.tbs.p, crt.tbs.len, sha);
+    PT_WAIT_THREAD(pt, errno = mi_crypto_ecc_verify(P256R1, p_manu_pubkey, sha, crt.sig));
+    if (errno != NORMAL_EXIT) {
+        MI_LOG_ERROR("Device cert is invalid.\n");
+        goto EXCEPTION_EXIT;
+    }
+    memcpy(p_dev_pubkey, crt.pub.p, 64);
+	MI_LOG_INFO("MSC self test start6: \n");
+    /* verify device signature */
+    PT_WAIT_THREAD(pt, mi_crypto_ecc_sign(P256R1, sha, sign.device));
+    PT_WAIT_THREAD(pt, errno = mi_crypto_ecc_verify(P256R1, p_dev_pubkey, sha, sign.device));
+    if (errno != NORMAL_EXIT) {
+        MI_LOG_ERROR("Device private key is invalid.\n");
+        goto EXCEPTION_EXIT;
+    }
+    MI_LOG_INFO("MSC self test start7: \n");
+    PT_WAIT_THREAD(pt, mi_crypto_ecc_keypair_gen(P256R1, dev_pub));
+
+    memcpy(app_pub, testpub, 64);
+    PT_WAIT_THREAD(pt, errno = mi_crypto_ecc_shared_secret_compute(P256R1, app_pub, eph_key));
+    if (errno != PT_ENDED) {
+        MI_LOG_ERROR("App pubkey is invaild.\n", errno);
+        goto EXCEPTION_EXIT;
+    }
+    MI_LOG_INFO("MSC self test start8: \n");
+    PT_WAIT_THREAD(pt, mi_crypto_record_write(0, (const uint8_t *)testmkpk, 32+4));
+    PT_WAIT_THREAD(pt, mi_crypto_record_read(0, tmpmkpk, 32+4));
+    if (memcmp(tmpmkpk, testmkpk, 36) != 0) {
+        MI_LOG_ERROR("WR/RD is abnormal.\n");
+        goto EXCEPTION_EXIT;
+    }
+	MI_LOG_INFO("MSC self test start9: \n");
+#if (HAVE_MSC==2)
+    PT_WAIT_THREAD(pt, mi_crypto_record_delete(0));
+    PT_WAIT_THREAD(pt, mi_crypto_record_read(0, tmpmkpk, 32+4));
+    {
+        char empty[36] = {0};
+        if (memcmp(tmpmkpk, empty, 36) != 0) {
+            MI_LOG_ERROR("DEL is abnormal.\n");
+            goto EXCEPTION_EXIT;
+        }
+    }
+	MI_LOG_INFO("MSC self test start10: \n");
+#endif
+
+    errno = MI_SUCCESS;
+
+EXCEPTION_EXIT:
+
+    if (errno == MI_SUCCESS) {
+        MI_LOG_INFO("MSC self test: "MI_LOG_COLOR_GREEN"PASS\n");
+        event = SCHD_EVT_MSC_SELF_TEST_PASS;
+    } else {
+        MI_LOG_INFO("MSC self test: "MI_LOG_COLOR_RED"FAIL\n");
+        event = SCHD_EVT_MSC_SELF_TEST_FAIL;
+    }
+
+    enqueue(&monitor_queue, &event);
+    
+    MSC_POWER_OFF(pt);
+
+    PT_END(pt);
+#endif
+}
+
+
+
 
 static void admin_login_procedure()
 {

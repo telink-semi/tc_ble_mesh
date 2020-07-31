@@ -503,17 +503,21 @@ int msc_power_off(void)
 
 int mi_msc_config(void * pwr_manage, const iic_config_t * p_iic_config, void *p_timer)
 {
-    if (p_iic_config == NULL || p_timer == NULL)
-        return -1;
-
     if (pwr_manage != NULL) {
         m_msc_power_manage = (int(*)(bool))pwr_manage;
         m_msc_power_manage(0);
     }
 
-    m_p_iic_config = p_iic_config;
-    m_timer        = p_timer;
-    return 0;
+    if (p_iic_config != NULL)
+        m_p_iic_config = p_iic_config;
+
+    if (p_timer != NULL)
+        m_timer        = p_timer;
+
+    if (m_p_iic_config == NULL || m_timer == NULL)
+        return -1;
+    else
+        return 0;
 }
 
 int msc_get_chip_info(msc_info_t *p_info)

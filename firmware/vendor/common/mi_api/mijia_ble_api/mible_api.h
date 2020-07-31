@@ -127,12 +127,12 @@ mible_status_t mible_iic_init(const iic_config_t * p_config, mible_handler_t han
 
 void mible_iic_uninit(void);
 
-mible_status_t mible_iic_tx(uint8_t addr, uint8_t * p_out, uint16_t len,
-		bool no_stop);
+mible_status_t mible_iic_tx(uint8_t addr, uint8_t * p_out, uint16_t len,uint8_t no_stop);
+
 
 mible_status_t mible_iic_rx(uint8_t addr, uint8_t * p_in, uint16_t len);
 
-int mible_iic_scl_pin_read(uint8_t port, uint8_t pin);
+int mible_iic_scl_pin_read(uint8_t port, uint16_t pin);
 
 int mible_gap_register(mible_gap_callback_t cb);
 

@@ -85,12 +85,12 @@ int mesh_cmd_sig_light_xyl_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	return mesh_light_xyl_st_rsp(cb_par);
 }
 
-int light_x_set(mesh_cmd_light_x_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list)
+int light_x_set(mesh_cmd_light_x_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list)
 {
 	return level_u16_set((mesh_cmd_lightness_set_t *)p_set, par_len, op, idx, retransaction, ST_TRANS_XYL_X, pub_list);
 }
 
-int light_y_set(mesh_cmd_light_y_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list)
+int light_y_set(mesh_cmd_light_y_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list)
 {
 	return level_u16_set((mesh_cmd_lightness_set_t *)p_set, par_len, op, idx, retransaction, ST_TRANS_XYL_Y, pub_list);	
 }

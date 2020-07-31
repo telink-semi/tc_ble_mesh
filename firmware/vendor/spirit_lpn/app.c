@@ -315,8 +315,8 @@ void proc_suspend_low_power()
 	if(!lpn_provision_ok){
 	    if(is_provision_success() && node_binding_tick 
 	    && clock_time_exceed(node_binding_tick, 3*1000*1000)){
-	        start_reboot();//lpn_provision_ok = 1;
-	        while(1);
+	        lpn_provision_ok = 1;
+	        node_binding_tick = 0;
 	    }
 
 		if(is_provision_success()){
@@ -350,7 +350,7 @@ void main_loop ()
 #endif	
 	////////////////////////////////////// BLE entry /////////////////////////////////
 	blt_sdk_main_loop ();
-	if(mesh_sleep_time.appWakeup_flg){
+	if(mesh_sleep_time.appWakeup_flg && !mesh_tx_seg_par.busy){
 		return;//save running time in early wakeup.
 	}
 	else{
@@ -365,7 +365,7 @@ void main_loop ()
 	if(A_send_indication){
 		A_send_indication = 0;
 		u16 val= 0x3344;
-		access_cmd_attr_indication(0xffff,ATTR_CURRENT_TEMP, (u8 *)&val, sizeof(val));
+		access_cmd_attr_indication(VD_MSG_ATTR_INDICA,0xffff,ATTR_CURRENT_TEMP, (u8 *)&val, sizeof(val));
 	}
 	#endif	
 	////////////////////////////////////// UI entry /////////////////////////////////
@@ -463,11 +463,9 @@ void user_init()
 #endif
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
-#if BLT_SOFTWARE_TIMER_ENABLE
-	blc_ll_initPowerManagement_module();        //pm module:      	 optional
-#endif
 
-#if(BLE_REMOTE_PM_ENABLE)	
+#if(BLE_REMOTE_PM_ENABLE)
+	blc_ll_initPowerManagement_module();        //pm module:      	 optional
 	#if SPIRIT_PRIVATE_LPN_EN
 	bls_pm_setSuspendMask (SUSPEND_DISABLE);
 	#else

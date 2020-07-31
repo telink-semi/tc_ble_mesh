@@ -3,19 +3,16 @@
 //#include <stddef.h>
 //#include <string.h>
 #include "mible_log.h"
-#include "third_party/mbedtls/sha256_hkdf.h"
-#include "third_party/mbedtls/sha256.h"
-#include "cryptography/mi_crypto.h"
-#include "cryptography/mi_crypto_backend_mbedtls.h"
 #include "mible_dfu_auth.h"
 #include "mible_dfu_flash.h"
+#include "third_party/mbedtls/sha256_hkdf.h"
+#include "third_party/mbedtls/sha256.h"
+#include "third_party/pt/pt.h"
+#include "cryptography/mi_crypto.h"
+#include "cryptography/mi_crypto_backend_mbedtls.h"
 
 #if MI_API_ENABLE
 /* Private define ------------------------------------------------------------*/
-
-#define MIBLE_DFU_FLAG_LZMA                                0x01
-#define MIBLE_DFU_FLAG_BSDIFF                              0x02
-
 #define MIBLE_DFU_TLV_NEW_VERSION                          0x01
 #define MIBLE_DFU_TLV_OLD_VERSION                          0x02
 #define MIBLE_DFU_TLV_SIGN_TYPE                            0x03
@@ -23,10 +20,6 @@
 #define MIBLE_DFU_TLV_PID                                  0x05
 
 #define MIBLE_DFU_CERT_MAX_SIZE                            512
-
-#ifndef MIN
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#endif
 
 /* Private typedef -----------------------------------------------------------*/
 #if defined ( __CC_ARM )
@@ -44,7 +37,7 @@ __packed struct mible_dfu_tag {
     uint16_t tag_size;
     uint16_t product_id;
     uint32_t firmware_size;
-    uint16_t certification_size;
+    uint16_t certificates_size;
     uint8_t flag;
     uint8_t reserved;
     uint8_t payload[1] ;
@@ -69,14 +62,14 @@ struct __PACKED mible_dfu_ver {
 typedef struct mible_dfu_ver mible_dfu_ver_t;
 
 struct __PACKED mible_dfu_tag {
-    uint32_t magic[4];
+    uint8_t magic[16];
     uint16_t tag_size;
     uint16_t product_id;
     uint32_t firmware_size;
-    uint16_t certification_size;
+    uint16_t certificates_size;
     uint8_t flag;
     uint8_t reserved;
-    uint8_t payload[1] ;
+    uint8_t payload[1];
 };
 typedef struct mible_dfu_tag mible_dfu_tag_t;
 
@@ -89,106 +82,7 @@ typedef struct mible_dfu_tlv mible_dfu_tlv_t;
 
 #endif
 
-/* Private variables ---------------------------------------------------------*/
-
-/* Private function prototypes -----------------------------------------------*/
-
-static uint8_t get_value(uint32_t offset)
-{
-    uint8_t tmp;
-    mible_dfu_flash_read(&tmp, sizeof tmp, offset);
-
-    return tmp;
-}
-
-static uint32_t get_offset(uint32_t total_size);
-static mible_status_t parse_tlv(uint8_t type, uint32_t offset, uint16_t max_len,
-                                    void * data, uint16_t data_len);
-static bool verify_firmware(mible_dfu_tag_t * tag, void * cert, void * sign, uint16_t sign_len);
-
-/* Exported functions --------------------------------------------------------*/
-
-mible_status_t mible_dfu_auth(uint32_t total_size, uint32_t product_id)
-{
-    mible_dfu_tag_t * p_dfu_tag = NULL;
-    mible_dfu_ver_t version;
-    mible_status_t ret = MI_SUCCESS;
-    uint32_t offset;
-    uint16_t tag_size, sign_size;
-    uint16_t root_size;
-    uint8_t dfu_tag[offsetof(mible_dfu_tag_t, payload)];
-	uint8_t buffer_for_root[MIBLE_DFU_CERT_MAX_SIZE];
-    offset = get_offset(total_size);
-    if (0xFFFFFFFF == offset) {
-        MI_LOG_WARNING("fail to read magic\n");
-        return MI_ERR_NOT_FOUND;
-    }
-    MI_LOG_DEBUG("find offset in flash -- 0x%x\n", offset);
-
-    ret = mible_dfu_flash_read(&tag_size, sizeof(tag_size), offset + 16); /* 16 bytes magic */
-    if (MI_SUCCESS != ret) {
-        MI_LOG_WARNING("fail to read tag size (err %d)\n", ret);
-        return ret;
-    }
-
-    /* CRC and fixed elements */
-    MI_LOG_DEBUG("tag length is %d, minimal len is %d\n",
-                    tag_size, sizeof(dfu_tag) + 4);
-    if (tag_size < sizeof(dfu_tag) + 4) {
-        MI_LOG_WARNING("invalid tag size\n");
-        return MI_ERR_NOT_FOUND;
-    }
-
-    ret = mible_dfu_flash_read(dfu_tag, sizeof(dfu_tag), offset);
-    if (MI_SUCCESS != ret) {
-        MI_LOG_WARNING("fail to read tag (err %d)\n", ret);
-        return ret;
-    }
-
-    p_dfu_tag = (mible_dfu_tag_t *)dfu_tag;
-    if (product_id != p_dfu_tag->product_id) {
-        MI_LOG_WARNING("product ID in firmware is %d\n", p_dfu_tag->product_id);
-        return MI_ERR_INTERNAL;
-    }
-    MI_LOG_DEBUG("flag in firmware is %d\n", p_dfu_tag->flag);
-
-    ret = parse_tlv(MIBLE_DFU_TLV_NEW_VERSION, offset + sizeof(dfu_tag),
-                    tag_size - sizeof(dfu_tag) - 4,    /* CRC and fixed elements */
-                    &version, sizeof(version));
-    if (MI_SUCCESS == ret) {
-        MI_LOG_DEBUG("new firmware %u.%u.%u_%04u\n", version.major, version.minor,
-                          version.revision, version.build);
-    } else {
-        MI_LOG_WARNING("Get new firmware version fail (err %d)\n", ret);
-    }
-
-    uint8_t certification[p_dfu_tag->certification_size];
-    ret = mible_dfu_flash_read(certification, p_dfu_tag->certification_size,
-                               p_dfu_tag->firmware_size + tag_size);
-    if (MI_SUCCESS != ret) {
-        MI_LOG_WARNING("can not read certification from firmware (err %d)\n", ret);
-        return ret;
-    }
-
-    sign_size = total_size - p_dfu_tag->firmware_size - tag_size - p_dfu_tag->certification_size;
-    uint8_t signature[sign_size];
-    ret = mible_dfu_flash_read(signature, sign_size,
-           p_dfu_tag->firmware_size + tag_size + p_dfu_tag->certification_size);
-    if (MI_SUCCESS != ret) {
-        MI_LOG_WARNING("can not read signature (err %d)\n", ret);
-        return ret;
-    }
-
-    if (verify_firmware(p_dfu_tag, certification, signature, sign_size)) {
-        MI_LOG_DEBUG("firmware is ready for OTA\n");
-        return MI_SUCCESS;
-    } else {
-        MI_LOG_WARNING("firmware is illegal\n");
-        return MI_ERR_INTERNAL;
-    }
-}
-
-static void get_next(uint8_t ps[], int16_t length, int8_t next[])
+static void get_next(const uint8_t ps[], int16_t length, int8_t next[])
 {
     int16_t j = 0;
     int8_t k = -1;
@@ -207,24 +101,29 @@ static void get_next(uint8_t ps[], int16_t length, int8_t next[])
     }
 }
 
-static uint32_t get_offset(uint32_t total_size)
+static uint32_t get_tag_offset(uint32_t uncheck_size)
 {
-    uint32_t i = 0;
     int8_t next[16], j = 0;
-    uint8_t magic[] = {0x47, 0x26, 0x56, 0x82, 0x41, 0x54, 0x4F, 0x46,
+    const uint8_t magic[] = {0x47, 0x26, 0x56, 0x82, 0x41, 0x54, 0x4F, 0x46,
                        0x54, 0xEF, 0x49, 0x4D, 0x00, 0x00, 0x00, 0x00};
-
+    uint8_t buf[128], buf_left = 0;
     get_next(magic, 16, next);
-    while (i < total_size && j < 16) {
-        if (-1 == j || get_value(total_size - i - 1) == magic[j]) {
-            i++;
+    while (uncheck_size >= sizeof(buf) && j < 16) {
+        if (buf_left == 0) {
+            uncheck_size -= sizeof(buf);
+            mible_dfu_flash_read(buf, sizeof(buf), uncheck_size);
+            buf_left = sizeof(buf);
+        }
+
+        if (-1 == j || buf[buf_left - 1] == magic[j]) {
+            buf_left--;
             j++;
         } else {
             j = next[j];
         }
     }
 
-    return (16 == j) ? total_size - i : 0xFFFFFFFF;
+    return (16 == j) ? uncheck_size + buf_left : 0xFFFFFFFF;
 }
 
 static mible_status_t parse_tlv(uint8_t type, uint32_t offset, uint16_t max_len,
@@ -280,120 +179,135 @@ static mible_status_t parse_tlv(uint8_t type, uint32_t offset, uint16_t max_len,
     return MI_ERR_NOT_FOUND;
 }
 
-static void get_hash(uint8_t sha[32], uint32_t firmware_size)
+void calc_hash(uint8_t sha[32], uint32_t firmware_size)
 {
     mbedtls_sha256_context ctx;
-    uint32_t size = firmware_size, copy_size;
-    uint8_t buffer[32];
+    uint32_t reminding_size = firmware_size, copy_size;
+    uint8_t buffer[256];
 
     mbedtls_sha256_init( &ctx );
     mbedtls_sha256_starts( &ctx, 0 );
 
-    while (size > 0) {
-        copy_size = MIN(size, sizeof(buffer));
-        mible_dfu_flash_read(buffer, copy_size, firmware_size - size);
+    while (reminding_size > 0) {
+        copy_size = MIN(reminding_size, sizeof(buffer));
+        mible_dfu_flash_read(buffer, copy_size, firmware_size - reminding_size);
         mbedtls_sha256_update( &ctx, buffer, copy_size );
-        size -= copy_size;
+        reminding_size -= copy_size;
     }
 
     mbedtls_sha256_finish( &ctx, sha );
     mbedtls_sha256_free( &ctx );
 }
 
-static bool verify_firmware(mible_dfu_tag_t * tag, void * cert, void * sign, uint16_t sign_len)
+int mible_dfu_auth(dfu_ctx_t * p_ctx, uint32_t product_id, uint32_t dfu_pack_size)
 {
-    msc_crt_t crt;
-    ecc256_pk_t parent_pub = {
-        0xbe,0xf5,0x8b,0x02,0xda,0xe3,0xff,0xf8,0x54,0x1a,0xa0,0x44,0x8f,0xba,0xc4,0x4d,
-        0xb7,0xc6,0x9a,0x2f,0xa8,0xf0,0xb1,0xb6,0xff,0x7a,0xd9,0x51,0xdb,0x66,0x28,0xfa,
-        0xd7,0xf0,0x20,0xea,0x39,0xa2,0xee,0x86,0x7f,0xdd,0x78,0x3f,0xdc,0x2f,0xb0,0x86,
-        0x09,0x5c,0xc2,0x85,0x04,0x13,0xa2,0x80,0x2c,0x62,0x7d,0xbd,0xc7,0x15,0xf4,0xf9,
-    };
-    int ret;
-    uint8_t child_sig[64], child_sha[32], buffer_for_cert[MIBLE_DFU_CERT_MAX_SIZE];
-    uint16_t cert_len;
-    const unsigned char * cert_develop;
+    mible_dfu_tag_t * p_dfu_tag = (mible_dfu_tag_t *)p_ctx->tag;
+    int ret = 0;
 
-    /* get certificate of server */
-    cert_len = mbedtls_crt_pem2der(cert, tag->certification_size,
-                                   buffer_for_cert, MIBLE_DFU_CERT_MAX_SIZE);
-    if (0 == cert_len) {
-        MI_LOG_WARNING("can not transfer server certificate\n");
-        return false;
+    /* fetch tag */
+    {
+        /* find tag HEAD*/
+        uint32_t tag_offset = get_tag_offset(dfu_pack_size);
+        if (0xFFFFFFFF == tag_offset) {
+            MI_LOG_WARNING("Not found TAG HEAD(MAGIC NUM)\n");
+            return 1;
+        }
+        MI_LOG_DEBUG("TAG offset : 0x%X\n", tag_offset);
+
+        /* Get tag size */
+        uint16_t tag_size;
+        ret = mible_dfu_flash_read(&tag_size, sizeof(tag_size), tag_offset + 16); /* 16 = magic num */
+        if (MI_SUCCESS != ret) {
+            MI_LOG_WARNING("fail to read tag size (err %d)\n", ret);
+            return 2;
+        }
+
+        /* Check tag size (4 = CRC32) */
+        if (tag_size < 32) {
+            MI_LOG_WARNING("invalid tag size (mini size 32)\n");
+            return 3;
+        }
+
+        ret = mible_dfu_flash_read(p_ctx->tag, MIN(tag_size, 512), tag_offset);
+        if (MI_SUCCESS != ret) {
+            MI_LOG_WARNING("fail to read tag (err %d)\n", ret);
+            return 4;
+        }
+
+        if (product_id != p_dfu_tag->product_id) {
+            MI_LOG_WARNING("DFU package isn't suit this model.\n", p_dfu_tag->product_id);
+            return 5;
+        }
+        MI_LOG_DEBUG("Flag: %d\n", p_dfu_tag->flag);
+
+        /* fetch TLV */
+        mible_dfu_ver_t version;
+        ret = parse_tlv(MIBLE_DFU_TLV_NEW_VERSION,
+                        tag_offset + offsetof(mible_dfu_tag_t, payload),
+                        tag_size - offsetof(mible_dfu_tag_t, payload) - 4,    /* CRC and fixed elements */
+                        &version,
+                        sizeof(version));
+        if (MI_SUCCESS == ret) {
+            MI_LOG_DEBUG("new firmware %u.%u.%u_%04u\n", version.major, version.minor,
+                              version.revision, version.build);
+        } else {
+            MI_LOG_WARNING("Get new firmware version fail (err %d)\n", ret);
+        }
     }
 
-    ret = mi_crypto_crt_parse_der(buffer_for_cert, cert_len, NULL, &crt);
-    if (ret < 0) {
-        MI_LOG_WARNING("can not parse server certificate\n");
-        return false;
+    /* fetch certificates */
+    {
+        msc_crt_t crt;
+        uint8_t certs[p_dfu_tag->certificates_size];
+        ret = mible_dfu_flash_read(certs, p_dfu_tag->certificates_size,
+                                   p_dfu_tag->firmware_size + p_dfu_tag->tag_size);
+        if (MI_SUCCESS != ret) {
+            MI_LOG_WARNING("Can't read certificates (error %d)\n", ret);
+            return 10;
+        }
+
+        /* get server certificate */
+        char * pem_crt = strstr( (const char *) certs, PEM_HEADER );
+        uint16_t cert_len = mbedtls_crt_pem2der((const unsigned char *)pem_crt, p_dfu_tag->certificates_size,
+                                                p_ctx->server_der_crt, MIBLE_DFU_CERT_MAX_SIZE);
+
+        ret = mi_crypto_crt_parse_der(p_ctx->server_der_crt, cert_len, NULL, &crt);
+        if (ret < 0) {
+            MI_LOG_WARNING("Can't find server certificate: %d\n", ret);
+            return 11;
+        } else {
+            memcpy(&p_ctx->server_crt, &crt, sizeof crt);
+        }
+
+        /* get developer certificate */
+        pem_crt = strstr( (const char *) pem_crt+1, PEM_HEADER );
+        cert_len = mbedtls_crt_pem2der((const unsigned char *)pem_crt, p_dfu_tag->certificates_size,
+                                       p_ctx->developer_der_crt, MIBLE_DFU_CERT_MAX_SIZE);
+        ret = mi_crypto_crt_parse_der(p_ctx->developer_der_crt, cert_len, NULL, &crt);
+        if (ret < 0) {
+            MI_LOG_WARNING("Can't parse developer certificate: %d\n", ret);
+            return 12;
+        } else {
+            memcpy(&p_ctx->developer_crt, &crt, sizeof crt);
+        }
     }
 
-    /* verify certificate of server */
-    memcpy(child_sig, crt.sig, 64);
-    mi_crypto_sha256(crt.tbs.p, crt.tbs.len, child_sha);
-    ret = mi_crypto_ecc_verify(P256R1, parent_pub, child_sha, child_sig);
-    if (ret != 3) {
-        MI_LOG_WARNING("fail to verify server certificate\n");
-        return false;
-    }
-    MI_LOG_DEBUG("server certificate is verified\n");
-
-    memcpy(parent_pub, crt.pub.p, 64);     /* get server public key */
-    MI_LOG_DEBUG("mi server public key:\n");
-    MI_LOG_HEXDUMP(parent_pub, 64);
-
-    /* get certificate of developer */
-    cert_develop = (unsigned char *)strstr( (const char *) cert, PEM_FOOTER );
-    if (NULL == cert_develop) {
-        MI_LOG_WARNING("can not find developer certificate\n");
-        return false;
+    /* fetch signature */
+    {
+        uint16_t signature_size = dfu_pack_size - p_dfu_tag->firmware_size - p_dfu_tag->tag_size - p_dfu_tag->certificates_size;
+        uint8_t signature[signature_size];
+        mible_dfu_flash_read(signature, signature_size,
+                             p_dfu_tag->firmware_size + p_dfu_tag->tag_size + p_dfu_tag->certificates_size);
+        ret = mbedtls_read_signature(signature, signature_size, p_ctx->pack_sig, 64);
+        if (ret < 0) {
+            MI_LOG_WARNING("fail to get signature from DFU package.\n");
+            return 13;
+        }
     }
 
-    cert_len = mbedtls_crt_pem2der(cert_develop + strlen(PEM_FOOTER),
-                                    tag->certification_size,
-                                    buffer_for_cert,
-                                    MIBLE_DFU_CERT_MAX_SIZE);
-    if (0 == cert_len) {
-        MI_LOG_WARNING("can not transfer developer certificate\n");
-        return false;
-    }
+    calc_hash(p_ctx->pack_sha, p_dfu_tag->firmware_size + p_dfu_tag->tag_size);
 
-    ret = mi_crypto_crt_parse_der(buffer_for_cert, cert_len, NULL, &crt);
-    if (ret < 0) {
-        MI_LOG_WARNING("can not parse developer certificate\n");
-        return false;
-    }
-
-    /* verify certificate of developer */
-    memcpy(child_sig, crt.sig, 64);
-    mi_crypto_sha256(crt.tbs.p, crt.tbs.len, child_sha);
-    ret = mi_crypto_ecc_verify(P256R1, parent_pub, child_sha, child_sig);
-    if (ret != 3) {
-        MI_LOG_WARNING("fail to verify developer certificate\n");
-        return false;
-    }
-    MI_LOG_DEBUG("developer certificate is verified\n");
-
-    memcpy(parent_pub, crt.pub.p, 64);    /* get developer public key */
-    MI_LOG_DEBUG("developer public key:\n");
-    MI_LOG_HEXDUMP(parent_pub, 64);
-
-    /* verify signature */
-    ret = mbedtls_read_signature(sign, sign_len, child_sig, 64);
-    if (ret < 0) {
-        MI_LOG_WARNING("fail to get signature from firmware\n");
-        return false;
-    }
-
-    get_hash(child_sha, tag->firmware_size + tag->tag_size);
-    ret = mi_crypto_ecc_verify(P256R1, parent_pub, child_sha, child_sig);
-    if (ret != 3) {
-        MI_LOG_WARNING("fail to verify signature\n");
-        return false;
-    }
-    MI_LOG_DEBUG("firmware signature is verified\n");
-
-    return true;
+    return 0;
 }
 #endif
 

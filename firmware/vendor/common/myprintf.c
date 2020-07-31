@@ -40,9 +40,9 @@ _attribute_no_inline_ void debug_info_tx_pin_init()
 {
     gpio_setup_up_down_resistor(DEBUG_INFO_TX_PIN,PM_PIN_PULLUP_1M);
     gpio_set_func(DEBUG_INFO_TX_PIN, AS_GPIO);
-    gpio_set_output_en(DEBUG_INFO_TX_PIN, 1);
-    gpio_set_input_en(DEBUG_INFO_TX_PIN, 0);
 	gpio_write(DEBUG_INFO_TX_PIN, 1);
+    gpio_set_output_en(DEBUG_INFO_TX_PIN, 1);
+    gpio_set_input_en(DEBUG_INFO_TX_PIN, 0);	
 }
 
 /* Put it into a function independently, to prevent the compiler from 

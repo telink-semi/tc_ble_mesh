@@ -1,18 +1,97 @@
+/********************************************************************************************************
+ * @file     directed_forwarding.h 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
+
 #ifndef DIRECTED_FORWARDING_H
 #define DIRECTED_FORWARDING_H
 #include "../../proj/tl_common.h"
 #include "../../proj_lib/sig_mesh/app_mesh.h"
 
 #define DIRECTED_PROXY_EN					FEATURE_PROXY_EN
-#define DIRECTED_FRIEND_EN					0//FEATURE_FRIEND_EN
+#define DIRECTED_FRIEND_EN					FEATURE_FRIEND_EN
 
-#define MAX_FORWARDING_TBL_ENTRIES_CNT		0x40 // at least 20 , for ram debug now
-#define MAX_DISCOVERY_TBL_ENTRIES_CNT		0x10
+#define MAX_FIXED_PATH						32
+#define MAX_NON_FIXED_PATH					64
+#define MAX_DEPENDENT_NUM					(MAX_LPN_NUM+2) // 2 for directed client
+
+#define MAX_DSC_TBL							0x10
 #define MAX_CONCURRENT_CNT					4
-#define MAX_DEPENDENT_LIST_SIZE				MAX_LPN_NUM
+
 #define PATH_REPLY_DELAY_MS					500 // unit:ms
 #define PATH_REQUEST_DELAY_MS				150 // unit:ms
 //STATIC_ASSERT(MAX_FORWARDING_TBL_ENTRIES_CNT>=20);
+
+#define DIRECTED_CONTROL_GET						0x30bf
+#define DIRECTED_CONTROL_SET						0x31bf
+#define DIRECTED_CONTROL_STATUS						0x32bf
+#define PATH_METRIC_GET								0x33bf
+#define PATH_METRIC_SET								0x34bf		
+#define PATH_METRIC_STATUS							0x35bf
+#define DISCOVERY_TABLE_CAPABILITIES_GET  			0x36bf
+#define DISCOVERY_TABLE_CAPABILITIES_SET  			0x37bf
+#define DISCOVERY_TABLE_CAPABILITIES_STATUS  		0x38bf
+#define FORWARDING_TABLE_ADD  						0x39bf
+#define FORWARDING_TABLE_DELETE  					0x3abf
+#define FORWARDING_TABLE_STATUS  					0x3bbf
+#define FORWARDING_TABLE_DEPENDENTS_ADD  			0x3cbf
+#define FORWARDING_TABLE_DEPENDENTS_DELETE  		0x3dbf
+#define FORWARDING_TABLE_DEPENDENTS_STATUS			0x3ebf
+#define FORWARDING_TABLE_DEPENDENTS_GET  			0x3fbf
+#define FORWARDING_TABLE_DEPENDENTS_GET_STATUS  	0x40bf
+#define FORWARDING_TABLE_ENTRIES_COUNT_GET  		0x41bf
+#define FORWARDING_TABLE_ENTRIES_COUNT_STATUS  		0x42bf
+#define FORWARDING_TABLE_ENTRIES_GET  				0x43bf
+#define FORWARDING_TABLE_ENTRIES_STATUS  			0x44bf
+#define WANTED_LANES_GET							0x45bf
+#define WANTED_LANES_SET							0x46bf
+#define WANTED_LANES_STATUS							0x47bf
+#define TWO_WAY_PATH_GET							0x48bf
+#define TWO_WAY_PATH_SET							0x49bf
+#define	TWO_WAY_PATH_STATUS							0x4abf
+#define PATH_ECHO_INTERVAL_GET						0x4bbf
+#define	PATH_ECHO_INTERVAL_SET						0x4cbf
+#define	PATH_ECHO_INTERVAL_STATUS					0x4dbf
+#define DIRECTED_NETWORK_TRANSMIT_GET				0x4ebf
+#define DIRECTED_NETWORK_TRANSMIT_SET				0x4fbf
+#define DIRECTED_NETWORK_TRANSMIT_STATUS			0x50bf
+#define DIRECTED_RELAY_RETRANSMIT_GET  				0x51bf
+#define DIRECTED_RELAY_RETRANSMIT_SET  				0x52bf
+#define DIRECTED_RELAY_RETRANSMIT_STATUS  			0x53bf
+#define RSSI_THRESHOLD_GET							0x54bf
+#define RSSI_THRESHOLD_SET							0x55bf
+#define RSSI_THRESHOLD_STATUS						0x56bf
+#define DIRECTED_PATHS_GET							0x57bf
+#define DIRECTED_PATHS_STATUS						0x58bf
+#define DIRECTED_PUBLISH_POLICY_GET   				0x59bf
+#define DIRECTED_PUBLISH_POLICY_SET  				0x5abf
+#define DIRECTED_PUBLISH_POLICY_STATUS  			0x5bbf
+#define PATH_DISCOVERY_TIMING_CONTROL_GET			0x5cbf
+#define PATH_DISCOVERY_TIMING_CONTROL_SET			0x5dbf
+#define PATH_DISCOVERY_TIMING_CONTROL_STATUS		0x5ebf
+#define DIRECTED_CONTROL_NETWORK_TRANSMIT_GET		0x5fbf
+#define DIRECTED_CONTROL_NETWORK_TRANSMIT_SET		0x60bf
+#define DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS	0x61bf
+#define DIRECTED_CONTROL_RELAY_RETRANSMIT_GET		0x62bf
+#define DIRECTED_CONTROL_RELAY_RETRANSMIT_SET		0x63bf
+#define DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS	0x64bf
 
 enum{
 	NON_FIXED_PATH=0, 
@@ -31,40 +110,6 @@ enum{
 	DF_PATH_DSC_RETRY_WAIT,
 };
 
-enum{
-	DIRECTED_FORWARDING_DISABLE,
-	DIRECTED_FORWARDING_ENABLE,	
-	DIRECTED_FORWARDING_PROHIBIT,
-};
-
-enum{
-	DIRECTED_RELAY_DISABLE,
-	DIRECTED_RELAY_ENABLE,	
-	DIRECTED_RELAY_PROHIBIT,
-};
-
-enum{
-	DIRECTED_PROXY_DISABLE,
-	DIRECTED_PROXY_ENABLE,
-	DIRECTED_PROXY_NOT_SUPPORT,
-	DIRECTED_PROXY_PROHIBIT,
-	DIRECTED_PROXY_IGNORE = 0xff,
-};
-
-enum{
-	DIRECTED_PROXY_USE_DEFAULT_DISABLE,
-	DIRECTED_PROXY_USE_DEFAULT_ENABLE,
-	DIRECTED_PROXY_USE_DEFAULT_NOT_SUPPORT,
-	DIRECTED_PROXY_USE_DEFAULT_IGNORE = 0xff,
-};
-
-enum{
-	DIRECTED_FRIEND_DISABLE,
-	DIRECTED_FRIEND_ENABLE,
-	DIRECTED_FRIEND_NOT_SUPPORT,
-	DIRECTED_FRIEND_IGNORE = 0xff,
-};
-
 typedef enum{
 	BEAR_UNASSIGNED = 0,
 	BEAR_ADV = BIT(0),
@@ -75,6 +120,7 @@ typedef enum{
 
 enum{
 	METRIC_TYPE_NODE_COUNT,
+	METRIC_TYPE_RFU,
 };
 
 enum{
@@ -84,21 +130,34 @@ enum{
 	PATH_LIFETIME_10DAYS,
 };
 
-#define GET_PATH_LIFETIME(lifetime)     ((lifetime==PATH_LIFETIME_12MINS) ? 12*60 : (  \
+enum{
+	PATH_DISCOVERY_INTERVAL_5S=5*1000,
+	PATH_DISCOVERY_INTERVAL_30S=30*1000,
+};
+
+enum{
+	LANE_GUARD_INTERVAL_2S=2*1000,
+	LANE_GUARD_INTERVAL_10S=10*1000,
+};
+
+enum{
+	RSSI_MARGIN_PROHIBITED=0x33,
+};
+
+enum{
+	DEPENDENT_TYPE_REMOVE=0,
+	DEPENDENT_TYPE_ADD,	
+};
+
+#define GET_PATH_LIFETIME_MS(lifetime)     (((lifetime==PATH_LIFETIME_12MINS) ? 12*60 : (  \
 					                 (lifetime==PATH_LIFETIME_2HOURS) ? 2*60*60 : (  \
 					                 (lifetime==PATH_LIFETIME_24HOURS) ? 24*60*60 : 10*24*60*60 \
-					                 )))
+					                 )))*1000)
 
-enum{
-	PATH_DISCOVERY_INTERVAL_5S=5,
-	PATH_DISCOVERY_INTERVAL_30S=30,
-};
+#define GET_PATH_DSC_INTERVAL_MS(dsc_interval)	 		(dsc_interval?PATH_DISCOVERY_INTERVAL_30S:PATH_DISCOVERY_INTERVAL_5S)
 
-enum{
-	LANE_GUARD_INTERVAL_2S=2,
-	LANE_GUARD_INTERVAL_10S=10,
-};
 
+#define GET_LANE_GUARD_INTERVAL_MS(guard_interval)		(guard_interval?LANE_GUARD_INTERVAL_10S:LANE_GUARD_INTERVAL_2S)
 typedef struct{
 	u16 netkey_index;
 	directed_control_t directed_control;	
@@ -189,11 +248,6 @@ typedef struct{
 }forwarding_tbl_dependents_get_t;
 
 typedef struct{
-	u8 size;
-	addr_range_little_endian_t addr_range[MAX_DEPENDENT_LIST_SIZE];
-}dependents_addr_range_list_t;
-
-typedef struct{
 	u8 status;
 	u16 netkey_index:12;
 	u16 dependents_list_mask:2;
@@ -202,19 +256,15 @@ typedef struct{
 	u16 start_index;
 	u16 path_origin;
 	u16 destination;
-	u8  par[2+2+(MAX_DEPENDENT_LIST_SIZE)*sizeof(addr_range_little_endian_t)]; // 2(identifier) + 2(list size) + list
+	u8  par[2+2+2*(MAX_DEPENDENT_NUM)*sizeof(addr_range_t)]; // 2(identifier) + 2(list size) + fixed/non_fixed list
 }forwarding_tbl_dependents_get_sts_t;
-
-typedef struct{
-	u16 fixed_cnt;
-	u16 non_fixed_cnt;
-}entries_cnt_t;
 
 typedef struct{
 	u8 status;
 	u16 netkey_index;
-	u16 forwarding_tbl_update_identifier;
-	entries_cnt_t entries_cnt;
+	u16 update_id;
+	u16 fixed_cnt;
+	u16 non_fixed_cnt;
 }forwarding_tbl_entries_count_st_t;
 
 enum{
@@ -224,21 +274,73 @@ enum{
  	ENTRIES_GET_DST_MATCH = BIT(3),
 };
 
+enum{
+	DEPENDENT_LIST_SIZE_ZERO,
+	DEPENDENT_LIST_SIZE_ONE,
+	DEPENDENT_LIST_SIZE_TWO,
+	DEPENDENT_LIST_SIZE_ERR,	
+};
+	
 typedef struct{
 	u16 netkey_index:12;
 	u16 filter_mask:4;
 	u16 start_index;
-	u16 path_origin;
-	u16 destination;
-	u16 update_identifier;
+	u8 par[1];
 }forwarding_tbl_entries_get_t;
 
+typedef struct{
+	u16 fixed_path_flag:1;
+	u16 unicast_destination_flag:1;
+	u16 backward_path_validated_flag:1;
+	u16 bearer_toward_path_origin_indicator:1;
+	u16 bearer_toward_path_target_indicator:1;
+	u16 dependent_origin_list_size_indicator:2;
+	u16 dependent_target_list_size_indicator:2;
+	u16 prohibited:7;
+}forwarding_table_entry_head_t;
+
+typedef struct{	
+	forwarding_table_entry_head_t entry_head;
+	union {
+		u16 src_addr;
+		addr_range_t path_origin_unicast_addr_range;
+	};
+	u16 dependent_origin_list_size; 
+	u16 bearer_toward_path_origin;
+	union {
+		u16 dst_addr;			
+		addr_range_t path_target_unicast_addr_range;
+	};
+	u16 dependent_target_list_size;
+	u16 bearer_toward_path_target; 
+}fixed_path_st_t;
+
+typedef struct{	
+	forwarding_table_entry_head_t entry_head;
+	u8 lane_counter;
+	u16 path_lifetime;
+	u8 path_origin_forwarding_number;
+	union {
+		u16 src_addr;
+		addr_range_t path_origin_unicast_addr_range;
+	};
+	u16 dependent_origin_list_size;
+	u16 bearer_toward_path_origin;
+	union {
+		u16 dst_addr;			
+		addr_range_t path_target_unicast_addr_range;
+	};
+	u16 dependent_target_list_size;
+	u16 bearer_toward_path_target; 
+}non_fixed_path_st_t;
+
+#define MAX_ENTRY_STS_LEN		100
 typedef struct{
 	u8 status;
 	u16 netkey_index:12;
 	u16 filter_mask:4;
 	u16 start_index;
-	u8 par[100]; // list size, confirm later
+	u8 par[MAX_ENTRY_STS_LEN]; //
 }forwarding_tbl_entries_st_t;
 
 typedef struct{
@@ -259,7 +361,7 @@ typedef struct{
 }two_way_path_set_t;
 
 typedef struct{
-	u32 status;
+	u8 status;
 	u32 netkey_index:16;
 	u32 two_way_path:1;
 	u32 Prohibited:7;
@@ -306,6 +408,7 @@ typedef struct{
 	u8 	snd_ele_cnt;
 }path_addr_t;
 
+#if 0
 typedef struct{
 	u16 fixed_path_flag:1;
 	u16 unicast_destination_flag:1;
@@ -317,7 +420,7 @@ typedef struct{
 	u16 rfu:7;
 }forwarding_table_entry_head_t;
 
-#if 0
+
 typedef struct{	// one entry of the forwarding table
 	forwarding_table_entry_head_t entry_head;
 	union {
@@ -369,33 +472,39 @@ typedef struct{	// one entry of the forwarding table
 	u8  rfu:5;
 	u16 path_origin; 
 	u8  path_origin_snd_ele_cnt;
-	path_addr_t dependent_origin[MAX_DEPENDENT_LIST_SIZE];
+	path_addr_t dependent_origin[MAX_DEPENDENT_NUM];
 	u16 destination;
 	u8  path_target_snd_ele_cnt;
-	path_addr_t dependent_target[MAX_DEPENDENT_LIST_SIZE];
-	u8  forwarding_number;
-	u8  lane_counter;
+	path_addr_t dependent_target[MAX_DEPENDENT_NUM];
 	u16  bearer_toward_path_origin;
 	u16  bearer_toward_path_target;
-}forwarding_table_entry_t;
+}path_entry_com_t;
 
 typedef struct{
-	u8 path_need;
-	u32 lifetime_s;
-	u32 path_echo_timer_s;
+	u8 path_need:1;
+	u8 path_monitoring:1;
+	u32 lifetime_ms;
+	u32 path_echo_timer_ms;
 	u32 path_echo_reply_timeout_timer;
-	u32 path_monitor_s;
-}forwarding_timer_t;
+	u8  forwarding_number;
+	u8  lane_counter;
+}non_fixed_entry_state_t;
 
 typedef struct{
-	forwarding_timer_t state;
-	forwarding_table_entry_t entry;
-}forwarding_entry_par_t;
+	non_fixed_entry_state_t state;
+	path_entry_com_t entry;
+}non_fixed_entry_t;
 
 typedef struct{
-	u16 update_identifier;
-	forwarding_entry_par_t fwd_entry_par[MAX_FORWARDING_TBL_ENTRIES_CNT];
-}forwarding_table_t;
+	non_fixed_entry_t path[MAX_NON_FIXED_PATH];
+	u16 update_id;
+}non_fixed_fwd_tbl_t;
+
+typedef struct{	
+	path_entry_com_t path[MAX_FIXED_PATH];
+	u16 update_id;
+}fixed_fwd_tbl_t;
+
 
 typedef struct{
 	u8 path_need;
@@ -432,93 +541,165 @@ typedef struct{
 
 typedef struct{
 	u8 forwarding_number;
-	discovery_entry_par_t dsc_entry_par[MAX_DISCOVERY_TBL_ENTRIES_CNT];
+	discovery_entry_par_t dsc_entry_par[MAX_DSC_TBL];
 }discovery_table_t;
 
 typedef struct{
-	u8 st;
-	u16 dst;
-	u8 path_need;
-}origin_state_t;
+#if MD_SERVER_EN
+	model_common_t srv;
+	mesh_directed_forward_t directed_forward;
+	fixed_fwd_tbl_t fixed_fwd_tbl[NET_KEY_MAX];
+#endif
+#if MD_CLIENT_EN
+	model_client_common_t clnt;
+#endif
+}model_df_cfg_t;
 
-typedef struct{
-	origin_state_t state[MAX_FORWARDING_TBL_ENTRIES_CNT];
-}path_origin_state_t;
+
+extern u32 mesh_md_df_addr;
+extern model_df_cfg_t 	model_sig_df_cfg;
 
 int is_directed_forwarding_en(u16 netkey_offset);
 int is_directed_relay_en(u16 netkey_offset);
 int is_directed_proxy_en(u16 netkey_offset);
 int is_directed_friend_en(u16 netkey_offset);
 int is_directed_forwarding_op(u16 op);
+u8 get_directed_proxy_dependent_ele_cnt(u16 netkey_offset, u16 addr);
+u8 get_directed_friend_dependent_ele_cnt(u16 netkey_offset, u16 addr);
+int is_proxy_use_directed(u16 netkey_offset);
+void directed_proxy_dependent_node_delete();
+void mesh_directed_forwarding_bind_state_update();
 void mesh_directed_forwarding_default_val_init();
-forwarding_entry_par_t * get_forwarding_entry(u16 netkey_offset, u16 path_origin, u16 destination, u8 entry_type);
-int directed_forwarding_initial_start(u16 netkey_index, u16 destination, addr_range_big_endian_t *p_dependent);
-int directed_forwarding_dependents_update_start(u16 netkey_offset, u8 type, u16 path_enpoint, addr_range_big_endian_t dependent_range_addr);
-void mesh_directed_forwarding_proc(u8 *bear, int src_type);
-int is_address_in_dependent_list(forwarding_table_entry_t *p_fwd_entry, u16 addr);
+void mesh_directed_proxy_capa_report(int netkey_offset);
+path_entry_com_t *get_forwarding_entry(u16 netkey_offset, u16 path_origin, u16 destination);
+int mesh_df_path_monitoring(path_entry_com_t *p_entry);
+int directed_forwarding_initial_start(u16 netkey_index, u16 destination, u16 dependent_addr, u16 dependent_ele_cnt);
+int directed_forwarding_dependents_update_start(u16 netkey_offset, u8 type, u16 path_enpoint, u16 dependent_addr, u8 dependent_ele_cnt);
+void mesh_directed_forwarding_proc(u8 *p_bear, u8 *par, int par_len, int src_type);
+int is_address_in_dependent_list(path_entry_com_t *p_fwd_entry, u16 addr);
 int forwarding_tbl_dependent_add(u16 range_start, u8 range_length, path_addr_t *p_dependent_list);
-forwarding_entry_par_t * add_new_path_entry_in_forwarding_tbl(u16 netkey_offset, forwarding_table_entry_t *p);
 
 discovery_entry_par_t * get_discovery_entry_correspond2_path_request(u16 netkey_offset, u16 path_origin, u8 forwarding_number);
-/**
- * @brief      This function process config message for directed forwarding
- * @param[in]  par
- * @param[in]  par_len
- * @param[in]  cb_par -  the resource for the message
- * @return     status
- */
+int cfg_cmd_send_path_request(mesh_ctl_path_req_t *p_path_req, u8 len, u16 netkey_offset);
+int cfg_cmd_path_metric_get(u16 node_adr, u16 nk_idx);
+int cfg_cmd_path_metric_set(u16 node_adr, u16 nk_idx, u8 metric_type, u8 lifetime);
+
+ #if (MD_SERVER_EN&&!WIN32)
 int mesh_cmd_sig_cfg_directed_control_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_directed_control_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_path_metric_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_path_metric_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_path_metric_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_dsc_tbl_capa_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_dsc_tbl_capa_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_dsc_tbl_capa_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_forwarding_tbl_add(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_forwarding_tbl_delete(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_forwarding_tbl_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_forwarding_tbl_dependents_add(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_forwarding_tbl_dependents_delete(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_forwarding_tbl_dependents_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_forwarding_tbl_dependents_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_forwarding_tbl_dependents_get_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_forwarding_tbl_entries_count_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_forwarding_tbl_entries_count_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_forwarding_tbl_entries_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_forwarding_tbl_entries_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_wanted_lanes_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_wanted_lanes_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_wanted_lanes_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_two_way_path_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_two_way_path_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_two_way_path_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_path_echo_interval_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_path_echo_interval_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_path_echo_interval_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_network_transmit_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_network_transmit_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_directed_network_transmit_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_relay_retransmit_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_relay_retransmit_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_directed_relay_retransmit_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_rssi_threshold_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_rssi_threshold_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_rssi_threshold_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_paths_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_directed_paths_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_publish_policy_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_publish_policy_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_directed_publish_policy_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_path_discovery_timing_control_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_path_discovery_timing_control_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_path_discovery_timing_control_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_control_network_transmit_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_control_network_transmit_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_cfg_directed_control_network_transmit_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_control_relay_transmit_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_control_relay_transmit_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+#else
+#define mesh_cmd_sig_cfg_directed_control_get							(0)
+#define mesh_cmd_sig_cfg_directed_control_set							(0)	
+#define mesh_cmd_sig_cfg_path_metric_get								(0)
+#define mesh_cmd_sig_cfg_path_metric_set								(0)
+#define mesh_cmd_sig_cfg_dsc_tbl_capa_get								(0)
+#define mesh_cmd_sig_cfg_dsc_tbl_capa_set								(0)
+#define mesh_cmd_sig_cfg_forwarding_tbl_add								(0)		
+#define mesh_cmd_sig_cfg_forwarding_tbl_delete							(0)
+#define mesh_cmd_sig_cfg_forwarding_tbl_dependents_add					(0)
+#define mesh_cmd_sig_cfg_forwarding_tbl_dependents_delete				(0)
+#define mesh_cmd_sig_cfg_forwarding_tbl_dependents_get					(0)
+#define mesh_cmd_sig_cfg_forwarding_tbl_entries_count_get				(0)
+#define mesh_cmd_sig_cfg_forwarding_tbl_entries_get						(0)
+#define mesh_cmd_sig_cfg_wanted_lanes_get								(0)
+#define mesh_cmd_sig_cfg_wanted_lanes_set								(0)
+#define mesh_cmd_sig_cfg_two_way_path_get								(0)
+#define mesh_cmd_sig_cfg_two_way_path_set								(0)		
+#define mesh_cmd_sig_cfg_path_echo_interval_get							(0)
+#define mesh_cmd_sig_cfg_path_echo_interval_set							(0)
+#define mesh_cmd_sig_cfg_directed_network_transmit_get					(0)
+#define mesh_cmd_sig_cfg_directed_network_transmit_set					(0)
+#define mesh_cmd_sig_cfg_directed_relay_retransmit_get					(0)
+#define mesh_cmd_sig_cfg_directed_relay_retransmit_set					(0)
+#define mesh_cmd_sig_cfg_rssi_threshold_get								(0)
+#define mesh_cmd_sig_cfg_rssi_threshold_set								(0)
+#define mesh_cmd_sig_cfg_directed_paths_get								(0)
+#define mesh_cmd_sig_cfg_directed_publish_policy_get					(0)
+#define mesh_cmd_sig_cfg_directed_publish_policy_set					(0)
+#define mesh_cmd_sig_cfg_path_discovery_timing_control_get				(0)
+#define mesh_cmd_sig_cfg_path_discovery_timing_control_set				(0)
+#define mesh_cmd_sig_cfg_directed_control_network_transmit_get			(0)
+#define mesh_cmd_sig_cfg_directed_control_network_transmit_set			(0)
+#define mesh_cmd_sig_cfg_directed_control_relay_transmit_get			(0)
+#define mesh_cmd_sig_cfg_directed_control_relay_transmit_set			(0)
+#endif
+
+#if MD_CLIENT_EN
+int mesh_cmd_sig_cfg_directed_control_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_path_metric_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_dsc_tbl_capa_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_forwarding_tbl_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_forwarding_tbl_dependents_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_forwarding_tbl_dependents_get_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_forwarding_tbl_entries_count_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_forwarding_tbl_entries_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_wanted_lanes_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_two_way_path_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_path_echo_interval_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_directed_network_transmit_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_directed_relay_retransmit_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_rssi_threshold_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_directed_paths_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_directed_publish_policy_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_path_discovery_timing_control_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_cfg_directed_control_network_transmit_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_control_relay_transmit_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+#else
+#define mesh_cmd_sig_cfg_directed_control_status						(0)
+#define mesh_cmd_sig_cfg_path_metric_status								(0)
+#define mesh_cmd_sig_cfg_dsc_tbl_capa_status							(0)
+#define mesh_cmd_sig_cfg_forwarding_tbl_status							(0)
+#define mesh_cmd_sig_cfg_forwarding_tbl_dependents_status				(0)	
+#define mesh_cmd_sig_cfg_forwarding_tbl_dependents_get_status 			(0)
+#define mesh_cmd_sig_cfg_forwarding_tbl_entries_count_status			(0)
+#define mesh_cmd_sig_cfg_forwarding_tbl_entries_status					(0)
+#define mesh_cmd_sig_cfg_wanted_lanes_status							(0)
+#define mesh_cmd_sig_cfg_two_way_path_status							(0)
+#define mesh_cmd_sig_cfg_path_echo_interval_status						(0)
+#define mesh_cmd_sig_cfg_directed_network_transmit_status				(0)
+#define mesh_cmd_sig_cfg_directed_relay_retransmit_status				(0)	
+#define mesh_cmd_sig_cfg_rssi_threshold_status				 			(0)
+#define mesh_cmd_sig_cfg_directed_paths_status							(0)
+#define mesh_cmd_sig_cfg_directed_publish_policy_status					(0)
+#define mesh_cmd_sig_cfg_path_discovery_timing_control_status 			(0)
+#define mesh_cmd_sig_cfg_directed_control_network_transmit_status		(0)
+#define mesh_cmd_sig_cfg_directed_control_relay_transmit_status			(0)
+#endif
+
+static inline non_fixed_entry_t *GET_NON_FIXED_ENTRY_POINT(u8 *p){
+	return (non_fixed_entry_t *)(p - OFFSETOF(non_fixed_entry_t,entry));
+}
 
 #endif

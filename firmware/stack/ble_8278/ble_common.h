@@ -439,10 +439,12 @@ typedef enum {
 #define 		ADV_INTERVAL_90MS							144
 #define 		ADV_INTERVAL_100MS                          160
 #define 		ADV_INTERVAL_105MS                          168
+#define 		ADV_INTERVAL_160MS                          256
 #define 		ADV_INTERVAL_200MS                          320
 #define 		ADV_INTERVAL_205MS                          328
 #define 		ADV_INTERVAL_300MS                          480
 #define 		ADV_INTERVAL_305MS                          488
+#define 		ADV_INTERVAL_360MS                          576
 #define 		ADV_INTERVAL_400MS                          640
 #define 		ADV_INTERVAL_405MS                          648
 #define 		ADV_INTERVAL_500MS                          800

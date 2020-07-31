@@ -19,7 +19,7 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../../proj/tl_common.h"
+#include "proj/tl_common.h"
 
 
 extern u8 adv_filter ;
@@ -29,8 +29,8 @@ extern u8 mesh_provisioner_buf_enable ;
 extern u8 ble_state;
 
 extern u8					blt_state;
-#ifndef VENDOR_ID
-#if (WIN32 && (0 == DEBUG_VENDOR_CMD_EN))    // because app can't set value by macro
+#ifndef VENDOR_ID // user can define in "user_app_config.h"
+#if (WIN32 && (0 == DEBUG_VENDOR_CMD_EN) && (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_NONE))    // because app can't set value by macro
 #define         VENDOR_ID                       0x0000
 #else
 	#if MI_API_ENABLE

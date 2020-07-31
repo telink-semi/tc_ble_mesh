@@ -528,7 +528,7 @@ void user_init()
 #endif
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
-#if BLT_SOFTWARE_TIMER_ENABLE
+#if BLE_REMOTE_PM_ENABLE
 	blc_ll_initPowerManagement_module();        //pm module:      	 optional
 #endif
 

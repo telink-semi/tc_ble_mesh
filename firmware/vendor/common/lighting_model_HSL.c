@@ -86,7 +86,7 @@ int mesh_cmd_sig_light_hsl_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	return mesh_light_hsl_st_rsp(cb_par);
 }
 
-int light_hue_set(mesh_cmd_light_hue_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list)
+int light_hue_set(mesh_cmd_light_hue_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list)
 {
 	//if(is_valid_hue(p_set->hue)){
 		return level_u16_set((mesh_cmd_lightness_set_t *)p_set, par_len, op, idx, retransaction, ST_TRANS_HSL_HUE, pub_list);
@@ -95,7 +95,7 @@ int light_hue_set(mesh_cmd_light_hue_set_t *p_set, int par_len, u16 op, int idx,
 	return 0;
 }
 
-int light_sat_set(mesh_cmd_light_sat_set_t *p_set, int par_len, u16 op, int idx, u8 retransaction, st_pub_list_t *pub_list)
+int light_sat_set(mesh_cmd_light_sat_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list)
 {
 	//if(is_valid_sat(p_set->sat)){
 		return level_u16_set((mesh_cmd_lightness_set_t *)p_set, par_len, op, idx, retransaction, ST_TRANS_HSL_SAT, pub_list);
