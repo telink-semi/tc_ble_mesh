@@ -24,36 +24,37 @@
 //  TelinkSigMeshLib
 //
 //  Created by 梁家誌 on 2020/3/26.
-//  Copyright © 2020 梁家誌. All rights reserved.
+//  Copyright © 2020 Telink. All rights reserved.
 //
 
 #import "SigRemoteAddManager.h"
+#import "SigProvisioningData.h"
 
-//typedef void(^InboundPDUNumberPDUReportCallBack)(NSInteger inboundPDUNumber);
 typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 @interface SigRemoteAddManager ()<SigMessageDelegate>
-@property (nonatomic, assign) BOOL isRemoteScaning;
-@property (nonatomic, assign) UInt8 currentMaxScannedItems;
-@property (nonatomic, weak) id oldDelegateForDeveloper;
-@property (nonatomic, strong) NSMutableArray <SigRemoteScanRspModel *>*remoteScanRspModels;
+@property (nonatomic,assign) BOOL isRemoteScaning;
+@property (nonatomic,assign) UInt8 currentMaxScannedItems;
+@property (nonatomic,weak) id oldDelegateForDeveloper;
+@property (nonatomic,strong) NSMutableArray <SigRemoteScanRspModel *>*remoteScanRspModels;
 @property (nonatomic,copy) remoteProvisioningScanReportCallBack reportBlock;
 @property (nonatomic,copy) resultBlock scanResultBlock;
 
-@property (nonatomic, assign) UInt16 unicastAddress;
-@property (nonatomic, strong) NSData *staticOobData;
-@property (nonatomic, strong) SigScanRspModel *unprovisionedDevice;
+@property (nonatomic,assign) UInt16 unicastAddress;
+@property (nonatomic,strong) NSData *staticOobData;
+@property (nonatomic,strong) SigScanRspModel *unprovisionedDevice;
 @property (nonatomic,copy) addDevice_prvisionSuccessCallBack provisionSuccessBlock;
 @property (nonatomic,copy) ErrorBlock failBlock;
-@property (nonatomic, assign) BOOL isProvisionning;
+@property (nonatomic,assign) BOOL isProvisionning;
 
 // for remote provision
-@property (nonatomic, assign) UInt16 reportNodeAddress;
-@property (nonatomic, strong) NSData *reportNodeUUID;
-@property (nonatomic, assign) NSInteger outboundPDUNumber;
-@property (nonatomic, assign) NSInteger inboundPDUNumber;
+@property (nonatomic,assign) UInt16 reportNodeAddress;
+@property (nonatomic,strong) NSData *reportNodeUUID;
+@property (nonatomic,assign) NSInteger outboundPDUNumber;
+@property (nonatomic,assign) NSInteger inboundPDUNumber;
 @property (nonatomic,copy,nullable) prvisionResponseCallBack provisionResponseBlock;
-@property (nonatomic, strong) SigMessageHandle *messageHandle;
+@property (nonatomic,strong) SigMessageHandle *messageHandle;
+@property (nonatomic, retain) dispatch_semaphore_t semaphore;
 
 @end
 
@@ -68,9 +69,11 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     return shareManager;
 }
 
+#pragma mark - remote scan
+
 - (void)startRemoteProvisionScanWithReportCallback:(remoteProvisioningScanReportCallBack)reportCallback resultCallback:(resultBlock)resultCallback {
     if (self.isRemoteScaning) {
-        NSString *errstr = @"SigRemoteAddManager is remoteScaning, please call stopRemoteProvisionScan";
+        NSString *errstr = @"SigRemoteAddManager is remoteScaning, please call `stopRemoteProvisionScan`";
         TeLogError(@"%@",errstr);
         NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
         if (resultCallback) {
@@ -86,6 +89,46 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     self.isRemoteScaning = YES;
     [self startSingleRemoteProvisionScan];
 }
+
+- (void)stopRemoteProvisionScan {
+    self.isRemoteScaning = NO;
+}
+
+- (void)endRemoteProvisionScan {
+    self.isRemoteScaning = NO;
+    if (self.messageHandle) {
+        [self.messageHandle cancel];
+    }
+    if (self.currentMaxScannedItems >= 0x04 && self.currentMaxScannedItems <= 0xFF) {
+        if (self.scanResultBlock) {
+            self.scanResultBlock(YES, nil);
+        }
+    } else {
+        NSString *errstr = @"Reomte scan fail: current connected node is no support remote provision scan.";
+        TeLogError(@"%@",errstr);
+        NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
+        if (self.scanResultBlock) {
+            self.scanResultBlock(NO, err);
+        }
+    }
+}
+
+- (void)startSingleRemoteProvisionScan {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(endSingleRemoteProvisionScan) object:nil];
+        [self performSelector:@selector(endSingleRemoteProvisionScan) withObject:nil afterDelay:kScanCapabilitiesTimeout];
+    });
+    [self getRemoteProvisioningScanCapabilities];
+}
+
+- (void)endSingleRemoteProvisionScan {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(endSingleRemoteProvisionScan) object:nil];
+    });
+    [self endRemoteProvisionScan];
+}
+
+#pragma mark - remote provision
 
 /// founcation4: remote provision (SDK need connected provisioned node.)
 /// @param provisionAddress address of new device.
@@ -108,7 +151,8 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     self.failBlock = fail;
     self.unprovisionedDevice = [SigDataSource.share getScanRspModelWithUUID:[SigBearer.share getCurrentPeripheral].identifier.UUIDString];
     SigNetkeyModel *provisionNet = nil;
-    for (SigNetkeyModel *net in SigDataSource.share.netKeys) {
+    NSArray *netKeys = [NSArray arrayWithArray:SigDataSource.share.netKeys];
+    for (SigNetkeyModel *net in netKeys) {
         if ([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] && netkeyIndex == net.index) {
             provisionNet = net;
             break;
@@ -127,6 +171,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     __weak typeof(self) weakSelf = self;
     TeLogInfo(@"start provision.");
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
+        [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
             if (weakSelf.isProvisionning) {
                 TeLog(@"disconnect in provisioning，provision fail.");
@@ -142,9 +187,11 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     self.messageHandle = [SDKLibCommand remoteProvisioningLinkOpenWithDestination:reportNodeAddress UUID:reportNodeUUID retryCount:kRemoteProgressRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
         TeLogInfo(@"linkOpen responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigRemoteProvisioningStatus_success) {
-            [weakSelf getCapabilitiesWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-                [weakSelf getCapabilitiesResultWithResponse:response];
-            }];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [weakSelf getCapabilitiesWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                    [weakSelf getCapabilitiesResultWithResponse:response];
+                }];
+            });
         } else {
             [self provisionFail];
             TeLogDebug(@"sentProvisionConfirmationPdu error, parameters= %@",responseMessage.parameters);
@@ -156,42 +203,14 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             TeLogDebug(@"sentProvisionConfirmationPdu error = %@",error.domain);
         }
     }];
-    
-}
-
-- (void)stopRemoteProvisionScan {
-    self.isRemoteScaning = NO;
-}
-
-- (void)endRemoteProvisionScan {
-    self.isRemoteScaning = NO;
-    if (self.currentMaxScannedItems >= 0x04 && self.currentMaxScannedItems <= 0xFF) {
-        if (self.scanResultBlock) {
-            self.scanResultBlock(YES, nil);
-        }
-    } else {
-        NSString *errstr = @"Reomte scan fail: current connected node is no support remote provision scan.";
-        TeLogError(@"%@",errstr);
-        NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
-        if (self.scanResultBlock) {
-            self.scanResultBlock(NO, err);
-        }
-    }
-}
-
-- (void)startSingleRemoteProvisionScan {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(endSingleRemoteProvisionScan) object:nil];
-        [self performSelector:@selector(endSingleRemoteProvisionScan) withObject:nil afterDelay:kScannedItemsTimeout*2];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(remoteProvisionTimeout) object:nil];
+        [self performSelector:@selector(remoteProvisionTimeout) withObject:nil afterDelay:kRemoteProgressTimeout];
     });
-    [self getRemoteProvisioningScanCapabilities];
 }
 
-- (void)endSingleRemoteProvisionScan {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(endSingleRemoteProvisionScan) object:nil];
-    });
-    [self endRemoteProvisionScan];
+- (void)remoteProvisionTimeout {
+    [self provisionFail];
 }
 
 // 1.remoteProvisioningScanCapabilitiesGet
@@ -203,7 +222,6 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             weakSelf.currentMaxScannedItems = responseMessage.maxScannedItems;
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(endSingleRemoteProvisionScan) object:nil];
-            [weakSelf performSelector:@selector(endSingleRemoteProvisionScan) withObject:nil afterDelay:kScannedItemsTimeout*2];
             [weakSelf performSelector:@selector(startRemoteProvisioningScan) withObject:nil afterDelay:0.5];
         });
 //        } else {
@@ -221,19 +239,45 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 // 2.remoteProvisioningScanStart
 - (void)startRemoteProvisioningScan {
-    self.messageHandle = [SDKLibCommand remoteProvisioningScanStartWithDestination:kMeshAddress_allNodes scannedItemsLimit:kScannedItemsLimit timeout:kScannedItemsTimeout UUID:nil retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanStatus * _Nonnull responseMessage) {
-        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
-    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//    self.messageHandle = [SDKLibCommand remoteProvisioningScanStartWithDestination:kMeshAddress_allNodes scannedItemsLimit:kScannedItemsLimit timeout:kScannedItemsTimeout UUID:nil retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanStatus * _Nonnull responseMessage) {
+//        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//    }];
+    
+    //since v3.2.2, remote provision with deviceKey.
+    __weak typeof(self) weakSelf = self;
+    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
+    [oprationQueue addOperationWithBlock:^{
+        //这个block语句块在子线程中执行
+        NSLog(@"oprationQueue");
+        for (SigNodeModel *node in SigDataSource.share.curNodes) {
+            if (!weakSelf.isRemoteScaning) {
+                return;
+            }
+            weakSelf.semaphore = dispatch_semaphore_create(0);
+            weakSelf.messageHandle = [SDKLibCommand remoteProvisioningScanStartWithDestination:node.address scannedItemsLimit:kScannedItemsLimit timeout:kScannedItemsTimeout UUID:nil retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanStatus * _Nonnull responseMessage) {
+                TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                [NSThread sleepForTimeInterval:0.1];
+                dispatch_semaphore_signal(weakSelf.semaphore);
+            }];
+            //Most provide 3 seconds to send remoteProvisioningScan every node.
+            dispatch_semaphore_wait(weakSelf.semaphore, kSendOneNodeScanTimeout);
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(endSingleRemoteProvisionScan) object:nil];
+            [weakSelf performSelector:@selector(endSingleRemoteProvisionScan) withObject:nil afterDelay:kScannedItemsTimeout*2];
+        });
     }];
-
 }
 
 - (void)setState:(ProvisionigState)state{
     _state = state;
     if (state == ProvisionigState_fail) {
         [self reset];
-        SigMeshLib.share.delegateForDeveloper = self.oldDelegateForDeveloper;
+        SigMeshLib.share.delegateForDeveloper = self.oldDelegateForDeveloper; 
         if (self.failBlock) {
             NSError *err = [NSError errorWithDomain:@"provision fail." code:-1 userInfo:nil];
             self.failBlock(err);
@@ -249,10 +293,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     return self.provisioningCapabilities.algorithms.fipsP256EllipticCurve == 1;
 }
 
-/// This method sends the provisioning request to the device
-/// over the Bearer specified in the init. Additionally, it
-/// adds the request payload to given inputs. Inputs are
-/// required in device authorization.
+/// This method sends the provisioning request to the device over the Bearer specified in the init. Additionally, it adds the request payload to given inputs. Inputs are required in device authorization.
 ///
 /// - parameter request: The request to be sent.
 /// - parameter inputs:  The Provisioning Inputs.
@@ -284,31 +325,40 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     
     SigNodeModel *model = [[SigNodeModel alloc] init];
     [model setAddress:address];
-    VC_node_info_t info = model.nodeInfo;
-    info.element_cnt = ele_count;
     model.deviceKey = [LibTools convertDataToHexStr:devKeyData];
     model.peripheralUUID = nil;
     model.UUID = identify;
     //Attention: There isn't scanModel at remote add, so develop need add macAddress in provisionSuccessCallback.
     model.macAddress = [LibTools convertDataToHexStr:[LibTools turnOverData:[_reportNodeUUID subdataWithRange:NSMakeRange(_reportNodeUUID.length - 6, 6)]]];
-    model.nodeInfo = info;
+    
+    SigPage0 *compositionData = [[SigPage0 alloc] init];
+    NSMutableArray *elements = [NSMutableArray array];
+    if (ele_count) {
+        for (int i=0; i<ele_count; i++) {
+            SigElementModel *ele = [[SigElementModel alloc] init];
+            [elements addObject:ele];
+        }
+    }
+    compositionData.elements = elements;
+    model.compositionData = compositionData;
+
     [SigDataSource.share addAndSaveNodeToMeshNetworkWithDeviceModel:model];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
+    [SigBluetooth.share setBluetoothDisconnectCallback:nil];
 }
 
 - (void)provisionFail {
     [self.messageHandle cancel];
     self.state = ProvisionigState_fail;
+    self.provisionResponseBlock = nil;
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
 }
 
-/// This method should be called when the OOB value has been received
-/// and Auth Value has been calculated.
-/// It computes and sends the Provisioner Confirmation to the device.
+/// This method should be called when the OOB value has been received and Auth Value has been calculated. It computes and sends the Provisioner Confirmation to the device.
 ///
 /// - parameter value: The 16 byte long Auth Value.
 - (void)authValueReceivedData:(NSData *)data {
@@ -342,10 +392,6 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     self.provisionResponseBlock = block;
     [self cancelLastMessageHandle];
     [self identifyWithAttentionTimer:0];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
-        [self performSelector:@selector(getCapabilitiesTimeout) withObject:nil afterDelay:timeout];
-    });
 }
 
 /**
@@ -407,66 +453,50 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     [self.provisioningData prepareWithNetwork:SigDataSource.share networkKey:self.networkKey unicastAddress:self.unicastAddress];
     PublicKey *publicKey = [[PublicKey alloc] initWithPublicKeyType:PublicKeyType_noOobPublicKey];
     AuthenticationMethod authenticationMethod = AuthenticationMethod_noOob;
+    self.authenticationMethod = AuthenticationMethod_noOob;
 
     SigProvisioningPdu *startPdu = [[SigProvisioningPdu alloc] initProvisioningstartPduWithAlgorithm:Algorithm_fipsP256EllipticCurve publicKeyType:publicKey.publicKeyType authenticationMethod:authenticationMethod authenticationAction:0 authenticationSize:0];
     self.outboundPDUNumber = 1;
     [self sendPdu:startPdu andAccumulateToData:self.provisioningData outboundPDUNumber:self.outboundPDUNumber complete:nil];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduTimeout) object:nil];
-        [self performSelector:@selector(sentStartProvisionPduTimeout) withObject:nil afterDelay:timeout];
-    });
+
 }
 
 - (void)sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:(NSData *)oobData timeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
     TeLogInfo(@"\n\n==========provision:step2(staticOob)\n\n");
-//    // Is the Provisioner Manager in the right state?
-//    if (self.state != ProvisionigState_capabilitiesReceived) {
-//        TeLogError(@"current state is wrong.");
-//        return;
-//    }
-//
-//    // Ensure the Network Key is set.
-//    if (self.networkKey == nil) {
-//        TeLogError(@"current networkKey isn't specified.");
-//        return;
-//    }
-//
-//    // Is the Bearer open?
-//    if (!SigBearer.share.isOpen) {
-//        TeLogError(@"current node's bearer isn't open.");
-//        return;
-//    }
-//
-//    self.provisionResponseBlock = block;
-//    [self cancelLastMessageHandle];
+    // Is the Provisioner Manager in the right state?
+    if (self.state != ProvisionigState_capabilitiesReceived) {
+        TeLogError(@"current state is wrong.");
+        return;
+    }
+
+    // Ensure the Network Key is set.
+    if (self.networkKey == nil) {
+        TeLogError(@"current networkKey isn't specified.");
+        return;
+    }
+
+    // Is the Bearer open?
+    if (!SigBearer.share.isOpen) {
+        TeLogError(@"current node's bearer isn't open.");
+        return;
+    }
+
+    self.provisionResponseBlock = block;
+    [self cancelLastMessageHandle];
     
-//    [self.provisioningData generateProvisionerRandomAndProvisionerPublicKey];
-//    [self.provisioningData provisionerDidObtainAuthValue:oobData];
-//
-//    // Send Provisioning Start request.
-//    self.state = ProvisionigState_provisioning;
-//    [self.provisioningData prepareWithNetwork:SigDataSource.share networkKey:self.networkKey unicastAddress:self.unicastAddress];
-//    PublicKey *publicKey = [[PublicKey alloc] initWithPublicKeyType:PublicKeyType_noOobPublicKey];
-//    AuthenticationMethod authenticationMethod = AuthenticationMethod_staticOob;
-//
-//    SigProvisioningPdu *startPdu = [[SigProvisioningPdu alloc] initProvisioningstartPduWithAlgorithm:Algorithm_fipsP256EllipticCurve publicKeyType:publicKey.publicKeyType authenticationMethod:authenticationMethod authenticationAction:0 authenticationSize:0];
-//    self.outboundPDUNumber = 1;
-//    __weak typeof(self) weakSelf = self;
-//    [self sendPdu:startPdu andAccumulateToData:self.provisioningData outboundPDUNumber:self.outboundPDUNumber complete:^(BOOL isSuccess) {
-//        if (isSuccess) {
-//            weakSelf.authenticationMethod = authenticationMethod;
-//            // Send the Public Key of the Provisioner.
-//            SigProvisioningPdu *publicPdu = [[SigProvisioningPdu alloc] initProvisioningPublicKeyPduWithPublicKey:weakSelf.provisioningData.provisionerPublicKey];
-//            [weakSelf sendPdu:publicPdu andAccumulateToData:weakSelf.provisioningData outboundPDUNumber:2 complete:nil];
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(sentStartProvisionPduTimeout) object:nil];
-//                [weakSelf performSelector:@selector(sentStartProvisionPduTimeout) withObject:nil afterDelay:timeout];
-//            });
-//        } else {
-//            TeLogError(@"send outboundPDUNumber:1, no response number:1.");
-//            [weakSelf sentStartProvisionPduTimeout];
-//        }
-//    }];
+    [self.provisioningData generateProvisionerRandomAndProvisionerPublicKey];
+    [self.provisioningData provisionerDidObtainAuthValue:oobData];
+
+    // Send Provisioning Start request.
+    self.state = ProvisionigState_provisioning;
+    [self.provisioningData prepareWithNetwork:SigDataSource.share networkKey:self.networkKey unicastAddress:self.unicastAddress];
+    PublicKey *publicKey = [[PublicKey alloc] initWithPublicKeyType:PublicKeyType_noOobPublicKey];
+    AuthenticationMethod authenticationMethod = AuthenticationMethod_staticOob;
+    self.authenticationMethod = AuthenticationMethod_staticOob;
+
+    SigProvisioningPdu *startPdu = [[SigProvisioningPdu alloc] initProvisioningstartPduWithAlgorithm:Algorithm_fipsP256EllipticCurve publicKeyType:publicKey.publicKeyType authenticationMethod:authenticationMethod authenticationAction:0 authenticationSize:0];
+    self.outboundPDUNumber = 1;
+    [self sendPdu:startPdu andAccumulateToData:self.provisioningData outboundPDUNumber:self.outboundPDUNumber complete:nil];
 }
 
 #pragma mark step2.5:Publickey
@@ -475,16 +505,10 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
     self.provisionResponseBlock = block;
     [self cancelLastMessageHandle];
-    self.authenticationMethod = AuthenticationMethod_noOob;
     // Send the Public Key of the Provisioner.
     SigProvisioningPdu *publicPdu = [[SigProvisioningPdu alloc] initProvisioningPublicKeyPduWithPublicKey:self.provisioningData.provisionerPublicKey];
     self.outboundPDUNumber = 2;
     [self sendPdu:publicPdu andAccumulateToData:self.provisioningData outboundPDUNumber:self.outboundPDUNumber complete:nil];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionPublicKeyPduTimeout) object:nil];
-        [self performSelector:@selector(sentProvisionPublicKeyPduTimeout) withObject:nil afterDelay:timeout];
-    });
-
 }
 
 #pragma mark step3:Confirmation
@@ -504,11 +528,6 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     [self cancelLastMessageHandle];
 
     [self authValueReceivedData:authValue];
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
-        [self performSelector:@selector(sentProvisionConfirmationPduTimeout) withObject:nil afterDelay:timeout];
-    });
 }
 
 #pragma mark step4:Random
@@ -520,10 +539,6 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     SigProvisioningPdu *pdu = [[SigProvisioningPdu alloc] initProvisioningRandomPduWithRandom:self.provisioningData.provisionerRandom];
     self.outboundPDUNumber = 4;
     [self sendRemoteProvisionPDUWithOutboundPDUNumber:self.outboundPDUNumber provisioningPDU:pdu.pduData retryCount:kRemoteProgressRetryCount complete:nil];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
-        [self performSelector:@selector(sentProvisionRandomPduTimeout) withObject:nil afterDelay:timeout];
-    });
 }
 
 #pragma mark step5:EncryptedData
@@ -535,17 +550,9 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     SigProvisioningPdu *pdu = [[SigProvisioningPdu alloc] initProvisioningEncryptedDataWithMicPduWithEncryptedData:self.provisioningData.encryptedProvisioningDataWithMic];
     self.outboundPDUNumber = 5;
     [self sendRemoteProvisionPDUWithOutboundPDUNumber:self.outboundPDUNumber provisioningPDU:pdu.pduData retryCount:kRemoteProgressRetryCount complete:nil];
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) object:nil];
-        [self performSelector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) withObject:nil afterDelay:timeout];
-    });
 }
 
 - (void)getCapabilitiesResultWithResponse:(SigProvisioningResponse *)response {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
-    });
     if (response.type == SigProvisioningPduType_capabilities && self.outboundPDUNumber == 0 && self.inboundPDUNumber == 0) {
         [self showCapabilitiesLog:response.capabilities];
         struct ProvisioningCapabilities capabilities = response.capabilities;
@@ -570,9 +577,11 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
                 }
             }else{
                 //当前设置为no oob provision
-                [self sentStartNoOobProvisionPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-                    [weakSelf sentProvisionPublicKeyPduWithResponse:response];
-                }];
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    [self sentStartNoOobProvisionPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                        [weakSelf sentProvisionPublicKeyPduWithResponse:response];
+                    }];
+                });
             }
         }
     }else if (!response || response.type == SigProvisioningPduType_failed) {
@@ -583,39 +592,18 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     }
 }
 
-- (void)getCapabilitiesTimeout {
-    TeLogInfo(@"getCapabilitiesTimeout");
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
-    });
-    if (self.provisionResponseBlock) {
-        self.provisionResponseBlock(nil);
-    }
-}
-
-- (void)sentStartProvisionPduTimeout {
-    TeLogInfo(@"sentStartProvisionPduTimeout");
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduTimeout) object:nil];
-    });
-    if (self.provisionResponseBlock) {
-        self.provisionResponseBlock(nil);
-    }
-}
-
 - (void)sentProvisionPublicKeyPduWithResponse:(SigProvisioningResponse *)response {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionPublicKeyPduTimeout) object:nil];
-    });
     TeLogInfo(@"device public key back:%@",response.responseData);
     if (response.type == SigProvisioningPduType_publicKey && self.outboundPDUNumber == 2 && self.inboundPDUNumber == 2) {
         [self.provisioningData accumulatePduData:[response.responseData subdataWithRange:NSMakeRange(1, response.responseData.length - 1)]];
         [self.provisioningData provisionerDidObtainWithDevicePublicKey:response.publicKey];
         if (self.provisioningData.sharedSecret && self.provisioningData.sharedSecret.length > 0) {
             __weak typeof(self) weakSelf = self;
-            [self sentProvisionConfirmationPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-                [weakSelf sentProvisionConfirmationPduWithResponse:response];
-            }];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self sentProvisionConfirmationPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                    [weakSelf sentProvisionConfirmationPduWithResponse:response];
+                }];
+            });
         }else{
             TeLogDebug(@"calculate SharedSecret fail.");
             [self provisionFail];
@@ -628,31 +616,17 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     }
 }
 
-- (void)sentProvisionPublicKeyPduTimeout {
-    TeLogInfo(@"sentProvisionPublicKeyPduTimeout");
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionPublicKeyPduTimeout) object:nil];
-    });
-    if (self.provisionResponseBlock) {
-        self.provisionResponseBlock(nil);
-    }
-}
-
 - (void)sentProvisionConfirmationPduWithResponse:(SigProvisioningResponse *)response {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
-    });
     TeLogInfo(@"device confirmation back:%@",response.responseData);
     if (response.type == SigProvisioningPduType_confirmation && self.outboundPDUNumber == 3 && self.inboundPDUNumber == 3) {
         [self.provisioningData provisionerDidObtainWithDeviceConfirmation:response.confirmation];
         __weak typeof(self) weakSelf = self;
-        [self sentProvisionRandomPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-            [weakSelf sentProvisionRandomPduWithResponse:response];
-        }];
-    }else if (!response || response.type == SigProvisioningPduType_failed) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self sentProvisionRandomPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                [weakSelf sentProvisionRandomPduWithResponse:response];
+            }];
         });
+    }else if (!response || response.type == SigProvisioningPduType_failed) {
         [self provisionFail];
         TeLogDebug(@"sentProvisionConfirmationPdu error = %lu",(unsigned long)response.error);
     }else{
@@ -660,20 +634,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     }
 }
 
-- (void)sentProvisionConfirmationPduTimeout {
-    TeLogInfo(@"sentProvisionConfirmationPduTimeout");
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
-    });
-    if (self.provisionResponseBlock) {
-        self.provisionResponseBlock(nil);
-    }
-}
-
 - (void)sentProvisionRandomPduWithResponse:(SigProvisioningResponse *)response {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
-    });
     TeLogInfo(@"device random back:%@",response.responseData);
     if (response.type == SigProvisioningPduType_random && self.outboundPDUNumber == 4 && self.inboundPDUNumber == 4) {
         [self.provisioningData provisionerDidObtainWithDeviceRandom:response.random];
@@ -683,9 +644,11 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             return;
         }
         __weak typeof(self) weakSelf = self;
-        [self sentProvisionEncryptedDataWithMicPduWithTimeout:kSentProvisionEncryptedDataWithMicTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-            [weakSelf sentProvisionEncryptedDataWithMicPduWithResponse:response];
-        }];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self sentProvisionEncryptedDataWithMicPduWithTimeout:kSentProvisionEncryptedDataWithMicTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                [weakSelf sentProvisionEncryptedDataWithMicPduWithResponse:response];
+            }];
+        });
     }else if (!response || response.type == SigProvisioningPduType_failed) {
         [self provisionFail];
         TeLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)response.error);
@@ -694,22 +657,9 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     }
 }
 
-- (void)sentProvisionRandomPduTimeout {
-    TeLogInfo(@"sentProvisionRandomPduTimeout");
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
-    });
-    if (self.provisionResponseBlock) {
-        self.provisionResponseBlock(nil);
-    }
-}
-
 - (void)sentProvisionEncryptedDataWithMicPduWithResponse:(SigProvisioningResponse *)response {
     TeLogInfo(@"\n\n==========provision end.\n\n");
     TeLogInfo(@"device provision result back:%@",response.responseData);
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) object:nil];
-    });
     if (response.type == SigProvisioningPduType_complete && self.outboundPDUNumber == 5 && self.inboundPDUNumber == 5) {
         [self provisionSuccess];
         [SigBearer.share setBearerProvisioned:YES];
@@ -724,16 +674,6 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         TeLogDebug(@"sentProvisionRandomPdu:no handel this response data");
     }
     self.provisionResponseBlock = nil;
-}
-
-- (void)sentProvisionEncryptedDataWithMicPduTimeout {
-    TeLogInfo(@"sentProvisionEncryptedDataWithMicPduTimeout");
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) object:nil];
-    });
-    if (self.provisionResponseBlock) {
-        self.provisionResponseBlock(nil);
-    }
 }
 
 - (void)showCapabilitiesLog:(struct ProvisioningCapabilities)capabilities {
@@ -784,9 +724,6 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         self.inboundPDUNumber = inboundPDUNumber;
         if (self.outboundPDUNumber == 1 && self.inboundPDUNumber == 1) {
             //进行step2.5
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduTimeout) object:nil];
-            });
             [self cancelLastMessageHandle];
             [self sentProvisionPublickeyPduWithTimeout:kRemoteProgressTimeout callback:self.provisionResponseBlock];
         }
