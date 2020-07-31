@@ -67,6 +67,7 @@
 #define ViewControllerIdentifiers_SceneDetailViewControllerID  @"SceneDetailViewController"
 #define ViewControllerIdentifiers_ChooseActionViewControllerID  @"ChooseActionViewController"
 #define ViewControllerIdentifiers_ActionViewControllerID  @"ActionViewController"
+#define ViewControllerIdentifiers_DeviceCompositionDataVCID @"DeviceCompositionDataVC"
 #define ViewControllerIdentifiers_SchedulerListViewControllerID  @"SchedulerListViewController"
 #define ViewControllerIdentifiers_SchedulerDetailViewControllerID  @"SchedulerDetailViewController"
 #define ViewControllerIdentifiers_EditModelIDsViewControllerID  @"EditModelIDsViewController"
@@ -118,6 +119,10 @@
 #define Tip_DeleteSceneSuccess   @"delete scene success ..."
 #define Tip_SelectScene   @"select at least one item!"
 
+#define Tip_GetComposition   @"get composition ..."
+#define Tip_GetCompositionFail   @"get composition fail ..."
+#define Tip_GetCompositionSuccess   @"get composition success ..."
+
 //分享使用方式(是否使用蓝牙点对点传输，YES为二维码加蓝牙点对点，NO为存二维码)
 #define kShareWithBluetoothPointToPoint (YES)
 //setting界面显示
@@ -151,5 +156,8 @@
 #define SCREENBOUNDS [UIScreen mainScreen].bounds
 #define SCREEN_WIDTH CGRectGetWidth([UIScreen mainScreen].bounds)
 #define SCREEN_HEIGHT CGRectGetHeight([UIScreen mainScreen].bounds)
+
+//默认指令的重试次数
+#define kDefaultRetryCount  (2)
 
 #endif /* DemoConst_h */

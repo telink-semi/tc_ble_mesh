@@ -59,6 +59,8 @@
             TeLogInfo(@"show busy now.");
             [ShowTipsHandle.share show:Tip_CommandBusy];
             self.view.userInteractionEnabled = NO;
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(busyTimeout) object:nil];
+            [self performSelector:@selector(busyTimeout) withObject:nil afterDelay:10.0];
         } else {
             TeLogInfo(@"show no busy now.");
             if (!self.view.isUserInteractionEnabled) {
@@ -66,6 +68,15 @@
             }
             self.view.userInteractionEnabled = YES;
         }
+    });
+}
+
+- (void)busyTimeout {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (!self.view.isUserInteractionEnabled) {
+            [ShowTipsHandle.share hidden];
+        }
+        self.view.userInteractionEnabled = YES;
     });
 }
 

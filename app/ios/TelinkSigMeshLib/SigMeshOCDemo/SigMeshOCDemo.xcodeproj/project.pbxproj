@@ -8,13 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2519E64E24123D870098ABE7 /* 8258_mesh.bin */; };
-		255396B124907D2A0095B499 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		258E2B8A248A24A20078DA7C /* InfoSwitchCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B88248A24A20078DA7C /* InfoSwitchCell.m */; };
 		258E2B8B248A24A20078DA7C /* InfoSwitchCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B89248A24A20078DA7C /* InfoSwitchCell.xib */; };
 		258E2B8F248A24B50078DA7C /* InfoNextCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B8D248A24B50078DA7C /* InfoNextCell.m */; };
 		258E2B90248A24B50078DA7C /* InfoNextCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B8E248A24B50078DA7C /* InfoNextCell.xib */; };
 		258E2B94248A24D40078DA7C /* InfoButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B92248A24D40078DA7C /* InfoButtonCell.m */; };
 		258E2B95248A24D40078DA7C /* InfoButtonCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B93248A24D40078DA7C /* InfoButtonCell.xib */; };
+		25A1928624D3C68900F102BF /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
+		25B1204224A34A01004F7E91 /* DeviceCompositionDataVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B1204124A34A01004F7E91 /* DeviceCompositionDataVC.m */; };
 		25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FFA24542CF200796BF9 /* 8269_mesh.bin */; };
 		25C30DD9246A401300F06076 /* OOBListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C30DD7246A401200F06076 /* OOBListVC.m */; };
 		25C30DDA246A401300F06076 /* OOBListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C30DD8246A401200F06076 /* OOBListVC.xib */; };
@@ -172,6 +173,8 @@
 		258E2B91248A24D40078DA7C /* InfoButtonCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InfoButtonCell.h; sourceTree = "<group>"; };
 		258E2B92248A24D40078DA7C /* InfoButtonCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InfoButtonCell.m; sourceTree = "<group>"; };
 		258E2B93248A24D40078DA7C /* InfoButtonCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = InfoButtonCell.xib; sourceTree = "<group>"; };
+		25B1204024A34A01004F7E91 /* DeviceCompositionDataVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceCompositionDataVC.h; sourceTree = "<group>"; };
+		25B1204124A34A01004F7E91 /* DeviceCompositionDataVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceCompositionDataVC.m; sourceTree = "<group>"; };
 		25B408392396691A00514CB7 /* TelinkSigMeshLib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = TelinkSigMeshLib.xcodeproj; path = ../../../TelinkSigMeshLib/TelinkSigMeshLib.xcodeproj; sourceTree = "<group>"; };
 		25C07FFA24542CF200796BF9 /* 8269_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8269_mesh.bin; sourceTree = "<group>"; };
 		25C30DD6246A401200F06076 /* OOBListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OOBListVC.h; sourceTree = "<group>"; };
@@ -391,7 +394,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				255396B124907D2A0095B499 /* TelinkSigMeshLib.framework in Frameworks */,
+				25A1928624D3C68900F102BF /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -632,6 +635,8 @@
 				A2944118216DDDBD0046F65A /* DeviceSettingViewController.m */,
 				A2896896216EE262003A0A72 /* DeviceSubscriptionListViewController.h */,
 				A2896897216EE262003A0A72 /* DeviceSubscriptionListViewController.m */,
+				25B1204024A34A01004F7E91 /* DeviceCompositionDataVC.h */,
+				25B1204124A34A01004F7E91 /* DeviceCompositionDataVC.m */,
 			);
 			path = DeviceSetting;
 			sourceTree = "<group>";
@@ -1155,6 +1160,7 @@
 				A2AB8F2621100FDD00D73EB4 /* SettingViewController.m in Sources */,
 				A2AB8F2121100FDD00D73EB4 /* GroupDetailViewController.m in Sources */,
 				A28CA3A62181E4AD005B1DB6 /* IQUIScrollView+Additions.m in Sources */,
+				25B1204224A34A01004F7E91 /* DeviceCompositionDataVC.m in Sources */,
 				A2AB8F58211012E400D73EB4 /* ChooseBinCell.m in Sources */,
 				25C30DD9246A401300F06076 /* OOBListVC.m in Sources */,
 				A2944127216E057B0046F65A /* SettingItemCell.m in Sources */,
@@ -1374,16 +1380,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
 				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/SigMeshOCDemo/PrefixHeader.pch";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"IOS_APP_ENABLE=1",
-					"WIN32=1",
-				);
+				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../TelinkSigMeshLib/TelinkSigMeshLib\"";
 				INFOPLIST_FILE = SigMeshOCDemo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -1414,10 +1417,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/SigMeshOCDemo/PrefixHeader.pch";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"IOS_APP_ENABLE=1",
-					"WIN32=1",
-				);
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../TelinkSigMeshLib/TelinkSigMeshLib\"";
 				INFOPLIST_FILE = SigMeshOCDemo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;

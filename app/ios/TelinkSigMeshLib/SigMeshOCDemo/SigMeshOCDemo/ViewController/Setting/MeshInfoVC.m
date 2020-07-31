@@ -258,6 +258,11 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+#ifndef kExist
+    if (indexPath.row == 0) {
+        return 0.1;
+    }
+#endif
     return 51.0;
 }
 

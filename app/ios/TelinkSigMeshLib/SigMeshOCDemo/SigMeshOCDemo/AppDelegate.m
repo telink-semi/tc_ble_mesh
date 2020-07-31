@@ -50,6 +50,7 @@
     if (type == nil) {
         type = [NSNumber numberWithInteger:KeyBindTpye_Normal];
         [[NSUserDefaults standardUserDefaults] setValue:type forKey:kKeyBindType];
+        [[NSUserDefaults standardUserDefaults] synchronize];
     }
 
     //demo v2.8.0新增remote添加模式，demo默认使用普通添加模式。
@@ -57,6 +58,7 @@
     if (remoteType == nil) {
         remoteType = [NSNumber numberWithBool:NO];
         [[NSUserDefaults standardUserDefaults] setValue:remoteType forKey:kRemoteAddType];
+        [[NSUserDefaults standardUserDefaults] synchronize];
     }
 
     //demo v2.8.1新增私有定制getOnlinestatus，demo默认使用私有定制获取状态。
@@ -64,6 +66,7 @@
     if (onlineType == nil) {
         onlineType = [NSNumber numberWithBool:YES];
         [[NSUserDefaults standardUserDefaults] setValue:onlineType forKey:kGetOnlineStatusType];
+        [[NSUserDefaults standardUserDefaults] synchronize];
     }
 
     //demo v3.0.0新增fast provision添加模式，demo默认使用普通添加模式。
@@ -71,13 +74,15 @@
     if (fastAddType == nil) {
         fastAddType = [NSNumber numberWithBool:NO];
         [[NSUserDefaults standardUserDefaults] setValue:fastAddType forKey:kFastAddType];
+        [[NSUserDefaults standardUserDefaults] synchronize];
     }
 
-    //demo v3.2.2新增staticOOB设备添加的兼容模式，demo默认使用不兼容模式（即staticOOB设备必须通过staticOOB provision的方式进行添加）。
+    //demo v3.2.2新增staticOOB设备添加的兼容模式，demo默认使用兼容模式。（兼容模式为staticOOB设备在无OOB数据的情况下通过noOOB provision的方式进行添加;不兼容模式为staticOOB设备必须通过staticOOB provision的方式进行添加）。
     NSNumber *addStaticOOBDevcieByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDevcieByNoOOBEnable];
     if (addStaticOOBDevcieByNoOOBEnable == nil) {
-        addStaticOOBDevcieByNoOOBEnable = [NSNumber numberWithBool:NO];
-        [[NSUserDefaults standardUserDefaults] setValue:fastAddType forKey:kAddStaticOOBDevcieByNoOOBEnable];
+        addStaticOOBDevcieByNoOOBEnable = [NSNumber numberWithBool:YES];
+        [[NSUserDefaults standardUserDefaults] setValue:addStaticOOBDevcieByNoOOBEnable forKey:kAddStaticOOBDevcieByNoOOBEnable];
+        [[NSUserDefaults standardUserDefaults] synchronize];
     }
     SigDataSource.share.addStaticOOBDevcieByNoOOBEnable = addStaticOOBDevcieByNoOOBEnable.boolValue;
 
