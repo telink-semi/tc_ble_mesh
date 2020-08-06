@@ -726,8 +726,8 @@
             matchs = YES;
         }
         // If the Key refresh procedure is in place, the identity might have been generated with the old key.
-        if (self.curNetkeyModel.oldKey && self.curNetkeyModel.oldKey.length > 0 && ![self.curNetkeyModel.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
-            encryptedData = [OpenSSLHelper.share calculateEvalueWithData:data andKey:self.curNetkeyModel.oldKeys.identityKey];
+        if (!matchs && self.curNetkeyModel.oldKey && self.curNetkeyModel.oldKey.length > 0 && ![self.curNetkeyModel.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
+            encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:self.curNetkeyModel.oldKeys.identityKey];
             if ([[encryptedData subdataWithRange:NSMakeRange(8, encryptedData.length-8)] isEqualToData:hash]) {
                 matchs = YES;
             }
@@ -1264,7 +1264,7 @@
 }
 
 - (SigNetkeyDerivaties *)oldKeys {
-    if (!_oldKey && self.oldKey && self.oldKey.length > 0 && ![self.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
+    if (!_oldKeys && self.oldKey && self.oldKey.length > 0 && ![self.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
         _oldKeys = [[SigNetkeyDerivaties alloc] initWithNetkeyData:[LibTools nsstringToHex:self.oldKey] helper:OpenSSLHelper.share];
     }
     return _oldKeys;
