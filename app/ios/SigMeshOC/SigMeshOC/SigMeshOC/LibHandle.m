@@ -59,28 +59,28 @@ NSString *const CommandIsBusyKey = @"IsBusy";
             memcpy(&temp, pu, 1);
             _type = temp;
         }
-        if (_rspData.length >= 2) {
+        if (_rspData.length >= 3) {
             temp = 0;
-            memcpy(&temp, pu+1, 1);
+            memcpy(&temp, pu+1, 2);
             _length = temp;
         }
-        if (_rspData.length >= 4) {
+        if (_rspData.length >= 5) {
             temp = 0;
-            memcpy(&temp, pu+2, 2);
+            memcpy(&temp, pu+3, 2);
             _address = temp;
         }
-        if (_rspData.length >= 6) {
+        if (_rspData.length >= 7) {
             temp = 0;
-            memcpy(&temp, pu+4, 2);
+            memcpy(&temp, pu+5, 2);
             _rspAddress = temp;
         }
         if (_rspData.length >= 7) {
-            temp = rf_link_get_op_by_ac(pu+6);
+            temp = rf_link_get_op_by_ac(pu+7);
             _opcode = temp;
         }
         u32 size_op = SIZE_OF_OP(temp);
-        if (_rspData.length > 6+size_op) {
-            _customData = [data subdataWithRange:NSMakeRange(6+size_op, _rspData.length-(6+size_op))];
+        if (_rspData.length > 7+size_op) {
+            _customData = [data subdataWithRange:NSMakeRange(7+size_op, _rspData.length-(7+size_op))];
         }
     }
     return self;
@@ -124,28 +124,28 @@ NSString *const CommandIsBusyKey = @"IsBusy";
             memcpy(&temp, pu, 1);
             _type = temp;
         }
-        if (_rspData.length >= 2) {
+        if (_rspData.length >= 3) {
             temp = 0;
-            memcpy(&temp, pu+1, 1);
+            memcpy(&temp, pu+1, 2);
             _length = temp;
         }
-        if (_rspData.length >= 4) {
+        if (_rspData.length >= 5) {
             temp = 0;
-            memcpy(&temp, pu+2, 2);
+            memcpy(&temp, pu+3, 2);
             _address = temp;
         }
-        if (_rspData.length >= 6) {
+        if (_rspData.length >= 7) {
             temp = 0;
-            memcpy(&temp, pu+4, 2);
+            memcpy(&temp, pu+5, 2);
             _rspAddress = temp;
         }
-        if (_rspData.length >= 9) {
+        if (_rspData.length >= 10) {
             temp = 0;
-            memcpy(&temp, pu+6, 3);
+            memcpy(&temp, pu+7, 3);
             _vendorOPCode = temp;
         }
-        if (_rspData.length > 9) {
-            _customData = [data subdataWithRange:NSMakeRange(9, _rspData.length-9)];
+        if (_rspData.length > 10) {
+            _customData = [data subdataWithRange:NSMakeRange(10, _rspData.length-10)];
         }
     }
     return self;
