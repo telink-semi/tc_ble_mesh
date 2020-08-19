@@ -331,7 +331,7 @@ public class GattConnection extends BluetoothGattCallback {
         if (services == null) return null;
         for (BluetoothGattService service :
                 services) {
-            if (service.getUuid().equals(UUIDInfo.PROVISION_SERVICE_UUID) || service.getUuid().equals(UUIDInfo.UNUSED_SERVICE_UUID)) {
+            if (service.getUuid().equals(UUIDInfo.PROVISION_SERVICE_UUID) || service.getUuid().equals(UUIDInfo.MESH_FLEX_SERVICE_UUID)) {
                 for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
                     if (characteristic.getUuid().equals(UUIDInfo.PB_IN_CHARACTERISTIC_UUID)) {
                         return service;
@@ -344,14 +344,14 @@ public class GattConnection extends BluetoothGattCallback {
 
     /**
      * @param real true: only check PROXY_SERVICE_UUID,
-     *             false: check PROXY_SERVICE_UUID and UNUSED_SERVICE_UUID
+     *             false: check PROXY_SERVICE_UUID and MESH_FLEX_SERVICE_UUID
      */
     private BluetoothGattService getProxyService(boolean real) {
         final List<BluetoothGattService> services = this.mServices;
         if (services == null) return null;
         for (BluetoothGattService service : services) {
             if ((service.getUuid().equals(UUIDInfo.PROXY_SERVICE_UUID))
-                    || (!real && service.getUuid().equals(UUIDInfo.UNUSED_SERVICE_UUID))) {
+                    || (!real && service.getUuid().equals(UUIDInfo.MESH_FLEX_SERVICE_UUID))) {
                 for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
                     if (characteristic.getUuid().equals(UUIDInfo.PROXY_IN_CHARACTERISTIC_UUID)) {
                         return service;
@@ -523,6 +523,7 @@ public class GattConnection extends BluetoothGattCallback {
         this.mHandler.removeCallbacks(mServicesDiscoveringRunnable);
         this.mServices = null;
         if (isConnectWaiting.get()) {
+            isConnectWaiting.set(false);
             this.connect();
         } else {
             if (mConnectionCallback != null) {

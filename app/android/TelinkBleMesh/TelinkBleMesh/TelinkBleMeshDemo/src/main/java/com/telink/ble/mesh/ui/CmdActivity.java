@@ -259,11 +259,13 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
 
 
         String tidInput = et_tid.getText().toString().trim();
+        int tidPosition;
         if (TextUtils.isEmpty(tidInput)) {
-            toastMsg("input tid position!");
-            return null;
+            tidPosition = -1;
+        }else {
+            tidPosition = Integer.valueOf(tidInput);
         }
-        final int tidPosition = Integer.valueOf(tidInput);
+
 
         MeshMessage meshMessage = new MeshMessage();
         meshMessage.setDestinationAddress(dstAdr);

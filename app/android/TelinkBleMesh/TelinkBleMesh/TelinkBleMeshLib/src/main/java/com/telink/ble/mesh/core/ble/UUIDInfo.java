@@ -32,7 +32,7 @@ public class UUIDInfo {
     public static final UUID SERVICE_UUID_OTA = UUID.fromString("00010203-0405-0607-0809-0a0b0c0d1912");
     public static final UUID CHARACTERISTIC_UUID_OTA = UUID.fromString("00010203-0405-0607-0809-0a0b0c0d2b12");
 
-    public static final UUID UNUSED_SERVICE_UUID = UUID.fromString("00007fdd-0000-1000-8000-00805f9b34fb");
+    public static final UUID MESH_FLEX_SERVICE_UUID = UUID.fromString("00007fdd-0000-1000-8000-00805f9b34fb");
 
     public static final UUID PROVISION_SERVICE_UUID = UUID.fromString("00001827-0000-1000-8000-00805f9b34fb");
     public static final UUID PB_IN_CHARACTERISTIC_UUID = UUID.fromString("00002adb-0000-1000-8000-00805f9b34fb");

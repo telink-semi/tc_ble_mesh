@@ -96,7 +96,7 @@ public final class Encipher {
 
     public static KeyPair generateKeyPair() {
         try {
-//        ECGenParameterSpec ecParamSpec = new ECGenParameterSpec("secp256r1");
+            // secp256r1
             ECNamedCurveParameterSpec ecParamSpec = ECNamedCurveTable.getParameterSpec("P-256");
             KeyPairGenerator generator = KeyPairGenerator.getInstance("ECDH", "SC");
             generator.initialize(ecParamSpec);
@@ -108,7 +108,6 @@ public final class Encipher {
     }
 
     public static byte[] generateECDH(byte[] xy, PrivateKey provisionerPrivateKey) {
-
         BigInteger x = BigIntegers.fromUnsignedByteArray(xy, 0, 32);
         BigInteger y = BigIntegers.fromUnsignedByteArray(xy, 32, 32);
 
@@ -122,10 +121,10 @@ public final class Encipher {
             keyFactory = KeyFactory.getInstance("ECDH", "SC");
             ECPublicKey publicKey = (ECPublicKey) keyFactory.generatePublic(keySpec);
 
-            KeyAgreement a = KeyAgreement.getInstance("ECDH", "SC");
-            a.init(provisionerPrivateKey);
-            a.doPhase(publicKey, true);
-            return a.generateSecret();
+            KeyAgreement keyAgreement = KeyAgreement.getInstance("ECDH", "SC");
+            keyAgreement.init(provisionerPrivateKey);
+            keyAgreement.doPhase(publicKey, true);
+            return keyAgreement.generateSecret();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (NoSuchProviderException e) {
@@ -251,6 +250,7 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         inputBufferT2.put((byte) 0x03);
         // privacyKey
         final byte[] t3 = aesCmac(inputBufferT2.array(), t);
+
         return new byte[][]{t1, t2, t3};
     }
 
@@ -307,15 +307,13 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
 
     /**
      * @param data online status data
-     * @param key  netKey
+     * @param key  netKey->beaconKey
      * @return decryption result
      */
     public static byte[] decryptOnlineStatus(byte[] data, byte[] key) {
         final int ivLen = 4;
         byte[] iv = new byte[ivLen];
         System.arraycopy(data, 0, iv, 0, ivLen);
-
-        System.out.println("iv: " + Arrays.bytesToHexString(iv, ":"));
 
         final int micLen = 2;
         byte[] mic = new byte[micLen];

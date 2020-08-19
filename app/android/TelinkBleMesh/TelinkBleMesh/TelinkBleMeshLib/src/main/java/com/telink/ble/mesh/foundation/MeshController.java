@@ -113,7 +113,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private final static int PROXY_ADV_TYPE_NETWORK_ID = 0x00;
 
-    /**
+    /**onCommandPrepared
      * proxy node advertising nodeIdentity
      */
     private final static int PROXY_ADV_TYPE_NODE_IDENTITY = 0x01;
@@ -1091,7 +1091,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         public void onNotify(UUID charUUID, byte[] data) {
             if (charUUID.equals(UUIDInfo.CHARACTERISTIC_UUID_ONLINE_STATUS)) {
                 log("online status encrypted data: " + Arrays.bytesToHexString(data, ":"));
+                MeshLogger.d("online data: " + Arrays.bytesToHexString(data));
+                MeshLogger.d("online key: " + Arrays.bytesToHexString(networkBeaconKey));
                 byte[] decrypted = Encipher.decryptOnlineStatus(data, networkBeaconKey);
+                MeshLogger.d("online dec: " + Arrays.bytesToHexString(decrypted));
                 if (decrypted != null) {
                     log("online status decrypted data: " + Arrays.bytesToHexString(decrypted, ":"));
                     onOnlineStatusNotify(decrypted);

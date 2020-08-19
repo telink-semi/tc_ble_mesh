@@ -405,7 +405,188 @@ public class FirmwareUpdatingController {
      * if all devices executed, then next step
      */
     private void executeUpdatingAction() {
+        log("action: " + getStepDesc(step) + " -- node index -- " + nodeIndex);
+        if (nodeIndex >= nodes.size()) {
+            // all nodes executed
 
+            log("current step complete: " + getStepDesc(step));
+
+            removeFailedDevices();
+
+            // check if has available nodes
+            if (nodes.size() != 0) {
+                nodeIndex = 0;
+
+                if (step == STEP_GET_BLOB_BLOCK) {
+                    // check if has missing chunk
+
+                    switch (mixFormat) {
+                        case BlobBlockStatusMessage.FORMAT_NO_CHUNKS_MISSING:
+                            log("no chunks missing");
+                            step = STEP_BLOB_BLOCK_TRANSFER_START;
+                            executeUpdatingAction();
+                            break;
+
+                        case BlobBlockStatusMessage.FORMAT_ALL_CHUNKS_MISSING:
+                            // resend all chunks
+                            log("all chunks missing");
+                            step = STEP_BLOB_CHUNK_SENDING;
+                            firmwareParser.resetBlock();
+                            executeUpdatingAction();
+                            break;
+                        case BlobBlockStatusMessage.FORMAT_SOME_CHUNKS_MISSING:
+                        case BlobBlockStatusMessage.FORMAT_ENCODED_MISSING_CHUNKS:
+                            // resend missing chunks
+                            log("resend missing chunks");
+                            missingChunkIndex = 0;
+                            resendMissingChunks();
+                            break;
+                    }
+
+
+                    /*if (missingChunks.size() == 0) {
+                        // no missing chunks
+                        step = STEP_BLOB_BLOCK_TRANSFER_START;
+                        executeUpdatingAction();
+                    } else {
+                        // resend missing chunks
+                        missingChunkIndex = 0;
+                        resendMissingChunks();
+                    }*/
+                } else {
+
+                    if (step == STEP_BLOB_TRANSFER_START) {
+                        onStateUpdate(STATE_PREPARED, "updating prepare complete", null);
+                    }
+
+                    log("next step: " + getStepDesc(step + 1));
+                    step++;
+                    executeUpdatingAction();
+                }
+            } else {
+                onUpdatingFail(STATE_FAIL, "all node failed when executing action");
+            }
+        } else {
+            int meshAddress = nodes.get(nodeIndex).getMeshAddress();
+            log(String.format("action executing: " + getStepDesc(step) + " -- %04X", meshAddress));
+            switch (this.step) {
+                case STEP_GET_FIRMWARE_INFO:
+                    onMeshMessagePrepared(FirmwareUpdateInfoGetMessage.getSimple(meshAddress, appKeyIndex));
+                    break;
+
+                case STEP_SET_SUBSCRIPTION:
+                    int eleAdr = nodes.get(nodeIndex).getUpdatingEleAddress();
+                    int modelId = MeshSigModel.SIG_MD_OBJ_TRANSFER_S.modelId;
+                    onMeshMessagePrepared(ModelSubscriptionSetMessage.getSimple(meshAddress,
+                            ModelSubscriptionSetMessage.MODE_ADD,
+                            eleAdr, groupAddress, modelId, true));
+                    break;
+
+
+                case STEP_GET_BLOB_INFO:
+                    onMeshMessagePrepared(BlobInfoGetMessage.getSimple(meshAddress, appKeyIndex));
+                    break;
+
+                case STEP_METADATA_CHECK:
+                    onMeshMessagePrepared(FirmwareMetadataCheckMessage.getSimple(meshAddress,
+                            appKeyIndex, metadataIndex, metadata));
+                    break;
+
+                case STEP_UPDATE_START:
+                    FirmwareUpdateStartMessage updateStartMessage = new FirmwareUpdateStartMessage(meshAddress, appKeyIndex);
+                    updateStartMessage.setMetadata(this.metadata);
+                    updateStartMessage.setUpdateBLOBID(blobId);
+                    updateStartMessage.setUpdateTtl((byte) 0xFF);
+                    updateStartMessage.setUpdateTimeoutBase(0);
+                    updateStartMessage.setUpdateFirmwareImageIndex(0);
+                    onMeshMessagePrepared(updateStartMessage);
+                    break;
+
+                case STEP_BLOB_TRANSFER_START:
+
+
+                    int objectSize = firmwareParser.getObjectSize();
+                    byte blockSizeLog = (byte) MeshUtils.mathLog2(firmwareParser.getBlockSize());
+                    int mtu = 380;
+
+                    BlobTransferStartMessage blobTransferStartMessage = BlobTransferStartMessage.getSimple(meshAddress, appKeyIndex,
+                            blobId, objectSize, blockSizeLog, mtu);
+                    onMeshMessagePrepared(blobTransferStartMessage);
+                    /*onMeshMessagePrepared(ObjectTransferStartMessage.getSimple(meshAddress, appKeyIndex, 1,
+                            blobId, objectSize, blockSizeLog));*/
+                    break;
+
+                case STEP_BLOB_TRANSFER_GET:
+                    onMeshMessagePrepared(BlobTransferGetMessage.getSimple(meshAddress, appKeyIndex));
+                    break;
+                case STEP_BLOB_BLOCK_TRANSFER_START:
+                    if (nodeIndex == 0) {
+                        if (firmwareParser.hasNextBlock()) {
+                            firmwareParser.nextBlock();
+                        } else {
+                            log("all blocks sent complete at: block -- " + firmwareParser.currentBlockIndex());
+                            step = STEP_UPDATE_GET;
+                            executeUpdatingAction();
+                            return;
+                        }
+                    }
+                    int blockNumber = firmwareParser.currentBlockIndex();
+                    int chunkSize = firmwareParser.getChunkSize();
+//                    int blockChecksumValue = firmwareParser.getBlockChecksum();
+//                    int currentBlockSize = firmwareParser.getCurBlockSize();
+
+                    onMeshMessagePrepared(BlobBlockStartMessage.getSimple(meshAddress, appKeyIndex,
+                            blockNumber, chunkSize));
+
+                    /*onMeshMessagePrepared(ObjectBlockTransferStartMessage.getSimple(meshAddress, appKeyIndex, 1,
+                            blobId, blockNumber,
+                            chunkSize,
+                            blockChecksumValue, currentBlockSize));*/
+
+                    break;
+
+                case STEP_BLOB_CHUNK_SENDING:
+                    sendChunks();
+                    break;
+
+                case STEP_GET_BLOB_BLOCK:
+
+                    onMeshMessagePrepared(BlobBlockGetMessage.getSimple(meshAddress, appKeyIndex));
+
+                    /*onMeshMessagePrepared(ObjectBlockGetMessage.getSimple(meshAddress, appKeyIndex, 1,
+                            blobId, firmwareParser.currentBlockIndex()));*/
+                    break;
+
+                case STEP_UPDATE_GET:
+
+                    onMeshMessagePrepared(FirmwareUpdateGetMessage.getSimple(meshAddress, appKeyIndex));
+
+                    /*onMeshMessagePrepared(FirmwareUpdateGetMessage.getSimple(meshAddress,
+                            appKeyIndex,
+                            1,
+                            companyId,
+                            firmwareId));*/
+                    break;
+
+                case STEP_UPDATE_APPLY:
+                    FirmwareUpdateApplyMessage applyMessage = FirmwareUpdateApplyMessage.getSimple(meshAddress, appKeyIndex);
+                    // for remote reliable apply
+                    applyMessage.setRetryCnt(10);
+                    onMeshMessagePrepared(applyMessage);
+                    /*onMeshMessagePrepared(FirmwareUpdateApplyMessage.getSimple(meshAddress,
+                            appKeyIndex,
+                            1,
+                            companyId,
+                            firmwareId));*/
+                    break;
+
+                case STEP_UPDATE_COMPLETE:
+                    onUpdatingSuccess();
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
 

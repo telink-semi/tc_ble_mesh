@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     TelinkMeshApplication.java 
+ * @file TelinkMeshApplication.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh;
 
@@ -52,6 +52,7 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.security.KeyPair;
 import java.util.List;
 
 /**
@@ -79,11 +80,12 @@ public class TelinkMeshApplication extends MeshApplication {
         MeshLogger.enableRecord(SharedPreferenceHelper.isLogEnable(this));
         MeshLogger.d(meshInfo.toString());
         closePErrorDialog();
-        testEncipher();
+//        testEncipher();
     }
 
-    private void testEncipher(){
-        byte[] encSample = {0x3C,0x5F,0x2A, (byte) 0xFE, (byte) 0xFE, (byte) 0xF0,0x09, (byte) 0xAA, (byte) 0xF9,0x74,0x47,0x3A,0x02,0x00, (byte) 0xF8, (byte) 0x83};
+
+    private void testEncipher() {
+        byte[] encSample = {0x3C, 0x5F, 0x2A, (byte) 0xFE, (byte) 0xFE, (byte) 0xF0, 0x09, (byte) 0xAA, (byte) 0xF9, 0x74, 0x47, 0x3A, 0x02, 0x00, (byte) 0xF8, (byte) 0x83};
         byte[] text = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
         byte[] key = {0x01, 0x23, 0x45, 0x67, (byte) 0x89, 0x01, 0x22, 0x23, 0x34, 0x45, 0x56, 0x67, 0x78, (byte) 0x89, (byte) 0x90, 0x02};
         byte[] enc = Encipher.aesCmac(text, key);

@@ -123,26 +123,16 @@ public final class Scheduler implements Serializable ,Parcelable{
         if (data == null || data.length != 10) return null;
         byte index = (byte) (data[0] & 0x0F);
         Register reg = new Register();
-        reg.year = (data[0] >> 4) | (data[1] & 0b111);
-        reg.month = (data[1] >> 3) | (data[2] & 0b1111111);
-        reg.day = (data[2] >> 7) | (data[3] & 0b1111); // d3 4
-
-        reg.hour = (data[3] >> 4) | (data[4] & 0b1); // d4 1
-
+        reg.year = (data[0] >> 4 & 0b1111) | ((data[1] & 0b111) << 4);
+        reg.month = (data[1] >> 3 & 0b11111) | ((data[2] & 0b1111111) << 5);
+        reg.day = (data[2] >> 7 & 0b1) | ((data[3] & 0b1111) << 1); // d3 4
+        reg.hour = (data[3] >> 4 & 0b1111) | ((data[4] & 0b1) << 4); // d4 1
         reg.minute = ((data[4] >> 1) & 0b111111); // d4 7
-
-
-        reg.second = ((data[4] >> 7) | (data[5] & 0b11111)); // d5 5
-
-        reg.week = ((data[5] >> 5) | (data[6] & 0b1111)); // d6 4
-
-
-        reg.action = (data[6] >> 4); // d6 8
-
-        reg.transTime = data[7]; // d7 8
-
+        reg.second = ((data[4] >> 7 & 0b1) | ((data[5] & 0b11111)) << 1); // d5 5
+        reg.week = ((data[5] >> 5 & 0b111) | ((data[6] & 0b1111)) << 3); // d6 4
+        reg.action = (data[6] >> 4 & 0b1111); // d6 8
+        reg.transTime = data[7] & 0xFF; // d7 8
         reg.sceneId = (data[8] & 0xFF) | ((data[9] << 8) & 0xFF); // d8 d9
-
         return new Scheduler(index, reg);
     }
 
