@@ -1337,7 +1337,7 @@
 }
 
 - (SigNetkeyDerivaties *)oldKeys {
-    if (!_oldKey && self.oldKey && self.oldKey.length > 0 && ![self.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
+    if (!_oldKeys && self.oldKey && self.oldKey.length > 0 && ![self.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
         _oldKeys = [[SigNetkeyDerivaties alloc] initWithNetkeyData:[LibTools nsstringToHex:self.oldKey] helper:OpenSSLHelper.share];
     }
     return _oldKeys;
@@ -1494,7 +1494,8 @@
         range1.highAddress = [NSString stringWithFormat:@"%04lX",(long)kAllocatedGroupRangeHighAddress];
         [self.allocatedGroupRange addObject:range1];
         
-        //短地址分配范围：1-0xff，0x0100-0x01ff，0x0200-0x02ff，0x0300-0x03ff， 。。。
+        //源码版本v3.2.2前，间隔255，短地址分配范围：1-0xff，0x0100-0x01ff，0x0200-0x02ff，0x0300-0x03ff， 。。。
+        //源码版本v3.2.2后，间隔1024，短地址分配范围：1~1024，1025~2048，2049~3072，3073~4096， 。。。
         self.allocatedUnicastRange = [NSMutableArray array];
         SigRangeModel *range2 = [[SigRangeModel alloc] init];
         range2.lowAddress = [NSString stringWithFormat:@"%04X",kAllocatedUnicastRangeLowAddress + (count == 0 ? 0 : (count*(kAllocatedUnicastRangeHighAddress+1)-1))];
