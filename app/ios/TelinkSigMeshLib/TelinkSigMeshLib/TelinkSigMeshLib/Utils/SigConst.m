@@ -204,7 +204,7 @@ UInt8 const kStartMeshConnectTimeout = 5;
 //publish设置的上报周期
 UInt8 const kPublishInterval = 20;
 //time model设置的上报周期
-UInt8 const kTimePublishInterval = 20;
+UInt8 const kTimePublishInterval = 30;
 //离线检测的时长
 UInt8 const kOfflineInterval = (kPublishInterval * 3 + 1);
 
@@ -221,7 +221,7 @@ UInt16 const kCompanyID = 0x0211;
 UInt8 const kLocationAddress = 1;
 //json数据生成，生成默认的短地址范围、组地址范围、场景id范围(当前默认一个provisioner，且所有平台使用同一个provisioner)
 UInt8 const kAllocatedUnicastRangeLowAddress = 1;
-UInt8 const kAllocatedUnicastRangeHighAddress = 0xff;
+UInt8 const kAllocatedUnicastRangeHighAddress = 0x400;//1024
 
 UInt16 const kAllocatedGroupRangeLowAddress = 0xC000;
 UInt16 const kAllocatedGroupRangeHighAddress = 0xC0ff;
