@@ -257,6 +257,7 @@
     SigControlMessage *pdu = [[SigControlMessage alloc] initFromProxyConfigurationMessage:message sentFromSource:source usingNetworkKey:networkKey];
     pdu.ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     [self sendLowerTransportPdu:pdu ofType:SigPduType_proxyConfiguration withTtl:0];
+    [_networkManager notifyAboutDeliveringMessage:(SigMeshMessage *)message fromLocalElement:SigMeshLib.share.dataSource.curLocationNodeModel.elements.firstObject toDestination:pdu.destination];
 }
 
 #pragma mark - private
