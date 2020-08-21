@@ -341,8 +341,8 @@
 		25957ECB237AC6C100816137 /* SigGenericMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25957EC9237AC6C100816137 /* SigGenericMessage.m */; };
 		25B8764C24850474006C76CB /* SigBluetooth.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B8764A24850474006C76CB /* SigBluetooth.m */; };
 		25B8764D24850474006C76CB /* SigBluetooth.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B8764A24850474006C76CB /* SigBluetooth.m */; };
-		25B8764E24850474006C76CB /* SigBluetooth.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B8764B24850474006C76CB /* SigBluetooth.h */; };
-		25B8764F24850474006C76CB /* SigBluetooth.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B8764B24850474006C76CB /* SigBluetooth.h */; };
+		25B8764E24850474006C76CB /* SigBluetooth.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B8764B24850474006C76CB /* SigBluetooth.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25B8764F24850474006C76CB /* SigBluetooth.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B8764B24850474006C76CB /* SigBluetooth.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25B95FEA238E4DBD00244D14 /* BackgroundTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B95FE8238E4DBD00244D14 /* BackgroundTimer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25B95FEB238E4DBD00244D14 /* BackgroundTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B95FE9238E4DBD00244D14 /* BackgroundTimer.m */; };
 		25B95FEE238E595600244D14 /* SigConst.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B95FEC238E595600244D14 /* SigConst.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1051,6 +1051,7 @@
 				2553950824907A9C0095B499 /* blowfish.h in Headers */,
 				252894752468F13400E590F9 /* LibTools.h in Headers */,
 				252894772468F13400E590F9 /* SigDataSource.h in Headers */,
+				25B8764F24850474006C76CB /* SigBluetooth.h in Headers */,
 				2528947A2468F13400E590F9 /* SigEnumeration.h in Headers */,
 				2528948B2468F13400E590F9 /* SigConfigMessage.h in Headers */,
 				252894812468F13400E590F9 /* SDKLibCommand.h in Headers */,
@@ -1160,7 +1161,6 @@
 				2553952E24907A9E0095B499 /* ssl23.h in Headers */,
 				2553953424907A9F0095B499 /* md5.h in Headers */,
 				252894DF2468F13400E590F9 /* TelinkSigMeshLibPrefixHeader.pch in Headers */,
-				25B8764F24850474006C76CB /* SigBluetooth.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1171,6 +1171,7 @@
 				2553957B24907AA30095B499 /* ssl2.h in Headers */,
 				2553955124907AA00095B499 /* srp.h in Headers */,
 				2553951324907A9D0095B499 /* ui.h in Headers */,
+				25B8764E24850474006C76CB /* SigBluetooth.h in Headers */,
 				2553956924907AA20095B499 /* ocsp.h in Headers */,
 				2553953124907A9F0095B499 /* opensslconf-x86_64.h in Headers */,
 				2553950F24907A9C0095B499 /* x509.h in Headers */,
@@ -1302,7 +1303,6 @@
 				2553952D24907A9E0095B499 /* ssl23.h in Headers */,
 				2553953324907A9F0095B499 /* md5.h in Headers */,
 				25335C6E235EB046006C79C1 /* TelinkSigMeshLibPrefixHeader.pch in Headers */,
-				25B8764E24850474006C76CB /* SigBluetooth.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
