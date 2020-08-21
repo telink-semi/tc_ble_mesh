@@ -76,6 +76,7 @@ typedef enum : NSUInteger {
     [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
             TeLogDebug(@"close success.");
+            //示范代码：只扫描1827的设备
             [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
                 if (unprovisioned) {
                     AddDeviceStateModel *model = [[AddDeviceStateModel alloc] init];
@@ -87,6 +88,26 @@ typedef enum : NSUInteger {
                     }
                 }
             }];
+            //示范代码：同时扫描1827和1828的设备
+//            [SDKLibCommand scanWithServiceUUIDs:@[[CBUUID UUIDWithString:kPROXYService],[CBUUID UUIDWithString:kPBGATTService]] checkNetworkEnable:NO result:^(CBPeripheral *peripheral, NSDictionary<NSString *,id> *advertisementData, NSNumber *RSSI, BOOL unprovisioned) {
+//                if (unprovisioned) {
+//                    AddDeviceStateModel *model = [[AddDeviceStateModel alloc] init];
+//                    model.peripheral = peripheral;
+//                    model.state = AddStateScan;
+//                    if (![weakSelf.allDevices containsObject:model]) {
+//                        [weakSelf.allDevices addObject:model];
+//                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+//                    }
+//                } else {
+//                    AddDeviceStateModel *model = [[AddDeviceStateModel alloc] init];
+//                    model.peripheral = peripheral;
+//                    model.state = AddStateKeybound;
+//                    if (![weakSelf.allDevices containsObject:model]) {
+//                        [weakSelf.allDevices addObject:model];
+//                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+//                    }
+//                }
+//            }];
             dispatch_async(dispatch_get_main_queue(), ^{
                 [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanFinish) object:nil];
                 [weakSelf performSelector:@selector(scanFinish) withObject:nil afterDelay:5.0];

@@ -43,7 +43,8 @@
 @property (nonatomic,strong) CBCharacteristic *MeshOTACharacteristic;
 
 @property (nonatomic,assign) BOOL isInitFinish;
-@property (nonatomic,strong) NSString *scanServiceUUID;
+@property (nonatomic,strong) NSMutableArray <CBUUID *>*scanServiceUUIDs;
+@property (nonatomic,assign) BOOL checkNetworkEnable;
 @property (nonatomic,strong) NSString *scanPeripheralUUID;
 
 @property (nonatomic,copy) bleInitSuccessCallback bluetoothInitSuccessCallback;
@@ -73,7 +74,9 @@
         shareBLE.manager = [[CBCentralManager alloc] initWithDelegate:shareBLE queue:dispatch_get_main_queue()];
         shareBLE.isInitFinish = NO;
         shareBLE.waitScanRseponseEnabel = NO;
+        shareBLE.checkNetworkEnable = NO;
         shareBLE.connectedPeripherals = [NSMutableArray array];
+        shareBLE.scanServiceUUIDs = [NSMutableArray array];
     });
     return shareBLE;
 }
@@ -111,24 +114,21 @@
 
 - (void)scanUnprovisionedDevicesWithResult:(bleScanPeripheralCallback)result {
 //    TeLogInfo(@"");
-    [self scanWithServiceUUID:kPBGATTService result:result];
+    [self scanWithServiceUUIDs:@[[CBUUID UUIDWithString:kPBGATTService]] checkNetworkEnable:NO result:result];
 }
 
 - (void)scanProvisionedDevicesWithResult:(bleScanPeripheralCallback)result {
 //    TeLogInfo(@"");
-    [self scanWithServiceUUID:kPROXYService result:result];
+    [self scanWithServiceUUIDs:@[[CBUUID UUIDWithString:kPROXYService]] checkNetworkEnable:YES result:result];
 }
 
-- (void)scanWithServiceUUID:(NSString *)UUID result:(bleScanPeripheralCallback)result{
+/// 自定义扫描接口，checkNetworkEnable表示是否对已经入网的1828设备进行NetworkID过滤，过滤则只能扫描到当前手机的本地mesh数据里面的设备。
+- (void)scanWithServiceUUIDs:(NSArray <CBUUID *>* _Nonnull)UUIDs checkNetworkEnable:(BOOL)checkNetworkEnable result:(bleScanPeripheralCallback)result {
     if (self.isInitFinish) {
-        self.scanServiceUUID = UUID;
+        self.checkNetworkEnable = checkNetworkEnable;
+        self.scanServiceUUIDs = [NSMutableArray arrayWithArray:UUIDs];
         self.bluetoothScanPeripheralCallback = result;
-        NSArray *uuids = nil;
-        if (UUID && UUID.length > 0) {
-            CBUUID *uuid = [CBUUID UUIDWithString:UUID];
-            uuids = [NSArray arrayWithObject:uuid];
-        }
-        [self.manager scanForPeripheralsWithServices:uuids options:nil];
+        [self.manager scanForPeripheralsWithServices:UUIDs options:nil];
     } else {
         TeLogError(@"Bluetooth is not power on.")
     }
@@ -156,7 +156,7 @@
 }
 
 - (void)stopScan {
-    self.scanServiceUUID = nil;
+    [self.scanServiceUUIDs removeAllObjects];
     self.scanPeripheralUUID = nil;
     self.bluetoothScanPeripheralCallback = nil;
     if (self.manager.isScanning) {
@@ -508,6 +508,10 @@
         if (self.bluetoothEnableCallback) {
             self.bluetoothEnableCallback(central,NO);
         }
+        if (self.currentPeripheral) {
+            NSError *err = [NSError errorWithDomain:@"CBCentralManager.state is not CBCentralManagerStatePoweredOn!" code:-1 userInfo:nil];
+            [self callbackDisconnectOfPeripheral:self.currentPeripheral error:err];
+        }
 //            [self stopAutoConnect];
     }
     if (self.bluetoothCentralUpdateStateCallback) {
@@ -545,16 +549,20 @@
         return;
     }
     
-    if (self.scanServiceUUID && [self.scanServiceUUID isEqualToString:kPBGATTService] && unProvisionAble) {
-        return;
+    BOOL shouldReturn = YES;
+    if (self.scanServiceUUIDs && [self.scanServiceUUIDs containsObject:[CBUUID UUIDWithString:kPBGATTService]] && provisionAble) {
+        shouldReturn = NO;
     }
-    if (self.scanServiceUUID && [self.scanServiceUUID isEqualToString:kPROXYService] && provisionAble) {
+    if (self.scanServiceUUIDs && [self.scanServiceUUIDs containsObject:[CBUUID UUIDWithString:kPROXYService]] && unProvisionAble) {
+        shouldReturn = NO;
+    }
+    if (shouldReturn) {
         return;
     }
     
     SigScanRspModel *scanRspModel = [[SigScanRspModel alloc] initWithPeripheral:peripheral advertisementData:advertisementData];
     //=================test==================//
-//    if (![scanRspModel.macAddress isEqualToString:@"FFFF20200722"]) {
+//    if (![scanRspModel.macAddress.uppercaseString isEqualToString:@"A4C138E44B94"]) {
 //        return;
 //    }
     //=================test==================//
@@ -566,7 +574,7 @@
         return;
     }
 
-    if (unProvisionAble) {
+    if (unProvisionAble && self.checkNetworkEnable) {
         scanRspModel.uuid = peripheral.identifier.UUIDString;
         BOOL isExist = [SigDataSource.share existScanRspModelOfCurrentMeshNetwork:scanRspModel];
         // 注释该逻辑，假定设备都不广播MacAddress

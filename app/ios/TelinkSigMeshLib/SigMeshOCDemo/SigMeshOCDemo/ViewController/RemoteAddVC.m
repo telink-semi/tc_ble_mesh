@@ -102,6 +102,7 @@
         }
         [weakSelf updateWithPeripheralUUID:identify macAddress:mac address:provisionAddress provisionResult:NO];
         TeLogInfo(@"RP-GATT:provision fail, error:%@",error);
+        [weakSelf showRemoteProvisionError:error];
     } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
         if (identify && address != 0) {
             SigScanRspModel *scanRsp = [SigDataSource.share getScanRspModelWithUUID:identify];
@@ -122,6 +123,7 @@
         }
         [weakSelf updateWithPeripheralUUID:identify macAddress:mac address:provisionAddress keyBindResult:NO];
         TeLogInfo(@"RP-GATT:keybind fail, error:%@",error);
+        [weakSelf showRemoteProvisionError:error];
     } finish:^{
         TeLogInfo(@"RP-GATT: finish.");
     }];
@@ -215,18 +217,25 @@
             }
         } fail:^(NSError * _Nonnull error) {
             TeLogDebug(@"RP-Remote:provision fail.");
-            [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_fail retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
-                
-            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                if (error != nil && isResponseAll == NO) {
-                    TeLogError(@"link close fail.");
-                }
-                [weakSelf.failSource addObject:model];
-                [weakSelf remoteAddSingleDeviceFinish];
-                [weakSelf updateWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:provisionAddress provisionResult:NO];
-                TeLogInfo(@"RP-Remote:provision fail, error=%@",error);
-                [weakSelf addNodeByRemoteProvision];
-            }];
+            if (![self.failSource containsObject:model]) {
+                [self.failSource addObject:model];
+            }
+            [self remoteAddSingleDeviceFinish];
+            [self updateWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:provisionAddress provisionResult:NO];
+
+            if (SigBearer.share.isOpen) {
+                [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_fail retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
+                    
+                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                    if (error != nil && isResponseAll == NO) {
+                        TeLogError(@"link close fail.");
+                    }
+                    TeLogInfo(@"RP-Remote:provision fail, error=%@",error);
+                    [weakSelf addNodeByRemoteProvision];
+                }];
+            } else {
+                [self addNodeByRemoteProvision];
+            }
         }];
     }
     #endif
@@ -271,7 +280,9 @@
         [self startRemoteProvisionScan];
     } else {
         //GATT add
-        [self addOneNodeInGATT];
+        [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+            [self addOneNodeInGATT];
+        }];
     }
 }
 

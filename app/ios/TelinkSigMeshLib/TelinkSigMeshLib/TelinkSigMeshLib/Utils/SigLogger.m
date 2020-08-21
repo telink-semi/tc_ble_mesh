@@ -124,9 +124,9 @@ void TelinkLogWithFile(NSString *format, ...) {
     va_list L;
     va_start(L, format);
     NSString *message = [[NSString alloc] initWithFormat:format arguments:L];
-    if (DEBUG) {
+//    if (DEBUG) {
         NSLog(@"%@", message);
-    }
+//    }
     // 开启异步子线程，将打印写入文件
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NSFileHandle *output = TelinkLogFileHandle();

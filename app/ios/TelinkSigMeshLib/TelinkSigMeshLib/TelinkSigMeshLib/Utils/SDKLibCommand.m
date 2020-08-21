@@ -3606,6 +3606,10 @@ function 1:special if you need do provision , you should call this method, and i
     [SigBluetooth.share scanProvisionedDevicesWithResult:result];
 }
 
++ (void)scanWithServiceUUIDs:(NSArray <CBUUID *>* _Nonnull)UUIDs checkNetworkEnable:(BOOL)checkNetworkEnable result:(bleScanPeripheralCallback)result {
+    [SigBluetooth.share scanWithServiceUUIDs:UUIDs checkNetworkEnable:checkNetworkEnable result:result];
+}
+
 + (void)scanMeshNodeWithPeripheralUUID:(NSString *)peripheralUUID timeout:(NSTimeInterval)timeout resultBlock:(bleScanSpecialPeripheralCallback)block {
     [SigBluetooth.share scanMeshNodeWithPeripheralUUID:peripheralUUID timeout:timeout resultBlock:block];
 }

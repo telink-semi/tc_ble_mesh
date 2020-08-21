@@ -972,7 +972,7 @@ response data like :
             //delay 500ms between finish read services and send invite of provision.
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kLoopWriteForBeaconDelayTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 isKeybinding = YES;
-                [Bluetooth.share keyBind:unicastAddress appkey:appkey appkeyIndex:appkeyIndex netkeyIndex:netkeyIndex keyBindType:keyBindType retryCount:0 keyBindSuccess:^(NSString *identify, UInt16 address) {
+                [Bluetooth.share keyBind:unicastAddress appkey:appkey appkeyIndex:appkeyIndex netkeyIndex:netkeyIndex keyBindType:keyBindType retryCount:retryCount keyBindSuccess:^(NSString *identify, UInt16 address) {
                     isKeybinding = NO;
                     if (weakSelf.singleKeyBindSuccessCallBack) {
                         weakSelf.singleKeyBindSuccessCallBack(identify,address);

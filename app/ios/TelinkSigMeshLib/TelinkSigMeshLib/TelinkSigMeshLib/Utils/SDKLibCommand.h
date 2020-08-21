@@ -705,6 +705,7 @@ peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+provisionTyp
 #pragma mark Scan API
 + (void)scanUnprovisionedDevicesWithResult:(bleScanPeripheralCallback)result;
 + (void)scanProvisionedDevicesWithResult:(bleScanPeripheralCallback)result;
++ (void)scanWithServiceUUIDs:(NSArray <CBUUID *>* _Nonnull)UUIDs checkNetworkEnable:(BOOL)checkNetworkEnable result:(bleScanPeripheralCallback)result;
 + (void)scanMeshNodeWithPeripheralUUID:(NSString *)peripheralUUID timeout:(NSTimeInterval)timeout resultBlock:(bleScanSpecialPeripheralCallback)block;
 + (void)stopScan;
 
