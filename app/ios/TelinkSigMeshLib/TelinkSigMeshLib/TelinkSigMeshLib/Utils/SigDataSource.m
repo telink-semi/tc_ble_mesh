@@ -72,7 +72,7 @@
         appkey.boundNetKey = 0;
         _defaultAppKeyA = appkey;
         _defaultIvIndexA = [[SigIvIndex alloc] initWithIndex:0x12345678 updateActive:NO];
-        _needPublishTimeModel = NO;
+        _needPublishTimeModel = YES;
         
         //OOB
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -996,8 +996,8 @@
             isExist = YES;
         }
         // If the Key refresh procedure is in place, the identity might have been generated with the old key.
-        if (self.curNetkeyModel.oldKey && self.curNetkeyModel.oldKey.length > 0 && ![self.curNetkeyModel.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
-            encryptedData = [OpenSSLHelper.share calculateEvalueWithData:data andKey:self.curNetkeyModel.oldKeys.identityKey];
+        if (!isExist && self.curNetkeyModel.oldKey && self.curNetkeyModel.oldKey.length > 0 && ![self.curNetkeyModel.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
+            encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:self.curNetkeyModel.oldKeys.identityKey];
             if ([[encryptedData subdataWithRange:NSMakeRange(8, encryptedData.length-8)] isEqualToData:hash]) {
                 isExist = YES;
             }
