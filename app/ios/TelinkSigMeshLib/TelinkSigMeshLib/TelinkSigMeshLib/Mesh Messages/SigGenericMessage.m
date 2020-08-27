@@ -133,7 +133,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericOnOffSet;
         _isOn = isOn;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -189,12 +190,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -221,7 +224,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericOnOffSetUnacknowledged;
         _isOn = isOn;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -277,12 +281,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -408,7 +414,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericLevelSet;
         _level = level;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -465,12 +472,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -497,7 +506,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericLevelSetUnacknowledged;
         _level = level;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -554,12 +564,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -651,7 +663,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericDeltaSet;
         _delta = delta;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -708,12 +721,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -740,7 +755,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericDeltaSetUnacknowledged;
         _delta = delta;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -797,12 +813,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -822,7 +840,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericMoveSet;
         _deltaLevel = deltaLevel;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -879,12 +898,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -911,7 +932,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericMoveSetUnacknowledged;
         _deltaLevel = deltaLevel;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -968,12 +990,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -1360,7 +1384,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericPowerLevelSet;
         _power = power;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -1417,12 +1442,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -1449,7 +1476,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericPowerLevelSetUnacknowledged;
         _power = power;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -1506,12 +1534,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -1532,7 +1562,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         self.opCode = SigOpCode_genericPowerLevelStatus;
         _power = power;
         _targetPower = 0;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
     }
     return self;
 }
@@ -3638,12 +3669,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -3714,12 +3747,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -4476,12 +4511,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -4554,12 +4591,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -4720,12 +4759,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+//v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -4798,12 +4839,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -5422,12 +5465,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -5512,12 +5557,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -5787,12 +5834,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -5871,13 +5920,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
-
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -6399,12 +6449,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -6477,13 +6529,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
-
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -6644,13 +6697,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
-
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -6723,12 +6777,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -6865,12 +6921,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -6955,12 +7013,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -7688,12 +7748,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -7778,12 +7840,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -8784,7 +8848,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 - (instancetype)init {
     if (self = [super init]) {
         self.opCode = SigOpCode_LightLCLightOnOffSet;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -8840,12 +8905,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -8864,7 +8931,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 - (instancetype)init {
     if (self = [super init]) {
         self.opCode = SigOpCode_LightLCLightOnOffSet;
-        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -8920,12 +8988,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = _delay;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-    }else{
-        tem8 = 0;
-        data = [NSData dataWithBytes:&tem8 length:1];
-        [mData appendData:data];
-        [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 

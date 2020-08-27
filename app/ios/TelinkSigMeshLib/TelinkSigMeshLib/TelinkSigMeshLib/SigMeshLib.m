@@ -172,6 +172,7 @@ static SigMeshLib *shareLib = nil;
         return nil;
     }
     
+    [self handleResponseMaxCommands];
     command.source = source;
     command.destination = destination;
     command.initialTtl = initialTtl;
@@ -225,6 +226,7 @@ static SigMeshLib *shareLib = nil;
         return nil;
     }
     
+    [self handleResponseMaxCommands];
     command.destination = [[SigMeshAddress alloc] initWithAddress:destination];
     command.initialTtl = initialTtl;
     command.commandType = SigCommandType_configMessage;
@@ -252,6 +254,7 @@ static SigMeshLib *shareLib = nil;
         return;
     }
     
+    [self handleResponseMaxCommands];
     command.commandType = SigCommandType_proxyConfigurationMessage;
 
     __weak typeof(self) weakSelf = self;
@@ -276,6 +279,8 @@ static SigMeshLib *shareLib = nil;
     if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
         command.responseMaxCount = 1;
     }
+    
+    [self handleResponseMaxCommands];
     [self addCommandToCacheListWithCommand:command];
     CBCharacteristic *onlineStatusCharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kOnlineStatusCharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral];
     if (onlineStatusCharacteristic != nil) {
@@ -306,12 +311,15 @@ static SigMeshLib *shareLib = nil;
         TeLogError(@"Error: Mesh Network not created.");
         return;
     }
-    __weak typeof(self) weakSelf = self;
-    dispatch_async(_queue, ^{
-        [weakSelf.networkManager cancelSigMessageHandle:messageId];
-        SDKLibCommand *command = [weakSelf getCommandWithSendMessageOpCode:messageId.opCode];
-        [weakSelf commandResponseFinishWithCommand:command];
-    });
+    SDKLibCommand *command = [self getCommandWithSendMessageOpCode:messageId.opCode];
+    [self commandResponseFinishWithCommand:command];
+
+//    __weak typeof(self) weakSelf = self;
+//    dispatch_async(_queue, ^{
+////        [weakSelf.networkManager cancelSigMessageHandle:messageId];
+//        SDKLibCommand *command = [weakSelf getCommandWithSendMessageOpCode:messageId.opCode];
+//        [weakSelf commandResponseFinishWithCommand:command];
+//    });
 }
 
 - (void)addCommandToCacheListWithCommand:(SDKLibCommand *)command {
@@ -345,8 +353,9 @@ static SigMeshLib *shareLib = nil;
     dispatch_async(weakSelf.queue, ^{
         [weakSelf.networkManager cancelSigMessageHandle:command.messageHandle];
     });
-    [self.commands removeObject:command];
-    if (self.commands.count == 0) {
+    command.hadReceiveAllResponse = YES;
+//    [self.commands removeObject:command];
+    if ([self hadSendCommandsFinish]) {
         [self isBusyNow];
     }
 }
@@ -354,14 +363,27 @@ static SigMeshLib *shareLib = nil;
 - (void)handleResponseMaxCommands {
     NSArray *commands = [NSArray arrayWithArray:_commands];
     for (SDKLibCommand *com in commands) {
-        if (com.responseMaxCount == 0 || com.responseMaxCount == 0xFF) {
+        if (com.responseMaxCount == 0 || com.responseMaxCount == 0xFF || com.hadReceiveAllResponse) {
             [self.commands removeObject:com];
         }
     }
 }
 
+- (BOOL)hadSendCommandsFinish {
+    BOOL tem = YES;
+    NSArray *commands = [NSArray arrayWithArray:_commands];
+    for (SDKLibCommand *com in commands) {
+        if (!com.hadReceiveAllResponse) {
+            tem = NO;
+            break;
+        }
+    }
+    return tem;
+}
+
 /// cancel all commands and retry of commands and retry of segment PDU.
 - (void)cleanAllCommandsAndRetry {
+    TeLogDebug(@"清除commands cache.");
     NSArray *commands = [NSArray arrayWithArray:_commands];
     for (SDKLibCommand *com in commands) {
         [com.messageHandle cancel];
@@ -370,8 +392,7 @@ static SigMeshLib *shareLib = nil;
 }
 
 - (BOOL)isBusyNow {
-    [self handleResponseMaxCommands];
-    BOOL busy = self.commands.count > 0;
+    BOOL busy = ![self hadSendCommandsFinish];
     dispatch_async(dispatch_get_main_queue(), ^{
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotifyCommandIsBusyOrNot object:nil userInfo:@{kCommandIsBusyKey : @(busy)}];
     });
@@ -424,7 +445,9 @@ static SigMeshLib *shareLib = nil;
         });
     }
     if (command.responseMaxCount != 0) {
-        if (command && command.responseSourceArray.count >= command.responseMaxCount) {
+//        if (command && command.responseSourceArray.count >= command.responseMaxCount) {
+        //优化：当实际回调的response多于传入的responseMaxCount时，使用==判断即可实现只回调一次resultCallback。
+        if (command && command.responseSourceArray.count == command.responseMaxCount) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self commandResponseFinishWithCommand:command];
                 if (command.resultCallback) {

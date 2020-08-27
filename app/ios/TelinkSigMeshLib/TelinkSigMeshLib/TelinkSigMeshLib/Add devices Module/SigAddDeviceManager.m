@@ -241,10 +241,7 @@ typedef enum : NSUInteger {
                             }
                             if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
                                 weakSelf.addStatus = SigAddStatusConnectSecond;
-                                [SigBearer.share closeWithResult:^(BOOL successful) {
-//                                    [weakSelf startAddPeripheral:peripheral];
-                                    [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
-                                }];
+                                [weakSelf performSelector:@selector(scanCurrentPeripheralForKeyBind) withObject:nil];
                             } else {
                                 [weakSelf keybind];
                             }
@@ -261,10 +258,7 @@ typedef enum : NSUInteger {
                             }
                             if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
                                 weakSelf.addStatus = SigAddStatusConnectSecond;
-                                [SigBearer.share closeWithResult:^(BOOL successful) {
-//                                    [weakSelf startAddPeripheral:peripheral];
-                                    [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
-                                }];
+                                [weakSelf performSelector:@selector(scanCurrentPeripheralForKeyBind) withObject:nil];
                             } else {
                                 [weakSelf keybind];
                             }
@@ -287,15 +281,18 @@ typedef enum : NSUInteger {
             if (weakSelf.retryCount > 0) {
                 TeLogDebug(@"retry connect peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
                 weakSelf.retryCount --;
-//                [weakSelf startAddPeripheral:peripheral];
-                [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
+                if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
+                    [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
+                } else {
+                    [weakSelf performSelector:@selector(scanCurrentPeripheralForKeyBind) withObject:nil];
+                }
             } else {
                 if (weakSelf.addStatus == SigAddStatusConnectFirst) {
                     if (weakSelf.provisionFailBlock) {
                         NSError *err = [NSError errorWithDomain:@"connect or read ATT fail. provision fail." code:-1 userInfo:nil];
                         weakSelf.provisionFailBlock(err);
                     }
-                } else if (weakSelf.addStatus == SigAddStatusConnectSecond) {
+                } else if (weakSelf.addStatus == SigAddStatusConnectSecond || weakSelf.addStatus == SigAddStatusKeyBinding) {
                     if (weakSelf.keyBindFailBlock) {
                         NSError *err = [NSError errorWithDomain:@"connect or read ATT fail. keybind fail." code:-1 userInfo:nil];
                         weakSelf.keyBindFailBlock(err);
@@ -305,6 +302,49 @@ typedef enum : NSUInteger {
             }
         }
     }];
+}
+
+- (void)scanCurrentPeripheralForKeyBind {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(keyBindByProxy) object:nil];
+        [self performSelector:@selector(keyBindByProxy) withObject:nil afterDelay:kScanNodeIdentityBeforeKeyBindTimeout];
+    });
+    __weak typeof(self) weakSelf = self;
+    [SigBluetooth.share setBluetoothDisconnectCallback:nil];
+    [SigBearer.share closeWithResult:^(BOOL successful) {
+        __block int maxRssi = 0;
+        [SigBluetooth.share scanProvisionedDevicesWithResult:^(CBPeripheral *peripheral, NSDictionary<NSString *,id> *advertisementData, NSNumber *RSSI, BOOL unprovisioned) {
+            if (!unprovisioned) {
+                if (maxRssi == 0) {
+                    maxRssi = RSSI.intValue;
+                    weakSelf.curPeripheral = peripheral;
+                } else {
+                    if (maxRssi > RSSI.intValue) {
+                        weakSelf.curPeripheral = peripheral;
+                    }
+                }
+                SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
+                if (rspModel.nodeIdentityData && rspModel.nodeIdentityData.length == 16) {
+                    SigEncryptedModel *encryptedModel = [SigDataSource.share getSigEncryptedModelWithAddress:weakSelf.unicastAddress];
+                    if (encryptedModel && encryptedModel.identityData && encryptedModel.identityData.length == 16 && [encryptedModel.identityData isEqualToData:rspModel.nodeIdentityData]) {
+                        TeLogInfo(@"keyBind start connect macAddress:%@,uuid=%@",rspModel.macAddress,rspModel.uuid);
+                        [SigBluetooth.share stopScan];
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(keyBindByProxy) object:nil];
+                        });
+                        [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
+                    }
+                }
+            }
+        }];
+    }];
+}
+
+- (void)keyBindByProxy {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(keyBindByProxy) object:nil];
+    });
+    [self performSelector:@selector(startAddPeripheral:) withObject:_curPeripheral];
 }
 
 - (void)addPeripheralFail:(CBPeripheral *)peripheral {

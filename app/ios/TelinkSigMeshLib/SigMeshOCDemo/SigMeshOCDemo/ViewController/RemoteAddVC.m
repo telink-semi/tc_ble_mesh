@@ -202,7 +202,7 @@
             SigNodeModel *node = [SigDataSource.share getNodeWithAddress:provisionAddress];
             if (node) {
                 [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_success retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
-                    
+
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     if (error != nil && isResponseAll == NO) {
                         TeLogError(@"link close fail.");
@@ -225,7 +225,7 @@
 
             if (SigBearer.share.isOpen) {
                 [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_fail retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
-                    
+
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     if (error != nil && isResponseAll == NO) {
                         TeLogError(@"link close fail.");

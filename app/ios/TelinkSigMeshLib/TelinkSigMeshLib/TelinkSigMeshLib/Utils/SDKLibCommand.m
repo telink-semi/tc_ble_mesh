@@ -44,6 +44,7 @@
         _responseSourceArray = [NSMutableArray array];
         _timeout = kSDKLibCommandTimeout;
         _hadRetryCount = 0;
+        _hadReceiveAllResponse = NO;
         _needTid = NO;
         _tid = 0;
         _netkeyA = SigDataSource.share.curNetkeyModel;
@@ -3203,6 +3204,10 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
+    // 特殊处理：因为该指令是存在response的，SDK会自动将异常的responseMaxCount=0修改为responseMaxCount=1，但该指令又不希望SDK对其进行retry，因此在此处修改一个很大的重试时间间隔timeout以避免预期外的超时callback。（想到更好的逻辑后再优化此代码。）
+    if (responseMaxCount == 0 && retryCount == 0) {
+        command.timeout = 0xFFFF;
+    }
     return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
@@ -3427,7 +3432,6 @@
         NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
         [oprationQueue addOperationWithBlock:^{
             //这个block语句块在子线程中执行
-            NSLog(@"oprationQueue");
             [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
         }];
     }

@@ -216,6 +216,8 @@ UIKIT_EXTERN UInt8 const kProvisionRandomTimeout;// 5
 UIKIT_EXTERN UInt8 const kSentProvisionEncryptedDataWithMicTimeout;// 5
 UIKIT_EXTERN UInt8 const kStartMeshConnectTimeout;// 10
 
+UIKIT_EXTERN UInt8 const kScanNodeIdentityBeforeKeyBindTimeout;// 3
+
 /// publish设置的上报周期
 UIKIT_EXTERN UInt8 const kPublishInterval;// 20
 /// time model设置的上报周期

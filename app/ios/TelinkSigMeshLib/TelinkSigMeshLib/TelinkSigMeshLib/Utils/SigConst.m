@@ -31,7 +31,7 @@
 
 #pragma mark - Const string
 
-NSString * const kTelinkSigMeshLibVersion = @"v3.2.2";
+NSString * const kTelinkSigMeshLibVersion = @"v3.2.3";
 
 NSString * const kNotifyCommandIsBusyOrNot = @"CommandIsBusyOrNot";
 NSString * const kCommandIsBusyKey = @"IsBusy";
@@ -200,6 +200,8 @@ UInt8 const kProvisionConfirmationTimeout = 5;
 UInt8 const kProvisionRandomTimeout = 5;
 UInt8 const kSentProvisionEncryptedDataWithMicTimeout = 5;
 UInt8 const kStartMeshConnectTimeout = 5;
+
+UInt8 const kScanNodeIdentityBeforeKeyBindTimeout = 3;
 
 //publish设置的上报周期
 UInt8 const kPublishInterval = 20;

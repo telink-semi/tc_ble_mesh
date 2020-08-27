@@ -154,7 +154,6 @@
     NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
     [oprationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
-        NSLog(@"oprationQueue");
         [SDKLibCommand updateIvIndexWithKeyRefreshFlag:NO ivUpdateActive:YES networkId:SigDataSource.share.curNetkeyModel.networkId ivIndex:weakSelf.ivIndex + 1 usingNetworkKey:SigDataSource.share.curNetkeyModel];
         
         [NSThread sleepForTimeInterval:2.0];

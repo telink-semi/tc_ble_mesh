@@ -160,6 +160,7 @@ typedef enum : UInt8 {
 @property (nonatomic,assign) NSTimeInterval timeout;//default is 1s,kSDKLibCommandTimeout.
 @property (nonatomic,assign) UInt8 hadRetryCount;//default is 0.
 @property (nonatomic, assign) BOOL needTid;//default is NO.
+@property (nonatomic, assign) BOOL hadReceiveAllResponse;//default is NO.
 @property (nonatomic, assign) UInt8 tid;//default is 0.
 @property (nonatomic,strong,nullable) BackgroundTimer *retryTimer;
 @property (nonatomic,strong) SigNetkeyModel *netkeyA;

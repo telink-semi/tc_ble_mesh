@@ -297,7 +297,7 @@
         // message was sent as a response to a Config Message sent by this Provisioner.
         SigNodeModel *node = [meshNetwork getNodeWithAddress:accessMessage.source];
         NSData *deviceKey = [LibTools nsstringToHex:node.deviceKey];
-        TeLogDebug(@"Try decoding using source's Node Device Key,deviceKey=%@",deviceKey);
+        TeLogVerbose(@"Try decoding using source's Node Device Key,deviceKey=%@",deviceKey);
         SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:deviceKey];
         if (deviceKey && deviceKey.length > 0 && pdu) {
             SigDeviceKeySet *keySet = [[SigDeviceKeySet alloc] initWithNetworkKey:accessMessage.networkKey node:node];
