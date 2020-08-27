@@ -234,7 +234,7 @@
 }
 
 - (BOOL)isOpen {
-    return [self.ble getCharacteristicWithUUIDString:kPROXY_Out_CharacteristicsID OfPeripheral:self.peripheral].isNotifying && [self.ble getCharacteristicWithUUIDString:kPBGATT_Out_CharacteristicsID OfPeripheral:self.peripheral].isNotifying;
+    return [self.ble getCharacteristicWithUUIDString:kPROXY_Out_CharacteristicsID OfPeripheral:self.peripheral].isNotifying || [self.ble getCharacteristicWithUUIDString:kPBGATT_Out_CharacteristicsID OfPeripheral:self.peripheral].isNotifying;
 }
 
 - (BOOL)isProvisioned {
@@ -352,16 +352,32 @@
             [SigBluetooth.share discoverServicesOfPeripheral:peripheral timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
 //                TeLogDebug(@"callback discoverServicesOfPeripheral peripheral=%@,successful=%d",peripheral,successful);
                 if (successful) {
-                    [SigBluetooth.share changeNotifyToState:YES Peripheral:peripheral characteristic:[SigBluetooth.share getCharacteristicWithUUIDString:kPBGATT_Out_CharacteristicsID OfPeripheral:peripheral] timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
-//                        TeLogDebug(@"callback 1.openNotifyOfPeripheral characteristic=%@,successful=%d",[SigBluetooth.share getCharacteristicWithUUIDString:kPBGATT_Out_CharacteristicsID OfPeripheral:peripheral],successful);
-                        if (successful) {
-                            [SigBluetooth.share changeNotifyToState:YES Peripheral:peripheral characteristic:[SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_Out_CharacteristicsID OfPeripheral:peripheral] timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
-//                                TeLogDebug(@"callback 2.openNotifyOfPeripheral characteristic=%@,successful=%d",[SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_Out_CharacteristicsID OfPeripheral:peripheral],successful);
-                                [weakSelf openResult:successful];
+                    NSMutableArray *characteristics = [NSMutableArray array];
+                    CBCharacteristic *gattOutCharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kPBGATT_Out_CharacteristicsID OfPeripheral:peripheral];
+                    CBCharacteristic *proxyOutCharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_Out_CharacteristicsID OfPeripheral:peripheral];
+                    if (gattOutCharacteristic) {
+                        [characteristics addObject:gattOutCharacteristic];
+                    }
+                    if (proxyOutCharacteristic) {
+                        [characteristics addObject:proxyOutCharacteristic];
+                    }
+                    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
+                    [oprationQueue addOperationWithBlock:^{
+                        //这个block语句块在子线程中执行
+                        __block BOOL hasFail = NO;
+                        for (CBCharacteristic *c in characteristics) {
+                            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+                            [SigBluetooth.share changeNotifyToState:YES Peripheral:peripheral characteristic:c timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
+                                hasFail = !successful;
+                                dispatch_semaphore_signal(semaphore);
                             }];
-                        }else{
-                            [weakSelf openResult:NO];
+                            //Most provide 5 seconds to change notify state.
+                            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 5.0));
+                            if (hasFail) {
+                                break;
+                            }
                         }
+                        [weakSelf openResult:!hasFail];
                     }];
                 }else{
                     [weakSelf openResult:NO];
@@ -485,6 +501,9 @@
         for (NSData *packet in packets) {
             [self showSendData:packet forCharacteristic:characteristic];
             [SigBearer.share.getCurrentPeripheral writeValue:packet forCharacteristic:characteristic type:type];
+        }
+        if (self.sendPacketFinishBlock) {
+            self.sendPacketFinishBlock();
         }
     }
 
