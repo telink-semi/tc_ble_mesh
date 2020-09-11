@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     BindingBearer.java 
+ * @file     GattOtaParameters.java 
  *
  * @brief    for TLSR chips
  *
@@ -19,23 +19,20 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-package com.telink.ble.mesh.core.access;
+package com.telink.ble.mesh.foundation.parameter;
 
 /**
- * bearer
- * Created by kee on 2019/9/5.
+ * Created by kee on 2017/11/23.
  */
 
-public enum BindingBearer {
-    /**
-     * binding only when target device is direct connected
-     */
-    GattOnly,
+public class GattConnectionParameters extends Parameters {
 
-    /**
-     * binding if mesh proxy is connected
-     */
-    Any,
+    public GattConnectionParameters(int targetMeshAddress) {
+        this.set(COMMON_PROXY_FILTER_INIT_NEEDED, true);
+        this.setTarget(targetMeshAddress);
+    }
 
-    Flex
+    public void setTarget(int meshAddress) {
+        this.set(ACTION_CONNECTION_MESH_ADDRESS, meshAddress);
+    }
 }

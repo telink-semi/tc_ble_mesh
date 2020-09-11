@@ -46,7 +46,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:max="99"
+            android:max="100"
+            android:min="1"
             android:padding="4dp"
             android:progress="9" />
 

@@ -24,11 +24,15 @@ package com.telink.ble.mesh.foundation;
 import android.content.Context;
 
 import com.telink.ble.mesh.core.Encipher;
+import com.telink.ble.mesh.core.ble.GattRequest;
 import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.networking.NetworkLayerPDU;
+import com.telink.ble.mesh.core.proxy.ProxyConfigurationPDU;
 import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
 import com.telink.ble.mesh.foundation.parameter.AutoConnectParameters;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.FastProvisioningParameters;
+import com.telink.ble.mesh.foundation.parameter.GattConnectionParameters;
 import com.telink.ble.mesh.foundation.parameter.GattOtaParameters;
 import com.telink.ble.mesh.foundation.parameter.MeshOtaParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
@@ -78,92 +82,6 @@ public class MeshService implements MeshController.EventCallback {
         mController.setEventCallback(this);
         mController.start(context);
         this.mEventHandler = eventHandler;
-        testEcdh();
-    }
-
-
-    private void testEcdh() {
-        byte[] content = Arrays.hexToBytes("2DE10AB359AA54B7D5CFFEB0262FE6AD");
-        byte[] key = Arrays.hexToBytes("6EE32FB8FC878EC6E20725481E675242");
-        byte[] aes = Encipher.aesCmac(content, key);
-        MeshLogger.d("aes: " + Arrays.bytesToHexString(aes));
-
-        byte[] salt = Encipher.generateSalt("smk2".getBytes());
-        MeshLogger.d("salt: " + Arrays.bytesToHexString(salt));
-
-        byte[] netkey = new byte[]{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x00};
-//        byte[] k3 = Encipher.k3();
-//        byte k4 = Encipher.k4(netkey);
-//        MeshLogger.d("k4" + k4);
-//        MeshLogger.d("k3: " + Arrays.bytesToHexString(k3));
-        byte[] netId = Encipher.generateIdentityKey(netkey);
-        MeshLogger.d("netId: " + Arrays.bytesToHexString(netId));
-
-
-        byte[] random = Arrays.hexToBytes("1122334455667788");
-        byte[] identity = Encipher.generateNodeIdentityHash(netId, random, 2);
-        MeshLogger.d("identity: " + Arrays.bytesToHexString(identity));
-
-        byte[] beaconKey = Encipher.generateBeaconKey(netkey);
-        MeshLogger.d("beaconKey: " + Arrays.bytesToHexString(beaconKey));
-
-        // aes: 314DE886AC5A48B2E897933FB4BF0D2D
-        // aesCMAC: 7C1FD960385E14A2150F5C0697FFBE39
-        /*KeyPair keyPair = Encipher.generateKeyPair();
-
-        BCECPublicKey publicKey = (BCECPublicKey) keyPair.getPublic();
-        byte[] pubX = publicKey.getQ().getXCoord().getEncoded();
-        MeshLogger.d("public key x hex: " + Arrays.bytesToHexString(pubX));
-        MeshLogger.d("public key x d: " + BigIntegers.fromUnsignedByteArray(pubX).toString());
-        byte[] pubY = publicKey.getQ().getYCoord().getEncoded();
-        MeshLogger.d("public key y hex: " + Arrays.bytesToHexString(pubY));
-        MeshLogger.d("public key y d: " + BigIntegers.fromUnsignedByteArray(pubY).toString());
-
-        BCECPrivateKey privateKey = (BCECPrivateKey) keyPair.getPrivate();
-        BigInteger d = privateKey.getD();
-
-        byte[] db = BigIntegers.asUnsignedByteArray(d);
-        MeshLogger.d("private key d: " + d.toString());
-        MeshLogger.d("private key db: " + Arrays.bytesToHexString(db));
-
-        BigInteger a = privateKey.getParams().getCurve().getA();
-        byte[] ab = BigIntegers.asUnsignedByteArray(a);
-        MeshLogger.d("private key ab: " + Arrays.bytesToHexString(ab));
-
-        BigInteger b = privateKey.getParams().getCurve().getB();
-        byte[] bb = BigIntegers.asUnsignedByteArray(b);
-        MeshLogger.d("private key bb: " + Arrays.bytesToHexString(bb));
-
-        BigInteger gx = privateKey.getParams().getGenerator().getAffineX();
-        byte[] gxb = BigIntegers.asUnsignedByteArray(gx);
-        MeshLogger.d("private key gxb: " + Arrays.bytesToHexString(gxb));
-
-        BigInteger gy = privateKey.getParams().getGenerator().getAffineY();
-        byte[] gyb = BigIntegers.asUnsignedByteArray(gy);
-        MeshLogger.d("private key gyb: " + Arrays.bytesToHexString(gyb));
-
-        ECFieldFp fieldFp = (ECFieldFp) privateKey.getParams().getCurve().getField();
-        BigInteger p = fieldFp.getP();
-        byte[] pb = BigIntegers.asUnsignedByteArray(p);
-        MeshLogger.d("private key pb: " + Arrays.bytesToHexString(pb));
-
-        ECNamedCurveSpec namedCurveSpec = (ECNamedCurveSpec) privateKey.getParams();
-        BigInteger order = namedCurveSpec.getOrder();
-        byte[] orderB = BigIntegers.asUnsignedByteArray(order);
-        MeshLogger.d("private key orderB: " + Arrays.bytesToHexString(orderB));
-
-        byte[] xy = Arrays.hexToBytes("6EE32FB8FC878EC6E20725481E6752422DE10AB359AA54B7D5CFFEB0262FE6AD7EC9632BF7E3C9836370329E045C94F0CF73B7F0E356115E7C2B167E33EF403E");
-
-
-        BigInteger x = BigIntegers.fromUnsignedByteArray(xy, 0, 32);
-        BigInteger y = BigIntegers.fromUnsignedByteArray(xy, 32, 32);
-        MeshLogger.d("x " + x.toString());
-        MeshLogger.d("y " + y.toString());
-        byte[] ecdhSec = Encipher.generateECDH(xy, privateKey);
-
-        BigInteger ecdhSecV = BigIntegers.fromUnsignedByteArray(ecdhSec);
-        MeshLogger.d("ecdh sec v: " + ecdhSecV.toString());
-        MeshLogger.d("ecdh sec: " + Arrays.bytesToHexString(ecdhSec));*/
     }
 
     public void clear() {
@@ -173,6 +91,9 @@ public class MeshService implements MeshController.EventCallback {
         }
     }
 
+    public void checkBluetoothState(){
+        mController.checkBluetoothState();
+    }
 
     public void setupMeshNetwork(MeshConfiguration configuration) {
         mController.setupMeshNetwork(configuration);
@@ -274,6 +195,13 @@ public class MeshService implements MeshController.EventCallback {
         mController.idle(disconnect);
     }
 
+    public void startGattConnection(GattConnectionParameters parameters){
+        mController.startGattConnection(parameters);
+    }
+
+    public boolean sendGattRequest(GattRequest request){
+        return mController.sendGattRequest(request);
+    }
 
     /**
      * send mesh message

@@ -30,7 +30,7 @@ import com.telink.ble.mesh.core.ble.UUIDInfo;
 public class AutoConnectParameters extends Parameters {
 
     public AutoConnectParameters() {
-        this.setScanFilter(createScanFilter(UUIDInfo.PROXY_SERVICE_UUID));
+        this.setScanFilter(createScanFilter(UUIDInfo.SERVICE_PROXY));
     }
 
 }

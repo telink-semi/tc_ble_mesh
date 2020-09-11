@@ -30,6 +30,7 @@ import android.widget.Button;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
+import com.telink.ble.mesh.core.access.BindingBearer;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.AdvertisingDevice;
 import com.telink.ble.mesh.entity.BindingDevice;
@@ -294,6 +295,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         int appKeyIndex = mesh.getDefaultAppKeyIndex();
         BindingDevice bindingDevice = new BindingDevice(nodeInfo.meshAddress, nodeInfo.deviceUUID, appKeyIndex);
         bindingDevice.setDefaultBound(defaultBound);
+        bindingDevice.setBearer(BindingBearer.GattOnly);
 //        bindingDevice.setDefaultBound(false);
         MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
     }

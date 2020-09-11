@@ -170,6 +170,7 @@
         <activity
             android:name="com.telink.ble.mesh.ui.test.OnOffTestActivity"
             android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity android:name="com.telink.ble.mesh.ui.test.ConnectionTestActivity" />
 
     </application>
 

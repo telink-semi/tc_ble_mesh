@@ -209,7 +209,8 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
 
             byte[] version = new byte[4];
             System.arraycopy(mFirmware, 2, version, 0, 4);
-            String firmVersion = new String(version);
+//            String firmVersion = new String(version);
+            String firmVersion = Arrays.bytesToHexString(version, ":");
             tv_version_info.setText(getString(R.string.version, firmVersion));
             tv_select_file.setText(fileName);
         } catch (IOException e) {

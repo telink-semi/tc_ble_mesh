@@ -31,7 +31,7 @@ import com.telink.ble.mesh.entity.FastProvisioningConfiguration;
 public class FastProvisioningParameters extends Parameters {
 
     public FastProvisioningParameters(FastProvisioningConfiguration fastProvisioningConfiguration) {
-        this.setScanFilter(createScanFilter(UUIDInfo.PROVISION_SERVICE_UUID));
+        this.setScanFilter(createScanFilter(UUIDInfo.SERVICE_PROVISION));
         this.set(ACTION_FAST_PROVISION_CONFIG, fastProvisioningConfiguration);
         this.set(COMMON_PROXY_FILTER_INIT_NEEDED, false);
     }

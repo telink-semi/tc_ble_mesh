@@ -43,9 +43,9 @@ public class ScanParameters extends Parameters {
         ScanParameters parameters = new ScanParameters();
 
         if (provisioned) {
-            parameters.filter.uuidInclude = new UUID[]{UUIDInfo.PROXY_SERVICE_UUID};
+            parameters.filter.uuidInclude = new UUID[]{UUIDInfo.SERVICE_PROXY};
         } else {
-            parameters.filter.uuidInclude = new UUID[]{UUIDInfo.PROVISION_SERVICE_UUID};
+            parameters.filter.uuidInclude = new UUID[]{UUIDInfo.SERVICE_PROVISION};
         }
         parameters.setScanFilter(parameters.filter);
         parameters.singleMode(single);

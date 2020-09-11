@@ -33,10 +33,12 @@ public class PublishModel implements Serializable {
 
     public static final int RFU_DEFAULT = 0x0C;
 
-
+    // 0 for time model
+    // 30 s
     // use default ttl in device
     public static final int TTL_DEFAULT = 0xFF;
 
+    // 0 for time model
     /**
      * default retransmit: 0x15
      * 0b 00010 101

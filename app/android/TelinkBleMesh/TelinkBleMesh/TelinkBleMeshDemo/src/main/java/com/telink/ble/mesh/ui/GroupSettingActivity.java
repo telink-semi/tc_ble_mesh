@@ -97,12 +97,14 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
                 MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
                 MeshMessage meshMessage;
                 if (seekBar == lum) {
+                    progress = Math.max(1, progress);
+                    MeshLogger.d(("lum: " + progress + " -- lightness: " + UnitConvert.lum2lightness(progress)));
                     meshMessage = LightnessSetMessage.getSimple(group.address,
                             meshInfo.getDefaultAppKeyIndex(),
                             UnitConvert.lum2lightness(progress),
                             false, 0);
                     MeshService.getInstance().sendMeshMessage(meshMessage);
-                    tv_lum.setText(getString(R.string.lum_progress, progress + 1, Integer.toHexString(group.address)));
+                    tv_lum.setText(getString(R.string.lum_progress, progress, Integer.toHexString(group.address)));
                 } else if (seekBar == temp) {
                     meshMessage = CtlTemperatureSetMessage.getSimple(group.address,
                             meshInfo.getDefaultAppKeyIndex(), UnitConvert.temp100ToTemp(progress),

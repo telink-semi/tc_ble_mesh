@@ -213,6 +213,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="4dp"
+                android:max="100"
+                android:min="1"
                 android:progress="9" />
         </LinearLayout>
 

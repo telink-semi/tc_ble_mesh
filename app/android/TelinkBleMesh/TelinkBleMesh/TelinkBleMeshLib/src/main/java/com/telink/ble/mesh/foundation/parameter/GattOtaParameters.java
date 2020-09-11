@@ -35,7 +35,7 @@ public class GattOtaParameters extends Parameters {
     }
 
     public void setTarget(int meshAddress) {
-        this.set(ACTION_OTA_MESH_ADDRESS, meshAddress);
+        this.set(ACTION_CONNECTION_MESH_ADDRESS, meshAddress);
     }
 
     public void setFirmware(byte[] firmware) {

@@ -207,10 +207,10 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         if (hslEleAdr == -1) {
             ll_hsl.setVisibility(View.GONE);
         } else {
-            ll_lum.setVisibility(View.GONE);
-            ll_lum_level.setVisibility(View.GONE);
-            ll_temp.setVisibility(View.GONE);
-            ll_temp_level.setVisibility(View.GONE);
+//            ll_lum.setVisibility(View.GONE);
+//            ll_lum_level.setVisibility(View.GONE);
+//            ll_temp.setVisibility(View.GONE);
+//            ll_temp_level.setVisibility(View.GONE);
         }
 
         if (lumEleInfo == null) {
@@ -265,10 +265,11 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
     };
 
     private void sendHslSetMessage(float[] hslValue) {
-        int hue = (int) (hslValue[0] * 65535 / 360);
-        int sat = (int) (hslValue[1] * 65535);
-        int lightness = (int) (hslValue[2] * 65535);
-
+        int hue = Math.round(hslValue[0] * 65535 / 360);
+        int sat = Math.round(hslValue[1] * 65535);
+        int lightness = Math.round(hslValue[2] * 65535);
+//        lightness = 0x54d5;
+        MeshLogger.d("set hsl: hue -> " + hue + " sat -> "+ sat + " lightness -> "+ lightness);
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         HslSetMessage hslSetMessage = HslSetMessage.getSimple(hslEleAdr, meshInfo.getDefaultAppKeyIndex(),
                 lightness,

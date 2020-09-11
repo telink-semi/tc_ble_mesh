@@ -50,7 +50,8 @@ public final class UnitConvert {
      * @return 0-65535
      */
     public static int lum2lightness(int lum) {
-        return 65535 * lum / 100;
+        return (int) Math.ceil((double) 65535 * lum / 100);
+//        return 65535 * lum / 100;
     }
 
     public static int lightness2lum(int lightness) {

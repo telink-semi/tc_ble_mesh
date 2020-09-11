@@ -66,11 +66,11 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initBottomNav();
-        startMeshService();
-        resetNodeState();
         TelinkMeshApplication.getInstance().addEventListener(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_EMPTY, this);
+        startMeshService();
+        resetNodeState();
     }
 
     private void initBottomNav() {
@@ -90,6 +90,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         MeshService.getInstance().init(this, TelinkMeshApplication.getInstance());
         MeshConfiguration meshConfiguration = TelinkMeshApplication.getInstance().getMeshInfo().convertToConfiguration();
         MeshService.getInstance().setupMeshNetwork(meshConfiguration);
+        MeshService.getInstance().checkBluetoothState();
     }
 
     private void resetNodeState() {

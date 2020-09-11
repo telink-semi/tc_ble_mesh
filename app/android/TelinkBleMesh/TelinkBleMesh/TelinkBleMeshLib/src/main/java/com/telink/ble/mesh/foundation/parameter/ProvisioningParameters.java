@@ -31,7 +31,7 @@ import com.telink.ble.mesh.entity.ProvisioningDevice;
 public class ProvisioningParameters extends Parameters {
 
     public ProvisioningParameters(ProvisioningDevice device) {
-        this.setScanFilter(createScanFilter(UUIDInfo.PROVISION_SERVICE_UUID));
+        this.setScanFilter(createScanFilter(UUIDInfo.SERVICE_PROVISION));
         this.set(ACTION_PROVISIONING_TARGET, device);
     }
 

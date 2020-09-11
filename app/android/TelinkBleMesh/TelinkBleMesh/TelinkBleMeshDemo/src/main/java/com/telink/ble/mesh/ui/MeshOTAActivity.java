@@ -396,7 +396,8 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
 
             byte[] version = new byte[4];
             System.arraycopy(mFirmware, 2, version, 0, 4);
-            String firmVersion = new String(version);
+//            String firmVersion = new String(version);
+            String firmVersion = Arrays.bytesToHexString(version, ":");
             tv_version_info.setText(getString(R.string.version, firmVersion));
             tv_file_path.setText(fileName);
         } catch (IOException e) {

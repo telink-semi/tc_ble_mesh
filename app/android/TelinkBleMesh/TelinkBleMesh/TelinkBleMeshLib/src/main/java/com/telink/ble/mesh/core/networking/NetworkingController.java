@@ -1117,7 +1117,8 @@ public class NetworkingController {
             if (success) {
                 if (segmentedBusy && mSendingReliableMessage.isSegmented()) {
                     segmentedBusy = false;
-                    mDelayHandler.removeCallbacks(mSegmentBlockWaitingTask);
+                    stopSegmentedBlockAckWaiting(true, true);
+//                    mDelayHandler.removeCallbacks(mSegmentBlockWaitingTask);
                 }
             }
         }

@@ -83,17 +83,6 @@ public class TelinkMeshApplication extends MeshApplication {
 //        testEncipher();
     }
 
-
-    private void testEncipher() {
-        byte[] encSample = {0x3C, 0x5F, 0x2A, (byte) 0xFE, (byte) 0xFE, (byte) 0xF0, 0x09, (byte) 0xAA, (byte) 0xF9, 0x74, 0x47, 0x3A, 0x02, 0x00, (byte) 0xF8, (byte) 0x83};
-        byte[] text = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-        byte[] key = {0x01, 0x23, 0x45, 0x67, (byte) 0x89, 0x01, 0x22, 0x23, 0x34, 0x45, 0x56, 0x67, 0x78, (byte) 0x89, (byte) 0x90, 0x02};
-        byte[] enc = Encipher.aesCmac(text, key);
-        MeshLogger.d("aes: " + Arrays.bytesToHexString(enc, ",0x"));
-
-
-    }
-
     private final String TAG = "Telink-APP";
 
     private void closePErrorDialog() {
@@ -135,6 +124,7 @@ public class TelinkMeshApplication extends MeshApplication {
     }
 
     public void setupMesh(MeshInfo mesh) {
+        MeshLogger.d("setup mesh info: " + meshInfo.toString());
         this.meshInfo = mesh;
         dispatchEvent(new MeshEvent(this, MeshEvent.EVENT_TYPE_MESH_RESET, "mesh reset"));
     }

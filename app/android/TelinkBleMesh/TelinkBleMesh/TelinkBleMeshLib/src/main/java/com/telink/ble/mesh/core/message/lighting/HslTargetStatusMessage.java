@@ -84,7 +84,7 @@ public class HslTargetStatusMessage extends StatusMessage implements Parcelable 
         index += 2;
         if (params.length == DATA_LEN_COMPLETE) {
             this.isComplete = true;
-            remainingTime = params[index];
+            this.remainingTime = params[index];
         }
     }
 

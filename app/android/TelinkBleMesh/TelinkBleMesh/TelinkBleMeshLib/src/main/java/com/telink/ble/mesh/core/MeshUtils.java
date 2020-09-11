@@ -242,7 +242,7 @@ public final class MeshUtils {
      */
     public static byte[] getMeshServiceData(byte[] scanRecord, boolean unprovisioned) {
         MeshScanRecord meshScanRecord = MeshScanRecord.parseFromBytes(scanRecord);
-        return meshScanRecord.getServiceData(ParcelUuid.fromString((unprovisioned ? UUIDInfo.PROVISION_SERVICE_UUID : UUIDInfo.PROXY_SERVICE_UUID).toString()));
+        return meshScanRecord.getServiceData(ParcelUuid.fromString((unprovisioned ? UUIDInfo.SERVICE_PROVISION : UUIDInfo.SERVICE_PROXY).toString()));
     }
 
     /**

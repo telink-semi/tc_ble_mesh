@@ -50,6 +50,7 @@ import com.telink.ble.mesh.ui.FastProvisionActivity;
 import com.telink.ble.mesh.ui.KeyBindActivity;
 import com.telink.ble.mesh.ui.LogActivity;
 import com.telink.ble.mesh.ui.MainActivity;
+import com.telink.ble.mesh.ui.test.ConnectionTestActivity;
 import com.telink.ble.mesh.ui.test.OnOffTestActivity;
 import com.telink.ble.mesh.ui.RemoteProvisionActivity;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
@@ -270,7 +271,8 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 break;
 
             case R.id.btn_test:
-                startActivity(new Intent(getActivity(), OnOffTestActivity.class));
+                startActivity(new Intent(getActivity(), ConnectionTestActivity.class));
+//                startActivity(new Intent(getActivity(), OnOffTestActivity.class));
                 break;
         }
     }
