@@ -106,9 +106,9 @@
     return [self decodeLimit:10000 indexesFromData:data atOffset:offset];
 }
 
-- (BOOL)isSegmented {
-    return YES;
-}
+//- (BOOL)isSegmented {
+//    return YES;
+//}
 
 @end
 
@@ -3326,6 +3326,10 @@
 
 - (UInt32)responseOpCode {
     return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+- (BOOL)isSegmented {
+    return NO;
 }
 
 @end

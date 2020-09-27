@@ -714,7 +714,7 @@
     return self;
 }
 
-- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode needTid:(BOOL)needTid tid:(UInt8)tid commandData:(NSData *)commandData {
+- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode needTid:(BOOL)needTid tid:(UInt8)tid commandData:(nullable NSData *)commandData {
     if (self = [super init]) {
         _hasReceiveResponse = NO;
         _netkeyIndex = netkeyIndex;
@@ -1368,6 +1368,10 @@
     return _index == 0;
 }
 
+- (NSString *)getNetKeyDetailString {
+    return [NSString stringWithFormat:@"name:%@\tindex:0x%04lX\tkey:0x%@\toldKey:0x%@\tphase:%d\tminSecurity:%@\ttimestamp:%@",_name,(long)_index,_key,_oldKey,_phase,_minSecurity,_timestamp];
+}
+
 @end
 
 
@@ -1498,8 +1502,8 @@
         //源码版本v3.2.3及以后，间隔1024，短地址分配范围：1~1024，1025~2048，2049~3072，3073~4096， 。。。
         self.allocatedUnicastRange = [NSMutableArray array];
         SigRangeModel *range2 = [[SigRangeModel alloc] init];
-        range2.lowAddress = [NSString stringWithFormat:@"%04X",kAllocatedUnicastRangeLowAddress + (count == 0 ? 0 : (count*(kAllocatedUnicastRangeHighAddress+1)-1))];
-        range2.highAddress = [NSString stringWithFormat:@"%04X",kAllocatedUnicastRangeHighAddress + (count == 0 ? 0 : count*(kAllocatedUnicastRangeHighAddress+1))];
+        range2.lowAddress = [NSString stringWithFormat:@"%04X",kAllocatedUnicastRangeLowAddress + (count == 0 ? 0 : (count*(SigDataSource.share.defaultAllocatedUnicastRangeHighAddress+1)-1))];
+        range2.highAddress = [NSString stringWithFormat:@"%04X",SigDataSource.share.defaultAllocatedUnicastRangeHighAddress + (count == 0 ? 0 : count*(SigDataSource.share.defaultAllocatedUnicastRangeHighAddress+1))];
         [self.allocatedUnicastRange addObject:range2];
         
         self.allocatedSceneRange = [NSMutableArray array];
@@ -1682,6 +1686,10 @@
         return [LibTools nsstringToHex:_oldKey];
     }
     return nil;
+}
+
+- (NSString *)getAppKeyDetailString {
+    return [NSString stringWithFormat:@"name:%@\tindex:0x%04lX\tboundNetKey:0x%04lX\tkey:0x%@\toldKey:0x%@",_name,(long)_index,(long)_boundNetKey,_key,_oldKey];
 }
 
 @end
@@ -1925,9 +1933,6 @@
         _relayRetransmit = [[SigRelayretransmitModel alloc] init];
         _networkTransmit = [[SigNetworktransmitModel alloc] init];
         
-        SigNodeKeyModel *nodeNetkey = [[SigNodeKeyModel alloc] init];
-        nodeNetkey.index = 0;
-        [_netKeys addObject:nodeNetkey];
         _secureNetworkBeacon = NO;
         _configComplete = NO;
         _blacklisted = NO;
@@ -2640,31 +2645,18 @@
 - (NSMutableArray <NSNumber *>*)getGroupIDs{
     @synchronized (self) {
         NSMutableArray *tem = [NSMutableArray array];
-        NSArray *allOptions = SigDataSource.share.defaultGroupSubscriptionModels;
-        for (NSNumber *modelID in allOptions) {
-            BOOL hasOption = NO;
-            NSArray *elements = [NSArray arrayWithArray:self.elements];
-            for (SigElementModel *element in elements) {
-                BOOL shouldBreak = NO;
-                NSArray *models = [NSArray arrayWithArray:element.models];
-                for (SigModelIDModel *modelIDModel in models) {
-                    if (modelIDModel.getIntModelID == modelID.intValue) {
-                        //[NSString]->[NSNumber]
-                        NSArray *subscribe = [NSArray arrayWithArray:modelIDModel.subscribe];
-                        for (NSString *groupIDString in subscribe) {
-                            [tem addObject:@([LibTools uint16From16String:groupIDString])];
-                        }
-                        hasOption = YES;
-                        shouldBreak = YES;
-                        break;
+        NSArray *elements = [NSArray arrayWithArray:self.elements];
+        for (SigElementModel *element in elements) {
+            NSArray *models = [NSArray arrayWithArray:element.models];
+            for (SigModelIDModel *modelIDModel in models) {
+                //[NSString]->[NSNumber]
+                NSArray *subscribe = [NSArray arrayWithArray:modelIDModel.subscribe];
+                for (NSString *groupIDString in subscribe) {
+                    NSNumber *groupNumber = @([LibTools uint16From16String:groupIDString]);
+                    if (![tem containsObject:groupNumber]) {
+                        [tem addObject:groupNumber];
                     }
                 }
-                if (shouldBreak) {
-                    break;
-                }
-            }
-            if (hasOption) {
-                break;
             }
         }
         return tem;

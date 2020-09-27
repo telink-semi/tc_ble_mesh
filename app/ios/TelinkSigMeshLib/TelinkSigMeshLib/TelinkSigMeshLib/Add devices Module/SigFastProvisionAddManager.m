@@ -355,6 +355,12 @@
         model.UUID = [LibTools convertDataToHexStr:fastModel.deviceKey];
         model.peripheralUUID = nil;
         model.macAddress = [LibTools convertDataToHexStr:[LibTools turnOverData:fastModel.macAddress]];
+        SigNodeKeyModel *nodeNetkey = [[SigNodeKeyModel alloc] init];
+        nodeNetkey.index = SigDataSource.share.curNetkeyModel.index;
+        if (![model.netKeys containsObject:nodeNetkey]) {
+            [model.netKeys addObject:nodeNetkey];
+        }
+
         if ([SigDataSource.share.nodes containsObject:model]) {
             NSInteger index = [SigDataSource.share.nodes indexOfObject:model];
             SigDataSource.share.nodes[index] = model;

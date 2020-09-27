@@ -253,7 +253,7 @@
 - (void)cancelSendingSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu {
     /// Last 13 bits of the sequence number are known as seqZero.
     UInt16 sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
-    TeLogInfo(@"Cancelling sending segments with seqZero:%d",sequenceZero);
+    TeLogInfo(@"Cancelling sending segments with seqZero:0x%X",sequenceZero);
     [_outgoingSegments removeObjectForKey:@(sequenceZero)];
     [_segmentTtl removeObjectForKey:@(sequenceZero)];
     BackgroundTimer *timer = _segmentTransmissionTimers[@(sequenceZero)];
@@ -284,7 +284,7 @@
 //    }
     UInt32 sequence = [networkPdu messageSequence];
     BOOL newSource = [_defaults objectForKey:[SigHelper.share getNodeAddressString:networkPdu.source]]==nil;//source为node的address
-//    TeLogDebug(@"============newSource=%d,networkPdu.source=%d",newSource,networkPdu.source);
+    TeLogVerbose(@"============newSource=%d,networkPdu.source=0x%x",newSource,networkPdu.source);
     if (!newSource) {
         NSInteger lastSequence = [_defaults integerForKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
         UInt64 localSeqAuth = ((UInt64)networkPdu.networkKey.ivIndex.index) << 24 | (UInt64)lastSequence;
@@ -609,13 +609,13 @@
 ///   - ack: The Segment Acknowledgment Message to sent.
 ///   - ttl: Initial Time To Live (TTL) value.
 - (void)sendAckSigSegmentAcknowledgmentMessage:(SigSegmentAcknowledgmentMessage *)ack withTtl:(UInt8)ttl {
-//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-//        TeLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x",ack,ack.source,ack.destination,ack.sequenceZero);
-//        [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl];
-//    });
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+        TeLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x",ack,ack.source,ack.destination,ack.sequenceZero);
+        [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl];
+    });
     
-    TeLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x,blockAck=0x%x",ack,ack.source,ack.destination,ack.sequenceZero,ack.blockAck);
-    [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl];
+//    TeLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x,blockAck=0x%x",ack,ack.source,ack.destination,ack.sequenceZero,ack.blockAck);
+//    [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl];
 }
 
 /// Sends all non-`nil` segments from `outgoingSegments` map from the given
@@ -636,7 +636,8 @@
     BOOL ackExpected = NO;
 
     UInt16 destination = 0;
-    
+    TeLogVerbose(@"==========发送seg=%@开始",array);
+
     // Send all the segments that have not been acknowledged yet.
     for (int i=0; i<count; i++) {
         SigSegmentedMessage *segment = array[i];

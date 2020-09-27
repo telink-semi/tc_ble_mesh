@@ -36,7 +36,7 @@
     if (_message == nil) {
         return NO;
     }
-    return _accessPdu.length > 11 || _message.isSegmented;
+    return _accessPdu.length > 15 || _message.isSegmented;
 }
 
 - (int)segmentsCount {
@@ -58,8 +58,16 @@
     }
 }
 
+- (instancetype)init {
+    if (self = [super init]) {
+        _isAccessMessage = SigLowerTransportPduType_accessMessage;
+    }
+    return self;
+}
+
 - (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu {
     if (self = [super init]) {
+        _isAccessMessage = SigLowerTransportPduType_accessMessage;
         _message = nil;
         _localElement = nil;
         _userInitiated = NO;
@@ -118,6 +126,7 @@
 
 - (instancetype)initFromMeshMessage:(SigMeshMessage *)message sentFromLocalElement:(SigElementModel *)localElement toDestination:(SigMeshAddress *)destination userInitiated:(BOOL)userInitiated {
     if (self = [super init]) {
+        _isAccessMessage = SigLowerTransportPduType_accessMessage;
         _message = message;
         _localElement = localElement;
         _userInitiated = userInitiated;

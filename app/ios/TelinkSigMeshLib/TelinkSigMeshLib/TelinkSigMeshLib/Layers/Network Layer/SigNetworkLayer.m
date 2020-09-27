@@ -33,6 +33,7 @@
 #import "SigLowerTransportLayer.h"
 #import "SigLowerTransportPdu.h"
 #import "SigControlMessage.h"
+#import "SigSegmentAcknowledgmentMessage.h"
 
 @interface SigNetworkLayer ()
 @property (nonatomic,assign) NSInteger networkTransmitCount;
@@ -187,6 +188,14 @@
         TeLogError(@"bearer is closed.");
         return;
     }
+    if ([pdu isMemberOfClass:[SigSegmentAcknowledgmentMessage class]]) {
+        if (SigBearer.share.isSending) {
+            self.lastNeedSendAckMessage = (SigSegmentAcknowledgmentMessage *)pdu;
+            return;
+        } else {
+            self.lastNeedSendAckMessage = nil;
+        }
+    }
     
     _ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     _networkKey = pdu.networkKey;
@@ -219,7 +228,16 @@
     }else{
         [SigBearer.share sendBlePdu:networkPdu ofType:type];
     }
-
+    if (self.lastNeedSendAckMessage) {
+        TeLogDebug(@"==========灵活处理中间的ack数据包。")
+        SigNodeModel *provisionerNode = SigDataSource.share.curLocationNodeModel;
+        UInt8 ttl = provisionerNode.defaultTTL;
+        if (ttl < 2) {
+            ttl = 10;
+        }
+        [self sendLowerTransportPdu:self.lastNeedSendAckMessage ofType:SigPduType_networkPdu withTtl:ttl];
+    }
+    
     // SDK need use networkTransmit in gatt provision.
     SigNetworktransmitModel *networkTransmit = _meshNetwork.curLocationNodeModel.networkTransmit;
     if (type == SigPduType_networkPdu && networkTransmit != nil && networkTransmit.count > 1 && !SigBearer.share.isProvisioned) {
@@ -298,9 +316,17 @@
     }
     
     //===========telink==========//
-    SigDataSource.share.curNetkeyModel.ivIndex.updateActive = secureNetworkBeacon.ivUpdateActive;
-    SigDataSource.share.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex;
-    [SigDataSource.share setIvIndex:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex]];
+    if (secureNetworkBeacon.ivUpdateActive) {
+        if (SigDataSource.share.curNetkeyModel.ivIndex.index != secureNetworkBeacon.ivIndex - 1) {
+            SigDataSource.share.curNetkeyModel.ivIndex.updateActive = NO;
+            SigDataSource.share.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex - 1;
+            [SigDataSource.share setIvIndex:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex - 1]];
+        }
+    } else {
+        SigDataSource.share.curNetkeyModel.ivIndex.updateActive = secureNetworkBeacon.ivUpdateActive;
+        SigDataSource.share.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex;
+        [SigDataSource.share setIvIndex:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex]];
+    }
     //===========telink==========//
     if (secureNetworkBeacon.keyRefreshFlag) {
         SigDataSource.share.curNetkeyModel.key = secureNetworkBeacon.networkKey.key;

@@ -55,6 +55,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// The Access Layer PDU data that will be sent.
 @property (nonatomic,strong) NSData *accessPdu;
 
+@property (nonatomic,assign) SigLowerTransportPduType isAccessMessage;
 /// Whether the outgoind message will be sent as segmented, or not.
 - (BOOL)isSegmented;
 

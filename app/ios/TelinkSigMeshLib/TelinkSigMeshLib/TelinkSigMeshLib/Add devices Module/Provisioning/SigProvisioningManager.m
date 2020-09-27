@@ -128,7 +128,12 @@
     model.UUID = self.unprovisionedDevice.advUuid;
     //Attention: There isn't scanModel at remote add, so develop need add macAddress in provisionSuccessCallback.
     model.macAddress = self.unprovisionedDevice.macAddress;
-    
+    SigNodeKeyModel *nodeNetkey = [[SigNodeKeyModel alloc] init];
+    nodeNetkey.index = self.networkKey.index;
+    if (![model.netKeys containsObject:nodeNetkey]) {
+        [model.netKeys addObject:nodeNetkey];
+    }
+
     SigPage0 *compositionData = [[SigPage0 alloc] init];
     compositionData.companyIdentifier = self.unprovisionedDevice.CID;
     compositionData.productIdentifier = self.unprovisionedDevice.PID;
@@ -308,11 +313,11 @@
 - (void)getCapabilitiesWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
     TeLogInfo(@"\n\n==========provision:step1\n\n");
     self.provisionResponseBlock = block;
-    [self identifyWithAttentionTimer:0];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
         [self performSelector:@selector(getCapabilitiesTimeout) withObject:nil afterDelay:timeout];
     });
+    [self identifyWithAttentionTimer:0];
 }
 
 #pragma mark step2:start
@@ -353,6 +358,7 @@
     SigProvisioningPdu *publicPdu = [[SigProvisioningPdu alloc] initProvisioningPublicKeyPduWithPublicKey:self.provisioningData.provisionerPublicKey];
     [self sendPdu:publicPdu andAccumulateToData:self.provisioningData];
     dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
         [self performSelector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) withObject:nil afterDelay:timeout];
     });
@@ -396,6 +402,7 @@
     SigProvisioningPdu *publicPdu = [[SigProvisioningPdu alloc] initProvisioningPublicKeyPduWithPublicKey:self.provisioningData.provisionerPublicKey];
     [self sendPdu:publicPdu andAccumulateToData:self.provisioningData];
     dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
         [self performSelector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) withObject:nil afterDelay:timeout];
     });
@@ -418,6 +425,7 @@
     [self authValueReceivedData:authValue];
     
     dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
         [self performSelector:@selector(sentProvisionConfirmationPduTimeout) withObject:nil afterDelay:timeout];
     });
@@ -431,6 +439,7 @@
     [self sendPdu:pdu];
 
     dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
         [self performSelector:@selector(sentProvisionRandomPduTimeout) withObject:nil afterDelay:timeout];
     });
@@ -444,6 +453,7 @@
     [self sendPdu:pdu];
 
     dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) object:nil];
         [self performSelector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) withObject:nil afterDelay:timeout];
     });

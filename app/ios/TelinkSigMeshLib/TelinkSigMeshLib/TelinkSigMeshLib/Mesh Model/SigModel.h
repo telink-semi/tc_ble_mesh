@@ -28,6 +28,7 @@
 //
 
 #import <Foundation/Foundation.h>
+NS_ASSUME_NONNULL_BEGIN
 
 @class SigNetkeyDerivaties,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel   ,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0;
 typedef void(^BeaconBackCallBack)(BOOL available);
@@ -47,7 +48,8 @@ typedef void(^bleCancelConnectCallback)(CBPeripheral *peripheral,BOOL successful
 typedef void(^bleCancelAllConnectCallback)(void);
 typedef void(^bleDisconnectCallback)(CBPeripheral *peripheral,NSError *error);
 typedef void(^bleIsReadyToSendWriteWithoutResponseCallback)(CBPeripheral *peripheral);
-typedef void(^bleDidUpdateValueForCharacteristicCallback)(CBPeripheral *peripheral,CBCharacteristic *characteristic);
+typedef void(^bleDidUpdateValueForCharacteristicCallback)(CBPeripheral *peripheral,CBCharacteristic *characteristic, NSError * _Nullable error);
+typedef void(^bleDidWriteValueForCharacteristicCallback)(CBPeripheral *peripheral,CBCharacteristic *characteristic, NSError * _Nullable error);
 
 @interface SigModel : NSObject
 @end
@@ -274,7 +276,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic, assign) UInt8 responseOpcode;// response of VendorOnOffSet:0xC4.
 @property (nonatomic, assign) BOOL needTid;
 @property (nonatomic, assign) UInt8 tid;
-@property (nonatomic, strong) NSData *commandData;//max length is MESH_CMD_ACCESS_LEN_MAX. SigGenericOnOffSet: commandData of turn on without TransitionTime and delay is {0x01,0x00,0x00}. commandData of turn off without TransitionTime and delay is {0x00,0x00,0x00}
+@property (nonatomic, strong, nullable) NSData *commandData;//max length is MESH_CMD_ACCESS_LEN_MAX. SigGenericOnOffSet: commandData of turn on without TransitionTime and delay is {0x01,0x00,0x00}. commandData of turn off without TransitionTime and delay is {0x00,0x00,0x00}
 
 @property (nonatomic, copy) responseAllMessageBlock responseCallBack;
 @property (nonatomic, assign) BOOL hasReceiveResponse;
@@ -287,7 +289,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 /// create sig model ini command
 - (instancetype)initSigModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt16)opcode commandData:(NSData *)commandData;
 /// create vebdor model ini command
-- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode needTid:(BOOL)needTid tid:(UInt8)tid commandData:(NSData *)commandData;
+- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode needTid:(BOOL)needTid tid:(UInt8)tid commandData:(nullable NSData *)commandData;
 /// create model by ini data
 /// @param iniCommandData ini data, eg: "a3ff000000000200ffffc21102c4020100"
 - (instancetype)initWithIniCommandData:(NSData *)iniCommandData;
@@ -503,7 +505,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 @interface SigNetkeyModel : NSObject
 
-@property (nonatomic, copy) NSString *oldKey;
+@property (nonatomic, copy, nullable) NSString *oldKey;
 
 @property (nonatomic, assign) UInt16 index;
 
@@ -541,6 +543,8 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 - (NSDictionary *)getDictionaryOfSigNetkeyModel;
 - (void)setDictionaryToSigNetkeyModel:(NSDictionary *)dictionary;
+
+- (NSString *)getNetKeyDetailString;
 
 @end
 
@@ -642,6 +646,8 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 - (NSDictionary *)getDictionaryOfSigAppkeyModel;
 - (void)setDictionaryToSigAppkeyModel:(NSDictionary *)dictionary;
+
+- (NSString *)getAppKeyDetailString;
 
 @end
 
@@ -756,7 +762,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*sceneAddress;//element addresses of scene
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*publishAddress;//element addresses of publish
 @property (nonatomic,assign) UInt16 publishModelID;//modelID of set publish
-@property (nonatomic,strong) NSString *peripheralUUID;
+@property (nonatomic,strong,nullable) NSString *peripheralUUID;
 
 ///return node true brightness, range is 0~100
 - (UInt8)trueBrightness;
@@ -951,7 +957,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 /// The array of Unicast or Group Addresses (4-character hexadecimal value), or Virtual Label UUIDs (32-character hexadecimal string).
 @property (nonatomic, strong) NSMutableArray <NSString *>*subscribe;
 /// The configuration of this Model's publication.
-@property (nonatomic, strong) SigPublishModel *publish;
+@property (nonatomic, strong, nullable) SigPublishModel *publish;
 /// The model message handler. This is non-`nil` for supported local Models and `nil` for Models of remote Nodes.
 @property (nonatomic,weak) id delegate;
 
@@ -1140,3 +1146,5 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 - (instancetype)initWithSourceType:(OOBSourceTpye)sourceType UUIDString:(NSString *)UUIDString OOBString:(NSString *)OOBString;
 - (void)updateWithUUIDString:(NSString *)UUIDString OOBString:(NSString *)OOBString;
 @end
+
+NS_ASSUME_NONNULL_END

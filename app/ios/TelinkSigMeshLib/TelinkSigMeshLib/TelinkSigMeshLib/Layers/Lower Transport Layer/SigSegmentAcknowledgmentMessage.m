@@ -96,7 +96,7 @@
         _blockAck = ack;
         UInt32 bigAck = CFSwapInt32HostToBig(ack);
         self.upperTransportPdu = [NSData dataWithBytes:&bigAck length:4];
-        TeLogInfo(@"node response last segment,send response is acknowledged.ack.blockAck=0x%x,upperTransportPdu=%@",ack,self.upperTransportPdu);
+        TeLogInfo(@"node response last segment,send response is acknowledged.ack.blockAck=0x%x,sequenceZero=0x%X,upperTransportPdu=%@",ack,_sequenceZero,self.upperTransportPdu);
         // Assuming all segments have the same source and destination addresses and network key.
         // Swaping source with destination. Destination here is guaranteed to be a Unicast Address.
         self.source = segment.destination;
