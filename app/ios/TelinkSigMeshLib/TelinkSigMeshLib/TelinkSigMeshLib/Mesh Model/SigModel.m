@@ -2590,7 +2590,44 @@
         }
         [array addObject:element];
     }
-    self.elements = array;
+    BOOL modelChange = NO;
+    if (self.elements.count != elements.count) {
+        modelChange = YES;
+    }
+    if (!modelChange) {
+        for (int i=0; i<self.elements.count; i++) {
+            SigElementModel *oldElement = self.elements[i];
+            if (array.count > i) {
+                SigElementModel *newElement = array[i];
+                if (oldElement.models.count != newElement.models.count) {
+                    modelChange = YES;
+                } else {
+                    for (int j=0; j<oldElement.models.count; j++) {
+                        SigModelIDModel *oldModelID = oldElement.models[j];
+                        if (newElement.models.count > j) {
+                            SigModelIDModel *newModelID = newElement.models[j];
+                            if (![oldModelID.modelId isEqualToString:newModelID.modelId]) {
+                                modelChange = YES;
+                            }
+                        } else {
+                            modelChange = YES;
+                        }
+                        if (modelChange) {
+                            break;
+                        }
+                    }
+                }
+            } else {
+                modelChange = YES;
+            }
+            if (modelChange) {
+                break;
+            }
+        }
+    }
+    if (modelChange) {
+        self.elements = array;
+    }
 }
 
 - (SigPage0 *)compositionData {
