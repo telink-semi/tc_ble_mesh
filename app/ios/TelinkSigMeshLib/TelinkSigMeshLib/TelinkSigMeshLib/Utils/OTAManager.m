@@ -222,21 +222,18 @@ typedef enum : NSUInteger {
     NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
     [oprationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
-        __block BOOL hasSuccess = NO;
-        NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
-        for (SigNodeModel *node in curNodes) {
-            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-            [SDKLibCommand configNodeIdentitySetWithDestination:node.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
-                TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                if (!error) {
-                    hasSuccess = YES;
-                }
-                dispatch_semaphore_signal(semaphore);
-                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-            }];
-            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
-        }
+        __block BOOL hasSuccess = NO;        
+        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+        [SDKLibCommand configNodeIdentitySetWithDestination:weakSelf.currentModel.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
+            TeLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            if (!error) {
+                hasSuccess = YES;
+            }
+            dispatch_semaphore_signal(semaphore);
+            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        }];
+        dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
         [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
             if (weakSelf.progress == SigGattOTAProgress_step2_nodeIdentitySetBeforeGATTOTA) {
                 if (hasSuccess) {
@@ -297,7 +294,10 @@ typedef enum : NSUInteger {
     [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
         if (weakSelf.progress == SigGattOTAProgress_step4_startConnectCBPeripheral) {
             if (successful) {
-                [weakSelf performSelector:@selector(setFilter) withObject:nil afterDelay:0.5];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(setFilter) object:nil];
+                    [weakSelf performSelector:@selector(setFilter) withObject:nil afterDelay:0.5];
+                });
             } else {
                 [weakSelf connectCBPeripheralFail];
             }

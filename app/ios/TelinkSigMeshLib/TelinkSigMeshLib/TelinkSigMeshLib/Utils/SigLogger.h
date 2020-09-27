@@ -62,26 +62,36 @@ log 写法1：测试验证线程
 /*
 log 写法2：
 */
-# define TeLog(fmt, ...) TelinkLogWithFile((@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);
+# define TeLog(fmt, ...) TelinkLogWithFile(YES,(@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);
 
 #define TeLogError(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagError) {\
-TelinkLogWithFile((@"[Error][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
+TelinkLogWithFile(SigLogger.share.logLevel & SigLogFlagError,(@"[Error][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
+} else {\
+TelinkLogWithFile(NO,(@"[Error][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
 #define TeLogWarn(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagWarning) {\
-TelinkLogWithFile((@"[Warn][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
+TelinkLogWithFile(YES,(@"[Warn][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
+} else {\
+TelinkLogWithFile(NO,(@"[Warn][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
 #define TeLogInfo(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagInfo) {\
-TelinkLogWithFile((@"[Info][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
+TelinkLogWithFile(YES,(@"[Info][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
+} else {\
+TelinkLogWithFile(NO,(@"[Info][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
 #define TeLogDebug(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagDebug) {\
-TelinkLogWithFile((@"[Debug][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
+TelinkLogWithFile(YES,(@"[Debug][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
+} else {\
+TelinkLogWithFile(NO,(@"[Debug][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
 #define TeLogVerbose(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagVerbose) {\
-TelinkLogWithFile((@"[Verbose][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
+TelinkLogWithFile(YES,(@"[Verbose][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
+} else {\
+TelinkLogWithFile(NO,(@"[Verbose][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
 }
 
 
@@ -166,7 +176,7 @@ void saveMeshJsonData(id data);
 /**
  自定义打印，会自动写文件
  */
-void TelinkLogWithFile(NSString *format, ...);
+void TelinkLogWithFile(BOOL show,NSString *format, ...);
 
 @end
 

@@ -76,12 +76,14 @@
 
 - (void)setSDKLogLevel:(SigLogLevel)logLevel{
     _logLevel = logLevel;
-    [self checkSDKLogFileSize];
-    [self enableLogger];
+    if (logLevel != SigLogLevelOff) {
+        [self checkSDKLogFileSize];
+        [self enableLogger];
+    }
 }
 
 - (void)enableLogger{
-    TelinkLogWithFile([NSString stringWithFormat:@"\n\n\n\n\t打开APP，初始化TelinkSigMesh %@日志模块\n\n\n",kTelinkSigMeshLibVersion]);
+    TelinkLogWithFile(YES,[NSString stringWithFormat:@"\n\n\n\n\t打开APP，初始化TelinkSigMesh %@日志模块\n\n\n",kTelinkSigMeshLibVersion]);
 }
 
 /// 监测缓存本地的日志文件大小，大于阈值则砍掉多余部分，只保留阈值的80%。
@@ -120,13 +122,13 @@ static NSFileHandle *TelinkLogFileHandle()
     return fileHandle;
 }
 
-void TelinkLogWithFile(NSString *format, ...) {
+void TelinkLogWithFile(BOOL show,NSString *format, ...) {
     va_list L;
     va_start(L, format);
     NSString *message = [[NSString alloc] initWithFormat:format arguments:L];
-//    if (DEBUG) {
+    if (show) {
         NSLog(@"%@", message);
-//    }
+    }
     // 开启异步子线程，将打印写入文件
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NSFileHandle *output = TelinkLogFileHandle();

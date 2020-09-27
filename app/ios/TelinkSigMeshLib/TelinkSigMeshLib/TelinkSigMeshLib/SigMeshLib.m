@@ -116,7 +116,7 @@ static SigMeshLib *shareLib = nil;
 
 - (void)updateOnlineStatusWithDeviceAddress:(UInt16)address deviceState:(DeviceState)state bright100:(UInt8)bright100 temperature100:(UInt8)temperature100{
     SigTelinkOnlineStatusMessage *message = [[SigTelinkOnlineStatusMessage alloc] initWithAddress:address state:state brightness:bright100 temperature:temperature100];
-    SDKLibCommand *command = [self getCommandWithReceiveMessage:message];
+    SDKLibCommand *command = [self getCommandWithReceiveMessage:message fromSource:address];
     BOOL shouldCallback = NO;
     if (![command.responseSourceArray containsObject:@(address)]) {
         shouldCallback = YES;
@@ -330,13 +330,12 @@ static SigMeshLib *shareLib = nil;
     if (command.responseAllMessageCallBack || command.resultCallback || (command.retryCount > 0 && command.responseMaxCount > 0)) {
         //command存储下来，超时或者失败，或者返回response时，从该地方拿到command，获取里面的callback，执行，再删除。
         [self.commands addObject:command];
-        TeLogVerbose(@"self.commands=%@",self.commands);
     }
 }
 
 - (void)commandTimeoutWithCommand:(SDKLibCommand *)command {
     [self commandResponseFinishWithCommand:command];
-    if (command.resultCallback) {
+    if (command.resultCallback && !command.hadReceiveAllResponse) {
         TeLogDebug(@"timeout command:%@-%@",command.curMeshMessage,command.curMeshMessage.parameters);
         NSError *error = [NSError errorWithDomain:kSigMeshLibCommandTimeoutErrorMessage code:kSigMeshLibCommandTimeoutErrorCode userInfo:nil];
         command.resultCallback(NO, error);
@@ -353,8 +352,7 @@ static SigMeshLib *shareLib = nil;
     dispatch_async(weakSelf.queue, ^{
         [weakSelf.networkManager cancelSigMessageHandle:command.messageHandle];
     });
-    command.hadReceiveAllResponse = YES;
-//    [self.commands removeObject:command];
+    [self.commands removeObject:command];
     if ([self hadSendCommandsFinish]) {
         [self isBusyNow];
     }
@@ -418,7 +416,7 @@ static SigMeshLib *shareLib = nil;
         }
     }
     
-    SDKLibCommand *command = [self getCommandWithReceiveMessage:message];
+    SDKLibCommand *command = [self getCommandWithReceiveMessage:message fromSource:(UInt16)source];
     BOOL shouldCallback = NO;
     if (command && ![command.responseSourceArray containsObject:@(source)]) {
         shouldCallback = YES;
@@ -456,6 +454,7 @@ static SigMeshLib *shareLib = nil;
             });
         }
     } else {
+        command.hadReceiveAllResponse = YES;
         if (command.retryTimer) {
             [command.retryTimer invalidate];
             command.retryTimer = nil;
@@ -502,7 +501,7 @@ static SigMeshLib *shareLib = nil;
         [self retrySendSDKLibCommand:command];
     } else {
         // 无需重试，返回发送成功。
-        [_commands removeObject:command];
+        command.hadReceiveAllResponse = YES;
         if (command.resultCallback) {
             command.resultCallback(NO, error);
         }
@@ -511,7 +510,7 @@ static SigMeshLib *shareLib = nil;
 
 - (void)didReceiveSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
     TeLogVerbose(@"didReceiveSigProxyConfigurationMessage=%@,source=0x%x,destination=0x%x",message,source,destination);
-    SDKLibCommand *command = [self getCommandWithReceiveMessage:(SigMeshMessage *)message];
+    SDKLibCommand *command = [self getCommandWithReceiveMessage:(SigMeshMessage *)message fromSource:source];
     [self commandResponseFinishWithCommand:command];
 
     //callback
@@ -529,12 +528,12 @@ static SigMeshLib *shareLib = nil;
 
 #pragma mark - Private
 
-- (SDKLibCommand *)getCommandWithReceiveMessage:(SigMeshMessage *)message {
+- (SDKLibCommand *)getCommandWithReceiveMessage:(SigMeshMessage *)message fromSource:(UInt16)source {
     SDKLibCommand *tem = nil;
     if ([message isKindOfClass:[SigConfigMessage class]]) {
         NSArray *commands = [NSArray arrayWithArray:_commands];
         for (SDKLibCommand *com in commands) {
-            if (((SigConfigMessage *)com.curMeshMessage).responseOpCode == message.opCode) {
+            if ((((SigConfigMessage *)com.curMeshMessage).responseOpCode == message.opCode) && (![SigHelper.share isUnicastAddress:com.destination.address] || ([SigHelper.share isUnicastAddress:com.destination.address] && com.destination.address == source))) {
                 tem = com;
                 break;
             }
@@ -542,7 +541,7 @@ static SigMeshLib *shareLib = nil;
     } else if ([message isKindOfClass:[SigGenericMessage class]]) {
         NSArray *commands = [NSArray arrayWithArray:_commands];
         for (SDKLibCommand *com in commands) {
-            if ([SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)com.curMeshMessage] && ((SigAcknowledgedGenericMessage *)com.curMeshMessage).responseOpCode == message.opCode) {
+            if ([SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)com.curMeshMessage] && ((SigAcknowledgedGenericMessage *)com.curMeshMessage).responseOpCode == message.opCode  && (![SigHelper.share isUnicastAddress:com.destination.address] || ([SigHelper.share isUnicastAddress:com.destination.address] && com.destination.address == source))) {
                 tem = com;
                 break;
             }
@@ -550,7 +549,7 @@ static SigMeshLib *shareLib = nil;
     } else if ([message isKindOfClass:[SigFilterStatus class]]) {
         NSArray *commands = [NSArray arrayWithArray:_commands];
         for (SDKLibCommand *com in commands) {
-            if (((SigStaticAcknowledgedProxyConfigurationMessage *)com.curMeshMessage).responseOpCode == message.opCode) {
+            if (((SigStaticAcknowledgedProxyConfigurationMessage *)com.curMeshMessage).responseOpCode == message.opCode  && (![SigHelper.share isUnicastAddress:com.destination.address] || ([SigHelper.share isUnicastAddress:com.destination.address] && com.destination.address == source))) {
                 tem = com;
                 break;
             }
@@ -558,7 +557,7 @@ static SigMeshLib *shareLib = nil;
     } else if ([message isKindOfClass:[SigUnknownMessage class]]) {//未定义的vendor回包
         NSArray *commands = [NSArray arrayWithArray:_commands];
         for (SDKLibCommand *com in commands) {
-            if (((SigIniMeshMessage *)com.curMeshMessage).responseOpCode == message.opCode || ((SigIniMeshMessage *)com.curMeshMessage).responseOpCode == ((message.opCode >> 16) & 0xFF)) {
+            if ((((SigIniMeshMessage *)com.curMeshMessage).responseOpCode == message.opCode || ((SigIniMeshMessage *)com.curMeshMessage).responseOpCode == ((message.opCode >> 16) & 0xFF))  && (![SigHelper.share isUnicastAddress:com.destination.address] || ([SigHelper.share isUnicastAddress:com.destination.address] && com.destination.address == source))) {
                 tem = com;
                 break;
             }
@@ -601,7 +600,15 @@ static SigMeshLib *shareLib = nil;
                    break;
                }
            }
-    }
+    } else if ([message isKindOfClass:[SigProxyConfigurationMessage class]]) {
+              NSArray *commands = [NSArray arrayWithArray:_commands];
+              for (SDKLibCommand *com in commands) {
+                  if (((SigProxyConfigurationMessage *)com.curMeshMessage).opCode == message.opCode) {
+                      tem = com;
+                      break;
+                  }
+              }
+       }
     return tem;
 }
 
@@ -624,7 +631,6 @@ static SigMeshLib *shareLib = nil;
     if (command.hadRetryCount >= command.retryCount) {
         // 重试完成，一个command.timeout没有足够response则报超时。
         BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
-            
             [weakSelf commandTimeoutWithCommand:command];
         }];
         command.retryTimer = timer;
