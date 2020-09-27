@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2519E64E24123D870098ABE7 /* 8258_mesh.bin */; };
-		2533B8B324F781710002A613 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
+		256BD1FD2520793600CBE259 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		258E2B8A248A24A20078DA7C /* InfoSwitchCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B88248A24A20078DA7C /* InfoSwitchCell.m */; };
 		258E2B8B248A24A20078DA7C /* InfoSwitchCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B89248A24A20078DA7C /* InfoSwitchCell.xib */; };
 		258E2B8F248A24B50078DA7C /* InfoNextCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B8D248A24B50078DA7C /* InfoNextCell.m */; };
@@ -17,6 +17,24 @@
 		258E2B95248A24D40078DA7C /* InfoButtonCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B93248A24D40078DA7C /* InfoButtonCell.xib */; };
 		25B1204224A34A01004F7E91 /* DeviceCompositionDataVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B1204124A34A01004F7E91 /* DeviceCompositionDataVC.m */; };
 		25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FFA24542CF200796BF9 /* 8269_mesh.bin */; };
+		25C2B4F92512F610003DCB8C /* AppKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C2B4F72512F610003DCB8C /* AppKeyListVC.m */; };
+		25C2B4FA2512F610003DCB8C /* AppKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C2B4F82512F610003DCB8C /* AppKeyListVC.xib */; };
+		25C2B4FE2512F620003DCB8C /* AppKeyAddVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C2B4FC2512F620003DCB8C /* AppKeyAddVC.m */; };
+		25C2B4FF2512F620003DCB8C /* AppKeyAddVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C2B4FD2512F620003DCB8C /* AppKeyAddVC.xib */; };
+		25C2B5032512F630003DCB8C /* NetKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C2B5012512F630003DCB8C /* NetKeyListVC.m */; };
+		25C2B5042512F630003DCB8C /* NetKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C2B5022512F630003DCB8C /* NetKeyListVC.xib */; };
+		25C2B5082512F641003DCB8C /* NetKeyAddVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C2B5062512F641003DCB8C /* NetKeyAddVC.m */; };
+		25C2B5092512F641003DCB8C /* NetKeyAddVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C2B5072512F641003DCB8C /* NetKeyAddVC.xib */; };
+		25C2B50D2512F8FC003DCB8C /* KeyCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C2B50B2512F8FC003DCB8C /* KeyCell.m */; };
+		25C2B50E2512F8FC003DCB8C /* KeyCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C2B50C2512F8FC003DCB8C /* KeyCell.xib */; };
+		25C2B51725136153003DCB8C /* DeviceNetKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C2B51525136153003DCB8C /* DeviceNetKeyListVC.m */; };
+		25C2B51825136153003DCB8C /* DeviceNetKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C2B51625136153003DCB8C /* DeviceNetKeyListVC.xib */; };
+		25C2B51C25136185003DCB8C /* DeviceAppKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C2B51A25136185003DCB8C /* DeviceAppKeyListVC.m */; };
+		25C2B51D25136185003DCB8C /* DeviceAppKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C2B51B25136185003DCB8C /* DeviceAppKeyListVC.xib */; };
+		25C2B521251361C0003DCB8C /* DeviceChooseKeyVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C2B51F251361C0003DCB8C /* DeviceChooseKeyVC.m */; };
+		25C2B522251361C0003DCB8C /* DeviceChooseKeyVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C2B520251361C0003DCB8C /* DeviceChooseKeyVC.xib */; };
+		25C2B5262513623F003DCB8C /* DeviceKeyCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C2B5242513623F003DCB8C /* DeviceKeyCell.m */; };
+		25C2B5272513623F003DCB8C /* DeviceKeyCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C2B5252513623F003DCB8C /* DeviceKeyCell.xib */; };
 		25C30DD9246A401300F06076 /* OOBListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C30DD7246A401200F06076 /* OOBListVC.m */; };
 		25C30DDA246A401300F06076 /* OOBListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C30DD8246A401200F06076 /* OOBListVC.xib */; };
 		25C30DDE246A404F00F06076 /* OOBItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C30DDC246A404F00F06076 /* OOBItemCell.m */; };
@@ -177,6 +195,33 @@
 		25B1204124A34A01004F7E91 /* DeviceCompositionDataVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceCompositionDataVC.m; sourceTree = "<group>"; };
 		25B408392396691A00514CB7 /* TelinkSigMeshLib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = TelinkSigMeshLib.xcodeproj; path = ../../../TelinkSigMeshLib/TelinkSigMeshLib.xcodeproj; sourceTree = "<group>"; };
 		25C07FFA24542CF200796BF9 /* 8269_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8269_mesh.bin; sourceTree = "<group>"; };
+		25C2B4F62512F610003DCB8C /* AppKeyListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppKeyListVC.h; sourceTree = "<group>"; };
+		25C2B4F72512F610003DCB8C /* AppKeyListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppKeyListVC.m; sourceTree = "<group>"; };
+		25C2B4F82512F610003DCB8C /* AppKeyListVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AppKeyListVC.xib; sourceTree = "<group>"; };
+		25C2B4FB2512F620003DCB8C /* AppKeyAddVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppKeyAddVC.h; sourceTree = "<group>"; };
+		25C2B4FC2512F620003DCB8C /* AppKeyAddVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppKeyAddVC.m; sourceTree = "<group>"; };
+		25C2B4FD2512F620003DCB8C /* AppKeyAddVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = AppKeyAddVC.xib; sourceTree = "<group>"; };
+		25C2B5002512F630003DCB8C /* NetKeyListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NetKeyListVC.h; sourceTree = "<group>"; };
+		25C2B5012512F630003DCB8C /* NetKeyListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NetKeyListVC.m; sourceTree = "<group>"; };
+		25C2B5022512F630003DCB8C /* NetKeyListVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NetKeyListVC.xib; sourceTree = "<group>"; };
+		25C2B5052512F641003DCB8C /* NetKeyAddVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NetKeyAddVC.h; sourceTree = "<group>"; };
+		25C2B5062512F641003DCB8C /* NetKeyAddVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NetKeyAddVC.m; sourceTree = "<group>"; };
+		25C2B5072512F641003DCB8C /* NetKeyAddVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NetKeyAddVC.xib; sourceTree = "<group>"; };
+		25C2B50A2512F8FC003DCB8C /* KeyCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyCell.h; sourceTree = "<group>"; };
+		25C2B50B2512F8FC003DCB8C /* KeyCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyCell.m; sourceTree = "<group>"; };
+		25C2B50C2512F8FC003DCB8C /* KeyCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = KeyCell.xib; sourceTree = "<group>"; };
+		25C2B51425136153003DCB8C /* DeviceNetKeyListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceNetKeyListVC.h; sourceTree = "<group>"; };
+		25C2B51525136153003DCB8C /* DeviceNetKeyListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceNetKeyListVC.m; sourceTree = "<group>"; };
+		25C2B51625136153003DCB8C /* DeviceNetKeyListVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DeviceNetKeyListVC.xib; sourceTree = "<group>"; };
+		25C2B51925136185003DCB8C /* DeviceAppKeyListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceAppKeyListVC.h; sourceTree = "<group>"; };
+		25C2B51A25136185003DCB8C /* DeviceAppKeyListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceAppKeyListVC.m; sourceTree = "<group>"; };
+		25C2B51B25136185003DCB8C /* DeviceAppKeyListVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DeviceAppKeyListVC.xib; sourceTree = "<group>"; };
+		25C2B51E251361C0003DCB8C /* DeviceChooseKeyVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceChooseKeyVC.h; sourceTree = "<group>"; };
+		25C2B51F251361C0003DCB8C /* DeviceChooseKeyVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceChooseKeyVC.m; sourceTree = "<group>"; };
+		25C2B520251361C0003DCB8C /* DeviceChooseKeyVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DeviceChooseKeyVC.xib; sourceTree = "<group>"; };
+		25C2B5232513623F003DCB8C /* DeviceKeyCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceKeyCell.h; sourceTree = "<group>"; };
+		25C2B5242513623F003DCB8C /* DeviceKeyCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceKeyCell.m; sourceTree = "<group>"; };
+		25C2B5252513623F003DCB8C /* DeviceKeyCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DeviceKeyCell.xib; sourceTree = "<group>"; };
 		25C30DD6246A401200F06076 /* OOBListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OOBListVC.h; sourceTree = "<group>"; };
 		25C30DD7246A401200F06076 /* OOBListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OOBListVC.m; sourceTree = "<group>"; };
 		25C30DD8246A401200F06076 /* OOBListVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OOBListVC.xib; sourceTree = "<group>"; };
@@ -394,7 +439,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2533B8B324F781710002A613 /* TelinkSigMeshLib.framework in Frameworks */,
+				256BD1FD2520793600CBE259 /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -429,6 +474,47 @@
 				2528953B2468FB1400E590F9 /* TelinkSigMeshLibExtensions.framework */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		25C2B4F52512F52D003DCB8C /* Keys */ = {
+			isa = PBXGroup;
+			children = (
+				25C2B4F62512F610003DCB8C /* AppKeyListVC.h */,
+				25C2B4F72512F610003DCB8C /* AppKeyListVC.m */,
+				25C2B4F82512F610003DCB8C /* AppKeyListVC.xib */,
+				25C2B4FB2512F620003DCB8C /* AppKeyAddVC.h */,
+				25C2B4FC2512F620003DCB8C /* AppKeyAddVC.m */,
+				25C2B4FD2512F620003DCB8C /* AppKeyAddVC.xib */,
+				25C2B5002512F630003DCB8C /* NetKeyListVC.h */,
+				25C2B5012512F630003DCB8C /* NetKeyListVC.m */,
+				25C2B5022512F630003DCB8C /* NetKeyListVC.xib */,
+				25C2B5052512F641003DCB8C /* NetKeyAddVC.h */,
+				25C2B5062512F641003DCB8C /* NetKeyAddVC.m */,
+				25C2B5072512F641003DCB8C /* NetKeyAddVC.xib */,
+				25C2B50A2512F8FC003DCB8C /* KeyCell.h */,
+				25C2B50B2512F8FC003DCB8C /* KeyCell.m */,
+				25C2B50C2512F8FC003DCB8C /* KeyCell.xib */,
+			);
+			path = Keys;
+			sourceTree = "<group>";
+		};
+		25C2B5102513610B003DCB8C /* DeviceKeys */ = {
+			isa = PBXGroup;
+			children = (
+				25C2B51425136153003DCB8C /* DeviceNetKeyListVC.h */,
+				25C2B51525136153003DCB8C /* DeviceNetKeyListVC.m */,
+				25C2B51625136153003DCB8C /* DeviceNetKeyListVC.xib */,
+				25C2B51925136185003DCB8C /* DeviceAppKeyListVC.h */,
+				25C2B51A25136185003DCB8C /* DeviceAppKeyListVC.m */,
+				25C2B51B25136185003DCB8C /* DeviceAppKeyListVC.xib */,
+				25C2B51E251361C0003DCB8C /* DeviceChooseKeyVC.h */,
+				25C2B51F251361C0003DCB8C /* DeviceChooseKeyVC.m */,
+				25C2B520251361C0003DCB8C /* DeviceChooseKeyVC.xib */,
+				25C2B5232513623F003DCB8C /* DeviceKeyCell.h */,
+				25C2B5242513623F003DCB8C /* DeviceKeyCell.m */,
+				25C2B5252513623F003DCB8C /* DeviceKeyCell.xib */,
+			);
+			path = DeviceKeys;
 			sourceTree = "<group>";
 		};
 		25C30DD5246A3FB900F06076 /* OOB Database */ = {
@@ -470,6 +556,7 @@
 			children = (
 				25C30DD5246A3FB900F06076 /* OOB Database */,
 				25E29A7E2429EEE50057D419 /* Share */,
+				25C2B4F52512F52D003DCB8C /* Keys */,
 				A277EAF4215A28BC0001116F /* ModelIDListViewController.h */,
 				A277EAF5215A28BC0001116F /* ModelIDListViewController.m */,
 				A2AB8F1221100FDC00D73EB4 /* EditModelIDsViewController.h */,
@@ -637,6 +724,7 @@
 				A2896897216EE262003A0A72 /* DeviceSubscriptionListViewController.m */,
 				25B1204024A34A01004F7E91 /* DeviceCompositionDataVC.h */,
 				25B1204124A34A01004F7E91 /* DeviceCompositionDataVC.m */,
+				25C2B5102513610B003DCB8C /* DeviceKeys */,
 			);
 			path = DeviceSetting;
 			sourceTree = "<group>";
@@ -1013,8 +1101,15 @@
 			files = (
 				258E2B95248A24D40078DA7C /* InfoButtonCell.xib in Resources */,
 				A28968A4216EFE9C003A0A72 /* ActionItemCell.xib in Resources */,
+				25C2B5042512F630003DCB8C /* NetKeyListVC.xib in Resources */,
+				25C2B51825136153003DCB8C /* DeviceNetKeyListVC.xib in Resources */,
+				25C2B51D25136185003DCB8C /* DeviceAppKeyListVC.xib in Resources */,
 				25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */,
+				25C2B4FF2512F620003DCB8C /* AppKeyAddVC.xib in Resources */,
+				25C2B50E2512F8FC003DCB8C /* KeyCell.xib in Resources */,
 				A2AB8EA92110046C00D73EB4 /* LaunchScreen.storyboard in Resources */,
+				25C2B5092512F641003DCB8C /* NetKeyAddVC.xib in Resources */,
+				25C2B4FA2512F610003DCB8C /* AppKeyListVC.xib in Resources */,
 				A2AB8F4F211012BC00D73EB4 /* ModelIDCell.xib in Resources */,
 				2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */,
 				A277EB07215A335E0001116F /* SceneItemCell.xib in Resources */,
@@ -1027,7 +1122,9 @@
 				25C30DDA246A401300F06076 /* OOBListVC.xib in Resources */,
 				A2944105216DDC2B0046F65A /* DeviceSetting.storyboard in Resources */,
 				A2AC67122176CFDD00D9B3A0 /* AddDeviceItemCell.xib in Resources */,
+				25C2B5272513623F003DCB8C /* DeviceKeyCell.xib in Resources */,
 				A2AB8F54211012D000D73EB4 /* ChooseModelIDCell.xib in Resources */,
+				25C2B522251361C0003DCB8C /* DeviceChooseKeyVC.xib in Resources */,
 				A277EAFB215A29500001116F /* Setting.storyboard in Resources */,
 				A2864221226FFCAA0053B5E4 /* MeshOTAVC.xib in Resources */,
 				25C30DDF246A404F00F06076 /* OOBItemCell.xib in Resources */,
@@ -1107,6 +1204,7 @@
 				A286421C226FFCAA0053B5E4 /* MeshOTAItemCell.m in Sources */,
 				A2AB8F612110135600D73EB4 /* ShowTipsView.m in Sources */,
 				A277EB06215A335E0001116F /* SceneItemCell.m in Sources */,
+				25C2B5262513623F003DCB8C /* DeviceKeyCell.m in Sources */,
 				A28CA3A92181E4AD005B1DB6 /* IQUIViewController+Additions.m in Sources */,
 				A287A9FC2133F323006B0EC7 /* UIImage+ColorPicker.m in Sources */,
 				A2944113216DDC6B0046F65A /* YZDisplayTitleLabel.m in Sources */,
@@ -1121,6 +1219,7 @@
 				A2A99D6921AFF30700194237 /* DebugViewController.m in Sources */,
 				A294411C216DE1760046F65A /* SingleDeviceViewController.m in Sources */,
 				A2AB8F53211012D000D73EB4 /* ChooseModelIDCell.m in Sources */,
+				25C2B51725136153003DCB8C /* DeviceNetKeyListVC.m in Sources */,
 				A2944114216DDC6B0046F65A /* YZDisplayViewController.m in Sources */,
 				A277EB0B215A338A0001116F /* SchedulerCell.m in Sources */,
 				25C30DDE246A404F00F06076 /* OOBItemCell.m in Sources */,
@@ -1133,6 +1232,7 @@
 				A28CA3A82181E4AD005B1DB6 /* IQUIView+Hierarchy.m in Sources */,
 				A2B27FCA215B1E2800983428 /* SceneDetailViewController.m in Sources */,
 				A2ADC3D421B0D5A200F3C2E6 /* OnOffItemCell.m in Sources */,
+				25C2B4F92512F610003DCB8C /* AppKeyListVC.m in Sources */,
 				A2981276224224B40065C7C4 /* NSString+calculate.m in Sources */,
 				A28CA3B12181E4AD005B1DB6 /* IQUIView+IQKeyboardToolbar.m in Sources */,
 				A2B27FD2215B20B700983428 /* ActionViewController.m in Sources */,
@@ -1144,7 +1244,9 @@
 				A277EAF6215A28BC0001116F /* ModelIDListViewController.m in Sources */,
 				A27C99F121F99E51006D5A09 /* ShareOutVC.m in Sources */,
 				A28CA3B02181E4AD005B1DB6 /* IQToolbar.m in Sources */,
+				25C2B521251361C0003DCB8C /* DeviceChooseKeyVC.m in Sources */,
 				A28CA3AF2181E4AD005B1DB6 /* IQTitleBarButtonItem.m in Sources */,
+				25C2B51C25136185003DCB8C /* DeviceAppKeyListVC.m in Sources */,
 				A2AB8F4E211012BC00D73EB4 /* ModelIDCell.m in Sources */,
 				A27C99EC21F99E1E006D5A09 /* ShareVC.m in Sources */,
 				258E2B8F248A24B50078DA7C /* InfoNextCell.m in Sources */,
@@ -1158,6 +1260,7 @@
 				A2944112216DDC6B0046F65A /* UIView+Frame.m in Sources */,
 				A2AB8EDF2110063700D73EB4 /* BaseViewController.m in Sources */,
 				A2AB8F2621100FDD00D73EB4 /* SettingViewController.m in Sources */,
+				25C2B4FE2512F620003DCB8C /* AppKeyAddVC.m in Sources */,
 				A2AB8F2121100FDD00D73EB4 /* GroupDetailViewController.m in Sources */,
 				A28CA3A62181E4AD005B1DB6 /* IQUIScrollView+Additions.m in Sources */,
 				25B1204224A34A01004F7E91 /* DeviceCompositionDataVC.m in Sources */,
@@ -1189,10 +1292,13 @@
 				A2AB8F912110612700D73EB4 /* DemoCommand.m in Sources */,
 				A2AB8F2221100FDD00D73EB4 /* GroupViewController.m in Sources */,
 				258E2B94248A24D40078DA7C /* InfoButtonCell.m in Sources */,
+				25C2B5082512F641003DCB8C /* NetKeyAddVC.m in Sources */,
 				A2AB8F1F21100FDD00D73EB4 /* EditModelIDsViewController.m in Sources */,
 				A2AC67112176CFDD00D9B3A0 /* AddDeviceItemCell.m in Sources */,
 				A287A9FB2133F323006B0EC7 /* DTColorPickerImageView.m in Sources */,
 				A2AB8F2321100FDD00D73EB4 /* LogViewController.m in Sources */,
+				25C2B5032512F630003DCB8C /* NetKeyListVC.m in Sources */,
+				25C2B50D2512F8FC003DCB8C /* KeyCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

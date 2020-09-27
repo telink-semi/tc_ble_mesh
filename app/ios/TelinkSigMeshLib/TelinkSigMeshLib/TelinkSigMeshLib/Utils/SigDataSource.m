@@ -30,6 +30,10 @@
 #import "SigDataSource.h"
 #import "OpenSSLHelper.h"
 
+@interface SigDataSource ()<SigDataSourceDelegate>
+@property (nonatomic,assign) UInt32 sequenceNumberOnDelegate;//通过SigDataSourceDelegate回调的sequenceNumber值。
+@end
+
 @implementation SigDataSource
 
 + (SigDataSource *)share{
@@ -50,7 +54,7 @@
         _netKeys = [NSMutableArray array];
         _appKeys = [NSMutableArray array];
         _scanList = [NSMutableArray array];
-
+//cy的json里面，组号绑定的model看到了这个几个：1304、1306、1308、130a、130b
         _ivIndex = [NSString stringWithFormat:@"%08X",kDefaultIvIndex];
         _encryptedArray = [NSMutableArray array];
         _defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(SIG_MD_G_ONOFF_S),@(SIG_MD_LIGHTNESS_S),@(SIG_MD_LIGHT_CTL_S),@(SIG_MD_LIGHT_CTL_TEMP_S),@(SIG_MD_LIGHT_HSL_S)]];
@@ -89,6 +93,8 @@
         }
         _addStaticOOBDevcieByNoOOBEnable = NO;
         _defaultRetryCount = 2;
+        _defaultAllocatedUnicastRangeHighAddress = kAllocatedUnicastRangeHighAddress;
+        _defaultSnoIncrement = kSnoIncrement;
     }
     return self;
 }
@@ -371,19 +377,23 @@
 }
 
 - (SigAppkeyModel *)curAppkeyModel{
-    //The default use first appkey temporarily
-    if (SigDataSource.share.appKeys.count > 0) {
-        return SigDataSource.share.appKeys.firstObject;
+    if (_curAppkeyModel == nil) {
+        //The default use first appkey temporarily
+        if (SigDataSource.share.appKeys.count > 0) {
+            _curAppkeyModel = SigDataSource.share.appKeys.firstObject;
+        }
     }
-    return nil;
+    return _curAppkeyModel;
 }
 
 - (SigNetkeyModel *)curNetkeyModel{
-    //The default use first netkey temporarily
-    if (SigDataSource.share.netKeys.count > 0) {
-        return SigDataSource.share.netKeys.firstObject;
+    if (_curNetkeyModel == nil) {
+        //The default use first netkey temporarily
+        if (SigDataSource.share.netKeys.count > 0) {
+            _curNetkeyModel = SigDataSource.share.netKeys.firstObject;
+        }
     }
-    return nil;
+    return _curNetkeyModel;
 }
 
 - (SigProvisionerModel *)curProvisionerModel{
@@ -507,7 +517,6 @@
     NSString *timestamp = [LibTools getNowTimeStringOfJson];
     //1.netKeys
     SigNetkeyModel *netkey = [[SigNetkeyModel alloc] init];
-    netkey.oldKey = @"";
     netkey.index = 0;
     netkey.phase = 0;
     netkey.timestamp = timestamp;
@@ -636,7 +645,7 @@
     if (self.curProvisionerModel) {
         TeLogInfo(@"exist location provisioner, needn't create");
         //sno添加增量
-        [SigDataSource.share setLocationSno:SigDataSource.share.getLocationSno + kSnoIncrement];
+        [SigDataSource.share setLocationSno:SigDataSource.share.getLocationSno + SigDataSource.share.defaultSnoIncrement];
     }else{
         //don't exist location provisioner, create and add to SIGDataSource.provisioners, then save location.
         //Attention: the max location address is 0x7fff, so max provisioner's allocatedUnicastRange highAddress cann't bigger than 0x7fff.
@@ -892,7 +901,7 @@
         TeLogVerbose(@"更新，下一个可用的sequenceNumber=0x%x",sequenceNumber);
         [self setLocationSno:sequenceNumber];
         //sno无需存储json
-//        if (sequenceNumber >= self.getLocationSno + kSnoIncrement) {
+//        if (sequenceNumber >= self.getLocationSno + SigDataSource.share.defaultSnoIncrement) {
 //            [self saveLocationData];
 //        }
     }else{
@@ -911,9 +920,31 @@
 }
 
 - (void)setLocationSno:(UInt32)sno {
-//    TeLogVerbose(@"sno=0x%x",(unsigned int)sno);
+    if ((sno - _sequenceNumberOnDelegate >= self.defaultSnoIncrement) || (sno < _sequenceNumberOnDelegate)) {
+        self.sequenceNumberOnDelegate = sno;
+        __weak typeof(self) weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if ([weakSelf.delegate respondsToSelector:@selector(onSequenceNumberUpdate:ivIndexUpdate:)]) {
+                [weakSelf.delegate onSequenceNumberUpdate:weakSelf.sequenceNumberOnDelegate ivIndexUpdate:[LibTools uint32From16String:SigDataSource.share.ivIndex]];
+            }
+        });
+    }
+    //    TeLogVerbose(@"sno=0x%x",(unsigned int)sno);
     [[NSUserDefaults standardUserDefaults] setObject:@(sno) forKey:kCurrenProvisionerSno_key];
     [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+- (void)setIvIndex:(NSString *)ivIndex {
+    if (![ivIndex isEqualToString:_ivIndex]) {
+        _ivIndex = ivIndex;
+        __block NSString *blockIv = _ivIndex;
+        __weak typeof(self) weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if ([weakSelf.delegate respondsToSelector:@selector(onSequenceNumberUpdate:ivIndexUpdate:)]) {
+                [weakSelf.delegate onSequenceNumberUpdate:weakSelf.sequenceNumberOnDelegate ivIndexUpdate:[LibTools uint32From16String:blockIv]];
+            }
+        });
+    }
 }
 
 - (SigEncryptedModel *)getSigEncryptedModelWithAddress:(UInt16)address {

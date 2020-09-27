@@ -32,6 +32,7 @@
 #import "UIButton+extension.h"
 #import "HomeViewController.h"
 #import "OTAFileSource.h"
+#import "UIViewController+Message.h"
 
 /**
  Attention: more detail about mesh OTA can look document Mesh_Firmware_update_20180228_d05r05.pdf
@@ -222,10 +223,10 @@
             UInt16 modelIdentifier = SIG_MD_BLOB_TRANSFER_S;
             NSArray *addressArray = [model getAddressesWithModelID:@(modelIdentifier)];
             if (addressArray && addressArray.count > 0) {
-                itemCell.titleLabel.text = [NSString stringWithFormat:@"adr:0x%X PID:0x%@    VID:%c%c",model.address,model.pid,vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+                itemCell.titleLabel.text = [NSString stringWithFormat:@"adr:0x%X    PID:0x%@ VID:%c%c",model.address,model.pid,vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
             } else {
                 vid = [LibTools uint16From16String:model.vid];
-                itemCell.titleLabel.text = [NSString stringWithFormat:@"adr:0x%X PID:0x%@    VID:%c%c Not support",model.address,model.pid,vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+                itemCell.titleLabel.text = [NSString stringWithFormat:@"adr:0x%X    PID:0x%@ VID:%c%c Not support",model.address,model.pid,vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
             }
             
             if (self.selectItemArray.count > 0) {
@@ -246,10 +247,13 @@
         }
     } else {
         NSString *binString = self.binStringArray[indexPath.row];
-        itemCell.titleLabel.text = binString;
+        NSData *data = [OTAFileSource.share getDataWithBinName:binString];
+        UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
+        itemCell.titleLabel.text = [NSString stringWithFormat:@"%@  PID:0x%X VID:%c%c",binString,[OTAFileSource.share getPidWithOTAData:data],vid&0xff,(vid>>8)&0xff];//vid显示两个字节的ASCII
         itemCell.selectButton.selected = indexPath.row == _binIndex;
         [itemCell.selectButton addAction:^(UIButton *button) {
             weakSelf.binIndex = indexPath.row;
+            [weakSelf checkPID];
             [weakSelf.tableView reloadData];
         }];
     }
@@ -298,8 +302,28 @@
     } else {
         if (_binIndex != indexPath.row) {
             _binIndex = indexPath.row;
+            [self checkPID];
             [self.tableView reloadData];
         }
+    }
+}
+
+- (void)checkPID {
+    NSString *binString = self.binStringArray[_binIndex];
+    NSData *data = [OTAFileSource.share getDataWithBinName:binString];
+    UInt16 pid = [OTAFileSource.share getPidWithOTAData:data];
+
+    //如果存在非当前PID的设备选中了要进行MeshOTA，则全部取消设备的选中，让客户重新选择。
+    BOOL chooseDifferent = NO;
+    for (SigNodeModel *node in self.selectItemArray) {
+        if ([LibTools uint16From16String:node.pid] != pid) {
+            chooseDifferent = YES;
+            break;
+        }
+    }
+    if (chooseDifferent) {
+        [self showAlertSureWithTitle:@"Hits" message:@"The PID of node is different from the PID of Bin file! Please choose device again." sure:nil];
+        [self.selectItemArray removeAllObjects];
     }
 }
 

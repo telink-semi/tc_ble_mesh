@@ -205,7 +205,7 @@
                     }];
                 }
             }];
-            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
         }
         TeLogDebug(@"add finish");
         while (delArray.count > 0) {
@@ -219,7 +219,7 @@
                     dispatch_semaphore_signal(semaphore);
                 }
             }];
-            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
         }
         TeLogDebug(@"del finish");
         TeLogDebug(@"save success");

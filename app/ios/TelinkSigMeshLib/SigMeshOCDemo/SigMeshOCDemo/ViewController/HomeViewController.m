@@ -38,7 +38,7 @@
 #import "SensorVC.h"
 #import "RemoteAddVC.h"
 
-@interface HomeViewController()<UICollectionViewDelegate,UICollectionViewDataSource,SigBearerDataDelegate>
+@interface HomeViewController()<UICollectionViewDelegate,UICollectionViewDataSource,SigBearerDataDelegate,SigDataSourceDelegate>
 @property (strong, nonatomic) NSMutableArray <SigNodeModel *>*source;
 @property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *AddBarButton;
@@ -279,6 +279,7 @@
 
 - (void)normalSetting{
     [super normalSetting];
+    SigDataSource.share.delegate = self;
 //    self.shouldSetTime = NO;
     self.title = @"Device";
     UILongPressGestureRecognizer *gesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(cellDidPress:)];
@@ -314,7 +315,7 @@
 
 #pragma  mark - SigBearerDataDelegate
 - (void)bearerDidOpen:(SigBearer *)bearer {
-    TeLogInfo(@"SigBearerDataDelegate1");
+    TeLogInfo(@"bearer did open!");
 //    [self blockState];
 //    dispatch_async(dispatch_get_main_queue(), ^{
 //        [self freshOnline:nil];
@@ -322,10 +323,15 @@
 }
 
 - (void)bearer:(SigBearer *)bearer didCloseWithError:(NSError *)error {
-    TeLogInfo(@"SigBearerDataDelegate2");
+    TeLogInfo(@"bearer did close!");
     self.shouldSetAllOffline = NO;
     [SigDataSource.share setAllDevicesOutline];
     [self reloadCollectionView];
+}
+
+#pragma  mark - SigDataSourceDelegate
+- (void)onSequenceNumberUpdate:(UInt32)sequenceNumber ivIndexUpdate:(UInt32)ivIndex {
+    TeLogInfo(@"本地存储数据需要更新sequenceNumber=0x%X,ivIndex=0x%X",sequenceNumber,ivIndex);
 }
 
 #pragma  mark LongPressGesture

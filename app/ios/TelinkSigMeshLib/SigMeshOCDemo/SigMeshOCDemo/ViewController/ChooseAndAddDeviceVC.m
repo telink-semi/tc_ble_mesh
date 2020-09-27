@@ -204,7 +204,6 @@ typedef enum : NSUInteger {
                         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
                         dispatch_semaphore_signal(semaphore);
                     }];
-                    
                     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
                 }
                 [SigBearer.share startMeshConnectWithComplete:nil];

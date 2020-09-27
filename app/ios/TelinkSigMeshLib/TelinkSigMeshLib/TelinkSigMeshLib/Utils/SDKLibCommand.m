@@ -2864,6 +2864,7 @@
     // Submit.
     __weak typeof(self) weakSelf = self;
     [self setType:SigProxyFilerType_whitelist successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+        TeLogVerbose(@"filter type:%@",responseMessage);
 //        //逻辑1.for循环每次只添加一个地址
 //        NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
 //        [oprationQueue addOperationWithBlock:^{
@@ -2907,11 +2908,13 @@
                 successCallback(source,destination,responseMessage);
             }
         } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+            TeLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
             if (failCallback) {
                 failCallback(error==nil,error);
             }
         }];
     } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+        TeLogVerbose(@"filter type,isResponseAll=%d,error:%@",isResponseAll,error);
         if (error != nil) {
             if (failCallback) {
                 failCallback(NO,error);
@@ -3315,11 +3318,6 @@
         TeLogWarn(@"change retryCount to 0.");
     }
     BOOL reliable = [self isReliableCommandWithOpcode:op vendorOpcodeResponse:model.responseOpcode];
-    if (SigMeshLib.share.isBusyNow) {
-        err = [NSError errorWithDomain:@"Telink sig mesh SDK is busy now." code:-1 userInfo:nil];
-        TeLogError(@"tx cmd busy!........................");
-        return err;
-    }
     if ([SigHelper.share isUnicastAddress:model.address] && reliable && model.responseMax > 1) {
         model.responseMax = 1;
         TeLogWarn(@"change responseMax to 1.");
@@ -3362,6 +3360,12 @@
     if (model.timeout) {
         command.timeout = model.timeout;
     }
+    if (model.netkeyA != SigDataSource.share.defaultNetKeyA) {
+        SigDataSource.share.curNetkeyModel = model.netkeyA;
+        SigDataSource.share.curAppkeyModel = model.appkeyA;
+        SigDataSource.share.curNetkeyModel.ivIndex = model.ivIndexA;
+    }
+
     if (model.appkeyA) {
         [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:model.address] usingApplicationKey:model.appkeyA command:command];
     } else {
@@ -3372,6 +3376,36 @@
 
 + (nullable NSError *)sendOpINIData:(NSData *)iniData successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     IniCommandModel *model = [[IniCommandModel alloc] initWithIniCommandData:iniData];
+    if (SigDataSource.share.curNetkeyModel.index != model.netkeyIndex) {
+        BOOL has = NO;
+        for (SigNetkeyModel *netkey in SigDataSource.share.netKeys) {
+            if (netkey.index == model.netkeyIndex) {
+                has = YES;
+                SigDataSource.share.curNetkeyModel = netkey;
+                break;
+            }
+        }
+        if (!has) {
+            TeLogError(@"%@",kSigMeshLibCommandInvalidNetKeyIndexErrorMessage);
+            NSError *error = [NSError errorWithDomain:kSigMeshLibCommandInvalidNetKeyIndexErrorMessage code:kSigMeshLibCommandInvalidNetKeyIndexErrorCode userInfo:nil];
+            return error;
+        }
+    }
+    if (SigDataSource.share.curAppkeyModel.index != model.appkeyIndex) {
+        BOOL has = NO;
+        for (SigAppkeyModel *appkey in SigDataSource.share.appKeys) {
+            if (appkey.index == model.appkeyIndex) {
+                has = YES;
+                SigDataSource.share.curAppkeyModel = appkey;
+                break;
+            }
+        }
+        if (!has) {
+            TeLogError(@"%@",kSigMeshLibCommandInvalidAppKeyIndexErrorMessage);
+            NSError *error = [NSError errorWithDomain:kSigMeshLibCommandInvalidAppKeyIndexErrorMessage code:kSigMeshLibCommandInvalidAppKeyIndexErrorCode userInfo:nil];
+            return error;
+        }
+    }
     model.netkeyA = SigDataSource.share.curNetkeyModel;
     model.appkeyA = SigDataSource.share.curAppkeyModel;
     model.ivIndexA = SigDataSource.share.curNetkeyModel.ivIndex;

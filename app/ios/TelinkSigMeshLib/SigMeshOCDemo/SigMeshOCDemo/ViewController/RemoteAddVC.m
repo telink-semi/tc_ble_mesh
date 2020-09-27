@@ -42,8 +42,9 @@
 @property (weak, nonatomic) IBOutlet UIButton *goBackButton;
 @property (strong, nonatomic) NSMutableArray <AddDeviceModel *>*source;
 @property (strong, nonatomic) UIBarButtonItem *refreshItem;
-@property (strong, nonatomic) NSMutableArray <SigRemoteScanRspModel *>*remoteSource;
+@property (strong, nonatomic) NSMutableArray <SigRemoteScanRspModel *>*remoteSource;//缓存扫描到准备添加的设备
 @property (strong, nonatomic) NSMutableArray <SigRemoteScanRspModel *>*failSource;
+@property (strong, nonatomic) NSMutableArray <SigRemoteScanRspModel *>*scanReportSource;//缓存扫描到本轮不准备添加的设备
 @property (assign, nonatomic) UInt8 maxItemsCount;
 @end
 
@@ -135,6 +136,11 @@
     #ifdef kExist
     if (kExistRemoteProvision) {
         __weak typeof(self) weakSelf = self;
+        for (SigRemoteScanRspModel *model in self.scanReportSource) {
+            if (![self.remoteSource containsObject:model]) {
+                [self.remoteSource addObject:model];
+            }
+        }
         [SigRemoteAddManager.share startRemoteProvisionScanWithReportCallback:^(SigRemoteScanRspModel * _Nonnull scanRemoteModel) {
             TeLogInfo(@"RP-Remote:reportNodeAddress=0x%x,uuid=%@,rssi=%d,oob=%d,mac=%@",scanRemoteModel.reportNodeAddress,scanRemoteModel.reportNodeUUID,scanRemoteModel.RSSI,scanRemoteModel.oob.value,scanRemoteModel.macAddress);
             [weakSelf addAndShowSigRemoteScanRspModelToUI:scanRemoteModel];
@@ -192,6 +198,7 @@
 #pragma mark RP-Remote: start provision
 - (void)remoteProvisionNodeWithRemoteScanRspModel:(SigRemoteScanRspModel *)model {
     UInt16 provisionAddress = SigDataSource.share.provisionAddress;
+    [self.scanReportSource removeObject:model];
     TeLogInfo(@"RP-Remote: start provision, uuid:%@,macAddress:%@->0x%x.",model.reportNodeUUID,model.macAddress,provisionAddress);
     #ifdef kExist
     __weak typeof(self) weakSelf = self;
@@ -201,16 +208,20 @@
                 TeLogInfo(@"RP-Remote:provision success, %@->0X%X",identify,address);
             SigNodeModel *node = [SigDataSource.share getNodeWithAddress:provisionAddress];
             if (node) {
+                __block BOOL hasStartKeyBind = NO;
                 [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_success retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
 
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    if (error != nil && isResponseAll == NO) {
-                        TeLogError(@"link close fail.");
+                    if (!hasStartKeyBind) {
+                        hasStartKeyBind = YES;
+                        if (error != nil && isResponseAll == NO) {
+                            TeLogError(@"link close fail.");
+                        }
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(keyBindWithNode:) object:node];
+                            [weakSelf performSelector:@selector(keyBindWithNode:) withObject:node afterDelay:2.0];
+                        });
                     }
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(keyBindWithNode:) object:node];
-                        [weakSelf performSelector:@selector(keyBindWithNode:) withObject:node afterDelay:2.0];
-                    });
                 }];
             } else {
                 TeLogError(@"node = nil.");
@@ -244,6 +255,7 @@
 #pragma mark RP-Remote: start keybind
 - (void)keyBindWithNode:(SigNodeModel *)node {
     TeLogInfo(@"RP-Remote: start keybind");
+    [SigMeshLib.share cleanAllCommandsAndRetry];
     __weak typeof(self) weakSelf = self;
     if (SigBearer.share.isOpen) {
         AddDeviceModel *model = [self getAddDeviceModelWithMacAddress:node.macAddress];
@@ -301,6 +313,11 @@
     if (![self.remoteSource containsObject:scanRemoteModel]) {
         if (![self.failSource containsObject:scanRemoteModel]) {
             [self.remoteSource addObject:scanRemoteModel];
+            if (![self.scanReportSource containsObject:scanRemoteModel]) {
+                [self.scanReportSource addObject:scanRemoteModel];
+            }
+        } else {
+            return;//provision失败，重新扫描到，不可显示为scaned状态。
         }
     } else {
         NSInteger index = [self.remoteSource indexOfObject:scanRemoteModel];
@@ -396,6 +413,7 @@
     self.source = [NSMutableArray array];
     self.remoteSource = [NSMutableArray array];
     self.failSource = [NSMutableArray array];
+    self.scanReportSource = [NSMutableArray array];
 }
 
 - (void)viewWillAppear:(BOOL)animated{

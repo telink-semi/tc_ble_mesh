@@ -46,6 +46,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 @property (nonatomic,copy) addDevice_prvisionSuccessCallBack provisionSuccessBlock;
 @property (nonatomic,copy) ErrorBlock failBlock;
 @property (nonatomic,assign) BOOL isProvisionning;
+@property (nonatomic,assign) BOOL isLinkOpenReportWaiting;
 
 // for remote provision
 @property (nonatomic,assign) UInt16 reportNodeAddress;
@@ -96,9 +97,11 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 - (void)endRemoteProvisionScan {
     self.isRemoteScaning = NO;
-    if (self.messageHandle) {
-        [self.messageHandle cancel];
-    }
+//    if (self.messageHandle) {
+//        [self.messageHandle cancel];
+//    }
+    //因为上面for循环发送了多次，在这里清理block。
+    [SigMeshLib.share cleanAllCommandsAndRetry];
     if (self.currentMaxScannedItems >= 0x04 && self.currentMaxScannedItems <= 0xFF) {
         if (self.scanResultBlock) {
             self.scanResultBlock(YES, nil);
@@ -168,6 +171,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     self.isProvisionning = YES;
     _outboundPDUNumber = -1;
     _inboundPDUNumber = -1;
+    self.isLinkOpenReportWaiting = YES;
     __weak typeof(self) weakSelf = self;
     TeLogInfo(@"start provision.");
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
@@ -186,16 +190,14 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     
     self.messageHandle = [SDKLibCommand remoteProvisioningLinkOpenWithDestination:reportNodeAddress UUID:reportNodeUUID retryCount:kRemoteProgressRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
         TeLogInfo(@"linkOpen responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
-        if (responseMessage.status == SigRemoteProvisioningStatus_success) {
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                [weakSelf getCapabilitiesWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-                    [weakSelf getCapabilitiesResultWithResponse:response];
-                }];
-            });
-        } else {
-            [self provisionFail];
-            TeLogDebug(@"sentProvisionConfirmationPdu error, parameters= %@",responseMessage.parameters);
-        }
+//        if (responseMessage.status == SigRemoteProvisioningStatus_success) {
+//            [weakSelf getCapabilitiesWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+//                [weakSelf getCapabilitiesResultWithResponse:response];
+//            }];
+//        } else {
+//            [self provisionFail];
+//            TeLogDebug(@"sentProvisionConfirmationPdu error, parameters= %@",responseMessage.parameters);
+//        }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (error) {
@@ -215,7 +217,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
 // 1.remoteProvisioningScanCapabilitiesGet
 - (void)getRemoteProvisioningScanCapabilities {
-    TeLogInfo(@"getRemoteProvisioningScanCapabilities address=0x%x",SigDataSource.share.getCurrentConnectedNode.address);
+    TeLogVerbose(@"getRemoteProvisioningScanCapabilities address=0x%x",SigDataSource.share.getCurrentConnectedNode.address);
     __weak typeof(self) weakSelf = self;
     self.messageHandle = [SDKLibCommand remoteProvisioningScanCapabilitiesGetWithDestination:SigDataSource.share.getCurrentConnectedNode.address retryCount:kRemoteProgressRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanCapabilitiesStatus * _Nonnull responseMessage) {
 //        if (responseMessage.activeScan) {
@@ -250,7 +252,6 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
     [oprationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
-        NSLog(@"oprationQueue");
         for (SigNodeModel *node in SigDataSource.share.curNodes) {
             if (!weakSelf.isRemoteScaning) {
                 return;
@@ -264,7 +265,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
                 dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to send remoteProvisioningScan every node.
-            dispatch_semaphore_wait(weakSelf.semaphore, kSendOneNodeScanTimeout);
+            dispatch_semaphore_wait(self.semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * kSendOneNodeScanTimeout));
         }
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(endSingleRemoteProvisionScan) object:nil];
@@ -330,7 +331,12 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     model.UUID = identify;
     //Attention: There isn't scanModel at remote add, so develop need add macAddress in provisionSuccessCallback.
     model.macAddress = [LibTools convertDataToHexStr:[LibTools turnOverData:[_reportNodeUUID subdataWithRange:NSMakeRange(_reportNodeUUID.length - 6, 6)]]];
-    
+    SigNodeKeyModel *nodeNetkey = [[SigNodeKeyModel alloc] init];
+    nodeNetkey.index = self.networkKey.index;
+    if (![model.netKeys containsObject:nodeNetkey]) {
+        [model.netKeys addObject:nodeNetkey];
+    }
+
     SigPage0 *compositionData = [[SigPage0 alloc] init];
     NSMutableArray *elements = [NSMutableArray array];
     if (ele_count) {
@@ -577,11 +583,9 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
                 }
             }else{
                 //当前设置为no oob provision
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    [self sentStartNoOobProvisionPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-                        [weakSelf sentProvisionPublicKeyPduWithResponse:response];
-                    }];
-                });
+                [self sentStartNoOobProvisionPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                    [weakSelf sentProvisionPublicKeyPduWithResponse:response];
+                }];
             }
         }
     }else if (!response || response.type == SigProvisioningPduType_failed) {
@@ -599,11 +603,9 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         [self.provisioningData provisionerDidObtainWithDevicePublicKey:response.publicKey];
         if (self.provisioningData.sharedSecret && self.provisioningData.sharedSecret.length > 0) {
             __weak typeof(self) weakSelf = self;
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                [self sentProvisionConfirmationPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-                    [weakSelf sentProvisionConfirmationPduWithResponse:response];
-                }];
-            });
+            [self sentProvisionConfirmationPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                [weakSelf sentProvisionConfirmationPduWithResponse:response];
+            }];
         }else{
             TeLogDebug(@"calculate SharedSecret fail.");
             [self provisionFail];
@@ -621,11 +623,9 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     if (response.type == SigProvisioningPduType_confirmation && self.outboundPDUNumber == 3 && self.inboundPDUNumber == 3) {
         [self.provisioningData provisionerDidObtainWithDeviceConfirmation:response.confirmation];
         __weak typeof(self) weakSelf = self;
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [self sentProvisionRandomPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-                [weakSelf sentProvisionRandomPduWithResponse:response];
-            }];
-        });
+        [self sentProvisionRandomPduWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+            [weakSelf sentProvisionRandomPduWithResponse:response];
+        }];
     }else if (!response || response.type == SigProvisioningPduType_failed) {
         [self provisionFail];
         TeLogDebug(@"sentProvisionConfirmationPdu error = %lu",(unsigned long)response.error);
@@ -644,11 +644,9 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             return;
         }
         __weak typeof(self) weakSelf = self;
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [self sentProvisionEncryptedDataWithMicPduWithTimeout:kSentProvisionEncryptedDataWithMicTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-                [weakSelf sentProvisionEncryptedDataWithMicPduWithResponse:response];
-            }];
-        });
+        [self sentProvisionEncryptedDataWithMicPduWithTimeout:kSentProvisionEncryptedDataWithMicTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+            [weakSelf sentProvisionEncryptedDataWithMicPduWithResponse:response];
+        }];
     }else if (!response || response.type == SigProvisioningPduType_failed) {
         [self provisionFail];
         TeLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)response.error);
@@ -726,6 +724,21 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             //进行step2.5
             [self cancelLastMessageHandle];
             [self sentProvisionPublickeyPduWithTimeout:kRemoteProgressTimeout callback:self.provisionResponseBlock];
+        }
+    } else if ([message isKindOfClass:[SigRemoteProvisioningLinkReport class]]) {
+        if (self.isLinkOpenReportWaiting) {
+            self.isLinkOpenReportWaiting = NO;
+            SigRemoteProvisioningLinkReport *linkReport = (SigRemoteProvisioningLinkReport *)message;
+            if (linkReport.status == SigRemoteProvisioningStatus_success) {
+                // means link open success
+                __weak typeof(self) weakSelf = self;
+                [self getCapabilitiesWithTimeout:kRemoteProgressTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                    [weakSelf getCapabilitiesResultWithResponse:response];
+                }];
+            } else {
+                // means link open fail
+                [self provisionFail];
+            }
         }
     }
 }

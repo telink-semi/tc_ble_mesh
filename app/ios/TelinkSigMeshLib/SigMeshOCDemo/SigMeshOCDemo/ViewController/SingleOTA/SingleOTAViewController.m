@@ -61,7 +61,21 @@
             return;
         }
     }
-    
+    UInt16 pid = [OTAFileSource.share getPidWithOTAData:self.localData];
+    if (pid != [LibTools uint16From16String:self.model.pid]) {
+        NSString *msg = [NSString stringWithFormat:@"The PID of node is different from the PID of Bin file, are you sure still OTA this node?"];
+        __weak typeof(self) weakSelf = self;
+        [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
+            [weakSelf otaAction];
+        } cancel:^(UIAlertAction *action) {
+            
+        }];
+    } else {
+        [self otaAction];
+    }
+}
+
+- (void)otaAction {
     TeLog(@"clickStartOTA");
     self.OTAing = YES;
     self.otaButton.backgroundColor = self.unableColor;
@@ -148,7 +162,9 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
     ChooseBinCell *cell = (ChooseBinCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_ChooseBinCellID forIndexPath:indexPath];
     NSString *binString = self.source[indexPath.row];
-    cell.nameLabel.text = binString;
+    NSData *data = [OTAFileSource.share getDataWithBinName:binString];
+    UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
+    cell.nameLabel.text = [NSString stringWithFormat:@"%@   PID:0x%X VID:%c%c",binString,[OTAFileSource.share getPidWithOTAData:data],vid&0xff,(vid>>8)&0xff];//vid显示两个字节的ASCII
     cell.selectButton.selected = indexPath.row == self.selectIndex;
     return cell;
 }
