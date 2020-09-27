@@ -34,7 +34,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigBluetooth : NSObject
 /// Default is NO.
 @property (nonatomic,assign) BOOL waitScanRseponseEnabel;
-
+/// new delagate function block since v3.2.3: all notify reporting by this block.
+@property (nonatomic,copy,nullable) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateValueCallback;
+/// new delagate function block since v3.2.3: notify writeWithResponse by this block.
+@property (nonatomic,copy,nullable) bleDidWriteValueForCharacteristicCallback bluetoothDidWriteValueCallback;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -88,6 +91,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral;
 
 - (BOOL)isWorkNormal;
+
+#pragma mark - new gatt api since v3.2.3
+- (BOOL)readCharachteristic:(CBCharacteristic *)characteristic ofPeripheral:(CBPeripheral *)peripheral;
+- (BOOL)writeValue:(NSData *)value toPeripheral:(CBPeripheral *)peripheral forCharacteristic:(CBCharacteristic *)characteristic type:(CBCharacteristicWriteType)type;
 
 @end
 

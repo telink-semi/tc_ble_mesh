@@ -61,7 +61,7 @@
 @property (nonatomic,copy) bleIsReadyToSendWriteWithoutResponseCallback bluetoothIsReadyToSendWriteWithoutResponseCallback;
 @property (nonatomic,copy) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateValueForCharacteristicCallback;
 @property (nonatomic,copy) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateOnlineStatusValueCallback;
-
+ 
 @end
 
 @implementation SigBluetooth
@@ -276,7 +276,8 @@
 
 - (void)cancelConnectionPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleCancelConnectCallback)block{
     self.bluetoothCancelConnectCallback = block;
-    if (peripheral && peripheral.state != CBPeripheralStateDisconnected && peripheral.state != CBPeripheralStateDisconnecting) {
+//    if (peripheral && peripheral.state != CBPeripheralStateDisconnected && peripheral.state != CBPeripheralStateDisconnecting) {
+    if (peripheral && peripheral.state != CBPeripheralStateDisconnected) {
         TeLogDebug(@"cancel single connection");
         self.currentPeripheral = peripheral;
         self.currentPeripheral.delegate = self;
@@ -290,6 +291,7 @@
             if (self.bluetoothCancelConnectCallback) {
                 self.bluetoothCancelConnectCallback(peripheral,YES);
             }
+            self.bluetoothCancelConnectCallback = nil;
         }
     }
 }
@@ -330,7 +332,7 @@
     CBCharacteristic *tem = nil;
     for (CBService *s in peripheral.services) {
         for (CBCharacteristic *c in s.characteristics) {
-            if ([c.UUID.UUIDString isEqualToString:uuid]) {
+            if ([c.UUID.UUIDString isEqualToString:uuid.uppercaseString]) {
                 tem = c;
                 break;
             }
@@ -347,6 +349,31 @@
         return YES;
     }
     return NO;
+}
+
+#pragma mark - new gatt api since v3.2.3
+- (BOOL)readCharachteristic:(CBCharacteristic *)characteristic ofPeripheral:(CBPeripheral *)peripheral {
+    if (peripheral.state != CBPeripheralStateConnected) {
+        TeLogError(@"peripheral is not CBPeripheralStateConnected, can't read.")
+        return NO;
+    }
+    TeLogInfo(@"%@--->read",characteristic.UUID.UUIDString);
+    self.currentPeripheral = peripheral;
+    self.currentPeripheral.delegate = self;
+    [self.currentPeripheral readValueForCharacteristic:characteristic];
+    return YES;
+}
+
+- (BOOL)writeValue:(NSData *)value toPeripheral:(CBPeripheral *)peripheral forCharacteristic:(CBCharacteristic *)characteristic type:(CBCharacteristicWriteType)type {
+    if (peripheral.state != CBPeripheralStateConnected) {
+        TeLogError(@"peripheral is not CBPeripheralStateConnected, can't write.")
+        return NO;
+    }
+    TeLogInfo(@"%@--->0x%@",characteristic.UUID.UUIDString,[LibTools convertDataToHexStr:value]);
+    self.currentPeripheral = peripheral;
+    self.currentPeripheral.delegate = self;
+    [self.currentPeripheral writeValue:value forCharacteristic:characteristic type:type];
+    return YES;
 }
 
 #pragma  mark - Private
@@ -425,7 +452,10 @@
 }
 
 - (void)cancelConnectPeripheralTimeout {
-    if (self.bluetoothCancelConnectCallback) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(cancelConnectPeripheralTimeout) object:nil];
+    });
+    if (self.bluetoothCancelConnectCallback && self.currentPeripheral) {
         TeLogInfo(@"cancelConnect peripheral fail.")
         self.bluetoothCancelConnectCallback(self.currentPeripheral,NO);
     }
@@ -436,7 +466,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(cancelConnectPeripheralTimeout) object:nil];
     });
-    if (self.bluetoothCancelConnectCallback) {
+    if (self.bluetoothCancelConnectCallback && self.currentPeripheral) {
         self.bluetoothCancelConnectCallback(self.currentPeripheral, YES);
     }
     self.bluetoothCancelConnectCallback = nil;
@@ -659,13 +689,30 @@
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverDescriptorsForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
-    if ([peripheral isEqual:self.currentPeripheral] && peripheral.services.lastObject.characteristics.lastObject == characteristic) {
-        [self discoverServicesFinish];
+    if ([peripheral isEqual:self.currentPeripheral]) {
+        CBCharacteristic *lastCharacteristic = nil;
+        for (CBService *s in peripheral.services) {
+            if (s.characteristics && s.characteristics.count > 0) {
+                lastCharacteristic = s.characteristics.lastObject;
+            }
+        }
+        if (lastCharacteristic == characteristic) {
+            [self discoverServicesFinish];
+        }
+    }
+}
+
+- (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
+    if (self.bluetoothDidWriteValueCallback) {
+        self.bluetoothDidWriteValueCallback(peripheral,characteristic,error);
     }
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(nullable NSError *)error {
 //    TeLogInfo(@"<--- from:uuid:%@, length:%d",characteristic.UUID.UUIDString,characteristic.value.length);
+    if (self.bluetoothDidUpdateValueCallback) {
+        self.bluetoothDidUpdateValueCallback(peripheral,characteristic,error);
+    }
     if (([characteristic.UUID.UUIDString isEqualToString:kPROXY_Out_CharacteristicsID] && SigBearer.share.isProvisioned) || ([characteristic.UUID.UUIDString isEqualToString:kPBGATT_Out_CharacteristicsID] && !SigBearer.share.isProvisioned)) {
         if ([characteristic.UUID.UUIDString isEqualToString:kPROXY_Out_CharacteristicsID]) {
             TeLogInfo(@"<--- from:PROXY, length:%d",characteristic.value.length);
@@ -674,7 +721,7 @@
             TeLogInfo(@"<--- from:GATT, length:%d",characteristic.value.length);
         }
         if (self.bluetoothDidUpdateValueForCharacteristicCallback) {
-            self.bluetoothDidUpdateValueForCharacteristicCallback(peripheral, characteristic);
+            self.bluetoothDidUpdateValueForCharacteristicCallback(peripheral, characteristic,error);
         }
     }
     if ([characteristic.UUID.UUIDString isEqualToString:kOTA_CharacteristicsID]) {
@@ -686,7 +733,7 @@
     if ([characteristic.UUID.UUIDString isEqualToString:kOnlineStatusCharacteristicsID]) {
         TeLogInfo(@"<--- from:OnlineStatusCharacteristics, length:%d",characteristic.value.length);
         if (self.bluetoothDidUpdateOnlineStatusValueCallback) {
-            self.bluetoothDidUpdateOnlineStatusValueCallback(peripheral, characteristic);
+            self.bluetoothDidUpdateOnlineStatusValueCallback(peripheral, characteristic,error);
         }
     }
 }

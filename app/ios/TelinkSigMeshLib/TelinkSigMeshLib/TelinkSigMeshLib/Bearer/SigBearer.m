@@ -55,7 +55,6 @@
 
 /// flag current node whether had provisioned.
 @property (nonatomic, assign) BOOL provisioned;//default is YES.
-@property (nonatomic,strong) BackgroundTimer *autoConnectScanTimer;
 @property (nonatomic, assign) BOOL hasScaned1828;//default is NO.
 @property (nonatomic,strong) NSMutableDictionary <CBPeripheral *,NSNumber *>*scanedPeripheralDict;
 @property (nonatomic, strong) NSThread *receiveThread;
@@ -76,6 +75,7 @@
         shareManager.delegate = shareManager;
         shareManager.provisioned = YES;
         shareManager.hasScaned1828 = NO;
+        shareManager.isSending = NO;
         shareManager.protocolHandler = [[ProxyProtocolHandler alloc] init];
         shareManager.scanedPeripheralDict = [[NSMutableDictionary alloc] init];
         [shareManager initThread];
@@ -265,13 +265,13 @@
             [weakSelf.dataDelegate bearer:weakSelf didCloseWithError:error];
         }
         if (weakSelf.isAutoReconnect && weakSelf.isProvisioned) {
-            [weakSelf startAutoConnect];
+            [weakSelf performSelectorOnMainThread:@selector(startAutoConnect) withObject:nil waitUntilDone:YES];
         }
     }];
     [self.ble setBluetoothIsReadyToSendWriteWithoutResponseCallback:^(CBPeripheral * _Nonnull peripheral) {
         [weakSelf shouldSendNextPacketData];
     }];
-    [self.ble setBluetoothDidUpdateValueForCharacteristicCallback:^(CBPeripheral * _Nonnull peripheral, CBCharacteristic * _Nonnull characteristic) {
+    [self.ble setBluetoothDidUpdateValueForCharacteristicCallback:^(CBPeripheral *peripheral, CBCharacteristic *characteristic, NSError * _Nullable error) {
         if (![peripheral isEqual:weakSelf.peripheral]) {
             TeLogDebug(@"value is not notify from currentPeripheral.");
             return;
@@ -288,7 +288,7 @@
             }
         }
     }];
-    [self.ble setBluetoothDidUpdateOnlineStatusValueCallback:^(CBPeripheral *peripheral, CBCharacteristic *characteristic) {
+    [self.ble setBluetoothDidUpdateOnlineStatusValueCallback:^(CBPeripheral *peripheral, CBCharacteristic *characteristic, NSError * _Nullable error) {
         if (![peripheral isEqual:weakSelf.peripheral]) {
             TeLogDebug(@"value is not notify from currentPeripheral.");
             return;
@@ -302,19 +302,26 @@
 }
 
 - (void)shouldSendNextPacketData {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(shouldSendNextPacketData) object:nil];
-    });
     if (self.queue.count == 0) {
+        TeLogDebug(@"")
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(shouldSendNextPacketData) object:nil];
+        });
         if (self.sendPacketFinishBlock) {
             self.sendPacketFinishBlock();
         }
         return;
+    } else {
+        TeLogDebug(@"")
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(shouldSendNextPacketData) object:nil];
+            [self performSelector:@selector(shouldSendNextPacketData) withObject:nil afterDelay:0.5];
+        });
+        NSData *packet = self.queue.firstObject;
+        [self.queue removeObjectAtIndex:0];
+        [self showSendData:packet forCharacteristic:self.characteristic];
+        [self.peripheral writeValue:packet forCharacteristic:self.characteristic type:CBCharacteristicWriteWithoutResponse];
     }
-    NSData *packet = self.queue.firstObject;
-    [self.queue removeObjectAtIndex:0];
-    [self showSendData:packet forCharacteristic:self.characteristic];
-    [self.peripheral writeValue:packet forCharacteristic:self.characteristic type:CBCharacteristicWriteWithoutResponse];
 }
 
 - (void)showSendData:(NSData *)data forCharacteristic:(CBCharacteristic *)characteristic {
@@ -361,6 +368,7 @@
                     if (proxyOutCharacteristic) {
                         [characteristics addObject:proxyOutCharacteristic];
                     }
+//                    TeLogDebug(@"characteristics=%@",characteristics);
                     NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
                     [oprationQueue addOperationWithBlock:^{
                         //这个block语句块在子线程中执行
@@ -408,6 +416,8 @@
     }
     if (self.bearerOpenCallback) {
         self.bearerOpenCallback(isSuccess);
+#warning 待完善
+        self.bearerOpenCallback = nil;
     }
     if (isSuccess) {
         if ([self.dataDelegate respondsToSelector:@selector(bearerDidOpen:)]) {
@@ -419,6 +429,7 @@
 - (void)closeResult:(BOOL)isSuccess {
     if (self.bearerCloseCallback) {
         self.bearerCloseCallback(isSuccess);
+//        self.bearerCloseCallback = nil;
     }
 }
 
@@ -522,7 +533,7 @@
     NSInteger mtu = [self.getCurrentPeripheral maximumWriteValueLengthForType:CBCharacteristicWriteWithoutResponse];
 //    NSInteger mtu = 20;
     NSArray *packets = [self.protocolHandler segmentWithData:pdu.pduData messageType:type mtu:mtu];
-    TeLogVerbose(@"pdu.pduData.length=%d,sentPcakets:%@",pdu.pduData.length,packets);
+//    TeLogVerbose(@"pdu.pduData.length=%d,sentPcakets:%@",pdu.pduData.length,packets);
 
     CBCharacteristic *c = nil;
     if (type == SigPduType_provisioningPdu) {
@@ -533,13 +544,15 @@
     //写法1.只负责压包，运行该函数完成不等于发送完成。
 //    [self sentPcakets:packets toCharacteristic:c type:CBCharacteristicWriteWithoutResponse];
     //写法2.等待所有压包都发送完成
+    self.isSending = YES;
     for (NSData *pack in packets) {
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         [self sentPcakets:@[pack] toCharacteristic:c type:CBCharacteristicWriteWithoutResponse complete:^{
             dispatch_semaphore_signal(semaphore);
         }];
-        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.0));
     }
+    self.isSending = NO;
 }
 
 - (void)sendOTAData:(NSData *)data complete:(SendPacketsFinishCallback)complete {
@@ -607,9 +620,6 @@
     self.isAutoReconnect = NO;
     self.stopMeshConnectCallback = complete;
     [SigBluetooth.share stopScan];
-    if (self.autoConnectScanTimer) {
-        [self.autoConnectScanTimer invalidate];
-    }
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(meshConnectTimeout) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectRssiHightestPeripheral) object:nil];
@@ -665,18 +675,14 @@
     [self stopAutoConnect];
     if (SigDataSource.share.curNodes.count > 0) {
         [self startMeshConnectWithComplete:self.startMeshConnectCallback];
-        __weak typeof(self) weakSelf = self;
-        self.autoConnectScanTimer = [BackgroundTimer scheduledTimerWithTimeInterval:kStartMeshConnectTimeout repeats:YES block:^(BackgroundTimer * _Nonnull t) {
-            [weakSelf startAutoConnect];
-        }];
     }
 }
 
 /// Stop auto connect(停止自动连接流程)
 - (void)stopAutoConnect {
-    if (self.autoConnectScanTimer) {
-        [self.autoConnectScanTimer invalidate];
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(meshConnectTimeout) object:nil];
+    });
 }
 
 /// 正常扫描流程：3秒内扫描到RSSI大于“-50”的设备，直接连接。
@@ -772,7 +778,10 @@
 //    if (self.startMeshConnectCallback) {
 //        self.startMeshConnectCallback(NO);
 //    }
-    [self startAutoConnect];
+    __weak typeof(self) weakSelf = self;
+    [self closeWithResult:^(BOOL successful) {
+        [weakSelf performSelectorOnMainThread:@selector(startAutoConnect) withObject:nil waitUntilDone:YES];
+    }];
 }
 
 @end

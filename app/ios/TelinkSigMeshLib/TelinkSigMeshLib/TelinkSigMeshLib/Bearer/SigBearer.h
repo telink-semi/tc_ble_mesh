@@ -74,6 +74,7 @@ typedef void(^SendPacketsFinishCallback)(void);
 @property (nonatomic, weak) id <SigBearerDataDelegate>dataDelegate;
 @property (nonatomic, assign) BOOL isAutoReconnect;//标记是否自动重连（ota和添加流程不需要自动重连）
 @property (nonatomic, copy) SendPacketsFinishCallback sendPacketFinishBlock;
+@property (nonatomic, assign) BOOL isSending;//标记是否正在发送数据
 
 #pragma  mark - Public API
 
