@@ -44,6 +44,7 @@
         _responseSourceArray = [NSMutableArray array];
         _timeout = kSDKLibCommandTimeout;
         _hadRetryCount = 0;
+        _hadReceiveAllResponse = NO;
         _needTid = NO;
         _tid = 0;
         _netkeyA = SigDataSource.share.curNetkeyModel;
@@ -2863,6 +2864,7 @@
     // Submit.
     __weak typeof(self) weakSelf = self;
     [self setType:SigProxyFilerType_whitelist successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+        TeLogVerbose(@"filter type:%@",responseMessage);
 //        //逻辑1.for循环每次只添加一个地址
 //        NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
 //        [oprationQueue addOperationWithBlock:^{
@@ -2906,11 +2908,13 @@
                 successCallback(source,destination,responseMessage);
             }
         } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+            TeLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
             if (failCallback) {
                 failCallback(error==nil,error);
             }
         }];
     } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+        TeLogVerbose(@"filter type,isResponseAll=%d,error:%@",isResponseAll,error);
         if (error != nil) {
             if (failCallback) {
                 failCallback(NO,error);
@@ -3203,6 +3207,10 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
+    // 特殊处理：因为该指令是存在response的，SDK会自动将异常的responseMaxCount=0修改为responseMaxCount=1，但该指令又不希望SDK对其进行retry，因此在此处修改一个很大的重试时间间隔timeout以避免预期外的超时callback。（想到更好的逻辑后再优化此代码。）
+    if (responseMaxCount == 0 && retryCount == 0) {
+        command.timeout = 0xFFFF;
+    }
     return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
@@ -3310,11 +3318,6 @@
         TeLogWarn(@"change retryCount to 0.");
     }
     BOOL reliable = [self isReliableCommandWithOpcode:op vendorOpcodeResponse:model.responseOpcode];
-    if (SigMeshLib.share.isBusyNow) {
-        err = [NSError errorWithDomain:@"Telink sig mesh SDK is busy now." code:-1 userInfo:nil];
-        TeLogError(@"tx cmd busy!........................");
-        return err;
-    }
     if ([SigHelper.share isUnicastAddress:model.address] && reliable && model.responseMax > 1) {
         model.responseMax = 1;
         TeLogWarn(@"change responseMax to 1.");
@@ -3357,6 +3360,12 @@
     if (model.timeout) {
         command.timeout = model.timeout;
     }
+    if (model.netkeyA != SigDataSource.share.defaultNetKeyA) {
+        SigDataSource.share.curNetkeyModel = model.netkeyA;
+        SigDataSource.share.curAppkeyModel = model.appkeyA;
+        SigDataSource.share.curNetkeyModel.ivIndex = model.ivIndexA;
+    }
+
     if (model.appkeyA) {
         [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:model.address] usingApplicationKey:model.appkeyA command:command];
     } else {
@@ -3367,6 +3376,36 @@
 
 + (nullable NSError *)sendOpINIData:(NSData *)iniData successCallback:(responseAllMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     IniCommandModel *model = [[IniCommandModel alloc] initWithIniCommandData:iniData];
+    if (SigDataSource.share.curNetkeyModel.index != model.netkeyIndex) {
+        BOOL has = NO;
+        for (SigNetkeyModel *netkey in SigDataSource.share.netKeys) {
+            if (netkey.index == model.netkeyIndex) {
+                has = YES;
+                SigDataSource.share.curNetkeyModel = netkey;
+                break;
+            }
+        }
+        if (!has) {
+            TeLogError(@"%@",kSigMeshLibCommandInvalidNetKeyIndexErrorMessage);
+            NSError *error = [NSError errorWithDomain:kSigMeshLibCommandInvalidNetKeyIndexErrorMessage code:kSigMeshLibCommandInvalidNetKeyIndexErrorCode userInfo:nil];
+            return error;
+        }
+    }
+    if (SigDataSource.share.curAppkeyModel.index != model.appkeyIndex) {
+        BOOL has = NO;
+        for (SigAppkeyModel *appkey in SigDataSource.share.appKeys) {
+            if (appkey.index == model.appkeyIndex) {
+                has = YES;
+                SigDataSource.share.curAppkeyModel = appkey;
+                break;
+            }
+        }
+        if (!has) {
+            TeLogError(@"%@",kSigMeshLibCommandInvalidAppKeyIndexErrorMessage);
+            NSError *error = [NSError errorWithDomain:kSigMeshLibCommandInvalidAppKeyIndexErrorMessage code:kSigMeshLibCommandInvalidAppKeyIndexErrorCode userInfo:nil];
+            return error;
+        }
+    }
     model.netkeyA = SigDataSource.share.curNetkeyModel;
     model.appkeyA = SigDataSource.share.curAppkeyModel;
     model.ivIndexA = SigDataSource.share.curNetkeyModel.ivIndex;
@@ -3427,7 +3466,6 @@
         NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
         [oprationQueue addOperationWithBlock:^{
             //这个block语句块在子线程中执行
-            NSLog(@"oprationQueue");
             [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
         }];
     }
@@ -3604,6 +3642,10 @@ function 1:special if you need do provision , you should call this method, and i
 
 + (void)scanProvisionedDevicesWithResult:(bleScanPeripheralCallback)result {
     [SigBluetooth.share scanProvisionedDevicesWithResult:result];
+}
+
++ (void)scanWithServiceUUIDs:(NSArray <CBUUID *>* _Nonnull)UUIDs checkNetworkEnable:(BOOL)checkNetworkEnable result:(bleScanPeripheralCallback)result {
+    [SigBluetooth.share scanWithServiceUUIDs:UUIDs checkNetworkEnable:checkNetworkEnable result:result];
 }
 
 + (void)scanMeshNodeWithPeripheralUUID:(NSString *)peripheralUUID timeout:(NSTimeInterval)timeout resultBlock:(bleScanSpecialPeripheralCallback)block {

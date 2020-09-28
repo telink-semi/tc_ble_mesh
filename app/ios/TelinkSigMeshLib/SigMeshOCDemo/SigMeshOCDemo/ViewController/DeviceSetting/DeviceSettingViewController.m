@@ -35,6 +35,8 @@
 #import "UIViewController+Message.h"
 #import "SensorVC.h"
 #import "DeviceCompositionDataVC.h"
+#import "DeviceNetKeyListVC.h"
+#import "DeviceAppKeyListVC.h"
 
 @interface DeviceSettingViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UILabel *macLabel;
@@ -88,13 +90,6 @@
             [self performSelector:@selector(resetNodeTimeout) withObject:nil afterDelay:5.0];
         });
     }
-    
-//    if (self.model && [self.model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
-//        //if node is Bluetooth.share.currentPeripheral, wait node didDisconnectPeripheral, delay 1.5s and pop.
-//    } else {
-//        //if node isn't Bluetooth.share.currentPeripheral, delay 5s and pop.
-//        [self performSelector:@selector(pop) withObject:nil afterDelay:TimeOut_KickoutConnectedDelayResponseTime];
-//    }
 }
 
 - (void)resetNodeTimeout {
@@ -122,18 +117,10 @@
 
 - (void)blockState{
     [super blockState];
-//    __weak typeof(self) weakSelf = self;
-//    [self.ble bleDisconnectOrConnectFail:^(CBPeripheral *peripheral) {
-//        if (weakSelf.hasClickKickout) {
-//            [ShowTipsHandle.share show:Tip_DisconnectOrConnectFail];
-//            [weakSelf performSelector:@selector(pop) withObject:nil afterDelay:TimeOut_KickoutDelayResponseTime];
-//        }
-//    }];
 }
 
 - (void)nilBlock{
     [super nilBlock];
-//    self.ble.bleDisconnectOrConnectFailCallBack = nil;
 }
 
 #pragma mark - Life method
@@ -155,9 +142,9 @@
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     if (self.model.isSensor) {
-        return 6;
+        return 8;
     } else {
-        return 5;
+        return 7;
     }
 }
 
@@ -224,6 +211,18 @@
             break;
         case 5:
         {
+            cell.nameLabel.text = @"NetKey List";
+            cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
+        }
+            break;
+        case 6:
+        {
+            cell.nameLabel.text = @"AppKey List";
+            cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
+        }
+            break;
+        case 7:
+        {
             cell.nameLabel.text = @"LPN";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_battery-20-bluetooth"];
         }
@@ -273,6 +272,16 @@
             break;
         case 5:
         {
+            [self pushToNetKeyListVC];
+        }
+            break;
+        case 6:
+        {
+            [self pushToAppKeyListVC];
+        }
+            break;
+        case 7:
+        {
             [self pushToSensorVC];
         }
             break;
@@ -302,6 +311,18 @@
 
 - (void)pushToDeviceOTA{
     SingleOTAViewController *vc = (SingleOTAViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SingleOTAViewControllerID];
+    vc.model = self.model;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)pushToNetKeyListVC {
+    DeviceNetKeyListVC *vc = [[DeviceNetKeyListVC alloc] init];
+    vc.model = self.model;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)pushToAppKeyListVC {
+    DeviceAppKeyListVC *vc = [[DeviceAppKeyListVC alloc] init];
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }

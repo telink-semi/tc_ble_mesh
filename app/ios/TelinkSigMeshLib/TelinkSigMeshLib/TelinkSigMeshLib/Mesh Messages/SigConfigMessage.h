@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSArray <NSNumber *>*)decodeIndexesFromData:(NSData *)data atOffset:(int)offset;
 
 /// By default, all Config Messages will be sent as segmented to make them more reliable.
-- (BOOL)isSegmented;
+//- (BOOL)isSegmented;
 
 @end
 

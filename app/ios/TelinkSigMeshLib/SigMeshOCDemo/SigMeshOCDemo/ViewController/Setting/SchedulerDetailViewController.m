@@ -154,7 +154,7 @@
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 TeLogDebug(@"");
             }];
-            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
         }
         TeLogDebug(@"save success");
         [weakSelf.device saveSchedulerModelWithModel:weakSelf.model];

@@ -124,4 +124,18 @@
     return data;
 }
 
+- (UInt16)getPidWithOTAData:(NSData *)data {
+    UInt16 pid = 0;
+    Byte *tempBytes = (Byte *)[data bytes];
+    memcpy(&pid, tempBytes + 0x2, 2);
+    return pid;
+}
+
+- (UInt16)getVidWithOTAData:(NSData *)data {
+    UInt16 vid = 0;
+    Byte *tempBytes = (Byte *)[data bytes];
+    memcpy(&vid, tempBytes + 0x4, 2);
+    return vid;
+}
+
 @end

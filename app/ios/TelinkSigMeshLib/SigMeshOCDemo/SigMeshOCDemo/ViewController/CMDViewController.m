@@ -87,6 +87,23 @@
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             TeLogVerbose(@"finish");
         }];
+        
+//        CBCharacteristic *otaCharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kOTA_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral];
+//        //注意：以下block使用完成后需要手动置为nil.
+//        //test1:接收到蓝牙数据的回调
+//        [SigBluetooth.share setBluetoothDidUpdateValueCallback:^(CBPeripheral * _Nonnull peripheral, CBCharacteristic * _Nonnull characteristic, NSError * _Nullable error) {
+//            if ([peripheral isEqual:SigBearer.share.getCurrentPeripheral] && [characteristic isEqual:otaCharacteristic]) {
+//                if (error == nil) {
+//                    TeLogDebug(@"CMD界面接收到数据<---0x%@",[LibTools convertDataToHexStr:characteristic.value]);
+//                } else {
+//                    TeLogError(@"CMD界面接收到错误:%@",error);
+//                }
+//            }
+//        }];
+//        //test2:发送写蓝牙数据接口
+//        [SigBluetooth.share writeValue:self.sendData toPeripheral:SigBearer.share.getCurrentPeripheral forCharacteristic:otaCharacteristic type:CBCharacteristicWriteWithoutResponse];
+//        //test3:发送写蓝牙数据接口
+//        [SigBluetooth.share readCharachteristic:otaCharacteristic ofPeripheral:SigBearer.share.getCurrentPeripheral];
     }
 }
 
@@ -185,6 +202,7 @@
 //}
 
 -(void)dealloc{
+    SigBluetooth.share.bluetoothDidUpdateValueCallback = nil;
     TeLogDebug(@"");
 }
 

@@ -34,7 +34,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigBluetooth : NSObject
 /// Default is NO.
 @property (nonatomic,assign) BOOL waitScanRseponseEnabel;
-
+/// new delagate function block since v3.2.3: all notify reporting by this block.
+@property (nonatomic,copy,nullable) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateValueCallback;
+/// new delagate function block since v3.2.3: notify writeWithResponse by this block.
+@property (nonatomic,copy,nullable) bleDidWriteValueForCharacteristicCallback bluetoothDidWriteValueCallback;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -57,6 +60,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)scanUnprovisionedDevicesWithResult:(bleScanPeripheralCallback)result;
 
 - (void)scanProvisionedDevicesWithResult:(bleScanPeripheralCallback)result;
+
+/// 自定义扫描接口，checkNetworkEnable表示是否对已经入网的1828设备进行NetworkID过滤，过滤则只能扫描到当前手机的本地mesh数据里面的设备。
+- (void)scanWithServiceUUIDs:(NSArray <CBUUID *>* _Nonnull)UUIDs checkNetworkEnable:(BOOL)checkNetworkEnable result:(bleScanPeripheralCallback)result;
 
 - (void)setBluetoothIsReadyToSendWriteWithoutResponseCallback:(bleIsReadyToSendWriteWithoutResponseCallback)bluetoothIsReadyToSendWriteWithoutResponseCallback;
 
@@ -85,6 +91,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral;
 
 - (BOOL)isWorkNormal;
+
+#pragma mark - new gatt api since v3.2.3
+- (BOOL)readCharachteristic:(CBCharacteristic *)characteristic ofPeripheral:(CBPeripheral *)peripheral;
+- (BOOL)writeValue:(NSData *)value toPeripheral:(CBPeripheral *)peripheral forCharacteristic:(CBCharacteristic *)characteristic type:(CBCharacteristicWriteType)type;
 
 @end
 

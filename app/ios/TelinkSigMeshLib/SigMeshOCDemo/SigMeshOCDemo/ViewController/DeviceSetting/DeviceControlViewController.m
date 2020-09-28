@@ -310,9 +310,19 @@
     item.onoffLabel.text = [NSString stringWithFormat:@"ele adr:0x%X",ele_adr.intValue];
     
     [item setClickSwiftBlock:^(UISwitch * _Nonnull swift) {
+        //0.不带渐变且无回包写法：
         //attention: resMax change to 0, because node detail vc needn't response.
 //        [DemoCommand switchOnOffWithIsOn:swift.isOn address:ele_adr.intValue responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
+        //1.不带渐变写法：
         [DemoCommand switchOnOffWithIsOn:swift.isOn address:ele_adr.intValue responseMaxCount:1 ack:YES successCallback:nil resultCallback:nil];
+        
+        //2.带渐变写法：Sending message:SigGenericOnOffSet->Access PDU, source:(0x0001)->destination: (0x0002) Op Code: (0x8202), accessPdu=820200174100
+//        SigTransitionTime *transitionTime = [[SigTransitionTime alloc] initWithSetps:1 stepResolution:SigStepResolution_seconds];
+//        [SDKLibCommand genericOnOffSetDestination:ele_adr.intValue isOn:swift.isOn transitionTime:transitionTime delay:0 retryCount:2 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+//            TeLogInfo(@"source=0x%x,destination=0x%x,responseMessage=%@",source,destination,responseMessage);
+//        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//        }];
     }];
     //Attention: panel has 8 onoff button, but node just has one onoff data, developer should fix that when your app has panel.
     if (indexPath.item == 0) {

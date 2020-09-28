@@ -36,6 +36,7 @@ typedef enum : NSUInteger {
     SigAddStatusProvisioning,
     SigAddStatusConnectSecond,
     SigAddStatusKeyBinding,
+    SigAddStatusKeyFree,
 } SigAddStatus;
 /*
  needDisconnectBetweenProvisionToKeyBind：标记是否需要SigAddStatusConnectSecond
@@ -77,7 +78,7 @@ typedef enum : NSUInteger {
         shareManager = [[SigAddDeviceManager alloc] init];
         shareManager.needDisconnectBetweenProvisionToKeyBind = YES;
         shareManager.retryCount = 3;
-        shareManager.addStatus = SigAddStatusScanning;
+        shareManager.addStatus = SigAddStatusKeyFree;
         shareManager.isAutoAddDevice = NO;
         shareManager.tempProvisionFailList = [NSMutableArray array];
     });
@@ -195,13 +196,16 @@ typedef enum : NSUInteger {
             [weakSelf refreshNextUnicastAddress];
             [weakSelf addPeripheralSuccess:weakSelf.curPeripheral];
         } fail:^(NSError * _Nonnull error) {
-            TeLogDebug(@"model bind fail, so keybind fail.");
-            if (weakSelf.keyBindFailBlock) {
-                NSError *err = [NSError errorWithDomain:@"model bind fail, so keybind fail." code:0 userInfo:nil];
-                weakSelf.keyBindFailBlock(err);
+            if (weakSelf.addStatus == SigAddStatusConnectSecond || weakSelf.addStatus == SigAddStatusKeyBinding) {
+                [weakSelf performSelector:@selector(checkToTryAgain:) withObject:peripheral afterDelay:0.1];
             }
-            [weakSelf refreshNextUnicastAddress];
-            [weakSelf addPeripheralFail:peripheral];
+//            TeLogDebug(@"model bind fail, so keybind fail.");
+//            if (weakSelf.keyBindFailBlock) {
+//                NSError *err = [NSError errorWithDomain:@"model bind fail, so keybind fail." code:0 userInfo:nil];
+//                weakSelf.keyBindFailBlock(err);
+//            }
+//            [weakSelf refreshNextUnicastAddress];
+//            [weakSelf addPeripheralFail:peripheral];
         }];
     } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         if (error) {
@@ -229,82 +233,134 @@ typedef enum : NSUInteger {
     self.curPeripheral = peripheral;
     __weak typeof(self) weakSelf = self;
     [[SigBearer share] connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
-        if (successful) {
-            if (weakSelf.addStatus == SigAddStatusConnectFirst) {
-                //it need delay 500ms before sent provision invite.
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    weakSelf.addStatus = SigAddStatusProvisioning;
-                    if (self.staticOOBData) {
-                        [SigProvisioningManager.share provisionWithUnicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex staticOobData:weakSelf.staticOOBData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-                            if (weakSelf.provisionSuccessBlock) {
-                                weakSelf.provisionSuccessBlock(identify, address);
-                            }
-                            if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
-                                weakSelf.addStatus = SigAddStatusConnectSecond;
-                                [SigBearer.share closeWithResult:^(BOOL successful) {
-//                                    [weakSelf startAddPeripheral:peripheral];
-                                    [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
-                                }];
-                            } else {
-                                [weakSelf keybind];
-                            }
-                        } fail:^(NSError * _Nonnull error) {
-                            if (weakSelf.provisionFailBlock) {
-                                weakSelf.provisionFailBlock(error);
-                            }
-                            [weakSelf addPeripheralFail:peripheral];
-                        }];
-                    } else {
-                        [SigProvisioningManager.share provisionWithUnicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-                            if (weakSelf.provisionSuccessBlock) {
-                                weakSelf.provisionSuccessBlock(identify, address);
-                            }
-                            if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
-                                weakSelf.addStatus = SigAddStatusConnectSecond;
-                                [SigBearer.share closeWithResult:^(BOOL successful) {
-//                                    [weakSelf startAddPeripheral:peripheral];
-                                    [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
-                                }];
-                            } else {
-                                [weakSelf keybind];
-                            }
-                        } fail:^(NSError * _Nonnull error) {
-                            if (weakSelf.provisionFailBlock) {
-                                weakSelf.provisionFailBlock(error);
-                            }
-                            [weakSelf addPeripheralFail:peripheral];
-                        }];
-                    }
-                });
-            } else if (weakSelf.addStatus == SigAddStatusConnectSecond) {
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    [weakSelf keybind];
-                });
-            }else{
-                TeLogError(@"error addStatus!!!!!!!!!");
-            }
-        } else {
-            if (weakSelf.retryCount > 0) {
-                TeLogDebug(@"retry connect peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
-                weakSelf.retryCount --;
-//                [weakSelf startAddPeripheral:peripheral];
-                [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
-            } else {
-                if (weakSelf.addStatus == SigAddStatusConnectFirst) {
-                    if (weakSelf.provisionFailBlock) {
-                        NSError *err = [NSError errorWithDomain:@"connect or read ATT fail. provision fail." code:-1 userInfo:nil];
-                        weakSelf.provisionFailBlock(err);
-                    }
-                } else if (weakSelf.addStatus == SigAddStatusConnectSecond) {
-                    if (weakSelf.keyBindFailBlock) {
-                        NSError *err = [NSError errorWithDomain:@"connect or read ATT fail. keybind fail." code:-1 userInfo:nil];
-                        weakSelf.keyBindFailBlock(err);
-                    }
+        if (weakSelf.addStatus != SigAddStatusKeyFree) {
+            if (successful) {
+                if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
+                    //it need delay 500ms before sent provision invite.
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        weakSelf.addStatus = SigAddStatusProvisioning;
+                        if (weakSelf.staticOOBData) {
+                            [SigProvisioningManager.share provisionWithUnicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex staticOobData:weakSelf.staticOOBData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+                                if (weakSelf.provisionSuccessBlock) {
+                                    weakSelf.provisionSuccessBlock(identify, address);
+                                }
+                                if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
+                                    weakSelf.addStatus = SigAddStatusConnectSecond;
+                                    [weakSelf performSelector:@selector(scanCurrentPeripheralForKeyBind) withObject:nil];
+                                } else {
+                                    [weakSelf keybind];
+                                }
+                            } fail:^(NSError * _Nonnull error) {
+                                if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
+                                    if (weakSelf.provisionFailBlock) {
+                                        weakSelf.provisionFailBlock(error);
+                                    }
+                                    [weakSelf addPeripheralFail:peripheral];
+                                }
+                            }];
+                        } else {
+                            [SigProvisioningManager.share provisionWithUnicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+                                if (weakSelf.provisionSuccessBlock) {
+                                    weakSelf.provisionSuccessBlock(identify, address);
+                                }
+                                if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
+                                    weakSelf.addStatus = SigAddStatusConnectSecond;
+                                    [weakSelf performSelector:@selector(scanCurrentPeripheralForKeyBind) withObject:nil];
+                                } else {
+                                    [weakSelf keybind];
+                                }
+                            } fail:^(NSError * _Nonnull error) {
+                                if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
+                                    if (weakSelf.provisionFailBlock) {
+                                        weakSelf.provisionFailBlock(error);
+                                    }
+                                    [weakSelf addPeripheralFail:peripheral];
+                                }
+                            }];
+                        }
+                    });
+                } else if (weakSelf.addStatus == SigAddStatusConnectSecond || weakSelf.addStatus == SigAddStatusKeyBinding) {
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        [weakSelf keybind];
+                    });
+                }else{
+                    TeLogError(@"error addStatus=%d!!!!!!!!!",weakSelf.addStatus);
                 }
-                [weakSelf addPeripheralFail:peripheral];
+            } else {
+                [weakSelf performSelector:@selector(checkToTryAgain:) withObject:peripheral afterDelay:0.1];
             }
         }
     }];
+}
+
+- (void)checkToTryAgain:(CBPeripheral *)peripheral {
+    if (self.retryCount > 0) {
+        TeLogDebug(@"retry connect peripheral=%@,retry count=%d",peripheral,self.retryCount);
+        self.retryCount --;
+        if (self.addStatus == SigAddStatusConnectFirst || self.addStatus == SigAddStatusProvisioning) {
+            [self performSelector:@selector(startAddPeripheral:) withObject:peripheral];
+        } else {
+            [self performSelector:@selector(scanCurrentPeripheralForKeyBind) withObject:nil];
+        }
+    } else {
+        if (self.addStatus == SigAddStatusConnectFirst) {
+            if (self.provisionFailBlock) {
+                NSError *err = [NSError errorWithDomain:@"connect or read ATT fail. provision fail." code:-1 userInfo:nil];
+                self.provisionFailBlock(err);
+            }
+        } else if (self.addStatus == SigAddStatusConnectSecond || self.addStatus == SigAddStatusKeyBinding) {
+            if (self.keyBindFailBlock) {
+                NSError *err = [NSError errorWithDomain:@"connect or read ATT fail. keybind fail." code:-1 userInfo:nil];
+                self.keyBindFailBlock(err);
+            }
+        }
+        [self addPeripheralFail:peripheral];
+    }
+}
+
+- (void)scanCurrentPeripheralForKeyBind {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(keyBindByProxy) object:nil];
+        [self performSelector:@selector(keyBindByProxy) withObject:nil afterDelay:kScanNodeIdentityBeforeKeyBindTimeout];
+    });
+    __weak typeof(self) weakSelf = self;
+    [SigBluetooth.share setBluetoothDisconnectCallback:nil];
+    [SigBearer.share closeWithResult:^(BOOL successful) {
+        if (weakSelf.addStatus == SigAddStatusConnectSecond || weakSelf.addStatus == SigAddStatusKeyBinding) {
+            __block int maxRssi = 0;
+            [SigBluetooth.share scanProvisionedDevicesWithResult:^(CBPeripheral *peripheral, NSDictionary<NSString *,id> *advertisementData, NSNumber *RSSI, BOOL unprovisioned) {
+                if (!unprovisioned) {
+                    if (maxRssi == 0) {
+                        maxRssi = RSSI.intValue;
+                        weakSelf.curPeripheral = peripheral;
+                    } else {
+                        if (maxRssi > RSSI.intValue) {
+                            weakSelf.curPeripheral = peripheral;
+                        }
+                    }
+                    SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
+                    if (rspModel.nodeIdentityData && rspModel.nodeIdentityData.length == 16) {
+                        SigEncryptedModel *encryptedModel = [SigDataSource.share getSigEncryptedModelWithAddress:weakSelf.unicastAddress];
+                        if (encryptedModel && encryptedModel.identityData && encryptedModel.identityData.length == 16 && [encryptedModel.identityData isEqualToData:rspModel.nodeIdentityData]) {
+                            TeLogInfo(@"keyBind start connect macAddress:%@,uuid=%@",rspModel.macAddress,rspModel.uuid);
+                            [SigBluetooth.share stopScan];
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(keyBindByProxy) object:nil];
+                            });
+                            [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
+                        }
+                    }
+                }
+            }];
+        }
+    }];
+}
+
+- (void)keyBindByProxy {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(keyBindByProxy) object:nil];
+    });
+    [self performSelector:@selector(startAddPeripheral:) withObject:_curPeripheral];
 }
 
 - (void)addPeripheralFail:(CBPeripheral *)peripheral {
@@ -317,6 +373,7 @@ typedef enum : NSUInteger {
         self.addStatus = SigAddStatusScanning;
         [self startScan];
     }else{
+        self.addStatus = SigAddStatusKeyFree;
         if (self.finishBlock) {
             self.finishBlock();
         }
@@ -328,6 +385,7 @@ typedef enum : NSUInteger {
         self.addStatus = SigAddStatusScanning;
         [self startScan];
     }else{
+        self.addStatus = SigAddStatusKeyFree;
         if (self.finishBlock) {
             self.finishBlock();
         }
@@ -337,6 +395,7 @@ typedef enum : NSUInteger {
 - (void)scanTimeout {
     self.addStatus = SigAddStatusScanning;
     [SigBluetooth.share stopScan];
+    self.addStatus = SigAddStatusKeyFree;
     if (self.finishBlock) {
         self.finishBlock();
     }

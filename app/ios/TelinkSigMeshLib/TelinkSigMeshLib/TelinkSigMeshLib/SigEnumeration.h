@@ -301,9 +301,9 @@ typedef enum : UInt32 {
     SigOpCode_configNetKeyStatus                             = 0x8044,
     SigOpCode_configNetKeyUpdate                             = 0x8045,
 
-    SigOpCode_configNodeIdentityGet                             = 0x8046,
-    SigOpCode_configNodeIdentitySet                             = 0x8047,
-    SigOpCode_configNodeIdentityStatus                             = 0x8048,
+    SigOpCode_configNodeIdentityGet                          = 0x8046,
+    SigOpCode_configNodeIdentitySet                          = 0x8047,
+    SigOpCode_configNodeIdentityStatus                       = 0x8048,
 
     SigOpCode_configNodeReset                                = 0x8049,
     SigOpCode_configNodeResetStatus                          = 0x804A,

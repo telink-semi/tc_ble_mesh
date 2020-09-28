@@ -70,8 +70,10 @@
     [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
             TeLogInfo(@"stop mesh success.");
+            __block UInt16 currentProvisionAddress = provisionAddress;
             [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel unicastAddress:0 uuid:nil keyBindType:type.integerValue productID:0 cpsData:nil isAutoAddNextDevice:YES provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                 if (identify && address != 0) {
+                    currentProvisionAddress = address;
                     [weakSelf updateDeviceProvisionSuccess:identify address:address];
                     TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
                 }
@@ -80,11 +82,12 @@
                 TeLogInfo(@"addDevice provision fail error:%@",error);
             } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                 if (identify && address != 0) {
-                    [weakSelf updateDeviceKeyBind:identify isSuccess:YES];
+                    currentProvisionAddress = address;
+                    [weakSelf updateDeviceKeyBind:identify address:currentProvisionAddress isSuccess:YES];
                     TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
                 }
             } keyBindFail:^(NSError * _Nonnull error) {
-                [weakSelf updateDeviceKeyBind:SigBearer.share.getCurrentPeripheral.identifier.UUIDString isSuccess:NO];
+                [weakSelf updateDeviceKeyBind:SigBearer.share.getCurrentPeripheral.identifier.UUIDString address:currentProvisionAddress isSuccess:NO];
                 TeLogInfo(@"addDevice keybind fail error:%@",error);
             } finish:^{
                 TeLogInfo(@"addDevice finish.");
@@ -143,10 +146,10 @@
     });
 }
 
-- (void)updateDeviceKeyBind:(NSString *)uuid isSuccess:(BOOL)isSuccess{
+- (void)updateDeviceKeyBind:(NSString *)uuid address:(UInt16)address isSuccess:(BOOL)isSuccess{
     NSArray *source = [NSArray arrayWithArray:self.source];
     for (AddDeviceModel *model in source) {
-        if ([model.scanRspModel.uuid isEqualToString:uuid]) {
+        if ([model.scanRspModel.uuid isEqualToString:uuid] || model.scanRspModel.address == address) {
             if (isSuccess) {
                 model.state = AddDeviceModelStateBindSuccess;
             } else {

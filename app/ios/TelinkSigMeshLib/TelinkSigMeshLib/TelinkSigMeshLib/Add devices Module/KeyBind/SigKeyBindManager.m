@@ -115,9 +115,6 @@
         TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         weakSelf.page = ((SigConfigCompositionDataStatus *)responseMessage).page;
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCompositionDataTimeOut) object:nil];
-        });
         if (!isResponseAll || error) {
             [weakSelf showKeyBindEnd];
             weakSelf.isKeybinding = NO;
@@ -125,6 +122,9 @@
                 weakSelf.failBlock(error);
             }
         } else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCompositionDataTimeOut) object:nil];
+            });
             [weakSelf appkeyAdd];
         }
     }];
@@ -132,9 +132,6 @@
 
 - (void)getCompositionDataTimeOut {
     [self showKeyBindEnd];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCompositionDataTimeOut) object:nil];
-    });
     [self.messageHandle cancel];
     self.isKeybinding = NO;
     if (self.failBlock) {
@@ -192,9 +189,6 @@
 
 - (void)addAppkeyTimeOut {
     [self showKeyBindEnd];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(addAppkeyTimeOut) object:nil];
-    });
     [self.messageHandle cancel];
     self.isKeybinding = NO;
     if (self.failBlock) {
@@ -240,7 +234,7 @@
                 
                 // 写法2：判断modelID
                 self.messageHandle = [SDKLibCommand configModelAppBindWithDestination:weakSelf.address applicationKeyIndex:weakSelf.appkeyModel.index elementAddress:element.unicastAddress modelIdentifier:modelID.getIntModelIdentifier companyIdentifier:modelID.getIntCompanyIdentifier retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelAppStatus * _Nonnull responseMessage) {
-                    TeLogVerbose(@"SigConfigModelAppStatus.parameters=%@",responseMessage.parameters);
+                    TeLogInfo(@"SigConfigModelAppStatus.parameters=%@",responseMessage.parameters);
                     if (responseMessage.status == SigConfigMessageStatus_success && responseMessage.modelIdentifier == modelID.getIntModelIdentifier && responseMessage.companyIdentifier == modelID.getIntCompanyIdentifier && responseMessage.elementAddress == element.unicastAddress) {
                         isFail = NO;
                         dispatch_semaphore_signal(semaphore);
@@ -254,8 +248,7 @@
                         dispatch_semaphore_signal(semaphore);
                     }
                 }];
-                
-                dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 3.0));
                 if (isFail) {
                     break;
                 }
@@ -282,9 +275,6 @@
 - (void)bindModelToAppkeyTimeOut {
     [self showKeyBindEnd];
     TeLogInfo(@"keyBind timeout.");
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(bindModelToAppkeyTimeOut) object:nil];
-    });
     [self.messageHandle cancel];
     self.isKeybinding = NO;
     if (self.failBlock) {
@@ -296,47 +286,52 @@
 - (void)keyBindSuccessAction {
     [self showKeyBindEnd];
     TeLogInfo(@"keyBind successful.");
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self];
-    });
     self.isKeybinding = NO;
-    //appkeys
-    [self.node setAddSigAppkeyModelSuccess:self.appkeyModel];
-    //composition data
-    [self.node setCompositionData:(SigPage0 *)self.page];
-    //save
-    [SigDataSource.share saveLocationData];
     //publish time model
     UInt32 option = SIG_MD_TIME_S;
-    NSArray *elementAddresses = [self.node getAddressesWithModelID:@(option)];
+    
+    SigNodeModel *node = [[SigNodeModel alloc] init];
+    [node setAddress:self.node.address];
+    [node setAddSigAppkeyModelSuccess:self.appkeyModel];
+    [node setCompositionData:(SigPage0 *)self.page];
+    NSArray *elementAddresses = [node getAddressesWithModelID:@(option)];
     if (elementAddresses.count > 0 && SigDataSource.share.needPublishTimeModel) {
-        TeLog(@"SDK need publish time");
+        TeLogInfo(@"SDK need publish time");
         __weak typeof(self) weakSelf = self;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             UInt16 eleAdr = [elementAddresses.firstObject intValue];
-            //周期，20秒上报一次。ttl:0xff（表示采用节点默认参数）。
-            SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:5 intervalSteps:2];
-            SigPublish *publish = [[SigPublish alloc] initWithDestination:kMeshAddress_allNodes withKeyIndex:SigDataSource.share.curAppkeyModel.index friendshipCredentialsFlag:0 ttl:0xff periodSteps:kTimePublishInterval periodResolution:1 retransmit:retransmit];
+            //周期，20秒上报一次。ttl:0xff（表示采用节点默认参数），0表示不relay。
+            SigRetransmit *retransmit = [[SigRetransmit alloc] initWithPublishRetransmitCount:0 intervalSteps:2];
+            SigPublish *publish = [[SigPublish alloc] initWithDestination:kMeshAddress_allNodes withKeyIndex:SigDataSource.share.curAppkeyModel.index friendshipCredentialsFlag:0 ttl:0 periodSteps:kTimePublishInterval periodResolution:1 retransmit:retransmit];
             SigModelIDModel *modelID = [weakSelf.node getModelIDModelWithModelID:option andElementAddress:eleAdr];
             [SDKLibCommand configModelPublicationSetWithDestination:self.address publish:publish elementAddress:eleAdr modelIdentifier:modelID.getIntModelIdentifier companyIdentifier:modelID.getIntCompanyIdentifier retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
-                TeLog(@"publish time callback");
+                TeLogInfo(@"publish time callback");
                 if (responseMessage.elementAddress == eleAdr) {
                     if (responseMessage.status == SigConfigMessageStatus_success && [LibTools uint16From16String:responseMessage.publish.address] == kMeshAddress_allNodes) {
-                        TeLog(@"publish time success");
+                        TeLogInfo(@"publish time success");
                     } else {
-                        TeLog(@"publish time status=%d,pubModel.publishAddress=%@",responseMessage.status,responseMessage.publish.address);
+                        TeLogInfo(@"publish time status=%d,pubModel.publishAddress=%@",responseMessage.status,responseMessage.publish.address);
                     }
+                    [weakSelf saveKeyBindSuccessToLocationData];
+                    [SigMeshLib.share cleanAllCommandsAndRetry];
                     //callback
                     if (weakSelf.keyBindSuccessBlock) {
                         weakSelf.keyBindSuccessBlock(weakSelf.node.peripheralUUID, weakSelf.address);
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TeLog(@"publish time finish.");
+                TeLogInfo(@"publish time finish.");
+                if (error) {
+                    if (weakSelf.failBlock) {
+                        weakSelf.failBlock(error);
+                    }
+                }
             }];
         });
     }else{
-        TeLog(@"SDK needn't publish time");
+        [self saveKeyBindSuccessToLocationData];
+        [SigMeshLib.share cleanAllCommandsAndRetry];
+        TeLogInfo(@"SDK needn't publish time");
         //callback
         if (self.keyBindSuccessBlock) {
             self.keyBindSuccessBlock(self.node.peripheralUUID, self.address);
@@ -344,8 +339,20 @@
     }
 }
 
+- (void)saveKeyBindSuccessToLocationData {
+    //appkeys
+    [self.node setAddSigAppkeyModelSuccess:self.appkeyModel];
+    //composition data
+    [self.node setCompositionData:(SigPage0 *)self.page];
+    //save
+    [SigDataSource.share saveLocationData];
+}
+
 - (void)showKeyBindEnd {
     TeLogInfo(@"\n\n==========keyBind end.\n\n");
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    });
 }
 
 @end

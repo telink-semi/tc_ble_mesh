@@ -216,6 +216,8 @@ UIKIT_EXTERN UInt8 const kProvisionRandomTimeout;// 5
 UIKIT_EXTERN UInt8 const kSentProvisionEncryptedDataWithMicTimeout;// 5
 UIKIT_EXTERN UInt8 const kStartMeshConnectTimeout;// 10
 
+UIKIT_EXTERN UInt8 const kScanNodeIdentityBeforeKeyBindTimeout;// 3
+
 /// publish设置的上报周期
 UIKIT_EXTERN UInt8 const kPublishInterval;// 20
 /// time model设置的上报周期
@@ -236,7 +238,7 @@ UIKIT_EXTERN UInt16 const kCompanyID;// 0x0211
 UIKIT_EXTERN UInt8 const kLocationAddress;// 1
 /// json数据生成，生成默认的短地址范围、组地址范围、场景id范围(当前默认一个provisioner，且所有平台使用同一个provisioner)
 UIKIT_EXTERN UInt8 const kAllocatedUnicastRangeLowAddress;// 1
-UIKIT_EXTERN UInt8 const kAllocatedUnicastRangeHighAddress;// 0xff
+UIKIT_EXTERN UInt16 const kAllocatedUnicastRangeHighAddress;// 0x400
 
 UIKIT_EXTERN UInt16 const kAllocatedGroupRangeLowAddress;// 0xC000
 UIKIT_EXTERN UInt16 const kAllocatedGroupRangeHighAddress;// 0xC0ff
@@ -270,6 +272,14 @@ UIKIT_EXTERN NSString * const kSigMeshLibModelIDModelNoExistErrorMessage;// mode
 /*指令超时*/
 UIKIT_EXTERN UInt32 const kSigMeshLibCommandTimeoutErrorCode;// 0x02110105
 UIKIT_EXTERN NSString * const kSigMeshLibCommandTimeoutErrorMessage;// modelIDModel is not exist
+
+/*NetKey Index 不存在*/
+UIKIT_EXTERN UInt32 const kSigMeshLibCommandInvalidNetKeyIndexErrorCode;// 0x02110106
+UIKIT_EXTERN NSString * const kSigMeshLibCommandInvalidNetKeyIndexErrorMessage;// Invalid NetKey Index
+
+/*AppKey Index 不存在*/
+UIKIT_EXTERN UInt32 const kSigMeshLibCommandInvalidAppKeyIndexErrorCode;// 0x02110107
+UIKIT_EXTERN NSString * const kSigMeshLibCommandInvalidAppKeyIndexErrorMessage;// Invalid AppKey Index
 
 /*模拟外设的固定服务和特征(分享中使用)*/
 UIKIT_EXTERN NSString * const kServiceUUID;// 33333333-0000-1000-8000-111111111111

@@ -45,6 +45,9 @@
 @property (nonatomic,strong) SigIvIndex *ivIndex;
 @end
 @implementation SigUpperTransportModel
+- (NSString *)description {
+    return[NSString stringWithFormat:@"<%p> - SigUpperTransportModel, SigUpperTransportPdu:%@",self,self.pdu];
+}
 @end
 
 @interface SigUpperTransportLayer ()
@@ -258,10 +261,10 @@
     model.ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     [array addObject:model];
     _queues[@(pdu.destination)] = array;
-    if (_queues[@(pdu.destination)].count == 1) {
+    if (array.count == 1) {
         [self sendNextToDestination:pdu.destination];
     }else{
-        TeLogWarn(@"异常逻辑，待完善。_queues[@(pdu.destination)]=%@",_queues[@(pdu.destination)]);
+        TeLogWarn(@"==========异常逻辑，待完善。_queues[@(pdu.destination)]=%@",array);
     }
 }
 

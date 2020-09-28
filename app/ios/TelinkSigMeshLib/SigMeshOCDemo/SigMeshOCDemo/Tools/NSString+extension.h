@@ -51,6 +51,10 @@
  */
 - (NSString *)removeAllSapceAndNewlines;
 
+/// 去掉所有空格和最后的回车，并在字符串前面补充“0”使其满足长度length
+/// @param length 需要返回的字符串的长度，大于该长度直接返回，不在补“0”
+- (NSString *)formatToLength:(UInt8)length;
+
 /*
  *循环在间隔n个字符添加m个空格
  */

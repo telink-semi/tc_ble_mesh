@@ -31,7 +31,7 @@
 
 #pragma mark - Const string
 
-NSString * const kTelinkSigMeshLibVersion = @"v3.2.2";
+NSString * const kTelinkSigMeshLibVersion = @"v3.2.3";
 
 NSString * const kNotifyCommandIsBusyOrNot = @"CommandIsBusyOrNot";
 NSString * const kCommandIsBusyKey = @"IsBusy";
@@ -201,10 +201,12 @@ UInt8 const kProvisionRandomTimeout = 5;
 UInt8 const kSentProvisionEncryptedDataWithMicTimeout = 5;
 UInt8 const kStartMeshConnectTimeout = 5;
 
+UInt8 const kScanNodeIdentityBeforeKeyBindTimeout = 3;
+
 //publish设置的上报周期
 UInt8 const kPublishInterval = 20;
 //time model设置的上报周期
-UInt8 const kTimePublishInterval = 20;
+UInt8 const kTimePublishInterval = 30;
 //离线检测的时长
 UInt8 const kOfflineInterval = (kPublishInterval * 3 + 1);
 
@@ -221,7 +223,7 @@ UInt16 const kCompanyID = 0x0211;
 UInt8 const kLocationAddress = 1;
 //json数据生成，生成默认的短地址范围、组地址范围、场景id范围(当前默认一个provisioner，且所有平台使用同一个provisioner)
 UInt8 const kAllocatedUnicastRangeLowAddress = 1;
-UInt8 const kAllocatedUnicastRangeHighAddress = 0xff;
+UInt16 const kAllocatedUnicastRangeHighAddress = 0x400;//1024
 
 UInt16 const kAllocatedGroupRangeLowAddress = 0xC000;
 UInt16 const kAllocatedGroupRangeHighAddress = 0xC0ff;
@@ -255,6 +257,14 @@ NSString * const kSigMeshLibModelIDModelNoExistErrorMessage = @"No exist, becaus
 /*指令超时*/
 UInt32 const kSigMeshLibCommandTimeoutErrorCode = 0x02110105;
 NSString * const kSigMeshLibCommandTimeoutErrorMessage = @"stop wait response, because command is timeout.";
+
+/*NetKey Index 不存在*/
+UInt32 const kSigMeshLibCommandInvalidNetKeyIndexErrorCode = 0x02110106;
+NSString * const kSigMeshLibCommandInvalidNetKeyIndexErrorMessage = @"Invalid NetKey Index.";
+
+/*AppKey Index 不存在*/
+UInt32 const kSigMeshLibCommandInvalidAppKeyIndexErrorCode = 0x02110107;
+NSString * const kSigMeshLibCommandInvalidAppKeyIndexErrorMessage = @"Invalid AppKey Index.";
 
 /*模拟外设的固定服务和特征(分享中使用)*/
 NSString * const kServiceUUID = @"33333333-0000-1000-8000-111111111111";

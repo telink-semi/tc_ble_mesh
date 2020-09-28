@@ -31,7 +31,19 @@
 
 @class SigNetkeyModel,SigProvisionerModel,SigAppkeyModel,SigSceneModel,SigGroupModel,SigNodeModel, SigIvIndex,SigBaseMeshMessage;
 
+@protocol SigDataSourceDelegate <NSObject>
+@optional
+
+/// Callback called when the sequenceNumber or ivIndex change.
+/// @param sequenceNumber sequenceNumber of current provisioner.
+/// @param ivIndex ivIndex of current mesh network.
+- (void)onSequenceNumberUpdate:(UInt32)sequenceNumber ivIndexUpdate:(UInt32)ivIndex;
+
+@end
+
 @interface SigDataSource : NSObject
+
+@property (nonatomic, weak) id <SigDataSourceDelegate>delegate;
 
 @property (nonatomic, strong) NSMutableArray<SigProvisionerModel *> *provisioners;
 
@@ -63,6 +75,8 @@
 @property (nonatomic, strong) SigNetkeyModel *defaultNetKeyA;
 @property (nonatomic, strong) SigAppkeyModel *defaultAppKeyA;
 @property (nonatomic, strong) SigIvIndex *defaultIvIndexA;
+@property (nonatomic, strong) SigNetkeyModel *curNetkeyModel;
+@property (nonatomic, strong) SigAppkeyModel *curAppkeyModel;
 /* cache value */
 @property (nonatomic, strong) NSMutableArray<SigScanRspModel *> *scanList;
 /// nodes should show in HomeViewController
@@ -81,6 +95,10 @@
 @property (nonatomic, assign) BOOL addStaticOOBDevcieByNoOOBEnable;
 /// default retry count of every command. default is 2.
 @property (nonatomic, assign) UInt8 defaultRetryCount;
+/// 默认一个provisioner分配的设备地址区间，默认值为kAllocatedUnicastRangeHighAddress（0x400）.
+@property (nonatomic, assign) UInt16 defaultAllocatedUnicastRangeHighAddress;
+/// 默认sequenceNumber的步长，默认值为kSnoIncrement（128）.
+@property (nonatomic, assign) UInt8 defaultSnoIncrement;
 
 
 //取消该限制：因为客户可以init该类型，用于创建一个中间的mesh数据，用于比较前后的mesh信息。
@@ -95,8 +113,6 @@
 - (NSDictionary *)getFormatDictionaryFromDataSource;
 
 - (UInt16)provisionAddress;
-- (SigAppkeyModel *)curAppkeyModel;
-- (SigNetkeyModel *)curNetkeyModel;
 - (SigProvisionerModel *)curProvisionerModel;
 - (NSData *)curNetKey;
 - (NSData *)curAppKey;

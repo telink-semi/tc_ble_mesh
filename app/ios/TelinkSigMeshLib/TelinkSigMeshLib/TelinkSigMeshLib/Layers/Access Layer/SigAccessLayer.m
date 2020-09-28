@@ -294,10 +294,9 @@
             networkKey = node.getNetworkKeys.lastObject;
         }
     }
-    TeLogInfo(@"Sending %@ to: 0x%x",message,destination);
     SigMeshAddress *meshAddress = [[SigMeshAddress alloc] initWithAddress:destination];
     SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:message sentFromLocalElement:element toDestination:meshAddress userInitiated:YES];
-    TeLogInfo(@"Sending %@",pdu);
+    TeLogInfo(@"Sending %@ %@",message,pdu);
     SigDeviceKeySet *keySet = [[SigDeviceKeySet alloc] initWithNetworkKey:networkKey node:node];
     
     // Set timers for the acknowledged messages.

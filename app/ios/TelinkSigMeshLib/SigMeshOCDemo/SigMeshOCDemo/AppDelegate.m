@@ -90,7 +90,13 @@
     [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
 //    [SigLogger.share setSDKLogLevel:SigLogLevelAll];
 
-    //初始化SDK
+    /*初始化SDK*/
+    //1.一个provisioner分配的地址范围，默认为0x400。
+    SigDataSource.share.defaultAllocatedUnicastRangeHighAddress = kAllocatedUnicastRangeHighAddress;
+    //2.mesh网络的sequenceNumber步长，默认为128。
+//    SigDataSource.share.defaultSnoIncrement = kSnoIncrement;
+    SigDataSource.share.defaultSnoIncrement = 16;
+    //3.启动SDK。
     [SDKLibCommand startMeshSDK];
         
     //(可选)SDK的分组默认绑定5个modelID，可通过以下接口修改分组默认绑定的modelIDs
@@ -103,6 +109,8 @@
 //    [SigDataSource.share.defaultNodeInfos addObject:model];
 
     SigMeshLib.share.transmissionTimerInteral = 0.600;
+
+    SigDataSource.share.needPublishTimeModel = NO;
     
     return YES;
 }

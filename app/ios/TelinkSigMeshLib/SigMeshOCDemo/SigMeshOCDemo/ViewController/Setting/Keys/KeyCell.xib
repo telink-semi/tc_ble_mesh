@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="16097.3" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="KGk-i7-Jjw" customClass="KeyCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="50"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="50"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AKu-vC-IOq">
+                        <rect key="frame" x="274" y="7" width="36" height="36"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="36" id="o0M-ji-MJ8"/>
+                        </constraints>
+                        <state key="normal" image="ic_edit"/>
+                    </button>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="key:" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HdL-0O-OFT">
+                        <rect key="frame" x="45" y="5" width="224" height="40"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="9"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_model" translatesAutoresizingMaskIntoConstraints="NO" id="Sza-tz-8S8">
+                        <rect key="frame" x="10" y="12.5" width="25" height="25"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="25" id="W04-mB-tCT"/>
+                            <constraint firstAttribute="width" constant="25" id="mAk-fm-OEJ"/>
+                        </constraints>
+                    </imageView>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="HdL-0O-OFT" firstAttribute="centerY" secondItem="Sza-tz-8S8" secondAttribute="centerY" id="M6M-Kw-5GI"/>
+                    <constraint firstItem="HdL-0O-OFT" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="5" id="THg-5g-qfi"/>
+                    <constraint firstAttribute="trailing" secondItem="AKu-vC-IOq" secondAttribute="trailing" constant="10" id="TLp-Yc-RM5"/>
+                    <constraint firstItem="AKu-vC-IOq" firstAttribute="width" secondItem="AKu-vC-IOq" secondAttribute="height" multiplier="1:1" id="UHW-PK-fx3"/>
+                    <constraint firstItem="AKu-vC-IOq" firstAttribute="centerY" secondItem="Sza-tz-8S8" secondAttribute="centerY" id="WZU-1w-gax"/>
+                    <constraint firstItem="Sza-tz-8S8" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="cjg-WN-g6h"/>
+                    <constraint firstItem="AKu-vC-IOq" firstAttribute="leading" secondItem="HdL-0O-OFT" secondAttribute="trailing" constant="5" id="iPU-H8-QPR"/>
+                    <constraint firstItem="HdL-0O-OFT" firstAttribute="leading" secondItem="Sza-tz-8S8" secondAttribute="trailing" constant="10" id="kSR-Hk-Gi1"/>
+                    <constraint firstItem="Sza-tz-8S8" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="10" id="krR-Ns-e8V"/>
+                    <constraint firstAttribute="bottom" secondItem="HdL-0O-OFT" secondAttribute="bottom" constant="5" id="lzF-tI-gax"/>
+                </constraints>
+            </tableViewCellContentView>
+            <viewLayoutGuide key="safeArea" id="aW0-zy-SZf"/>
+            <connections>
+                <outlet property="detailLabel" destination="HdL-0O-OFT" id="Uoj-y6-FPR"/>
+                <outlet property="editButton" destination="AKu-vC-IOq" id="R8I-bX-aC0"/>
+                <outlet property="iconImageView" destination="Sza-tz-8S8" id="rdE-lh-OvR"/>
+            </connections>
+            <point key="canvasLocation" x="139" y="83"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="ic_edit" width="50" height="50"/>
+        <image name="ic_model" width="50" height="50"/>
+    </resources>
+</document>

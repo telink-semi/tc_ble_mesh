@@ -31,7 +31,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigLowerTransportPdu,SigNetworkManager;
+@class SigLowerTransportPdu,SigNetworkManager,SigSegmentAcknowledgmentMessage;
 
 @interface SigNetworkLayer : NSObject
 @property (nonatomic,strong) SigNetworkManager *networkManager;
@@ -40,6 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) NSUserDefaults *defaults;
 @property (nonatomic,strong) SigIvIndex *ivIndex;
 @property (nonatomic,strong) SigNetkeyModel *networkKey;
+@property (nonatomic,strong,nullable) SigSegmentAcknowledgmentMessage *lastNeedSendAckMessage;
 
 - (instancetype)initWithNetworkManager:(SigNetworkManager *)networkManager;
 

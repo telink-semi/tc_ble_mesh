@@ -41,4 +41,13 @@
 
 - (NSData *)getDataWithMeshJsonName:(NSString *)jsonName;
 
+
+/// 获取Bin文件的PID的值。
+/// @param data Bin文件的二进制数据。
+- (UInt16)getPidWithOTAData:(NSData *)data;
+
+/// 获取Bin文件的VID的值。
+/// @param data Bin文件的二进制数据。
+- (UInt16)getVidWithOTAData:(NSData *)data;
+
 @end

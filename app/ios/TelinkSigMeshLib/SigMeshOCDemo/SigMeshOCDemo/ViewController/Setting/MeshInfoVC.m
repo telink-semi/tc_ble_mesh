@@ -29,6 +29,8 @@
 
 #import "MeshInfoVC.h"
 #import "OOBListVC.h"
+#import "AppKeyListVC.h"
+#import "NetKeyListVC.h"
 #import "InfoSwitchCell.h"
 #import "InfoNextCell.h"
 #import "InfoButtonCell.h"
@@ -69,9 +71,11 @@
     [array addObject:@"online status from uuid"];
     [array addObject:@"try add staticOOB device by noOOB provision"];
     [array addObject:@"OOB Database"];
-    [array addObject:[NSString stringWithFormat:@"netKey:%@",SigDataSource.share.curNetkeyModel.key]];
-    [array addObject:[NSString stringWithFormat:@"appKey:%@",SigDataSource.share.curAppkeyModel.key]];
-    [array addObject:[NSString stringWithFormat:@"ivIndex: 0x%x",(unsigned int)_ivIndex]];
+    [array addObject:@"AppLey List"];
+    [array addObject:@"NetLey List"];
+    //==========test==========//
+//    [array addObject:[NSString stringWithFormat:@"ivIndex: 0x%x",(unsigned int)_ivIndex]];
+    //==========test==========//
     _source = array;
     [self.tableView reloadData];
 }
@@ -124,16 +128,14 @@
     [self.navigationController pushViewController:vc animated:YES];
 }
 
-- (void)clickCopyNetKey:(UIButton *)sender {
-    UIPasteboard*pasteboard = [UIPasteboard generalPasteboard];
-    pasteboard.string = SigDataSource.share.curNetkeyModel.key;
-    [self showTips:@"copy netKey success"];
+- (void)clickAppKeyListButton {
+    AppKeyListVC *vc = [[AppKeyListVC alloc] init];
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
-- (void)clickCopyAppKey:(UIButton *)sender {
-    UIPasteboard*pasteboard = [UIPasteboard generalPasteboard];
-    pasteboard.string = SigDataSource.share.curAppkeyModel.key;
-    [self showTips:@"copy appKey success"];
+- (void)clickNetKeyListButton {
+    NetKeyListVC *vc = [[NetKeyListVC alloc] init];
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (void)clickIvUpdate:(UIButton *)sender {
@@ -154,7 +156,6 @@
     NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
     [oprationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
-        NSLog(@"oprationQueue");
         [SDKLibCommand updateIvIndexWithKeyRefreshFlag:NO ivUpdateActive:YES networkId:SigDataSource.share.curNetkeyModel.networkId ivIndex:weakSelf.ivIndex + 1 usingNetworkKey:SigDataSource.share.curNetkeyModel];
         
         [NSThread sleepForTimeInterval:2.0];
@@ -162,7 +163,7 @@
         [SigDataSource.share setLocationSno:0x01];
         [SDKLibCommand updateIvIndexWithKeyRefreshFlag:NO ivUpdateActive:NO networkId:SigDataSource.share.curNetkeyModel.networkId ivIndex:weakSelf.ivIndex + 1 usingNetworkKey:SigDataSource.share.curNetkeyModel];
 
-        [SigDataSource.share updateIvIndexString:[NSString stringWithFormat:@"%08X",weakSelf.ivIndex+1]];
+        [SigDataSource.share updateIvIndexString:[NSString stringWithFormat:@"%08lX",(unsigned long)weakSelf.ivIndex+1]];
         
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share delayHidden:0.5];
@@ -221,25 +222,22 @@
             [cell.showSwitch addTarget:self action:@selector(clickAddStaticOOBDevcieByNoOOBEnableSwitch:) forControlEvents:UIControlEventValueChanged];
         }
         return cell;
-    } else if (indexPath.row == 5) {
+    } else if (indexPath.row >= 5 && indexPath.row <= 7) {
         InfoNextCell *cell = (InfoNextCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoNextCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
         cell.showLabel.text = _source[indexPath.row];
         return cell;
-    } else if (indexPath.row > 5) {
+    } else if (indexPath.row == 8) {
         InfoButtonCell *cell = (InfoButtonCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoButtonCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryNone;
         cell.showLabel.text = _source[indexPath.row];
-        if (indexPath.row == 6) {
-            [cell.showButton setTitle:@"copy" forState:UIControlStateNormal];
-            [cell.showButton addTarget:self action:@selector(clickCopyNetKey:) forControlEvents:UIControlEventTouchUpInside];
-        } else if (indexPath.row == 7) {
-            [cell.showButton setTitle:@"copy" forState:UIControlStateNormal];
-            [cell.showButton addTarget:self action:@selector(clickCopyAppKey:) forControlEvents:UIControlEventTouchUpInside];
-        } else if (indexPath.row == 8) {
-            [cell.showButton setTitle:@"+1" forState:UIControlStateNormal];
-            [cell.showButton addTarget:self action:@selector(clickIvUpdate:) forControlEvents:UIControlEventTouchUpInside];
-        }
+        [cell.showButton setTitle:@"+1" forState:UIControlStateNormal];
+        [cell.showButton addTarget:self action:@selector(clickIvUpdate:) forControlEvents:UIControlEventTouchUpInside];
+        return cell;
+    } else {
+        InfoNextCell *cell = (InfoNextCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoNextCellID forIndexPath:indexPath];
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.showLabel.text = _source[indexPath.row];
         return cell;
     }
     return nil;
@@ -248,7 +246,11 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     if (indexPath.row == 5) {
         [self clickOOBButton];
-    }
+    } else if (indexPath.row == 6) {
+        [self clickAppKeyListButton];
+    } else if (indexPath.row == 7) {
+        [self clickNetKeyListButton];
+   }
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     cell.selected = NO;
 }

@@ -129,10 +129,12 @@
                 }
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+            TeLogDebug(@"edit SubscribeList finish.")
+            __strong __typeof(weakSelf)strongSelf = weakSelf;
             if (editSubSuccess && error == nil) {
-                [weakSelf editOneOptionSuccessWithAddress:weakSelf.model.address];
+                [strongSelf editOneOptionSuccessWithAddress:strongSelf.model.address];
             } else {
-                [weakSelf editGroupFail:button];
+                [strongSelf editGroupFail:button];
             }
         }];
     }

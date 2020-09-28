@@ -66,6 +66,7 @@
             if (!isResponseAll || error) {
                 [weakSelf showTips:Tip_GetCompositionFail];
             } else {
+                [weakSelf showCompositionDataUI];
                 [weakSelf showTips:Tip_GetCompositionSuccess];
             }
         });

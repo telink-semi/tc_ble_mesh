@@ -57,11 +57,14 @@
 }
 
 - (void)show:(NSString *)tip{
-    if (![[UIApplication sharedApplication].windows.firstObject.subviews containsObject:_showTipView]) {
-        [[UIApplication sharedApplication].windows.firstObject addSubview:_showTipView];
-    }
-    _showTipView.tipLab.text = tip;
-    [_showTipView.activity startAnimating];
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (![[UIApplication sharedApplication].windows.firstObject.subviews containsObject:weakSelf.showTipView]) {
+            [[UIApplication sharedApplication].windows.firstObject addSubview:weakSelf.showTipView];
+        }
+        weakSelf.showTipView.tipLab.text = tip;
+        [weakSelf.showTipView.activity startAnimating];
+    });
 }
 
 - (void)hidden{
