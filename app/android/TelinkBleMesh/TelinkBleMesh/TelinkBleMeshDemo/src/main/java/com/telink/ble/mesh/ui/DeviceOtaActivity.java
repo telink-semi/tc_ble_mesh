@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     DeviceOtaActivity.java 
+ * @file DeviceOtaActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -28,11 +28,13 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.entity.ConnectionFilter;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
@@ -58,10 +60,10 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
 
     private TextView tv_select_file, tv_log, tv_progress, tv_version_info, tv_info;
     private Button btn_start_ota;
-
+    private CheckBox cb_update;
     private byte[] mFirmware;
     private NodeInfo mNodeInfo;
-
+    private int binPid;
     private final static int REQUEST_CODE_GET_FILE = 1;
     private final static int MSG_PROGRESS = 11;
     private final static int MSG_INFO = 12;
@@ -125,14 +127,14 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
             tv_info.append(getString(R.string.node_version, Arrays.bytesToHexString(pb, ":"), Arrays.bytesToHexString(vb, ":")));
         } else {
             tv_info.append("\n");
-            tv_info.append(getString(R.string.node_version, "--", "--"));
+            tv_info.append(getString(R.string.node_version, "null", "null"));
         }
 
         btn_start_ota = findViewById(R.id.btn_start_ota);
 
         tv_select_file.setOnClickListener(this);
         btn_start_ota.setOnClickListener(this);
-
+        cb_update = findViewById(R.id.cb_update);
     }
 
     @Override
@@ -153,10 +155,16 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
                     return;
                 }
 
+                if (binPid != mNodeInfo.compositionData.pid && !cb_update.isChecked()) {
+                    toastMsg("[force upgrade] not checked");
+                    return;
+                }
+
                 tv_log.setText("start OTA");
                 tv_progress.setText("");
                 btn_start_ota.setEnabled(false);
-                GattOtaParameters parameters = new GattOtaParameters(mNodeInfo.meshAddress, mFirmware);
+                ConnectionFilter connectionFilter = new ConnectionFilter(ConnectionFilter.TYPE_MESH_ADDRESS, mNodeInfo.meshAddress);
+                GattOtaParameters parameters = new GattOtaParameters(connectionFilter, mFirmware);
                 MeshService.getInstance().startGattOta(parameters);
                 break;
 
@@ -207,10 +215,16 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
             stream.read(mFirmware);
             stream.close();
 
-            byte[] version = new byte[4];
-            System.arraycopy(mFirmware, 2, version, 0, 4);
-//            String firmVersion = new String(version);
-            String firmVersion = Arrays.bytesToHexString(version, ":");
+            byte[] pid = new byte[2];
+            byte[] vid = new byte[2];
+            System.arraycopy(mFirmware, 2, pid, 0, 2);
+            this.binPid = MeshUtils.bytes2Integer(pid, ByteOrder.LITTLE_ENDIAN);
+
+            System.arraycopy(mFirmware, 4, vid, 0, 2);
+
+            String pidInfo = Arrays.bytesToHexString(pid, ":");
+            String vidInfo = Arrays.bytesToHexString(vid, ":");
+            String firmVersion = " pid-" + pidInfo + " vid-" + vidInfo;
             tv_version_info.setText(getString(R.string.version, firmVersion));
             tv_select_file.setText(fileName);
         } catch (IOException e) {

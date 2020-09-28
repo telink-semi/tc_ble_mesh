@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     MeshInfo.java 
+ * @file MeshInfo.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.model;
 
@@ -25,7 +25,6 @@ package com.telink.ble.mesh.model;
 import android.content.Context;
 import android.util.SparseArray;
 
-import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.networking.NetworkLayerPDU;
 import com.telink.ble.mesh.demo.R;
@@ -365,8 +364,9 @@ public class MeshInfo implements Serializable, Cloneable {
         meshInfo.localAddress = DEFAULT_LOCAL_ADDRESS;
         meshInfo.provisionIndex = DEFAULT_LOCAL_ADDRESS + 1; // 0x0002
 
-        meshInfo.provisionerUUID = SharedPreferenceHelper.getLocalUUID(context);
-        ;
+//        meshInfo.provisionerUUID = SharedPreferenceHelper.getLocalUUID(context);
+        meshInfo.provisionerUUID = Arrays.bytesToHexString(MeshUtils.generateRandom(16));
+
         meshInfo.groups = new ArrayList<>();
         meshInfo.unicastRange = new AddressRange(0x01, 0xFF);
         String[] groupNames = context.getResources().getStringArray(R.array.group_name);

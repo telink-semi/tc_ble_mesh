@@ -34,6 +34,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoGetMessage;
@@ -61,6 +62,7 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -92,6 +94,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
     private TextView tv_file_path, tv_version_info,
             tv_progress, tv_info;
     private byte[] mFirmware;
+    private int binPid;
 
     private int progress = 0;
     private boolean isComplete = false;
@@ -394,12 +397,18 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
             stream.read(mFirmware);
             stream.close();
 
-            byte[] version = new byte[4];
-            System.arraycopy(mFirmware, 2, version, 0, 4);
-//            String firmVersion = new String(version);
-            String firmVersion = Arrays.bytesToHexString(version, ":");
+            byte[] pid = new byte[2];
+            byte[] vid = new byte[2];
+            System.arraycopy(mFirmware, 2, pid, 0, 2);
+            this.binPid = MeshUtils.bytes2Integer(pid, ByteOrder.LITTLE_ENDIAN);
+            System.arraycopy(mFirmware, 4, vid, 0, 2);
+
+            String pidInfo = Arrays.bytesToHexString(pid, ":");
+            String vidInfo = Arrays.bytesToHexString(vid, ":");
+            String firmVersion = "pid-" + pidInfo + " vid-" + vidInfo;
             tv_version_info.setText(getString(R.string.version, firmVersion));
             tv_file_path.setText(fileName);
+            mDeviceAdapter.selectPid(this.binPid);
         } catch (IOException e) {
             e.printStackTrace();
             mFirmware = null;

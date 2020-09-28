@@ -38,20 +38,17 @@ public class GattOtaEvent extends Event<String> {
 
     public static final String EVENT_TYPE_OTA_PROGRESS = "com.telink.sig.mesh.OTA_PROGRESS";
 
-    private int meshAddress;
     private int progress;
     private String desc;
 
 
-    public GattOtaEvent(Object sender, String type, int meshAddress, int progress, String desc) {
+    public GattOtaEvent(Object sender, String type, int progress, String desc) {
         super(sender, type);
-        this.meshAddress = meshAddress;
         this.progress = progress;
         this.desc = desc;
     }
 
     protected GattOtaEvent(Parcel in) {
-        meshAddress = in.readInt();
         progress = in.readInt();
         desc = in.readString();
     }
@@ -72,9 +69,6 @@ public class GattOtaEvent extends Event<String> {
         return desc;
     }
 
-    public int getMeshAddress() {
-        return meshAddress;
-    }
 
     public int getProgress() {
         return progress;
@@ -87,7 +81,6 @@ public class GattOtaEvent extends Event<String> {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(meshAddress);
         dest.writeInt(progress);
         dest.writeString(desc);
     }

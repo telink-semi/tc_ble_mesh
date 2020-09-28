@@ -22,6 +22,7 @@
 package com.telink.ble.mesh.model.json;
 
 
+import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.entity.Scheduler;
 
 import java.util.ArrayList;
@@ -165,8 +166,8 @@ public class MeshStorage {
         public String vid;
         public String crpl;
         public Features features;
-        public boolean secureNetworkBeacon;
-        public int defaultTTL;
+        public boolean secureNetworkBeacon = true;
+        public int defaultTTL = MeshMessage.DEFAULT_TTL;
         public Transmit networkTransmit;
         public Transmit relayRetransmit;
         public List<NodeKey> appKeys;

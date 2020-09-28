@@ -1,6 +1,7 @@
 package com.telink.ble.mesh.ui.test;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
@@ -8,6 +9,7 @@ import com.telink.ble.mesh.core.ble.GattRequest;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.entity.ConnectionFilter;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
@@ -18,8 +20,10 @@ import com.telink.ble.mesh.ui.BaseActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
-public class ConnectionTestActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
+import java.util.UUID;
 
+public class ConnectionTestActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
+    private Handler handler = new Handler();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +50,7 @@ public class ConnectionTestActivity extends BaseActivity implements View.OnClick
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        handler.removeCallbacksAndMessages(null);
         TelinkMeshApplication.getInstance().removeEventListener(this);
     }
 
@@ -53,7 +58,8 @@ public class ConnectionTestActivity extends BaseActivity implements View.OnClick
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_connect:
-                MeshService.getInstance().startGattConnection(new GattConnectionParameters(8));
+                ConnectionFilter connectionFilter = new ConnectionFilter(ConnectionFilter.TYPE_MAC_ADDRESS, "D5:43:FC:D1:9D:A5");
+                MeshService.getInstance().startGattConnection(new GattConnectionParameters(connectionFilter));
                 break;
 
             case R.id.btn_disconnect:
@@ -61,32 +67,71 @@ public class ConnectionTestActivity extends BaseActivity implements View.OnClick
                 break;
 
             case R.id.btn_send:
-                GattRequest request = GattRequest.newInstance();
-                request.characteristicUUID = UUIDInfo.CHARACTERISTIC_FW_VERSION;
-                request.serviceUUID = UUIDInfo.SERVICE_DEVICE_INFO;
-                request.type = GattRequest.RequestType.READ;
-                request.callback = new GattRequest.Callback() {
-                    @Override
-                    public void success(GattRequest request, Object obj) {
-                        MeshLogger.d("success" + Arrays.bytesToHexString((byte[]) obj));
-                    }
-
-                    @Override
-                    public void error(GattRequest request, String errorMsg) {
-                        MeshLogger.d("error: " + errorMsg);
-                    }
-
-                    @Override
-                    public boolean timeout(GattRequest request) {
-                        MeshLogger.d("timeout");
-                        return false;
-                    }
-                };
-                MeshService.getInstance().sendGattRequest(request);
+//                sendTestRequest();
+                getVersion();
                 break;
 
         }
     }
+
+    private void getVersion(){
+        GattRequest write = GattRequest.newInstance();
+        write.serviceUUID = UUIDInfo.SERVICE_DEVICE_INFO;
+        write.characteristicUUID = UUIDInfo.CHARACTERISTIC_FW_VERSION;
+        write.type = GattRequest.RequestType.READ;
+        write.callback = requestCallback;
+        write.tag = "read version";
+        MeshService.getInstance().sendGattRequest(write);
+    }
+
+    private void sendTestRequest(){
+
+        GattRequest enableNotify = GattRequest.newInstance();
+        enableNotify.serviceUUID = UUID.fromString("ae5d1e47-5c13-43a0-8635-82ad38a1381f");
+        enableNotify.characteristicUUID = UUID.fromString("a3dd50bf-f7a7-4e99-838e-570a086c661b");
+        enableNotify.type = GattRequest.RequestType.ENABLE_NOTIFY;
+        enableNotify.tag = "enable-notify";
+        MeshService.getInstance().sendGattRequest(enableNotify);
+
+        GattRequest request = GattRequest.newInstance();
+        request.serviceUUID = UUID.fromString("ae5d1e47-5c13-43a0-8635-82ad38a1381f");
+        request.characteristicUUID = UUID.fromString("a3dd50bf-f7a7-4e99-838e-570a086c661b");
+        request.descriptorUUID = UUIDInfo.DESCRIPTOR_CFG_UUID;
+        request.data = new byte[]{0x01, 0x00};
+        request.type = GattRequest.RequestType.WRITE_DESCRIPTOR;
+        request.callback = requestCallback;
+        request.tag = "write ccc";
+        MeshService.getInstance().sendGattRequest(request);
+
+        GattRequest write = GattRequest.newInstance();
+        write.serviceUUID = UUID.fromString("ae5d1e47-5c13-43a0-8635-82ad38a1381f");
+        write.characteristicUUID = UUID.fromString("a3dd50bf-f7a7-4e99-838e-570a086c661b");
+        write.data = new byte[]{0x01};
+        write.type = GattRequest.RequestType.WRITE;
+        write.callback = requestCallback;
+        write.tag = "write";
+        MeshService.getInstance().sendGattRequest(write);
+
+
+    }
+
+    private GattRequest.Callback requestCallback = new GattRequest.Callback() {
+        @Override
+        public void success(GattRequest request, Object obj) {
+            MeshLogger.d("success : " + request.tag);
+        }
+
+        @Override
+        public void error(GattRequest request, String errorMsg) {
+            MeshLogger.d("error : " + request.tag);
+        }
+
+        @Override
+        public boolean timeout(GattRequest request) {
+            MeshLogger.d("timeout : " + request.tag);
+            return false;
+        }
+    };
 
     @Override
     public void performed(Event<String> event) {

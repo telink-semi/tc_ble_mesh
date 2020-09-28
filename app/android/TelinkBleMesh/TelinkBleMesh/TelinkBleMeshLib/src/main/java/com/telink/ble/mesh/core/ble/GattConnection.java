@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     GattConnection.java 
+ * @file GattConnection.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.ble;
 
@@ -540,6 +540,11 @@ public class GattConnection extends BluetoothGattCallback {
         return mBluetoothDevice.getAddress();
     }
 
+    public String getDeviceName() {
+        if (mBluetoothDevice == null) return null;
+        return mBluetoothDevice.getName();
+    }
+
     /************************************************************************
      * gatt operation
      ************************************************************************/
@@ -624,9 +629,10 @@ public class GattConnection extends BluetoothGattCallback {
 
     private void onNotify(BluetoothGattCharacteristic characteristic, byte[] data) {
         final UUID charUUID = characteristic.getUuid();
-        if (charUUID.equals(UUIDInfo.CHARACTERISTIC_ONLINE_STATUS)) {
+        final UUID serviceUUID = characteristic.getService().getUuid();
+        if (!charUUID.equals(UUIDInfo.CHARACTERISTIC_PB_OUT) && !charUUID.equals(UUIDInfo.CHARACTERISTIC_PROXY_OUT)) {
             if (mConnectionCallback != null) {
-                mConnectionCallback.onNotify(charUUID, data);
+                mConnectionCallback.onNotify(serviceUUID, charUUID, data);
             }
             return;
         }
@@ -647,7 +653,7 @@ public class GattConnection extends BluetoothGattCallback {
             return;
         }
         if (mConnectionCallback != null) {
-            mConnectionCallback.onNotify(charUUID, completePacket);
+            mConnectionCallback.onNotify(serviceUUID, charUUID, completePacket);
         }
     }
 
@@ -847,12 +853,12 @@ public class GattConnection extends BluetoothGattCallback {
                     }
                 } else {
                     success = false;
-                    errorMsg = "read descriptor error";
+                    errorMsg = "read descriptor error - descriptor not found";
                 }
 
             } else {
                 success = false;
-                errorMsg = "read characteristic error";
+                errorMsg = "read characteristic error - characteristic not found";
             }
         } else {
             success = false;
@@ -930,7 +936,7 @@ public class GattConnection extends BluetoothGattCallback {
 
             } else {
                 success = false;
-                errorMsg = "read characteristic error";
+                errorMsg = "read characteristic error - characteristic not found";
             }
         } else {
             success = false;
@@ -1295,7 +1301,7 @@ public class GattConnection extends BluetoothGattCallback {
 
         void onServicesDiscovered(List<BluetoothGattService> services);
 
-        void onNotify(UUID charUUID, byte[] data);
+        void onNotify(UUID serviceUUID, UUID charUUID, byte[] data);
     }
 
     private void log(String logMessage) {

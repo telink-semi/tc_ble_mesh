@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     NodeInfo.java 
+ * @file NodeInfo.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.model;
 
@@ -25,13 +25,15 @@ import android.os.Handler;
 import android.util.SparseBooleanArray;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.Scheduler;
+import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
-
 import java.io.Serializable;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +56,10 @@ public class NodeInfo implements Serializable {
     public static final int STATE_BIND_SUCCESS = 2;
 
     public static final int STATE_BIND_FAIL = -2;
+
+    public static final int STATE_TIME_PUB_SET_SUCCESS = 3;
+
+    public static final int STATE_TIME_PUB_SET_FAIL = 4;
 
     public int state;
 
@@ -398,15 +404,25 @@ public class NodeInfo implements Serializable {
 
             case STATE_BIND_FAIL:
                 return "Key Bind Fail -- " + stateDesc;
+
+            case STATE_TIME_PUB_SET_SUCCESS:
+                return "Time publish set success ";
+
+            case STATE_TIME_PUB_SET_FAIL:
+                return "Time publish set fail ";
         }
         return "UNKNOWN";
     }
 
     public String getPidDesc() {
         String pidInfo = "";
-        if (state == STATE_BIND_SUCCESS) {
-            pidInfo = (compositionData.cid == 0x0211 ? String.format("%02X", compositionData.pid)
-                    : "cid-" + String.format("%02X", compositionData.cid));
+        if (state >= STATE_BIND_SUCCESS && compositionData != null) {
+            return "cid-" +
+                    Arrays.bytesToHexString(MeshUtils.integer2Bytes(compositionData.cid, 2, ByteOrder.LITTLE_ENDIAN), "") +
+                    " pid-" +
+                    Arrays.bytesToHexString(MeshUtils.integer2Bytes(compositionData.pid, 2, ByteOrder.LITTLE_ENDIAN), "");
+//            pidInfo = (compositionData.cid == 0x0211 ? String.format("%04X", compositionData.pid)
+//                    : "cid-" + String.format("%02X", compositionData.cid));
 
         } else {
             pidInfo = "(unbound)";
@@ -424,5 +440,9 @@ public class NodeInfo implements Serializable {
 
     public boolean isLpn() {
         return this.compositionData != null && this.compositionData.lowPowerSupport();
+    }
+
+    public boolean isOffline() {
+        return this.onOff == ON_OFF_STATE_OFFLINE;
     }
 }

@@ -40,6 +40,12 @@
             android:layout_height="wrap_content"
             android:textSize="13sp" />
 
+        <CheckBox
+            android:id="@+id/cb_update"
+            android:layout_width="wrap_content"
+            android:textSize="11sp"
+            android:layout_height="wrap_content"
+            android:text="Force upgrade different pid versions" />
 
         <TextView
             android:id="@+id/tv_version_info"

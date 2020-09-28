@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     DeviceProvisionActivity.java 
+ * @file DeviceProvisionActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,12 +17,13 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -31,10 +32,15 @@ import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.access.BindingBearer;
+import com.telink.ble.mesh.core.message.MeshSigModel;
+import com.telink.ble.mesh.core.message.config.ConfigStatus;
+import com.telink.ble.mesh.core.message.config.ModelPublicationSetMessage;
+import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.AdvertisingDevice;
 import com.telink.ble.mesh.entity.BindingDevice;
 import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.entity.ModelPublication;
 import com.telink.ble.mesh.entity.ProvisioningDevice;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
@@ -42,6 +48,7 @@ import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.BindingEvent;
 import com.telink.ble.mesh.foundation.event.ProvisioningEvent;
 import com.telink.ble.mesh.foundation.event.ScanEvent;
+import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
@@ -77,6 +84,8 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     private Button btn_back;
     private MeshInfo mesh;
     private MenuItem refreshItem;
+    private Handler mHandler = new Handler();
+    private boolean isPubSetting = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +111,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         TelinkMeshApplication.getInstance().addEventListener(BindingEvent.EVENT_TYPE_BIND_FAIL, this);
         TelinkMeshApplication.getInstance().addEventListener(ScanEvent.EVENT_TYPE_SCAN_TIMEOUT, this);
         TelinkMeshApplication.getInstance().addEventListener(ScanEvent.EVENT_TYPE_DEVICE_FOUND, this);
+        TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
         mesh = TelinkMeshApplication.getInstance().getMeshInfo();
 
         startScan();
@@ -236,13 +246,27 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
                     startScan();
                 } else if (event.getType().equals(BindingEvent.EVENT_TYPE_BIND_SUCCESS)) {
                     onKeyBindSuccess((BindingEvent) event);
-                    startScan();
+
                 } else if (event.getType().equals(BindingEvent.EVENT_TYPE_BIND_FAIL)) {
                     onKeyBindFail((BindingEvent) event);
                     startScan();
                 } else if (event.getType().equals(ScanEvent.EVENT_TYPE_DEVICE_FOUND)) {
                     AdvertisingDevice device = ((ScanEvent) event).getAdvertisingDevice();
                     onDeviceFound(device);
+                }else if (event.getType().equals(ModelPublicationStatusMessage.class.getName())){
+                    MeshLogger.d("pub setting status: " + isPubSetting);
+                    if (!isPubSetting){
+                        return;
+                    }
+                    mHandler.removeCallbacks(timePubSetTimeoutTask);
+                    final ModelPublicationStatusMessage statusMessage = (ModelPublicationStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
+
+                    if (statusMessage.getStatus() == ConfigStatus.SUCCESS.code) {
+                        onTimePublishComplete(true, "time pub set success");
+                    } else {
+                        onTimePublishComplete(false, "time pub set status err: " + statusMessage.getStatus());
+                        MeshLogger.log("publication err: " + statusMessage.getStatus());
+                    }
                 }
             }
         });
@@ -313,6 +337,54 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         mListAdapter.notifyDataSetChanged();
         mesh.saveOrUpdate(DeviceProvisionActivity.this);
+
+        if (setTimePublish(deviceInList)) {
+            isPubSetting = true;
+            MeshLogger.d("waiting for time publication status");
+        } else {
+            startScan();
+        }
+    }
+
+    private boolean setTimePublish(NodeInfo nodeInfo) {
+        int modelId = MeshSigModel.SIG_MD_TIME_S.modelId;
+        int pubEleAdr = nodeInfo.getTargetEleAdr(modelId);
+        if (pubEleAdr != -1) {
+            final int period = 30 * 1000;
+            final int pubAdr = 0xFFFF;
+            int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+            ModelPublication modelPublication = ModelPublication.createDefault(pubEleAdr, pubAdr, appKeyIndex, period, modelId, true);
+
+            ModelPublicationSetMessage publicationSetMessage = new ModelPublicationSetMessage(nodeInfo.meshAddress, modelPublication);
+            boolean result = MeshService.getInstance().sendMeshMessage(publicationSetMessage);
+            if (result) {
+                mHandler.removeCallbacks(timePubSetTimeoutTask);
+                mHandler.postDelayed(timePubSetTimeoutTask, 5 * 1000);
+            }
+            return result;
+        } else {
+            return false;
+        }
+    }
+
+    private Runnable timePubSetTimeoutTask = new Runnable() {
+        @Override
+        public void run() {
+            onTimePublishComplete(false, "time pub set timeout");
+        }
+    };
+
+    private void onTimePublishComplete(boolean success, String desc) {
+        MeshLogger.d("pub set complete: " + success + " -- " + desc);
+        isPubSetting = false;
+        NodeInfo deviceInList = getProcessingNode();
+        if (deviceInList == null) return;
+
+        deviceInList.state = success ? NodeInfo.STATE_TIME_PUB_SET_SUCCESS : NodeInfo.STATE_TIME_PUB_SET_FAIL;
+        deviceInList.stateDesc = desc;
+        mListAdapter.notifyDataSetChanged();
+        mesh.saveOrUpdate(DeviceProvisionActivity.this);
+        startScan();
     }
 
     private void onKeyBindFail(BindingEvent event) {

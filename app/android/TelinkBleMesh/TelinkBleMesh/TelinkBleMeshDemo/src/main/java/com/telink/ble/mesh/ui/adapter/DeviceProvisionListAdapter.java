@@ -92,7 +92,7 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
             if (device.state == NodeInfo.STATE_PROVISION_FAIL) {
                 holder.pb_provision.setSecondaryProgress(100);
                 holder.pb_provision.setProgress(0);
-            } else if (device.state == NodeInfo.STATE_BIND_SUCCESS) {
+            } else if (device.state >= NodeInfo.STATE_BIND_SUCCESS) {
                 holder.pb_provision.setProgress(100);
                 holder.pb_provision.setSecondaryProgress(0);
             } else {

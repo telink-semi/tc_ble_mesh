@@ -94,9 +94,19 @@ public class Parameters {
     public static final String ACTION_OTA_FIRMWARE = "com.telink.ble.mesh.light.ACTION_OTA_FIRMWARE";
 
     /**
-     * target mesh address for direct mesh connection
+     * target filter for direct mesh connection
      */
-    public static final String ACTION_CONNECTION_MESH_ADDRESS = "com.telink.ble.mesh.light.ACTION_CONNECTION_MESH_ADDRESS";
+    public static final String ACTION_CONNECTION_FILTER = "com.telink.ble.mesh.light.ACTION_CONNECTION_FILTER";
+
+    /**
+     * target mac address for direct mesh connection
+     */
+    public static final String ACTION_CONNECTION_MAC_ADDRESS = "com.telink.ble.mesh.light.ACTION_CONNECTION_MAC_ADDRESS";
+
+    /**
+     * target name for direct mesh connection: device name should be unique
+     */
+    public static final String ACTION_CONNECTION_DEVICE_NAME = "com.telink.ble.mesh.light.ACTION_CONNECTION_DEVICE_NAME";
 
     /**
      * mesh ota targets: int[] addresses

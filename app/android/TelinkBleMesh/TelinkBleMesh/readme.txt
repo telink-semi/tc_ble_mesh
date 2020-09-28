@@ -1,10 +1,15 @@
 
-todo
-1. remote provision 需等到 link report再继续下一步
-
-
 version record
 
+V3.2.3
+
+SIG mesh android app V3.2.3 release notes:
+1. Add startGattConnection interface in MeshService for connect target mesh node, connection state will be uploaded by GattConnectionEvent
+2. Add pid info  before OTA/MeshOTA;
+
+----------------
+
+V3.2.2
 
 1. fix device provision timeout failure if device static-oob data not found when device support static-oob
 2. fix app key binding failure when target vendor model does not support app key encryption

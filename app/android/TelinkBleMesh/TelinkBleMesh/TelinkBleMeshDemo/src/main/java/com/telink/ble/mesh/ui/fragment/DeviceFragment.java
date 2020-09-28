@@ -55,6 +55,8 @@ import com.telink.ble.mesh.ui.test.OnOffTestActivity;
 import com.telink.ble.mesh.ui.RemoteProvisionActivity;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.OnlineDeviceListAdapter;
+import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.List;
 
@@ -166,8 +168,9 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                     toastMsg("device info null!");
                     return false;
                 }
+                MeshLogger.d("deviceKey: " + (Arrays.bytesToHexString(deviceInfo.deviceKey)));
                 Intent intent;
-                if (deviceInfo.state == NodeInfo.STATE_BIND_SUCCESS) {
+                if (deviceInfo.state >= NodeInfo.STATE_BIND_SUCCESS) {
                     intent = new Intent(getActivity(), DeviceSettingActivity.class);
                 } else {
                     intent = new Intent(getActivity(), KeyBindActivity.class);

@@ -86,6 +86,13 @@ public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOT
         notifyDataSetChanged();
     }
 
+    public void selectPid(int pid){
+        for (NodeInfo deviceInfo : mDevices) {
+            deviceInfo.selected = isFirmwareUpdateSupport(deviceInfo) &&  deviceInfo.compositionData.pid == pid && !deviceInfo.isOffline();
+        }
+        notifyDataSetChanged();
+    }
+
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
