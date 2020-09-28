@@ -404,6 +404,7 @@ public class FirmwareUpdatingController {
      * one device by one device
      * if all devices executed, then next step
      */
+    // draft feature
     private void executeUpdatingAction() {
         log("action: " + getStepDesc(step) + " -- node index -- " + nodeIndex);
         if (nodeIndex >= nodes.size()) {

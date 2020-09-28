@@ -31,3 +31,5 @@ V3.2.0
 4. Change transition time from none to default when sending command;
 5. Add qrcode share by cloud.
 
+
+// draft feature
