@@ -20,10 +20,10 @@
  *           
  *******************************************************************************************************/
 
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
-#include "../../proj_lib/ble/ll//ll.h"
+#include "proj/tl_common.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "proj_lib/ble/ll//ll.h"
 #include "app_beacon.h"
 
 //FLASH_ADDRESS_EXTERN;

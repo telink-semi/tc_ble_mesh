@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#include "../../vendor/common/version.h"    // include mesh_config.h inside.
+#include "vendor/common/version.h"    // include mesh_config.h inside.
 //////////////////board sel/////////////////////////////////////
 #define PCBA_8258_DONGLE_48PIN          1
 #define PCBA_8258_C1T139A30_V1_0        2

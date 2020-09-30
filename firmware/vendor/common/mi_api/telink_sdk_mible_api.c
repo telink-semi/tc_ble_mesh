@@ -1,3 +1,25 @@
+/********************************************************************************************************
+ * @file     telink_sdk_mible_api.c 
+ *
+ * @brief    for TLSR chips
+ *
+ * @author	 telink
+ * @date     Sep. 30, 2010
+ *
+ * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ *           All rights reserved.
+ *           
+ *			 The information contained herein is confidential and proprietary property of Telink 
+ * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
+ *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
+ *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
+ *           This heading MUST NOT be removed from this file.
+ *
+ * 			 Licensees are granted free, non-transferable use of the information in this 
+ *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *           
+ *******************************************************************************************************/
+
 #include "telink_sdk_mible_api.h"
 #include "proj_lib/ble/ll/ll_whitelist.h"
 #if MI_API_ENABLE
@@ -224,10 +246,12 @@ mible_status_t telink_ble_mi_adv_start(mible_gap_adv_param_t *p_param)
 	if(p_param->adv_interval_min == 16){ //protect the mesh stack ,the interval must be 10ms
 		return MI_SUCCESS;
 	}
+	/*
+	// in the mesh ,we not allow to change the parameter of the mesh adv inter.
 	status = bls_ll_setAdvParam( p_param->adv_interval_min, p_param->adv_interval_max, \
 			 	 	 	 	 	     p_param->adv_type, OWN_ADDRESS_PUBLIC, \
 			 	 	 	 	 	     0,  NULL,  chn_mask, ADV_FP_NONE);
-	
+	*/
 	return MI_SUCCESS;
 }
 // user function ,and will call by the mi part 
@@ -610,6 +634,7 @@ void mible_dfu_handler(mible_dfu_state_t state, mible_dfu_param_t *param)
 #define MIBLE_DFU_STATUS_ERR_LOW_BATTERY                       0x08
 #define MIBLE_DFU_STATUS_ERR_UNKNOWN                           0xFF
 
+#define RECORD_DFU_INFO                                        5
 
     if(MIBLE_DFU_STATE_START == state){
         MI_LOG_INFO("state = MIBLE_DFU_STATE_START\n");
@@ -632,6 +657,11 @@ void mible_dfu_handler(mible_dfu_state_t state, mible_dfu_param_t *param)
 
     }else if(MIBLE_DFU_STATE_CANCEL == state){
         MI_LOG_INFO("state = MIBLE_DFU_STATE_CANCEL\n");
+    }else if(MIBLE_DFU_STATE_WRITEERR == state){
+        MI_LOG_INFO("state = MIBLE_DFU_STATE_WRITEERR\n");
+        mible_record_delete(RECORD_DFU_INFO);
+		// set flag and wait to reset ,when disconnect 
+		reboot_flag =1;        
     }
 }
 
@@ -874,15 +904,14 @@ mible_status_t telink_record_write(uint16_t record_id, uint8_t* p_data,uint8_t l
 	if(len > RECORD_MAX_LEN || len == 0){
 		telink_record_eve_cb(record_id,MI_ERR_INVALID_LENGTH,MIBLE_ARCH_EVT_RECORD_WRITE);
 		return MI_ERR_INVALID_LENGTH;
-	}else if((u32)p_data%4 != 0){
-		telink_record_eve_cb(record_id,MI_ERR_INVALID_PARAM,MIBLE_ARCH_EVT_RECORD_WRITE);
-		return MI_ERR_INVALID_PARAM;
 	}
 	// check the first record 
 	telink_record_delete(record_id);
 	if(flash_idx_adr + (len+3)+RECORD_RESERVE_SPACE > FLASH_ADR_MI_RECORD_TMP){
 		// need to clean the flash first .
+		MI_LOG_INFO("start record clean %d\n",flash_idx_adr);
 		telink_record_clean_cpy();
+		MI_LOG_INFO("start record end %d \n",flash_idx_adr);
 	}
 	// write part 
 	memset(p_buf,0,sizeof(telink_record_t));
@@ -918,24 +947,32 @@ mible_status_t telink_record_write(uint16_t record_id, uint8_t* p_data,uint8_t l
 	return MI_SUCCESS;
 }
 
-uint8_t find_record_adr(uint16_t record_id,u32 *p_adr)
+_attribute_ram_code_ uint8_t find_record_adr(uint16_t record_id,u32 *p_adr) // make the record find fun more faster
 {
-	uint32_t record_adr = FLASH_ADR_MI_RECORD;
-	uint8_t *p_buf = (u8 *)(&telink_record);
-	while(1){
-		flash_read_page(record_adr,sizeof(telink_record_t),p_buf);
-		if(telink_record.rec_id == 0xffff || record_adr >= FLASH_ADR_MI_RECORD_TMP){
-			return FALSE;
+	u32 idx =0;
+	u8 reocrd_buf[512];
+	u32 record_idx =0;
+	telink_record_t *p_record = (telink_record_t *)reocrd_buf;
+	flash_read_page(FLASH_ADR_MI_RECORD+idx,sizeof(reocrd_buf),reocrd_buf);
+	while((idx + RECORD_RESERVE_SPACE)<4096){
+		if((record_idx+3 )> sizeof(reocrd_buf)){
+			flash_read_page(FLASH_ADR_MI_RECORD+idx,sizeof(reocrd_buf),reocrd_buf);
+			record_idx = 0;
 		}
-		if(telink_record.rec_id == record_id){
-			*p_adr = record_adr;
+		p_record = (telink_record_t *)(reocrd_buf+record_idx);
+		if(p_record->rec_id == 0xffff){
+			return FALSE;
+		}else if (p_record->rec_id == record_id){
+			*p_adr = FLASH_ADR_MI_RECORD+idx;
 			return TRUE;
 		}else{
-			record_adr += telink_record.len + 3 ;
+			idx +=p_record->len+3;
+			record_idx +=p_record->len+3;
 		}
 	}
 	return FALSE;
 }
+
 
 
 

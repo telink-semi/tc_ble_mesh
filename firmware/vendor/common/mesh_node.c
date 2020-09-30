@@ -19,19 +19,21 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../vendor/common/remote_prov.h"
-#include "../../vendor/common/fast_provision_model.h"
-#include "../../vendor/common/app_heartbeat.h"
-#include "../../vendor/common/app_health.h"
-#include "../../vendor/common/directed_forwarding.h"
-#include "../../vendor/common/mesh_ota.h"
-#include "../../vendor/common/lighting_model_LC.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "vendor/common/remote_prov.h"
+#include "vendor/common/fast_provision_model.h"
+#include "vendor/common/app_heartbeat.h"
+#include "vendor/common/app_health.h"
+#include "vendor/common/directed_forwarding.h"
+#include "vendor/common/mesh_ota.h"
+#include "vendor/common/lighting_model_LC.h"
 #include "version.h"
 #include "app_privacy_beacon.h"
-#include "../../proj/mcu/watchdog_i.h"
+#include "proj/mcu/watchdog_i.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
+
 #if (ALI_MD_TIME_EN)
 #include "user_ali_time.h"
 #endif
@@ -585,7 +587,11 @@ mesh_composition_data_local_t model_sig_cfg_s_cps = {   // can't extern, must st
             {
                 FEATURE_RELAY_EN,       // u16 relay       :1;
                 FEATURE_PROXY_EN,        // u16 proxy       :1;
+                #if WIN32
+                0,
+                #else
                 FEATURE_FRIEND_EN,      // u16 frid        :1;
+                #endif
                 FEATURE_LOWPOWER_EN,    // u16 low_power   :1;
                 0,                      // u16 rfu         :12;
             },
@@ -1487,7 +1493,13 @@ void net_key_del2(mesh_net_key_t *p_key)
 			app_key_del2(&p_key->app_key[i]);
 		}
 	}
-	
+#if (MD_DF_EN&&!WIN32)
+	int key_offset = get_mesh_net_key_offset(p_key->index);
+	if(key_offset < NET_KEY_MAX){
+		memset(&proxy_mag.directed_server[key_offset], 0x00, sizeof(proxy_mag.directed_server[key_offset]));
+		mesh_directed_proxy_capa_report(key_offset);
+	}
+#endif	
 	memset(p_key, 0, sizeof(mesh_net_key_t));
 	mesh_key_save();
 }
@@ -2387,7 +2399,7 @@ int mesh_provision_par_set(u8 *prov_pars)
 	}else{
 	}
 	
-    if(is_actived_factory_test_mode()){
+    if(factory_test_mode_en){ // is_actived_factory_test_mode 
         factory_test_key_bind(0);
     }
 	provision_mag.gatt_mode = GATT_PROXY_MODE;
@@ -3633,7 +3645,7 @@ int mesh_notifyfifo_rxfifo()
 #if FEATURE_RELAY_EN
 #define FULL_REALY_PROC_ENABLE	1
 
-int relay_adv_prepare_handler(rf_packet_adv_t * p)  // no random for relay transmit
+int relay_adv_prepare_handler(rf_packet_adv_t * p, int rand_en)  // no random for relay transmit
 {
     my_fifo_t *p_fifo = &mesh_adv_fifo_relay;
 #if FULL_REALY_PROC_ENABLE
@@ -3662,8 +3674,11 @@ int relay_adv_prepare_handler(rf_packet_adv_t * p)  // no random for relay trans
                 #endif
             }
         }else{
-            if(p_relay->tick_10ms){ // no need, but should be better.
+            if(p_relay->tick_10ms){ // not neccessary to check not zero, but should be better.
                 p_relay->tick_10ms--;   // start tick
+                if(rand_en){
+                    set_random_adv_delay(1);    // random 10~20ms
+                }
             }
         }
         return 1;
@@ -3732,8 +3747,11 @@ void client_node_reset_cb(u16 adr_dst)
 }
 
 #define RELIABLE_INTERVAL_MS_MIN       (2 * CMD_INTERVAL_MS + MESH_RSP_BASE_DELAY_STEP*10 + 300)	// relay + response
+#if DEBUG_CFG_CMD_GROUP_AK_EN
+#define RELIABLE_INTERVAL_MS_MAX       (max2((RELIABLE_INTERVAL_MS_MIN + 500), 4000))
+#else
 #define RELIABLE_INTERVAL_MS_MAX       (max2((RELIABLE_INTERVAL_MS_MIN + 500), 2000))
-
+#endif
 u32 get_reliable_interval_ms_min()
 {
     return RELIABLE_INTERVAL_MS_MIN;
@@ -3896,7 +3914,7 @@ void online_st_proc()
 
 void online_st_force_notify_check(mesh_cmd_bear_unseg_t *p_bear, u8 *ut_dec, int src_type)
 {
-    if(mesh_node_report_enable && (ADV_FROM_GATT == src_type)){
+    if(mesh_node_report_enable && (MESH_BEAR_GATT == src_type)){
         online_st_force_notify_check3(p_bear, ut_dec);
     }
 }
@@ -3979,7 +3997,9 @@ void mesh_loop_proc_prior()
 void mesh_loop_process()
 {
     CB_USER_MAIN_LOOP();
-    
+	#if GATEWAY_ENABLE && DEBUG_CFG_CMD_GROUP_AK_EN
+    mesh_ota_comm_test();
+	#endif
     #if MD_REMOTE_PROV
     // remote prov proc
     mesh_cmd_sig_rp_loop_proc();
@@ -4163,7 +4183,7 @@ int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_p
 	#endif
 	
 	mesh_cmd_bear_unseg_t *p_br = GET_BEAR_FROM_ADV_PAYLOAD(p_payload);
-	if(ADV_FROM_MESH == src_type){
+	if(MESH_BEAR_ADV == src_type){
 	    if(p_br->len + SIZEOF_MEMBER (mesh_cmd_bear_unseg_t,len) > ADV_MAX_DATA_LEN){
 	        return -1;
 	    }
@@ -4209,7 +4229,7 @@ int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_p
 void mesh_gatt_bear_handle(u8 *bear)
 {
 	mesh_cmd_bear_unseg_t *p_bear = (mesh_cmd_bear_unseg_t *)bear;
-	app_event_handler_adv(&p_bear->len, ADV_FROM_GATT, p_bear->trans_par_val);
+	app_event_handler_adv(&p_bear->len, MESH_BEAR_GATT, p_bear->trans_par_val);
 }
 
 int mesh_is_proxy_ready()
@@ -4527,7 +4547,7 @@ void mesh_kr_cfgcl_status_update(mesh_rc_rsp_t *rsp)
 	#if MD_REMOTE_PROV
 	}else if (mesh_rsp_opcode_is_rp(op)){
         #if WIN32
-        mesh_rp_client_rx_cb(rsp->data,rsp->src);
+        mesh_rp_client_rx_cb(rsp);
         #endif
     #endif
 	}
@@ -4606,6 +4626,12 @@ void mesh_kr_cfgcl_status_update(mesh_rc_rsp_t *rsp)
 void mesh_ota_master_ack_timeout_handle(){}
 #endif
 
+int is_valid_tlk_fw_buf(u8 *p_flag)
+{
+    u32 startup_flag = START_UP_FLAG;
+    return (0 == memcmp(p_flag, &startup_flag, 4));
+}
+
 void mesh_ota_read_data(u32 adr, u32 len, u8 * buf)
 {
 #if WIN32
@@ -4632,14 +4658,15 @@ u8 get_ota_check_type()
 	if(ota_type[0] == 0x5D){
 		return ota_type[1];
 	}
-	return OTA_CHECK_TYPE_NONE;
+	return FW_CHECK_NONE;
 }
 
 u32 get_total_crc_type1_new_fw()
 {
 	u32 crc = 0;
 	u32 len = get_fw_len();
-	mesh_ota_read_data(len - 4, 4, (u8 *)&crc);
+	u32 addr_crc = ((len + 15)/16 - 1) * 16;
+	mesh_ota_read_data(addr_crc, 4, (u8 *)&crc);
     return crc;
 }
 
@@ -4689,6 +4716,47 @@ u32 get_blk_crc_tlk_type1(u8 *data, u32 len, u32 addr)
         crc += crc16(buf, sizeof(buf));
     }
     return crc;
+}
+
+// check 2
+static const unsigned long crc32_half_tbl[16] = {
+	0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
+	0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
+	0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
+	0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c
+};
+
+//_attribute_ram_code_
+unsigned long crc32_half_cal(unsigned long crc, unsigned char* input, unsigned long* table, int len)
+{
+    unsigned char* pch = input;
+    for(int i=0; i<len; i++)
+    {
+        crc = (crc>>4) ^ table[(crc^*pch) & 0x0f];
+        pch++;
+    }
+
+    return crc;
+}
+
+u32 get_crc32_16bytes(unsigned long crc_init, unsigned char* data)
+{
+    //split 16 bytes OTA data into 32 half bytes to caculate CRC.
+    u8 ota_dat[32];
+    for(int i=0;i<16;i++){
+        ota_dat[i*2] = data[i]&0x0f;
+        ota_dat[i*2+1] = data[i]>>4;
+    }
+    return crc32_half_cal(crc_init, ota_dat, (unsigned long* )crc32_half_tbl, 32);
+}
+
+u32 get_blk_crc_tlk_type2(u32 crc_init, u8 *data, u32 len)
+{	
+    u32 num = len / OTA_DATA_LEN_1; // sizeof firmware data which exclude crc, is always 16byte aligned.
+    for(u32 i = 0; i < num; ++i){
+        crc_init = get_crc32_16bytes(crc_init, data + OTA_DATA_LEN_1 * i);
+    }
+    return crc_init;
 }
 #endif
 

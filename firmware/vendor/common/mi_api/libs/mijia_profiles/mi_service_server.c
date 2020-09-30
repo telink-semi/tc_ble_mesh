@@ -30,6 +30,10 @@
 #include "mible_log.h"
 #include "mi_service_server.h"
 #if MI_API_ENABLE
+#if (USE_GATT_SPEC==1)
+#include "ble_spec/mible_spec.h"
+#endif
+
 /**@brief Xiaomi Service structure.
  *
  * @details This structure contains status information related to the service.
@@ -42,8 +46,17 @@ typedef struct {
     uint16_t                 version_handle;          /**< Handle related to the characteristic value (as provided by the BLE Stack). */
     uint16_t                 ctrl_point_handle;       /**< Handle related to the characteristic value (as provided by the BLE Stack). */
     uint16_t                 auth_handle;             /**< Handle related to the characteristic value (as provided by the BLE Stack). */
+#if (USE_MIBLE_OTA==1)
     uint16_t                 ota_ctrl_point;
     uint16_t                 ota_data;
+#endif
+#if (USE_GATT_SPEC==1)
+    uint16_t                 spec_read_handle;
+    uint16_t                 spec_write_handle;
+#endif
+#if (USE_MIBLE_WAC==1)
+    uint16_t                 wifi_status;
+#endif
 
     mi_service_evt_handler_t handler;
 } ble_mi_t;
@@ -57,23 +70,16 @@ typedef struct {
 #define BLE_UUID_MI_SERVICE  0xFE95                    /**< The UUID of the Xiaomi Service. */
 
 #define BLE_UUID_MI_VERS     0x0004                    /**< The UUID of the Mi Service Version Characteristic. */
+#define BLE_UUID_MI_WIFI_CFG 0x0005                    /**< The UUID of the WiFi Status Characteristic. */
 #define BLE_UUID_MI_CTRLP    0x0010                    /**< The UUID of the Control Point Characteristic. */
 #define BLE_UUID_MI_SECURE   0x0016                    /**< The UUID of the Secure Auth Characteristic. */
 #define BLE_UUID_MI_OTA_CTRL 0x0017                    /**< The UUID of the OTA Control Point Characteristic. */
 #define BLE_UUID_MI_OTA_DATA 0x0018                    /**< The UUID of the OTA Data Characteristic. */
 #define BLE_UUID_MI_STANDARD 0x0019                    /**< The UUID of the Standard Auth Characteristic. */
+#define BLE_UUID_MI_SPEC_RD  0x001A                    /**< The UUID of the MIOT Spec RX Characteristic. */
+#define BLE_UUID_MI_SPEC_WR  0x001B                    /**< The UUID of the MIOT Spec TX Characteristic. */
 
-#define CHAR_VERSION_IDX   0
-#define CHAR_CTRLP_IDX     1
-#define CHAR_AUTH_IDX      2
-#define CHAR_OTA_CP_IDX    3
-#define CHAR_OTA_DATA_IDX  4
-
-#if (USE_MIBLE_OTA==0)
-#define SERVICE_CHAR_CNT   3
-#else
-#define SERVICE_CHAR_CNT   5
-#endif
+#define SERVICE_CHAR_CNT   (3 + 2*USE_MIBLE_OTA + 2*USE_GATT_SPEC + 1*USE_MIBLE_WAC)
 
 static ble_mi_t mi_srv;
 static const uint8_t version[20] = MIBLE_LIB_AND_DEVELOPER_VERSION;
@@ -116,16 +122,16 @@ static void on_connect(mible_gap_evt_param_t * p_ble_evt)
     init.conn_handle = mi_srv.conn_handle;
     init.ctrl_handle = mi_srv.ota_ctrl_point;
     init.data_handle = mi_srv.ota_data;
-    init.product_id = PRODUCT_ID;
-	// change the ota part for the telink part 
-	extern unsigned int	ota_program_offset;
-	init.flash_start = ota_program_offset;
-	init.flash_size = 0x30000;
-	//init.flash_start = DFU_NVM_START;
-    //init.flash_size = DFU_NVM_END - DFU_NVM_START;
+    init.product_id  = PRODUCT_ID;
+    init.model       = MODEL_NAME;
+    extern unsigned int	ota_program_offset;
+    init.flash_start = ota_program_offset;
+    init.flash_size  = 0x30000;
     mible_dfu_init(&init);
 #endif
-
+#if (USE_GATT_SPEC==1)
+    spec_data_trans_init(mi_srv.conn_handle, mi_srv.service_handle, mi_srv.spec_read_handle, mi_srv.spec_write_handle);
+#endif
 }
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_DISCONNECTED event from the BLE Stack.
@@ -151,6 +157,11 @@ static void on_disconnect(mible_gap_evt_param_t * p_ble_evt)
     uint8_t errno = mible_dfu_upgrade();
     MI_ERR_CHECK(errno);
 #endif
+
+#if USE_GATT_SPEC==1
+    spec_data_trans_deinit();
+#endif
+
 }
 
 /**@brief Function for handling the @ref BLE_GAP_EVT_CONN_PARAM_UPDATE event from the BLE Stack.
@@ -189,27 +200,29 @@ _attribute_ram_code_ static void on_write(mible_gatts_evt_param_t * p_ble_evt)
     {
         auth_data_process(pdata, len);
     }
-	else if (handle == mi_srv.ota_ctrl_point)
+#if (USE_GATT_SPEC==1)
+    else if (handle == mi_srv.spec_read_handle)
     {
-        if (get_mi_authorization() == ADMIN_AUTHORIZATION) {
-            mible_gatts_rw_auth_reply(mi_srv.conn_handle, 1, handle, 0, pdata, len, 2);
-            mible_dfu_ctrl(pdata, len);
-        } else {
-            mible_gatts_rw_auth_reply(mi_srv.conn_handle, 0, handle, 0, NULL, 0, 2);
+        if (get_mi_authorization() == ADMIN_AUTHORIZATION) 
+        {
+            spec_recv_data_process(pdata, len);
         }
     }
-    else if (handle == mi_srv.ota_data)
+    else if (handle == mi_srv.spec_write_handle)
     {
-        if (get_mi_authorization() == ADMIN_AUTHORIZATION) {
-            mible_dfu_data(pdata, len);
+        if (get_mi_authorization() == ADMIN_AUTHORIZATION) 
+        {
+            spec_write_data_process(pdata, len);
         }
-    }else
+    }
+#endif
+    else
     {
         // Do Nothing. This event is not relevant for this service.
     }
 }
 
-#if USE_MIBLE_OTA
+#if USE_MIBLE_OTA==1
 /**@brief Function for handling the @ref BLE_GATTS_EVT_WRITE event from the BLE Stack.
  *
  * @param[in] p_mi_s    Xiaomi Service structure.
@@ -257,27 +270,30 @@ static void service_init_succ(mible_arch_gatts_srv_init_cmp_t *param)
 
     if (param->status == MI_SUCCESS) {
         mi_srv.service_handle     = p_srv_db->srv_handle;
-        mi_srv.version_handle     = p_char_db[CHAR_VERSION_IDX].char_value_handle;
-        mi_srv.ctrl_point_handle  = p_char_db[CHAR_CTRLP_IDX].char_value_handle;
-        mi_srv.auth_handle        = p_char_db[CHAR_AUTH_IDX].char_value_handle;
-#if (USE_MIBLE_OTA==1)
-        mi_srv.ota_ctrl_point     = p_char_db[CHAR_OTA_CP_IDX].char_value_handle;
-        mi_srv.ota_data           = p_char_db[CHAR_OTA_DATA_IDX].char_value_handle;
+        mi_srv.version_handle     = (*p_char_db++).char_value_handle;
+        MI_LOG_INFO(" version : %d\n", mi_srv.version_handle);
+#if (USE_MIBLE_WAC==1)
+        mi_srv.wifi_status        = (*p_char_db++).char_value_handle;
+        MI_LOG_INFO(" wifi status : %d\n", mi_srv.wifi_status);
 #endif
-        MI_LOG_INFO("chars value handle list\n"
-                    " version : %d\n"
-                    " ctrl point : %d\n"
-                    " auth : %d\n"
-                    " ota ctrl point : %d\n"
-                    " ota data : %d\n",
-            mi_srv.version_handle, mi_srv.ctrl_point_handle, mi_srv.auth_handle,
-            mi_srv.ota_ctrl_point, mi_srv.ota_data);
-        
+        mi_srv.ctrl_point_handle  = (*p_char_db++).char_value_handle;
+        mi_srv.auth_handle        = (*p_char_db++).char_value_handle;
+        MI_LOG_INFO(" ctrl point : %d\n auth : %d\n", mi_srv.ctrl_point_handle, mi_srv.auth_handle);
+#if (USE_MIBLE_OTA==1)
+        mi_srv.ota_ctrl_point     = (*p_char_db++).char_value_handle;
+        mi_srv.ota_data           = (*p_char_db++).char_value_handle;
+        MI_LOG_INFO(" ota ctrl point : %d\n ota data : %d\n", mi_srv.ota_ctrl_point, mi_srv.ota_data);
+#endif
+#if (USE_GATT_SPEC==1)
+        mi_srv.spec_read_handle   = (*p_char_db++).char_value_handle;
+        mi_srv.spec_write_handle  = (*p_char_db++).char_value_handle;
+        MI_LOG_INFO(" spec rd : %d\n spec wr : %d\n", mi_srv.spec_read_handle, mi_srv.spec_write_handle);
+#endif
+
         mible_gatts_value_set(mi_srv.service_handle, mi_srv.version_handle, 0, (void*)version, sizeof(version));
-        
     }
     
-    //free(p_char_db);
+    //free(p_srv_db->p_char_db);
     //free(p_srv_db);
     
     // TODO: support more than one service databases
@@ -381,56 +397,102 @@ uint32_t mi_service_init()
 	p_mi_service[0].srv_uuid.uuid16 = BLE_UUID_MI_SERVICE;
     
     // add char version
-    p_mi_char[CHAR_VERSION_IDX] = (mible_gatts_char_db_t){
-        //.char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_VERS, },   
+    *p_mi_char = (mible_gatts_char_db_t){
+       // .char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_VERS},
         .char_property = MIBLE_READ,
         .char_value_len = sizeof(version),
     };
-    p_mi_char[CHAR_VERSION_IDX].char_uuid.type =0;
-    p_mi_char[CHAR_VERSION_IDX].char_uuid.uuid16 = BLE_UUID_MI_VERS;
-
+    p_mi_char->char_uuid.type =0;
+    p_mi_char->char_uuid.uuid16 = BLE_UUID_MI_VERS;
+	p_mi_char++;
+#if (USE_MIBLE_WAC==1)
+    // add char wifi status
+    *p_mi_char++ = (mible_gatts_char_db_t){
+        //.char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_WIFI_CFG},
+        .char_property = MIBLE_READ | MIBLE_NOTIFY,
+        .char_value_len = 4,
+    };
+	p_mi_char->char_uuid.type =0;
+    p_mi_char->char_uuid.uuid16 = BLE_UUID_MI_WIFI_CFG;
+#endif
     // add char control point
-    p_mi_char[CHAR_CTRLP_IDX] = (mible_gatts_char_db_t){
-        //.char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_CTRLP,},   
+    *p_mi_char = (mible_gatts_char_db_t){
+        //.char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_CTRLP},
         .char_property = MIBLE_WRITE_WITHOUT_RESP | MIBLE_NOTIFY,
         .char_value_len = 4,
-        .is_variable_len = true,
     };
-	p_mi_char[CHAR_CTRLP_IDX].char_uuid.type = 0;
-	p_mi_char[CHAR_CTRLP_IDX].char_uuid.uuid16 = BLE_UUID_MI_CTRLP;
-
+	p_mi_char->char_uuid.type = 0;
+	p_mi_char->char_uuid.uuid16 = BLE_UUID_MI_CTRLP;
+	p_mi_char++;
     // add char authentication
-    p_mi_char[CHAR_AUTH_IDX] = (mible_gatts_char_db_t){
-        //.char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_SECURE, }, 
+    *p_mi_char = (mible_gatts_char_db_t){
+	/*
+#if (defined(MI_BLE_ENABLED) && (HAVE_MSC)) || defined(MI_MESH_ENABLED)
+        .char_uuid = (mible_uuid_t){.type = 0, .uuid16 =  BLE_UUID_MI_SECURE},
+#else
+        .char_uuid = (mible_uuid_t){.type = 0, .uuid16 =  BLE_UUID_MI_STANDARD},
+#endif
+*/
         .char_property = MIBLE_WRITE_WITHOUT_RESP | MIBLE_NOTIFY,
         .char_value_len = MAX_ATT_PAYLOAD,
         .is_variable_len = true,
     };
-	p_mi_char[CHAR_AUTH_IDX].char_uuid.type =0;
-	p_mi_char[CHAR_AUTH_IDX].char_uuid.uuid16 = BLE_UUID_MI_SECURE;
-#if USE_MIBLE_OTA
+#if (defined(MI_BLE_ENABLED) && (HAVE_MSC)) || defined(MI_MESH_ENABLED)
+        p_mi_char->char_uuid.type = 0;
+		p_mi_char->char_uuid.uuid16 = BLE_UUID_MI_SECURE;
+#else
+        p_mi_char->char_uuid.type = 0;
+		p_mi_char->char_uuid.uuid16 = BLE_UUID_MI_STANDARD;
+#endif
+p_mi_char++;
+
+#if (USE_MIBLE_OTA==1)
     // add char ota control point
-    p_mi_char[CHAR_OTA_CP_IDX] = (mible_gatts_char_db_t){
-       // .char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_OTA_CTRL, },
+    *p_mi_char = (mible_gatts_char_db_t){
+        //.char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_OTA_CTRL},
         .char_property = MIBLE_WRITE | MIBLE_NOTIFY,
         .char_value_len = 20,
         .is_variable_len = true,
         .wr_author = 1
     };
-	p_mi_char[CHAR_OTA_CP_IDX].char_uuid.type = 0;
-	p_mi_char[CHAR_OTA_CP_IDX].char_uuid.uuid16 = BLE_UUID_MI_OTA_CTRL;
+	p_mi_char->char_uuid.type = 0;
+	p_mi_char->char_uuid.uuid16 = BLE_UUID_MI_OTA_CTRL;
+	p_mi_char++;
 
     // add char ota data
-    p_mi_char[CHAR_OTA_DATA_IDX] = (mible_gatts_char_db_t){
-        //.char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_OTA_DATA, },
+    *p_mi_char = (mible_gatts_char_db_t){
+       // .char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_OTA_DATA},
         .char_property = MIBLE_WRITE_WITHOUT_RESP | MIBLE_NOTIFY,
         .char_value_len = MAX_ATT_PAYLOAD,
         .is_variable_len = true,
         .wr_author = 1
     };
-	p_mi_char[CHAR_OTA_DATA_IDX].char_uuid.type = 0;
-	p_mi_char[CHAR_OTA_DATA_IDX].char_uuid.uuid16= BLE_UUID_MI_OTA_DATA;
+	p_mi_char->char_uuid.type = 0;
+	p_mi_char->char_uuid.uuid16 = BLE_UUID_MI_OTA_DATA;
+	p_mi_char++;
 #endif
+
+#if (USE_GATT_SPEC==1)
+    // add char SPEC
+    *p_mi_char = (mible_gatts_char_db_t){
+        //.char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_SPEC_RD},
+        .char_property = MIBLE_WRITE_WITHOUT_RESP | MIBLE_NOTIFY,
+        .char_value_len = MAX_ATT_PAYLOAD,
+        .is_variable_len = true,
+    };
+	p_mi_char->char_uuid.type = 0;
+	p_mi_char->char_uuid.uuid16 = BLE_UUID_MI_SPEC_RD;
+	p_mi_char++;
+    *p_mi_char = (mible_gatts_char_db_t){
+       // .char_uuid = (mible_uuid_t){.type = 0, .uuid16 = BLE_UUID_MI_SPEC_WR},
+        .char_property = MIBLE_WRITE_WITHOUT_RESP | MIBLE_NOTIFY,
+        .char_value_len = MAX_ATT_PAYLOAD,
+        .is_variable_len = true,
+    };
+	p_mi_char->char_uuid.type = 0;
+	p_mi_char->char_uuid.uuid16 = BLE_UUID_MI_SPEC_WR;
+	p_mi_char++;
+#endif		
     err_code = mible_gatts_service_init(&mi_gatts_db);
     MI_ERR_CHECK(err_code);
 
@@ -468,4 +530,42 @@ uint32_t opcode_recv(void)
     mible_gatts_value_get(mi_srv.service_handle, mi_srv.ctrl_point_handle, (uint8_t*)&opcode, &len);
     return opcode;
 }
+
+#if (USE_MIBLE_WAC==1)
+int set_wifi_status(uint8_t status)
+{
+    int errno;
+
+    if (mi_srv.wifi_status == 0)
+        return MIBLE_ERR_ATT_INVALID_ATT_HANDLE;
+
+    errno = mible_gatts_value_set(mi_srv.service_handle, mi_srv.wifi_status, 0, (void*) &status, sizeof(status));
+
+    if (errno != MI_SUCCESS) {
+        MI_LOG_INFO("Cann't set wifi status : %X\n", errno);
+    }
+    return errno;
+}
+
+int report_wifi_status(uint8_t status)
+{
+    int errno;
+    if (mi_srv.conn_handle == BLE_CONN_HANDLE_INVALID)
+        return MIBLE_ERR_INVALID_CONN_HANDLE;
+
+    if (mi_srv.wifi_status == 0)
+        return MIBLE_ERR_ATT_INVALID_ATT_HANDLE;
+
+    errno = set_wifi_status(status);
+    MI_ERR_CHECK(errno);
+
+    errno = mible_gatts_notify_or_indicate(mi_srv.conn_handle, mi_srv.service_handle, mi_srv.wifi_status,
+                                   0, (void*) &status, sizeof(status), 1);
+
+    if (errno != MI_SUCCESS) {
+        MI_LOG_INFO("Cann't send wifi status : %X\n", errno);
+    }
+    return errno;
+}
+#endif
 #endif

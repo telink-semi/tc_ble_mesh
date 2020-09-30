@@ -17,6 +17,7 @@ typedef struct {
     uint16_t ctrl_handle;
     uint16_t data_handle;
     uint16_t product_id;
+    char *   model;
     uint32_t flash_start;
     uint32_t flash_size;
 } mible_dfu_init_t;
@@ -26,6 +27,7 @@ typedef enum {
     MIBLE_DFU_STATE_VERIFY,
     MIBLE_DFU_STATE_SWITCH,
     MIBLE_DFU_STATE_CANCEL,
+    MIBLE_DFU_STATE_WRITEERR
 } mible_dfu_state_t;
 
 typedef struct {
@@ -49,15 +51,17 @@ typedef union {
 typedef void (* mible_dfu_callback_t) (mible_dfu_state_t state, mible_dfu_param_t *param);
 typedef int (* pre_check_func_t)(void);
 
-/* Exported constants --------------------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
+
 /* Internal API for mijia ble libs. Should not use in Application layer */
 mible_status_t mible_dfu_init(mible_dfu_init_t * p_init);
 mible_status_t mible_dfu_ctrl(uint8_t * buffer, uint16_t size);
 mible_status_t mible_dfu_data(uint8_t * buffer, uint16_t size);
 mible_status_t mible_dfu_upgrade(void);
 
+
 /* User API */
+
 /**@brief Register DFU callback function used to receive DFU event.
  *
  * @param[in] cb    Callback function

@@ -19,41 +19,41 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/rf_drv.h"
-#include "../../proj_lib/pm.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/ble/ll/ll_whitelist.h"
-#include "../../proj_lib/ble/trace.h"
-#include "../../proj_lib/ble/ble_common.h"
-#include "../../proj/mcu/pwm.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
-#include "../../proj/drivers/adc.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/ble/ble_smp.h"
-#include "../../proj_lib/mesh_crypto/mesh_crypto.h"
-#include "../../proj_lib/mesh_crypto/mesh_md5.h"
-#include "../../proj_lib/mesh_crypto/sha256_telink.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj/tl_common.h"
+#include "proj_lib/rf_drv.h"
+#include "proj_lib/pm.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/ll/ll_whitelist.h"
+#include "proj_lib/ble/trace.h"
+#include "proj_lib/ble/ble_common.h"
+#include "proj/mcu/pwm.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "proj/drivers/adc.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/ble_smp.h"
+#include "proj_lib/mesh_crypto/mesh_crypto.h"
+#include "proj_lib/mesh_crypto/mesh_md5.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "../common/app_provison.h"
 #include "../common/app_beacon.h"
 #include "../common/app_proxy.h"
 #include "../common/app_health.h"
 #include "../common/vendor_model.h"
-#include "../../proj/drivers/keyboard.h"
+#include "proj/drivers/keyboard.h"
 #include "app.h"
-#include "../../stack/ble/gap/gap.h"
-#include "../../proj_lib/ble/l2cap.h"
+#include "stack/ble/gap/gap.h"
+#include "proj_lib/ble/l2cap.h"
 #include "vendor/common/blt_soft_timer.h"
 #include "proj/drivers/rf_pa.h"
-
+#include "../common/remote_prov.h"
 #if MI_API_ENABLE
-#include "../../vendor/common/mi_api/telink_sdk_mible_api.h"
-#include "../../vendor/common/mi_api/libs/mijia_profiles/mi_service_server.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
+#include "vendor/common/mi_api/libs/mijia_profiles/mi_service_server.h"
 #endif 
 #if (HCI_ACCESS==HCI_USE_UART)
-#include "../../proj/drivers/uart.h"
+#include "proj/drivers/uart.h"
 #endif
 
 #if DEBUG_CFG_CMD_GROUP_AK_EN
@@ -168,6 +168,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 		if (subcode == HCI_SUB_EVT_LE_ADVERTISING_REPORT)	// ADV packet
 		{
 			event_adv_report_t *pa = (event_adv_report_t *)p;
+			#if MD_REMOTE_PROV
+			mesh_cmd_extend_loop_cb(pa);
+			#endif
 			if(LL_TYPE_ADV_NONCONN_IND != (pa->event_type & 0x0F)){
 				return 0;
 			}
@@ -187,7 +190,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			send_to_hci = mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD);
 			#else
-			send_to_hci = app_event_handler_adv(pa->data, ADV_FROM_MESH, 1);
+			send_to_hci = app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1);
 			#endif
 		}
 
@@ -397,7 +400,7 @@ void main_loop ()
 	if(A_send_indication){
 		A_send_indication = 0;
 		u16 val= 0x3344;
-		access_cmd_attr_indication(0xffff,ATTR_CURRENT_TEMP, (u8 *)&val, sizeof(val));
+		access_cmd_attr_indication(VD_MSG_ATTR_INDICA,0xffff,ATTR_CURRENT_TEMP, (u8 *)&val, sizeof(val));
 	}
 	#endif	
 	#endif
@@ -415,6 +418,7 @@ void main_loop ()
 	#if MI_API_ENABLE
 	telink_gatt_event_loop();
 	ev_main();
+	mi_vendor_cfg_rsp_proc();
 	#if XIAOMI_MODULE_ENABLE
 	mi_api_loop_run();
 	#endif
@@ -591,8 +595,18 @@ void user_init()
 	// OTA init
 	#if (DUAL_MODE_ADAPT_EN && (0 == FW_START_BY_BOOTLOADER_EN) || DUAL_MODE_WITH_TLK_MESH_EN)
 	if(DUAL_MODE_NOT_SUPPORT == dual_mode_state)
-	#endif
-	{bls_ota_clearNewFwDataArea();	 //must
+	#endif	
+	{
+		#if MI_API_ENABLE
+			#define RECORD_DFU_INFO   5
+			u32 adr_record;
+			if(!find_record_adr(RECORD_DFU_INFO,&adr_record)){
+				bls_ota_clearNewFwDataArea();
+				telink_record_clean_cpy();// trigger clean recycle ,and it will not need to clean in the conn state
+			}
+		#else
+		bls_ota_clearNewFwDataArea();	 //must
+		#endif
 	}
 	//blc_ll_initScanning_module(tbl_mac);
 	//gatt initialization
@@ -624,7 +638,8 @@ void user_init()
 	advertise_init();
 	mi_service_init();
 	telink_mi_vendor_init();
-	
+	//cfg_led_event(LED_EVENT_FLASH_4HZ_3T);
+	//cfg_led_event(LED_EVENT_FLASH_1HZ_3S);
 	}
 #endif 
 	extern u32 system_time_tick;
@@ -649,6 +664,8 @@ void user_init()
 #endif
 
     CB_USER_INIT();
+
+
 }
 
 #if (PM_DEEPSLEEP_RETENTION_ENABLE)

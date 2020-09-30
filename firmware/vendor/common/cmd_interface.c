@@ -26,12 +26,12 @@
 #include "../../../reference/tl_bulk/lib_file/hw_fun.h"
 #include "app_provison.h"
 #else
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
 #include "user_config.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../proj_lib/mesh_crypto/mesh_crypto.h"
-#include "../../proj_lib/pm.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/mesh_crypto/mesh_crypto.h"
+#include "proj_lib/pm.h"
 #include "app_proxy.h"
 #include "app_health.h"
 #endif

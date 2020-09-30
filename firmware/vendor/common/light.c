@@ -19,25 +19,25 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
-#include "../../vendor/common/lighting_model.h"
-#include "../../vendor/common/lighting_model_HSL.h"
-#include "../../vendor/common/lighting_model_xyL.h"
-#include "../../vendor/common/lighting_model_LC.h"
-#include "../../vendor/common/generic_model.h"
-#include "../../vendor/common/scene.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "vendor/common/lighting_model.h"
+#include "vendor/common/lighting_model_HSL.h"
+#include "vendor/common/lighting_model_xyL.h"
+#include "vendor/common/lighting_model_LC.h"
+#include "vendor/common/generic_model.h"
+#include "vendor/common/scene.h"
 #include "light.h"
 #if HOMEKIT_EN
-#include "../../vendor/common/led_cfg.h"
+#include "vendor/common/led_cfg.h"
 #endif
 #if WIN32
 #include <stdlib.h>
 #else
-#include "../../proj/mcu/watchdog_i.h"
-#include "../../proj_lib/pm.h"
+#include "proj/mcu/watchdog_i.h"
+#include "proj_lib/pm.h"
 #endif
 
 
@@ -50,14 +50,6 @@
   * @{
   */
 
-
-typedef struct{
-    u32 gpio;
-    u8 id;
-    u8 invert;
-    u8 func;
-    u8 rsv[1];
-}light_res_hw_t;
 
 #if ((LIGHT_TYPE_SEL == LIGHT_TYPE_CT) || (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL))
 u8 ct_flag = 1; // default CT
@@ -188,6 +180,13 @@ s16 get_on_power_up_last(sw_level_save_t *p_save)
 {
 	return (p_save->onoff ? p_save->last : LEVEL_OFF);
 }
+
+#if KEEP_ONOFF_STATE_AFTER_OTA
+void set_keep_onoff_state_after_ota()
+{
+	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) | BIT(OTA_REBOOT_FLAG));
+}
+#endif
 
 void mesh_global_var_init_light_sw()
 {
@@ -572,12 +571,19 @@ _USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
     //calc the temp100 transfer for mi 
     u16 mi_temp = light_ctl_temp_prensent_get(idx);
     u8 mi_ct = 0;
-    if(mi_temp<2700){
+	#if LS_TEST_ENABLE
+	#define CT_MI_MIN		3000
+	#define CT_MI_MAX		6400
+	#else
+	#define CT_MI_MIN		2700
+	#define CT_MI_MAX		6500
+	#endif
+    if(mi_temp<CT_MI_MIN){
         mi_ct =0;
-    }else if (mi_temp > 6500){
+    }else if (mi_temp > CT_MI_MAX){
         mi_ct = 100;
     }else {
-        mi_ct = ((mi_temp-2700)*100)/(6500-2700);
+        mi_ct = ((mi_temp-CT_MI_MIN)*100)/(CT_MI_MAX-CT_MI_MIN);
     }
     light_dim_set_hw(idx, 0, 0xffff);// turn on the filter part 
     light_dim_set_hw(idx, 1, get_pwm_cmp(0xff, mi_ct*lum_100/100));
@@ -1007,7 +1013,7 @@ int light_g_level_set_idx(int idx, s16 level, int init_time_flag, int st_trans_t
 }
 
 #if MD_SERVER_EN
-void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type)
+void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type, int hsl_set_cmd_flag)
 {
     if(idx < LIGHT_CNT){
 		set_level_current_type(idx, st_trans_type);
@@ -1041,7 +1047,38 @@ void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type)
                     }
                     p_trans->remain_t_ms = remain_t_ms_org * (abs_delta / abs_step) + val;
                 }else{
-				    p_trans->step_1p32768 = (((p_trans->target - p_trans->present) * 32768) /(s32)(p_trans->remain_t_ms)) * LIGHT_ADJUST_INTERVAL;
+					s32 delta = (p_trans->target - p_trans->present);
+					#if LIGHT_TYPE_HSL_EN
+                    st_transition_t *p_trans_lightness = P_ST_TRANS(idx, ST_TRANS_LIGHTNESS);
+                    st_transition_t *p_trans_hue = P_ST_TRANS(idx, ST_TRANS_HSL_HUE);
+                    st_transition_t *p_trans_sat = P_ST_TRANS(idx, ST_TRANS_HSL_SAT);
+                    int flag_keep_color = (hsl_set_cmd_flag && ((ST_TRANS_HSL_HUE == st_trans_type) || (ST_TRANS_HSL_SAT == st_trans_type)));
+					if(flag_keep_color){
+					    if((LEVEL_OFF == p_trans_lightness->present)
+					    && (LEVEL_OFF == p_trans_hue->present)
+					    && (LEVEL_OFF == p_trans_sat->present)){ // ON by HSL set command
+                            p_trans_hue->present = p_trans_hue->target;
+                            p_trans_sat->present = p_trans_sat->target;
+					    }
+					}
+
+					if(ST_TRANS_HSL_HUE == st_trans_type){
+					    delta = get_Hue_delta_value(s16_to_u16(p_trans->target), s16_to_u16(p_trans->present));
+					}
+					#endif
+					
+				    p_trans->step_1p32768 = ((delta * 32768) /(s32)(p_trans->remain_t_ms)) * LIGHT_ADJUST_INTERVAL;
+
+                    #if LIGHT_TYPE_HSL_EN
+					if(flag_keep_color){
+					    if((LEVEL_OFF == p_trans_lightness->target)
+					    && (LEVEL_OFF == p_trans_hue->target)
+					    && (LEVEL_OFF == p_trans_sat->target)){ // OFF by HSL set command
+                            p_trans_hue->step_1p32768 = 0; // will be set to target directly when transition complete
+                            p_trans_sat->step_1p32768 = 0;
+					    }
+					}
+                    #endif
 				}
 			}else{
 				p_trans->step_1p32768 = 0;
@@ -1108,8 +1145,13 @@ s16 light_get_next_level(int idx, int st_trans_type)
 	s32 adjust_1p32768 = p_trans->step_1p32768+ p_trans->present_1p32768;
 	s32 result = p_trans->present + (adjust_1p32768 / 32768);
 	p_trans->present_1p32768 = adjust_1p32768 % 32768;
-	
-    result = get_val_with_check_range(result, p_save->min, p_save->max, st_trans_type);
+
+	#if LIGHT_TYPE_HSL_EN
+	if(ST_TRANS_HSL_HUE != st_trans_type)   // hue is a circular parameter from 0~360 degree
+	#endif
+	{
+        result = get_val_with_check_range(result, p_save->min, p_save->max, st_trans_type);
+    }
 	
 	return (s16)result;
 }
@@ -1118,27 +1160,27 @@ void light_transition_log(int st_trans_type, s16 present_level)
 {
 #if 0
 	if(ST_TRANS_LIGHTNESS == st_trans_type){
-		LOG_MSG_INFO(TL_LOG_NODE_BASIC,0,0,"present_lightness 0x%04x", s16_to_u16(present_level));
+		LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"present_lightness 0x%04x", s16_to_u16(present_level));
 	#if (LIGHT_TYPE_CT_EN)
 	}else if(ST_TRANS_CTL_TEMP == st_trans_type){
-		LOG_MSG_INFO(TL_LOG_MESH,0,0,"present_ctl_temp 0x%04x", s16_to_u16(present_level));
+		LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"present_ctl_temp 0x%04x", s16_to_u16(present_level));
 	}else if(ST_TRANS_CTL_D_UV == st_trans_type){
-		LOG_MSG_INFO(TL_LOG_MESH,0,0,"present_ctl_D_UV %d", present_level);
+		LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"present_ctl_D_UV %d", present_level);
 	#endif
 	#if (LIGHT_TYPE_HSL_EN)
 	}else if(ST_TRANS_HSL_HUE == st_trans_type){
-		LOG_MSG_INFO(TL_LOG_MESH,0,0,"present_hsl_hue 0x%04x", s16_to_u16(present_level));
+		LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"present_hsl_hue 0x%04x", s16_to_u16(present_level));
 	}else if(ST_TRANS_HSL_SAT == st_trans_type){
-		LOG_MSG_INFO(TL_LOG_MESH,0,0,"present_hsl_sat 0x%04x", s16_to_u16(present_level));
+		LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"present_hsl_sat 0x%04x", s16_to_u16(present_level));
 	#endif
 	#if (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
 	}else if(ST_TRANS_XYL_X == st_trans_type){
-		LOG_MSG_INFO(TL_LOG_MESH,0,0,"present_xyl_x 0x%04x", s16_to_u16(present_level));
+		LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"present_xyl_x 0x%04x", s16_to_u16(present_level));
 	}else if(ST_TRANS_XYL_Y == st_trans_type){
-		LOG_MSG_INFO(TL_LOG_MESH,0,0,"present_xyl_y 0x%04x", s16_to_u16(present_level));
+		LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"present_xyl_y 0x%04x", s16_to_u16(present_level));
 	#endif
 	}else{
-		LOG_MSG_INFO(TL_LOG_MESH,0,0,"xxxx 0x%04x", s16_to_u16(present_level));
+		LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"xxxx 0x%04x", s16_to_u16(present_level));
 	}
 #endif
 }

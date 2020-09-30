@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj/tl_common.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 
 // ------
 #ifndef CEIL_DIV
@@ -130,9 +130,13 @@
 
 //------op parameters
 #if WIN32
-#define MESH_OTA_UPDATE_NODE_MAX        (180)   // max: (380 - head)/2
+#define MESH_OTA_UPDATE_NODE_MAX        (MESH_NODE_MAX_NUM) // max: (380 - head)/2
 #else
-#define MESH_OTA_UPDATE_NODE_MAX        (64)     // set small just for save RAM
+    #if (__TL_LIB_8269__ || MCU_CORE_TYPE == MCU_CORE_8269 )
+#define MESH_OTA_UPDATE_NODE_MAX        (MESH_ELE_MAX_NUM)  // set small just for save RAM
+    #else
+#define MESH_OTA_UPDATE_NODE_MAX        (MESH_NODE_MAX_NUM)
+    #endif
 #endif
 
 #if 0 // WIN32 test
@@ -170,10 +174,6 @@
 #define FW_ADD_BYTE_EN      0
     #endif
 #endif
-enum{
-    OTA_CHECK_TYPE_NONE             = 0,
-    OTA_CHECK_TYPE_TELINK_MESH      = 1,
-};
 
 /*distribute model status code*/
 enum{
@@ -489,6 +489,8 @@ typedef struct{
 	u8 policy;
 	u8 pause_flag;  // pause mesh ota tx flow when GATT disconnect, untill APP resume.
 	u8 st;
+	u8 ota_rcv_flag;    // step 1: private method of receiving update address list,
+	u8 adr_set_flag;    // step 2: have received address list before, so there is no list within distribute start command.
 }fw_distribut_srv_proc_t;
 
 typedef struct{
@@ -510,6 +512,7 @@ typedef struct{
 	u8 bk_size_log;
     u8 update_phase     :3;
     u8 additional_info  :5;
+    u8 bin_crc_type;
     u8 bin_crc_done;
     u8 reboot_flag_backup;
     u8 metadata_len;
@@ -619,6 +622,7 @@ unsigned short crc16(unsigned char *pD, int len);
 void mesh_ota_read_data(u32 adr, u32 len, u8 * buf);
 void mesh_ota_proc();
 int is_blob_chunk_transfer_ready();
+void mesh_fw_distibut_set(u8 en);
 
 extern u32	ota_program_offset;
 

@@ -23,11 +23,11 @@
 #ifndef _REMOTE_PROV_H
 #define _REMOTE_PROV_H
 
-#include "../../proj/tl_common.h"
-#include "../../vendor/mesh/app.h"
-#include "../../vendor/mesh_lpn/app.h"
-#include "../../vendor/mesh_provision/app.h"
-#include "../../vendor/mesh_switch/app.h"
+#include "proj/tl_common.h"
+#include "vendor/mesh/app.h"
+#include "vendor/mesh_lpn/app.h"
+#include "vendor/mesh_provision/app.h"
+#include "vendor/mesh_switch/app.h"
 #include "mesh_lpn.h"
 #include "mesh_fn.h"
 #include "time_model.h"
@@ -260,20 +260,36 @@ typedef struct{
     u8 uuid[16];
     u8 oob[2];
 }rp_scan_report_str;
-
+#define MAX_EXTEND_ADV_LEN 0x30
 typedef struct{
     u8 status;
     u8 uuid[16];
     u8 oob_info[2];
-    u8 adv_str[13];
+    u8 adv_str[MAX_EXTEND_ADV_LEN];
+	u8 adv_str_len;
 }rp_extend_scan_report_str;
 #define MAX_ADTYPE_FILTER_CNT   8
+
+#define EXTEND_END_ALL_AD  				(BIT(0))
+#define EXTEND_END_TIMEOUT  			(BIT(1))
+#define EXTEND_END_WITHOUT_URI_AD  		(BIT(2))
+#define EXTEND_END_WITH_ONLY_URI_AD  	(BIT(3))
+#define EXTEND_END_WITH_MULTI_URI_AD  	(BIT(4))
+
 typedef struct{
+	// different extend scan security para
+	u8 mac_adr[6];
+	u16 nid;
+	u16 src_adr;
+	// extend scan para
     u8 ADTypeFilterCount;
     u8 ADTypeFilter[MAX_ADTYPE_FILTER_CNT];
     u8 uuid[16];
     u8 time_s;
-    u32 tick;
+    u32 tick_s;
+	// extend result and end condition 
+	u8 end_flag;
+	u8 active_scan;
     rp_extend_scan_report_str report;
 }remote_prov_extend_scan_str;
 
@@ -301,7 +317,7 @@ typedef struct{
     remote_prov_retry_str re_send;
 }remote_proc_pdu_sts_str;
 
-
+#define MAX_EXTEND_SCAN_CNT		4
 typedef struct{
     //capa sts part 
     u8 active_scan;
@@ -321,7 +337,7 @@ typedef struct{
     // remote prov sts 
     remote_proc_pdu_sts_str rp_pdu;
 	//extend scan sts part , the extend feature is independent
-    remote_prov_extend_scan_str rp_extend;
+    remote_prov_extend_scan_str rp_extend[MAX_EXTEND_SCAN_CNT];
 	#if WIN32 
 	u8 dkri_cli;
 	u16 adr_src;
@@ -428,7 +444,7 @@ int mesh_cmd_sig_rp_cli_send_link_open(u16 node_adr,u8 *p_uuid,u8 dkri);
 int mesh_cmd_sig_rp_cli_send_link_close(u16 node_adr,u8 reason);
 u8 get_mesh_rp_proc_en();
 u8 mesh_rsp_opcode_is_rp(u16 opcode);
-int mesh_rp_client_rx_cb(u8 * p_data,u16 unicast);
+int mesh_rp_client_rx_cb(mesh_rc_rsp_t *rsp);
 int mesh_remote_prov_st_publish(u8 idx);
 void mesh_rp_client_set_prov_sts(u8 sts);
 void mesh_rp_server_set_sts(u8 sts);
@@ -453,11 +469,16 @@ void mesh_cmd_sig_rsp_scan_init();
 void mesh_rp_pdu_retry_send();
 void mesh_rp_client_para_reset();
 void mesh_rp_dkri_end_cb();
+int mesh_cmd_extend_loop_cb(event_adv_report_t *report);
+u8 conn_adv_type_is_valid_in_extend(u8* p_adv);
+u8 mesh_extend_scan_proc_is_valid();
+
 #if WIN32
 void mesh_prov_set_cli_dkri(u8 dkri);
 void mesh_prov_set_adr_dev_candi(u16 adr,u8 *p_dev);
 u8 mesh_prov_dkri_is_valid();
-void mesh_prov_dev_candi_store_proc();
+void mesh_prov_dev_candi_store_proc(u16 cmd_src);
+
 
 #endif
 

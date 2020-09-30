@@ -1,6 +1,7 @@
 /* Copyright 2014, Kenneth MacKay. Licensed under the BSD 2-clause license. */
 
 #include "uECC.h"
+#include "uECC_config.h"
 #include "uECC_vli.h"
 #include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #include "proj/mcu/watchdog_i.h"
@@ -179,11 +180,11 @@ static cmpresult_t uECC_vli_cmp_unsafe(const uECC_word_t *left,
                                        wordcount_t num_words);
 
 #if (uECC_PLATFORM == uECC_arm || uECC_PLATFORM == uECC_arm_thumb || \
-        uECC_PLATFORM == uECC_arm_thumb2)
+        uECC_PLATFORM == uECC_arm_thumb2) && defined( __GNUC__ )
     #include "asm_arm.inc"
 #endif
 
-#if (uECC_PLATFORM == uECC_avr)
+#if (uECC_PLATFORM == uECC_avr) && defined( __GNUC__ )
     #include "asm_avr.inc"
 #endif
 

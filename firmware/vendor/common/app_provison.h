@@ -21,11 +21,11 @@
  *******************************************************************************************************/
 #ifndef __APP_PROVISON_H_CLIPSE
 #define __APP_PROVISON_H_CLIPSE
-#include "../../vendor/common/light.h"
-#include "../../vendor/common/mesh_node.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../proj_lib/sig_mesh/Test_case.h"
-#define PROVISION_GATT_ENABLE 1
+#include "vendor/common/light.h"
+#include "vendor/common/mesh_node.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/Test_case.h"
+#define PB_GATT_ENABLE 1
 
 extern u8 blt_state;
 #define PROVISION_ELE_ADR 	0x7F00
@@ -736,6 +736,7 @@ VC_node_info_t * get_VC_node_info(u16 obj_adr, int is_must_primary);
 void erase_vc_node_info();
 
 extern void set_pb_gatt_adv(u8 *p,u8 flags);
+extern void set_adv_provisioner(rf_packet_adv_t * p);
 extern void set_adv_provision(rf_packet_adv_t * p);
 extern u8 set_adv_proxy(rf_packet_adv_t * p);
 
@@ -905,6 +906,7 @@ void mesh_rp_adv_prov_complete_rsp(pro_PB_ADV *p_adv);
 int VC_node_dev_key_save_candi(u16 adr, u8 *dev_key_cadi);
 u8* VC_master_get_other_node_dev_key_candi(u16 adr);
 int VC_node_dev_key_candi_enable(u16 adr);
+int VC_node_replace_devkey_candi_adr(u16 adr, u16 new_adr,u8 *dev_key_cadi);
 
 #endif 
 

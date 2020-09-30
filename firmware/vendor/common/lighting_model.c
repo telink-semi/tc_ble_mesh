@@ -19,15 +19,15 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #ifndef WIN32
-#include "../../proj/mcu/watchdog_i.h"
+#include "proj/mcu/watchdog_i.h"
 #endif 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "scene.h"
 #include "lighting_model_LC.h"
 #include "lighting_model.h"
@@ -335,7 +335,7 @@ int g_level_set(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int 
     set_trans.level_move = level_adjust;
     if(!retransaction || delta_offset){
 		if(p_set_trans && ((present_level != set_trans.target_val) || force)){ // force only for G_LEVEL_SET_NOACK
-			light_g_level_set_idx_with_trans((u8 *)p_set_trans, idx, st_trans_type);
+			light_g_level_set_idx_with_trans((u8 *)p_set_trans, idx, st_trans_type, pub_list->hsl_set_cmd_flag);
 			// no need publish at start time now.
             get_light_pub_list(st_trans_type, present_level, set_trans.target_val, 1, pub_list);
 		}else{
@@ -467,6 +467,10 @@ int mesh_tx_cmd_lightness_st(u8 idx, u16 ele_adr, u16 dst_adr, u16 op_rsp, u8 *u
 		}
 	}
 #endif	
+#if LS_TEST_ENABLE
+	rsp.present = rsp.present/655;
+	rsp.target = rsp.target/655;
+#endif
 	u32 len = sizeof(rsp);
 	if(0 == rsp.remain_t){
 		len -= 3;
@@ -595,6 +599,10 @@ int mesh_cmd_sig_lightness_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
     st_pub_list_t pub_list = {{0}};
+	#if LS_TEST_ENABLE
+	mesh_cmd_lightness_set_t *par_t = (mesh_cmd_lightness_set_t *)par;
+	par_t->lightness = par_t->lightness*655;
+	#endif
 	err = lightness_set((mesh_cmd_lightness_set_t *)par, par_len, cb_par->op, cb_par->model_idx, cb_par->retransaction, &pub_list);
 	if(err){
 		return 0;

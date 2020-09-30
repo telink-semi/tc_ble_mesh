@@ -127,7 +127,6 @@ typedef struct mible_dfu_fragment mible_dfu_fragment_t;
 
 
 /* Private function prototypes -----------------------------------------------*/
-
 static mible_status_t mible_dfu_rsp(uint8_t event, uint8_t * param, uint16_t len);
 static void mible_dfu_timer_callback(void * arg);
 static char  mible_dfu_program_flash(pt_t * pt);
@@ -138,7 +137,19 @@ static char  mible_dfu_switch_process(pt_t * pt);
 /* Private variables ---------------------------------------------------------*/
 static uint8_t retry_num;
 static mible_dfu_config_t m_dfu;
+#if MINIMIZE_RAM_SIZE
+#include <stdlib.h>
+#define NEW(obj, size)       \
+do {obj = malloc(size); } while(0)
+#define FREE(obj)            \
+do {if (obj != NULL) {free(obj); obj = NULL;}} while(0)
+static mible_dfu_fragment_t *p_buf;
+#else
+#define NEW(obj, size)
+#define FREE(obj)
 static mible_dfu_fragment_t dfu_buf;
+static mible_dfu_fragment_t *p_buf = &dfu_buf;
+#endif
 static uint8_t evt_buffer[MIBLE_DFU_EVT_SIZE_MAX * MIBLE_DFU_EVT_CNT_MAX];
 static uint32_t dfu_timer_tick;
 static pstimer_t dfu_timer = {
@@ -252,7 +263,6 @@ mible_status_t mible_dfu_ctrl(uint8_t * buffer, uint16_t size)
             break;
         }
         case MIBLE_DFU_REQ_FRAGMENT_SIZE: {
-            curr_state = _DOWNLOADING;
             uint8_t simul_retrans, dmtu;
             rxfer_features_get(&simul_retrans, &dmtu);
             m_dfu.fragment_size = dmtu > 18 ? MAX_FRAGMENT_SIZE : 512;
@@ -260,15 +270,27 @@ mible_status_t mible_dfu_ctrl(uint8_t * buffer, uint16_t size)
             uint8_t param[5];
             param[0] = LO_UINT16(MIBLE_DFU_REQ_FRAGMENT_SIZE);
             param[1] = HI_UINT16(MIBLE_DFU_REQ_FRAGMENT_SIZE);
-            param[2] = dfu_pre_check == NULL ? MIBLE_DFU_STATUS_SUCC : dfu_pre_check();
+
+            NEW(p_buf, sizeof(mible_dfu_fragment_t));
+            if (p_buf == NULL)
+                param[2] = MIBLE_DFU_STATUS_ERR_NO_MEM;
+            else
+                param[2] = dfu_pre_check == NULL ? MIBLE_DFU_STATUS_SUCC : dfu_pre_check();
+
             param[3] = LO_UINT16(m_dfu.fragment_size);
             param[4] = HI_UINT16(m_dfu.fragment_size);
+
             ret = mible_dfu_rsp(MIBLE_DFU_EVENT_RSP_OP_STATUS, param, sizeof(param));
 
-            mible_dfu_param_t dfu_param = {
-                    .start.fragment_size = m_dfu.fragment_size,
-            };
-            run_callback(MIBLE_DFU_STATE_START, &dfu_param);
+            if (param[2] == MIBLE_DFU_STATUS_SUCC) {
+                mible_dfu_param_t dfu_param = {
+                        .start.fragment_size = m_dfu.fragment_size,
+                };
+                run_callback(MIBLE_DFU_STATE_START, &dfu_param);
+                curr_state = _DOWNLOADING;
+            } else {
+                curr_state = _TERMINATED;
+            }
             mible_timer_start(m_dfu.timer_id, MIBLE_DFU_TIMER_PERIOD, NULL);
             break;
         }
@@ -410,16 +432,16 @@ static PT_THREAD(mible_dfu_program_flash(pt_t * pt))
 {
     PT_BEGIN(pt);
 
-    uint16_t data_size = m_dfu.current_size - sizeof(dfu_buf.index);
+    uint16_t data_size = m_dfu.current_size - sizeof(p_buf->index);
     /* Try to write the fragment into flash */
     TIMING_BEGIN();
-    mible_dfu_flash_write(dfu_buf.data,
+    mible_dfu_flash_write(p_buf->data,
                           data_size,
-                          (dfu_buf.index - 1) * m_dfu.fragment_size);
+                          (p_buf->index - 1) * m_dfu.fragment_size);
     TIMING_END("WR fragment");
 
-    uint32_t crc32      = dfu_buf.index == 1 ? 0 : m_dfu_info.crc32;
-    uint32_t crc32_orig = soft_crc32(dfu_buf.data, data_size, crc32);
+    uint32_t crc32      = p_buf->index == 1 ? 0 : m_dfu_info.crc32;
+    uint32_t crc32_orig = soft_crc32(p_buf->data, data_size, crc32);
     /* Read the copy of fragment to RAM */
     TIMING_BEGIN();
     for (int i = 0, r = data_size % BUF_SIZE; i <= data_size / BUF_SIZE; i++) {
@@ -427,10 +449,10 @@ static PT_THREAD(mible_dfu_program_flash(pt_t * pt))
         uint32_t offset = i * BUF_SIZE;
 
         if (i < data_size / BUF_SIZE) {
-            mible_dfu_flash_read(buffer, BUF_SIZE, (dfu_buf.index - 1) * m_dfu.fragment_size + offset);
+            mible_dfu_flash_read(buffer, BUF_SIZE, (p_buf->index - 1) * m_dfu.fragment_size + offset);
             crc32 = soft_crc32(buffer, BUF_SIZE, crc32);
         } else if (r) {
-            mible_dfu_flash_read(buffer, r, (dfu_buf.index - 1) * m_dfu.fragment_size + offset);
+            mible_dfu_flash_read(buffer, r, (p_buf->index - 1) * m_dfu.fragment_size + offset);
             crc32 = soft_crc32(buffer, r, crc32);
         }
     }
@@ -438,15 +460,17 @@ static PT_THREAD(mible_dfu_program_flash(pt_t * pt))
 
     /* Check the integrity of fragment */
     if (crc32 == crc32_orig) {
-        if (dfu_buf.index == 1) {
+        if (p_buf->index == 1) {
             m_dfu_info.recv_bytes = data_size;
-        } else if (dfu_buf.index > m_dfu_info.last_index) {
+        } else if (p_buf->index > m_dfu_info.last_index) {
             m_dfu_info.recv_bytes += data_size;
         }
         MI_LOG_DEBUG("recv amount %d bytes, crc32 %X\n", m_dfu_info.recv_bytes, crc32);
-        m_dfu_info.last_index = dfu_buf.index;
+        m_dfu_info.last_index = p_buf->index;
         m_dfu_info.crc32      = crc32;
-        mible_record_write(RECORD_DFU_INFO, (void*)&m_dfu_info, sizeof(m_dfu_info));
+		if(m_dfu_info.last_index %4 == 0){
+			mible_record_write(RECORD_DFU_INFO, (void*)&m_dfu_info, sizeof(m_dfu_info));
+		}
     } else if (--retry_num > 0) {
         MI_LOG_DEBUG("Fail to save fragment (cracked CRC %X), try again\n", crc32);
         PT_RESTART(pt);
@@ -474,24 +498,26 @@ static PT_THREAD(mible_dfu_xfer_process(pt_t * pt))
 
     PT_BEGIN(pt);
 
-    format_rx_cb(&m_dfu.rxfer_dfu, &dfu_buf, m_dfu.fragment_size + 2);
+    format_rx_cb(&m_dfu.rxfer_dfu, p_buf, m_dfu.fragment_size + 2);
     PT_SPAWN(pt, &pt_rx, stat = rxfer_rx_thd(&pt_rx,
                                              &m_dfu.rxfer_dfu,
                                              PASS_THROUGH,
                                              &m_dfu.current_size));
     if (stat == PT_EXITED) {
-        rsp_frag_xfer_status(dfu_buf.index, MIBLE_DFU_STATUS_ERR_RX_FAIL);
+        rsp_frag_xfer_status(p_buf->index, MIBLE_DFU_STATUS_ERR_RX_FAIL);
         goto EXIT;
     }
 
     retry_num = MIBLE_DFU_STORE_RETRY_MAX;
     PT_SPAWN(pt, &pt_flash, stat = mible_dfu_program_flash(&pt_flash));
     if (stat == PT_EXITED) {
-        rsp_frag_xfer_status(dfu_buf.index, MIBLE_DFU_STATUS_ERR_BUSY);
+        rsp_frag_xfer_status(p_buf->index, MIBLE_DFU_STATUS_ERR_BUSY);
+		mible_dfu_param_t dfu_param;
+        run_callback(MIBLE_DFU_STATE_WRITEERR,&dfu_param);
         goto EXIT;
     } else {
-        rsp_frag_xfer_status(dfu_buf.index, MIBLE_DFU_STATUS_SUCC);
-        MI_LOG_DEBUG("successfully recv fragment %d\n", dfu_buf.index);
+        rsp_frag_xfer_status(p_buf->index, MIBLE_DFU_STATUS_SUCC);
+        MI_LOG_DEBUG("successfully recv fragment %d\n", p_buf->index);
     }
 
     PT_END(pt);
@@ -525,7 +551,7 @@ static PT_THREAD(mible_dfu_verify_process(pt_t *pt))
 {
     int stat;
     static uint8_t ret = MIBLE_ERR_UNKNOWN;
-    dfu_ctx_t *p_ctx = (dfu_ctx_t*)&dfu_buf;
+    dfu_ctx_t *p_ctx = (dfu_ctx_t*)p_buf;
     ecc256_pk_t parent_pub = {
         0xbe,0xf5,0x8b,0x02,0xda,0xe3,0xff,0xf8,0x54,0x1a,0xa0,0x44,0x8f,0xba,0xc4,0x4d,
         0xb7,0xc6,0x9a,0x2f,0xa8,0xf0,0xb1,0xb6,0xff,0x7a,0xd9,0x51,0xdb,0x66,0x28,0xfa,
@@ -540,7 +566,7 @@ static PT_THREAD(mible_dfu_verify_process(pt_t *pt))
     MI_LOG_DEBUG("begin verify, fw_size: %d, pid: %d\n",
                   m_dfu_info.recv_bytes, m_dfu.init.product_id);
 
-    if (mible_dfu_auth(p_ctx, m_dfu.init.product_id, m_dfu_info.recv_bytes) == MI_SUCCESS) {
+    if (mible_dfu_auth(p_ctx, &m_dfu.init, m_dfu_info.recv_bytes) == MI_SUCCESS) {
         mi_crypto_sha256(p_ctx->server_crt.tbs.p, p_ctx->server_crt.tbs.len, child_sha);
         memcpy(child_sig, p_ctx->server_crt.sig, 64);
         PT_WAIT_THREAD(pt, stat = mi_crypto_ecc_verify(P256R1, parent_pub, child_sha, child_sig));
@@ -651,6 +677,8 @@ static PT_THREAD(mible_dfu_terminate_process(pt_t * pt))
     MSC_POWER_OFF(pt);
 
     PT_WAIT_UNTIL(pt, m_dfu.conn_stat == 0 || m_dfu.evt_queue.cnt == 0);
+
+    FREE(p_buf);
 
     curr_state = _IDLE;
     dfu_state = MIBLE_DFU_STATE_CANCEL;

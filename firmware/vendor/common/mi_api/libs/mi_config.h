@@ -25,17 +25,22 @@
 #define MIBLE_AUTH_MODE            2
 #define MIBLE_LIB_MAJOR            1
 #define MIBLE_LIB_MINOR            1
-#define MIBLE_LIB_REVISION         1
+#define MIBLE_LIB_REVISION         2
 #elif defined(MI_BLE_ENABLED) && (HAVE_MSC)
 #define MIBLE_AUTH_MODE            1
 #define MIBLE_LIB_MAJOR            2
 #define MIBLE_LIB_MINOR            3
-#define MIBLE_LIB_REVISION         1
+#define MIBLE_LIB_REVISION         2
 #elif defined(MI_MESH_ENABLED)
 #define MIBLE_AUTH_MODE            1
 #define MIBLE_LIB_MAJOR            1
 #define MIBLE_LIB_MINOR            4
-#define MIBLE_LIB_REVISION         1
+#define MIBLE_LIB_REVISION         3
+#if (HAVE_MSC==0)
+#define HAVE_OTP_PKI               1
+#else
+#define HAVE_OTP_PKI               0
+#endif
 #else
 #error "No MI_BLE_ENABLED or MI_MESH_ENABLED is defined. Should add one of them in the preprocesser symbols."
 #endif
@@ -74,7 +79,7 @@
 #define MI_LESHI_ONE_ONFF_PID		2007
 #define MI_LESHI_TWO_ONOFF_PID		2047
 #define MI_LESSHI_THREE_ONFF_PID 	2048
-
+#define MI_LEISHI_TEST_PID			3639
 #define MI_SINGLE_ONOFF_BATTERY_PID	889
 #define MI_IOT_TELINK_MODE 		1
 #if MI_IOT_TELINK_MODE
@@ -114,6 +119,19 @@
 #define PRODUCT_ID              889//develop board 
 #endif
 
+#if (PRODUCT_ID == MI_LEISHI_TEST_PID)
+#define LS_TEST_ENABLE 			1
+#else
+#define LS_TEST_ENABLE 			0
+#endif
+
+/**
+ * @note Model name got from xiaomi IoT developer platform.
+ */
+#ifndef MODEL_NAME
+#define MODEL_NAME              "xiaomi.dev.ble"
+//#define MODEL_NAME              "lemesh.light.test04"
+#endif
 #define DEMO_CER_MODE			0
 #define FLASH_CER_MODE			1 
 
@@ -168,14 +186,14 @@
  * @note Device side has RESET button.
  */
 #ifndef HAVE_RESET_BUTTON
-#define HAVE_RESET_BUTTON      0
+#define HAVE_RESET_BUTTON      1
 #endif
 
 /**
  * @note Device side has bind confirm button.
  */
 #ifndef HAVE_CONFIRM_BUTTON
-#define HAVE_CONFIRM_BUTTON    0
+#define HAVE_CONFIRM_BUTTON    1
 #endif
 
 /**
@@ -215,6 +233,20 @@
 #define USE_MIBLE_OTA          1
 #endif
 
+/**
+ * @note Use Mi BLE WiFi Access Protocol.
+ */
+#ifndef USE_MIBLE_WAC
+#define USE_MIBLE_WAC          0
+#endif
+
+/**
+ * @note Use GATT MIoT-Spec.
+ */
+#ifndef USE_GATT_SPEC
+#define USE_GATT_SPEC          0
+#endif
+
 #ifndef DFU_NVM_START
 #define DFU_NVM_START          0x4A000UL      /**< DFU Buffer Start Address */
 #endif
@@ -239,6 +271,7 @@
 
 
 typedef struct {
+    char *   model;
     uint16_t pid;
     uint16_t io;
     uint8_t  have_msc;

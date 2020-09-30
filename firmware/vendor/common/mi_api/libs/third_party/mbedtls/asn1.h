@@ -31,6 +31,7 @@
 
 #include <stddef.h>
 
+#undef MBEDTLS_BIGNUM_C
 #if defined(MBEDTLS_BIGNUM_C)
 #include "bignum.h"
 #endif

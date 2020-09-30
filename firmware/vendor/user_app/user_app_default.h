@@ -44,7 +44,11 @@ extern "C" {
 #endif
 
 #ifndef USER_MESH_CMD_VD_ARRAY          
-#define USER_MESH_CMD_VD_ARRAY              
+#define USER_MESH_CMD_VD_ARRAY              // NULL
+#endif
+
+#ifndef USER_REDEFINE_SCAN_RSP_EN          
+#define USER_REDEFINE_SCAN_RSP_EN           0
 #endif
 
 // PWM_FREQ

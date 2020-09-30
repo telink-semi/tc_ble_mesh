@@ -41,6 +41,32 @@ typedef void (* mi_service_evt_handler_t)(uint8_t is_connected);
  */
 uint32_t mi_service_init(void);
 
+/**
+ * @brief Function for report the wifi access status to App.
+ *
+ * @param[in] status: 0 no connection
+ *                    1 do connecting
+ *                    2 connected WiFi AP
+ *                    3 connected server
+ *                    4 wifi passwd incorrect
+ *                    5 server auth failed
+ *                    6 passport auth successful
+ */
+int report_wifi_status(uint8_t status);
+
+/**
+ * @brief Function for set local wifi status GATT char value.
+ *
+ * @param[in] status: 0 no connection
+ *                    1 do connecting
+ *                    2 connected WiFi AP
+ *                    3 connected server
+ *                    4 wifi passwd incorrect
+ *                    5 server auth failed
+ *                    6 passport auth successful
+ */
+int set_wifi_status(uint8_t status);
+
 /* internal api */
 void mi_service_event_register(mi_service_evt_handler_t h);
 uint32_t opcode_send(uint32_t status);

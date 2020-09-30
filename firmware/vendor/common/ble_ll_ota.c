@@ -20,15 +20,15 @@
  *           
  *******************************************************************************************************/
 
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/ble/ble_common.h"
-#include "../../proj_lib/ble/trace.h"
-#include "../../proj_lib/pm.h"
+#include "proj/tl_common.h"
+#include "proj_lib/ble/ble_common.h"
+#include "proj_lib/ble/trace.h"
+#include "proj_lib/pm.h"
 #include "drivers/8258/flash.h"
-#include "../../proj/mcu/watchdog_i.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj/mcu/watchdog_i.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "mesh_ota.h"
 #include "version.h"
 #if AIS_ENABLE
@@ -94,6 +94,19 @@ unsigned short crc16 (unsigned char *pD, int len)
      return crc;
 }
 
+#if 0
+unsigned long crc32_cal(unsigned long crc, unsigned char* input, unsigned long* table, int len)
+{
+    unsigned char* pch = input;
+    for(int i=0; i<len; i++)
+    {
+        crc = (crc>>8) ^ table[(crc^*pch) & 0xff];
+        pch++;
+    }
+
+    return crc;
+}
+#endif
 
 #if(MCU_CORE_TYPE == MCU_CORE_8269)
 void bls_ota_setFirmwareSizeAndOffset(int firmware_size_k, u32 ota_offset)
@@ -268,28 +281,57 @@ int otaWrite(void * p)
 			blt_ota_start_tick = clock_time()|1;  //mark time
 			crc = (req->dat[19]<<8) | req->dat[18];
 			if(crc == crc16(req->dat, 18)){
+			    #if ENCODE_OTA_BIN_EN
+			    int nDataLen = req->l2cap - 7;
+			    if(16 == nDataLen){
+    			    u8 key[16];
+    			    memcpy(key, key_encode_bin, sizeof(key));
+    			    aes_decrypt(key, req->dat+2, req->dat+2);
+			    }
+			    #endif
 				if(ota_adr == 0){
 				    if(req->dat[8] == 0x5D){
 				    	need_check_type = req->dat[9] ;
 				    }
-				    if(need_check_type == 1){
-				    	fw_check_val = (req->dat[18] | req->dat[19]<<8);
+				    
+				    if(need_check_type == FW_CHECK_AGTHM1){
+				    	fw_check_val = 0;   // init
+				    }else if(need_check_type == FW_CHECK_AGTHM2){
+				        fw_check_val = 0xFFFFFFFF;  //crc init set to 0xFFFFFFFF
+				    }
+
+                    if(!is_valid_tlk_fw_buf(req->dat+10)){
+                        err_flg = OTA_FW_CHECK_ERR;
+                    }else{
+    				    #if ENCODE_OTA_BIN_EN
+    				    if(need_check_type != FW_CHECK_AGTHM2){
+    				        err_flg = OTA_FW_CHECK_ERR;
+    				    }
+    				    #endif
 				    }
 				}else if(ota_adr == 1){
 					ota_pkt_total = (((req->dat[10]) |( (req->dat[11] << 8) & 0xFF00) | ((req->dat[12] << 16) & 0xFF0000) | ((req->dat[13] << 24) & 0xFF000000)) + 15)/16;
 					if(ota_pkt_total < 3){
 						// invalid fw
 						err_flg = OTA_ERR_STS;
-					}else if(need_check_type == 1){
-						fw_check_val += (req->dat[18] | req->dat[19]<<8);
 					}
-				}else if(ota_adr < ota_pkt_total - 1 && need_check_type == 1){
-					fw_check_val += (req->dat[18] | req->dat[19]<<8);
-				}else if(ota_adr == ota_pkt_total - 1 && need_check_type == 1){
-					if(fw_check_val != ((req->dat[2]) |( (req->dat[3] << 8) & 0xFF00) | ((req->dat[4] << 16) & 0xFF0000) | ((req->dat[5] << 24) & 0xFF000000)) ){
-						err_flg = OTA_ERR_STS;
+				}else if(ota_adr == ota_pkt_total - 1){
+				    u32 crc_bin = ((req->dat[2]) |( (req->dat[3] << 8) & 0xFF00) | ((req->dat[4] << 16) & 0xFF0000) | ((req->dat[5] << 24) & 0xFF000000));
+				    if((need_check_type == FW_CHECK_AGTHM1) || (need_check_type == FW_CHECK_AGTHM2)){
+    					if(fw_check_val != crc_bin){
+    						err_flg = OTA_FW_CHECK_ERR;
+    					}
 					}
 				}
+
+                if(((0 == ota_adr) || ota_adr < ota_pkt_total - 1)){// 
+                    if(need_check_type == FW_CHECK_AGTHM1){
+						fw_check_val += (req->dat[18] | req->dat[19]<<8);
+                    }else if(need_check_type == FW_CHECK_AGTHM2){
+    					fw_check_val = get_crc32_16bytes(fw_check_val, req->dat + 2);
+					}
+                }
+				
 				//log_data(TR_24_ota_adr,ota_adr);
 				if((ota_adr<<4)>=(ota_firmware_size_k<<10)){
 					err_flg = OTA_OVERFLOW;
@@ -387,14 +429,14 @@ void bls_ota_procTimeout(void)
 {
 	blt_slave_ota_finish_handle();
 
-	if(clock_time_exceed(blt_ota_start_tick , blt_ota_timeout_us)){  //OTA timeout
+	if(blt_ota_start_tick && clock_time_exceed(blt_ota_start_tick , blt_ota_timeout_us)){  //OTA timeout
 		rf_link_slave_ota_finish_led_and_reboot(OTA_TIMEOUT);
 	}
 }
 
 void blt_ota_finished_flag_set(u8 reset_flag)
 {
-	if(blt_ota_finished_time == 0){
+	if(blcOta.ota_start_flag && (blt_ota_finished_time == 0)){
 		blt_ota_finished_flag = reset_flag;
 		blt_ota_finished_time = clock_time()|1;
 	}
@@ -418,7 +460,7 @@ void rf_link_slave_ota_finish_led_and_reboot(u8 st)
     }
 	
 #if KEEP_ONOFF_STATE_AFTER_OTA 
-	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) | BIT(OTA_REBOOT_FLAG));
+	set_keep_onoff_state_after_ota();
 #endif
 	if(otaResIndicateCb){
 		otaResIndicateCb(st);   // should be better at last.
@@ -577,7 +619,7 @@ int ais_otaWrite(void * p)
 	}
 	
 	if(msg_p->msg_type == AIS_OTA_END){
-		if(OTA_CHECK_TYPE_TELINK_MESH == get_ota_check_type()){
+		if(FW_CHECK_AGTHM1 == get_ota_check_type()){
 			if(is_valid_ota_check_type1()){
 				err_flg = OTA_SUCCESS;
 			}
@@ -637,3 +679,4 @@ int ais_otaWrite(void * p)
 	return 0;
 }
 #endif
+

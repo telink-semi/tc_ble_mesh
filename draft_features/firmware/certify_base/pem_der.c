@@ -20,11 +20,11 @@
  *           
  *******************************************************************************************************/
 
-#include "../../../proj_lib/ble/ll/ll.h"
-#include "../../../proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
 #include "../user_config.h"
-#include "../../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../../proj_lib/mesh_crypto/sha256_telink.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
 #include "sha1_telink.h"
 #include "pem_der.h"
 #if CERTIFY_BASE_ENABLE

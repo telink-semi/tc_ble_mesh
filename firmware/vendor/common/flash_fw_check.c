@@ -21,7 +21,7 @@
  *******************************************************************************************************/
 
 #include "flash_fw_check.h"
-#include "../../drivers/8258/flash.h"
+#include "drivers/8258/flash.h"
 
 extern _attribute_data_retention_   u32		ota_program_offset;
 extern _attribute_data_retention_	int		ota_program_bootAddr;

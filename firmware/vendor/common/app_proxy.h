@@ -22,8 +22,8 @@
 #ifndef APP_PROXY_H
 #define APP_PROXY_H
 #include "app_provison.h"
-#include "../../vendor/common/light.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "vendor/common/light.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 
 #define MAX_LIST_LEN 	16
 
@@ -109,6 +109,12 @@ enum{
 	PROXY_CLIENT,
 	DIRECTED_PROXY_CLIENT,
 	BLACK_LIST_CLIENT,
+};
+
+enum{
+	USE_DIRECTED_ENABLE,
+	USE_DIRECTED_DISABLE,
+	USE_DIRECTED_PROHIBITED,
 };
 
 typedef struct{

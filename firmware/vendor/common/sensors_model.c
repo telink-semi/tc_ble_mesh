@@ -19,7 +19,7 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #include "sensors_model.h"
 u32 mesh_md_sensor_addr = FLASH_ADR_MD_SENSOR;
 model_sensor_t			model_sig_sensor;

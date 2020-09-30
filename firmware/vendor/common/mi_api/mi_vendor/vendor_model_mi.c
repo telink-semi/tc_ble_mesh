@@ -19,15 +19,15 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #if !WIN32
-#include "../../../../proj/mcu/watchdog_i.h"
+#include "proj/mcu/watchdog_i.h"
 #endif 
-#include "../../../../proj_lib/ble/ll/ll.h"
-#include "../../../../proj_lib/ble/blt_config.h"
-#include "../../../../vendor/common/user_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
 #include "../../app_health.h"
-#include "../../../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor_model_mi.h"
 #include "../mijia_pub_proc.h"
 #if (VENDOR_MD_MI_EN)
@@ -276,14 +276,7 @@ void init_mi_ssid_piid_val()
 {
 	vd_mi_property_changed_str *p_proper = &(p_mi_proper->proper_data[0]);
 	p_proper->mi_head.ssid = 0x03;
-	p_proper->mi_head.piid = 0x03;
-	p_proper = &(p_mi_proper->proper_data[1]);
-	p_proper->mi_head.ssid = 0x03;
-	p_proper->mi_head.piid = 0x05;
-	p_proper = &(p_mi_proper->proper_data[2]);
-	p_proper->mi_head.ssid = 0x03;
-	p_proper->mi_head.piid = 0x0f;
-
+	p_proper->mi_head.piid = 0x01;
 }
 
 void init_mi_ssid_sn()
@@ -415,13 +408,15 @@ int mi_cb_vd_set_property_noack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"use mi version old ",0);
 	}
 	if(p_mi_proper->ver_new){
-		if( is_group_adr(cb_par->adr_dst)){
-			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"is grp or not ",0);
-			if(p_mi_proper->last_grp_tid== p_proper->tid){
+		if( is_group_adr(cb_par->adr_dst)||
+			is_unicast_adr(cb_par->adr_dst)||
+			is_virtual_adr(cb_par->adr_dst)){
+			// almost all the adr will proc the tid part .
+			if(p_mi_proper->last_tid== p_proper->tid){
 				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tid is the same",0);
 				return 0;
 			}else{
-				p_mi_proper->last_grp_tid = p_proper->tid;
+				p_mi_proper->last_tid = p_proper->tid;
 			}
 		}
 	}

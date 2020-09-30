@@ -97,17 +97,38 @@ static struct {
     uint16_t protocol_version;
 } dev_info;
 
+#if MINIMIZE_RAM_SIZE
+#include <stdlib.h>
+#define NEW(obj, size)  do {obj = malloc(size);} while(0)
+#define FREE(obj)       do {if (obj != NULL) {free(obj); obj = NULL;}} while(0)
+
+static uint8_t* xfer_buffer;
+static uint8_t* app_pub;
+static uint8_t* dev_pub;
+static uint8_t* eph_key;
+static uint8_t* sha;
+static __ALIGN(4) union {
+    uint8_t *device;
+    uint8_t *server;
+} sign;
+#else
+#define NEW(obj, size)
+#define FREE(obj)
+
+static uint8_t xfer_buffer[512];
 static __ALIGN(4) uint8_t app_pub[64];
 static __ALIGN(4) uint8_t dev_pub[64];
-static __ALIGN(4) uint8_t sha[32];
 static __ALIGN(4) uint8_t eph_key[32];
-static __ALIGN(4) uint8_t LTMK[32];
-static __ALIGN(4) uint8_t GATT_LTMK[32];
-static __ALIGN(4) session_ctx_t session_key;
+static __ALIGN(4) uint8_t sha[32];
 static __ALIGN(4) union {
     uint8_t device[64];
     uint8_t server[64];
 } sign;
+#endif // CONTEXT_ON_HEAP
+
+static __ALIGN(4) uint8_t LTMK[32];
+static __ALIGN(4) uint8_t GATT_LTMK[32];
+static __ALIGN(4) session_ctx_t session_key;
 
 struct {
     union {
@@ -129,8 +150,6 @@ static uint16_t mesh_config_len;
 static uint16_t server_cert_len;
 static uint16_t dev_cert_len;
 static uint16_t manu_cert_len;
-static uint8_t buffer[128];
-static uint8_t xfer_buffer[512];
 static msc_crt_t crt;
 static uint16_t IO_selected;
 static uint8_t OOB[16];
@@ -372,6 +391,44 @@ void mi_schd_process()
     TRACE_EXIT(PROFILE_PIN);
 }
 
+int new_ctx(uint32_t proc)
+{
+    int r = 0;
+    switch (proc) {
+    case MESH_REG_TYPE:
+        NEW(sha, 32);
+        NEW(sign.device, 64);
+        if (sha == NULL || sign.device == NULL)
+            r = -1;
+        // fall through
+    case MESH_LOGIN_TYPE:
+        NEW(xfer_buffer, 512);
+        NEW(app_pub, 64);
+        NEW(dev_pub, 64);
+        NEW(eph_key, 32);
+        if (xfer_buffer == NULL || app_pub == NULL || dev_pub == NULL || eph_key == NULL)
+            r = -1;
+        break;
+    }
+
+    return r;
+}
+
+void free_ctx(uint32_t proc)
+{
+    switch (proc) {
+    case MESH_REG_TYPE:
+        FREE(sha);
+        FREE(sign.device);
+    case MESH_LOGIN_TYPE:
+        FREE(xfer_buffer);
+        FREE(app_pub);
+        FREE(dev_pub);
+        FREE(eph_key);
+        break;
+    }
+}
+
 uint32_t mi_scheduler_start(uint32_t procedure)
 {
     int32_t errno;
@@ -382,6 +439,10 @@ uint32_t mi_scheduler_start(uint32_t procedure)
         schd_ticks        = 0;
         schd_need_exec    = true;
         schd_is_completed = false;
+        if (new_ctx(procedure) != MI_SUCCESS) {
+            free_ctx(procedure);
+            return 1;
+        }
         break;
 
     case SYS_DEV_INFO_GET:
@@ -432,6 +493,7 @@ uint32_t mi_scheduler_stop(void)
             break;
         }
         enqueue(&monitor_queue, &event);
+        mi_schd_process();
     }
     return 0;
 }
@@ -485,9 +547,6 @@ static void schd_evt_handler(uint8_t evt_id)
         m_is_registered = true;
         break;
 
-    case SCHD_EVT_KEY_DEL_FAIL:
-        break;
-
     case SCHD_EVT_KEY_DEL_SUCC:
         m_is_registered = false;
         break;
@@ -539,8 +598,11 @@ static int monitor(pt_t *pt)
         if (schd_is_completed) {
             MI_LOG_WARNING("OPERATION 0x%08X completed.\n", schd_procedure);
             memset(&need_processing, 0, sizeof(need_processing));
+            free_ctx(schd_procedure);
+
             schd_procedure = 0;
             MSC_POWER_OFF(pt);
+
             schd_need_exec = false;
             mible_timer_stop(schd_tick_timer);
 
@@ -667,7 +729,7 @@ EXIT:
     PT_END(pt);
 }
 
-#if DEBUG_MIBLE
+#if DEBUG_RXFER
 static PT_THREAD(rxfer_test_mode(pt_t *pt))
 {
     static uint8_t buffer[2048];
@@ -713,11 +775,11 @@ static void sys_procedure(uint32_t type)
         if (need_processing.pt1)
             need_processing.pt1 = PT_SCHEDULE(update_link_layer(&pt1));
         break;
-	case SYS_MSC_SELF_TEST:
+    case SYS_MSC_SELF_TEST:
 		if (need_processing.pt1)
             need_processing.pt1 = PT_SCHEDULE(msc_self_test(&pt1));
         break;
-#if DEBUG_MIBLE
+#if DEBUG_RXFER
     case SYS_RXFER_TEST:
         if (need_processing.pt1)
             need_processing.pt1 = PT_SCHEDULE(rxfer_test_mode(&pt1));
@@ -846,42 +908,42 @@ static int mesh_reg_ble(pt_t *pt)
     MI_LOG_INFO(MI_LOG_COLOR_BLUE"schd_tick %3d: dev_cert sent.\n", schd_ticks);
     
     PT_WAIT_UNTIL(pt, DATA_IS_VALID_P(signal.dev_info));
-    ptr = buffer;
+    ptr = xfer_buffer;
     memcpy(ptr, &dev_info, sizeof(dev_info));
     ptr += sizeof(dev_info);
     memcpy(ptr, manu_sn, sizeof(manu_sn));
     ptr += sizeof(manu_sn);
-    memcpy(ptr, dev_pub, sizeof(dev_pub));
-    ptr += sizeof(dev_pub);
-    format_tx_cb(&rxfer_auth, buffer, ptr - buffer);
+    memcpy(ptr, dev_pub, 64);
+    ptr += 64;
+    format_tx_cb(&rxfer_auth, xfer_buffer, ptr - xfer_buffer);
     PT_SPAWN(pt, &pt_rxfer_tx, rxfer_tx_thd(&pt_rxfer_tx, &rxfer_auth, ECC_PUBKEY));
     MI_LOG_INFO(MI_LOG_COLOR_BLUE"schd_tick %3d: dev_info, manu_sn, dev_pub sent. \n", schd_ticks);
 
     /* Stage 2: Receive Server certificate and signature */
 
-    format_rx_cb(&rxfer_auth, xfer_buffer, sizeof(xfer_buffer));
+    format_rx_cb(&rxfer_auth, xfer_buffer, 512);
     PT_SPAWN(pt, &pt_rxfer_rx, rxfer_rx_thd(&pt_rxfer_rx, &rxfer_auth, SERVER_CERT, &server_cert_len));
     SET_DATA_VALID(signal.server_cert);
     MI_LOG_INFO(MI_LOG_COLOR_BLUE"schd_tick %3d: server_cert %d bytes received.\n", schd_ticks, server_cert_len);
 
-    format_rx_cb(&rxfer_auth, app_pub, sizeof(app_pub));
+    format_rx_cb(&rxfer_auth, app_pub, 64);
     PT_SPAWN(pt, &pt_rxfer_rx, rxfer_rx_thd(&pt_rxfer_rx, &rxfer_auth, ECC_PUBKEY));
     SET_DATA_VALID(signal.app_pub);
     MI_LOG_INFO(MI_LOG_COLOR_BLUE"schd_tick %3d: server_pub received.\n", schd_ticks);
 
-    format_rx_cb(&rxfer_auth, sign.server, sizeof(sign));
+    format_rx_cb(&rxfer_auth, sign.server, 64);
     PT_SPAWN(pt, &pt_rxfer_rx, rxfer_rx_thd(&pt_rxfer_rx, &rxfer_auth, SERVER_SIGN));
     SET_DATA_VALID(signal.server_sign);
     MI_LOG_INFO(MI_LOG_COLOR_BLUE"schd_tick %3d: server_sign received.\n", schd_ticks);
 
     /* Stage 3: Send device signature */
     PT_WAIT_UNTIL(pt, DATA_IS_VALID_P(signal.dev_sign));
-    format_tx_cb(&rxfer_auth, sign.device, sizeof(sign));
+    format_tx_cb(&rxfer_auth, sign.device, 64);
     PT_SPAWN(pt, &pt_rxfer_tx, rxfer_tx_thd(&pt_rxfer_tx, &rxfer_auth, DEV_SIGNATURE));
     MI_LOG_INFO(MI_LOG_COLOR_BLUE"schd_tick %3d: dev_sign sent.\n", schd_ticks);
 
     /* Stage 4: Receive mesh configuration */
-    format_rx_cb(&rxfer_auth, xfer_buffer, sizeof(xfer_buffer));
+    format_rx_cb(&rxfer_auth, xfer_buffer, 512);
     PT_SPAWN(pt, &pt_rxfer_rx, rxfer_rx_thd(&pt_rxfer_rx, &rxfer_auth, MESH_CONFIG, &mesh_config_len));
     MI_LOG_INFO(MI_LOG_COLOR_BLUE"schd_tick %3d: enc mesh config %d bytes received.\n", schd_ticks, mesh_config_len);
     // CCM MIC length is 4
@@ -929,7 +991,7 @@ static int mesh_reg_auth(pt_t *pt)
 
     if (IO_selected == 0) {
         MI_LOG_ERROR("Select NO OOB mode.\n");
-        mi_crypto_hkdf_sha256(eph_key,         sizeof(eph_key),
+        mi_crypto_hkdf_sha256(eph_key,         32,
                                  NULL,         0,
                      (void *)reg_info,         sizeof(reg_info)-1,
                                  LTMK,         32);
@@ -940,7 +1002,7 @@ static int mesh_reg_auth(pt_t *pt)
         enqueue(&monitor_queue, &event);
         PT_WAIT_UNTIL(pt, OOB_is_avail == true);
 
-        mi_crypto_hkdf_sha256(   eph_key,         sizeof(eph_key),
+        mi_crypto_hkdf_sha256(   eph_key,         32,
                                      OOB,         16,
                         (void *)reg_info,         sizeof(reg_info)-1,
                                     LTMK,         32);
@@ -1065,12 +1127,12 @@ static int admin_ble(pt_t *pt)
 {
     PT_BEGIN(pt);
     
-    format_rx_cb(&rxfer_auth, app_pub, sizeof(app_pub));
+    format_rx_cb(&rxfer_auth, app_pub, 64);
     PT_SPAWN(pt, &pt_rxfer_rx, rxfer_rx_thd(&pt_rxfer_rx, &rxfer_auth, ECC_PUBKEY));
     SET_DATA_VALID(signal.app_pub);
 
     PT_WAIT_UNTIL(pt, DATA_IS_VALID_P(signal.dev_pub));
-    format_tx_cb(&rxfer_auth, dev_pub, sizeof(dev_pub));
+    format_tx_cb(&rxfer_auth, dev_pub, 64);
     PT_SPAWN(pt, &pt_rxfer_tx, rxfer_tx_thd(&pt_rxfer_tx, &rxfer_auth, ECC_PUBKEY));
 
     format_rx_cb(&rxfer_auth, &encrypt_login_data, sizeof(encrypt_login_data));
@@ -1102,9 +1164,9 @@ static int admin_auth(pt_t *pt)
 #endif
 
     PT_WAIT_UNTIL(pt, DATA_IS_VALID_P(signal.eph_key));
-    memcpy(buffer, eph_key, sizeof(eph_key));
-    memcpy(buffer+sizeof(eph_key), GATT_LTMK, sizeof(GATT_LTMK));
-    mi_crypto_hkdf_sha256(buffer,         sizeof(eph_key) + sizeof(GATT_LTMK),
+    memcpy(xfer_buffer, eph_key, 32);
+    memcpy(xfer_buffer+32, GATT_LTMK, sizeof(GATT_LTMK));
+    mi_crypto_hkdf_sha256(xfer_buffer,    32 + sizeof(GATT_LTMK),
                 (void *)log_salt,         sizeof(log_salt)-1,
                 (void *)log_info,         sizeof(log_info)-1,
             (void *)&session_key,         sizeof(session_key));
@@ -1126,7 +1188,7 @@ static int admin_auth(pt_t *pt)
         PT_EXIT(pt);
     }
 
-    crc32 = soft_crc32(dev_pub, sizeof(dev_pub), 0);
+    crc32 = soft_crc32(dev_pub, 64, 0);
 
     if (crc32 == encrypt_login_data.crc32) {
         MI_LOG_INFO("ADMIN LOG SUCCESS: %d\n", schd_ticks);

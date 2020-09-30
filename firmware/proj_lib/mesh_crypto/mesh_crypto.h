@@ -59,8 +59,8 @@ int	mesh_sec_msg_enc_ll (unsigned char key[16], unsigned char nonce[13], unsigne
 int	mesh_sec_msg_dec_ll (unsigned char key[16], unsigned char nonce[13], unsigned char* dat, int n, u8 *aStr, u8 aStrLen, int mic_length);
 
 int	mesh_sec_msg_obfuscation (unsigned char key[16], unsigned char iv[4], unsigned char* p_ctl);
-int  mesh_sec_msg_enc_nw(u8 *nw, u8 len_lt, u8 swap_type_lt, u8 sec_type, int fri_key_idx, u8 len_nw, u8 adv_type,u8 cfg_filter, u8 nk_array_idx);
-int  mesh_sec_msg_enc_nw_rf_buf(u8 *nw, u8 len_lt, u8 sec_type, int fri_key_idx,u8 cfg_filter, u8 nk_array_idx);
+int  mesh_sec_msg_enc_nw(u8 *nw, u8 len_lt, u8 swap_type_lt, u8 sec_type, int fri_key_idx, u8 len_nw, u8 adv_type,u8 cfg_filter, u8 nk_array_idx, bool4 retransmit_rx);
+int  mesh_sec_msg_enc_nw_rf_buf(u8 *nw, u8 len_lt, u8 sec_type, int fri_key_idx, u8 cfg_filter, u8 nk_array_idx, bool4 retransmit_rx);
 int  mesh_sec_msg_enc_apl(u8 *mat, u8 *bear, int mic_length);
 int  mesh_sec_msg_dec_nw(u8 *nw, int len_dec_nw_int, u8 nid, u8 cfg_filter, int src_type);
 int  mesh_sec_msg_dec_apl(u8 *ac, u16 len_ut, const u8 *nw_little);

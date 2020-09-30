@@ -22,10 +22,10 @@
 
 #ifndef __USER_ALI_H
 #define __USER_ALI_H
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
+#include "proj/tl_common.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
 
 typedef struct{
 	//u8 rev;

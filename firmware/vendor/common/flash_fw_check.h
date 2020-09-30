@@ -24,7 +24,7 @@
 #define _FLASH_FW_CHECK_H_
 
 
-#include "../../proj/common/types.h"
+#include "proj/common/types.h"
 
 /****
  * param--crc_init_value: crc initial value. if set 0.

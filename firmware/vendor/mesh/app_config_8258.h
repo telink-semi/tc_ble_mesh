@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#include "../../vendor/common/version.h"    // include mesh_config.h inside.
+#include "vendor/common/version.h"    // include mesh_config.h inside.
 //////////////////board sel/////////////////////////////////////
 #define PCBA_8258_DONGLE_48PIN          1
 #define PCBA_8258_C1T139A30_V1_0        2
@@ -83,6 +83,7 @@ extern "C" {
 #define HCI_USE_UART	1
 #define HCI_USE_USB		2
 
+#ifndef HCI_ACCESS
 #if (WIN32 || PTS_TEST_EN)
 #define HCI_ACCESS		HCI_USE_USB
 #else
@@ -92,6 +93,7 @@ extern "C" {
 #if (HCI_ACCESS==HCI_USE_UART)
 #define UART_TX_PIN		UART_TX_PB1
 #define UART_RX_PIN		UART_RX_PB0
+#endif
 #endif
 
 #ifndef HCI_LOG_FW_EN
@@ -322,6 +324,9 @@ extern "C" {
 #define I2C_MSC_FREQ                    I2C_CLOCK_400K 
 #endif
 
+#if MI_API_ENABLE
+#include "mi_config.h"
+#endif
 /////////////////// set default   ////////////////
 
 #include "../common/default_config.h"

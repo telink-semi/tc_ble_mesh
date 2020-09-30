@@ -159,7 +159,7 @@ typedef struct mi_proper_str{
 	
 	u8 ver_new;
 	u8 pub_mode;
-	u16 last_grp_tid;
+	u16 last_tid;
 	u8 ssid_sts_change;
 	u8 piid_sts_change;
 	u8 ssid_now;

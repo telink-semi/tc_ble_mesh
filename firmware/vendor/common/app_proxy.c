@@ -19,12 +19,12 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/app_provison.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/app_provison.h"
 #include "app_beacon.h"
 #include "app_proxy.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "app_privacy_beacon.h"
 #include "directed_forwarding.h"
 proxy_config_mag_str proxy_mag;
@@ -63,7 +63,7 @@ void proxy_cfg_list_init_upon_connection()
 	#if (MD_DF_EN&&MD_SERVER_EN&&!WIN32)
 	proxy_mag.proxy_client_type = UNSET_CLIENT;
 	for(int i=0; i<NET_KEY_MAX; i++){
-		proxy_mag.directed_server[i].use_directed = model_sig_df_cfg.directed_forward.subnet_state[i].directed_control.directed_proxy_use_directed_default;
+		proxy_mag.directed_server[i].use_directed = (DIRECTED_PROXY_USE_DEFAULT_ENABLE == model_sig_df_cfg.directed_forward.subnet_state[i].directed_control.directed_proxy_use_directed_default);
 		proxy_mag.directed_server[i].client_addr = ADR_UNASSIGNED;
 		proxy_mag.directed_server[i].client_2nd_ele_cnt = 0;			
 		mesh_directed_proxy_capa_report(i);
@@ -309,6 +309,7 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 		case PROXY_FILTER_RM_ADR:
 			//we suppose the num is 2
 			para_len =len-18;
+			LOG_MSG_LIB(TL_LOG_NODE_SDK,p_addr,para_len,"remove filter adr part ",0);
 			for(i=0;i<para_len/2;i++){
 				endianness_swap_u16(p_addr+2*i);
 				proxy_unicast = p_addr[2*i]+(p_addr[2*i+1]<<8);
@@ -320,24 +321,26 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 		case DIRECTED_PROXY_CONTROL:{
 				directed_proxy_ctl_t *p_directed_ctl = (directed_proxy_ctl_t *)p_str->para;
 				swap_addr_range2_little_endian((u8 *)&p_directed_ctl->addr_range);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, (u8 *)p_directed_ctl, sizeof(directed_proxy_ctl_t),"directed proxy control ",0);
 				int key_offset = get_mesh_net_key_offset(mesh_key.netkey_sel_dec);
 				direct_proxy_server_t *p_direct_proxy = &proxy_mag.directed_server[key_offset];
-				if(is_directed_proxy_en(key_offset) && ((UNSET_CLIENT == proxy_mag.proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type))){
-					if(UNSET_CLIENT == proxy_mag.proxy_client_type){					
-						proxy_mag.proxy_client_type = DIRECTED_PROXY_CLIENT;
-						for(int i=0; i<NET_KEY_MAX; i++){
-							proxy_mag.directed_server[i].use_directed = 0;
-						}						
-					}
-					
-					p_direct_proxy->use_directed = p_directed_ctl->use_directed;
-					if(p_directed_ctl->use_directed){
-						p_direct_proxy->client_addr = p_directed_ctl->addr_range.range_start;
-						if(p_directed_ctl->addr_range.length_present){
-							p_direct_proxy->client_2nd_ele_cnt = p_directed_ctl->addr_range.range_length - 1;
+				if(!((BLACK_LIST_CLIENT == proxy_mag.proxy_client_type) || (PROXY_CLIENT == proxy_mag.proxy_client_type)) && (p_directed_ctl->use_directed < USE_DIRECTED_PROHIBITED)){
+					if(is_directed_proxy_en(key_offset)){
+						if(UNSET_CLIENT == proxy_mag.proxy_client_type){					
+							proxy_mag.proxy_client_type = DIRECTED_PROXY_CLIENT;
+							for(int i=0; i<NET_KEY_MAX; i++){
+								proxy_mag.directed_server[i].use_directed = 0;
+							}						
 						}
+						
+						p_direct_proxy->use_directed = p_directed_ctl->use_directed;
+						if(p_directed_ctl->use_directed){
+							p_direct_proxy->client_addr = p_directed_ctl->addr_range.range_start;
+							if(p_directed_ctl->addr_range.length_present){
+								p_direct_proxy->client_2nd_ele_cnt = p_directed_ctl->addr_range.range_length - 1;
+							}
+						}					
 					}
-
 					mesh_directed_proxy_capa_report(key_offset);
 				}										
 			}

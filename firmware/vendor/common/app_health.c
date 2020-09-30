@@ -19,11 +19,11 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../proj_lib/mesh_crypto/mesh_crypto.h"
-#include "../../proj_lib/pm.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/mesh_crypto/mesh_crypto.h"
+#include "proj_lib/pm.h"
 #include "app_proxy.h"
 #include "app_health.h"
 #define ATTENTION_VAL_100_MS	10
@@ -33,10 +33,11 @@ model_health_t 			model_sig_health;
 
 u8 init_health_para()
 {
-	model_sig_health.srv.health_mag.cur_sts.company_id = model_sig_health.srv.health_mag.fault_sts.company_id = g_vendor_id;
-	model_sig_health.srv.health_mag.period_sts.fast_period_log = 0;
-	model_sig_health.srv.health_mag.attention_timer = 0x00;
-	model_sig_health.srv.health_mag.dst_adr = 0x00;
+	mesh_health_mag_sts_t *p_health = &(model_sig_health.srv.health_mag);
+	p_health->cur_sts.company_id = p_health->fault_sts.company_id = g_vendor_id;
+	p_health->period_sts.fast_period_log = 0;
+	p_health->attention_timer = 0x00;
+	p_health->dst_adr = 0x00;
 	return 1;
 }
 

@@ -108,8 +108,8 @@ void mesh_directed_forwarding_bind_state_update()
 			}
 		}
 
-		if(DIRECTED_PROXY_DISABLE == p_control->directed_proxy){		
-			p_control->directed_proxy_use_directed_default = DIRECTED_PROXY_USE_DEFAULT_DISABLE;
+		if((DIRECTED_PROXY_DISABLE == p_control->directed_proxy) || (DIRECTED_PROXY_NOT_SUPPORT == p_control->directed_proxy_use_directed_default)){		
+			p_control->directed_proxy_use_directed_default = DIRECTED_PROXY_DISABLE_OR_NOT_SUPPORT;
 		}
 
 		if((FRIEND_SUPPORT_DISABLE == model_sig_cfg_s.frid) && (p_control->directed_friend < DIRECTED_FRIEND_NOT_SUPPORT)){
@@ -248,7 +248,7 @@ int mesh_df_path_monitoring(path_entry_com_t *p_entry){
 #if (MD_SERVER_EN&&!WIN32)
 void mesh_directed_proxy_capa_report(int netkey_offset)
 {
-	if(!is_provision_success()){
+	if(!is_provision_success() || (model_sig_df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_proxy>DIRECTED_PROXY_ENABLE)){
 		return ;
 	}
 	directed_proxy_capa_sts proxy_capa;	
@@ -258,8 +258,7 @@ void mesh_directed_proxy_capa_report(int netkey_offset)
 	}
 	proxy_capa.directed_proxy = model_sig_df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_proxy;
 	proxy_capa.use_directed = proxy_mag.directed_server[netkey_offset].use_directed;
-	
-	mesh_tx_cmd_layer_cfg_primary(DIRECTED_PROXY_CAPA_STATUS,(u8 *)(&proxy_capa),sizeof(proxy_capa),PROXY_CONFIG_FILTER_DST_ADR);
+	mesh_tx_cmd_layer_cfg_primary_specified_key(DIRECTED_PROXY_CAPA_STATUS,(u8 *)(&proxy_capa),sizeof(proxy_capa),PROXY_CONFIG_FILTER_DST_ADR, mesh_key.net_key[netkey_offset][0].index);
 }
 
 void directed_proxy_dependent_node_delete()
@@ -286,7 +285,7 @@ void mesh_directed_forwarding_default_val_init()
 		p_df->subnet_state[i].directed_control.directed_forwarding = DIRECTED_FORWARDING_DISABLE;//DIRECTED_FORWARDING_ENABLE; 	
 		p_df->subnet_state[i].directed_control.directed_relay = DIRECTED_RELAY_DISABLE;//DIRECTED_RELAY_ENABLE; 
 		p_df->subnet_state[i].directed_control.directed_proxy = DIRECTED_PROXY_EN ? DIRECTED_PROXY_DISABLE : DIRECTED_PROXY_NOT_SUPPORT;
-		p_df->subnet_state[i].directed_control.directed_proxy_use_directed_default = DIRECTED_PROXY_EN ? DIRECTED_PROXY_USE_DEFAULT_DISABLE : DIRECTED_PROXY_USE_DEFAULT_NOT_SUPPORT;
+		p_df->subnet_state[i].directed_control.directed_proxy_use_directed_default = DIRECTED_PROXY_EN ? DIRECTED_PROXY_USE_DEFAULT_DISABLE : DIRECTED_PROXY_DISABLE_OR_NOT_SUPPORT;
 		p_df->subnet_state[i].directed_control.directed_friend = DIRECTED_FRIEND_EN ? DIRECTED_FRIEND_DISABLE:DIRECTED_FRIEND_NOT_SUPPORT;
 		
 		p_df->subnet_state[i].path_metric.metric_type = METRIC_TYPE_NODE_COUNT;
@@ -306,7 +305,7 @@ void mesh_directed_forwarding_default_val_init()
 	p_df->control_relay_transmit.count = PTS_TEST_EN?2:TRANSMIT_CNT_DEF;
 	p_df->control_relay_transmit.invl_steps = PTS_TEST_EN?9:TRANSMIT_INVL_STEPS_DEF;
 		
-	p_df->rssi_threshold.default_rssi_threshold = -80; // should be 10 dB above the receiver sensitivity
+	p_df->rssi_threshold.default_rssi_threshold = -88; // should be 10 dB above the receiver sensitivity
 	p_df->rssi_threshold.rssi_margin = PTS_TEST_EN?0x14:(DF_TEST_MODE_EN?0:10); // default 0x14 in spec
 
 	p_df->directed_paths.node_paths = 20;
@@ -438,7 +437,7 @@ discovery_entry_par_t * add_discovery_table_entry(u16 netkey_offset, addr_range_
 	
 	foreach(i, MAX_DSC_TBL){
 		if(0 == discovery_table[netkey_offset].dsc_entry_par[i].entry.path_origin.addr){
-			LOG_USER_MSG_INFO(0, 0, "add discovery_table origin:0x%x des:0x%x", dsc_tbl_entry.path_origin, dsc_tbl_entry.destination);
+			LOG_USER_MSG_INFO(0, 0, "add discovery_table origin:0x%x des:0x%x", dsc_tbl_entry.path_origin.addr, dsc_tbl_entry.destination);
 			discovery_table[netkey_offset].dsc_entry_par[i].entry = dsc_tbl_entry;					
 			return &discovery_table[netkey_offset].dsc_entry_par[i];
 		}
@@ -694,7 +693,8 @@ non_fixed_entry_t * add_new_path_in_non_fixed_fwd_tbl(u16 netkey_offset, non_fix
 	
 	if(path_index < MAX_NON_FIXED_PATH){	
 		p_entry = &non_fixed_fwd_tbl[netkey_offset].path[path_index];
-		memcpy(p_entry, p, sizeof(non_fixed_entry_t));		
+		memcpy(p_entry, p, sizeof(non_fixed_entry_t));	
+		non_fixed_fwd_tbl[netkey_offset].update_id++;
 	}
 	return p_entry;
 }
@@ -769,17 +769,31 @@ non_fixed_entry_t * add_forwarding_entry_by_path_reply_delay_timer_expired(u16 n
 	else{
 		tbl_entry.entry.destination = ele_adr_primary;
 		tbl_entry.entry.path_target_snd_ele_cnt = g_ele_cnt - 1;
-	}
-		
-	u16 match_F2L = mesh_mac_match_friend(p_dsc_entry->destination);
-	foreach(i, g_max_lpn_num){
-		if((match_F2L>>i) & 0x01){						
-			forwarding_tbl_dependent_add(fn_other_par[i].LPNAdr, fn_req[i].NumEle, tbl_entry.entry.dependent_target);
-			break;
+
+		u16 match_F2L = mesh_mac_match_friend(p_dsc_entry->destination);
+		if(match_F2L){
+			foreach(i, g_max_lpn_num){
+				if((match_F2L>>i) & 0x01){						
+					forwarding_tbl_dependent_add(fn_other_par[i].LPNAdr, fn_req[i].NumEle, tbl_entry.entry.dependent_target);
+					break;
+				}
+			}
+		}
+		else{
+			u8 range_length = 1;
+			if(is_valid_adv_with_proxy_filter(p_dsc_entry->destination)){
+				foreach(i, NET_KEY_MAX){
+					if(p_dsc_entry->destination == proxy_mag.directed_server[i].client_addr){
+						range_length = proxy_mag.directed_server[i].client_2nd_ele_cnt + 1;
+						break;
+					}
+				}
+			}
+			forwarding_tbl_dependent_add(p_dsc_entry->destination, range_length, tbl_entry.entry.dependent_target);
 		}
 	}
 
-	tbl_entry.entry.bearer_toward_path_target = BEAR_UNASSIGNED;
+	tbl_entry.entry.bearer_toward_path_target = MESH_BEAR_UNASSIGNED;
 	tbl_entry.state.lane_counter = 1;
 	
 	non_fixed_entry_t *p_fwd_entry = get_non_fixed_path_entry(netkey_offset, tbl_entry.entry.path_origin, tbl_entry.entry.destination);
@@ -827,7 +841,7 @@ non_fixed_entry_t * add_forwarding_tbl_entry_by_rcv_path_reply(u16 netkey_offset
 		tbl_entry.entry.bearer_toward_path_origin = p_dsc_entry->entry.bearer_toward_path_origin;
 	}
 	else{
-		tbl_entry.entry.bearer_toward_path_origin = BEAR_UNASSIGNED;
+		tbl_entry.entry.bearer_toward_path_origin = MESH_BEAR_UNASSIGNED;
 	}
 	
 	if(p_dsc_entry->entry.dependent_origin.addr){
@@ -1022,7 +1036,19 @@ int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_
 	directed_control_sts.netkey_index = p_set->netkey_index;
 	int key_offset = get_mesh_net_key_offset(p_set->netkey_index);	
 	if(-1 != key_offset){
+		u8 need_capa_report = 0;
 		directed_control_t *p_control = (directed_control_t *)&model_sig_df_cfg.directed_forward.subnet_state[key_offset].directed_control;
+	
+		if((UNSET_CLIENT == proxy_mag.proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type)){
+			if((DIRECTED_PROXY_ENABLE==p_control->directed_proxy) && (DIRECTED_PROXY_DISABLE == p_set->directed_control.directed_proxy)){// directed proxy enable to disable
+				memset(&proxy_mag.directed_server[key_offset], 0x00, sizeof(proxy_mag.directed_server[key_offset]));
+				need_capa_report = 1;
+			}	
+			else if(((DIRECTED_PROXY_DISABLE==p_control->directed_proxy) && (DIRECTED_PROXY_ENABLE == p_set->directed_control.directed_proxy))){ //directed proxy disable to enable
+				need_capa_report = 1;
+			}
+		}
+	
 		if(p_set->directed_control.directed_forwarding < DIRECTED_FORWARDING_PROHIBIT){
 			p_control->directed_forwarding = p_set->directed_control.directed_forwarding;
 		}
@@ -1032,30 +1058,28 @@ int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_
 		}
 		
 		if(p_set->directed_control.directed_proxy < DIRECTED_PROXY_NOT_SUPPORT){
-			if((DIRECTED_PROXY_ENABLE==p_control->directed_proxy) && (DIRECTED_PROXY_DISABLE == p_set->directed_control.directed_proxy)){
-				if((UNSET_CLIENT == proxy_mag.proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type)){
-					proxy_mag.directed_server[key_offset].use_directed = 0;
-					proxy_mag.directed_server[key_offset].client_addr = proxy_mag.directed_server[key_offset].client_2nd_ele_cnt = 0;
-					mesh_directed_proxy_capa_report(key_offset);
-				}
-			}
 			p_control->directed_proxy = p_set->directed_control.directed_proxy;
 		}
 		
-		if(p_set->directed_control.directed_proxy_use_directed_default < DIRECTED_PROXY_USE_DEFAULT_NOT_SUPPORT){
+		if(p_set->directed_control.directed_proxy_use_directed_default < DIRECTED_PROXY_DISABLE_OR_NOT_SUPPORT){
 			p_control->directed_proxy_use_directed_default = p_set->directed_control.directed_proxy_use_directed_default;
 		}
 		
 		if(p_set->directed_control.directed_friend < DIRECTED_FRIEND_NOT_SUPPORT){
 			p_control->directed_friend = p_set->directed_control.directed_friend;
 		}
-
+		
+		mesh_directed_forwarding_bind_state_update();	
+		proxy_mag.directed_server[key_offset].use_directed = (DIRECTED_PROXY_USE_DEFAULT_ENABLE == p_control->directed_proxy_use_directed_default);
+		if(need_capa_report){
+			mesh_directed_proxy_capa_report(key_offset);
+		}
 		
 		if(p_set->directed_control.directed_forwarding == 0){	
 			memset(non_fixed_fwd_tbl, 0x00, sizeof(non_fixed_fwd_tbl));
 			memset(discovery_table, 0x00, sizeof(discovery_table));
 		}
-		mesh_directed_forwarding_bind_state_update();
+		
 		memcpy(&directed_control_sts.directed_control, &model_sig_df_cfg.directed_forward.subnet_state[key_offset].directed_control, sizeof(directed_control_t));
 		#if PTS_TEST_EN
 		mesh_common_store(FLASH_ADR_MD_DF);
@@ -1209,7 +1233,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_add(u8 *par, int par_len, mesh_cb_fun_par_t 
 		//mesh_match_type_t match_type;
     	//mesh_match_group_mac(&match_type, tbl_entry.destination, 0, 0, 0);
 		p_fwd_entry = get_fixed_path_entry(key_offset, tbl_entry.path_origin, tbl_entry.destination);
-		if((tbl_entry.bearer_toward_path_origin>BEAR_SUPPORT) || (tbl_entry.bearer_toward_path_target > BEAR_SUPPORT)
+		if((tbl_entry.bearer_toward_path_origin>MESH_BEAR_SUPPORT) || (tbl_entry.bearer_toward_path_target > MESH_BEAR_SUPPORT)
 			// Welson to do: add error conditions: P417
 		){ // invalid bear
 			forwarding_tbl_status.status = ST_INVALID_BEARER;
@@ -1396,14 +1420,33 @@ int get_dependent_list_num(path_addr_t *p_list)
 	return num;
 }
 
+int get_dependent_addr_range_list(u8 *addr_list, path_addr_t *p_dependent_list, u16 start_offset)
+{
+	int len = 0;
+	foreach_range(i, start_offset, MAX_DEPENDENT_NUM){
+		if(p_dependent_list[i].addr){
+			addr_range_t *p_addr_range = (addr_range_t *)&addr_list[len];
+			len += 2;
+			p_addr_range->range_start = p_dependent_list[i].addr;
+			if(p_dependent_list[i].snd_ele_cnt){
+				len += 1;
+				p_addr_range->length_present = 1;
+				p_addr_range->range_length = p_dependent_list[i].snd_ele_cnt + 1;
+			}
+		}
+	}
+	
+	return len;
+}
+
 int mesh_cmd_sig_cfg_forwarding_tbl_dependents_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err =-1;
 	forwarding_tbl_dependents_get_t *p_dependents_get = (forwarding_tbl_dependents_get_t *) par;
 	static forwarding_tbl_dependents_get_sts_t dependengts_get_sts;
-	path_entry_com_t *p_fwd_entry;
+	path_entry_com_t *p_fwd_entry=0;
 
-	u32 cur_par_len = OFFSETOF(forwarding_tbl_dependents_get_sts_t, par);
+	u32 cur_par_len = OFFSETOF(forwarding_tbl_dependents_get_sts_t, range_list);
 	u8 identifier_exist = (par_len >= sizeof(forwarding_tbl_dependents_get_t));	
 	u8 via_par_len = 0;
 	memset(&dependengts_get_sts, 0x00, sizeof(dependengts_get_sts));
@@ -1411,80 +1454,62 @@ int mesh_cmd_sig_cfg_forwarding_tbl_dependents_get(u8 *par, int par_len, mesh_cb
 	dependengts_get_sts.netkey_index = p_dependents_get->netkey_index;
 	memcpy(&dependengts_get_sts.status+1, p_dependents_get, sizeof(forwarding_tbl_dependents_get_t));
 
-	int key_offset = get_mesh_net_key_offset(p_dependents_get->netkey_index);	
-	if(-1 != key_offset){	
-		p_fwd_entry = get_fixed_path_entry(key_offset, p_dependents_get->path_origin, p_dependents_get->destination);	
-		if(p_fwd_entry){
-			
-			if(identifier_exist){
-				model_sig_df_cfg.fixed_fwd_tbl[key_offset].update_id = p_dependents_get->update_identifier;
-				#if PTS_TEST_EN
-				mesh_common_store(FLASH_ADR_MD_DF);
-				#endif
-			}
-			memcpy(dependengts_get_sts.par, &model_sig_df_cfg.fixed_fwd_tbl[key_offset].update_id, 2);
-			via_par_len += 2;
-			
-			u8 dependent_origin_num = 0;//get_dependent_list_num(p_fwd_entry->dependent_origin);
+	int key_offset = get_mesh_net_key_offset(p_dependents_get->netkey_index);		
+	u16 fwd_tbl_id = p_dependents_get->fixed_path_flag ? model_sig_df_cfg.fixed_fwd_tbl[key_offset].update_id:non_fixed_fwd_tbl[key_offset].update_id;
+	dependengts_get_sts.up_id = fwd_tbl_id;
+	if(-1 == key_offset){
+		dependengts_get_sts.status = ST_INVALID_NETKEY;
+		cur_par_len = OFFSETOF(forwarding_tbl_dependents_get_sts_t, up_id);
+	}
+	else if(identifier_exist && (p_dependents_get->update_identifier != fwd_tbl_id)){	
+		dependengts_get_sts.status = ST_OBSOLETE_INFO;
+		cur_par_len = OFFSETOF(forwarding_tbl_dependents_get_sts_t, dependent_origion_size);
+	}
+
+	if(ST_SUCCESS == dependengts_get_sts.status){
+		if(p_dependents_get->fixed_path_flag){
+			p_fwd_entry = get_fixed_path_entry(key_offset, p_dependents_get->path_origin, p_dependents_get->destination);
+		}
+		else{
+			non_fixed_entry_t *p_non_fixed_entry = get_non_fixed_path_entry(key_offset, p_dependents_get->path_origin, p_dependents_get->destination);
+			p_fwd_entry = &p_non_fixed_entry->entry;			
+		}	
+		
+		if(p_fwd_entry){			
+			u8 origin_num = (p_dependents_get->dependents_list_mask & DEPENDENT_GET_PATH_ORIGIN_MATCH)?get_dependent_list_num(p_fwd_entry->dependent_origin):0;			
+			u8 target_num = (p_dependents_get->dependents_list_mask & DEPENDENT_GET_DESTINATION_MATCH)?get_dependent_list_num(p_fwd_entry->dependent_target):0;
+		
+			u8 total_dependent_num = origin_num + target_num;
 			u16 origin_start_index = 0;
-			u8 dependent_target_num = 0;//get_dependent_list_num(p_fwd_entry->dependent_target);	
 			u16 target_start_index = 0;
-			if(p_dependents_get->dependents_list_mask & DEPENDENT_GET_PATH_ORIGIN_MATCH){
-				dependent_origin_num = get_dependent_list_num(p_fwd_entry->dependent_origin);
-				
-				dependengts_get_sts.par[via_par_len] = (p_dependents_get->start_index<dependent_origin_num) ? (dependent_origin_num-p_dependents_get->start_index):0;
-				origin_start_index = dependent_origin_num - dependengts_get_sts.par[via_par_len];
-				if(p_dependents_get->start_index > dependent_origin_num){
-					p_dependents_get->start_index = p_dependents_get->start_index - dependent_origin_num;
+			if(p_dependents_get->start_index){
+				if(p_dependents_get->start_index < total_dependent_num){
+					if(p_dependents_get->start_index < origin_num){
+						origin_num -= p_dependents_get->start_index;	
+						origin_start_index = p_dependents_get->start_index;
+					}
+					else{						
+						target_num = total_dependent_num - p_dependents_get->start_index;
+						target_start_index = p_dependents_get->start_index - origin_num;
+						origin_num = 0;
+					}
 				}
 				else{
-					p_dependents_get->start_index = 0;
+					origin_num = target_num = 0;
 				}
 			}
-			via_par_len += 1;
 
-			if(p_dependents_get->dependents_list_mask & DEPENDENT_GET_DESTINATION_MATCH){
-				dependent_target_num = get_dependent_list_num(p_fwd_entry->dependent_target);
-				dependengts_get_sts.par[via_par_len] = (p_dependents_get->start_index<dependent_target_num) ? (dependent_target_num-p_dependents_get->start_index):0;	
-				target_start_index = dependent_target_num - dependengts_get_sts.par[via_par_len];
-			}				
-			via_par_len += 1;
-			
-			if(dependent_origin_num){
-				for(u16 index=origin_start_index; index<dependent_origin_num; index++){
-					addr_range_t *p_addr_range = (addr_range_t *)(dependengts_get_sts.par+via_par_len);
-					p_addr_range->range_start = p_fwd_entry->dependent_origin[index].addr;
-					if(p_fwd_entry->dependent_origin[index].snd_ele_cnt){
-						p_addr_range->length_present = 1;
-						p_addr_range->range_length = p_fwd_entry->dependent_origin[index].snd_ele_cnt + 1;
-						via_par_len += 3;
-					}
-					else{
-						via_par_len += 2;
-					}
-				}
+			if(origin_num){
+				via_par_len = get_dependent_addr_range_list(&dependengts_get_sts.range_list[0], p_fwd_entry->dependent_origin, origin_start_index);
+			}
+
+			if(target_num){
+				via_par_len += get_dependent_addr_range_list(&dependengts_get_sts.range_list[via_par_len], p_fwd_entry->dependent_target, target_start_index);
 			}
 			
-			if(dependent_target_num){
-				for(u16 index=target_start_index; index<dependent_target_num; index++){
-					addr_range_t *p_addr_range = (addr_range_t *)(dependengts_get_sts.par+via_par_len);
-					p_addr_range->range_start = p_fwd_entry->dependent_target[index].addr;
-					if(p_fwd_entry->dependent_target[index].snd_ele_cnt){
-						p_addr_range->length_present = 1;
-						p_addr_range->range_length = p_fwd_entry->dependent_target[index].snd_ele_cnt + 1;
-						via_par_len += 3;
-					}
-					else{
-						via_par_len += 2;
-					}
-				}
-			}
-			
-		}				
-		
-	}
-	else{
-		dependengts_get_sts.status = ST_INVALID_NETKEY;
+			dependengts_get_sts.dependent_origion_size = origin_num;
+			dependengts_get_sts.dependent_target_size = target_num;
+		}					
 	}
 
 	cur_par_len += via_par_len;
@@ -1526,14 +1551,23 @@ int mesh_cmd_sig_cfg_forwarding_tbl_entries_count_get(u8 *par, int par_len, mesh
 	return err;
 }
 
-u16 mesh_fill_fwd_tbl_entry_list(path_entry_com_t *p_entry, u8 *p_list)
+u16 mesh_fill_fwd_tbl_entry_list(path_entry_com_t *p_entry, u8 *p_list, u8 fix_path)
 {
 	u16 via_len = 0;
 	forwarding_table_entry_head_t *p_head = (forwarding_table_entry_head_t *)p_list;	
-	p_head->fixed_path_flag = 1;
+	p_head->fixed_path_flag = fix_path;
 	p_head->backward_path_validated_flag = p_entry->backward_path_validated;						
 	via_len += sizeof(forwarding_table_entry_head_t);
 
+	if(!fix_path){
+		non_fixed_entry_t *p_non_fixed_entry = GET_NON_FIXED_ENTRY_POINT((u8*) p_entry);
+		p_list[via_len++] = p_non_fixed_entry->state.lane_counter;
+		u16 remaining_time = (clock_time_ms()-p_non_fixed_entry->state.lifetime_ms)/1000/60;
+		memcpy(p_list+via_len, &remaining_time, 2);
+		via_len +=2;
+		p_list[via_len++] = p_non_fixed_entry->state.forwarding_number;
+	}
+	
 	addr_range_t *p_origin = (addr_range_t *)(p_list+via_len);
 	p_origin->range_start = p_entry->path_origin;
 	if(p_entry->path_origin_snd_ele_cnt){
@@ -1600,6 +1634,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_entries_get(u8 *par, int par_len, mesh_cb_fu
 	u16 par_offset = 0;	
 	u16 update_id = 0;
 	u8 update_id_existed = 0;
+	u8 is_fix_path = (p_entries_get->filter_mask&ENTRIES_GET_FIXED_PATH);
 	if(p_entries_get->filter_mask & ENTRIES_GET_PATH_ORIGIN_MATCH){
 		path_origin = p_entries_get->par[par_offset] + (p_entries_get->par[par_offset+1]<<8);
 		par_offset += 2;
@@ -1610,11 +1645,6 @@ int mesh_cmd_sig_cfg_forwarding_tbl_entries_get(u8 *par, int par_len, mesh_cb_fu
 		par_offset += 2;
 	}
 
-	update_id_existed = (par_len>OFFSETOF(forwarding_tbl_entries_get_t, par) - par_offset);
-	if(update_id_existed){
-		update_id = path_origin = p_entries_get->par[par_offset] + (p_entries_get->par[par_offset+1]<<8);
-	}
-
 	memset(&entries_sts, 0x00, sizeof(entries_sts));
 	entries_sts.status = ST_SUCCESS;
 	entries_sts.netkey_index = netkey_index;
@@ -1622,79 +1652,62 @@ int mesh_cmd_sig_cfg_forwarding_tbl_entries_get(u8 *par, int par_len, mesh_cb_fu
 	entries_sts.start_index = p_entries_get->start_index;
 	memcpy(entries_sts.par, p_entries_get->par, par_offset);
 	int key_offset = get_mesh_net_key_offset(netkey_index);	
-	if(-1 != key_offset){
-		memcpy(entries_sts.par+par_offset, &model_sig_df_cfg.fixed_fwd_tbl[key_offset].update_id, 2);
-		par_offset += 2;
 
-		u16 valid_index = 0;
-		if(p_entries_get->filter_mask & ENTRIES_GET_FIXED_PATH){
-			for(u16 path_offset=0; path_offset<MAX_FIXED_PATH; path_offset++){										
-				if(par_offset+sizeof(fixed_path_st_t) > MAX_ENTRY_STS_LEN){// buf not enough
-					break;
-				}
-				
-				path_entry_com_t *p_entry = &model_sig_df_cfg.fixed_fwd_tbl[key_offset].path[path_offset];
-				
-				if((!p_entry->path_origin) || (valid_index < p_entries_get->start_index)){
-					if(p_entry->path_origin){
-						valid_index++;
-					}
-					continue;
-				}				
-				
-				if(((p_entries_get->filter_mask&ENTRIES_GET_PATH_ORIGIN_MATCH) && (path_origin != p_entry->path_origin)) ||
-					((p_entries_get->filter_mask&ENTRIES_GET_DST_MATCH) && (destination != p_entry->destination))){
-					continue;
-				}
-
-				u16 par_len = mesh_fill_fwd_tbl_entry_list(p_entry, entries_sts.par+par_offset);
-				par_offset += par_len;				
-			}
-
-			if(update_id_existed){// update id existed
-				model_sig_df_cfg.fixed_fwd_tbl[key_offset].update_id = update_id;
-				#if PTS_TEST_EN
-				mesh_common_store(FLASH_ADR_MD_DF);
-				#endif
-			}
-		}
-		
-		if(p_entries_get->filter_mask & ENTRIES_GET_NON_FIXED_PATH){
-			valid_index = 0;
-			for(u16 path_offset=0; path_offset<MAX_NON_FIXED_PATH; path_offset++){										
-				if(par_offset+sizeof(non_fixed_path_st_t) > MAX_ENTRY_STS_LEN){// buf not enough
-					break;
-				}
-				
-				if(par_offset+sizeof(fixed_path_st_t) > MAX_ENTRY_STS_LEN){// buf not enough
-					break;
-				}
-				
-				path_entry_com_t *p_entry = &non_fixed_fwd_tbl[key_offset].path[path_offset].entry;
-				
-				if((!p_entry->path_origin) || (valid_index < p_entries_get->start_index)){
-					if(p_entry->path_origin){
-						valid_index++;
-					}
-					continue;
-				}				
-				
-				if(((p_entries_get->filter_mask&ENTRIES_GET_PATH_ORIGIN_MATCH) && (path_origin != p_entry->path_origin)) ||
-					((p_entries_get->filter_mask&ENTRIES_GET_DST_MATCH) && (destination != p_entry->destination))){
-					continue;
-				}
-
-				u16 par_len = mesh_fill_fwd_tbl_entry_list(p_entry, entries_sts.par+par_offset);
-				par_offset += par_len;
-			}
-
-			if(update_id_existed){// update id existed
-				non_fixed_fwd_tbl[key_offset].update_id = update_id;
-			}
+	update_id_existed = (par_len>OFFSETOF(forwarding_tbl_entries_get_t, par) - par_offset);	
+	u16 fwd_tbl_id = is_fix_path ? model_sig_df_cfg.fixed_fwd_tbl[key_offset].update_id:non_fixed_fwd_tbl[key_offset].update_id;
+	memcpy(entries_sts.par+par_offset, &fwd_tbl_id, 2);
+	par_offset += 2;
+	if(-1 == key_offset){
+		entries_sts.status = ST_INVALID_NETKEY;
+		par_offset -= 2;
+	}
+	else if(update_id_existed){
+		update_id = p_entries_get->par[par_offset] + (p_entries_get->par[par_offset+1]<<8);
+		if(update_id != fwd_tbl_id ){
+			entries_sts.status = ST_OBSOLETE_INFO;
 		}
 	}
-	else{
 
+	if(ST_SUCCESS == entries_sts.status){
+		u16 valid_index = 0;		
+		u16 max_paths = is_fix_path ? MAX_FIXED_PATH:MAX_NON_FIXED_PATH;
+		u16 entry_length = is_fix_path ? sizeof(fixed_path_st_t):sizeof(non_fixed_path_st_t);
+		if(p_entries_get->filter_mask & (ENTRIES_GET_FIXED_PATH|ENTRIES_GET_NON_FIXED_PATH)){						
+			for(u16 path_offset=0; path_offset<max_paths; path_offset++){										
+				if(par_offset+entry_length > MAX_ENTRY_STS_LEN){// buf not enough
+					break;
+				}
+				
+				path_entry_com_t *p_entry = is_fix_path ? &model_sig_df_cfg.fixed_fwd_tbl[key_offset].path[path_offset]:&non_fixed_fwd_tbl[key_offset].path[path_offset].entry;
+				
+				if((!p_entry->path_origin) || (valid_index < p_entries_get->start_index)){
+					if(p_entry->path_origin){
+						valid_index++;
+					}
+					continue;
+				}				
+				
+				if(((p_entries_get->filter_mask&ENTRIES_GET_PATH_ORIGIN_MATCH) && (path_origin != p_entry->path_origin)) ||
+					((p_entries_get->filter_mask&ENTRIES_GET_DST_MATCH) && (destination != p_entry->destination))){
+					continue;
+				}
+									
+				u16 par_len = mesh_fill_fwd_tbl_entry_list(p_entry, entries_sts.par+par_offset, is_fix_path);
+				par_offset += par_len;	
+			}
+
+			if(update_id_existed){// update id existed
+				if(is_fix_path){
+					model_sig_df_cfg.fixed_fwd_tbl[key_offset].update_id = update_id;
+					#if PTS_TEST_EN
+					mesh_common_store(FLASH_ADR_MD_DF);
+					#endif
+				}
+				else{
+					non_fixed_fwd_tbl[key_offset].update_id = update_id;
+				}
+			}
+		}
 	}
 
 	err = mesh_tx_cmd_rsp_cfg_model(cb_par->op_rsp, (u8 *)(&entries_sts), OFFSETOF(forwarding_tbl_entries_st_t, par)+par_offset, cb_par->adr_src);
@@ -2109,7 +2122,7 @@ int mesh_cmd_sig_cfg_directed_control_relay_transmit_set(u8 *par, int par_len, m
 //-------------------------forwarding config message end-----------------------------------//
 
 //---------------------------directed forwarding procedures-------------------//
-int path_request_msg_set(discovery_entry_par_t * p_dsc_entry, mesh_ctl_path_req_t * p_path_req)
+int path_request_msg_set(u16 netkey_offset, discovery_entry_par_t * p_dsc_entry, mesh_ctl_path_req_t * p_path_req)
 {
 	u8 via_par_len = 0;
 	memset(p_path_req, 0x00, sizeof(mesh_ctl_path_req_t));
@@ -2122,7 +2135,8 @@ int path_request_msg_set(discovery_entry_par_t * p_dsc_entry, mesh_ctl_path_req_
 		p_path_req->origin_path_metric = 0;
 	}
 	else{
-		p_path_req->origin_path_metric = p_dsc_entry->entry.path_metric + 1;
+		non_fixed_entry_t *p_fwd_entry = get_forwarding_entry_correspond2_discovery_entry(netkey_offset, &p_dsc_entry->entry);
+		p_path_req->origin_path_metric = p_dsc_entry->entry.path_metric + 1 + (p_fwd_entry?p_fwd_entry->state.lane_counter:0);
 	}
 	p_path_req->destination = p_dsc_entry->entry.destination;	
 	
@@ -2153,56 +2167,53 @@ int path_request_msg_set(discovery_entry_par_t * p_dsc_entry, mesh_ctl_path_req_
 	return (OFFSETOF(mesh_ctl_path_req_t, addr_par)+via_par_len);
 }
 
-int prepare_and_send_path_reply(u16 netkey_offset, discovery_entry_par_t *p_dsc_entry)
+int prepare_and_send_path_reply(u16 netkey_offset, discovery_entry_par_t *p_dsc_entry, u8 confirm_req)
 {
 	mesh_ctl_path_reply_t path_reply;
 	u8 via_par_len = 0;
 	memset(&path_reply, 0x00, sizeof(mesh_ctl_path_reply_t));
+	non_fixed_entry_t *p_fwd_entry = get_forwarding_entry_correspond2_discovery_entry(netkey_offset, &p_dsc_entry->entry);
+	if(!p_fwd_entry){
+		return -1;
+	}
+
+	path_reply.confirmation_request = confirm_req;
 	if(is_unicast_adr(p_dsc_entry->entry.destination)){
-		non_fixed_entry_t *p_fwd_entry = get_forwarding_entry_correspond2_discovery_entry(netkey_offset, &p_dsc_entry->entry);
-		path_reply.unicast_destination = 1;
 		addr_range_t *p_path_target = (addr_range_t *)path_reply.addr_par;
-		if(p_fwd_entry){
-			p_path_target->range_start = p_fwd_entry->entry.destination;
-			via_par_len += 2;
-			if(p_fwd_entry->entry.path_target_snd_ele_cnt){
-				p_path_target->length_present = 1;
-				p_path_target->range_length = p_fwd_entry->entry.path_target_snd_ele_cnt+1;
-				via_par_len += 1;
-			}
-		}
-		else{ // path target
+		path_reply.unicast_destination = 1;
+		via_par_len += 2;
+		if(is_path_target(p_dsc_entry->entry.destination)){
+			path_reply.confirmation_request = model_sig_df_cfg.directed_forward.subnet_state[netkey_offset].two_way_path;
 			p_path_target->range_start = ele_adr_primary;
-			via_par_len += 2;
 			if(g_ele_cnt > 1){
 				p_path_target->length_present = 1;
 				p_path_target->range_length = g_ele_cnt;
 				via_par_len += 1;
 			}
 		}
-		int offset = -1;
-		if(p_fwd_entry){
-			offset = get_offset_in_dependent_list(p_fwd_entry->entry.dependent_target, p_dsc_entry->entry.destination);
-		}
 		else{
-			path_reply.confirmation_request = model_sig_df_cfg.directed_forward.subnet_state[netkey_offset].two_way_path;
-		}			
-		
-		if(-1 != offset){
-			path_reply.on_behalf_of_dependent_target = 1;
-			addr_range_t *p_dependent_target = (addr_range_t *)(path_reply.addr_par + via_par_len);
-			p_dependent_target->range_start = p_fwd_entry->entry.dependent_target[offset].addr;
-			via_par_len += 2;
-			if(p_fwd_entry->entry.dependent_target[offset].snd_ele_cnt){
+			p_path_target->range_start = p_fwd_entry->entry.destination;
+			if(p_fwd_entry->entry.path_target_snd_ele_cnt){			
+				p_path_target->length_present = 1;
+				p_path_target->range_length = p_fwd_entry->entry.path_target_snd_ele_cnt + 1;
 				via_par_len += 1;
-				p_dependent_target->length_present = 1;
-				p_dependent_target->range_length = p_fwd_entry->entry.dependent_target[offset].snd_ele_cnt + 1;
+			}
+		}
+
+		if(p_dsc_entry->entry.destination != p_fwd_entry->entry.destination){
+			path_reply.on_behalf_of_dependent_target = 1;	
+			addr_range_t *p_dependent_target = (addr_range_t *)(path_reply.addr_par + via_par_len);
+			p_dependent_target->range_start = p_dsc_entry->entry.destination;
+			via_par_len += 2;
+			int offset = get_offset_in_dependent_list(p_fwd_entry->entry.dependent_target, p_dsc_entry->entry.destination);
+			if(-1 != offset){
+				if(p_fwd_entry->entry.dependent_target[offset].snd_ele_cnt){
+					via_par_len += 1;
+					p_dependent_target->length_present = 1;
+					p_dependent_target->range_length = p_fwd_entry->entry.dependent_target[offset].snd_ele_cnt+1;					
+				}
 			}
 		}	
-	}
-	else{
-		path_reply.unicast_destination = 0;
-		via_par_len += 2;
 	}
 	
 	path_reply.path_origin = p_dsc_entry->entry.path_origin.addr;
@@ -2236,8 +2247,7 @@ int path_discovery_by_discovery_entry(u16 netkey_offset, discovery_entry_par_t *
 		p_dsc_entry->entry.forwarding_number = discovery_table[netkey_offset].forwarding_number;
 	}
 	p_dsc_entry->state.path_need = 0;
-	start_path_discovery_timer(p_dsc_entry); 
-	u8 len = path_request_msg_set(p_dsc_entry, &path_req);
+	u8 len = path_request_msg_set(netkey_offset, p_dsc_entry, &path_req);
 	return cfg_cmd_send_path_request(&path_req, len, netkey_offset);
 }
 
@@ -2276,7 +2286,8 @@ int is_path_target(u16 destination)
 {
 	u8 model_idx = 0;
 	u8 *p_model = mesh_find_ele_resource_in_model(ele_adr_primary, SIG_MD_G_ONOFF_S, 1,&model_idx, 0);// search all model id later
-	if( is_own_ele(destination)|| (p_model&&is_subscription_adr((model_common_t *)p_model, destination)) || mesh_mac_match_friend(destination) || mesh_group_match_friend(destination)){
+	if( is_own_ele(destination)|| (p_model&&is_subscription_adr((model_common_t *)p_model, destination)) || mesh_mac_match_friend(destination) 
+		|| mesh_group_match_friend(destination) || is_valid_adv_with_proxy_filter(destination)){
 		return 1;
 	}
 	return 0;
@@ -2332,13 +2343,12 @@ void discovery_table_timing_proc(u16 netkey_offset)
 	foreach(dsc_tbl_offset, MAX_DSC_TBL){
 		discovery_entry_par_t *p_dsc_entry = &discovery_table[netkey_offset].dsc_entry_par[dsc_tbl_offset];
 		discovery_timing_t *p_dsc_timing = &model_sig_df_cfg.directed_forward.discovery_timing;
-		non_fixed_entry_t *p_fwd_entry = 0;
+		non_fixed_entry_t *p_fwd_entry = get_non_fixed_path_entry(netkey_offset, p_dsc_entry->entry.path_origin.addr, p_dsc_entry->entry.destination);
 		if(p_dsc_entry->entry.destination){
 			if(p_dsc_entry->state.discovery_timer && clock_time_exceed(p_dsc_entry->state.discovery_timer, (GET_PATH_DSC_INTERVAL_MS(p_dsc_timing->path_discovery_interval))*1000)){
 				LOG_MSG_LIB(TL_LOG_DIRECTED_FORWARDING, 0, 0, "path discovery timer expired", 0);
 				stop_path_discovery_timer(p_dsc_entry);						
 				if(is_own_ele(p_dsc_entry->entry.path_origin.addr)){ // path origin
-					p_fwd_entry = get_non_fixed_path_entry(netkey_offset, p_dsc_entry->entry.path_origin.addr, p_dsc_entry->entry.destination);									
 					if(p_fwd_entry){
 						if(p_fwd_entry->entry.path_not_ready){
 							p_fwd_entry->entry.path_not_ready = 0;
@@ -2395,7 +2405,7 @@ void discovery_table_timing_proc(u16 netkey_offset)
 
 			if(p_dsc_entry->state.reply_delay_timer && clock_time_exceed(p_dsc_entry->state.reply_delay_timer, (is_unicast_adr(p_dsc_entry->entry.destination)?PATH_REPLY_DELAY_MS:(PATH_REPLY_DELAY_MS+(rand()%500)))*1000)){							
 				stop_path_reply_delay_timer(p_dsc_entry);
-				p_fwd_entry = get_non_fixed_path_entry(netkey_offset, p_dsc_entry->entry.path_origin.addr, p_dsc_entry->entry.destination);
+				p_fwd_entry = get_forwarding_entry_correspond2_discovery_entry(netkey_offset, &p_dsc_entry->entry);
 				if(p_fwd_entry){// forwarding table entry exist, update
 					update_forwarding_entry_by_path_reply_delay_timer_expired(netkey_offset, p_fwd_entry, p_dsc_entry);
 				}
@@ -2405,7 +2415,7 @@ void discovery_table_timing_proc(u16 netkey_offset)
 						start_path_lifetime_timer(p_fwd_entry);
 					}
 				}	
-				prepare_and_send_path_reply(netkey_offset, p_dsc_entry);
+				prepare_and_send_path_reply(netkey_offset, p_dsc_entry, 0);
 			}
 		}
 	}
@@ -2463,7 +2473,8 @@ int directed_forwarding_initial_start(u16 netkey_offset, u16 destination, u16 de
 				}
 			}
 			else if(direced_forwarding_concurrent_count_check(netkey_offset)){				
-				discovery_entry_par_t * p_dsc_entry = add_discovery_table_entry(netkey_offset, &path_origin, destination, &dependent_origin, ADR_UNASSIGNED, BEAR_UNASSIGNED, 0);
+				discovery_entry_par_t * p_dsc_entry = add_discovery_table_entry(netkey_offset, &path_origin, destination, &dependent_origin, ADR_UNASSIGNED, MESH_BEAR_UNASSIGNED, 0);
+				start_path_discovery_timer(p_dsc_entry);
 				if(p_dsc_entry){	
 					err = 0; 
 					path_discovery_by_discovery_entry(netkey_offset, p_dsc_entry);
@@ -2497,23 +2508,20 @@ void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type)
 			adv_report_extend_t *p_extend = get_adv_report_extend(&p_bear->len);;
 			s8 rssi = p_extend->rssi;  
 			LOG_MSG_LIB(TL_LOG_DIRECTED_FORWARDING, par, par_len, "receive CMD_CTL_PATH_REQUEST rssi:%d p_nw->src:0x%x dst:0x%x ", rssi, p_nw->src, p_path_req->destination);			
-			if(rssi > (model_sig_df_cfg.directed_forward.rssi_threshold.default_rssi_threshold + model_sig_df_cfg.directed_forward.rssi_threshold.rssi_margin)){				
+			if(rssi >= (model_sig_df_cfg.directed_forward.rssi_threshold.default_rssi_threshold + model_sig_df_cfg.directed_forward.rssi_threshold.rssi_margin)){				
 				if(p_path_req->path_metric_type == model_sig_df_cfg.directed_forward.subnet_state[netkey_offset].path_metric.metric_type){					
 					p_fwd_entry = get_forwarding_entry_correspond2_path_request(netkey_offset, p_path_req);
-					#if 0 
-					if((!p_fwd_entry) || ((p_path_req->forwarding_number-p_fwd_entry->entry.forwarding_number)<128){ 
+					#if 1 
+					if((!p_fwd_entry) || ((p_path_req->forwarding_number-p_fwd_entry->state.forwarding_number)<128)){ 
 					#else
 					if(1){// dorwarding number always 0 after powerup now.
 					#endif
-						u8 model_idx = 0;
-						u8 *p_model = mesh_find_ele_resource_in_model(ele_adr_primary, SIG_MD_G_ONOFF_S, 1,&model_idx, 0);// search all model id later
-						if( is_own_ele(p_path_req->destination) || (p_model&&is_subscription_adr((model_common_t *)p_model, p_path_req->destination)) || (mesh_mac_match_friend(p_path_req->destination) || mesh_group_match_friend(p_path_req->destination)) 
-							|| (DIRECTED_RELAY_ENABLE == model_sig_df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_relay)){
+						if(is_path_target(p_path_req->destination) ||(DIRECTED_RELAY_ENABLE == model_sig_df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_relay)){
 							discovery_entry_par_t *p_dsc_entry = get_discovery_entry_correspond2_path_request(netkey_offset, p_addr_origin->range_start, p_path_req->forwarding_number);
 						    u8 start_path_request = 0;
 							if(!p_dsc_entry){
 								p_dsc_entry = add_discovery_table_entry(netkey_offset, 0, 0, 0, p_nw->src, src_type, p_path_req);
-								LOG_MSG_LIB(TL_LOG_DIRECTED_FORWARDING, 0, 0, " add_discovery_table_entry:%x path_metric=%d", p_dsc_entry, p_dsc_entry->entry.path_metric);
+								LOG_MSG_LIB(TL_LOG_DIRECTED_FORWARDING, 0, 0, " add_discovery_table_entry:%x path_metric=%d src_type:%d", p_dsc_entry, p_dsc_entry->entry.path_metric, src_type);
 								if(p_dsc_entry){
 									start_path_discovery_timer(p_dsc_entry);
 									if(is_path_target(p_path_req->destination)){
@@ -2570,7 +2578,7 @@ void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type)
 						}
 					}
 					else{
-						start_path_reply_delay_timer(p_dsc_entry);
+						prepare_and_send_path_reply(netkey_offset, p_dsc_entry, p_path_reply->confirmation_request);
 					}
 				}
 			}

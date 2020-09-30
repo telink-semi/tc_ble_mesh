@@ -979,10 +979,10 @@ __WEAK mible_status_t mible_nvm_write(void * p_data, uint32_t length, uint32_t a
     }
 	u8 *p_buf = (u8 *)(p_data);
 	// if the address is the sector start (4k size align ),we need to erase first 
-	/*
+	
 	if(address %0x1000 == 0){ // wait for test ,and add mainly for test when power off ,and continue to test 
-		flash_erase_sector(address);
-	}*/
+		//flash_erase_sector(address);
+	}
 	if(address == ota_program_offset){
 		p_buf[8]=0xff;// change it to unvalid flag
 	}

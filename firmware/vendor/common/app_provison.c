@@ -19,24 +19,24 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
 #include "app_provison.h"
 #include "app_beacon.h"
-#include "../../proj_lib/mesh_crypto/le_crypto.h"
-#include "../../proj_lib/mesh_crypto/mesh_crypto.h"
-#include "../../proj_lib/mesh_crypto/mesh_md5.h"
-#include "../../proj_lib/mesh_crypto/sha256_telink.h"
+#include "proj_lib/mesh_crypto/le_crypto.h"
+#include "proj_lib/mesh_crypto/mesh_crypto.h"
+#include "proj_lib/mesh_crypto/mesh_md5.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
 
 #if WIN32 
 #include "../../../reference/tl_bulk/lib_file/app_config.h"
 #include "../../../reference/tl_bulk/lib_file/hw_fun.h"
 #include"../../../reference/tl_bulk/lib_file/gatt_provision.h"
 #else 
-#include "../../vendor/common/mi_api/telink_sdk_mible_api.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #endif
-#include "../../vendor/common/remote_prov.h"
-#include "../../vendor/common/certify_base/certify_base_crypto.h"
+#include "vendor/common/remote_prov.h"
+#include "vendor/common/certify_base/certify_base_crypto.h"
 
 #define DEBUG_PROXY_SAR_ENABLE 	0
 prov_para_proc_t prov_para;
@@ -314,6 +314,24 @@ void set_pb_gatt_adv(u8 *p,u8 flags)
 	return;
 }
 
+
+#if PROVISIONER_GATT_ADV_EN
+const u8	provisioner_advData[] = {
+	0x02, 0x01, 0x06, 							// normal discoverable mode and BR/EDR not supported
+	0x0c, 0x09, 'p', 'r', 'o', 'v','i','s','i','o','n','e','r',	 //name
+};
+
+void set_adv_provisioner(rf_packet_adv_t * p) 
+{
+	p->header.type = LL_TYPE_ADV_IND;
+	memcpy(p->advA,tbl_mac,6);
+	memcpy(p->data, provisioner_advData, sizeof(provisioner_advData));
+	p->rf_len = 6 + sizeof(provisioner_advData);
+	p->dma_len = p->rf_len + 2;	
+	return ;
+}
+#endif
+
 void set_adv_provision(rf_packet_adv_t * p) 
 {
 	set_pb_gatt_adv(p->data,6);
@@ -375,7 +393,7 @@ void mesh_provision_para_reset()
 	prov_para.initial_pro_roles = MESH_INI_ROLE_NODE;
 	#endif
 	if(provision_mag.gatt_mode != GATT_PROXY_MODE){
-		#if PROVISION_GATT_ENABLE 
+		#if PB_GATT_ENABLE 
 		provision_mag.gatt_mode = GATT_PROVISION_MODE;
 		#else
 		provision_mag.gatt_mode = GATT_ADV_NORMAL_MODE;
@@ -824,29 +842,18 @@ const unsigned char r_mic[] = {0x73,0xe0,0xec,0x50,0x78,0x3b,0x10,0xc7};
 _attribute_no_retention_bss_ u8 pro_edch[32];
 u8 pro_random[16]={0x8b,0x19,0xac,0x31,0xd5,0x8b,0x12,0x4c, 0x94,0x62,0x09,0xb5,0xdb,0x10,0x21,0xb9};
 _attribute_no_retention_bss_ u8 pro_comfirm[16];
-_attribute_no_retention_bss_ u8 pro_input[145]/*={		0x00,0x01,0x00,0x01,0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-						0x00,0x2c,0x31,0xa4,0x7b,0x57,0x79,0x80, 0x9e,0xf4,0x4c,0xb5,0xea,0xaf,0x5c,0x3e,
-						0x43,0xd5,0xf8,0xfa,0xad,0x4a,0x87,0x94, 0xcb,0x98,0x7e,0x9b,0x03,0x74,0x5c,0x78,
-						0xdd,0x91,0x95,0x12,0x18,0x38,0x98,0xdf, 0xbe,0xcd,0x52,0xe2,0x40,0x8e,0x43,0x87,
-						0x1f,0xd0,0x21,0x10,0x91,0x17,0xbd,0x3e, 0xd4,0xea,0xf8,0x43,0x77,0x43,0x71,0x5d,
-						0x4f,0xf4,0x65,0xe4,0x3f,0xf2,0x3d,0x3f, 0x1b,0x9d,0xc7,0xdf,0xc0,0x4d,0xa8,0x75,
-						0x81,0x84,0xdb,0xc9,0x66,0x20,0x47,0x96, 0xec,0xcf,0x0d,0x6c,0xf5,0xe1,0x65,0x00,
-						0xcc,0x02,0x01,0xd0,0x48,0xbc,0xbb,0xd8, 0x99,0xee,0xef,0xc4,0x24,0x16,0x4e,0x33,
-						0xc2,0x01,0xc2,0xb0,0x10,0xca,0x6b,0x4d, 0x43,0xa8,0xa1,0x55,0xca,0xd8,0xec,0xb2,
-						0x79}*/;
-_attribute_no_retention_bss_ u8  pro_auth[16]/* = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0}*/;
-_attribute_no_retention_bss_ u8  dev_sig_comfirm[16];
-
-u8 dev_random[16];
+_attribute_no_retention_bss_ u8 pro_input[145];
+_attribute_no_retention_bss_ u8  pro_auth[16];
 _attribute_no_retention_bss_ u8 pro_session_key[16];
 _attribute_no_retention_bss_ u8 pro_session_nonce_tmp[16];
 _attribute_no_retention_bss_ u8 pro_session_nonce[16];
+_attribute_no_retention_bss_ u8 pro_dat[40];
+_attribute_no_retention_bss_ u8 prov_net_key[16];
 
-_attribute_no_retention_data_ u8 prov_net_key[16]/*={0x11,0x22,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,0xd8,0xd9,0xda,0xdb,0xdc,0xdd,0xde,0xdf}*/;
+_attribute_no_retention_bss_ u8 dev_random[16];
+_attribute_no_retention_bss_ u8  dev_sig_comfirm[16];
 const u8 const_prov_ivi[4]={0x11,0x22,0x33,0x44};
 
-_attribute_no_retention_bss_ u8 pro_dat[40]/* = {0x11,0x22,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,0xd8,0xd9,0xda,0xdb,0xdc,0xdd,0xde,0xdf,	
-						 0x00,0x00,0x00,0x11,0x22,0x33,0x44,0x04,0x00}*/;						 
 u8 set_provision_networkkey_self(u8 *p_key,u8 len )
 {
 	if(len >16){
@@ -912,21 +919,12 @@ void pro_random_init()
 #endif
 #endif
 
-_attribute_bss_retention_ u8 dev_auth[16]/* = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0}*/;
+_attribute_bss_retention_ u8 dev_auth[16];
 #if(!__PROJECT_MESH_PRO__)
 _attribute_no_retention_bss_ u8 dev_edch[32];
 u8 dev_random[16]={0x55,0xa2,0xa2,0xbc,0xa0,0x4c,0xd3,0x2f, 0xf6,0xf3,0x46,0xbd,0x0a,0x0c,0x1a,0x3a};
 _attribute_no_retention_bss_ u8 dev_comfirm[16];
-_attribute_no_retention_bss_ u8 dev_input[0x91]/*={		0x00,0x01,0x00,0x01,0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-						0x00,0x2c,0x31,0xa4,0x7b,0x57,0x79,0x80, 0x9e,0xf4,0x4c,0xb5,0xea,0xaf,0x5c,0x3e,
-						0x43,0xd5,0xf8,0xfa,0xad,0x4a,0x87,0x94, 0xcb,0x98,0x7e,0x9b,0x03,0x74,0x5c,0x78,
-						0xdd,0x91,0x95,0x12,0x18,0x38,0x98,0xdf, 0xbe,0xcd,0x52,0xe2,0x40,0x8e,0x43,0x87,
-						0x1f,0xd0,0x21,0x10,0x91,0x17,0xbd,0x3e, 0xd4,0xea,0xf8,0x43,0x77,0x43,0x71,0x5d,
-						0x4f,0xf4,0x65,0xe4,0x3f,0xf2,0x3d,0x3f, 0x1b,0x9d,0xc7,0xdf,0xc0,0x4d,0xa8,0x75,
-						0x81,0x84,0xdb,0xc9,0x66,0x20,0x47,0x96, 0xec,0xcf,0x0d,0x6c,0xf5,0xe1,0x65,0x00,
-						0xcc,0x02,0x01,0xd0,0x48,0xbc,0xbb,0xd8, 0x99,0xee,0xef,0xc4,0x24,0x16,0x4e,0x33,
-						0xc2,0x01,0xc2,0xb0,0x10,0xca,0x6b,0x4d, 0x43,0xa8,0xa1,0x55,0xca,0xd8,0xec,0xb2,
-						0x79}*/;
+_attribute_no_retention_bss_ u8 dev_input[0x91];
 u8 pro_random[16];
 
 _attribute_no_retention_bss_ u8 dev_pro_comfirm[16];
@@ -1696,9 +1694,10 @@ void mesh_adv_provision_retry()
 }
 
 void set_rsp_ack_transnum(pro_PB_ADV *p_adv){
-	if(	(p_adv->transBear.bearOpen.header.GPCF == BEARS_CTL && p_adv->transBear.bearAck.header.BearCtl == LINK_ACK	)){
+	trans_bear_header *p_header = &(p_adv->transBear.bearOpen.header);
+	if(	(p_header->GPCF == BEARS_CTL && p_header->BearCtl == LINK_ACK)){
 		prov_para.rsp_ack_transnum = 0;
-	}else if(p_adv->transBear.bearAck.header.GPCF!= TRANS_ACK){
+	}else if(p_header->GPCF!= TRANS_ACK){
 		prov_para.rsp_ack_transnum = p_adv->trans_num;
 	}
 	else{
@@ -1909,7 +1908,8 @@ u32 mesh_node_out_oob_pub_key_tick =0;
 #define MESH_NODE_OUT_OOB_PUB_KEY_TIME_S	6*1000*1000
 void check_mesh_node_out_oob_pub_key_send_time()
 {
-	if(clock_time_exceed(mesh_node_out_oob_pub_key_tick,MESH_NODE_OUT_OOB_PUB_KEY_TIME_S)&&mesh_node_out_oob_pub_key_tick){
+	if(clock_time_exceed(mesh_node_out_oob_pub_key_tick,MESH_NODE_OUT_OOB_PUB_KEY_TIME_S)&&
+		mesh_node_out_oob_pub_key_tick){
 		// stop send the pubkey 
 		mesh_node_out_oob_pub_key_tick =0;
 		send_rcv_retry_clr();
@@ -3138,17 +3138,28 @@ void mesh_prov_proc_loop()
 #if WIN32 
 STATIC_ASSERT(sizeof(VC_node_info) <= 4096*128);
 #else
+	#if DEBUG_CFG_CMD_GROUP_AK_EN
+STATIC_ASSERT(sizeof(VC_node_info) <= 4096*2);	// because only one sector for it now
+	#else
 STATIC_ASSERT(sizeof(VC_node_info) <= 4096);	// because only one sector for it now
+	#endif
 #endif
 
 void save_vc_node_info_all()
 {
-    #if WIN32
+#if WIN32
     // erase all the store vc node info part 
     // erase_vc_node_info(); // no need erase, write directly later
-    #else
-    flash_erase_sector(FLASH_ADR_VC_NODE_INFO);
-    #endif
+#else
+	#if DEBUG_CFG_CMD_GROUP_AK_EN
+	u8 cnt = (sizeof(VC_node_info)+4095)/4096;
+	for(u8 i=0;i<cnt;i++){
+		flash_erase_sector(FLASH_ADR_VC_NODE_INFO+0x1000*i);
+	}
+	#else
+	flash_erase_sector(FLASH_ADR_VC_NODE_INFO);
+	#endif
+#endif
     flash_write_page(FLASH_ADR_VC_NODE_INFO, sizeof(VC_node_info), (u8 *)VC_node_info);
 }
 
@@ -3322,16 +3333,14 @@ int VC_node_dev_key_candi_enable(u16 adr)
         }
     }
     if(p_info){
-        if(!(adr == p_info->node_adr)){
-            p_info->node_adr = adr;
-            memcpy(p_info->dev_key, p_info->dev_key_candi, 16);
-			memset(p_info->dev_key_candi,0,16);
-            #if DONGLE_PROVISION_EN
-            save_vc_node_info_all();
-            #else
-            save_vc_node_info_single(p_info);
-            #endif
-        }
+        p_info->node_adr = adr;
+        memcpy(p_info->dev_key, p_info->dev_key_candi, 16);
+		memset(p_info->dev_key_candi,0,16);
+        #if DONGLE_PROVISION_EN
+        save_vc_node_info_all();
+        #else
+        save_vc_node_info_single(p_info);
+        #endif
         return 0;
     }
 
@@ -3339,7 +3348,7 @@ int VC_node_dev_key_candi_enable(u16 adr)
 }
 
 
-int VC_node_dev_key_save_candi(u16 adr, u8 *dev_key_cadi)
+int VC_node_replace_devkey_candi_adr(u16 adr, u16 new_adr,u8 *dev_key_cadi)
 {
     if(!is_unicast_adr(adr) && (!adr)){
         return -1;
@@ -3357,10 +3366,42 @@ int VC_node_dev_key_save_candi(u16 adr, u8 *dev_key_cadi)
         }
     }
     if(p_info){
-        if(!((adr == p_info->node_adr)&&(!memcmp(p_info->dev_key_candi, dev_key_cadi, 16)))){
-            p_info->node_adr = adr;
-            memcpy(p_info->dev_key_candi, dev_key_cadi, 16);
+		p_info->node_adr = new_adr;
+		memcpy(p_info->dev_key, dev_key_cadi, 16);
+		memset(p_info->dev_key_candi,0,16);
+		#if DONGLE_PROVISION_EN
+		save_vc_node_info_all();
+		#else
+		save_vc_node_info_single(p_info);
+		#endif
+        return 0;
+    }
 
+    return -1; 	 // full
+}
+ 
+ int VC_node_dev_key_save_candi(u16 adr, u8 *dev_key_cadi)
+ {
+	 if(!is_unicast_adr(adr) && (!adr)){
+		 return -1;
+	 }
+ 
+	 VC_node_info_t *p_info = 0;	// save
+	 VC_node_info_t *p_info_1st_empty = 0;
+	 foreach(i,MESH_NODE_MAX_NUM){
+		 VC_node_info_t *p_info_tmp = &VC_node_info[i];
+		 if(p_info_tmp->node_adr == adr){	 
+			 p_info = p_info_tmp;  // existed
+			 break;
+		 }else if((!p_info_1st_empty) && ((0 == p_info_tmp->node_adr)||(p_info_tmp->node_adr >= 0x8000))){
+			 p_info_1st_empty = p_info_tmp;
+		 }
+	 }
+	 if(p_info){
+		 if(!((adr == p_info->node_adr)&&(!memcmp(p_info->dev_key_candi, dev_key_cadi, 16)))){
+			 p_info->node_adr = adr;
+			 memcpy(p_info->dev_key_candi, dev_key_cadi, 16);
+ 
             #if DONGLE_PROVISION_EN
             save_vc_node_info_all();
             #else

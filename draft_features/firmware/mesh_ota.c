@@ -19,22 +19,22 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #if !WIN32
-#include "../../proj/mcu/watchdog_i.h"
+#include "proj/mcu/watchdog_i.h"
 #endif 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "mesh_ota.h"
-#include "../../proj_lib/mesh_crypto/sha256_telink.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
 
 #if MD_MESH_OTA_EN
 #if WIN32
-#include "../../proj/common/tstring.h"
+#include "proj/common/tstring.h"
 
 u32 	ota_firmware_size_k = FW_SIZE_MAX_K;	// same with pm_8269.c
 #endif
@@ -161,6 +161,8 @@ u8 fw_ota_data_rx[NEW_FW_MAX_SIZE] = {1,2,3,4,5,};
 #endif
 
 STATIC_ASSERT(MESH_OTA_BLOCK_SIZE_MAX <= MESH_OTA_CHUNK_SIZE * 32);
+STATIC_ASSERT((MESH_OTA_BLOCK_SIZE_MIN % 16 == 0)&&(MESH_OTA_BLOCK_SIZE_MAX % 16 == 0)); // for CRC check
+STATIC_ASSERT((MESH_OTA_CHUNK_SIZE % 16 == 0)); // for encryption bin
 
 //STATIC_ASSERT(MESH_OTA_CHUNK_NUM_MAX <= 32);  // max bit of miss_mask in fw_distribut_srv_proc
 
@@ -337,12 +339,46 @@ int read_ota_file2buffer()
     return 0;
 }
 
+void mesh_fw_distibut_set(u8 en)
+{
+	fw_distribut_srv_proc.ota_rcv_flag = en;
+}
+
+void mesh_fw_distribute_adr(u8 en)
+{
+	fw_distribut_srv_proc.adr_set_flag = en;
+}
+
+void fw_distribut_update_list_init(fw_distribut_start_t *p_start, u32 update_node_cnt)
+{
+    foreach(i,update_node_cnt){
+        fw_distribut_srv_proc.list[i].adr = p_start->update_list[i];
+        fw_distribut_srv_proc.list[i].st_block_start = UPDATE_NODE_ST_IN_PROGRESS;
+    }
+    fw_distribut_srv_proc.node_cnt = update_node_cnt;
+}
+
 int mesh_cmd_sig_fw_distribut_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	u8 st = DISTRIBUT_ST_INTERNAL_ERROR;
     fw_distribut_start_t *p_start = (fw_distribut_start_t *)par;
     u32 update_node_cnt = (par_len - OFFSETOF(fw_distribut_start_t,update_list)) / 2;
-    
+	if( fw_distribut_srv_proc.ota_rcv_flag && 
+		fw_distribut_srv_proc.st == MASTER_OTA_ST_IDLE){
+		// if it have the ota_rcv_flag,we will only set the para part .
+		distribut_srv_proc_init();
+		update_node_cnt = par_len/2;
+		if(update_node_cnt){
+		    fw_distribut_start_t *p_start2 = (fw_distribut_start_t *)(par - OFFSETOF(fw_distribut_start_t,update_list));
+            fw_distribut_update_list_init(p_start2, update_node_cnt);
+        }
+		mesh_fw_distibut_set(0);
+		mesh_fw_distribute_adr(1);
+		return 0; 
+	}
+	if(fw_distribut_srv_proc.adr_set_flag){
+		update_node_cnt = fw_distribut_srv_proc.node_cnt;
+	}
     if(update_node_cnt > MESH_OTA_UPDATE_NODE_MAX || update_node_cnt == 0){
         LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"update node cnt error: %d", update_node_cnt);
     	st = DISTRIBUT_ST_OUTOF_RESOURCE;
@@ -364,7 +400,9 @@ int mesh_cmd_sig_fw_distribut_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
     	#endif
     }else{
         APP_print_connected_addr();
-        distribut_srv_proc_init();
+		if(fw_distribut_srv_proc.adr_set_flag == 0){
+			distribut_srv_proc_init();
+		}
         fw_distribut_srv_proc.adr_group = p_start->adr_group;
         fw_distribut_srv_proc.adr_distr_node = ele_adr_primary;
         if(0 != read_ota_file2buffer()){
@@ -372,12 +410,8 @@ int mesh_cmd_sig_fw_distribut_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
             return 0;   // error
         }
         
-        if(update_node_cnt){
-            foreach(i,update_node_cnt){
-                fw_distribut_srv_proc.list[i].adr = p_start->update_list[i];
-                fw_distribut_srv_proc.list[i].st_block_start = UPDATE_NODE_ST_IN_PROGRESS;
-            }
-            fw_distribut_srv_proc.node_cnt = update_node_cnt;
+        if(update_node_cnt && fw_distribut_srv_proc.adr_set_flag == 0){
+            fw_distribut_update_list_init(p_start, update_node_cnt);
         }
 
         #if WIN32 
@@ -386,6 +420,7 @@ int mesh_cmd_sig_fw_distribut_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
         }else
         #endif
         {
+        	mesh_fw_distribute_adr(0);
             mesh_ota_master_next_st_set(MASTER_OTA_ST_DISTRIBUT_START);
         }
         
@@ -1156,7 +1191,7 @@ void mesh_ota_master_proc()
 			{
 				fw_detail_list_t *p_list = fw_distribut_srv_proc.list;
 				u8 mesh_ota_sts[1+2*MESH_OTA_UPDATE_NODE_MAX];
-				u8 mesh_ota_idx =0;
+				u16 mesh_ota_idx =0;
 				mesh_ota_sts[0]=0;
 				for(int i=0;i<fw_distribut_srv_proc.node_cnt;i++){
 					p_list = &(fw_distribut_srv_proc.list[i]);
@@ -1245,6 +1280,13 @@ u32 soft_crc32_ota_flash(u32 addr, u32 len, u32 crc_init,u32 *out_crc_type1_blk)
         #endif
         if(0 == addr){
             buf[8] = fw_update_srv_proc.reboot_flag_backup;
+            fw_update_srv_proc.bin_crc_type = get_ota_check_type();
+            if(FW_CHECK_AGTHM2 == fw_update_srv_proc.bin_crc_type){
+                fw_update_srv_proc.crc_total = 0xffffffff;  // crc init
+                if(out_crc_type1_blk){
+                    *out_crc_type1_blk = fw_update_srv_proc.crc_total;
+                }
+            }
         }
         
         #if BLOCK_CRC32_CHECKSUM_EN
@@ -1252,14 +1294,26 @@ u32 soft_crc32_ota_flash(u32 addr, u32 len, u32 crc_init,u32 *out_crc_type1_blk)
         #endif
         
 		if(out_crc_type1_blk){
-        	crc_type1_blk += get_blk_crc_tlk_type1(buf, len_read, addr);	// use to get total crc of total firmware.
+		    if(FW_CHECK_AGTHM2 == fw_update_srv_proc.bin_crc_type){
+		        u32 crc_check_len = len_read;
+		        if(addr + len_read == fw_update_srv_proc.blob_size){ // the last packet
+		            if(len_read % 16 == 0){ // encryption bin mode
+		                crc_check_len -= 1;  // the last packet
+		            }
+		        }
+		        *out_crc_type1_blk = get_blk_crc_tlk_type2(*out_crc_type1_blk, buf, crc_check_len);
+		    }else{
+        	    crc_type1_blk += get_blk_crc_tlk_type1(buf, len_read, addr);	// use to get total crc of total firmware.
+        	}
 		}
         
         len -= len_read;
         addr += len_read;
     }
     if(out_crc_type1_blk){
-		*out_crc_type1_blk = crc_type1_blk;
+        if(FW_CHECK_AGTHM2 != fw_update_srv_proc.bin_crc_type){
+		    *out_crc_type1_blk = crc_type1_blk;
+		}
 	}
     return crc_init;
 }
@@ -1301,7 +1355,14 @@ int is_valid_mesh_ota_calibrate_val()
     }
     #endif
 
-	if(OTA_CHECK_TYPE_TELINK_MESH == get_ota_check_type()){
+    u8 check_type = get_ota_check_type();
+            
+    #if ENCODE_OTA_BIN_EN
+    if(check_type != FW_CHECK_AGTHM2){
+        return 0;   // must check 2.
+    }
+    #endif
+	if((FW_CHECK_AGTHM1 == check_type) || (FW_CHECK_AGTHM2 == check_type)){
 	    if(0 == fw_update_srv_proc.bin_crc_done){
     	    u32 len = fw_update_srv_proc.blob_size;
     		int crc_ok = (is_valid_mesh_ota_len(len) 
@@ -2022,6 +2083,15 @@ int mesh_cmd_sig_blob_chunk_transfer(u8 *par, int par_len, mesh_cb_fun_par_t *cb
     int fw_data_len = par_len - 2;
     
     if(is_blob_chunk_transfer_ready() && ((fw_data_len > 0) && (fw_data_len <= MESH_OTA_CHUNK_SIZE))){
+        #if (ENCODE_OTA_BIN_EN && (!WIN32))
+        u8 key[16];
+        memcpy(key, key_encode_bin, sizeof(key));
+        int dec_pos = 0;
+        while(dec_pos + 16 <= fw_data_len){
+            aes_decrypt(key, p_chunk->data + dec_pos, p_chunk->data + dec_pos);
+            dec_pos += 16;
+        }
+        #endif
         //u32 bit_chunk = BIT(p_chunk->chunk_num);
         //LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0,"chunk_num: 0x%04x",p_chunk->chunk_num);
         if((p_chunk->chunk_num + 1) * fw_update_srv_proc.block_start.chunk_size > (1 << fw_update_srv_proc.bk_size_log)){
@@ -2060,7 +2130,7 @@ int mesh_cmd_sig_blob_chunk_transfer(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 int block_crc32_check_current(u32 check_val)
 {
     u32 adr = updater_get_fw_data_position(0);
-    u32 crc_type1_blk = 0;
+    u32 crc_type1_blk = (FW_CHECK_AGTHM2 == fw_update_srv_proc.bin_crc_type) ? fw_update_srv_proc.crc_total : 0;
     u32 crc32_cal = 0;
     crc32_cal = soft_crc32_ota_flash(adr, fw_update_srv_proc.bk_size_current, 0,&crc_type1_blk);
     #if BLOCK_CRC32_CHECKSUM_EN
@@ -2071,7 +2141,11 @@ int block_crc32_check_current(u32 check_val)
         u8 *mask = fw_update_srv_proc.blk_crc_tlk_mask;
         u16 blk_num = fw_update_srv_proc.block_start.block_num; // have make sure blk_num is valid before.
         if(!is_array_mask_en(mask, blk_num)){
-            fw_update_srv_proc.crc_total += crc_type1_blk;
+            if(FW_CHECK_AGTHM2 == fw_update_srv_proc.bin_crc_type){
+                fw_update_srv_proc.crc_total = crc_type1_blk;
+            }else{
+                fw_update_srv_proc.crc_total += crc_type1_blk;
+            }
             set_array_mask_en(mask, blk_num);
         }
         #if (0 == BLOCK_CRC32_CHECKSUM_EN)

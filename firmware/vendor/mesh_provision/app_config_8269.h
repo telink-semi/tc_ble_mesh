@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#include "../../vendor/common/version.h"    // include mesh_config.h inside.
+#include "vendor/common/version.h"    // include mesh_config.h inside.
 
 
 #define _USER_CONFIG_DEFINED_	1	// must define this macro to make others known
@@ -65,6 +65,8 @@ extern "C" {
 
 /////////////////// mesh project config /////////////////////////////////
 #define TRANSITION_TIME_DEFAULT_VAL (0x00)  // 0x41: 1 second // 0x00: means no default transition time
+
+#define PROVISIONER_GATT_ADV_EN	    0 // must be 0, because ram limited(define blt_rxfifo and blt_txfifo)
 
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			0

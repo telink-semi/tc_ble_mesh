@@ -19,12 +19,12 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../proj_lib/mesh_crypto/mesh_crypto.h"
-#include "../../proj_lib/pm.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/mesh_crypto/mesh_crypto.h"
+#include "proj_lib/pm.h"
 #include "app_proxy.h"
 #include "app_health.h"
 #include "mesh_test_cmd.h"
@@ -270,4 +270,22 @@ void test_cmd_tdebug()
 		}
 	}
 }
+
+#if 0
+void power_on_io_proc(u8 i)
+{
+#if !WIN32
+#define GPIO_DEBUG 	GPIO_PB4
+	gpio_set_func(GPIO_DEBUG,AS_GPIO);
+	gpio_set_output_en(GPIO_DEBUG,1);
+	while(i){
+		gpio_write(GPIO_DEBUG,1);
+		NOP_TEST_BYTE_100;
+		gpio_write(GPIO_DEBUG,0);
+		NOP_TEST_BYTE_100;
+		i--;
+	}
+#endif
+}
+#endif
 

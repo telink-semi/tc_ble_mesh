@@ -337,6 +337,7 @@ _attribute_ram_code_ void rxfer_process(rxfer_cb_t *pxfer, uint8_t *pdata, uint8
             case DEV_CONFIRMATION:
             case DEV_RANDOM:
             case BIND_KEY:
+            case WIFI_CONFIG:
                 pxfer->cmd_type = SEG_CMD;
                 pxfer->cmd = cmd;
                 memcpy(&pxfer->max_sn, pframe->ctrl.arg, 2);
@@ -360,6 +361,7 @@ _attribute_ram_code_ void rxfer_process(rxfer_cb_t *pxfer, uint8_t *pdata, uint8
             case DEV_CONFIRMATION:
             case DEV_RANDOM:
             case BIND_KEY:
+            case WIFI_CONFIG:
                 pxfer->cmd_type = SGL_CMD;
                 pxfer->cmd = cmd;
                 pxfer->max_sn = 1;
@@ -550,7 +552,8 @@ PT_THREAD(rxfer_rx_thd(pt_t *pt, rxfer_cb_t *pxfer, uint8_t data_type, ...))
 
     if (data_type == SERVER_CERT  ||
         data_type == PASS_THROUGH ||
-        data_type == MESH_CONFIG) {
+        data_type == MESH_CONFIG  ||
+        data_type == WIFI_CONFIG) {
         va_list ap;
         va_start(ap, data_type);
         uint16_t * arg = (uint16_t*)(va_arg(ap, int));

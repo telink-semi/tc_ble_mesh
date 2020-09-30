@@ -22,8 +22,8 @@
 
 #ifndef SUBNET_DIRECTED_H
 #define SUBNET_DIRECTED_H
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj/tl_common.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 
 #define MAX_BRIDGE_ENTRIES			0x10
 

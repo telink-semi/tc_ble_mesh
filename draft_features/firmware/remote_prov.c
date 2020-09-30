@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 
 #include "remote_prov.h"
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #ifndef WIN32
-#include "../../proj/mcu/watchdog_i.h"
+#include "proj/mcu/watchdog_i.h"
 #endif 
 #include "user_config.h"
 #include "lighting_model.h"
@@ -31,23 +31,25 @@
 #include "lighting_model_LC.h"
 #include "mesh_ota.h"
 #include "mesh_common.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../proj_lib/mesh_crypto/sha256_telink.h"
-#include "../../proj_lib/mesh_crypto/le_crypto.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
+#include "proj_lib/mesh_crypto/le_crypto.h"
+#include "proj/common/tstring.h"
+
 #if MI_API_ENABLE 
-#include "../../vendor/common/mi_api/telink_sdk_mible_api.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #endif 
 #define REMOTE_PROV_PTS_EN	0
 #if MD_REMOTE_PROV
 model_remote_prov_t model_remote_prov;
 u32 mesh_md_rp_addr = FLASH_ADR_MD_REMOTE_PROV;
 rp_mag_str rp_mag;
-
 u8 node_devkey_candi[16];
+provison_net_info_str node_adr_net_info;
 
 void mesh_rp_para_init()
 {
@@ -326,19 +328,9 @@ int mesh_cmd_sig_rp_scan_proc()
     return 1;
 }
 
-int mesh_cmd_sig_rp_scan_extend_proc()
-{
-    remote_prov_extend_scan_str *p_ex_scan = &(rp_mag.rp_extend);
-    if(clock_time_exceed_s(p_ex_scan->tick,p_ex_scan->time_s)&&p_ex_scan->time_s){
-        // timeout 
-        memset(p_ex_scan,0,sizeof(remote_prov_extend_scan_str));
-    }
-    return 1;
-}
-
 int mesh_ad_type_is_valid(u8 ad_type)
 {
-	if(ad_type>=AD_TYPE_FLAGS && ad_type <= AD_TYPE_TK_VALUE){
+	if((ad_type>=AD_TYPE_FLAGS && ad_type <= AD_TYPE_TK_VALUE) ||(ad_type == AD_TYPE_URI)){
 		if(	ad_type != AD_TYPE_SHORT_LOCAL &&
 			ad_type != AD_TYPE_16BITS_UUID &&
 			ad_type != AD_TYPE_32BITS_UUID &&
@@ -369,33 +361,365 @@ int extend_ad_type_is_valid(u8 *p_type,u8 cnt)
 	return 1;
 }
 
+int mesh_filter_have_uri_ad_types(u8 *p_filter,u8 len)
+{
+	for(int i=0;i<len;i++){
+		if(p_filter[i] == AD_TYPE_URI){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+int mesh_analyze_filter_proc(u8 *p_filter,u8 len)
+{
+	if(len==0){
+		return 0;
+	}
+	int uri_ad_flag = mesh_filter_have_uri_ad_types(p_filter,len);
+	if(uri_ad_flag){
+		return (len==1)?EXTEND_END_WITH_ONLY_URI_AD:EXTEND_END_WITH_MULTI_URI_AD;
+	}else{
+		return EXTEND_END_WITHOUT_URI_AD;
+	}
+}
+
+int mesh_proc_filter_part(remote_prov_extend_scan_str *p_scan,remote_prov_extend_scan_start *p_extend_scan)
+{
+	if(p_extend_scan->ADTypeFilterCount == 0){
+		return 0;
+	}
+	p_scan->ADTypeFilterCount = p_extend_scan->ADTypeFilterCount;
+	memcpy(p_scan->ADTypeFilter,p_extend_scan->ADTypeFilter,p_scan->ADTypeFilterCount);
+	p_scan->end_flag |= EXTEND_END_ALL_AD;
+	return 1;
+}
+
+int mesh_tx_extend_scan_report(remote_prov_extend_scan_str *p_scan)
+{
+	int err = -1;
+	u8 rsp_len =0;
+	rp_extend_scan_report_str *p_report = &p_scan->report;
+	if(is_buf_zero(p_report->uuid,sizeof(p_report->uuid))){
+		return 1;
+	}
+	// we will force to send the oob info part 
+	p_report->status = REMOTE_PROV_STS_SUC;
+	rsp_len = 19+p_report->adv_str_len;
+	err = mesh_tx_cmd_rsp(REMOTE_PROV_EXTEND_SCAN_REPORT,(u8 *)p_report,rsp_len,
+                      ele_adr_primary,p_scan->src_adr,0,0); 
+	if(err == 0){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
+void mesh_extend_set_scan_str(remote_prov_extend_scan_str *p_scan,event_adv_report_t *report)
+{
+	beacon_data_pk *p_beacon = (beacon_data_pk *)(report->data);
+	// cpy the uuid info directly to the report uuid part 
+	memcpy(p_scan->report.uuid,p_beacon->device_uuid,16);
+	memcpy(p_scan->report.oob_info,p_beacon->oob_info,2);
+	// set the unprov's node mac adr ,and then it can operate by the mac adr.
+	memcpy(p_scan->mac_adr,report->mac,6);
+	p_scan->active_scan =1;
+}
+
+int mesh_extend_unprov_beacon_cb(event_adv_report_t *report)
+{
+	beacon_data_pk *p_beacon = (beacon_data_pk *)(report->data);
+	for(int i=0;i<MAX_EXTEND_SCAN_CNT;i++){
+		remote_prov_extend_scan_str *p_scan = &(rp_mag.rp_extend[i]);
+		if(p_scan->end_flag && is_buf_zero(p_scan->report.uuid,16)){
+			if(!is_buf_zero(p_scan->uuid,sizeof(p_scan->uuid))){// should have const uuid.
+				if(!memcmp(p_scan->uuid,p_beacon->device_uuid,16)){
+					//only the unprov beacon's uuid is the same as the scan's uuid ,we can operate
+					mesh_extend_set_scan_str(p_scan,report);
+				}
+			}else{
+				// cpy the uuid info directly to the report uuid part 
+				mesh_extend_set_scan_str(p_scan,report);	
+				//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,p_scan->mac_adr,6,"set extend unprov para",0);
+			}
+		}
+	}
+	return 1;
+}
+
+typedef struct{
+	u8 len;
+	u8 type;
+	u8 data[1];
+}ad_type_str;
+
+u8 mesh_extend_filter_is_valid(remote_prov_extend_scan_str *p_scan,u8 ad_type)
+{
+	for(int i=0;i<p_scan->ADTypeFilterCount;i++){
+		if(ad_type == p_scan->ADTypeFilter[i]){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+u8 mesh_extend_filter_clear(remote_prov_extend_scan_str *p_scan,u8 ad_type)
+{
+	for(int i=0;i<p_scan->ADTypeFilterCount;i++){
+		if(ad_type == p_scan->ADTypeFilter[i]){
+			p_scan->ADTypeFilter[i] = 0;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+u8 mesh_extend_filter_set_report_str(remote_prov_extend_scan_str *p_scan,event_adv_report_t *report,u8 uri_flag)
+{
+	int len =report->len;
+	int idx=0;
+	rp_extend_scan_report_str *p_report = &(p_scan->report);
+	while(idx<=len){
+		ad_type_str *p_adv = (ad_type_str *)&(report->data[idx]);
+		if(!is_buf_zero(p_scan->ADTypeFilter,sizeof(p_scan->ADTypeFilter))&&
+			mesh_extend_filter_is_valid(p_scan,p_adv->type)){
+			u8 len = p_report->adv_str_len;
+			u8 *buf = &(p_report->adv_str[len]);
+			if((len+p_adv->len+1) <= MAX_EXTEND_ADV_LEN){
+				memcpy(buf,(u8*)p_adv,p_adv->len+1);// cpy all the data.
+				p_report->adv_str_len += p_adv->len+1;
+				mesh_extend_filter_clear(p_scan,p_adv->type);
+				//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,p_scan->ADTypeFilter,8,"the adv type is %d",p_report->adv_str_len);
+				if(uri_flag && p_adv->type == AD_TYPE_URI){
+					return 1;
+				}
+			}else{
+				return 0;
+			}
+		}
+		idx+=p_adv->len+1;
+	}
+	return 0;
+}
+
+u8 mesh_tx_send_extend_scan_report(remote_prov_extend_scan_str *p_scan)
+{
+	int err =-1;
+	rp_extend_scan_report_str *p_report = &(p_scan->report);
+	//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8 *)p_report,19+p_report->adv_str_len,"mesh_tx_send_extend_scan_report",0);
+	err = mesh_tx_cmd_rsp(REMOTE_PROV_EXTEND_SCAN_REPORT,(u8 *)p_report,19+p_report->adv_str_len,
+                      ele_adr_primary,p_scan->src_adr,0,0); 
+	if(err == 0){
+		//clear the scan procedure 
+		memset(p_scan,0,sizeof(remote_prov_extend_scan_str));
+		return 1;
+	}
+	return 0;
+}
+
+u8 mesh_exend_filter_check_without_uri_ad(remote_prov_extend_scan_str *p_scan,event_adv_report_t *report)
+{
+	if(p_scan->end_flag & EXTEND_END_WITHOUT_URI_AD){
+		if(mesh_extend_filter_set_report_str(p_scan,report,0)){
+			return mesh_tx_send_extend_scan_report(p_scan);
+		}
+	}
+	return 0;
+}
+
+u8 mesh_exend_filter_check_with_uri_ad(remote_prov_extend_scan_str *p_scan,event_adv_report_t *report)
+{
+	if( p_scan->end_flag & EXTEND_END_WITH_ONLY_URI_AD ||
+		p_scan->end_flag & EXTEND_END_WITH_MULTI_URI_AD ){
+		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh_exend_filter_check_with_uri_ad ",0);
+		//proc the extend scan report,whether it have the uri adtype packet and proc 
+		if(mesh_extend_filter_set_report_str(p_scan,report,1)){
+			return mesh_tx_send_extend_scan_report(p_scan);
+		}
+	}
+	return 0;
+}
+
+u8 mesh_extend_filter_check_all_ad_type(remote_prov_extend_scan_str *p_scan,event_adv_report_t *report)
+{
+	if(p_scan->end_flag&EXTEND_END_ALL_AD){
+		// proc all the other cmd .
+		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh_extend_filter_check_all_ad_type",0);
+		mesh_extend_filter_set_report_str(p_scan,report,0);
+		// check the adv filter is all proc success or not .
+		if(is_buf_zero(p_scan->ADTypeFilter,sizeof(p_scan->ADTypeFilter))){
+			return mesh_tx_send_extend_scan_report(p_scan);
+		}
+	}
+	return 0;
+}
+
+
+int mesh_extend_adv_filter_proc(remote_prov_extend_scan_str *p_scan,event_adv_report_t *report)
+{
+	if((report->event_type&0x0f) == LL_TYPE_SCAN_RSP){
+		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh rcv scan rsp cmd ",0);
+		if(mesh_exend_filter_check_without_uri_ad(p_scan,report)){
+			return 1;
+		}
+	}
+	if(mesh_exend_filter_check_with_uri_ad(p_scan,report)){
+		return 1;
+	}
+	mesh_extend_filter_check_all_ad_type(p_scan,report);
+	return 1;
+}
+
+int mesh_extend_adv_cb(event_adv_report_t *report)
+{
+	for(int i=0;i<MAX_EXTEND_SCAN_CNT;i++){
+		remote_prov_extend_scan_str *p_scan = &(rp_mag.rp_extend[i]);
+		// directly compare the mac adr part ,and then set the adv filter part 
+		if(!memcmp(p_scan->mac_adr,report->mac,6)){
+			mesh_extend_adv_filter_proc(p_scan,report);
+		}
+	}
+	return 1;
+}
+
+u8  mesh_cmd_is_unprovision_beacon(event_adv_report_t *report)
+{
+	if((report->event_type&0x0f) == LL_TYPE_ADV_NONCONN_IND && 
+		report->data[1]== MESH_ADV_TYPE_BEACON &&
+		report->data[2]== UNPROVISION_BEACON){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
+u8  mesh_cmd_is_extend_proc_adv(event_adv_report_t *report)
+{
+	if((report->event_type&0x0f) == LL_TYPE_ADV_IND || 
+		(report->event_type&0x0f) == LL_TYPE_SCAN_RSP){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
+int mesh_cmd_extend_loop_cb(event_adv_report_t *report)
+{
+	// we should suppose when start a extend scan ,should first receive an unprovision beacon ,and then rcv the adv part
+	if(mesh_extend_scan_proc_is_valid() == 0){
+		return 0;
+	}
+	if(mesh_cmd_is_unprovision_beacon(report)){
+		mesh_extend_unprov_beacon_cb(report);
+	}else if(mesh_cmd_is_extend_proc_adv(report)){
+		mesh_extend_adv_cb(report);
+	}
+	return 1;
+}	
+
+_attribute_ram_code_ u8 conn_adv_type_is_valid_in_extend(u8* p_adv)
+{
+#if !WIN32
+	if(mesh_extend_scan_proc_is_valid() == 0){
+		return 0;
+	}
+	for(int i=0;i<MAX_EXTEND_SCAN_CNT;i++){
+		remote_prov_extend_scan_str *p_scan = &(rp_mag.rp_extend[i]);
+		if(!memcmp(p_scan->mac_adr,p_adv,6)){
+			if(p_scan->active_scan){
+				memcpy(pkt_scan_req.scanA,tbl_mac,6);
+				memcpy(pkt_scan_req.advA,p_scan->mac_adr,6);
+				rf_start_stx2rx ((void *)&pkt_scan_req, clock_time() + 100);
+			}
+			return 1;
+		}
+	}
+#endif
+	return 0;
+}
+
+void mesh_cmd_extend_timeout_proc()
+{
+	if(mesh_extend_scan_proc_is_valid() == 0){
+		return ;
+	}
+	for(int i=0;i<MAX_EXTEND_SCAN_CNT;i++){
+		remote_prov_extend_scan_str *p_scan = &(rp_mag.rp_extend[i]);
+		if(!is_buf_zero(p_scan,sizeof(remote_prov_extend_scan_str))){// means data is valid 
+			if((p_scan->end_flag & EXTEND_END_TIMEOUT )&& 
+				clock_time_exceed_s(p_scan->tick_s,p_scan->time_s)){
+				// need to report the extend scan report 
+				if(mesh_tx_extend_scan_report(p_scan)){
+					memset(p_scan,0,sizeof(remote_prov_extend_scan_str));//clear the info if finish ,else it will retry
+				}
+			}
+		}
+	}
+}
+
+remote_prov_extend_scan_str * mesh_find_empty_extend_scan()
+{
+	for(int i=0;i<MAX_EXTEND_SCAN_CNT;i++){
+		remote_prov_extend_scan_str *p_scan = &(rp_mag.rp_extend[i]);
+		if(is_buf_zero(p_scan,sizeof(remote_prov_extend_scan_str))){
+			return p_scan;
+		}
+	}
+	return 0;
+}
+
+u8 mesh_extend_scan_proc_is_valid()
+{
+	for(int i=0;i<MAX_EXTEND_SCAN_CNT;i++){
+		remote_prov_extend_scan_str *p_scan = &(rp_mag.rp_extend[i]);
+		if(p_scan->end_flag != 0){
+			return 1;
+		}
+	}
+	return 0;
+}
+
 // extend cmd will reserve to dispatch ??
 int mesh_cmd_sig_rp_extend_scan_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     remote_prov_extend_scan_start *p_extend_scan = (remote_prov_extend_scan_start *)par;
-    remote_prov_extend_scan_str *p_scan = &(rp_mag.rp_extend);
+    remote_prov_extend_scan_str *p_scan = mesh_find_empty_extend_scan();
+	if(p_scan == 0){
+		return -10;
+	}
+	// first find a empty extend buffer first.
 	memset(p_scan,0,sizeof(remote_prov_extend_scan_str));
-	if(!extend_ad_type_is_valid(p_extend_scan->ADTypeFilter,p_scan->ADTypeFilterCount)){
+	if(p_extend_scan->ADTypeFilterCount == 0 || p_extend_scan->ADTypeFilterCount > MAX_ADTYPE_FILTER_CNT){
+		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"extend filter cnt is invalid ",0);
 		return -1;
 	}
-	if(par_len == p_extend_scan->ADTypeFilterCount+1){
-		
-	}else if(par_len == p_extend_scan->ADTypeFilterCount+18){
-		u8 time_s = par[17+p_extend_scan->ADTypeFilterCount];
-		memcpy(p_scan->uuid,par+1+p_extend_scan->ADTypeFilterCount,16);
-		if(!mesh_extend_scan_timeout_is_valid(time_s)){
-			return -2;
-		}
-		p_scan->time_s = time_s;
-	}else{}
-	p_scan->ADTypeFilterCount = p_extend_scan->ADTypeFilterCount;
-	if(p_scan->ADTypeFilterCount<=MAX_ADTYPE_FILTER_CNT){
-	    memcpy(p_scan->ADTypeFilter,p_extend_scan->ADTypeFilter,p_scan->ADTypeFilterCount);
-	}else{
-	    return -3;
+	if(!extend_ad_type_is_valid(p_extend_scan->ADTypeFilter,p_extend_scan->ADTypeFilterCount)){
+		//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"extend filter value is invalid ",0);
+		return -2;
 	}
-	// need to start scan .
-	
+	if(!mesh_proc_filter_part(p_scan,p_extend_scan)){
+		
+		return -3;
+	}
+	p_scan->nid = cb_par->p_nw->nid;
+	p_scan->src_adr = cb_par->adr_src;
+	p_scan->end_flag |= mesh_analyze_filter_proc(p_extend_scan->ADTypeFilter,p_scan->ADTypeFilterCount);
+	//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"extend filter adr is %d,end flag is %d",p_scan->src_adr,p_scan->end_flag);
+	if(par_len == p_extend_scan->ADTypeFilterCount+1){// means only have the filter and ad types part 
+		
+	}else if(par_len == p_extend_scan->ADTypeFilterCount+18){// suppose the uuid and time at the same time 
+		u8 *p_uuid = par + 1 + p_extend_scan->ADTypeFilterCount;
+		u8 time_s = p_uuid[16];
+		memcpy(p_scan->uuid,p_uuid,16);
+		if(!mesh_extend_scan_timeout_is_valid(time_s)){
+			return -4;//timeout is invalid 
+		}
+		p_scan->end_flag |= EXTEND_END_TIMEOUT;
+		p_scan->time_s = time_s;
+		p_scan->tick_s = clock_time_s();
+	}else{
+		return -5; // the length is invalid .
+	}
     return 0;
 }
 
@@ -468,12 +792,15 @@ void mesh_rp_dkri_end_cb()
 			mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);    // restart establish procedure
 			#endif
 			//Copy Composition Data Page 128 to Composition Data Page 0, ,perhaps no page 128
-
+			mesh_cps_data_update_page0_from_page128();
 			// if the node adr ,it should directly update the devkey part 
 			memcpy(mesh_key.dev_key,node_devkey_candi,16);
 			memset(node_devkey_candi,0,16);// clear the devkey candi.
-			mesh_cps_data_update_page0_from_page128();
-		}else if (dkri == RP_DKRI_NODE_CPS_REFRESH){
+			// use the provision mag's adr to update the others. have already proc by the mesh_rsp_handle
+			memcpy(&provision_mag.pro_net_info,&node_adr_net_info,sizeof(provison_net_info_str));
+			// add the info about the gatt mode provision ,should set the cfg data part into the node identity
+			mesh_provision_par_handle((u8 *)&provision_mag.pro_net_info);
+			}else if (dkri == RP_DKRI_NODE_CPS_REFRESH){
 			mesh_cps_data_update_page0_from_page128();
 		}
 		prov_para.dkri = 0; //clear the status .
@@ -737,8 +1064,10 @@ void mesh_prov_pdu_send_retry_proc()
         p_retry->tick = clock_time()|1; 
 		if (p_retry->retry_flag & REMOTE_PROV_SERVER_OUTBOUND_FLAG&& !is_busy_tx_segment_or_reliable_flow()){
             // proc the rsp of the segment cmd ,and proc one packet for some time.
-            if(mesh_cmd_sig_rp_pdu_outbound_send() == 0){
+			//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE OUTBOUND_FLAG send",0);
+			if(mesh_cmd_sig_rp_pdu_outbound_send() == 0){
 				p_retry->retry_flag &=~(REMOTE_PROV_SERVER_OUTBOUND_FLAG);
+				//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE OUTBOUND_FLAG send suc",0);
 				return ;
 			}
         }
@@ -746,8 +1075,10 @@ void mesh_prov_pdu_send_retry_proc()
 			u8 *prov_data = (p_retry->adv).transStart.data;
 			u8 pro_cmd = prov_data[0];
 			u8 len = get_mesh_pro_str_len(pro_cmd);
+			//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE cmd send",0);
 			if(mesh_prov_server_to_client_cmd(prov_data,len)== 0){
 				p_retry->retry_flag &=~(REMOTE_PROV_SERVER_CMD_FLAG);
+				//LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE cmd send suc",0);
 				return ;
 			}
         }
@@ -1054,7 +1385,8 @@ int mesh_rp_dkri_prov_data_proc(u8 dkri,u8* p_dev_key,u8 *p_prov_net)
 			(p_net->key_index == p_net_data->key_index)&&
 			!memcmp(p_net->iv_index ,p_net_data->iv_index,sizeof(p_net_data->iv_index))){
 				mesh_dkri_set_flag_devkey(dkri,p_dev_key);
-				// set a flag ,and wait to proc the node adr refresh proc part 
+				// need to store the prov_net_info first ,after the procedure ,we will update it .
+				memcpy(&node_adr_net_info,p_prov_net,sizeof(node_adr_net_info));
 				return 1;
 		}else{
 			return 0;
@@ -1088,9 +1420,11 @@ int mesh_rp_dkri_data_rcv_complete(mesh_pro_data_structer *p_rcv,mesh_pro_data_s
 	//calculate the dev_key part 
 	mesh_sec_dev_key(dev_key,prov_salt,dev_edch);
 	if(mesh_rp_dkri_prov_data_proc(rp_mag.link_dkri,dev_key,p_prov_net)){
-		memcpy(&provision_mag.pro_net_info,p_prov_net,sizeof(provison_net_info_str));
-		// add the info about the gatt mode provision ,should set the cfg data part into the node identity
-		mesh_provision_par_handle((u8 *)&provision_mag.pro_net_info);
+		if(rp_mag.link_dkri != RP_DKRI_NODE_ADR_REFRESH){
+			memcpy(&provision_mag.pro_net_info,p_prov_net,sizeof(provison_net_info_str));
+			// add the info about the gatt mode provision ,should set the cfg data part into the node identity
+			mesh_provision_par_handle((u8 *)&provision_mag.pro_net_info);
+		}
 		set_pro_complete(p_send);
 	}else{
 		// should be the pro fail cmd to disconnect
@@ -1285,7 +1619,6 @@ void mesh_cmd_sig_rp_server_loop_proc()
 	mesh_prov_pdu_link_open_sts_proc();
     mesh_prov_pdu_send_retry_proc();
     mesh_cmd_sig_rp_scan_proc();
-    mesh_cmd_sig_rp_scan_extend_proc();
 	mesh_prov_report_loop_proc();
 }
 
@@ -1304,6 +1637,7 @@ void mesh_cmd_sig_rp_loop_proc()
     #if WIN32
     mesh_rp_pdu_retry_send();
     #else
+	mesh_cmd_extend_timeout_proc();
     mesh_rp_ser_tick_loop();
     mesh_cmd_sig_rp_server_loop_proc();
     #endif

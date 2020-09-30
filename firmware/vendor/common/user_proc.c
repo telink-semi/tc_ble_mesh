@@ -22,13 +22,13 @@
 
 #include "user_proc.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../vendor/common/lighting_model.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "vendor/common/lighting_model.h"
 #include "vendor_model.h"
 #include "fast_provision_model.h"
-#include "../../proj_lib/mesh_crypto/aes_att.h"
-#include "../../proj_lib/mesh_crypto/mesh_md5.h"
-#include "../../vendor/common/certify_base/certify_base_crypto.h"
+#include "proj_lib/mesh_crypto/aes_att.h"
+#include "proj_lib/mesh_crypto/mesh_md5.h"
+#include "vendor/common/certify_base/certify_base_crypto.h"
 
 
 #if(AIS_ENABLE)
@@ -145,10 +145,10 @@ void user_power_on_proc()
     #if ((MESH_USER_DEFINE_MODE != MESH_SPIRIT_ENABLE)&&!MI_API_ENABLE)
     foreach(i,LIGHT_CNT){
         u16 adr_src = ele_adr_primary + (ELE_CNT_EVERY_LIGHT * i);
-        #if FEATURE_LOWPOWER_EN
-        mesh_tx_cmd_g_level_st(i, adr_src, 0xffff, 0, 0); // not support lightness as default
-        #else
+        #if MD_LIGHTNESS_EN
         mesh_tx_cmd_lightness_st(i, adr_src, 0xffff, LIGHTNESS_STATUS, 0, 0);
+        #elif MD_LEVEL_EN
+        mesh_tx_cmd_g_level_st(i, adr_src, 0xffff, 0, 0); // not support lightness as default
         #endif
     }
     #endif

@@ -19,23 +19,23 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #if !WIN32
-#include "../../proj/mcu/watchdog_i.h"
+#include "proj/mcu/watchdog_i.h"
 #endif 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
-#include "../../proj_lib/pm.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
+#include "proj_lib/pm.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "lighting_model.h"
-#include "../../vendor/common/sensors_model.h"
-#include "../../proj_lib/mesh_crypto/sha256_telink.h"
+#include "vendor/common/sensors_model.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
 #include "mesh_common.h"
-#include "../../vendor/common/app_health.h"
-#include "../../vendor/common/app_heartbeat.h"
+#include "vendor/common/app_health.h"
+#include "vendor/common/app_heartbeat.h"
 
 // ------- friend node && LPN common
 u8 mesh_subsc_adr_cnt_get (mesh_cmd_bear_unseg_t *p_br)
@@ -590,7 +590,7 @@ void mesh_friend_response_delay_proc_fn(u8 lpn_idx)
                 memcpy(&bear_temp, p_delay->poll_rsp, sizeof(mesh_cmd_bear_unseg_t));
 	            //LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)&bear_temp.len, bear_temp.len+1,"Data for poll:",0);
                 
-                mesh_sec_msg_enc_nw_rf_buf((u8 *)(&bear_temp.nw), mesh_lt_len_get_by_bear(&bear_temp), FRIENDSHIP, lpn_idx,0,fn_other_par[lpn_idx].nk_sel_dec_fn);
+                mesh_sec_msg_enc_nw_rf_buf((u8 *)(&bear_temp.nw), mesh_lt_len_get_by_bear(&bear_temp), FRIENDSHIP, lpn_idx,0,fn_other_par[lpn_idx].nk_sel_dec_fn, 0);
                 mesh_tx_cmd_add_packet_fn2lpn((u8 *)&bear_temp);
             }
 

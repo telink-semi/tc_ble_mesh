@@ -21,12 +21,16 @@
  *******************************************************************************************************/
 
 #ifdef MCU_STARTUP_8258_RET_16K
+@.include "version.in"
+#include "../../vendor/common/version.h"
 
 #ifndef __LOAD_RAM_SIZE__
 #define	__LOAD_RAM_SIZE__		0xc
 #endif
 
+#ifndef RAM_SIZE_MAX
 #define RAM_SIZE_MAX            (64*1024)
+#endif
 
 #define __MCU_STACK_INIT_EN     ((RAM_SIZE_MAX >= 48*1024) && MCU_STACK_INIT_EN)
 
@@ -34,8 +38,6 @@
 @********************************************************************************************************
 @                                           MACROS AND DEFINIITIONS
 @********************************************************************************************************
-@.include "version.in"
-#include "../../vendor/common/version.h"
 
 					@ Mode, correspords to bits 0-5 in CPSR
 	.equ MODE_BITS,		0x1F	@ Bit mask for mode bits in CPSR

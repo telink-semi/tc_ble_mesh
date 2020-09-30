@@ -19,16 +19,16 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #ifndef WIN32
-#include "../../proj/mcu/watchdog_i.h"
+#include "proj/mcu/watchdog_i.h"
 #endif 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../vendor/common/time_model.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "vendor/common/time_model.h"
 #include "time_model.h"
 #include "lighting_model_LC.h"
 #include "sensors_model.h"
@@ -82,7 +82,7 @@ void system_timer_handle_100ms()
     sensor_lighting_ctrl_proc();
 #endif
 #if (MD_DF_EN && MD_SERVER_EN && !WIN32)
-	mesh_directed_forwarding_proc(0, 0, 0, ADV_FROM_MESH);
+	mesh_directed_forwarding_proc(0, 0, 0, MESH_BEAR_ADV);
 #endif
 }
 

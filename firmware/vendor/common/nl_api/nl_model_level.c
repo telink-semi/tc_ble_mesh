@@ -20,10 +20,10 @@
  *           
  *******************************************************************************************************/
 
-#include "../../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #include "../light.h"
 #include "../user_config.h"
-#include "../../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "../lighting_model.h"
 #include "nl_model_level.h"
 

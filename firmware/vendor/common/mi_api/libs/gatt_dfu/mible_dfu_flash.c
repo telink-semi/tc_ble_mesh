@@ -1,5 +1,3 @@
-/* Includes ------------------------------------------------------------------*/
-
 //#include <string.h>
 #include "mible_api.h"
 #include "mible_log.h"

@@ -20,10 +20,10 @@
  *           
  *******************************************************************************************************/
 
-#include "../../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #include "../user_config.h"
 #include "../light.h"
-#include "../../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "nl_model_schedules.h"
 
 #if NL_API_ENABLE

@@ -22,9 +22,9 @@
 #ifndef APP_HEALTH_H_
 #define APP_HEALTH_H_
 
-#include "../../vendor/common/light.h"
-#include "../../proj_lib/sig_mesh/Test_case.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "vendor/common/light.h"
+#include "proj_lib/sig_mesh/Test_case.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 
 #define TEST_ID_STATIC 0
 #define TEST_ID_VENDOR_BLE_ASSIGN	1

@@ -6,6 +6,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "mible_type.h"
+#include "mible_dfu_main.h"
 #include "cryptography/mi_crypto_backend_mbedtls.h"
 
 /* Exported types ------------------------------------------------------------*/
@@ -23,6 +24,6 @@ typedef struct {
 /* Exported constants --------------------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 
-int mible_dfu_auth(dfu_ctx_t * p_ctx, uint32_t product_id, uint32_t dfu_pack_size);
+int mible_dfu_auth(dfu_ctx_t * p_ctx, mible_dfu_init_t * p_meta, uint32_t dfu_pack_size);
 
 #endif

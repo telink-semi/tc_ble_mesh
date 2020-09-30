@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 
 
 extern u32 system_time_ms;

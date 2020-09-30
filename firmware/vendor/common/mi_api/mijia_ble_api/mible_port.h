@@ -124,7 +124,7 @@
 
 #define CRITICAL_SECTION_ENTER()
 #define CRITICAL_SECTION_EXIT()
-#define MI_LOG_ENABLED 1
+//#define MI_LOG_ENABLED 1
 
 #define MI_PRINTF(...)							my_printf_uart(__VA_ARGS__)	
 #define MI_HEXDUMP(base_addr, bytes)			my_printf_uart_hexdump(base_addr,bytes)

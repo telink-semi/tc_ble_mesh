@@ -49,4 +49,7 @@ u8 gateway_upload_prov_link_cls(u8 *p_rsp,u8 len);
 u8 gateway_upload_prov_link_open(u8 *p_cmd,u8 len);
 u8 gateway_upload_log_info(u8 *p_buf,u8 len ,char *format,...); //gateway upload the print info to the vc
 
-
+int mesh_tx_comm_cmd(u16 adr);
+void mesh_ota_comm_test();
+extern u32 comm_send_flag ;
+extern u32 comm_send_tick ;

@@ -22,11 +22,11 @@
 
 #pragma once
 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
-#include "../../proj/common/utlist.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "proj/common/utlist.h"
 #include "light.h"
 #if MI_API_ENABLE
 #include "./mi_api/telink_sdk_mible_api.h"
@@ -113,7 +113,7 @@ typedef struct ev_loop_ctrl_t{
 }ev_loop_ctrl_t;
 
 #endif 
-enum { EV_TIMER_SAFE_MARGIN_US = 4000000, EV_TIMER_SAFE_MARGIN = (EV_TIMER_SAFE_MARGIN_US * CLOCK_SYS_CLOCK_1US) };		// in us,  
+enum { EV_TIMER_SAFE_MARGIN_US = 40000000, EV_TIMER_SAFE_MARGIN = (EV_TIMER_SAFE_MARGIN_US * CLOCK_SYS_CLOCK_1US) };		// in us,  
 typedef enum{
 	EV_SUSPEND_NOTIFY,
 	EV_WAKEUP_NOTIFY,

@@ -19,25 +19,25 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
-#include "../../proj/common/tstring.h"
+#include "proj/tl_common.h"
+#include "proj/common/tstring.h"
 #if !WIN32
-#include "../../proj/mcu/watchdog_i.h"
-#include "../../proj_lib/mesh_crypto/mesh_md5.h"
+#include "proj/mcu/watchdog_i.h"
+#include "proj_lib/mesh_crypto/mesh_md5.h"
 #include "myprintf.h"
 #endif 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "app_provison.h"
 #include "lighting_model.h"
-#include "../../vendor/common/sensors_model.h"
-#include "../../vendor/common/remote_prov.h"
-#include "../../proj_lib/mesh_crypto/sha256_telink.h"
-#include "../../proj_lib/mesh_crypto/le_crypto.h"
+#include "vendor/common/sensors_model.h"
+#include "vendor/common/remote_prov.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
+#include "proj_lib/mesh_crypto/le_crypto.h"
 #include "lighting_model_LC.h"
 #include "mesh_ota.h"
 #include "mesh_common.h"
@@ -56,19 +56,19 @@
 #include "../../../reference/tl_bulk/lib_file/host_fifo.h"
 #endif
 #if MI_API_ENABLE 
-#include "../../vendor/common/mi_api/telink_sdk_mible_api.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #endif 
 #if FAST_PROVISION_ENABLE
-#include "../../vendor/common/fast_provision_model.h"
+#include "vendor/common/fast_provision_model.h"
 #endif
 
 #if (HCI_ACCESS==HCI_USE_UART)
-#include "../../proj/drivers/uart.h"
+#include "proj/drivers/uart.h"
 #endif
 
 #if HOMEKIT_EN
 #include "../mesh_gw_node_homekit/hk_CategoryDef.h"
-#include "../../homekit_src/homekit_inc.h"
+#include "homekit_src/homekit_inc.h"
 #include "homekit_src/hk_adv_packet.h"
 #include "../mesh_gw_node_homekit/app.h"
 #endif
@@ -203,6 +203,49 @@ STATIC_ASSERT(HCI_RX_FIFO_SIZE % 16 == 0);
 MYFIFO_INIT(hci_rx_fifo, HCI_RX_FIFO_SIZE, 4);
 #endif
 #endif
+
+#if (!WIN32)    // also used for shell file.
+__WEAK void function_null_compile(const void *p){}// just for avoid being optimized
+
+#if ENCODE_OTA_BIN_EN
+/**
+ * key_encode_bin : Encryption key for OTA firmware.
+ * eclipse will create two firmwares: *.bin and *_enc.bin . "*_enc.bin" is only used for OTA.
+ * The key is used to encrypte in eclipse and decrypte in firmware.
+ * Key size must be 16 bytes in hex and should never be changed any more for this product.
+*/
+#ifndef ENCODE_BIN_USER_KEY     // please define in "user_app_config.h"
+#define ENCODE_BIN_USER_KEY     {0} //{0x51,0x03,0x1f,0x03,0x57,0x81,0x7b,0x5c,0x48,0x83,0x93,0xae,0xa8,0xc6,0x5d,0x9a,} // 
+#endif
+const u8 key_encode_bin[] = ENCODE_BIN_USER_KEY;    // must const
+STATIC_ASSERT(sizeof(key_encode_bin) == 16);
+
+#ifdef ENCODE_BIN_USER_NAME     // please define in "user_app_config.h" if need.
+const u8 ENCODE_BIN_USER_NAME_CONST[] = ENCODE_BIN_USER_NAME; // {"8258_mesh_AES"}
+STATIC_ASSERT(sizeof(ENCODE_BIN_USER_NAME_CONST) >= 1);
+#define FUNC_NULL_KEEP_ENCODE_BIN_USER_NAME()   do{function_null_compile(ENCODE_BIN_USER_NAME_CONST);}while(0)
+#endif
+#endif
+
+#ifndef FUNC_NULL_KEEP_ENCODE_BIN_USER_NAME
+#define FUNC_NULL_KEEP_ENCODE_BIN_USER_NAME()    
+#endif
+
+#ifdef NORMAL_BIN_USER_NAME    // please define in "user_app_config.h" if need.
+const u8 NORMAL_BIN_USER_NAME_CONST[] = NORMAL_BIN_USER_NAME; // {"8258_mesh_normal"}
+STATIC_ASSERT(sizeof(NORMAL_BIN_USER_NAME_CONST) >= 1);
+#define FUNC_NULL_KEEP_NORMAL_BIN_USER_NAME()     do{function_null_compile(NORMAL_BIN_USER_NAME_CONST);}while(0)
+#else
+#define FUNC_NULL_KEEP_NORMAL_BIN_USER_NAME()     
+#endif
+
+#define FUNC_NULL_KEEP_VAL()    FUNC_NULL_KEEP_ENCODE_BIN_USER_NAME(); \
+                                FUNC_NULL_KEEP_NORMAL_BIN_USER_NAME();
+#else
+#define FUNC_NULL_KEEP_VAL()    
+#endif
+
+
 
 u8 g_reliable_retry_cnt_def = RELIABLE_RETRY_CNT_DEF;
 u8 pair_login_ok = 0;
@@ -569,6 +612,10 @@ _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
 			}
 			else if(adv_type != LL_TYPE_ADV_NONCONN_IND){
 				next_buffer = 0;
+				#if MD_REMOTE_PROV
+				next_buffer = conn_adv_type_is_valid_in_extend(pAdv->advA);
+				
+				#endif
 				#if (USER_ADV_FILTER_EN)
 				next_buffer = user_adv_filter_proc(pAdv);
 				#endif
@@ -610,7 +657,9 @@ _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
 			}else if (fifo_free_cnt < 4){
 					// can not make the fifo overflow 
 				next_buffer = 0;
-			}else{}
+			}else{
+			}
+			
 			#if DEBUG_CFG_CMD_GROUP_AK_EN
 			update_nw_notify_num(pAdv, next_buffer);
 			#endif
@@ -897,23 +946,49 @@ _USER_CAN_REDEFINE_ void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_
 #endif
 }
 
+#if MI_API_ENABLE
 typedef struct{
 	u8 id;
 	u16 group_id;
+	// extra sts to control
+	u16 adr_src;
+	u8 send_cnt;
+	u32 send_tick;
 }mi_vendor_sts_str;
+
+mi_vendor_sts_str vd_proc;
+
+void mi_vendor_cfg_rsp_set(u16 grp_id,u16 adr_src)
+{
+	vd_proc.send_cnt = 2;
+	vd_proc.id = MI_SIMPLE_ROW_RSP;
+	vd_proc.group_id = grp_id;
+	vd_proc.adr_src = adr_src;
+	vd_proc.send_tick = clock_time()-300*1000;//force it can send at the first time
+}
+
+void mi_vendor_cfg_rsp_proc()
+{
+	int err =-1;
+	if( vd_proc.send_cnt && 
+		!is_busy_tx_segment_or_reliable_flow()
+		&&clock_time_exceed(vd_proc.send_tick,200*1000)){
+		err = mesh_tx_cmd2normal_primary(VD_MI_NODE_GW, (u8 *)(&vd_proc.id), 3,vd_proc.adr_src,0);
+		if(err == 0){
+			vd_proc.send_tick = clock_time();
+			vd_proc.send_cnt--;
+		}
+	}
+}
+#endif
 
 int mesh_cmd_sig_cfg_model_sub_cb(u8 st,mesh_cfg_model_sub_set_t * p_sub_set,bool4 sig_model,u16 adr_src)
 {
 #if MI_API_ENABLE
 	if(sub_adr_onoff){
 		// need to rsp the status 
-		mi_vendor_sts_str mi_sts;
-		mi_sts.id =MI_SIMPLE_ROW_RSP;
-		mi_sts.group_id = sub_adr_onoff;
-		int i=3;
-		while(i--){
-			mesh_tx_cmd2normal_primary(VD_MI_NODE_GW, (u8 *)&mi_sts, sizeof(mi_sts),adr_src,0);
-		}
+		mi_vendor_cfg_rsp_set(sub_adr_onoff,adr_src);
+		mi_vendor_cfg_rsp_proc();
 		sub_adr_onoff =0;
 		#if MI_SWITCH_LPN_EN // need to add random delay part 
 		mesh_rsp_random_delay_step = 120 + (rand() %10);    // random delay between 1200~1300ms
@@ -935,11 +1010,14 @@ void mesh_node_prov_event_callback(u8 evt_code)
 #else
     if( evt_code == EVENT_MESH_NODE_RC_LINK_START ||
         evt_code == EVENT_MESH_PRO_RC_LINK_START ){
+        #if(!GATEWAY_ENABLE)
         if(blt_state == BLS_LINK_STATE_CONN){
             blc_ll_setScanEnable (0, 0);
 			blc_att_setServerDataPendingTime_upon_ClientCmd(1);
 			set_prov_timeout_tick(clock_time()|1); 
-        }else{
+        }else
+		#endif
+		{
              // disable the mesh provision filter part 
 		    enable_mesh_adv_filter();
 		    //set_prov_timeout_tick(clock_time()|1); // disable the prov timeout proc ,only enable in gatt mode 
@@ -1154,6 +1232,9 @@ void mesh_ota_reboot_check_refresh()
 void mesh_ota_reboot_proc()
 {
     if(ota_reboot_later_tick && clock_time_exceed(ota_reboot_later_tick, 3000*1000)){ // for 4 hops or more
+        #if KEEP_ONOFF_STATE_AFTER_OTA 
+        set_keep_onoff_state_after_ota();
+        #endif
         irq_disable();
         if(OTA_SUCCESS_DEBUG == ota_reboot_type){
             while(1){show_ota_result(OTA_SUCCESS);}
@@ -1252,7 +1333,13 @@ void set_random_adv_delay(int en)   // 0-10ms for mesh network PDU random delay
 	// random from 0--10ms
 	u8 cnt = 0;
 	if(en){
-		cnt = (rand() & 0x0F) + 1;	// unit : 625us; CMD_RAND_DELAY_MAX_MS
+	    if(blt_state == BLS_LINK_STATE_CONN){
+	        #if (!SIG_MESH_LOOP_PROC_10MS_EN) // no need for 8269
+	        cnt = (rand() % 12) + 1;    // because ble window. a little shorter should be better
+	        #endif
+	    }else{
+		    cnt = (rand() & 0x0F) + 1;	// unit : 625us; CMD_RAND_DELAY_MAX_MS
+		}
 	}
 	bls_set_adv_delay(cnt);
 }
@@ -1324,7 +1411,7 @@ u8 gatt_adv_send_flag = 1;
 int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
 {
 #if FEATURE_RELAY_EN
-    if(relay_adv_prepare_handler(p)){
+    if(relay_adv_prepare_handler(p, rand_flag)){
         return 1;
     }
 #endif
@@ -1341,7 +1428,7 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
     }
     
     // dispatch gatt part 
-#if   !__PROJECT_MESH_PRO__
+#if   (!__PROJECT_MESH_PRO__ || PROVISIONER_GATT_ADV_EN)
     if(gatt_adv_send_flag && (blt_state!=BLS_LINK_STATE_CONN)
     #if FEATURE_LOWPOWER_EN
     && ((!is_lpn_support_and_en) || (LPN_MODE_GATT_OTA == lpn_mode))
@@ -1410,20 +1497,27 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
                 	ret = 1;
     			}
     				#endif
-                    #if PROVISION_GATT_ENABLE
+					#if PROVISIONER_GATT_ADV_EN
+				else{
+					set_adv_provisioner(p);
+					ret=1;
+				}
+					#else
+                    	#if PB_GATT_ENABLE
                 else if(provision_mag.gatt_mode == GATT_PROVISION_MODE){
                     set_adv_provision(p);
                     ret=1;
                     // dispatch proxy part adv 
                 }
-                    #endif 
-    				#if FEATURE_PROXY_EN
+                    	#endif 
+    					#if FEATURE_PROXY_EN
                 else if (provision_mag.gatt_mode == GATT_PROXY_MODE){
                     ret = set_adv_proxy(p);
                 }
-    				#endif
+    					#endif
                 else{
                 }
+					#endif
                 #endif
             }
         }
@@ -1534,22 +1628,29 @@ int app_advertise_prepare_handler (rf_packet_adv_t * p)
                             
         if(!adv_retry_flag){
 			#if (!MESH_RX_TEST)   // because is 10ms interval for TEST mode: mesh_conn_param_update_req()
-        	if(BLS_LINK_STATE_CONN == blt_state ||MI_SWITCH_LPN_EN || SPIRIT_PRIVATE_LPN_EN){
+        	if(MI_SWITCH_LPN_EN || SPIRIT_PRIVATE_LPN_EN){ // BLS_LINK_STATE_CONN == blt_state || should not depend CI.
         	    mesh_tx_cmd_busy_cnt = 0;
             }else
             #endif
             {
-            	if(p_bear->type & MD_PUB_FLAG){	
+            	if((p_bear->type & MD_PUB_FLAG)
+                #if ONLINE_STATUS_EN
+            	&& (p_bear->type != MESH_ADV_TYPE_ONLINE_ST)
+            	#endif
+            	){
 					mesh_tx_cmd_busy_cnt = (p_trans_par->invl_steps+1)*5-1; // publish unit is 50ms
-				}
-				else
-				{
+				}else{
             		mesh_tx_cmd_busy_cnt = p_trans_par->invl_steps;
 				}
             }
         }
 		u8 bear_type = p_bear->type;
-		p_bear->type &= ~BEAR_TYPE_FLAG;
+		#if ONLINE_STATUS_EN
+		if(p_bear->type != MESH_ADV_TYPE_ONLINE_ST)
+		#endif
+		{
+		    p_bear->type &= ~BEAR_TYPE_FLAG;
+		}
         ret = mesh_adv_cmd_set((u8 *)p, (u8 *)p_bear);
         p_bear->type = bear_type;// restore bear type flag
         #if __PROJECT_MESH_SWITCH__
@@ -1709,6 +1810,7 @@ void ble_mac_init()
 
 _USER_CAN_REDEFINE_ void mesh_scan_rsp_init()
 {
+#if (0 == USER_REDEFINE_SCAN_RSP_EN)
 	mesh_scan_rsp_t tbl_scanRsp={0};
 	tbl_scanRsp.vendor_id = g_vendor_id;
 	tbl_scanRsp.adr_primary = ele_adr_primary;
@@ -1724,6 +1826,7 @@ _USER_CAN_REDEFINE_ void mesh_scan_rsp_init()
 	rsp_len = ais_pri_data_set(&tbl_scanRsp.len);	
 	#endif
 	bls_ll_setScanRspData((u8 *)&tbl_scanRsp, rsp_len);
+#endif
 }
 #else
 void mesh_ota_reboot_set(u8 type){}
@@ -1783,6 +1886,8 @@ void mesh_vd_init()
 #if FAST_PROVISION_ENABLE
 	mesh_fast_prov_val_init();
 #endif
+
+    FUNC_NULL_KEEP_VAL();
 }
 
 #if WIN32
@@ -2234,7 +2339,11 @@ int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_
 					random_delay_step = 80 + (rand() %120);    // random delay between 800~2000ms
 						#endif
 					#else
-					random_delay_step = MESH_RSP_BASE_DELAY_STEP + (rand() & 0x1f);    // unit : ADV_INTERVAL_MIN(10ms)
+						#if DEBUG_CFG_CMD_GROUP_AK_EN
+					random_delay_step = MESH_RSP_BASE_DELAY_STEP + (rand() % max_time_10ms);    // unit : ADV_INTERVAL_MIN(10ms)
+						#else
+					random_delay_step = MESH_RSP_BASE_DELAY_STEP + (rand() % 0x20);
+						#endif
 					#endif
 				}else if (is_unicast_adr(cb_par->adr_dst)){
 					#if MI_SWITCH_LPN_EN
@@ -2265,19 +2374,36 @@ int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_
 // mesh rsp handle cb 
 int mesh_rsp_handle_cb(mesh_rc_rsp_t *p_rsp)
 {
-	#if GATEWAY_ENABLE
+	u32 size_op =0 ;
+	u16 op = 0;
+	size_op = size_op;  // just for cleaning compile warning, will be optimized.
+	op = op;            // just for cleaning compile warning, will be optimized.
+#if (!WIN32 && DEBUG_CFG_CMD_GROUP_AK_EN)
+	op = rf_link_get_op_by_ac(p_rsp->data);
+	size_op = SIZE_OF_OP(op);
+	if(op == VD_MESH_TRANS_TIME_STS && p_rsp->src != ele_adr_primary){
+		u8 *p_rcv_buf = &(p_rsp->data[p_rsp->len - 4]);
+		u32 rcv_tick = clock_time();
+		memcpy(p_rcv_buf,&rcv_tick,4);
+		memcpy(p_rcv_buf+4,&comm_send_tick,4);
+		p_rsp->len +=8;
+		comm_send_flag = 1; //allow to send the next cmd again .
+	}
+#endif
+
+#if GATEWAY_ENABLE
     gateway_model_cmd_rsp((u8 *)&(p_rsp->src),p_rsp->len);
 
 	#if MD_MESH_OTA_EN // VC_DISTRIBUTOR_UPDATE_CLIENT_EN
-	u16 op = rf_link_get_op_by_ac(p_rsp->data);
-	u32 size_op = SIZE_OF_OP(op);
+	op = rf_link_get_op_by_ac(p_rsp->data);
+	size_op = SIZE_OF_OP(op);
     //u8 *par = p_rsp->data + size_op;
     //u16 par_len = GET_PAR_LEN_FROM_RSP(p_rsp->len, size_op);
 	if(mesh_ota_master_rx(p_rsp, op, size_op)){
 	    return 1;
 	}
 	#endif
-	#endif 
+#endif 
 	return 1;
 }
 
@@ -2315,13 +2441,14 @@ void mesh_tx_reliable_stop_report(u16 op,u16 dst, u32 rsp_max, u32 rsp_cnt)
 #endif
 
 #if GATEWAY_ENABLE||WIN32
-u8 gateway_seg_buf[ACCESS_WITH_MIC_LEN_MAX];
+#define MAX_SEG_NUM_CNT max2(ACCESS_WITH_MIC_LEN_MAX,MESH_OTA_UPDATE_NODE_MAX*2+0x10)
+u8 gateway_seg_buf[MAX_SEG_NUM_CNT];
 u16 gateway_seg_buf_len;
 int gateway_sar_pkt_reassemble(u8 *buf,int len )
 {
 	u8 type =0;
 	type = buf[0];
-	if(len >= ACCESS_WITH_MIC_LEN_MAX){
+	if(len >= MAX_SEG_NUM_CNT){
 		gateway_seg_buf_len =0;
 		return ERR_PACKET_LEN;
 	}
@@ -2337,13 +2464,13 @@ int gateway_sar_pkt_reassemble(u8 *buf,int len )
 	}else if (type == SAR_CONTINUS){
 		memcpy(gateway_seg_buf+gateway_seg_buf_len,buf+1,len-1);
 		gateway_seg_buf_len += len-1;
-		if(gateway_seg_buf_len >= ACCESS_WITH_MIC_LEN_MAX){
+		if(gateway_seg_buf_len >= MAX_SEG_NUM_CNT){
 			gateway_seg_buf_len =0;
 			return ERR_PACKET_LEN;
 		}
 		return PACKET_WAIT_COMPLETE;
 	}else if (type == SAR_END){
-		if( (gateway_seg_buf_len +len-1 )>= ACCESS_WITH_MIC_LEN_MAX){
+		if( (gateway_seg_buf_len +len-1 )>= MAX_SEG_NUM_CNT){
 			gateway_seg_buf_len =0;
 			return ERR_PACKET_LEN;
 		}
@@ -2367,7 +2494,7 @@ int gateway_sar_pkt_segment(u8 *p_par,int par_len, u16 valid_fifo_size, u8 *p_he
 	head_len += 2;
 	seg_par_len = valid_fifo_size - head_len;
 	
-	if(valid_fifo_size > (valid_fifo_size + head_len)){// whole packet 
+	if(valid_fifo_size >= (par_len + head_len)){// whole packet 
 		head[1] = SAR_COMPLETE;
 		my_fifo_push_hci_tx_fifo(p_par,par_len, head, head_len);
 		return 1;
@@ -2428,8 +2555,9 @@ int app_hci_cmd_from_usb (void)	// be called in blt_sdk_main_loop()
 
 int app_hci_cmd_from_usb_handle (u8 *buff, int n) // for both usb and uart
 {
+	int ret = -1;
 	if(n <= 2){		// error len
-		return 0;
+		return ret;
 	}
 
 	static u32 app_uuu;
@@ -2444,12 +2572,11 @@ int app_hci_cmd_from_usb_handle (u8 *buff, int n) // for both usb and uart
 		if(gateway_sar_pkt_reassemble(buff+1,n-1) == RIGHT_PACKET_RET){
 			n = gateway_seg_buf_len;
 			buff = gateway_seg_buf;
+			ret = 0;
 		}
 		else{
-			return 0;
+			return ret;
 		}
-		#elif IS_VC_PROJECT
-		fifo_push_vc_cmd2dongle_usb(buff, n);
 		#endif
 	}
 
@@ -2459,50 +2586,51 @@ int app_hci_cmd_from_usb_handle (u8 *buff, int n) // for both usb and uart
 	
 	if (HCI_CMD_BULK_CMD2MODEL == type)
 	{
-        mesh_bulk_cmd2model(hci_data, hci_data_len);
+        ret = mesh_bulk_cmd2model(hci_data, hci_data_len);
 	}
 	else if (HCI_CMD_BULK_CMD2DEBUG == type)
 	{
-        mesh_bulk_cmd((mesh_bulk_cmd_par_t *)hci_data, hci_data_len);
+        ret = mesh_bulk_cmd((mesh_bulk_cmd_par_t *)hci_data, hci_data_len);
 	}
 	#if (!IS_VC_PROJECT)
 	#if (PROXY_HCI_SEL == PROXY_HCI_USB)
 	else if(HCI_CMD_ADV_PKT == type){
-		mesh_nw_pdu_from_gatt_handle(hci_data);
+		ret = mesh_nw_pdu_from_gatt_handle(hci_data);
 	}
 	#endif
 	#if DEBUG_MESH_DONGLE_IN_VC_EN
 	else if(HCI_CMD_ADV_DEBUG_MESH_DONGLE2BEAR == type){
-		mesh_tx_cmd_add_packet(hci_data);
+		ret = mesh_tx_cmd_add_packet(hci_data);
 	}
 	else if(HCI_CMD_ADV_DEBUG_MESH_DONGLE2GATT == type){
 		if(mesh_is_proxy_ready()){	// is_proxy_support_and_en
-			mesh_proxy_adv2gatt(hci_data, MESH_ADV_TYPE_MESSAGE);
+			ret = mesh_proxy_adv2gatt(hci_data, MESH_ADV_TYPE_MESSAGE);
 		}
 	}
 	else if(HCI_CMD_ADV_DEBUG_MESH_LED == type){
 		mesh_light_control_t *p = (mesh_light_control_t *)(hci_data);
 		pwm_set_lum(p->id, p->val, p->pol);
+		ret = 0;
 	}
 	#endif
 	#endif
 	else if (HCI_CMD_BULK_SET_PAR == type)
 	{
 		// set parameters of VC node
-    	mesh_bulk_set_par(hci_data, hci_data_len);
+    	ret = mesh_bulk_set_par(hci_data, hci_data_len);
 	}
 	else if (HCI_CMD_BULK_SET_PAR2USB == type)
 	{
 		#if IS_VC_PROJECT
-		fifo_push_vc_cmd2dongle_usb(buff, n);
+		ret = fifo_push_vc_cmd2dongle_usb(buff, n);
 		#else
-    	mesh_bulk_set_par2usb(hci_data, hci_data_len);
+    	ret = mesh_bulk_set_par2usb(hci_data, hci_data_len);
     	#endif
 	}
 	else if (HCI_CMD_PROVISION == type)
 	{
 		#if FEATURE_PROV_EN
-		mesh_provision_cmd_process();   
+		ret = mesh_provision_cmd_process();   
 	   	#endif
 	}
 	#if 0
@@ -2522,35 +2650,37 @@ int app_hci_cmd_from_usb_handle (u8 *buff, int n) // for both usb and uart
 	}else if (HCI_CMD_GATEWAY_CMD == type){
 		//gateway cmd
 		#if IS_VC_PROJECT
-		fifo_push_vc_cmd2dongle_usb(buff, n);
+		ret = fifo_push_vc_cmd2dongle_usb(buff, n);
 		#else
 		#if GATEWAY_ENABLE
 		// if the cmd is the node reset cmd ,need to proc the vc node info part
-		mesh_bulk_cmd((mesh_bulk_cmd_par_t *)(hci_data), hci_data_len);
+		ret = mesh_bulk_cmd((mesh_bulk_cmd_par_t *)(hci_data), hci_data_len);
 		#endif
 		#endif
 	}else if (HCI_CMD_GATEWAY_CTL == type){
 		#if IS_VC_PROJECT
-		fifo_push_vc_cmd2dongle_usb(buff, n);
+		ret = fifo_push_vc_cmd2dongle_usb(buff, n);
 		#else
 		#if GATEWAY_ENABLE
-    	gateway_cmd_from_host_ctl(hci_data, hci_data_len);
+    	ret = gateway_cmd_from_host_ctl(hci_data, hci_data_len);
     	#endif
 		#endif 
 	}else if (HCI_CMD_GATEWAY_OTA == type){
 		#if GATEWAY_ENABLE
-		gateway_cmd_from_host_ota(hci_data, hci_data_len);
+		ret = gateway_cmd_from_host_ota(hci_data, hci_data_len);
 		#endif
 	}else if (HCI_CMD_MESH_OTA == type){
 		#if GATEWAY_ENABLE
-		gateway_cmd_from_host_mesh_ota(hci_data, hci_data_len);
+		ret = gateway_cmd_from_host_mesh_ota(hci_data, hci_data_len);
 		#endif
 	}else{
-		#if (__PROJECT_8267_MASTER_KMA_DONGLE__)
-		blc_hci_handler (buff, n);
+		#if IS_VC_PROJECT
+		ret = fifo_push_vc_cmd2dongle_usb(buff, n);
+		#elif (__PROJECT_8267_MASTER_KMA_DONGLE__)
+		ret = blc_hci_handler (buff, n);
 		#endif
 	}
-	return 0;
+	return ret;
 }
 
 
@@ -2816,6 +2946,34 @@ int tl_log_msg_valid(char *pstr,u32 len_max,u32 module)
 	return ret;
 }
 
+#if WIN32 
+void set_log_windown_en (u8 en);
+void tl_log_file(u32 level_module,u8 *pbuf,int len,char  *format,...)
+{
+	char tl_log_str[MAX_STRCAT_BUF] = {0};
+	u32 module = LOG_GET_MODULE(level_module);
+	u32 log_level = LOG_GET_LEVEL(level_module);
+	set_log_windown_en(0);
+	if((0 == log_level) || (log_level > TL_LOG_LEVEL_MAX)){
+	    return ;
+	}else{
+        memcpy(tl_log_str,TL_LOG_STRING[log_level - 1],MAX_LEVEL_STRING_CNT);
+	}
+	
+	if(!tl_log_msg_valid(tl_log_str,sizeof(tl_log_str), module)){
+	    if(log_level != TL_LOG_LEVEL_ERROR){
+		    return ;
+		}
+	}
+	
+	va_list list;
+	va_start( list, format );
+	LogMsgModuleDlg_and_buf(pbuf,len,tl_log_str,format,list);
+	set_log_windown_en(1);
+}
+
+#endif
+
 void tl_log_msg(u32 level_module,u8 *pbuf,int len,char  *format,...)
 {
 #if (WIN32 || HCI_LOG_FW_EN)
@@ -2862,7 +3020,7 @@ int mesh_dev_key_candi_decrypt_cb(u16 src_adr, int dirty_flag ,u8* ac_backup ,un
 	if(err){
 		LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"device key candi decryption error ",0);
 	}else{
-		#if DONGLE_PROVISION_EN &&WIN32
+		#if DONGLE_PROVISION_EN ||WIN32
 		// update the vc node info part 
 		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"provisioner decrypt suc",0);
 		VC_node_dev_key_candi_enable(src_adr);// if decrypt suc ,the provisioner will update the candidate.

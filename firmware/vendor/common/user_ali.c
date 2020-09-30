@@ -22,12 +22,12 @@
 
 #include "user_ali.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../proj_lib/mesh_crypto/sha256_telink.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
 #include "vendor_model.h"
 #include "fast_provision_model.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
-#include "../../proj_lib/mesh_crypto/aes_cbc.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "proj_lib/mesh_crypto/aes_cbc.h"
 
 const char num2char[] = "0123456789abcdef";
 

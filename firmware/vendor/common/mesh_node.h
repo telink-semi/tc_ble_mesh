@@ -21,7 +21,7 @@
  *******************************************************************************************************/
 
 #pragma once
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #if NL_API_ENABLE
 #include "nl_api/nl_model_schedules.h"
 #endif
@@ -621,6 +621,9 @@ typedef struct{
 	u8 present_onoff;
 	u8 target_onoff;
 	u8 remain_t;
+#if MESH_RX_TEST
+	u8 data[20];
+#endif
 }mesh_cmd_g_onoff_st_t;
 
 typedef struct{
@@ -701,10 +704,12 @@ typedef struct{
 
 
 //--------------------------------------- node composition data
+#ifndef LIGHT_CNT
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL)
 #define LIGHT_CNT                       (3)     // means instance count
 #else
 #define LIGHT_CNT                       (1)     // means instance count
+#endif
 #endif
 #define ELE_CNT                         (LIGHT_CNT * ELE_CNT_EVERY_LIGHT)
 
@@ -1613,6 +1618,10 @@ u8 * mesh_cfg_cmd_dev_key_candi_get(const u16 adr);
 void mesh_tx_en_devkey_candi(u8 en);
 u8 mesh_cps_data_page0_page128_is_same();
 u8 mesh_cps_data_update_page0_from_page128();
+u32 get_crc32_16bytes(unsigned long crc_init, unsigned char* data);
+u32 get_blk_crc_tlk_type2(u32 crc_init, u8 *data, u32 len);
+int is_valid_tlk_fw_buf(u8 *p_flag);
+void power_on_io_proc(u8 i);
 
 
 extern u16 ele_adr_primary;

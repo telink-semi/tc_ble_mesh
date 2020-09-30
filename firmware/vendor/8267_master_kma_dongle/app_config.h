@@ -120,12 +120,13 @@ extern "C" {
 #define TL_SDM_BUFFER_SIZE			1024
 #endif
 
+#if BLE_DMIC_ENABLE //save ram
 #if TL_MIC_32K_FIR_16K
 	#define	TL_MIC_BUFFER_SIZE				1984
 #else
 	#define	TL_MIC_BUFFER_SIZE				992
 #endif
-
+#endif
 
 
 #if __PROJECT_8261_MASTER_KMA_DONGLE__ || __PROJECT_8267_MASTER_KMA_DONGLE__ || __PROJECT_8269_MASTER_KMA_DONGLE__
@@ -143,10 +144,15 @@ extern "C" {
 	// 8267
 	#define	 GPIO_LED_WHITE			GPIO_PB4
 	#define	 GPIO_LED_GREEN			GPIO_PB6
+	#if(HCI_ACCESS == HCI_USE_UART)// uart use PC2 PC3
+	#define	 GPIO_LED_RED			GPIO_LED_WHITE
+	#define	 GPIO_LED_BLUE			GPIO_LED_GREEN
+	#define	 GPIO_LED_YELLOW		GPIO_LED_GREEN
+	#else
 	#define	 GPIO_LED_RED			GPIO_PC2
 	#define	 GPIO_LED_BLUE			GPIO_PC3
 	#define	 GPIO_LED_YELLOW		GPIO_PC3
-
+	#endif
 
 	#define  PB4_INPUT_ENABLE		0
 	#define	 PB4_OUTPUT_ENABLE		1

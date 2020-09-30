@@ -19,37 +19,38 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/rf_drv.h"
-#include "../../proj_lib/pm.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/ble/ll/ll_whitelist.h"
-#include "../../proj_lib/ble/trace.h"
-#include "../../proj/mcu/pwm.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
-#include "../../proj/drivers/adc.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/ble/ble_smp.h"
-#include "../../proj_lib/mesh_crypto/mesh_crypto.h"
-#include "../../proj_lib/mesh_crypto/mesh_md5.h"
+#include "proj/tl_common.h"
+#include "proj_lib/rf_drv.h"
+#include "proj_lib/pm.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/ll/ll_whitelist.h"
+#include "proj_lib/ble/trace.h"
+#include "proj/mcu/pwm.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "proj/drivers/adc.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/ble_smp.h"
+#include "proj_lib/mesh_crypto/mesh_crypto.h"
+#include "proj_lib/mesh_crypto/mesh_md5.h"
 
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "../common/app_provison.h"
 #include "../common/app_beacon.h"
 #include "../common/app_proxy.h"
 #include "../common/app_health.h"
-#include "../../proj/drivers/keyboard.h"
+#include "../common/mesh_ota.h"
+#include "proj/drivers/keyboard.h"
 #include "app.h"
-#include "../../stack/ble/gap/gap.h"
+#include "stack/ble/gap/gap.h"
 #include "vendor/common/blt_soft_timer.h"
 #include "proj/drivers/rf_pa.h"
 
 #if (HCI_ACCESS==HCI_USE_UART)
-#include "../../proj/drivers/uart.h"
+#include "proj/drivers/uart.h"
 #endif
 
-#if(__PROJECT_MESH_PRO__&&(!AIS_ENABLE))
+#if(MCU_CORE_TYPE == MCU_CORE_8269) // 8269 ram limited
 MYFIFO_INIT(blt_rxfifo, 64, 8);
 MYFIFO_INIT(blt_txfifo, 40, 4);
 #else
@@ -113,7 +114,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			send_to_hci = mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD);
 			#else
-			send_to_hci = app_event_handler_adv(pa->data, ADV_FROM_MESH, 1);
+			send_to_hci = app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1);
 			#endif
 		}
 
@@ -358,7 +359,7 @@ u8 gateway_upload_provision_self_sts(u8 sts)
 
 u8 gateway_upload_mesh_ota_sts(u8 *p_dat,int len)
 {
-	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_MESH_OTA_STS,p_dat,sizeof(len));
+	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_MESH_OTA_STS,p_dat,len);
 }
 
 u8 gateway_upload_mesh_sno_val()
@@ -468,6 +469,40 @@ u8 gateway_upload_log_info(u8 *p_data,u8 len ,char *format,...) //gateway upload
 	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_LOG_STRING,(u8 *)log_str,head_len);
 }
 
+#if DEBUG_CFG_CMD_GROUP_AK_EN
+u8 comm_send_cnt = 0;
+u16 comm_adr_dst = 0;
+u32 comm_send_flag = 0;
+u32 comm_send_tick = 0;
+
+int mesh_tx_comm_cmd(u16 adr)
+{
+	comm_send_tick = clock_time();
+	comm_send_flag = 0;
+	u8 par[32] = {0};
+	mesh_bulk_vd_cmd_par_t *p_bulk_vd_cmd = (mesh_bulk_vd_cmd_par_t *)par;
+	p_bulk_vd_cmd->nk_idx = 0;
+    p_bulk_vd_cmd->ak_idx = 0;
+	p_bulk_vd_cmd->retry_cnt = g_reliable_retry_cnt_def;
+	p_bulk_vd_cmd->rsp_max = 1;
+	p_bulk_vd_cmd->adr_dst = adr;
+	p_bulk_vd_cmd->op = VD_MESH_TRANS_TIME_GET;
+	p_bulk_vd_cmd->vendor_id = g_vendor_id;
+	p_bulk_vd_cmd->op_rsp = VD_MESH_TRANS_TIME_STS;
+	p_bulk_vd_cmd->tid_pos = 0;
+	u8 par_len = OFFSETOF(mesh_bulk_vd_cmd_par_t, par) + (p_bulk_vd_cmd->tid_pos?2:1);
+	return mesh_bulk_cmd((mesh_bulk_cmd_par_t*)p_bulk_vd_cmd, par_len);
+}
+
+void mesh_ota_comm_test()
+{
+	int err =-1;
+	if(comm_send_flag && comm_send_cnt>0){
+		err = mesh_tx_comm_cmd(comm_adr_dst);
+		comm_send_cnt--;
+	}
+}
+#endif
 
 u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 {
@@ -542,7 +577,44 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 	}else if (op_code == HCI_GATEWAY_CMD_SEND_VC_NODE_INFO){
 		VC_node_info_t *p_info = (VC_node_info_t *)(p+1);
 		VC_node_dev_key_save(p_info->node_adr,p_info->dev_key,p_info->element_cnt);
+	}else if (op_code == HCI_GATEWAY_CMD_MESH_OTA_ADR_SEND){
+		#if MD_MESH_OTA_EN
+		mesh_fw_distibut_set(1);
+		mesh_cmd_sig_fw_distribut_start(p+1,len-1, 0);
+		#endif
 	}
+	#if MESH_RX_TEST
+	else if (op_code == HCI_GATEWAY_CMD_MESH_RX_TEST) {
+		u8 par[10];
+		u8 *data = &p[1];
+		memset(par,0x00,sizeof(par));
+		u16 adr_dst = data[2] + (data[3]<<8);
+		u8 rsp_max = data[4];	
+		par[0] = data[6]&0x01;//on_off	
+		u8 ack = data[5];
+		u32 send_tick = clock_time();
+		memcpy(par+4, &send_tick, 4);
+		par[8] = data[6];// cur count
+		u8 pkt_nums_send = data[7];
+		par[3] = data[8];// pkt_nums_ack	
+		u32 par_len = 37-(31-12)-6-4;
+		if(data[7] > 1){// unseg:11  seg:8
+			par_len = (37-(31-12)-4)*pkt_nums_send-6;
+		}
+		extern u16 mesh_rsp_rec_addr;
+		mesh_rsp_rec_addr = data[9] + (data[10]<<8);
+		SendOpParaDebug(adr_dst, rsp_max, ack ? G_ONOFF_SET : G_ONOFF_SET_NOACK, 
+						   (u8 *)&par, par_len);
+	}
+	#endif
+	#if DEBUG_CFG_CMD_GROUP_AK_EN
+	else if (op_code == HCI_GATEWAY_CMD_MESH_COMMUNICATE_TEST){
+	    comm_adr_dst = p[1]|(p[2]<<8);
+		comm_send_cnt = p[3];
+		comm_send_flag = 1;
+		mesh_tx_comm_cmd(comm_adr_dst);
+	}
+	#endif
 	return 1;
 }
 

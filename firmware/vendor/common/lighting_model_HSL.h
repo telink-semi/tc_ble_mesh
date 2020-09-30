@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj/tl_common.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 
 //----------------------------------- op code
 // op cmd 0xxxxxxx (SIG)
@@ -129,6 +129,7 @@ typedef struct{
 // -----------
 int light_hue_set(mesh_cmd_light_hue_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list);
 int light_sat_set(mesh_cmd_light_sat_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction, st_pub_list_t *pub_list);
+s16 get_Hue_delta_value(u16 hue_target, u16 hue_present);
 
 int mesh_light_hsl_st_publish(u8 idx);
 int mesh_light_hue_st_publish(u8 idx);

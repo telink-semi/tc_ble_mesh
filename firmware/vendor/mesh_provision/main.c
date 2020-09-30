@@ -31,7 +31,7 @@ extern void user_init();
 extern void main_loop ();
 
 #if (HCI_ACCESS==HCI_USE_UART)
-#include "../../proj/drivers/uart.h"
+#include "proj/drivers/uart.h"
 extern my_fifo_t hci_rx_fifo;
 
 u16 uart_tx_irq=0, uart_rx_irq=0;
