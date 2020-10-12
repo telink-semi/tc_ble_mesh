@@ -127,6 +127,8 @@
                 [SigDataSource.share setLocationSno:0];
             }
         }
+        SigDataSource.share.curNetkeyModel = nil;
+        SigDataSource.share.curAppkeyModel = nil;
         [SigDataSource.share checkExistLocationProvisioner];
         [SigDataSource.share saveLocationData];
         [SigDataSource.share.scanList removeAllObjects];

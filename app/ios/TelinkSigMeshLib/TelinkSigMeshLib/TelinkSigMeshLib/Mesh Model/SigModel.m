@@ -1800,6 +1800,7 @@
 - (nonnull id)copyWithZone:(nullable NSZone *)zone {
     SigSceneModel *model = [[[self class] alloc] init];
     model.addresses = [[NSMutableArray alloc] initWithArray:self.addresses];
+    model.actionList = [[NSMutableArray alloc] initWithArray:self.actionList];
     model.name = self.name;
     model.number = self.number;
     return model;
