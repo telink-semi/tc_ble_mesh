@@ -468,6 +468,12 @@ public class GattConnection extends BluetoothGattCallback {
         }
     }
 
+    public void requestConnectionPriority(int connectionPriority) {
+        if (mGatt != null) {
+            mGatt.requestConnectionPriority(connectionPriority);
+        }
+    }
+
     public boolean refreshCache() {
         if (Build.VERSION.SDK_INT >= 27) return false;
         if (mGatt == null) {
@@ -543,6 +549,10 @@ public class GattConnection extends BluetoothGattCallback {
     public String getDeviceName() {
         if (mBluetoothDevice == null) return null;
         return mBluetoothDevice.getName();
+    }
+
+    public int getMtu() {
+        return this.mtu;
     }
 
     /************************************************************************

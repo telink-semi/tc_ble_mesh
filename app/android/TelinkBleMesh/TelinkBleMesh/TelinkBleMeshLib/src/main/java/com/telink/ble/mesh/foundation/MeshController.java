@@ -23,6 +23,7 @@ package com.telink.ble.mesh.foundation;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -673,6 +674,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         return mGattConnection.sendRequest(request);
     }
 
+    int getMtu(){
+        return mGattConnection.getMtu();
+    }
+
     void startMeshOTA(MeshOtaParameters meshOtaParameters) {
         if (!validateActionMode(Mode.MODE_MESH_OTA)) {
             log("mesh updating running currently");
@@ -816,6 +821,14 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     public boolean getOnlineStatus() {
         return isLogin && mGattConnection.enableOnlineStatus();
     }
+
+    public void resetDELState(boolean enable) {
+        if (mNetworkingController != null){
+            mNetworkingController.enableDLE(enable);
+        }
+    }
+
+
 
     /**
      * send mesh message
@@ -991,7 +1004,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             case MODE_MESH_OTA:
                 onActionStart();
                 FirmwareUpdateConfiguration configuration = (FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG);
-                rebuildFirmwareUpdatingDevices(configuration.getUpdatingDevices());
+                rebuildFirmwareUpdatingDevices(configuration);
                 mFirmwareUpdatingController.begin(configuration);
                 break;
 
@@ -1021,9 +1034,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     /**
      * move direct device to last
      *
-     * @param devices updating targets
      */
-    private void rebuildFirmwareUpdatingDevices(List<MeshUpdatingDevice> devices) {
+    private void rebuildFirmwareUpdatingDevices(FirmwareUpdateConfiguration configuration) {
+        List<MeshUpdatingDevice> devices = configuration.getUpdatingDevices();
         Iterator<MeshUpdatingDevice> iterator = devices.iterator();
         MeshUpdatingDevice device;
         MeshUpdatingDevice directDevice = null;
@@ -1036,6 +1049,15 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         }
         if (directDevice != null) {
             devices.add(directDevice);
+            if (devices.size() == 1){
+                // update gatt connection when OTA start
+//                mGattConnection.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
+                configuration.setSingleAndDirect(true);
+                configuration.setDleLength(mNetworkingController.getSegmentAccessLength());
+            }else {
+                configuration.setSingleAndDirect(false);
+            }
+
         }
     }
 
@@ -1506,6 +1528,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
+//            if (!device.getAddress().contains("FF:FF:BB:CC:DD"))return;
             onScanFilter(device, rssi, scanRecord);
         }
 
@@ -1658,6 +1681,13 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         }
         onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_COMPLETE,
                 success, opcode, rspMax, rspCount, "mesh message send complete");
+    }
+
+    @Override
+    public void onSegmentMessageComplete(boolean success) {
+        if (actionMode == Mode.MODE_MESH_OTA){
+            mFirmwareUpdatingController.onSegmentComplete(success);
+        }
     }
 
     public void onInnerMessageFailed(int opcode) {

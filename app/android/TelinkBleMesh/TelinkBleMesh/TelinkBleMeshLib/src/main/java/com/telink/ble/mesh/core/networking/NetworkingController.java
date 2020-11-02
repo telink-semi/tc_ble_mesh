@@ -75,9 +75,19 @@ public class NetworkingController {
     // include mic(4)
     private static final int UNSEGMENTED_TRANSPORT_PAYLOAD_MAX_LENGTH = 15;
 
-    private static final int UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = 11;
+    private static final int UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT = 11;
 
-    private static final int SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = 12;
+//    private static final int SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = 12;
+
+    private static final int UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE = 225;
+
+//    private static final int SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH + 1;
+
+    private boolean dleEnabled = false;
+
+    // segmentedAccessLength = unsegmentedAccessLength + 1
+    private int unsegmentedAccessLength = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE;
+
 
     private static final int DEFAULT_SEQUENCE_NUMBER_UPDATE_STEP = 0x100;
 
@@ -305,6 +315,15 @@ public class NetworkingController {
         this.deviceKeyMap.put(unicastAddress, deviceKey);
     }
 
+    public void enableDLE(boolean enable) {
+        this.dleEnabled = enable;
+        this.unsegmentedAccessLength = enable ? UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE : UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
+        log("enableDLE: " + enable + " -- value : " + this.unsegmentedAccessLength);
+    }
+
+    public int getSegmentAccessLength() {
+        return this.unsegmentedAccessLength;
+    }
 
     public void removeDeviceKey(int unicastAddress) {
         this.deviceKeyMap.remove(unicastAddress);
@@ -461,7 +480,8 @@ public class NetworkingController {
 
         byte[] accessPduData = accessPDU.toByteArray();
 
-        boolean segmented = accessPduData.length > UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH;
+//        boolean segmented = accessPduData.length > UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH;
+        boolean segmented = accessPduData.length > unsegmentedAccessLength;
         meshMessage.setSegmented(segmented);
         if (segmented) {
             synchronized (RELIABLE_SEGMENTED_LOCK) {
@@ -524,7 +544,7 @@ public class NetworkingController {
                     }
                     reliableBusy = true;
                     mSendingReliableMessage = meshMessage;
-//                    restartReliableMessageTimeoutTask(false);
+//                    restartReliableMessageTimeoutTask(); // 11
                 }
                 SparseArray<SegmentedAccessMessagePDU> segmentedAccessMessages = createSegmentedAccessMessage(upperPDU.getEncryptedPayload(), akf, aid, aszmic, sequenceNumber);
                 if (segmentedAccessMessages.size() == 0) return false;
@@ -541,6 +561,8 @@ public class NetworkingController {
                     this.sentSegmentedMessageBuffer = segmentedAccessMessages.clone();
                     startSegmentedMessageTimeoutCheck();
                     startSegmentedBlockAckWaiting(meshMessage.getCtl(), meshMessage.getTtl(), src, dst);
+                } else if (reliable) {
+                    restartReliableMessageTimeoutTask();
                 }
                 sendNetworkPduList(networkLayerPduList);
             }
@@ -633,14 +655,13 @@ public class NetworkingController {
      */
     private void onSegmentedMessageComplete(boolean success) {
         log("segmented message complete, success? : " + success);
-        segmentedBusy = false;
-        mDelayHandler.removeCallbacks(segmentedMessageTimeoutTask);
+        // clear segment state
+        clearSegmentSendingState(success);
 
-        sentSegmentedMessageBuffer.clear();
-
+        // check reliable state
         if (reliableBusy) {
             /*
-            if segmented message sent success, check response after #RELIABLE_MESSAGE_TIMEOUT
+            if segmented message sent success, check response after #@link{RELIABLE_MESSAGE_TIMEOUT}
             else if segmented message timeout, retry immediately
              */
             if (success) {
@@ -650,6 +671,21 @@ public class NetworkingController {
                 onReliableMessageComplete(false);
             }
         }
+    }
+
+    private void clearSegmentSendingState(boolean success) {
+        segmentedBusy = false;
+        mDelayHandler.removeCallbacks(segmentedMessageTimeoutTask);
+        sentSegmentedMessageBuffer.clear();
+        if (mNetworkingBridge != null) {
+            mNetworkingBridge.onSegmentMessageComplete(success);
+        }
+        /*final  MeshMessage meshMessage = mSendingReliableMessage;
+        if (meshMessage != null){
+            int opcode = meshMessage.getOpcode();
+
+        }*/
+
     }
 
     private long getSegmentedTimeout(int ttl, boolean outer) {
@@ -677,8 +713,10 @@ public class NetworkingController {
         synchronized (mNetworkingQueue) {
             queueSize = mNetworkingQueue.size();
         }
+
         // 960
-        long timeout = 1280 + queueSize * NETWORKING_INTERVAL;
+//        long timeout = 1280 + queueSize * NETWORKING_INTERVAL;
+        long timeout = (dleEnabled ? 2560 : 1280) + queueSize * NETWORKING_INTERVAL;
         log("reliable message timeout:" + timeout);
         return timeout;
     }
@@ -1387,7 +1425,7 @@ public class NetworkingController {
                 lastSeqAuth = seqAuth;
                 lastSegSrc = src;
                 receivedSegmentedMessageBuffer.clear();
-            }else {
+            } else {
                 sendSegmentBlockBusyAck(src, seqZero, seqAuth);
                 return null;
             }
@@ -1408,7 +1446,8 @@ public class NetworkingController {
             } else {
                 sendSegmentBlockBusyAck(src, seqZero, seqAuth);
             }
-        } else*/ {
+        } else*/
+        {
             receivedSegmentedMessageBuffer.put(segO, message);
 
             int messageCnt = receivedSegmentedMessageBuffer.size();
@@ -1493,12 +1532,13 @@ public class NetworkingController {
 
     private SparseArray<SegmentedAccessMessagePDU> createSegmentedAccessMessage(byte[] encryptedUpperTransportPDU, byte akf, byte aid, int aszmic, int sequenceNumber) {
 
+        final int segmentedAccessLen = this.unsegmentedAccessLength + 1;
         byte[] seqNoBuffer = MeshUtils.integer2Bytes(sequenceNumber, 3, ByteOrder.BIG_ENDIAN);
         // 13 lowest bits
         int seqZero = ((seqNoBuffer[1] & 0x1F) << 8) | (seqNoBuffer[2] & 0xFF);
 
         // segment pdu number
-        int segNum = (int) Math.ceil(((double) encryptedUpperTransportPDU.length) / SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH);
+        int segNum = (int) Math.ceil(((double) encryptedUpperTransportPDU.length) / segmentedAccessLen); // SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH
         int segN = segNum - 1; // index from 0
         log("create segmented access message: seqZero - " + seqZero + " segN - " + segN);
 
@@ -1507,7 +1547,7 @@ public class NetworkingController {
         int segmentedLength;
         SegmentedAccessMessagePDU lowerTransportPDU;
         for (int segOffset = 0; segOffset < segNum; segOffset++) {
-            segmentedLength = Math.min(encryptedUpperTransportPDU.length - offset, SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH);
+            segmentedLength = Math.min(encryptedUpperTransportPDU.length - offset, segmentedAccessLen);
             lowerTransportPDU = new SegmentedAccessMessagePDU();
             lowerTransportPDU.setAkf(akf);
             lowerTransportPDU.setAid(aid);

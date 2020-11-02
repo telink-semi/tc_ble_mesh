@@ -66,4 +66,6 @@ public interface NetworkingBridge {
      * @param rspCount received response count
      */
     void onReliableMessageComplete(boolean success, int opcode, int rspMax, int rspCount);
+
+    void onSegmentMessageComplete(boolean success);
 }

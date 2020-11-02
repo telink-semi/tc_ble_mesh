@@ -54,6 +54,8 @@ public class SharedPreferenceHelper {
 
     private static final String KEY_NO_OOB = "com.telink.bluetooth.light.KEY_NO_OOB";
 
+    private static final String KEY_DLE_ENABLE = "com.telink.bluetooth.light.KEY_DLE_ENABLE";
+
     public static boolean isFirstLoad(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(KEY_FIRST_LOAD, true);
@@ -137,6 +139,16 @@ public class SharedPreferenceHelper {
     public static void setNoOOBEnable(Context context, boolean enable) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_NO_OOB, enable).apply();
+    }
+
+    public static boolean isDleEnable(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KEY_DLE_ENABLE, false);
+    }
+
+    public static void setDleEnable(Context context, boolean enable) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putBoolean(KEY_DLE_ENABLE, enable).apply();
     }
 
 }

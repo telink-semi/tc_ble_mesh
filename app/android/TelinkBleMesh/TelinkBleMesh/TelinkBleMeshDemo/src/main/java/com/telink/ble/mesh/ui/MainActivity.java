@@ -26,6 +26,7 @@ import android.os.Handler;
 import android.view.MenuItem;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
@@ -94,6 +95,8 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         MeshConfiguration meshConfiguration = TelinkMeshApplication.getInstance().getMeshInfo().convertToConfiguration();
         MeshService.getInstance().setupMeshNetwork(meshConfiguration);
         MeshService.getInstance().checkBluetoothState();
+        // set DLE enable
+        MeshService.getInstance().resetDELState(SharedPreferenceHelper.isDleEnable(this));
     }
 
     private void resetNodeState() {

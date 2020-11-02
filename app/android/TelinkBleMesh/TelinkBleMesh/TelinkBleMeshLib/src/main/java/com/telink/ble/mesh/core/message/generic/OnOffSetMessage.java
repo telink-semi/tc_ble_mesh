@@ -75,6 +75,22 @@ public class OnOffSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
+        /*byte[] realParams = isComplete ?
+                new byte[]{
+                        this.onOff,
+                        this.tid,
+                        this.transitionTime,
+                        this.delay
+                }
+                :
+                new byte[]{
+                        this.onOff,
+                        this.tid
+                }
+                ;
+        byte[] params = new byte[378];
+        System.arraycopy(realParams, 0, params, 0, realParams.length);
+        return params;*/
         return
                 isComplete ?
                         new byte[]{

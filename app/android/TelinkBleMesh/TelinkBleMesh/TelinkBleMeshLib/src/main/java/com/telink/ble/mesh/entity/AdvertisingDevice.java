@@ -26,6 +26,10 @@ import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.telink.ble.mesh.util.MeshLogger;
+
+import java.util.Arrays;
+
 /**
  * scanned devices
  */
@@ -74,7 +78,9 @@ public class AdvertisingDevice implements Parcelable {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof AdvertisingDevice && ((AdvertisingDevice) obj).device.equals(device);
+        return obj instanceof AdvertisingDevice
+                && ((AdvertisingDevice) obj).device.equals(device)
+                && Arrays.equals(((AdvertisingDevice) obj).scanRecord, scanRecord);
     }
 
     @Override

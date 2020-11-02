@@ -201,6 +201,13 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                     onKickOutFinish();
                 }
             }, 3 * 1000);
+        }else {
+            delayHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    onKickOutFinish();
+                }
+            }, 10 * 1000);
         }
     }
 

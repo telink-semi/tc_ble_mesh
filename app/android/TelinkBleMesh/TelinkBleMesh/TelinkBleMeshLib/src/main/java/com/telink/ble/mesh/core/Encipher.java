@@ -100,6 +100,7 @@ public final class Encipher {
             ECNamedCurveParameterSpec ecParamSpec = ECNamedCurveTable.getParameterSpec("P-256");
             KeyPairGenerator generator = KeyPairGenerator.getInstance("ECDH", "SC");
             generator.initialize(ecParamSpec);
+
             return generator.generateKeyPair();
         } catch (Exception e) {
             MeshLogger.log("generate key pair err!");

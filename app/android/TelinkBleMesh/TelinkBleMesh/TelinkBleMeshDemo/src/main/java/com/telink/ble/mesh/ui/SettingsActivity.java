@@ -47,7 +47,7 @@ import com.telink.ble.mesh.util.MeshLogger;
  */
 public class SettingsActivity extends BaseActivity implements View.OnClickListener {
 
-    private Switch switch_log, switch_private, switch_remote_prov, switch_fast_prov, switch_no_oob;
+    private Switch switch_log, switch_private, switch_remote_prov, switch_fast_prov, switch_no_oob, switch_dle;
     private EditText et_net_key, et_app_key;
     private MeshInfo mesh;
     private TextView tv_online_status;
@@ -83,8 +83,8 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         switch_remote_prov = findViewById(R.id.switch_remote_prov);
 
         // draft feature
-        findViewById(R.id.ll_rp).setVisibility(View.GONE);
-        findViewById(R.id.line_rp).setVisibility(View.GONE);
+//        findViewById(R.id.ll_rp).setVisibility(View.GONE);
+//        findViewById(R.id.line_rp).setVisibility(View.GONE);
 
         switch_remote_prov.setChecked(SharedPreferenceHelper.isRemoteProvisionEnable(this));
         switch_remote_prov.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -118,6 +118,15 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
             }
         });
 
+        switch_dle = findViewById(R.id.switch_dle);
+        switch_dle.setChecked(SharedPreferenceHelper.isDleEnable(this));
+        switch_dle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                MeshService.getInstance().resetDELState(isChecked);
+                SharedPreferenceHelper.setDleEnable(SettingsActivity.this, isChecked);
+            }
+        });
 
         enableBackNav(true);
 

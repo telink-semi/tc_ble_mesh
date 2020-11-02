@@ -1,6 +1,9 @@
 
 version record
 
+V3.2.4
+1. DLE support
+
 V3.2.3
 
 SIG mesh android app V3.2.3 release notes:

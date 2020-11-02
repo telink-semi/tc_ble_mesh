@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     MeshService.java 
+ * @file MeshService.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.foundation;
 
@@ -26,8 +26,6 @@ import android.content.Context;
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.ble.GattRequest;
 import com.telink.ble.mesh.core.message.MeshMessage;
-import com.telink.ble.mesh.core.networking.NetworkLayerPDU;
-import com.telink.ble.mesh.core.proxy.ProxyConfigurationPDU;
 import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
 import com.telink.ble.mesh.foundation.parameter.AutoConnectParameters;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
@@ -40,16 +38,10 @@ import com.telink.ble.mesh.foundation.parameter.ScanParameters;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
-import org.spongycastle.jce.spec.ECNamedCurveSpec;
-import org.spongycastle.util.BigIntegers;
 
-import java.math.BigInteger;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.security.Security;
-import java.security.spec.ECFieldFp;
 
 import androidx.annotation.NonNull;
 
@@ -82,6 +74,21 @@ public class MeshService implements MeshController.EventCallback {
         mController.setEventCallback(this);
         mController.start(context);
         this.mEventHandler = eventHandler;
+        test();
+    }
+
+    private void test(){
+        KeyPair keyPair = Encipher.generateKeyPair();
+
+        BCECPublicKey publicKey = (BCECPublicKey) keyPair.getPublic();
+        byte[] x = publicKey.getQ().getXCoord().getEncoded();
+        byte[] y = publicKey.getQ().getYCoord().getEncoded();
+        MeshLogger.d("pub data: " + Arrays.bytesToHexString(x) + " -- " + Arrays.bytesToHexString(y));
+
+        byte[] pvt = keyPair.getPrivate().getEncoded();
+        MeshLogger.d("pvt data: " + Arrays.bytesToHexString(pvt));
+//        byte[] pub = keyPair.getPublic().getEncoded();
+
     }
 
     public void clear() {
@@ -91,7 +98,7 @@ public class MeshService implements MeshController.EventCallback {
         }
     }
 
-    public void checkBluetoothState(){
+    public void checkBluetoothState() {
         mController.checkBluetoothState();
     }
 
@@ -195,12 +202,16 @@ public class MeshService implements MeshController.EventCallback {
         mController.idle(disconnect);
     }
 
-    public void startGattConnection(GattConnectionParameters parameters){
+    public void startGattConnection(GattConnectionParameters parameters) {
         mController.startGattConnection(parameters);
     }
 
-    public boolean sendGattRequest(GattRequest request){
+    public boolean sendGattRequest(GattRequest request) {
         return mController.sendGattRequest(request);
+    }
+
+    public int getMtu() {
+        return mController.getMtu();
     }
 
     /**
@@ -226,6 +237,10 @@ public class MeshService implements MeshController.EventCallback {
      */
     public boolean getOnlineStatus() {
         return mController.getOnlineStatus();
+    }
+
+    public void resetDELState(boolean enable) {
+        mController.resetDELState(enable);
     }
 
     /********************************************************************************

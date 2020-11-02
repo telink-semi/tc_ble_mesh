@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     FirmwareUpdatingController.java 
+ * @file FirmwareUpdatingController.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.access;
 
@@ -247,6 +247,17 @@ public class FirmwareUpdatingController {
 
     private AccessBridge accessBridge;
 
+    /**
+     * update only direct connected device
+     */
+    private boolean isGattMode = false;
+
+    private int gattAddress = -1;
+
+    private int dleLength = 11;
+    // for missing test
+    boolean test = true;
+
     public FirmwareUpdatingController(HandlerThread handlerThread) {
         delayHandler = new Handler(handlerThread.getLooper());
     }
@@ -269,14 +280,26 @@ public class FirmwareUpdatingController {
             return;
         }
         test = true;
-        firmwareParser.reset(configuration.getFirmwareData());
+        this.isGattMode = configuration.isSingleAndDirect();
+        this.dleLength = configuration.getDleLength();
+        this.firmwareParser.reset(configuration.getFirmwareData());
         log(" config -- " + configuration.toString());
+        log("isGattMode? " + isGattMode);
         this.appKeyIndex = configuration.getAppKeyIndex();
         this.groupAddress = configuration.getGroupAddress();
         this.nodes = configuration.getUpdatingDevices();
         this.blobId = configuration.getBlobId();
         this.nodeIndex = 0;
         if (nodes != null && nodes.size() != 0) {
+
+            /*if (this.isGattMode){
+                this.step = STEP_GET_FIRMWARE_INFO;
+            }else {
+                this.step = STEP_SET_SUBSCRIPTION;
+            }*/
+            if (this.isGattMode) {
+                this.gattAddress = this.nodes.get(0).getMeshAddress();
+            }
             this.step = STEP_SET_SUBSCRIPTION;
             executeUpdatingAction();
         } else {
@@ -310,17 +333,15 @@ public class FirmwareUpdatingController {
         }
     };
 
-    boolean test = true;
-
     private void sendChunks() {
         byte[] chunkData = firmwareParser.nextChunk();
         final int chunkIndex = firmwareParser.currentChunkIndex();
-        if (test) {
+        /*if (test) {
             if (firmwareParser.currentChunkIndex() == 2) {
                 byte[] missingChunkData = firmwareParser.nextChunk();
                 test = false;
             }
-        }
+        }*/
         if (chunkData != null) {
             validateUpdatingProgress();
 //            int chunkNumber = firmwareParser.currentChunkIndex();
@@ -330,8 +351,15 @@ public class FirmwareUpdatingController {
             log("next chunk transfer msg: " + blobChunkTransferMessage.toString());
 
             onMeshMessagePrepared(blobChunkTransferMessage);
-
-            delayHandler.postDelayed(chunkSendingTask, getChunkSendingInterval());
+            if (!isGattMode) {
+                delayHandler.postDelayed(chunkSendingTask, getChunkSendingInterval());
+            }else {
+                int len = chunkData.length + 3;
+                boolean segment = len > dleLength;
+                if (!segment){
+                    sendChunks();
+                }
+            }
         } else {
             log("chunks sent complete at: block -- " + firmwareParser.currentBlockIndex()
                     + " chunk -- " + firmwareParser.currentChunkIndex());
@@ -395,7 +423,8 @@ public class FirmwareUpdatingController {
     };
 
     private BlobChunkTransferMessage generateChunkTransferMessage(int chunkNumber, byte[] chunkData) {
-        return BlobChunkTransferMessage.getSimple(groupAddress, appKeyIndex, chunkNumber, chunkData);
+        int address = isGattMode ? gattAddress : groupAddress;
+        return BlobChunkTransferMessage.getSimple(address, appKeyIndex, chunkNumber, chunkData);
     }
 
 
@@ -406,7 +435,188 @@ public class FirmwareUpdatingController {
      */
     // draft feature
     private void executeUpdatingAction() {
+        log("action: " + getStepDesc(step) + " -- node index -- " + nodeIndex);
+        if (nodeIndex >= nodes.size()) {
+            // all nodes executed
 
+            log("current step complete: " + getStepDesc(step));
+
+            removeFailedDevices();
+
+            // check if has available nodes
+            if (nodes.size() != 0) {
+                nodeIndex = 0;
+
+                if (step == STEP_GET_BLOB_BLOCK) {
+                    // check if has missing chunk
+
+                    switch (mixFormat) {
+                        case BlobBlockStatusMessage.FORMAT_NO_CHUNKS_MISSING:
+                            log("no chunks missing");
+                            step = STEP_BLOB_BLOCK_TRANSFER_START;
+                            executeUpdatingAction();
+                            break;
+
+                        case BlobBlockStatusMessage.FORMAT_ALL_CHUNKS_MISSING:
+                            // resend all chunks
+                            log("all chunks missing");
+                            step = STEP_BLOB_CHUNK_SENDING;
+                            firmwareParser.resetBlock();
+                            executeUpdatingAction();
+                            break;
+                        case BlobBlockStatusMessage.FORMAT_SOME_CHUNKS_MISSING:
+                        case BlobBlockStatusMessage.FORMAT_ENCODED_MISSING_CHUNKS:
+                            // resend missing chunks
+                            log("resend missing chunks");
+                            missingChunkIndex = 0;
+                            resendMissingChunks();
+                            break;
+                    }
+
+
+                    /*if (missingChunks.size() == 0) {
+                        // no missing chunks
+                        step = STEP_BLOB_BLOCK_TRANSFER_START;
+                        executeUpdatingAction();
+                    } else {
+                        // resend missing chunks
+                        missingChunkIndex = 0;
+                        resendMissingChunks();
+                    }*/
+                } else {
+
+                    if (step == STEP_BLOB_TRANSFER_START) {
+                        onStateUpdate(STATE_PREPARED, "updating prepare complete", null);
+                    }
+
+                    log("next step: " + getStepDesc(step + 1));
+                    step++;
+                    executeUpdatingAction();
+                }
+            } else {
+                onUpdatingFail(STATE_FAIL, "all node failed when executing action");
+            }
+        } else {
+            int meshAddress = nodes.get(nodeIndex).getMeshAddress();
+            log(String.format("action executing: " + getStepDesc(step) + " -- %04X", meshAddress));
+            switch (this.step) {
+                case STEP_GET_FIRMWARE_INFO:
+                    onMeshMessagePrepared(FirmwareUpdateInfoGetMessage.getSimple(meshAddress, appKeyIndex));
+                    break;
+
+                case STEP_SET_SUBSCRIPTION:
+                    int eleAdr = nodes.get(nodeIndex).getUpdatingEleAddress();
+                    int modelId = MeshSigModel.SIG_MD_OBJ_TRANSFER_S.modelId;
+                    onMeshMessagePrepared(ModelSubscriptionSetMessage.getSimple(meshAddress,
+                            ModelSubscriptionSetMessage.MODE_ADD,
+                            eleAdr, groupAddress, modelId, true));
+                    break;
+
+
+                case STEP_GET_BLOB_INFO:
+                    onMeshMessagePrepared(BlobInfoGetMessage.getSimple(meshAddress, appKeyIndex));
+                    break;
+
+                case STEP_METADATA_CHECK:
+                    onMeshMessagePrepared(FirmwareMetadataCheckMessage.getSimple(meshAddress,
+                            appKeyIndex, metadataIndex, metadata));
+                    break;
+
+                case STEP_UPDATE_START:
+                    FirmwareUpdateStartMessage updateStartMessage = new FirmwareUpdateStartMessage(meshAddress, appKeyIndex);
+                    updateStartMessage.setMetadata(this.metadata);
+                    updateStartMessage.setUpdateBLOBID(blobId);
+                    updateStartMessage.setUpdateTtl((byte) 0xFF);
+                    updateStartMessage.setUpdateTimeoutBase(0);
+                    updateStartMessage.setUpdateFirmwareImageIndex(0);
+                    onMeshMessagePrepared(updateStartMessage);
+                    break;
+
+                case STEP_BLOB_TRANSFER_START:
+
+
+                    int objectSize = firmwareParser.getObjectSize();
+                    byte blockSizeLog = (byte) MeshUtils.mathLog2(firmwareParser.getBlockSize());
+                    int mtu = 380;
+
+                    BlobTransferStartMessage blobTransferStartMessage = BlobTransferStartMessage.getSimple(meshAddress, appKeyIndex,
+                            blobId, objectSize, blockSizeLog, mtu);
+                    onMeshMessagePrepared(blobTransferStartMessage);
+                    /*onMeshMessagePrepared(ObjectTransferStartMessage.getSimple(meshAddress, appKeyIndex, 1,
+                            blobId, objectSize, blockSizeLog));*/
+                    break;
+
+                case STEP_BLOB_TRANSFER_GET:
+                    onMeshMessagePrepared(BlobTransferGetMessage.getSimple(meshAddress, appKeyIndex));
+                    break;
+                case STEP_BLOB_BLOCK_TRANSFER_START:
+                    if (nodeIndex == 0) {
+                        if (firmwareParser.hasNextBlock()) {
+                            firmwareParser.nextBlock();
+                        } else {
+                            log("all blocks sent complete at: block -- " + firmwareParser.currentBlockIndex());
+                            step = STEP_UPDATE_GET;
+                            executeUpdatingAction();
+                            return;
+                        }
+                    }
+                    int blockNumber = firmwareParser.currentBlockIndex();
+                    int chunkSize = firmwareParser.getChunkSize();
+//                    int blockChecksumValue = firmwareParser.getBlockChecksum();
+//                    int currentBlockSize = firmwareParser.getCurBlockSize();
+
+                    onMeshMessagePrepared(BlobBlockStartMessage.getSimple(meshAddress, appKeyIndex,
+                            blockNumber, chunkSize));
+
+                    /*onMeshMessagePrepared(ObjectBlockTransferStartMessage.getSimple(meshAddress, appKeyIndex, 1,
+                            blobId, blockNumber,
+                            chunkSize,
+                            blockChecksumValue, currentBlockSize));*/
+
+                    break;
+
+                case STEP_BLOB_CHUNK_SENDING:
+                    sendChunks();
+                    break;
+
+                case STEP_GET_BLOB_BLOCK:
+
+                    onMeshMessagePrepared(BlobBlockGetMessage.getSimple(meshAddress, appKeyIndex));
+
+                    /*onMeshMessagePrepared(ObjectBlockGetMessage.getSimple(meshAddress, appKeyIndex, 1,
+                            blobId, firmwareParser.currentBlockIndex()));*/
+                    break;
+
+                case STEP_UPDATE_GET:
+
+                    onMeshMessagePrepared(FirmwareUpdateGetMessage.getSimple(meshAddress, appKeyIndex));
+
+                    /*onMeshMessagePrepared(FirmwareUpdateGetMessage.getSimple(meshAddress,
+                            appKeyIndex,
+                            1,
+                            companyId,
+                            firmwareId));*/
+                    break;
+
+                case STEP_UPDATE_APPLY:
+                    FirmwareUpdateApplyMessage applyMessage = FirmwareUpdateApplyMessage.getSimple(meshAddress, appKeyIndex);
+                    // for remote reliable apply
+                    applyMessage.setRetryCnt(10);
+                    onMeshMessagePrepared(applyMessage);
+                    /*onMeshMessagePrepared(FirmwareUpdateApplyMessage.getSimple(meshAddress,
+                            appKeyIndex,
+                            1,
+                            companyId,
+                            firmwareId));*/
+                    break;
+
+                case STEP_UPDATE_COMPLETE:
+                    onUpdatingSuccess();
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
 
@@ -437,6 +647,16 @@ public class FirmwareUpdatingController {
                     }
                 }
 
+            }
+        }
+    }
+
+    public void onSegmentComplete(boolean success) {
+        if (isGattMode && step == STEP_BLOB_CHUNK_SENDING) {
+            if (success){
+                sendChunks();
+            }else {
+                onUpdatingFail(STATE_FAIL, "chunk send fail -- segment message send fail");
             }
         }
     }
@@ -500,8 +720,12 @@ public class FirmwareUpdatingController {
     }
 
     private void onFirmwareInfoStatus(FirmwareUpdateInfoStatusMessage firmwareInfoStatusMessage) {
-
         log("firmware info status: " + firmwareInfoStatusMessage.toString());
+        if (step != STEP_GET_FIRMWARE_INFO){
+            log("not at STEP_GET_FIRMWARE_INFO");
+            return;
+        }
+
         int firstIndex = firmwareInfoStatusMessage.getFirstIndex();
         int companyId = firmwareInfoStatusMessage.getListCount();
         List<FirmwareUpdateInfoStatusMessage.FirmwareInformationEntry> firmwareInformationList
@@ -512,6 +736,10 @@ public class FirmwareUpdatingController {
 
     private void onSubscriptionStatus(ModelSubscriptionStatusMessage subscriptionStatusMessage) {
         log("subscription status: " + subscriptionStatusMessage.toString());
+        if (step != STEP_SET_SUBSCRIPTION){
+            log("not at STEP_SET_SUBSCRIPTION");
+            return;
+        }
         if (subscriptionStatusMessage.getStatus() != ConfigStatus.SUCCESS.code) {
             onDeviceFail(nodes.get(nodeIndex), "grouping status err " + subscriptionStatusMessage.getStatus());
         }
@@ -525,6 +753,10 @@ public class FirmwareUpdatingController {
      */
     private void onBlobInfoStatus(BlobInfoStatusMessage objectInfoStatusMessage) {
         log("object info status: " + objectInfoStatusMessage.toString());
+        if (step != STEP_GET_BLOB_INFO){
+            log("not at STEP_GET_BLOB_INFO");
+            return;
+        }
         nodeIndex++;
         executeUpdatingAction();
     }
@@ -566,7 +798,7 @@ public class FirmwareUpdatingController {
                 final UpdatePhase phase = UpdatePhase.valueOf(firmwareUpdateStatusMessage.getPhase() & 0xFF);
                 if (step == STEP_UPDATE_APPLY) {
                     if (phase == UpdatePhase.VERIFICATION_SUCCESS
-                    || phase == UpdatePhase.APPLYING_UPDATE) {
+                            || phase == UpdatePhase.APPLYING_UPDATE) {
                         onDeviceSuccess(nodes.get(nodeIndex));
                     } else {
                         onDeviceFail(nodes.get(nodeIndex), "phase error when update apply");

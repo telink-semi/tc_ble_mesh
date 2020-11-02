@@ -39,6 +39,10 @@ public class FirmwareUpdateConfiguration {
 
     private long blobId = 0x8877665544332211L;
 
+    private boolean singleAndDirect = false;
+
+    private int dleLength;
+
     public FirmwareUpdateConfiguration(List<MeshUpdatingDevice> updatingDevices,
                                        byte[] firmwareData,
                                        int appKeyIndex,
@@ -67,6 +71,22 @@ public class FirmwareUpdateConfiguration {
 
     public long getBlobId() {
         return blobId;
+    }
+
+    public boolean isSingleAndDirect() {
+        return singleAndDirect;
+    }
+
+    public void setSingleAndDirect(boolean singleAndDirect) {
+        this.singleAndDirect = singleAndDirect;
+    }
+
+    public int getDleLength() {
+        return dleLength;
+    }
+
+    public void setDleLength(int dleLength) {
+        this.dleLength = dleLength;
     }
 
     @Override
