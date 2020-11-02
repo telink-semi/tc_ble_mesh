@@ -21,9 +21,9 @@
  *******************************************************************************************************/
 #ifndef APP_BEACON_H
 #define APP_BEACON_H
-#include "../../vendor/common/light.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../vendor/common/app_privacy_beacon.h"
+#include "vendor/common/light.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "vendor/common/app_privacy_beacon.h"
 #if WIN32
 #pragma pack(1)
 #endif

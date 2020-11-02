@@ -19,7 +19,7 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 
 #define SEC_MES_DEBUG_EN    0
 #define FRIEND_MSG_TEST_EN  0

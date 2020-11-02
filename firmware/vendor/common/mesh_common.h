@@ -22,17 +22,17 @@
 
 #pragma once
 
-#include "../../proj/tl_common.h"
-#include "../../vendor/mesh/app.h"
-#include "../../vendor/mesh_lpn/app.h"
-#include "../../vendor/mesh_provision/app.h"
-#include "../../vendor/mesh_switch/app.h"
+#include "proj/tl_common.h"
+#include "vendor/mesh/app.h"
+#include "vendor/mesh_lpn/app.h"
+#include "vendor/mesh_provision/app.h"
+#include "vendor/mesh_switch/app.h"
 #include "mesh_lpn.h"
 #include "mesh_fn.h"
 #include "time_model.h"
 #include "scheduler.h"
 #include "mesh_property.h"
-#include "../../vendor/user_app/user_app.h"
+#include "vendor/user_app/user_app.h"
 
 /** @addtogroup Mesh_Common
   * @{
@@ -212,6 +212,7 @@ extern u8 GATT_PROXY_HANDLE;    // may use in library
 extern const u8 SERVICE_CHANGE_ATT_HANDLE_SLAVE;
 extern const u8 ONLINE_ST_ATT_HANDLE_SLAVE;
 extern u8 proc_homekit_pair;
+extern const u8 key_encode_bin[];
 
 enum{
 	BLE_4_0 =0,
@@ -298,6 +299,8 @@ void mesh_seg_must_en(u8 en);
 int mesh_dev_key_candi_decrypt_cb( u16 src_adr,int dirty_flag ,u8* ac_backup ,unsigned char *r_an, 
 											       unsigned char* ac, int len_ut, int mic_length);
 u8 mesh_pub_retransmit_para_en();
+void mi_vendor_cfg_rsp_proc();
+void set_random_adv_delay(int en);
 
 
 /**

@@ -63,11 +63,22 @@ asm(".global     __FW_START_BY_BOOTLOADER_EN");
 #if (HCI_ACCESS==HCI_USE_UART || HCI_ACCESS==HCI_USE_USB)
 	
 #endif
-MYFIFO_INIT(hci_rx_fifo, 72, 8); 
-MYFIFO_INIT(hci_tx_fifo, 80, 8);
+
+#define HCI_TX_FIFO_SIZE	(80)
+#define HCI_RX_FIFO_SIZE	(80)	//size not smaller than 80 for uart mode in pubkey exchange
+#if (HCI_ACCESS==HCI_USE_UART)
+#define UART_HW_HEAD_LEN    (4 + 2) //4:uart dma_len,  2: uart margin
+#define HCI_TX_FIFO_SIZE_USABLE     (HCI_TX_FIFO_SIZE - 2)  // 2: sizeof(fifo.len)
+u8 uart_hw_tx_buf[HCI_TX_FIFO_SIZE_USABLE + UART_HW_HEAD_LEN]; // not for user;  2: sizeof(fifo.len)
+const u8 UART_TX_LEN_MAX = (sizeof(uart_hw_tx_buf) - UART_HW_HEAD_LEN);
+#endif
+
+MYFIFO_INIT(hci_rx_fifo, HCI_RX_FIFO_SIZE, 8);
+MYFIFO_INIT(hci_tx_fifo, HCI_TX_FIFO_SIZE, 8);
 
 
-MYFIFO_INIT(blt_rxfifo, 64, 8);
+
+MYFIFO_INIT(blt_rxfifo, 64, 16);
 MYFIFO_INIT(blt_txfifo, 64, 4);
 
 
@@ -697,56 +708,55 @@ int app_event_callback (u32 h, u8 *p, int n)
 
 
 #if (HCI_ACCESS == HCI_USE_UART)
-	uart_data_t T_txdata_buf;
+int blc_rx_from_uart (void)
+{
+	uart_ErrorCLR();
+	uart_data_t * p =(uart_data_t *) my_fifo_get(&hci_rx_fifo);
 
-	int blc_rx_from_uart (void)
+	if (p)
 	{
-		if(my_fifo_get(&hci_rx_fifo) == 0)
-		{
+		if(p->len == 4 && p->data[0] == 0x05 && p->data[1] == 0x00 && p->data[2] == 0x00 && p->data[3] == 0x00){
+			extern int master_ota_cmd;
+			master_ota_cmd = 1;
 			return 0;
 		}
+		
+		blc_hci_handler (p->data, p->len);
 
-		u8* p = my_fifo_get(&hci_rx_fifo);
-		u32 rx_len = p[0]; //usually <= 255 so 1 byte should be sufficient
-
-		if (rx_len)
-		{
-			blm_hci_handler(&p[4], rx_len - 4);
-			my_fifo_pop(&hci_rx_fifo);
-		}
-
-
-		return 0;
+		my_fifo_pop(&hci_rx_fifo);
 	}
 
-	int blc_hci_tx_to_uart ()
+
+	return 0;
+}
+
+int blc_hci_tx_to_uart ()
+{
+	static u32 uart_tx_tick = 0;
+
+	u8 *p = my_fifo_get (&hci_tx_fifo);
+
+
+
+#if 1 //(ADD_DELAY_FOR_UART_DATA)
+	if (p && !uart_tx_is_busy () && clock_time_exceed(uart_tx_tick, 30000))
+#else
+	if (p && !uart_tx_is_busy ())
+#endif
 	{
-		static u32 uart_tx_tick = 0;
 
-		u8 *p = my_fifo_get (&hci_tx_fifo);
-
-
-
-	#if 1 //(ADD_DELAY_FOR_UART_DATA)
-		if (p && !uart_tx_is_busy () && clock_time_exceed(uart_tx_tick, 30000))
-	#else
-		if (p && !uart_tx_is_busy ())
-	#endif
+		u16 data_len = p[0]+p[1]*256 ;
+		if(uart_Send(p, data_len+2))
 		{
-			memcpy(&T_txdata_buf.data, p + 2, p[0]+p[1]*256);
-			T_txdata_buf.len = p[0]+p[1]*256 ;
+			uart_tx_tick = clock_time();
 
-
-			if (uart_Send((u8 *)(&T_txdata_buf)))
-			{
-				uart_tx_tick = clock_time();
-
-				my_fifo_pop (&hci_tx_fifo);
-			}
+			my_fifo_pop (&hci_tx_fifo);
 		}
-		return 0;
-
 	}
+	return 0;
+
+}
+
 #endif
 
 ///////////////////////////////////////////
@@ -866,15 +876,15 @@ void user_init()
 	
 
 	#if(HCI_ACCESS == HCI_USE_UART)
-		gpio_set_input_en(GPIO_PB2, 1);
-		gpio_set_input_en(GPIO_PB3, 1);
-		gpio_setup_up_down_resistor(GPIO_PB2, PM_PIN_PULLUP_1M);
-		gpio_setup_up_down_resistor(GPIO_PB3, PM_PIN_PULLUP_1M);
-		uart_io_init(UART_GPIO_8267_PB2_PB3);
+		gpio_set_input_en(GPIO_PC2, 1);
+		gpio_set_input_en(GPIO_PC3, 1);
+		gpio_setup_up_down_resistor(GPIO_PC2, PM_PIN_PULLUP_1M);
+		gpio_setup_up_down_resistor(GPIO_PC3, PM_PIN_PULLUP_1M);
+		uart_io_init(UART_GPIO_8267_PC2_PC3);
 		CLK32M_UART115200;
 
 		reg_dma_rx_rdy0 = FLD_DMA_CHN_UART_RX | FLD_DMA_CHN_UART_TX; //clear uart rx/tx status
-		uart_BuffInit(hci_rx_fifo_b, hci_rx_fifo.size, hci_tx_fifo_b);
+		uart_BuffInit(hci_rx_fifo_b, hci_rx_fifo.size, uart_hw_tx_buf);
 		blc_register_hci_handler (blc_rx_from_uart, blc_hci_tx_to_uart);
 	#elif (HCI_ACCESS == HCI_USE_USB)
 		extern void usb_bulk_drv_init (void *p);

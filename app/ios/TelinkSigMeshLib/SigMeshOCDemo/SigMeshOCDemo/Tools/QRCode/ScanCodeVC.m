@@ -29,6 +29,9 @@
 
 #import "ScanCodeVC.h"
 #import "ScanView.h"
+#import <AssetsLibrary/AssetsLibrary.h>
+#import <Photos/Photos.h>
+#import "UIViewController+Message.h"
 
 @interface ScanCodeVC ()
 @property (nonatomic, strong) ScanView *scanView;
@@ -65,25 +68,52 @@
     [super viewDidLoad];
     self.title = @"Scan";
     self.view.backgroundColor = [UIColor whiteColor];
-    [self.view addSubview: self.scanView];
+    if (self.isCanUseCamera) {
+        [self.view addSubview: self.scanView];
+    } else {
+        __weak typeof(self) weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf showAlertSureWithTitle:@"Hits" message:@"请到设置界面打开TelinkSigMesh的相机权限。" sure:^(UIAlertAction *action) {
+                NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+                if ([[UIApplication sharedApplication] canOpenURL:url]) {
+                    [[UIApplication sharedApplication] openURL:url];
+                }
+            }];
+        });
+    }
+}
+
+// 后面的摄像头是否可用
+- (BOOL)isCanUseCamera {
+    //    iOS 判断应用是否有使用相机的权限
+    NSString *mediaType = AVMediaTypeVideo;//读取媒体类型
+    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:mediaType];//读取设备授权状态
+    if(authStatus == AVAuthorizationStatusRestricted || authStatus == AVAuthorizationStatusDenied){
+//        NSString *errorStr = @"应用相机权限受限,请在设置中启用";
+        return NO;
+    }
+    return YES;
 }
 
 - (void)backToMain{
     [self.navigationController popViewControllerAnimated:YES];
-//    [self.navigationController popToRootViewControllerAnimated:true];
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear: animated];
-    [self.scanView start];
+    if (_scanView) {
+        [self.scanView start];
+    }
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(backToMain) name:@"BackToMain" object:nil];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
 {
     [super viewDidDisappear: animated];
-    [self.scanView stop];
+    if (_scanView) {
+        [self.scanView stop];
+    }
     [[NSNotificationCenter defaultCenter] removeObserver:self name:@"BackToMain" object:nil];
 }
 
@@ -93,7 +123,9 @@
 
 - (void)dealloc
 {
-    [self.scanView stop];
+    if (_scanView) {
+        [self.scanView stop];
+    }
 }
 
 @end

@@ -19,27 +19,27 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #ifndef WIN32
-#include "../../proj/mcu/watchdog_i.h"
+#include "proj/mcu/watchdog_i.h"
 #endif 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
 #include "app_health.h"
 #include "app_heartbeat.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../vendor/common/remote_prov.h"
-#include "../../vendor/common/lighting_model.h"
-#include "../../vendor/common/lighting_model_HSL.h"
-#include "../../vendor/common/lighting_model_xyL.h"
-#include "../../vendor/common/lighting_model_LC.h"
-#include "../../vendor/common/scene.h"
-#include "../../vendor/common/time_model.h"
-#include "../../vendor/common/sensors_model.h"
-#include "../../vendor/common/scheduler.h"
-#include "../../vendor/common/mesh_ota.h"
-#include "../../vendor/common/mesh_property.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "vendor/common/remote_prov.h"
+#include "vendor/common/lighting_model.h"
+#include "vendor/common/lighting_model_HSL.h"
+#include "vendor/common/lighting_model_xyL.h"
+#include "vendor/common/lighting_model_LC.h"
+#include "vendor/common/scene.h"
+#include "vendor/common/time_model.h"
+#include "vendor/common/sensors_model.h"
+#include "vendor/common/scheduler.h"
+#include "vendor/common/mesh_ota.h"
+#include "vendor/common/mesh_property.h"
 #include "generic_model.h"
 #include "directed_forwarding.h"
 #include "app_privacy_beacon.h"
@@ -54,6 +54,11 @@
   * @{
   */
 
+#if MESH_RX_TEST
+mesh_rcv_t mesh_rcv_cmd;
+mesh_rcv_t mesh_rcv_ack;
+u16 mesh_rsp_rec_addr;
+#endif
 
 model_g_onoff_level_t	model_sig_g_onoff_level;
 model_g_power_onoff_trans_time_t   model_sig_g_power_onoff;
@@ -82,13 +87,13 @@ void mesh_g_onoff_st_rsp_par_fill(mesh_cmd_g_onoff_st_t *rsp, u8 idx)
 	rsp->present_onoff = get_onoff_from_level(level_st.present_level);
 	rsp->target_onoff = get_onoff_from_level(level_st.target_level);
 	rsp->remain_t = level_st.remain_t;
+#if MESH_RX_TEST
+	for(int i=0;i<sizeof(rsp->data);i++) {
+		rsp->data[i] = i;
+	}
+#endif
 }
 
-#if MESH_RX_TEST
-mesh_rcv_t mesh_rcv_cmd;
-mesh_rcv_t mesh_rcv_ack;
-u16 mesh_rsp_rec_addr;
-#endif
 
 /**
  * @brief  Send General Onoff Status message.
@@ -298,6 +303,9 @@ int mesh_tx_cmd_g_level_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_com
 		len -= 3;
 	}
 #if MESH_RX_TEST
+	if (idx > 0){
+		return 0;
+	}
 	mesh_rcv_t *p_result;
 	if(BLS_LINK_STATE_CONN == blt_state){
 		p_result = &mesh_rcv_ack;
@@ -1024,8 +1032,13 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 
     // remote provision link parameters 
     {REMOTE_PROV_LINK_GET,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_get,REMOTE_PROV_LINK_STS},
-    {REMOTE_PROV_LINK_OPEN,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_open,REMOTE_PROV_LINK_STS},
-    {REMOTE_PROV_LINK_CLOSE,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_close,REMOTE_PROV_LINK_STS},
+	#if WIN32
+	// binding the link report ,when send the link open cmd ,it should rsp the link report .
+	{REMOTE_PROV_LINK_OPEN,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_open,REMOTE_PROV_LINK_REPORT},
+	#else
+	{REMOTE_PROV_LINK_OPEN,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_open,REMOTE_PROV_LINK_STS},
+	#endif
+	{REMOTE_PROV_LINK_CLOSE,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_close,REMOTE_PROV_LINK_STS},
     {REMOTE_PROV_LINK_STS,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_link_sts,STATUS_NONE},
     {REMOTE_PROV_LINK_REPORT,1,SIG_MD_REMOTE_PROV_SERVER,SIG_MD_REMOTE_PROV_CLIENT,mesh_cmd_sig_rp_link_report,STATUS_NONE},
     {REMOTE_PROV_PDU_SEND,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_pdu_send,STATUS_NONE},

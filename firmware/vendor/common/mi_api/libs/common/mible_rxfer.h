@@ -22,7 +22,7 @@ extern "C" {
 #define DEV_CONFIRMATION 0x0C
 #define DEV_RANDOM       0x0D
 #define BIND_KEY         0x0E
-
+#define WIFI_CONFIG      0x0F
 
 typedef struct {
     uint16_t   conn_handle;

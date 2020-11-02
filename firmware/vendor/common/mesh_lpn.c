@@ -19,24 +19,24 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #if !WIN32
-#include "../../proj/mcu/watchdog_i.h"
+#include "proj/mcu/watchdog_i.h"
 #endif 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
-#include "../../proj_lib/pm.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
+#include "proj_lib/pm.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "lighting_model.h"
-#include "../../vendor/common/sensors_model.h"
-#include "../../proj_lib/mesh_crypto/sha256_telink.h"
+#include "vendor/common/sensors_model.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
 #include "mesh_common.h"
-#include "../../vendor/common/app_heartbeat.h"
+#include "vendor/common/app_heartbeat.h"
 #if(HCI_ACCESS == HCI_USE_UART)
-#include "../../proj/drivers/uart.h"
+#include "proj/drivers/uart.h"
 #endif
 
 #if (IS_VC_PROJECT || TESTCASE_FLAG_ENABLE)

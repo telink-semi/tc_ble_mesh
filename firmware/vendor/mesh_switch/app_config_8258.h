@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#include "../../vendor/common/version.h"    // include mesh_config.h inside.
+#include "vendor/common/version.h"    // include mesh_config.h inside.
 //////////////////board sel/////////////////////////////////////
 
 

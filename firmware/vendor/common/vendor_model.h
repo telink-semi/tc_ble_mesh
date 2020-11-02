@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 
 #if (VENDOR_MD_NORMAL_EN)
 // vendor model id
@@ -104,6 +104,13 @@
     #endif
 
 //------ end
+#endif
+
+#if DEBUG_CFG_CMD_GROUP_AK_EN			// just for internal test
+extern u8 max_time_10ms;
+#define VD_MESH_TRANS_TIME_GET			0xc5
+#define VD_MESH_TRANS_TIME_STS			0xc6
+#define VD_MESH_TRANS_TIME_SET			0xc7
 #endif
 
 //------op parameters

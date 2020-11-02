@@ -26,5 +26,6 @@ int mi_mesh_otp_read(uint16_t item_type, uint8_t *p_out, uint16_t max_olen);
 int mi_mesh_otp_program(void);
 int mi_mesh_otp_program_simulation(void);
 int mi_mesh_otp_verify(void);
+u16 mi_root_cert_len();
 
 #endif /* MIJIA_BLE_LIBS_CRYPTOGRAPHY_MI_MESH_OTP_H_ */

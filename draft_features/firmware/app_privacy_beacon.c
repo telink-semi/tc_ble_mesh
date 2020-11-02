@@ -20,11 +20,11 @@
  *           
  *******************************************************************************************************/
 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
 #include "app_beacon.h"
-#include "../../vendor/common/app_provison.h"
-#include "../../proj/common/types.h"
+#include "vendor/common/app_provison.h"
+#include "proj/common/types.h"
 #include "app_privacy_beacon.h"
 
 #if MD_PRIVACY_BEA

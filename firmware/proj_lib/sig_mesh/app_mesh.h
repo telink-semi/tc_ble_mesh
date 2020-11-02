@@ -52,7 +52,11 @@
 
 //----------------------------------- test
 #if DONGLE_PROVISION_EN
+	#if DEBUG_CFG_CMD_GROUP_AK_EN
+#define MESH_NODE_MAX_NUM       305
+	#else
 #define MESH_NODE_MAX_NUM       200	// comfirm later
+	#endif
 #else
 	#if WIN32
 	#define MESH_NODE_MAX_NUM       1000  // 1000
@@ -311,7 +315,11 @@ extern const u8	const_tbl_scanRsp [9] ;
 #if WIN32
 #define MESH_ELE_MAX_NUM        MESH_NODE_MAX_NUM
 #else
-#define MESH_ELE_MAX_NUM        32
+    #if (__TL_LIB_8269__ || MCU_CORE_TYPE == MCU_CORE_8269 )
+#define MESH_ELE_MAX_NUM        32	// to save RAM
+    #else
+#define MESH_ELE_MAX_NUM        MESH_NODE_MAX_NUM
+    #endif
 #endif
 #define ADV_INTERVAL_UNIT		(ADV_INTERVAL_10MS)	
 
@@ -336,8 +344,8 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define ADV_INTERVAL_MS			(20)   // no random 20ms
 #define ADV_INTERVAL_MS_PROVED	(20)	
 	#else
-#define ADV_INTERVAL_MS			(40)   // with random (0~30ms)
-#define ADV_INTERVAL_MS_PROVED	(300)
+#define ADV_INTERVAL_MS			(100)   // with random (0~30ms)
+#define ADV_INTERVAL_MS_PROVED	(150)   // change it send more frequently 
 	#endif
 #elif HOMEKIT_EN	
 #define ADV_INTERVAL_MS			(ADV_INTERVAL_30MS)
@@ -357,8 +365,8 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define TRANSMIT_INVL_STEPS_DEF	(2)
 #else
 	#if MI_API_ENABLE
-#define TRANSMIT_CNT_DEF		(2)
-#define TRANSMIT_INVL_STEPS_DEF	(4)	
+#define TRANSMIT_CNT_DEF		(7)
+#define TRANSMIT_INVL_STEPS_DEF	(0)	
 		#if(AIS_ENABLE)//MI AIS dual mode
 		#define AIS_TRANSMIT_CNT_DEF		(5)
 		#define AIS_TRANSMIT_INVL_STEPS_DEF	(2)	
@@ -815,7 +823,11 @@ typedef struct{
 
 extern status_record_t slave_status_record[];
 #if DEBUG_CFG_CMD_GROUP_AK_EN
-#define RELIABLE_RETRY_CNT_DEF              0
+	#if WIN32
+#define RELIABLE_RETRY_CNT_DEF              2
+	#else
+#define RELIABLE_RETRY_CNT_DEF              2
+	#endif
 #else
 #define RELIABLE_RETRY_CNT_DEF              2
 #endif
@@ -1146,7 +1158,7 @@ enum{
 enum{
 	DIRECTED_PROXY_USE_DEFAULT_DISABLE,
 	DIRECTED_PROXY_USE_DEFAULT_ENABLE,
-	DIRECTED_PROXY_USE_DEFAULT_NOT_SUPPORT,
+	DIRECTED_PROXY_DISABLE_OR_NOT_SUPPORT,
 	DIRECTED_PROXY_USE_DEFAULT_IGNORE = 0xff,
 };
 
@@ -1378,10 +1390,14 @@ typedef struct{
 	u8 auth_tag[8];
 }mesh_beacon_privacy_t;
 //---------------
-enum{
-	ADV_FROM_MESH = 0,
-	ADV_FROM_GATT = 1,
-};
+
+typedef enum{
+	MESH_BEAR_UNASSIGNED = 0,
+	MESH_BEAR_ADV = BIT(0),
+	MESH_BEAR_GATT = BIT(1),
+}bear_index_t;
+
+#define MESH_BEAR_SUPPORT	(MESH_BEAR_ADV|MESH_BEAR_GATT)
 
 #define GATEWAY_OTA_MESH		0
 #define GATEWAY_OTA_SLEF		1 // initial is ota self
@@ -1510,7 +1526,7 @@ int my_fifo_push_adv (my_fifo_t *f, u8 *p, u8 n, u8 ow);
 int my_fifo_push_relay_ll (my_fifo_t *f, mesh_cmd_bear_unseg_t *p_in, u8 n, u8 ow);
 int my_fifo_push_relay (mesh_cmd_bear_unseg_t *p_in, u8 n, u8 ow);
 int my_fifo_push_hci_tx_fifo (u8 *p, u16 n, u8 *head, u8 head_len);
-int relay_adv_prepare_handler(rf_packet_adv_t * p);
+int relay_adv_prepare_handler(rf_packet_adv_t * p, int rand_en);
 void my_fifo_poll_relay(my_fifo_t *f);
 u8* get_adv_cmd();
 mesh_relay_buf_t * my_fifo_get_relay(my_fifo_t *f);
@@ -1721,7 +1737,9 @@ void tl_log_msg_warn(u16 module,u8 *pbuf,int len,char  *format,...);
 void tl_log_msg_info(u16 module,u8 *pbuf,int len,char  *format,...);
 void tl_log_msg_dbg(u16 module,u8 *pbuf,int len,char  *format,...);
 void user_log_info(u8 *pbuf,int len,char  *format,...);
-
+#if WIN32
+void tl_log_file(u32 level_module,u8 *pbuf,int len,char  *format,...);
+#endif
 
 #if 0// add nor base part ,we can demo from this part 
 #define LOG_SRC_BEARER          (1 <<  0) /**< Receive logs from the bearer layer. */
@@ -1868,6 +1886,11 @@ typedef enum{
 #define LOG_MSG_DBG(module,pbuf,len,format,...) 
 #endif 
 
+#if WIN32 
+#define LOG_MSG_WIN32_FILE(module,pbuf,len,format,...)  tl_log_file(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_DEBUG,module),pbuf,len,format,__VA_ARGS__)
+#else
+#define LOG_MSG_WIN32_FILE(module,pbuf,len,format,...)
+#endif
 
 #define LOG_MSG_FUNC_NAME()     do{LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "%s", __FUNCTION__);}while(0)
 void MessageBoxVC(const char *str);

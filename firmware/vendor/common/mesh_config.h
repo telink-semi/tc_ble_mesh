@@ -216,6 +216,10 @@ extern "C" {
 #define FW_START_BY_BOOTLOADER_EN   1
     #endif
 #define DUAL_MESH_ZB_BL_EN          1
+#elif (DEBUG_CFG_CMD_GROUP_AK_EN)
+#define SUBSCRIPTION_SHARE_EN		1
+#define AIS_ENABLE					0
+#define PROVISION_FLOW_SIMPLE_EN    1
 #else // (MESH_USER_DEFINE_MODE == MESH_NORMAL_MODE  and all other)
 #define SUBSCRIPTION_SHARE_EN		1
 #define AIS_ENABLE					0
@@ -261,6 +265,7 @@ extern "C" {
 
 #if (MESH_USER_DEFINE_MODE == MESH_PIPA_ENABLE)
 #define DUAL_OTA_NEED_LOGIN_EN      1
+#define ENCODE_OTA_BIN_EN           1
 #endif
 
 #ifndef MI_SWITCH_LPN_EN
@@ -381,7 +386,7 @@ extern "C" {
 #define CMD_LINEAR_EN               1
 #endif
 
-#define MESH_RX_TEST	(0&&(!WIN32))
+#define MESH_RX_TEST	((0 || DEBUG_CFG_CMD_GROUP_AK_EN) &&(!WIN32))
 #define MESH_DELAY_TEST_EN		0
 
 #if WIN32
@@ -395,14 +400,14 @@ extern "C" {
 #endif
 
 #ifndef MD_MESH_OTA_EN
-#if (__PROJECT_MESH_PRO__)   // app & gateway
+#if DEBUG_CFG_CMD_GROUP_AK_EN
+#define MD_MESH_OTA_EN				1	// just for internal test.
+#elif (__PROJECT_MESH_PRO__)   // app & gateway
     #if WIN32
 #define MD_MESH_OTA_EN				1
     #else // gateway
 #define MD_MESH_OTA_EN				0   // dufault disable before released by SIG.
     #endif
-#elif DEBUG_CFG_CMD_GROUP_AK_EN
-#define MD_MESH_OTA_EN				1
 #else
 	#if ((MESH_USER_DEFINE_MODE == MESH_MI_ENABLE) || (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL) || __PROJECT_MESH_LPN__ || SPIRIT_PRIVATE_LPN_EN || (LIGHT_TYPE_SEL == TYPE_TOOTH_BRUSH))
 #define MD_MESH_OTA_EN				0   // must 0
@@ -703,12 +708,15 @@ extern "C" {
 #define USER_DEFINE_SET_CCC_ENABLE 	1   // must 1
 
 #define PROXY_PDU_TIMEOUT_TICK 		20*1000*1000
+
+#ifndef SEND_STATUS_WHEN_POWER_ON
 #if (WIN32 || __PROJECT_MESH_SWITCH__)
 #define SEND_STATUS_WHEN_POWER_ON			0
 #elif (DEBUG_MESH_DONGLE_IN_VC_EN && (!IS_VC_PROJECT))
 #define SEND_STATUS_WHEN_POWER_ON			0
 #else
 #define SEND_STATUS_WHEN_POWER_ON			1
+#endif
 #endif
 
 

@@ -19,15 +19,15 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #if !WIN32
-#include "../../proj/mcu/watchdog_i.h"
+#include "proj/mcu/watchdog_i.h"
 #endif 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor_model.h"
 #include "fast_provision_model.h"
 
@@ -787,6 +787,32 @@ int cb_app_vendor_all_cmd(mesh_cmd_ac_vd_t *ac, int ac_len, mesh_cb_fun_par_vend
 // = sizeof(mesh_cmd_lt_unseg_t.data) - sizeof(MIC) - sizeof(op) = 15-4-3 = 8
 STATIC_ASSERT(sizeof(vd_rc_key_report_t) <= 8);
 
+#if DEBUG_CFG_CMD_GROUP_AK_EN
+int cb_vd_trans_time_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    // send back the current tick part .
+    u32 tick_sts =0;
+	tick_sts = clock_time();
+    return mesh_tx_cmd_rsp(VD_MESH_TRANS_TIME_STS,(u8*)&tick_sts,4,ele_adr_primary,cb_par->adr_src,0,0);
+    
+}
+
+u8 max_time_10ms = 0x20; 
+int cb_vd_trans_time_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	max_time_10ms = par[0];
+	u32 tick_sts =0;
+	tick_sts = max_time_10ms;
+	return mesh_tx_cmd_rsp(VD_MESH_TRANS_TIME_STS,(u8*)&tick_sts,4,ele_adr_primary,cb_par->adr_src,0,0);
+}
+
+int cb_vd_trans_time_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	int err =-1;
+	return err;
+}
+#endif
+
 #if !WIN32
 const 
 #endif
@@ -836,6 +862,12 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
     {VD_MESH_PROV_CONFIRM, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_provision_confirm, VD_MESH_PROV_CONFIRM_STS},
     {VD_MESH_PROV_CONFIRM_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_mesh_provison_data_sts, STATUS_NONE},
     {VD_MESH_PROV_COMPLETE, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_provision_complete, STATUS_NONE},
+	#else
+		#if DEBUG_CFG_CMD_GROUP_AK_EN
+	{VD_MESH_TRANS_TIME_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_trans_time_get, VD_MESH_TRANS_TIME_STS},
+	{VD_MESH_TRANS_TIME_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_trans_time_set, VD_MESH_TRANS_TIME_STS},
+	{VD_MESH_TRANS_TIME_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_trans_time_sts, STATUS_NONE},
+		#endif
     #endif
     
     #if (LPN_VENDOR_SENSOR_EN)

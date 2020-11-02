@@ -207,17 +207,17 @@ u16 mesh_heartbeat_cal_feature_part(u16 fea)
 {
 	u16 ret =0;
 	if(model_sig_cfg_s.hb_pub.feature & BIT(MESH_HB_RELAY_BIT)){
-		if(model_sig_cfg_s.relay){
+		if(RELAY_SUPPORT_ENABLE == model_sig_cfg_s.relay){
 			ret |= BIT(MESH_HB_RELAY_BIT);
 		}
 	}
 	if(model_sig_cfg_s.hb_pub.feature & BIT(MESH_HB_PROXY_BIT)){
-		if(model_sig_cfg_s.gatt_proxy){
+		if(GATT_PROXY_SUPPORT_ENABLE == model_sig_cfg_s.gatt_proxy){
 			ret |= BIT(MESH_HB_PROXY_BIT);
 		}
 	}
 	if(model_sig_cfg_s.hb_pub.feature & BIT(MESH_HB_FRI_BIT)){
-		if(model_sig_cfg_s.frid){
+		if(FRIEND_SUPPORT_ENABLE == model_sig_cfg_s.frid){
 			ret |= BIT(MESH_HB_FRI_BIT);
 		}
 	}
@@ -373,7 +373,7 @@ u8 dispatch_heartbeat_pub_ttl(u8 val)
 void init_heartbeat_str()
 {
 	// need to trigger the hearbeat msg ,at the first time 
-	hb_pub_100ms = clock_time_100ms()- BIT(31);//reserve 32767s
+	//hb_pub_100ms = clock_time_100ms()- BIT(31);//reserve 32767s
 
 	// heartbeat publication 
 	/*

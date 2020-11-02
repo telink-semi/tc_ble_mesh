@@ -1,6 +1,7 @@
 #include "mi_config.h"
 
 const mi_config_t m_config = {
+        .model             = MODEL_NAME,
         .pid               = PRODUCT_ID,
         .io                = OOB_IO_CAP,
         .have_msc          = HAVE_MSC,

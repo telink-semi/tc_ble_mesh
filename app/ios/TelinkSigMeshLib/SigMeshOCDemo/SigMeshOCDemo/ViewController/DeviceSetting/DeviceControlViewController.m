@@ -103,16 +103,20 @@
     if (self.hasNextBrightness) {
         [self changeBrightness];
     }
+//    else {
+//        [self refreshLumAndTemp];
+//    }
 }
 
 - (void)changeBrightness {
     self.hadChangeBrightness = YES;
     self.hasNextBrightness = NO;
     TeLogInfo(@"self.nextBrightness=%d",self.nextBrightness);
+    self.model.brightness = [LibTools lumToLightness:self.nextBrightness];
     [DemoCommand changeBrightnessWithBrightness100:self.nextBrightness address:self.model.address retryCount:0 responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigLightLightnessStatus * _Nonnull responseMessage) {
         
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeBrightnessFinish) object:nil];
@@ -136,17 +140,20 @@
     if (self.hasNextTempareture) {
         [self changeTempareture];
     }
+//    else {
+//        [self refreshLumAndTemp];
+//    }
 }
 
 - (void)changeTempareture {
     self.hadChangeTempareture = YES;
     self.hasNextTempareture = NO;
+    self.model.temperature = [LibTools temp100ToTemp:self.nextTempareture];
     [DemoCommand changeTempratureWithTemprature100:self.nextTempareture address:[self.model.temperatureAddresses.firstObject intValue] retryCount:0 responseMaxCount:0 ack:NO successCallback:^(UInt16 source, UInt16 destination, SigLightCTLTemperatureStatus * _Nonnull responseMessage) {
         
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
-    }];
 
+    }];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(changeTemparetureFinish) object:nil];
         [self performSelector:@selector(changeTemparetureFinish) withObject:nil afterDelay:kCommandInterval];

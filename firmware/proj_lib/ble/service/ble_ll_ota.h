@@ -27,12 +27,19 @@
 #define BLE_OTA_ENABLE		0
 #endif
 
+#define START_UP_FLAG		(0x544c4e4b)
 
 
 #define CMD_OTA_FW_VERSION					0xff00
 #define CMD_OTA_START						0xff01
 #define CMD_OTA_END							0xff02
 
+enum{
+    FW_CHECK_NONE       = 0x00,  //
+    FW_CHECK_AGTHM1     = 0x01,  //crc16, then add
+    FW_CHECK_AGTHM2     = 0x02,  //crc 32
+    FW_CHECK_MAX,
+};
 
 typedef struct{
 	u8  ota_start_flag;
@@ -69,6 +76,7 @@ enum{
  	OTA_OVERFLOW,		 // the ota adr overflow to 0x30000
  	OTA_ERR_STS,
 	OTA_SUCCESS_DEBUG,     //success
+ 	OTA_FW_CHECK_ERR,
 };
 
 typedef struct{
@@ -171,5 +179,6 @@ unsigned short crc16(unsigned char *pD, int len);
 u8 ota_condition_enable();
 void set_ota_reboot_flag(u8 flag);
 u8 get_fw_ota_value();
+
 
 #endif /* BLE_LL_OTA_H_ */

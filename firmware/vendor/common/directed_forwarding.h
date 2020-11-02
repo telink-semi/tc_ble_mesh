@@ -22,17 +22,17 @@
 
 #ifndef DIRECTED_FORWARDING_H
 #define DIRECTED_FORWARDING_H
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj/tl_common.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 
 #define DIRECTED_PROXY_EN					FEATURE_PROXY_EN
 #define DIRECTED_FRIEND_EN					FEATURE_FRIEND_EN
 
 #define MAX_FIXED_PATH						32
-#define MAX_NON_FIXED_PATH					64
+#define MAX_NON_FIXED_PATH					(PTS_TEST_EN?4:64)
 #define MAX_DEPENDENT_NUM					(MAX_LPN_NUM+2) // 2 for directed client
 
-#define MAX_DSC_TBL							0x10
+#define MAX_DSC_TBL							(PTS_TEST_EN?4:0x10)
 #define MAX_CONCURRENT_CNT					4
 
 #define PATH_REPLY_DELAY_MS					500 // unit:ms
@@ -109,14 +109,6 @@ enum{
 	DF_PATH_MONITOR,
 	DF_PATH_DSC_RETRY_WAIT,
 };
-
-typedef enum{
-	BEAR_UNASSIGNED = 0,
-	BEAR_ADV = BIT(0),
-	BEAR_GATT = BIT(1),
-}bear_index_t;
-
-#define BEAR_SUPPORT	(BEAR_ADV|BEAR_GATT)
 
 enum{
 	METRIC_TYPE_NODE_COUNT,
@@ -256,7 +248,10 @@ typedef struct{
 	u16 start_index;
 	u16 path_origin;
 	u16 destination;
-	u8  par[2+2+2*(MAX_DEPENDENT_NUM)*sizeof(addr_range_t)]; // 2(identifier) + 2(list size) + fixed/non_fixed list
+	u16 up_id;
+	u8  dependent_origion_size;
+	u8  dependent_target_size;
+	u8  range_list[4*MAX_DEPENDENT_NUM*sizeof(addr_range_t)];
 }forwarding_tbl_dependents_get_sts_t;
 
 typedef struct{
@@ -516,7 +511,7 @@ typedef struct{
 	u8 first_reply_msg;
 	u8 path_confirm_sent;
 	u8 new_lane_established;
-	u8 lant_counter;
+	u8 lane_counter;
 }discovery_state_t;
 
 typedef struct{
@@ -564,6 +559,7 @@ int is_directed_relay_en(u16 netkey_offset);
 int is_directed_proxy_en(u16 netkey_offset);
 int is_directed_friend_en(u16 netkey_offset);
 int is_directed_forwarding_op(u16 op);
+int is_path_target(u16 destination);
 u8 get_directed_proxy_dependent_ele_cnt(u16 netkey_offset, u16 addr);
 u8 get_directed_friend_dependent_ele_cnt(u16 netkey_offset, u16 addr);
 int is_proxy_use_directed(u16 netkey_offset);

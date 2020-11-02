@@ -158,7 +158,7 @@ function :proc the  mesh packet
 para:  
 
             p_payload: the payload of the mesh packet 
-            src_type: ADV_FROM_GATT the packet from the gatt-provision bearer 
+            src_type: MESH_BEAR_GATT the packet from the gatt-provision bearer 
             need_proxy_and_trans_par_val: the ble master ,this value should be set to 0
 return :        
            -1: err

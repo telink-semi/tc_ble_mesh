@@ -19,30 +19,30 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #if !WIN32
-#include "../../proj/mcu/watchdog_i.h"
-#include "../../proj_lib/mesh_crypto/mesh_md5.h"
-#include "../../vendor/common/myprintf.h"
+#include "proj/mcu/watchdog_i.h"
+#include "proj_lib/mesh_crypto/mesh_md5.h"
+#include "vendor/common/myprintf.h"
 #endif 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
-#include "../../vendor/common/app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../vendor/common/app_provison.h"
-#include "../../vendor/common/lighting_model.h"
-#include "../../vendor/common/sensors_model.h"
-#include "../../vendor/common/remote_prov.h"
-#include "../../proj_lib/mesh_crypto/sha256_telink.h"
-#include "../../proj_lib/mesh_crypto/le_crypto.h"
-#include "../../vendor/common/lighting_model_LC.h"
-#include "../../vendor/common/mesh_ota.h"
-#include "../../vendor/common/mesh_common.h"
-#include "../../vendor/common/mesh_config.h"
-#include "../../vendor/common/directed_forwarding.h"
-#include "../../vendor/common/certify_base/certify_base_crypto.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "vendor/common/app_health.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "vendor/common/app_provison.h"
+#include "vendor/common/lighting_model.h"
+#include "vendor/common/sensors_model.h"
+#include "vendor/common/remote_prov.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
+#include "proj_lib/mesh_crypto/le_crypto.h"
+#include "vendor/common/lighting_model_LC.h"
+#include "vendor/common/mesh_ota.h"
+#include "vendor/common/mesh_common.h"
+#include "vendor/common/mesh_config.h"
+#include "vendor/common/directed_forwarding.h"
+#include "vendor/common/certify_base/certify_base_crypto.h"
 
 #if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258))
 #include "stack/ble/ble.h"
@@ -51,11 +51,11 @@
 #endif
 
 #if FAST_PROVISION_ENABLE
-#include "../../vendor/common/fast_provision_model.h"
+#include "vendor/common/fast_provision_model.h"
 #endif
 
 #if (HCI_ACCESS==HCI_USE_UART)
-#include "../../proj/drivers/uart.h"
+#include "proj/drivers/uart.h"
 #endif
 
 

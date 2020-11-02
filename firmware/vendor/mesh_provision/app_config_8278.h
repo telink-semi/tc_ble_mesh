@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#include "../../vendor/common/version.h"    // include mesh_config.h inside.
+#include "vendor/common/version.h"    // include mesh_config.h inside.
 //////////////////board sel/////////////////////////////////////
 #define PCBA_8278_DONGLE_48PIN          1
 #define PCBA_8278_C1T197A30_V1_0        2
@@ -80,6 +80,8 @@ extern "C" {
 
 /////////////////// mesh project config /////////////////////////////////
 #define TRANSITION_TIME_DEFAULT_VAL (0x00)  // 0x41: 1 second // 0x00: means no default transition time
+
+#define PROVISIONER_GATT_ADV_EN	    0
 
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			0

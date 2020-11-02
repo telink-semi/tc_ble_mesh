@@ -2,9 +2,6 @@
 #include "mible_api.h"
 #include "mible_port.h"
 
-#include "third_party/pt/pt.h"
-#include "third_party/pt/pt_misc.h"
-
 #undef  MI_LOG_MODULE_NAME
 #define MI_LOG_MODULE_NAME "mbed"
 #include "mible_log.h"
@@ -14,6 +11,7 @@
 #include "third_party/mbedtls/asn1.h"
 #include "third_party/mbedtls/sha256_hkdf.h"
 #include "third_party/mbedtls/ccm.h"
+#include "third_party/mbedtls/base64.h"
 
 #define CHECK(code) if( ( ret = code ) != 0 ){ return( ret ); }
 #define CHECK_RANGE(min, max, val) if( val < min || val > max ){ return( ret ); }
@@ -608,38 +606,6 @@ done:
     return ret;
 }
 
-static size_t base64_decode(const unsigned char * base64, size_t size,
-                                unsigned char * buf, size_t buf_sz)
-{
-    int i = 0, j = 0, trans[4] = {0};
-    const char * base64char = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    while (i < size && j < buf_sz) {
-        if (' ' == base64[i] || '\r' == base64[i] || '\n' == base64[i]) {
-            ++i;
-            continue;
-        }
-        trans[0] = num_strchr(base64char, base64[i]);
-        trans[1] = num_strchr(base64char, base64[i + 1]);
-        buf[j++] = ((trans[0] << 2) & 0xfc) | ((trans[1] >> 4) & 0x03);
-        if ('=' == base64[i + 2]) {
-            break;
-        } else {
-            trans[2] = num_strchr(base64char, base64[i + 2]);
-        }
-        buf[j++] = ((trans[1] << 4) & 0xf0) | ((trans[2] >> 2) & 0x0f);
-        if ('=' == base64[i + 3]) {
-            break;
-        } else {
-            trans[3] = num_strchr(base64char, base64[i + 3]);
-        }
-        buf[j++] = ((trans[2] << 6) & 0xc0) | (trans[3] & 0x3f);
-        i += 4;
-    }
-
-    return j;
-}
-
 int mbedtls_crt_pem2der(const unsigned char *pem, size_t pem_sz,
                                   unsigned char *der_buf, size_t buf_sz)
 {
@@ -661,7 +627,7 @@ int mbedtls_crt_pem2der(const unsigned char *pem, size_t pem_sz,
     }
 
     s1 += strlen(PEM_HEADER);
-    der_sz = base64_decode( s1, s2 - s1, der_buf, buf_sz );
+    mbedtls_base64_decode(der_buf, buf_sz, &der_sz, s1, s2 - s1);
 
 done:
     return der_sz;

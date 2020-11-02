@@ -35,6 +35,8 @@
 #include "../pm.h"
 
 #define PA_ENABLE	0
+
+#ifndef MY_RF_POWER_INDEX
 #if(PA_ENABLE)
 #if(MCU_CORE_TYPE == MCU_CORE_8269)
 #define		MY_RF_POWER_INDEX		RF_POWER_0dBm
@@ -54,6 +56,7 @@
     #endif
 #elif(MCU_CORE_TYPE == MCU_CORE_8278)
 #define		MY_RF_POWER_INDEX		RF_POWER_P3p50dBm
+#endif
 #endif
 #endif
 
@@ -212,9 +215,13 @@ typedef struct {
 
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
 	#if WIN32
-	#define 		FLASH_ADR_VC_NODE_INFO		0x80000		//  from 0x00000 to 0x40000 (256K)
+#define 		FLASH_ADR_VC_NODE_INFO		0x80000		//  from 0x00000 to 0x40000 (256K)
 	#else
-	#define 		FLASH_ADR_VC_NODE_INFO		0x3f000		//
+		#if DEBUG_CFG_CMD_GROUP_AK_EN
+#define         FLASH_ADR_VC_NODE_INFO      0x78000 // vcnode info
+		#else
+#define 		FLASH_ADR_VC_NODE_INFO		0x3f000		//
+		#endif
 	#endif
 #endif
 #define			FLASH_ADR_AREA_1_END		0x40000
@@ -507,7 +514,9 @@ enum{
     HCI_GATEWAY_CMD_GET_UUID_MAC        = 0x10,
     HCI_GATEWAY_CMD_DEL_VC_NODE_INFO    = 0x11,
     HCI_GATEWAY_CMD_SEND_VC_NODE_INFO	= 0x12,
-    
+    HCI_GATEWAY_CMD_MESH_OTA_ADR_SEND = 0x13,// HCI send back the static oob information 
+    HCI_GATEWAY_CMD_MESH_COMMUNICATE_TEST = 0x14,// HCI send back the static oob information
+    HCI_GATEWAY_CMD_MESH_RX_TEST        = 0x15,
 	// rsp cmd part 
 	HCI_GATEWAY_RSP_UNICAST	=0x80,
 	HCI_GATEWAY_RSP_OP_CODE	=0X81,

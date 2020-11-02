@@ -19,7 +19,7 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"  
+#include "proj/tl_common.h"  
 #include "proj_lib/ble/service/ble_ll_ota.h"
 
 #if PRINT_DEBUG_INFO

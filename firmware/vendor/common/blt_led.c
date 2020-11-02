@@ -20,10 +20,10 @@
  *           
  *******************************************************************************************************/
 
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/rf_drv.h"
-#include "../../proj_lib/pm.h"
-#include "../../proj_lib/ble/ll/ll.h"
+#include "proj/tl_common.h"
+#include "proj_lib/rf_drv.h"
+#include "proj_lib/pm.h"
+#include "proj_lib/ble/ll/ll.h"
 
 #include "../common/blt_led.h"
 

@@ -25,7 +25,7 @@
 #if ANDROID_APP_ENABLE || IOS_APP_ENABLE 
 #pragma pack(1)
 #endif
-#include "../../proj/mcu/config.h"
+#include "proj/mcu/config.h"
 
 #if (__PROJECT_8266_MASTER_KMA_DONGLE__ || __PROJECT_8267_MASTER_KMA_DONGLE__)
 	#include "../8267_master_kma_dongle/app_config.h"

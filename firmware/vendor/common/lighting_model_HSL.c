@@ -19,15 +19,15 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #ifndef WIN32
-#include "../../proj/mcu/watchdog_i.h"
+#include "proj/mcu/watchdog_i.h"
 #endif 
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "lighting_model_HSL.h"
 #include "lighting_model.h"
 
@@ -37,6 +37,35 @@ model_light_hsl_t       model_sig_light_hsl;
 u32 mesh_md_light_hsl_addr = FLASH_ADR_MD_LIGHT_HSL;
 
 #if MD_SERVER_EN
+
+s16 get_Hue_delta_value(u16 hue_target, u16 hue_present) // hue is a circular parameter from 0~360 degree
+{
+	s16 result = 0;
+	u16 Tmp_Current_hue = hue_present;
+	u32 Tmp_caulate_val = 0;
+	if(hue_target > Tmp_Current_hue){
+		Tmp_caulate_val = Tmp_Current_hue + 0x8000;
+		if(hue_target > Tmp_caulate_val){
+			result = (hue_target - 65535) + (0 - Tmp_Current_hue);
+		}else{
+			result = hue_target - Tmp_Current_hue ;
+		}
+	}else{
+		Tmp_caulate_val = hue_target + 0x8000;
+		if(Tmp_Current_hue > Tmp_caulate_val){
+			result = (65535 - Tmp_Current_hue) + (hue_target);
+		}else{
+			result =  hue_target - Tmp_Current_hue;
+		}
+	}
+
+	//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"Current_hsl_hue 0x%4x\r\n", Tmp_Current_hue);
+	//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"Set_hsl_hue 0x%4x\r\n", hue_target);
+
+	return result;
+}
+
+
 /*
 	lighting model command callback function ----------------
 */
@@ -121,6 +150,7 @@ int mesh_cmd_sig_light_hsl_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
         return err;
     }
 
+    pub_list.hsl_set_cmd_flag = 1;
 	mesh_cmd_light_hue_set_t *p_hue_set_tmp = (mesh_cmd_light_hue_set_t *)&lightness_set_tmp;
 	p_hue_set_tmp->hue = p_set->hue;
 	err = light_hue_set(p_hue_set_tmp, len_tmp, cb_par->op, cb_par->model_idx, cb_par->retransaction, &pub_list);

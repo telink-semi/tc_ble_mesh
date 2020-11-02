@@ -21,26 +21,26 @@
  *******************************************************************************************************/
 
 #include "remote_prov.h"
-#include "../../proj/tl_common.h"
+#include "proj/tl_common.h"
 #include "user_config.h"
 #include "lighting_model.h"
 #include "sensors_model.h"
 #include "lighting_model_LC.h"
 #include "mesh_ota.h"
 #include "mesh_common.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "app_health.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
-#include "../../proj_lib/mesh_crypto/sha256_telink.h"
-#include "../../proj_lib/mesh_crypto/le_crypto.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
+#include "proj_lib/mesh_crypto/le_crypto.h"
 #if WIN32 // remote prov client proc part ,only concern about the gatt provision part 
 #include "../../../reference/tl_bulk/lib_file/host_fifo.h"
 #include "../../../reference/tl_bulk/lib_file/gatt_provision.h"
-
+#include "../../../reference/tl_bulk/Sig_mesh_json_info.h"
 #if MI_API_ENABLE 
-#include "../../vendor/common/mi_api/telink_sdk_mible_api.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #endif 
 rp_mag_cli_str rp_client;
 
@@ -173,8 +173,11 @@ void mesh_rp_client_set_prov_sts(u8 sts)
 }
 
 
-int mesh_rp_client_rx_cb(u8 * p_data,u16 unicast)
+int mesh_rp_client_rx_cb(mesh_rc_rsp_t *rsp)
 {
+	u8 * p_data = rsp->data;
+	u16 src_adr = rsp->src;
+	u16 dst_adr = rsp->dst;
     rp_mag_cli_str *p_rp = &rp_client;
     remote_prov_pdu_report *p_event = (remote_prov_pdu_report *)p_data;
     u8 *p_rp_data = &p_event->InboundPDUNumber;
@@ -190,12 +193,17 @@ int mesh_rp_client_rx_cb(u8 * p_data,u16 unicast)
         remote_prov_scan_report *p_report = (remote_prov_scan_report *)p_rp_data;
         LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8 *)p_report,sizeof(remote_prov_scan_report),"CLIENT:REMOTE_PROV_SCAN_REPORT",0);
         remote_prov_scan_report_win32 rep_win32;
-        rep_win32.unicast = unicast;
+        rep_win32.unicast = src_adr;
         memcpy((u8 *)&(rep_win32.scan_report),p_report,sizeof(remote_prov_scan_report));
         remote_prov_scan_report_cb((u8 *)&rep_win32,sizeof(remote_prov_scan_report_win32));        
     }else if (p_event->opcode == REMOTE_PROV_EXTEND_SCAN_REPORT){
         remote_prov_extend_scan_report *p_report = (remote_prov_extend_scan_report *)p_rp_data;
         LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8 *)p_report,sizeof(remote_prov_extend_scan_report),"CLIENT:REMOTE_PROV_EXTEND_SCAN_REPORT",0);
+		remote_prov_scan_report_win32 rep_win32;
+        rep_win32.unicast = src_adr;
+        memcpy(rep_win32.scan_report.uuid,p_report->uuid,sizeof(p_report->uuid));
+		rep_win32.scan_report.oob = p_report->OOBinformation;
+        remote_prov_scan_report_cb((u8 *)&rep_win32,sizeof(remote_prov_scan_report_win32));
     }else if (p_event->opcode == REMOTE_PROV_LINK_STS){
         remote_prov_link_status *p_link_sts = (remote_prov_link_status *)p_rp_data;
         LOG_MSG_INFO(TL_LOG_REMOTE_PROV,(u8 *)p_link_sts,sizeof(remote_prov_link_status),"CLIENT:REMOTE_PROV_LINK_STS",0);
@@ -205,12 +213,13 @@ int mesh_rp_client_rx_cb(u8 * p_data,u16 unicast)
     }else if(p_event->opcode == REMOTE_PROV_PDU_OUTBOUND_REPORT || REMOTE_PROV_PDU_REPORT){
         mesh_pro_data_structer *p_send = (mesh_pro_data_structer *)gatt_para_pro;
         mesh_pro_data_structer *p_rcv = (mesh_pro_data_structer *)p_event->ProvisioningPDU;
-		if(p_event->opcode == REMOTE_PROV_PDU_REPORT){
-			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"REMOTE_PROV_PDU_REPORT,inbound num is %d",p_event->InboundPDUNumber);
-
+		if(p_event->opcode == REMOTE_PROV_PDU_OUTBOUND_REPORT){
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,&(p_event->InboundPDUNumber),0x31,"REMOTE_PROV_PDU_REPORT,inbound num is %d",p_event->InboundPDUNumber);
+		}else if(p_event->opcode == REMOTE_PROV_PDU_REPORT){
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,&(p_event->InboundPDUNumber),0x31,"REMOTE_PROV_PDU_OUTBOUND_REPORT data is ",0);
 		}
         u8 prov_code = p_event->ProvisioningPDU[0];
-        if(prov_code == PRO_FAIL){
+        if(prov_code == PRO_FAIL && p_event->opcode == REMOTE_PROV_PDU_REPORT){
             // terminate,need to send link close cmd 
             // reset all the status part 
             LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:PRO_FAIL",0);
@@ -341,7 +350,7 @@ int mesh_rp_client_rx_cb(u8 * p_data,u16 unicast)
                     if(prov_code == PRO_COMPLETE){
                         prov_timer_clr();
                         gatt_prov_rcv_pro_complete();
-						mesh_prov_dev_candi_store_proc();
+						mesh_prov_dev_candi_store_proc(src_adr);
                         provision_end_callback(PROV_NORMAL_RET);
                         gatt_provision_mag.provison_send_state = STATE_PRO_SUC;
 						mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,REMOTE_PROV_LINK_CLOSE_SUC);
@@ -398,7 +407,7 @@ void mesh_prov_set_adr_dev_candi(u16 adr,u8 *p_dev)
 	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,p_dev,16,"the adr is %d,and the devkey is ",adr);
 }
 
-void mesh_prov_dev_candi_store_proc()
+void mesh_prov_dev_candi_store_proc(u16 cmd_src)
 {
 	LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"mesh_prov_dev_candi_store_proc ",0);
 	if(mesh_prov_dkri_is_valid()){
@@ -409,8 +418,9 @@ void mesh_prov_dev_candi_store_proc()
 		LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"RP_DKRI_DEV_KEY_REFRESH proc",0);
 		VC_node_dev_key_save_candi(rp_mag.adr_src,rp_mag.dev_candi);		
 	}else if(rp_mag.dkri_cli == RP_DKRI_NODE_ADR_REFRESH){
-		VC_node_dev_key_save_candi(rp_mag.adr_src,rp_mag.dev_candi);// update the candi part 
-		VC_node_dev_key_candi_enable(rp_mag.adr_src);// update the devkey part ,and clear the candi part 
+		VC_node_replace_devkey_candi_adr(cmd_src,rp_mag.adr_src,rp_mag.dev_candi);// update the candi part 
+		//update the json file part .
+		json_update_node_adr_devicekey(rp_mag.adr_src,cmd_src,rp_mag.dev_candi);
 	}else if (rp_mag.dkri_cli == RP_DKRI_NODE_CPS_REFRESH){
 		VC_node_dev_key_save_candi(rp_mag.adr_src,rp_mag.dev_candi);
 	}

@@ -19,16 +19,16 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
+#include "proj/tl_common.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
 #include "../common/app_provison.h"
 #include "../common/app_proxy.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "../common/app_beacon.h"
 
-#include "../../homekit_src/homekit_inc.h"
+#include "homekit_src/homekit_inc.h"
 #include "../common/led_cfg.h"
 #include "common.h"
 

@@ -19,39 +19,39 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/rf_drv.h"
-#include "../../proj_lib/pm.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/ble/ll/ll_whitelist.h"
-#include "../../proj_lib/ble/trace.h"
-#include "../../proj/mcu/pwm.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
-#include "../../proj/drivers/adc.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj_lib/ble/ble_smp.h"
-#include "../../proj_lib/mesh_crypto/mesh_crypto.h"
-#include "../../proj_lib/mesh_crypto/mesh_md5.h"
-#include "../../proj_lib/mesh_crypto/sha256_telink.h"
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj/tl_common.h"
+#include "proj_lib/rf_drv.h"
+#include "proj_lib/pm.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/ll/ll_whitelist.h"
+#include "proj_lib/ble/trace.h"
+#include "proj/mcu/pwm.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "proj/drivers/adc.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/ble_smp.h"
+#include "proj_lib/mesh_crypto/mesh_crypto.h"
+#include "proj_lib/mesh_crypto/mesh_md5.h"
+#include "proj_lib/mesh_crypto/sha256_telink.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #include "../common/app_provison.h"
 #include "../common//app_beacon.h"
 #include "../common//app_proxy.h"
 #include "../common//app_health.h"
 #include "../common//vendor_model.h"
-#include "../../proj/drivers/keyboard.h"
+#include "proj/drivers/keyboard.h"
 #include "app.h"
-#include "../../stack/ble/gap/gap.h"
+#include "stack/ble/gap/gap.h"
 #include "vendor/common/blt_soft_timer.h"
 #include "proj/drivers/rf_pa.h"
 
 #if MI_API_ENABLE
-#include "../../vendor/common/mi_api/telink_sdk_mible_api.h"
-#include "../../vendor/common/mi_api/libs/mesh_auth/mi_service_server.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
+#include "vendor/common/mi_api/libs/mesh_auth/mi_service_server.h"
 #endif 
 #if (HCI_ACCESS==HCI_USE_UART)
-#include "../../proj/drivers/uart.h"
+#include "proj/drivers/uart.h"
 #endif
 
 MYFIFO_INIT(blt_rxfifo, 64, 16);
@@ -117,7 +117,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			send_to_hci = mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD);
 			#else
-			send_to_hci = app_event_handler_adv(pa->data, ADV_FROM_MESH, 1);
+			send_to_hci = app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1);
 			#endif
 		}
 

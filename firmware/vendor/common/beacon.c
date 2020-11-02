@@ -20,8 +20,8 @@
  *           
  *******************************************************************************************************/
 
-#include "../../proj/tl_common.h"
-#include "../../proj_lib/ble/ll/ll.h"
+#include "proj/tl_common.h"
+#include "proj_lib/ble/ll/ll.h"
 
 #if(BEACON_ENABLE)
 #if 0

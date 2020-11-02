@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include "../../proj/tl_common.h"
-#include "../../vendor/common/mesh_node.h"
+#include "proj/tl_common.h"
+#include "vendor/common/mesh_node.h"
 
 /** @addtogroup Mesh_Common
   * @{
@@ -187,8 +187,18 @@ enum{
 };
 
 typedef struct{
+    u32 gpio;
+    u8 id;
+    u8 invert;
+    u8 func;
+    u8 rsv[1];
+}light_res_hw_t;
+
+typedef struct{
 	u8 st[ST_TRANS_MAX + 1];    // + 1: for onoff publish flag
+// follwing parmeters is for inputting.	
 	u8 no_dim_refresh_flag;     // input parameter
+	u8 hsl_set_cmd_flag;        //
 }st_pub_list_t;  // st_level_set_pub_list_t
 
 typedef struct{
@@ -321,7 +331,7 @@ void get_light_pub_list(int st_trans_type, s16 present_level, s16 target_level, 
 void light_level_set_all(s16 level);
 int light_onoff_idx(int idx, int on, int init_time_flag);
 int light_onoff_idx_with_trans(u8 *set_trans, int idx);
-void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type);
+void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type, int hsl_set_cmd_flag);
 void light_res_sw_g_level_target_set(int idx, s16 level, int st_trans_type);
 void light_onoff_all(u8 on);
 void light_transition_proc();
@@ -409,6 +419,7 @@ void reset_rx_onoff_cnt();
 void increase_rx_onoff_cnt();
 u16 get_rx_cnts();
 void light_transition_onoff_manual(u8 onoff, u8 transit_t, u8 light_idx);
+void set_keep_onoff_state_after_ota();
 
 
 static inline u16 get_lightness_present(int light_idx)
