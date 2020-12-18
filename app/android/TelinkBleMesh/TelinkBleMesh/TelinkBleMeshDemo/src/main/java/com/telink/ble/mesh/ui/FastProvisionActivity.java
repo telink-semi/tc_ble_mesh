@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     FastProvisionActivity.java 
+ * @file FastProvisionActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -40,8 +40,11 @@ import com.telink.ble.mesh.foundation.event.FastProvisioningEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.parameter.FastProvisioningParameters;
 import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.NetworkingDevice;
+import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
+import com.telink.ble.mesh.ui.adapter.DeviceAutoProvisionListAdapter;
 import com.telink.ble.mesh.ui.adapter.DeviceProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 
@@ -56,20 +59,18 @@ import androidx.recyclerview.widget.RecyclerView;
  * fast provision
  */
 
-public class FastProvisionActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
+public class FastProvisionActivity extends BaseActivity implements EventListener<String> {
 
     private MeshInfo meshInfo;
 
     /**
      * ui devices
      */
-    private List<NodeInfo> devices = new ArrayList<>();
+    private List<NetworkingDevice> devices = new ArrayList<>();
 
-    private DeviceProvisionListAdapter mListAdapter;
+    private DeviceAutoProvisionListAdapter mListAdapter;
 
     private Handler delayHandler = new Handler();
-
-    private Button btn_back;
 
     private PrivateDevice[] targetDevices = PrivateDevice.values();
 
@@ -83,13 +84,12 @@ public class FastProvisionActivity extends BaseActivity implements View.OnClickL
         setContentView(R.layout.activity_device_provision);
         initTitle();
         RecyclerView rv_devices = findViewById(R.id.rv_devices);
-        devices = new ArrayList<>();
 
-        mListAdapter = new DeviceProvisionListAdapter(this, devices);
+        mListAdapter = new DeviceAutoProvisionListAdapter(this, devices);
         rv_devices.setLayoutManager(new GridLayoutManager(this, 2));
         rv_devices.setAdapter(mListAdapter);
-        btn_back = findViewById(R.id.btn_back);
-        btn_back.setOnClickListener(this);
+//        btn_back = findViewById(R.id.btn_back);
+//        btn_back.setOnClickListener(this);
 
         meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
@@ -130,7 +130,7 @@ public class FastProvisionActivity extends BaseActivity implements View.OnClickL
     }
 
     private void enableUI(boolean enable) {
-        btn_back.setEnabled(enable);
+        enableBackNav(enable);
     }
 
 
@@ -144,8 +144,10 @@ public class FastProvisionActivity extends BaseActivity implements View.OnClickL
         nodeInfo.deviceKey = fastProvisioningDevice.getDeviceKey();
         nodeInfo.elementCnt = fastProvisioningDevice.getElementCount();
         nodeInfo.compositionData = getCompositionData(fastProvisioningDevice.getPid());
-        nodeInfo.state = NodeInfo.STATE_PROVISIONING;
-        devices.add(nodeInfo);
+
+        NetworkingDevice device = new NetworkingDevice(nodeInfo);
+        device.state = NetworkingState.PROVISIONING;
+        devices.add(device);
         mListAdapter.notifyDataSetChanged();
 
         meshInfo.provisionIndex = fastProvisioningDevice.getNewAddress() + fastProvisioningDevice.getElementCount();
@@ -158,14 +160,6 @@ public class FastProvisionActivity extends BaseActivity implements View.OnClickL
         super.onDestroy();
         TelinkMeshApplication.getInstance().removeEventListener(this);
         delayHandler.removeCallbacksAndMessages(null);
-    }
-
-
-    @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.btn_back) {
-            finish();
-        }
     }
 
     @Override
@@ -183,12 +177,13 @@ public class FastProvisionActivity extends BaseActivity implements View.OnClickL
     }
 
     private void onFastProvisionComplete(boolean success) {
-        for (NodeInfo nodeInfo : devices) {
+        for (NetworkingDevice networkingDevice : devices) {
             if (success) {
-                nodeInfo.state = NodeInfo.STATE_BIND_SUCCESS;
-                meshInfo.insertDevice(nodeInfo);
+                networkingDevice.state = NetworkingState.BIND_SUCCESS;
+                networkingDevice.nodeInfo.bound = true;
+                meshInfo.insertDevice(networkingDevice.nodeInfo);
             } else {
-                nodeInfo.state = NodeInfo.STATE_PROVISION_FAIL;
+                networkingDevice.state = NetworkingState.PROVISION_FAIL;
             }
         }
         if (success) {

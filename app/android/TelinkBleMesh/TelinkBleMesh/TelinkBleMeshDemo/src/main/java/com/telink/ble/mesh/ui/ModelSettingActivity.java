@@ -42,7 +42,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class ModelSettingActivity extends BaseActivity {
 
-
     private ModelListAdapter mAdapter;
     private List<MeshSigModel> modelList;
 

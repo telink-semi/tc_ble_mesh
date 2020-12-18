@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     DeviceControlFragment.java 
+ * @file DeviceControlFragment.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,15 +17,14 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.fragment;
 
-import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ScrollView;
@@ -52,13 +51,11 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.ui.adapter.SwitchListAdapter;
-import com.telink.ble.mesh.ui.widget.ColorPanel;
+import com.telink.ble.mesh.ui.widget.CompositionColorView;
 import com.telink.ble.mesh.util.MeshLogger;
-
 
 import java.util.List;
 
-import androidx.core.graphics.ColorUtils;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -68,15 +65,11 @@ import androidx.recyclerview.widget.RecyclerView;
  */
 
 public class DeviceControlFragment extends BaseFragment implements EventListener<String>, View.OnClickListener {
-    ColorPanel color_panel;
-    View color_presenter;
-    ScrollView sv_container;
-    private View ll_hsl, ll_lum, ll_lum_level, ll_temp, ll_temp_level;
+    private CompositionColorView cps_color;
+    private View ll_lum, ll_lum_level, ll_temp, ll_temp_level;
     NodeInfo deviceInfo;
-    TextView tv_hsl, tv_lum, tv_temp, tv_lum_level, tv_temp_level;
-    SeekBar sb_color, sb_lum, sb_temp;
-    SeekBar sb_red, sb_green, sb_blue;
-    TextView tv_red, tv_green, tv_blue;
+    TextView tv_lum, tv_temp, tv_lum_level, tv_temp_level;
+    SeekBar sb_lum, sb_temp;
     private long preTime;
     private static final int DELAY_TIME = 320;
 
@@ -120,45 +113,29 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         rv_switch.setLayoutManager(new GridLayoutManager(getActivity(), 4));
         switchListAdapter = new SwitchListAdapter(getActivity(), onOffEleAdrList);
         rv_switch.setAdapter(switchListAdapter);
-        sv_container = view.findViewById(R.id.sv_container);
-        color_panel = view.findViewById(R.id.color_panel);
-        color_panel.setOnTouchListener(this.colorPanelTouchListener);
-        color_panel.setColorChangeListener(colorChangeListener);
-        color_panel.setColor(Color.WHITE);
-
-        color_presenter = view.findViewById(R.id.color_presenter);
-
-        ll_hsl = view.findViewById(R.id.ll_hsl);
+        cps_color = view.findViewById(R.id.cps_color);
+        cps_color.setMessageDelegate(new CompositionColorView.ColorMessageDelegate() {
+            @Override
+            public void onHSLMessage(float[] hsl) {
+                sendHslSetMessage(hsl);
+            }
+        });
         ll_lum = view.findViewById(R.id.ll_lum);
         ll_lum_level = view.findViewById(R.id.ll_lum_level);
         ll_temp = view.findViewById(R.id.ll_temp);
         ll_temp_level = view.findViewById(R.id.ll_temp_level);
 
-        tv_hsl = view.findViewById(R.id.tv_hsl);
         tv_lum = view.findViewById(R.id.tv_lum);
         tv_temp = view.findViewById(R.id.tv_temp);
         tv_lum_level = view.findViewById(R.id.tv_lum_level);
         tv_temp_level = view.findViewById(R.id.tv_temp_level);
 
-        tv_red = view.findViewById(R.id.tv_red);
-        tv_green = view.findViewById(R.id.tv_green);
-        tv_blue = view.findViewById(R.id.tv_blue);
 
-        sb_color = view.findViewById(R.id.sb_color);
         sb_lum = view.findViewById(R.id.sb_brightness);
         sb_temp = view.findViewById(R.id.sb_temp);
 
-        sb_red = view.findViewById(R.id.sb_red);
-        sb_green = view.findViewById(R.id.sb_green);
-        sb_blue = view.findViewById(R.id.sb_blue);
-
         sb_lum.setOnSeekBarChangeListener(onSeekBarChangeListener);
         sb_temp.setOnSeekBarChangeListener(onSeekBarChangeListener);
-        sb_color.setOnSeekBarChangeListener(onSeekBarChangeListener);
-
-        sb_red.setOnSeekBarChangeListener(onSeekBarChangeListener);
-        sb_green.setOnSeekBarChangeListener(onSeekBarChangeListener);
-        sb_blue.setOnSeekBarChangeListener(onSeekBarChangeListener);
 
         view.findViewById(R.id.iv_lum_add).setOnClickListener(this);
         view.findViewById(R.id.iv_lum_minus).setOnClickListener(this);
@@ -205,7 +182,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
 
     private void setVisibility() {
         if (hslEleAdr == -1) {
-            ll_hsl.setVisibility(View.GONE);
+            cps_color.setVisibility(View.GONE);
         } else {
 //            ll_lum.setVisibility(View.GONE);
 //            ll_lum_level.setVisibility(View.GONE);
@@ -244,32 +221,12 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         TelinkMeshApplication.getInstance().removeEventListener(this);
     }
 
-    private ColorPanel.ColorChangeListener colorChangeListener = new ColorPanel.ColorChangeListener() {
-
-
-        @Override
-        public void onColorChanged(float[] hsv, boolean touchStopped) {
-            int color = Color.HSVToColor(hsv);
-            float[] hslValue = new float[3];
-            ColorUtils.colorToHSL(color, hslValue);
-
-            refreshDesc(hslValue, color);
-            long currentTime = System.currentTimeMillis();
-            if ((currentTime - preTime) >= DELAY_TIME || touchStopped) {
-                preTime = currentTime;
-                sendHslSetMessage(hslValue);
-            } else {
-                MeshLogger.w("CMD reject : color set");
-            }
-        }
-    };
-
     private void sendHslSetMessage(float[] hslValue) {
         int hue = Math.round(hslValue[0] * 65535 / 360);
         int sat = Math.round(hslValue[1] * 65535);
         int lightness = Math.round(hslValue[2] * 65535);
 //        lightness = 0x54d5;
-        MeshLogger.d("set hsl: hue -> " + hue + " sat -> "+ sat + " lightness -> "+ lightness);
+        MeshLogger.d("set hsl: hue -> " + hue + " sat -> " + sat + " lightness -> " + lightness);
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         HslSetMessage hslSetMessage = HslSetMessage.getSimple(hslEleAdr, meshInfo.getDefaultAppKeyIndex(),
                 lightness,
@@ -300,13 +257,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
 
         void onProgressUpdate(SeekBar seekBar, int progress, boolean immediate) {
 
-            if (seekBar == sb_color) {
-
-                float visibility = ((float) progress) / 100;
-                if (color_panel != null) {
-                    color_panel.setVisibility(visibility, immediate);
-                }
-            } else if (seekBar == sb_lum || seekBar == sb_temp) {
+            if (seekBar == sb_lum || seekBar == sb_temp) {
 
                 long currentTime = System.currentTimeMillis();
                 if (seekBar == sb_lum) {
@@ -335,66 +286,9 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
                         MeshService.getInstance().sendMeshMessage(temperatureSetMessage);
                     }
                 }
-            } else if (seekBar == sb_red || seekBar == sb_green || seekBar == sb_blue) {
-                long currentTime = System.currentTimeMillis();
-
-                int red = sb_red.getProgress();
-                int green = sb_green.getProgress();
-                int blue = sb_blue.getProgress();
-                int color = 0xFF000000 | ((red & 0xFF) << 16) | ((green & 0xFF) << 8) | (blue & 0xFF);
-
-                color_panel.setColor(color);
-                float[] hsv = new float[3];
-                Color.colorToHSV(color, hsv);
-                sb_color.setProgress((int) (hsv[2] * 100));
-
-                float[] hslValue = new float[3];
-                ColorUtils.colorToHSL(color, hslValue);
-                refreshDesc(hslValue, color);
-
-                if ((currentTime - preTime) >= DELAY_TIME || immediate) {
-                    preTime = currentTime;
-                    sendHslSetMessage(hslValue);
-                }
             }
         }
     };
-
-    private View.OnTouchListener colorPanelTouchListener = new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                sv_container.requestDisallowInterceptTouchEvent(false);
-            } else {
-                sv_container.requestDisallowInterceptTouchEvent(true);
-            }
-            return false;
-        }
-    };
-
-    private void refreshDesc(float[] hslValue, int color) {
-
-        color_presenter.setBackgroundColor(color);
-
-        int red = (color >> 16) & 0xFF;
-        int green = (color >> 8) & 0xFF;
-        int blue = color & 0xFF;
-
-        sb_red.setProgress(red);
-        sb_green.setProgress(green);
-        sb_blue.setProgress(blue);
-
-        tv_red.setText(String.format("%03d", red));
-        tv_green.setText(String.format("%03d", green));
-        tv_blue.setText(String.format("%03d", blue));
-
-        // Hue Saturation Hue
-        String hsl = "HSL: \n\tH -- " + (hslValue[0]) + "(" + (byte) (hslValue[0] * 100 / 360) + ")" +
-                "\n\tS -- " + (hslValue[1]) + "(" + (byte) (hslValue[1] * 100) + ")" +
-                "\n\tL -- " + (hslValue[2] + "(" + (byte) (hslValue[2] * 100) + ")"
-        );
-        tv_hsl.setText(hsl);
-    }
 
 
     @Override

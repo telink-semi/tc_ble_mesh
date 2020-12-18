@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     Arrays.java 
+ * @file Arrays.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,18 +17,20 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.util;
 
+import android.text.TextUtils;
+
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
-import java.util.Formatter;
 
 /**
  * array util
  */
 public final class Arrays {
+    public static final char[] HEX_BASIC = "0123456789ABCDEF".toCharArray();
 
     private Arrays() {
     }
@@ -138,23 +140,17 @@ public final class Arrays {
         if (array == null || array.length == 0)
             return "";
 
-        StringBuilder sb = new StringBuilder();
-
-        Formatter formatter = new Formatter(sb);
-        formatter.format("%02X", array[0]);
-
-        for (int i = 1; i < array.length; i++) {
-
-//            if (!Strings.isEmpty(separator))
-            sb.append(separator);
-
-            formatter.format("%02X", array[i]);
+        final boolean sepNul = TextUtils.isEmpty(separator);
+        StringBuilder hexResult = new StringBuilder();
+        int ai;
+        for (int i = 0; i < array.length; i++) {
+            ai = array[i] & 0xFF;
+            if (i != 0 && !sepNul) {
+                hexResult.append(separator);
+            }
+            hexResult.append(HEX_BASIC[ai >>> 4]).append(HEX_BASIC[ai & 0x0F]);
         }
-
-        formatter.flush();
-        formatter.close();
-
-        return sb.toString();
+        return hexResult.toString();
     }
 
     public static byte[] hexToBytes(String hexStr) {

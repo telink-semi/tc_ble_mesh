@@ -32,6 +32,9 @@ import com.telink.ble.mesh.foundation.Event;
  */
 
 public class ProvisioningEvent extends Event<String> implements Parcelable {
+
+    public static final String EVENT_TYPE_PROVISION_BEGIN = "com.telink.ble.mesh.EVENT_TYPE_PROVISION_BEGIN";
+
     public static final String EVENT_TYPE_PROVISION_SUCCESS = "com.telink.ble.mesh.EVENT_TYPE_PROVISION_SUCCESS";
 
     public static final String EVENT_TYPE_PROVISION_FAIL = "com.telink.ble.mesh.EVENT_TYPE_PROVISION_FAIL";

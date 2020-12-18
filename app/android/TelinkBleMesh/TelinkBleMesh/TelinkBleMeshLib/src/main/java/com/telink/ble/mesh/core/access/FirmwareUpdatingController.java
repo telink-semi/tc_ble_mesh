@@ -225,11 +225,15 @@ public class FirmwareUpdatingController {
 
     private long blobId;
 
-    private byte[] metadata = {0, 0, 0, 0};
+
+    // firmware[2-5] + [0, 0, 0, 0]
+    private byte[] metadata = {0, 0, 0, 0, 0, 0, 0, 0};
 
     private int metadataIndex = 0;
 
     private MeshFirmwareParser firmwareParser = new MeshFirmwareParser();
+
+    private byte[] firmwareData;
 
     /**
      * received missing chunk number
@@ -254,6 +258,7 @@ public class FirmwareUpdatingController {
 
     private int gattAddress = -1;
 
+    // check if last chunk in block needs segmentation
     private int dleLength = 11;
     // for missing test
     boolean test = true;
@@ -282,7 +287,12 @@ public class FirmwareUpdatingController {
         test = true;
         this.isGattMode = configuration.isSingleAndDirect();
         this.dleLength = configuration.getDleLength();
-        this.firmwareParser.reset(configuration.getFirmwareData());
+        this.firmwareData = configuration.getFirmwareData();
+        if (firmwareData.length < 6) {
+            return;
+        }
+        System.arraycopy(firmwareData, 2, this.metadata, 0, 4);
+//        this.firmwareParser.reset(configuration.getFirmwareData());
         log(" config -- " + configuration.toString());
         log("isGattMode? " + isGattMode);
         this.appKeyIndex = configuration.getAppKeyIndex();
@@ -353,10 +363,10 @@ public class FirmwareUpdatingController {
             onMeshMessagePrepared(blobChunkTransferMessage);
             if (!isGattMode) {
                 delayHandler.postDelayed(chunkSendingTask, getChunkSendingInterval());
-            }else {
+            } else {
                 int len = chunkData.length + 3;
                 boolean segment = len > dleLength;
-                if (!segment){
+                if (!segment) {
                     sendChunks();
                 }
             }
@@ -397,9 +407,22 @@ public class FirmwareUpdatingController {
         }
     }
 
+    /*private long getChunkSendingInterval() {
+        // relay 320 ms
+
+        long interval = firmwareParser.getChunkSize() / 12 * NetworkingController.NETWORKING_INTERVAL + NetworkingController.NETWORKING_INTERVAL;
+        final long min = 5 * 1000;
+        interval = Math.max(min, interval);
+        log("chunk sending interval: " + interval);
+        return interval;
+    }*/
+
     private long getChunkSendingInterval() {
         // relay 320 ms
 
+        if (isGattMode) {
+            return 100;
+        }
         long interval = firmwareParser.getChunkSize() / 12 * NetworkingController.NETWORKING_INTERVAL + NetworkingController.NETWORKING_INTERVAL;
         final long min = 5 * 1000;
         interval = Math.max(min, interval);
@@ -653,9 +676,9 @@ public class FirmwareUpdatingController {
 
     public void onSegmentComplete(boolean success) {
         if (isGattMode && step == STEP_BLOB_CHUNK_SENDING) {
-            if (success){
+            if (success) {
                 sendChunks();
-            }else {
+            } else {
                 onUpdatingFail(STATE_FAIL, "chunk send fail -- segment message send fail");
             }
         }
@@ -721,7 +744,7 @@ public class FirmwareUpdatingController {
 
     private void onFirmwareInfoStatus(FirmwareUpdateInfoStatusMessage firmwareInfoStatusMessage) {
         log("firmware info status: " + firmwareInfoStatusMessage.toString());
-        if (step != STEP_GET_FIRMWARE_INFO){
+        if (step != STEP_GET_FIRMWARE_INFO) {
             log("not at STEP_GET_FIRMWARE_INFO");
             return;
         }
@@ -736,7 +759,7 @@ public class FirmwareUpdatingController {
 
     private void onSubscriptionStatus(ModelSubscriptionStatusMessage subscriptionStatusMessage) {
         log("subscription status: " + subscriptionStatusMessage.toString());
-        if (step != STEP_SET_SUBSCRIPTION){
+        if (step != STEP_SET_SUBSCRIPTION) {
             log("not at STEP_SET_SUBSCRIPTION");
             return;
         }
@@ -752,11 +775,17 @@ public class FirmwareUpdatingController {
      * response of {@link BlobInfoStatusMessage}
      */
     private void onBlobInfoStatus(BlobInfoStatusMessage objectInfoStatusMessage) {
+
+
         log("object info status: " + objectInfoStatusMessage.toString());
-        if (step != STEP_GET_BLOB_INFO){
+        if (step != STEP_GET_BLOB_INFO) {
             log("not at STEP_GET_BLOB_INFO");
             return;
         }
+        int blockSize = (int) Math.pow(2, objectInfoStatusMessage.getMaxBlockSizeLog());
+        int chunkSize = objectInfoStatusMessage.getMaxChunkSize();
+        log("chunk size : " + chunkSize + " block size: " + blockSize);
+        this.firmwareParser.reset(firmwareData, blockSize, chunkSize);
         nodeIndex++;
         executeUpdatingAction();
     }

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -13,7 +14,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -21,7 +22,7 @@
                 android:id="@+id/iv_device"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
+                android:layout_gravity="center_vertical"
                 android:padding="8dp"
                 android:src="@drawable/ic_bulb_off" />
 
@@ -29,35 +30,51 @@
                 android:id="@+id/tv_device_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toRightOf="@id/iv_device"
+                android:layout_weight="1"
                 android:breakStrategy="simple"
                 android:ellipsize="end"
-                android:gravity="center_vertical"
-                android:lines="3"
-                android:maxLines="4"
-                android:text="1232312"
+                android:lines="6"
+                android:maxLines="6"
                 android:textSize="11sp" />
 
-            <ImageView
-                android:id="@+id/iv_close"
+            <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentRight="true"
-                android:background="?attr/selectableItemBackground"
-                android:src="@drawable/ic_close"
-                android:tint="@color/grey" />
+                android:layout_height="match_parent">
 
-        </RelativeLayout>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tv_state"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:layout_weight="1"
-            android:text="device connected"
-            android:textSize="11sp" />
+                    <TextView
+                        android:id="@+id/tv_state"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="bind"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <CheckBox
+                    android:id="@+id/cb_select"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:checked="false" />
+
+                <Button
+                    android:id="@+id/btn_add"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="ADD"
+                    android:textColor="@color/colorPrimary"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+
+        </LinearLayout>
 
         <ProgressBar
             android:id="@+id/pb_provision"
@@ -94,28 +111,6 @@
                     android:text="device connected"
                     android:textSize="11sp" />
 
-
-                <Button
-                    android:id="@+id/btn_add"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:text="ADD"
-                    android:textColor="@color/colorPrimary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <!--<ImageView
-                    android:id="@+id/iv_add"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_add_circle"
-                    android:tint="@color/file_color_primary" />-->
 
             </LinearLayout>
 

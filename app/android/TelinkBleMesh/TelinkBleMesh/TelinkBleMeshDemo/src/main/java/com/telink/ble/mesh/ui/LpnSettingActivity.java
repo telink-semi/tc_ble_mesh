@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     LpnSettingActivity.java 
+ * @file LpnSettingActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -50,9 +50,9 @@ import androidx.appcompat.app.AlertDialog;
 
 
 /**
+ * LPN setting
  * Created by kee on 2017/8/17.
  */
-
 public class LpnSettingActivity extends BaseActivity implements EventListener<String> {
 
     private MeshInfo mesh;
@@ -142,29 +142,6 @@ public class LpnSettingActivity extends BaseActivity implements EventListener<St
                 }
             }
         }
-        /*if (event.getType().equals(NotificationEvent.EVENT_TYPE_VENDOR_RESPONSE)) {
-            NotificationInfo info = ((NotificationEvent) event).getNotificationInfo();
-            MeshLogger.log("vendor response: " + info.toString());
-            if (info.srcAdr == eleAdr && info.opcode == OP_VENDOR_STATUS) {
-                byte[] params = info.params;
-                if (params.length == 4) {
-                    int humidity = (params[0] & 0xFF) + ((params[1] & 0xFF) << 8);
-                    int temperature = (params[2] & 0xFF) + ((params[3] & 0xFF) << 8);
-                    msgHandler.obtainMessage(MSG_APPEND_LOG, dateFormat.format(new Date()) + " Sensor State STATUS : H=" + humidity + " T=" + temperature + '\n')
-                            .sendToTarget();
-                } else if (params.length == 2) {
-
-                }
-
-
-            }
-
-
-        } else if (event.getType().equals(NotificationEvent.EVENT_TYPE_KICK_OUT_CONFIRM)) {
-
-            onKickOutFinish();
-
-        }*/
     }
 
     private void showKickConfirmDialog() {
@@ -234,29 +211,6 @@ public class LpnSettingActivity extends BaseActivity implements EventListener<St
                     if (MeshService.getInstance().sendMeshMessage(meshMessage)) {
                         msgHandler.obtainMessage(MSG_APPEND_LOG, dateFormat.format(new Date()) + " Sensor State GET \n").sendToTarget();
                     }
-//                    meshMessage.setTidPosition(tidPosition);
-                    /*
-                    final byte[] params = new byte[]{
-                            (byte) 0xa3, (byte) 0xff, //flag
-                            (byte) 0x00, (byte) 0x00, // netKey index
-                            (byte) 0x00, (byte) 0x00, // appKey index
-                            (byte) 0x02, // retry cnt
-                            (byte) 0x00, // rsp max
-                            (byte) 0x01, (byte) 0x00, // dest address
-                            (byte) 0xe0, (byte) 0x11, (byte) 0x02, // vendor opcode
-                            (byte) 0xe1, (byte) 0x02, (byte) 0x00, (byte) 0x00}; // params
-                    */
-//                    Mesh mesh = TelinkMeshApplication.getInstance().getMeshInfo();
-
-                    // todo mesh interface
-                    /*MeshCommand command = MeshCommand.newInstance(
-                            mesh.netKeyIndex, mesh.appKeyIndex,
-                            1, eleAdr, OP_VENDOR_GET);
-                    command.params = new byte[]{(byte) 0xe1, (byte) 0x02, (byte) 0x00, (byte) 0x00};
-                    if (MeshService.getInstance().sendMeshCommand(command)) {
-                        msgHandler.obtainMessage(MSG_APPEND_LOG, dateFormat.format(new Date()) + " Sensor State GET \n").sendToTarget();
-                    }*/
-
                     break;
 
                 case R.id.btn_kick:

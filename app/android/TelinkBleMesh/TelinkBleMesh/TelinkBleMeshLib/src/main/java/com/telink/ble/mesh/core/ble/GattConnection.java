@@ -1188,6 +1188,7 @@ public class GattConnection extends BluetoothGattCallback {
 
     @Override
     public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+        log("onMtuChanged: " + mtu);
         super.onMtuChanged(gatt, mtu, status);
         if (gattStatusSuccess(status)) {
             this.mtu = mtu;
@@ -1214,6 +1215,10 @@ public class GattConnection extends BluetoothGattCallback {
         public void run() {
             log("disconnection timeout");
             synchronized (CONNECTION_STATE_LOCK) {
+                if (mGatt != null) {
+                    mGatt.disconnect();
+                    mGatt.close();
+                }
                 mConnectionState = CONN_STATE_IDLE;
                 onDisconnected();
             }

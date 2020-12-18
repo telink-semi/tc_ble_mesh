@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     DeviceFragment.java 
+ * @file DeviceFragment.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 
 package com.telink.ble.mesh.ui.fragment;
@@ -45,17 +45,17 @@ import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.ui.CmdActivity;
+import com.telink.ble.mesh.ui.DeviceAutoProvisionActivity;
 import com.telink.ble.mesh.ui.DeviceProvisionActivity;
 import com.telink.ble.mesh.ui.DeviceSettingActivity;
 import com.telink.ble.mesh.ui.FastProvisionActivity;
 import com.telink.ble.mesh.ui.KeyBindActivity;
 import com.telink.ble.mesh.ui.LogActivity;
 import com.telink.ble.mesh.ui.MainActivity;
-import com.telink.ble.mesh.ui.test.ConnectionTestActivity;
-import com.telink.ble.mesh.ui.test.OnOffTestActivity;
 import com.telink.ble.mesh.ui.RemoteProvisionActivity;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.OnlineDeviceListAdapter;
+import com.telink.ble.mesh.ui.test.ConnectionTestActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -121,6 +121,8 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                         startActivity(new Intent(getActivity(), RemoteProvisionActivity.class));
                     } else if (SharedPreferenceHelper.isFastProvisionEnable(getActivity())) {
                         startActivity(new Intent(getActivity(), FastProvisionActivity.class));
+                    } else if (SharedPreferenceHelper.isAutoPvEnable(getActivity())) {
+                        startActivity(new Intent(getActivity(), DeviceAutoProvisionActivity.class));
                     } else {
                         startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
                     }
@@ -171,7 +173,7 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 }
                 MeshLogger.d("deviceKey: " + (Arrays.bytesToHexString(deviceInfo.deviceKey)));
                 Intent intent;
-                if (deviceInfo.state >= NodeInfo.STATE_BIND_SUCCESS) {
+                if (deviceInfo.bound) {
                     intent = new Intent(getActivity(), DeviceSettingActivity.class);
                 } else {
                     intent = new Intent(getActivity(), KeyBindActivity.class);

@@ -207,7 +207,7 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
         NodeInfo local = mesh.getDeviceByUUID(remote.getDeviceUUID());
         if (local == null) return;
 
-        local.state = NodeInfo.STATE_BIND_SUCCESS;
+        local.bound = true;
 //        local. = remote.boundModels;
         local.compositionData = remote.getCompositionData();
         mesh.saveOrUpdate(this);

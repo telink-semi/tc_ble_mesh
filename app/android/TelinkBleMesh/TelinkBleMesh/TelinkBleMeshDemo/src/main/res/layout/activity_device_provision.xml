@@ -26,8 +26,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:singleLine="true"
-        android:visibility="gone"
-        android:text="LOG" />
+        android:text="LOG"
+        android:visibility="gone" />
 
     <Button
         android:id="@+id/btn_remote_scan"
@@ -38,12 +38,12 @@
         android:visibility="gone" />
 
     <Button
-        android:id="@+id/btn_back"
+        android:id="@+id/btn_add_all"
+        style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Go Back"
-        android:enabled="false"
-        style="@style/Widget.AppCompat.Button.Colored"
+        android:text="ADD ALL"
+        android:visibility="gone"
         android:theme="@style/AccentButton" />
 
 

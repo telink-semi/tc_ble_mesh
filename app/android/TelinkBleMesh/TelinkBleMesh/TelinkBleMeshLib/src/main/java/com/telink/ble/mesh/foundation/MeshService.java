@@ -23,7 +23,6 @@ package com.telink.ble.mesh.foundation;
 
 import android.content.Context;
 
-import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.ble.GattRequest;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
@@ -35,12 +34,8 @@ import com.telink.ble.mesh.foundation.parameter.GattOtaParameters;
 import com.telink.ble.mesh.foundation.parameter.MeshOtaParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
-import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import org.spongycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
-
-import java.security.KeyPair;
 import java.security.Security;
 
 import androidx.annotation.NonNull;
@@ -56,6 +51,9 @@ public class MeshService implements MeshController.EventCallback {
         Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
     }
 
+    /**
+     * mesh protocol implementation
+     */
     private MeshController mController;
 
     private static MeshService mThis = new MeshService();
@@ -64,8 +62,14 @@ public class MeshService implements MeshController.EventCallback {
         return mThis;
     }
 
+    /**
+     * event handler
+     */
     private EventHandler mEventHandler;
 
+    /**
+     * init mesh engine
+     */
     public void init(@NonNull Context context, EventHandler eventHandler) {
         MeshLogger.log("MeshService#init");
         if (mController == null) {
@@ -74,23 +78,11 @@ public class MeshService implements MeshController.EventCallback {
         mController.setEventCallback(this);
         mController.start(context);
         this.mEventHandler = eventHandler;
-        test();
     }
 
-    private void test(){
-        KeyPair keyPair = Encipher.generateKeyPair();
-
-        BCECPublicKey publicKey = (BCECPublicKey) keyPair.getPublic();
-        byte[] x = publicKey.getQ().getXCoord().getEncoded();
-        byte[] y = publicKey.getQ().getYCoord().getEncoded();
-        MeshLogger.d("pub data: " + Arrays.bytesToHexString(x) + " -- " + Arrays.bytesToHexString(y));
-
-        byte[] pvt = keyPair.getPrivate().getEncoded();
-        MeshLogger.d("pvt data: " + Arrays.bytesToHexString(pvt));
-//        byte[] pub = keyPair.getPublic().getEncoded();
-
-    }
-
+    /**
+     * clear mesh engine
+     */
     public void clear() {
         MeshLogger.log("MeshService#clear");
         if (this.mController != null) {
@@ -98,13 +90,27 @@ public class MeshService implements MeshController.EventCallback {
         }
     }
 
+    /**
+     * setup mesh info
+     *
+     * @param configuration mesh configuration, inner params should not be null
+     */
+    public void setupMeshNetwork(MeshConfiguration configuration) {
+        mController.setupMeshNetwork(configuration);
+    }
+
+    /**
+     * check bluetooth state
+     * state will be received by BluetoothEvent
+     * {@link com.telink.ble.mesh.foundation.event.BluetoothEvent}
+     */
     public void checkBluetoothState() {
         mController.checkBluetoothState();
     }
 
-    public void setupMeshNetwork(MeshConfiguration configuration) {
-        mController.setupMeshNetwork(configuration);
-    }
+    /********************************************************************************
+     * mesh api
+     ********************************************************************************/
 
     /**
      * @return is proxy connected && proxy set success (if proxy filter set needed)
@@ -121,17 +127,26 @@ public class MeshService implements MeshController.EventCallback {
         return mController.getDirectNodeAddress();
     }
 
+    /**
+     * remove device in mesh configuration
+     * this action only delete device info in map ,
+     * if kick-out device from mesh network is needed, call sendMeshMessage(NodeResetMessage)
+     *
+     * @param meshAddress target device address
+     */
     public void removeDevice(int meshAddress) {
         mController.removeDevice(meshAddress);
     }
 
+    /**
+     * get current action mode
+     *
+     * @return current mode
+     * @see com.telink.ble.mesh.foundation.MeshController.Mode
+     */
     public MeshController.Mode getCurrentMode() {
         return mController.getMode();
     }
-
-    /********************************************************************************
-     * mesh api
-     ********************************************************************************/
 
     /**
      * start scanning
@@ -140,6 +155,9 @@ public class MeshService implements MeshController.EventCallback {
         mController.startScan(scanParameters);
     }
 
+    /**
+     * stop bluetooth scanning
+     */
     public void stopScan() {
         mController.stopScan();
     }
@@ -166,7 +184,7 @@ public class MeshService implements MeshController.EventCallback {
     }
 
     /**
-     * ota by gatt
+     * ota by gatt, [telink private]
      */
     public void startGattOta(GattOtaParameters otaParameters) {
         mController.startGattOta(otaParameters);
@@ -194,10 +212,18 @@ public class MeshService implements MeshController.EventCallback {
         mController.startRemoteProvision(remoteProvisioningDevice);
     }
 
+    /**
+     * fast provision, [telink private]
+     */
     public void startFastProvision(FastProvisioningParameters fastProvisioningConfiguration) {
         mController.startFastProvision(fastProvisioningConfiguration);
     }
 
+    /**
+     * idle
+     *
+     * @param disconnect if disconnect current gatt connection
+     */
     public void idle(boolean disconnect) {
         mController.idle(disconnect);
     }
@@ -206,10 +232,17 @@ public class MeshService implements MeshController.EventCallback {
         mController.startGattConnection(parameters);
     }
 
+    /**
+     * @param request gatt request
+     * @return if request sent
+     */
     public boolean sendGattRequest(GattRequest request) {
         return mController.sendGattRequest(request);
     }
 
+    /**
+     * @return get current gatt connection mtu
+     */
     public int getMtu() {
         return mController.getMtu();
     }
@@ -239,6 +272,9 @@ public class MeshService implements MeshController.EventCallback {
         return mController.getOnlineStatus();
     }
 
+    /**
+     * @param enable if enable DLE, this will change mesh segmentation bound
+     */
     public void resetDELState(boolean enable) {
         mController.resetDELState(enable);
     }
@@ -247,10 +283,16 @@ public class MeshService implements MeshController.EventCallback {
      * bluetooth api
      ********************************************************************************/
 
+    /**
+     * @return bluetooth enabled
+     */
     public boolean isBluetoothEnabled() {
         return mController.isBluetoothEnabled();
     }
 
+    /**
+     * enable bluetooth
+     */
     public void enableBluetooth() {
         mController.enableBluetooth();
     }
@@ -261,7 +303,6 @@ public class MeshService implements MeshController.EventCallback {
     public String getCurDeviceMac() {
         return mController.getCurDeviceMac();
     }
-
 
     @Override
     public void onEventPrepared(Event<String> event) {

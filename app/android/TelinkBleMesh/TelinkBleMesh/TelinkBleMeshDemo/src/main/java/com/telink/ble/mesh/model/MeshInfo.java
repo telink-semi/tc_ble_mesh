@@ -47,11 +47,19 @@ import androidx.annotation.NonNull;
 
 public class MeshInfo implements Serializable, Cloneable {
 
-
+    /**
+     * local storage file name , saved by serializi
+     */
     public static final String FILE_NAME = "com.telink.ble.mesh.demo.STORAGE";
 
+    /**
+     * local provisioner UUID
+     */
     public String provisionerUUID;
 
+    /**
+     * unicast address range
+     */
     public AddressRange unicastRange;
 
     /**
@@ -71,9 +79,6 @@ public class MeshInfo implements Serializable, Cloneable {
      */
     public List<AppKey> appKeyList;
 
-//    public int appKeyIndex;
-
-
     /**
      * ivIndex and sequence number are used in NetworkPDU
      *
@@ -83,6 +88,9 @@ public class MeshInfo implements Serializable, Cloneable {
      */
     public int ivIndex;
 
+    /**
+     * provisioner sequence number
+     */
     public int sequenceNumber;
 
     /**
@@ -98,10 +106,19 @@ public class MeshInfo implements Serializable, Cloneable {
      */
     public int provisionIndex = 1;
 
+    /**
+     * scenes saved in mesh
+     */
     public List<Scene> scenes = new ArrayList<>();
 
+    /**
+     * groups
+     */
     public List<GroupInfo> groups = new ArrayList<>();
 
+    /**
+     * static-oob info
+     */
     public List<OOBPair> oobPairs = new ArrayList<>();
 
     public int getDefaultAppKeyIndex() {
@@ -357,7 +374,9 @@ public class MeshInfo implements Serializable, Cloneable {
         meshInfo.netKeyIndex = 0x00;
         meshInfo.appKeyList = new ArrayList<>();
 //        meshInfo.appKeyList.add(new MeshInfo.AppKey(0x00, APP_KEY));
+//        byte[] appKey = Arrays.hexToBytes("522514A01CE1BAC821986BDD46D037C0");
         meshInfo.appKeyList.add(new AppKey(0x00, MeshUtils.generateRandom(16)));
+//        meshInfo.appKeyList.add(new AppKey(0x00, appKey));
         meshInfo.ivIndex = 0;
         meshInfo.sequenceNumber = 0;
         meshInfo.nodes = new ArrayList<>();

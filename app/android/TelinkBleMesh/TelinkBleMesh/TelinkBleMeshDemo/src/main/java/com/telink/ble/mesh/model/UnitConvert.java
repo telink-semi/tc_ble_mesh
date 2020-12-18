@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     UnitConvert.java 
+ * @file UnitConvert.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.model;
 
@@ -29,8 +29,12 @@ import java.util.Calendar;
 /**
  * Created by kee on 2017/11/28.
  */
-
 public final class UnitConvert {
+
+    /**
+     * @param lum 0-100
+     * @return -32768-32767
+     */
     public static int lum2level(int lum) {
         if (lum > 100) {
             lum = 100;
@@ -38,6 +42,10 @@ public final class UnitConvert {
         return (-32768 + (65535 * lum) / 100);
     }
 
+    /**
+     * @param level -32768-32767
+     * @return lum 0-100
+     */
     public static int level2lum(short level) {
 
         int re = (((level + 32768) * 100) / 65535);
@@ -54,6 +62,10 @@ public final class UnitConvert {
 //        return 65535 * lum / 100;
     }
 
+    /**
+     * @param lightness 0-65535
+     * @return lum 0-100
+     */
     public static int lightness2lum(int lightness) {
         return lightness * 100 / 65535;
     }
@@ -72,6 +84,10 @@ public final class UnitConvert {
         return (800 + ((20000 - 800) * temp100) / 100);
     }
 
+    /**
+     * @param temp 800-2000
+     * @return temp100 0-100
+     */
     public static int tempToTemp100(int temp) {
         if (temp < 800) return 0;
         if (temp > 20000) return 100;
@@ -79,6 +95,11 @@ public final class UnitConvert {
     }
 
 
+    /**
+     * get zone offset, 15min
+     *
+     * @return zoneOffSet
+     */
     public static int getZoneOffset() {
         Calendar cal = Calendar.getInstance();
         // zone offset and daylight offset

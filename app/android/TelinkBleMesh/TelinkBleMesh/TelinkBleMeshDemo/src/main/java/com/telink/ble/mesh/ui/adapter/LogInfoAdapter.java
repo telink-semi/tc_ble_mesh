@@ -32,6 +32,7 @@ import com.telink.ble.mesh.util.LogInfo;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Locale;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -44,10 +45,12 @@ import androidx.recyclerview.widget.RecyclerView;
 public class LogInfoAdapter extends BaseRecyclerViewAdapter<LogInfoAdapter.ViewHolder> {
 
     private Context mContext;
+    private List<LogInfo> logInfoList;
     private SimpleDateFormat mDateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.getDefault());
 
-    public LogInfoAdapter(Context context) {
+    public LogInfoAdapter(Context context, List<LogInfo> logInfoList) {
         this.mContext = context;
+        this.logInfoList = logInfoList;
     }
 
     @Override
@@ -60,13 +63,13 @@ public class LogInfoAdapter extends BaseRecyclerViewAdapter<LogInfoAdapter.ViewH
 
     @Override
     public int getItemCount() {
-        return MeshLogger.logInfoList.size();
+        return logInfoList.size();
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
-        LogInfo logInfo = MeshLogger.logInfoList.get(position);
+        LogInfo logInfo = logInfoList.get(position);
         String info = mDateFormat.format(logInfo.millis) + "/" + logInfo.tag + " : " + logInfo.logMessage;
         holder.tv_name.setTextColor(mContext.getResources().getColor(getColorResId(logInfo.level)));
         holder.tv_name.setText(info);

@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     OOBEditActivity.java 
+ * @file OOBEditActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -35,9 +35,8 @@ import com.telink.ble.mesh.util.Arrays;
 import androidx.appcompat.widget.Toolbar;
 
 /**
- * show device composition data
+ * add or edit static-OOB
  */
-
 public class OOBEditActivity extends BaseActivity {
 
     public static final String EXTRA_OOB = "com.telink.ble.mesh.EXTRA_OOB";

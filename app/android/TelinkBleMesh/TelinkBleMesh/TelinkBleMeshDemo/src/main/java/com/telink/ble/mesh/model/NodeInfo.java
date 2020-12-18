@@ -43,25 +43,6 @@ import java.util.List;
 
 public class NodeInfo implements Serializable {
 
-    /**
-     * networking state
-     */
-    public static final int STATE_PROVISION_FAIL = -1;
-
-    public static final int STATE_PROVISIONING = 0;
-
-    // binding equals provision success
-    public static final int STATE_BINDING = 1;
-
-    public static final int STATE_BIND_SUCCESS = 2;
-
-    public static final int STATE_BIND_FAIL = -2;
-
-    public static final int STATE_TIME_PUB_SET_SUCCESS = 3;
-
-    public static final int STATE_TIME_PUB_SET_FAIL = 4;
-
-    public int state;
 
     /**
      * on/off state
@@ -72,11 +53,6 @@ public class NodeInfo implements Serializable {
 
     public static final int ON_OFF_STATE_OFFLINE = -1;
 
-
-    /**
-     * state description
-     */
-    public String stateDesc;
 
     /**
      * primary element unicast address
@@ -98,6 +74,8 @@ public class NodeInfo implements Serializable {
      * element count
      */
     public int elementCnt = 0;
+
+    public boolean bound = false;
 
     public byte[] deviceKey;
 
@@ -388,35 +366,11 @@ public class NodeInfo implements Serializable {
     }
 
 
-    public String getStateDesc() {
-        switch (state) {
-            case STATE_PROVISION_FAIL:
-                return "Provision Fail -- " + stateDesc;
 
-            case STATE_PROVISIONING:
-                return "Provisioning";
-
-            case STATE_BINDING:
-                return "Key Binding" + (defaultBind ? "(default)" : "");
-
-            case STATE_BIND_SUCCESS:
-                return "Key Bind Success" + (defaultBind ? "(default)" : "");
-
-            case STATE_BIND_FAIL:
-                return "Key Bind Fail -- " + stateDesc;
-
-            case STATE_TIME_PUB_SET_SUCCESS:
-                return "Time publish set success ";
-
-            case STATE_TIME_PUB_SET_FAIL:
-                return "Time publish set fail ";
-        }
-        return "UNKNOWN";
-    }
 
     public String getPidDesc() {
         String pidInfo = "";
-        if (state >= STATE_BIND_SUCCESS && compositionData != null) {
+        if (bound && compositionData != null) {
             return "cid-" +
                     Arrays.bytesToHexString(MeshUtils.integer2Bytes(compositionData.cid, 2, ByteOrder.LITTLE_ENDIAN), "") +
                     " pid-" +

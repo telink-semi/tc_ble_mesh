@@ -169,7 +169,7 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
         if (settingIndex > selectedAdrList.size() - 1) {
             dismissWaitingDialog();
             toastMsg("store scene complete");
-//            finish();
+            finish();
             return;
         }
         SettingModel model = selectedAdrList.get(settingIndex);

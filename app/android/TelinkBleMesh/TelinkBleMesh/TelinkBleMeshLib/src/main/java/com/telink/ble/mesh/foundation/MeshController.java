@@ -23,7 +23,6 @@ package com.telink.ble.mesh.foundation;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -331,7 +330,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     void checkBluetoothState() {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         onBluetoothStateUpdate(adapter.getState());
-
     }
 
     private void onBluetoothStateUpdate(int state) {
@@ -339,6 +337,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         switch (state) {
             case BluetoothAdapter.STATE_OFF:
                 stateInfo = ("bluetooth disabled");
+                if (mGattConnection != null){
+                    mGattConnection.disconnect();
+                }
                 break;
             case BluetoothAdapter.STATE_ON:
                 stateInfo = ("bluetooth enabled");
@@ -674,7 +675,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         return mGattConnection.sendRequest(request);
     }
 
-    int getMtu(){
+    int getMtu() {
         return mGattConnection.getMtu();
     }
 
@@ -823,11 +824,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     public void resetDELState(boolean enable) {
-        if (mNetworkingController != null){
+        if (mNetworkingController != null) {
             mNetworkingController.enableDLE(enable);
         }
     }
-
 
 
     /**
@@ -935,6 +935,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
         if (actionMode == Mode.MODE_PROVISION) {
             ProvisioningDevice provisioningDevice = (ProvisioningDevice) mActionParams.get(Parameters.ACTION_PROVISIONING_TARGET);
+            onProvisionBegin(provisioningDevice, "provision begin");
             onActionStart();
             mProvisioningController.begin(provisioningDevice);
         } else if (actionMode == Mode.MODE_FAST_PROVISION) {
@@ -1033,7 +1034,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     /**
      * move direct device to last
-     *
      */
     private void rebuildFirmwareUpdatingDevices(FirmwareUpdateConfiguration configuration) {
         List<MeshUpdatingDevice> devices = configuration.getUpdatingDevices();
@@ -1049,12 +1049,12 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         }
         if (directDevice != null) {
             devices.add(directDevice);
-            if (devices.size() == 1){
+            if (devices.size() == 1) {
                 // update gatt connection when OTA start
 //                mGattConnection.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
                 configuration.setSingleAndDirect(true);
                 configuration.setDleLength(mNetworkingController.getSegmentAccessLength());
-            }else {
+            } else {
                 configuration.setSingleAndDirect(false);
             }
 
@@ -1528,7 +1528,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
-//            if (!device.getAddress().contains("FF:FF:BB:CC:DD"))return;
+//            if (!device.getAddress().contains("FF:FF:BB:CC:DD")) return;
             onScanFilter(device, rssi, scanRecord);
         }
 
@@ -1560,6 +1560,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         onEventPrepared(provisioningEvent);
     }
 
+    private void onProvisionBegin(ProvisioningDevice device, String desc) {
+        postProvisioningEvent(ProvisioningEvent.EVENT_TYPE_PROVISION_BEGIN, device, desc);
+    }
 
     private void onProvisionFailed(ProvisioningDevice provisioningDevice, String desc) {
         log("provisioning failed: " + desc + " -- " + provisioningDevice.getUnicastAddress());
@@ -1685,7 +1688,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     @Override
     public void onSegmentMessageComplete(boolean success) {
-        if (actionMode == Mode.MODE_MESH_OTA){
+        if (actionMode == Mode.MODE_MESH_OTA) {
             mFirmwareUpdatingController.onSegmentComplete(success);
         }
     }
@@ -2006,7 +2009,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
          */
         MODE_REMOTE_PROVISION,
 
-
+        /**
+         * remote bind
+         */
         MODE_REMOTE_BIND,
 
         /**

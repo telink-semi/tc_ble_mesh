@@ -216,28 +216,6 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
                 MeshLogger.e("scene setting err!");
             }
         }
-        switch (event.getType()) {
-            // mesh interface
-
-            /*case NotificationEvent.EVENT_TYPE_SCENE_REGISTER_STATUS:
-                if (tarScene == null) return;
-                NotificationInfo notificationInfo = ((NotificationEvent) event).getNotificationInfo();
-                byte[] params = notificationInfo.params;
-
-                SceneRegisterNotificationParser.SceneRegisterInfo registerInfo = SceneRegisterNotificationParser.create().parse(params);
-
-                int status = registerInfo == null ? -1 : registerInfo.status;
-                if (status == 0 && notificationInfo.srcAdr == tarScene.states.get(deleteIndex).address) {
-                    handler.removeCallbacks(cmdTimeoutCheckTask);
-                    deleteIndex++;
-                    deleteNextDevice();
-                } else {
-                    dismissWaitingDialog();
-                    MeshLogger.e("scene setting err!");
-                }
-
-                break;*/
-        }
     }
 
     @Override

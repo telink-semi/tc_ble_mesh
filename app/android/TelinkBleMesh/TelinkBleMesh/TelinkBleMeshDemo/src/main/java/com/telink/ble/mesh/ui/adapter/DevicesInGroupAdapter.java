@@ -90,7 +90,7 @@ public class DevicesInGroupAdapter extends BaseRecyclerViewAdapter<DevicesInGrou
 //        holder.tv_name.setText(models.get(position).getAddress());
         String info = Integer.toHexString(device.meshAddress).toUpperCase();
 
-        if (device.state >= NodeInfo.STATE_BIND_SUCCESS) {
+        if (device.bound) {
             /*info += " : " +
                     (device.lum < 0 ? 0 : device.lum) + " : " +
                     device.temp;*/

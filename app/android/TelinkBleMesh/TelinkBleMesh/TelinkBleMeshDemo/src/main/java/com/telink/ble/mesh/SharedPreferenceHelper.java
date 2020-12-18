@@ -56,6 +56,8 @@ public class SharedPreferenceHelper {
 
     private static final String KEY_DLE_ENABLE = "com.telink.bluetooth.light.KEY_DLE_ENABLE";
 
+    private static final String KEY_AUTO_PV = "com.telink.bluetooth.light.KEY_AUTO_PV";
+
     public static boolean isFirstLoad(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(KEY_FIRST_LOAD, true);
@@ -149,6 +151,16 @@ public class SharedPreferenceHelper {
     public static void setDleEnable(Context context, boolean enable) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_DLE_ENABLE, enable).apply();
+    }
+
+    public static boolean isAutoPvEnable(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KEY_AUTO_PV, false);
+    }
+
+    public static void setAutoPvEnable(Context context, boolean enable) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putBoolean(KEY_AUTO_PV, enable).apply();
     }
 
 }

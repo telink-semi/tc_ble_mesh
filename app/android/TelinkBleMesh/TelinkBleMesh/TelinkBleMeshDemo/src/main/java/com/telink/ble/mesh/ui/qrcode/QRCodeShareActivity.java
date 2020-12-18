@@ -146,6 +146,7 @@ public class QRCodeShareActivity extends BaseActivity {
         showWaitingDialog("uploading...");
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         String jsonStr = MeshStorageService.getInstance().meshToJsonString(meshInfo);
+        MeshLogger.d("upload json string: " + jsonStr);
         TelinkHttpClient.getInstance().upload(jsonStr, QRCODE_TIMEOUT, uploadCallback);
     }
 

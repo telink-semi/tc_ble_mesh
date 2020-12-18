@@ -51,9 +51,8 @@ import java.io.InputStream;
 import java.nio.ByteOrder;
 
 /**
- *
+ * device firmware update by gatt ota
  */
-
 public class DeviceOtaActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
 
 //    private Button btn_back;

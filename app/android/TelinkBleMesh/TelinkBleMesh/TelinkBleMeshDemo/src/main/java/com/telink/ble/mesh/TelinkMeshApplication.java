@@ -61,6 +61,7 @@ import java.util.List;
  */
 public class TelinkMeshApplication extends MeshApplication {
 
+    private final String TAG = "Telink-APP";
     private static TelinkMeshApplication mThis;
 
     private MeshInfo meshInfo;
@@ -79,50 +80,14 @@ public class TelinkMeshApplication extends MeshApplication {
         initMesh();
         MeshLogger.enableRecord(SharedPreferenceHelper.isLogEnable(this));
         MeshLogger.d(meshInfo.toString());
+        AppCrashHandler.init(this);
         closePErrorDialog();
-        mOfflineCheckHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                testEncipherIncorrect();
-            }
-        }, 1500);
-
-    }
-
-    private void testEncipherCorrect(){
-        // address: 0x0048 72
-        byte[] provisioningData = Arrays.hexToBytes("3b1b81863349fceadf5821a23b0c43d9000000000000000048");
-        byte[] sessionKey = Arrays.hexToBytes("9d152588cfceaa5c234f9f3eced8be85");
-        byte[] sessionNonce = Arrays.hexToBytes("90760dee8fa53819175b234a10");
-        byte[] encData = Encipher.ccm(provisioningData, sessionKey, sessionNonce, 8, true);
-//        byte[] decData = Encipher.ccm(Arrays.hexToBytes("1623e189e7742c8facd1de19ed73cf58bba3a19c4a66287b78bf6e71aa4b3d4910"),
-//                sessionKey, sessionNonce, 8, false
-//        );
-        // 071623e189e7742c8facd1de19ed73cf58bba3a19c4a66283330412445a40695360a
-        //
-        MeshLogger.d("enc provision data: " + Arrays.bytesToHexString(encData));
-//        MeshLogger.d("dec provision data: " + Arrays.bytesToHexString(decData));
-    }
-
-    private void testEncipherIncorrect(){
-        // address: 0x0056 86
-
-        /*byte[] provisioningData = Arrays.hexToBytes("3b1b81863349fceadf5821a23b0c43d9000000000000000056");
-
-        byte[] encData = Arrays.hexToBytes("8D9A97625A9EEA668E0BF34EB4499F50EF1F0184D9262017F7191757D7144A5B9F");
-        byte[] sessionKey = Arrays.hexToBytes("6ead7942fb48850b5790f1b0bbecff67");
-        byte[] sessionNonce = Arrays.hexToBytes("0a59a9e948bea21dc4955493c5");
-//        byte[] enData = Encipher.ccm(provisioningData, sessionKey, sessionNonce, 8, true);
-        byte[] tmpData = Encipher.ccm(encData, sessionKey, sessionNonce, 8, false);
-
-
-        // 8D9A97625A9EEA668E0BF34EB4499F50EF1F0184D9262017F7191757D7144A5B9F
-        MeshLogger.d("enc provision data: " + Arrays.bytesToHexString(tmpData));*/
+//        byte[] data = Arrays.hexToBytes("BA0536160EE76CD499E7C49845CD5");
+//        MeshLogger.d(Arrays.bytesToHexString(data));
     }
 
 
 
-    private final String TAG = "Telink-APP";
 
     private void closePErrorDialog() {
         if (Build.VERSION.SDK_INT <= 27) {

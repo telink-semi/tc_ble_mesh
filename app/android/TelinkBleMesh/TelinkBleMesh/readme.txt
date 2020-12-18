@@ -3,6 +3,8 @@ version record
 
 V3.2.4
 1. DLE support
+2. 添加可选设备配网模式
+3. 更新文档
 
 V3.2.3
 

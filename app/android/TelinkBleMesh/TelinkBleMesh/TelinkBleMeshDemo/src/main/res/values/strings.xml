@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">TelinkBleMesh</string>
 
-    <string name="app_copyright">©2019 Telink Semiconductor</string>
+    <string name="app_copyright">©2020 Telink Semiconductor</string>
 
     <string name="menu_scan">scan</string>
     <string name="menu_stop">stop</string>
@@ -42,13 +42,15 @@
 
     <string name="device_state_desc_mesh_ota">adr-0x%s\n%s</string>
 
-    <string name="device_prov_desc">adr: 0x%s - uuid:%s</string>
+    <string name="device_prov_desc">address: %s\nuuid:%s</string>
 
 
     <string name="publication_setting">Publication (ele : %s model: %s)</string>
 
 
     <string name="enable_log">Enable LOG</string>
+
+    <string name="auto_provision">Auto Provision</string>
 
     <string name="private_mode">Private Mode(Default Bound)</string>
 
@@ -114,6 +116,14 @@
         <item>4. Back to home page, and waiting for mesh reconnect </item>
     </string-array>
 
+    <string name="auto_provision_tip">
+        Enabled for scanning , provisioning and key-binding one by one;
+        Disabled for selectable networking.
+    </string>
+
+    <string name="private_mode_tip">
+        Enabled for default bound when key-binding;
+    </string>
 
     <string name="remote_prov_tip">
         If remote provision enabled, provision process will be:\n\n
@@ -134,6 +144,19 @@
 
     <string name="use_no_oob_tip">
         Use No-OOB if device UUID not found when device is static-OOB supported
+    </string>
+
+    <string name="dle_tip">
+        DLE selected action will change mesh upper layer segmentation bound:
+        \n\n\tDisabled ->  segment bound is 11;
+        \n\n\tEnabled ->  segment bound is 225.
+        \n\n\nSee [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT] and [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE] in [NetworkingController].
+
+    </string>
+
+
+    <string name="fast_pv_tip">
+        Telink private provision profile, scan and setting device by direct connected mesh device.
     </string>
 
     <string name="online_status_enabled">Online Status: ENABLED</string>

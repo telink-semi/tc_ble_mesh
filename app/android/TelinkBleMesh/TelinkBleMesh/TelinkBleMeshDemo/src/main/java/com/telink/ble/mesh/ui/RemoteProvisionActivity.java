@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     RemoteProvisionActivity.java 
+ * @file RemoteProvisionActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,15 +17,13 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
@@ -53,9 +51,11 @@ import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
 import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.NetworkingDevice;
+import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
-import com.telink.ble.mesh.ui.adapter.DeviceProvisionListAdapter;
+import com.telink.ble.mesh.ui.adapter.DeviceAutoProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -77,16 +77,16 @@ import androidx.recyclerview.widget.RecyclerView;
  * 5. remote scan -> ...
  */
 
-public class RemoteProvisionActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
+public class RemoteProvisionActivity extends BaseActivity implements EventListener<String> {
 
     private MeshInfo meshInfo;
 
     /**
      * ui devices
      */
-    private List<NodeInfo> devices = new ArrayList<>();
+    private List<NetworkingDevice> devices = new ArrayList<>();
 
-    private DeviceProvisionListAdapter mListAdapter;
+    private DeviceAutoProvisionListAdapter mListAdapter;
 
     /**
      * scanned devices timeout remote-scanning
@@ -96,8 +96,6 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
     private Handler delayHandler = new Handler();
 
     private boolean proxyComplete = false;
-
-    private Button btn_back;
 
     private static final byte THRESHOLD_REMOTE_RSSI = -85;
 
@@ -111,13 +109,10 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         setContentView(R.layout.activity_device_provision);
         initTitle();
         RecyclerView rv_devices = findViewById(R.id.rv_devices);
-        devices = new ArrayList<>();
 
-        mListAdapter = new DeviceProvisionListAdapter(this, devices);
+        mListAdapter = new DeviceAutoProvisionListAdapter(this, devices);
         rv_devices.setLayoutManager(new GridLayoutManager(this, 2));
         rv_devices.setAdapter(mListAdapter);
-        btn_back = findViewById(R.id.btn_back);
-        btn_back.setOnClickListener(this);
 
         meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
@@ -164,7 +159,7 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     private void enableUI(boolean enable) {
         MeshLogger.d("remote - enable ui: " + enable);
-        btn_back.setEnabled(enable);
+        enableBackNav(enable);
     }
 
     /******************************************************************************
@@ -188,9 +183,9 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
 
         System.arraycopy(serviceData, 0, deviceUUID, 0, uuidLen);
-        NodeInfo localNode = getNodeByUUID(deviceUUID);
+        NetworkingDevice localNode = getNodeByUUID(deviceUUID);
         if (localNode != null) {
-            MeshLogger.d("device exists: state -- " + localNode.getStateDesc());
+            MeshLogger.d("device exists");
             return;
         }
         MeshService.getInstance().stopScan();
@@ -220,8 +215,10 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             nodeInfo.meshAddress = address;
             nodeInfo.macAddress = advertisingDevice.device.getAddress();
             nodeInfo.deviceUUID = deviceUUID;
-            nodeInfo.state = NodeInfo.STATE_PROVISIONING;
-            devices.add(nodeInfo);
+            NetworkingDevice device = new NetworkingDevice(nodeInfo);
+            device.bluetoothDevice = advertisingDevice.device;
+            device.state = NetworkingState.PROVISIONING;
+            devices.add(device);
             mListAdapter.notifyDataSetChanged();
         } else {
             MeshLogger.d("provisioning busy");
@@ -232,13 +229,13 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
         ProvisioningDevice remote = event.getProvisioningDevice();
 
-        NodeInfo nodeInfo = getProcessingNode();
+        NetworkingDevice networkingDevice = getProcessingNode();
 
-        nodeInfo.state = NodeInfo.STATE_BINDING;
+        networkingDevice.state = NetworkingState.BINDING;
         int elementCnt = remote.getDeviceCapability().eleNum;
-        nodeInfo.elementCnt = elementCnt;
-        nodeInfo.deviceKey = remote.getDeviceKey();
-        meshInfo.insertDevice(nodeInfo);
+        networkingDevice.nodeInfo.elementCnt = elementCnt;
+        networkingDevice.nodeInfo.deviceKey = remote.getDeviceKey();
+        meshInfo.insertDevice(networkingDevice.nodeInfo);
         meshInfo.provisionIndex += elementCnt;
         meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
 
@@ -252,36 +249,37 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             if (device != null) {
                 MeshLogger.log("private device");
                 final byte[] cpsData = device.getCpsData();
-                nodeInfo.compositionData = CompositionData.from(cpsData);
+                networkingDevice.nodeInfo.compositionData = CompositionData.from(cpsData);
                 defaultBound = true;
             } else {
                 MeshLogger.log("private device null");
             }
         }
 
-        nodeInfo.setDefaultBind(defaultBound);
+        networkingDevice.nodeInfo.setDefaultBind(defaultBound);
         mListAdapter.notifyDataSetChanged();
         int appKeyIndex = meshInfo.getDefaultAppKeyIndex();
-        BindingDevice bindingDevice = new BindingDevice(nodeInfo.meshAddress, nodeInfo.deviceUUID, appKeyIndex);
+        BindingDevice bindingDevice = new BindingDevice(networkingDevice.nodeInfo.meshAddress, networkingDevice.nodeInfo.deviceUUID, appKeyIndex);
         bindingDevice.setDefaultBound(defaultBound);
         MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
     }
 
     private void onProvisionFail(ProvisioningEvent event) {
         ProvisioningDevice deviceInfo = event.getProvisioningDevice();
-        NodeInfo pvDevice = getProcessingNode();
-        pvDevice.state = NodeInfo.STATE_PROVISION_FAIL;
-        pvDevice.stateDesc = event.getDesc();
+        NetworkingDevice pvDevice = getProcessingNode();
+        pvDevice.state = NetworkingState.PROVISION_FAIL;
+        pvDevice.addLog("Provisioning", event.getDesc());
         mListAdapter.notifyDataSetChanged();
     }
 
     private void onKeyBindSuccess(BindingEvent event) {
         BindingDevice remote = event.getBindingDevice();
-        NodeInfo deviceInList = getProcessingNode();
-        deviceInList.state = NodeInfo.STATE_BIND_SUCCESS;
+        NetworkingDevice deviceInList = getProcessingNode();
+        deviceInList.state = NetworkingState.BIND_SUCCESS;
+        deviceInList.nodeInfo.bound = true;
         // if is default bound, composition data has been valued ahead of binding action
         if (!remote.isDefaultBound()) {
-            deviceInList.compositionData = remote.getCompositionData();
+            deviceInList.nodeInfo.compositionData = remote.getCompositionData();
         }
 
         mListAdapter.notifyDataSetChanged();
@@ -290,9 +288,9 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 
     private void onKeyBindFail(BindingEvent event) {
         BindingDevice remote = event.getBindingDevice();
-        NodeInfo deviceInList = getProcessingNode();
-        deviceInList.state = NodeInfo.STATE_BIND_FAIL;
-        deviceInList.stateDesc = event.getDesc();
+        NetworkingDevice deviceInList = getProcessingNode();
+        deviceInList.state = NetworkingState.BIND_FAIL;
+        deviceInList.addLog("Binding", event.getDesc());
         mListAdapter.notifyDataSetChanged();
         meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
     }
@@ -366,8 +364,8 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
 //        if (!Arrays.bytesToHexString(remoteProvisioningDevice.getUuid(), ":").contains("DD:CC:BB:FF:FF")) return;
 
         // check if device exists
-        NodeInfo nodeInfo = getNodeByUUID(remoteProvisioningDevice.getUuid());
-        if (nodeInfo != null) {
+        NetworkingDevice networkingDevice = getNodeByUUID(remoteProvisioningDevice.getUuid());
+        if (networkingDevice != null) {
             MeshLogger.d("device already exists");
             return;
         }
@@ -412,8 +410,9 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         nodeInfo.macAddress = Arrays.bytesToHexString(macBytes, ":").toUpperCase();
 
         nodeInfo.meshAddress = address;
-        nodeInfo.state = NodeInfo.STATE_PROVISIONING;
-        devices.add(nodeInfo);
+        NetworkingDevice networkingDevice = new NetworkingDevice(nodeInfo);
+        networkingDevice.state = NetworkingState.PROVISIONING;
+        devices.add(networkingDevice);
         mListAdapter.notifyDataSetChanged();
 
         // check if oob exists -- remote support
@@ -440,14 +439,6 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             }
         }
     };
-
-
-    @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.btn_back) {
-            finish();
-        }
-    }
 
     @Override
     public void performed(final Event<String> event) {
@@ -506,18 +497,18 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         // start remote binding
         RemoteProvisioningDevice remote = event.getRemoteProvisioningDevice();
         MeshLogger.log("remote act success: " + Arrays.bytesToHexString(remote.getUuid()));
-        NodeInfo nodeInfo = getProcessingNode();
-        nodeInfo.state = NodeInfo.STATE_BINDING;
+        NetworkingDevice networkingDevice = getProcessingNode();
+        networkingDevice.state = NetworkingState.BINDING;
         int elementCnt = remote.getDeviceCapability().eleNum;
-        nodeInfo.elementCnt = elementCnt;
-        nodeInfo.deviceKey = remote.getDeviceKey();
-        meshInfo.insertDevice(nodeInfo);
+        networkingDevice.nodeInfo.elementCnt = elementCnt;
+        networkingDevice.nodeInfo.deviceKey = remote.getDeviceKey();
+        meshInfo.insertDevice(networkingDevice.nodeInfo);
         meshInfo.provisionIndex += elementCnt;
         meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
-        nodeInfo.setDefaultBind(false);
+        networkingDevice.nodeInfo.setDefaultBind(false);
         mListAdapter.notifyDataSetChanged();
         int appKeyIndex = meshInfo.getDefaultAppKeyIndex();
-        final BindingDevice bindingDevice = new BindingDevice(nodeInfo.meshAddress, nodeInfo.deviceUUID, appKeyIndex);
+        final BindingDevice bindingDevice = new BindingDevice(networkingDevice.nodeInfo.meshAddress, networkingDevice.nodeInfo.deviceUUID, appKeyIndex);
         bindingDevice.setBearer(BindingBearer.Any);
         delayHandler.removeCallbacksAndMessages(null);
         delayHandler.postDelayed(new Runnable() {
@@ -534,20 +525,20 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
         MeshLogger.log("remote act fail: " + Arrays.bytesToHexString(event.getRemoteProvisioningDevice().getUuid()));
 
         RemoteProvisioningDevice deviceInfo = event.getRemoteProvisioningDevice();
-        NodeInfo pvDevice = getProcessingNode();
-        pvDevice.state = NodeInfo.STATE_PROVISION_FAIL;
-        pvDevice.stateDesc = event.getDesc();
+        NetworkingDevice pvDevice = getProcessingNode();
+        pvDevice.state = NetworkingState.PROVISION_FAIL;
+        pvDevice.addLog("remote-provision", event.getDesc());
         mListAdapter.notifyDataSetChanged();
     }
 
-    private NodeInfo getProcessingNode() {
+    private NetworkingDevice getProcessingNode() {
         return this.devices.get(this.devices.size() - 1);
     }
 
-    private NodeInfo getNodeByUUID(byte[] deviceUUID) {
-        for (NodeInfo nodeInfo : this.devices) {
-            if (Arrays.equals(deviceUUID, nodeInfo.deviceUUID)) {
-                return nodeInfo;
+    private NetworkingDevice getNodeByUUID(byte[] deviceUUID) {
+        for (NetworkingDevice networkingDevice : this.devices) {
+            if (Arrays.equals(deviceUUID, networkingDevice.nodeInfo.deviceUUID)) {
+                return networkingDevice;
             }
         }
         return null;
@@ -561,8 +552,8 @@ public class RemoteProvisionActivity extends BaseActivity implements View.OnClic
             }
         }
 
-        for (NodeInfo nodeInfo : devices) {
-            serverAddresses.add(nodeInfo.meshAddress);
+        for (NetworkingDevice networkingDevice : devices) {
+            serverAddresses.add(networkingDevice.nodeInfo.meshAddress);
         }
         return serverAddresses;
     }

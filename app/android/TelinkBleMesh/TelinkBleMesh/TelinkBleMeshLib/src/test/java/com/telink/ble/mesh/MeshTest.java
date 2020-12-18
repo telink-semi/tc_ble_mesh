@@ -154,5 +154,14 @@ public class MeshTest {
 
     }
 
+    @Test
+    public void arrayHexTest(){
+        byte[] pre = MeshUtils.generateRandom(16);;
+        for (int i = 0; i < pre.length; i++) {
+            pre[i] = (byte) (i * 5);
+        }
+        System.out.println("pre : " + Arrays.bytesToHexString(pre));
+
+    }
 
 }

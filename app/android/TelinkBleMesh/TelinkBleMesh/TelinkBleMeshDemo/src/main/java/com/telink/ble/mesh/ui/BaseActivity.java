@@ -240,6 +240,7 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
     protected void enableBackNav(boolean enable) {
         Toolbar toolbar = findViewById(R.id.title_bar);
         if (enable) {
+            toolbar.setNavigationIcon(R.drawable.ic_arrow_left);
             toolbar.setNavigationOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     finish();

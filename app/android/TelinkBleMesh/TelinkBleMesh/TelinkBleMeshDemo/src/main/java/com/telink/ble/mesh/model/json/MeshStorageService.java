@@ -25,6 +25,7 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.entity.CompositionData;
@@ -279,7 +280,9 @@ public class MeshStorageService {
 
         // only import first network key
         final MeshStorage.NetworkKey networkKey = meshStorage.netKeys.get(0);
+        MeshLogger.d("import netkey : " + networkKey.key);
         mesh.networkKey = Arrays.hexToBytes(networkKey.key);
+        MeshLogger.d("import netkey 1 : " + Arrays.bytesToHexString(mesh.networkKey));
         mesh.netKeyIndex = networkKey.index;
 
 
@@ -429,8 +432,7 @@ public class MeshStorageService {
 
                     deviceInfo.subList = subList;
 //                    deviceInfo.setPublishModel();
-                    deviceInfo.state = (node.appKeys != null && node.appKeys.size() != 0)
-                            ? NodeInfo.STATE_BIND_SUCCESS : NodeInfo.STATE_BIND_FAIL;
+                    deviceInfo.bound = (node.appKeys != null && node.appKeys.size() != 0);
 
                     deviceInfo.compositionData = convertNodeToNodeInfo(node);
 
@@ -577,7 +579,7 @@ public class MeshStorageService {
         node.name = "Common Node";
 
         // check if appKey list exists to confirm device bound state
-        if (deviceInfo.state >= NodeInfo.STATE_BIND_SUCCESS) {
+        if (deviceInfo.bound) {
             node.appKeys = new ArrayList<>();
             node.appKeys.add(new MeshStorage.NodeKey(0, false));
         }

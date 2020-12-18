@@ -39,6 +39,7 @@
 
             </LinearLayout>
 
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
@@ -53,11 +54,58 @@
                 android:padding="4dp">
 
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/auto_provision"
+                    android:textSize="12sp" />
+
+                <ImageView
+                    android:id="@+id/iv_tip_auto_provision"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_tip"
+                    android:tint="@color/grey" />
+
+
+                <Switch
+                    android:id="@+id/switch_auto_provision"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:layout_margin="4dp"
+                android:background="@color/gray" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/private_mode"
                     android:textSize="12sp" />
+
+
+                <ImageView
+                    android:id="@+id/iv_tip_default_bound"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_tip"
+                    android:tint="@color/grey" />
 
                 <Switch
                     android:id="@+id/switch_private_mode"
@@ -337,7 +385,6 @@
                 android:padding="2dp"
                 android:textSize="12sp"
                 android:textStyle="bold" />
-
 
 
             <!-- online status -->

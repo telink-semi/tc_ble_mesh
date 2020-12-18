@@ -219,6 +219,7 @@ public class FastProvisioningController {
         if (this.onMeshMessagePrepared(resetMessage)) {
             // if reset message sent, start reset timer
             onStateUpdate(STATE_RESET_NETWORK, "reset provisioner network", null);
+            delayHandler.removeCallbacks(resetNetworkTask);
             delayHandler.postDelayed(resetNetworkTask, PROVISIONER_DELAY + configuration.getResetDelay());
         } else {
             onFastProvisionComplete(false, "reset command send err");

@@ -175,6 +175,7 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
     }
 
     private void onDownloadSuccess(final String meshJson) {
+        MeshLogger.d("device import json string: " + meshJson);
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         final MeshInfo result;
         try {
@@ -221,6 +222,7 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
     }
 
     private void syncData(MeshInfo newMesh) {
+        MeshLogger.d("sync mesh : " + newMesh.toString());
         newMesh.saveOrUpdate(this);
         MeshService.getInstance().idle(true);
         TelinkMeshApplication.getInstance().setupMesh(newMesh);
