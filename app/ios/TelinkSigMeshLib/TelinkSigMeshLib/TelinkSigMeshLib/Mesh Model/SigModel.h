@@ -234,6 +234,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic, strong) SigPage0 *defaultCompositionData;
 
 - (instancetype)initWithCID:(UInt16)cid PID:(UInt16)pid;
+- (instancetype)initWithCID:(UInt16)cid PID:(UInt16)pid compositionData:(NSData *)cpsData;
 
 @end
 
@@ -592,6 +593,8 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
  @return SigProvisionerModel model
  */
 -(instancetype)initWithExistProvisionerCount:(UInt16)count andProvisionerUUID:(NSString *)provisionerUUID;
+
+- (instancetype)initWithExistProvisionerMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast andProvisionerUUID:(NSString *)provisionerUUID;
 
 - (SigNodeModel *)node;
 

@@ -7,7 +7,7 @@
 		<key>Release_TelinkSigMeshLib.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>2</integer>
+			<integer>3</integer>
 		</dict>
 		<key>TelinkSigMeshLib.xcscheme_^#shared#^_</key>
 		<dict>
@@ -17,7 +17,7 @@
 		<key>TelinkSigMeshLibExtensions.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>1</integer>
+			<integer>2</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
@@ -33,6 +33,11 @@
 			<true/>
 		</dict>
 		<key>25C0AFD8235D597400846CFB</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>25CE4E57254A910E004E6F12</key>
 		<dict>
 			<key>primary</key>
 			<true/>

@@ -214,6 +214,8 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
  ******************************************************************************/
 + (NSString *)textFromBase64String:(NSString *)base64;
 
++ (NSString *)textFromBase64String:(NSString *)base64 password:(NSString *)password;
+
 #pragma mark - 正则表达式相关
 
 + (BOOL)validateUUID:(NSString *)uuidString;

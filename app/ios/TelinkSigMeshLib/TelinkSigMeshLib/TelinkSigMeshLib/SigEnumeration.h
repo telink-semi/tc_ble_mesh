@@ -209,7 +209,7 @@ typedef enum : UInt8 {
     SigStepResolution_tensOfMinutes          = 0b11,
 } SigStepResolution;
 
-/// The status of a Config operation.
+/// The status of a Config operation.Table 4.108: Summary of status codes.
 /// - seeAlso: Mesh_v1.0.pdf  (page.194)
 typedef enum : UInt8 {
     SigConfigMessageStatus_success                        = 0x00,
@@ -264,6 +264,10 @@ typedef enum : UInt32 {
     SigOpCode_configGATTProxySet                             = 0x8013,
     SigOpCode_configGATTProxyStatus                          = 0x8014,
 
+    SigOpCode_configKeyRefreshPhaseGet                       = 0x8015,
+    SigOpCode_configKeyRefreshPhaseSet                       = 0x8016,
+    SigOpCode_configKeyRefreshPhaseStatus                    = 0x8017,
+
     SigOpCode_configModelPublicationGet                      = 0x8018,
     SigOpCode_configModelPublicationSet                      = 0x03,
     SigOpCode_configModelPublicationStatus                   = 0x8019,
@@ -290,6 +294,17 @@ typedef enum : UInt32 {
     SigOpCode_configSIGModelSubscriptionList                 = 0x802A,
     SigOpCode_configVendorModelSubscriptionGet               = 0x802B,
     SigOpCode_configVendorModelSubscriptionList              = 0x802C,
+
+    SigOpCode_configLowPowerNodePollTimeoutGet               = 0x802D,
+    SigOpCode_configLowPowerNodePollTimeoutStatus            = 0x802E,
+
+    SigOpCode_configHeartbeatPublicationGet                  = 0x8038,
+    SigOpCode_configHeartbeatPublicationSet                  = 0x8039,
+    SigOpCode_configHeartbeatPublicationStatus               = 0x06,
+    SigOpCode_configHeartbeatSubscriptionGet                 = 0x803A,
+    SigOpCode_configHeartbeatSubscriptionSet                 = 0x803B,
+    SigOpCode_configHeartbeatSubscriptionStatus              = 0x803C,
+    
     SigOpCode_configModelAppBind                             = 0x803D,
     SigOpCode_configModelAppStatus                           = 0x803E,
     SigOpCode_configModelAppUnbind                           = 0x803F,
@@ -1149,7 +1164,7 @@ typedef enum : UInt8 {
     SigNodeFeaturesState_notSupported   = 2,
 } SigNodeFeaturesState;
 
-/// 4.2.14 Key Refresh Phase
+/// 4.2.14 Key Refresh Phase.Table 4.17: Key Refresh Phase state values.
 /// - seeAlso: Mesh_v1.0.pdf  (page.143)
 typedef enum : UInt8 {
     /// Phase 0: Normal Operation.
@@ -1512,5 +1527,12 @@ typedef enum : UInt8 {
     SigFastProvisionStatus_complete = 0x09,
     SigFastProvisionStatus_timeout = 0x0A,
 } SigFastProvisionStatus;
+
+/// Table 4.18: Controllable Key Refresh transition values
+/// - seeAlso: Mesh_v1.0.pdf  (page.143)
+typedef enum : UInt8 {
+    SigControllableKeyRefreshTransitionValues_two = 0x02,
+    SigControllableKeyRefreshTransitionValues_three = 0x03,
+} SigControllableKeyRefreshTransitionValues;
 
 #endif /* SigEnumeration_h */
