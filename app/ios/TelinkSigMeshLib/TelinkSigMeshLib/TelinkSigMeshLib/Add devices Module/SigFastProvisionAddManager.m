@@ -185,7 +185,9 @@
     if (self.scanMacAddressList.count) {
         [self setAddress];
     } else {
-        [self performSelector:@selector(getAddressRetry) withObject:nil afterDelay:0.5];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self performSelector:@selector(getAddressRetry) withObject:nil afterDelay:0.5];
+        });
     }
 }
 
@@ -297,7 +299,9 @@
 //        TeLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        [weakSelf performSelector:@selector(confirm) withObject:nil afterDelay:0.5];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf performSelector:@selector(confirm) withObject:nil afterDelay:0.5];
+        });
     }];
 }
 

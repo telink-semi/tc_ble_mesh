@@ -31,6 +31,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol SigBluetoothDelegate <NSObject>
+@optional
+/// 需要过滤的设备，返回YES则过滤，返回NO则不过滤。
+- (BOOL)needToBeFilteredNodeWithSigScanRspModel:(SigScanRspModel *)scanRspModel provisioned:(BOOL)provisioned peripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI;
+@end
+
+
 @interface SigBluetooth : NSObject
 /// Default is NO.
 @property (nonatomic,assign) BOOL waitScanRseponseEnabel;
@@ -38,6 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,copy,nullable) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateValueCallback;
 /// new delagate function block since v3.2.3: notify writeWithResponse by this block.
 @property (nonatomic,copy,nullable) bleDidWriteValueForCharacteristicCallback bluetoothDidWriteValueCallback;
+@property (nonatomic, weak) id <SigBluetoothDelegate>delegate;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));

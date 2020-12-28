@@ -53,6 +53,9 @@ typedef void(^SendPacketsFinishCallback)(void);
 
 @protocol SigBearerDataDelegate <NSObject>
 @optional
+/// Callback called when the Bearer is connected and discover services finish, and open notify finish.
+/// @param bearer The Bearer.
+- (void)bearerDidConnectedAndDiscoverServices:(SigBearer *)bearer;
 /// Callback called when the Bearer is ready for use.
 /// @param bearer The Bearer.
 - (void)bearerDidOpen:(SigBearer *)bearer;

@@ -416,12 +416,12 @@
     }
     if (self.bearerOpenCallback) {
         self.bearerOpenCallback(isSuccess);
-#warning 待完善
+//#warning 待完善
         self.bearerOpenCallback = nil;
     }
     if (isSuccess) {
-        if ([self.dataDelegate respondsToSelector:@selector(bearerDidOpen:)]) {
-            [self.dataDelegate bearerDidOpen:self];
+        if ([self.dataDelegate respondsToSelector:@selector(bearerDidConnectedAndDiscoverServices:)]) {
+            [self.dataDelegate bearerDidConnectedAndDiscoverServices:self];
         }
     }
 }
@@ -479,10 +479,16 @@
 - (void)sentPcakets:(NSArray <NSData *>*)packets toCharacteristic:(CBCharacteristic *)characteristic type:(CBCharacteristicWriteType)type {
     if (packets == nil || packets.count == 0) {
         TeLogError(@"current packets is empty.");
+        if (self.sendPacketFinishBlock) {
+            self.sendPacketFinishBlock();
+        }
         return;
     }
     if (characteristic == nil) {
         TeLogError(@"current characteristic is empty.");
+        if (self.sendPacketFinishBlock) {
+            self.sendPacketFinishBlock();
+        }
         return;
     }
 
@@ -685,7 +691,7 @@
     });
 }
 
-/// 正常扫描流程：3秒内扫描到RSSI大于“-50”的设备，直接连接。
+/// 正常扫描流程：1秒内扫描到RSSI大于“-50”的设备，直接连接。
 - (void)connectRssiHighterPeripheral:(CBPeripheral *)peripheral {
 //    TeLogInfo(@"peripheral.uuid=%@",peripheral.identifier.UUIDString);
     [SigBluetooth.share stopScan];
@@ -763,11 +769,17 @@
     if (SigDataSource.share.hasNodeExistTimeModelID && SigDataSource.share.needPublishTimeModel) {
         [SDKLibCommand statusNowTime];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if ([self.dataDelegate respondsToSelector:@selector(bearerDidOpen:)]) {
+                [self.dataDelegate bearerDidOpen:self];
+            }
             if (self.startMeshConnectCallback) {
                 self.startMeshConnectCallback(YES);
             }
         });
     }else{
+        if ([self.dataDelegate respondsToSelector:@selector(bearerDidOpen:)]) {
+            [self.dataDelegate bearerDidOpen:self];
+        }
         if (self.startMeshConnectCallback) {
             self.startMeshConnectCallback(YES);
         }
