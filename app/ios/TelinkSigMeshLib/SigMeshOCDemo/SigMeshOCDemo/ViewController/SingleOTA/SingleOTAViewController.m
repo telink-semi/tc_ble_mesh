@@ -76,7 +76,7 @@
 }
 
 - (void)otaAction {
-    TeLog(@"clickStartOTA");
+    TeLogVerbose(@"clickStartOTA");
     self.OTAing = YES;
     self.otaButton.backgroundColor = self.unableColor;
     self.tableView.userInteractionEnabled = NO;
@@ -107,7 +107,7 @@
     self.OTAing = NO;
     self.normalColor = kDefultColor;
     self.unableColor = [UIColor colorWithRed:185.0/255.0 green:185.0/255.0 blue:185.0/255.0 alpha:1.0];
-    self.title = [NSString stringWithFormat:@"OTA PID:0x%X",[LibTools uint16From16String:self.model.pid]];
+    self.title = [NSString stringWithFormat:@"OTA Pid:0x%X Vid:0x%X",[LibTools uint16From16String:self.model.pid],[LibTools uint16From16String:self.model.vid]];
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_ChooseBinCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_ChooseBinCellID];
     self.source = [[NSMutableArray alloc] initWithArray:OTAFileSource.share.getAllBinFile];
@@ -143,7 +143,7 @@
     self.tableView.userInteractionEnabled = YES;
     [self showOTATips:@"OTA success"];
     [SigBearer.share startMeshConnectWithComplete:nil];
-    TeLog(@"otaSuccess");
+    TeLogVerbose(@"otaSuccess");
 }
 
 - (void)otaFailAction{
@@ -156,7 +156,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
-    TeLog(@"otaFail");
+    TeLogVerbose(@"otaFail");
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{

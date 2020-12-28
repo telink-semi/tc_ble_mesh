@@ -225,6 +225,7 @@
 }
 
 - (void)replaceMesh:(NSDictionary *)dict uuid:(NSString *)uuid {
+    NSString *oldMeshUUID = SigDataSource.share.meshUUID;
     [SigDataSource.share setDictionaryToDataSource:dict];
     BOOL result = dict != nil;
     if (result) {
@@ -238,8 +239,8 @@
         return;
     }
 
-    NSString *oldMeshUUID = SigDataSource.share.meshUUID;
-    BOOL needChangeProvisionAddress = NO;
+    BOOL needChangeProvisionerAddress = NO;//修改手机本地节点的地址
+    BOOL reStartSequenceNumber = NO;//修改手机本地节点使用的发包序列号sno
     BOOL hasPhoneUUID = NO;
     NSString *curPhoneUUID = [SigDataSource.share getCurrentProvisionerUUID];
     NSArray *provisioners = [NSArray arrayWithArray:SigDataSource.share.provisioners];
@@ -249,48 +250,55 @@
             break;
         }
     }
-    BOOL reStartSequenceNumber = NO;
     if (hasPhoneUUID) {
         // v3.1.0 存在
         BOOL isSameMesh = [SigDataSource.share.meshUUID isEqualToString:oldMeshUUID];
         if (isSameMesh) {
-            // v3.1.0 存在，且为相同mesh网络，覆盖JSON，且使用本地的sno和kCurrentMeshProvisionAddress_key
-            needChangeProvisionAddress = NO;
-            reStartSequenceNumber = NO;;
+            // v3.1.0 存在，且为相同mesh网络，覆盖JSON，且使用本地的sno和ProvisionerAddress
+            needChangeProvisionerAddress = NO;
+            reStartSequenceNumber = NO;
         } else {
-            // v3.1.0 存在，但为不同mesh网络，获取provision，修改为新的provisionLocation adress，sno从0开始
-            needChangeProvisionAddress = YES;
+            // v3.1.0 存在，但为不同mesh网络，获取provision，修改为新的ProvisionerAddress，sno从0开始
+            needChangeProvisionerAddress = YES;
             reStartSequenceNumber = YES;
         }
     } else {
-        // v3.1.0 不存在，覆盖并新建provision
-        needChangeProvisionAddress = NO;
+        // v3.1.0 不存在，覆盖并新建provisioner
+        needChangeProvisionerAddress = NO;
         reStartSequenceNumber = YES;
     }
-    if (needChangeProvisionAddress) {
-        //修改provisionLocation adress
-        UInt16 maxAddr = SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
-        NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.nodes];
-        for (SigNodeModel *node in nodes) {
-            NSInteger curMax = node.address + node.elements.count - 1;
-            if (curMax > maxAddr) {
-                maxAddr = curMax;
-            }
-        }
-        UInt16 newProvisionAddress = maxAddr + 1;
-        [SigDataSource.share saveLocationProvisionAddress:newProvisionAddress];
-        [SigDataSource.share changeLocationProvisionerNodeAddressToAddress:newProvisionAddress];
-        TeLogDebug(@"已经使用了address=0x%x作为本地地址",newProvisionAddress);
-    } else {
-        //新建或者覆盖
-        if (reStartSequenceNumber) {
-            [[NSUserDefaults standardUserDefaults] removeObjectForKey:kCurrentMeshProvisionAddress_key];
-            [SigDataSource.share setLocationSno:0];
+    
+    //重新计算sno
+    if (reStartSequenceNumber) {
+        [[NSUserDefaults standardUserDefaults] removeObjectForKey:kCurrentMeshProvisionAddress_key];
+        [SigDataSource.share setLocationSno:0];
+    }
+    
+    UInt16 maxAddr = SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
+    NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.nodes];
+    for (SigNodeModel *node in nodes) {
+        NSInteger curMax = node.address + node.elements.count - 1;
+        if (curMax > maxAddr) {
+            maxAddr = curMax;
         }
     }
-    SigDataSource.share.curNetkeyModel = nil;
-    SigDataSource.share.curAppkeyModel = nil;
+    if (needChangeProvisionerAddress) {
+        //修改手机的本地节点的地址
+        UInt16 newProvisionAddress = maxAddr + 1;
+        [SigDataSource.share changeLocationProvisionerNodeAddressToAddress:newProvisionAddress];
+        TeLogDebug(@"已经使用了address=0x%x作为本地地址",newProvisionAddress);
+        //修改下一次添加设备使用的地址
+        [SigDataSource.share saveLocationProvisionAddress:maxAddr + 1];
+    } else {
+        //修改下一次添加设备使用的地址
+        [SigDataSource.share saveLocationProvisionAddress:maxAddr];
+    }
+    TeLogDebug(@"下一次添加设备可以使用的地址address=0x%x",SigDataSource.share.provisionAddress);
+    
+//    SigDataSource.share.curNetkeyModel = nil;
+//    SigDataSource.share.curAppkeyModel = nil;
     [SigDataSource.share checkExistLocationProvisioner];
+    [SigDataSource.share saveLocationData];
     [SigDataSource.share.scanList removeAllObjects];
 }
 

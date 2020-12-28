@@ -167,17 +167,17 @@
 #pragma  mark LongPressGesture
 - (void)cellDidPress:(UILongPressGestureRecognizer *)sender{
     if (sender.state == UIGestureRecognizerStateBegan) {
-        if (self.model.netKeys.count == 1) {
-            [self showAlertSureWithTitle:@"Hits" message:@"The node needs at least one netkey!" sure:nil];
-            return;
-        }
-        if (!SigBearer.share.isOpen) {
-            [self showAlertSureWithTitle:@"Hits" message:@"The mesh network is not online!" sure:nil];
-            return;
-        }
-        
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
+            if (self.model.netKeys.count == 1) {
+                [self showAlertSureWithTitle:@"Hits" message:@"The node needs at least one netkey!" sure:nil];
+                return;
+            }
+            if (!SigBearer.share.isOpen) {
+                [self showAlertSureWithTitle:@"Hits" message:@"The mesh network is not online!" sure:nil];
+                return;
+            }
+
             SigNetkeyModel *model = self.sourceArray[indexPath.row];
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete netKey, index:0x%04lX key:%@",(long)model.index,model.key];
             __weak typeof(self) weakSelf = self;

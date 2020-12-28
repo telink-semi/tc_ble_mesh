@@ -93,13 +93,13 @@
 #pragma  mark LongPressGesture
 - (void)cellDidPress:(UILongPressGestureRecognizer *)sender{
     if (sender.state == UIGestureRecognizerStateBegan) {
-        if (SigDataSource.share.appKeys.count == 1) {
-            [self showAlertSureWithTitle:@"Hits" message:@"The mesh network needs at least one appkey!" sure:nil];
-            return;
-        }
-
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
+            if (SigDataSource.share.appKeys.count == 1) {
+                [self showAlertSureWithTitle:@"Hits" message:@"The mesh network needs at least one appkey!" sure:nil];
+                return;
+            }
+
             SigAppkeyModel *model = self.sourceArray[indexPath.row];
             BOOL hadBound = NO;
             NSArray *temNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];

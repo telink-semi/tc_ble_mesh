@@ -41,10 +41,14 @@
 @property (weak, nonatomic) IBOutlet UIButton *startButton;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (nonatomic, strong) NSMutableArray <SigNodeModel *>*allItemArray;
+@property (nonatomic, strong) NSMutableArray <NSNumber *>*allItemAddressArray;
 @property (nonatomic, strong) NSMutableArray *binStringArray;
 @property (nonatomic, strong) NSMutableArray <SigNodeModel *>*selectItemArray;
+@property (nonatomic, strong) NSMutableArray <NSNumber *>*selectItemAddressArray;
 @property (nonatomic, assign) NSInteger binIndex;
 @property (nonatomic, strong) NSMutableDictionary *allItemVIDDict;
+@property (assign, nonatomic) BOOL needDelayReloadData;
+@property (assign, nonatomic) BOOL isDelaying;
 
 @end
 
@@ -54,14 +58,20 @@
     [super viewDidLoad];
      
     self.title = @"Mesh OTA";
-    
+    self.needDelayReloadData = NO;
+
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_MeshOTAItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_MeshOTAItemCellID];
 
     self.binIndex = -1;
     self.selectItemArray = [NSMutableArray array];
+    self.selectItemAddressArray = [NSMutableArray array];
     self.allItemArray = [[NSMutableArray alloc] initWithArray:SigDataSource.share.curNodes];
+    self.allItemAddressArray = [NSMutableArray array];
+    for (SigNodeModel *node in self.allItemArray) {
+        [self.allItemAddressArray addObject:@(node.address)];
+    }
     self.binStringArray = [NSMutableArray arrayWithArray:OTAFileSource.share.getAllBinFile];
     self.allItemVIDDict = [NSMutableDictionary dictionary];
     
@@ -82,7 +92,32 @@
             [SigDataSource.share saveLocationData];
         }
     }
-    [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    [self performSelectorOnMainThread:@selector(delayReloadTableViewView) withObject:nil waitUntilDone:YES];
+//    [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+}
+
+//刷新UI需要间隔0.1秒，防止100个设备时出现界面卡顿。
+- (void)delayReloadTableViewView {
+    if (!self.needDelayReloadData) {
+        self.needDelayReloadData = YES;
+        self.isDelaying = NO;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.tableView reloadData];
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(delayFinish) object:nil];
+            [self performSelector:@selector(delayFinish) withObject:nil afterDelay:0.1];
+        });
+    } else {
+        if (!self.isDelaying) {
+            self.isDelaying = YES;
+        }
+    }
+}
+
+- (void)delayFinish {
+    self.needDelayReloadData = NO;
+    if (self.isDelaying) {
+        [self delayReloadTableViewView];
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated{
@@ -202,23 +237,28 @@
             [itemCell.selectButton addAction:^(UIButton *button) {
                 if (!button.selected) {
                     NSArray *allItemArray = [NSArray arrayWithArray:weakSelf.allItemArray];
+                    NSMutableArray *selectNodes = [NSMutableArray array];
+                    NSMutableArray *selectAddresses = [NSMutableArray array];
                     for (SigNodeModel *model in allItemArray) {
                         if (model.state != DeviceStateOutOfLine) {
-                            if (![weakSelf.selectItemArray containsObject:model]) {
-                                [weakSelf.selectItemArray addObject:model];
-                            }
+                            [selectNodes addObject:model];
+                            [selectAddresses addObject:@(model.address)];
                         }
                     }
+                    weakSelf.selectItemArray = selectNodes;
+                    weakSelf.selectItemAddressArray = selectAddresses;
                 } else {
                     [weakSelf.selectItemArray removeAllObjects];
+                    [weakSelf.selectItemAddressArray removeAllObjects];
                 }
                 [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
             }];
         }else{
             SigNodeModel *model = self.allItemArray[indexPath.row-1];
+            NSNumber *address = self.allItemAddressArray[indexPath.row-1];
             int vid = 0;
-            if ([self.allItemVIDDict.allKeys containsObject:@(model.address)]) {
-                vid = [self.allItemVIDDict[@(model.address)] intValue];
+            if ([self.allItemVIDDict.allKeys containsObject:address]) {
+                vid = [self.allItemVIDDict[address] intValue];
             }
             UInt16 modelIdentifier = SIG_MD_BLOB_TRANSFER_S;
             NSArray *addressArray = [model getAddressesWithModelID:@(modelIdentifier)];
@@ -229,17 +269,19 @@
                 itemCell.titleLabel.text = [NSString stringWithFormat:@"adr:0x%X    PID:0x%@ VID:%c%c Not support",model.address,model.pid,vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
             }
             
-            if (self.selectItemArray.count > 0) {
-                itemCell.selectButton.selected = [self.selectItemArray containsObject:model];
+            if (self.selectItemAddressArray.count > 0) {
+                itemCell.selectButton.selected = [self.selectItemAddressArray containsObject:address];
             } else {
                 itemCell.selectButton.selected = NO;
             }
             [itemCell.selectButton addAction:^(UIButton *button) {
                 if (model.state != DeviceStateOutOfLine) {
-                    if ([weakSelf.selectItemArray containsObject:model]) {
+                    if ([weakSelf.selectItemAddressArray containsObject:address]) {
                         [weakSelf.selectItemArray removeObject:model];
+                        [weakSelf.selectItemAddressArray removeObject:address];
                     }else{
                         [weakSelf.selectItemArray addObject:model];
+                        [weakSelf.selectItemAddressArray addObject:address];
                     }
                     [weakSelf.tableView reloadData];
                 }
@@ -277,24 +319,31 @@
             __weak typeof(self) weakSelf = self;
             MeshOTAItemCell *itemCell = [tableView cellForRowAtIndexPath:indexPath];
             if (!itemCell.selectButton.selected) {
-                NSArray *allItemArray = [NSArray arrayWithArray:self.allItemArray];
+                NSArray *allItemArray = [NSArray arrayWithArray:weakSelf.allItemArray];
+                NSMutableArray *selectNodes = [NSMutableArray array];
+                NSMutableArray *selectAddresses = [NSMutableArray array];
                 for (SigNodeModel *model in allItemArray) {
                     if (model.state != DeviceStateOutOfLine) {
-                        if (![weakSelf.selectItemArray containsObject:model]) {
-                            [weakSelf.selectItemArray addObject:model];
-                        }
+                        [selectNodes addObject:model];
+                        [selectAddresses addObject:@(model.address)];
                     }
                 }
+                weakSelf.selectItemArray = selectNodes;
+                weakSelf.selectItemAddressArray = selectAddresses;
             } else {
                 [weakSelf.selectItemArray removeAllObjects];
+                [weakSelf.selectItemAddressArray removeAllObjects];
             }
         }else{
             SigNodeModel *model = self.allItemArray[indexPath.row-1];
+            NSNumber *address = self.allItemAddressArray[indexPath.row-1];
             if (model.state != DeviceStateOutOfLine) {
-                if ([self.selectItemArray containsObject:model]) {
+                if ([self.selectItemAddressArray containsObject:address]) {
                     [self.selectItemArray removeObject:model];
+                    [self.selectItemAddressArray removeObject:address];
                 }else{
                     [self.selectItemArray addObject:model];
+                    [self.selectItemAddressArray addObject:address];
                 }
             }
         }
@@ -351,8 +400,26 @@
             [tem addObject:@(model.address)];
         }
         
+        NSData *incomingFirmwareMetadata = nil;
+        if (data && data.length >= 6) {
+            //incomingFirmwareMetadata默认为8个字节的0。需要bin文件里面从index为2开始取4个字节的数据，再补充4个字节的0。
+            UInt32 tem32 = 0;
+            NSData *temData = [NSData dataWithBytes:&tem32 length:4];
+            NSMutableData *mData = [NSMutableData dataWithData:[data subdataWithRange:NSMakeRange(2, 4)]];
+            //test meshOTA vid
+//            NSMutableData *mData = [NSMutableData dataWithData:[data subdataWithRange:NSMakeRange(2, 2)]];
+//            UInt16 vid = 0x3633;//对应vid为‘36’
+//            NSData *vidData = [NSData dataWithBytes:&vid length:2];
+//            [mData appendData:vidData];
+            [mData appendData:temData];
+            incomingFirmwareMetadata = mData;
+        } else {
+            [self showTips:@"This Bin file is invalid."];
+            return;
+        }
+        
         __weak typeof(self) weakSelf = self;
-        [MeshOTAManager.share startMeshOTAWithLocationAddress:SigDataSource.share.curLocationNodeModel.address cid:0x0211 deviceAddresses:tem otaData:data progressHandle:^(NSInteger progress) {
+        [MeshOTAManager.share startMeshOTAWithLocationAddress:SigDataSource.share.curLocationNodeModel.address deviceAddresses:tem otaData:data incomingFirmwareMetadata:incomingFirmwareMetadata progressHandle:^(NSInteger progress) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 NSString *t = [NSString stringWithFormat:@"mesh ota... progress:%ld%%", (long)progress];
                 [ShowTipsHandle.share show:t];

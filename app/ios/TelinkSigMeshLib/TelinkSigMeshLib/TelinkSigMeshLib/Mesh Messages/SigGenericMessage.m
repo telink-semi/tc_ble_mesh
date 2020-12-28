@@ -10302,11 +10302,12 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithChunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData {
+- (instancetype)initWithChunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData sendBySegmentPdu:(BOOL)sendBySegmentPdu {
     if (self = [super init]) {
         self.opCode = SigOpCode_BLOBChunkTransfer;
         _chunkNumber = chunkNumber;
         _chunkData = [NSData dataWithData:chunkData];
+        _sendBySegmentPdu = sendBySegmentPdu;
         NSMutableData *mData = [NSMutableData data];
         UInt16 tem16 = chunkNumber;
         NSData *data = [NSData dataWithBytes:&tem16 length:2];
@@ -10335,6 +10336,20 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         }
     }
     return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem16 = _chunkNumber;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    [mData appendData:_chunkData];
+    return mData;
+}
+
+- (BOOL)isSegmented {
+    //v3.3.0特殊处理：最后一个包如果为unsegment包，需使用segment包进行发送。即所有SigBLOBChunkTransfer都使用segment的发送发送即可。
+    return _sendBySegmentPdu;
 }
 
 @end
@@ -10396,22 +10411,24 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         _status = tem8 & 0b1111;
         _RFU = (tem8 >> 4) & 0b11;
         _format = (tem8 >> 6) & 0b11;
-//        memcpy(&tem8, dataByte+1, 1);
-//        _transferPhase = tem8;
         UInt16 tem16 = 0;
         memcpy(&tem16, dataByte+1, 2);
         _blockNumber = tem16;
         memcpy(&tem16, dataByte+3, 2);
         _chunkSize = tem16;
-        if (parameters.length >= 5+2) {
-            memcpy(&tem16, dataByte+5, 2);
-            UInt16 addressBits = tem16;
+        if (parameters.length > 5) {
             NSMutableArray *array = [NSMutableArray array];
-            for (int i=0; i<32; i++) {
-                BOOL exist = (addressBits >> i) & 1;
-                if (exist) {
-                    [array addObject:@(i)];
+            UInt16 addressesLength = parameters.length - 5;
+            UInt16 index = 0;
+            while (addressesLength > index) {
+                memcpy(&tem8, dataByte+5+index, 1);
+                for (int i=0; i<8; i++) {
+                    BOOL exist = (tem8 >> i) & 1;
+                    if (exist) {
+                        [array addObject:@(i+8*index)];
+                    }
                 }
+                index++;
             }
             if (_format == SigBLOBBlockFormatType_someChunksMissing) {
                 _missingChunksList = array;

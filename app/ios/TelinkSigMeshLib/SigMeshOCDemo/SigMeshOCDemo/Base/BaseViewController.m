@@ -29,7 +29,7 @@
 
 #import "BaseViewController.h"
 #import "ShowTipsView.h"
-#import "UIImage+ColorPicker.h"
+#import "UIImage+Extension.h"
 
 @implementation BaseViewController
 
@@ -86,7 +86,7 @@
     //导航栏背景颜色
     UINavigationBar *bar = self.navigationController.navigationBar;
     bar.translucent = NO;
-    UIImage *bgImage = [UIImage imageWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, 64) color:kDefultColor];
+    UIImage *bgImage = [UIImage createImageWithColor:kDefultColor];
     [bar setBackgroundImage:bgImage forBarMetrics:UIBarMetricsDefault];
     //设置返回按钮文字为空
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:nil];

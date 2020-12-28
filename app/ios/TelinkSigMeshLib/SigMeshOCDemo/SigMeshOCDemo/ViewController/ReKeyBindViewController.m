@@ -65,7 +65,17 @@
     __weak typeof(self) weakSelf = self;
     if (SigBearer.share.isOpen) {
         NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
-        [SDKLibCommand keyBind:self.model.address appkeyModel:SigDataSource.share.curAppkeyModel keyBindType:type.integerValue productID:0 cpsData:nil keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+        UInt8 keyBindType = type.integerValue;
+        UInt16 productID = [LibTools uint16From16String:self.model.pid];
+        DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
+        NSData *cpsData = deviceType.defaultCompositionData.parameters;
+        if (keyBindType == KeyBindTpye_Fast) {
+            if (cpsData == nil || cpsData.length == 0) {
+                keyBindType = KeyBindTpye_Normal;
+            }
+        }
+        
+        [SDKLibCommand keyBind:self.model.address appkeyModel:SigDataSource.share.curAppkeyModel keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             [weakSelf performSelectorOnMainThread:@selector(showKeyBindSuccess) withObject:nil waitUntilDone:YES];
             weakSelf.hasClickKeyBind = NO;
         } fail:^(NSError * _Nonnull error) {
@@ -83,7 +93,7 @@
         }];
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(showKeyBindFail) object:nil];
-            [self performSelector:@selector(showKeyBindFail) withObject:nil afterDelay:10.0];
+            [self performSelector:@selector(showKeyBindFail) withObject:nil afterDelay:30.0];
         });
     }
     
@@ -94,8 +104,8 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [ShowTipsHandle.share show:Tip_ReKeyBindDeviceSuccess];
         [ShowTipsHandle.share delayHidden:3.0];
+        [self performSelector:@selector(pop) withObject:nil afterDelay:3.0];
     });
-    [self performSelector:@selector(pop) withObject:nil afterDelay:3.0];
 }
 
 - (void)connectPeripheralWithUUIDTimeout{
@@ -110,7 +120,10 @@
 }
 
 - (void)showKeyBindFail{
-    TeLog(@"reKeyBind fail");
+    TeLogVerbose(@"reKeyBind fail");
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(showKeyBindFail) object:nil];
+    });
     [ShowTipsHandle.share hidden];
     [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
@@ -216,7 +229,8 @@
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
     self.title = @"Key Bind";
-    self.detailLabel.text = [NSString stringWithFormat:@"meshAddress:0x%02X\nmac:%@",self.model.address,[LibTools getMacStringWithMac:self.model.macAddress]];
+//    self.detailLabel.text = [NSString stringWithFormat:@"meshAddress:0x%02X\nmac:%@",self.model.address,[LibTools getMacStringWithMac:self.model.macAddress]];
+    self.detailLabel.text = [NSString stringWithFormat:@"meshAddress:0x%02X\nUUID:%@",self.model.address,self.model.UUID];
 }
 
 - (void)viewWillDisappear:(BOOL)animated{

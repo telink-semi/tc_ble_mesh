@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="16097.3" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="17506" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17505"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -33,7 +34,7 @@
                     <nil key="highlightedColor"/>
                 </label>
                 <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="0~0xFFF" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="IqV-KG-taK">
-                    <rect key="frame" x="92" y="104.5" width="312" height="34"/>
+                    <rect key="frame" x="112" y="104.5" width="292" height="34"/>
                     <fontDescription key="fontDescription" type="system" pointSize="12"/>
                     <textInputTraits key="textInputTraits" keyboardType="numbersAndPunctuation"/>
                 </textField>
@@ -53,7 +54,7 @@
                     <nil key="highlightedColor"/>
                 </label>
                 <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="0~0xFFF" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="o9R-Px-5KV">
-                    <rect key="frame" x="92" y="144" width="312" height="34"/>
+                    <rect key="frame" x="112" y="144" width="292" height="34"/>
                     <fontDescription key="fontDescription" type="system" pointSize="12"/>
                     <textInputTraits key="textInputTraits" keyboardType="numbersAndPunctuation"/>
                 </textField>
@@ -64,7 +65,7 @@
                     <nil key="highlightedColor"/>
                 </label>
                 <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="input 16 bytes data" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="jJh-Gj-LQP">
-                    <rect key="frame" x="92" y="183.5" width="312" height="34"/>
+                    <rect key="frame" x="112" y="183.5" width="292" height="34"/>
                     <fontDescription key="fontDescription" type="system" pointSize="12"/>
                     <textInputTraits key="textInputTraits" keyboardType="numbersAndPunctuation"/>
                 </textField>
@@ -78,7 +79,8 @@
                     <nil key="highlightedColor"/>
                 </label>
             </subviews>
-            <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+            <viewLayoutGuide key="safeArea" id="Q5M-cg-NOt"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
             <constraints>
                 <constraint firstItem="XRu-xZ-Kiv" firstAttribute="top" secondItem="Q5M-cg-NOt" secondAttribute="top" constant="20" id="35f-IM-naJ"/>
                 <constraint firstItem="o9R-Px-5KV" firstAttribute="centerY" secondItem="Xqx-6W-U2n" secondAttribute="centerY" id="4eP-JB-W3T"/>
@@ -88,7 +90,6 @@
                 <constraint firstItem="Yht-Ug-PCv" firstAttribute="trailing" secondItem="XRu-xZ-Kiv" secondAttribute="trailing" id="HRU-JV-ZHg"/>
                 <constraint firstItem="jJh-Gj-LQP" firstAttribute="trailing" secondItem="XRu-xZ-Kiv" secondAttribute="trailing" id="Hyt-Yg-309"/>
                 <constraint firstItem="Yht-Ug-PCv" firstAttribute="leading" secondItem="XRu-xZ-Kiv" secondAttribute="leading" id="OnK-8H-Dzi"/>
-                <constraint firstItem="IqV-KG-taK" firstAttribute="leading" secondItem="7Kh-4p-cLz" secondAttribute="trailing" constant="27" id="Pi9-hp-IiK"/>
                 <constraint firstItem="XRu-xZ-Kiv" firstAttribute="leading" secondItem="Q5M-cg-NOt" secondAttribute="leading" constant="10" id="RSz-wS-Xfd"/>
                 <constraint firstItem="jJh-Gj-LQP" firstAttribute="leading" secondItem="IqV-KG-taK" secondAttribute="leading" id="ZWf-Wz-Ee7"/>
                 <constraint firstItem="o9R-Px-5KV" firstAttribute="trailing" secondItem="XRu-xZ-Kiv" secondAttribute="trailing" id="ZgK-eR-U2O"/>
@@ -99,11 +100,16 @@
                 <constraint firstItem="IqV-KG-taK" firstAttribute="trailing" secondItem="XRu-xZ-Kiv" secondAttribute="trailing" id="jHl-HX-nmb"/>
                 <constraint firstItem="jJh-Gj-LQP" firstAttribute="centerY" secondItem="w3f-hU-fbK" secondAttribute="centerY" id="n7p-iC-Czm"/>
                 <constraint firstItem="7Kh-4p-cLz" firstAttribute="leading" secondItem="XRu-xZ-Kiv" secondAttribute="leading" id="otc-53-2n6"/>
+                <constraint firstItem="o9R-Px-5KV" firstAttribute="leading" secondItem="Xqx-6W-U2n" secondAttribute="trailing" constant="4" id="sgq-Bv-fTH"/>
                 <constraint firstItem="Xqx-6W-U2n" firstAttribute="leading" secondItem="XRu-xZ-Kiv" secondAttribute="leading" id="uCu-kg-1HI"/>
                 <constraint firstItem="Yht-Ug-PCv" firstAttribute="top" secondItem="w3f-hU-fbK" secondAttribute="bottom" constant="20" id="xom-Pj-QVj"/>
             </constraints>
-            <viewLayoutGuide key="safeArea" id="Q5M-cg-NOt"/>
             <point key="canvasLocation" x="139" y="83"/>
         </view>
     </objects>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
 </document>

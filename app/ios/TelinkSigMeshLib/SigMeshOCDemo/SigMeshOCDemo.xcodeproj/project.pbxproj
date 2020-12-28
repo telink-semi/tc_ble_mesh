@@ -7,15 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		250DAC5E258C555300EBC6CE /* BaseTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 250DAC5D258C555300EBC6CE /* BaseTableView.m */; };
 		2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2519E64E24123D870098ABE7 /* 8258_mesh.bin */; };
-		2539D00D2533EA68001471BE /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
+		254C656B2570FF6C00096625 /* ColorPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 254C656A2570FF6C00096625 /* ColorPickerView.m */; };
 		258E2B8A248A24A20078DA7C /* InfoSwitchCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B88248A24A20078DA7C /* InfoSwitchCell.m */; };
 		258E2B8B248A24A20078DA7C /* InfoSwitchCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B89248A24A20078DA7C /* InfoSwitchCell.xib */; };
 		258E2B8F248A24B50078DA7C /* InfoNextCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B8D248A24B50078DA7C /* InfoNextCell.m */; };
 		258E2B90248A24B50078DA7C /* InfoNextCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B8E248A24B50078DA7C /* InfoNextCell.xib */; };
 		258E2B94248A24D40078DA7C /* InfoButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B92248A24D40078DA7C /* InfoButtonCell.m */; };
 		258E2B95248A24D40078DA7C /* InfoButtonCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B93248A24D40078DA7C /* InfoButtonCell.xib */; };
+		25ADB1F9254186310078E8D7 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		25B1204224A34A01004F7E91 /* DeviceCompositionDataVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B1204124A34A01004F7E91 /* DeviceCompositionDataVC.m */; };
+		25C0097C2599D37700DC19AC /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FFA24542CF200796BF9 /* 8269_mesh.bin */; };
 		25C2B4F92512F610003DCB8C /* AppKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C2B4F72512F610003DCB8C /* AppKeyListVC.m */; };
 		25C2B4FA2512F610003DCB8C /* AppKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C2B4F82512F610003DCB8C /* AppKeyListVC.xib */; };
@@ -43,6 +46,12 @@
 		25C30DE4246A408E00F06076 /* EditOOBVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C30DE2246A408E00F06076 /* EditOOBVC.xib */; };
 		25C30DE8246A40AA00F06076 /* ChooseOOBFileVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C30DE6246A40AA00F06076 /* ChooseOOBFileVC.m */; };
 		25C30DE9246A40AA00F06076 /* ChooseOOBFileVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C30DE7246A40AA00F06076 /* ChooseOOBFileVC.xib */; };
+		25C44FD4256CE3C900C28E80 /* OnOffModelCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C44FD2256CE3C900C28E80 /* OnOffModelCell.m */; };
+		25C44FD5256CE3C900C28E80 /* OnOffModelCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C44FD3256CE3C900C28E80 /* OnOffModelCell.xib */; };
+		25C44FE0256CE3FA00C28E80 /* LevelAndSliderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C44FDE256CE3FA00C28E80 /* LevelAndSliderCell.m */; };
+		25C44FE1256CE3FA00C28E80 /* LevelAndSliderCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C44FDF256CE3FA00C28E80 /* LevelAndSliderCell.xib */; };
+		25EE0B62256B59E40063FEE1 /* ColorModelCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25EE0B60256B59E40063FEE1 /* ColorModelCell.m */; };
+		25EE0B63256B59E40063FEE1 /* ColorModelCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25EE0B61256B59E40063FEE1 /* ColorModelCell.xib */; };
 		A20C14B72254556700B42909 /* ColorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A20C14B62254556700B42909 /* ColorManager.m */; };
 		A23FE43822CD96760018F090 /* FileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43722CD96760018F090 /* FileChooseVC.m */; };
 		A23FE43F22CDF3230018F090 /* ChooseAndAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A23FE43E22CDF3230018F090 /* ChooseAndAddDeviceVC.m */; };
@@ -66,8 +75,6 @@
 		A2864221226FFCAA0053B5E4 /* MeshOTAVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = A2864215226FFCAA0053B5E4 /* MeshOTAVC.xib */; };
 		A2864223226FFCAA0053B5E4 /* UIButton+extension.m in Sources */ = {isa = PBXBuildFile; fileRef = A2864219226FFCAA0053B5E4 /* UIButton+extension.m */; };
 		A287A9F52133F293006B0EC7 /* HSLViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A287A9F42133F293006B0EC7 /* HSLViewController.m */; };
-		A287A9FB2133F323006B0EC7 /* DTColorPickerImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = A287A9F82133F323006B0EC7 /* DTColorPickerImageView.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		A287A9FC2133F323006B0EC7 /* UIImage+ColorPicker.m in Sources */ = {isa = PBXBuildFile; fileRef = A287A9FA2133F323006B0EC7 /* UIImage+ColorPicker.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		A2896898216EE262003A0A72 /* DeviceSubscriptionListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A2896897216EE262003A0A72 /* DeviceSubscriptionListViewController.m */; };
 		A289689D216EEE21003A0A72 /* DeviceStateItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = A289689C216EEE21003A0A72 /* DeviceStateItemView.m */; };
 		A289689F216EEE31003A0A72 /* DeviceStateItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = A289689E216EEE31003A0A72 /* DeviceStateItemView.xib */; };
@@ -164,6 +171,13 @@
 			remoteGlobalIDString = 25C0AFD9235D597400846CFB;
 			remoteInfo = TelinkSigMeshLib;
 		};
+		25E8B153254BB866008506E0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 25B408392396691A00514CB7 /* TelinkSigMeshLib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 25CE4E58254A910E004E6F12;
+			remoteInfo = TelinkSigMeshLibTests;
+		};
 		A2AB8EB22110046C00D73EB4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A2AB8E912110046A00D73EB4 /* Project object */;
@@ -181,7 +195,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		250DAC5C258C555300EBC6CE /* BaseTableView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BaseTableView.h; sourceTree = "<group>"; };
+		250DAC5D258C555300EBC6CE /* BaseTableView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BaseTableView.m; sourceTree = "<group>"; };
 		2519E64E24123D870098ABE7 /* 8258_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh.bin; sourceTree = "<group>"; };
+		254C65692570FF6C00096625 /* ColorPickerView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorPickerView.h; sourceTree = "<group>"; };
+		254C656A2570FF6C00096625 /* ColorPickerView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ColorPickerView.m; sourceTree = "<group>"; };
 		258E2B87248A24A20078DA7C /* InfoSwitchCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InfoSwitchCell.h; sourceTree = "<group>"; };
 		258E2B88248A24A20078DA7C /* InfoSwitchCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InfoSwitchCell.m; sourceTree = "<group>"; };
 		258E2B89248A24A20078DA7C /* InfoSwitchCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = InfoSwitchCell.xib; sourceTree = "<group>"; };
@@ -234,6 +252,15 @@
 		25C30DE5246A40AA00F06076 /* ChooseOOBFileVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChooseOOBFileVC.h; sourceTree = "<group>"; };
 		25C30DE6246A40AA00F06076 /* ChooseOOBFileVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ChooseOOBFileVC.m; sourceTree = "<group>"; };
 		25C30DE7246A40AA00F06076 /* ChooseOOBFileVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ChooseOOBFileVC.xib; sourceTree = "<group>"; };
+		25C44FD1256CE3C900C28E80 /* OnOffModelCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OnOffModelCell.h; sourceTree = "<group>"; };
+		25C44FD2256CE3C900C28E80 /* OnOffModelCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = OnOffModelCell.m; sourceTree = "<group>"; };
+		25C44FD3256CE3C900C28E80 /* OnOffModelCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OnOffModelCell.xib; sourceTree = "<group>"; };
+		25C44FDD256CE3FA00C28E80 /* LevelAndSliderCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LevelAndSliderCell.h; sourceTree = "<group>"; };
+		25C44FDE256CE3FA00C28E80 /* LevelAndSliderCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LevelAndSliderCell.m; sourceTree = "<group>"; };
+		25C44FDF256CE3FA00C28E80 /* LevelAndSliderCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LevelAndSliderCell.xib; sourceTree = "<group>"; };
+		25EE0B5F256B59E40063FEE1 /* ColorModelCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorModelCell.h; sourceTree = "<group>"; };
+		25EE0B60256B59E40063FEE1 /* ColorModelCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ColorModelCell.m; sourceTree = "<group>"; };
+		25EE0B61256B59E40063FEE1 /* ColorModelCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ColorModelCell.xib; sourceTree = "<group>"; };
 		A20C14B52254556700B42909 /* ColorManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorManager.h; sourceTree = "<group>"; };
 		A20C14B62254556700B42909 /* ColorManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ColorManager.m; sourceTree = "<group>"; };
 		A23FE43622CD96760018F090 /* FileChooseVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileChooseVC.h; sourceTree = "<group>"; };
@@ -275,10 +302,6 @@
 		A2864219226FFCAA0053B5E4 /* UIButton+extension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIButton+extension.m"; sourceTree = "<group>"; };
 		A287A9F32133F293006B0EC7 /* HSLViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HSLViewController.h; sourceTree = "<group>"; };
 		A287A9F42133F293006B0EC7 /* HSLViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HSLViewController.m; sourceTree = "<group>"; };
-		A287A9F72133F323006B0EC7 /* DTColorPickerImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DTColorPickerImageView.h; sourceTree = "<group>"; };
-		A287A9F82133F323006B0EC7 /* DTColorPickerImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DTColorPickerImageView.m; sourceTree = "<group>"; };
-		A287A9F92133F323006B0EC7 /* UIImage+ColorPicker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+ColorPicker.h"; sourceTree = "<group>"; };
-		A287A9FA2133F323006B0EC7 /* UIImage+ColorPicker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+ColorPicker.m"; sourceTree = "<group>"; };
 		A2896896216EE262003A0A72 /* DeviceSubscriptionListViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceSubscriptionListViewController.h; sourceTree = "<group>"; };
 		A2896897216EE262003A0A72 /* DeviceSubscriptionListViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceSubscriptionListViewController.m; sourceTree = "<group>"; };
 		A289689B216EEE21003A0A72 /* DeviceStateItemView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceStateItemView.h; sourceTree = "<group>"; };
@@ -350,7 +373,7 @@
 		A29AABE321A2653F0023F06C /* UIImage+Extension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIImage+Extension.m"; sourceTree = "<group>"; };
 		A2A99D6721AFF30100194237 /* DebugViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugViewController.h; sourceTree = "<group>"; };
 		A2A99D6821AFF30200194237 /* DebugViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DebugViewController.m; sourceTree = "<group>"; };
-		A2AB8E992110046A00D73EB4 /* TelinkSigMesh.l.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TelinkSigMesh.l.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A2AB8E992110046A00D73EB4 /* TelinkSigMesh.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TelinkSigMesh.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2AB8E9C2110046A00D73EB4 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		A2AB8E9D2110046A00D73EB4 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		A2AB8EA32110046A00D73EB4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -439,7 +462,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2539D00D2533EA68001471BE /* TelinkSigMeshLib.framework in Frameworks */,
+				25C0097C2599D37700DC19AC /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -447,6 +470,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				25ADB1F9254186310078E8D7 /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -460,20 +484,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		251B2BA1239742270024A48D /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		25B4083A2396691A00514CB7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */,
 				2528953B2468FB1400E590F9 /* TelinkSigMeshLibExtensions.framework */,
+				25E8B154254BB866008506E0 /* TelinkSigMeshLibTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		25BA733B25495ED70013B4CE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		25C2B4F52512F52D003DCB8C /* Keys */ = {
@@ -599,12 +624,10 @@
 		A287A9F62133F323006B0EC7 /* ColorPicker */ = {
 			isa = PBXGroup;
 			children = (
-				A287A9F72133F323006B0EC7 /* DTColorPickerImageView.h */,
-				A287A9F82133F323006B0EC7 /* DTColorPickerImageView.m */,
-				A287A9F92133F323006B0EC7 /* UIImage+ColorPicker.h */,
-				A287A9FA2133F323006B0EC7 /* UIImage+ColorPicker.m */,
 				A20C14B52254556700B42909 /* ColorManager.h */,
 				A20C14B62254556700B42909 /* ColorManager.m */,
+				254C65692570FF6C00096625 /* ColorPickerView.h */,
+				254C656A2570FF6C00096625 /* ColorPickerView.m */,
 			);
 			path = ColorPicker;
 			sourceTree = "<group>";
@@ -749,14 +772,14 @@
 				A2AB8EB42110046D00D73EB4 /* SigMeshOCDemoTests */,
 				A2AB8EBF2110046D00D73EB4 /* SigMeshOCDemoUITests */,
 				A2AB8E9A2110046A00D73EB4 /* Products */,
-				251B2BA1239742270024A48D /* Frameworks */,
+				25BA733B25495ED70013B4CE /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
 		A2AB8E9A2110046A00D73EB4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A2AB8E992110046A00D73EB4 /* TelinkSigMesh.l.app */,
+				A2AB8E992110046A00D73EB4 /* TelinkSigMesh.app */,
 				A2AB8EB12110046C00D73EB4 /* SigMeshOCDemoTests.xctest */,
 				A2AB8EBC2110046D00D73EB4 /* SigMeshOCDemoUITests.xctest */,
 			);
@@ -841,6 +864,8 @@
 			children = (
 				A2AB8EDD2110063700D73EB4 /* BaseViewController.h */,
 				A2AB8EDE2110063700D73EB4 /* BaseViewController.m */,
+				250DAC5C258C555300EBC6CE /* BaseTableView.h */,
+				250DAC5D258C555300EBC6CE /* BaseTableView.m */,
 			);
 			path = Base;
 			sourceTree = "<group>";
@@ -848,6 +873,15 @@
 		A2AB8ED22110052100D73EB4 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				25EE0B5F256B59E40063FEE1 /* ColorModelCell.h */,
+				25EE0B60256B59E40063FEE1 /* ColorModelCell.m */,
+				25EE0B61256B59E40063FEE1 /* ColorModelCell.xib */,
+				25C44FD1256CE3C900C28E80 /* OnOffModelCell.h */,
+				25C44FD2256CE3C900C28E80 /* OnOffModelCell.m */,
+				25C44FD3256CE3C900C28E80 /* OnOffModelCell.xib */,
+				25C44FDD256CE3FA00C28E80 /* LevelAndSliderCell.h */,
+				25C44FDE256CE3FA00C28E80 /* LevelAndSliderCell.m */,
+				25C44FDF256CE3FA00C28E80 /* LevelAndSliderCell.xib */,
 				A2AB8F422110121300D73EB4 /* HomeItemCell.h */,
 				A2AB8F432110121300D73EB4 /* HomeItemCell.m */,
 				A2AB8F452110128F00D73EB4 /* DeviceGroupListCell.h */,
@@ -983,14 +1017,13 @@
 			);
 			name = SigMeshOCDemo;
 			productName = SigMeshOCDemo;
-			productReference = A2AB8E992110046A00D73EB4 /* TelinkSigMesh.l.app */;
+			productReference = A2AB8E992110046A00D73EB4 /* TelinkSigMesh.app */;
 			productType = "com.apple.product-type.application";
 		};
 		A2AB8EB02110046C00D73EB4 /* SigMeshOCDemoTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A2AB8EC82110046D00D73EB4 /* Build configuration list for PBXNativeTarget "SigMeshOCDemoTests" */;
 			buildPhases = (
-				DDCDE82B21378F1DABD8C2DE /* [CP] Check Pods Manifest.lock */,
 				A2AB8EAD2110046C00D73EB4 /* Sources */,
 				A2AB8EAE2110046C00D73EB4 /* Frameworks */,
 				A2AB8EAF2110046C00D73EB4 /* Resources */,
@@ -1009,7 +1042,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A2AB8ECB2110046D00D73EB4 /* Build configuration list for PBXNativeTarget "SigMeshOCDemoUITests" */;
 			buildPhases = (
-				F33E187C183C89EC542E4C8B /* [CP] Check Pods Manifest.lock */,
 				A2AB8EB82110046D00D73EB4 /* Sources */,
 				A2AB8EB92110046D00D73EB4 /* Frameworks */,
 				A2AB8EBA2110046D00D73EB4 /* Resources */,
@@ -1030,7 +1062,7 @@
 		A2AB8E912110046A00D73EB4 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = Telink;
 				TargetAttributes = {
 					A2AB8E982110046A00D73EB4 = {
@@ -1092,6 +1124,13 @@
 			remoteRef = 25B4083D2396691A00514CB7 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		25E8B154254BB866008506E0 /* TelinkSigMeshLibTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = TelinkSigMeshLibTests.xctest;
+			remoteRef = 25E8B153254BB866008506E0 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -1103,6 +1142,7 @@
 				A28968A4216EFE9C003A0A72 /* ActionItemCell.xib in Resources */,
 				25C2B5042512F630003DCB8C /* NetKeyListVC.xib in Resources */,
 				25C2B51825136153003DCB8C /* DeviceNetKeyListVC.xib in Resources */,
+				25EE0B63256B59E40063FEE1 /* ColorModelCell.xib in Resources */,
 				25C2B51D25136185003DCB8C /* DeviceAppKeyListVC.xib in Resources */,
 				25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */,
 				25C2B4FF2512F620003DCB8C /* AppKeyAddVC.xib in Resources */,
@@ -1122,12 +1162,14 @@
 				25C30DDA246A401300F06076 /* OOBListVC.xib in Resources */,
 				A2944105216DDC2B0046F65A /* DeviceSetting.storyboard in Resources */,
 				A2AC67122176CFDD00D9B3A0 /* AddDeviceItemCell.xib in Resources */,
+				25C44FD5256CE3C900C28E80 /* OnOffModelCell.xib in Resources */,
 				25C2B5272513623F003DCB8C /* DeviceKeyCell.xib in Resources */,
 				A2AB8F54211012D000D73EB4 /* ChooseModelIDCell.xib in Resources */,
 				25C2B522251361C0003DCB8C /* DeviceChooseKeyVC.xib in Resources */,
 				A277EAFB215A29500001116F /* Setting.storyboard in Resources */,
 				A2864221226FFCAA0053B5E4 /* MeshOTAVC.xib in Resources */,
 				25C30DDF246A404F00F06076 /* OOBItemCell.xib in Resources */,
+				25C44FE1256CE3FA00C28E80 /* LevelAndSliderCell.xib in Resources */,
 				A2AB8F59211012E400D73EB4 /* ChooseBinCell.xib in Resources */,
 				A2AB8F632110137400D73EB4 /* ShowTipsView.xib in Resources */,
 				A2AB8EA42110046A00D73EB4 /* Main.storyboard in Resources */,
@@ -1154,45 +1196,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		DDCDE82B21378F1DABD8C2DE /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-SigMeshOCDemoTests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		F33E187C183C89EC542E4C8B /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-SigMeshOCDemoUITests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		A2AB8E952110046A00D73EB4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -1206,7 +1209,6 @@
 				A277EB06215A335E0001116F /* SceneItemCell.m in Sources */,
 				25C2B5262513623F003DCB8C /* DeviceKeyCell.m in Sources */,
 				A28CA3A92181E4AD005B1DB6 /* IQUIViewController+Additions.m in Sources */,
-				A287A9FC2133F323006B0EC7 /* UIImage+ColorPicker.m in Sources */,
 				A2944113216DDC6B0046F65A /* YZDisplayTitleLabel.m in Sources */,
 				A2D800002248729F001208F5 /* RemoteAddVC.m in Sources */,
 				A2AB8F472110128F00D73EB4 /* DeviceGroupListCell.m in Sources */,
@@ -1219,8 +1221,10 @@
 				A2A99D6921AFF30700194237 /* DebugViewController.m in Sources */,
 				A294411C216DE1760046F65A /* SingleDeviceViewController.m in Sources */,
 				A2AB8F53211012D000D73EB4 /* ChooseModelIDCell.m in Sources */,
+				25C44FE0256CE3FA00C28E80 /* LevelAndSliderCell.m in Sources */,
 				25C2B51725136153003DCB8C /* DeviceNetKeyListVC.m in Sources */,
 				A2944114216DDC6B0046F65A /* YZDisplayViewController.m in Sources */,
+				25EE0B62256B59E40063FEE1 /* ColorModelCell.m in Sources */,
 				A277EB0B215A338A0001116F /* SchedulerCell.m in Sources */,
 				25C30DDE246A404F00F06076 /* OOBItemCell.m in Sources */,
 				A27C99F721F9A9FE006D5A09 /* MeshInfoVC.m in Sources */,
@@ -1244,6 +1248,8 @@
 				A277EAF6215A28BC0001116F /* ModelIDListViewController.m in Sources */,
 				A27C99F121F99E51006D5A09 /* ShareOutVC.m in Sources */,
 				A28CA3B02181E4AD005B1DB6 /* IQToolbar.m in Sources */,
+				25C44FD4256CE3C900C28E80 /* OnOffModelCell.m in Sources */,
+				250DAC5E258C555300EBC6CE /* BaseTableView.m in Sources */,
 				25C2B521251361C0003DCB8C /* DeviceChooseKeyVC.m in Sources */,
 				A28CA3AF2181E4AD005B1DB6 /* IQTitleBarButtonItem.m in Sources */,
 				25C2B51C25136185003DCB8C /* DeviceAppKeyListVC.m in Sources */,
@@ -1266,6 +1272,7 @@
 				25B1204224A34A01004F7E91 /* DeviceCompositionDataVC.m in Sources */,
 				A2AB8F58211012E400D73EB4 /* ChooseBinCell.m in Sources */,
 				25C30DD9246A401300F06076 /* OOBListVC.m in Sources */,
+				254C656B2570FF6C00096625 /* ColorPickerView.m in Sources */,
 				A2944127216E057B0046F65A /* SettingItemCell.m in Sources */,
 				A2AB8F2521100FDD00D73EB4 /* ReKeyBindViewController.m in Sources */,
 				A2AB8E9E2110046A00D73EB4 /* AppDelegate.m in Sources */,
@@ -1295,7 +1302,6 @@
 				25C2B5082512F641003DCB8C /* NetKeyAddVC.m in Sources */,
 				A2AB8F1F21100FDD00D73EB4 /* EditModelIDsViewController.m in Sources */,
 				A2AC67112176CFDD00D9B3A0 /* AddDeviceItemCell.m in Sources */,
-				A287A9FB2133F323006B0EC7 /* DTColorPickerImageView.m in Sources */,
 				A2AB8F2321100FDD00D73EB4 /* LogViewController.m in Sources */,
 				25C2B5032512F630003DCB8C /* NetKeyListVC.m in Sources */,
 				25C2B50D2512F8FC003DCB8C /* KeyCell.m in Sources */,
@@ -1395,6 +1401,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1453,6 +1460,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1485,11 +1493,14 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/SigMeshOCDemo/PrefixHeader.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
@@ -1500,13 +1511,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.3;
+				MARKETING_VERSION = 3.3.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = otw0909.SigMeshOCDemo.l;
-				PRODUCT_NAME = TelinkSigMesh.l;
+				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMesh;
+				PRODUCT_NAME = TelinkSigMesh;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -1517,10 +1528,13 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/SigMeshOCDemo/PrefixHeader.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = "";
@@ -1531,13 +1545,13 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.3;
+				MARKETING_VERSION = 3.3.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = otw0909.SigMeshOCDemo.l;
-				PRODUCT_NAME = TelinkSigMesh.l;
+				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMesh;
+				PRODUCT_NAME = TelinkSigMesh;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -1548,6 +1562,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../TelinkSigMeshLib/TelinkSigMeshLib\"";
 				INFOPLIST_FILE = SigMeshOCDemoTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1557,7 +1572,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = otw0909.SigMeshOCDemoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SigMeshOCDemo.app/SigMeshOCDemo";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TelinkSigMesh.app/TelinkSigMesh";
 			};
 			name = Debug;
 		};
@@ -1567,6 +1582,7 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../TelinkSigMeshLib/TelinkSigMeshLib\"";
 				INFOPLIST_FILE = SigMeshOCDemoTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1576,7 +1592,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = otw0909.SigMeshOCDemoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SigMeshOCDemo.app/SigMeshOCDemo";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TelinkSigMesh.app/TelinkSigMesh";
 			};
 			name = Release;
 		};

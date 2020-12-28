@@ -54,8 +54,7 @@
         _netKeys = [NSMutableArray array];
         _appKeys = [NSMutableArray array];
         _scanList = [NSMutableArray array];
-//cy的json里面，组号绑定的model看到了这个几个：1304、1306、1308、130a、130b
-        _ivIndex = [NSString stringWithFormat:@"%08X",kDefaultIvIndex];
+        _ivIndex = [NSString stringWithFormat:@"%08X",(unsigned int)kDefaultIvIndex];
         _encryptedArray = [NSMutableArray array];
         _defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(SIG_MD_G_ONOFF_S),@(SIG_MD_LIGHTNESS_S),@(SIG_MD_LIGHT_CTL_S),@(SIG_MD_LIGHT_CTL_TEMP_S),@(SIG_MD_LIGHT_HSL_S)]];
         _defaultNodeInfos = [NSMutableArray array];
@@ -77,6 +76,7 @@
         _defaultAppKeyA = appkey;
         _defaultIvIndexA = [[SigIvIndex alloc] initWithIndex:0x12345678 updateActive:NO];
         _needPublishTimeModel = YES;
+        _defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength = kUnsegmentedAccessMessageLowerTransportPDUMaxLength;
         
         //OOB
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -91,7 +91,7 @@
         } else {
             _OOBList = [NSMutableArray array];
         }
-        _addStaticOOBDevcieByNoOOBEnable = NO;
+        _addStaticOOBDevcieByNoOOBEnable = YES;
         _defaultRetryCount = 2;
         _defaultAllocatedUnicastRangeHighAddress = kAllocatedUnicastRangeHighAddress;
         _defaultSnoIncrement = kSnoIncrement;
@@ -260,6 +260,8 @@
         }
         _scenes = scenes;
     }
+    _curNetkeyModel = nil;
+    _curAppkeyModel = nil;
 }
 
 - (NSDictionary *)getFormatDictionaryFromDataSource {
@@ -464,7 +466,7 @@
 }
 
 ///Special handling: store the uuid of current provisioner.
-- (void)saveCurrentProvisionerUUID:(NSString *)uuid{
+- (void)saveCurrentProvisionerUUID:(NSString *)uuid {
     [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:kCurrenProvisionerUUID_key];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
@@ -501,7 +503,7 @@
         [SigDataSource.share setDictionaryToDataSource:meshDict];
         //Attention: it will set _ivIndex to kDefaultIvIndex when mesh.json hasn't the key @"ivIndex"
         if (!_ivIndex || _ivIndex.length == 0) {
-            _ivIndex = [NSString stringWithFormat:@"%08X",kDefaultIvIndex];
+            _ivIndex = [NSString stringWithFormat:@"%08X",(unsigned int)kDefaultIvIndex];
             [self saveLocationData];
         }
     }
@@ -513,7 +515,7 @@
     [SigBluetooth share];
 }
 
-- (void)initMeshData{
+- (void)initMeshData {
     NSString *timestamp = [LibTools getNowTimeStringOfJson];
     //1.netKeys
     SigNetkeyModel *netkey = [[SigNetkeyModel alloc] init];
@@ -536,7 +538,7 @@
     [_appKeys addObject:appkey];
 
     //3.provisioners
-    SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerCount:0 andProvisionerUUID:[LibTools convertDataToHexStr:[LibTools initMeshUUID]]];
+    SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerMaxHighAddressUnicast:0 andProvisionerUUID:[LibTools convertDataToHexStr:[LibTools initMeshUUID]]];
     [_provisioners addObject:provisioner];
 
     //4.add new provisioner to nodes
@@ -558,7 +560,7 @@
 //    _version = LibTools.getSDKVersion;
     _version = @"1.0.0";
     _timestamp = timestamp;
-    _ivIndex = [NSString stringWithFormat:@"%08X",kDefaultIvIndex];
+    _ivIndex = [NSString stringWithFormat:@"%08X",(unsigned int)kDefaultIvIndex];
 }
 
 - (void)addLocationNodeWithProvisioner:(SigProvisionerModel *)provisioner{
@@ -650,7 +652,7 @@
         //don't exist location provisioner, create and add to SIGDataSource.provisioners, then save location.
         //Attention: the max location address is 0x7fff, so max provisioner's allocatedUnicastRange highAddress cann't bigger than 0x7fff.
         if (self.provisioners.count <= 0x7f) {
-            SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerCount:[self getProvisionerCount] andProvisionerUUID:[self getCurrentProvisionerUUID]];
+            SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerMaxHighAddressUnicast:[self getMaxHighAddressUnicast] andProvisionerUUID:[self getCurrentProvisionerUUID]];
             [_provisioners addObject:provisioner];
             [self addLocationNodeWithProvisioner:provisioner];
             _timestamp = [LibTools getNowTimeStringOfJson];
@@ -676,6 +678,17 @@
     }
     NSInteger count = (max >> 8) + 1;
     return count;
+}
+
+- (UInt16)getMaxHighAddressUnicast {
+    UInt16 max = 0;
+    NSArray *provisioners = [NSArray arrayWithArray:_provisioners];
+    for (SigProvisionerModel *provisioner in provisioners) {
+        if (max < provisioner.allocatedUnicastRange.firstObject.hightIntAddress) {
+            max = provisioner.allocatedUnicastRange.firstObject.hightIntAddress;
+        }
+    }
+    return max;
 }
 
 - (void)editGroupIDsOfDevice:(BOOL)add unicastAddress:(NSNumber *)unicastAddress groupAddress:(NSNumber *)groupAddress{
@@ -898,7 +911,7 @@
         return;
     }
     if (self.curLocationNodeModel && sequenceNumber != self.getCurrentProvisionerIntSequenceNumber) {
-        TeLogVerbose(@"更新，下一个可用的sequenceNumber=0x%x",sequenceNumber);
+//        TeLogVerbose(@"更新，下一个可用的sequenceNumber=0x%x",sequenceNumber);
         [self setLocationSno:sequenceNumber];
         //sno无需存储json
 //        if (sequenceNumber >= self.getLocationSno + SigDataSource.share.defaultSnoIncrement) {
@@ -937,6 +950,11 @@
 - (void)setIvIndex:(NSString *)ivIndex {
     if (![ivIndex isEqualToString:_ivIndex]) {
         _ivIndex = ivIndex;
+        UInt32 newSequenceNumber = 0;
+        _sequenceNumberOnDelegate = newSequenceNumber;
+        [[NSUserDefaults standardUserDefaults] setObject:@(newSequenceNumber) forKey:kCurrenProvisionerSno_key];
+        [[NSUserDefaults standardUserDefaults] synchronize];// save sequenceNumber
+        [SigDataSource.share saveLocationData];// save ivIndex
         __block NSString *blockIv = _ivIndex;
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{

@@ -42,8 +42,8 @@
 }
 
 - (IBAction)changeOnoff:(UISwitch *)sender {
-    if (self.clickSwiftBlock) {
-        self.clickSwiftBlock(sender);
+    if (self.clickSwitchBlock) {
+        self.clickSwitchBlock(sender);
     }
 }
 

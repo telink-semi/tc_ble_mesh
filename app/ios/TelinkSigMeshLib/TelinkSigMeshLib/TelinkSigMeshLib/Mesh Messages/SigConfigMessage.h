@@ -500,6 +500,58 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
+#pragma mark opcode:0x8015
+
+/// 4.3.2.58 Config Key Refresh Phase Get
+/// - seeAlso: Mesh_v1.0.pdf  (page.177)
+@interface SigConfigKeyRefreshPhaseGet : SigConfigMessage
+/// Index of the NetKey.
+@property (nonatomic,assign) UInt16 netKeyIndex;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0x8016
+
+/// 4.3.2.59 Config Key Refresh Phase Set
+/// - seeAlso: Mesh_v1.0.pdf  (page.177)
+@interface SigConfigKeyRefreshPhaseSet : SigConfigMessage
+/// Index of the NetKey.
+@property (nonatomic,assign) UInt16 netKeyIndex;
+/// New Key Refresh Phase Transition.
+@property (nonatomic,assign) SigControllableKeyRefreshTransitionValues transition;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex transition:(SigControllableKeyRefreshTransitionValues)transition;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0x8017
+
+/// 4.3.2.60 Config Key Refresh Phase Status
+/// - seeAlso: Mesh_v1.0.pdf  (page.177)
+@interface SigConfigKeyRefreshPhaseStatus : SigConfigMessage
+/// Status Code for the requesting message.
+@property (nonatomic,assign) SigConfigMessageStatus status;
+/// Index of the NetKey.
+@property (nonatomic,assign) UInt16 netKeyIndex;
+/// Key Refresh Phase State.
+@property (nonatomic, assign) KeyRefreshPhase phase;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
 #pragma mark opcode:0x8018
 @interface SigConfigModelPublicationGet : SigConfigAnyModelMessage
 - (NSData *)parameters;
@@ -826,6 +878,254 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*addresses;//[Address]
 - (NSData *)parameters;
 - (instancetype)initForModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x802D
+
+/// 4.3.2.67 Config Low Power Node PollTimeout Get
+/// - seeAlso: Mesh_v1.0.pdf  (page.181)
+@interface SigConfigLowPowerNodePollTimeoutGet : SigConfigMessage
+/// The unicast address of the Low Power node.
+@property (nonatomic,assign) UInt16 LPNAddress;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithLPNAddress:(UInt16)LPNAddress;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0x802E
+
+/// 4.3.2.68 Config Low Power Node PollTimeout Status
+/// - seeAlso: Mesh_v1.0.pdf  (page.182)
+@interface SigConfigLowPowerNodePollTimeoutStatus : SigConfigMessage
+/// The unicast address of the Low Power node.
+@property (nonatomic,assign) UInt16 LPNAddress;
+/// The current value of the PollTimeout timer of the Low Power node. Size is 3 bytes.
+@property (nonatomic,assign) UInt32 pollTimeout;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x8038
+
+/// 4.3.2.61 Config Heartbeat Publication Get
+/// - seeAlso: Mesh_v1.0.pdf  (page.178)
+@interface SigConfigHeartbeatPublicationGet : SigConfigMessage
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0x8039
+
+/// 4.3.2.62 Config Heartbeat Publication Set
+/// - seeAlso: Mesh_v1.0.pdf  (page.179)
+@interface SigConfigHeartbeatPublicationSet : SigConfigMessage
+/// Destination address for Heartbeat messages.
+@property (nonatomic,assign) UInt16 destination;
+/*
+ Table 4.24: Heartbeat Publication Count Log values
+
+Value          Description
+0x00           Heartbeat messages are not being sent periodically
+0x01–0x11      Number of Heartbeat messages, 2^(n-1), that remain to be sent
+0x12-0xFE      Prohibited
+0xFF           Heartbeat messages are being sent indefinitely
+ */
+/// Number of Heartbeat messages to be sent.
+@property (nonatomic,assign) UInt8 countLog;
+/*
+ Table 4.25: Heartbeat Publication Period Log values
+
+Value          Description
+0x00           Heartbeat messages are not being sent periodically
+0x01–0x11      Period in 2^(n-1) seconds for sending periodical Heartbeat messages
+0x12-0xFF      Prohibited
+ */
+/// Period for sending Heartbeat messages.
+@property (nonatomic,assign) UInt8 periodLog;
+/*
+ Table 4.26: Heartbeat Publication TTL values
+
+Value          Description
+0x00–0x7F      The Heartbeat Publication TTL state
+0x80-0xFF      Prohibited
+ */
+/// Number of Heartbeat messages to be sent.
+@property (nonatomic,assign) UInt8 ttl;
+/// Bit field indicating features that trigger Heartbeat messages when changed.
+@property (nonatomic,assign) SigFeatures features;
+/// Index of the NetKey.
+@property (nonatomic,assign) UInt16 netKeyIndex;
+
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithDestination:(UInt16)destination countLog:(UInt8)countLog periodLog:(UInt8)periodLog ttl:(UInt8)ttl features:(SigFeatures)features netKeyIndex:(UInt16)netKeyIndex;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0x06
+
+/// 4.3.2.63 Config Heartbeat Publication Status
+/// - seeAlso: Mesh_v1.0.pdf  (page.179)
+@interface SigConfigHeartbeatPublicationStatus : SigConfigMessage
+/// Status Code for the requesting message.
+@property (nonatomic,assign) SigConfigMessageStatus status;
+/// Destination address for Heartbeat messages.
+@property (nonatomic,assign) UInt16 destination;
+/*
+ Table 4.24: Heartbeat Publication Count Log values
+
+Value          Description
+0x00           Heartbeat messages are not being sent periodically
+0x01–0x11      Number of Heartbeat messages, 2^(n-1), that remain to be sent
+0x12-0xFE      Prohibited
+0xFF           Heartbeat messages are being sent indefinitely
+ */
+/// Number of Heartbeat messages to be sent.
+@property (nonatomic,assign) UInt8 countLog;
+/*
+ Table 4.25: Heartbeat Publication Period Log values
+
+Value          Description
+0x00           Heartbeat messages are not being sent periodically
+0x01–0x11      Period in 2^(n-1) seconds for sending periodical Heartbeat messages
+0x12-0xFF      Prohibited
+ */
+/// Period for sending Heartbeat messages.
+@property (nonatomic,assign) UInt8 periodLog;
+/*
+ Table 4.26: Heartbeat Publication TTL values
+
+Value          Description
+0x00–0x7F      The Heartbeat Publication TTL state
+0x80-0xFF      Prohibited
+ */
+/// Number of Heartbeat messages to be sent.
+@property (nonatomic,assign) UInt8 ttl;
+/// Bit field indicating features that trigger Heartbeat messages when changed.
+@property (nonatomic,assign) SigFeatures features;
+/// Index of the NetKey.
+@property (nonatomic,assign) UInt16 netKeyIndex;
+
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0x803A
+
+/// 4.3.2.64 Config Heartbeat Subscription Get
+/// - seeAlso: Mesh_v1.0.pdf  (page.180)
+@interface SigConfigHeartbeatSubscriptionGet : SigConfigMessage
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0x803B
+
+/// 4.3.2.65 Config Heartbeat Subscription Set
+/// - seeAlso: Mesh_v1.0.pdf  (page.180)
+@interface SigConfigHeartbeatSubscriptionSet : SigConfigMessage
+/// Source address for Heartbeat messages.
+@property (nonatomic,assign) UInt16 source;
+/// Destination address for Heartbeat messages.
+@property (nonatomic,assign) UInt16 destination;
+/*
+ Table 4.25: Heartbeat Publication Period Log values
+
+Value          Description
+0x00           Heartbeat messages are not being sent periodically
+0x01–0x11      Period in 2^(n-1) seconds for sending periodical Heartbeat messages
+0x12-0xFF      Prohibited
+ */
+/// Period for sending Heartbeat messages.
+@property (nonatomic,assign) UInt8 periodLog;
+
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithSource:(UInt16)source destination:(UInt16)destination periodLog:(UInt8)periodLog;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0x803C
+
+/// 4.3.2.66 Config Heartbeat Subscription Status
+/// - seeAlso: Mesh_v1.0.pdf  (page.181)
+@interface SigConfigHeartbeatSubscriptionStatus : SigConfigMessage
+/// Status Code for the requesting message.
+@property (nonatomic,assign) SigConfigMessageStatus status;
+/// Source address for Heartbeat messages.
+@property (nonatomic,assign) UInt16 source;
+/// Destination address for Heartbeat messages.
+@property (nonatomic,assign) UInt16 destination;
+/*
+ Table 4.25: Heartbeat Publication Period Log values
+
+Value          Description
+0x00           Heartbeat messages are not being sent periodically
+0x01–0x11      Period in 2^(n-1) seconds for sending periodical Heartbeat messages
+0x12-0xFF      Prohibited
+ */
+/// Period for sending Heartbeat messages.
+@property (nonatomic,assign) UInt8 periodLog;
+/*
+ Table 4.24: Heartbeat Publication Count Log values
+
+Value          Description
+0x00           Heartbeat messages are not being sent periodically
+0x01–0x11      Number of Heartbeat messages, 2^(n-1), that remain to be sent
+0x12-0xFE      Prohibited
+0xFF           Heartbeat messages are being sent indefinitely
+ */
+/// Number of Heartbeat messages to be sent.
+@property (nonatomic,assign) UInt8 countLog;
+/*
+ Table 4.30: Heartbeat Subscription Min TTL values
+
+Value          Description
+0x00           No Heartbeat messages have been received
+0x01–0x7F      The Heartbeat Subscription Min Hops state
+0x80-0xFF      Prohibited
+ */
+/// Minimum hops when receiving Heartbeat messages.
+@property (nonatomic,assign) UInt8 minHops;
+/*
+ Table 4.31: Heartbeat Subscription Max TTL values
+
+Value          Description
+ 0x00           No Heartbeat messages have been received
+ 0x01–0x7F      The Heartbeat Subscription Max Hops state
+ 0x80-0xFF      Prohibited
+ */
+/// Maximum hops when receiving Heartbeat messages.
+@property (nonatomic,assign) UInt8 maxHops;
+
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 

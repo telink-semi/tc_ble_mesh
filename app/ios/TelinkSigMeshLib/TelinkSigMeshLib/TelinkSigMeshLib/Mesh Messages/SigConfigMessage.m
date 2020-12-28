@@ -1453,6 +1453,158 @@
 @end
 
 
+@implementation SigConfigKeyRefreshPhaseGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configKeyRefreshPhaseGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configKeyRefreshPhaseGet;
+        _netKeyIndex = netKeyIndex;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configKeyRefreshPhaseGet;
+        if (parameters == nil || parameters.length != 2) {
+            return nil;
+        }
+        UInt16 tem16 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem16, dataByte, 2);
+        _netKeyIndex = (tem16 >> 4) & 0xFFF;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem16 = _netKeyIndex << 4;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigKeyRefreshPhaseStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigKeyRefreshPhaseSet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configKeyRefreshPhaseSet;
+    }
+    return self;
+}
+
+- (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex transition:(SigControllableKeyRefreshTransitionValues)transition {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configKeyRefreshPhaseSet;
+        _netKeyIndex = netKeyIndex;
+        _transition = transition;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configKeyRefreshPhaseSet;
+        if (parameters == nil || parameters.length != 3) {
+            return nil;
+        }
+        UInt16 tem16 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem16, dataByte, 2);
+        _netKeyIndex = (tem16 >> 4) & 0xFFF;
+        UInt8 tem8 = 0;
+        memcpy(&tem8, dataByte+2, 1);
+        _transition = tem8;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem16 = _netKeyIndex << 4;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    UInt8 tem8 = _transition;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigKeyRefreshPhaseStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigKeyRefreshPhaseStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configKeyRefreshPhaseStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configKeyRefreshPhaseStatus;
+        if (parameters == nil || parameters.length != 4) {
+            return nil;
+        }
+        UInt8 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 1);
+        _status = tem;
+        UInt16 tem16 = 0;
+        memcpy(&tem16, dataByte+1, 2);
+        _netKeyIndex = (tem16 >> 4) & 0xFFF;
+        memcpy(&tem, dataByte+3, 1);
+        _phase = tem;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    UInt16 tem16 = _netKeyIndex << 4;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem8 = _phase;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+@end
+
+
 @implementation SigConfigModelPublicationGet
 
 - (instancetype)init {
@@ -3240,6 +3392,444 @@
 @end
 
 
+@implementation SigConfigLowPowerNodePollTimeoutGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configLowPowerNodePollTimeoutGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithLPNAddress:(UInt16)LPNAddress {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configKeyRefreshPhaseGet;
+        _LPNAddress = LPNAddress;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configKeyRefreshPhaseGet;
+        if (parameters == nil || parameters.length != 2) {
+            return nil;
+        }
+        UInt16 tem16 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem16, dataByte, 2);
+        _LPNAddress = tem16;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem16 = _LPNAddress;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigLowPowerNodePollTimeoutStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigLowPowerNodePollTimeoutStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configLowPowerNodePollTimeoutStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configLowPowerNodePollTimeoutStatus;
+        if (parameters == nil || parameters.length != 5) {
+            return nil;
+        }
+        UInt16 tem16 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem16, dataByte, 2);
+        _LPNAddress = tem16;
+        UInt32 tem1 = 0,tem2 = 0,tem3 = 0;
+        memcpy(&tem1, dataByte+2, 1);
+        memcpy(&tem2, dataByte+3, 1);
+        memcpy(&tem3, dataByte+4, 1);
+        _pollTimeout = tem1 << 16 | tem2 << 8 | tem3;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem16 = _LPNAddress;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    UInt32 tem32 = CFSwapInt32HostToBig(_pollTimeout);
+    NSData *temData = [NSData dataWithBytes:&tem32 length:4];
+    [mData appendData:[temData subdataWithRange:NSMakeRange(1, 3)]];
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigHeartbeatPublicationGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatPublicationGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatPublicationGet;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigConfigHeartbeatPublicationStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigHeartbeatPublicationSet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatPublicationSet;
+    }
+    return self;
+}
+
+- (instancetype)initWithDestination:(UInt16)destination countLog:(UInt8)countLog periodLog:(UInt8)periodLog ttl:(UInt8)ttl features:(SigFeatures)features netKeyIndex:(UInt16)netKeyIndex {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatPublicationSet;
+        _destination = destination;
+        _countLog = countLog;
+        _periodLog = periodLog;
+        _ttl = ttl;
+        _features = features;
+        _netKeyIndex = netKeyIndex;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatPublicationSet;
+        if (parameters == nil || parameters.length != 9) {
+            return nil;
+        }
+        UInt16 tem16 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem16, dataByte, 2);
+        _destination = tem16;
+        UInt8 tem8 = 0;
+        memcpy(&tem8, dataByte+2, 1);
+        _countLog = tem8;
+        memcpy(&tem8, dataByte+3, 1);
+        _periodLog = tem8;
+        memcpy(&tem8, dataByte+4, 1);
+        _ttl = tem8;
+        memcpy(&tem16, dataByte+5, 2);
+        _features.value = tem16;
+        memcpy(&tem16, dataByte+7, 2);
+        _netKeyIndex = (tem16 >> 4) & 0xFFF;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem16 = _destination;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    UInt8 tem8 = _countLog;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _periodLog;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _ttl;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem16 = _features.value;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem16 = _netKeyIndex << 4;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigHeartbeatPublicationStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigHeartbeatPublicationStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatPublicationStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatPublicationStatus;
+        if (parameters == nil || parameters.length != 10) {
+            return nil;
+        }
+        UInt8 tem8 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem8, dataByte, 1);
+        _status = tem8;
+        UInt16 tem16 = 0;
+        memcpy(&tem16, dataByte+1, 2);
+        _destination = tem16;
+        memcpy(&tem8, dataByte+3, 1);
+        _countLog = tem8;
+        memcpy(&tem8, dataByte+4, 1);
+        _periodLog = tem8;
+        memcpy(&tem8, dataByte+5, 1);
+        _ttl = tem8;
+        memcpy(&tem16, dataByte+6, 2);
+        _features.value = tem16;
+        memcpy(&tem16, dataByte+8, 2);
+        _netKeyIndex = (tem16 >> 4) & 0xFFF;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    UInt16 tem16 = _destination;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem8 = _countLog;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _periodLog;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _ttl;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem16 = _features.value;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem16 = _netKeyIndex << 4;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+@end
+
+
+@implementation SigConfigHeartbeatSubscriptionGet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatSubscriptionGet;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatSubscriptionGet;
+        if (parameters == nil || parameters.length == 0) {
+            return self;
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    return nil;
+}
+
+- (Class)responseType {
+    return [SigConfigHeartbeatSubscriptionStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigHeartbeatSubscriptionSet
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatSubscriptionSet;
+    }
+    return self;
+}
+
+- (instancetype)initWithSource:(UInt16)source destination:(UInt16)destination periodLog:(UInt8)periodLog {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatSubscriptionSet;
+        _source = source;
+        _destination = destination;
+        _periodLog = periodLog;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatSubscriptionSet;
+        if (parameters == nil || parameters.length != 5) {
+            return nil;
+        }
+        UInt16 tem16 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem16, dataByte, 2);
+        _source = tem16;
+        memcpy(&tem16, dataByte+2, 2);
+        _destination = tem16;
+        UInt8 tem8 = 0;
+        memcpy(&tem8, dataByte+4, 1);
+        _periodLog = tem8;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt16 tem16 = _source;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem16 = _destination;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    UInt8 tem8 = _periodLog;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+- (Class)responseType {
+    return [SigConfigHeartbeatSubscriptionStatus class];
+}
+
+- (UInt32)responseOpCode {
+    return ((SigMeshMessage *)[[self.responseType alloc] init]).opCode;
+}
+
+@end
+
+
+@implementation SigConfigHeartbeatSubscriptionStatus
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatSubscriptionStatus;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configHeartbeatSubscriptionStatus;
+        if (parameters == nil || parameters.length != 9) {
+            return nil;
+        }
+        UInt8 tem8 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem8, dataByte, 1);
+        _status = tem8;
+        UInt16 tem16 = 0;
+        memcpy(&tem16, dataByte+1, 2);
+        _source = tem16;
+        memcpy(&tem16, dataByte+3, 2);
+        _destination = tem16;
+        memcpy(&tem8, dataByte+5, 1);
+        _periodLog = tem8;
+        memcpy(&tem8, dataByte+6, 1);
+        _countLog = tem8;
+        memcpy(&tem8, dataByte+7, 1);
+        _minHops = tem8;
+        memcpy(&tem8, dataByte+8, 1);
+        _maxHops = tem8;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    UInt16 tem16 = _source;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem16 = _destination;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem8 = _periodLog;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _countLog;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _minHops;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _maxHops;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+@end
+
+
 @implementation SigConfigModelAppBind
 
 - (instancetype)init {
@@ -3942,7 +4532,17 @@
 }
 
 - (NSData *)parameters {
-    return nil;
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = _status;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    UInt16 tem16 = _netKeyIndex << 4;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem8 = _identity;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
 }
 
 @end

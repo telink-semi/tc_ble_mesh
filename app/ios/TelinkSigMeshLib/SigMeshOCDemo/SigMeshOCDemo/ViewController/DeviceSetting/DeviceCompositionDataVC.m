@@ -45,6 +45,13 @@
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(clickRefreshCompositionData)];
     self.navigationItem.rightBarButtonItem = rightItem;
     [self showCompositionDataUI];
+    //==========test==========//
+//    [SDKLibCommand configNodeIdentitySetWithDestination:self.model.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
+//        TeLogInfo(@"NodeIdentity返回，opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//        TeLogInfo(@"");
+//    }];
+    //==========test==========//
 }
 
 - (void)clickRefreshCompositionData {

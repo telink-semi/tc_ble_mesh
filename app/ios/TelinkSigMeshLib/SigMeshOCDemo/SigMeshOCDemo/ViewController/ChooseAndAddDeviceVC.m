@@ -168,9 +168,14 @@ typedef enum : NSUInteger {
                         staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
                     }
                     
-//                    UInt16 productID = 1;
-//                    DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
-//                    NSData *cpsData = deviceType.defaultCompositionData.parameters;
+//                    //fastbind 获取cpsData1：PID为1或者7，SDK内置了这两个PID的cpsData，当接口是fastBind且cpsData为空，则使用PID查找cpsData，查找不到则默认使用PID为1的cpsData。
+////                    UInt16 productID = 1;
+////                    DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
+////                    NSData *cpsData = deviceType.defaultCompositionData.parameters;
+//                    //fastbind 获取cpsData2：当接口是fastBind且传入cpsData，则无论PID为多少，直接使用cpsData里面的PID。
+//                    UInt16 productID = 0;
+//                    NSData *cpsData = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
+//                    //fastbind接口调用如下：
 //                    [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:KeyBindTpye_Fast productID:productID cpsData:cpsData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
 //                        model.state = AddStateKeybinding;
 //                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];

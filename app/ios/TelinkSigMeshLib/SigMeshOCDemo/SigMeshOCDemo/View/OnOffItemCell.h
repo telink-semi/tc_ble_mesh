@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak, nonatomic) IBOutlet UIView *onoffView;
 @property (weak, nonatomic) IBOutlet UISwitch *onoffSwitch;
 @property (weak, nonatomic) IBOutlet UILabel *onoffLabel;
-@property (copy, nonatomic) void(^clickSwiftBlock)(UISwitch *swift);
+@property (copy, nonatomic) void(^clickSwitchBlock)(UISwitch *uiswitch);
 @end
 
 NS_ASSUME_NONNULL_END

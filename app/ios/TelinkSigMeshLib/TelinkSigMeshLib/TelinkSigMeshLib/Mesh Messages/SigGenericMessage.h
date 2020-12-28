@@ -3416,7 +3416,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 chunkNumber;
 /// Part of the BLOB data, szie is 1 to Chunk Size.
 @property (nonatomic,strong) NSData *chunkData;
-- (instancetype)initWithChunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData;
+@property (nonatomic,assign) BOOL sendBySegmentPdu;
+
+- (instancetype)initWithChunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData sendBySegmentPdu:(BOOL)sendBySegmentPdu;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 

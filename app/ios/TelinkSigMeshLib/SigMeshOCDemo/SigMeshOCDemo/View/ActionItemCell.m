@@ -43,6 +43,13 @@
 }
 
 - (void)updateContent:(ActionModel *)model{
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:model.address];
+    if (model.state != DeviceStateOutOfLine && node && node.sceneAddress.count > 0) {
+        [self.selectButton setImage:[UIImage imageNamed:@"unxuan"] forState:UIControlStateNormal];
+    } else {
+        [self.selectButton setImage:[UIImage imageNamed:@"bukexuan"] forState:UIControlStateNormal];
+    }
+
     [self.stateView updateContent:model];
 }
 

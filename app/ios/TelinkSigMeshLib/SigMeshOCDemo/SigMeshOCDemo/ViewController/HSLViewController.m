@@ -28,112 +28,48 @@
 //
 
 #import "HSLViewController.h"
-#import "DTColorPickerImageView.h"
 #import "ColorManager.h"
+#import "ColorModelCell.h"
+#import "BaseTableView.h"
 
-@interface HSLViewController()<DTColorPickerImageViewDelegate>
-@property (weak, nonatomic) IBOutlet DTColorPickerImageView *colorPicker;
-@property (weak, nonatomic) IBOutlet UILabel *showRGBLabel;
-@property (weak, nonatomic) IBOutlet UILabel *showHSLLabel;
-@property (weak, nonatomic) IBOutlet UIImageView *currentColorView;
-@property (weak, nonatomic) IBOutlet UISlider *brightnessSlider;
-@property (weak, nonatomic) IBOutlet UILabel *lightLabel;
-@property (weak, nonatomic) IBOutlet UISlider *RSlider;
-@property (weak, nonatomic) IBOutlet UISlider *GSlider;
-@property (weak, nonatomic) IBOutlet UISlider *BSlider;
-
+@interface HSLViewController()<UITableViewDataSource,BaseTableViewDelegate,ColorModelCellDelegate>
+@property (weak, nonatomic) IBOutlet BaseTableView *tableView;
+@property (strong, nonatomic) UIColor *colorModel;
 @property (strong, nonatomic) RGBModel *rgbModel;
 @property (strong, nonatomic) HSVModel *hsvModel;
 @property (strong, nonatomic) HSLModel *hslModel;
 @property (assign, nonatomic) BOOL hasNextCMD;
-
-//保存当前色盘取到的HSV中的HS的值，V值则取L滑竿的值。初始值RGB都是255，HSL值0、0、1，L滑竿值最大，颜色为白色。
-@property (strong, nonatomic) HSVModel *colorWheelHSVModel;
-
+@property (strong, nonatomic) ColorModelCell *colorModelCell;
 @end
 
 @implementation HSLViewController
 
 - (void)normalSetting{
     [super normalSetting];
-    
     self.title = @"HSL";
-//    if (!kControllerInHSL) {
-//        self.lightLabel.text = @"V:";
-//    }
-
-    self.currentColorView.layer.cornerRadius = 8;
-    self.currentColorView.layer.borderWidth = 1;
-    self.currentColorView.layer.borderColor = [UIColor lightGrayColor].CGColor;
-    self.brightnessSlider.value = 1.0;
-    [self handleColor:[UIColor whiteColor]];
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;//去掉下划线
+    self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+    [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_ColorModelCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_ColorModelCellID];
+    self.tableView.baseTableViewDelegate = self;
 }
 
-- (IBAction)changeBrightness:(UISlider *)sender {
-    UIColor *color = nil;
-    if (kControllerInHSL) {
-        self.colorWheelHSVModel.value = sender.value;
-        color = [ColorManager getUIColorWithHSVColor:self.colorWheelHSVModel];
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    self.tabBarController.tabBar.hidden = YES;
+    // 禁用返回手势
+    if ([self.navigationController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
+        self.navigationController.interactivePopGestureRecognizer.enabled = NO;
     }
-//    else{
-//        color = [UIColor colorWithHue:self.hsvModel.hue saturation:self.hsvModel.saturation brightness:sender.value alpha:self.hsvModel.alpha];
-//    }
-    [self handleColor:color];
-    [self refreshRGBSlider];
-    [self sendHSLData];
 }
 
-- (IBAction)changeR:(UISlider *)sender {
-    UIColor *color = [UIColor colorWithRed:sender.value green:self.rgbModel.green blue:self.rgbModel.blud alpha:1.0];
-    [self handleColor:color];
-    [self sendHSLData];
-}
-
-- (IBAction)changeG:(UISlider *)sender {
-    UIColor *color = [UIColor colorWithRed:self.rgbModel.red green:sender.value blue:self.rgbModel.blud alpha:1.0];
-    [self handleColor:color];
-    [self sendHSLData];
-}
-
-- (IBAction)changeB:(UISlider *)sender {
-    UIColor *color = [UIColor colorWithRed:self.rgbModel.red green:self.rgbModel.green blue:sender.value alpha:1.0];
-    [self handleColor:color];
-    [self sendHSLData];
-}
-
-- (void)imageView:(DTColorPickerImageView *)imageView didPickColorWithColor:(UIColor *)color{
-    HSVModel *hsv = [ColorManager getHSVWithColor:color];
-    hsv.value = self.brightnessSlider.value;
-    UIColor *temColor = [ColorManager getUIColorWithHSVColor:hsv];
-    [self handleColor:temColor];
-    [self sendHSLData];
-}
-
-- (void)handleColor:(UIColor *)color{
-    if (kControllerInHSL) {
-        self.hslModel = [ColorManager getHSLWithColor:color];
-        self.showHSLLabel.text = [NSString stringWithFormat:@"HSL:\n H--%d\n S--%d\n L--%d",(int)(self.hslModel.hue*100),(int)(self.hslModel.saturation*100),(int)(self.hslModel.lightness*100)];
-//        self.brightnessSlider.value = self.hslModel.lightness;
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    // 开启返回手势
+    if ([self.navigationController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
+        self.navigationController.interactivePopGestureRecognizer.enabled = YES;
     }
-//    else {
-//        self.hsvModel = [ColorManager getHSVWithColor:color];
-//        self.showHSLLabel.text = [NSString stringWithFormat:@"HSV:\n H--%d\n S--%d\n V--%d",(int)(self.hsvModel.hue*100),(int)(self.hsvModel.saturation*100),(int)(self.hsvModel.value*100)];
-////        self.brightnessSlider.value = self.hsvModel.value;
-//    }
-    
-    self.rgbModel = [ColorManager getRGBWithColor:color];
-    self.colorWheelHSVModel = [ColorManager getHSVWithColor:color];
-    self.currentColorView.backgroundColor = color;
-    self.showRGBLabel.text = [NSString stringWithFormat:@"RGB:\n R--%d\n G--%d\n B--%d",(int)(self.rgbModel.red*100),(int)(self.rgbModel.green*100),(int)(self.rgbModel.blud*100)];
-    self.RSlider.value = self.rgbModel.red;
-    self.GSlider.value = self.rgbModel.green;
-    self.BSlider.value = self.rgbModel.blud;
-}
-
-- (void)refreshRGBSlider {
-    self.RSlider.value = self.rgbModel.red;
-    self.GSlider.value = self.rgbModel.green;
-    self.BSlider.value = self.rgbModel.blud;
 }
 
 - (void)sendHSLData{
@@ -148,17 +84,15 @@
             //单灯
             address = self.model.address;
         }
-        if (kControllerInHSL) {
-            [DemoCommand changeHSLWithAddress:address hue:self.hslModel.hue saturation:self.hslModel.saturation brightness:self.hslModel.lightness responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
-        }
-//        else {
-//            [DemoCommand changeHSLWithAddress:address hue100:self.hsvModel.hue*100 saturation100:self.hsvModel.saturation*100 brightness100:self.hsvModel.value*100 responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
-//        }
+        [DemoCommand changeHSLWithAddress:address hue:self.hslModel.hue saturation:self.hslModel.saturation brightness:self.hslModel.lightness responseMaxCount:0 ack:NO successCallback:nil resultCallback:nil];
         self.hasNextCMD = NO;
     } else {
         if (!self.hasNextCMD) {
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sendHSLData) object:nil];
-            [self performSelector:@selector(sendHSLData) withObject:nil afterDelay:kCMDInterval];
+            self.hasNextCMD = YES;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sendHSLData) object:nil];
+                [self performSelector:@selector(sendHSLData) withObject:nil afterDelay:kCMDInterval];
+            });
         }
     }
 }
@@ -178,6 +112,49 @@
 
 -(void)dealloc{
     TeLogDebug(@"");
+}
+
+#pragma mark - ColorModelCellDelegate
+
+- (void)colorModelCell:(ColorModelCell *)cell didChangedColorWithColor:(UIColor *)color rgbModel:(RGBModel *)rgbModel hsvModel:(HSVModel *)hsvModel hslModel:(HSLModel *)hslModel {
+    self.colorModel = color;
+    self.rgbModel = rgbModel;
+    self.hsvModel = hsvModel;
+    self.hslModel = hslModel;
+    [self sendHSLData];
+}
+
+#pragma mark - UITableViewDataSource
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return 1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    ColorModelCell *cell = (ColorModelCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_ColorModelCellID forIndexPath:indexPath];
+    cell.delegate = self;
+    [cell setColorModel:[UIColor yellowColor]];
+    self.colorModelCell = cell;
+    return cell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    return 692.5;
+}
+
+#pragma mark - BaseTableViewDelegate
+
+// 目的：触摸到色盘的layer内部时则相应色盘手势，不再响应BaseTableView的滑动手势了。
+-(BOOL)baseTableView:(BaseTableView *)baseTableView gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
+    CGPoint point = [touch locationInView:self.view];
+    point = [self.colorModelCell.layer convertPoint:point fromLayer:self.view.layer];
+    if ([self.colorModelCell.layer containsPoint:point]) {
+        point = [self.colorModelCell.colorPicker.layer convertPoint:point fromLayer:self.colorModelCell.layer];
+        if ([self.colorModelCell.colorPicker.layer containsPoint:point]) {
+            return NO;
+        }
+    }
+    return YES;
 }
 
 @end

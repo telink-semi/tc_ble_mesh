@@ -70,16 +70,6 @@
     self.view.backgroundColor = [UIColor whiteColor];
     if (self.isCanUseCamera) {
         [self.view addSubview: self.scanView];
-    } else {
-        __weak typeof(self) weakSelf = self;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [weakSelf showAlertSureWithTitle:@"Hits" message:@"请到设置界面打开TelinkSigMesh的相机权限。" sure:^(UIAlertAction *action) {
-                NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
-                if ([[UIApplication sharedApplication] canOpenURL:url]) {
-                    [[UIApplication sharedApplication] openURL:url];
-                }
-            }];
-        });
     }
 }
 
@@ -106,6 +96,17 @@
         [self.scanView start];
     }
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(backToMain) name:@"BackToMain" object:nil];
+    if (!self.isCanUseCamera) {
+        __weak typeof(self) weakSelf = self;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf showAlertSureWithTitle:@"Hits" message:@"请到设置界面打开TelinkSigMesh的相机权限。" sure:^(UIAlertAction *action) {
+                NSURL *url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+                if ([[UIApplication sharedApplication] canOpenURL:url]) {
+                    [[UIApplication sharedApplication] openURL:url];
+                }
+            }];
+        });
+    }
 }
 
 - (void)viewDidDisappear:(BOOL)animated
@@ -123,6 +124,7 @@
 
 - (void)dealloc
 {
+    TeLogVerbose(@"");
     if (_scanView) {
         [self.scanView stop];
     }
