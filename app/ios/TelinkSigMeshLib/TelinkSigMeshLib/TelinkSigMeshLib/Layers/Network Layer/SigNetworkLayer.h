@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigNetworkManager *networkManager;
 @property (nonatomic,strong) SigDataSource *meshNetwork;
 //@property (nonatomic,strong) NSCache <NSData *, NSNull *>*networkMessageCache;
-@property (nonatomic,strong) NSUserDefaults *defaults;
+//@property (nonatomic,strong) NSUserDefaults *defaults;
 @property (nonatomic,strong) SigIvIndex *ivIndex;
 @property (nonatomic,strong) SigNetkeyModel *networkKey;
 @property (nonatomic,strong,nullable) SigSegmentAcknowledgmentMessage *lastNeedSendAckMessage;

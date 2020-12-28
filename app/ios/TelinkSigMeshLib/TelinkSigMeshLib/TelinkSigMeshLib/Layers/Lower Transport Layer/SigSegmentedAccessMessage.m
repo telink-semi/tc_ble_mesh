@@ -51,6 +51,7 @@
             return nil;
         }
         BOOL akf = (tem & 0b01000000) != 0;
+        self.AKF = akf;
         if (akf) {
             _aid = tem & 0x3F;
         } else {
@@ -86,6 +87,7 @@
         self.type = SigLowerTransportPduType_accessMessage;
         self.message = pdu.message;
         self.localElement = pdu.localElement;
+        self.AKF = pdu.AKF;
         _aid = pdu.aid;
         self.source = pdu.source;
         self.destination = pdu.destination;
@@ -95,10 +97,10 @@
         _sequence = pdu.sequence;
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
-        int lowerBound = (int)(offset * 12);
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * 12);
+        int lowerBound = (int)(offset * (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3));
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3));
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + 11) / 12) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3)) - 1;
         self.upperTransportPdu = segment;
         self.userInitiated = pdu.userInitiated;
     }
@@ -117,6 +119,7 @@
         self.type = SigLowerTransportPduType_accessMessage;
         self.message = pdu.message;
         self.localElement = pdu.localElement;
+        self.AKF = pdu.AKF;
         _aid = pdu.aid;
         self.source = pdu.source;
         self.destination = pdu.destination;
@@ -125,10 +128,10 @@
         _sequence = pdu.sequence;
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
-        int lowerBound = (int)(offset * 12);
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * 12);
+        int lowerBound = (int)(offset * (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3));
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3));
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + 11) / 12) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3)) - 1;
         self.upperTransportPdu = segment;
     }
     return self;
@@ -137,10 +140,10 @@
 
 - (NSData *)transportPdu {
     UInt8 octet0 = 0x80;// SEG = 1
-    if (_aid != 0) {
+    if (self.AKF) {
         octet0 |= 0b01000000;// AKF = 1
-        octet0 |= _aid;
     }
+    octet0 |= _aid;
     UInt8 octet1 = ((_transportMicSize << 4) & 0x80) | (UInt8)(self.sequenceZero >> 6);
     UInt8 octet2 = (UInt8)((self.sequenceZero & 0x3F) << 2) | (self.segmentOffset >> 3);
     UInt8 octet3 = ((self.segmentOffset & 0x07) << 5) | (self.lastSegmentNumber & 0x1F);

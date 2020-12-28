@@ -30,6 +30,7 @@
 #import "SigAccessLayer.h"
 #import "SigAccessPdu.h"
 #import "SigUpperTransportLayer.h"
+#import "SigLowerTransportLayer.h"
 
 /// The transaction object is used for Transaction Messages,
 /// for example `GenericLevelSet`.
@@ -214,9 +215,8 @@
             }
             m = genericMessage;
         }
-        TeLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
+//        TeLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
     }
-    TeLogVerbose(@"Sending %@ from: %@, to: 0x%x",m,element,destination.address);
     SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:m sentFromLocalElement:element toDestination:destination userInitiated:YES];
     SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];
     TeLogInfo(@"Sending message:%@->%@",message.class,pdu);
@@ -256,7 +256,7 @@
             }
             m = genericMessage;
         }
-        TeLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
+//        TeLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
     }
     TeLogVerbose(@"Sending %@ from: %@, to: 0x%x",m,element,destination.address);
     SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:m sentFromLocalElement:element toDestination:destination userInitiated:YES];
@@ -359,6 +359,7 @@
         }
     }
     [_networkManager.upperTransportLayer cancelHandleSigMessageHandle:handle];
+    [_networkManager.lowerTransportLayer cancelTXSendingSegmentedWithDestination:handle.destination];
 }
 
 - (void)handleAccessPdu:(SigAccessPdu *)accessPdu sendWithSigKeySet:(SigKeySet *)keySet asResponseToRequest:(SigAcknowledgedMeshMessage *)request {
@@ -380,37 +381,6 @@
 - (UInt32)getKeyForElement:(SigElementModel *)element andDestination:(SigMeshAddress *)destination {
     return (UInt32)((element.unicastAddress) << 16) | (UInt32)(destination.address);
 }
-
-//- (void)createReliableContextForSigAccessPdu:(SigAccessPdu *)pdu sentFromElement:(SigElementModel *)element withTtl:(UInt8)initialTtl usingKeySet:(SigKeySet *)keySet {
-//    SigAcknowledgedMeshMessage *request = (SigAcknowledgedMeshMessage *)pdu.message;
-//    if ((request && [request isKindOfClass:[SigAcknowledgedMeshMessage class]]) || [SigHelper.share isAcknowledgedMessage:pdu.message]) {
-//        /// The TTL with which the request will be sent.
-//        UInt8 ttl = element.parentNode.defaultTTL;
-//        if (![SigHelper.share isRelayedTTL:ttl]) {
-//            ttl = _networkManager.defaultTtl;
-//        }
-//
-//        /// The delay after which the local Element will try to resend the
-//        /// request. When the response isn't received after the first retry,
-//        /// it will try again every time doubling the last delay until the
-//        /// time goes out.
-//        NSTimeInterval initialDelay = [_networkManager acknowledgmentMessageInterval:ttl segmentCount:pdu.segmentsCount];
-//        /// The timeout before which the response should be received.
-//        NSTimeInterval timeout = _networkManager.acknowledgmentMessageTimeout;
-//
-//        __weak typeof(self) weakSelf = self;
-//        SigAcknowledgmentContext *ack = [[SigAcknowledgmentContext alloc] initForRequest:request sentFromSource:pdu.source toDestination:pdu.destination.address repeatAfterDelay:initialDelay repeatBlock:^{
-//            TeLogInfo(@"Resending %@",pdu);
-//            [weakSelf.networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet];
-//        } timeout:timeout timeoutBlock:^{
-//            TeLogInfo(@"Response to %@ not received %f",pdu,timeout);
-//            TeLogInfo(@"%@ sent from: 0x%x, to: 0x%x timed out",request,pdu.source,pdu.destination.address);
-//            [weakSelf removeAllTimeoutTimerInreliableMessageContexts];
-//            [weakSelf.networkManager notifyAboutError:[NSError errorWithDomain:AccessError_timeout code:0 userInfo:nil] duringSendingMessage:request fromLocalElement:element toDestination:pdu.destination.address];
-//        }];
-//        [_reliableMessageContexts addObject:ack];
-//    }
-//}
 
 - (void)removeAllTimeoutTimerInreliableMessageContexts {
     TeLogInfo(@"============9.3.AccessError.timeout");
@@ -505,6 +475,16 @@
                 break;
             case SigOpCode_configGATTProxyStatus:
                 messageType = [SigConfigGATTProxyStatus class];
+                break;
+                // Key Refresh Phase
+            case SigOpCode_configKeyRefreshPhaseGet:
+                messageType = [SigConfigKeyRefreshPhaseGet class];
+                break;
+            case SigOpCode_configKeyRefreshPhaseSet:
+                messageType = [SigConfigKeyRefreshPhaseSet class];
+                break;
+            case SigOpCode_configKeyRefreshPhaseStatus:
+                messageType = [SigConfigKeyRefreshPhaseStatus class];
                 break;
                 // Friend configuration
             case SigOpCode_configFriendGet:
@@ -637,6 +617,35 @@
                 messageType = [SigConfigVendorModelSubscriptionList class];
                 break;
                 
+                // Low Power Node Poll Timeout
+            case SigOpCode_configLowPowerNodePollTimeoutGet:
+                messageType = [SigConfigLowPowerNodePollTimeoutGet class];
+                break;
+            case SigOpCode_configLowPowerNodePollTimeoutStatus:
+                messageType = [SigConfigLowPowerNodePollTimeoutStatus class];
+                break;
+
+                // Heartbeat Publication
+            case SigOpCode_configHeartbeatPublicationGet:
+                messageType = [SigConfigHeartbeatPublicationGet class];
+                break;
+            case SigOpCode_configHeartbeatPublicationSet:
+                messageType = [SigConfigHeartbeatPublicationSet class];
+                break;
+            case SigOpCode_configHeartbeatPublicationStatus:
+                messageType = [SigConfigHeartbeatPublicationStatus class];
+                break;
+                // node identity
+            case SigOpCode_configHeartbeatSubscriptionGet:
+                messageType = [SigConfigHeartbeatSubscriptionGet class];
+                break;
+            case SigOpCode_configHeartbeatSubscriptionSet:
+                messageType = [SigConfigHeartbeatSubscriptionSet class];
+                break;
+            case SigOpCode_configHeartbeatSubscriptionStatus:
+                messageType = [SigConfigHeartbeatSubscriptionStatus class];
+                break;
+
                 // node identity
             case SigOpCode_configNodeIdentityGet:
                 messageType = [SigConfigNodeIdentityGet class];
