@@ -95,6 +95,8 @@ NS_ASSUME_NONNULL_BEGIN
 ///                         on Network Layer.
 - (void)sendSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu withTtl:(UInt8)initialTtl usingNetworkKey:(SigNetkeyModel *)networkKey;
 
+- (void)cancelTXSendingSegmentedWithDestination:(UInt16)destination;
+
 /// Cancels sending segmented Upper Transoprt PDU.
 ///
 /// - parameter pdu: The Upper Transport PDU.
