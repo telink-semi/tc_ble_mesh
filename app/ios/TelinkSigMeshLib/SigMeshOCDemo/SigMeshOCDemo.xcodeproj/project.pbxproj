@@ -10,6 +10,7 @@
 		250DAC5E258C555300EBC6CE /* BaseTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 250DAC5D258C555300EBC6CE /* BaseTableView.m */; };
 		2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2519E64E24123D870098ABE7 /* 8258_mesh.bin */; };
 		254C656B2570FF6C00096625 /* ColorPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 254C656A2570FF6C00096625 /* ColorPickerView.m */; };
+		257DAD24259B1FFE0092A784 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		258E2B8A248A24A20078DA7C /* InfoSwitchCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B88248A24A20078DA7C /* InfoSwitchCell.m */; };
 		258E2B8B248A24A20078DA7C /* InfoSwitchCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B89248A24A20078DA7C /* InfoSwitchCell.xib */; };
 		258E2B8F248A24B50078DA7C /* InfoNextCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B8D248A24B50078DA7C /* InfoNextCell.m */; };
@@ -18,7 +19,6 @@
 		258E2B95248A24D40078DA7C /* InfoButtonCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B93248A24D40078DA7C /* InfoButtonCell.xib */; };
 		25ADB1F9254186310078E8D7 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		25B1204224A34A01004F7E91 /* DeviceCompositionDataVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B1204124A34A01004F7E91 /* DeviceCompositionDataVC.m */; };
-		25C0097C2599D37700DC19AC /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FFA24542CF200796BF9 /* 8269_mesh.bin */; };
 		25C2B4F92512F610003DCB8C /* AppKeyListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C2B4F72512F610003DCB8C /* AppKeyListVC.m */; };
 		25C2B4FA2512F610003DCB8C /* AppKeyListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C2B4F82512F610003DCB8C /* AppKeyListVC.xib */; };
@@ -462,7 +462,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				25C0097C2599D37700DC19AC /* TelinkSigMeshLib.framework in Frameworks */,
+				257DAD24259B1FFE0092A784 /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

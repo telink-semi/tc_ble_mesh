@@ -34,6 +34,7 @@
 #define kRetryCountInBLOBChunkTransfer    (3)
 #define kMeshOTAGroupAddress    (0xc000)
 #define kSegmentIntervalCount   (16)
+#define kUnSegmentPacketInterval   (0.2)
 
 #define kPid    @"pid"
 #define kVid    @"vid"
@@ -931,11 +932,17 @@
                 if (error) {
                     hasFail = YES;
                     weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBChunkTransfer, error=%@.",error.domain] code:-weakSelf.meshOTAProgress userInfo:nil];
+                    dispatch_semaphore_signal(weakSelf.semaphore);
                 } else {
                     weakSelf.successActionInCurrentProgress ++;
-
+                    if (destination == kMeshOTAGroupAddress && self.chunkIndex%kSegmentIntervalCount!=0 && (chunkData.length + 2) <= (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
+                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUnSegmentPacketInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                            dispatch_semaphore_signal(weakSelf.semaphore);
+                        });
+                    } else {
+                        dispatch_semaphore_signal(weakSelf.semaphore);
+                    }
                 }
-                dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 1000 seconds for BLOBChunkTransferWithDestination in every chunk.
             dispatch_semaphore_wait(self.semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1000.0));
@@ -982,11 +989,17 @@
                     if (error) {
                         hasFail = YES;
                         weakSelf.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBChunkTransfer, error=%@.",error.domain] code:-weakSelf.meshOTAProgress userInfo:nil];
+                        dispatch_semaphore_signal(weakSelf.semaphore);
                     } else {
                         weakSelf.successActionInCurrentProgress ++;
-
+                        if (destination == kMeshOTAGroupAddress && self.chunkIndex%kSegmentIntervalCount!=0 && (chunkData.length + 2) <= (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
+                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUnSegmentPacketInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                                dispatch_semaphore_signal(weakSelf.semaphore);
+                            });
+                        } else {
+                            dispatch_semaphore_signal(weakSelf.semaphore);
+                        }
                     }
-                    dispatch_semaphore_signal(weakSelf.semaphore);
                 }];
                 //Most provide 1000 seconds for BLOBChunkTransferWithDestination in every chunk.
                 dispatch_semaphore_wait(self.semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1000.0));
