@@ -73,7 +73,7 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
         view.findViewById(R.id.btn_location_ignore).setOnClickListener(this);
 
         // draft feature
-//        view.findViewById(R.id.view_mesh_ota).setVisibility(View.GONE);
+        view.findViewById(R.id.view_mesh_ota).setVisibility(View.GONE);
     }
 
     @Override

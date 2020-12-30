@@ -34,7 +34,6 @@ import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.ui.DebugActivity;
 import com.telink.ble.mesh.ui.MeshOTAActivity;
-import com.telink.ble.mesh.ui.ModelListActivity;
 import com.telink.ble.mesh.ui.SceneListActivity;
 import com.telink.ble.mesh.ui.SettingsActivity;
 import com.telink.ble.mesh.ui.ShareActivity;
@@ -91,7 +90,7 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.view_model_setting:
-                startActivity(new Intent(getActivity(), ModelListActivity.class));
+//                startActivity(new Intent(getActivity(), ModelListActivity.class));
                 break;
             case R.id.view_scene_setting:
                 startActivity(new Intent(getActivity(), SceneListActivity.class));

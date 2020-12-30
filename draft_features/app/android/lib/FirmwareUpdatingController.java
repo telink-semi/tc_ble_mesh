@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     FirmwareUpdatingController.java 
+ * @file FirmwareUpdatingController.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.access;
 
@@ -225,11 +225,15 @@ public class FirmwareUpdatingController {
 
     private long blobId;
 
-    private byte[] metadata = {0, 0, 0, 0};
+
+    // firmware[2-5] + [0, 0, 0, 0]
+    private byte[] metadata = new byte[8];
 
     private int metadataIndex = 0;
 
     private MeshFirmwareParser firmwareParser = new MeshFirmwareParser();
+
+    private byte[] firmwareData;
 
     /**
      * received missing chunk number
@@ -246,6 +250,18 @@ public class FirmwareUpdatingController {
     private Handler delayHandler;
 
     private AccessBridge accessBridge;
+
+    /**
+     * update only direct connected device
+     */
+    private boolean isGattMode = false;
+
+    private int gattAddress = -1;
+
+    // check if last chunk in block needs segmentation
+    private int dleLength = 11;
+    // for missing test
+    boolean test = true;
 
     public FirmwareUpdatingController(HandlerThread handlerThread) {
         delayHandler = new Handler(handlerThread.getLooper());
@@ -269,14 +285,33 @@ public class FirmwareUpdatingController {
             return;
         }
         test = true;
-        firmwareParser.reset(configuration.getFirmwareData());
+        this.isGattMode = configuration.isSingleAndDirect();
+        this.dleLength = configuration.getDleLength();
+        this.firmwareData = configuration.getFirmwareData();
+        if (firmwareData.length < 6) {
+            return;
+        }
+        this.metadata = configuration.getMetadata();
+
+        // reset when device chunk size received
+//        this.firmwareParser.reset(configuration.getFirmwareData());
         log(" config -- " + configuration.toString());
+        log("isGattMode? " + isGattMode);
         this.appKeyIndex = configuration.getAppKeyIndex();
         this.groupAddress = configuration.getGroupAddress();
         this.nodes = configuration.getUpdatingDevices();
         this.blobId = configuration.getBlobId();
         this.nodeIndex = 0;
         if (nodes != null && nodes.size() != 0) {
+
+            /*if (this.isGattMode){
+                this.step = STEP_GET_FIRMWARE_INFO;
+            }else {
+                this.step = STEP_SET_SUBSCRIPTION;
+            }*/
+            if (this.isGattMode) {
+                this.gattAddress = this.nodes.get(0).getMeshAddress();
+            }
             this.step = STEP_SET_SUBSCRIPTION;
             executeUpdatingAction();
         } else {
@@ -310,17 +345,15 @@ public class FirmwareUpdatingController {
         }
     };
 
-    boolean test = true;
-
     private void sendChunks() {
         byte[] chunkData = firmwareParser.nextChunk();
         final int chunkIndex = firmwareParser.currentChunkIndex();
-        if (test) {
+        /*if (test) {
             if (firmwareParser.currentChunkIndex() == 2) {
                 byte[] missingChunkData = firmwareParser.nextChunk();
                 test = false;
             }
-        }
+        }*/
         if (chunkData != null) {
             validateUpdatingProgress();
 //            int chunkNumber = firmwareParser.currentChunkIndex();
@@ -330,8 +363,15 @@ public class FirmwareUpdatingController {
             log("next chunk transfer msg: " + blobChunkTransferMessage.toString());
 
             onMeshMessagePrepared(blobChunkTransferMessage);
-
-            delayHandler.postDelayed(chunkSendingTask, getChunkSendingInterval());
+            if (!isGattMode) {
+                delayHandler.postDelayed(chunkSendingTask, getChunkSendingInterval());
+            } else {
+                int len = chunkData.length + 3;
+                boolean segment = len > dleLength;
+                if (!segment) {
+                    sendChunks();
+                }
+            }
         } else {
             log("chunks sent complete at: block -- " + firmwareParser.currentBlockIndex()
                     + " chunk -- " + firmwareParser.currentChunkIndex());
@@ -369,11 +409,34 @@ public class FirmwareUpdatingController {
         }
     }
 
-    private long getChunkSendingInterval() {
+    /*private long getChunkSendingInterval() {
         // relay 320 ms
 
         long interval = firmwareParser.getChunkSize() / 12 * NetworkingController.NETWORKING_INTERVAL + NetworkingController.NETWORKING_INTERVAL;
         final long min = 5 * 1000;
+        interval = Math.max(min, interval);
+        log("chunk sending interval: " + interval);
+        return interval;
+    }*/
+
+    private long getChunkSendingInterval() {
+        // relay 320 ms
+
+        if (isGattMode) {
+            return 100;
+        }
+
+        // 12
+        // 208
+        // chunk size + opcode(1 byte)
+        final int chunkMsgLen = firmwareParser.getChunkSize() + 1;
+        final int unsegLen = NetworkingController.unsegmentedAccessLength;
+        final int segLen = unsegLen + 1;
+        int segmentCnt = chunkMsgLen == unsegLen ? 1 : (chunkMsgLen % segLen == 0 ? chunkMsgLen / segLen : (chunkMsgLen / segLen + 1));
+        long interval = segmentCnt * NetworkingController.NETWORKING_INTERVAL;
+//        final long min = 5 * 1000;
+        // use 5000 when DLE disabled, use 300 when DLE enabled
+        final long min = unsegLen == NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT ? 5 * 1000 : 300;
         interval = Math.max(min, interval);
         log("chunk sending interval: " + interval);
         return interval;
@@ -395,7 +458,8 @@ public class FirmwareUpdatingController {
     };
 
     private BlobChunkTransferMessage generateChunkTransferMessage(int chunkNumber, byte[] chunkData) {
-        return BlobChunkTransferMessage.getSimple(groupAddress, appKeyIndex, chunkNumber, chunkData);
+        int address = isGattMode ? gattAddress : groupAddress;
+        return BlobChunkTransferMessage.getSimple(address, appKeyIndex, chunkNumber, chunkData);
     }
 
 
@@ -622,6 +686,16 @@ public class FirmwareUpdatingController {
         }
     }
 
+    public void onSegmentComplete(boolean success) {
+        if (isGattMode && step == STEP_BLOB_CHUNK_SENDING) {
+            if (success) {
+                sendChunks();
+            } else {
+                onUpdatingFail(STATE_FAIL, "chunk send fail -- segment message send fail");
+            }
+        }
+    }
+
     //  在 发包过程中 retry导致的收多次
     public void onMessageNotification(NotificationMessage message) {
         Opcode opcode = Opcode.valueOf(message.getOpcode());
@@ -681,8 +755,12 @@ public class FirmwareUpdatingController {
     }
 
     private void onFirmwareInfoStatus(FirmwareUpdateInfoStatusMessage firmwareInfoStatusMessage) {
-
         log("firmware info status: " + firmwareInfoStatusMessage.toString());
+        if (step != STEP_GET_FIRMWARE_INFO) {
+            log("not at STEP_GET_FIRMWARE_INFO");
+            return;
+        }
+
         int firstIndex = firmwareInfoStatusMessage.getFirstIndex();
         int companyId = firmwareInfoStatusMessage.getListCount();
         List<FirmwareUpdateInfoStatusMessage.FirmwareInformationEntry> firmwareInformationList
@@ -693,6 +771,10 @@ public class FirmwareUpdatingController {
 
     private void onSubscriptionStatus(ModelSubscriptionStatusMessage subscriptionStatusMessage) {
         log("subscription status: " + subscriptionStatusMessage.toString());
+        if (step != STEP_SET_SUBSCRIPTION) {
+            log("not at STEP_SET_SUBSCRIPTION");
+            return;
+        }
         if (subscriptionStatusMessage.getStatus() != ConfigStatus.SUCCESS.code) {
             onDeviceFail(nodes.get(nodeIndex), "grouping status err " + subscriptionStatusMessage.getStatus());
         }
@@ -705,7 +787,17 @@ public class FirmwareUpdatingController {
      * response of {@link BlobInfoStatusMessage}
      */
     private void onBlobInfoStatus(BlobInfoStatusMessage objectInfoStatusMessage) {
+
+
         log("object info status: " + objectInfoStatusMessage.toString());
+        if (step != STEP_GET_BLOB_INFO) {
+            log("not at STEP_GET_BLOB_INFO");
+            return;
+        }
+        int blockSize = (int) Math.pow(2, objectInfoStatusMessage.getMaxBlockSizeLog());
+        int chunkSize = objectInfoStatusMessage.getMaxChunkSize();
+        log("chunk size : " + chunkSize + " block size: " + blockSize);
+        this.firmwareParser.reset(firmwareData, blockSize, chunkSize);
         nodeIndex++;
         executeUpdatingAction();
     }
@@ -747,7 +839,7 @@ public class FirmwareUpdatingController {
                 final UpdatePhase phase = UpdatePhase.valueOf(firmwareUpdateStatusMessage.getPhase() & 0xFF);
                 if (step == STEP_UPDATE_APPLY) {
                     if (phase == UpdatePhase.VERIFICATION_SUCCESS
-                    || phase == UpdatePhase.APPLYING_UPDATE) {
+                            || phase == UpdatePhase.APPLYING_UPDATE) {
                         onDeviceSuccess(nodes.get(nodeIndex));
                     } else {
                         onDeviceFail(nodes.get(nodeIndex), "phase error when update apply");
