@@ -347,6 +347,10 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         }
     }
 
+    /*private boolean setTimePublish(NodeInfo nodeInfo){
+        return false;
+    }*/
+
     private boolean setTimePublish(NodeInfo nodeInfo) {
         int modelId = MeshSigModel.SIG_MD_TIME_S.modelId;
         int pubEleAdr = nodeInfo.getTargetEleAdr(modelId);

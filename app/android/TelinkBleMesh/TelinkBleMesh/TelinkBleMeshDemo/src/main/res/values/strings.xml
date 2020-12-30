@@ -57,7 +57,7 @@
 
     <string name="enable_remote_provision">Remote Provision</string>
 
-    <string name="enable_dle">Enable DLE</string>
+    <string name="enable_dle">Enable DLE Mode Extend Bearer</string>
 
     <string name="enable_fast_provision">Fast Provision</string>
 

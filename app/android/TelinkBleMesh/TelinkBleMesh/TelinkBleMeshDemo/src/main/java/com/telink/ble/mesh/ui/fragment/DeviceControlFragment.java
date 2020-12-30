@@ -22,12 +22,10 @@
 package com.telink.ble.mesh.ui.fragment;
 
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -193,7 +191,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         if (lumEleInfo == null) {
             ll_lum.setVisibility(View.GONE);
         } else {
-            tv_lum.setText(getString(R.string.lum_progress, Math.max(1, deviceInfo.lum), Integer.toHexString(lumEleInfo.keyAt(0))));
+            tv_lum.setText(getString(R.string.lum_progress, deviceInfo.lum, Integer.toHexString(lumEleInfo.keyAt(0))));
             sb_lum.setProgress(deviceInfo.lum);
             if (!lumEleInfo.get(lumEleInfo.keyAt(0))) {
                 ll_lum_level.setVisibility(View.GONE);
@@ -262,8 +260,8 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
                 long currentTime = System.currentTimeMillis();
                 if (seekBar == sb_lum) {
                     deviceInfo.lum = progress;
-                    progress = Math.max(1, progress);
                     tv_lum.setText(getString(R.string.lum_progress, progress, Integer.toHexString(lumEleInfo.keyAt(0))));
+                    progress = Math.max(1, progress);
                     if ((currentTime - preTime) >= DELAY_TIME || immediate) {
                         preTime = currentTime;
                         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();

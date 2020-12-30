@@ -73,20 +73,20 @@ public class NetworkingController {
 
     private final String LOG_TAG = "Networking";
     // include mic(4)
-    private static final int UNSEGMENTED_TRANSPORT_PAYLOAD_MAX_LENGTH = 15;
+    public static final int UNSEGMENTED_TRANSPORT_PAYLOAD_MAX_LENGTH = 15;
 
-    private static final int UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT = 11;
+    public static final int UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT = 11;
 
 //    private static final int SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = 12;
 
-    private static final int UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE = 225;
+    public static final int UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE = 225;
 
 //    private static final int SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH + 1;
 
     private boolean dleEnabled = false;
 
     // segmentedAccessLength = unsegmentedAccessLength + 1
-    private int unsegmentedAccessLength = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE;
+    public static int unsegmentedAccessLength = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE;
 
 
     private static final int DEFAULT_SEQUENCE_NUMBER_UPDATE_STEP = 0x100;
@@ -317,12 +317,12 @@ public class NetworkingController {
 
     public void enableDLE(boolean enable) {
         this.dleEnabled = enable;
-        this.unsegmentedAccessLength = enable ? UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE : UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
-        log("enableDLE: " + enable + " -- value : " + this.unsegmentedAccessLength);
+        unsegmentedAccessLength = enable ? UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE : UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
+        log("enableDLE: " + enable + " -- value : " + unsegmentedAccessLength);
     }
 
     public int getSegmentAccessLength() {
-        return this.unsegmentedAccessLength;
+        return unsegmentedAccessLength;
     }
 
     public void removeDeviceKey(int unicastAddress) {
@@ -544,7 +544,7 @@ public class NetworkingController {
                     }
                     reliableBusy = true;
                     mSendingReliableMessage = meshMessage;
-//                    restartReliableMessageTimeoutTask(); // 11
+//                    restartReliableMessageTimeoutTask(); //
                 }
                 SparseArray<SegmentedAccessMessagePDU> segmentedAccessMessages = createSegmentedAccessMessage(upperPDU.getEncryptedPayload(), akf, aid, aszmic, sequenceNumber);
                 if (segmentedAccessMessages.size() == 0) return false;
@@ -1532,7 +1532,7 @@ public class NetworkingController {
 
     private SparseArray<SegmentedAccessMessagePDU> createSegmentedAccessMessage(byte[] encryptedUpperTransportPDU, byte akf, byte aid, int aszmic, int sequenceNumber) {
 
-        final int segmentedAccessLen = this.unsegmentedAccessLength + 1;
+        final int segmentedAccessLen = unsegmentedAccessLength + 1;
         byte[] seqNoBuffer = MeshUtils.integer2Bytes(sequenceNumber, 3, ByteOrder.BIG_ENDIAN);
         // 13 lowest bits
         int seqZero = ((seqNoBuffer[1] & 0x1F) << 8) | (seqNoBuffer[2] & 0xFF);

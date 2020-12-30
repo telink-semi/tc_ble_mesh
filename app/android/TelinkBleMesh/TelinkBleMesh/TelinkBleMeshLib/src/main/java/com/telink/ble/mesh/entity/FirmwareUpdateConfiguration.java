@@ -30,6 +30,7 @@ import java.util.List;
 public class FirmwareUpdateConfiguration {
     private List<MeshUpdatingDevice> updatingDevices;
     private byte[] firmwareData;
+    private byte[] metadata;
     private int appKeyIndex;
     private int groupAddress;
 
@@ -45,10 +46,12 @@ public class FirmwareUpdateConfiguration {
 
     public FirmwareUpdateConfiguration(List<MeshUpdatingDevice> updatingDevices,
                                        byte[] firmwareData,
+                                       byte[] metadata,
                                        int appKeyIndex,
                                        int groupAddress) {
         this.updatingDevices = updatingDevices;
         this.firmwareData = firmwareData;
+        this.metadata = metadata;
         this.appKeyIndex = appKeyIndex;
         this.groupAddress = groupAddress;
     }
@@ -89,11 +92,16 @@ public class FirmwareUpdateConfiguration {
         this.dleLength = dleLength;
     }
 
+    public byte[] getMetadata() {
+        return metadata;
+    }
+
     @Override
     public String toString() {
         return "FirmwareUpdateConfiguration{" +
                 "updatingDevices=" + updatingDevices.size() +
                 ", firmwareData=" + firmwareData.length +
+                ", metadata=" + metadata.length +
                 ", appKeyIndex=" + appKeyIndex +
                 ", groupAddress=" + groupAddress +
 

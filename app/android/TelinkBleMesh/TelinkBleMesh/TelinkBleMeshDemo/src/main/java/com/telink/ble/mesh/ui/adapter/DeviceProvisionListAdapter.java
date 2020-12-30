@@ -110,6 +110,10 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
         holder.iv_close.setVisibility(!processing && device.state == NetworkingState.IDLE ? View.VISIBLE : View.INVISIBLE);
         if (device.state == NetworkingState.IDLE) {
             holder.pb_provision.setVisibility(View.GONE);
+        } else if (device.state == NetworkingState.WAITING) {
+            holder.pb_provision.setVisibility(View.GONE);
+//            holder.pb_provision.setVisibility(View.VISIBLE);
+//            holder.pb_provision.setIndeterminate(false);
         } else {
             holder.pb_provision.setVisibility(View.VISIBLE);
             if (device.isProcessing()) {

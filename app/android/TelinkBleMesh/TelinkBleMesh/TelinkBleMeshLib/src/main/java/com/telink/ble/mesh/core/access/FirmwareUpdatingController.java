@@ -227,7 +227,7 @@ public class FirmwareUpdatingController {
 
 
     // firmware[2-5] + [0, 0, 0, 0]
-    private byte[] metadata = {0, 0, 0, 0, 0, 0, 0, 0};
+    private byte[] metadata = new byte[8];
 
     private int metadataIndex = 0;
 
@@ -291,7 +291,9 @@ public class FirmwareUpdatingController {
         if (firmwareData.length < 6) {
             return;
         }
-        System.arraycopy(firmwareData, 2, this.metadata, 0, 4);
+        this.metadata = configuration.getMetadata();
+
+        // reset when device chunk size received
 //        this.firmwareParser.reset(configuration.getFirmwareData());
         log(" config -- " + configuration.toString());
         log("isGattMode? " + isGattMode);
@@ -423,8 +425,18 @@ public class FirmwareUpdatingController {
         if (isGattMode) {
             return 100;
         }
-        long interval = firmwareParser.getChunkSize() / 12 * NetworkingController.NETWORKING_INTERVAL + NetworkingController.NETWORKING_INTERVAL;
-        final long min = 5 * 1000;
+
+        // 12
+        // 208
+        // chunk size + opcode(1 byte)
+        final int chunkMsgLen = firmwareParser.getChunkSize() + 1;
+        final int unsegLen = NetworkingController.unsegmentedAccessLength;
+        final int segLen = unsegLen + 1;
+        int segmentCnt = chunkMsgLen == unsegLen ? 1 : (chunkMsgLen % segLen == 0 ? chunkMsgLen / segLen : (chunkMsgLen / segLen + 1));
+        long interval = segmentCnt * NetworkingController.NETWORKING_INTERVAL;
+//        final long min = 5 * 1000;
+        // use 5000 when DLE disabled, use 300 when DLE enabled
+        final long min = unsegLen == NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT ? 5 * 1000 : 300;
         interval = Math.max(min, interval);
         log("chunk sending interval: " + interval);
         return interval;

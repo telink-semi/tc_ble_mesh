@@ -489,6 +489,11 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         mesh.saveOrUpdate(DeviceProvisionActivity.this);
     }
 
+
+    /*private boolean setTimePublish(NetworkingDevice networkingDevice){
+        return false;
+    }*/
+
     /**
      * set time publish after
      *

@@ -77,30 +77,98 @@ import androidx.recyclerview.widget.RecyclerView;
  * batch firmware update by mesh
  * Created by kee on 2018/9/18.
  */
-//
 public class MeshOTAActivity extends BaseActivity implements View.OnClickListener, BaseSelectableListAdapter.SelectStatusChangedListener, EventListener<String> {
+
+    /**
+     * group mesh address used in mesh-OTA procedure
+     */
+    private static final int MESH_OTA_GROUP_ADDRESS = 0xC00F;
+
+    /**
+     * request code for file select
+     */
+    private static final int REQUEST_CODE_GET_FILE = 1;
+
+    /**
+     * message code : info
+     */
+    private static final int MSG_INFO = 0;
+
+    /**
+     * message code : progress update
+     */
+    private static final int MSG_PROGRESS = 1;
+
+    /**
+     * view adapter
+     */
     private MeshOTADeviceSelectAdapter mDeviceAdapter;
+
+    /**
+     * local mesh info
+     */
     private MeshInfo mesh;
+
+    /**
+     * local devices
+     */
     private List<NodeInfo> devices;
+
+    /**
+     * device address & version key-value map
+     */
     private Map<Integer, String> versions;
+
+    /**
+     * update complete devices
+     */
     private Set<MeshUpdatingDevice> completeDevices;
+
+    /**
+     * UIView
+     */
     private CheckBox cb_device;
     private Button btn_start, btn_get_version;
     private RecyclerView rv_device;
     private ProgressBar pb_mesh_ota;
 
-    private Handler delayHandler = new Handler();
-    private static final int REQUEST_CODE_GET_FILE = 1;
     private TextView tv_file_path, tv_version_info,
             tv_progress, tv_info;
-    private byte[] mFirmware;
+
+    /**
+     * firmware info read from selected file
+     */
+    private byte[] firmwareData;
+
+    /**
+     * metadata, used in {@link com.telink.ble.mesh.core.message.firmwareupdate.FirmwareMetadataCheckMessage}
+     * default valued by 2 bytes length PID , 2 bytes length VID and 4 bytes length custom data.
+     * length NOT more than 8 is recommended
+     */
+    private byte[] metadata;
+
+    /**
+     * pid in firmware data
+     */
     private int binPid;
 
+    /**
+     * mesh-OTA firmware updating progress
+     * count begins when first chunk transfer sent {@link com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobChunkTransferMessage}
+     */
     private int progress = 0;
+
+    /**
+     * is mesh-OTA complete
+     */
     private boolean isComplete = false;
 
-    private static final int MSG_INFO = 0;
-    private static final int MSG_PROGRESS = 1;
+
+    /**
+     * delay handler
+     */
+    private Handler delayHandler = new Handler();
+
 
     @SuppressLint("HandlerLeak")
     private Handler infoHandler = new Handler() {
@@ -108,8 +176,10 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if (msg.what == MSG_INFO) {
+                // update info
                 tv_info.setText(msg.obj.toString());
             } else if (msg.what == MSG_PROGRESS) {
+                // update progress
                 tv_progress.setText(String.valueOf(progress));
                 pb_mesh_ota.setProgress(progress);
             }
@@ -155,10 +225,15 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
         tv_info = findViewById(R.id.tv_info);
         pb_mesh_ota = findViewById(R.id.pb_mesh_ota);
 
+        addEventListeners();
+    }
 
-        TelinkMeshApplication.getInstance().addEventListener(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, this);
+    private void addEventListeners() {
+
+        // firmware info
         TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdateInfoStatusMessage.class.getName(), this);
 
+        TelinkMeshApplication.getInstance().addEventListener(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, this);
         TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_SUCCESS, this);
         TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_FAIL, this);
         TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_PROGRESS, this);
@@ -190,7 +265,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_start:
-                if (mFirmware == null) {
+                if (firmwareData == null) {
                     toastMsg("Pls select file");
                     return;
                 }
@@ -225,8 +300,12 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
                     updatingDevices.add(directDevice);
                 }
 
-                FirmwareUpdateConfiguration configuration = new FirmwareUpdateConfiguration(updatingDevices, mFirmware,
-                        meshInfo.getDefaultAppKeyIndex(), 0xC00F);
+                this.metadata = new byte[8];
+                System.arraycopy(this.firmwareData, 2, this.metadata, 0, 4);
+
+                FirmwareUpdateConfiguration configuration = new FirmwareUpdateConfiguration(updatingDevices,
+                        this.firmwareData, this.metadata,
+                        meshInfo.getDefaultAppKeyIndex(), MESH_OTA_GROUP_ADDRESS);
                 MeshOtaParameters meshOtaParameters = new MeshOtaParameters(configuration);
                 MeshService.getInstance().startMeshOta(meshOtaParameters);
 
@@ -393,15 +472,15 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
         try {
             InputStream stream = new FileInputStream(fileName);
             int length = stream.available();
-            mFirmware = new byte[length];
-            stream.read(mFirmware);
+            firmwareData = new byte[length];
+            stream.read(firmwareData);
             stream.close();
 
             byte[] pid = new byte[2];
             byte[] vid = new byte[2];
-            System.arraycopy(mFirmware, 2, pid, 0, 2);
+            System.arraycopy(firmwareData, 2, pid, 0, 2);
             this.binPid = MeshUtils.bytes2Integer(pid, ByteOrder.LITTLE_ENDIAN);
-            System.arraycopy(mFirmware, 4, vid, 0, 2);
+            System.arraycopy(firmwareData, 4, vid, 0, 2);
 
             String pidInfo = Arrays.bytesToHexString(pid, ":");
             String vidInfo = Arrays.bytesToHexString(vid, ":");
@@ -411,7 +490,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
             mDeviceAdapter.selectPid(this.binPid);
         } catch (IOException e) {
             e.printStackTrace();
-            mFirmware = null;
+            firmwareData = null;
             tv_version_info.setText(getString(R.string.version, "null"));
             tv_file_path.setText("file error");
         }
