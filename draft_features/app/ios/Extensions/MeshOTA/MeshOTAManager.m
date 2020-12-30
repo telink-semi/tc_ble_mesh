@@ -883,7 +883,7 @@
 
     //v3.3.0开始新增优化逻辑：当只有一个节点且为直连节点时，不再通过组地址进行OTA数据发送，只对直连节点进行OTA数据发送即可。
     UInt16 destination = kMeshOTAGroupAddress;
-//    if (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength != kUnsegmentedAccessMessageLowerTransportPDUMaxLength) {
+//    if (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength != kUnsegmentedMessageLowerTransportPDUMaxLength) {
         //打开了DLE功能
         if (self.allAddressArray.count - self.failAddressArray.count == 1) {
             NSArray *allArray = [NSArray arrayWithArray:self.allAddressArray];
@@ -935,7 +935,7 @@
                     dispatch_semaphore_signal(weakSelf.semaphore);
                 } else {
                     weakSelf.successActionInCurrentProgress ++;
-                    if (destination == kMeshOTAGroupAddress && self.chunkIndex%kSegmentIntervalCount!=0 && (chunkData.length + 2) <= (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
+                    if (destination == kMeshOTAGroupAddress && self.chunkIndex%kSegmentIntervalCount!=0 && (chunkData.length + 2) <= (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUnSegmentPacketInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                             dispatch_semaphore_signal(weakSelf.semaphore);
                         });
@@ -992,7 +992,7 @@
                         dispatch_semaphore_signal(weakSelf.semaphore);
                     } else {
                         weakSelf.successActionInCurrentProgress ++;
-                        if (destination == kMeshOTAGroupAddress && self.chunkIndex%kSegmentIntervalCount!=0 && (chunkData.length + 2) <= (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
+                        if (destination == kMeshOTAGroupAddress && self.chunkIndex%kSegmentIntervalCount!=0 && (chunkData.length + 2) <= (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
                             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUnSegmentPacketInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                                 dispatch_semaphore_signal(weakSelf.semaphore);
                             });

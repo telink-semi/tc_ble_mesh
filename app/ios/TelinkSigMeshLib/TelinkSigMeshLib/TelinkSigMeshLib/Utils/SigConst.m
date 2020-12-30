@@ -286,5 +286,5 @@ UInt32 const kSnoIncrement = 128;
 /*初始化json数据时的ivIndex的值*/
 UInt32 const kDefaultIvIndex = 0x0;//0x0
 
-/*默认一个unsegmented Access PDU的最大长度，大于该长度则需要进行segment分包，默认值为kUnsegmentedAccessMessageLowerTransportPDUMaxLength（15）*/
-UInt16 const kUnsegmentedAccessMessageLowerTransportPDUMaxLength = 15;//15
+/*默认一个unsegmented Access PDU的最大长度，大于该长度则需要进行segment分包，默认值为kUnsegmentedMessageLowerTransportPDUMaxLength（15）*/
+UInt16 const kUnsegmentedMessageLowerTransportPDUMaxLength = 15;//15

@@ -76,7 +76,7 @@
         _defaultAppKeyA = appkey;
         _defaultIvIndexA = [[SigIvIndex alloc] initWithIndex:0x12345678 updateActive:NO];
         _needPublishTimeModel = YES;
-        _defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength = kUnsegmentedAccessMessageLowerTransportPDUMaxLength;
+        _defaultUnsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
         
         //OOB
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];

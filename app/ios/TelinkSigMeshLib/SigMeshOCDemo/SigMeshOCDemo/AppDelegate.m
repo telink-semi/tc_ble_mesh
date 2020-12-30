@@ -95,7 +95,7 @@
     } else {
         if (DLEType.boolValue) {
             //(可选)打开DLE功能后，SDK的Access消息是长度大于229字节才进行segment分包。
-            SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength = kDLEUnsegmentLength;
+            SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = kDLEUnsegmentLength;
         }
     }
 

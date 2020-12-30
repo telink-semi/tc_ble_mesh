@@ -125,7 +125,7 @@
 }
 
 - (void)clickDLEEnableSwitch:(UISwitch *)sender {
-    SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength = sender.on ? kDLEUnsegmentLength : kUnsegmentedAccessMessageLowerTransportPDUMaxLength;
+    SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = sender.on ? kDLEUnsegmentLength : kUnsegmentedMessageLowerTransportPDUMaxLength;
     NSNumber *type = [NSNumber numberWithBool:sender.on];
     [[NSUserDefaults standardUserDefaults] setValue:type forKey:kDLEType];
     [[NSUserDefaults standardUserDefaults] synchronize];

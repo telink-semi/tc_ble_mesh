@@ -198,7 +198,7 @@
     [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
     //==========telink need this==========//
     /// Number of segments to be sent.
-    NSInteger count = (pdu.transportPdu.length + (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3) - 1) / (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3);
+    NSInteger count = (pdu.transportPdu.length + (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3) - 1) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3);
     // Create all segments to be sent.
     NSMutableArray *outgoingSegments = [NSMutableArray array];
     for (int i=0; i<count; i++) {
@@ -229,7 +229,7 @@
     [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
     //==========telink need this==========//
     /// Number of segments to be sent.
-    NSInteger count = (pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3);
+    NSInteger count = (pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3);
     // Create all segments to be sent.
     NSMutableArray *outgoingSegments = [NSMutableArray array];
     for (int i=0; i<count; i++) {

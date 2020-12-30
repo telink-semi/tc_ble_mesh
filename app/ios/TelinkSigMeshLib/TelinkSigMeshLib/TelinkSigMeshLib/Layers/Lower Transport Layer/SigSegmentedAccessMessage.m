@@ -97,10 +97,10 @@
         _sequence = pdu.sequence;
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
-        int lowerBound = (int)(offset * (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3));
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3));
+        int lowerBound = (int)(offset * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3)) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
         self.upperTransportPdu = segment;
         self.userInitiated = pdu.userInitiated;
     }
@@ -128,10 +128,10 @@
         _sequence = pdu.sequence;
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
-        int lowerBound = (int)(offset * (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3));
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3));
+        int lowerBound = (int)(offset * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedAccessMessageLowerTransportPDUMaxLength - 3)) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
         self.upperTransportPdu = segment;
     }
     return self;
