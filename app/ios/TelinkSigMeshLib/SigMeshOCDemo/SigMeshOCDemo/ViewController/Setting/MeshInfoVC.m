@@ -65,12 +65,13 @@
 
 - (void)refreshSourceAndUI {
     NSMutableArray *array = [NSMutableArray array];
-    [array addObject:@"remote provision"];
-    [array addObject:@"fast provision"];
-    [array addObject:@"fast bind(Default Bound)"];
-    [array addObject:@"online status from uuid"];
+    [array addObject:@"Enable remote provision"];
+    [array addObject:@"Enable fast provision"];
+    [array addObject:@"Enable fast bind(Default Bound)"];
+    [array addObject:@"Enable online status from uuid"];
     [array addObject:@"try add staticOOB device by noOOB provision"];
     [array addObject:@"OOB Database"];
+    [array addObject:@"Enable DLE Mode Extend Bearer"];
     [array addObject:@"AppLey List"];
     [array addObject:@"NetLey List"];
     //==========test==========//
@@ -120,6 +121,13 @@
     SigDataSource.share.addStaticOOBDevcieByNoOOBEnable = sender.on;
     NSNumber *type = [NSNumber numberWithBool:sender.on];
     [[NSUserDefaults standardUserDefaults] setValue:type forKey:kAddStaticOOBDevcieByNoOOBEnable];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+}
+
+- (void)clickDLEEnableSwitch:(UISwitch *)sender {
+    SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = sender.on ? kDLEUnsegmentLength : kUnsegmentedMessageLowerTransportPDUMaxLength;
+    NSNumber *type = [NSNumber numberWithBool:sender.on];
+    [[NSUserDefaults standardUserDefaults] setValue:type forKey:kDLEType];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -196,7 +204,7 @@
 
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (indexPath.row <= 4) {
+    if (indexPath.row <= 4 || indexPath.row == 6) {
         InfoSwitchCell *cell = (InfoSwitchCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoSwitchCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryNone;
         cell.showLabel.text = _source[indexPath.row];
@@ -220,14 +228,18 @@
             NSNumber *addStaticOOBDevcieByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDevcieByNoOOBEnable];
             cell.showSwitch.on = addStaticOOBDevcieByNoOOBEnable.boolValue;
             [cell.showSwitch addTarget:self action:@selector(clickAddStaticOOBDevcieByNoOOBEnableSwitch:) forControlEvents:UIControlEventValueChanged];
+        } else if (indexPath.row == 6) {
+            NSNumber *DLEEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kDLEType];
+            cell.showSwitch.on = DLEEnable.boolValue;
+            [cell.showSwitch addTarget:self action:@selector(clickDLEEnableSwitch:) forControlEvents:UIControlEventValueChanged];
         }
         return cell;
-    } else if (indexPath.row >= 5 && indexPath.row <= 7) {
+    } else if (indexPath.row == 5 || indexPath.row == 7 || indexPath.row == 8) {
         InfoNextCell *cell = (InfoNextCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoNextCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
         cell.showLabel.text = _source[indexPath.row];
         return cell;
-    } else if (indexPath.row == 8) {
+    } else if (indexPath.row == 9) {
         InfoButtonCell *cell = (InfoButtonCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoButtonCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryNone;
         cell.showLabel.text = _source[indexPath.row];
@@ -246,9 +258,9 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     if (indexPath.row == 5) {
         [self clickOOBButton];
-    } else if (indexPath.row == 6) {
-        [self clickAppKeyListButton];
     } else if (indexPath.row == 7) {
+        [self clickAppKeyListButton];
+    } else if (indexPath.row == 8) {
         [self clickNetKeyListButton];
    }
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];

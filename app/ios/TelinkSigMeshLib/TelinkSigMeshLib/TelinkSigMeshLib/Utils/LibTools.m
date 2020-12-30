@@ -307,24 +307,36 @@
 
 ///16进制NSString转Uint8
 + (UInt8)uint8From16String:(NSString *)string{
+    if (string == nil || string.length == 0) {
+        return 0;
+    }
 //    return [self uint8FromBytes:[self turnOverData:[self nsstringToHex:[self formatIntString:string]]]];
     return [self uint8FromBytes:[self turnOverData:[self nsstringToHex:string]]];
 }
 
 ///16进制NSString转Uint16
 + (UInt16)uint16From16String:(NSString *)string{
+    if (string == nil || string.length == 0) {
+        return 0;
+    }
 //    return [self uint16FromBytes:[self turnOverData:[self nsstringToHex:[self formatIntString:string]]]];
     return [self uint16FromBytes:[self turnOverData:[self nsstringToHex:string]]];
 }
 
 ///16进制NSString转Uint32
 + (UInt32)uint32From16String:(NSString *)string{
+    if (string == nil || string.length == 0) {
+        return 0;
+    }
 //    return [self uint32FromBytes:[self turnOverData:[self nsstringToHex:[self formatIntString:string]]]];
     return [self uint32FromBytes:[self turnOverData:[self nsstringToHex:string]]];
 }
 
 ///16进制NSString转Uint64
 + (UInt64)uint64From16String:(NSString *)string{
+    if (string == nil || string.length == 0) {
+        return 0;
+    }
 //    return [self uint32FromBytes:[self turnOverData:[self nsstringToHex:[self formatIntString:string]]]];
     return [self uint64FromBytes:[self turnOverData:[self nsstringToHex:string]]];
 }
@@ -610,6 +622,7 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
     if (text && ![text isEqualToString:LocalStr_None]) {
         //取项目的bundleIdentifier作为KEY  改动了此处
         NSString *key = [[NSBundle mainBundle] bundleIdentifier];
+//        NSString *key = @"com.Ledvance.smartapp";
         NSData *data = [text dataUsingEncoding:NSUTF8StringEncoding];
         //IOS 自带DES加密 Begin  改动了此处
         data = [self DESEncrypt:data WithKey:key];
@@ -626,9 +639,27 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
     if (base64 && ![base64 isEqualToString:LocalStr_None]) {
         //取项目的bundleIdentifier作为KEY   改动了此处
         NSString *key = [[NSBundle mainBundle] bundleIdentifier];
+//        NSString *key = @"com.Ledvance.smartapp";
         NSData *data = [self dataWithBase64EncodedString:base64];
         //IOS 自带DES解密 Begin    改动了此处
         data = [self DESDecrypt:data WithKey:key];
+        //IOS 自带DES加密 End
+        return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    }
+    else {
+        return LocalStr_None;
+    }
+}
+
++ (NSString *)textFromBase64String:(NSString *)base64 password:(NSString *)password
+{
+    if (base64 && ![base64 isEqualToString:LocalStr_None]) {
+        //取项目的bundleIdentifier作为KEY   改动了此处
+//        NSString *key = [[NSBundle mainBundle] bundleIdentifier];
+//        NSString *key = @"com.Ledvance.smartapp";
+        NSData *data = [self dataWithBase64EncodedString:base64];
+        //IOS 自带DES解密 Begin    改动了此处
+        data = [self DESDecrypt:data WithKey:password];
         //IOS 自带DES加密 End
         return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     }

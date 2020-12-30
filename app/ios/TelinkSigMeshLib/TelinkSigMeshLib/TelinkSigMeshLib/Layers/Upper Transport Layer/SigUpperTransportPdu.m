@@ -45,7 +45,7 @@
         
         // The nonce type is 0x01 for messages signed with Application Key and
         // 0x02 for messages signed using Device Key (Configuration Messages).
-        UInt8 type = accessMessage.aid != 0 ? 0x01 : 0x02;
+        UInt8 type = accessMessage.AKF ? 0x01 : 0x02;
         // ASZMIC is set to 1 for messages sent with high security
         // (64-bit TransMIC). This is possible only for Segmented Access Messages.
         UInt8 aszmic = micSize == 4 ? 0 : 1;
@@ -76,6 +76,7 @@
         }
         _source = accessMessage.source;
         _destination = accessMessage.destination;
+        _AKF = accessMessage.AKF;
         _aid = accessMessage.aid;
         _transportMicSize = accessMessage.transportMicSize;
         _transportPdu = accessMessage.upperTransportPdu;
@@ -97,7 +98,7 @@
         
         // The nonce type is 0x01 for messages signed with Application Key and
         // 0x02 for messages signed using Device Key (Configuration Messages).
-        UInt8 type = accessMessage.aid != 0 ? 0x01 : 0x02;
+        UInt8 type = accessMessage.AKF ? 0x01 : 0x02;
         // ASZMIC is set to 1 for messages sent with high security
         // (64-bit TransMIC). This is possible only for Segmented Access Messages.
         UInt8 aszmic = micSize == 4 ? 0 : 1;
@@ -128,6 +129,7 @@
         }
         _source = accessMessage.source;
         _destination = accessMessage.destination;
+        _AKF = accessMessage.AKF;
         _aid = accessMessage.aid;
         _transportMicSize = accessMessage.transportMicSize;
         _transportPdu = accessMessage.upperTransportPdu;
@@ -154,11 +156,14 @@
         _sequence = sequence;
         _accessPdu = pdu.accessPdu;
         _aid = keySet.aid;
+        if ([keySet isMemberOfClass:[SigAccessKeySet class]]) {
+            _AKF = YES;
+        }
         SigMeshMessageSecurity security = pdu.message.security;
         
         // The nonce type is 0x01 for messages signed with Application Key and
         // 0x02 for messages signed using Device Key (Configuration Messages).
-        UInt8 type = _aid != 0 ? 0x01 : 0x02;
+        UInt8 type = _AKF ? 0x01 : 0x02;
         // ASZMIC is set to 1 for messages that shall be sent with high security
         // (64-bit TransMIC). This is possible only for Segmented Access Messages.
         UInt8 aszmic = security == SigMeshMessageSecurityHigh && (_accessPdu.length > 11 || pdu.isSegmented) ? 1 : 0;
@@ -181,9 +186,6 @@
         [nonce appendData:sourceData];
         [nonce appendData:destinationData];
         [nonce appendData:ivIndexData];
-        //==========test=========//
-        TeLogVerbose(@"==========ivIndex=0x%x",ivIndex.index);
-        //==========test=========//
 
         _transportMicSize = aszmic == 0 ? 4 : 8;
         _transportPdu = [OpenSSLHelper.share calculateCCM:_accessPdu withKey:keySet.accessKey nonce:nonce andMICSize:_transportMicSize withAdditionalData:pdu.destination.virtualLabel.getData];
@@ -201,11 +203,14 @@
         _sequence = sequence;
         _accessPdu = pdu.accessPdu;
         _aid = keySet.aid;
+        if ([keySet isMemberOfClass:[SigAccessKeySet class]]) {
+            _AKF = YES;
+        }
         SigMeshMessageSecurity security = pdu.message.security;
         
         // The nonce type is 0x01 for messages signed with Application Key and
         // 0x02 for messages signed using Device Key (Configuration Messages).
-        UInt8 type = _aid != 0 ? 0x01 : 0x02;
+        UInt8 type = _AKF ? 0x01 : 0x02;
         // ASZMIC is set to 1 for messages that shall be sent with high security
         // (64-bit TransMIC). This is possible only for Segmented Access Messages.
         UInt8 aszmic = security == SigMeshMessageSecurityHigh && (_accessPdu.length > 11 || pdu.isSegmented) ? 1 : 0;
@@ -229,9 +234,6 @@
         [nonce appendData:sourceData];
         [nonce appendData:destinationData];
         [nonce appendData:ivIndexData];
-        //==========test=========//
-        TeLogVerbose(@"==========ivIndex=0x%x",keySet.networkKey.ivIndex.index);
-        //==========test=========//
 
         _transportMicSize = aszmic == 0 ? 4 : 8;
         _transportPdu = [OpenSSLHelper.share calculateCCM:_accessPdu withKey:keySet.accessKey nonce:nonce andMICSize:_transportMicSize withAdditionalData:pdu.destination.virtualLabel.getData];
@@ -243,7 +245,7 @@
 //    TeLogDebug(@"accessMessage.upperTransportPdu=%@,length=%d",[LibTools convertDataToHexStr:accessMessage.transportPdu],accessMessage.transportPdu.length);
     // Was the message signed using Application Key?
     UInt8 aid = accessMessage.aid;
-    if (aid != 0) {
+    if (accessMessage.AKF) {
         // When the message was sent to a Virtual Address, the message must be decoded
         // with the Virtual Label as Additional Data.
         NSMutableArray <SigGroupModel *>*matchingGroups = [NSMutableArray array];

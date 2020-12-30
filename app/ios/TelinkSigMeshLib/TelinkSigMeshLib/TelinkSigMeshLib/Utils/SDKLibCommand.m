@@ -330,6 +330,48 @@
     return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
++ (SigMessageHandle *)configKeyRefreshPhaseGetWithDestination:(UInt16)destination netKeyIndex:(UInt16)netKeyIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigKeyRefreshPhaseStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigKeyRefreshPhaseGet *config = [[SigConfigKeyRefreshPhaseGet alloc] initWithNetKeyIndex:netKeyIndex];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseKeyRefreshPhaseStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)configKeyRefreshPhaseSetWithDestination:(UInt16)destination netKeyIndex:(UInt16)netKeyIndex transition:(SigControllableKeyRefreshTransitionValues)transition retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigKeyRefreshPhaseStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigKeyRefreshPhaseSet *config = [[SigConfigKeyRefreshPhaseSet alloc] initWithNetKeyIndex:netKeyIndex transition:transition];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseKeyRefreshPhaseStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
 + (SigMessageHandle *)configModelPublicationGetWithDestination:(UInt16)destination elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
     if (node == nil) {
@@ -665,6 +707,111 @@
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseVendorModelSubscriptionListCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)configLowPowerNodePollTimeoutGetWithDestination:(UInt16)destination LPNAddress:(UInt16)LPNAddress retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigLowPowerNodePollTimeoutStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigLowPowerNodePollTimeoutGet *config = [[SigConfigLowPowerNodePollTimeoutGet alloc] initWithLPNAddress:LPNAddress];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseLowPowerNodePollTimeoutStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)configHeartbeatPublicationGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigHeartbeatPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigHeartbeatPublicationGet *config = [[SigConfigHeartbeatPublicationGet alloc] init];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseHeartbeatPublicationStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)configHeartbeatPublicationSetWithDestination:(UInt16)destination countLog:(UInt8)countLog periodLog:(UInt8)periodLog ttl:(UInt8)ttl features:(SigFeatures)features netKeyIndex:(UInt16)netKeyIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigHeartbeatPublicationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigHeartbeatPublicationSet *config = [[SigConfigHeartbeatPublicationSet alloc] initWithDestination:destination countLog:countLog periodLog:periodLog ttl:ttl features:features netKeyIndex:netKeyIndex];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseHeartbeatPublicationStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)configHeartbeatSubscriptionGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigHeartbeatSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigHeartbeatSubscriptionGet *config = [[SigConfigHeartbeatSubscriptionGet alloc] init];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseHeartbeatSubscriptionStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.retryCount = retryCount;
+    command.responseMaxCount = responseMaxCount;
+    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)configHeartbeatSubscriptionSetWithDestination:(UInt16)destination source:(UInt16)source periodLog:(UInt8)periodLog retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigHeartbeatSubscriptionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+    if (node == nil) {
+        TeLogError(@"there has not a node that address is 0x%x",destination);
+        if (resultCallback) {
+            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"there has not a node that address is 0x%x",destination] code:0 userInfo:nil];
+            resultCallback(NO,error);
+        }
+        return nil;
+    }
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    SigConfigHeartbeatSubscriptionSet *config = [[SigConfigHeartbeatSubscriptionSet alloc] initWithSource:source destination:destination periodLog:periodLog];
+    command.curMeshMessage = config;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseHeartbeatSubscriptionStatusCallBack = successCallback;
     command.resultCallback = resultCallback;
     command.retryCount = retryCount;
     command.responseMaxCount = responseMaxCount;
@@ -2840,22 +2987,26 @@
         return;
     }
     NSMutableArray *addresses = [NSMutableArray array];
-    NSArray *elements = [NSArray arrayWithArray:node.elements];
-    for (SigElementModel *element in elements) {
-        element.parentNodeAddress = node.address;
-        // Add Unicast Addresses of all Elements of the Provisioner's Node.
-        [addresses addObject:@(element.unicastAddress)];
-        // Add all addresses that the Node's Models are subscribed to.
-        NSArray *models = [NSArray arrayWithArray:element.models];
-        for (SigModelIDModel *model in models) {
-            if (model.subscribe && model.subscribe.count > 0) {
-                NSArray *subscribe = [NSArray arrayWithArray:model.subscribe];
-                for (NSString *addr in subscribe) {
-                    UInt16 indAddr = [LibTools uint16From16String:addr];
-                    [addresses addObject:@(indAddr)];
+    if (node.elements && node.elements.count > 0) {
+        NSArray *elements = [NSArray arrayWithArray:node.elements];
+        for (SigElementModel *element in elements) {
+            element.parentNodeAddress = node.address;
+            // Add Unicast Addresses of all Elements of the Provisioner's Node.
+            [addresses addObject:@(element.unicastAddress)];
+            // Add all addresses that the Node's Models are subscribed to.
+            NSArray *models = [NSArray arrayWithArray:element.models];
+            for (SigModelIDModel *model in models) {
+                if (model.subscribe && model.subscribe.count > 0) {
+                    NSArray *subscribe = [NSArray arrayWithArray:model.subscribe];
+                    for (NSString *addr in subscribe) {
+                        UInt16 indAddr = [LibTools uint16From16String:addr];
+                        [addresses addObject:@(indAddr)];
+                    }
                 }
             }
         }
+    } else {
+        [addresses addObject:@(node.address)];
     }
 
     // Add All Nodes group address.
@@ -2900,19 +3051,21 @@
 //        }];
         
         //逻辑2.一次添加多个地址
-        [weakSelf addAddressesToFilterWithAddresses:addresses successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-            TeLogVerbose(@"responseMessage.listSize=%d",responseMessage.listSize);
-            SigDataSource.share.unicastAddressOfConnected = source;
-            [weakSelf sendSecureNetworkBeacon];
-            if (successCallback) {
-                successCallback(source,destination,responseMessage);
-            }
-        } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-            TeLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
-            if (failCallback) {
-                failCallback(error==nil,error);
-            }
-        }];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf addAddressesToFilterWithAddresses:addresses successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+                TeLogVerbose(@"responseMessage.listSize=%d",responseMessage.listSize);
+                SigDataSource.share.unicastAddressOfConnected = source;
+                [weakSelf sendSecureNetworkBeacon];
+                if (successCallback) {
+                    successCallback(source,destination,responseMessage);
+                }
+            } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+                TeLogVerbose(@"add address,isResponseAll=%d,error:%@",isResponseAll,error);
+                if (failCallback) {
+                    failCallback(error==nil,error);
+                }
+            }];
+        });
     } failCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
         TeLogVerbose(@"filter type,isResponseAll=%d,error:%@",isResponseAll,error);
         if (error != nil) {
@@ -3129,8 +3282,8 @@
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
 }
 
-+ (SigMessageHandle *)BLOBChunkTransferWithDestination:(UInt16)destination chunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount resultCallback:(resultBlock)resultCallback {
-    SigBLOBChunkTransfer *message = [[SigBLOBChunkTransfer alloc] initWithChunkNumber:chunkNumber chunkData:chunkData];
++ (SigMessageHandle *)BLOBChunkTransferWithDestination:(UInt16)destination chunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData sendBySegmentPdu:(BOOL)sendBySegmentPdu retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount resultCallback:(resultBlock)resultCallback {
+    SigBLOBChunkTransfer *message = [[SigBLOBChunkTransfer alloc] initWithChunkNumber:chunkNumber chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu];
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     command.curMeshMessage = message;
     command.resultCallback = resultCallback;
@@ -3435,8 +3588,6 @@
     [[SigBluetooth share] bleInit:^(CBCentralManager * _Nonnull central) {
         TeLogInfo(@"finish init SigBluetooth.");
         [SigMeshLib share];
-//        [SigMeshLib.share setAcknowledgmentMessageInterval:5.0];
-//        [SigMeshLib.share setAcknowledgmentMessageTimeout:40.0];
     }];
     
 //    ///默认为NO，连接速度更加快。设置为YES，表示扫描到的设备必须包含MacAddress，有些客户在添加流程需要通过MacAddress获取三元组信息，需要使用YES。
@@ -3449,9 +3600,6 @@
 
 + (void)sendSecureNetworkBeacon {
     SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:NO networkId:SigDataSource.share.curNetkeyModel.networkId ivIndex:[LibTools uint32From16String:SigDataSource.share.ivIndex] usingNetworkKey:SigDataSource.share.curNetkeyModel];
-    //==========test=========//
-    TeLogVerbose(@"==========ivIndex=0x%x",(unsigned int)[LibTools uint32From16String:SigDataSource.share.ivIndex]);
-    //==========test=========//
     TeLogInfo(@"send SecureNetworkBeacon=%@",[LibTools convertDataToHexStr:beacon.pduData]);
     [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
 }
@@ -3495,7 +3643,7 @@
     }
     NSArray *elementAddresses = [node getAddressesWithModelID:@(option)];
     if (elementAddresses.count > 0) {
-        TeLog(@"SDK need publish time");
+        TeLogVerbose(@"SDK need publish time");
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             UInt16 eleAdr = [elementAddresses.firstObject intValue];
             //周期，20秒上报一次。ttl:0xff（表示采用节点默认参数）。

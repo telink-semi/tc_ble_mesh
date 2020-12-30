@@ -654,26 +654,6 @@
         _CID = cid;
         _PID = pid;
         if (cid == kCompanyID) {
-////            VC_node_info_t node_info = {};
-////            memset(&node_info, 0xff, sizeof(VC_node_info_t));
-//            UInt8 temPage = 0;
-//            NSData *pageData = [NSData dataWithBytes:&temPage length:1];
-//            NSMutableData *mData = [NSMutableData dataWithData:pageData];
-//            
-//            if (pid == 7) {
-//                //set default VC_node_info_t of panel
-////                memcpy(&node_info.cps.page0_head.cid, PanelByte, sizeof(PanelByte));
-//                NSData *compositionData = [NSData dataWithBytes:PanelByte length:sizeof(PanelByte)];
-//                [mData appendData:compositionData];
-//            }else if (pid == 1) {
-//                //set default VC_node_info_t of CT
-////                memcpy(&node_info.cps.page0_head.cid, CTByte, sizeof(CTByte));
-//                NSData *compositionData = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
-//                [mData appendData:compositionData];
-//            }
-//            _defaultCompositionData = mData;
-////            _defultNodeInfo = node_info;
-
             SigPage0 *compositionData = [[SigPage0 alloc] init];
             UInt8 temPage = 0;
             NSData *pageData = [NSData dataWithBytes:&temPage length:1];
@@ -688,6 +668,37 @@
                 NSData *data = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
                 [mData appendData:data];
                 compositionData = [[SigPage0 alloc] initWithParameters:mData];
+            }
+            _defaultCompositionData = compositionData;
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithCID:(UInt16)cid PID:(UInt16)pid compositionData:(NSData *)cpsData {
+    if (self = [super init]) {
+        _CID = cid;
+        _PID = pid;
+        if (cid == kCompanyID) {
+            SigPage0 *compositionData = [[SigPage0 alloc] init];
+            UInt8 temPage = 0;
+            NSData *pageData = [NSData dataWithBytes:&temPage length:1];
+            NSMutableData *mData = [NSMutableData dataWithData:pageData];
+            if (cpsData && cpsData.length > 0) {
+                [mData appendData:cpsData];
+                compositionData = [[SigPage0 alloc] initWithParameters:mData];
+            } else {
+                if (pid == 7) {
+                    //set default compositionData of panel
+                    NSData *data = [NSData dataWithBytes:PanelByte length:sizeof(PanelByte)];
+                    [mData appendData:data];
+                    compositionData = [[SigPage0 alloc] initWithParameters:mData];
+                }else if (pid == 1) {
+                    //set default compositionData of CT
+                    NSData *data = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
+                    [mData appendData:data];
+                    compositionData = [[SigPage0 alloc] initWithParameters:mData];
+                }
             }
             _defaultCompositionData = compositionData;
         }
@@ -1500,6 +1511,7 @@
         
         //源码版本v3.2.2前，间隔255，短地址分配范围：1-0xff，0x0100-0x01ff，0x0200-0x02ff，0x0300-0x03ff， 。。。
         //源码版本v3.2.3及以后，间隔1024，短地址分配范围：1~1024，1025~2048，2049~3072，3073~4096， 。。。
+        //源码版本v3.3.0及以后，间隔0x0400，短地址分配范围：0x0001~0x03FF，0x0400~0x07FF，0x0800~0x0BFF，0x0C00~0x0FFF,...,0x7C00~0x7FFF.
         self.allocatedUnicastRange = [NSMutableArray array];
         SigRangeModel *range2 = [[SigRangeModel alloc] init];
         range2.lowAddress = [NSString stringWithFormat:@"%04X",kAllocatedUnicastRangeLowAddress + (count == 0 ? 0 : (count*(SigDataSource.share.defaultAllocatedUnicastRangeHighAddress+1)-1))];
@@ -1518,6 +1530,42 @@
     return self;
 }
 
+- (instancetype)initWithExistProvisionerMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast andProvisionerUUID:(NSString *)provisionerUUID {
+    if (self = [super init]) {
+        self.allocatedGroupRange = [NSMutableArray array];
+        SigRangeModel *range1 = [[SigRangeModel alloc] init];
+        //做法1：不同的Provisioner使用不同的组地址范围
+//        range1.lowAddress = [NSString stringWithFormat:@"%04X",kAllocatedGroupRangeLowAddress + count*0x100];
+//        range1.highAddress = [NSString stringWithFormat:@"%04X",kAllocatedGroupRangeHighAddress + count*0x100];
+        //做法2：不同的Provisioner都使用同一组组地址
+        range1.lowAddress = [NSString stringWithFormat:@"%04lX",(long)kAllocatedGroupRangeLowAddress];
+        range1.highAddress = [NSString stringWithFormat:@"%04lX",(long)kAllocatedGroupRangeHighAddress];
+        [self.allocatedGroupRange addObject:range1];
+        
+        //源码版本v3.2.2前，间隔255，短地址分配范围：1-0xff，0x0100-0x01ff，0x0200-0x02ff，0x0300-0x03ff， 。。。
+        //源码版本v3.2.3及以后，间隔1024，短地址分配范围：1~1024，1025~2048，2049~3072，3073~4096， 。。。
+        //源码版本v3.3.0及以后，间隔0x0400，短地址分配范围：0x0001~0x03FF，0x0400~0x07FF，0x0800~0x0BFF，0x0C00~0x0FFF,...,0x7C00~0x7FFF.
+        self.allocatedUnicastRange = [NSMutableArray array];
+        SigRangeModel *range2 = [[SigRangeModel alloc] init];
+        range2.lowAddress = [NSString stringWithFormat:@"%04X",maxHighAddressUnicast + 1];
+        UInt16 highAddress = maxHighAddressUnicast + SigDataSource.share.defaultAllocatedUnicastRangeHighAddress - (maxHighAddressUnicast == 0 ? 1 : 0);
+        if (highAddress > 0x7FFF) {
+            highAddress = 0x7FFF;
+        }
+        range2.highAddress = [NSString stringWithFormat:@"%04X",highAddress];
+        [self.allocatedUnicastRange addObject:range2];
+        
+        self.allocatedSceneRange = [NSMutableArray array];
+        SigSceneRangeModel *range3 = [[SigSceneRangeModel alloc] init];
+        range3.firstScene = [NSString stringWithFormat:@"%04lX",(long)kAllocatedSceneRangeFirstAddress];
+        range3.lastScene = [NSString stringWithFormat:@"%04lX",(long)kAllocatedSceneRangeLastAddress];
+        [self.allocatedSceneRange addObject:range3];
+                
+        self.UUID = provisionerUUID;
+        self.provisionerName = @"Telink iOS provisioner";
+    }
+    return self;
+}
 
 - (SigNodeModel *)node {
     SigNodeModel *tem = nil;
@@ -1937,9 +1985,9 @@
         _secureNetworkBeacon = NO;
         _configComplete = NO;
         _blacklisted = NO;
-        _HSL_Hue = 0xffff-1;
-        _HSL_Saturation = 0xffff;
-        _HSL_Lightness = 0xffff;
+        _HSL_Hue = 0;
+        _HSL_Saturation = 0;
+        _HSL_Lightness = 0;
         _heartbeatPub = [[SigHeartbeatPubModel alloc] init];
         _heartbeatSub = [[NSMutableArray alloc] init];
 //        _sno = @"00000000";
@@ -2169,7 +2217,7 @@
             SigElementModel *ele = self.elements[i];
             NSArray *all = [NSArray arrayWithArray:ele.models];
             for (SigModelIDModel *modelID in all) {
-                if (modelID.getIntModelIdentifier == sigModelID.intValue) {
+                if (modelID.getIntModelID == sigModelID.intValue) {
                     [array addObject:@(self.address+i)];
                     break;
                 }
@@ -2667,7 +2715,12 @@
     }
 }
 
-- (UInt16)address{
+- (void)setUnicastAddress:(NSString *)unicastAddress {
+    _unicastAddress = unicastAddress;
+    _address = [LibTools uint16From16String:unicastAddress];
+}
+
+- (UInt16)address {
     if (_address == 0) {
         _address = [LibTools uint16From16String:self.unicastAddress];
     }

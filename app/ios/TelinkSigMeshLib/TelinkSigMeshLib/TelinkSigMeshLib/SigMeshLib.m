@@ -73,10 +73,6 @@ static SigMeshLib *shareLib = nil;
     _acknowledgmentTimerInterval = 0.150;
     _transmissionTimerInteral = 0.200;
     _retransmissionLimit = 20;
-    _segmentTXTimeout = 15;
-    _segmentRXTimeout = 15;
-//    _acknowledgmentMessageTimeout = 30.0;
-//    _acknowledgmentMessageInterval = 2.0;
     _networkTransmitIntervalSteps = 0b11111;
     _networkTransmitInterval = (_networkTransmitIntervalSteps + 1) * 10 / 1000.0;//单位ms
     _queue = dispatch_queue_create("SigMeshLib.queue(消息收发队列)", DISPATCH_QUEUE_SERIAL);
@@ -136,6 +132,9 @@ static SigMeshLib *shareLib = nil;
             SigPublishManager.share.discoverOutlineNodeCallback(@(address));
         });
     }
+    if ([self.delegateForDeveloper respondsToSelector:@selector(didReceiveMessage:sentFromSource:toDestination:)]) {
+        [self.delegateForDeveloper didReceiveMessage:message sentFromSource:address toDestination:SigDataSource.share.curLocationNodeModel.address];
+    }
 }
 
 #pragma mark - Send Mesh Messages
@@ -180,9 +179,9 @@ static SigMeshLib *shareLib = nil;
     command.commandType = SigCommandType_meshMessage;
     __weak typeof(self) weakSelf = self;
     dispatch_async(_queue, ^{
-        if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
-            command.responseMaxCount = 1;
-        }
+//        if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
+//            command.responseMaxCount = 1;
+//        }
         [weakSelf addCommandToCacheListWithCommand:command];
         if (command.appkeyA) {
             [weakSelf.networkManager sendMeshMessage:message fromElement:source toDestination:destination withTtl:initialTtl usingApplicationKey:applicationKey command:command];
@@ -233,9 +232,9 @@ static SigMeshLib *shareLib = nil;
 
     __weak typeof(self) weakSelf = self;
     dispatch_async(_queue, ^{
-        if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
-            command.responseMaxCount = 1;
-        }
+//        if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
+//            command.responseMaxCount = 1;
+//        }
         [weakSelf addCommandToCacheListWithCommand:command];
         [weakSelf.networkManager sendConfigMessage:message toDestination:destination withTtl:initialTtl];
     });
@@ -259,9 +258,9 @@ static SigMeshLib *shareLib = nil;
 
     __weak typeof(self) weakSelf = self;
     dispatch_async(_queue, ^{
-        if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
-            command.responseMaxCount = 1;
-        }
+//        if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
+//            command.responseMaxCount = 1;
+//        }
         [weakSelf addCommandToCacheListWithCommand:command];
         [weakSelf.networkManager sendSigProxyConfigurationMessage:message];
     });
@@ -276,9 +275,9 @@ static SigMeshLib *shareLib = nil;
         TeLogError(@"Mesh Network not created");
         return [NSError errorWithDomain:kSigMeshLibNoCreateMeshNetworkErrorMessage code:kSigMeshLibNoCreateMeshNetworkErrorCode userInfo:nil];
     }
-    if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
-        command.responseMaxCount = 1;
-    }
+//    if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
+//        command.responseMaxCount = 1;
+//    }
     
     [self handleResponseMaxCommands];
     [self addCommandToCacheListWithCommand:command];
@@ -323,9 +322,9 @@ static SigMeshLib *shareLib = nil;
 }
 
 - (void)addCommandToCacheListWithCommand:(SDKLibCommand *)command {
-    if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
-        command.responseMaxCount = 1;
-    }
+//    if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]] && [SigHelper.share isAcknowledgedMessage:(SigMeshMessage *)command.curMeshMessage] && command.responseMaxCount == 0) {
+//        command.responseMaxCount = 1;
+//    }
     //存在response的指令出存储
     if (command.responseAllMessageCallBack || command.resultCallback || (command.retryCount > 0 && command.responseMaxCount > 0)) {
         //command存储下来，超时或者失败，或者返回response时，从该地方拿到command，获取里面的callback，执行，再删除。

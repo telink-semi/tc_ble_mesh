@@ -56,7 +56,7 @@
 }
 
 - (BOOL)isSegmented {
-    return [self accessPdu].length > 11;
+    return [self accessPdu].length > SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
 }
 
 /// The Access Layer PDU data that will be sent.

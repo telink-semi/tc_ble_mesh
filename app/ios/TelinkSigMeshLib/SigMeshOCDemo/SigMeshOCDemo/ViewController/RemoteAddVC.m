@@ -260,7 +260,17 @@
     if (SigBearer.share.isOpen) {
         AddDeviceModel *model = [self getAddDeviceModelWithMacAddress:node.macAddress];
         NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
-        [SDKLibCommand keyBind:node.address appkeyModel:SigDataSource.share.curAppkeyModel keyBindType:type.integerValue productID:0 cpsData:nil keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+        UInt8 keyBindType = type.integerValue;
+        UInt16 productID = [LibTools uint16From16String:node.pid];
+        DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
+        NSData *cpsData = deviceType.defaultCompositionData.parameters;
+        if (keyBindType == KeyBindTpye_Fast) {
+            if (cpsData == nil || cpsData.length == 0) {
+                keyBindType = KeyBindTpye_Normal;
+            }
+        }
+
+        [SDKLibCommand keyBind:node.address appkeyModel:SigDataSource.share.curAppkeyModel keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             [weakSelf remoteAddSingleDeviceFinish];
             [weakSelf updateWithPeripheralUUID:model.scanRspModel.uuid macAddress:model.scanRspModel.macAddress address:node.address keyBindResult:YES];
             TeLogInfo(@"RP-Remote:keybind success, %@->0X%X",model.scanRspModel.uuid,node.address);

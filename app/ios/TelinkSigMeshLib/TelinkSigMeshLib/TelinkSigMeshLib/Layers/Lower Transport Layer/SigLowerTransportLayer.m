@@ -40,7 +40,6 @@
 #import "SigNetworkManager.h"
 
 @interface SigLowerTransportLayer ()
-@property (nonatomic,strong) NSUserDefaults *defaults;
 @property (nonatomic,strong) dispatch_queue_t mutex;
 
 @end
@@ -50,7 +49,6 @@
 - (instancetype)initWithNetworkManager:(SigNetworkManager *)networkManager {
     if (self = [super init]) {
         _networkManager = networkManager;
-        _defaults = [NSUserDefaults standardUserDefaults];
         self.incompleteSegments = [NSMutableDictionary dictionary];
         self.incompleteTimers = [NSMutableDictionary dictionary];
         self.acknowledgmentTimers = [NSMutableDictionary dictionary];
@@ -200,7 +198,7 @@
     [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
     //==========telink need this==========//
     /// Number of segments to be sent.
-    NSInteger count = (pdu.transportPdu.length + 11) / 12;
+    NSInteger count = (pdu.transportPdu.length + (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3) - 1) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3);
     // Create all segments to be sent.
     NSMutableArray *outgoingSegments = [NSMutableArray array];
     for (int i=0; i<count; i++) {
@@ -231,7 +229,7 @@
     [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
     //==========telink need this==========//
     /// Number of segments to be sent.
-    NSInteger count = (pdu.transportPdu.length + 11) / 12;
+    NSInteger count = (pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3);
     // Create all segments to be sent.
     NSMutableArray *outgoingSegments = [NSMutableArray array];
     for (int i=0; i<count; i++) {
@@ -248,6 +246,22 @@
     _segmentTtl[@(sequenceZero)] = @(ttl);
     _outgoingSegments[@(sequenceZero)] = outgoingSegments;
     [self sendSegmentsForSequenceZero:sequenceZero limit:_networkManager.retransmissionLimit];
+}
+
+- (void)cancelTXSendingSegmentedWithDestination:(UInt16)destination {
+    if (_incompleteTimers && _incompleteTimers.allKeys.count > 0) {
+        NSArray *keys = _incompleteTimers.allKeys;
+        for (NSNumber *n in keys) {
+            UInt32 key = n.intValue;
+            if (((key >> 16) & 0xFFFF) == destination) {
+                BackgroundTimer *t = _incompleteTimers[n];
+                [t invalidate];
+                [_incompleteTimers removeObjectForKey:n];
+                t = nil;
+                break;
+            }
+        }
+    }
 }
 
 - (void)cancelSendingSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu {
@@ -283,12 +297,14 @@
 //        return YES;
 //    }
     UInt32 sequence = [networkPdu messageSequence];
-    BOOL newSource = [_defaults objectForKey:[SigHelper.share getNodeAddressString:networkPdu.source]]==nil;//source为node的address
-    TeLogVerbose(@"============newSource=%d,networkPdu.source=0x%x",newSource,networkPdu.source);
+    UInt64 receivedSeqAuth = ((UInt64)networkPdu.networkKey.ivIndex.index) << 24 | (UInt64)sequence;
+    NSDictionary *oldDic = [[NSUserDefaults standardUserDefaults] objectForKey:SigDataSource.share.meshUUID];
+    NSNumber *lastSequenceAuthNumber = [oldDic objectForKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
+    BOOL newSource = lastSequenceAuthNumber == nil;//source为node的address
+
+//    TeLogVerbose(@"============newSource=%d,networkPdu.source=0x%x",newSource,networkPdu.source);
     if (!newSource) {
-        NSInteger lastSequence = [_defaults integerForKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
-        UInt64 localSeqAuth = ((UInt64)networkPdu.networkKey.ivIndex.index) << 24 | (UInt64)lastSequence;
-        UInt64 receivedSeqAuth = ((UInt64)networkPdu.networkKey.ivIndex.index) << 24 | (UInt64)sequence;
+        UInt64 localSeqAuth = (UInt64)lastSequenceAuthNumber.intValue;
 
         // In general, the SeqAuth of the received message must be greater
         // than SeqAuth of any previously received message from the same source.
@@ -305,15 +321,17 @@
             reassemblyInProgress = _incompleteSegments[@(key)] != nil || msg.sequenceZero == sequenceZero;
         }
         if (receivedSeqAuth > localSeqAuth || (reassemblyInProgress && receivedSeqAuth == localSeqAuth)) {
-            TeLogInfo(@"============")
+//            TeLogInfo(@"============SeqAuth校验通过！")
         }else{
             TeLogError(@"Discarding packet (seqAuth:%llu, expected >%llu)",receivedSeqAuth,localSeqAuth);
             return NO;
         }
     }
     // SeqAuth is valid, save the new sequence authentication value.
-    //2019年11月01日16:34:37，更新本地节点的sno
-    [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence];
+    NSMutableDictionary *newDic = [NSMutableDictionary dictionaryWithDictionary:oldDic];
+    [newDic setValue:@(receivedSeqAuth) forKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
+    [[NSUserDefaults standardUserDefaults] setValue:newDic forKey:SigDataSource.share.meshUUID];
+    [[NSUserDefaults standardUserDefaults] synchronize];
     return YES;
 }
 
@@ -609,13 +627,14 @@
 ///   - ack: The Segment Acknowledgment Message to sent.
 ///   - ttl: Initial Time To Live (TTL) value.
 - (void)sendAckSigSegmentAcknowledgmentMessage:(SigSegmentAcknowledgmentMessage *)ack withTtl:(UInt8)ttl {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+//    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+//        TeLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x",ack,ack.source,ack.destination,ack.sequenceZero);
+//        [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl];
+//    });
+    dispatch_async(SigMeshLib.share.queue, ^{
         TeLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x",ack,ack.source,ack.destination,ack.sequenceZero);
         [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl];
     });
-    
-//    TeLogInfo(@"sending ACK=%@ ,from ack.source :0x%x, to destination :0x%x, ack.sequenceZero=0x%x,blockAck=0x%x",ack,ack.source,ack.destination,ack.sequenceZero,ack.blockAck);
-//    [self.networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl];
 }
 
 /// Sends all non-`nil` segments from `outgoingSegments` map from the given

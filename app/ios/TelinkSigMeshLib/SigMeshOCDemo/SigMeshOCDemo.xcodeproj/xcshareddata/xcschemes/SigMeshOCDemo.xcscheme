@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1010"
+   LastUpgradeVersion = "1200"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A2AB8E982110046A00D73EB4"
-               BuildableName = "TelinkSigMesh.l.app"
+               BuildableName = "TelinkSigMesh.app"
                BlueprintName = "SigMeshOCDemo"
                ReferencedContainer = "container:SigMeshOCDemo.xcodeproj">
             </BuildableReference>
@@ -31,7 +31,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A2AB8E982110046A00D73EB4"
-            BuildableName = "TelinkSigMesh.l.app"
+            BuildableName = "TelinkSigMesh.app"
             BlueprintName = "SigMeshOCDemo"
             ReferencedContainer = "container:SigMeshOCDemo.xcodeproj">
          </BuildableReference>
@@ -74,7 +74,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A2AB8E982110046A00D73EB4"
-            BuildableName = "TelinkSigMesh.l.app"
+            BuildableName = "TelinkSigMesh.app"
             BlueprintName = "SigMeshOCDemo"
             ReferencedContainer = "container:SigMeshOCDemo.xcodeproj">
          </BuildableReference>
@@ -91,7 +91,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A2AB8E982110046A00D73EB4"
-            BuildableName = "TelinkSigMesh.l.app"
+            BuildableName = "TelinkSigMesh.app"
             BlueprintName = "SigMeshOCDemo"
             ReferencedContainer = "container:SigMeshOCDemo.xcodeproj">
          </BuildableReference>

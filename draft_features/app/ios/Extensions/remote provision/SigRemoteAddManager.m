@@ -178,7 +178,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
         [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
             if (weakSelf.isProvisionning) {
-                TeLog(@"disconnect in provisioning，provision fail.");
+                TeLogInfo(@"disconnect in provisioning，provision fail.");
                 if (fail) {
                     weakSelf.isProvisionning = NO;
                     NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];

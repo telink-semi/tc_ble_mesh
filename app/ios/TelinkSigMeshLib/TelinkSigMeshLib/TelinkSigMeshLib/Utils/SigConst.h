@@ -301,4 +301,7 @@ UIKIT_EXTERN UInt32 const kSnoIncrement;//128
 /*初始化json数据时的ivIndex的值*/
 UIKIT_EXTERN UInt32 const kDefaultIvIndex;//0x0
 
+/*默认一个unsegmented Access PDU的最大长度，大于该长度则需要进行segment分包，默认值为kUnsegmentedMessageLowerTransportPDUMaxLength（15）*/
+UIKIT_EXTERN UInt16 const kUnsegmentedMessageLowerTransportPDUMaxLength;//15
+
 NS_ASSUME_NONNULL_END

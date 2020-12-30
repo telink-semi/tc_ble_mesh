@@ -57,7 +57,9 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
     frame = SCREENBOUNDS;
     if (self = [super initWithFrame: frame]) {
         self.backgroundColor = [UIColor colorWithWhite: 0.f alpha: 0.2f];
-        [self.layer addSublayer: self.scanView];
+        if (self.isCameraAvailable && self.isRearCameraAvailable) {
+            [self.layer addSublayer: self.scanView];
+        }
         [self setupScanRect];
         [self addSubview: self.remind];
         self.layer.masksToBounds = YES;
@@ -66,6 +68,21 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
     return self;
 }
 
+#pragma mark - 摄像头和相册相关的公共类
+// 判断设备是否有摄像头
+- (BOOL)isCameraAvailable{
+    return [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera];
+}
+  
+// 前面的摄像头是否可用
+- (BOOL)isFrontCameraAvailable{
+    return [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceFront];
+}
+  
+// 后面的摄像头是否可用
+- (BOOL)isRearCameraAvailable{
+    return [UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear];
+}
 
 #pragma mark - life
 /**
@@ -83,14 +100,18 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
  */
 - (void)start
 {
-    [self.session startRunning];
+    if (self.isCameraAvailable && self.isRearCameraAvailable) {
+        [self.session startRunning];
+    }
 }
 
 /**
  *  停止视频会话
  */
 - (void)stop {
-    [self.session stopRunning];
+    if (self.isCameraAvailable && self.isRearCameraAvailable) {
+        [self.session stopRunning];
+    }
 }
 
 

@@ -54,7 +54,7 @@
     if (self = [super init]) {
         _networkManager = networkManager;
         _meshNetwork = networkManager.manager.dataSource;
-        _defaults = [[NSUserDefaults alloc] initWithSuiteName:_meshNetwork.meshUUID];
+//        _defaults = [NSUserDefaults standardUserDefaults];
 //        _networkMessageCache = [[NSCache alloc] init];
     }
     return self;
@@ -146,7 +146,7 @@
     // As the sequnce number was just used, it has to be incremented.
     [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence+1];
 
-    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
+//    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
     SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl ivIndex:ivIndex];
     // Loopback interface.
     if ([self shouldLoopback:networkPdu]) {
@@ -208,7 +208,7 @@
     // As the sequnce number was just used, it has to be incremented.
     [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence+1];
 
-    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
+//    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
 //    SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl];
     if (pdu.networkKey == nil || pdu.ivIndex == nil) {
         TeLogError(@"networkKey or ivIndex error!!!");
@@ -229,6 +229,7 @@
         [SigBearer.share sendBlePdu:networkPdu ofType:type];
     }
     if (self.lastNeedSendAckMessage) {
+        //发包过程中收到segment的结束包，优先把当前包发送完成，再发送ack包。
         TeLogDebug(@"==========灵活处理中间的ack数据包。")
         SigNodeModel *provisionerNode = SigDataSource.share.curLocationNodeModel;
         UInt8 ttl = provisionerNode.defaultTTL;

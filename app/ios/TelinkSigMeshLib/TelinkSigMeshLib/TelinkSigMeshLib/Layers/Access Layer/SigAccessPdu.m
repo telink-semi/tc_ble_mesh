@@ -36,7 +36,7 @@
     if (_message == nil) {
         return NO;
     }
-    return _accessPdu.length > 15 || _message.isSegmented;
+    return _accessPdu.length > SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength || _message.isSegmented;
 }
 
 - (int)segmentsCount {
@@ -48,10 +48,10 @@
     }
     switch (_message.security) {
         case SigMeshMessageSecurityLow:
-            return 1 + (int)((_accessPdu.length + 3) / 12);
+            return 1 + (int)((_accessPdu.length + 3) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
             break;
         case SigMeshMessageSecurityHigh:
-            return 1 + (int)((_accessPdu.length + 7) / 12);
+            return 1 + (int)((_accessPdu.length + 7) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
             break;
         default:
             break;

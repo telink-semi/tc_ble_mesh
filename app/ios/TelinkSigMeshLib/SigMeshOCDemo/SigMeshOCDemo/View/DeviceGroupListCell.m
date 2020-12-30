@@ -37,6 +37,7 @@
 @property (strong, nonatomic) NSArray <NSNumber *>*options;
 @property (strong, nonatomic) NSMutableArray <NSNumber *>*temOptions;
 @property (assign, nonatomic) BOOL isEditing;
+@property (strong, nonatomic) NSError *editSubscribeListError;
 
 @end
 
@@ -65,7 +66,11 @@
     if (self.temOptions.count > 0) {
         self.isEditing = YES;
         [ShowTipsHandle.share show:Tip_EditGroup];
-        [self performSelector:@selector(editGroupFail:) withObject:sender afterDelay:10.0];
+        self.editSubscribeListError = [NSError errorWithDomain:Tip_EditGroupFail code:-1 userInfo:nil];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(editGroupFail:) object:sender];
+            [self performSelector:@selector(editGroupFail:) withObject:sender afterDelay:10.0];
+        });
         [self editionNextOption:sender];
     }
 }
@@ -95,9 +100,12 @@
         return;
     }
     self.isEditing = NO;
-    sender.selected = !sender.isSelected;
-    [ShowTipsHandle.share show:Tip_EditGroupFail];
-    [ShowTipsHandle.share delayHidden:2.0];
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        sender.selected = !sender.isSelected;
+        [ShowTipsHandle.share show:weakSelf.editSubscribeListError.domain];
+        [ShowTipsHandle.share delayHidden:2.0];
+    });
 }
 
 - (void)editingOption:(UInt32)option button:(UIButton *)button{
@@ -117,14 +125,29 @@
             return;
         }
         __block BOOL editSubSuccess = NO;
-        [DemoCommand editSubscribeListWithWithDestination:weakSelf.model.address isAdd:button.isSelected groupAddress:weakSelf.groupAddress elementAddress:eleAddress modelIdentifier:option companyIdentifier:0 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
+        UInt16 modelIdentifier = 0,companyIdentifier = 0;
+        if (option >= 0x1000 && option <= 0x13ff) {
+            //sig model
+            modelIdentifier = option;
+        } else {
+            //vendor model
+            modelIdentifier = (option >> 16) & 0xFFFF;
+            companyIdentifier = option & 0xFFFF;
+        }
+        [DemoCommand editSubscribeListWithWithDestination:weakSelf.model.address isAdd:button.isSelected groupAddress:weakSelf.groupAddress elementAddress:eleAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
             if (weakSelf.isEditing && responseMessage.elementAddress == eleAddress && responseMessage.address == weakSelf.groupAddress) {
-                if (responseMessage.modelIdentifier == option) {
+                if (responseMessage.modelIdentifier == modelIdentifier && responseMessage.companyIdentifier == companyIdentifier) {
                     if (responseMessage.status == SigConfigMessageStatus_success) {
                         editSubSuccess = YES;
                     } else {
                         editSubSuccess = NO;
                         TeLogError(@"订阅组号失败：error code=%d",responseMessage.status);
+                        if (responseMessage.status == SigConfigMessageStatus_insufficientResources) {
+                            //资源不足，设备的组号已经添加满了。
+                            weakSelf.editSubscribeListError = [NSError errorWithDomain:@"Insufficient Resources!" code:-1 userInfo:nil];
+                        } else {
+                            weakSelf.editSubscribeListError = [NSError errorWithDomain:Tip_EditGroupFail code:-1 userInfo:nil];
+                        }
                     }
                 }
             }
@@ -156,8 +179,8 @@
         //所有配置已经完成
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(editGroupFail:) object:self.subToGroup];
+            [self performSelector:@selector(editSuccessful) withObject:nil afterDelay:1.0];
         });
-        [self performSelector:@selector(editSuccessful) withObject:nil afterDelay:1.0];
     }
 }
 

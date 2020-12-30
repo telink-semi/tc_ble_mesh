@@ -32,7 +32,11 @@
 
 #define kTelinkSDKDebugLogData @"TelinkSDKDebugLogData"
 #define kTelinkSDKMeshJsonData @"TelinkSDKMeshJsonData"
-#define kTelinkSDKDebugLogDataSize ((double)1024*1024*20) //默认日志最大存储大小为20M。
+#define kTelinkSDKDebugLogDataSize ((double)1024*1024*20) //默认日志最大存储大小为20M。每10*60秒检查一次日志文件大小。
+
+@interface SigLogger ()
+@property (nonatomic, strong) BackgroundTimer *timer;
+@end
 
 @implementation SigLogger
 
@@ -46,7 +50,7 @@
     return shareLogger;
 }
 
-- (void)initLogFile{
+- (void)initLogFile {
     NSFileManager *manager = [[NSFileManager alloc] init];
     if (![manager fileExistsAtPath:self.logFilePath]) {
         BOOL ret = [manager createFileAtPath:self.logFilePath contents:nil attributes:nil];
@@ -77,6 +81,10 @@
 - (void)setSDKLogLevel:(SigLogLevel)logLevel{
     _logLevel = logLevel;
     if (logLevel != SigLogLevelOff) {
+        __weak typeof(self) weakSelf = self;
+        _timer = [BackgroundTimer scheduledTimerWithTimeInterval:10 * 60 repeats:YES block:^(BackgroundTimer * _Nonnull t) {
+            [weakSelf checkSDKLogFileSize];
+        }];
         [self checkSDKLogFileSize];
         [self enableLogger];
     }
@@ -198,6 +206,16 @@ void saveMeshJsonData(id data){
     NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     //对缓存于iTunes共享文件夹的json文件进行解密。加密调用接口__BASE64().
     str = __TEXT(str);
+    [handle closeFile];
+    return str;
+}
+
+/// 用于解密客户上传的加密后的TelinkSDKMeshJsonData文件
+- (NSString *)getDecryptTelinkSDKMeshJsonDataWithPassword:(NSString *)password {
+    NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:SigLogger.share.meshJsonFilePath];
+    NSData *data = [handle readDataToEndOfFile];
+    NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    str = [LibTools textFromBase64String:str password:password];
     [handle closeFile];
     return str;
 }

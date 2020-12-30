@@ -47,6 +47,10 @@
 #define CellIdentifiers_InfoSwitchCellID  @"InfoSwitchCell"
 #define CellIdentifiers_InfoNextCellID  @"InfoNextCell"
 #define CellIdentifiers_InfoButtonCellID  @"InfoButtonCell"
+#define CellIdentifiers_ColorModelCellID  @"ColorModelCell"
+#define CellIdentifiers_OnOffModelCellID  @"OnOffModelCell"
+#define CellIdentifiers_LevelAndSliderCellID  @"LevelAndSliderCell"
+
 
 //ViewControllerIdentifiers
 #define ViewControllerIdentifiers_LogViewControllerID   @"LogViewController"
@@ -133,14 +137,10 @@
 #define kshowMeshInfo    (YES)
 #define kshowChooseAdd    (YES)
 
-//HSL发送数据包是使用RGB转HSL的模式
-#define kControllerInHSL    (YES)
-//HSL发送数据包是使用RGB转HSV的模式（iOS系统提供的接口就是RGB转HSV的接口）
-//#define kControllerInHSL    (NO)
-
 #define kKeyBindType  @"kKeyBindType"
 #define kRemoteAddType  @"kRemoteAddType"
 #define kFastAddType  @"kFastAddType"
+#define kDLEType  @"kDLEType"
 #define kGetOnlineStatusType  @"kGetOnlineStatusType"
 #define kAddStaticOOBDevcieByNoOOBEnable  @"kAddStaticOOBDevcieByNoOOBEnable"
 
@@ -159,5 +159,7 @@
 
 //默认指令的重试次数
 #define kDefaultRetryCount  (2)
+
+#define kDLEUnsegmentLength (229)
 
 #endif /* DemoConst_h */

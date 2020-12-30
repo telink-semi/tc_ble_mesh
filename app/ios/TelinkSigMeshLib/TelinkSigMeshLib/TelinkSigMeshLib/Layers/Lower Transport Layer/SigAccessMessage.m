@@ -52,6 +52,7 @@
             return nil;
         }
         BOOL akf = (tem & 0b01000000) != 0;
+        self.AKF = akf;
         if (akf) {
             _aid = tem & 0x3F;
         } else {
@@ -74,6 +75,7 @@
         self.type = SigLowerTransportPduType_accessMessage;
         // Assuming all segments have the same AID, source and destination addresses and TransMIC.
         SigSegmentedAccessMessage *segment = segments.firstObject;
+        _AKF = segment.AKF;
         _aid = segment.aid;
         _transportMicSize = segment.transportMicSize;
         self.source = segment.source;
@@ -94,7 +96,7 @@
 - (instancetype)initFromUnsegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey {
     if (self = [super init]) {
         self.type = SigLowerTransportPduType_accessMessage;
-        
+        _AKF = pdu.AKF;
         _aid = pdu.aid;
         _transportMicSize = 4;
         _sequence = pdu.sequence;
@@ -108,10 +110,10 @@
 
 - (NSData *)transportPdu {
     UInt8 octet0 = 0x00;// SEG = 0
-    if (_aid != 0) {
+    if (self.AKF) {
         octet0 |= 0b01000000;// AKF = 1
-        octet0 |= _aid;
     }
+    octet0 |= _aid;
     NSMutableData *mData = [NSMutableData dataWithBytes:&octet0 length:1];
     [mData appendData:self.upperTransportPdu];
     return mData;

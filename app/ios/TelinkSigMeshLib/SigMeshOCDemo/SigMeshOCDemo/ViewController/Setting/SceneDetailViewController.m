@@ -241,7 +241,8 @@
     sender.selected = !sender.isSelected;
     NSArray *allActions = [NSArray arrayWithArray:self.allActions];
     for (ActionModel *action in allActions) {
-        if (action.state != DeviceStateOutOfLine) {
+        SigNodeModel *node = [SigDataSource.share getNodeWithAddress:action.address];
+        if (action.state != DeviceStateOutOfLine && node && node.sceneAddress.count > 0) {
             if (sender.isSelected) {
                 if (![self.selectActions containsObject:action]) {
                     [self.selectActions addObject:action];

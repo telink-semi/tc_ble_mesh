@@ -35,6 +35,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SigAccessMessage : SigLowerTransportPdu
 
+/// Application Key Flag
+@property (nonatomic,assign) BOOL AKF;
+
 /// 6-bit Application Key identifier. This field is set to `nil`
 /// if the message is signed with a Device Key instead.
 @property (nonatomic,assign) UInt8 aid;

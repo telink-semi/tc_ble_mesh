@@ -164,9 +164,6 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     [mData appendData:fData];
     [mData appendData:ivData];
     [mData appendData:addressData];
-    //==========test=========//
-    TeLogVerbose(@"==========ivIndex=0x%x",self.ivIndex.index);
-    //==========test=========//
     NSData *resultData = [[OpenSSLHelper share] calculateCCM:mData withKey:sessionKey nonce:sessionNonce andMICSize:8 withAdditionalData:nil];
     return resultData;
 }

@@ -238,6 +238,10 @@
         case SigOpCode_configGATTProxySet:
             responseOpcode = SigOpCode_configGATTProxyStatus;
             break;
+        case SigOpCode_configKeyRefreshPhaseGet:
+        case SigOpCode_configKeyRefreshPhaseSet:
+            responseOpcode = SigOpCode_configKeyRefreshPhaseStatus;
+            break;;
         case SigOpCode_configModelPublicationGet:
         case SigOpCode_configModelPublicationSet:
         case SigOpCode_configModelPublicationVirtualAddressSet:
@@ -265,6 +269,17 @@
             break;
         case SigOpCode_configVendorModelSubscriptionGet:
             responseOpcode = SigOpCode_configVendorModelSubscriptionList;
+            break;
+        case SigOpCode_configLowPowerNodePollTimeoutGet:
+            responseOpcode = SigOpCode_configLowPowerNodePollTimeoutStatus;
+            break;
+        case SigOpCode_configHeartbeatPublicationGet:
+        case SigOpCode_configHeartbeatPublicationSet:
+            responseOpcode = SigOpCode_configHeartbeatPublicationStatus;
+            break;
+        case SigOpCode_configHeartbeatSubscriptionGet:
+        case SigOpCode_configHeartbeatSubscriptionSet:
+            responseOpcode = SigOpCode_configHeartbeatSubscriptionStatus;
             break;
         case SigOpCode_configModelAppBind:
         case SigOpCode_configModelAppUnbind:
@@ -528,7 +543,7 @@
             responseOpcode = SigOpCode_BLOBInformationStatus;
             break;
         default:
-            TeLog(@"Warning:undefault or noAck sendOpcode:0x%x",sendOpcode);
+            TeLogVerbose(@"Warning:undefault or noAck sendOpcode:0x%x",sendOpcode);
             break;
     }
     return responseOpcode;

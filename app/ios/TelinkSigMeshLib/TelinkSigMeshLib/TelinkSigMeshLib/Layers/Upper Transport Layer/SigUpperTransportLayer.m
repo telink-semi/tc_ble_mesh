@@ -122,7 +122,7 @@
     SigNetkeyModel *networkKey = command.netkeyA;
     SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromAccessPdu:accessPdu usingKeySet:keySet ivIndex:command.ivIndexA sequence:sequence];
     TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
-    BOOL isSegmented = pdu.transportPdu.length > 15 || accessPdu.isSegmented;
+    BOOL isSegmented = pdu.transportPdu.length > SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength || accessPdu.isSegmented;
     if (isSegmented) {
         TeLogInfo(@"sending segment pdu.");
         // Enqueue the PDU. If the queue was empty, the PDU will be sent
@@ -139,7 +139,7 @@
     SigNetkeyModel *networkKey = keySet.networkKey;
     SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromAccessPdu:accessPdu usingKeySet:keySet sequence:sequence];
     TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
-    BOOL isSegmented = pdu.transportPdu.length > 15 || accessPdu.isSegmented;
+    BOOL isSegmented = pdu.transportPdu.length > SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength || accessPdu.isSegmented;
     if (isSegmented) {
         TeLogInfo(@"sending segment pdu.");
         // Enqueue the PDU. If the queue was empty, the PDU will be sent
@@ -203,7 +203,7 @@
         TeLogDebug(@"_queues[destination] is empty.");
         return;
     }
-    NSMutableArray *tem = _queues[@(destination)];
+    NSMutableArray *tem = [NSMutableArray arrayWithArray:_queues[@(destination)]];
     if (tem.count == 0) {
         TeLogDebug(@"_queues[destination] is empty.");
         return;

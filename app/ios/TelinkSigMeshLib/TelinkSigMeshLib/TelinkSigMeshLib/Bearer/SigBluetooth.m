@@ -170,6 +170,9 @@
 - (void)connectPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleConnectPeripheralCallback)block {
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
         TeLogError(@"Bluetooth is not power on.")
+        if (block) {
+            block(peripheral,NO);
+        }
         return;
     }
     if (peripheral.state == CBPeripheralStateConnected) {
@@ -192,6 +195,9 @@
 - (void)discoverServicesOfPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleDiscoverServicesCallback)block {
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
         TeLogError(@"Bluetooth is not power on.")
+        if (block) {
+            block(peripheral,NO);
+        }
         return;
     }
     if (peripheral.state != CBPeripheralStateConnected) {
@@ -214,6 +220,9 @@
 - (void)changeNotifyToState:(BOOL)state Peripheral:(CBPeripheral *)peripheral characteristic:(CBCharacteristic *)characteristic timeout:(NSTimeInterval)timeout resultBlock:(bleChangeNotifyCallback)block {
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
         TeLogError(@"Bluetooth is not power on.")
+        if (block) {
+            block(peripheral,NO);
+        }
         return;
     }
     if (peripheral.state != CBPeripheralStateConnected) {
@@ -550,6 +559,12 @@
 }
 
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *, id> *)advertisementData RSSI:(NSNumber *)RSSI {
+    // 将127修正为-90，防止APP扫描不到设备。
+    if (RSSI.intValue == 127) {
+        RSSI = @(-90);
+//        TeLogDebug(@"将127修正为-90，防止APP扫描不到设备。peripheral.identifier.UUIDString=%@",peripheral.identifier.UUIDString);
+    }
+    
     /// there is invalid node when RSSI is greater than or equal to 0.
     if (RSSI.intValue >=0) {
         return;
@@ -591,6 +606,14 @@
     }
     
     SigScanRspModel *scanRspModel = [[SigScanRspModel alloc] initWithPeripheral:peripheral advertisementData:advertisementData];
+    
+    if ([self.delegate respondsToSelector:@selector(needToBeFilteredNodeWithSigScanRspModel:provisioned:peripheral:advertisementData:RSSI:)]) {
+        BOOL result = [self.delegate needToBeFilteredNodeWithSigScanRspModel:scanRspModel provisioned:unProvisionAble peripheral:peripheral advertisementData:advertisementData RSSI:RSSI];
+        if (result) {
+            return;
+        }
+    }
+    
     //=================test==================//
 //    if (![scanRspModel.macAddress.uppercaseString isEqualToString:@"A4C138E44B94"]) {
 //        return;
@@ -629,6 +652,9 @@
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
     TeLogInfo(@"uuid:%@",peripheral.identifier.UUIDString);
+    //v3.3.0,用于过滤重复的sequenceNumber，设备连接成功则清除当前缓存的设备返回的旧的最大sequenceNumber字典。(因为所有设备断电时设备端的sequenceNumber会归零。)
+    [[NSUserDefaults standardUserDefaults] setValue:@{} forKey:SigDataSource.share.meshUUID];
+    [[NSUserDefaults standardUserDefaults] synchronize];
     if ([peripheral isEqual:self.currentPeripheral]) {
         [self addConnectedPeripheralToLocations:peripheral];
         [self connectPeripheralFinish];
@@ -747,7 +773,7 @@
 
 //since ios 11.0
 - (void)peripheralIsReadyToSendWriteWithoutResponse:(CBPeripheral *)peripheral {
-    TeLogVerbose(@"since ios 11.0,peripheralIsReadyToSendWriteWithoutResponse");
+//    TeLogVerbose(@"since ios 11.0,peripheralIsReadyToSendWriteWithoutResponse");
     if ([peripheral isEqual:self.currentPeripheral]) {
         if (self.bluetoothIsReadyToSendWriteWithoutResponseCallback) {
             self.bluetoothIsReadyToSendWriteWithoutResponseCallback(peripheral);

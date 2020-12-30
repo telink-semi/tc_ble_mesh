@@ -99,6 +99,8 @@
 @property (nonatomic, assign) UInt16 defaultAllocatedUnicastRangeHighAddress;
 /// 默认sequenceNumber的步长，默认值为kSnoIncrement（128）.
 @property (nonatomic, assign) UInt8 defaultSnoIncrement;
+/// 默认一个unsegmented Access PDU的最大长度，大于该长度则需要进行segment分包，默认值为kUnsegmentedMessageLowerTransportPDUMaxLength（15，如onoff：2bytes opcode + 9bytes data(1byte onoff+1byte TID+7bytes other data) + 4bytes MIC）。默认一个segmented Access PDU的最大长度为kUnsegmentedMessageLowerTransportPDUMaxLength-3。
+@property (nonatomic, assign) UInt16 defaultUnsegmentedMessageLowerTransportPDUMaxLength;
 
 
 //取消该限制：因为客户可以init该类型，用于创建一个中间的mesh数据，用于比较前后的mesh信息。
@@ -119,6 +121,8 @@
 - (SigNodeModel *)curLocationNodeModel;
 - (NSInteger)getOnlineDevicesNumber;
 - (BOOL)hasNodeExistTimeModelID;
+///Special handling: store the uuid of current provisioner.
+- (void)saveCurrentProvisionerUUID:(NSString *)uuid;
 ///Special handling: get the uuid of current provisioner.
 - (NSString *)getCurrentProvisionerUUID;
 

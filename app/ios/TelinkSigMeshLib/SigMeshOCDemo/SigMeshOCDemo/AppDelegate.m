@@ -39,7 +39,7 @@
 @implementation AppDelegate
 
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {    
     [IQKeyboardManager sharedManager].shouldResignOnTouchOutside = YES;
     [[UINavigationBar appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor whiteColor]}];
     [[UINavigationBar appearance] setTintColor:[UIColor whiteColor]];
@@ -86,6 +86,19 @@
     }
     SigDataSource.share.addStaticOOBDevcieByNoOOBEnable = addStaticOOBDevcieByNoOOBEnable.boolValue;
 
+    //demo v3.3.0新增DLE模式，demo默认关闭DLE模式。（客户定制功能）
+    NSNumber *DLEType = [[NSUserDefaults standardUserDefaults] valueForKey:kDLEType];
+    if (DLEType == nil) {
+        DLEType = [NSNumber numberWithBool:NO];
+        [[NSUserDefaults standardUserDefaults] setValue:DLEType forKey:kDLEType];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    } else {
+        if (DLEType.boolValue) {
+            //(可选)打开DLE功能后，SDK的Access消息是长度大于229字节才进行segment分包。
+            SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = kDLEUnsegmentLength;
+        }
+    }
+
     //demo中setting界面显示的log信息，客户开发到后期，APP稳定后可以不集成该功能，且上架最好关闭log保存功能。(客户发送iTunes中的日志文件“TelinkSDKDebugLogData”给泰凌微即可)
     [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
 //    [SigLogger.share setSDKLogLevel:SigLogLevelAll];
@@ -101,6 +114,7 @@
         
     //(可选)SDK的分组默认绑定5个modelID，可通过以下接口修改分组默认绑定的modelIDs
     SigDataSource.share.defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(SIG_MD_G_ONOFF_S),@(SIG_MD_LIGHTNESS_S),@(SIG_MD_LIGHT_CTL_S),@(SIG_MD_LIGHT_CTL_TEMP_S),@(SIG_MD_LIGHT_HSL_S)]];
+//    [SigDataSource.share.defaultGroupSubscriptionModels addObject:@(0x00000211)];//新增vendorModelID用于测试加组及vendor组控。
     
     //(可选)SDK默认实现了PID为1和7的设备的fast bind功能，其它类型的设备可通过以下接口添加该类型设备默认的nodeInfo以实现fast bind功能
 //    DeviceTypeModel *model = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:8];
@@ -110,7 +124,7 @@
 
     SigMeshLib.share.transmissionTimerInteral = 0.600;
 
-    SigDataSource.share.needPublishTimeModel = NO;
+//    SigDataSource.share.needPublishTimeModel = NO;
     
     return YES;
 }

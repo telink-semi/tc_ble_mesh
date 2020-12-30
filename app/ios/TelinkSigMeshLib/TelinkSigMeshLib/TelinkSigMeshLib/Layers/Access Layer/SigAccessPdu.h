@@ -33,7 +33,29 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class SigUpperTransportPdu,SigMeshAddress;
 
+/// 3.7.3 Access payload
+/// - seeAlso: Mesh_v1.0.pdf  (page.92)
 @interface SigAccessPdu : NSObject
+/// Operation Code. Size is 1, 2, or 3 bytes.
+@property (nonatomic,assign) UInt32 opCode;
+/// Application Parameters. Size is 0 ~ 379.
+@property (nonatomic,strong) NSData *parameters;
+/// Number of packets for this PDU.
+///
+/// Number of Packets | Maximum useful access payload size (octets)
+///            | 32 bit TransMIC    | 64 bit TransMIC
+/// -----------------+---------------------+-------------------------
+/// 1                      | 11 (unsegmented) | n/a
+/// 1                      | 8 (segmented)       | 4 (segmented)
+/// 2                      | 20                          | 16
+/// 3                      | 32                          | 28
+/// n                      | (n×12)-4                 | (n×12)-8
+/// 32                    | 380                        | 376
+- (int)segmentsCount;
+
+
+
+
 /// The Mesh Message that is being sent, or `nil`, when the message
 /// was received.
 @property (nonatomic,strong) SigMeshMessage *message;
@@ -42,35 +64,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigElementModel *localElement;
 /// Whether sending this message has been initiated by the user.
 @property (nonatomic,assign) BOOL userInitiated;
-
 /// Source Address.
 @property (nonatomic,assign) UInt16 source;
 /// Destination Address.
 @property (nonatomic,strong) SigMeshAddress *destination;
-/// Message Op Code.
-@property (nonatomic,assign) UInt32 opCode;
-/// Message parameters as Data.
-@property (nonatomic,strong) NSData *parameters;
-
 /// The Access Layer PDU data that will be sent.
 @property (nonatomic,strong) NSData *accessPdu;
 
 @property (nonatomic,assign) SigLowerTransportPduType isAccessMessage;
 /// Whether the outgoind message will be sent as segmented, or not.
 - (BOOL)isSegmented;
-
-/// Number of packets for this PDU.
-///
-/// Number of Packets | Maximum useful access payload size (octets)
-///                   | 32 bit TransMIC  | 64 bit TransMIC
-/// ------------------+------------------+-------------------------
-/// 1                 | 11 (unsegmented) | n/a
-/// 1                 | 8 (segmented)    | 4 (segmented)
-/// 2                 | 20               | 16
-/// 3                 | 32               | 28
-/// n                 | (n×12)-4         | (n×12)-8
-/// 32                | 380              | 376
-- (int)segmentsCount;
 
 - (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu;
 

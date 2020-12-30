@@ -172,6 +172,7 @@ typedef enum : NSUInteger {
 void saveMeshJsonData(id data);
 /// 解密iTunes中缓存的加密的json数据
 - (NSString *)getDecryptTelinkSDKMeshJsonData;
+- (NSString *)getDecryptTelinkSDKMeshJsonDataWithPassword:(NSString *)password;
 
 /**
  自定义打印，会自动写文件

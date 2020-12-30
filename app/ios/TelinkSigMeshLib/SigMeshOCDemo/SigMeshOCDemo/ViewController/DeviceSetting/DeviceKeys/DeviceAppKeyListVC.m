@@ -201,17 +201,17 @@
 #pragma  mark LongPressGesture
 - (void)cellDidPress:(UILongPressGestureRecognizer *)sender{
     if (sender.state == UIGestureRecognizerStateBegan) {
-        if (self.model.appKeys.count == 1) {
-            [self showAlertSureWithTitle:@"Hits" message:@"The node needs at least one appkey!" sure:nil];
-            return;
-        }
-        if (!SigBearer.share.isOpen) {
-            [self showAlertSureWithTitle:@"Hits" message:@"The mesh network is not online!" sure:nil];
-            return;
-        }
-        
         NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:[sender locationInView:self.tableView]];
         if (indexPath != nil) {
+            if (self.model.appKeys.count == 1) {
+                [self showAlertSureWithTitle:@"Hits" message:@"The node needs at least one appkey!" sure:nil];
+                return;
+            }
+            if (!SigBearer.share.isOpen) {
+                [self showAlertSureWithTitle:@"Hits" message:@"The mesh network is not online!" sure:nil];
+                return;
+            }
+
             SigAppkeyModel *model = self.sourceArray[indexPath.row];
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete appKey, index:0x%04lX key:%@",(long)model.index,model.key];
             __weak typeof(self) weakSelf = self;
@@ -231,7 +231,17 @@
             [ShowTipsHandle.share show:@"KeyBind..."];
         });
         NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
-        [SDKLibCommand keyBind:self.model.address appkeyModel:appKey keyBindType:type.integerValue productID:0 cpsData:nil keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+        UInt8 keyBindType = type.integerValue;
+        UInt16 productID = [LibTools uint16From16String:self.model.pid];
+        DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
+        NSData *cpsData = deviceType.defaultCompositionData.parameters;
+        if (keyBindType == KeyBindTpye_Fast) {
+            if (cpsData == nil || cpsData.length == 0) {
+                keyBindType = KeyBindTpye_Normal;
+            }
+        }
+
+        [SDKLibCommand keyBind:self.model.address appkeyModel:appKey keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share show:@"KeyBind success!"];
                 [ShowTipsHandle.share delayHidden:3.0];
