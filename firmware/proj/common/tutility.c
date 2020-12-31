@@ -125,6 +125,12 @@ void swapX(const u8 *src, u8 *dst, int len)
         dst[len - 1 - i] = src[i];
 }
 
+void swap16(u8 dst[2], const u8 src[2])
+{
+    swapX(src, dst, 2);
+}
+
+
 void swap24(u8 dst[3], const u8 src[3])
 {
     swapX(src, dst, 3);

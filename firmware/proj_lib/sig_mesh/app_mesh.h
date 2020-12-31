@@ -345,7 +345,7 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define ADV_INTERVAL_MS_PROVED	(20)	
 	#else
 #define ADV_INTERVAL_MS			(100)   // with random (0~30ms)
-#define ADV_INTERVAL_MS_PROVED	(150)   // change it send more frequently 
+#define ADV_INTERVAL_MS_PROVED	(120)   // change it send more frequently 
 	#endif
 #elif HOMEKIT_EN	
 #define ADV_INTERVAL_MS			(ADV_INTERVAL_30MS)
@@ -454,8 +454,13 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define MESH_ADV_TYPE_PROXY_FLAG 		(0xE0)  // for FLAG
 #define MESH_ADV_TYPE_PROXY_CFG_FLAG 	(0xE1)  // for FLAG
 
+// --- 
+enum{
+    PREPARE_HANDLE_ADV_LEGACY   = 1,
+    PREPARE_HANDLE_ADV_EXTEND   = 2,    // use type of AUX EXTENDED ADV to send.
+};
 
-
+// ---
 #define MESH_CMD_ACCESS_LEN_MAX (380)   //  (128)
 #define ACCESS_WITH_MIC_LEN_MAX (MESH_CMD_ACCESS_LEN_MAX + 4)
 
@@ -516,12 +521,13 @@ typedef struct{
 	};
 	u16 adr_src;
 	u16 adr_dst;
-	u8* uuid;
+	u8* uuid;           // uuid of virtual address
 	model_common_t *pub_md;
 	u32 rsp_max;
 	u32 op_rsp;     // include vendor id
 	u16 op;
 	u8 immutable_flag;  // immutable-credentials tag which indicate whether or not to changing key between master and DF.
+	u8 extend_adv_short_unsegment_flag;
 	u8 nk_array_idx;
 	u8 ak_array_idx;
 	u8 seg_must;   // 1:  force use segment flow to tx short messages.
@@ -780,6 +786,32 @@ typedef struct{
     };
 }mesh_cmd_bear_seg_t;
 
+#define NW_PAR_MAX_SIZE             (16)  // OFFSETOF(mesh_cmd_bear_seg_t, ut)
+#define GET_ALIGN_CEIL(A, B)        ((((A) + (B) - 1) / (B)) * B)
+
+#define ADV_EXTEND_PAYLOAD_MAX      (255 - (6 + 4)) //  6: mac; 4: extend header;
+#define BEAR_EXTEND_MAX             (ADV_EXTEND_PAYLOAD_MAX + OFFSETOF(mesh_cmd_bear_unseg_t, len))
+
+#define DELTA_EXTEND_AND_NORMAL     (ADV_EXTEND_PAYLOAD_MAX - 31)
+
+#if MESH_DLE_MODE
+#define DLE_RX_FIFO_SIZE            GET_ALIGN_CEIL(DLE_LEN_MAX_RX + 24, 16) //max: 288
+#define DLE_TX_FIFO_SIZE            GET_ALIGN_CEIL(DLE_LEN_MAX_TX + 12, 4)  //max: 264
+#else
+#define DLE_RX_FIFO_SIZE            0   // use 0 to show compile warning
+#define DLE_TX_FIFO_SIZE            0   // use 0 to show compile warning
+#endif
+
+#if WIN32
+#define GET_DELTA_EXTEND_BEAR       (isVC_DLEModeExtendBearer() ? DELTA_EXTEND_AND_NORMAL : 0)
+#define MESH_BEAR_SIZE              (sizeof(mesh_cmd_bear_unseg_t) + DELTA_EXTEND_AND_NORMAL) // buffer default support DLE length
+#else
+#define GET_DELTA_EXTEND_BEAR       (tx_bear_extend_en ? DELTA_EXTEND_AND_NORMAL : 0) // used in library
+#define MESH_BEAR_SIZE              (sizeof(mesh_cmd_bear_unseg_t) + GET_DELTA_EXTEND_BEAR)
+#endif
+
+#define MESH_UNSEGMENT_MAX_SIZE     (ACCESS_WITH_MIC_LEN_MAX_UNSEG + GET_DELTA_EXTEND_BEAR)
+
 typedef struct{
     union{
         u16 valid;
@@ -843,7 +875,7 @@ int	rf_link_slave_add_status (mesh_rc_rsp_t *p_rsp, u16 op);
 int mesh_rsp_handle(mesh_rc_rsp_t *p_rsp);
 int is_busy_tx_seg(u16 adr_dst);
 int is_busy_reliable_cmd(u16 adr_dst);
-u8 * get_ut_tx_buf(u32 len_ac, u16 adr_dst, u8 *ac2self, u32 ac2self_max, int seg_must);
+u8 * get_ut_tx_buf(material_tx_cmd_t *p, u8 *ac2self, u32 ac2self_max, int seg_must);
 
 int is_unicast_adr(u16 adr);
 int is_virtual_adr(u16 adr);
@@ -885,6 +917,7 @@ typedef struct{
 	u8 nid  :7;         // nw par
 	u8 ivi  :1;
 	u8 nk_array_idx;    // decryption key
+	u8 len_ut_max_single_seg;
 	u8 par_saved;
 	u8 status;
 	u8 seg_cnt;
@@ -937,7 +970,7 @@ extern mesh_rx_seg_par_t mesh_rx_seg_par;
 
 #define FRIEND_KEY_NO_SECU_FLAG     (0x7F)
 
-#define SUB_LIST_MAX_LPN            (5)     //  max contain 5 adr in one unsegment control message, be used in library, user can't modify now.
+#define SUB_LIST_MAX_LPN            (5)     //  max contain 5 adr in one unsegment control message
 #define SUB_LIST_MAX_IN_ONE_MSG    	(5)
 #if PTS_TEST_EN
 #define FN_CACHE_SIZE_LOG           (3)		//  FN BV08 required
@@ -966,7 +999,7 @@ extern mesh_rx_seg_par_t mesh_rx_seg_par;
 
 #define LPN_SCAN_PROVISION_START_TIMEOUT_MS (60*1000)   // from power up to this time, if didn't receive provision start command, LPN will auto enter sleep.
 #define LPN_WORKING_TIMEOUT_MS   	        (60*1000)   // Prevent abnormal working time.
-#define LPN_START_REQUEST_AFTER_BIND_MS     (3*1000)    // 
+#define LPN_START_REQUEST_AFTER_BIND_MS     (GATT_LPN_EN ? (6*1000) : (3*1000))    // 
 
 #define LPN_ADV_EN                  0
 #define LPN_ADV_INTERVAL_MS         (2000)
@@ -1304,7 +1337,6 @@ extern mesh_fri_ship_other_t fn_other_par[MAX_LPN_NUM];
 extern fn_ctl_rsp_delay_t fn_ctl_rsp_delay[MAX_LPN_NUM];
 extern mesh_fri_ship_proc_fn_t fri_ship_proc_fn[MAX_LPN_NUM];
 extern mesh_fri_ship_proc_lpn_t fri_ship_proc_lpn;
-extern mesh_lpn_sleep_t  lpn_sleep;
 extern mesh_lpn_par_t mesh_lpn_par;
 
 void friend_ship_establish_ok_cb_lpn();
@@ -1428,9 +1460,6 @@ typedef enum{
 }mesh_sts_code_e;
 #endif
 //--------------- inline function
-static inline u8 mesh_nw_transmit_cnt_get(){
-	return model_sig_cfg_s.nw_transmit.count;
-}
 
 static inline int is_cfg_model(u32 model_id, int sig_flag)
 {
@@ -1495,7 +1524,7 @@ enum{
 extern u8 key_bind_list_cnt;
 void mesh_kr_cfgcl_status_update(mesh_rc_rsp_t *rsp);
 int mesh_sec_msg_dec_virtual_ll(u16 ele_adr, u32 model_id, bool4 sig_model, 
-			u8 *key, u8 *nonce, u8 *dat, int n, int mic_length, u16 adr_dst, u8 *dat_org);
+			u8 *key, u8 *nonce, u8 *dat, int n, int mic_length, u16 adr_dst, const u8 *dat_org);
 void mesh_set_model_ele_adr(u16 ele_adr, u32 model_id, bool4 sig_model);
 void mesh_tx_pub_period(u16 ele_adr, u32 model_id, bool4 sig_model);
 void ev_handle_traversal_cps_ll(u32 ev, u8 *par, u16 ele_adr, u32 model_id, bool4 sig_model);
@@ -1508,6 +1537,8 @@ u8 is_model_in_key_bind_list(u16 *p_mode_id);
 int mesh_tx_cmd_rsp_cfg_model(u16 op, u8 *par, u32 par_len, u16 adr_dst);
 u32 get_blt_conn_interval_us();
 u32 get_ele_idx(u16 ele_adr);
+int mesh_rsp_err_st_sub_list(u8 st, u16 ele_adr, u32 model_id, bool4 sig_model, u16 adr_dst);
+u8 mesh_add_pkt_model_sub_list(u16 ele_adr, u32 model_id, bool4 sig_model, u16 adr_src);
 
 //--------
 int blc_hci_handler (u8 *p, int n);
@@ -1519,7 +1550,7 @@ void show_ota_result(int result);
 int factory_reset_handle ();
 int factory_reset_cnt_check ();
 int factory_reset();
-void kick_out();
+void kick_out(int led_en);
 int is_fixed_group(u16 adr_dst);
 
 int my_fifo_push_adv (my_fifo_t *f, u8 *p, u8 n, u8 ow);
@@ -1544,7 +1575,7 @@ u16 mesh_group_match_friend(u16 adr);
 u8 get_tx_nk_arr_idx_friend(u16 adr, u16 op);
 u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, bool4 sig_model, u8 *idx_out, int set_flag);
 u8 find_ele_support_model_and_match_dst(mesh_adr_list_t *adr_list, u16 adr_dst, u32 model_id, bool4 sig_model);
-int mesh_sec_msg_dec_virtual (u8 *key, u8 *nonce, u8 *dat, int n, int mic_length, u16 adr_dst, u8 *dat_org);
+int mesh_sec_msg_dec_virtual (u8 *key, u8 *nonce, u8 *dat, int n, int mic_length, u16 adr_dst, const u8 *dat_org);
 int mesh_rc_data_layer_access(u8 *ac, int len_ac, mesh_cmd_nw_t *p_nw);
 void mesh_seg_ack_poll();
 int is_busy_segment_or_reliable_flow();
@@ -1585,13 +1616,7 @@ void friend_subsc_add(u16 *adr_list, u32 subsc_cnt);
 void friend_subsc_rmv(u16 *adr_list, u32 subsc_cnt);
 
 void mesh_lpn_proc_suspend ();
-void mesh_lpn_sleep_prepare(u16 op, u32 sleep_ms);
-void mesh_lpn_sleep_set_ready();
-void mesh_lpn_sleep_later_op(u16 op, u32 sleep_ms);
-void mesh_lpn_sleep_enter_later();
-void mesh_lpn_suspend_timer(int sleep_ms, int deep_retention_flag);
-void mesh_lpn_stop_to_wait_io_wakeup();
-void mesh_lpn_sleep_enter_normal_seg();
+void mesh_lpn_sleep_prepare(u16 op);
 void mesh_friend_ship_proc_init_lpn();
 
 void suspend_enter(u32 sleep_ms, int deep_retention_flag);
@@ -1665,6 +1690,14 @@ void mesh_kr_cfgcl_mode_set(u16 addr, u8 mode,u16 nk_idx);
 int mesh_adr_check(u16 adr_src, u16 adr_dst);
 int mesh_adr_check_src_own_rx(u16 adr_src);
 int mesh_proxy_adv2gatt(u8 *bear,u8 adv_type);
+
+/************************** mesh_dongle_adv_report2vc **************************
+function : copy the dec mesh message to hci tx fifo  
+para:
+	p_payload: pointer of the message, point to GET_ADV_PAYLOAD_FROM_BEAR(mesh_cmd_bear_unseg_t)
+ret: 0  means push fifo OK 
+	-1 or other value means err 
+****************************************************************************/
 int mesh_dongle_adv_report2vc(u8 *p_payload, u8 report_cmd);
 int mesh_bear_tx2mesh(u8 *bear, u8 trans_par_val);
 int mesh_bear_tx2gatt(u8 *bear,u8 adv_type);
@@ -1731,7 +1764,7 @@ int OnAppendLog_vs(unsigned char *p, int len);
 #endif
 // level part 
 
-void tl_log_msg(u32 level_module,u8 *pbuf,int len,char  *format,...);
+int tl_log_msg(u32 level_module,u8 *pbuf,int len,char  *format,...);
 void tl_log_msg_err(u16 module,u8 *pbuf,int len,char *format,...);
 void tl_log_msg_warn(u16 module,u8 *pbuf,int len,char  *format,...);
 void tl_log_msg_info(u16 module,u8 *pbuf,int len,char  *format,...);
@@ -1848,7 +1881,13 @@ typedef enum{
 #define LOG_GET_MODULE(level_module)            (level_module & 0x1F)
 #define LOG_GET_LEVEL(level_module)             ((level_module >> 5) & 0x07)
 
-#define LOG_FW_FUNC_EN      1 // (__LIB_EN__ || HCI_LOG_FW_EN) // if use __LIB_EN__, it will be different between src and release version.
+#if WIN32
+	#define LOG_FW_FUNC_EN      1
+#else
+	#ifndef LOG_FW_FUNC_EN
+	#define LOG_FW_FUNC_EN      (HCI_LOG_FW_EN)
+	#endif
+#endif
 
 #if (LOG_FW_FUNC_EN && HCI_LOG_FW_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_USER))
 #define LOG_USER_MSG_INFO(pbuf,len,format,...)  tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_USER,TL_LOG_USER),pbuf,len,format,__VA_ARGS__)
@@ -1856,32 +1895,32 @@ typedef enum{
 #define LOG_USER_MSG_INFO(pbuf,len,format,...)
 #endif
 
-#if (LOG_FW_FUNC_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_LIB))
-#define LOG_MSG_LIB(module,pbuf,len,format,...)  tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_LIB,module),pbuf,len,format,__VA_ARGS__)
+#if (TL_LOG_LEVEL >= TL_LOG_LEVEL_LIB)
+#define LOG_MSG_LIB(module,pbuf,len,format,...)  do{int val; val = (LOG_FW_FUNC_EN && tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_LIB,module),pbuf,len,format,__VA_ARGS__));}while(0)
 #else
 #define LOG_MSG_LIB(module,pbuf,len,format,...) 
 #endif 
 
-#if (LOG_FW_FUNC_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_ERROR))
-#define LOG_MSG_ERR(module,pbuf,len,format,...)  tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_ERROR,module),pbuf,len,format,__VA_ARGS__)
+#if (TL_LOG_LEVEL >= TL_LOG_LEVEL_ERROR)
+#define LOG_MSG_ERR(module,pbuf,len,format,...)  do{int val; val = (LOG_FW_FUNC_EN && tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_ERROR,module),pbuf,len,format,__VA_ARGS__));}while(0)
 #else
 #define LOG_MSG_ERR(module,pbuf,len,format,...) 
 #endif 
 
-#if (LOG_FW_FUNC_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_WARNING))
-#define LOG_MSG_WARN(module,pbuf,len,format,...) tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_WARNING,module),pbuf,len,format,__VA_ARGS__)
+#if (TL_LOG_LEVEL >= TL_LOG_LEVEL_WARNING)
+#define LOG_MSG_WARN(module,pbuf,len,format,...) do{int val; val = (LOG_FW_FUNC_EN && tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_WARNING,module),pbuf,len,format,__VA_ARGS__));}while(0)
 #else
 #define LOG_MSG_WARN(module,pbuf,len,format,...) 
 #endif 
 
-#if (LOG_FW_FUNC_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_INFO))
-#define LOG_MSG_INFO(module,pbuf,len,format,...) tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_INFO,module),pbuf,len,format,__VA_ARGS__)
+#if (TL_LOG_LEVEL >= TL_LOG_LEVEL_INFO)
+#define LOG_MSG_INFO(module,pbuf,len,format,...) do{int val; val = (LOG_FW_FUNC_EN && tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_INFO,module),pbuf,len,format,__VA_ARGS__));}while(0)
 #else
 #define LOG_MSG_INFO(module,pbuf,len,format,...) 
 #endif
 
-#if (LOG_FW_FUNC_EN && (TL_LOG_LEVEL >= TL_LOG_LEVEL_DEBUG))
-#define LOG_MSG_DBG(module,pbuf,len,format,...)	tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_DEBUG,module),pbuf,len,format,__VA_ARGS__)
+#if (TL_LOG_LEVEL >= TL_LOG_LEVEL_DEBUG)
+#define LOG_MSG_DBG(module,pbuf,len,format,...)	do{int val; val = (LOG_FW_FUNC_EN && tl_log_msg(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_DEBUG,module),pbuf,len,format,__VA_ARGS__));}while(0)
 #else
 #define LOG_MSG_DBG(module,pbuf,len,format,...) 
 #endif 
@@ -1894,6 +1933,7 @@ typedef enum{
 
 #define LOG_MSG_FUNC_NAME()     do{LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "%s", __FUNCTION__);}while(0)
 void MessageBoxVC(const char *str);
+int isVC_DLEModeExtendBearer();
 
 FLASH_ADDRESS_EXTERN;
 extern my_fifo_t mesh_adv_cmd_fifo;
@@ -1934,15 +1974,21 @@ extern u8 pub_flag;
 #endif
 
 #define while_1_test        do{while(1);}while(0)
-#define is_relay_support_and_en	(FEATURE_RELAY_EN && (RELAY_SUPPORT_ENABLE == model_sig_cfg_s.relay))
+#define is_relay_support_and_en	(FEATURE_RELAY_EN && (RELAY_SUPPORT_ENABLE == mesh_get_relay()))
 #if WIN32
 #define is_proxy_support_and_en	 0
 #else
-#define is_proxy_support_and_en	(FEATURE_PROXY_EN && (GATT_PROXY_SUPPORT_ENABLE == model_sig_cfg_s.gatt_proxy) \
+#define is_proxy_support_and_en	(FEATURE_PROXY_EN && (GATT_PROXY_SUPPORT_ENABLE == mesh_get_gatt_proxy()) \
 								 && mesh_is_proxy_ready())
 #endif
-#define is_fn_support_and_en	(FEATURE_FRIEND_EN && (FRIEND_SUPPORT_ENABLE == model_sig_cfg_s.frid))
+#define is_fn_support_and_en	(FEATURE_FRIEND_EN && (FRIEND_SUPPORT_ENABLE == mesh_get_friend()))
 #define is_lpn_support_and_en	(FEATURE_LOWPOWER_EN && lpn_provision_ok)
+
+#if BLE_REMOTE_PM_ENABLE
+#define ENABLE_SUSPEND_MASK 	bls_pm_setSuspendMask(SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN)
+#else
+#define ENABLE_SUSPEND_MASK
+#endif
 
 int mesh_construct_adv_bear_with_nw(u8 *bear, u8 *nw, u8 len_nw);
 u8 gateway_provision_rsp_cmd(u16 unicast_adr);
@@ -1959,22 +2005,22 @@ void friend_subsc_list_add_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr
 void friend_subsc_list_rmv_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr_list_rmv, u32 cnt);
 
 
-static inline u8 mesh_nw_len_get_by_bear (mesh_cmd_bear_unseg_t *p_br){
+static inline u8 mesh_nw_len_get_by_bear (const mesh_cmd_bear_unseg_t *p_br){
     return (p_br->len - 1);	// 1 : sizeof(p_br->type)
 }
 
-static inline u8 mesh_lt_len_get_by_bear (mesh_cmd_bear_unseg_t *p_br)
+static inline u8 mesh_lt_len_get_by_bear (const mesh_cmd_bear_unseg_t *p_br)
 {
-    mesh_cmd_nw_t *p_nw = &p_br->nw;
+    const mesh_cmd_nw_t *p_nw = &p_br->nw;
     int len_nw = mesh_nw_len_get_by_bear(p_br);
     return (len_nw - OFFSETOF(mesh_cmd_nw_t, data)- (p_nw->ctl ? SZMIC_NW64 : SZMIC_NW32));
 }
 
-static inline u8 mesh_bear_len_get (mesh_cmd_bear_unseg_t *p_br){	// exclude trans_par_val
+static inline u8 mesh_bear_len_get (const mesh_cmd_bear_unseg_t *p_br){	// exclude trans_par_val
     return (p_br->len + OFFSETOF(mesh_cmd_bear_unseg_t, len) + sizeof(p_br->len));
 }
 
-static inline u8 mesh_adv_payload_len_get (mesh_cmd_bear_unseg_t *p_br){
+static inline u8 mesh_adv_payload_len_get (const mesh_cmd_bear_unseg_t *p_br){
     return (p_br->len + OFFSETOF(mesh_cmd_bear_unseg_t, len));
 }
 
@@ -2099,20 +2145,29 @@ void aes_ll_encryption(u8 *key, u8 *plaintext, u8 *result);
 int dualmode_ota_auth_value_check (const u8 key[8], u8 uuid[16], const u8 auth_app[16]);
 void cmd_ota_mesh_hk_login_handle(const u8 auth_app[16]);
 void mesh_seg_filter_adr_set(u16 adr);
+u32 mesh_max_payload_get (u32 ctl, bool4 extend_adv_short_unseg);
+int is_extend_unseg2short_unseg(u16 op);
+int is_extend_unseg2short_unseg_ctl(u16 ctl_op);
 
 extern u8 mesh_node_report_enable;
 extern u32 online_status_timeout;
 
 #endif
 
+#if ATT_REPLACE_PROXY_SERVICE_EN
+#define proxy_Out_ccc			provision_Out_ccc
+#define proxy_In_ccc			provision_In_ccc
+#endif
+
 #if DEBUG_CFG_CMD_GROUP_AK_EN
 record_info_t *get_existed_nw_notify_record(u16 addr);
 record_info_t * add_nw_notify_record(u8 *p_payload);
-void update_nw_notify_num(rf_packet_adv_t * pAdv, u8 next_buffer);
+void update_nw_notify_num(u8 * p_rf_pkt, u8 next_buffer);
 #endif
 //--------------- include
 #include "../../vendor/common/mesh_node.h"
 #include "../../proj_lib/mesh_crypto/mesh_crypto.h"
+#include "../../vendor/common/config_model.h"
 #include "../../vendor/common/system_time.h"
 #include "../../vendor/common/app_beacon.h"
 #include "../../vendor/common/app_provison.h"
@@ -2122,6 +2177,7 @@ void update_nw_notify_num(rf_packet_adv_t * pAdv, u8 next_buffer);
 #include "../../vendor/common/vendor_model.h"
 #if MI_API_ENABLE
 #include "../../vendor/common/mi_api/mi_vendor/vendor_model_mi.h"
+#include "mi_config.h"
 #endif
 #include "../../vendor/common/cmd_interface.h"
 #include "../../vendor/common/sensors_model.h"

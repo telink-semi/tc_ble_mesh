@@ -32,6 +32,9 @@
 #include "time_model.h"
 #include "scheduler.h"
 #include "mesh_property.h"
+#if (!WIN32 && EXTENDED_ADV_ENABLE)
+#include "../../stack/ble/ll/ll_ext_adv.h"
+#endif
 #include "vendor/user_app/user_app.h"
 
 /** @addtogroup Mesh_Common
@@ -112,7 +115,7 @@ extern u16 g_reliable_retry_interval_min;
 extern u16 g_reliable_retry_interval_max;
 extern u8 pair_login_ok;
 extern u8 mesh_need_random_delay;
-extern const u8 UART_TX_LEN_MAX;
+extern const u16 UART_TX_LEN_MAX;
 extern u16 gateway_seg_buf_len;
 extern u8 gateway_seg_buf[];
 
@@ -170,6 +173,19 @@ int mesh_tx_cmd2self_primary(u32 light_idx, u8 *ac, int len_ac);
 u32 get_mesh_pub_interval_ms(u32 model_id, bool4 sig_model, mesh_pub_period_t *period);
 void publish_when_powerup();
 int is_need_response_to_self(u16 adr_dst, u16 op);
+int app_func_before_suspend();
+
+#if GATEWAY_ENABLE
+typedef u8 (*access_layer_dst_addr)(mesh_cmd_nw_t *p_nw);
+void register_access_layer_dst_addr_callback(void* p);
+/**
+ * @brief  the callback function for register_access_layer_dst_addr_callback
+ *   gateway can set the dst addr valid by return true even not subscribe the addr
+ * @param  p_nw: point to network message
+ * @return: 0:invaild,  1:valid
+ */
+u8 mesh_access_layer_dst_addr_valid(mesh_cmd_nw_t *p_nw);
+#endif
 
 extern u8 gatt_adv_send_flag;
 extern u16 g_vendor_id;
@@ -296,11 +312,32 @@ void vendor_md_cb_pub_st_set2ali();
 int pre_set_beacon_to_adv(rf_packet_adv_t *p);
 u16 swap_u16_data(u16 swap);
 void mesh_seg_must_en(u8 en);
-int mesh_dev_key_candi_decrypt_cb( u16 src_adr,int dirty_flag ,u8* ac_backup ,unsigned char *r_an, 
+int mesh_dev_key_candi_decrypt_cb( u16 src_adr,int dirty_flag ,const u8* ac_backup ,unsigned char *r_an, 
 											       unsigned char* ac, int len_ut, int mic_length);
 u8 mesh_pub_retransmit_para_en();
 void mi_vendor_cfg_rsp_proc();
 void set_random_adv_delay(int en);
+void bls_l2cap_requestConnParamUpdate_Normal();
+
+// ------------ clock -----------
+#if (CHIP_TYPE >= CHIP_TYPE_8258)
+    #if (CLOCK_SYS_CLOCK_HZ == 16000000)
+#define SYS_CLK_CRYSTAL     (SYS_CLK_16M_Crystal)
+    #elif (CLOCK_SYS_CLOCK_HZ == 24000000)
+#define SYS_CLK_CRYSTAL     (SYS_CLK_24M_Crystal)
+    #elif (CLOCK_SYS_CLOCK_HZ == 32000000)
+#define SYS_CLK_CRYSTAL     (SYS_CLK_32M_Crystal)
+    #elif (CLOCK_SYS_CLOCK_HZ == 48000000)
+#define SYS_CLK_CRYSTAL     (SYS_CLK_48M_Crystal)
+    #else
+#error clock not set properly
+    #endif
+#else
+#define SYS_CLK_CRYSTAL     // NULL
+#endif
+
+void clock_switch_to_highest();
+void clock_switch_to_normal();
 
 
 /**

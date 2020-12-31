@@ -132,6 +132,57 @@ start_suspend:
     tmov r8, r8
     tmov r8, r8
 
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+	
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+	
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    tmov r8, r8
+    
     tpop {r2-r3}
     tjex lr
 

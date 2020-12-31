@@ -68,6 +68,24 @@ extern "C" {
 #ifndef	SWITCH_FW_ENABLE
 #define SWITCH_FW_ENABLE		0
 #endif
+#ifndef	GATT_LPN_EN
+#define GATT_LPN_EN		        0
+#endif
+#ifndef	MESH_DLE_MODE
+#define MESH_DLE_MODE		    0
+#endif
+#ifndef	MESH_LONG_PACKET_EN
+#define MESH_LONG_PACKET_EN		0
+#endif
+#ifndef	EXTENDED_ADV_ENABLE
+#define EXTENDED_ADV_ENABLE		0
+#endif
+
+#if __PROJECT_MESH_PRO__
+#define MESH_BLE_NOTIFY_FIFO_EN     0
+#else
+#define MESH_BLE_NOTIFY_FIFO_EN     (MESH_DLE_MODE != MESH_DLE_MODE_EXTEND_BEAR)
+#endif
 
 //////////// debug  /////////////////////////////////
 #ifndef __DEBUG__

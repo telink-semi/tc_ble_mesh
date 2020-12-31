@@ -31,7 +31,7 @@
 
 #define VERSION_GET(low, high)      ((low)|(high << 8))
 
-#define FW_VERSION_TELINK_RELEASE   (VERSION_GET(0x33, 0x32))       // user can't modify
+#define FW_VERSION_TELINK_RELEASE   (VERSION_GET(0x33, 0x33))       // user can't modify
 
 #define PID_UNKNOW              (0x0000)
 // ------ light ------
@@ -80,7 +80,11 @@ format: please refer to spec "4.2.1.1 Composition Data Page 0"
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 #elif (__PROJECT_MESH__)   // light
 #define MESH_PID_SEL		(LIGHT_TYPE_SEL)
+	#if DU_ENABLE
+#define MESH_VID		    DU_FW_VER       // in the du mode ,we will use to set version .
+	#else
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
+	#endif
 #elif (__PROJECT_MESH_GW_NODE_HK__)   // light
 #define MESH_PID_SEL		(LIGHT_TYPE_SEL)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine

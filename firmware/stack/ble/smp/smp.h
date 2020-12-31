@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -38,6 +38,9 @@
 
 
 
+#ifndef	SIMPLE_MULTI_MAC_EN
+#define SIMPLE_MULTI_MAC_EN					0
+#endif
 
 #define SMP_INFO_STORAGE_IN_FLASH			1
 #define SMP_INFO_STORAGE_IN_EEPROM			2
@@ -70,8 +73,8 @@
 
 #define		LL_CONNECTION_MAX						1  //controller determine this value
 
-#if (LL_MULTI_MASTER_SINGLE_SLAVE_ENABLE)
-	#define 	SMP_BONDING_DEVICE_MAX_NUM				12
+#if (SIMPLE_MULTI_MAC_EN)
+	#define 	SMP_BONDING_DEVICE_MAX_NUM				16
 #else
 	#define 	SMP_BONDING_DEVICE_MAX_NUM				4
 #endif
@@ -175,6 +178,7 @@ typedef struct{
 
 	u16						rsvd;
 	u8						own_conn_addr[6];
+	u8		                local_irk[16];
 
 
 }smp_param_own_t;
@@ -245,7 +249,7 @@ void 		blc_smp_param_setBondingDeviceMaxNumber ( int device_num);
 
 void 		blc_smp_setSecurityLevel(le_security_mode_level_t  mode_level);
 
-
+void 		blc_smp_preMakeEcdhKeysEnable(u8 enable);
 
 
 

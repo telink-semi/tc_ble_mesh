@@ -376,7 +376,6 @@ void main_loop ()
 	
 	mesh_loop_process();
 	#if MI_API_ENABLE
-	telink_gatt_event_loop();
 	ev_main();
 	#if XIAOMI_MODULE_ENABLE
 	mi_api_loop_run();
@@ -432,7 +431,9 @@ void user_init()
 	#if DEBUG_EVB_EN
 	set_sha256_init_para_mode(1);	// must 1
 	#else
-		if((MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)){
+		if((MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)||
+			(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)||
+			(MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)){
             set_sha256_init_para_mode(1);
 		}else if (MESH_USER_DEFINE_MODE == MESH_AES_ENABLE){
 

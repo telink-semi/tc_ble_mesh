@@ -48,6 +48,7 @@ void friend_cmd_send_subsc_conf(u16 adr_dst, u8 transNo);
 int mesh_tx_cmd_layer_upper_ctl_FN(u8 op, u8 *par, u32 len_par, u16 adr_dst);
 void mesh_iv_update_start_poll_fn(u8 iv_update_by_sno, u8 beacon_iv_update_pkt_flag);
 u16 mesh_group_match_friend(u16 adr);
+int fn_cache_get_extend_adv_short_unseg(u32 ctl, u8 len_ut_max_single_seg_rx);
 
 
 extern u8 g_max_lpn_num;

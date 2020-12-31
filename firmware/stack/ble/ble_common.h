@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -62,10 +62,8 @@
 #define			BLUETOOTH_VER_4_2				8
 #define			BLUETOOTH_VER_5_0				9
 
-#define			BLUETOOTH_VER					BLUETOOTH_VER_4_2
-
 #ifndef 		BLUETOOTH_VER
-#define			BLUETOOTH_VER					BLUETOOTH_VER_5_0
+#define			BLUETOOTH_VER					BLUETOOTH_VER_4_2	// modify by weixiong
 #endif
 
 
@@ -94,21 +92,23 @@
 
 #elif (BLUETOOTH_VER == BLUETOOTH_VER_4_2)
 
-	#define LL_FEATURE_ENABLE_LE_ENCRYPTION								1
-	#define	LL_FEATURE_ENABLE_EXTENDED_REJECT_INDICATION				1
-	#define	LL_FEATURE_ENABLE_SLAVE_INITIATED_FEATURES_EXCHANGE			1
-	#define	LL_FEATURE_ENABLE_LE_PING									1
+	#define LL_FEATURE_ENABLE_LE_ENCRYPTION								0	// modify by weixiong
+	#define	LL_FEATURE_ENABLE_EXTENDED_REJECT_INDICATION				0	// modify by weixiong
+	#define	LL_FEATURE_ENABLE_SLAVE_INITIATED_FEATURES_EXCHANGE			0	// modify by weixiong
+	#define	LL_FEATURE_ENABLE_LE_PING									0	// modify by weixiong
 	#define	LL_FEATURE_ENABLE_LE_DATA_LENGTH_EXTENSION					BLE_CORE42_DATA_LENGTH_EXTENSION_ENABLE
+	#define	LL_FEATURE_ENABLE_LL_PRIVACY								0
 
 	#define LL_CMD_MAX						  							LL_LENGTH_RSP
 
 #elif (BLUETOOTH_VER == BLUETOOTH_VER_5_0)
 
-	#define LL_FEATURE_ENABLE_LE_ENCRYPTION								1
-	#define	LL_FEATURE_ENABLE_EXTENDED_REJECT_INDICATION				1
-	#define	LL_FEATURE_ENABLE_SLAVE_INITIATED_FEATURES_EXCHANGE			1
-	#define	LL_FEATURE_ENABLE_LE_PING									1
+	#define LL_FEATURE_ENABLE_LE_ENCRYPTION								0
+	#define	LL_FEATURE_ENABLE_EXTENDED_REJECT_INDICATION				0
+	#define	LL_FEATURE_ENABLE_SLAVE_INITIATED_FEATURES_EXCHANGE			0
+	#define	LL_FEATURE_ENABLE_LE_PING									0
 	#define	LL_FEATURE_ENABLE_LE_DATA_LENGTH_EXTENSION					BLE_CORE42_DATA_LENGTH_EXTENSION_ENABLE
+	#define	LL_FEATURE_ENABLE_LL_PRIVACY								0
 
 	#define	LL_FEATURE_ENABLE_LE_2M_PHY									LL_FEATURE_SUPPORT_LE_2M_PHY
 	#define	LL_FEATURE_ENABLE_LE_CODED_PHY								LL_FEATURE_SUPPORT_LE_CODED_PHY
@@ -551,10 +551,36 @@ typedef struct{
 	u8  rf_len;				//LEN(6)_RFU(2)
 
 	u8	advA[6];			//address
+	#if (MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR)
+	u8  data[249];          // 255 -6(mac)
+	#else
 	u8	data[31];			//0-31 byte
+	#endif
 }rf_packet_adv_t;
 
 
+#if EXTENDED_ADV_ENABLE
+typedef struct {
+	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
+
+	rf_adv_head_t  header;
+	u8  rf_len;				//LEN(6)_RFU(2)
+	
+	u8  adv_mode  :2;
+	u8  header_len:6;
+
+	u8 flags;
+
+	u16 data_id: 12;
+	u16 set_id :  4;
+
+	u8 chn_idx         :6;
+	u8 clock_accuracy  :1;
+	u8 offset_units    :1;
+	u16 aux_offset     :13;
+	u16 aux_phy        :3;
+}rf_packet_adv_ext_ind_t;
+#endif
 
 typedef struct{
 	u32 dma_len;            //won't be a fixed number as previous, should adjust with the mouse package number
@@ -890,7 +916,7 @@ typedef struct{
 	u16	chanId;
 	u8  opcode;
 	u8  datalen;
-	u16  data[3];
+	u8  data[3];
 }rf_packet_att_readByGroupTypeRsp_t;
 
 typedef struct{
@@ -1352,4 +1378,6 @@ typedef struct {
 	u8	status;
 	u16	handle;
 } event_enc_refresh_t;
+
+
 #endif

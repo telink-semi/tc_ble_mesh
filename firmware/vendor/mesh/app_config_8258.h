@@ -86,6 +86,8 @@ extern "C" {
 #ifndef HCI_ACCESS
 #if (WIN32 || PTS_TEST_EN)
 #define HCI_ACCESS		HCI_USE_USB
+#elif MESH_MONITOR_EN
+#define HCI_ACCESS		HCI_USE_UART
 #else
 #define HCI_ACCESS		HCI_USE_NONE
 #endif 
@@ -140,6 +142,26 @@ extern "C" {
 #define TRANSITION_TIME_DEFAULT_VAL (GET_TRANSITION_TIME_WITH_STEP(1, TRANSITION_STEP_RES_1S)) // (0x41)  // 0x41: 1 second // 0x00: means no default transition time
 	#endif
 #endif
+#endif
+
+#if MI_API_ENABLE
+#define MESH_DLE_MODE               MESH_DLE_MODE_GATT
+#define DLE_LEN_MAX_RX              (136)
+#define DLE_LEN_MAX_TX              (40)
+#elif GATT_LPN_EN
+#define MESH_DLE_MODE               MESH_DLE_MODE_EXTEND_BEAR
+#define DLE_LEN_MAX_RX              (MAX_OCTETS_DATA_LEN_EXTENSION)
+#define DLE_LEN_MAX_TX              (80)
+#elif DEBUG_CFG_CMD_GROUP_AK_EN
+#define MESH_DLE_MODE               0   // because not enough RAM
+#elif EXTENDED_ADV_ENABLE
+#define MESH_DLE_MODE               MESH_DLE_MODE_EXTEND_BEAR
+#define DLE_LEN_MAX_RX              (MAX_OCTETS_DATA_LEN_EXTENSION) // must MAX_OCTETS_DATA_LEN_EXTENSION
+#define DLE_LEN_MAX_TX              (40)
+#else
+#define MESH_DLE_MODE               MESH_DLE_MODE_GATT
+#define DLE_LEN_MAX_RX              (56)
+#define DLE_LEN_MAX_TX              (40)
 #endif
 
 /////////////////// MODULE /////////////////////////////////

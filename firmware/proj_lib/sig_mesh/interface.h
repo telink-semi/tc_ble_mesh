@@ -493,13 +493,13 @@ function : use the para of the provision comfirm  key and the provision random t
 para:
 	p_comfirm: the result of the comfirm value (16 bytes) (out)
 	p_comfirm_key: the pointer of the comfirm key (16 bytes)(in)
-	pro_random: the pointer of the random value (16 bytes)(in)
+	p_random: the pointer of the random value (16 bytes)(in)
 ret: 1  means OK 
 	not use the return 
 notice: it should wait the result of the comfirm value before the function return ,or the flow will be error
 	
 ******************************************************************************/
-extern int mesh_sec_prov_cloud_comfirm(u8* p_comfirm,u8 *p_comfirm_key,u8 *pro_random);
+extern int mesh_sec_prov_cloud_comfirm(u8* p_comfirm,u8 *p_comfirm_key,u8 *p_random);
 /**************************mesh_cloud_dev_comfirm_check***************************
 function : use the para of the comfirm key and the dev random to calculate the device random ,and compare with the random
 		value receive from the device .

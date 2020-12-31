@@ -167,6 +167,14 @@ _attribute_ram_code_ void start_reboot(void)
 
 void ota_set_flag()
 {
+    u32 fw_flag_telink = START_UP_FLAG;
+    u32 flag_new = 0;
+	flash_read_page(ota_program_offset + 8, sizeof(flag_new), (u8 *)&flag_new);
+	flag_new &= 0xffffff4b;
+    if(flag_new != fw_flag_telink){
+        return ; // invalid flag
+    }
+
 #if(__TL_LIB_8267__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8267) || \
 	__TL_LIB_8269__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8269))
 	u32 flag = 0x4b;
@@ -299,6 +307,9 @@ int otaWrite(void * p)
 				    }else if(need_check_type == FW_CHECK_AGTHM2){
 				        fw_check_val = 0xFFFFFFFF;  //crc init set to 0xFFFFFFFF
 				    }
+					else{
+						err_flg = OTA_FW_CHECK_ERR;
+					}
 
                     if(!is_valid_tlk_fw_buf(req->dat+10)){
                         err_flg = OTA_FW_CHECK_ERR;
@@ -594,7 +605,6 @@ int ais_ota_rc_report(u8 frame_desc, u32 trans_size)
 }
 
 
-extern u8 mesh_cmd_ut_rx_seg[];
 const u8 company[4] = {'K', 'N', 'L', 'T'};
 int ais_otaWrite(void * p)
 {

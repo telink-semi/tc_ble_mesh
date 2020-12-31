@@ -140,7 +140,7 @@
 void generateRandomNum(int len, u8 *data);
 
 void swapX(const u8 *src, u8 *dst, int len);
-
+void swap16(u8 dst[2], const u8 src[2]);
 void swap24(u8 dst[3], const u8 src[3]);
 void swap32(u8 dst[4], const u8 src[4]);
 void swap48(u8 dst[6], const u8 src[6]);
@@ -189,4 +189,5 @@ u8 * my_fifo_get_offset (my_fifo_t *f, u8 offset);
                                             STATIC_ASSERT(BIT_IS_POW2(n))
 #define		MYFIFO_INIT_NO_RET(name,size,n)		_attribute_no_retention_bss_ u8 name##_b[(size) * (n)]={0};_attribute_no_retention_data_ my_fifo_t name = {size,n,0,0,name##_b};  \
 												STATIC_ASSERT(BIT_IS_POW2(n))
+#define		ATT_ALLIGN4_DMA_BUFF(n)			(((n + 10) + 3) / 4 * 4)
 

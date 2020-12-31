@@ -81,7 +81,7 @@ void system_timer_handle_100ms()
 #if !WIN32 && SENSOR_LIGHTING_CTRL_EN
     sensor_lighting_ctrl_proc();
 #endif
-#if (MD_DF_EN && MD_SERVER_EN && !WIN32)
+#if (MD_DF_EN && MD_SERVER_EN && !WIN32 && !FEATURE_LOWPOWER_EN)
 	mesh_directed_forwarding_proc(0, 0, 0, MESH_BEAR_ADV);
 #endif
 }

@@ -23,8 +23,8 @@
 #ifndef _PEM_DER_H_
 #define _PEM_DER_H_
 
-//#include <string.h>
-//#include <stddef.h>
+#include <string.h>
+#include <stddef.h>
 
 #define MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL               -0x002A  /**< Output buffer too small. */
 #define MBEDTLS_ERR_BASE64_INVALID_CHARACTER              -0x002C  /**< Invalid character in input. */

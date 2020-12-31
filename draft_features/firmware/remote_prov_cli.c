@@ -356,7 +356,7 @@ int mesh_rp_client_rx_cb(mesh_rc_rsp_t *rsp)
 						mesh_cmd_sig_rp_cli_send_link_close(rp_client.node_adr,REMOTE_PROV_LINK_CLOSE_SUC);
                         mesh_rp_client_para_reset();
                         LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"CLIENT:RP_PROV_COMPLETE_RSP",0);
-                        cache_init(0xffff);
+                        cache_init(ADR_ALL_NODES);
 						
                     }
                 }

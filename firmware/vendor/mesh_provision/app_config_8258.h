@@ -94,6 +94,12 @@ extern "C" {
 
 #define PROVISIONER_GATT_ADV_EN	    0
 
+#if EXTENDED_ADV_ENABLE
+#define MESH_DLE_MODE               MESH_DLE_MODE_EXTEND_BEAR
+#define DLE_LEN_MAX_RX              (MAX_OCTETS_DATA_LEN_EXTENSION) // must MAX_OCTETS_DATA_LEN_EXTENSION
+#define DLE_LEN_MAX_TX              (40)
+#endif
+
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			0
 #define PM_DEEPSLEEP_RETENTION_ENABLE   0

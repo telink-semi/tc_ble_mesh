@@ -48,7 +48,7 @@ ret: 0  means OK
 ****************************************************************************/
 int SendOpParaDebug(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len);
 
-/**************************SendOpParaDebug**************************
+/**************************SendOpByINI**************************
 function : the basic function of the send cmd by ini format .
 para:
 	ini_buf[0:1]: meas ini flag, please set to 0xa3 0xff as default. 

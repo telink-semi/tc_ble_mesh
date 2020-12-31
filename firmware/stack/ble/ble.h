@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -74,7 +74,9 @@
 #include "ll/ll_conn/ll_conn_csa.h"
 
 #include "ll/ll_ext.h"
-//#include "ll/ll_ext_adv.h"
+#if EXTENDED_ADV_ENABLE
+#include "ll/ll_ext_adv.h"
+#endif
 #include "ll/ll_ext_scan.h"
 
 

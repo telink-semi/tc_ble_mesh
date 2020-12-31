@@ -85,8 +85,9 @@ void mesh_node_identity_refresh()
 #endif
 }
 
-void mesh_tx_sec_privacy_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
+int mesh_tx_sec_privacy_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 {
+	int err = 0;
 #if !WIN32
 	u8 key_phase = p_nk_base->key_phase;
     mesh_net_key_t *p_netkey = p_nk_base;
@@ -103,12 +104,13 @@ void mesh_tx_sec_privacy_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 	bc_bear.beacon.type = PRIVACY_BEACON;
 	mesh_sec_pri_beacon(pri_key_flag,pri_ivi,prov_para.priv_random,p_netkey->prik,bc_bear.beacon.data);
 	if(blt_sts){
-		notify_pkts((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_privacy_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
+		err = notify_pkts((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_privacy_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
 	}else{
-    	mesh_bear_tx2mesh_and_gatt((u8 *)&bc_bear, MESH_ADV_TYPE_BEACON, TRANSMIT_DEF_PAR_BEACON);
+    	err = mesh_bear_tx2mesh_and_gatt((u8 *)&bc_bear, MESH_ADV_TYPE_BEACON, TRANSMIT_DEF_PAR_BEACON);
 	}
 #endif
 
+    return err;
 }
 static auth_tag_cache_t auth_cache;
 u8 private_beacon_auth_cache_proc(u8 *p_auth)
@@ -334,9 +336,9 @@ int mesh_tx_private_beacon_enable(mesh_net_key_t *p_netkey)
 }
 
 
-void mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts)
+int mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts)
 {
-	
+	int err = 0;    // default success.
 	model_private_beacon_ser_t *p_beacon_ser = &(model_private_beacon.srv[0]);
 	if(p_beacon_ser->beacon_sts == PRIVATE_BEACON_ENABLE){
 		foreach(i,NET_KEY_MAX){
@@ -354,7 +356,7 @@ void mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts)
 					continue;
 				}
 			}
-			mesh_tx_sec_privacy_beacon(p_netkey_base, blt_sts);
+			err = mesh_tx_sec_privacy_beacon(p_netkey_base, blt_sts);
 		}
 		#if 0
 		if(special_PRB_BV01 && p_beacon_ser->random_inv_step != 0){
@@ -362,6 +364,8 @@ void mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts)
 		}
 		#endif
 	}
+
+	return err;
 }
 	#endif
 #endif

@@ -27,37 +27,23 @@ typedef enum {
 
 } mibeacon_obj_name_t;
 
-#if defined ( __CC_ARM )
-__packed struct miot_spec_property_s{
-    uint8_t        piid;
-    uint8_t         len;
-    void*           val;
-};
-#elif defined ( __GNUC__ )
-struct miot_spec_property_s{
-    uint8_t        piid;
-    uint8_t         len;
-    void*           val;
-} __PACKED;
-#endif
-typedef struct miot_spec_property_s miot_spec_property_t;
 
-#if defined ( __CC_ARM )
-__packed struct miot_spec_open_lock_event_s {
-    uint8_t  action : 4;
-    uint8_t  method : 4;
-    uint32_t user_id;
-    uint32_t time;
-};
-#elif defined ( __GNUC__ )
-struct miot_spec_open_lock_event_s {
-    uint8_t  action : 4;
-    uint8_t  method : 4;
-    uint32_t user_id;
-    uint32_t time;
-} __PACKED;
-#endif
-typedef struct miot_spec_open_lock_event_s miot_spec_open_lock_event_t;
+typedef union {
+    struct{
+        uint16_t piid : 9;
+        uint16_t flag : 1;
+        uint16_t siid : 4;
+        uint16_t head : 2;
+    }prop;
+    struct{
+        uint16_t eiid : 9;
+        uint16_t flag : 1;
+        uint16_t siid : 4;
+        uint16_t head : 2;
+    }event;
+    uint16_t all;
+} spec_id_v2_t;
+
 
 /**
  * @brief   Set adv data with mibeacon and user customized data.
@@ -147,15 +133,14 @@ int mibeacon_obj_enque(uint16_t nm, uint8_t len, void *val, uint8_t stop_adv);
  * OBJ_ADV_TIMEOUT_MS  : the time one object will be continuously sent.
  *
  */
-int miot_spec_property_changed(uint8_t siid, uint8_t piid, uint8_t len, void* val, uint8_t stop_adv);
+int mibeacon_property_changed(uint8_t siid, uint16_t piid, uint8_t len, void* val, uint8_t stop_adv);
  
 /**
  * @brief   Enqueue a SPEC event into the mibeacon object tx queue.
  *
  * @param   [in] siid: service id
- *          [in] eiid: property id
- *          [in] piid_num: number of properties
- *          [in] properties_array: the array of property structs
+ *          [in] eiid: event id
+ *          [in] val: user should build properties value into parameter "val" in order
  *          [in] stop_adv: When the object queue is sent out, it will SHUTDOWN BLE advertising
  *
  * @return  MI_SUCCESS             Successfully enqueued a object into the object queue.
@@ -164,6 +149,10 @@ int miot_spec_property_changed(uint8_t siid, uint8_t piid, uint8_t len, void* va
  *          MI_ERR_INTERNAL        Can not invoke the sending handler.
  *
  * @note    This function ONLY works when the device has been registered and has restored the keys.
+ *
+ * @note    spec v2 do not support lock event, secure product (eg. lock) should use mibeacon_obj_enque
+ *
+ * @note    Users should build properties value into parameter "val" in order
  *
  * The mibeacon object is an adv message contains the status or event. BLE gateway
  * can receive the beacon message (by BLE scanning) and upload it to server for
@@ -175,35 +164,6 @@ int miot_spec_property_changed(uint8_t siid, uint8_t piid, uint8_t len, void* va
  * OBJ_ADV_TIMEOUT_MS  : the time one object will be continuously sent.
  *
  */
-int miot_spec_event_occurred(uint8_t siid, uint8_t eiid, uint8_t piid_num, miot_spec_property_t* properties_array, uint8_t stop_adv);
-
-/**
- * @brief   Enqueue a SPEC lock event into the mibeacon object tx queue.
- *
- * @param   [in] siid: service id
- *          [in] eiid: property id
- *          [in] len: length of
- *          [in] val: the pointer to open lock event structs
- *          [in] stop_adv: When the object queue is sent out, it will SHUTDOWN BLE advertising
- *
- * @return  MI_SUCCESS             Successfully enqueued a object into the object queue.
- *          MI_ERR_DATA_SIZE       Object value length is too long.
- *          MI_ERR_RESOURCES       Object queue is full. Please try again later.
- *          MI_ERR_INTERNAL        Can not invoke the sending handler.
- *
- * @note    This function ONLY works when the device has been registered and has restored the keys.
- *          This function ONLY works for open lock event.
- *
- * The mibeacon object is an adv message contains the status or event. BLE gateway
- * can receive the beacon message (by BLE scanning) and upload it to server for
- * triggering customized home automation scene.
- *
- * OBJ_QUEUE_SIZE      : max num of objects can be concurrency advertising
- *                      ( actually, it will be sent one by one )
- * OBJ_ADV_INTERVAL    : the object adv interval
- * OBJ_ADV_TIMEOUT_MS  : the time one object will be continuously sent.
- *
- */
-int miot_spec_open_lock_event_occurred(uint8_t siid, uint8_t eiid, uint8_t len, miot_spec_open_lock_event_t* val, uint8_t stop_adv);
+int mibeacon_event_occurred(uint8_t siid, uint16_t eiid, uint8_t len, void* val, uint8_t stop_adv);
 
 #endif

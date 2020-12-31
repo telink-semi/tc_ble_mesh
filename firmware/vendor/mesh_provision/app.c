@@ -54,8 +54,11 @@
 MYFIFO_INIT(blt_rxfifo, 64, 8);
 MYFIFO_INIT(blt_txfifo, 40, 4);
 #else
-MYFIFO_INIT(blt_rxfifo, 64, 16);
-MYFIFO_INIT(blt_txfifo, 40, 32);
+#define BLT_RX_FIFO_SIZE        (MESH_DLE_MODE ? DLE_RX_FIFO_SIZE : 64)
+#define BLT_TX_FIFO_SIZE        (MESH_DLE_MODE ? DLE_TX_FIFO_SIZE : 40)
+
+MYFIFO_INIT(blt_rxfifo, BLT_RX_FIFO_SIZE, 16);
+MYFIFO_INIT(blt_txfifo, BLT_TX_FIFO_SIZE, 32);
 #endif
 
 //u8		peer_type;
@@ -577,6 +580,7 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 	}else if (op_code == HCI_GATEWAY_CMD_SEND_VC_NODE_INFO){
 		VC_node_info_t *p_info = (VC_node_info_t *)(p+1);
 		VC_node_dev_key_save(p_info->node_adr,p_info->dev_key,p_info->element_cnt);
+		gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_VC_NODE_INFO, NULL, 0);
 	}else if (op_code == HCI_GATEWAY_CMD_MESH_OTA_ADR_SEND){
 		#if MD_MESH_OTA_EN
 		mesh_fw_distibut_set(1);
@@ -734,6 +738,10 @@ void user_init()
 	blc_ll_initBasicMCU();                      //mandatory
 	blc_ll_initStandby_module(tbl_mac);				//mandatory
 #endif
+
+#if (EXTENDED_ADV_ENABLE)
+	mesh_blc_ll_initExtendedAdv();
+#endif
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
 #if BLE_REMOTE_PM_ENABLE
@@ -745,6 +753,9 @@ void user_init()
 	blc_l2cap_register_handler (app_l2cap_packet_receive);
 	///////////////////// USER application initialization ///////////////////
 
+#if EXTENDED_ADV_ENABLE
+	/*u8 status = */mesh_blc_ll_setExtAdvParamAndEnable();
+#endif
 	u8 status = bls_ll_setAdvParam( ADV_INTERVAL_MIN, ADV_INTERVAL_MAX, \
 			 	 	 	 	 	     ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, \
 			 	 	 	 	 	     0,  NULL,  BLT_ENABLE_ADV_ALL, ADV_FP_NONE);

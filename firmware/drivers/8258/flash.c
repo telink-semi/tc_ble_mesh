@@ -195,9 +195,12 @@ _attribute_ram_code_ void flash_erase_block(u32 addr){
 
 _attribute_ram_code_ void flash_write_page_256(u32 addr, u32 len, const u8 *buf){
 #if MI_API_ENABLE
+	// for the customer will change the otp base adr .
+	/*
 	if(!is_valid_sector_addr(addr)){
 		return ;
 	}
+	*/
 #endif
 
 	u8 r = irq_disable();

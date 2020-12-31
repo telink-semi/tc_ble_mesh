@@ -29,6 +29,7 @@
 #define BAUD_USE    SIMU_BAUD_1M
 #define SIMU_UART_IRQ_EN    (1&&!blcOta.ota_start_flag)
 
+#define _PRINT_FUN_RAMCODE_        //_attribute_ram_code_
 
 extern  void uart_simu_send_bytes(u8 *p,int len);
 //#define debugBuffer (*(volatile unsigned char (*)[40])(0x8095d8))

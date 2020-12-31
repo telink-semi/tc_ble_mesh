@@ -22,7 +22,7 @@
 
 #ifndef _TELINK_SDK_MIBLE_API_C_
 #define _TELINK_SDK_MIBLE_API_C_
-#include "mible_api.h"
+#include "./mijia_ble_api/mible_api.h"
 #include "proj/tl_common.h"
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
@@ -40,8 +40,6 @@
 #if MI_API_ENABLE
 #include "./libs/third_party/mbedtls/sha256_hkdf.h"
 #include "./libs/mi_config.h"
-#include "./libs/mesh_auth/mible_mesh_auth.h"
-void mi_schd_event_handler(schd_evt_t *evt_id);
 #endif
 extern attribute_t* gAttributes;
 
@@ -108,6 +106,7 @@ u8 mi_mesh_sleep_time_exceed_adv_iner();
 void telink_mi_vendor_init();
 void mi_reboot_proc();
 unsigned char  mi_ota_is_busy();
+u8 telink_record_clean_cpy();
 
 
 
@@ -144,6 +143,9 @@ typedef enum {
 #define MI_UNPROV_STATE	0
 #define MI_PROVED_STATE 3
 
+#define MI_MESH_PUB_STEP	6
+#define MI_MESH_PUB_VAL		2
+void mem_pool_init(void);
 
 #endif
 

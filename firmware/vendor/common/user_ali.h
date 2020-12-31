@@ -26,6 +26,16 @@
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
+#if !WIN32
+extern const char num2char[17];
+#endif
+extern u32 con_product_id;// little endiness 
+#if ((MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE) || (MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE))
+extern const u8 con_mac_address[6];//small endiness
+#else
+extern u8  con_mac_address[6];//small endiness
+#endif
+extern u8 con_sec_data[16];
 
 typedef struct{
 	//u8 rev;

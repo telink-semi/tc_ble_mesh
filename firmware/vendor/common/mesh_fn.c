@@ -44,6 +44,17 @@ u8 mesh_subsc_adr_cnt_get (mesh_cmd_bear_unseg_t *p_br)
     return (len_lt - 1)/2;
 }
 
+int fn_cache_get_extend_adv_short_unseg(u32 ctl, u8 len_ut_max_single_seg_rx)
+{
+    #if (MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR)
+    if(len_ut_max_single_seg_rx == (mesh_max_payload_get(ctl, 1))){
+        return 1; // keep the same max bear length
+    }
+    #endif
+    
+    return 0;
+}
+
 void friend_cmd_send_fn(u8 lpn_idx, u8 op)  // always need.
 {
 #if (FRI_SAMPLE_EN)
@@ -586,12 +597,18 @@ void mesh_friend_response_delay_proc_fn(u8 lpn_idx)
     if(p_delay->delay_type && clock_time_exceed(p_delay->tick, fn_req[lpn_idx].RecDelay * 1000 - 1800)){    // 1800us: encryption pkt time
         if(DELAY_POLL == p_delay->delay_type){
             if(p_delay->poll_rsp){
-                mesh_cmd_bear_unseg_t bear_temp;
+                mesh_cmd_bear_unseg_t bear_temp; // TODO DLE
                 memcpy(&bear_temp, p_delay->poll_rsp, sizeof(mesh_cmd_bear_unseg_t));
-	            //LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)&bear_temp.len, bear_temp.len+1,"Data for poll:",0);
-                
-                mesh_sec_msg_enc_nw_rf_buf((u8 *)(&bear_temp.nw), mesh_lt_len_get_by_bear(&bear_temp), FRIENDSHIP, lpn_idx,0,fn_other_par[lpn_idx].nk_sel_dec_fn, 0);
-                mesh_tx_cmd_add_packet_fn2lpn((u8 *)&bear_temp);
+                u8 bear_tx_len = mesh_bear_len_get(&bear_temp);
+                if(bear_tx_len <= sizeof(bear_temp)){
+    	            //LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)&bear_temp.len, bear_temp.len+1,"Data for poll:",0);
+                    
+                    mesh_sec_msg_enc_nw_rf_buf((u8 *)(&bear_temp.nw), mesh_lt_len_get_by_bear(&bear_temp), FRIENDSHIP, lpn_idx,0,fn_other_par[lpn_idx].nk_sel_dec_fn, 0);
+                    mesh_tx_cmd_add_packet_fn2lpn((u8 *)&bear_temp);
+                }else{
+                    LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"fn rsp len err",0);
+                    //  TODO: DLE
+                }
             }
 
             mesh_fri_ship_proc_fn_t *proc_fn = &fri_ship_proc_fn[lpn_idx];

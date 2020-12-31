@@ -114,6 +114,7 @@ u16			bls_ll_getConnectionTimeout(void);	 // if return 0, means not in connectio
 int			bls_ll_requestConnBrxEventDisable(void);
 void		bls_ll_disableConnBrxEvent(void);
 void		bls_ll_restoreConnBrxEvent(void);
+void bls_phy_scan_mode (int set_chn);
 
 
 

@@ -331,7 +331,7 @@ void uart_ndma_send_byte(unsigned char uartData)
  */
 static unsigned char *tx_buff = NULL;
 unsigned char uart_Send(unsigned char* data, unsigned int len){
-    extern const u8 UART_TX_LEN_MAX;
+    extern const u16 UART_TX_LEN_MAX;
     if(len > UART_TX_LEN_MAX){
         return 1;	// skip valid length data, avoid dead loop
     }

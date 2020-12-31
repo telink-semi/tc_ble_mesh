@@ -139,6 +139,11 @@ int 	blt_soft_timer_delete(blt_timer_callback_t func)
 	return 0;
 }
 
+int 	blt_soft_timer_update(blt_timer_callback_t func, u32 interval_us)
+{
+	blt_soft_timer_delete(func);
+	return blt_soft_timer_add(func, interval_us);
+}
 
 
 void  	blt_soft_timer_process(int type)

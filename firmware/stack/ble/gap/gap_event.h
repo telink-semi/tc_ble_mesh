@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -61,9 +61,9 @@
 #define GAP_EVT_MASK_GATT_HANDLE_VLAUE_CONFIRM                     	 (1<<GAP_EVT_GATT_HANDLE_VLAUE_CONFIRM)
 
 
-#define GAP_EVT_MASK_DEFAULT										( GAP_EVT_MASK_SMP_TK_DISPALY 			|| \
-																	  GAP_EVT_MASK_SMP_TK_REQUEST_PASSKEY   || \
-																	  GAP_EVT_MASK_SMP_TK_REQUEST_OOB		|| \
+#define GAP_EVT_MASK_DEFAULT										( GAP_EVT_MASK_SMP_TK_DISPALY 			| \
+																	  GAP_EVT_MASK_SMP_TK_REQUEST_PASSKEY   | \
+																	  GAP_EVT_MASK_SMP_TK_REQUEST_OOB		| \
 																	  GAP_EVT_MASK_ATT_EXCHANGE_MTU )
 
 

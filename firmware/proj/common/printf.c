@@ -42,7 +42,7 @@
 
 #define MAX_PRINT_STRING_CNT 60
 
-static void printchar(char **str, int c) {
+_PRINT_FUN_RAMCODE_ static void printchar(char **str, int c) {
 	if (str) {
 		**str = c;
 		++(*str);
@@ -53,7 +53,7 @@ static void printchar(char **str, int c) {
 #define PAD_RIGHT 1
 #define PAD_ZERO 2
 
-static int prints(char **out, const char *string, int width, int pad) {
+_PRINT_FUN_RAMCODE_ static int prints(char **out, const char *string, int width, int pad) {
 	register int pc = 0, padchar = ' ';
 
 	if (width > 0) {
@@ -89,7 +89,7 @@ static int prints(char **out, const char *string, int width, int pad) {
 /* the following should be enough for 32 bit int */
 #define PRINT_BUF_LEN 12
 
-static int printi(char **out, int i, int b, int sg, int width, int pad,
+_PRINT_FUN_RAMCODE_ static int printi(char **out, int i, int b, int sg, int width, int pad,
 		int letbase) {
 	char print_buf[PRINT_BUF_LEN];
 	register char *s;
@@ -131,7 +131,7 @@ static int printi(char **out, int i, int b, int sg, int width, int pad,
 	return pc + prints(out, s, width, pad);
 }
 
-int print(char **out, const char *format, va_list args) {
+_PRINT_FUN_RAMCODE_ int print(char **out, const char *format, va_list args) {
 	register int width, pad;
 	register int pc = 0;
 	char scr[2];
@@ -200,12 +200,12 @@ int print(char **out, const char *format, va_list args) {
 }
 const char printf_arrb2t[] = "0123456789abcdef";
 
-u32 get_len_Bin2Text(u32 buf_len)
+_PRINT_FUN_RAMCODE_ u32 get_len_Bin2Text(u32 buf_len)
 {
     return (buf_len*3 + (((buf_len+15)/16)*(1+2))); // 1: space, 2: /r/n
 }
 
-int printf_Bin2Text (char *lpD, int lpD_len_max, char *lpS, int n)
+_PRINT_FUN_RAMCODE_ int printf_Bin2Text (char *lpD, int lpD_len_max, char *lpS, int n)
 {
     int i = 0;
 	int m = n;

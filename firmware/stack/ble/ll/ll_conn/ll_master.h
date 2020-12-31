@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -168,6 +168,8 @@ bool blm_ll_isRfStateMachineBusy(void);
 
 
 ble_sts_t  blm_hci_reset(void);
+
+ble_sts_t blm_ll_enc_proc_disconnect(u16 handle, u8 reason);
 
 ble_sts_t blm_ll_disconnect (u16 handle, u8 reason);
 

@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -83,7 +83,7 @@ static inline u32 rf_get_ble_access_code_16to32 (u16 code)
 	return r;
 }
 
-
+u32 blt_ll_conn_calc_access_addr_v2(void);
 
 
 /******************************* User Interface  ************************************/

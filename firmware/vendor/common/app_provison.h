@@ -108,6 +108,7 @@ typedef struct {
 		trans_con_pdu	transCon;
 		trans_bear_pdu	transBear;
 	};
+	u8 rfu[1];  // just 4 byte align, because it's in union buffer.
 }pro_PB_ADV;
 
 typedef struct{
@@ -558,12 +559,6 @@ typedef struct{
 }pro_para_mag;
 extern u8 prov_link_cls_code;
 extern u8 dev_auth[16]/* = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0}*/;
-extern u8 dev_edch[32];
-extern u8 dev_random[16];
-extern u8 dev_comfirm[16];
-extern u8 dev_input[0x91];
-extern u8 pro_random[16];
-extern u8 dev_pro_comfirm[16];
 
 extern u8 prov_link_uuid[16];
 extern mesh_prov_oob_str prov_oob;
@@ -713,9 +708,64 @@ extern fast_prov_par_t fast_prov;
 
 #define MAX_RETRY_INTERVAL	1000*1000
 extern VC_node_info_t VC_node_info[MESH_NODE_MAX_NUM];
-extern pro_PB_ADV rcv_pb;
-#define PROVISION_GATT_MAX_LEN      (sizeof(rcv_pb.pb_pdu)) // 0x50
-extern u8 proxy_para_buf[PROVISION_GATT_MAX_LEN]; 
+
+#define PROV_VAR_UION_EN    (FEATURE_LOWPOWER_EN) // can't not change
+
+typedef struct{
+#if PROV_VAR_UION_EN
+    union{
+#endif
+	    u8 ut_tx_seg[ACCESS_WITH_MIC_LEN_MAX];  // used when provisioned
+	    struct{
+			mesh_prov_seg_t u_mesh_prov_seg;
+			u8 u_confirm_input[0x91+3];			// 3 for 4bytes align		
+	        pro_PB_ADV pb;
+	    }prov_ing;                              // used when provisioning
+#if PROV_VAR_UION_EN
+	};
+#endif
+}mesh_cmd_ut_tx_seg_union_t;
+
+typedef struct{
+#if PROV_VAR_UION_EN
+    union{
+#endif
+	    u8 ut_rx_seg[ACCESS_WITH_MIC_LEN_MAX];  // used when provisioned
+	    struct{
+			u8 u_dev_random[16];
+	        u8 u_pro_random[16];
+			u8 u_dev_confirm[16];
+	        u8 u_pro_confirm[16];
+			u8 u_ecdh_secret[32];
+	    }prov_ing;                              // used when provisioning
+#if PROV_VAR_UION_EN
+	};
+#endif
+}mesh_cmd_ut_rx_seg_union_t;
+
+extern mesh_cmd_ut_tx_seg_union_t mesh_cmd_ut_tx_seg_union;
+extern mesh_cmd_ut_rx_seg_union_t mesh_cmd_ut_rx_seg_union;
+
+#define confirm_input				(mesh_cmd_ut_tx_seg_union.prov_ing.u_confirm_input)
+#define mesh_prov_seg				(mesh_cmd_ut_tx_seg_union.prov_ing.u_mesh_prov_seg)
+#define rcv_pb  					(mesh_cmd_ut_tx_seg_union.prov_ing.pb)
+#define PROVISION_GATT_MAX_LEN      (sizeof(mesh_cmd_ut_tx_seg_union.prov_ing.pb.pb_pdu)) // 0x50
+				
+#define dev_random      			(mesh_cmd_ut_rx_seg_union.prov_ing.u_dev_random)
+#define pro_random					(mesh_cmd_ut_rx_seg_union.prov_ing.u_pro_random)
+#define dev_comfirm					(mesh_cmd_ut_rx_seg_union.prov_ing.u_dev_confirm)
+#define pro_comfirm					(mesh_cmd_ut_rx_seg_union.prov_ing.u_pro_confirm)
+#define ecdh_secret					(mesh_cmd_ut_rx_seg_union.prov_ing.u_ecdh_secret)
+
+#define mesh_cmd_ut_tx_seg          (mesh_cmd_ut_tx_seg_union.ut_tx_seg)
+#define mesh_cmd_ut_rx_seg          (mesh_cmd_ut_rx_seg_union.ut_rx_seg)
+
+#if 1 // (MESH_DLE_MODE || (CHIP_TYPE >= CHIP_TYPE_8258))   // make sure mesh OTA can accept a long unsegment.
+#define PROXY_GATT_MAX_LEN          max2(255, PROVISION_GATT_MAX_LEN)	// TODO // BEAR_EXTEND_MAX, refer to max len of adv payload
+#else
+#define PROXY_GATT_MAX_LEN          PROVISION_GATT_MAX_LEN
+#endif
+extern u8 proxy_para_buf[PROXY_GATT_MAX_LEN]; 
 extern u8 proxy_para_len;
 extern u8 para_pro[PROVISION_GATT_MAX_LEN]; //it's also used in proxy_gatt_Write(), but network payload is less then 31, because it will be relayed directly.
 extern u8 para_len ;
@@ -725,9 +775,6 @@ extern mesh_pro_data_structer		pro_data_str;
 extern pro_para_mag  provision_mag;
 extern u8 prov_net_key[16];
 
-extern u8 dev_auth[];
-extern u8 dev_edch[32];
-extern u8 dev_input[0x91];
 
 u8 set_provision_networkkey_self(u8 *p_key,u8 len );
 void set_provisionee_para(u8 *p_net_key,u16 key_index,u8 flags,u8 *p_ivi,u16 unicast);

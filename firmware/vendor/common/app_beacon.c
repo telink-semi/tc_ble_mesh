@@ -32,9 +32,10 @@
 
 u8  provision_In_ccc[2]={0x01,0x00};// set it can work enable 
 u8  provision_Out_ccc[2]={0x00,0x00}; 
+#if !ATT_REPLACE_PROXY_SERVICE_EN
 extern u8 proxy_Out_ccc[2];
 extern u8 proxy_In_ccc[2];
-
+#endif
 void reset_all_ccc()
 {
 	// wait for the whole dispatch 
@@ -46,45 +47,40 @@ void reset_all_ccc()
 	return ;
 }
 
-u8 mesh_beacon_send_proc()
+int mesh_beacon_send_proc()
 {
+	int err = -1;
 #if !WIN32
-	if(!beacon_send.en){
-		return 0;
-	}
 	if(blt_state == BLS_LINK_STATE_CONN){
 		if (proxy_Out_ccc[0]==1 && proxy_Out_ccc[1]==0){
 			if(is_provision_success()&& beacon_send.conn_beacon_flag){
-				beacon_send.conn_beacon_flag =0;
-				mesh_tx_sec_private_beacon_proc(1);	// send conn beacon to the provisioner 		
-				return 1;
+				err = mesh_tx_sec_private_beacon_proc(1);// send conn beacon to the provisioner
+				if(0 == err){				 
+					beacon_send.conn_beacon_flag =0;
+				}				
 			}
-		}else{
-			return 0;
 		}
+		return err;
 	}else{
 		reset_all_ccc(); 
 	}
 	// dispatch when connected whether it need to send the unprovisioned beacon 
-	if(clock_time_exceed(beacon_send.tick ,beacon_send.inter)&&!is_provision_success()){
+	if(beacon_send.en && clock_time_exceed(beacon_send.tick ,beacon_send.inter)&&!is_provision_success()){
 		beacon_send.tick = clock_time();
 		#if (!(DEBUG_MESH_DONGLE_IN_VC_EN && (!IS_VC_PROJECT)) )
 			if(!is_provision_working()){
 				#if !__PROJECT_MESH_PRO__
 					#if VENDOR_MD_NORMAL_EN
-				unprov_beacon_send(MESH_UNPROVISION_BEACON_WITH_URI,0); // send the adv beacon to the provisioner
+				err = unprov_beacon_send(MESH_UNPROVISION_BEACON_WITH_URI,0); // send the adv beacon to the provisioner
 					#endif
 				#endif 
 				
 			}
 			
 		#endif
-		return 1;
-	}else{
-		return 0;
 	}
 #endif 
-	return 0;
+	return err;
 }
 
 int check_pkt_is_unprovision_beacon(u8 *dat)
@@ -145,8 +141,9 @@ u8 beacon_test_case(u8*p_tc,u8 len )
 					}
 // URI_HASH             {0xD9,0x74,0x78,0xb3};  // sample data for URI_DATA
 
-u8 unprov_beacon_send(u8 mode ,u8 blt_sts)
+int unprov_beacon_send(u8 mode ,u8 blt_sts)
 {
+	int err = -1;
 /*
 	Device UUID : 70cf7c9732a345b691494810d2e9cbf4
 	OOB : Number, Inside Manual
@@ -169,16 +166,17 @@ u8 unprov_beacon_send(u8 mode ,u8 blt_sts)
 	}else{}
 	if(blt_sts){
 	    #if (!WIN32)
-		notify_pkts((u8 *)(&(beaconData.bea_data)),sizeof(beacon_data_pk),PROVISION_ATT_HANDLE,MSG_MESH_BEACON);
+		err = notify_pkts((u8 *)(&(beaconData.bea_data)),sizeof(beacon_data_pk),PROVISION_ATT_HANDLE,MSG_MESH_BEACON);
 		#endif
 	}else{
-		mesh_tx_cmd_add_packet((u8 *)(&beaconData));
+		err = mesh_tx_cmd_add_packet((u8 *)(&beaconData));
 	}
-	return 1;
+	return err;
 }	
 
-void mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
+int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 {
+	int err = -1;
     u8 key_phase = p_nk_base->key_phase;
     mesh_net_key_t *p_netkey = p_nk_base;
 	if(KEY_REFRESH_PHASE2 == key_phase){
@@ -208,35 +206,39 @@ void mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 		#if WIN32
 		prov_write_data_trans((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,MSG_MESH_BEACON);
 		#else
-		notify_pkts((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
+		err = notify_pkts((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
 		#endif
 	}else{
 		// static u32 iv_idx_st_A1;iv_idx_st_A1++;
-    	mesh_bear_tx2mesh_and_gatt((u8 *)&bc_bear, MESH_ADV_TYPE_BEACON, TRANSMIT_DEF_PAR_BEACON);
+    	err = mesh_bear_tx2mesh_and_gatt((u8 *)&bc_bear, MESH_ADV_TYPE_BEACON, TRANSMIT_DEF_PAR_BEACON);
 	}
+    return err;
 }
 
-void mesh_tx_sec_nw_beacon_all_net(u8 blt_sts)
+int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts)
 {
-	if(!is_provision_success()){
-		return ;
+	int err = -1;
+	if(!is_provision_success()||MI_API_ENABLE){// in the mi mode will never send secure beacon .
+		return err;
 	}
 	foreach(i,NET_KEY_MAX){
 		mesh_net_key_t *p_netkey_base = &mesh_key.net_key[i][0];
 		if(!p_netkey_base->valid){
 			continue;
 		}
-		mesh_tx_sec_nw_beacon(p_netkey_base, blt_sts);
+		err = mesh_tx_sec_nw_beacon(p_netkey_base, blt_sts);
 	}
+	return err;
 }
 
-void mesh_tx_sec_private_beacon_proc(u8 blt_sts)
+int mesh_tx_sec_private_beacon_proc(u8 blt_sts)
 {
-	mesh_tx_sec_nw_beacon_all_net(blt_sts);
+	int err = mesh_tx_sec_nw_beacon_all_net(blt_sts);
 	#if MD_PRIVACY_BEA
 		#if MD_SERVER_EN
-		mesh_tx_privacy_nw_beacon_all_net(blt_sts);
+		err = mesh_tx_privacy_nw_beacon_all_net(blt_sts);
 		#endif
 	#endif
+	return err;
 }
 

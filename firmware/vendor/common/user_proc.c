@@ -24,6 +24,7 @@
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor/common/lighting_model.h"
+#include "vendor/common/generic_model.h"
 #include "vendor_model.h"
 #include "fast_provision_model.h"
 #include "proj_lib/mesh_crypto/aes_att.h"
@@ -142,13 +143,15 @@ u8 user_mac_proc()
 #if MD_SERVER_EN
 void user_power_on_proc()
 {
-    #if ((MESH_USER_DEFINE_MODE != MESH_SPIRIT_ENABLE)&&!MI_API_ENABLE)
+    #if ((MESH_USER_DEFINE_MODE != MESH_SPIRIT_ENABLE)&&(MESH_USER_DEFINE_MODE != MESH_TAIBAI_ENABLE)&&!MI_API_ENABLE)
     foreach(i,LIGHT_CNT){
         u16 adr_src = ele_adr_primary + (ELE_CNT_EVERY_LIGHT * i);
         #if MD_LIGHTNESS_EN
         mesh_tx_cmd_lightness_st(i, adr_src, 0xffff, LIGHTNESS_STATUS, 0, 0);
         #elif MD_LEVEL_EN
         mesh_tx_cmd_g_level_st(i, adr_src, 0xffff, 0, 0); // not support lightness as default
+        #elif MD_ONOFF_EN
+        mesh_tx_cmd_g_onoff_st(i, adr_src, 0xffff, 0, 0, G_ONOFF_STATUS);   // will send every onoff status
         #endif
     }
     #endif
@@ -193,7 +196,7 @@ void user_system_time_proc()
 //if return 0, will not send transation ack for link open cmd
 int user_node_rc_link_open_callback()
 {
-	#if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)
+	#if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE ||MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 	sha256_dev_uuid_str *p_uuid = (sha256_dev_uuid_str *)prov_para.device_uuid;
 	if(p_uuid->adv_flag){
 		return 0;

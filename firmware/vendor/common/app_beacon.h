@@ -110,16 +110,16 @@ extern beacon_str  beaconData;
 u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info);
 u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash);
 u8  beacon_secure_init(beacon_str *p_str,u8 flags,u8 * p_netId,u8* p_ivIdx,u8* p_auth);
-u8 unprov_beacon_send(u8 mode ,u8 blt_sts);
+int unprov_beacon_send(u8 mode ,u8 blt_sts);
 u8 beacon_test_case(u8*p_tc,u8 len );
-void mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts);
-void mesh_tx_sec_nw_beacon_all_net(u8 blt_sts);
+int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts);
+int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts);
 
-u8 mesh_beacon_send_proc();
+int mesh_beacon_send_proc();
 void beacon_str_init();
 int check_pkt_is_unprovision_beacon(u8 *dat);
 extern beacon_send_str beacon_send;
-void mesh_tx_sec_private_beacon_proc(u8 blt_sts);
+int mesh_tx_sec_private_beacon_proc(u8 blt_sts);
 
 
 #endif 

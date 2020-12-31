@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -47,14 +47,22 @@ static inline void blc_app_setExternalCrystalCapEnable(u8  en)
 
 
 
+
+extern u32 flash_sector_mac_address;
+extern u32 flash_sector_calibration;
+
 static inline void blc_app_loadCustomizedParameters(void)
 {
 	 if(!blt_miscParam.ext_cap_en)
 	 {
 		 //customize freq_offset adjust cap value, if not customized, default ana_81 is 0xd0
-		 u8 cap_frqoft = *(unsigned char*) (flash_sector_calibration + CALIB_OFFSET_CAP_INFO);
-		 if( cap_frqoft != 0xff ){
-			 analog_write(0x8A, cap_frqoft );
+		 //for 512K Flash, flash_sector_calibration equals to 0x77000
+		 //for 1M  Flash, flash_sector_calibration equals to 0xFE000
+		 if(flash_sector_calibration){
+			 u8 cap_frqoft = *(unsigned char*) (flash_sector_calibration + CALIB_OFFSET_CAP_INFO);
+			 if( cap_frqoft != 0xff ){
+				 analog_write(0x8A, (analog_read(0x8A) & 0xc0)|(cap_frqoft & 0x3f));
+			 }
 		 }
 	 }
 }
@@ -63,6 +71,25 @@ static inline void blc_app_loadCustomizedParameters(void)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+#if 1
+#define		BLS_TELINK_MESH_SCAN_MODE_ENABLE				1
+#define		BLS_TELINK_MESH_SMP_ENABLE						0
+#define 	BLS_TELINK_WHITE_LIST_ENABLE					0
+#define 	RAMCODE_OPTIMIZE_CONN_POWER_NEGLECT_ENABLE		1
+#define 	DEEP_RET_ENTRY_CONDITIONS_OPTIMIZATION_EN		1 
+#endif
 
 
 ///////////////////  Feature ////////////////////////////
@@ -87,21 +114,6 @@ static inline void blc_app_loadCustomizedParameters(void)
 
 
 
-#ifndef  LL_MULTI_MASTER_SINGLE_SLAVE_ENABLE
-#define  LL_MULTI_MASTER_SINGLE_SLAVE_ENABLE				0
-#endif
-
-
-#if (LL_MULTI_MASTER_SINGLE_SLAVE_ENABLE)
-
-	#define BLE_CORE42_DATA_LENGTH_EXTENSION_ENABLE			0  // process later
-	#define	FIX_HW_CRC24_EN						            1
-	#define BLUETOOTH_VER									BLUETOOTH_VER_4_2
-#endif
-
-
-
-
 #ifndef		BLS_ADV_INTERVAL_CHECK_ENABLE
 #define		BLS_ADV_INTERVAL_CHECK_ENABLE					0
 #endif
@@ -115,7 +127,7 @@ static inline void blc_app_loadCustomizedParameters(void)
 
 //conn param update/map update
 #ifndef	BLS_PROC_MASTER_UPDATE_REQ_IN_IRQ_ENABLE
-#define BLS_PROC_MASTER_UPDATE_REQ_IN_IRQ_ENABLE			0
+#define BLS_PROC_MASTER_UPDATE_REQ_IN_IRQ_ENABLE			1
 #endif
 
 
@@ -172,6 +184,30 @@ static inline void blc_app_loadCustomizedParameters(void)
 #define LL_FEATURE_SUPPORT_CHANNEL_SELECTION_ALGORITHM2				1
 #endif
 
+
+
+
+//core_5.2 feature begin
+#ifndef LL_FEATURE_SUPPORT_CONNECTED_ISOCHRONOUS_STREAM_MASTER
+#define LL_FEATURE_SUPPORT_CONNECTED_ISOCHRONOUS_STREAM_MASTER		1
+#endif
+
+#ifndef LL_FEATURE_SUPPORT_CONNECTED_ISOCHRONOUS_STREAM_SLAVE
+#define LL_FEATURE_SUPPORT_CONNECTED_ISOCHRONOUS_STREAM_SLAVE		1
+#endif
+
+#ifndef LL_FEATURE_SUPPORT_ISOCHRONOUS_BROADCASTER
+#define LL_FEATURE_SUPPORT_ISOCHRONOUS_BROADCASTER					1
+#endif
+
+#ifndef LL_FEATURE_SUPPORT_SYNCHRONIZED_RECEIVER
+#define LL_FEATURE_SUPPORT_SYNCHRONIZED_RECEIVER					1
+#endif
+
+#ifndef LL_FEATURE_SUPPORT_ISOCHRONOUS_CHANNELS
+#define LL_FEATURE_SUPPORT_ISOCHRONOUS_CHANNELS						1
+#endif
+//core_5.2 feature end
 
 
 

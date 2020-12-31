@@ -87,20 +87,20 @@ int access_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack, transition_par_
 	return SendOpParaDebug(adr_dst, rsp_max, ack ? G_ONOFF_SET : G_ONOFF_SET_NOACK, 
 						   (u8 *)&par, par_len);
 }
-#else // for test
+#else // for long packet test
 typedef struct{
 	u8 onoff;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
-	u8 rsv[20];
+	u8 rsv[219];
 }mesh_cmd_g_onoff_set2_t;
 
 int access_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack, transition_par_t *trs_par)
 {
     //ack = 0;
 	mesh_cmd_g_onoff_set2_t par = {0};
-	u32 par_len = OFFSETOF(mesh_cmd_g_onoff_set2_t,transit_t);
+	u32 par_len = sizeof(par);//OFFSETOF(mesh_cmd_g_onoff_set2_t,transit_t);
 	par.onoff = onoff;
 	//if(trs_par){
 		par_len = sizeof(mesh_cmd_g_onoff_set2_t);

@@ -40,7 +40,7 @@ typedef struct mem_pool_t
 
 #define MEMPOOL_DECLARE(pool_name, pool_mem, itemsize, itemcount)	\
 	mem_pool_t pool_name;											\
-	u8 pool_mem[MEMPOOL_ITEMSIZE_2_BLOCKSIZE(itemsize) * itemcount];
+	u8 pool_mem[MEMPOOL_ITEMSIZE_2_BLOCKSIZE(itemsize) * itemcount] _attribute_aligned_(4);
 
 mem_pool_t* mempool_init(mem_pool_t* pool, void* mem, int itemsize, int itemcount);
 void* mempool_alloc(mem_pool_t* pool);

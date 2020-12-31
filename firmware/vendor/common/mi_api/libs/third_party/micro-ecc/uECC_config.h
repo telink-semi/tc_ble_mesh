@@ -12,6 +12,7 @@ Possible values for uECC_PLATFORM are defined below: */
 #define uECC_arm_thumb2 5
 #define uECC_arm64      6
 #define uECC_avr        7
+#define uECC_telink     8
 
 #include "types.h"
 

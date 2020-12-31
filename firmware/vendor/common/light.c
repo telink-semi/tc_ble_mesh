@@ -316,6 +316,9 @@ u8 edch_is_exist()
 	return 1;
 }
 
+/*
+ * light pwm init() will cost 1.5ms when 16MHz. so it should not be called directly when retention wakeup.
+ */
 void light_pwm_init()
 {
 #if ((!IS_VC_PROJECT)&&(!__PROJECT_SPIRIT_LPN__))
@@ -1063,6 +1066,7 @@ void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type,
 					}
 
 					if(ST_TRANS_HSL_HUE == st_trans_type){
+					    // hue is a circular parameter from 0~360 degree
 					    delta = get_Hue_delta_value(s16_to_u16(p_trans->target), s16_to_u16(p_trans->present));
 					}
 					#endif
@@ -1147,7 +1151,19 @@ s16 light_get_next_level(int idx, int st_trans_type)
 	p_trans->present_1p32768 = adjust_1p32768 % 32768;
 
 	#if LIGHT_TYPE_HSL_EN
-	if(ST_TRANS_HSL_HUE != st_trans_type)   // hue is a circular parameter from 0~360 degree
+	if(ST_TRANS_HSL_HUE == st_trans_type){   // hue is a circular parameter from 0~360 degree
+	    #if (HSL_HUE_MAX < 0xffff)
+        result = s16_to_u16((s16)result);
+	    u16 logic_hue_max = HSL_HUE_MAX;
+        if(result > logic_hue_max){
+            if(adjust_1p32768 < 0){
+                result = HSL_HUE_MAX - (0xffff - result);
+            }
+            result %= (HSL_HUE_MAX + 1);
+        }
+        result = u16_to_s16((u16)result);
+	    #endif
+	}else
 	#endif
 	{
         result = get_val_with_check_range(result, p_save->min, p_save->max, st_trans_type);
@@ -1286,7 +1302,7 @@ int is_led_busy()
 }
 
 void led_onoff_gpio(u32 gpio, u8 on){
-#if (FEATURE_LOWPOWER_EN || GATT_LPN_EN)
+#if (FEATURE_LOWPOWER_EN || PM_DEEPSLEEP_RETENTION_ENABLE)
     gpio_set_func (gpio, AS_GPIO);
     gpio_set_output_en (gpio, 0);
     gpio_write(gpio, 0);
@@ -1298,7 +1314,7 @@ void led_onoff_gpio(u32 gpio, u8 on){
 #endif
 }
 
-#if __PROJECT_MESH_SWITCH__
+#if (__PROJECT_MESH_SWITCH__ || PM_DEEPSLEEP_RETENTION_ENABLE)
 void proc_led()
 {
 	if(p_vendor_proc_led){
@@ -1341,6 +1357,9 @@ void proc_led()
 				if (led_no - 1 == led_count)
 				{
 					led_count = led_no = 0;
+					#if (!__PROJECT_MESH_SWITCH__)
+					light_dim_refresh_all(); // should not report online status again
+					#endif
 					return ;
 				}
 			}

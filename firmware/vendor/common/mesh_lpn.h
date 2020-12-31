@@ -50,8 +50,7 @@ void lpn_debug_alter_debug_pin(int reset);
 void friend_cmd_send_poll();
 void mesh_friend_ship_start_poll();
 void mesh_feature_set_lpn();
-void suspend_quick_check();
-void lpn_quick_tx_and_suspend(int suspend, u8 op);
+void lpn_quick_tx(u8 is_mesh_msg);
 int lpn_rx_offer_handle(u8 *bear);
 void lpn_no_offer_handle();
 void subsc_add_rmv_test(int add);
@@ -65,6 +64,12 @@ void mesh_friend_ship_retry();
 void send_gatt_adv_right_now();
 u8 lpn_get_poll_retry_max();
 void lpn_mode_set(int mode);
+void mesh_lpn_gatt_adv_refresh();
+int mesh_lpn_send_gatt_adv();
+int mesh_lpn_rcv_delay_wakeup(void);
+int mesh_lpn_poll_md_wakeup(void);
+int mesh_lpn_adv_interval_update(u8 adv_tick_refresh);
+int mesh_lpn_subsc_pending_add(u16 op, u16 addr);
 
 enum{
     HANDLE_NONE                     = 0,
@@ -91,18 +96,14 @@ enum{
     LPN_MODE_GATT_OTA       = 1,
 };
 
-typedef struct {
-	u8 type;
-	u8 event;
-	u8 adv_cnt;
-}lpn_deep_handle_t;
-
-extern lpn_deep_handle_t lpn_deep_handle;
 extern u8 mesh_lpn_rx_master_key;
-extern u8 send_gatt_adv_now_flag;
 extern u8 fri_request_retry_max;
-extern u8 lpn_deep_retention_en;
 extern u32 lpn_wakeup_tick;
 extern u8 lpn_mode;
 extern u32 lpn_mode_tick;
+extern u8 mesh_lpn_quick_tx_flag;
 
+typedef struct{
+	u16 op;
+	u16 sub_addr;
+}lpn_sub_list_event_t;

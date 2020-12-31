@@ -142,7 +142,5 @@ int mi_crypto_record_write(uint8_t record_id, const uint8_t *p_data, uint8_t len
 int mi_crypto_record_read(uint8_t record_id, uint8_t *p_data, uint8_t len);
 
 int mi_crypto_record_delete(uint8_t record_id);
-unsigned short get_manu_cert_len();
-unsigned char * get_manu_cert_pointer();
 
 #endif  /* __MI_CRYPTO_H__ */ 

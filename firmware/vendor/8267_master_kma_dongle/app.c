@@ -79,7 +79,7 @@ MYFIFO_INIT(hci_tx_fifo, HCI_TX_FIFO_SIZE, 8);
 
 
 MYFIFO_INIT(blt_rxfifo, 64, 16);
-MYFIFO_INIT(blt_txfifo, 64, 4);
+MYFIFO_INIT(blt_txfifo, 64, 8); // because MTU size is 54, and may receive several max MTU at a short time when mesh OTA.
 
 
 ////////////////////////////////////////////////////////////////////
@@ -424,10 +424,11 @@ int app_l2cap_handler (u16 conn_handle, u8 *raw_pkt)
 			u32 timeout_us = req->timeout*10000; //10ms unit
 			u32 long_suspend_us = interval_us * (req->latency+1);
 
-			//interval < 200ms
+			//interval < 200ms   why ?
 			//long suspend < 5S
 			// interval * (latency +1)*2 <= timeout
-			if( interval_us < 200000 && long_suspend_us < 5000000 && (long_suspend_us*2<=timeout_us) )
+			#define VALID_INTERVAL_MAX      1000000 // ms // TODO
+			if( interval_us <= VALID_INTERVAL_MAX && long_suspend_us < 5000000 && (long_suspend_us*2<=timeout_us) )
 			{
 				//when master host accept slave's conn param update req, should send a conn param update response on l2cap
 				//with CONN_PARAM_UPDATE_ACCEPT; if not accpet,should send  CONN_PARAM_UPDATE_REJECT

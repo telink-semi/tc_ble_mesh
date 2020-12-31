@@ -178,10 +178,10 @@ enum{
 #define SIG_MD_REMOTE_PROV_SERVER       0x0004
 #define SIG_MD_REMOTE_PROV_CLIENT       0x0005
 #endif
-#define SIG_MD_DF_CFG_S					0x0006
-#define SIG_MD_DF_CFG_C					0x0007
-#define SIG_MD_BRIDGE_CFG_SERVER		0x0008
-#define SIG_MD_BRIDGE_CFG_CLIENT		0x0009
+#define SIG_MD_DF_CFG_S					0xBF30
+#define SIG_MD_DF_CFG_C					0xBF31
+#define SIG_MD_BRIDGE_CFG_SERVER		0xBF32
+#define SIG_MD_BRIDGE_CFG_CLIENT		0xBF33
 #define SIG_MD_PRIVATE_BEACON_SERVER 	0x000a
 #define SIG_MD_PRIVATE_BEACON_CLIENT	0x000b
 
@@ -253,11 +253,12 @@ enum{
 	#if (GATEWAY_ENABLE&&__PROJECT_MESH_PRO__)
 #define SUB_LIST_MAX                    (2)
 	#else
-#define SUB_LIST_MAX                    (8) // can't modify now, because it is used in library.
+#define SUB_LIST_MAX                    (8) 
 	#endif
 #else	
-#define SUB_LIST_MAX                    (2)
+#define SUB_LIST_MAX                    (8)
 #endif
+#define VIRTUAL_ADDR_ENABLE				(SUB_LIST_MAX<=8)// disable virtual address to save ram
 #define FIX_SIZE(sig_model)             (sig_model?2:0)
 
 // net key
@@ -822,7 +823,9 @@ typedef struct{
 	mesh_model_pub_par_t pub_par;
 	u8 directed_pub_policy;
 	u16 sub_list[SUB_LIST_MAX];     // pub_adr, pub_par, sub_list must follow com if existed
+#if VIRTUAL_ADDR_ENABLE
 	u8 sub_uuid[SUB_LIST_MAX][16];
+#endif
 }model_common_t;
 
 typedef struct{
@@ -1453,6 +1456,9 @@ typedef struct{
     u8 rx_update;   // receive iv index update flag
     u8 update_trigger_by_save;
     u8 update_proc_flag;
+#if FEATURE_LOWPOWER_EN
+    u8 rx_beacon_ok_after_searching; // have received beacon after entering recovery mode.
+#endif
 }mesh_iv_idx_st_t;
 
 extern mesh_key_t mesh_key;
@@ -1491,6 +1497,7 @@ void mesh_decrease_ivi(u8 *p_ivi);
 int mesh_ivi_greater_or_equal(const u8 *p_ivi1, const u8 *p_ivi2, u32 val);
 int mesh_ivi_equal(const u8 *p_ivi1, const u8 *p_ivi2, u32 delta);
 void mesh_set_iv_idx_rx(u8 ivi);
+void mesh_iv_idx_init_cb(int rst_sno);
 void mesh_set_ele_adr(u16 adr);
 void mesh_set_ele_adr_ll(u16 adr, int save);
 int is_own_ele(u16 adr);
@@ -1622,6 +1629,11 @@ u32 get_crc32_16bytes(unsigned long crc_init, unsigned char* data);
 u32 get_blk_crc_tlk_type2(u32 crc_init, u8 *data, u32 len);
 int is_valid_tlk_fw_buf(u8 *p_flag);
 void power_on_io_proc(u8 i);
+unsigned char ble_moudle_id_is_kmadongle();
+void mesh_ivi_proc_cb(u8 search_flag);
+void mesh_blc_ll_initExtendedAdv();
+u8 mesh_blc_ll_setExtAdvParamAndEnable();
+void mesh_blc_ll_setExtAdvData(u8 adv_pdu_len, u8 *data);
 
 
 extern u16 ele_adr_primary;
@@ -1629,6 +1641,7 @@ extern u8 g_ele_cnt;
 extern u8 g_bind_key_max;
 extern u8 key_bind_all_ele_en;
 extern u16 connect_addr_gatt;
+extern u32 prov_app_key_setup_tick;
 
 //#define node_unprovision_flag   (!is_provision_success())
 extern u8 node_need_store_misc;
@@ -1639,7 +1652,8 @@ extern u8 mesh_adv_txrx_self_en;
 extern mesh_tid_t mesh_tid;
 extern u8 switch_project_flag;
 extern u8 my_rf_power_index;
-
+extern u8 tx_bear_extend_en;
+extern u8 proxy_message_between_gatt_and_adv_en;
 //------------model
 extern /*const */mesh_page0_t * const gp_page0;
 #define cps_cid                (gp_page0->head.cid)

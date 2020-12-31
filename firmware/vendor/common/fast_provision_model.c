@@ -81,7 +81,7 @@ int mesh_reset_network(u8 provision_enable)
 	provision_random_data_init(); // will init in provisioning
 
 // spirit mode init
-	#if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)
+	#if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 	beacon_str_init();
 	sha256_dev_uuid_str *p_uuid = (sha256_dev_uuid_str *)prov_para.device_uuid;
 	p_uuid->adv_flag = 0;

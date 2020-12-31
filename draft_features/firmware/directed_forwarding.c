@@ -246,38 +246,6 @@ int mesh_df_path_monitoring(path_entry_com_t *p_entry){
 }
 //--------------directed forwarding command interface end---------------------------//
 #if (MD_SERVER_EN&&!WIN32)
-void mesh_directed_proxy_capa_report(int netkey_offset)
-{
-	if(!is_provision_success() || (model_sig_df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_proxy>DIRECTED_PROXY_ENABLE)){
-		return ;
-	}
-	directed_proxy_capa_sts proxy_capa;	
-	mesh_net_key_t *p_netkey_base = &mesh_key.net_key[netkey_offset][0];
-	if(!p_netkey_base->valid){
-		return;
-	}
-	proxy_capa.directed_proxy = model_sig_df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_proxy;
-	proxy_capa.use_directed = proxy_mag.directed_server[netkey_offset].use_directed;
-	mesh_tx_cmd_layer_cfg_primary_specified_key(DIRECTED_PROXY_CAPA_STATUS,(u8 *)(&proxy_capa),sizeof(proxy_capa),PROXY_CONFIG_FILTER_DST_ADR, mesh_key.net_key[netkey_offset][0].index);
-}
-
-void directed_proxy_dependent_node_delete()
-{
-	foreach(netkey_offset, NET_KEY_MAX){
-		if(DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type){
-			directed_forwarding_dependents_update_start(netkey_offset, DEPENDENT_TYPE_REMOVE, ele_adr_primary,  proxy_mag.directed_server[netkey_offset].client_addr, proxy_mag.directed_server[netkey_offset].client_2nd_ele_cnt+1);
-		}
-		else if((PROXY_CLIENT == proxy_mag.proxy_client_type) && (FILTER_WHITE_LIST == proxy_mag.filter_type)){
-			list_mag_str *p_list_dst = &(proxy_mag.white_list);
-			foreach(idx, MAX_LIST_LEN){
-				if((p_list_dst->list_idx[idx/8] & BIT(idx%8)) && is_unicast_adr(p_list_dst->list_data[idx])){
-					directed_forwarding_dependents_update_start(netkey_offset, DEPENDENT_TYPE_REMOVE, ele_adr_primary, p_list_dst->list_data[idx], 1);
-				}
-			}
-		}	
-	}
-}
-
 void mesh_directed_forwarding_default_val_init()
 {
 	mesh_directed_forward_t *p_df = &model_sig_df_cfg.directed_forward;
@@ -320,6 +288,39 @@ void mesh_directed_forwarding_default_val_init()
 
 	mesh_directed_forwarding_bind_state_update();
 	return;
+}
+
+void mesh_directed_proxy_capa_report(int netkey_offset)
+{
+	if(!is_provision_success() || (model_sig_df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_proxy>DIRECTED_PROXY_ENABLE)){
+		return ;
+	}
+	directed_proxy_capa_sts proxy_capa;	
+	mesh_net_key_t *p_netkey_base = &mesh_key.net_key[netkey_offset][0];
+	if(!p_netkey_base->valid){
+		return;
+	}
+	proxy_capa.directed_proxy = model_sig_df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_proxy;
+	proxy_capa.use_directed = proxy_mag.directed_server[netkey_offset].use_directed;
+	mesh_tx_cmd_layer_cfg_primary_specified_key(DIRECTED_PROXY_CAPA_STATUS,(u8 *)(&proxy_capa),sizeof(proxy_capa),PROXY_CONFIG_FILTER_DST_ADR, mesh_key.net_key[netkey_offset][0].index);
+}
+
+#if !FEATURE_LOWPOWER_EN
+void directed_proxy_dependent_node_delete()
+{
+	foreach(netkey_offset, NET_KEY_MAX){
+		if(DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type){
+			directed_forwarding_dependents_update_start(netkey_offset, DEPENDENT_TYPE_REMOVE, ele_adr_primary,  proxy_mag.directed_server[netkey_offset].client_addr, proxy_mag.directed_server[netkey_offset].client_2nd_ele_cnt+1);
+		}
+		else if((PROXY_CLIENT == proxy_mag.proxy_client_type) && (FILTER_WHITE_LIST == proxy_mag.filter_type)){
+			list_mag_str *p_list_dst = &(proxy_mag.white_list);
+			foreach(idx, MAX_LIST_LEN){
+				if((p_list_dst->list_idx[idx/8] & BIT(idx%8)) && is_unicast_adr(p_list_dst->list_data[idx])){
+					directed_forwarding_dependents_update_start(netkey_offset, DEPENDENT_TYPE_REMOVE, ele_adr_primary, p_list_dst->list_data[idx], 1);
+				}
+			}
+		}	
+	}
 }
 
 //----------------------------discovery table process---------------------//
@@ -1002,7 +1003,7 @@ non_fixed_entry_t * get_forwarding_entry_correspond2_path_request_solication(u16
 	}
 	return 0;
 }
-
+#endif
 //---------------------------forwarding table process end---------------------//
 
 //---------------------------forwarding config message-----------------------------------//
@@ -1026,6 +1027,7 @@ int mesh_cmd_sig_cfg_directed_control_get(u8 *par, int par_len, mesh_cb_fun_par_
 	return err;
 }
 
+#if !FEATURE_LOWPOWER_EN
 int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err =-1;
@@ -2647,6 +2649,7 @@ void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type)
 		}
 	}
 }
+#endif
 #endif
 
 #if MD_CLIENT_EN

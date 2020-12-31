@@ -98,6 +98,10 @@ extern "C" {
 	#endif
 #endif
 
+#if (WIN32)
+#define MESH_DLE_MODE               	MESH_DLE_MODE_EXTEND_BEAR	// support both.
+#endif
+
 /////////////////// MODULE /////////////////////////////////
 #define BLE_REMOTE_PM_ENABLE			0
 #define BLE_REMOTE_SECURITY_ENABLE      0
@@ -228,13 +232,14 @@ extern "C" {
 #define CRYSTAL_TYPE			XTAL_12M		//  extern 12M crystal
 
 /////////////////// watchdog  //////////////////////////////
+#if (!WIN32)
 #define MODULE_WATCHDOG_ENABLE		1
 #if (MESH_USER_DEFINE_MODE == MESH_MI_ENABLE)
 #define WATCHDOG_INIT_TIMEOUT		20000  //in mi mode the watchdog timeout is 20s
 #else
 #define WATCHDOG_INIT_TIMEOUT		2000  //in mi mode the watchdog timeout is 20s
 #endif
-
+#endif
 
 /////////////////// set default   ////////////////
 

@@ -580,8 +580,13 @@ int cfg_cmd_send_path_request(mesh_ctl_path_req_t *p_path_req, u8 len, u16 netke
 int cfg_cmd_path_metric_get(u16 node_adr, u16 nk_idx);
 int cfg_cmd_path_metric_set(u16 node_adr, u16 nk_idx, u8 metric_type, u8 lifetime);
 
- #if (MD_SERVER_EN&&!WIN32)
+#if !WIN32
 int mesh_cmd_sig_cfg_directed_control_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+#else
+#define mesh_cmd_sig_cfg_directed_control_get							(0)	
+#endif
+ 
+ #if (MD_SERVER_EN&&!FEATURE_LOWPOWER_EN&&!WIN32)
 int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_path_metric_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_path_metric_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -616,7 +621,6 @@ int mesh_cmd_sig_cfg_directed_control_network_transmit_set(u8 *par, int par_len,
 int mesh_cmd_sig_cfg_directed_control_relay_transmit_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_control_relay_transmit_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 #else
-#define mesh_cmd_sig_cfg_directed_control_get							(0)
 #define mesh_cmd_sig_cfg_directed_control_set							(0)	
 #define mesh_cmd_sig_cfg_path_metric_get								(0)
 #define mesh_cmd_sig_cfg_path_metric_set								(0)

@@ -42,12 +42,14 @@
 
  unsigned char i2c_write_series_for_msc(unsigned char Slave_addr,unsigned int W_Addr, unsigned int W_AddrLen, unsigned char * dataBuf, int dataLen,unsigned char iic_stop)
 {
+	unsigned char r = irq_disable();
     unsigned char status = IIC_EVT_XFER_DONE;
     
 	reg_i2c_id	 = (Slave_addr<<1)&(~FLD_I2C_WRITE_READ_BIT); //SlaveID & 0xfe,.i.e write data. R:High  W:Low
     //lanuch start /id    start
-    reg_i2c_ctrl = (FLD_I2C_CMD_ID | FLD_I2C_CMD_START );// when addr=0,other (not telink) iic device no need start signal
-
+    reg_i2c_ctrl = (FLD_I2C_CMD_START );// when addr=0,other (not telink) iic device no need start signal
+	sleep_us(50);
+	reg_i2c_ctrl =  FLD_I2C_CMD_ID;
     while(reg_i2c_status & FLD_I2C_CMD_BUSY	);
     if(reg_i2c_status & FLD_I2C_NAK){
         status = IIC_EVT_ADDRESS_NACK;
@@ -80,6 +82,7 @@
         while(reg_i2c_status & FLD_I2C_CMD_BUSY );
 
     }
+	irq_restore(r);
     return status;
 }
 
@@ -94,11 +97,14 @@
  */
 unsigned char i2c_read_series_msc(unsigned char Slave_addr,unsigned int R_Addr, unsigned int R_AddrLen, unsigned char * dataBuf, int dataLen)
 {
+	unsigned char r = irq_disable();
     unsigned char status = IIC_EVT_XFER_DONE;
 
 	//start + id(Read)
 	reg_i2c_id	 = (Slave_addr<<1)|(FLD_I2C_WRITE_READ_BIT);  //SlaveID & 0xfe,.i.e write data. R:High  W:Low
-	reg_i2c_ctrl = (FLD_I2C_CMD_ID | FLD_I2C_CMD_START);
+	reg_i2c_ctrl = (FLD_I2C_CMD_START);
+	sleep_us(50);
+	reg_i2c_ctrl = FLD_I2C_CMD_ID;
 	while(reg_i2c_status & FLD_I2C_CMD_BUSY	);
     if(reg_i2c_status & FLD_I2C_NAK){
         status = IIC_EVT_ADDRESS_NACK;
@@ -110,7 +116,6 @@ unsigned char i2c_read_series_msc(unsigned char Slave_addr,unsigned int R_Addr, 
         return status;
     
     }
-    sleep_us(100);
 
 	//read data
 	unsigned int bufIndex = 0;
@@ -133,7 +138,7 @@ unsigned char i2c_read_series_msc(unsigned char Slave_addr,unsigned int R_Addr, 
 	//termiante
 	reg_i2c_ctrl = FLD_I2C_CMD_STOP; //launch stop cycle
 	while(reg_i2c_status & FLD_I2C_CMD_BUSY	);
-
+	irq_restore(r);
     return status;
 }
 #endif

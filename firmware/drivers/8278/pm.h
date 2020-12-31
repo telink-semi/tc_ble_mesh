@@ -29,7 +29,7 @@
 #include "bsp.h"
 #include "gpio.h"
 
-#define PM_LONG_SUSPEND_EN					1 // modify by weixiong, sig mesh need suspend time longer than 16 second.
+#define PM_LONG_SUSPEND_EN					1// modify by weixiong
 
 #ifndef PM_TIM_RECOVER_MODE
 #define PM_TIM_RECOVER_MODE			    	1
@@ -62,13 +62,14 @@
 #define EARLYWAKEUP_TIME_US_SUSPEND 		(PM_DCDC_DELAY_DURATION + PM_XTAL_MANUAL_MODE_DELAY + 200)  //100: code running time margin
 #define EARLYWAKEUP_TIME_US_DEEP_RET    	(PM_DCDC_DELAY_DURATION  + 64)
 #if 1 // add by weixiong
-#define EARLYWAKEUP_TIME_US_DEEP    		(0) // start_reboot_ is 1ms deepsleep, so can't set early wakeup.
+#define EARLYWAKEUP_TIME_US_DEEP    		(0) // for start_reboot_ is 1ms deepsleep
 #else
 #define EARLYWAKEUP_TIME_US_DEEP    		(PM_DCDC_DELAY_DURATION  + 32 + SOFT_START_DELAY*62)
 #endif
 #define EMPTYRUN_TIME_US       	    		(EARLYWAKEUP_TIME_US_SUSPEND + 200)
 
 
+#define PM_EMPTYRUN_TIME_US			25
 
 
 
@@ -192,7 +193,7 @@ extern _attribute_aligned_(4) pm_tim_recover_t			pm_timRecover;
 #endif
 
 
-typedef int (*suspend_handler_t)(void);
+typedef int (*suspend_handler_t)(unsigned int wakeup_tick);
 extern  suspend_handler_t 		 func_before_suspend;
 
 typedef void (*check_32k_clk_handler_t)(void);
@@ -411,8 +412,6 @@ void cpu_set_32k_tick(unsigned int tick);
 
 void soft_reboot_dly13ms_use24mRC(void);
 
-
-
 #if PM_LONG_SLEEP_WAKEUP_EN
 /**
  * @brief      This function servers to wake up the cpu from sleep mode.
@@ -423,3 +422,12 @@ void soft_reboot_dly13ms_use24mRC(void);
  */
 int pm_long_sleep_wakeup (SleepMode_TypeDef sleep_mode, SleepWakeupSrc_TypeDef wakeup_src, unsigned int  SleepDurationUs);
 #endif
+/**
+ * @brief      This function servers to wake up the cpu from sleep mode.
+ * @param[in]  sleep_mode - sleep mode type select.
+ * @param[in]  wakeup_src - wake up source select.
+ * @param[in]  wakeup_tick - the time of sleep,unit is 31.25us,1ms = 32.
+ * @return     indicate whether the cpu is wake up successful.
+ */
+int cpu_long_sleep_wakeup_32k_rc(SleepMode_TypeDef sleep_mode,  SleepWakeupSrc_TypeDef wakeup_src, unsigned int  wakeup_tick);
+#define cpu_long_sleep_wakeup	cpu_long_sleep_wakeup_32k_rc

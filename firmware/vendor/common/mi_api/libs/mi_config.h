@@ -1,7 +1,6 @@
 #ifndef __MI_CONFIG_H__
 #define __MI_CONFIG_H__
 #include <stdint.h>
-#include "vendor/common/version.h"    // include mesh_config.h inside.
 
 #if defined(CUSTOMIZED_MI_CONFIG_FILE)
 #include CUSTOMIZED_MI_CONFIG_FILE
@@ -14,28 +13,31 @@
  * And DEVELOPER_VERSION will identify developer firmware version.
  * e.g. x.y.z_d
  */
+
 #ifndef DEVELOPER_VERSION
-#define DEVELOPER_VERSION       0001
+#define DEVELOPER_VERSION           0001
 #endif
-#define MI_MESH_ENABLED 1
+
 #define STR_VAL(str)  #str
-#define CONCAT_VERSION(x,y,z,u) STR_VAL(x) "." STR_VAL(y) "." STR_VAL(z) "_" STR_VAL(u)
+#define CONCAT_DEVELOPER_VERSION(x) STR_VAL(x)
+#define CONCAT_LIB_VERSION(x,y,z)   STR_VAL(x) "." STR_VAL(y) "." STR_VAL(z) "_"
+#define CONCAT_VERSION(x,y,z,u)     STR_VAL(x) "." STR_VAL(y) "." STR_VAL(z) "_" STR_VAL(u)
 
 #if defined(MI_BLE_ENABLED) && (!HAVE_MSC)
 #define MIBLE_AUTH_MODE            2
 #define MIBLE_LIB_MAJOR            1
 #define MIBLE_LIB_MINOR            1
-#define MIBLE_LIB_REVISION         2
+#define MIBLE_LIB_REVISION         4
 #elif defined(MI_BLE_ENABLED) && (HAVE_MSC)
 #define MIBLE_AUTH_MODE            1
 #define MIBLE_LIB_MAJOR            2
 #define MIBLE_LIB_MINOR            3
-#define MIBLE_LIB_REVISION         2
+#define MIBLE_LIB_REVISION         3
 #elif defined(MI_MESH_ENABLED)
 #define MIBLE_AUTH_MODE            1
 #define MIBLE_LIB_MAJOR            1
 #define MIBLE_LIB_MINOR            4
-#define MIBLE_LIB_REVISION         3
+#define MIBLE_LIB_REVISION         5
 #if (HAVE_MSC==0)
 #define HAVE_OTP_PKI               1
 #else
@@ -45,84 +47,21 @@
 #error "No MI_BLE_ENABLED or MI_MESH_ENABLED is defined. Should add one of them in the preprocesser symbols."
 #endif
 
-#if MI_API_ENABLE
-	#if (MSC_TYPE == MSC_MJA1 || MSC_TYPE == MSC_MJSC)
-	#define HAVE_MSC	MSC_TYPE
-	#else
-	#define HAVE_MSC	0
-	#endif
-#else
-	#define HAVE_MSC	0
-#endif
-
-
+#define MIBLE_DEVELOPER_VERSION         CONCAT_DEVELOPER_VERSION(DEVELOPER_VERSION)
+#define MIBLE_LIB_VERSION               CONCAT_LIB_VERSION(MIBLE_LIB_MAJOR, MIBLE_LIB_MINOR, MIBLE_LIB_REVISION)
 #define MIBLE_LIB_AND_DEVELOPER_VERSION CONCAT_VERSION(MIBLE_LIB_MAJOR, MIBLE_LIB_MINOR, MIBLE_LIB_REVISION, DEVELOPER_VERSION)
-
 
 /**
  * @note Product identification got from xiaomi IoT developer platform.
  */
-#define MI_MESH_LIGHT_SUB_ADR	0xfe00
-#define MI_MESH_SWITCH_SUB_ADR	0xfe01
-#define MI_MESH_PLUG_SUB_ADR	0xfe02
-#define MI_MESH_FANS_SUB_ADR	0xfe03
-	
-#define MI_MESH_PUB_ADR 		0xfeff
-
-
-#define MI_YEELIGHT_CT_LIGHT_PID	0x3b4
-#define MI_FANS_CTL_PID				0x3b5
-
-#define MI_LESHI_CT_LAMP_PID		2091
-#define MI_LEISHI_CT_LIGHT_PID		1369
-#define MI_FULIAN_CT_LIGHT_PID		1527
-#define MI_LESHI_ONE_ONFF_PID		2007
-#define MI_LESHI_TWO_ONOFF_PID		2047
-#define MI_LESSHI_THREE_ONFF_PID 	2048
-#define MI_LEISHI_TEST_PID			3639
-#define MI_SINGLE_ONOFF_BATTERY_PID	889
-#define MI_IOT_TELINK_MODE 		1
-#if MI_IOT_TELINK_MODE
-	#if MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_CT_LIGHT
-#define PRODUCT_ID	MI_YEELIGHT_CT_LIGHT_PID
-//#define PRODUCT_ID	MI_LEISHI_CT_LIGHT_PID
-//#define PRODUCT_ID	MI_FULIAN_CT_LIGHT_PID
-#define MI_MESH_SUB_ADR			MI_MESH_LIGHT_SUB_ADR
-	#elif MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_LAMP
-#define PRODUCT_ID				MI_LESHI_CT_LAMP_PID
-#define MI_MESH_SUB_ADR			MI_MESH_LIGHT_SUB_ADR	
-	#elif MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_ONE_ONOFF 
-		#if MI_SWITCH_LPN_EN
-#define PRODUCT_ID				MI_SINGLE_ONOFF_BATTERY_PID
-		#else
-#define PRODUCT_ID				MI_LESHI_ONE_ONFF_PID
-		#endif
-#define MI_MESH_SUB_ADR			MI_MESH_SWITCH_SUB_ADR
-	#elif MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_TWO_ONOFF 
-#define PRODUCT_ID				MI_LESHI_TWO_ONOFF_PID
-#define MI_MESH_SUB_ADR			MI_MESH_SWITCH_SUB_ADR
-	#elif MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_THREE_ONOFF
-#define PRODUCT_ID				MI_LESSHI_THREE_ONFF_PID
-#define MI_MESH_SUB_ADR			MI_MESH_SWITCH_SUB_ADR
-	#elif (MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_PLUG)
-#define PRODUCT_ID				MI_YEELIGHT_CT_LIGHT_PID
-#define MI_MESH_SUB_ADR			MI_MESH_PLUG_SUB_ADR
-	#elif (MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_FANS)
-#define PRODUCT_ID				MI_FANS_CTL_PID
-#define MI_MESH_SUB_ADR			MI_MESH_FANS_SUB_ADR
-	#else
-#define PRODUCT_ID				MI_YEELIGHT_CT_LIGHT_PID
-#define MI_MESH_SUB_ADR			MI_MESH_PLUG_SUB_ADR
-	#endif
-	
+#ifndef PRODUCT_ID
+#if defined(MI_BLE_ENABLED) && (HAVE_MSC)
+#define PRODUCT_ID              463
+#elif defined(MI_BLE_ENABLED)
+#define PRODUCT_ID              156
 #else
-#define PRODUCT_ID              889//develop board 
+#define PRODUCT_ID              889
 #endif
-
-#if (PRODUCT_ID == MI_LEISHI_TEST_PID)
-#define LS_TEST_ENABLE 			1
-#else
-#define LS_TEST_ENABLE 			0
 #endif
 
 /**
@@ -130,19 +69,7 @@
  */
 #ifndef MODEL_NAME
 #define MODEL_NAME              "xiaomi.dev.ble"
-//#define MODEL_NAME              "lemesh.light.test04"
 #endif
-#define DEMO_CER_MODE			0
-#define FLASH_CER_MODE			1 
-
-#define MI_MESH_PUB_STEP	6
-#define MI_MESH_PUB_VAL		2
-#define MI_MESH_GATEWAY_ADR 	1
-
-#if MI_IOT_TELINK_MODE
-#define MI_CER_MODE 	DEMO_CER_MODE
-#endif
-
 
 
 /**
@@ -163,11 +90,11 @@
 #endif
 
 #ifndef OBJ_ADV_INTERVAL_MS
-#define OBJ_ADV_INTERVAL_MS    100
+#define OBJ_ADV_INTERVAL_MS    50
 #endif
 
 #ifndef OBJ_ADV_TIMEOUT_MS
-#define OBJ_ADV_TIMEOUT_MS     3000
+#define OBJ_ADV_TIMEOUT_MS     1500
 #endif
 
 
@@ -234,6 +161,13 @@
 #endif
 
 /**
+ * @note Use Mi BLE MCU OTA Protocol.
+ */
+#ifndef USE_MCU_OTA
+#define USE_MCU_OTA           1
+#endif
+
+/**
  * @note Use Mi BLE WiFi Access Protocol.
  */
 #ifndef USE_MIBLE_WAC
@@ -244,7 +178,7 @@
  * @note Use GATT MIoT-Spec.
  */
 #ifndef USE_GATT_SPEC
-#define USE_GATT_SPEC          0
+#define USE_GATT_SPEC          1
 #endif
 
 #ifndef DFU_NVM_START
@@ -256,11 +190,14 @@
 #endif
 
 #ifndef MAX_ATT_MTU
-#define MAX_ATT_MTU            23
+#define MAX_ATT_MTU            247
 #endif
 
 #define MAX_ATT_PAYLOAD       (MAX_ATT_MTU-3)
 
+#ifndef STORE_DFU_IDX_EVERY_N_FRAG
+#define STORE_DFU_IDX_EVERY_N_FRAG 0
+#endif
 
 /* DEBUG */
 #ifndef DEBUG_MIBLE
@@ -271,18 +208,22 @@
 
 
 typedef struct {
-    char *   model;
+    const char *   developer_version;
+    const char *   model;
     uint16_t pid;
     uint16_t io;
     uint8_t  have_msc;
-    uint8_t  have_reset_button:1;
-    uint8_t  schd_in_mainloop :1;
-    uint8_t  reserve          :6;
+    uint8_t  have_reset_button  :1;
+    uint8_t  have_confirm_button:1;
+    uint8_t  schd_in_mainloop   :1;
+    uint8_t  reserve            :5;
     uint8_t  max_att_payload;
+    uint32_t dfu_start;
+    uint32_t dfu_size;
 } mi_config_t;
 
-extern const mi_config_t m_config;
-#define DEV_SK_FLASH_ADR 	   0x7f000
+extern mi_config_t m_config;
+
 #endif  /* __MI_CONFIG_H__ */ 
 
 

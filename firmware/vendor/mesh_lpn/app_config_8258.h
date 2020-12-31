@@ -119,8 +119,14 @@ extern "C" {
 /////////////////// mesh project config /////////////////////////////////
 #define TRANSITION_TIME_DEFAULT_VAL (0x00)  // 0x41: 1 second // 0x00: means no default transition time
 
+#define MESH_DLE_MODE               0 // MESH_DLE_MODE_GATT
+#if MESH_DLE_MODE
+#define DLE_LEN_MAX_RX              (MAX_OCTETS_DATA_LEN_EXTENSION)
+#define DLE_LEN_MAX_TX              (40)
+#endif
+
 /////////////////// MODULE /////////////////////////////////
-#define BLE_REMOTE_PM_ENABLE			0
+#define BLE_REMOTE_PM_ENABLE			1
 #if BLE_REMOTE_PM_ENABLE
 #define PM_DEEPSLEEP_RETENTION_ENABLE   1   // must
 #else
@@ -130,7 +136,7 @@ extern "C" {
 #define BLE_IR_ENABLE					0
 
 #ifndef BLT_SOFTWARE_TIMER_ENABLE
-#define BLT_SOFTWARE_TIMER_ENABLE		0
+#define BLT_SOFTWARE_TIMER_ENABLE		1
 #endif
 
 //////////////////////////// KEYSCAN/MIC  GPIO //////////////////////////////////
@@ -236,7 +242,7 @@ extern "C" {
 #if DUAL_MESH_ZB_BL_EN // keep same with zb
 #define CLOCK_SYS_CLOCK_HZ  	32000000
 #else
-#define CLOCK_SYS_CLOCK_HZ  	16000000
+#define CLOCK_SYS_CLOCK_HZ  	32000000
 #endif
 //////////////////Extern Crystal Type///////////////////////
 #define CRYSTAL_TYPE			XTAL_12M		//  extern 12M crystal

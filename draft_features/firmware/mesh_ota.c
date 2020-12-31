@@ -42,6 +42,7 @@ u32 	ota_firmware_size_k = FW_SIZE_MAX_K;	// same with pm_8269.c
 STATIC_ASSERT(FW_SIZE_MAX_K % 4 == 0);  // because ota_firmware_size_k is must 4k aligned.
 STATIC_ASSERT(ACCESS_WITH_MIC_LEN_MAX >= (MESH_OTA_CHUNK_SIZE + 1 + SZMIC_TRNS_SEG64 + 7)); // 1: op code, 7:margin
 STATIC_ASSERT(sizeof(fw_update_metadata_check_t) + SIZE_OF_OP(FW_UPDATE_METADATA_CHECK) <= 11); // use unsegment should be better.
+STATIC_ASSERT(PROXY_GATT_MAX_LEN >= (MESH_OTA_CHUNK_SIZE + 13+1+2)); //OFFSETOF(mesh_cmd_bear_unseg_t,ut) + 1 + OFFSETOF(blob_chunk_transfer_t,data)
 
 #define BLOCK_CRC32_CHECKSUM_EN     (0)
 
@@ -101,9 +102,9 @@ inline u16 get_fw_block_cnt(u32 blob_size, u8 bk_size_log)
     return (blob_size + bk_size - 1) / bk_size;
 }
 
-inline u16 get_block_size(u32 blob_size, u8 bk_size_log, u16 block_num)
+inline u32 get_block_size(u32 blob_size, u8 bk_size_log, u16 block_num)
 {
-    u16 bk_size = (1 << bk_size_log);
+    u32 bk_size = (1 << bk_size_log);
     u16 bk_cnt = get_fw_block_cnt(blob_size, bk_size_log);
     if(block_num + 1 < bk_cnt){
         return bk_size;
@@ -112,12 +113,12 @@ inline u16 get_block_size(u32 blob_size, u8 bk_size_log, u16 block_num)
     }
 }
 
-inline u16 get_fw_chunk_cnt(u16 bk_size_current, u16 chunk_size_max)
+inline u16 get_fw_chunk_cnt(u32 bk_size_current, u16 chunk_size_max)
 {
     return (bk_size_current + chunk_size_max - 1) / chunk_size_max;
 }
 
-inline u16 get_chunk_size(u16 bk_size_current, u16 chunk_size_max, u16 chunk_num)
+inline u16 get_chunk_size(u32 bk_size_current, u16 chunk_size_max, u16 chunk_num)
 {
     u16 chunk_cnt = get_fw_chunk_cnt(bk_size_current, chunk_size_max);
     if(chunk_num + 1 < chunk_cnt){
@@ -147,8 +148,9 @@ int is_mesh_ota_cid_match(u16 cid)
 #if DISTRIBUTOR_UPDATE_CLIENT_EN
 // const u32 fw_id_new     = 0xff000021;   // set in distribution start
 const u8  blob_id_new[8] = {0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88};
-#define TEST_CHECK_SUM_TYPE     (BLOB_BLOCK_CHECK_SUM_TYPE_CRC32)
-#define TEST_BK_SIZE_LOG        (MESH_OTA_BLOCK_SIZE_LOG_MIN)
+//#define TEST_CHECK_SUM_TYPE     (BLOB_BLOCK_CHECK_SUM_TYPE_CRC32)
+
+#define GROUP_VAL_FW_INFO_GET_ALL       (0x0000)
 
 #define NEW_FW_MAX_SIZE     (FLASH_ADR_AREA_FIRMWARE_END) // = (192*1024)
 u32 new_fw_size = 0;
@@ -160,7 +162,7 @@ u8 fw_ota_data_tx[NEW_FW_MAX_SIZE];
 u8 fw_ota_data_rx[NEW_FW_MAX_SIZE] = {1,2,3,4,5,};
 #endif
 
-STATIC_ASSERT(MESH_OTA_BLOCK_SIZE_MAX <= MESH_OTA_CHUNK_SIZE * 32);
+STATIC_ASSERT(MESH_OTA_BLOCK_SIZE_MAX <= MESH_OTA_CHUNK_SIZE * 65536);
 STATIC_ASSERT((MESH_OTA_BLOCK_SIZE_MIN % 16 == 0)&&(MESH_OTA_BLOCK_SIZE_MAX % 16 == 0)); // for CRC check
 STATIC_ASSERT((MESH_OTA_CHUNK_SIZE % 16 == 0)); // for encryption bin
 
@@ -170,6 +172,8 @@ STATIC_ASSERT((MESH_OTA_CHUNK_SIZE % 16 == 0)); // for encryption bin
 fw_distribut_srv_proc_t fw_distribut_srv_proc = {{0}};      // for distributor (server + client) + updater client
 
 #define master_ota_current_node_adr     (fw_distribut_srv_proc.list[fw_distribut_srv_proc.node_num].adr)
+
+blob_info_status_t g_blob_info_status = {0};
 
 
 inline void mesh_ota_master_next_st_set(u8 st)
@@ -183,7 +187,7 @@ inline void mesh_ota_master_next_st_set(u8 st)
 
 inline int is_only_get_fw_info_fw_distribut_srv()
 {
-    return (0 == fw_distribut_srv_proc.adr_group);
+    return (GROUP_VAL_FW_INFO_GET_ALL == fw_distribut_srv_proc.adr_group);
 }
 
 void mesh_ota_master_next_block()
@@ -211,7 +215,7 @@ inline u16 distribut_get_fw_block_cnt()
     return get_fw_block_cnt(fw_distribut_srv_proc.blob_size, fw_distribut_srv_proc.bk_size_log);
 }
 
-inline u16 distribut_get_block_size(u16 block_num)
+inline u32 distribut_get_block_size(u16 block_num)
 {
     return get_block_size(fw_distribut_srv_proc.blob_size, fw_distribut_srv_proc.bk_size_log, block_num);
 }
@@ -403,7 +407,22 @@ int mesh_cmd_sig_fw_distribut_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 		if(fw_distribut_srv_proc.adr_set_flag == 0){
 			distribut_srv_proc_init();
 		}
+
         fw_distribut_srv_proc.adr_group = p_start->adr_group;
+		#if WIN32
+        if(ble_moudle_id_is_kmadongle()){
+            if((1 == update_node_cnt) && (p_start->adr_group != GROUP_VAL_FW_INFO_GET_ALL)){
+                if((p_start->update_list[0] == APP_get_GATT_connect_addr())
+                #if DEBUG_SHOW_VC_SELF_EN
+                ||(p_start->update_list[0] == ele_adr_primary)
+                #endif
+                ){
+                    fw_distribut_srv_proc.adr_group = p_start->update_list[0];
+                }
+            }
+        }
+		#endif
+        
         fw_distribut_srv_proc.adr_distr_node = ele_adr_primary;
         if(0 != read_ota_file2buffer()){
             distribut_srv_proc_init();
@@ -604,7 +623,7 @@ int access_cmd_blob_block_start(u16 adr_dst, u16 block_num)
     LOG_MSG_FUNC_NAME();
     blob_block_start_t *p_bk_start = &fw_distribut_srv_proc.block_start;  // record parameters
     p_bk_start->block_num = block_num;
-    p_bk_start->chunk_size = MESH_OTA_CHUNK_SIZE;
+    p_bk_start->chunk_size = g_blob_info_status.chunk_size_max;
     fw_distribut_srv_proc.bk_size_current = distribut_get_block_size(block_num);
 
 	return SendOpParaDebug(adr_dst, 1, BLOB_BLOCK_START, (u8 *)p_bk_start, sizeof(blob_block_start_t));
@@ -675,13 +694,17 @@ int mesh_ota_check_skip_current_node()
     return 0;
 }
 
-#if DEBUG_SHOW_VC_SELF_EN
-int is_mesh_ota_and_only_VC_update()
+#if VC_CHECK_NEXT_SEGMENT_EN
+int mesh_ota_and_only_one_node_check()
 {
     fw_distribut_srv_proc_t *distr_proc = &fw_distribut_srv_proc;
     if(MASTER_OTA_ST_BLOB_CHUNK_START == distr_proc->st){
-        if((1 == distr_proc->node_cnt) && (distr_proc->list[0].adr == ele_adr_primary)){
-            return 1;
+        if((1 == distr_proc->node_cnt) && is_unicast_adr(fw_distribut_srv_proc.adr_group)){
+            if(distr_proc->list[0].adr == ele_adr_primary){
+                return VC_MESH_OTA_ONLY_ONE_NODE_SELF;
+            }else if(distr_proc->list[0].adr == APP_get_GATT_connect_addr()){
+                return VC_MESH_OTA_ONLY_ONE_NODE_CONNECTED;
+            }
         }
     }
     return 0;
@@ -795,26 +818,28 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
                     next_st = 1;
                 }
             }else if((MASTER_OTA_ST_BLOB_BLOCK_GET | OTA_WAIT_ACK_MASK) == distr_proc->st){
-                distr_proc->list[distr_proc->node_num].st_block_get = p->format;
-                int miss_chunk_len = par_len - OFFSETOF(blob_block_status_t,miss_chunk);
-                if(miss_chunk_len >= 0 && miss_chunk_len <= sizeof(distr_proc->miss_mask)){
-                    // distr_proc->miss_mask[] have been zero before block get and after end of MASTER_OTA_ST_BLOB_CHUNK_START.
-                    if(BLOB_BLOCK_FORMAT_NO_CHUNK_MISS == p->format){
-                    }else if(BLOB_BLOCK_FORMAT_ALL_CHUNK_MISS == p->format){
-                        set_bit_by_cnt(distr_proc->miss_mask, sizeof(distr_proc->miss_mask), distribut_get_fw_chunk_cnt()); // all need send
-                        LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "ALL CHUNK MISS", 0);
-                    }else if(BLOB_BLOCK_FORMAT_SOME_CHUNK_MISS == p->format){
-                        for(int i = 0; i < (miss_chunk_len); ++i){
-                            distr_proc->miss_mask[i] |= p->miss_chunk[i];
+                if(BLOB_TRANS_ST_SUCCESS == p->st){
+                    distr_proc->list[distr_proc->node_num].st_block_get = p->format;
+                    int miss_chunk_len = par_len - OFFSETOF(blob_block_status_t,miss_chunk);
+                    if(miss_chunk_len >= 0 && miss_chunk_len <= sizeof(distr_proc->miss_mask)){
+                        // distr_proc->miss_mask[] have been zero before block get and after end of MASTER_OTA_ST_BLOB_CHUNK_START.
+                        if(BLOB_BLOCK_FORMAT_NO_CHUNK_MISS == p->format){
+                        }else if(BLOB_BLOCK_FORMAT_ALL_CHUNK_MISS == p->format){
+                            set_bit_by_cnt(distr_proc->miss_mask, sizeof(distr_proc->miss_mask), distribut_get_fw_chunk_cnt()); // all need send
+                            LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "ALL CHUNK MISS", 0);
+                        }else if(BLOB_BLOCK_FORMAT_SOME_CHUNK_MISS == p->format){
+                            for(int i = 0; i < (miss_chunk_len); ++i){
+                                distr_proc->miss_mask[i] |= p->miss_chunk[i];
+                            }
+                            LOG_MSG_LIB (TL_LOG_NODE_BASIC, p->miss_chunk, miss_chunk_len, "SOME MISS CHUNK ", 0);
+                        }else if(BLOB_BLOCK_FORMAT_ENCODE_MISS_CHUNK == p->format){
+                            // TODO : Note: use "or" but not "memcpy"
+                            // distr_proc->miss_mask[i] |= ??;
+                            LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "TODO: BLOB_BLOCK_FORMAT_ENCODE_MISS_CHUNK", 0);
                         }
-                        LOG_MSG_LIB (TL_LOG_NODE_BASIC, p->miss_chunk, miss_chunk_len, "SOME MISS CHUNK ", 0);
-                    }else if(BLOB_BLOCK_FORMAT_ENCODE_MISS_CHUNK == p->format){
-                        // TODO : Note: use "or" but not "memcpy"
-                        // distr_proc->miss_mask[i] |= ??;
-                        LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "TODO: BLOB_BLOCK_FORMAT_ENCODE_MISS_CHUNK", 0);
+                    }else{
+                        LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "TODO: MISS CHUNK LENGTH TOO LONG", 0);
                     }
-                }else{
-                    LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "TODO: MISS CHUNK LENGTH TOO LONG", 0);
                 }
                 next_st = 1;
             }
@@ -827,7 +852,12 @@ int mesh_ota_master_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
         op_handle_ok = 1;
     }else if(BLOB_INFO_STATUS == op){
         if(adr_match && ((MASTER_OTA_ST_BLOB_INFO_GET | OTA_WAIT_ACK_MASK) == distr_proc->st)){
-            //blob_info_status_t *p = (blob_info_status_t *)par;
+            blob_info_status_t *p = (blob_info_status_t *)par;
+            memcpy(&g_blob_info_status, p, sizeof(g_blob_info_status));
+            u16 mesh_chunk_size_max = MESH_CMD_ACCESS_LEN_MAX - (1 + OFFSETOF(blob_chunk_transfer_t,data)); // 1: op
+            if(g_blob_info_status.chunk_size_max > mesh_chunk_size_max){
+                g_blob_info_status.chunk_size_max = mesh_chunk_size_max;
+            }
             next_st = 1;
         }
         op_handle_ok = 1;
@@ -1006,7 +1036,7 @@ void mesh_ota_master_proc()
 		    if(distr_proc->node_num < distr_proc->node_cnt){
 		        if(mesh_ota_check_skip_current_node()){ break;}
 		        
-    	        if(0 == access_cmd_blob_transfer_start(master_ota_current_node_adr, new_fw_size, TEST_BK_SIZE_LOG)){
+    	        if(0 == access_cmd_blob_transfer_start(master_ota_current_node_adr, new_fw_size, g_blob_info_status.bk_size_log_max)){
     	            mesh_ota_master_wait_ack_st_set();
     	        }
 	        }else{
@@ -1024,7 +1054,7 @@ void mesh_ota_master_proc()
                     
                     #if 0 // BLOCK_CRC32_CHECKSUM_EN
     		        u32 adr = distribut_get_fw_data_position(0);
-    		        u16 size = distribut_get_block_size(block_num_current);
+    		        u32 size = distribut_get_block_size(block_num_current);
 					u32 crc =0;
 					#if !WIN32
 					if(block_num_current == 0){
@@ -1072,11 +1102,12 @@ void mesh_ota_master_proc()
 		    u32 chunk_cnt = distribut_get_fw_chunk_cnt();
 		    if(distr_proc->chunk_num < chunk_cnt){
 		        if(is_buf_bit_set(distr_proc->miss_mask, distr_proc->chunk_num)){
-                    blob_chunk_transfer_t cmd = {0};
-                    cmd.chunk_num = distr_proc->chunk_num;
-                    u16 size = distribut_get_chunk_size(cmd.chunk_num);
-                    if(size > MESH_OTA_CHUNK_SIZE){
-                        size = MESH_OTA_CHUNK_SIZE;
+		            u8 cmd_buf[MESH_CMD_ACCESS_LEN_MAX+16] = {0};
+                    blob_chunk_transfer_t *p_cmd = (blob_chunk_transfer_t *)cmd_buf;
+                    p_cmd->chunk_num = distr_proc->chunk_num;
+                    u16 size = distribut_get_chunk_size(p_cmd->chunk_num);
+                    if(size > g_blob_info_status.chunk_size_max){
+                        size = g_blob_info_status.chunk_size_max;
                     }
 
                     u32 fw_pos = 0;
@@ -1084,17 +1115,17 @@ void mesh_ota_master_proc()
 					u16 block_num_current = fw_distribut_srv_proc.block_start.block_num;
 					
 					#if !WIN32
-					if(block_num_current == 0 && cmd.chunk_num == 0){
-						u8 first_chunk[MESH_OTA_CHUNK_SIZE];
+					if(block_num_current == 0 && p_cmd->chunk_num == 0){
+						u8 first_chunk[g_blob_info_status.chunk_size_max];
 						flash_read_page(ota_program_offset,sizeof(first_chunk),first_chunk);
 						first_chunk[8] = get_fw_ota_value();
 						data = first_chunk;
-						memcpy(cmd.data, data, size);
+						memcpy(p_cmd->data, data, size);
 					}else
 					#endif
 					{
-						fw_pos = distribut_get_fw_data_position(cmd.chunk_num);
-                        mesh_ota_tx_fw_data_read(fw_pos, size, cmd.data);
+						fw_pos = distribut_get_fw_data_position(p_cmd->chunk_num);
+                        mesh_ota_tx_fw_data_read(fw_pos, size, p_cmd->data);
 					}
 					
                     u16 bk_total = distribut_get_fw_block_cnt();
@@ -1108,7 +1139,7 @@ void mesh_ota_master_proc()
                         LOG_MSG_ERR (TL_LOG_COMMON, 0, 0, "----OTA,missing chunk test: %2d----", distr_proc->chunk_num);
     		            distr_proc->chunk_num++;
     		            fw_distribut_srv_proc.miss_chunk_test_flag = 0;
-                    }else if(0 == access_cmd_blob_chunk_transfer(fw_distribut_srv_proc.adr_group, (u8 *)&cmd, size+2)){
+                    }else if(0 == access_cmd_blob_chunk_transfer(fw_distribut_srv_proc.adr_group, (u8 *)p_cmd, size+2)){
     		            distr_proc->chunk_num++;
     		        }
 		        }else{
@@ -1263,12 +1294,16 @@ void mesh_ota_save_data(u32 adr, u32 len, u8 * data){
 		data[8] = 0xff;					//FW flag invalid
 	}
     #endif
-	flash_write_page(ota_program_offset + adr, len, data);
+	flash_write_page(ota_program_offset + adr, len, data); // will readback to check in soft_crc32_ota_flash.
 #endif
 }
 
 u32 soft_crc32_ota_flash(u32 addr, u32 len, u32 crc_init,u32 *out_crc_type1_blk)
 {
+#if (MESH_OTA_BLOCK_SIZE_MAX > 16 * 1024)
+    clock_switch_to_highest();
+#endif
+
     u32 crc_type1_blk = 0;
     u8 buf[64];      // CRC_SIZE_UNIT
     while(len){
@@ -1309,12 +1344,20 @@ u32 soft_crc32_ota_flash(u32 addr, u32 len, u32 crc_init,u32 *out_crc_type1_blk)
         
         len -= len_read;
         addr += len_read;
+        #if MODULE_WATCHDOG_ENABLE
+        wd_clear();
+        #endif
     }
     if(out_crc_type1_blk){
         if(FW_CHECK_AGTHM2 != fw_update_srv_proc.bin_crc_type){
 		    *out_crc_type1_blk = crc_type1_blk;
 		}
 	}
+
+#if (MESH_OTA_BLOCK_SIZE_MAX > 16 * 1024)
+    clock_switch_to_normal();
+#endif
+
     return crc_init;
 }
 
@@ -1371,8 +1414,10 @@ int is_valid_mesh_ota_calibrate_val()
     		fw_update_srv_proc.bin_crc_done = crc_ok ? BIN_CRC_DONE_OK : BIN_CRC_DONE_FAIL;
 		}
         return (BIN_CRC_DONE_OK == fw_update_srv_proc.bin_crc_done);
+	}else{
+		fw_update_srv_proc.bin_crc_done = BIN_CRC_DONE_FAIL; // take as error if not crc check
+		return 0;
 	}
-	return 1;
 }
 
 
@@ -1381,7 +1426,7 @@ inline u16 updater_get_fw_block_cnt()
     return get_fw_block_cnt(fw_update_srv_proc.blob_size, fw_update_srv_proc.bk_size_log);
 }
 
-inline u16 updater_get_block_size(u16 block_num)
+inline u32 updater_get_block_size(u16 block_num)
 {
     return get_block_size(fw_update_srv_proc.blob_size, fw_update_srv_proc.bk_size_log, block_num);
 }
@@ -1505,6 +1550,9 @@ int mesh_cmd_sig_fw_update_metadata_check(u8 *par, int par_len, mesh_cb_fun_par_
             memcpy(&fw_update_srv_proc.start.metadata, &p_check->metadata, metadata_len);
             fw_update_srv_proc.metadata_len = metadata_len;
             // may check meta data again when update start.
+            #if GATT_LPN_EN
+            bls_l2cap_requestConnParamUpdate_Normal();
+            #endif
             st = UPDATE_ST_SUCCESS;
         }else{
             st = UPDATE_ST_METADATA_CHECK_FAIL;
@@ -1674,6 +1722,9 @@ int mesh_cmd_sig_fw_update_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
             fw_update_srv_proc.blob_trans_phase = BLOB_TRANS_PHASE_WAIT_START;
             fw_update_srv_proc.busy = 1;
             st = UPDATE_ST_SUCCESS;
+			#if (MESH_DLE_MODE && !WIN32)
+            LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0 ,"DLE RemoteMaxRx: %d, DLE RemoteMaxTx: %d",bltData.connRemoteMaxRxOctets, bltData.connRemoteMaxTxOctets);
+			#endif
 	    }else{
     	    st = UPDATE_ST_METADATA_CHECK_FAIL;
 	    }
@@ -1710,7 +1761,8 @@ int mesh_cmd_sig_fw_update_apply(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
                 new_fw_write_file(fw_ota_data_rx, fw_update_srv_proc.blob_size);
 				#endif
 				#else
-                mesh_ota_reboot_set((fw_update_srv_proc.blob_size > 256) ? OTA_SUCCESS : OTA_SUCCESS_DEBUG);
+				extern u8 ota_reboot_type; // blob_size will have been cleared if "update apply repeat" happens.
+                mesh_ota_reboot_set(((fw_update_srv_proc.blob_size > 256) || (OTA_SUCCESS == ota_reboot_type)) ? OTA_SUCCESS : OTA_SUCCESS_DEBUG);
                 #endif
                 cali_ok = 1;
             }else{
@@ -2001,7 +2053,7 @@ u8 blob_block_start_par_check(blob_block_start_t *p_start)
     if(BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN || fw_update_srv_proc.busy){
         if((BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN || (UPDATE_PHASE_TRANSFER_ACTIVE == fw_update_srv_proc.update_phase))
         && fw_update_srv_proc.blob_trans_busy){
-            u16 bk_size_max = (1 << fw_update_srv_proc.bk_size_log);
+            u32 bk_size_max = (1 << fw_update_srv_proc.bk_size_log);
             int block_num_valid = p_start->block_num <= updater_get_block_rx_ok_cnt();
             if(!block_num_valid && ((fw_update_srv_proc.blob_trans_phase == BLOB_TRANS_PHASE_WAIT_NEXT_CHUNK) // MMDL/SR/BT/BV-21-C, start twice.
                                     || (fw_update_srv_proc.blob_trans_phase == BLOB_TRANS_PHASE_COMPLETE))){
@@ -2094,7 +2146,7 @@ int mesh_cmd_sig_blob_chunk_transfer(u8 *par, int par_len, mesh_cb_fun_par_t *cb
         #endif
         //u32 bit_chunk = BIT(p_chunk->chunk_num);
         //LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0,"chunk_num: 0x%04x",p_chunk->chunk_num);
-        if((p_chunk->chunk_num + 1) * fw_update_srv_proc.block_start.chunk_size > (1 << fw_update_srv_proc.bk_size_log)){
+        if((p_chunk->chunk_num * fw_update_srv_proc.block_start.chunk_size + fw_data_len) > (1 << fw_update_srv_proc.bk_size_log)){
             #if 0 // no need, just discard message.
             // MMDL/SR/BT/BV-31-C BLOB Chunk Transfer-Invalid Parameters: discard all that have been received
             set_bit_by_cnt(fw_update_srv_proc.miss_mask, sizeof(fw_update_srv_proc.miss_mask), updater_get_fw_chunk_cnt());
@@ -2177,7 +2229,7 @@ int mesh_cmd_sig_blob_block_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
             }else
             #endif
             {
-                rsp_len += sizeof(rsp.miss_chunk);
+                rsp_len += CEIL_8(updater_get_fw_chunk_cnt());//sizeof(rsp.miss_chunk);
                 rsp.format = BLOB_BLOCK_FORMAT_SOME_CHUNK_MISS;
             }
         }else{
@@ -2188,7 +2240,7 @@ int mesh_cmd_sig_blob_block_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
                 st = BLOB_BLOCK_ST_WRONG_CHECK_SUM;
             }else
             #else
-            int crc_ok = block_crc32_check_current(0); // crc_ok =1 means have not been receive "block get" before
+            int crc_ok = fw_update_srv_proc.blob_block_rx_ok || block_crc32_check_current(0); // crc_ok =1 means have not been receive "block get" before
             #endif
             {
                 if(crc_ok){

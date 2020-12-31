@@ -63,7 +63,7 @@ int  mesh_sec_msg_enc_nw(u8 *nw, u8 len_lt, u8 swap_type_lt, u8 sec_type, int fr
 int  mesh_sec_msg_enc_nw_rf_buf(u8 *nw, u8 len_lt, u8 sec_type, int fri_key_idx, u8 cfg_filter, u8 nk_array_idx, bool4 retransmit_rx);
 int  mesh_sec_msg_enc_apl(u8 *mat, u8 *bear, int mic_length);
 int  mesh_sec_msg_dec_nw(u8 *nw, int len_dec_nw_int, u8 nid, u8 cfg_filter, int src_type);
-int  mesh_sec_msg_dec_apl(u8 *ac, u16 len_ut, const u8 *nw_little);
+int  mesh_sec_msg_dec_apl(u8 *ac, u16 len_ut, const u8 *nw_little, const u8 *ac_backup);
 u8 mesh_sec_get_aid(u8 *key);
 int mesh_sec_dev_key (unsigned char dev_key[16], unsigned char *salt, unsigned char ecdh[32]);
 void mesh_sec_get_nid_ek_pk_master(u8 *nid, u8 *ek, u8 *pk, u8 *nk);
@@ -90,6 +90,9 @@ void mesh_swap_nw_lt(u8 *nw, u8 swap_type_lt);
 void swap_addr_range2_little_endian(u8 *data);
 void swap_addr_range2_big_endian(u8 *data);
 int test_proxy_adv_with_node_identity();
+
+int ecc_shared_compute(void *p_ctx, u8 const *p_sk, u8 const *p_pk, u8 *p_ss);
+
 
 u8 crc8_rohc(u8 *data,u32 len);
 void test_virtual_address();

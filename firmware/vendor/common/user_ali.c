@@ -29,7 +29,7 @@
 #include "proj_lib/ble/service/ble_ll_ota.h"
 #include "proj_lib/mesh_crypto/aes_cbc.h"
 
-const char num2char[] = "0123456789abcdef";
+const char num2char[17] = "0123456789abcdef";
 
 
 #if(AIS_ENABLE)
@@ -45,9 +45,9 @@ STATIC_ASSERT(sizeof(sha256_dev_uuid_str) <= 16);   // because sizeof dev uuid i
 	#else
 #if(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
 u32 con_product_id=192941;// little endiness 
-#if(MESH_USER_DEFINE_MODE != MESH_MI_SPIRIT_ENABLE)
+	#if(MESH_USER_DEFINE_MODE != MESH_MI_SPIRIT_ENABLE)
 const
-#endif
+	#endif
 u8 con_mac_address[6]={0xee,0x11,0x33,0x55,0x77,0x03};//small endiness
 //char con_sec_data[]="claoePqYe1avDpmf8Jcm4jF52kVOLS1Q";
 char con_sec_data[32];
@@ -66,7 +66,19 @@ u8 con_sec_data[16]={ 0x04,0x6e,0x68,0x11,0x27,0xed,0xe6,0x70,
 u8 con_sec_data[16];
     #endif
 #define SIZE_CON_SEC_DATA   (sizeof(con_sec_data))
+#elif((MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE))
+	#if 0
+	u32 con_product_id=7003001;// little endiness 
+	u8  con_mac_address[6]={0x6e,0x79,0x12,0x75,0x60,0xd4};//small endiness
+	u8 con_sec_data[16];
+	#else
+	u32 con_product_id=7003001;// little endiness 
+	u8  con_mac_address[6]={0x7D,0x79,0x12,0x75,0x60,0xd4};//small endiness
+	u8 con_sec_data[16]={0x49,0x22,0xeb,0x7a,	0x0a,0x45,0x81,0x8d,
+						 0xa4,0x34,0x7c,0xd4,	0xed,0x1b,0x4c,0xf9};
 	#endif
+	#define SIZE_CON_SEC_DATA   (sizeof(con_sec_data))
+#endif
 #endif
 
 #if(DUAL_VENDOR_EN)
@@ -247,7 +259,6 @@ void caculate_sha256_to_create_pro_oob(u8 *pro_auth,u8 *random)
 void caculate_sha256_to_create_static_oob()
 {
 	#if !WIN32		// comfirm later
-	extern u8 dev_random[16];
 	u8 sha256_out[32];
 	caculate_sha256_node_oob(sha256_out,dev_random);
 	mesh_set_dev_auth(sha256_out, 16);
