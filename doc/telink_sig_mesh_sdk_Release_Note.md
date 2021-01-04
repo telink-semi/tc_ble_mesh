@@ -75,8 +75,6 @@
 * (Firmware) gateway can send adv packets and can be connected by master. enable PROVISIONER_GATT_ADV_EN for this function, disabled by default.
 * (Firmware) the number of ota nodes is expanded to 200 in gateway project, which is defined by MESH_OTA_UPDATE_NODE_MAX.
 * (Firmware) add UART mode for 8269 master dongle project. Master dongle firmware need set HCI_ACCESS to HCI_USE_UART, and sig_mesh_tool.exe need select the "UART" button to enable this function. The default is USB mode.
-* (Firmware) add customized functions for TangSeng.(update latest customer's protocol)
-* (Firmware) add customized functions for PiPa.
 * (android APP) add API of connecting specified node and reporting the connection status to app.
 * (android APP) add the function of displaying and comparing the PID value before OTA.
 * (IOS APP) add the function of adding new NetKey and AppKey, and app can use the new key to send commands.
@@ -106,8 +104,6 @@
 * (Firmware) 增加gateway节点发送可连接广播包和被master连接的功能。把PROVISIONER_GATT_ADV_EN置为1可开启这个功能，默认为0.
 * (Firmware) gateway 进行mesh OTA的节点数增加到200个节点, 具体数量定义是MESH_OTA_UPDATE_NODE_MAX。
 * (Firmware) 增加8269 master dongle的串口通讯模式。 master dongle firmware配置HCI_ACCESS为HCI_USE_UART，上位机选择 "UART"按钮即可。默认为USB模式。
-* (Firmware) 增加tangseng客户的定制功能（更新最新接入协议）。
-* (Firmware) 增加PiPa客户的定制功能。
 * (android APP) 增加API接口，用于连接指定节点，并且把连接状态上报给app;
 * (android APP) 增加在OTA前显示和判断PID的功能;
 * (IOS APP) 增加添加新的NetKey和AppKey的功能，并能使用新添加的key发送指令。
@@ -137,9 +133,7 @@
 
 * update 8278 driver for A2 chip.
 * add GATT low power mode, need to enable macro of GATT_LPN_EN, disabled by default.
-* add the flow of proprietary GATT_OTA login, just customization function for customer 'Pipa', need to enable macro of MESH_PIPA_ENABLE and DUAL_OTA_NEED_LOGIN_EN.
 * add “user_app_config.h” for user to modify some default settings. It can be use to separate user settings and application codes from SDK.
-* add customized hardware security mode and update their lib version to 1.4.1, just customization function for customer 'Tangseng'.
 * (iOS APP) support static oob provisioning and static oob database importing.
 
 ### Performance Improvements
@@ -160,9 +154,6 @@
 * (firmware) update 8278 drivers for A1.
 * (android APP) add function of static_oob provisioning.
 
-### Bug Fixes
-* (firmware) fix a bug about ota, this bug is only in the customer's project of tangseng.
-
 ### BREAKING CHANGES
 
 * N/A
@@ -179,7 +170,6 @@
 * LPN：set LED state 'on' by default. Once power up, send level status message to display in UI. Long press key SW1 to trigger factory reset function.
 * add a new macro FEATURE_FRIEND_EN,user can set FEATURE_FRIEND_EN to 0 to disable friend feature to reduce RAM and code size.
 * improve user experience by letting nodes which are provisioned can be shown in GATT scan window of sig_mesh_tool.exe.
-* Tangseng project: merge library of mesh1.4.0 and add vendor_publish function.
 * (android APP) switch from c-lib version to java-source version.
 * (android APP) add QR code to share network by cloud.
 * (IOS APP) cut down the size of OpenSSL file.
