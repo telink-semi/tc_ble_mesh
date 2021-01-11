@@ -67,8 +67,10 @@
 /**
  * @note Model name got from xiaomi IoT developer platform.
  */
+#define DEFAULT_MODEL			"xiaomi.dev.ble"
+
 #ifndef MODEL_NAME
-#define MODEL_NAME              "xiaomi.dev.ble"
+#define MODEL_NAME              DEFAULT_MODEL
 #endif
 
 
