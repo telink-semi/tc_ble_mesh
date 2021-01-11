@@ -1,3 +1,45 @@
+## V3.3.1
+### Bug Fixes
+
+* N/A
+
+### Features	
+
+* (Firmware) add the default device name in customized OTA mode. if it was used, the device name of new firmware will not be checked by the node when OTA.
+
+### Performance Improvements
+
+* (Firmware) improve the receiving success rate of extend adv mode. only "liblt_8258_mesh_extend_adv.a" need to be updated.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) 增加客户定制OTA模式下的默认device name。当节点使用此name时，节点将不检查 new firmware 的device name。
+
+### Performance Improvements
+
+* (Firmware) 改善 extend ADV mode 的收包成功率。仅更新liblt_8258_mesh_extend_adv.a 即可。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
 ## V3.3.0
 ### Bug Fixes
 
