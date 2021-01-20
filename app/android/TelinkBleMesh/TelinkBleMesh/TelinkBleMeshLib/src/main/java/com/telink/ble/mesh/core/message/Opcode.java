@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     Opcode.java 
+ * @file Opcode.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message;
 
@@ -87,6 +87,7 @@ public enum Opcode {
     CFG_LPN_POLL_TIMEOUT_GET(0x2D80),
     CFG_LPN_POLL_TIMEOUT_STATUS(0x2E80),
 
+
     HEALTH_FAULT_CLEAR(0x2F80),
     HEALTH_FAULT_CLEAR_NOACK(0x3080),
     HEALTH_FAULT_GET(0x3180),
@@ -122,6 +123,21 @@ public enum Opcode {
     SIG_MODEL_APP_LIST(0x4C80),
     VENDOR_MODEL_APP_GET(0x4D80),
     VENDOR_MODEL_APP_LIST(0x4E80),
+
+    // subnet bridge
+    SUBNET_BRIDGE_GET(0x70BF),
+    SUBNET_BRIDGE_SET(0x71BF),
+    SUBNET_BRIDGE_STATUS(0x72BF),
+    BRIDGING_TABLE_ADD(0x73BF),
+    BRIDGING_TABLE_REMOVE(0x74BF),
+    BRIDGING_TABLE_STATUS(0x75BF),
+    BRIDGED_SUBNETS_GET(0x76BF),
+    BRIDGED_SUBNETS_LIST(0x77BF),
+    BRIDGING_TABLE_GET(0x78BF),
+    BRIDGING_TABLE_LIST(0x79BF),
+    BRIDGE_CAPABILITY_GET(0x7ABF),
+    BRIDGE_CAPABILITY_STATUS(0x7BBF),
+
 
     // generic
     G_ONOFF_GET(0x0182),
@@ -318,7 +334,7 @@ public enum Opcode {
     OBJ_INFO_STATUS(0x0BB7),*/
 
     /**
-     * firmware update
+     * BLOB Transfer
      */
     BLOB_TRANSFER_GET(0x01B7),
     BLOB_TRANSFER_START(0x02B7),
@@ -331,6 +347,11 @@ public enum Opcode {
     BLOB_INFORMATION_GET(0x0AB7),
     BLOB_INFORMATION_STATUS(0x0BB7),
     BLOB_PARTIAL_BLOCK_REPORT(0x7C),
+
+
+    /**
+     * Firmware Update
+     */
     FIRMWARE_UPDATE_INFORMATION_GET(0x01B6),
     FIRMWARE_UPDATE_INFORMATION_STATUS(0x02B6),
     FIRMWARE_UPDATE_FIRMWARE_METADATA_CHECK(0x03B6),
@@ -341,8 +362,35 @@ public enum Opcode {
     FIRMWARE_UPDATE_APPLY(0x08B6),
     FIRMWARE_UPDATE_STATUS(0x09B6),
 
+    /**
+     * Firmware Distribution
+     */
+    FD_GET(0x24B7),
+    FD_START(0x6C),
+    FD_CANCEL(0x25B7),
+    FD_APPLY(0x26B7),
+    FD_STATUS(0x6B),
+    FD_RECEIVERS_GET(0x6F),
+    FD_RECEIVERS_LIST(0x20B7),
+    FD_RECEIVERS_ADD(0x21B7),
+    FD_RECEIVERS_DELETE_ALL(0x22B7),
+    FD_RECEIVERS_STATUS(0x6E),
+    FD_CAPABILITIES_GET(0x23B7),
+    FD_CAPABILITIES_STATUS(0x6D),
+    FD_UPLOAD_GET(0x27B7),
+    FD_UPLOAD_START(0x6A),
+    FD_UPLOAD_OOB_START(0x60),
+    FD_UPLOAD_CANCEL(0x28B7),
+    FD_UPLOAD_STATUS(0x5F),
+    FD_FIRMWARE_GET(0x5E),
+    FD_FIRMWARE_STATUS(0x5C),
+    FD_FIRMWARE_GET_BY_INDEX(0x29B7),
+    FD_FIRMWARE_DELETE(0x5D),
+    FD_FIRMWARE_DELETE_ALL(0x2AB7),
 
-    // fast provision [vendor command]
+    /**
+     * fast provision, telink private [vendor command]
+     */
     VD_MESH_RESET_NETWORK(0x0211C5),
     VD_MESH_ADDR_GET(0x0211C6),
     VD_MESH_ADDR_GET_STS(0x0211C7),

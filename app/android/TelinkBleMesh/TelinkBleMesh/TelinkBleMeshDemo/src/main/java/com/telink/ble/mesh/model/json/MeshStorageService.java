@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     MeshStorageService.java 
+ * @file MeshStorageService.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.model.json;
 
@@ -25,14 +25,15 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.Scheduler;
 import com.telink.ble.mesh.entity.TransitionTime;
 import com.telink.ble.mesh.model.GroupInfo;
+import com.telink.ble.mesh.model.MeshAppKey;
 import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.model.Scene;
@@ -126,14 +127,17 @@ public class MeshStorageService {
      *
      * @return file
      */
-    public File exportMeshToJson(File dir, String filename, MeshInfo mesh) {
-        MeshStorage meshStorage = meshToJson(mesh);
+    public File exportMeshToJson(File dir, String filename, MeshInfo mesh, List<MeshNetKey> selectedNetKeys) {
+        MeshStorage meshStorage = meshToJson(mesh, selectedNetKeys);
         String jsonData = mGson.toJson(meshStorage);
         return FileSystem.writeString(dir, filename, jsonData);
     }
 
-    public String meshToJsonString(MeshInfo meshInfo) {
-        MeshStorage meshStorage = meshToJson(meshInfo);
+    /**
+     * @return json string
+     */
+    public String meshToJsonString(MeshInfo meshInfo, List<MeshNetKey> selectedNetKeys) {
+        MeshStorage meshStorage = meshToJson(meshInfo, selectedNetKeys);
         return mGson.toJson(meshStorage);
     }
 
@@ -142,7 +146,7 @@ public class MeshStorageService {
      *
      * @param mesh instance
      */
-    private MeshStorage meshToJson(MeshInfo mesh) {
+    private MeshStorage meshToJson(MeshInfo mesh, List<MeshNetKey> selectedNetKeys) {
         MeshStorage meshStorage = new MeshStorage();
 
         meshStorage.meshUUID = Arrays.bytesToHexString(MeshUtils.generateRandom(16), "").toUpperCase();
@@ -153,31 +157,53 @@ public class MeshStorageService {
         MeshLogger.d("time : " + formattedDate);
         meshStorage.timestamp = formattedDate;
 
-        // add default netKey
-        MeshStorage.NetworkKey netKey = new MeshStorage.NetworkKey();
-        netKey.name = "Telink Network Key";
-        netKey.index = mesh.netKeyIndex;
-        netKey.phase = 0;
-        // secure | insecure
-        netKey.minSecurity = "secure";
-        netKey.timestamp = meshStorage.timestamp;
-        netKey.key = Arrays.bytesToHexString(mesh.networkKey, "").toUpperCase();
+        // add all netKey
         meshStorage.netKeys = new ArrayList<>();
-        meshStorage.netKeys.add(netKey);
-
-        // add default appKey
         MeshStorage.ApplicationKey appKey;
         meshStorage.appKeys = new ArrayList<>();
-        for (MeshInfo.AppKey ak : mesh.appKeyList) {
+        // for (MeshNetKey meshNetKey : mesh.meshNetKeyList) {
+        for (MeshNetKey meshNetKey : selectedNetKeys) {
+            MeshStorage.NetworkKey netKey = new MeshStorage.NetworkKey();
+//            netKey.name = "Telink Network Key";
+            netKey.name = meshNetKey.name;
+            netKey.index = meshNetKey.index;
+            netKey.phase = 0;
+            // secure | insecure
+            netKey.minSecurity = "secure";
+            netKey.timestamp = meshStorage.timestamp;
+            netKey.key = Arrays.bytesToHexString(meshNetKey.key, "").toUpperCase();
+            meshStorage.netKeys.add(netKey);
+
+            // find bound app keys
+            for (MeshAppKey ak : mesh.appKeyList) {
+                if (ak.boundNetKeyIndex == meshNetKey.index) {
+                    appKey = new MeshStorage.ApplicationKey();
+                    appKey.name = "Telink Application Key";
+                    appKey.index = ak.index;
+                    appKey.key = Arrays.bytesToHexString(ak.key, "").toUpperCase();
+                    // bound network key index
+                    appKey.boundNetKey = ak.boundNetKeyIndex;
+                    meshStorage.appKeys.add(appKey);
+                    break;
+                }
+            }
+
+        }
+
+
+        // add default appKey
+        /*MeshStorage.ApplicationKey appKey;
+        meshStorage.appKeys = new ArrayList<>();
+        for (MeshAppKey ak : mesh.appKeyList) {
             appKey = new MeshStorage.ApplicationKey();
             appKey.name = "Telink Application Key";
             appKey.index = ak.index;
             appKey.key = Arrays.bytesToHexString(ak.key, "").toUpperCase();
 
             // bound network key index
-            appKey.boundNetKey = mesh.netKeyIndex;
+            appKey.boundNetKey = ak.boundNetKeyIndex;
             meshStorage.appKeys.add(appKey);
-        }
+        }*/
 
         meshStorage.groups = new ArrayList<>();
 //        String[] groupNames = context.getResources().getStringArray(R.array.group_name);
@@ -278,17 +304,19 @@ public class MeshStorageService {
     public boolean updateLocalMesh(MeshStorage meshStorage, MeshInfo mesh) {
 //        Mesh mesh = new Mesh();
 
-        // only import first network key
-        final MeshStorage.NetworkKey networkKey = meshStorage.netKeys.get(0);
-        MeshLogger.d("import netkey : " + networkKey.key);
-        mesh.networkKey = Arrays.hexToBytes(networkKey.key);
-        MeshLogger.d("import netkey 1 : " + Arrays.bytesToHexString(mesh.networkKey));
-        mesh.netKeyIndex = networkKey.index;
+        // import all network keys
+        mesh.meshNetKeyList = new ArrayList<>();
+        for (MeshStorage.NetworkKey networkKey : meshStorage.netKeys) {
+            MeshLogger.d("import netkey : " + networkKey.key);
+            mesh.meshNetKeyList.add(
+                    new MeshNetKey(networkKey.name, networkKey.index, Arrays.hexToBytes(networkKey.key))
+            );
 
+        }
 
         mesh.appKeyList = new ArrayList<>();
         for (MeshStorage.ApplicationKey applicationKey : meshStorage.appKeys) {
-            mesh.appKeyList.add(new MeshInfo.AppKey(applicationKey.index, Arrays.hexToBytes(applicationKey.key)));
+            mesh.appKeyList.add(new MeshAppKey(applicationKey.name, applicationKey.index, Arrays.hexToBytes(applicationKey.key), applicationKey.boundNetKey));
         }
 
 //        MeshStorage.Provisioner provisioner = meshStorage.provisioners.get(0);
@@ -338,7 +366,7 @@ public class MeshStorageService {
         if (localProvisioner == null) {
             int low = maxRangeHigh + 1;
 
-            if(low + 0xFF > MeshUtils.UNICAST_ADDRESS_MAX){
+            if (low + 0xFF > MeshUtils.UNICAST_ADDRESS_MAX) {
                 MeshLogger.d("no available unicast range");
                 return false;
             }

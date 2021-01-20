@@ -26,7 +26,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
@@ -293,6 +292,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         int elementCnt = remote.getDeviceCapability().eleNum;
         nodeInfo.elementCnt = elementCnt;
         nodeInfo.deviceKey = remote.getDeviceKey();
+        nodeInfo.netKeyIndexes.add(mesh.getDefaultNetKey().index);
         mesh.insertDevice(nodeInfo);
         mesh.provisionIndex += elementCnt;
         mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);

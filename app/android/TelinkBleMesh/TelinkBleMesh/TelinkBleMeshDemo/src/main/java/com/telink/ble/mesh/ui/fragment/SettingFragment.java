@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     SettingFragment.java 
+ * @file SettingFragment.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.fragment;
 
@@ -33,6 +33,7 @@ import android.view.ViewGroup;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.ui.DebugActivity;
+import com.telink.ble.mesh.ui.MeshInfoActivity;
 import com.telink.ble.mesh.ui.MeshOTAActivity;
 import com.telink.ble.mesh.ui.SceneListActivity;
 import com.telink.ble.mesh.ui.SettingsActivity;
@@ -68,12 +69,13 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
         view.findViewById(R.id.view_debug).setOnClickListener(this);
         view.findViewById(R.id.view_share).setOnClickListener(this);
         view.findViewById(R.id.view_mesh_ota).setOnClickListener(this);
+        view.findViewById(R.id.view_mesh_info).setOnClickListener(this);
         ll_location_setting = view.findViewById(R.id.ll_location_setting);
         view.findViewById(R.id.btn_location_setting).setOnClickListener(this);
         view.findViewById(R.id.btn_location_ignore).setOnClickListener(this);
 
         // draft feature
-        view.findViewById(R.id.view_mesh_ota).setVisibility(View.GONE);
+//        view.findViewById(R.id.view_mesh_ota).setVisibility(View.GONE);
     }
 
     @Override
@@ -108,6 +110,10 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
                 break;
             case R.id.view_mesh_ota:
                 startActivity(new Intent(getActivity(), MeshOTAActivity.class));
+                break;
+
+            case R.id.view_mesh_info:
+                startActivity(new Intent(getActivity(), MeshInfoActivity.class));
                 break;
             case R.id.btn_location_setting:
                 Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);

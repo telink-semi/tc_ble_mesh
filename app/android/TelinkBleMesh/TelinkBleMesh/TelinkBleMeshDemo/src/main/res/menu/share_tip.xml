@@ -7,10 +7,10 @@
         android:title="Tip"
         app:showAsAction="ifRoom" />
 
-    <item
+    <!--<item
         android:id="@+id/item_qrcode"
         android:icon="@drawable/ic_qrcode"
         android:title="QRCode"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom" />-->
 
 </menu>

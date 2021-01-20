@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     MeshStatus.java 
+ * @file MeshStatus.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,27 +17,29 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message;
 
 import android.util.SparseArray;
 
 import com.telink.ble.mesh.core.message.config.AppKeyStatusMessage;
+import com.telink.ble.mesh.core.message.config.BridgingTableStatusMessage;
 import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelAppStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelSubscriptionStatusMessage;
-import com.telink.ble.mesh.core.message.config.NodeIdentitySetMessage;
+import com.telink.ble.mesh.core.message.config.NetKeyStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeIdentityStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
+import com.telink.ble.mesh.core.message.config.SubnetBridgeStatusMessage;
 import com.telink.ble.mesh.core.message.fastpv.MeshAddressStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareMetadataStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateStatusMessage;
-import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobPartialBlockReportMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobBlockStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobInfoStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobPartialBlockReportMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobTransferStatusMessage;
 import com.telink.ble.mesh.core.message.generic.LevelStatusMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
@@ -109,6 +111,10 @@ public class MeshStatus {
             register(Opcode.CFG_MODEL_SUB_STATUS.value, ModelSubscriptionStatusMessage.class);
             register(Opcode.CFG_MODEL_PUB_STATUS.value, ModelPublicationStatusMessage.class);
             register(Opcode.NODE_ID_STATUS.value, NodeIdentityStatusMessage.class);
+            register(Opcode.NETKEY_STATUS.value, NetKeyStatusMessage.class);
+
+            register(Opcode.SUBNET_BRIDGE_STATUS.value, SubnetBridgeStatusMessage.class);
+            register(Opcode.BRIDGING_TABLE_STATUS.value, BridgingTableStatusMessage.class);
 
             // generic
             register(Opcode.G_ONOFF_STATUS.value, OnOffStatusMessage.class);

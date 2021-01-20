@@ -83,8 +83,8 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         switch_remote_prov = findViewById(R.id.switch_remote_prov);
 
         // draft feature
-        findViewById(R.id.ll_rp).setVisibility(View.GONE);
-        findViewById(R.id.line_rp).setVisibility(View.GONE);
+//        findViewById(R.id.ll_rp).setVisibility(View.GONE);
+//        findViewById(R.id.line_rp).setVisibility(View.GONE);
 
         switch_remote_prov.setChecked(SharedPreferenceHelper.isRemoteProvisionEnable(this));
         switch_remote_prov.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -160,7 +160,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
     private void showMeshInfo() {
         mesh = TelinkMeshApplication.getInstance().getMeshInfo();
-        et_net_key.setText(Arrays.bytesToHexString(mesh.networkKey, ""));
+        et_net_key.setText(Arrays.bytesToHexString(mesh.meshNetKeyList.get(0).key, ""));
         et_app_key.setText(Arrays.bytesToHexString(mesh.appKeyList.get(0).key, ""));
     }
 

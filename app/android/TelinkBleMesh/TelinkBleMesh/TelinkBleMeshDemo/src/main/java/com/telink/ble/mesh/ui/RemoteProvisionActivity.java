@@ -235,6 +235,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         int elementCnt = remote.getDeviceCapability().eleNum;
         networkingDevice.nodeInfo.elementCnt = elementCnt;
         networkingDevice.nodeInfo.deviceKey = remote.getDeviceKey();
+        networkingDevice.nodeInfo.netKeyIndexes.add(meshInfo.getDefaultNetKey().index);
         meshInfo.insertDevice(networkingDevice.nodeInfo);
         meshInfo.provisionIndex += elementCnt;
         meshInfo.saveOrUpdate(RemoteProvisionActivity.this);

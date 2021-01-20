@@ -31,6 +31,13 @@ import com.telink.ble.mesh.core.access.BindingBearer;
  */
 
 public class BindingDevice implements Parcelable {
+
+    /**
+     * network key index,
+     * if the index value is -1, it would be replaced by {@link com.telink.ble.mesh.foundation.MeshConfiguration#netKeyIndex}
+     */
+    private int netKeyIndex = -1;
+
     /**
      * device unicast address
      */
@@ -87,6 +94,7 @@ public class BindingDevice implements Parcelable {
     }
 
     protected BindingDevice(Parcel in) {
+        netKeyIndex = in.readInt();
         meshAddress = in.readInt();
         deviceUUID = in.createByteArray();
         appKeyIndex = in.readInt();
@@ -106,6 +114,14 @@ public class BindingDevice implements Parcelable {
             return new BindingDevice[size];
         }
     };
+
+    public int getNetKeyIndex() {
+        return netKeyIndex;
+    }
+
+    public void setNetKeyIndex(int netKeyIndex) {
+        this.netKeyIndex = netKeyIndex;
+    }
 
     public int getMeshAddress() {
         return meshAddress;
@@ -170,6 +186,7 @@ public class BindingDevice implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(netKeyIndex);
         dest.writeInt(meshAddress);
         dest.writeByteArray(deviceUUID);
         dest.writeInt(appKeyIndex);

@@ -104,6 +104,13 @@ public enum MeshSigModel implements Serializable {
     SIG_MD_LIGHT_LC_SETUP_S(0x1310, "Light LC Setup Server", "Lighting"),
     SIG_MD_LIGHT_LC_C(0x1311, "Light LC Client", "Lighting"),
 
+
+    SIG_MD_CFG_DF_S(0xBF30, "direct forwarding server", "", true),
+    SIG_MD_CFG_DF_C(0xBF31, "direct forwarding client", "", true),
+
+    SIG_MD_CFG_BRIDGE_S(0xBF32, "subnet bridge server", "", true),
+    SIG_MD_CFG_BRIDGE_C(0xBF33, "subnet bridge client", "", true),
+
     /**
      * firmware update model
      */

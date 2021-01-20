@@ -171,6 +171,10 @@
             android:name="com.telink.ble.mesh.ui.test.OnOffTestActivity"
             android:windowSoftInputMode="stateAlwaysHidden" />
         <activity android:name="com.telink.ble.mesh.ui.test.ConnectionTestActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.NodeNetKeyActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.MeshInfoActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.SubnetBridgeActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.BridgingTableAddActivity" />
 
     </application>
 

@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     DeviceSettingFragment.java 
+ * @file DeviceSettingFragment.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.fragment;
 
@@ -50,7 +50,9 @@ import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.ui.CompositionDataActivity;
 import com.telink.ble.mesh.ui.DeviceOtaActivity;
 import com.telink.ble.mesh.ui.ModelSettingActivity;
+import com.telink.ble.mesh.ui.NodeNetKeyActivity;
 import com.telink.ble.mesh.ui.SchedulerListActivity;
+import com.telink.ble.mesh.ui.SubnetBridgeActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -98,8 +100,9 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         view.findViewById(R.id.view_relay).setOnClickListener(this);
         view.findViewById(R.id.view_sub).setOnClickListener(this);
         view.findViewById(R.id.view_ota).setOnClickListener(this);
+        view.findViewById(R.id.view_net_key).setOnClickListener(this);
         view.findViewById(R.id.btn_kick).setOnClickListener(this);
-
+        view.findViewById(R.id.view_subnet).setOnClickListener(this);
 
         TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(NodeResetStatusMessage.class.getName(), this);
@@ -201,7 +204,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                     onKickOutFinish();
                 }
             }, 3 * 1000);
-        }else {
+        } else {
             delayHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -324,6 +327,17 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                     delayHandler.removeCallbacks(cmdTimeoutTask);
                     delayHandler.postDelayed(cmdTimeoutTask, 5 * 1000);
                 }*/
+                break;
+
+
+            case R.id.view_net_key:
+                startActivity(new Intent(getActivity(), NodeNetKeyActivity.class)
+                        .putExtra("meshAddress", deviceInfo.meshAddress));
+                break;
+
+            case R.id.view_subnet:
+                startActivity(new Intent(getActivity(), SubnetBridgeActivity.class)
+                        .putExtra("meshAddress", deviceInfo.meshAddress));
                 break;
         }
     }

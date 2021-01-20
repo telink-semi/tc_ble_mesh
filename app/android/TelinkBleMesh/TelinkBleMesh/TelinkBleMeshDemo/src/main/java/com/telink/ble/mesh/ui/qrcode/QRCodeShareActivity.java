@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     QRCodeShareActivity.java 
+ * @file QRCodeShareActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,17 +17,15 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.qrcode;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -35,14 +33,16 @@ import com.google.gson.Gson;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.BaseActivity;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
@@ -60,6 +60,7 @@ public class QRCodeShareActivity extends BaseActivity {
     private int countIndex;
     private QRCodeGenerator mQrCodeGenerator;
     private Handler countDownHandler = new Handler();
+    List<MeshNetKey> meshNetKeyList;
 
     @SuppressLint("HandlerLeak")
     private Handler mGeneratorHandler = new Handler() {
@@ -97,6 +98,8 @@ public class QRCodeShareActivity extends BaseActivity {
         setContentView(R.layout.activity_share_qrcode);
         setTitle("Share-QRCode");
         enableBackNav(true);
+
+
         /*Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.share_scan);
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
@@ -107,10 +110,28 @@ public class QRCodeShareActivity extends BaseActivity {
                 return false;
             }
         });*/
-
         tv_info = findViewById(R.id.tv_info);
         iv_qr = findViewById(R.id.iv_qr);
-        upload();
+
+        getNetKeyList();
+        upload(meshNetKeyList);
+    }
+
+    private void getNetKeyList() {
+        int[] selectedIndexes = getIntent().getIntArrayExtra("selectedIndexes");
+        if (selectedIndexes == null) return;
+        MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+
+        meshNetKeyList = new ArrayList<>();
+        outer:
+        for (MeshNetKey netKey : meshInfo.meshNetKeyList) {
+            for (int idx : selectedIndexes) {
+                if (idx == netKey.index) {
+                    meshNetKeyList.add(netKey);
+                    continue outer;
+                }
+            }
+        }
     }
 
     @Override
@@ -130,7 +151,7 @@ public class QRCodeShareActivity extends BaseActivity {
                 .setPositiveButton("Regenerate", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        upload();
+                        upload(meshNetKeyList);
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -142,10 +163,10 @@ public class QRCodeShareActivity extends BaseActivity {
         builder.show();
     }
 
-    private void upload() {
+    private void upload(List<MeshNetKey> meshNetKeyList) {
         showWaitingDialog("uploading...");
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-        String jsonStr = MeshStorageService.getInstance().meshToJsonString(meshInfo);
+        String jsonStr = MeshStorageService.getInstance().meshToJsonString(meshInfo, meshNetKeyList);
         MeshLogger.d("upload json string: " + jsonStr);
         TelinkHttpClient.getInstance().upload(jsonStr, QRCODE_TIMEOUT, uploadCallback);
     }
@@ -176,7 +197,7 @@ public class QRCodeShareActivity extends BaseActivity {
                         .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                upload();
+                                upload(meshNetKeyList);
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {

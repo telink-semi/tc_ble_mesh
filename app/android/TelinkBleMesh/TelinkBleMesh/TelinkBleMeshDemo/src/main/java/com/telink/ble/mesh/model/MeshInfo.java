@@ -70,14 +70,16 @@ public class MeshInfo implements Serializable, Cloneable {
     /**
      * network key and network key index
      */
-    public byte[] networkKey;
+    public List<MeshNetKey> meshNetKeyList = new ArrayList<>();
 
-    public int netKeyIndex;
+//    public byte[] networkKey;
+
+//    public int netKeyIndex;
 
     /**
      * application key list
      */
-    public List<AppKey> appKeyList;
+    public List<MeshAppKey> appKeyList = new ArrayList<>();
 
     /**
      * ivIndex and sequence number are used in NetworkPDU
@@ -120,6 +122,10 @@ public class MeshInfo implements Serializable, Cloneable {
      * static-oob info
      */
     public List<OOBPair> oobPairs = new ArrayList<>();
+
+    public MeshNetKey getDefaultNetKey() {
+        return meshNetKeyList.get(0);
+    }
 
     public int getDefaultAppKeyIndex() {
         if (appKeyList.size() == 0) {
@@ -292,24 +298,12 @@ public class MeshInfo implements Serializable, Cloneable {
     }
 
 
-    public static class AppKey implements Serializable {
-        public int index;
-        public byte[] key;
-
-        public AppKey(int index, byte[] key) {
-            this.index = index;
-            this.key = key;
-        }
-    }
-
     @Override
     public String toString() {
         return "MeshInfo{" +
                 "nodes=" + nodes.size() +
-                ", networkKey=" + Arrays.bytesToHexString(networkKey, "") +
-                ", netKeyIndex=0x" + Integer.toHexString(netKeyIndex) +
-                ", appKey=" + Arrays.bytesToHexString(appKeyList.get(0).key, "") +
-                ", appKeyIndex=0x" + Integer.toHexString(appKeyList.get(0).index) +
+                ", netKey=" + getNetKeyStr() +
+                ", appKey=" + getAppKeyStr() +
                 ", ivIndex=" + Integer.toHexString(ivIndex) +
                 ", sequenceNumber=" + sequenceNumber +
                 ", localAddress=" + localAddress +
@@ -317,6 +311,22 @@ public class MeshInfo implements Serializable, Cloneable {
                 ", scenes=" + scenes.size() +
                 ", groups=" + groups.size() +
                 '}';
+    }
+
+    public String getNetKeyStr() {
+        StringBuilder strBuilder = new StringBuilder();
+        for (MeshNetKey meshNetKey : meshNetKeyList) {
+            strBuilder.append("\nindex: ").append(meshNetKey.index).append(" -- ").append("key: ").append(Arrays.bytesToHexString(meshNetKey.key));
+        }
+        return strBuilder.toString();
+    }
+
+    public String getAppKeyStr() {
+        StringBuilder strBuilder = new StringBuilder();
+        for (MeshAppKey meshNetKey : appKeyList) {
+            strBuilder.append("\nindex: ").append(meshNetKey.index).append(" -- ").append("key: ").append(Arrays.bytesToHexString(meshNetKey.key));
+        }
+        return strBuilder.toString();
     }
 
 
@@ -334,13 +344,13 @@ public class MeshInfo implements Serializable, Cloneable {
                 meshConfiguration.deviceKeyMap.put(node.meshAddress, node.deviceKey);
             }
         }
-
-        meshConfiguration.netKeyIndex = netKeyIndex;
-        meshConfiguration.networkKey = networkKey;
+        MeshNetKey netKey = getDefaultNetKey();
+        meshConfiguration.netKeyIndex = netKey.index;
+        meshConfiguration.networkKey = netKey.key;
 
         meshConfiguration.appKeyMap = new SparseArray<>();
         if (appKeyList != null) {
-            for (AppKey appKey :
+            for (MeshAppKey appKey :
                     appKeyList) {
                 meshConfiguration.appKeyMap.put(appKey.index, appKey.key);
             }
@@ -370,13 +380,17 @@ public class MeshInfo implements Serializable, Cloneable {
 //        final int IV_INDEX = 0x20345678;
 
 //        meshInfo.networkKey = NET_KEY;
-        meshInfo.networkKey = MeshUtils.generateRandom(16);
-        meshInfo.netKeyIndex = 0x00;
-        meshInfo.appKeyList = new ArrayList<>();
-//        meshInfo.appKeyList.add(new MeshInfo.AppKey(0x00, APP_KEY));
-//        byte[] appKey = Arrays.hexToBytes("522514A01CE1BAC821986BDD46D037C0");
-        meshInfo.appKeyList.add(new AppKey(0x00, MeshUtils.generateRandom(16)));
-//        meshInfo.appKeyList.add(new AppKey(0x00, appKey));
+        meshInfo.meshNetKeyList = new ArrayList<>();
+        final int KEY_COUNT = 3;
+        final String[] NET_KEY_NAMES = {"Default Net Key", "Sub Net Key 1", "Sub Net Key 2"};
+        final String[] APP_KEY_NAMES = {"Default App Key", "Sub App Key 1", "Sub App Key 2"};
+        final byte[] APP_KEY_VAL = MeshUtils.generateRandom(16);
+        for (int i = 0; i < KEY_COUNT; i++) {
+            meshInfo.meshNetKeyList.add(new MeshNetKey(NET_KEY_NAMES[i], i, MeshUtils.generateRandom(16)));
+            meshInfo.appKeyList.add(new MeshAppKey(APP_KEY_NAMES[i],
+                    i, APP_KEY_VAL, i));
+        }
+
         meshInfo.ivIndex = 0;
         meshInfo.sequenceNumber = 0;
         meshInfo.nodes = new ArrayList<>();
@@ -399,5 +413,6 @@ public class MeshInfo implements Serializable, Cloneable {
 
         return meshInfo;
     }
+
 }
 

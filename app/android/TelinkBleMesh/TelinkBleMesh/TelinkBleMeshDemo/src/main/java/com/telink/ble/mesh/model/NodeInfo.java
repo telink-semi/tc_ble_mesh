@@ -71,6 +71,12 @@ public class NodeInfo implements Serializable {
     public byte[] deviceUUID;
 
     /**
+     * network key indexes, contains at least one primary network key.
+     * can be add by {@link com.telink.ble.mesh.core.message.config.NetKeyAddMessage}
+     */
+    public List<Integer> netKeyIndexes = new ArrayList<>();
+
+    /**
      * element count
      */
     public int elementCnt = 0;
@@ -122,9 +128,18 @@ public class NodeInfo implements Serializable {
     private boolean defaultBind = false;
 
     /**
+     * subnet bridge enable
+     */
+    public boolean subnetBridgeEnabled = false;
+
+    public List<BridgingTable> bridgingTableList = new ArrayList<>();
+
+    /**
      * selected for UI select
      */
     public boolean selected = false;
+
+
 
     private OfflineCheckTask offlineCheckTask = new OfflineCheckTask() {
         @Override

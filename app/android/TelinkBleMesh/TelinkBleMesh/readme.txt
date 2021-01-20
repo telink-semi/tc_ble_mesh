@@ -1,6 +1,29 @@
 
 version record
 
+subnet bridge:
+1. App 需添加net add/remove 等管理
+2. JSON 文件导出时, 需选择 network key. 不同的network key 代表不同的 subnet
+3.
+
+1. Enable Subnet Bridge
+2. Bridging Table
+
+
+
+
+mesh OTA 进度:
+1. initiator 和 distributor的流程基本梳理完成
+2. firmware distribution (FD) 相关的 message(firmwaredistribution包中) 已经创建完成, 细节方面, 如 注释, 消息opcode, rspOpcode 都未检查;
+3. 需打通 initiator , distributor , updating nodes 各角色间的消息流转
+4. 流程参考  firmware_update_flow.txt 文件
+
+todo:
+1. MeshOTA 页面中添加 app as distributor
+2. MeshOTA 页面中检查直连设备设备是否支持 distributor, 如果设备不支持, 则使用app作为 distributor
+3. Take Over 接管
+
+
 V3.3.0
 
 1. Add DLE mode extend bearer support for sending long unsegmented mesh packet;

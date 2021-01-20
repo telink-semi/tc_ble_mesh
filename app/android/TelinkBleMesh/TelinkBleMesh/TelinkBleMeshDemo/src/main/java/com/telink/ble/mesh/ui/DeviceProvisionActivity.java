@@ -417,6 +417,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         int elementCnt = remote.getDeviceCapability().eleNum;
         nodeInfo.elementCnt = elementCnt;
         nodeInfo.deviceKey = remote.getDeviceKey();
+        nodeInfo.netKeyIndexes.add(mesh.getDefaultNetKey().index);
         mesh.insertDevice(nodeInfo);
         mesh.provisionIndex += elementCnt;
         mesh.saveOrUpdate(DeviceProvisionActivity.this);
@@ -495,7 +496,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     }*/
 
     /**
-     * set time publish after
+     * set time publish after key bind success
      *
      * @param networkingDevice target
      * @return

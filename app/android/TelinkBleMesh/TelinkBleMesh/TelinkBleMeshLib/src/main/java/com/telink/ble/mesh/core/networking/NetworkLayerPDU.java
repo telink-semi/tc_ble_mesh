@@ -220,6 +220,7 @@ public class NetworkLayerPDU {
         int iviNid = pduData[0] & 0xFF;
         int ivi = iviNid >> 7;
         int nid = iviNid & 0x7F;
+        MeshLogger.i("ivi -- " + ivi + " nid -- " + nid);
         if (!validateNetworkPdu(ivi, nid)) {
             MeshLogger.i("ivi or nid invalid: ivi -- " + ivi + " nid -- " + nid +
                     " encryptSuit : ivi -- " + encryptionSuite.ivIndex + " nid -- " + encryptionSuite.nid);

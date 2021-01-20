@@ -337,7 +337,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         switch (state) {
             case BluetoothAdapter.STATE_OFF:
                 stateInfo = ("bluetooth disabled");
-                if (mGattConnection != null){
+                if (mGattConnection != null) {
                     mGattConnection.disconnect();
                 }
                 break;
@@ -974,7 +974,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                     public void run() {
                         onActionStart();
                         BindingDevice bindingDevice = (BindingDevice) mActionParams.get(Parameters.ACTION_BINDING_TARGET);
-                        mBindingController.begin(meshConfiguration.netKeyIndex,
+                        int netKeyIndex = bindingDevice.getNetKeyIndex();
+                        if (netKeyIndex == -1) {
+                            netKeyIndex = meshConfiguration.netKeyIndex;
+                        }
+                        mBindingController.begin(netKeyIndex,
                                 meshConfiguration.appKeyMap.get(bindingDevice.getAppKeyIndex()), bindingDevice);
                     }
                 }, 500);

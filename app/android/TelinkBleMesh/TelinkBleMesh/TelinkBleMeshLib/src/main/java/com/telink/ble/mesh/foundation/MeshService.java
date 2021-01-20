@@ -260,6 +260,7 @@ public class MeshService implements MeshController.EventCallback {
      * @param meshMessage message
      */
     public boolean sendMeshMessage(MeshMessage meshMessage) {
+        if (meshMessage == null) return false;
         return mController.sendMeshMessage(meshMessage);
     }
 

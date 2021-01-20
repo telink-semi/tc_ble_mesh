@@ -310,10 +310,12 @@
                 android:layout_margin="4dp"
                 android:background="@color/gray" />
 
+            <!--     net key       -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center">
+                android:gravity="center"
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -342,7 +344,8 @@
                 android:enabled="false"
                 android:padding="2dp"
                 android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:visibility="gone" />
 
             <View
                 android:layout_width="match_parent"
@@ -354,7 +357,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center">
+                android:gravity="center"
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -384,7 +388,8 @@
                 android:enabled="false"
                 android:padding="2dp"
                 android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:visibility="gone" />
 
 
             <!-- online status -->
