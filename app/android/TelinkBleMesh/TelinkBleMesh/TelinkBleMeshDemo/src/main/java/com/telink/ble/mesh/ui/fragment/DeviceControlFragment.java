@@ -239,6 +239,11 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (seekBar == sb_lum) {
+                if (cps_color.getVisibility() == View.VISIBLE) {
+                    cps_color.updateLightness(progress);
+                }
+            }
             if (fromUser)
                 onProgressUpdate(seekBar, progress, false);
         }

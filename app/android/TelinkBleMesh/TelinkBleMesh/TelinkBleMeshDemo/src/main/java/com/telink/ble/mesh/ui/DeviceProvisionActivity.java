@@ -54,6 +54,7 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
+import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
@@ -63,6 +64,7 @@ import com.telink.ble.mesh.ui.adapter.DeviceProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -193,7 +195,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     private void onDeviceFound(AdvertisingDevice advertisingDevice) {
         // provision service data: 15:16:28:18:[16-uuid]:[2-oobInfo]
         byte[] serviceData = MeshUtils.getMeshServiceData(advertisingDevice.scanRecord, true);
-        if (serviceData == null || serviceData.length < 16) {
+        if (serviceData == null || serviceData.length < 17) {
             MeshLogger.log("serviceData error", MeshLogger.LEVEL_ERROR);
             return;
         }
@@ -204,6 +206,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         System.arraycopy(serviceData, 0, deviceUUID, 0, uuidLen);
 
+        final int oobInfo = MeshUtils.bytes2Integer(serviceData, 16, 2, ByteOrder.LITTLE_ENDIAN);
 
         if (deviceExists(deviceUUID)) {
             MeshLogger.d("device exists");
@@ -217,6 +220,9 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         NetworkingDevice processingDevice = new NetworkingDevice(nodeInfo);
         processingDevice.bluetoothDevice = advertisingDevice.device;
+        if (AppSettings.DRAFT_FEATURES_ENABLE) {
+            processingDevice.oobInfo = oobInfo;
+        }
         processingDevice.state = NetworkingState.IDLE;
         processingDevice.addLog(NetworkingDevice.TAG_SCAN, "device found");
         devices.add(processingDevice);
@@ -229,7 +235,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
             MeshService.getInstance().stopScan();
         }
 
-        int address = mesh.provisionIndex;
+        int address = mesh.getProvisionIndex();
         MeshLogger.d("alloc address: " + address);
         if (!MeshUtils.validUnicastAddress(address)) {
             enableUI(true);
@@ -238,7 +244,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         byte[] deviceUUID = processingDevice.nodeInfo.deviceUUID;
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(processingDevice.bluetoothDevice, processingDevice.nodeInfo.deviceUUID, address);
-
+        provisioningDevice.setOobInfo(processingDevice.oobInfo);
         processingDevice.state = NetworkingState.PROVISIONING;
         processingDevice.addLog(NetworkingDevice.TAG_PROVISION, "action start -> 0x" + String.format("%04X", address));
         processingDevice.nodeInfo.meshAddress = address;
@@ -253,8 +259,9 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
             provisioningDevice.setAutoUseNoOOB(autoUseNoOOB);
         }
         ProvisioningParameters provisioningParameters = new ProvisioningParameters(provisioningDevice);
-        MeshService.getInstance().startProvisioning(provisioningParameters);
 
+        MeshLogger.d("provisioning device: " + provisioningDevice.toString());
+        MeshService.getInstance().startProvisioning(provisioningParameters);
     }
 
     @Override
@@ -419,7 +426,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         nodeInfo.deviceKey = remote.getDeviceKey();
         nodeInfo.netKeyIndexes.add(mesh.getDefaultNetKey().index);
         mesh.insertDevice(nodeInfo);
-        mesh.provisionIndex += elementCnt;
+        mesh.increaseProvisionIndex(elementCnt);
         mesh.saveOrUpdate(DeviceProvisionActivity.this);
 
 

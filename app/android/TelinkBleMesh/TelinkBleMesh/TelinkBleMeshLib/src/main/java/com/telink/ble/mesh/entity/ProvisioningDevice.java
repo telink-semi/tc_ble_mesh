@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     ProvisioningDevice.java 
+ * @file ProvisioningDevice.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.entity;
 
@@ -25,6 +25,7 @@ import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningCapabilityPDU;
 import com.telink.ble.mesh.util.Arrays;
 
@@ -50,6 +51,29 @@ public class ProvisioningDevice implements Parcelable {
     private BluetoothDevice bluetoothDevice;
 
     protected byte[] deviceUUID;
+
+
+    /**
+     * OOB Information
+     * Bit - Description
+     * 0 - Other
+     * 1 - Electronic / URI
+     * 2 - 2D machine-readable code
+     * 3 - Bar code
+     * 4 - Near Field Communication (NFC)
+     * 5 - Number
+     * 6 - String
+     * 7 - Support for certificate-based provisioning
+     * 8 - Support for provisioning records
+     * 9 - Reserved for Future Use
+     * 10 - Reserved for Future Use
+     * 11 - On box
+     * 12 - Inside box
+     * 13 - On piece of paper
+     * 14 - Inside manual
+     * 15 - On device
+     */
+    protected int oobInfo;
 
     protected byte[] networkKey;
 
@@ -123,6 +147,7 @@ public class ProvisioningDevice implements Parcelable {
     protected ProvisioningDevice(Parcel in) {
         bluetoothDevice = in.readParcelable(BluetoothDevice.class.getClassLoader());
         deviceUUID = in.createByteArray();
+        oobInfo = in.readInt();
         networkKey = in.createByteArray();
         networkKeyIndex = in.readInt();
         keyRefreshFlag = in.readByte();
@@ -155,6 +180,15 @@ public class ProvisioningDevice implements Parcelable {
                 .putInt(ivIndex)
                 .putShort((short) unicastAddress);
         return buffer.array();
+    }
+
+
+    public int getOobInfo() {
+        return oobInfo;
+    }
+
+    public void setOobInfo(int oobInfo) {
+        this.oobInfo = oobInfo;
     }
 
     public BluetoothDevice getBluetoothDevice() {
@@ -262,6 +296,7 @@ public class ProvisioningDevice implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeParcelable(bluetoothDevice, flags);
         dest.writeByteArray(deviceUUID);
+        dest.writeInt(oobInfo);
         dest.writeByteArray(networkKey);
         dest.writeInt(networkKeyIndex);
         dest.writeByte(keyRefreshFlag);
@@ -277,6 +312,7 @@ public class ProvisioningDevice implements Parcelable {
     public String toString() {
         return "ProvisioningDevice{" +
                 "deviceUUID=" + Arrays.bytesToHexString(deviceUUID) +
+                ", oobInfo=0b" + Integer.toBinaryString(oobInfo) +
                 ", networkKey=" + Arrays.bytesToHexString(networkKey) +
                 ", networkKeyIndex=" + networkKeyIndex +
                 ", keyRefreshFlag=" + keyRefreshFlag +

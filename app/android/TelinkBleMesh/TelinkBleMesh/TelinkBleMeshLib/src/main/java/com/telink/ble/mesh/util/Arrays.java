@@ -140,7 +140,8 @@ public final class Arrays {
         if (array == null || array.length == 0)
             return "";
 
-        final boolean sepNul = TextUtils.isEmpty(separator);
+//        final boolean sepNul = TextUtils.isEmpty(separator);
+        final boolean sepNul = separator == null || separator.length() == 0;
         StringBuilder hexResult = new StringBuilder();
         int ai;
         for (int i = 0; i < array.length; i++) {

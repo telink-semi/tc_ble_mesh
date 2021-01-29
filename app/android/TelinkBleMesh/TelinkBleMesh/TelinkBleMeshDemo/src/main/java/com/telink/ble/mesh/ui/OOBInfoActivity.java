@@ -145,7 +145,8 @@ public class OOBInfoActivity extends BaseActivity {
             public void onClick(DialogInterface dialog, int which) {
                 TelinkMeshApplication.getInstance().getMeshInfo().oobPairs.remove(position);
                 TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(OOBInfoActivity.this);
-                mAdapter.notifyItemRemoved(position);
+                mAdapter.notifyDataSetChanged();
+//                mAdapter.notifyItemRemoved(position);
                 dialog.dismiss();
             }
         });
@@ -210,16 +211,14 @@ public class OOBInfoActivity extends BaseActivity {
             List<OOBPair> pairs = TelinkMeshApplication.getInstance().getMeshInfo().oobPairs;
             pairs.add(pair);
             TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
-            mAdapter.notifyItemInserted(pairs.size() - 1);
+            mAdapter.notifyDataSetChanged();
         } else if (requestCode == REQUEST_CODE_EDIT_OOB) {
             // edit success
             OOBPair pair = (OOBPair) data.getSerializableExtra(OOBEditActivity.EXTRA_OOB);
             final int position = data.getIntExtra(OOBEditActivity.EXTRA_POSITION, 0);
             TelinkMeshApplication.getInstance().getMeshInfo().oobPairs.set(position, pair);
-            mAdapter.notifyItemChanged(position);
+            mAdapter.notifyDataSetChanged();
         }
-
-
     }
 
 

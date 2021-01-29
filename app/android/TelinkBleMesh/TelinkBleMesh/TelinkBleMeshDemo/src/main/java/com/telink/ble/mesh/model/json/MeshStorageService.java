@@ -178,7 +178,7 @@ public class MeshStorageService {
             for (MeshAppKey ak : mesh.appKeyList) {
                 if (ak.boundNetKeyIndex == meshNetKey.index) {
                     appKey = new MeshStorage.ApplicationKey();
-                    appKey.name = "Telink Application Key";
+                    appKey.name = ak.name;
                     appKey.index = ak.index;
                     appKey.key = Arrays.bytesToHexString(ak.key, "").toUpperCase();
                     // bound network key index
@@ -222,9 +222,14 @@ public class MeshStorageService {
         provisioner.provisionerName = "Telink Provisioner";
         // create uncast range, default: 0x0001 -- 0x00FF
         provisioner.allocatedUnicastRange = new ArrayList<>();
-        provisioner.allocatedUnicastRange.add(
-                new MeshStorage.Provisioner.AddressRange(String.format("%04X", mesh.unicastRange.low), String.format("%04X", mesh.unicastRange.high))
-        );
+
+
+        for (AddressRange range : mesh.unicastRange) {
+            provisioner.allocatedUnicastRange.add(
+                    new MeshStorage.Provisioner.AddressRange(String.format("%04X", range.low), String.format("%04X", range.high))
+            );
+        }
+
         provisioner.allocatedGroupRange = new ArrayList<>();
         provisioner.allocatedGroupRange.add(new MeshStorage.Provisioner.AddressRange("C000", "C0FF"));
         provisioner.allocatedSceneRange = new ArrayList<>();
@@ -370,10 +375,12 @@ public class MeshStorageService {
                 MeshLogger.d("no available unicast range");
                 return false;
             }
-
-            mesh.unicastRange = new AddressRange(low, low + 0xFF);
+            final int high = low + 0x03FF;
+            mesh.unicastRange = new ArrayList<AddressRange>();
+            mesh.unicastRange.add(new AddressRange(low, high));
             mesh.localAddress = low;
-            mesh.provisionIndex = low + 1;
+            mesh.increaseProvisionIndex(1);
+            mesh.addressTopLimit = high;
             mesh.sequenceNumber = 0;
 //            MeshStorage.Provisioner.AddressRange unicastRange = localProvisioner.allocatedUnicastRange.get(0);
 //

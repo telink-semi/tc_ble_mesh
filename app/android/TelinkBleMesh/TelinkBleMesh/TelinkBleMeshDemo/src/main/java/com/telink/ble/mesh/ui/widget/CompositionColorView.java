@@ -98,8 +98,6 @@ public class CompositionColorView extends FrameLayout {
     }
 
 
-
-
     private ColorPanel.ColorChangeListener colorChangeListener = new ColorPanel.ColorChangeListener() {
 
         @Override
@@ -199,6 +197,20 @@ public class CompositionColorView extends FrameLayout {
 
     };
 
+    public void updateLightness(int lightnessProgress) {
+        if (sb_lit != null) {
+            sb_lit.setProgress(lightnessProgress);
+
+            float hue = sb_hue.getProgress();
+            float sat100 = sb_sat.getProgress();
+            float lit100 = sb_lit.getProgress();
+            float[] hslVal = new float[]{hue, sat100 / 100, lit100 / 100};
+            int color = ColorUtils.HSLToColor(hslVal);
+            float[] hsv = new float[3];
+            Color.colorToHSV(color, hsv);
+            refreshDesc(hslVal, color, (int) (hsv[2] * 100));
+        }
+    }
 
     private void sendHslSetMessage(float[] hslValue) {
         if (messageDelegate != null) {
@@ -231,8 +243,6 @@ public class CompositionColorView extends FrameLayout {
                 "\n\tL -- " + (hslValue[2] + "(" + (byte) (hslValue[2] * 100) + ")"
         );
         tv_hsl.setText(hsl);
-
-
 
 
         int hue = (int) hslValue[0];

@@ -76,6 +76,10 @@ public class ProvisioningStartPDU implements ProvisioningStatePDU {
         return startPDU;
     }
 
+    public void setPublicKey(boolean publicKeyEnable) {
+        this.publicKey = (byte) (publicKeyEnable ? 1 : 0);
+    }
+
     @Override
     public byte[] toBytes() {
         return new byte[]{

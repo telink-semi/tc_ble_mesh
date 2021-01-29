@@ -190,7 +190,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         }
         MeshService.getInstance().stopScan();
 
-        int address = meshInfo.provisionIndex;
+        int address = meshInfo.getProvisionIndex();
 
         MeshLogger.d("alloc address: " + address);
         if (address == -1) {
@@ -237,7 +237,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         networkingDevice.nodeInfo.deviceKey = remote.getDeviceKey();
         networkingDevice.nodeInfo.netKeyIndexes.add(meshInfo.getDefaultNetKey().index);
         meshInfo.insertDevice(networkingDevice.nodeInfo);
-        meshInfo.provisionIndex += elementCnt;
+        meshInfo.increaseProvisionIndex(elementCnt);
         meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
 
         // check if private mode opened
@@ -395,7 +395,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         MeshLogger.log(String.format("provision next: server -- %04X uuid -- %s",
                 device.getServerAddress(),
                 Arrays.bytesToHexString(device.getUuid())));
-        int address = meshInfo.provisionIndex;
+        int address = meshInfo.getProvisionIndex();
         if (address > MeshUtils.UNICAST_ADDRESS_MAX) {
             enableUI(true);
             return;
@@ -504,7 +504,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         networkingDevice.nodeInfo.elementCnt = elementCnt;
         networkingDevice.nodeInfo.deviceKey = remote.getDeviceKey();
         meshInfo.insertDevice(networkingDevice.nodeInfo);
-        meshInfo.provisionIndex += elementCnt;
+        meshInfo.increaseProvisionIndex(elementCnt);
         meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
         networkingDevice.nodeInfo.setDefaultBind(false);
         mListAdapter.notifyDataSetChanged();

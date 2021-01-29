@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     Encipher.java 
+ * @file Encipher.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,13 +17,11 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core;
 
-import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
-
 
 import org.spongycastle.crypto.BlockCipher;
 import org.spongycastle.crypto.CipherParameters;
@@ -43,6 +41,7 @@ import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.BigIntegers;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -53,6 +52,9 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 
 import javax.crypto.KeyAgreement;
@@ -109,16 +111,16 @@ public final class Encipher {
     }
 
     public static byte[] generateECDH(byte[] xy, PrivateKey provisionerPrivateKey) {
-        BigInteger x = BigIntegers.fromUnsignedByteArray(xy, 0, 32);
-        BigInteger y = BigIntegers.fromUnsignedByteArray(xy, 32, 32);
-
-        ECParameterSpec ecParameters = ECNamedCurveTable.getParameterSpec("secp256r1");
-        ECCurve curve = ecParameters.getCurve();
-        ECPoint ecPoint = curve.validatePoint(x, y);
-
-        ECPublicKeySpec keySpec = new ECPublicKeySpec(ecPoint, ecParameters);
-        KeyFactory keyFactory;
         try {
+            BigInteger x = BigIntegers.fromUnsignedByteArray(xy, 0, 32);
+            BigInteger y = BigIntegers.fromUnsignedByteArray(xy, 32, 32);
+
+            ECParameterSpec ecParameters = ECNamedCurveTable.getParameterSpec("secp256r1");
+            ECCurve curve = ecParameters.getCurve();
+            ECPoint ecPoint = curve.validatePoint(x, y);
+
+            ECPublicKeySpec keySpec = new ECPublicKeySpec(ecPoint, ecParameters);
+            KeyFactory keyFactory;
             keyFactory = KeyFactory.getInstance("ECDH", "SC");
             ECPublicKey publicKey = (ECPublicKey) keyFactory.generatePublic(keySpec);
 
@@ -126,13 +128,7 @@ public final class Encipher {
             keyAgreement.init(provisionerPrivateKey);
             keyAgreement.doPhase(publicKey, true);
             return keyAgreement.generateSecret();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException | IllegalArgumentException | NoSuchProviderException | InvalidKeySpecException | InvalidKeyException e) {
             e.printStackTrace();
         }
         return null;
@@ -364,5 +360,89 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
 
         System.arraycopy(status, 0, data, ivLen, status.length);
         return data;
+    }
+
+
+    /**
+     * check version & time & Serial Number
+     * <p>
+     * <p>
+     * "ecdsa-with-SHA256"
+     * check certificate data and return inner public key
+     *
+     * @param cerData certificate data formatted by x509 der
+     * @return public key
+     */
+    public static byte[] checkCertificate(byte[] cerData) {
+        CertificateFactory factory = null;
+        try {
+            factory = CertificateFactory.getInstance("X.509");
+
+            X509Certificate certificate = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(cerData));
+            if (certificate.getVersion() != 3) {
+                MeshLogger.d("version check err");
+                return null;
+            }
+
+            int serialNumber = certificate.getSerialNumber().intValue();
+            if (serialNumber != 4096) {
+                MeshLogger.d("serial number check err");
+                return null;
+            }
+
+            /**
+             * check datetime validity
+             */
+            certificate.checkValidity();
+
+            /**
+             * get X509 version
+             */
+            certificate.getVersion();
+
+            /**
+             * get subject names ,
+             */
+            certificate.getSubjectAlternativeNames();
+            certificate.getExtendedKeyUsage();
+//          byte[]  publicKey = certificate.getPublicKey().getEncoded();
+
+            Signature verifier = Signature.getInstance(certificate.getSigAlgName(), "SC");
+//            verifier.initVerify(certificate.getPublicKey()); // This cert is signed by CA
+            verifier.initVerify(certificate); // This cert is signed by CA
+            verifier.update(certificate.getTBSCertificate());  //TBS is to get the "To Be Signed" part of the certificate - .getEncoded() gets the whole cert, which includes the signature
+            boolean result = verifier.verify(certificate.getSignature());
+
+
+            java.security.interfaces.ECPublicKey pk = (java.security.interfaces.ECPublicKey) certificate.getPublicKey();
+            byte[] keyX = pk.getW().getAffineX().toByteArray();
+            if (keyX.length > 32) {
+                byte[] x = new byte[32];
+                System.arraycopy(keyX, 1, x, 0, 32);
+                keyX = x;
+            }
+            byte[] keyY = pk.getW().getAffineY().toByteArray();
+            if (keyY.length > 32) {
+                byte[] y = new byte[32];
+                System.arraycopy(keyY, 1, y, 0, 32);
+                keyY = y;
+            }
+
+            byte[] pubKeyKey = new byte[keyX.length + keyY.length];
+            System.arraycopy(keyX, 0, pubKeyKey, 0, keyX.length);
+            System.arraycopy(keyY, 0, pubKeyKey, keyX.length, keyY.length);
+
+            if (result) {
+                System.out.println("signature validation pass");
+//                return null;
+                return pubKeyKey;
+            } else {
+                System.out.println("signature validation failed");
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

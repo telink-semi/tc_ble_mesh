@@ -162,7 +162,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         }
         MeshService.getInstance().stopScan();
 
-        int address = mesh.provisionIndex;
+        int address = mesh.getProvisionIndex();
 
         MeshLogger.d("alloc address: " + address);
         if (address == -1) {
@@ -294,7 +294,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         nodeInfo.deviceKey = remote.getDeviceKey();
         nodeInfo.netKeyIndexes.add(mesh.getDefaultNetKey().index);
         mesh.insertDevice(nodeInfo);
-        mesh.provisionIndex += elementCnt;
+        mesh.increaseProvisionIndex(elementCnt);
         mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);
 
 

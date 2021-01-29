@@ -49,10 +49,14 @@ import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.FileSystem;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.io.ByteArrayInputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.KeyPair;
+import java.security.Signature;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.List;
 
 /**
@@ -84,10 +88,8 @@ public class TelinkMeshApplication extends MeshApplication {
         closePErrorDialog();
 //        byte[] data = Arrays.hexToBytes("BA0536160EE76CD499E7C49845CD5");
 //        MeshLogger.d(Arrays.bytesToHexString(data));
+
     }
-
-
-
 
     private void closePErrorDialog() {
         if (Build.VERSION.SDK_INT <= 27) {

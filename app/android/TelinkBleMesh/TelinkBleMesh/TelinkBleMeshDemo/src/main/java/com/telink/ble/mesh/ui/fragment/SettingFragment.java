@@ -32,6 +32,7 @@ import android.view.ViewGroup;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.ui.DebugActivity;
 import com.telink.ble.mesh.ui.MeshInfoActivity;
 import com.telink.ble.mesh.ui.MeshOTAActivity;
@@ -74,8 +75,11 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
         view.findViewById(R.id.btn_location_setting).setOnClickListener(this);
         view.findViewById(R.id.btn_location_ignore).setOnClickListener(this);
 
-        // draft feature
-//        view.findViewById(R.id.view_mesh_ota).setVisibility(View.GONE);
+        if (AppSettings.DRAFT_FEATURES_ENABLE) {
+            view.findViewById(R.id.view_mesh_ota).setVisibility(View.VISIBLE);
+        } else {
+            view.findViewById(R.id.view_mesh_ota).setVisibility(View.GONE);
+        }
     }
 
     @Override

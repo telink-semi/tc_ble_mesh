@@ -33,6 +33,7 @@ import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.model.json.AddressRange;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.FileSystem;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ public class MeshInfo implements Serializable, Cloneable {
     /**
      * unicast address range
      */
-    public AddressRange unicastRange;
+    public List<AddressRange> unicastRange = new ArrayList<>();
 
     /**
      * nodes saved in mesh network
@@ -106,7 +107,9 @@ public class MeshInfo implements Serializable, Cloneable {
      *
      * @see NodeInfo#elementCnt
      */
-    public int provisionIndex = 1;
+    private int provisionIndex = 1;
+
+    public int addressTopLimit = 0xFF;
 
     /**
      * scenes saved in mesh
@@ -329,6 +332,24 @@ public class MeshInfo implements Serializable, Cloneable {
         return strBuilder.toString();
     }
 
+    public int getProvisionIndex() {
+        return provisionIndex;
+    }
+
+    /**
+     * @param addition
+     */
+    public void increaseProvisionIndex(int addition) {
+        this.provisionIndex += addition;
+        if (provisionIndex > this.addressTopLimit) {
+            MeshLogger.d("");
+            final int low = this.addressTopLimit + 1;
+            final int high = low + 0x03FF;
+            this.unicastRange.add(new AddressRange(low, high));
+            this.addressTopLimit = high;
+        }
+    }
+
 
     @Override
     public Object clone() throws CloneNotSupportedException {
@@ -401,7 +422,9 @@ public class MeshInfo implements Serializable, Cloneable {
         meshInfo.provisionerUUID = Arrays.bytesToHexString(MeshUtils.generateRandom(16));
 
         meshInfo.groups = new ArrayList<>();
-        meshInfo.unicastRange = new AddressRange(0x01, 0xFF);
+        meshInfo.unicastRange = new ArrayList<>();
+        meshInfo.unicastRange.add(new AddressRange(0x01, 0x400));
+        meshInfo.addressTopLimit = 0x0400;
         String[] groupNames = context.getResources().getStringArray(R.array.group_name);
         GroupInfo group;
         for (int i = 0; i < 8; i++) {

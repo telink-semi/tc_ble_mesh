@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     MeshUtils.java 
+ * @file MeshUtils.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core;
 
@@ -27,8 +27,13 @@ import com.telink.ble.mesh.core.ble.MeshScanRecord;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.util.Arrays;
 
+import java.io.ByteArrayInputStream;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.ECPublicKey;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -264,5 +269,19 @@ public final class MeshUtils {
         return missingChunks;
     }
 
+
+    /**
+     * @return is certificate based supported
+     */
+    public static boolean isCertSupported(int oobInfo) {
+        return (oobInfo & MeshUtils.bit(7)) != 0;
+    }
+
+    /**
+     * @return is provisioning record supported
+     */
+    public static boolean isPvRecordSupported(int oobInfo) {
+        return (oobInfo & MeshUtils.bit(8)) != 0;
+    }
 
 }

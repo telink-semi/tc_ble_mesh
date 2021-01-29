@@ -15,6 +15,11 @@ public class NetworkingDevice {
 
     public BluetoothDevice bluetoothDevice;
 
+    /**
+     * oob info in scan record
+     */
+    public int oobInfo;
+
     public NodeInfo nodeInfo;
 
     public List<LogInfo> logs = new ArrayList<>();

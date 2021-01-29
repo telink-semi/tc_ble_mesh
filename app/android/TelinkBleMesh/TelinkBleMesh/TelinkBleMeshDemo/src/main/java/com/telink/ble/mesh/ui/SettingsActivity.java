@@ -82,9 +82,13 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
         switch_remote_prov = findViewById(R.id.switch_remote_prov);
 
-        // draft feature
-//        findViewById(R.id.ll_rp).setVisibility(View.GONE);
-//        findViewById(R.id.line_rp).setVisibility(View.GONE);
+        if (AppSettings.DRAFT_FEATURES_ENABLE) {
+            findViewById(R.id.ll_rp).setVisibility(View.VISIBLE);
+            findViewById(R.id.line_rp).setVisibility(View.VISIBLE);
+        } else {
+            findViewById(R.id.ll_rp).setVisibility(View.GONE);
+            findViewById(R.id.line_rp).setVisibility(View.GONE);
+        }
 
         switch_remote_prov.setChecked(SharedPreferenceHelper.isRemoteProvisionEnable(this));
         switch_remote_prov.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

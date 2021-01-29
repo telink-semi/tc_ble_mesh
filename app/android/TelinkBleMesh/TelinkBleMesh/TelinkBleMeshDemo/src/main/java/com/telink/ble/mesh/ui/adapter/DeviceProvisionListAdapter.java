@@ -31,6 +31,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
@@ -77,6 +78,7 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
         holder.tv_log_latest = itemView.findViewById(R.id.tv_log_latest);
         holder.btn_add = itemView.findViewById(R.id.btn_add);
         holder.iv_close = itemView.findViewById(R.id.iv_close);
+        holder.iv_cert = itemView.findViewById(R.id.iv_cert);
         return holder;
     }
 
@@ -97,7 +99,6 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
         }
         holder.iv_device.setImageResource(iconRes);
 
-
         String deviceDesc = mContext.getString(R.string.device_prov_desc, nodeInfo.meshAddress == -1 ? "[Unallocated]" : "0x" + String.format("%04X", nodeInfo.meshAddress), Arrays.bytesToHexString(nodeInfo.deviceUUID));
         if (!TextUtils.isEmpty(nodeInfo.macAddress)) {
             deviceDesc += "\nmac: " + nodeInfo.macAddress;
@@ -108,6 +109,10 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
 //        holder.pb_provision.setIndeterminate(false);
         holder.btn_add.setVisibility(!processing && device.state == NetworkingState.IDLE ? View.VISIBLE : View.INVISIBLE);
         holder.iv_close.setVisibility(!processing && device.state == NetworkingState.IDLE ? View.VISIBLE : View.INVISIBLE);
+
+        boolean certVisible = MeshUtils.isCertSupported(device.oobInfo);
+        holder.iv_cert.setVisibility(certVisible ? View.VISIBLE : View.GONE);
+
         if (device.state == NetworkingState.IDLE) {
             holder.pb_provision.setVisibility(View.GONE);
         } else if (device.state == NetworkingState.WAITING) {
@@ -179,7 +184,7 @@ public class DeviceProvisionListAdapter extends BaseRecyclerViewAdapter<DevicePr
         public ProgressBar pb_provision;
         public RecyclerView rv_networking_log;
         public View ll_info;
-        public ImageView iv_arrow, iv_close;
+        public ImageView iv_arrow, iv_close, iv_cert;
         public Button btn_add;
         public TextView tv_log_latest;
 

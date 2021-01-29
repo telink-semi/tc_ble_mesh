@@ -48,6 +48,16 @@
                 android:src="@drawable/ic_close"
                 android:tint="@color/grey" />
 
+            <ImageView
+                android:id="@+id/iv_cert"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentLeft="true"
+                android:background="?attr/selectableItemBackground"
+                android:src="@drawable/ic_cert"
+                android:visibility="gone" />
+
         </RelativeLayout>
 
         <TextView

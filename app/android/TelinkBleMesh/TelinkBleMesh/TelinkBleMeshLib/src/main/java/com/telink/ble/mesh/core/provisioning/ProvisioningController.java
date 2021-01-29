@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     ProvisioningController.java 
+ * @file ProvisioningController.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.provisioning;
 
@@ -25,6 +25,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 
 import com.telink.ble.mesh.core.Encipher;
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningCapabilityPDU;
 import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningConfirmPDU;
 import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningDataPDU;
@@ -32,6 +33,10 @@ import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningInvitePDU;
 import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningPDU;
 import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningPubKeyPDU;
 import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningRandomPDU;
+import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningRecordRequestPDU;
+import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningRecordResponsePDU;
+import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningRecordsGetPDU;
+import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningRecordsListPDU;
 import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningStartPDU;
 import com.telink.ble.mesh.core.provisioning.pdu.ProvisioningStatePDU;
 import com.telink.ble.mesh.core.proxy.ProxyPDU;
@@ -70,7 +75,7 @@ public class ProvisioningController {
      * =>
      * pub_key(P->D)
      * =>
-     * pub_key(D->P)
+     * pub_key(D->P) (if use oob public key, skip)
      * =>
      * confirm(P->D)
      * =>
@@ -90,6 +95,10 @@ public class ProvisioningController {
      * not in provisioning flow
      */
     public static final int STATE_IDLE = 0x1000;
+
+    public static final int STATE_RECORDS_GET = 0x0010;
+
+    public static final int STATE_RECORD_REQUEST = 0x0011;
 
     /**
      * sent provisioning invite pdu
@@ -162,9 +171,24 @@ public class ProvisioningController {
 
     private static final long TIMEOUT_PROVISIONING = 60 * 1000;
 
+    private static final int MAX_FRAGMENT_SIZE = 20;
+
     private Handler delayHandler;
 
     private ProvisioningBridge mProvisioningBridge;
+
+    private int recordId = -1;
+
+    private int fragmentOffset = 0;
+
+    private byte[] recordData;
+
+    /**
+     * public key in certificate get by record response data
+     */
+    private byte[] recordPubKey;
+
+    private ProvisioningRecordsListPDU recordsListPDU;
 
     private ProvisioningInvitePDU invitePDU;
 
@@ -211,10 +235,15 @@ public class ProvisioningController {
     public void begin(@NonNull ProvisioningDevice device) {
         log("begin -- " + Arrays.bytesToHexString(device.getDeviceUUID()));
         this.mProvisioningDevice = device;
-
         delayHandler.removeCallbacks(provisioningTimeoutTask);
         delayHandler.postDelayed(provisioningTimeoutTask, TIMEOUT_PROVISIONING);
-        provisionInvite();
+        final int oobInfo = device.getOobInfo();
+        if (MeshUtils.isCertSupported(oobInfo) && MeshUtils.isPvRecordSupported(oobInfo)) {
+            provisionRecordsGet();
+        } else {
+            provisionInvite();
+        }
+
     }
 
     public void clear() {
@@ -223,13 +252,6 @@ public class ProvisioningController {
         }
         this.state = STATE_IDLE;
     }
-
-
-    /*public void begin(byte[] networkKey, int netKeyIndex, int ivIndex, int unicast, byte[] authValue) {
-        this.mProvisioningParams = ProvisioningParams.getDefault(networkKey, netKeyIndex, ivIndex, unicast);
-        this.authValue = authValue;
-        provisionInvite();
-    }*/
 
     public void pushNotification(byte[] provisioningPdu) {
         if (state == STATE_IDLE) {
@@ -246,7 +268,6 @@ public class ProvisioningController {
                 break;
 
             case ProvisioningPDU.TYPE_PUBLIC_KEY:
-
                 onPubKeyReceived(provisioningData);
                 break;
 
@@ -263,6 +284,14 @@ public class ProvisioningController {
                 break;
             case ProvisioningPDU.TYPE_FAILED:
                 onProvisionFail("failed notification received");
+                break;
+
+            case ProvisioningPDU.TYPE_RECORDS_LIST:
+                onRecordListReceived(provisioningData);
+                break;
+
+            case ProvisioningPDU.TYPE_RECORD_RESPONSE:
+                onRecordResponse(provisioningData);
                 break;
         }
     }
@@ -293,6 +322,20 @@ public class ProvisioningController {
         }
     }
 
+    private void provisionRecordsGet() {
+        updateProvisioningState(STATE_RECORDS_GET, "Records Get");
+        ProvisioningRecordsGetPDU recordsGetPDU = new ProvisioningRecordsGetPDU();
+        sendProvisionPDU(recordsGetPDU);
+    }
+
+
+    private void provisionRecordRequest() {
+        log(String.format("Record Request recordID=%04X offset=%04X", recordId, fragmentOffset));
+        ProvisioningRecordRequestPDU recordRequestPDU =
+                new ProvisioningRecordRequestPDU(recordId, fragmentOffset, MAX_FRAGMENT_SIZE);
+        sendProvisionPDU(recordRequestPDU);
+    }
+
     /**
      * invite
      */
@@ -306,6 +349,7 @@ public class ProvisioningController {
 
     private void provisionStart(boolean isStaticOOB) {
         startPDU = ProvisioningStartPDU.getSimple(isStaticOOB);
+        startPDU.setPublicKey(pvCapability.publicKeyType == 1 && recordPubKey != null);
         updateProvisioningState(STATE_START, "Start - use static oob?" + isStaticOOB);
         sendProvisionPDU(startPDU);
     }
@@ -336,6 +380,9 @@ public class ProvisioningController {
         }
         provisionStart(useStaticOOB);
         provisionSendPubKey();
+        if (pvCapability.publicKeyType == 1 && recordPubKey != null) {
+            onPubKeyReceived(recordPubKey);
+        }
     }
 
     private void onPubKeyReceived(byte[] pubKeyData) {
@@ -345,10 +392,14 @@ public class ProvisioningController {
         }
 
         updateProvisioningState(STATE_PUB_KEY_RECEIVED, "Public Key received");
-        log("pub key received: " + Arrays.bytesToHexString(pubKeyData, ":"));
+        log("pub key received: " + Arrays.bytesToHexString(pubKeyData, ""));
         devicePubKeyPDU = ProvisioningPubKeyPDU.fromBytes(pubKeyData);
         deviceECDHSecret = Encipher.generateECDH(pubKeyData, provisionerKeyPair.getPrivate());
-        log("get secret: " + Arrays.bytesToHexString(deviceECDHSecret, ":"));
+        if (deviceECDHSecret == null) {
+            onProvisionFail("invalid public key");
+            return;
+        }
+        log("get secret: " + Arrays.bytesToHexString(deviceECDHSecret, ""));
         sendConfirm();
     }
 
@@ -400,6 +451,71 @@ public class ProvisioningController {
             sendProvisionData();
         } else {
             onProvisionFail("device confirm check err!");
+        }
+    }
+
+    private void onRecordListReceived(byte[] recordsData) {
+        if (state != STATE_RECORDS_GET) {
+            log("record list received when not record list get", MeshLogger.LEVEL_WARN);
+            return;
+        }
+        // 0D 0000 0000 0001
+        this.recordsListPDU = ProvisioningRecordsListPDU.fromBytes(recordsData);
+        if (recordsListPDU.recordsList.size() < 2) {
+            onProvisionFail("Device Certificate not found");
+            return;
+        }
+
+        this.recordId = recordsListPDU.recordsList.get(1);
+        this.fragmentOffset = 0;
+        this.recordData = null;
+        this.recordPubKey = null;
+        updateProvisioningState(STATE_RECORD_REQUEST, "Record Request");
+        provisionRecordRequest();
+    }
+
+    private void onRecordResponse(byte[] recordResponseData) {
+        if (state != STATE_RECORD_REQUEST) {
+            log("record response received when not record request", MeshLogger.LEVEL_WARN);
+            return;
+        }
+        ProvisioningRecordResponsePDU responsePDU = ProvisioningRecordResponsePDU.fromBytes(recordResponseData);
+        log(responsePDU.toString());
+        if (responsePDU.status != ProvisioningRecordResponsePDU.STATUS_SUCCESS || responsePDU.data == null) {
+            onProvisionFail("record response error");
+            return;
+        }
+        compositeResponseData(responsePDU.data);
+
+        if (recordData.length >= responsePDU.totalLength) {
+            onRecordResponseComplete();
+        } else {
+            fragmentOffset = fragmentOffset + responsePDU.data.length;
+            provisionRecordRequest();
+        }
+    }
+
+
+    private void compositeResponseData(byte[] newRecordData) {
+        if (recordData == null) {
+            recordData = newRecordData;
+        } else {
+//            recordData = ByteBuffer.allocate(recordData.length + newRecordData.length).put(recordData).put(newRecordData).array();
+            byte[] re = new byte[recordData.length + newRecordData.length];
+            System.arraycopy(recordData, 0, re, 0, recordData.length);
+            System.arraycopy(newRecordData, 0, re, recordData.length, newRecordData.length);
+            recordData = re;
+        }
+    }
+
+    private void onRecordResponseComplete() {
+        log("complete record: " + Arrays.bytesToHexString(recordData));
+        recordPubKey = Encipher.checkCertificate(recordData);
+        if (recordPubKey == null || recordPubKey.length != 64) {
+            onProvisionFail("certificate record check error");
+        } else {
+            log("public key in record: " + Arrays.bytesToHexString(recordPubKey));
+            provisionInvite();
         }
     }
 
@@ -538,6 +654,7 @@ public class ProvisioningController {
             mProvisioningBridge.onCommandPrepared(ProxyPDU.TYPE_PROVISIONING_PDU, re);
         }
     }
+
 
     private Runnable provisioningTimeoutTask = new Runnable() {
         @Override

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file AppSettings.java
+ * @file ProvisioningInvitePDU.java
  *
  * @brief for TLSR chips
  *
@@ -19,14 +19,25 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *
  *******************************************************************************************************/
-package com.telink.ble.mesh.model;
+package com.telink.ble.mesh.core.provisioning.pdu;
 
-public abstract class AppSettings {
-    /**
-     * is online-status enabled
-     */
-    public static boolean ONLINE_STATUS_ENABLE = false;
+/**
+ * Created by kee on 2019/7/19.
+ */
 
-    // draft feature
-    public static final boolean DRAFT_FEATURES_ENABLE = true;
+public class ProvisioningRecordsGetPDU implements ProvisioningStatePDU {
+
+
+    public ProvisioningRecordsGetPDU() {
+    }
+
+    @Override
+    public byte[] toBytes() {
+        return null;
+    }
+
+    @Override
+    public byte getState() {
+        return ProvisioningPDU.TYPE_RECORDS_GET;
+    }
 }

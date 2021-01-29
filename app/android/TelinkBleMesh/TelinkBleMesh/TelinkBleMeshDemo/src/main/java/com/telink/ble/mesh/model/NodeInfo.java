@@ -91,7 +91,7 @@ public class NodeInfo implements Serializable {
     public List<Integer> subList = new ArrayList<>();
 
     // device lightness
-    public int lum = 0;
+    public int lum = 100;
 
     // device temperature
     public int temp = 0;
@@ -138,7 +138,6 @@ public class NodeInfo implements Serializable {
      * selected for UI select
      */
     public boolean selected = false;
-
 
 
     private OfflineCheckTask offlineCheckTask = new OfflineCheckTask() {
@@ -379,8 +378,6 @@ public class NodeInfo implements Serializable {
         }
         return null;
     }
-
-
 
 
     public String getPidDesc() {

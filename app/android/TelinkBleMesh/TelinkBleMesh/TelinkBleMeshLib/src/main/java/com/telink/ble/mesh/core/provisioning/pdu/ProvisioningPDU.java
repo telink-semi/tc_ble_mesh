@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     ProvisioningPDU.java 
+ * @file ProvisioningPDU.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.provisioning.pdu;
 
@@ -25,30 +25,7 @@ package com.telink.ble.mesh.core.provisioning.pdu;
  * Created by kee on 2019/7/18.
  */
 // big endian
-public class ProvisioningPDU implements PDU {
-    /**
-     * including :
-     * padding : 2 bits 0b00
-     * typeValue : 6 bits
-     * 0x00 - 0x09 indicates provisioning state
-     * 0x0A–0xFF Reserved for Future Use
-     */
-    private byte type;
-
-    /**
-     * provisioning params
-     */
-    private byte[] params;
-
-    public static ProvisioningPDU createGeneralInstance(byte type) {
-        ProvisioningPDU pdu = new ProvisioningPDU();
-        pdu.type = type;
-        if (type == TYPE_INVITE) {
-            pdu.params = new byte[]{0};
-        }
-        return pdu;
-    }
-
+public abstract class ProvisioningPDU implements PDU {
 
     /**
      * Invites a device to join a mesh network
@@ -100,6 +77,42 @@ public class ProvisioningPDU implements PDU {
      */
     public static final byte TYPE_FAILED = 0x09;
 
+    /**
+     * Indicates a request to retrieve a provisioning record fragment from the device
+     */
+    public static final byte TYPE_RECORD_REQUEST = 0x0A;
+
+    /**
+     * Contains a provisioning record fragment or an error status,
+     * sent in response to a Provisioning Record Request
+     */
+    public static final byte TYPE_RECORD_RESPONSE = 0x0B;
+
+    /**
+     * Indicates a request to retrieve the list of IDs of the provisioning records
+     * that the unprovisioned device supports.
+     */
+    public static final byte TYPE_RECORDS_GET = 0x0C;
+
+    /**
+     * Contains the list of IDs of the provisioning records that the unprovisioned device supports.
+     */
+    public static final byte TYPE_RECORDS_LIST = 0x0D;
+
+
+    /**
+     * including :
+     * padding : 2 bits 0b00
+     * typeValue : 6 bits
+     * 0x00 - 0x09 indicates provisioning state
+     * 0x0A–0xFF Reserved for Future Use
+     */
+    private byte type;
+
+    /**
+     * provisioning params
+     */
+    private byte[] params;
 
     @Override
     public byte[] toBytes() {

@@ -114,7 +114,7 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
     private void actionStart() {
         enableUI(false);
 
-        int provisionIndex = meshInfo.provisionIndex;
+        int provisionIndex = meshInfo.getProvisionIndex();
         SparseIntArray targetDevicePid = new SparseIntArray(targetDevices.length);
 
         CompositionData compositionData;
@@ -150,7 +150,7 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         devices.add(device);
         mListAdapter.notifyDataSetChanged();
 
-        meshInfo.provisionIndex = fastProvisioningDevice.getNewAddress() + fastProvisioningDevice.getElementCount();
+        meshInfo.increaseProvisionIndex(fastProvisioningDevice.getElementCount());
         meshInfo.saveOrUpdate(this);
     }
 
