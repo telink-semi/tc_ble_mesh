@@ -72,11 +72,11 @@
     [array addObject:@"try add staticOOB device by noOOB provision"];
     [array addObject:@"OOB Database"];
     [array addObject:@"Enable DLE Mode Extend Bearer"];
-    [array addObject:@"AppLey List"];
-    [array addObject:@"NetLey List"];
-    //==========test==========//
-//    [array addObject:[NSString stringWithFormat:@"ivIndex: 0x%x",(unsigned int)_ivIndex]];
-    //==========test==========//
+    [array addObject:[NSString stringWithFormat:@"IV Index: 0x%08X",(unsigned int)_ivIndex]];
+    [array addObject:[NSString stringWithFormat:@"Sequence Number: 0x%06X",(unsigned int)SigDataSource.share.getCurrentProvisionerIntSequenceNumber]];
+    [array addObject:[NSString stringWithFormat:@"Local Address: 0x%04X",(unsigned int)SigDataSource.share.curLocationNodeModel.address]];
+    [array addObject:@"NetKey List"];
+    [array addObject:@"AppKey List"];
     _source = array;
     [self.tableView reloadData];
 }
@@ -156,9 +156,9 @@
         [ShowTipsHandle.share show:t];
     });
 
-    if (SigDataSource.share.getCurrentProvisionerIntSequenceNumber < 0xc10000) {
-        [SigDataSource.share setLocationSno:0xc10000];
-    }
+//    if (SigDataSource.share.getCurrentProvisionerIntSequenceNumber < 0xc00000) {
+//        [SigDataSource.share setLocationSno:0xc00000];
+//    }
     
     __weak typeof(self) weakSelf = self;
     NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
@@ -166,19 +166,19 @@
         //这个block语句块在子线程中执行
         [SDKLibCommand updateIvIndexWithKeyRefreshFlag:NO ivUpdateActive:YES networkId:SigDataSource.share.curNetkeyModel.networkId ivIndex:weakSelf.ivIndex + 1 usingNetworkKey:SigDataSource.share.curNetkeyModel];
         
-        [NSThread sleepForTimeInterval:2.0];
-        
+//        [NSThread sleepForTimeInterval:2.0];
+//
         [SigDataSource.share setLocationSno:0x01];
-        [SDKLibCommand updateIvIndexWithKeyRefreshFlag:NO ivUpdateActive:NO networkId:SigDataSource.share.curNetkeyModel.networkId ivIndex:weakSelf.ivIndex + 1 usingNetworkKey:SigDataSource.share.curNetkeyModel];
-
+//        [SDKLibCommand updateIvIndexWithKeyRefreshFlag:NO ivUpdateActive:NO networkId:SigDataSource.share.curNetkeyModel.networkId ivIndex:weakSelf.ivIndex + 1 usingNetworkKey:SigDataSource.share.curNetkeyModel];
+//
         [SigDataSource.share updateIvIndexString:[NSString stringWithFormat:@"%08lX",(unsigned long)weakSelf.ivIndex+1]];
-        
+//
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share delayHidden:0.5];
-            SigDataSource.share.curNetkeyModel.ivIndex.index = weakSelf.ivIndex + 1;
-            SigDataSource.share.curNetkeyModel.ivIndex.updateActive = YES;
-            [weakSelf refreshSourceAndUI];
-            [weakSelf showTips:@"ivUpdate success."];
+//            SigDataSource.share.curNetkeyModel.ivIndex.index = weakSelf.ivIndex + 1;
+//            SigDataSource.share.curNetkeyModel.ivIndex.updateActive = YES;
+//            [weakSelf refreshSourceAndUI];
+//            [weakSelf showTips:@"ivUpdate success."];
         });
 
     }];
@@ -212,6 +212,9 @@
             NSNumber *remote = [[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType];
             cell.showSwitch.on = remote.boolValue;
             [cell.showSwitch addTarget:self action:@selector(clickRemoteSwitch:) forControlEvents:UIControlEventValueChanged];
+            #ifndef kExist
+            cell.contentView.hidden = YES;
+            #endif
         } else if (indexPath.row == 1) {
             NSNumber *fastProvision = [[NSUserDefaults standardUserDefaults] valueForKey:kFastAddType];
             cell.showSwitch.on = fastProvision.boolValue;
@@ -234,17 +237,20 @@
             [cell.showSwitch addTarget:self action:@selector(clickDLEEnableSwitch:) forControlEvents:UIControlEventValueChanged];
         }
         return cell;
-    } else if (indexPath.row == 5 || indexPath.row == 7 || indexPath.row == 8) {
+    } else if (indexPath.row == 5 || indexPath.row == 10 || indexPath.row == 11) {
         InfoNextCell *cell = (InfoNextCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoNextCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
         cell.showLabel.text = _source[indexPath.row];
         return cell;
-    } else if (indexPath.row == 9) {
+    } else if (indexPath.row == 7 || indexPath.row == 8 || indexPath.row == 9) {
         InfoButtonCell *cell = (InfoButtonCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoButtonCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryNone;
         cell.showLabel.text = _source[indexPath.row];
-        [cell.showButton setTitle:@"+1" forState:UIControlStateNormal];
-        [cell.showButton addTarget:self action:@selector(clickIvUpdate:) forControlEvents:UIControlEventTouchUpInside];
+        if (indexPath.row == 7) {
+            [cell.showButton setTitle:@"+1" forState:UIControlStateNormal];
+            [cell.showButton addTarget:self action:@selector(clickIvUpdate:) forControlEvents:UIControlEventTouchUpInside];
+        }
+        cell.showButton.hidden = YES;
         return cell;
     } else {
         InfoNextCell *cell = (InfoNextCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoNextCellID forIndexPath:indexPath];
@@ -258,10 +264,10 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     if (indexPath.row == 5) {
         [self clickOOBButton];
-    } else if (indexPath.row == 7) {
-        [self clickAppKeyListButton];
-    } else if (indexPath.row == 8) {
+    } else if (indexPath.row == 10) {
         [self clickNetKeyListButton];
+    } else if (indexPath.row == 11) {
+        [self clickAppKeyListButton];
    }
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     cell.selected = NO;

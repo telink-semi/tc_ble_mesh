@@ -523,8 +523,27 @@
         case SigOpCode_FirmwareDistributionCancel:
             responseOpcode = SigOpCode_FirmwareDistributionStatus;
             break;
-        case SigOpCode_FirmwareDistributionNodesGet:
-            responseOpcode = SigOpCode_FirmwareDistributionNodesList;
+        case SigOpCode_FirmwareDistributionReceiversGet:
+            responseOpcode = SigOpCode_FirmwareDistributionReceiversList;
+            break;
+        case SigOpCode_FirmwareDistributionCapabilitiesGet:
+            responseOpcode = SigOpCode_FirmwareDistributionCapabilitiesStatus;
+            break;
+        case SigOpCode_FirmwareDistributionReceiversAdd:
+        case SigOpCode_FirmwareDistributionReceiversDeleteAll:
+            responseOpcode = SigOpCode_FirmwareDistributionReceiversStatus;
+            break;
+        case SigOpCode_FirmwareDistributionUploadGet:
+        case SigOpCode_FirmwareDistributionUploadStart:
+        case SigOpCode_FirmwareDistributionUploadOOBStart:
+        case SigOpCode_FirmwareDistributionUploadCancel:
+            responseOpcode = SigOpCode_FirmwareDistributionUploadStatus;
+            break;
+        case SigOpCode_FirmwareDistributionFirmwareGet:
+        case SigOpCode_FirmwareDistributionFirmwareGetByIndex:
+        case SigOpCode_FirmwareDistributionFirmwareDelete:
+        case SigOpCode_FirmwareDistributionFirmwareDeleteAll:
+            responseOpcode = SigOpCode_FirmwareDistributionFirmwareStatus;
             break;
 
             // BLOB Transfer Messages
@@ -542,6 +561,23 @@
         case SigOpCode_BLOBInformationGet:
             responseOpcode = SigOpCode_BLOBInformationStatus;
             break;
+        case SigOpCode_BridgeCapabilityGet:
+            responseOpcode = SigOpCode_BridgeCapabilityStatus;
+            break;
+        case SigOpCode_BridgeTableGet:
+            responseOpcode = SigOpCode_BridgeTableList;
+            break;
+        case SigOpCode_BridgeTableAdd:
+        case SigOpCode_BridgeTableRemove:
+            responseOpcode = SigOpCode_BridgeTableStatus;
+            break;
+        case SigOpCode_BridgeSubnetsGet:
+            responseOpcode = SigOpCode_BridgeSubnetsList;
+            break;
+        case SigOpCode_SubnetBridgeGet:
+        case SigOpCode_SubnetBridgeSet:
+            responseOpcode = SigOpCode_SubnetBridgeStatus;
+            break;
         default:
             TeLogVerbose(@"Warning:undefault or noAck sendOpcode:0x%x",sendOpcode);
             break;
@@ -558,6 +594,132 @@
         int responseOpCode = [self getResponseOpcodeWithSendOpcode:message.opCode];
         return responseOpCode != 0;
     }
+}
+
+- (NSString *)getDetailOfSigFirmwareUpdatePhaseType:(SigFirmwareUpdatePhaseType)phaseType {
+    NSString *tem = @"";
+    switch (phaseType) {
+        case SigFirmwareUpdatePhaseType_idle:
+            tem = @"idle";
+            break;
+        case SigFirmwareUpdatePhaseType_transferError:
+            tem = @"transfer error";
+            break;
+        case SigFirmwareUpdatePhaseType_transferActive:
+            tem = @"transfer active";
+            break;
+        case SigFirmwareUpdatePhaseType_verifyingUpdate:
+            tem = @"verifying update";
+            break;
+        case SigFirmwareUpdatePhaseType_verificationSuccess:
+            tem = @"verification success";
+            break;
+        case SigFirmwareUpdatePhaseType_verificationFailed:
+            tem = @"verification failed";
+            break;
+        case SigFirmwareUpdatePhaseType_applyingUpdate:
+            tem = @"applying update";
+            break;
+        case SigFirmwareUpdatePhaseType_prohibited:
+            tem = @"prohibited";
+            break;
+        default:
+            break;
+    }
+    return tem;
+}
+
+- (NSString *)getDetailOfSigFirmwareUpdateServerAndClientModelStatusType:(SigFirmwareUpdateServerAndClientModelStatusType)statusType {
+    NSString *tem = @"";
+    switch (statusType) {
+        case SigFirmwareUpdateServerAndClientModelStatusType_success:
+            tem = @"success";
+            break;
+        case SigFirmwareUpdateServerAndClientModelStatusType_insufficientResources:
+            tem = @"insufficient resources";
+            break;
+        case SigFirmwareUpdateServerAndClientModelStatusType_wrongPhase:
+            tem = @"wrong phase";
+            break;
+        case SigFirmwareUpdateServerAndClientModelStatusType_internalError:
+            tem = @"internal error";
+            break;
+        case SigFirmwareUpdateServerAndClientModelStatusType_wrongFirmwareIndex:
+            tem = @"wrong firmware index";
+            break;
+        case SigFirmwareUpdateServerAndClientModelStatusType_metadataCheckFailed:
+            tem = @"metadata check failed";
+            break;
+        case SigFirmwareUpdateServerAndClientModelStatusType_temporarilyUnavailable:
+            tem = @"temporarily unavailable";
+            break;
+        case SigFirmwareUpdateServerAndClientModelStatusType_BLOBTransferBusy:
+            tem = @"BLOB transfer busy";
+            break;
+        default:
+            break;
+    }
+    return tem;
+}
+
+- (NSString *)getDetailOfSigBLOBTransferStatusType:(SigBLOBTransferStatusType)statusType {
+    NSString *tem = @"prohibited";
+    switch (statusType) {
+        case SigBLOBTransferStatusType_success:
+            tem = @"success";
+            break;
+        case SigBLOBTransferStatusType_invalidBlockNumber:
+            tem = @"invalid block number";
+            break;
+        case SigBLOBTransferStatusType_invalidBlockSize:
+            tem = @"invalid block size";
+            break;
+        case SigBLOBTransferStatusType_invalidChunkSize:
+            tem = @"invalid chunk size";
+            break;
+        case SigBLOBTransferStatusType_wrongPhase:
+            tem = @"wrong phase";
+            break;
+        case SigBLOBTransferStatusType_invalidParameter:
+            tem = @"invalid parameter";
+            break;
+        case SigBLOBTransferStatusType_wrongBLOBID:
+            tem = @"wrong BLOBID";
+            break;
+        case SigBLOBTransferStatusType_BLOBTooLarge:
+            tem = @"BLOB too large";
+            break;
+        case SigBLOBTransferStatusType_unsupportedTransferMode:
+            tem = @"unsupported transfer mode";
+            break;
+        case SigBLOBTransferStatusType_internalError:
+            tem = @"internal error";
+            break;
+        case SigBLOBTransferStatusType_informationUnavailable:
+            tem = @"information unavailable";
+            break;
+        default:
+            break;
+    }
+    return tem;
+}
+
+- (NSString *)getDetailOfSigDirectionsFieldValues:(SigDirectionsFieldValues)directions {
+    NSString *tem = @"prohibited";
+    switch (directions) {
+        case SigDirectionsFieldValues_prohibited:
+            tem = @"Prohibited";
+            break;
+        case SigDirectionsFieldValues_unidirectional:
+            tem = @"Unidirectional";
+            break;
+        case SigDirectionsFieldValues_bidirectional:
+            tem = @"Directional";
+            break;
+        default:
+            break;
+    }
+    return tem;
 }
 
 @end

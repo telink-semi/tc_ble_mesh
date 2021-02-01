@@ -53,6 +53,18 @@ typedef void (^MyBlock) (id _Nullable result, NSError * _Nullable err);
 /// @param block result callback
 - (void)downloadJsonDictionaryWithUUID:(NSString *)uuid didLoadData:(MyBlock)block;
 
+/// 3.check firmware
+/// @param firewareIDString current firmware id
+/// @param updateURI update URI from the response of firmwareUpdateInformationGet
+/// @param block result callback
+- (void)firmwareCheckRequestWithFirewareIDString:(NSString *)firewareIDString updateURI:(NSString *)updateURI didLoadData:(MyBlock)block;
+
+/// 4.get firmware
+/// @param firewareIDString current firmware id
+/// @param updateURI update URI from the response of firmwareUpdateInformationGet
+/// @param block result callback
+- (void)firmwareGetRequestWithFirewareIDString:(NSString *)firewareIDString updateURI:(NSString *)updateURI didLoadData:(MyBlock)block;
+
 @end
 
 NS_ASSUME_NONNULL_END

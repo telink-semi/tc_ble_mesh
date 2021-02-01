@@ -240,12 +240,11 @@ struct EncryptedDataWithMicPdu {
         // If it doesn't, and the IV Update procedure is active, the PDU will be deobfuscated and decoded with IV Index decremented by 1.
         UInt32 index = ivIndex.index;
         if (_ivi != (index & 0x01)) {
-            if (ivIndex.updateActive && index > 1) {
+            if (index > 0) {
                 index -= 1;
-            } else {
-                return nil;
             }
         }
+        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
         for (SigNetkeyDerivaties *keys in keySets) {
             // Deobfuscate CTL, TTL, SEQ and SRC.
             NSData *deobfuscatedData = [OpenSSLHelper.share deobfuscate:pdu ivIndex:index privacyKey:keys.privacyKey];
@@ -296,8 +295,6 @@ struct EncryptedDataWithMicPdu {
             _type = type;
             _ttl = ttl;
             _sequence = sequence;
-//            TeLogVerbose(@"返回蓝牙包的sequence=0x%x",(unsigned int)sequence);
-//            [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence+1];
             _source = source;
             UInt8 decryptedData0 = 0,decryptedData1 = 0;
             Byte *decryptedDataByte = (Byte *)decryptedData.bytes;
@@ -352,12 +349,11 @@ struct EncryptedDataWithMicPdu {
         // If it doesn't, and the IV Update procedure is active, the PDU will be deobfuscated and decoded with IV Index decremented by 1.
         UInt32 index = networkKey.ivIndex.index;
         if (_ivi != (index & 0x01)) {
-            if (networkKey.ivIndex.updateActive && index > 1) {
+            if (index > 0) {
                 index -= 1;
-            } else {
-                return nil;
             }
         }
+        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
         for (SigNetkeyDerivaties *keys in keySets) {
             // Deobfuscate CTL, TTL, SEQ and SRC.
             NSData *deobfuscatedData = [OpenSSLHelper.share deobfuscate:pdu ivIndex:index privacyKey:keys.privacyKey];
@@ -410,7 +406,6 @@ struct EncryptedDataWithMicPdu {
             _type = type;
             _ttl = ttl;
             _sequence = sequence;
-//            TeLogVerbose(@"返回蓝牙包的sequence=0x%x",(unsigned int)sequence);
             _source = source;
             UInt8 decryptedData0 = 0,decryptedData1 = 0;
             Byte *decryptedDataByte = (Byte *)decryptedData.bytes;

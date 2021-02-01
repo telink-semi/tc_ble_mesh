@@ -62,11 +62,11 @@
 
 /// 测试解密共享文件夹的json文件`TelinkSDKMeshJsonData`
 - (void)testGetDecryptTelinkSDKMeshJsonData {
-//    NSLog(@"%@",SigLogger.share.getDecryptTelinkSDKMeshJsonData);
-    
-//    NSString *key = [[NSBundle mainBundle] bundleIdentifier];
-    NSString *key = @"com.Ledvance.smartapp";
-    NSLog(@"%@",[SigLogger.share getDecryptTelinkSDKMeshJsonDataWithPassword:key]);
+    //1.
+    NSLog(@"%@",SigLogger.share.getDecryptTelinkSDKMeshJsonData);
+    //2.
+//    NSString *key = @"com.telink.TelinkSDKMeshJsonData";
+//    NSLog(@"%@",[SigLogger.share getDecryptTelinkSDKMeshJsonDataWithPassword:key]);
 }
 
 /// 测试SigProvisionerModel创建及Unicast分配
@@ -103,6 +103,23 @@
             }
         }
     }
+}
+
+- (void)testSubnetBridge {
+    SigSubnetBridgeStatus *status1 = [[SigSubnetBridgeStatus alloc] init];
+    SigSubnetBridgeModel *model = [[SigSubnetBridgeModel alloc] initWithDirections:SigDirectionsFieldValues_bidirectional netKeyIndex1:0x001 netKeyIndex2:0x000 address1:0x0100 address2:0x0004];
+    SigSubnetBridgeStatus *status2 = [[SigSubnetBridgeStatus alloc] initWithSubnetBridge:model];
+    SigSubnetBridgeStatus *status3 = [[SigSubnetBridgeStatus alloc] initWithParameters:status2.parameters];
+    NSLog(@"status1=%@",status1.parameters);
+    NSLog(@"status2=%@",status2.parameters);
+    NSLog(@"status3=%@",status3.parameters);
+    
+    SigBridgeSubnetModel *model1 = [[SigBridgeSubnetModel alloc] init];
+    SigBridgeSubnetModel *model2 = [[SigBridgeSubnetModel alloc] initWithNetKeyIndex1:0x001 netKeyIndex2:0x000];
+    SigBridgeSubnetModel *model3 = [[SigBridgeSubnetModel alloc] initWithParameters:model2.parameters];
+    NSLog(@"model1=%@",model1.parameters);
+    NSLog(@"model2=%@",model2.parameters);
+    NSLog(@"model3=%@",model3.parameters);
 }
 
 @end

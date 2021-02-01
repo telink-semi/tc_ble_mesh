@@ -49,7 +49,8 @@
 @property (nonatomic, strong) NSMutableDictionary *allItemVIDDict;
 @property (assign, nonatomic) BOOL needDelayReloadData;
 @property (assign, nonatomic) BOOL isDelaying;
-
+@property (nonatomic, strong) NSMutableArray <SigUpdatingNodeEntryModel *>*receiversList;
+@property (nonatomic, strong) NSMutableArray <NSNumber *>*receiversAddressList;
 @end
 
 @implementation MeshOTAVC
@@ -158,7 +159,7 @@
     }
     
     //2.firmwareUpdateInformationGet
-    UInt16 modelIdentifier = SIG_MD_BLOB_TRANSFER_S;
+    UInt16 modelIdentifier = kSigModel_ObjectTransferServer_ID;
     NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
     NSInteger responseMax = 0;
     for (SigNodeModel *model in curNodes) {
@@ -260,13 +261,18 @@
             if ([self.allItemVIDDict.allKeys containsObject:address]) {
                 vid = [self.allItemVIDDict[address] intValue];
             }
-            UInt16 modelIdentifier = SIG_MD_BLOB_TRANSFER_S;
+            UInt16 modelIdentifier = kSigModel_ObjectTransferServer_ID;
             NSArray *addressArray = [model getAddressesWithModelID:@(modelIdentifier)];
             if (addressArray && addressArray.count > 0) {
-                itemCell.titleLabel.text = [NSString stringWithFormat:@"adr:0x%X    PID:0x%@ VID:%c%c",model.address,model.pid,vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+                NSString *str = [NSString stringWithFormat:@"adr:0x%X pid:0x%X vid:%c%c",model.address,[LibTools uint16From16String:model.pid],vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+                if ([self.receiversAddressList containsObject:@(model.address)]) {
+                    SigUpdatingNodeEntryModel *nodeEntryModel = self.receiversList[[self.receiversAddressList indexOfObject:@(model.address)]];
+                    str = [NSString stringWithFormat:@"%@ %@",str,[self getDetailStringOfSigUpdatingNodeEntryModel:nodeEntryModel]];
+                }
+                itemCell.titleLabel.text = str;
             } else {
                 vid = [LibTools uint16From16String:model.vid];
-                itemCell.titleLabel.text = [NSString stringWithFormat:@"adr:0x%X    PID:0x%@ VID:%c%c Not support",model.address,model.pid,vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+                itemCell.titleLabel.text = [NSString stringWithFormat:@"adr:0x%X pid:0x%X vid:%c%c Not support",model.address,[LibTools uint16From16String:model.pid],vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
             }
             
             if (self.selectItemAddressArray.count > 0) {
@@ -284,6 +290,9 @@
                         [weakSelf.selectItemAddressArray addObject:address];
                     }
                     [weakSelf.tableView reloadData];
+                } else {
+                    [self showTips:@"This node is outline."];
+                    return;
                 }
             }];
         }
@@ -291,7 +300,7 @@
         NSString *binString = self.binStringArray[indexPath.row];
         NSData *data = [OTAFileSource.share getDataWithBinName:binString];
         UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
-        itemCell.titleLabel.text = [NSString stringWithFormat:@"%@  PID:0x%X VID:%c%c",binString,[OTAFileSource.share getPidWithOTAData:data],vid&0xff,(vid>>8)&0xff];//vid显示两个字节的ASCII
+        itemCell.titleLabel.text = [NSString stringWithFormat:@"%@ pid:0x%X vid:%c%c",binString,[OTAFileSource.share getPidWithOTAData:data],vid&0xff,(vid>>8)&0xff];//vid显示两个字节的ASCII
         itemCell.selectButton.selected = indexPath.row == _binIndex;
         [itemCell.selectButton addAction:^(UIButton *button) {
             weakSelf.binIndex = indexPath.row;
@@ -345,6 +354,9 @@
                     [self.selectItemArray addObject:model];
                     [self.selectItemAddressArray addObject:address];
                 }
+            } else {
+                [self showTips:@"This node is outline."];
+                return;
             }
         }
         [self.tableView reloadData];
@@ -417,7 +429,8 @@
             [self showTips:@"This Bin file is invalid."];
             return;
         }
-        
+        self.receiversList = [NSMutableArray array];
+        self.receiversAddressList = [NSMutableArray array];
         __weak typeof(self) weakSelf = self;
         [MeshOTAManager.share startMeshOTAWithLocationAddress:SigDataSource.share.curLocationNodeModel.address deviceAddresses:tem otaData:data incomingFirmwareMetadata:incomingFirmwareMetadata progressHandle:^(NSInteger progress) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -444,14 +457,151 @@
             });
             [SigBearer.share startMeshConnectWithComplete:nil];
         }];
+//        [MeshOTAManager.share startFirmwareUpdateWithDeviceAddresses:tem otaData:data incomingFirmwareMetadata:incomingFirmwareMetadata gattDistributionProgressHandle:^(NSInteger progress) {
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                NSString *t = [NSString stringWithFormat:@"mesh ota... gatt progress:%ld%%", (long)progress];
+//                [ShowTipsHandle.share show:t];
+//                if (progress == 100) {
+//                    [weakSelf userAbled:YES];
+//                    [ShowTipsHandle.share delayHidden:2.0];
+//                }
+//            });
+//        } advDistributionProgressHandle:^(SigFirmwareDistributionReceiversList *responseMessage) {
+//            TeLogInfo(@"adv responseMessage=%@",responseMessage);
+//            if (responseMessage && responseMessage.receiversList && responseMessage.receiversList.count > 0) {
+//                dispatch_async(dispatch_get_main_queue(), ^{
+//                    [weakSelf updateReceiversList:responseMessage.receiversList];
+//                });
+//            }
+//        } finishHandle:^(NSArray<NSNumber *> *successAddresses, NSArray<NSNumber *> *failAddresses) {
+//            NSString *tip = [NSString stringWithFormat:@"Mesh ota finish, success:%ld,fail:%ld", (long)successAddresses.count, (long)failAddresses.count];
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                [weakSelf userAbled:YES];
+//                [ShowTipsHandle.share delayHidden:0];
+//                [weakSelf showTips:tip];
+//            });
+//        } errorHandle:^(NSError * _Nullable error) {
+//            NSString *tip = [NSString stringWithFormat:@"Mesh ota fail, error = %@", error];
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                [weakSelf userAbled:YES];
+//                [ShowTipsHandle.share delayHidden:0];
+//                [weakSelf showTips:tip];
+//            });
+//            [SigBearer.share startMeshConnectWithComplete:nil];
+//        }];
     }
     #endif
+}
+
+- (void)updateReceiversList:(NSArray <SigUpdatingNodeEntryModel *>*)receiversList {
+    NSMutableArray *oldAddresses = [NSMutableArray arrayWithArray:self.receiversAddressList];
+    NSMutableArray *newAddresses = [NSMutableArray array];
+    for (SigUpdatingNodeEntryModel *model in receiversList) {
+        [newAddresses addObject:@(model.address)];
+    }
+    for (NSNumber *newAddress in newAddresses) {
+        if ([oldAddresses containsObject:newAddress]) {
+            [self.receiversList replaceObjectAtIndex:[oldAddresses indexOfObject:newAddress] withObject:receiversList[[newAddresses indexOfObject:newAddress]]];
+        } else {
+            [self.receiversList addObject:receiversList[[newAddresses indexOfObject:newAddress]]];
+            [self.receiversAddressList addObject:newAddress];
+        }
+    }
+    NSString *advString = @"mesh ota... adv progress:";
+    for (SigUpdatingNodeEntryModel *model in self.receiversList) {
+        advString = [NSString stringWithFormat:@"%@\nadr:0x%X %@",advString,model.address,[self getDetailStringOfSigUpdatingNodeEntryModel:model]];
+    }
+    [ShowTipsHandle.share show:advString];
+    [self.tableView reloadData];
+}
+
+- (NSString *)getDetailStringOfSigUpdatingNodeEntryModel:(SigUpdatingNodeEntryModel *)model {
+    NSString *phaseString = [SigHelper.share getDetailOfSigFirmwareUpdatePhaseType:model.retrievedUpdatePhase];
+    if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applyingUpdate) {
+        phaseString = @"success";
+    }
+    NSString *tem = [NSString stringWithFormat:@"prog:%d%%-%@",model.transferProgress,phaseString];
+    return tem;
 }
 
 - (void)userAbled:(BOOL)able{
     self.startButton.enabled = able;
     self.tableView.userInteractionEnabled = able;
     [self setStartButtonEnable:able];
+}
+
+typedef void(^getFirmwareImageCompleteHandle)(NSError *error, SigFirmwareInformationEntryModel *model, NSData *firmwareData);
+- (void)getFirmwareImageWithNodeAddress:(UInt16)nodeAddress firstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit completeHandle:(getFirmwareImageCompleteHandle)completeHandle {
+    [SDKLibCommand firmwareUpdateInformationGetWithDestination:nodeAddress firstIndex:firstIndex entriesLimit:entriesLimit retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
+        TeLogDebug(@"firmwareUpdateInformationGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        if (responseMessage.firmwareInformationList && responseMessage.firmwareInformationList.count > 0) {
+            SigFirmwareInformationEntryModel *model = responseMessage.firmwareInformationList.firstObject;
+            [TelinkHttpManager.share firmwareCheckRequestWithFirewareIDString:model.getFirmwareIDString updateURI:model.getUpdateURIString didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+                if (!err) {
+                    //check firmware response
+                    UInt16 connectedNodeAddress = SigDataSource.share.unicastAddressOfConnected;
+                    [SDKLibCommand firmwareDistributionUploadOOBStartWithDestination:connectedNodeAddress uploadURILength:model.updateURILength uploadURI:model.updateURL uploadFirmwareID:model.currentFirmwareID retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionUploadStatus * _Nonnull responseMessage) {
+                        TeLogDebug(@"firmwareDistributionUploadOOBStart=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                        if (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success) {
+                            [TelinkHttpManager.share firmwareGetRequestWithFirewareIDString:model.getFirmwareIDString updateURI:model.getUpdateURIString didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+                                if (!err) {
+                                    //get firmware response
+                                    //待完善：从result中取出实际的firmwareData
+                                    NSData *fData = [NSData data];
+                                    if (completeHandle) {
+                                        completeHandle(nil,model,fData);
+                                    }
+                                } else {
+                                    //get firmware fail
+                                    if (completeHandle) {
+                                        completeHandle(err,model,nil);
+                                    }
+                                }
+                            }];
+                        } else {
+                            NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"firmwareDistributionUploadOOBStart,status=0x%X",responseMessage.status] code:-responseMessage.status userInfo:nil];
+                            if (completeHandle) {
+                                completeHandle(error,model,nil);
+                            }
+                        }
+                    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                        if (error) {
+                            if (completeHandle) {
+                                completeHandle(error,model,nil);
+                            }
+                        }
+                    }];
+                } else {
+                    //check firmware fail
+                    if (completeHandle) {
+                        completeHandle(err,model,nil);
+                    }
+                }
+            }];
+        }
+    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        if (error) {
+            if (completeHandle) {
+                completeHandle(error,nil,nil);
+            }
+        }
+    }];
+}
+
+- (void)startMeshOTADistribution {
+    
+}
+
+- (void)showMeshOTAError:(NSError *)error {
+    TeLogDebug(@"error=%@",error);
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [weakSelf userAbled:YES];
+        [ShowTipsHandle.share delayHidden:0];
+        [weakSelf showTips:error.domain];
+    });
 }
 
 @end

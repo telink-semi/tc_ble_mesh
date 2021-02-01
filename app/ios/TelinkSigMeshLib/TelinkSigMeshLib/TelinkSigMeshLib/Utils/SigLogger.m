@@ -45,7 +45,6 @@
     static dispatch_once_t tempOnce=0;
     dispatch_once(&tempOnce, ^{
         shareLogger = [[SigLogger alloc] init];
-        [shareLogger initLogFile];
     });
     return shareLogger;
 }
@@ -81,12 +80,22 @@
 - (void)setSDKLogLevel:(SigLogLevel)logLevel{
     _logLevel = logLevel;
     if (logLevel != SigLogLevelOff) {
+        [self initLogFile];
         __weak typeof(self) weakSelf = self;
         _timer = [BackgroundTimer scheduledTimerWithTimeInterval:10 * 60 repeats:YES block:^(BackgroundTimer * _Nonnull t) {
             [weakSelf checkSDKLogFileSize];
         }];
         [self checkSDKLogFileSize];
         [self enableLogger];
+    } else {
+        //OFF状态则删除TelinkSDKDebugLogData和加密的TelinkSDKMeshJsonData。
+        NSFileManager *manager = [[NSFileManager alloc] init];
+        if ([manager fileExistsAtPath:self.logFilePath]) {
+            [manager removeItemAtPath:self.logFilePath error:nil];
+        }
+        if ([manager fileExistsAtPath:self.meshJsonFilePath]) {
+            [manager removeItemAtPath:self.meshJsonFilePath error:nil];
+        }
     }
 }
 

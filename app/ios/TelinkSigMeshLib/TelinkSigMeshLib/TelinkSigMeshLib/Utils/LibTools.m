@@ -453,6 +453,11 @@
     return (val + 32768);
 }
 
+///（四舍五入，保留两位小数）
++ (float)roundFloat:(float)price {
+    return roundf(price*100)/100;
+}
+
 #pragma mark - JSON相关
 
 /**
@@ -620,9 +625,7 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
 + (NSString *)base64StringFromText:(NSString *)text
 {
     if (text && ![text isEqualToString:LocalStr_None]) {
-        //取项目的bundleIdentifier作为KEY  改动了此处
-        NSString *key = [[NSBundle mainBundle] bundleIdentifier];
-//        NSString *key = @"com.Ledvance.smartapp";
+        NSString *key = @"com.telink.TelinkSDKMeshJsonData";
         NSData *data = [text dataUsingEncoding:NSUTF8StringEncoding];
         //IOS 自带DES加密 Begin  改动了此处
         data = [self DESEncrypt:data WithKey:key];
@@ -637,9 +640,7 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
 + (NSString *)textFromBase64String:(NSString *)base64
 {
     if (base64 && ![base64 isEqualToString:LocalStr_None]) {
-        //取项目的bundleIdentifier作为KEY   改动了此处
-        NSString *key = [[NSBundle mainBundle] bundleIdentifier];
-//        NSString *key = @"com.Ledvance.smartapp";
+        NSString *key = @"com.telink.TelinkSDKMeshJsonData";
         NSData *data = [self dataWithBase64EncodedString:base64];
         //IOS 自带DES解密 Begin    改动了此处
         data = [self DESDecrypt:data WithKey:key];
@@ -654,9 +655,6 @@ static const char encodingTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
 + (NSString *)textFromBase64String:(NSString *)base64 password:(NSString *)password
 {
     if (base64 && ![base64 isEqualToString:LocalStr_None]) {
-        //取项目的bundleIdentifier作为KEY   改动了此处
-//        NSString *key = [[NSBundle mainBundle] bundleIdentifier];
-//        NSString *key = @"com.Ledvance.smartapp";
         NSData *data = [self dataWithBase64EncodedString:base64];
         //IOS 自带DES解密 Begin    改动了此处
         data = [self DESDecrypt:data WithKey:password];

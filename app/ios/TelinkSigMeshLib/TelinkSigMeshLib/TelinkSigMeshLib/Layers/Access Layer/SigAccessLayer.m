@@ -1289,16 +1289,61 @@
             case SigOpCode_FirmwareDistributionApply:
                 messageType = [SigFirmwareDistributionApply class];
                 break;
+            case SigOpCode_FirmwareDistributionUploadGet:
+                messageType = [SigFirmwareDistributionUploadGet class];
+                break;
+            case SigOpCode_FirmwareDistributionUploadStart:
+                messageType = [SigFirmwareDistributionUploadStart class];
+                break;
+            case SigOpCode_FirmwareDistributionUploadOOBStart:
+                messageType = [SigFirmwareDistributionUploadOOBStart class];
+                break;
+            case SigOpCode_FirmwareDistributionUploadCancel:
+                messageType = [SigFirmwareDistributionUploadCancel class];
+                break;
+            case SigOpCode_FirmwareDistributionUploadStatus:
+                messageType = [SigFirmwareDistributionUploadStatus class];
+                break;
+            case SigOpCode_FirmwareDistributionFirmwareGet:
+                messageType = [SigFirmwareDistributionFirmwareGet class];
+                break;
+            case SigOpCode_FirmwareDistributionFirmwareGetByIndex:
+                messageType = [SigFirmwareDistributionFirmwareGetByIndex class];
+                break;
+            case SigOpCode_FirmwareDistributionFirmwareDelete:
+                messageType = [SigFirmwareDistributionFirmwareDelete class];
+                break;
+            case SigOpCode_FirmwareDistributionFirmwareDeleteAll:
+                messageType = [SigFirmwareDistributionFirmwareDeleteAll class];
+                break;
+            case SigOpCode_FirmwareDistributionFirmwareStatus:
+                messageType = [SigFirmwareDistributionFirmwareStatus class];
+                break;
             case SigOpCode_FirmwareDistributionStatus:
                 messageType = [SigFirmwareDistributionStatus class];
                 break;
-//            case SigOpCode_FirmwareDistributionNodesGet:
-//                messageType = [SigFirmwareDistributionDetailsGet class];
-//                break;
-            case SigOpCode_FirmwareDistributionNodesList:
-                messageType = [SigFirmwareDistributionDetailsList class];
+            case SigOpCode_FirmwareDistributionReceiversGet:
+                messageType = [SigFirmwareDistributionReceiversGet class];
                 break;
-
+            case SigOpCode_FirmwareDistributionReceiversList:
+                messageType = [SigFirmwareDistributionReceiversList class];
+                break;
+            case SigOpCode_FirmwareDistributionReceiversAdd:
+                messageType = [SigFirmwareDistributionReceiversAdd class];
+                break;
+            case SigOpCode_FirmwareDistributionReceiversDeleteAll:
+                messageType = [SigFirmwareDistributionReceiversDeleteAll class];
+                break;
+            case SigOpCode_FirmwareDistributionReceiversStatus:
+                messageType = [SigFirmwareDistributionReceiversStatus class];
+                break;
+            case SigOpCode_FirmwareDistributionCapabilitiesGet:
+                messageType = [SigFirmwareDistributionCapabilitiesGet class];
+                break;
+            case SigOpCode_FirmwareDistributionCapabilitiesStatus:
+                messageType = [SigFirmwareDistributionCapabilitiesStatus class];
+                break;
+                
                 // BLOB Transfer Messages
             case SigOpCode_BLOBTransferGet:
                 messageType = [SigBLOBTransferGet class];
@@ -1332,6 +1377,44 @@
                 break;
             case SigOpCode_BLOBInformationStatus:
                 messageType = [SigBLOBInformationStatus class];
+                break;
+    
+                // subnet bridge Messages
+            case SigOpCode_BridgeCapabilityGet:
+                messageType = [SigBridgeCapabilityGet class];
+                break;
+            case SigOpCode_BridgeCapabilityStatus:
+                messageType = [SigBridgeCapabilityStatus class];
+                break;
+            case SigOpCode_BridgeTableAdd:
+                messageType = [SigBridgeTableAdd class];
+                break;
+            case SigOpCode_BridgeTableGet:
+                messageType = [SigBridgeTableGet class];
+                break;
+            case SigOpCode_BridgeTableList:
+                messageType = [SigBridgeTableList class];
+                break;
+            case SigOpCode_BridgeTableRemove:
+                messageType = [SigBridgeTableRemove class];
+                break;
+            case SigOpCode_BridgeTableStatus:
+                messageType = [SigBridgeTableStatus class];
+                break;
+            case SigOpCode_BridgeSubnetsGet:
+                messageType = [SigBridgeSubnetsGet class];
+                break;
+            case SigOpCode_BridgeSubnetsList:
+                messageType = [SigBridgeSubnetsList class];
+                break;
+            case SigOpCode_SubnetBridgeGet:
+                messageType = [SigSubnetBridgeGet class];
+                break;
+            case SigOpCode_SubnetBridgeSet:
+                messageType = [SigSubnetBridgeSet class];
+                break;
+            case SigOpCode_SubnetBridgeStatus:
+                messageType = [SigSubnetBridgeStatus class];
                 break;
             default:
                 break;

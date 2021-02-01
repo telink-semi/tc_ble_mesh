@@ -47,7 +47,7 @@
 }
 
 - (void)reloadSelectModelID{
-    NSArray *options = @[@(SIG_MD_G_ONOFF_S),@(SIG_MD_LIGHTNESS_S),@(SIG_MD_LIGHT_CTL_S),@(SIG_MD_LIGHT_CTL_TEMP_S),@(SIG_MD_LIGHT_HSL_S)];
+    NSArray *options = @[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID)];
     [self.source removeAllObjects];
     for (NSNumber *modelID in options) {
         ModelIDModel *model = [SigDataSource.share getModelIDModel:modelID];

@@ -28,10 +28,17 @@
 //
 
 #import "ShareOutVC.h"
+#import "UIButton+extension.h"
 #import "UIViewController+Message.h"
+#import "KeyCell.h"
+#import "ShowQRCodeViewController.h"
 
-@interface ShareOutVC ()
-@property (weak, nonatomic) IBOutlet UITextView *outTipTextView;
+@interface ShareOutVC ()<UITableViewDelegate,UITableViewDataSource>
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (weak, nonatomic) IBOutlet UIButton *selectJsonButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectQRCodeButton;
+@property (nonatomic, strong) NSMutableArray <SigNetkeyModel *>*sourceArray;
+@property (nonatomic, strong) NSMutableArray <SigNetkeyModel *>*selectArray;
 
 @end
 
@@ -40,11 +47,64 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    
-    self.outTipTextView.text = @"Export JSON:\n\n1. Click EXPORT button to create a new json file.\n2. Iphone connect to computer that install iTunes.\n3. Click on the iTunes phone icon in the upper left corner of iTunes into the iphone interface.\n4. Select \"file sharing\" in the left of the iTunes, then find and click on the demo APP in the application of \"TelinkSigMesh\", wait for iTunes load file.\n5. After file is loaded, found file \"mesh-.json\"in the \"TelinkSigMesh\".You just must to drag the file to your computer.\n\n导出JSON数据操作，步骤如下：\n\n1. 点击APP的EXPORT按钮，生成新的json文件。\n2. 将手机连接到安装了iTunes的电脑上。\n3. 点击iTunes左上角的手机图标进入iTunes设备详情界面。\n4. 选择iTunes左侧的“文件共享”，然后在应用中找到并点击demo APP “TelinkSigMesh”，等待iTunes加载文件。\n5. 文件加载完成后，在“TelinkSigMesh”的文稿中找到mesh的分享数据文件“mesh-.json”，把该文件拖到电脑即可。";
+    self.selectJsonButton.selected = YES;
+    self.selectQRCodeButton.selected = NO;
+    self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+    self.sourceArray = [NSMutableArray arrayWithArray:SigDataSource.share.netKeys];
+    self.selectArray = [NSMutableArray arrayWithObject:SigDataSource.share.curNetkeyModel];
+    [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(KeyCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(KeyCell.class)];
 }
 
 - (IBAction)clickExportButton:(UIButton *)sender {
+    if (self.selectArray.count == 0) {
+        [self showTips:@"Please select at least one network key!"];
+        return;
+    }
+    
+    //3.3.2新增逻辑：只分享选中的NetKey和该NetKey下的AppKey。
+    SigDataSource *exportDS = [[SigDataSource alloc] init];
+    [exportDS setDictionaryToDataSource:SigDataSource.share.getDictionaryFromDataSource];
+    exportDS.netKeys = [NSMutableArray arrayWithArray:self.selectArray];
+    NSMutableArray *netkeyIndexs = [NSMutableArray array];
+    for (SigNetkeyModel *model in exportDS.netKeys) {
+        [netkeyIndexs addObject:@(model.index)];
+    }
+    NSMutableArray *apps = [NSMutableArray array];
+    for (SigAppkeyModel *model in SigDataSource.share.appKeys) {
+        if ([netkeyIndexs containsObject:@(model.boundNetKey)]) {
+            [apps addObject:model];
+        }
+    }
+    exportDS.appKeys = [NSMutableArray arrayWithArray:apps];
+
+    NSMutableDictionary *exportDict = [NSMutableDictionary dictionaryWithDictionary:[exportDS getDictionaryFromDataSource]];
+    //3.3.2新增逻辑：未定义subnet bridge的key，暂时不分享subnet bridge相关内容。
+    if ([exportDict.allKeys containsObject:@"nodes"]) {
+        NSArray *nodeList = exportDict[@"nodes"];
+        NSMutableArray *newNodes = [NSMutableArray array];
+        if (nodeList && nodeList.count) {
+            for (NSDictionary *dic in nodeList) {
+                NSMutableDictionary *mDict = [NSMutableDictionary dictionaryWithDictionary:dic];
+                if ([mDict.allKeys containsObject:@"subnetBridgeList"]) {
+                    [mDict removeObjectForKey:@"subnetBridgeList"];
+                }
+                if ([mDict.allKeys containsObject:@"subnetBridgeEnable"]) {
+                    [mDict removeObjectForKey:@"subnetBridgeEnable"];
+                }
+                [newNodes addObject:mDict];
+            }
+            exportDict[@"nodes"] = newNodes;
+        }
+    }
+
+    if (self.selectJsonButton.selected) {
+        [self exporyMeshByJsonFileWithDictionary:exportDict];
+    } else if (self.selectQRCodeButton.selected) {
+        [self exporyMeshByQRCodeWithDictionary:exportDict];
+    }
+}
+
+- (void)exporyMeshByJsonFileWithDictionary:(NSDictionary *)dictionary {
     //导出json文件名为“mesh-时间.json”
     NSDate *date = [NSDate date];
     NSDateFormatter *f = [[NSDateFormatter alloc] init];
@@ -60,9 +120,7 @@
     if (!exist) {
         BOOL ret = [manager createFileAtPath:path contents:nil attributes:nil];
         if (ret) {
-            NSDictionary *jsonDict = [SigDataSource.share getFormatDictionaryFromDataSource];
-            NSData *tempData = [LibTools getJSONDataWithDictionary:jsonDict];
-//            NSData *tempData = [SigDataSource.share.getJsonStringFromeDataSource dataUsingEncoding:NSUTF8StringEncoding];
+            NSData *tempData = [LibTools getJSONDataWithDictionary:dictionary];
             NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:path];
             [handle truncateFileAtOffset:0];
             [handle writeData:tempData];
@@ -79,6 +137,47 @@
     }
 }
 
+- (void)exporyMeshByQRCodeWithDictionary:(NSDictionary *)dictionary {
+    __weak typeof(self) weakSelf = self;
+    //设置有效时间5分钟
+    [TelinkHttpManager.share uploadJsonDictionary:dictionary timeout:60 * 5 didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (err) {
+                NSString *errstr = [NSString stringWithFormat:@"%@",err];
+                TeLogInfo(@"%@",errstr);
+                [weakSelf showTips:errstr];
+            } else {
+                TeLogInfo(@"result=%@",result);
+                NSDictionary *dic = (NSDictionary *)result;
+                BOOL isSuccess = [dic[@"isSuccess"] boolValue];
+                if (isSuccess) {
+                    [weakSelf pushToShowQRCodeVCWithUUID:dic[@"data"]];
+                }else{
+                    [weakSelf showTips:dic[@"msg"]];
+                }
+            }
+        });
+    }];
+}
+
+- (void)pushToShowQRCodeVCWithUUID:(NSString *)uuid {
+    ShowQRCodeViewController *vc = (ShowQRCodeViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ShowQRCodeViewControllerID storybroad:@"Setting"];
+    vc.uuidString = uuid;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (IBAction)clickSelectJsonFile:(UIButton *)sender {
+    self.selectJsonButton.selected = YES;
+    self.selectQRCodeButton.selected = NO;
+
+}
+
+- (IBAction)clickSelectQRCode:(UIButton *)sender {
+    self.selectJsonButton.selected = NO;
+    self.selectQRCodeButton.selected = YES;
+
+}
+
 - (void)showTips:(NSString *)message{
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -88,15 +187,48 @@
     });
 }
 
-
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
+#pragma mark - UITableViewDataSource
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return self.sourceArray.count;
 }
-*/
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    KeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(KeyCell.class) forIndexPath:indexPath];
+    SigNetkeyModel *model = self.sourceArray[indexPath.row];
+    [cell setNetKeyModel:model];
+    [cell.editButton setImage:[UIImage imageNamed:@"unxuan"] forState:UIControlStateNormal];
+    [cell.editButton setImage:[UIImage imageNamed:@"xuan"] forState:UIControlStateSelected];
+    cell.editButton.selected = [self.selectArray containsObject:model];
+    __weak typeof(self) weakSelf = self;
+    [cell.editButton addAction:^(UIButton *button) {
+        if ([weakSelf.selectArray containsObject:model]) {
+            [weakSelf.selectArray removeObject:model];
+        } else {
+            [weakSelf.selectArray addObject:model];
+        }
+        [weakSelf.tableView reloadData];
+    }];
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    cell.selected = NO;
+    SigNetkeyModel *model = self.sourceArray[indexPath.row];
+    if ([self.selectArray containsObject:model]) {
+        [self.selectArray removeObject:model];
+    } else {
+        [self.selectArray addObject:model];
+    }
+    [self.tableView reloadData];
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    return 55;
+}
+
+-(void)dealloc{
+    TeLogDebug(@"");
+}
 
 @end

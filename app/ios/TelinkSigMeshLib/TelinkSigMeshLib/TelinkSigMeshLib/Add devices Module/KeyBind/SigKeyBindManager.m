@@ -328,7 +328,7 @@
         TeLogInfo(@"keyBind successful.");
         self.isKeybinding = NO;
         //publish time model
-        UInt32 option = SIG_MD_TIME_S;
+        UInt32 option = kSigModel_TimeServer_ID;
         
         SigNodeModel *node = [[SigNodeModel alloc] init];
         [node setAddress:self.node.address];

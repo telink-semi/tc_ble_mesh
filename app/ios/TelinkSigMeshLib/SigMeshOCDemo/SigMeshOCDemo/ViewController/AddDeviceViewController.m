@@ -52,7 +52,8 @@
 }
 
 #pragma mark - Event
-- (void)startAddDevice{    
+- (void)startAddDevice{
+    TeLogVerbose(@"");
     self.refreshItem.enabled = NO;
     self.goBackButton.enabled = NO;
     [self.goBackButton setBackgroundColor:[UIColor lightGrayColor]];
@@ -66,8 +67,8 @@
     
     __weak typeof(self) weakSelf = self;
     NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
-
     [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        TeLogVerbose(@"successful=%d",successful);
         if (successful) {
             TeLogInfo(@"stop mesh success.");
             __block UInt16 currentProvisionAddress = provisionAddress;

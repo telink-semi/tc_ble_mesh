@@ -32,6 +32,7 @@
 #import "ShareInVC.h"
 #import "ShowQRCodeViewController.h"
 #import "ScanCodeVC.h"
+#import "ShareTipsVC.h"
 
 @interface ShareVC ()
 @property (strong, nonatomic) ScanCodeVC *scanCodeVC;
@@ -52,7 +53,7 @@
 }
 
 - (void)configUI{
-    self.title = @"Share by iTunes";
+    self.title = @"Share Mesh";
     
     [self setUpAllViewController];
     
@@ -83,7 +84,7 @@
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:nil];
 //    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(clickTopRight:)];
     UIButton *but = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 60, 30)];
-    [but setTitle:@"HTTP" forState:UIControlStateNormal];
+    [but setTitle:@"Tips" forState:UIControlStateNormal];
     [but addTarget:self action:@selector(clickTopRight:) forControlEvents:UIControlEventTouchUpInside];
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithCustomView:but];
     self.navigationItem.rightBarButtonItem = rightItem;
@@ -104,27 +105,8 @@
 }
 
 - (void)clickTopRight:(UIButton *)button {
-    __weak typeof(self) weakSelf = self;
-    UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:@"Share by QRCode" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-        
-    UIAlertAction *alertT = [UIAlertAction actionWithTitle:@"Export json" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        NSLog(@"Export json");
-        [weakSelf clickExportByQRCode];
-    }];
-    UIAlertAction *alertT2 = [UIAlertAction actionWithTitle:@"Import json" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        NSLog(@"Import json");
-        [weakSelf clickCamera];
-    }];
-    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-        NSLog(@"Cancel");
-    }];
-    [actionSheet addAction:alertT];
-    [actionSheet addAction:alertT2];
-    [actionSheet addAction:alertF];
-    actionSheet.popoverPresentationController.sourceView = button;
-    actionSheet.popoverPresentationController.sourceRect =  button.frame;
-
-    [self presentViewController:actionSheet animated:YES completion:nil];
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storybroad:@"Setting"];
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (void)clickCamera{

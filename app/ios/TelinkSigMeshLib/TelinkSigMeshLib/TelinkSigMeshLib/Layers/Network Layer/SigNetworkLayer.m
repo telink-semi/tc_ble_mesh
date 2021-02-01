@@ -146,7 +146,7 @@
     // As the sequnce number was just used, it has to be incremented.
     [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence+1];
 
-//    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
+    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
     SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl ivIndex:ivIndex];
     // Loopback interface.
     if ([self shouldLoopback:networkPdu]) {
@@ -208,7 +208,7 @@
     // As the sequnce number was just used, it has to be incremented.
     [SigDataSource.share updateCurrentProvisionerIntSequenceNumber:sequence+1];
 
-//    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
+    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
 //    SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl];
     if (pdu.networkKey == nil || pdu.ivIndex == nil) {
         TeLogError(@"networkKey or ivIndex error!!!");
@@ -272,9 +272,9 @@
     // to configure the Proxy Server. This allows sniffing the network without
     // an option to send messages.
     UInt16 source = _meshNetwork.curLocationNodeModel.address != 0 ? _meshNetwork.curLocationNodeModel.address : MeshAddress_maxUnicastAddress;
-    TeLogInfo(@"Sending %@%@ from: 0x%x to: 0000",message,message.parameters,source);
     SigControlMessage *pdu = [[SigControlMessage alloc] initFromProxyConfigurationMessage:message sentFromSource:source usingNetworkKey:networkKey];
     pdu.ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
+    TeLogInfo(@"Sending %@%@ from: 0x%x to: 0000,ivIndex=0x%x",message,message.parameters,source,pdu.ivIndex.index);
     [self sendLowerTransportPdu:pdu ofType:SigPduType_proxyConfiguration withTtl:0];
     [_networkManager notifyAboutDeliveringMessage:(SigMeshMessage *)message fromLocalElement:SigMeshLib.share.dataSource.curLocationNodeModel.elements.firstObject toDestination:pdu.destination];
 }
@@ -297,12 +297,20 @@
     SigNetkeyModel *networkKey = secureNetworkBeacon.networkKey;
     if (secureNetworkBeacon.ivIndex < networkKey.ivIndex.index) {
         TeLogError(@"Discarding beacon (ivIndex: 0x%x, expected >= 0x%x)",(unsigned int)secureNetworkBeacon.ivIndex,(unsigned int)networkKey.ivIndex.index);
+        if (SigDataSource.share.getCurrentProvisionerIntSequenceNumber >= 0xc00000) {
+            SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES networkId:networkKey.networkId ivIndex:networkKey.ivIndex.index+1 usingNetworkKey:networkKey];
+            SigMeshLib.share.secureNetworkBeacon = beacon;
+        } else {
+            SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:NO networkId:networkKey.networkId ivIndex:networkKey.ivIndex.index usingNetworkKey:networkKey];
+            SigMeshLib.share.secureNetworkBeacon = beacon;
+        }
         return;
     }
+    SigMeshLib.share.secureNetworkBeacon = secureNetworkBeacon;
     SigIvIndex *ivIndex = [[SigIvIndex alloc] initWithIndex:secureNetworkBeacon.ivIndex updateActive:secureNetworkBeacon.ivUpdateActive];
     networkKey.ivIndex = ivIndex;
     //==========test=========//
-    TeLogVerbose(@"==========receive secure Network Beacon, ivIndex=0x%x",ivIndex.index);
+    TeLogVerbose(@"==========receive secure Network Beacon, ivIndex=0x%x,updateActive=%d",ivIndex.index,ivIndex.updateActive);
     //==========test=========//
 
     // If the Key Refresh Procedure is in progress, and the new Network Key
@@ -317,16 +325,18 @@
     }
     
     //===========telink==========//
-    if (secureNetworkBeacon.ivUpdateActive) {
-        if (SigDataSource.share.curNetkeyModel.ivIndex.index != secureNetworkBeacon.ivIndex - 1) {
-            SigDataSource.share.curNetkeyModel.ivIndex.updateActive = NO;
-            SigDataSource.share.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex - 1;
-            [SigDataSource.share setIvIndex:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex - 1]];
+    if (secureNetworkBeacon.ivIndex > SigDataSource.share.curNetkeyModel.ivIndex.index) {
+        if (secureNetworkBeacon.ivUpdateActive) {
+            if (SigDataSource.share.curNetkeyModel.ivIndex.index != secureNetworkBeacon.ivIndex - 1) {
+                SigDataSource.share.curNetkeyModel.ivIndex.updateActive = NO;
+                SigDataSource.share.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex - 1;
+                [SigDataSource.share updateIvIndexString:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex - 1]];
+            }
+        } else {
+            SigDataSource.share.curNetkeyModel.ivIndex.updateActive = secureNetworkBeacon.ivUpdateActive;
+            SigDataSource.share.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex;
+            [SigDataSource.share updateIvIndexString:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex]];
         }
-    } else {
-        SigDataSource.share.curNetkeyModel.ivIndex.updateActive = secureNetworkBeacon.ivUpdateActive;
-        SigDataSource.share.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex;
-        [SigDataSource.share setIvIndex:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex]];
     }
     //===========telink==========//
     if (secureNetworkBeacon.keyRefreshFlag) {
@@ -334,6 +344,9 @@
     }
     if ([_networkManager.manager.delegate respondsToSelector:@selector(didReceiveSigSecureNetworkBeaconMessage:)]) {
         [_networkManager.manager.delegate didReceiveSigSecureNetworkBeaconMessage:secureNetworkBeacon];
+    }
+    if ([_networkManager.manager.delegateForDeveloper respondsToSelector:@selector(didReceiveSigSecureNetworkBeaconMessage:)]) {
+        [_networkManager.manager.delegateForDeveloper didReceiveSigSecureNetworkBeaconMessage:secureNetworkBeacon];
     }
 
 //    [self updateProxyFilterUsingNetworkKey:networkKey];

@@ -553,6 +553,14 @@ static SigMeshLib *shareLib = nil;
                 break;
             }
         }
+    } else if ([message isKindOfClass:[SigTelinkOnlineStatusMessage class]]){//私有定制onlineStatus回包
+        NSArray *commands = [NSArray arrayWithArray:_commands];
+        for (SDKLibCommand *com in commands) {
+            if ([com.curMeshMessage isMemberOfClass:[SigGenericOnOffGet class]]) {
+                tem = com;
+                break;
+            }
+        }
     } else if ([message isKindOfClass:[SigUnknownMessage class]]) {//未定义的vendor回包
         NSArray *commands = [NSArray arrayWithArray:_commands];
         for (SDKLibCommand *com in commands) {

@@ -311,7 +311,8 @@ typedef enum : NSUInteger {
             TeLogDebug(@"retry connect peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
             weakSelf.retryCount --;
             if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
-                [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
+                //重试连接时如果断开连接超时会导致closeWithResult重复赋值。所以添加该延时。
+                [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral afterDelay:0.1];
             } else {
                 [weakSelf performSelector:@selector(scanCurrentPeripheralForKeyBind) withObject:nil];
             }

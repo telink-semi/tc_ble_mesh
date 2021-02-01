@@ -248,6 +248,7 @@
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
         TeLogError(@"Bluetooth is not power on.")
     }
+    self.bluetoothConnectPeripheralCallback = nil;
     __weak typeof(self) weakSelf = self;
     NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
     [oprationQueue addOperationWithBlock:^{
@@ -655,6 +656,7 @@
     //v3.3.0,用于过滤重复的sequenceNumber，设备连接成功则清除当前缓存的设备返回的旧的最大sequenceNumber字典。(因为所有设备断电时设备端的sequenceNumber会归零。)
     [[NSUserDefaults standardUserDefaults] setValue:@{} forKey:SigDataSource.share.meshUUID];
     [[NSUserDefaults standardUserDefaults] synchronize];
+    SigMeshLib.share.secureNetworkBeacon = nil;
     if ([peripheral isEqual:self.currentPeripheral]) {
         [self addConnectedPeripheralToLocations:peripheral];
         [self connectPeripheralFinish];

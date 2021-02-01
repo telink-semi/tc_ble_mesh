@@ -101,6 +101,90 @@ UIKIT_EXTERN NSString * const kFeatureString_proxy;
 UIKIT_EXTERN NSString * const kFeatureString_friend;
 UIKIT_EXTERN NSString * const kFeatureString_lowPower;
 
+UIKIT_EXTERN NSString * const kSigModelGroup_Generic_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_Sensors_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_TimeServer_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_Lighting_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_Configuration_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_Health_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_RemoteProvision_Describe;
+
+UIKIT_EXTERN NSString * const kSigModelGroup_FirmwareUpdate_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_FirmwareDistribution_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_ObjectTransfer_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_SubnetBridge_Describe;
+
+UIKIT_EXTERN NSString * const kSigModel_ConfigurationServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_ConfigurationClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_HealthServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_HealthClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_RemoteProvisionServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_RemoteProvisionClient_Describe;
+
+UIKIT_EXTERN NSString * const kSigModel_GenericOnOffServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericOnOffClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericLevelServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericLevelClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericDefaultTransitionTimeServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericDefaultTransitionTimeClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericPowerOnOffServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericPowerOnOffSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericPowerOnOffClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericPowerLevelServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericPowerLevelSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericPowerLevelClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericBatteryServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericBatteryClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericLocationServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericLocationSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericLocationClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericAdminPropertyServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericManufacturerPropertyServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericUserPropertyServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericClientPropertyServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_GenericPropertyClient_Describe;
+// --------
+UIKIT_EXTERN NSString * const kSigModel_SensorServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SensorSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SensorClient_Describe;
+// --------
+UIKIT_EXTERN NSString * const kSigModel_TimeServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_TimeSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_TimeClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SceneServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SceneSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SceneClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SchedulerServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SchedulerSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SchedulerClient_Describe;
+// --------
+UIKIT_EXTERN NSString * const kSigModel_LightLightnessServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightLightnessSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightLightnessClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightCTLServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightCTLSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightCTLClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightCTLTemperatureServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightHSLServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightHSLSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightHSLClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightHSLHueServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightHSLSaturationServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightxyLServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightxyLSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightxyLClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightLCServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightLCSetupServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LightLCClient_Describe;
+// --------
+UIKIT_EXTERN NSString * const kSigModel_FirmwareUpdateServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_FirmwareUpdateClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_FirmwareDistributionServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_FirmwareDistributionClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_ObjectTransferServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_ObjectTransferClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SubnetBridgeServer_Describe;
+
 
 #pragma mark - Const bool
 
@@ -119,81 +203,86 @@ UIKIT_EXTERN UInt16 const LEVEL_OFF;// -32768
 UIKIT_EXTERN UInt16 const LUM_OFF;// 0
 
 //sig model
-UIKIT_EXTERN UInt16 const SIG_MD_CFG_SERVER;// 0x0000
-UIKIT_EXTERN UInt16 const SIG_MD_CFG_CLIENT;// 0x0001
-UIKIT_EXTERN UInt16 const SIG_MD_HEALTH_SERVER;// 0x0002
-UIKIT_EXTERN UInt16 const SIG_MD_HEALTH_CLIENT;// 0x0003
-UIKIT_EXTERN UInt16 const SIG_MD_REMOTE_PROV_SERVER;// 0x0004
-UIKIT_EXTERN UInt16 const SIG_MD_REMOTE_PROV_CLIENT;// 0x0005
+UIKIT_EXTERN UInt16 const kSigModel_ConfigurationServer_ID;//               = 0x0000
+UIKIT_EXTERN UInt16 const kSigModel_ConfigurationClient_ID;//               = 0x0001
+UIKIT_EXTERN UInt16 const kSigModel_HealthServer_ID;//                      = 0x0002;
+UIKIT_EXTERN UInt16 const kSigModel_HealthClient_ID;//                      = 0x0003;
+UIKIT_EXTERN UInt16 const kSigModel_RemoteProvisionServer_ID;//             = 0x0004;
+UIKIT_EXTERN UInt16 const kSigModel_RemoteProvisionClient_ID;//             = 0x0005;
+// --------
+UIKIT_EXTERN UInt16 const kSigModel_GenericOnOffServer_ID;//                = 0x1000;
+UIKIT_EXTERN UInt16 const kSigModel_GenericOnOffClient_ID;//                = 0x1001;
+UIKIT_EXTERN UInt16 const kSigModel_GenericLevelServer_ID;//                = 0x1002;
+UIKIT_EXTERN UInt16 const kSigModel_GenericLevelClient_ID;//                = 0x1003;
+UIKIT_EXTERN UInt16 const kSigModel_GenericDefaultTransitionTimeServer_ID;//= 0x1004;
+UIKIT_EXTERN UInt16 const kSigModel_GenericDefaultTransitionTimeClient_ID;//= 0x1005;
+UIKIT_EXTERN UInt16 const kSigModel_GenericPowerOnOffServer_ID;//           = 0x1006;
+UIKIT_EXTERN UInt16 const kSigModel_GenericPowerOnOffSetupServer_ID;//      = 0x1007;
+UIKIT_EXTERN UInt16 const kSigModel_GenericPowerOnOffClient_ID;//           = 0x1008;
+UIKIT_EXTERN UInt16 const kSigModel_GenericPowerLevelServer_ID;//           = 0x1009;
+UIKIT_EXTERN UInt16 const kSigModel_GenericPowerLevelSetupServer_ID;//      = 0x100A;
+UIKIT_EXTERN UInt16 const kSigModel_GenericPowerLevelClient_ID;//           = 0x100B;
+UIKIT_EXTERN UInt16 const kSigModel_GenericBatteryServer_ID;//              = 0x100C;
+UIKIT_EXTERN UInt16 const kSigModel_GenericBatteryClient_ID;//              = 0x100D;
+UIKIT_EXTERN UInt16 const kSigModel_GenericLocationServer_ID;//             = 0x100E;
+UIKIT_EXTERN UInt16 const kSigModel_GenericLocationSetupServer_ID;//        = 0x100F;
+UIKIT_EXTERN UInt16 const kSigModel_GenericLocationClient_ID;//             = 0x1010;
+UIKIT_EXTERN UInt16 const kSigModel_GenericAdminPropertyServer_ID;//        = 0x1011;
+UIKIT_EXTERN UInt16 const kSigModel_GenericManufacturerPropertyServer_ID;// = 0x1012;
+UIKIT_EXTERN UInt16 const kSigModel_GenericUserPropertyServer_ID;//         = 0x1013;
+UIKIT_EXTERN UInt16 const kSigModel_GenericClientPropertyServer_ID;//       = 0x1014;
+UIKIT_EXTERN UInt16 const kSigModel_GenericPropertyClient_ID;//             = 0x1015;
+// --------
+UIKIT_EXTERN UInt16 const kSigModel_SensorServer_ID;//                      = 0x1100;
+UIKIT_EXTERN UInt16 const kSigModel_SensorSetupServer_ID;//                 = 0x1101;
+UIKIT_EXTERN UInt16 const kSigModel_SensorClient_ID;//                      = 0x1102;
+// --------
+UIKIT_EXTERN UInt16 const kSigModel_TimeServer_ID;//                        = 0x1200;
+UIKIT_EXTERN UInt16 const kSigModel_TimeSetupServer_ID;//                   = 0x1201;
+UIKIT_EXTERN UInt16 const kSigModel_TimeClient_ID;//                        = 0x1202;
+UIKIT_EXTERN UInt16 const kSigModel_SceneServer_ID;//                       = 0x1203;
+UIKIT_EXTERN UInt16 const kSigModel_SceneSetupServer_ID;//                  = 0x1204;
+UIKIT_EXTERN UInt16 const kSigModel_SceneClient_ID;//                       = 0x1205;
+UIKIT_EXTERN UInt16 const kSigModel_SchedulerServer_ID;//                   = 0x1206;
+UIKIT_EXTERN UInt16 const kSigModel_SchedulerSetupServer_ID;//              = 0x1207;
+UIKIT_EXTERN UInt16 const kSigModel_SchedulerClient_ID;//                   = 0x1208;
+// --------
+UIKIT_EXTERN UInt16 const kSigModel_LightLightnessServer_ID;//              = 0x1300;
+UIKIT_EXTERN UInt16 const kSigModel_LightLightnessSetupServer_ID;//         = 0x1301;
+UIKIT_EXTERN UInt16 const kSigModel_LightLightnessClient_ID;//              = 0x1302;
+UIKIT_EXTERN UInt16 const kSigModel_LightCTLServer_ID;//                    = 0x1303;
+UIKIT_EXTERN UInt16 const kSigModel_LightCTLSetupServer_ID;//               = 0x1304;
+UIKIT_EXTERN UInt16 const kSigModel_LightCTLClient_ID;//                    = 0x1305;
+UIKIT_EXTERN UInt16 const kSigModel_LightCTLTemperatureServer_ID;//         = 0x1306;
+UIKIT_EXTERN UInt16 const kSigModel_LightHSLServer_ID;//                    = 0x1307;
+UIKIT_EXTERN UInt16 const kSigModel_LightHSLSetupServer_ID;//               = 0x1308;
+UIKIT_EXTERN UInt16 const kSigModel_LightHSLClient_ID;//                    = 0x1309;
+UIKIT_EXTERN UInt16 const kSigModel_LightHSLHueServer_ID;//                 = 0x130A;
+UIKIT_EXTERN UInt16 const kSigModel_LightHSLSaturationServer_ID;//          = 0x130B;
+UIKIT_EXTERN UInt16 const kSigModel_LightxyLServer_ID;//                    = 0x130C;
+UIKIT_EXTERN UInt16 const kSigModel_LightxyLSetupServer_ID;//               = 0x130D;
+UIKIT_EXTERN UInt16 const kSigModel_LightxyLClient_ID;//                    = 0x130E;
+UIKIT_EXTERN UInt16 const kSigModel_LightLCServer_ID;//                     = 0x130F;
+UIKIT_EXTERN UInt16 const kSigModel_LightLCSetupServer_ID;//                = 0x1310;
+UIKIT_EXTERN UInt16 const kSigModel_LightLCClient_ID;//                     = 0x1311;
+// --------
+/// - seeAlso: pre-spec OTA model opcode details.pdf  (page.2)
+UIKIT_EXTERN UInt16 const kSigModel_FirmwareUpdateServer_ID;//              = 0xFE00;
+UIKIT_EXTERN UInt16 const kSigModel_FirmwareUpdateClient_ID;//              = 0xFE01;
+UIKIT_EXTERN UInt16 const kSigModel_FirmwareDistributionServer_ID;//        = 0xFE02;
+UIKIT_EXTERN UInt16 const kSigModel_FirmwareDistributionClient_ID;//        = 0xFE03;
+UIKIT_EXTERN UInt16 const kSigModel_ObjectTransferServer_ID;//              = 0xFF00;
+UIKIT_EXTERN UInt16 const kSigModel_ObjectTransferClient_ID;//              = 0xFF01;
+UIKIT_EXTERN UInt16 const kSigModel_SubnetBridgeServer_ID;//                = 0xBF32;
 
+//旧版本使用的key start
 UIKIT_EXTERN UInt16 const SIG_MD_G_ONOFF_S;// 0x1000
-UIKIT_EXTERN UInt16 const SIG_MD_G_ONOFF_C;// 0x1001
-UIKIT_EXTERN UInt16 const SIG_MD_G_LEVEL_S;// 0x1002
-UIKIT_EXTERN UInt16 const SIG_MD_G_LEVEL_C;// 0x1003
-UIKIT_EXTERN UInt16 const SIG_MD_G_DEF_TRANSIT_TIME_S;// 0x1004
-UIKIT_EXTERN UInt16 const SIG_MD_G_DEF_TRANSIT_TIME_C;// 0x1005
-UIKIT_EXTERN UInt16 const SIG_MD_G_POWER_ONOFF_S;// 0x1006
-UIKIT_EXTERN UInt16 const SIG_MD_G_POWER_ONOFF_SETUP_S;// 0x1007
-UIKIT_EXTERN UInt16 const SIG_MD_G_POWER_ONOFF_C;// 0x1008
-UIKIT_EXTERN UInt16 const SIG_MD_G_POWER_LEVEL_S;// 0x1009
-UIKIT_EXTERN UInt16 const SIG_MD_G_POWER_LEVEL_SETUP_S;// 0x100A
-UIKIT_EXTERN UInt16 const SIG_MD_G_POWER_LEVEL_C;// 0x100B
-UIKIT_EXTERN UInt16 const SIG_MD_G_BAT_S;// 0x100C
-UIKIT_EXTERN UInt16 const SIG_MD_G_BAT_C;// 0x100D
-UIKIT_EXTERN UInt16 const SIG_MD_G_LOCATION_S;// 0x100E
-UIKIT_EXTERN UInt16 const SIG_MD_G_LOCATION_SETUP_S;// 0x100F
-UIKIT_EXTERN UInt16 const SIG_MD_G_LOCATION_C;// 0x1010
-UIKIT_EXTERN UInt16 const SIG_MD_G_ADMIN_PROP_S;// 0x1011
-UIKIT_EXTERN UInt16 const SIG_MD_G_MFG_PROP_S;// 0x1012
-UIKIT_EXTERN UInt16 const SIG_MD_G_USER_PROP_S;// 0x1013
-UIKIT_EXTERN UInt16 const SIG_MD_G_CLIENT_PROP_S;// 0x1014
-UIKIT_EXTERN UInt16 const SIG_MD_G_PROP_C;// 0x1015
-// --------
-UIKIT_EXTERN UInt16 const SIG_MD_SENSOR_S;// 0x1100
-UIKIT_EXTERN UInt16 const SIG_MD_SENSOR_SETUP_S;// 0x1101
-UIKIT_EXTERN UInt16 const SIG_MD_SENSOR_C;// 0x1102
-// --------
-UIKIT_EXTERN UInt16 const SIG_MD_TIME_S;// 0x1200
-UIKIT_EXTERN UInt16 const SIG_MD_TIME_SETUP_S;// 0x1201
-UIKIT_EXTERN UInt16 const SIG_MD_TIME_C;// 0x1202
-UIKIT_EXTERN UInt16 const SIG_MD_SCENE_S;// 0x1203
-UIKIT_EXTERN UInt16 const SIG_MD_SCENE_SETUP_S;// 0x1204
-UIKIT_EXTERN UInt16 const SIG_MD_SCENE_C;// 0x1205
-UIKIT_EXTERN UInt16 const SIG_MD_SCHED_S;// 0x1206
-UIKIT_EXTERN UInt16 const SIG_MD_SCHED_SETUP_S;// 0x1207
-UIKIT_EXTERN UInt16 const SIG_MD_SCHED_C;// 0x1208
-// --------
 UIKIT_EXTERN UInt16 const SIG_MD_LIGHTNESS_S;// 0x1300
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHTNESS_SETUP_S;// 0x1301
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHTNESS_C;// 0x1302
 UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_CTL_S;// 0x1303
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_CTL_SETUP_S;// 0x1304
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_CTL_C;// 0x1305
 UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_CTL_TEMP_S;// 0x1306
 UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_HSL_S;// 0x1307
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_HSL_SETUP_S;// 0x1308
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_HSL_C;// 0x1309
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_HSL_HUE_S;// 0x130A
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_HSL_SAT_S;// 0x130B
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_XYL_S;// 0x130C
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_XYL_SETUP_S;// 0x130D
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_XYL_C;// 0x130E
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_LC_S;// 0x130F
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_LC_SETUP_S;// 0x1310
-UIKIT_EXTERN UInt16 const SIG_MD_LIGHT_LC_C;// 0x1311
-// --------
-UIKIT_EXTERN UInt16 const SIG_MD_FW_UPDATE_S;// 0xFE00
-UIKIT_EXTERN UInt16 const SIG_MD_FW_UPDATE_C;// 0xFE01
-UIKIT_EXTERN UInt16 const SIG_MD_FW_DISTRIBUT_S;// 0xFE02
-UIKIT_EXTERN UInt16 const SIG_MD_FW_DISTRIBUT_C;// 0xFE03
-UIKIT_EXTERN UInt16 const SIG_MD_BLOB_TRANSFER_S;// 0xFF00
-UIKIT_EXTERN UInt16 const SIG_MD_BLOB_TRANSFER_C;// 0xFF01
+//旧版本使用的key end
 
-
-UIKIT_EXTERN UInt16 const kConfigurationServerModelId;// 0x0000
-UIKIT_EXTERN UInt16 const kConfigurationClientModelId;// 0x0001
-UIKIT_EXTERN UInt16 const kHealthServerModelId;// 0x0002
-UIKIT_EXTERN UInt16 const kHealthClientModelId;// 0x0003
 
 UIKIT_EXTERN UInt16 const kMeshAddress_unassignedAddress;// 0x0000
 UIKIT_EXTERN UInt16 const kMeshAddress_minUnicastAddress;// 0x0001
@@ -271,7 +360,7 @@ UIKIT_EXTERN NSString * const kSigMeshLibModelIDModelNoExistErrorMessage;// mode
 
 /*指令超时*/
 UIKIT_EXTERN UInt32 const kSigMeshLibCommandTimeoutErrorCode;// 0x02110105
-UIKIT_EXTERN NSString * const kSigMeshLibCommandTimeoutErrorMessage;// modelIDModel is not exist
+UIKIT_EXTERN NSString * const kSigMeshLibCommandTimeoutErrorMessage;// command is timeout
 
 /*NetKey Index 不存在*/
 UIKIT_EXTERN UInt32 const kSigMeshLibCommandInvalidNetKeyIndexErrorCode;// 0x02110106
@@ -288,8 +377,9 @@ UIKIT_EXTERN NSString * const kWriteNotiyCharacteristicUUID;// 22222222-0000-100
 UIKIT_EXTERN UInt16 const kPacketJsonLength;// 100
 UIKIT_EXTERN UInt16 const kPacketAllLength;// (kPacketJsonLength+4)
 
-/*telink当前定义的两个设备类型*/
+/*telink当前定义的三个设备类型*/
 UIKIT_EXTERN UInt16 const SigNodePID_CT;// 1
+UIKIT_EXTERN UInt16 const SigNodePID_HSL;// 2
 UIKIT_EXTERN UInt16 const SigNodePID_Panel;// 7
 
 UIKIT_EXTERN float const kCMDInterval;// 0.32

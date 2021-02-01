@@ -31,7 +31,7 @@
 
 #pragma mark - Const string
 
-NSString * const kTelinkSigMeshLibVersion = @"v3.3.0";
+NSString * const kTelinkSigMeshLibVersion = @"v3.3.2";
 
 NSString * const kNotifyCommandIsBusyOrNot = @"CommandIsBusyOrNot";
 NSString * const kCommandIsBusyKey = @"IsBusy";
@@ -90,6 +90,90 @@ NSString * const kFeatureString_proxy = @"proxy";
 NSString * const kFeatureString_friend = @"friend";
 NSString * const kFeatureString_lowPower = @"lowPower";
 
+//sig model
+NSString * const kSigModelGroup_Generic_Describe = @"Generic";
+NSString * const kSigModelGroup_Sensors_Describe = @"Sensors";
+NSString * const kSigModelGroup_TimeServer_Describe = @"Time Server";
+NSString * const kSigModelGroup_Lighting_Describe = @"Lighting";
+NSString * const kSigModelGroup_Configuration_Describe = @"Configuration";
+NSString * const kSigModelGroup_Health_Describe = @"Health";
+NSString * const kSigModelGroup_RemoteProvision_Describe = @"Remote Provision";
+NSString * const kSigModelGroup_FirmwareUpdate_Describe = @"Firmware Update";
+NSString * const kSigModelGroup_FirmwareDistribution_Describe = @"Firmware Distribution";
+NSString * const kSigModelGroup_ObjectTransfer_Describe = @"Object Transfer";
+NSString * const kSigModelGroup_SubnetBridge_Describe = @"Subnet Bridge";
+
+NSString * const kSigModel_ConfigurationServer_Describe = @"Configuration Server";
+NSString * const kSigModel_ConfigurationClient_Describe             = @"Configuration Client";
+NSString * const kSigModel_HealthServer_Describe          = @"Health Server";
+NSString * const kSigModel_HealthClient_Describe          = @"Health Client";
+NSString * const kSigModel_RemoteProvisionServer_Describe     = @"Remote Provision Server";
+NSString * const kSigModel_RemoteProvisionClient_Describe     = @"Remote Provision Client";
+
+NSString * const kSigModel_GenericOnOffServer_Describe              = @"Generic OnOff Server";
+NSString * const kSigModel_GenericOnOffClient_Describe              = @"Generic OnOff Client";
+NSString * const kSigModel_GenericLevelServer_Describe              = @"Generic Level Server";
+NSString * const kSigModel_GenericLevelClient_Describe              = @"Generic Level Client";
+NSString * const kSigModel_GenericDefaultTransitionTimeServer_Describe   = @"Generic Default Transition Time Server";
+NSString * const kSigModel_GenericDefaultTransitionTimeClient_Describe   = @"Generic Default Transition Time Client";
+NSString * const kSigModel_GenericPowerOnOffServer_Describe        = @"Generic Power OnOff Server";
+NSString * const kSigModel_GenericPowerOnOffSetupServer_Describe  = @"Generic Power OnOff Setup Server";
+NSString * const kSigModel_GenericPowerOnOffClient_Describe        = @"Generic Power OnOff Client";
+NSString * const kSigModel_GenericPowerLevelServer_Describe        = @"Generic Power Level Server";
+NSString * const kSigModel_GenericPowerLevelSetupServer_Describe  = @"Generic Power Level Setup Server";
+NSString * const kSigModel_GenericPowerLevelClient_Describe        = @"Generic Power Level Client";
+NSString * const kSigModel_GenericBatteryServer_Describe                = @"Generic Battery Server";
+NSString * const kSigModel_GenericBatteryClient_Describe                = @"Generic Battery Client";
+NSString * const kSigModel_GenericLocationServer_Describe           = @"Generic Location Server";
+NSString * const kSigModel_GenericLocationSetupServer_Describe     = @"Generic Location Setup Server";
+NSString * const kSigModel_GenericLocationClient_Describe           = @"Generic Location Client";
+NSString * const kSigModel_GenericAdminPropertyServer_Describe         = @"Generic Admin Property Server";
+NSString * const kSigModel_GenericManufacturerPropertyServer_Describe           = @"Generic Manufacturer Property Server";
+NSString * const kSigModel_GenericUserPropertyServer_Describe          = @"Generic User Property Server";
+NSString * const kSigModel_GenericClientPropertyServer_Describe        = @"Generic Client Property Server";
+NSString * const kSigModel_GenericPropertyClient_Describe               = @"Generic Property Client";
+// --------
+NSString * const kSigModel_SensorServer_Describe               = @"Sensor Server";
+NSString * const kSigModel_SensorSetupServer_Describe         = @"Sensor Setup Server";
+NSString * const kSigModel_SensorClient_Describe               = @"Sensor Client";
+// --------
+NSString * const kSigModel_TimeServer_Describe                 = @"Time Server";
+NSString * const kSigModel_TimeSetupServer_Describe           = @"Time Setup Server";
+NSString * const kSigModel_TimeClient_Describe                 = @"Time Client";
+NSString * const kSigModel_SceneServer_Describe                = @"Scene Server";
+NSString * const kSigModel_SceneSetupServer_Describe          = @"Scene Setup Server";
+NSString * const kSigModel_SceneClient_Describe                = @"Scene Client";
+NSString * const kSigModel_SchedulerServer_Describe                = @"Scheduler Server";
+NSString * const kSigModel_SchedulerSetupServer_Describe          = @"Scheduler Setup Server";
+NSString * const kSigModel_SchedulerClient_Describe                = @"Scheduler Client";
+// --------
+NSString * const kSigModel_LightLightnessServer_Describe            = @"Light Lightness Server";
+NSString * const kSigModel_LightLightnessSetupServer_Describe      = @"Light Lightness Setup Server";
+NSString * const kSigModel_LightLightnessClient_Describe            = @"Light Lightness Client";
+NSString * const kSigModel_LightCTLServer_Describe            = @"Light CTL Server";
+NSString * const kSigModel_LightCTLSetupServer_Describe      = @"Light CTL Setup Server";
+NSString * const kSigModel_LightCTLClient_Describe            = @"Light CTL Client";
+NSString * const kSigModel_LightCTLTemperatureServer_Describe       = @"Light CTL Temperature Server";
+NSString * const kSigModel_LightHSLServer_Describe            = @"Light HSL Server";
+NSString * const kSigModel_LightHSLSetupServer_Describe      = @"Light HSL Setup Server";
+NSString * const kSigModel_LightHSLClient_Describe            = @"Light HSL Client";
+NSString * const kSigModel_LightHSLHueServer_Describe        = @"Light HSL Hue Server";
+NSString * const kSigModel_LightHSLSaturationServer_Describe        = @"Light HSL Saturation Server";
+NSString * const kSigModel_LightxyLServer_Describe            = @"Light xyL Server";
+NSString * const kSigModel_LightxyLSetupServer_Describe      = @"Light xyL Setup Server";
+NSString * const kSigModel_LightxyLClient_Describe            = @"Light xyL Client";
+NSString * const kSigModel_LightLCServer_Describe             = @"Light LC Server";
+NSString * const kSigModel_LightLCSetupServer_Describe       = @"Light LC Setup Server";
+NSString * const kSigModel_LightLCClient_Describe             = @"Light LC Client";
+// --------
+NSString * const kSigModel_FirmwareUpdateServer_Describe            = @"Firmware Update Server";
+NSString * const kSigModel_FirmwareUpdateClient_Describe            = @"Firmware Update Client";
+NSString * const kSigModel_FirmwareDistributionServer_Describe         = @"Firmware Distribution Server";
+NSString * const kSigModel_FirmwareDistributionClient_Describe         = @"Firmware Distribution Client";
+NSString * const kSigModel_ObjectTransferServer_Describe         = @"Object Transfer Server";
+NSString * const kSigModel_ObjectTransferClient_Describe         = @"Object Transfer Client";
+NSString * const kSigModel_SubnetBridgeServer_Describe                = @"Subnet Bridge Server";
+
 #pragma mark - Const bool
 
 BOOL const kAddNotAdvertisementMac = NO;
@@ -105,80 +189,85 @@ UInt16 const LEVEL_OFF = -32768;
 UInt16 const LUM_OFF = 0;
 
 //sig model
-UInt16 const SIG_MD_CFG_SERVER = 0x0000;//for test high byte
-UInt16 const SIG_MD_CFG_CLIENT             = 0x0001;
-UInt16 const SIG_MD_HEALTH_SERVER          = 0x0002;
-UInt16 const SIG_MD_HEALTH_CLIENT          = 0x0003;
-UInt16 const SIG_MD_REMOTE_PROV_SERVER     = 0x0004;
-UInt16 const SIG_MD_REMOTE_PROV_CLIENT     = 0x0005;
+UInt16 const kSigModel_ConfigurationServer_ID                = 0x0000;
+UInt16 const kSigModel_ConfigurationClient_ID                = 0x0001;
+UInt16 const kSigModel_HealthServer_ID                       = 0x0002;
+UInt16 const kSigModel_HealthClient_ID                       = 0x0003;
+UInt16 const kSigModel_RemoteProvisionServer_ID              = 0x0004;
+UInt16 const kSigModel_RemoteProvisionClient_ID              = 0x0005;
 
+UInt16 const kSigModel_GenericOnOffServer_ID                 = 0x1000;
+UInt16 const kSigModel_GenericOnOffClient_ID                 = 0x1001;
+UInt16 const kSigModel_GenericLevelServer_ID                 = 0x1002;
+UInt16 const kSigModel_GenericLevelClient_ID                 = 0x1003;
+UInt16 const kSigModel_GenericDefaultTransitionTimeServer_ID = 0x1004;
+UInt16 const kSigModel_GenericDefaultTransitionTimeClient_ID = 0x1005;
+UInt16 const kSigModel_GenericPowerOnOffServer_ID            = 0x1006;
+UInt16 const kSigModel_GenericPowerOnOffSetupServer_ID       = 0x1007;
+UInt16 const kSigModel_GenericPowerOnOffClient_ID            = 0x1008;
+UInt16 const kSigModel_GenericPowerLevelServer_ID            = 0x1009;
+UInt16 const kSigModel_GenericPowerLevelSetupServer_ID       = 0x100A;
+UInt16 const kSigModel_GenericPowerLevelClient_ID            = 0x100B;
+UInt16 const kSigModel_GenericBatteryServer_ID               = 0x100C;
+UInt16 const kSigModel_GenericBatteryClient_ID               = 0x100D;
+UInt16 const kSigModel_GenericLocationServer_ID              = 0x100E;
+UInt16 const kSigModel_GenericLocationSetupServer_ID         = 0x100F;
+UInt16 const kSigModel_GenericLocationClient_ID              = 0x1010;
+UInt16 const kSigModel_GenericAdminPropertyServer_ID         = 0x1011;
+UInt16 const kSigModel_GenericManufacturerPropertyServer_ID  = 0x1012;
+UInt16 const kSigModel_GenericUserPropertyServer_ID          = 0x1013;
+UInt16 const kSigModel_GenericClientPropertyServer_ID        = 0x1014;
+UInt16 const kSigModel_GenericPropertyClient_ID              = 0x1015;
+// --------
+UInt16 const kSigModel_SensorServer_ID                       = 0x1100;
+UInt16 const kSigModel_SensorSetupServer_ID                  = 0x1101;
+UInt16 const kSigModel_SensorClient_ID                       = 0x1102;
+// --------
+UInt16 const kSigModel_TimeServer_ID                         = 0x1200;
+UInt16 const kSigModel_TimeSetupServer_ID                    = 0x1201;
+UInt16 const kSigModel_TimeClient_ID                         = 0x1202;
+UInt16 const kSigModel_SceneServer_ID                        = 0x1203;
+UInt16 const kSigModel_SceneSetupServer_ID                   = 0x1204;
+UInt16 const kSigModel_SceneClient_ID                        = 0x1205;
+UInt16 const kSigModel_SchedulerServer_ID                    = 0x1206;
+UInt16 const kSigModel_SchedulerSetupServer_ID               = 0x1207;
+UInt16 const kSigModel_SchedulerClient_ID                    = 0x1208;
+// --------
+UInt16 const kSigModel_LightLightnessServer_ID               = 0x1300;
+UInt16 const kSigModel_LightLightnessSetupServer_ID          = 0x1301;
+UInt16 const kSigModel_LightLightnessClient_ID               = 0x1302;
+UInt16 const kSigModel_LightCTLServer_ID                     = 0x1303;
+UInt16 const kSigModel_LightCTLSetupServer_ID                = 0x1304;
+UInt16 const kSigModel_LightCTLClient_ID                     = 0x1305;
+UInt16 const kSigModel_LightCTLTemperatureServer_ID          = 0x1306;
+UInt16 const kSigModel_LightHSLServer_ID                     = 0x1307;
+UInt16 const kSigModel_LightHSLSetupServer_ID                = 0x1308;
+UInt16 const kSigModel_LightHSLClient_ID                     = 0x1309;
+UInt16 const kSigModel_LightHSLHueServer_ID                  = 0x130A;
+UInt16 const kSigModel_LightHSLSaturationServer_ID           = 0x130B;
+UInt16 const kSigModel_LightxyLServer_ID                     = 0x130C;
+UInt16 const kSigModel_LightxyLSetupServer_ID                = 0x130D;
+UInt16 const kSigModel_LightxyLClient_ID                     = 0x130E;
+UInt16 const kSigModel_LightLCServer_ID                      = 0x130F;
+UInt16 const kSigModel_LightLCSetupServer_ID                 = 0x1310;
+UInt16 const kSigModel_LightLCClient_ID                      = 0x1311;
+// --------
+UInt16 const kSigModel_FirmwareUpdateServer_ID               = 0xFE00;
+UInt16 const kSigModel_FirmwareUpdateClient_ID               = 0xFE01;
+UInt16 const kSigModel_FirmwareDistributionServer_ID         = 0xFE02;
+UInt16 const kSigModel_FirmwareDistributionClient_ID         = 0xFE03;
+UInt16 const kSigModel_ObjectTransferServer_ID               = 0xFF00;
+UInt16 const kSigModel_ObjectTransferClient_ID               = 0xFF01;
+UInt16 const kSigModel_SubnetBridgeServer_ID                 = 0xBF32;
+// --------
+
+//旧版本使用的key start
 UInt16 const SIG_MD_G_ONOFF_S              = 0x1000;
-UInt16 const SIG_MD_G_ONOFF_C              = 0x1001;
-UInt16 const SIG_MD_G_LEVEL_S              = 0x1002;
-UInt16 const SIG_MD_G_LEVEL_C              = 0x1003;
-UInt16 const SIG_MD_G_DEF_TRANSIT_TIME_S   = 0x1004;
-UInt16 const SIG_MD_G_DEF_TRANSIT_TIME_C   = 0x1005;
-UInt16 const SIG_MD_G_POWER_ONOFF_S        = 0x1006;
-UInt16 const SIG_MD_G_POWER_ONOFF_SETUP_S  = 0x1007;
-UInt16 const SIG_MD_G_POWER_ONOFF_C        = 0x1008;
-UInt16 const SIG_MD_G_POWER_LEVEL_S        = 0x1009;
-UInt16 const SIG_MD_G_POWER_LEVEL_SETUP_S  = 0x100A;
-UInt16 const SIG_MD_G_POWER_LEVEL_C        = 0x100B;
-UInt16 const SIG_MD_G_BAT_S                = 0x100C;
-UInt16 const SIG_MD_G_BAT_C                = 0x100D;
-UInt16 const SIG_MD_G_LOCATION_S           = 0x100E;
-UInt16 const SIG_MD_G_LOCATION_SETUP_S     = 0x100F;
-UInt16 const SIG_MD_G_LOCATION_C           = 0x1010;
-UInt16 const SIG_MD_G_ADMIN_PROP_S         = 0x1011;
-UInt16 const SIG_MD_G_MFG_PROP_S           = 0x1012;
-UInt16 const SIG_MD_G_USER_PROP_S          = 0x1013;
-UInt16 const SIG_MD_G_CLIENT_PROP_S        = 0x1014;
-UInt16 const SIG_MD_G_PROP_C               = 0x1015;
-// --------
-UInt16 const SIG_MD_SENSOR_S               = 0x1100;
-UInt16 const SIG_MD_SENSOR_SETUP_S         = 0x1101;
-UInt16 const SIG_MD_SENSOR_C               = 0x1102;
-// --------
-UInt16 const SIG_MD_TIME_S                 = 0x1200;
-UInt16 const SIG_MD_TIME_SETUP_S           = 0x1201;
-UInt16 const SIG_MD_TIME_C                 = 0x1202;
-UInt16 const SIG_MD_SCENE_S                = 0x1203;
-UInt16 const SIG_MD_SCENE_SETUP_S          = 0x1204;
-UInt16 const SIG_MD_SCENE_C                = 0x1205;
-UInt16 const SIG_MD_SCHED_S                = 0x1206;
-UInt16 const SIG_MD_SCHED_SETUP_S          = 0x1207;
-UInt16 const SIG_MD_SCHED_C                = 0x1208;
-// --------
 UInt16 const SIG_MD_LIGHTNESS_S            = 0x1300;
-UInt16 const SIG_MD_LIGHTNESS_SETUP_S      = 0x1301;
-UInt16 const SIG_MD_LIGHTNESS_C            = 0x1302;
 UInt16 const SIG_MD_LIGHT_CTL_S            = 0x1303;
-UInt16 const SIG_MD_LIGHT_CTL_SETUP_S      = 0x1304;
-UInt16 const SIG_MD_LIGHT_CTL_C            = 0x1305;
 UInt16 const SIG_MD_LIGHT_CTL_TEMP_S       = 0x1306;
 UInt16 const SIG_MD_LIGHT_HSL_S            = 0x1307;
-UInt16 const SIG_MD_LIGHT_HSL_SETUP_S      = 0x1308;
-UInt16 const SIG_MD_LIGHT_HSL_C            = 0x1309;
-UInt16 const SIG_MD_LIGHT_HSL_HUE_S        = 0x130A;
-UInt16 const SIG_MD_LIGHT_HSL_SAT_S        = 0x130B;
-UInt16 const SIG_MD_LIGHT_XYL_S            = 0x130C;
-UInt16 const SIG_MD_LIGHT_XYL_SETUP_S      = 0x130D;
-UInt16 const SIG_MD_LIGHT_XYL_C            = 0x130E;
-UInt16 const SIG_MD_LIGHT_LC_S             = 0x130F;
-UInt16 const SIG_MD_LIGHT_LC_SETUP_S       = 0x1310;
-UInt16 const SIG_MD_LIGHT_LC_C             = 0x1311;
-// --------
-UInt16 const SIG_MD_FW_UPDATE_S            = 0xFE00;
-UInt16 const SIG_MD_FW_UPDATE_C            = 0xFE01;
-UInt16 const SIG_MD_FW_DISTRIBUT_S         = 0xFE02;
-UInt16 const SIG_MD_FW_DISTRIBUT_C         = 0xFE03;
-UInt16 const SIG_MD_BLOB_TRANSFER_S         = 0xFF00;
-UInt16 const SIG_MD_BLOB_TRANSFER_C         = 0xFF01;
-
-UInt16 const kConfigurationServerModelId = 0x0000;
-UInt16 const kConfigurationClientModelId = 0x0001;
-UInt16 const kHealthServerModelId = 0x0002;
-UInt16 const kHealthClientModelId = 0x0003;
+//旧版本使用的key end
 
 UInt16 const kMeshAddress_unassignedAddress = 0x0000;
 UInt16 const kMeshAddress_minUnicastAddress = 0x0001;
@@ -275,6 +364,7 @@ UInt16 const kPacketAllLength = kPacketJsonLength+4;
 
 /*telink当前定义的两个设备类型*/
 UInt16 const SigNodePID_CT = 1;
+UInt16 const SigNodePID_HSL = 2;
 UInt16 const SigNodePID_Panel = 7;
 
 float const kCMDInterval = 0.32;

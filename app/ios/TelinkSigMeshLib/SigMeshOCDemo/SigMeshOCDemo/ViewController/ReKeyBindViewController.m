@@ -74,7 +74,10 @@
                 keyBindType = KeyBindTpye_Normal;
             }
         }
-        
+        if (cpsData && cpsData.length > 0) {
+            cpsData = [cpsData subdataWithRange:NSMakeRange(1, cpsData.length - 1)];
+        }
+
         [SDKLibCommand keyBind:self.model.address appkeyModel:SigDataSource.share.curAppkeyModel keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             [weakSelf performSelectorOnMainThread:@selector(showKeyBindSuccess) withObject:nil waitUntilDone:YES];
             weakSelf.hasClickKeyBind = NO;

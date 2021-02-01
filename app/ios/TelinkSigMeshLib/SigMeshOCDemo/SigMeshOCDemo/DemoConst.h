@@ -72,6 +72,8 @@
 #define ViewControllerIdentifiers_ChooseActionViewControllerID  @"ChooseActionViewController"
 #define ViewControllerIdentifiers_ActionViewControllerID  @"ActionViewController"
 #define ViewControllerIdentifiers_DeviceCompositionDataVCID @"DeviceCompositionDataVC"
+#define ViewControllerIdentifiers_SubnetBridgeListVCID @"SubnetBridgeListVC"
+#define ViewControllerIdentifiers_AddBridgeTableVCID @"AddBridgeTableVC"
 #define ViewControllerIdentifiers_SchedulerListViewControllerID  @"SchedulerListViewController"
 #define ViewControllerIdentifiers_SchedulerDetailViewControllerID  @"SchedulerDetailViewController"
 #define ViewControllerIdentifiers_EditModelIDsViewControllerID  @"EditModelIDsViewController"
@@ -90,6 +92,7 @@
 #define ViewControllerIdentifiers_DeviceSettingViewControllerID  @"DeviceSettingViewController"
 #define ViewControllerIdentifiers_DeviceSubscriptionListViewControllerID  @"DeviceSubscriptionListViewController"
 #define ViewControllerIdentifiers_SensorVCID  @"SensorVC"
+#define ViewControllerIdentifiers_ShareTipsVCID @"ShareTipsVC"
 
 #define kCommandInterval    (0.32)
 
@@ -126,6 +129,10 @@
 #define Tip_GetComposition   @"get composition ..."
 #define Tip_GetCompositionFail   @"get composition fail ..."
 #define Tip_GetCompositionSuccess   @"get composition success ..."
+
+#define Tip_AddSubnetBridge   @"add subnet bridge ..."
+#define Tip_AddSubnetBridgeFail   @"add subnet bridge fail ..."
+#define Tip_AddSubnetBridgeSuccess   @"add subnet bridge success ..."
 
 //分享使用方式(是否使用蓝牙点对点传输，YES为二维码加蓝牙点对点，NO为存二维码)
 #define kShareWithBluetoothPointToPoint (YES)

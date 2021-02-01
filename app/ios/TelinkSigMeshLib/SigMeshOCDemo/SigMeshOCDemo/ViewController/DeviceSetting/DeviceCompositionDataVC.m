@@ -44,6 +44,7 @@
     self.title = @"Composition Data";
     UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(clickRefreshCompositionData)];
     self.navigationItem.rightBarButtonItem = rightItem;
+    self.compositionDataTV.font = [UIFont systemFontOfSize:12.0];
     [self showCompositionDataUI];
     //==========test==========//
 //    [SDKLibCommand configNodeIdentitySetWithDestination:self.model.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
@@ -104,7 +105,7 @@
     NSString *tem = [NSString stringWithFormat:@""];
     for (int i=0; i < self.model.compositionData.elements.count; i++) {
         SigElementModel *element = self.model.compositionData.elements[i];
-        tem = [tem stringByAppendingFormat:@"\tElement%d:\n%@",i+1,[self getStringOfElement:element]];
+        tem = [tem stringByAppendingFormat:@"  element adr:0x%04X\n%@",i+self.model.address,[self getStringOfElement:element]];
     }
     return tem;
 }
@@ -113,9 +114,11 @@
     NSString *tem = [NSString stringWithFormat:@""];
     for (SigModelIDModel *modelID in element.models) {
         if (modelID.isBluetoothSIGAssigned) {
-            tem = [tem stringByAppendingFormat:@"\tSig Model ID:0x%04X\n",modelID.getIntModelIdentifier];
+            ModelIDModel *m = [SigDataSource.share getModelIDModel:@(modelID.getIntModelID)];
+            tem = [tem stringByAppendingFormat:@"\tSig model - 0x%04X - %@\n",modelID.getIntModelIdentifier,m.modelName];
         } else {
-            tem = [tem stringByAppendingFormat:@"\tVendor Model ID:0x%04X CID:0x%04X\n",modelID.getIntModelIdentifier,modelID.getIntCompanyIdentifier];
+//            tem = [tem stringByAppendingFormat:@"\tVendor Model ID:0x%04X CID:0x%04X\n",modelID.getIntModelIdentifier,modelID.getIntCompanyIdentifier];
+            tem = [tem stringByAppendingFormat:@"\tVendor model - 0x%08X\n",modelID.getIntModelID];
         }
     }
     return tem;

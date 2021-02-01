@@ -132,6 +132,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (UInt16)lumToLightness:(UInt8)lum;
 + (UInt8)tempToTemp100:(UInt16)temp;
 + (UInt16)temp100ToTemp:(UInt8)temp100;
+///（四舍五入，保留两位小数）
++ (float)roundFloat:(float)price;
 
 #pragma mark - JSON相关
 

@@ -89,6 +89,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param message message
 - (BOOL)isAcknowledgedMessage:(SigMeshMessage *)message;
 
+- (NSString *)getDetailOfSigFirmwareUpdatePhaseType:(SigFirmwareUpdatePhaseType)phaseType;
+- (NSString *)getDetailOfSigFirmwareUpdateServerAndClientModelStatusType:(SigFirmwareUpdateServerAndClientModelStatusType)statusType;
+- (NSString *)getDetailOfSigBLOBTransferStatusType:(SigBLOBTransferStatusType)statusType;
+- (NSString *)getDetailOfSigDirectionsFieldValues:(SigDirectionsFieldValues)directions;
+
 @end
 
 NS_ASSUME_NONNULL_END

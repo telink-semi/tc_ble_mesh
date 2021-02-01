@@ -146,29 +146,7 @@
     SigAppkeyModel *model = self.sourceArray[indexPath.row];
     [cell setAppKeyModel:model];
     __weak typeof(self) weakSelf = self;
-    [cell.editButton addAction:^(UIButton *button) {
-        BOOL hadBound = NO;
-        NSArray *temNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
-        for (SigNodeModel *node in temNodes) {
-            if (node.appKeys && node.appKeys.count > 0) {
-                for (SigNodeKeyModel *nodeKey in node.appKeys) {
-                    if (nodeKey.index == model.index) {
-                        hadBound = YES;
-                        break;
-                    }
-                }
-                if (hadBound) {
-                    break;
-                }
-            }
-        }
-        TeLogDebug(@"%@",indexPath);
-        if (hadBound) {
-            [self showAlertSureWithTitle:@"Hits" message:@"Some nodes have already bound this appkey, you can`t edit it!" sure:nil];
-            /*客户需要保证绑定该AppKey的设备都在线，并且给所有绑定该AppKey的设备发送SigConfigAppKeyUpdate指令且成功后，才可以修改mesh里面的AppKey的值。此处发送逻辑过于复杂且限制太多，当前只是禁止客户进行修改操作。客户使用demoAPP时，可以通过下面的步骤实现修改mesh网络的某个AppKey的功能：可以先从设备里面移除该AppKey，再在setting界面修改AppKey，再给设备重新绑定AppKey。*/
-            return;
-        }
-        
+    [cell.editButton addAction:^(UIButton *button) {        
         AppKeyAddVC *vc = [[AppKeyAddVC alloc] init];
         vc.isAdd = NO;
         [vc setAppKeyModel:model];
