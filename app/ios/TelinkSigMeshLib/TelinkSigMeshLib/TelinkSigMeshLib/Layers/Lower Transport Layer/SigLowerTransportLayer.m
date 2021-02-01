@@ -392,6 +392,7 @@
             TeLogInfo(@"response last segment, sent ack.");
             [self sendAckForSegments:@[segment] withTtl:ttl];
         }
+        message.networkPduModel = networkPdu;
         return message;
     }else{
         // If a message is composed of multiple segments, they all need to
@@ -452,6 +453,7 @@
                 }
                 [self sendAckForSegments:allSegments withTtl:ttl];
             }
+            message.networkPduModel = networkPdu;
             return message;
         } else {
             // The Provisioner shall send block acknowledgment only if the message was

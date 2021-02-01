@@ -56,7 +56,15 @@
         UInt8 tem2 = aszmic << 7;
         UInt16 tem3 = CFSwapInt16HostToBig(accessMessage.source);
         UInt16 tem4 = CFSwapInt16HostToBig(accessMessage.destination);
-        UInt32 tem5 = CFSwapInt32HostToBig(ivIndex.index);
+        UInt32 index = ivIndex.index;
+        if (accessMessage.networkPduModel.ivi != (index & 0x01)) {
+            if (index > 0) {
+                index -= 1;
+            }
+        }
+        UInt32 tem5 = CFSwapInt32HostToBig(index);
+        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
+
         [nonce appendData:[NSData dataWithBytes:&tem1 length:1]];
         [nonce appendData:[NSData dataWithBytes:&tem2 length:1]];
         [nonce appendData:seq];
@@ -109,7 +117,15 @@
         UInt8 tem2 = aszmic << 7;
         UInt16 tem3 = CFSwapInt16HostToBig(accessMessage.source);
         UInt16 tem4 = CFSwapInt16HostToBig(accessMessage.destination);
-        UInt32 tem5 = CFSwapInt32HostToBig(accessMessage.networkKey.ivIndex.index);
+        UInt32 index = accessMessage.networkKey.ivIndex.index;
+        if (accessMessage.networkPduModel.ivi != (index & 0x01)) {
+            if (index > 0) {
+                index -= 1;
+            }
+        }
+        UInt32 tem5 = CFSwapInt32HostToBig(index);
+        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
+
         [nonce appendData:[NSData dataWithBytes:&tem1 length:1]];
         [nonce appendData:[NSData dataWithBytes:&tem2 length:1]];
         [nonce appendData:seq];
@@ -186,6 +202,9 @@
         [nonce appendData:sourceData];
         [nonce appendData:destinationData];
         [nonce appendData:ivIndexData];
+        //==========test=========//
+        TeLogVerbose(@"==========加密使用ivIndex=0x%x",ivIndex.index);
+        //==========test=========//
 
         _transportMicSize = aszmic == 0 ? 4 : 8;
         _transportPdu = [OpenSSLHelper.share calculateCCM:_accessPdu withKey:keySet.accessKey nonce:nonce andMICSize:_transportMicSize withAdditionalData:pdu.destination.virtualLabel.getData];
@@ -234,6 +253,9 @@
         [nonce appendData:sourceData];
         [nonce appendData:destinationData];
         [nonce appendData:ivIndexData];
+        //==========test=========//
+        TeLogVerbose(@"==========加密使用ivIndex=0x%x",ivIndex.index);
+        //==========test=========//
 
         _transportMicSize = aszmic == 0 ? 4 : 8;
         _transportPdu = [OpenSSLHelper.share calculateCCM:_accessPdu withKey:keySet.accessKey nonce:nonce andMICSize:_transportMicSize withAdditionalData:pdu.destination.virtualLabel.getData];

@@ -65,7 +65,7 @@
         self.upperTransportPdu = [data subdataWithRange:NSMakeRange(1, data.length-1)];
         self.source = networkPdu.source;
         self.destination = networkPdu.destination;
-
+        self.networkPduModel = networkPdu;
     }
     return self;
 }
