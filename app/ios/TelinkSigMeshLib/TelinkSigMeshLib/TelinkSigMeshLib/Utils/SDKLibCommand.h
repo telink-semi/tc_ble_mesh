@@ -654,23 +654,6 @@ typedef enum : UInt8 {
 + (SigMessageHandle *)remoteProvisioningPDUSendWithDestination:(UInt16)destination OutboundPDUNumber:(UInt8)outboundPDUNumber provisioningPDU:(NSData *)provisioningPDU retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount resultCallback:(resultBlock)resultCallback;
 
 
-#pragma mark - subnet bridge
-
-+ (SigMessageHandle *)subnetBridgeGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSubnetBridgeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
-
-+ (SigMessageHandle *)subnetBridgeSetWithDestination:(UInt16)destination subnetBridge:(SigSubnetBridgeStateValues)subnetBridge retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSubnetBridgeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
-
-+ (SigMessageHandle *)bridgeTableAddWithDestination:(UInt16)destination subnetBridge:(SigSubnetBridgeModel *)subnetBridge retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBridgeTableStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
-
-+ (SigMessageHandle *)bridgeTableRemoveWithDestination:(UInt16)destination netKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 address1:(UInt16)address1 address2:(UInt16)address2 retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBridgeTableStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
-
-+ (SigMessageHandle *)bridgeSubnetsGetWithDestination:(UInt16)destination filter:(SigFilterFieldValues)filter prohibited:(UInt8)prohibited netKeyIndex:(UInt16)netKeyIndex startIndex:(UInt8)startIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBridgeSubnetsListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
-
-+ (SigMessageHandle *)bridgeTableGetWithDestination:(UInt16)destination netKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 startIndex:(UInt16)startIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBridgeTableListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
-
-+ (SigMessageHandle *)bridgeCapabilityGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBridgeCapabilityStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
-
-
 #pragma mark - API by Telink
 
 /// Get Online device, private use OnlineStatusCharacteristic(获取当前mesh网络的所有设备的在线、开关、亮度、色温状态(私有定制，需要特定的OnlineStatusCharacteristic))
@@ -785,7 +768,7 @@ peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+provisionTyp
 + (void)keyBind:(UInt16)address appkeyModel:(SigAppkeyModel *)appkeyModel keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail;
 
 + (CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral;
-+ (void)setBluetoothCentralUpdateStateCallback:(bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback;
++ (void)setBluetoothCentralUpdateStateCallback:(_Nullable bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback;
 
 #pragma mark Scan API
 + (void)scanUnprovisionedDevicesWithResult:(bleScanPeripheralCallback)result;

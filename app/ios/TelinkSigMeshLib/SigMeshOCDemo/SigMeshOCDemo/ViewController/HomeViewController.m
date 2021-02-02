@@ -67,6 +67,7 @@
 #pragma mark add node entrance
 - (IBAction)addNewDevice:(UIBarButtonItem *)sender {
     BOOL isRemoteAdd = [[[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType] boolValue];
+    [SDKLibCommand setBluetoothCentralUpdateStateCallback:nil];
     if (isRemoteAdd) {
         TeLogVerbose(@"click remote add device");
         

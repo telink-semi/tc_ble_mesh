@@ -153,10 +153,9 @@
     SettingItemCell *cell = (SettingItemCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_SettingItemCellID forIndexPath:indexPath];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     cell.stateSwitch.hidden = YES;
-    if (self.model.subnetBridgeServerAddress.count == 0) {
-        cell.contentView.hidden = indexPath.row == 3;
-    }
-    
+#ifndef kExist
+    cell.contentView.hidden = indexPath.row == 3;
+#endif
     switch (indexPath.row) {
         case 0:
         {
@@ -245,9 +244,11 @@
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (indexPath.row == 3 && self.model.subnetBridgeServerAddress.count == 0) {
+#ifndef kExist
+    if (indexPath.row == 3) {
         return 0.01f;
     }
+#endif
     return 51.0;
 }
 

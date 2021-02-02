@@ -161,6 +161,8 @@
 		25335F77235EF339006C79C1 /* SigAddDeviceManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F6B235EF339006C79C1 /* SigAddDeviceManager.m */; };
 		25335F90235F06D3006C79C1 /* SDKLibCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 25335F8E235F06D3006C79C1 /* SDKLibCommand.m */; };
 		25335F91235F06D3006C79C1 /* SDKLibCommand.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F8F235F06D3006C79C1 /* SDKLibCommand.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		254072A925C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 254072A725C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		254072AA25C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 254072A825C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m */; };
 		255394F924907A9B0095B499 /* pem2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A324907A9B0095B499 /* pem2.h */; };
 		255394FA24907A9B0095B499 /* pem2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A324907A9B0095B499 /* pem2.h */; };
 		255394FB24907A9B0095B499 /* pem.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A424907A9B0095B499 /* pem.h */; };
@@ -457,6 +459,8 @@
 		25335F6B235EF339006C79C1 /* SigAddDeviceManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigAddDeviceManager.m; sourceTree = "<group>"; };
 		25335F8E235F06D3006C79C1 /* SDKLibCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDKLibCommand.m; sourceTree = "<group>"; };
 		25335F8F235F06D3006C79C1 /* SDKLibCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDKLibCommand.h; sourceTree = "<group>"; };
+		254072A725C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+subnetBridge.h"; sourceTree = "<group>"; };
+		254072A825C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+subnetBridge.m"; sourceTree = "<group>"; };
 		255394A324907A9B0095B499 /* pem2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem2.h; sourceTree = "<group>"; };
 		255394A424907A9B0095B499 /* pem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem.h; sourceTree = "<group>"; };
 		255394A524907A9B0095B499 /* ssl3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssl3.h; sourceTree = "<group>"; };
@@ -644,6 +648,7 @@
 		2528952B2468F6F200E590F9 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				254072A625C8E37100D0FF8B /* subnet bridge */,
 				2528952C2468F6F200E590F9 /* remote provision */,
 				2528952F2468F6F200E590F9 /* MeshOTA */,
 			);
@@ -873,6 +878,15 @@
 			path = KeyBind;
 			sourceTree = "<group>";
 		};
+		254072A625C8E37100D0FF8B /* subnet bridge */ = {
+			isa = PBXGroup;
+			children = (
+				254072A725C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h */,
+				254072A825C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m */,
+			);
+			path = "subnet bridge";
+			sourceTree = "<group>";
+		};
 		255394A024907A9B0095B499 /* OpenSSL */ = {
 			isa = PBXGroup;
 			children = (
@@ -1088,6 +1102,7 @@
 				252894772468F13400E590F9 /* SigDataSource.h in Headers */,
 				252894732468F13400E590F9 /* SigAddDeviceManager.h in Headers */,
 				252894702468F13400E590F9 /* SigPdu.h in Headers */,
+				254072A925C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h in Headers */,
 				2528947A2468F13400E590F9 /* SigEnumeration.h in Headers */,
 				2528948B2468F13400E590F9 /* SigConfigMessage.h in Headers */,
 				252894812468F13400E590F9 /* SDKLibCommand.h in Headers */,
@@ -1525,6 +1540,7 @@
 				252895072468F13400E590F9 /* SigGenericMessage.m in Sources */,
 				252895082468F13400E590F9 /* SigLowerTransportLayer.m in Sources */,
 				252895092468F13400E590F9 /* SigMeshMessage.m in Sources */,
+				254072AA25C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m in Sources */,
 				2528950A2468F13400E590F9 /* SigSegmentedControlMessage.m in Sources */,
 				2528950B2468F13400E590F9 /* SigNetworkLayer.m in Sources */,
 				2528950D2468F13400E590F9 /* LibTools.m in Sources */,

@@ -3567,98 +3567,6 @@
     return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
-#pragma mark - subnet bridge
-
-+ (SigMessageHandle *)subnetBridgeGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSubnetBridgeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigSubnetBridgeGet *message = [[SigSubnetBridgeGet alloc] init];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseSubnetBridgeStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = responseMaxCount;
-    command.retryCount = retryCount;
-    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
-//    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-}
-
-+ (SigMessageHandle *)subnetBridgeSetWithDestination:(UInt16)destination subnetBridge:(SigSubnetBridgeStateValues)subnetBridge retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseSubnetBridgeStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigSubnetBridgeSet *message = [[SigSubnetBridgeSet alloc] initWithSubnetBridge:subnetBridge];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseSubnetBridgeStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = responseMaxCount;
-    command.retryCount = retryCount;
-    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
-//    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-}
-
-+ (SigMessageHandle *)bridgeTableAddWithDestination:(UInt16)destination subnetBridge:(SigSubnetBridgeModel *)subnetBridge retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBridgeTableStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigBridgeTableAdd *message = [[SigBridgeTableAdd alloc] initWithSubnetBridge:subnetBridge];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseBridgeTableStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = responseMaxCount;
-    command.retryCount = retryCount;
-    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
-//    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-}
-
-+ (SigMessageHandle *)bridgeTableRemoveWithDestination:(UInt16)destination netKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 address1:(UInt16)address1 address2:(UInt16)address2 retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBridgeTableStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigBridgeTableRemove *message = [[SigBridgeTableRemove alloc] initWithNetKeyIndex1:netKeyIndex1 netKeyIndex2:netKeyIndex2 address1:address1 address2:address2];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseBridgeTableStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = responseMaxCount;
-    command.retryCount = retryCount;
-    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
-//    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-}
-
-+ (SigMessageHandle *)bridgeSubnetsGetWithDestination:(UInt16)destination filter:(SigFilterFieldValues)filter prohibited:(UInt8)prohibited netKeyIndex:(UInt16)netKeyIndex startIndex:(UInt8)startIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBridgeSubnetsListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigBridgeSubnetsGet *message = [[SigBridgeSubnetsGet alloc] initWithFilter:filter prohibited:prohibited netKeyIndex:netKeyIndex startIndex:startIndex];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseBridgeSubnetsListCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = responseMaxCount;
-    command.retryCount = retryCount;
-    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
-//    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-}
-
-+ (SigMessageHandle *)bridgeTableGetWithDestination:(UInt16)destination netKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 startIndex:(UInt16)startIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBridgeTableListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigBridgeTableGet *message = [[SigBridgeTableGet alloc] initWithNetKeyIndex1:netKeyIndex1 netKeyIndex2:netKeyIndex2 startIndex:startIndex];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseBridgeTableListCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = responseMaxCount;
-    command.retryCount = retryCount;
-    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
-//    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-}
-
-+ (SigMessageHandle *)bridgeCapabilityGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBridgeCapabilityStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SigBridgeCapabilityGet *message = [[SigBridgeCapabilityGet alloc] init];
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    command.curMeshMessage = message;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseBridgeCapabilityStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.responseMaxCount = responseMaxCount;
-    command.retryCount = retryCount;
-    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
-//    return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigDataSource.share.curAppkeyModel command:command];
-}
 
 #pragma mark - API by Telink
 
@@ -4014,7 +3922,7 @@ function 1:special if you need do provision , you should call this method, and i
     return [SigBluetooth.share getCharacteristicWithUUIDString:uuid OfPeripheral:peripheral];
 }
 
-+ (void)setBluetoothCentralUpdateStateCallback:(bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback {
++ (void)setBluetoothCentralUpdateStateCallback:(_Nullable bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback {
     [SigBluetooth.share setBluetoothCentralUpdateStateCallback:bluetoothCentralUpdateStateCallback];
 }
 

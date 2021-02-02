@@ -61,7 +61,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)bleInit:(bleInitSuccessCallback)result;
 - (BOOL)isBLEInitFinish;
 
-- (void)setBluetoothCentralUpdateStateCallback:(bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback;
+- (void)setBluetoothCentralUpdateStateCallback:(_Nullable bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback;
 
 - (void)setBluetoothDisconnectCallback:(_Nullable bleDisconnectCallback)bluetoothDisconnectCallback;
 

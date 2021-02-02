@@ -100,8 +100,8 @@
     }
 
     //demo中setting界面显示的log信息，客户开发到后期，APP稳定后可以不集成该功能，且上架最好关闭log保存功能。(客户发送iTunes中的日志文件“TelinkSDKDebugLogData”给泰凌微即可)
-    [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
-//    [SigLogger.share setSDKLogLevel:SigLogLevelAll];
+//    [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
+    [SigLogger.share setSDKLogLevel:SigLogLevelAll];
 
     /*初始化SDK*/
     //1.一个provisioner分配的地址范围，默认为0x400。

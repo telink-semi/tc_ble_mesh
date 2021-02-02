@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		250DAC5E258C555300EBC6CE /* BaseTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 250DAC5D258C555300EBC6CE /* BaseTableView.m */; };
 		2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2519E64E24123D870098ABE7 /* 8258_mesh.bin */; };
+		254072D225C8E99E00D0FF8B /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		254C656B2570FF6C00096625 /* ColorPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 254C656A2570FF6C00096625 /* ColorPickerView.m */; };
 		254EDCAE25C002400011D0A1 /* ShareTipsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 254EDCAD25C002400011D0A1 /* ShareTipsVC.m */; };
 		2589E3AA25BE63F5001B3828 /* SubnetBridgeListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3A925BE63F5001B3828 /* SubnetBridgeListVC.m */; };
@@ -65,7 +66,6 @@
 		25C44FD5256CE3C900C28E80 /* OnOffModelCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C44FD3256CE3C900C28E80 /* OnOffModelCell.xib */; };
 		25C44FE0256CE3FA00C28E80 /* LevelAndSliderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25C44FDE256CE3FA00C28E80 /* LevelAndSliderCell.m */; };
 		25C44FE1256CE3FA00C28E80 /* LevelAndSliderCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25C44FDF256CE3FA00C28E80 /* LevelAndSliderCell.xib */; };
-		25E19F5D25C3DB71009D73AF /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		25EE0B62256B59E40063FEE1 /* ColorModelCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25EE0B60256B59E40063FEE1 /* ColorModelCell.m */; };
 		25EE0B63256B59E40063FEE1 /* ColorModelCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25EE0B61256B59E40063FEE1 /* ColorModelCell.xib */; };
 		A20C14B72254556700B42909 /* ColorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A20C14B62254556700B42909 /* ColorManager.m */; };
@@ -510,7 +510,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				25E19F5D25C3DB71009D73AF /* TelinkSigMeshLib.framework in Frameworks */,
+				254072D225C8E99E00D0FF8B /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1639,7 +1639,7 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
@@ -1674,7 +1674,7 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "";

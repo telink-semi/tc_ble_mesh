@@ -69,6 +69,7 @@
         if (SigBearer.share.isOpen) {
             if (self.model.state != DeviceStateOutOfLine) {
                 TeLogInfo(@"send request for subnetBridgeSet, address:%d",self.model.address);
+#ifdef kExist
                 __weak typeof(self) weakSelf = self;
                 _messageHandle = [SDKLibCommand subnetBridgeSetWithDestination:self.model.address subnetBridge:sender.on ? SigSubnetBridgeStateValues_enabled : SigSubnetBridgeStateValues_disabled retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigSubnetBridgeStatus * _Nonnull responseMessage) {
                     TeLogDebug(@"subnetBridgeSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
@@ -77,6 +78,7 @@
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 }];
+#endif
             } else {
                 sender.on = !sender.on;
                 [self showTips:@"The node is offline, app cann`t set subnet bridge."];
@@ -96,7 +98,6 @@
 
 - (void)removeBridgeTable:(SigSubnetBridgeModel *)subnetBridge {
     TeLogDebug(@"");
-    __weak typeof(self) weakSelf = self;
     if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for bridgeTableRemove, but busy now.");
         [self showTips:@"app is busy now, try again later."];
@@ -104,6 +105,8 @@
         if (SigBearer.share.isOpen) {
             if (self.model.state != DeviceStateOutOfLine) {
                 TeLogInfo(@"send request for bridgeTableRemove, address:%d",self.model.address);
+#ifdef kExist
+                __weak typeof(self) weakSelf = self;
                 _messageHandle = [SDKLibCommand bridgeTableRemoveWithDestination:self.model.address netKeyIndex1:subnetBridge.netKeyIndex1 netKeyIndex2:subnetBridge.netKeyIndex2 address1:subnetBridge.address1 address2:subnetBridge.address2 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
                     TeLogDebug(@"bridgeTableRemove=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (responseMessage.status == SigConfigMessageStatus_success) {
@@ -113,6 +116,7 @@
                     TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
 
                 }];
+#endif
             } else {
                 [self showTips:@"The node is offline, app cann`t remove bridge table."];
             }
@@ -210,7 +214,7 @@
 
 - (void)deleteSubnetBridgeOfDevice:(SigSubnetBridgeModel *)subnetBridgeModel {
     [ShowTipsHandle.share show:@"delete Subnet Bridge from node..."];
-
+#ifdef kExist
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand bridgeTableRemoveWithDestination:self.model.address netKeyIndex1:subnetBridgeModel.netKeyIndex1 netKeyIndex2:subnetBridgeModel.netKeyIndex2 address1:subnetBridgeModel.address1 address2:subnetBridgeModel.address2 retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
         TeLogInfo(@"delete Subnet Bridge responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
@@ -231,6 +235,7 @@
             [ShowTipsHandle.share delayHidden:2.0];
         });
     }];
+#endif
 }
 
 @end

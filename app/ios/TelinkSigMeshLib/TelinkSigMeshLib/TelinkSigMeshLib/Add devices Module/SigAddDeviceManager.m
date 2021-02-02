@@ -175,6 +175,8 @@ typedef enum : NSUInteger {
 }
 
 - (void)keybind{
+    TeLogVerbose(@"");
+    self.addStatus = SigAddStatusKeyBinding;
     __weak typeof(self) weakSelf = self;
     CBPeripheral *peripheral = SigBearer.share.getCurrentPeripheral;
     [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
@@ -220,7 +222,10 @@ typedef enum : NSUInteger {
             if (weakSelf.retryCount > 0) {
                 TeLogDebug(@"retry setFilter peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
                 weakSelf.retryCount --;
-                [weakSelf keybind];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(keybind) object:nil];
+                    [weakSelf performSelector:@selector(keybind) withObject:nil afterDelay:0.1];
+                });
             } else {
                 TeLogDebug(@"setFilter fail, so keybind fail.");
                 if (weakSelf.keyBindFailBlock) {
@@ -235,8 +240,10 @@ typedef enum : NSUInteger {
 }
 
 - (void)startAddPeripheral:(CBPeripheral *)peripheral {
+    TeLogVerbose(@"");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(scanTimeout) object:nil];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(keybind) object:nil];
     });
     self.curPeripheral = peripheral;
     __weak typeof(self) weakSelf = self;

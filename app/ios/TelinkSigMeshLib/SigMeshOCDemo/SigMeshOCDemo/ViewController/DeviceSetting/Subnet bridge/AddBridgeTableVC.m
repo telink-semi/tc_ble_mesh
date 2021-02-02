@@ -60,7 +60,7 @@
                 [self performSelector:@selector(addSubnetBridgeTimeOut) withObject:nil afterDelay:10.0];
                 [ShowTipsHandle.share show:Tip_AddSubnetBridge];
             });
-
+#ifdef kExist
             __weak typeof(self) weakSelf = self;
             __block BOOL hasFail = NO;
             _messageHandle = [SDKLibCommand bridgeTableAddWithDestination:self.model.address subnetBridge:self.bridgeModel retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
@@ -86,6 +86,7 @@
                     }
                 });
             }];
+#endif
         } else {
             [self showTips:@"The node is offline, app cann`t add bridge table."];
         }
