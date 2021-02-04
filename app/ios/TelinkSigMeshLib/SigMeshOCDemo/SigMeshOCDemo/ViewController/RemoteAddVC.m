@@ -232,11 +232,11 @@
             }
         } fail:^(NSError * _Nonnull error) {
             TeLogDebug(@"RP-Remote:provision fail.");
-            if (![self.failSource containsObject:model]) {
-                [self.failSource addObject:model];
+            if (![weakSelf.failSource containsObject:model]) {
+                [weakSelf.failSource addObject:model];
             }
-            [self remoteAddSingleDeviceFinish];
-            [self updateWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:provisionAddress provisionResult:NO];
+            [weakSelf remoteAddSingleDeviceFinish];
+            [weakSelf updateWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:provisionAddress provisionResult:NO];
 
             if (SigBearer.share.isOpen) {
                 [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_fail retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
@@ -249,7 +249,7 @@
                     [weakSelf addNodeByRemoteProvision];
                 }];
             } else {
-                [self addNodeByRemoteProvision];
+                [weakSelf addNodeByRemoteProvision];
             }
         }];
     }
@@ -308,9 +308,10 @@
         //remote add
         [self startRemoteProvisionScan];
     } else {
+        __weak typeof(self) weakSelf = self;
         //GATT add
         [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
-            [self addOneNodeInGATT];
+            [weakSelf addOneNodeInGATT];
         }];
     }
 }

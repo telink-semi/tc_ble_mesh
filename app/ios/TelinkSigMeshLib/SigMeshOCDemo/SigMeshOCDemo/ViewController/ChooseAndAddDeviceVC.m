@@ -237,6 +237,7 @@ typedef enum : NSUInteger {
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_MeshOTAItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_MeshOTAItemCellID];
     self.allDevices = [NSMutableArray array];
     self.selectDevices = [NSMutableArray array];
+    [SDKLibCommand setBluetoothCentralUpdateStateCallback:nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated{

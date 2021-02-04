@@ -201,6 +201,7 @@
     command.resultCallback = resultCallback;
     command.retryCount = retryCount;
     command.responseMaxCount = responseMaxCount;
+//    command.timeout = 3.0;//GATT-LPN固件返回SigConfigCompositionData比较慢，当前接口设置超时为3秒。
     return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 

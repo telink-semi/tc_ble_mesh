@@ -163,7 +163,7 @@ typedef enum : NSUInteger {
             SigScanRspModel *model = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
             SigOOBModel *oobModel = [SigDataSource.share getSigOOBModelWithUUID:model.advUuid];
             if (oobModel && oobModel.OOBString && oobModel.OOBString.length == 32) {
-                self.staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
+                weakSelf.staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
             }
             [weakSelf startAddPeripheral:peripheral];
         }

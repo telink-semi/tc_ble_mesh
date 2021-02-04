@@ -158,8 +158,8 @@
         return;
     }
     
-    //2.firmwareUpdateInformationGet
-    UInt16 modelIdentifier = kSigModel_ObjectTransferServer_ID;
+    //2.firmwareUpdateInformationGet，该消息在modelID：kSigModel_FirmwareUpdateServer_ID里面。
+    UInt16 modelIdentifier = kSigModel_FirmwareUpdateServer_ID;
     NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
     NSInteger responseMax = 0;
     for (SigNodeModel *model in curNodes) {
@@ -291,7 +291,7 @@
                     }
                     [weakSelf.tableView reloadData];
                 } else {
-                    [self showTips:@"This node is outline."];
+                    [weakSelf showTips:@"This node is outline."];
                     return;
                 }
             }];

@@ -213,6 +213,7 @@
         }
     }
     
+    [SigDataSource.share checkExistLocationProvisioner];
     if (hasPhoneUUID) {
         // v3.1.0, 存在
         BOOL isSameMesh = [SigDataSource.share.meshUUID isEqualToString:oldMeshUUID];
@@ -248,17 +249,16 @@
         UInt16 newProvisionAddress = maxAddr + 1;
         [SigDataSource.share changeLocationProvisionerNodeAddressToAddress:newProvisionAddress];
         TeLogDebug(@"已经使用了address=0x%x作为本地地址",newProvisionAddress);
-        //修改下一次添加设备使用的地址
-        [SigDataSource.share saveLocationProvisionAddress:maxAddr + 1];
+        //修改已经使用的设备地址
+        [SigDataSource.share saveLocationProvisionAddress:newProvisionAddress];
     } else {
-        //修改下一次添加设备使用的地址
+        //修改已经使用的设备地址
         [SigDataSource.share saveLocationProvisionAddress:maxAddr];
     }
     TeLogDebug(@"下一次添加设备可以使用的地址address=0x%x",SigDataSource.share.provisionAddress);
     
 //    SigDataSource.share.curNetkeyModel = nil;
 //    SigDataSource.share.curAppkeyModel = nil;
-    [SigDataSource.share checkExistLocationProvisioner];
     [SigDataSource.share saveLocationData];
     [SigDataSource.share.scanList removeAllObjects];
 }

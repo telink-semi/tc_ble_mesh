@@ -163,9 +163,9 @@
         TeLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (weakSelf.isKeybinding) {
             if (((SigConfigAppKeyStatus *)responseMessage).status == SigConfigMessageStatus_success) {
-                if (self.type == KeyBindTpye_Normal) {
+                if (weakSelf.type == KeyBindTpye_Normal) {
                     [weakSelf bindModel];
-                } else if (self.type == KeyBindTpye_Fast) {
+                } else if (weakSelf.type == KeyBindTpye_Fast) {
                     DeviceTypeModel *deviceType = nil;
                     if (weakSelf.fastKeybindCpsData != nil) {
                         TeLogVerbose(@"init cpsData from config.cpsdata.");
