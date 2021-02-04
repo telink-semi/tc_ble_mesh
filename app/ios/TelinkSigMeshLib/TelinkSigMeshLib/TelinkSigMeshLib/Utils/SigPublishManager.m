@@ -74,7 +74,7 @@
     if (device && device.hasPublishFunction && device.hasOpenPublish && device.hasPublishPeriod) {
         [self stopCheckOfflineTimerWithAddress:address];
         __weak typeof(self) weakSelf = self;
-        BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:kOfflineInterval repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+        BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:[LibTools getIntervalWithSigPeriodModel:[device getModelIDModelWithModelID:device.publishModelID].publish.period]*3+1 repeats:NO block:^(BackgroundTimer * _Nonnull t) {
             [weakSelf setDeviceOffline:address];
         }];
         _checkOfflineTimerDict[address] = timer;

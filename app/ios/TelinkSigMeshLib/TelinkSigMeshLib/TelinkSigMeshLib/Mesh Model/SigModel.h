@@ -1082,6 +1082,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 @property (nonatomic, assign) NSInteger numberOfSteps;
 
+/// 值为100、1000、10000、600000
 @property (nonatomic, assign) NSInteger resolution;
 
 - (NSDictionary *)getDictionaryOfSigPeriodModel;

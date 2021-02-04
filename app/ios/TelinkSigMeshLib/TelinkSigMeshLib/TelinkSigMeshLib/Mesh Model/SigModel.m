@@ -2971,8 +2971,8 @@
                         sigModelIDModel.publish.credentials = 0;
                         sigModelIDModel.publish.ttl = 0xff;
                         //json数据中，period为publish周期的毫秒数据，默认20秒
-                        sigModelIDModel.publish.period.numberOfSteps = kPublishInterval;
-                        sigModelIDModel.publish.period.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_seconds];
+                        sigModelIDModel.publish.period.numberOfSteps = SigDataSource.share.defaultPublishPeriodModel.numberOfSteps;
+                        sigModelIDModel.publish.period.resolution = SigDataSource.share.defaultPublishPeriodModel.resolution;
                         sigModelIDModel.publish.retransmit = retransmit;
                         sigModelIDModel.publish.address = [NSString stringWithFormat:@"%04lX",(long)kMeshAddress_allNodes];
                         break;

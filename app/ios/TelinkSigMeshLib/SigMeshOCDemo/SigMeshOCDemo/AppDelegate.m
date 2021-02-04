@@ -122,6 +122,14 @@
 //    [model setDefultNodeInfoData:nodeInfoData];
 //    [SigDataSource.share.defaultNodeInfos addObject:model];
 
+    //(可选)SDK默认publish周期为20秒，通过修改可以修改SDK的默认publish参数，或者客户自行实现publish检测机制。
+//    SigPeriodModel *periodModel = [[SigPeriodModel alloc] init];
+//    periodModel.numberOfSteps = kPublishIntervalOfDemo;
+////    periodModel.numberOfSteps = 5;//整形，范围0x01~0x3F.
+//    periodModel.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_seconds];
+//    SigDataSource.share.defaultPublishPeriodModel = periodModel;
+
+    
     SigMeshLib.share.transmissionTimerInteral = 0.600;
 
 //    SigDataSource.share.needPublishTimeModel = NO;

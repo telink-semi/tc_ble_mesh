@@ -135,6 +135,12 @@ NS_ASSUME_NONNULL_BEGIN
 ///（四舍五入，保留两位小数）
 + (float)roundFloat:(float)price;
 
+/// 通过周期对象SigPeriodModel获取周期时间，单位为秒。
++ (double)getIntervalWithSigPeriodModel:(SigPeriodModel *)periodModel;
+
+/// 通过周期对象SigPeriodModel获取周期时间，单位为秒。
++ (SigStepResolution)getSigStepResolutionWithSigPeriodModel:(SigPeriodModel *)periodModel;
+
 #pragma mark - JSON相关
 
 /**

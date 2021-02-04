@@ -458,6 +458,27 @@
     return roundf(price*100)/100;
 }
 
+/// 通过周期对象SigPeriodModel获取周期时间，单位为秒。
++ (double)getIntervalWithSigPeriodModel:(SigPeriodModel *)periodModel {
+    double tem = periodModel.resolution * periodModel.numberOfSteps / 1000.0;
+    return tem;
+}
+
+/// 通过周期对象SigPeriodModel获取周期时间，单位为秒。
++ (SigStepResolution)getSigStepResolutionWithSigPeriodModel:(SigPeriodModel *)periodModel {
+    SigStepResolution r = SigStepResolution_seconds;
+    if (periodModel.resolution == 6000000) {
+        r = SigStepResolution_tensOfMinutes;
+    } else if (periodModel.resolution == 10000) {
+        r = SigStepResolution_tensOfSeconds;
+    } else if (periodModel.resolution == 1000) {
+        r = SigStepResolution_seconds;
+    } else if (periodModel.resolution == 100) {
+        r = SigStepResolution_hundredsOfMilliseconds;
+    }
+    return r;
+}
+
 #pragma mark - JSON相关
 
 /**

@@ -122,4 +122,22 @@
     NSLog(@"model3=%@",model3.parameters);
 }
 
+- (void)testSigPeriodModel {
+    SigPeriodModel *model1 = [[SigPeriodModel alloc] init];
+    model1.numberOfSteps = 15;
+    model1.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_hundredsOfMilliseconds];
+    NSLog(@"model1=%f",[LibTools getIntervalWithSigPeriodModel:model1]);
+    SigPeriodModel *model2 = [[SigPeriodModel alloc] init];
+    model2.numberOfSteps = 25;
+    model2.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_seconds];
+    NSLog(@"model2=%f",[LibTools getIntervalWithSigPeriodModel:model2]);
+    SigPeriodModel *model3 = [[SigPeriodModel alloc] init];
+    model3.numberOfSteps = 35;
+    model3.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_tensOfSeconds];
+    NSLog(@"model3=%f",[LibTools getIntervalWithSigPeriodModel:model3]);
+    SigPeriodModel *model4 = [[SigPeriodModel alloc] init];
+    model4.numberOfSteps = 45;
+    model4.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_tensOfMinutes];
+    NSLog(@"model4=%f",[LibTools getIntervalWithSigPeriodModel:model4]);
+}
 @end

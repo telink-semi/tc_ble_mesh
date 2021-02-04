@@ -212,8 +212,8 @@
             cell.stateSwitch.on = self.model.hasOpenPublish;
             __weak typeof(self) weakSelf = self;
             [cell setChangeStateBlock:^(UISwitch * _Nonnull stateSwitch) {                
-                /* 周期，20秒上报一次(periodSteps:kPublishInterval,:Range：0x01-0x3F; periodResolution:1) */
-                [DemoCommand editPublishListWithPublishAddress:stateSwitch.isOn ? kMeshAddress_allNodes : kMeshAddress_unassignedAddress nodeAddress:weakSelf.model.address elementAddress:eleAdr modelIdentifier:option companyIdentifier:0 periodSteps:kPublishInterval periodResolution:SigStepResolution_seconds retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
+                /* 周期，20秒上报一次(periodSteps:kPublishIntervalOfDemo,:Range：0x01-0x3F; periodResolution:1) */
+                [DemoCommand editPublishListWithPublishAddress:stateSwitch.isOn ? kMeshAddress_allNodes : kMeshAddress_unassignedAddress nodeAddress:weakSelf.model.address elementAddress:eleAdr modelIdentifier:option companyIdentifier:0 periodSteps:SigDataSource.share.defaultPublishPeriodModel.numberOfSteps periodResolution:[LibTools getSigStepResolutionWithSigPeriodModel:SigDataSource.share.defaultPublishPeriodModel] retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
                     TeLogDebug(@"editPublishList callback");
                     if (responseMessage.status == SigConfigMessageStatus_success && responseMessage.elementAddress == eleAdr) {
                         if (responseMessage.publish.publicationAddress.address == kMeshAddress_allNodes) {

@@ -169,4 +169,6 @@
 
 #define kDLEUnsegmentLength (229)
 
+#define kPublishIntervalOfDemo  (20)
+
 #endif /* DemoConst_h */

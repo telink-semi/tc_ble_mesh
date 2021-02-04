@@ -97,6 +97,10 @@
         _defaultRetryCount = 2;
         _defaultAllocatedUnicastRangeHighAddress = kAllocatedUnicastRangeHighAddress;
         _defaultSnoIncrement = kSnoIncrement;
+        SigPeriodModel *periodModel = [[SigPeriodModel alloc] init];
+        periodModel.numberOfSteps = kPublishInterval;
+        periodModel.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_seconds];
+        _defaultPublishPeriodModel = periodModel;
     }
     return self;
 }
