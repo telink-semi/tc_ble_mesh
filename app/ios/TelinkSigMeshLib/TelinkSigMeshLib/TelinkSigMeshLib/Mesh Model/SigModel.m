@@ -55,65 +55,78 @@
 - (instancetype)init{
     if (self = [super init]) {
         //Generic
-        _modelIDCount = 52;
-        _model1 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic OnOff Server" sigModelID:SIG_MD_G_ONOFF_S];
-        _model2 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic OnOff Client" sigModelID:SIG_MD_G_ONOFF_C];
-        _model3 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Level Server" sigModelID:SIG_MD_G_LEVEL_S];
-        _model4 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Level Client" sigModelID:SIG_MD_G_LEVEL_C];
-        _model5 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Default Transition Time Server" sigModelID:SIG_MD_G_DEF_TRANSIT_TIME_S];
-        _model6 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Default Transition Time Client" sigModelID:SIG_MD_G_DEF_TRANSIT_TIME_C];
-        _model7 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Power OnOff Server" sigModelID:SIG_MD_G_POWER_ONOFF_S];
-        _model8 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Power OnOff Setup Server" sigModelID:SIG_MD_G_POWER_ONOFF_SETUP_S];
-        _model9 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Power OnOff Client" sigModelID:SIG_MD_G_POWER_ONOFF_C];
-        _model10 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Power Level Server" sigModelID:SIG_MD_G_POWER_LEVEL_S];
-        _model11 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Power Level Setup Server" sigModelID:SIG_MD_G_POWER_LEVEL_SETUP_S];
-        _model12 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Power Level Client" sigModelID:SIG_MD_G_POWER_LEVEL_C];
-        _model13 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Battery Server" sigModelID:SIG_MD_G_BAT_S];
-        _model14 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Battery Client" sigModelID:SIG_MD_G_BAT_C];
-        _model15 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Location Server" sigModelID:SIG_MD_G_LOCATION_S];
-        _model16 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Location Setup Server" sigModelID:SIG_MD_G_LOCATION_SETUP_S];
-        _model17 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Location Client" sigModelID:SIG_MD_G_LOCATION_C];
-        _model18 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Admin Property Server" sigModelID:SIG_MD_G_ADMIN_PROP_S];
-        _model19 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Manufacturer Property Server" sigModelID:SIG_MD_G_MFG_PROP_S];
-        _model20 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic User Property Server" sigModelID:SIG_MD_G_USER_PROP_S];
-        _model21 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Client Property Server" sigModelID:SIG_MD_G_CLIENT_PROP_S];
-        _model22 = [[ModelIDModel alloc] initWithModelGroup:@"Generic" modelName:@"Generic Property Client" sigModelID:SIG_MD_G_PROP_C];
+        ModelIDModel *model1 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericOnOffServer_Describe sigModelID:kSigModel_GenericOnOffServer_ID];
+        ModelIDModel *model2 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericOnOffClient_Describe sigModelID:kSigModel_GenericOnOffClient_ID];
+        ModelIDModel *model3 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericLevelServer_Describe sigModelID:kSigModel_GenericLevelServer_ID];
+        ModelIDModel *model4 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericLevelClient_Describe sigModelID:kSigModel_GenericLevelClient_ID];
+        ModelIDModel *model5 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericDefaultTransitionTimeServer_Describe sigModelID:kSigModel_GenericDefaultTransitionTimeServer_ID];
+        ModelIDModel *model6 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericDefaultTransitionTimeClient_Describe sigModelID:kSigModel_GenericDefaultTransitionTimeClient_ID];
+        ModelIDModel *model7 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericPowerOnOffServer_Describe sigModelID:kSigModel_GenericPowerOnOffServer_ID];
+        ModelIDModel *model8 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericPowerOnOffSetupServer_Describe sigModelID:kSigModel_GenericPowerOnOffSetupServer_ID];
+        ModelIDModel *model9 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericPowerOnOffClient_Describe sigModelID:kSigModel_GenericPowerOnOffClient_ID];
+        ModelIDModel *model10 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericPowerLevelServer_Describe sigModelID:kSigModel_GenericPowerLevelServer_ID];
+        ModelIDModel *model11 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericPowerLevelSetupServer_Describe sigModelID:kSigModel_GenericPowerLevelSetupServer_ID];
+        ModelIDModel *model12 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericPowerLevelClient_Describe sigModelID:kSigModel_GenericPowerLevelClient_ID];
+        ModelIDModel *model13 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericBatteryServer_Describe sigModelID:kSigModel_GenericBatteryServer_ID];
+        ModelIDModel *model14 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericBatteryClient_Describe sigModelID:kSigModel_GenericBatteryClient_ID];
+        ModelIDModel *model15 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericLocationServer_Describe sigModelID:kSigModel_GenericLocationServer_ID];
+        ModelIDModel *model16 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericLocationSetupServer_Describe sigModelID:kSigModel_GenericLocationSetupServer_ID];
+        ModelIDModel *model17 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericLocationClient_Describe sigModelID:kSigModel_GenericLocationClient_ID];
+        ModelIDModel *model18 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericAdminPropertyServer_Describe sigModelID:kSigModel_GenericAdminPropertyServer_ID];
+        ModelIDModel *model19 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericManufacturerPropertyServer_Describe sigModelID:kSigModel_GenericManufacturerPropertyServer_ID];
+        ModelIDModel *model20 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericUserPropertyServer_Describe sigModelID:kSigModel_GenericUserPropertyServer_ID];
+        ModelIDModel *model21 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericClientPropertyServer_Describe sigModelID:kSigModel_GenericClientPropertyServer_ID];
+        ModelIDModel *model22 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Generic_Describe modelName:kSigModel_GenericPropertyClient_Describe sigModelID:kSigModel_GenericPropertyClient_ID];
         //Sensors
-        _model23 = [[ModelIDModel alloc] initWithModelGroup:@"Sensors" modelName:@"Sensor Server" sigModelID:SIG_MD_SENSOR_S];
-        _model24 = [[ModelIDModel alloc] initWithModelGroup:@"Sensors" modelName:@"Sensor Setup Server" sigModelID:SIG_MD_SENSOR_SETUP_S];
-        _model25 = [[ModelIDModel alloc] initWithModelGroup:@"Sensors" modelName:@"Sensor Client" sigModelID:SIG_MD_SENSOR_C];
+        ModelIDModel *model23 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Sensors_Describe modelName:kSigModel_SensorServer_Describe sigModelID:kSigModel_SensorServer_ID];
+        ModelIDModel *model24 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Sensors_Describe modelName:kSigModel_SensorSetupServer_Describe sigModelID:kSigModel_SensorSetupServer_ID];
+        ModelIDModel *model25 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Sensors_Describe modelName:kSigModel_SensorClient_Describe sigModelID:kSigModel_SensorClient_ID];
         //Time and Scenes
-        _model26 = [[ModelIDModel alloc] initWithModelGroup:@"Time Server" modelName:@"Time and Scenes" sigModelID:SIG_MD_TIME_S];
-        _model27 = [[ModelIDModel alloc] initWithModelGroup:@"Time Server" modelName:@"Time Setup Server" sigModelID:SIG_MD_TIME_SETUP_S];
-        _model28 = [[ModelIDModel alloc] initWithModelGroup:@"Time Server" modelName:@"Time Client" sigModelID:SIG_MD_TIME_C];
-        _model29 = [[ModelIDModel alloc] initWithModelGroup:@"Time Server" modelName:@"Scene Server" sigModelID:SIG_MD_SCENE_S];
-        _model30 = [[ModelIDModel alloc] initWithModelGroup:@"Time Server" modelName:@"Scene Setup Server" sigModelID:SIG_MD_SCENE_SETUP_S];
-        _model31 = [[ModelIDModel alloc] initWithModelGroup:@"Time Server" modelName:@"Scene Client" sigModelID:SIG_MD_SCENE_C];
-        _model32 = [[ModelIDModel alloc] initWithModelGroup:@"Time Server" modelName:@"Scheduler Server" sigModelID:SIG_MD_SCHED_S];
-        _model33 = [[ModelIDModel alloc] initWithModelGroup:@"Time Server" modelName:@"Scheduler Setup Server" sigModelID:SIG_MD_SCHED_SETUP_S];
-        _model34 = [[ModelIDModel alloc] initWithModelGroup:@"Time Server" modelName:@"Scheduler Client" sigModelID:SIG_MD_SCHED_C];
+        ModelIDModel *model26 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_TimeServer_Describe modelName:kSigModel_TimeServer_Describe sigModelID:kSigModel_TimeServer_ID];
+        ModelIDModel *model27 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_TimeServer_Describe modelName:kSigModel_TimeSetupServer_Describe sigModelID:kSigModel_TimeSetupServer_ID];
+        ModelIDModel *model28 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_TimeServer_Describe modelName:kSigModel_TimeClient_Describe sigModelID:kSigModel_TimeClient_ID];
+        ModelIDModel *model29 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_TimeServer_Describe modelName:kSigModel_SceneServer_Describe sigModelID:kSigModel_SceneServer_ID];
+        ModelIDModel *model30 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_TimeServer_Describe modelName:kSigModel_SceneSetupServer_Describe sigModelID:kSigModel_SceneSetupServer_ID];
+        ModelIDModel *model31 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_TimeServer_Describe modelName:kSigModel_SceneClient_Describe sigModelID:kSigModel_SceneClient_ID];
+        ModelIDModel *model32 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_TimeServer_Describe modelName:kSigModel_SchedulerServer_Describe sigModelID:kSigModel_SchedulerServer_ID];
+        ModelIDModel *model33 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_TimeServer_Describe modelName:kSigModel_SchedulerSetupServer_Describe sigModelID:kSigModel_SchedulerSetupServer_ID];
+        ModelIDModel *model34 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_TimeServer_Describe modelName:kSigModel_SchedulerClient_Describe sigModelID:kSigModel_SchedulerClient_ID];
         //Lighting
-        _model35 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light Lightness Server" sigModelID:SIG_MD_LIGHTNESS_S];
-        _model36 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light Lightness Setup Server" sigModelID:SIG_MD_LIGHTNESS_SETUP_S];
-        _model37 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light Lightness Client" sigModelID:SIG_MD_LIGHTNESS_C];
-        _model38 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light CTL Server" sigModelID:SIG_MD_LIGHT_CTL_S];
-        _model39 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light CTL Setup Server" sigModelID:SIG_MD_LIGHT_CTL_SETUP_S];
-        _model40 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light CTL Client" sigModelID:SIG_MD_LIGHT_CTL_C];
-        _model41 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light CTL Temperature Server" sigModelID:SIG_MD_LIGHT_CTL_TEMP_S];
-        _model42 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light HSL Server" sigModelID:SIG_MD_LIGHT_HSL_S];
-        _model43 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light HSL Setup Server" sigModelID:SIG_MD_LIGHT_HSL_SETUP_S];
-        _model44 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light HSL Client" sigModelID:SIG_MD_LIGHT_HSL_C];
-        _model45 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light HSL Hue Server" sigModelID:SIG_MD_LIGHT_HSL_HUE_S];
-        _model46 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light HSL Saturation Server" sigModelID:SIG_MD_LIGHT_HSL_SAT_S];
-        _model47 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light xyL Server" sigModelID:SIG_MD_LIGHT_XYL_S];
-        _model48 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light xyL Setup Server" sigModelID:SIG_MD_LIGHT_XYL_SETUP_S];
-        _model49 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light xyL Client" sigModelID:SIG_MD_LIGHT_XYL_C];
-        _model50 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light LC Server" sigModelID:SIG_MD_LIGHT_LC_S];
-        _model51 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light LC Setup Server" sigModelID:SIG_MD_LIGHT_LC_SETUP_S];
-        _model52 = [[ModelIDModel alloc] initWithModelGroup:@"Lighting" modelName:@"Light LC Client" sigModelID:SIG_MD_LIGHT_LC_C];
-        
-        _modelIDs = @[_model1,_model2,_model3,_model4,_model5,_model6,_model7,_model8,_model9,_model10,_model11,_model12,_model13,_model14,_model15,_model16,_model17,_model18,_model19,_model20,_model21,_model22,_model23,_model24,_model25,_model26,_model27,_model28,_model29,_model30,_model31,_model32,_model33,_model34,_model35,_model36,_model37,_model38,_model39,_model40,_model41,_model42,_model43,_model44,_model45,_model46,_model47,_model48,_model49,_model50,_model51,_model52];
-        //        _defaultModelIDs = @[_model1,_model3,_model4,_model35,_model36,_model38,_model39,_model41,_model50,_model51];//默认选中10个
+        ModelIDModel *model35 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightLightnessServer_Describe sigModelID:kSigModel_LightLightnessServer_ID];
+        ModelIDModel *model36 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightLightnessSetupServer_Describe sigModelID:kSigModel_LightLightnessSetupServer_ID];
+        ModelIDModel *model37 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightLightnessClient_Describe sigModelID:kSigModel_LightLightnessClient_ID];
+        ModelIDModel *model38 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightCTLServer_Describe sigModelID:kSigModel_LightCTLServer_ID];
+        ModelIDModel *model39 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightCTLSetupServer_Describe sigModelID:kSigModel_LightCTLSetupServer_ID];
+        ModelIDModel *model40 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightCTLClient_Describe sigModelID:kSigModel_LightCTLClient_ID];
+        ModelIDModel *model41 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightCTLTemperatureServer_Describe sigModelID:kSigModel_LightCTLTemperatureServer_ID];
+        ModelIDModel *model42 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightHSLServer_Describe sigModelID:kSigModel_LightHSLServer_ID];
+        ModelIDModel *model43 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightHSLSetupServer_Describe sigModelID:kSigModel_LightHSLSetupServer_ID];
+        ModelIDModel *model44 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightHSLClient_Describe sigModelID:kSigModel_LightHSLClient_ID];
+        ModelIDModel *model45 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightHSLHueServer_Describe sigModelID:kSigModel_LightHSLHueServer_ID];
+        ModelIDModel *model46 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightHSLSaturationServer_Describe sigModelID:kSigModel_LightHSLSaturationServer_ID];
+        ModelIDModel *model47 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightxyLServer_Describe sigModelID:kSigModel_LightxyLServer_ID];
+        ModelIDModel *model48 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightxyLSetupServer_Describe sigModelID:kSigModel_LightxyLSetupServer_ID];
+        ModelIDModel *model49 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightxyLClient_Describe sigModelID:kSigModel_LightxyLClient_ID];
+        ModelIDModel *model50 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightLCServer_Describe sigModelID:kSigModel_LightLCServer_ID];
+        ModelIDModel *model51 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightLCSetupServer_Describe sigModelID:kSigModel_LightLCSetupServer_ID];
+        ModelIDModel *model52 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Lighting_Describe modelName:kSigModel_LightLCClient_Describe sigModelID:kSigModel_LightLCClient_ID];
+
+        ModelIDModel *model53 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Configuration_Describe modelName:kSigModel_ConfigurationServer_Describe sigModelID:kSigModel_ConfigurationServer_ID];
+        ModelIDModel *model54 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Configuration_Describe modelName:kSigModel_ConfigurationClient_Describe sigModelID:kSigModel_ConfigurationClient_ID];
+        ModelIDModel *model55 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Health_Describe modelName:kSigModel_HealthServer_Describe sigModelID:kSigModel_HealthServer_ID];
+        ModelIDModel *model56 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_Health_Describe modelName:kSigModel_HealthClient_Describe sigModelID:kSigModel_HealthClient_ID];
+        ModelIDModel *model57 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_RemoteProvision_Describe modelName:kSigModel_RemoteProvisionServer_Describe sigModelID:kSigModel_RemoteProvisionServer_ID];
+        ModelIDModel *model58 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_RemoteProvision_Describe modelName:kSigModel_RemoteProvisionClient_Describe sigModelID:kSigModel_RemoteProvisionClient_ID];
+        ModelIDModel *model59 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareUpdate_Describe modelName:kSigModel_FirmwareUpdateServer_Describe sigModelID:kSigModel_FirmwareUpdateServer_ID];
+        ModelIDModel *model60 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareUpdate_Describe modelName:kSigModel_FirmwareUpdateClient_Describe sigModelID:kSigModel_FirmwareUpdateClient_ID];
+        ModelIDModel *model61 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareDistribution_Describe modelName:kSigModel_FirmwareDistributionServer_Describe sigModelID:kSigModel_FirmwareDistributionServer_ID];
+        ModelIDModel *model62 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareDistribution_Describe modelName:kSigModel_FirmwareDistributionClient_Describe sigModelID:kSigModel_FirmwareDistributionClient_ID];
+        ModelIDModel *model63 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_ObjectTransfer_Describe modelName:kSigModel_ObjectTransferServer_Describe sigModelID:kSigModel_ObjectTransferServer_ID];
+        ModelIDModel *model64 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_ObjectTransfer_Describe modelName:kSigModel_ObjectTransferClient_Describe sigModelID:kSigModel_ObjectTransferClient_ID];
+        ModelIDModel *model65 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SubnetBridge_Describe modelName:kSigModel_SubnetBridgeServer_Describe sigModelID:kSigModel_SubnetBridgeServer_ID];
+
+        _modelIDs = @[model1,model2,model3,model4,model5,model6,model7,model8,model9,model10,model11,model12,model13,model14,model15,model16,model17,model18,model19,model20,model21,model22,model23,model24,model25,model26,model27,model28,model29,model30,model31,model32,model33,model34,model35,model36,model37,model38,model39,model40,model41,model42,model43,model44,model45,model46,model47,model48,model49,model50,model51,model52,model53,model54,model55,model56,model57,model58,model59,model60,model61,model62,model63,model64,model65];
+        //        _defaultModelIDs = @[model1,model3,model4,model35,model36,model38,model39,model41,model50,model51];//默认选中10个
         _defaultModelIDs = _modelIDs;//默认选中所有
         
     }
@@ -663,6 +676,11 @@
                 NSData *data = [NSData dataWithBytes:PanelByte length:sizeof(PanelByte)];
                 [mData appendData:data];
                 compositionData = [[SigPage0 alloc] initWithParameters:mData];
+            }else if (pid == 2) {
+                //set default compositionData of HSL
+                NSData *data = [NSData dataWithBytes:HSLByte length:sizeof(HSLByte)];
+                [mData appendData:data];
+                compositionData = [[SigPage0 alloc] initWithParameters:mData];
             }else if (pid == 1) {
                 //set default compositionData of CT
                 NSData *data = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
@@ -688,12 +706,17 @@
                 [mData appendData:cpsData];
                 compositionData = [[SigPage0 alloc] initWithParameters:mData];
             } else {
-                if (pid == 7) {
+                if (pid == SigNodePID_Panel) {
                     //set default compositionData of panel
                     NSData *data = [NSData dataWithBytes:PanelByte length:sizeof(PanelByte)];
                     [mData appendData:data];
                     compositionData = [[SigPage0 alloc] initWithParameters:mData];
-                }else if (pid == 1) {
+                } else if (pid == SigNodePID_HSL) {
+                    //set default compositionData of CT
+                    NSData *data = [NSData dataWithBytes:HSLByte length:sizeof(HSLByte)];
+                    [mData appendData:data];
+                    compositionData = [[SigPage0 alloc] initWithParameters:mData];
+                } else if (pid == SigNodePID_CT) {
                     //set default compositionData of CT
                     NSData *data = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
                     [mData appendData:data];
@@ -820,14 +843,50 @@
 @end
 
 
-@implementation SigNodeUpdateStatusModel
+@implementation SigUpdatingNodeEntryModel
 
-- (instancetype)initWithAddress:(UInt16)address status:(SigUpdateStatusType)status {
+- (instancetype)initWithAddress:(UInt16)address retrievedUpdatePhase:(SigFirmwareUpdatePhaseType)retrievedUpdatePhase updateStatus:(SigFirmwareUpdateServerAndClientModelStatusType)updateStatus transferStatus:(SigBLOBTransferStatusType)transferStatus transferProgress:(UInt8)transferProgress updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex {
     if (self = [super init]) {
         _address = address;
-        _status = status;
+        _retrievedUpdatePhase = retrievedUpdatePhase;
+        _updateStatus = updateStatus;
+        _transferStatus = transferStatus;
+        _transferProgress = transferProgress;
+        _updateFirmwareImageIndex = updateFirmwareImageIndex;
+        UInt64 tem64 = 0;
+        UInt64 address64 = address;
+        UInt64 retrievedUpdatePhase64 = retrievedUpdatePhase;
+        UInt64 updateStatus64 = updateStatus;
+        UInt64 transferStatus64 = transferStatus;
+        UInt64 transferProgress64 = transferProgress;
+        UInt64 updateFirmwareImageIndex64 = updateFirmwareImageIndex;
+        tem64 = (address64 & 0x7FFF) | ((retrievedUpdatePhase64 & 0xF) << 15) | ((updateStatus64 & 0x7) << 19) | ((transferStatus64 & 0xF) << 22) | ((transferProgress64 & 0x3F) << 26) | ((updateFirmwareImageIndex64 & 0xFF) << 32);
+        self.parameters = [NSData dataWithBytes:&tem64 length:5];
     }
     return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length == 5) {
+            UInt64 tem64 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem64, dataByte, 5);
+            _address = tem64&0x7FFF;
+            _retrievedUpdatePhase = (tem64 >> 15) & 0xF;
+            _updateStatus = (tem64 >> 19) & 0x7;
+            _transferStatus = (tem64 >> 22) & 0xF;
+            _transferProgress = (tem64 >> 26) & 0x3F;
+            _updateFirmwareImageIndex = (tem64 >> 32) & 0xFF;
+            _parameters = [NSData dataWithData:parameters];
+        }
+    }
+    return self;
+}
+
+- (NSString *)getDetailString {
+    NSString *tem = [NSString stringWithFormat:@"Address:(0x%X),Phase:(0x%X,\"%@\"),update:(0x%X,\"%@\"),transfer:(0x%X,\"%@\"),Progress:(%d%%),index:(0x%X)",_address,_retrievedUpdatePhase,[SigHelper.share getDetailOfSigFirmwareUpdatePhaseType:_retrievedUpdatePhase],_updateStatus,[SigHelper.share getDetailOfSigFirmwareUpdateServerAndClientModelStatusType:_updateStatus],_transferStatus,[SigHelper.share getDetailOfSigBLOBTransferStatusType:_transferStatus],_transferProgress,_updateFirmwareImageIndex];
+    return tem;
 }
 
 @end
@@ -859,6 +918,59 @@
             } else {
                 return nil;
             }
+        } else {
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSString *)getFirmwareIDString {
+    NSString *tem = @"";
+    if (_currentFirmwareID && _currentFirmwareID.length > 0) {
+        tem = [LibTools convertDataToHexStr:_currentFirmwareID];
+    }
+    return tem;
+}
+
+- (NSString *)getUpdateURIString {
+    NSString *tem = @"";
+    if (_updateURL && _updateURL.length > 0) {
+        tem = [LibTools convertDataToHexStr:_updateURL];
+    }
+    return tem;
+}
+
+@end
+
+
+@implementation SigReceiverEntryModel
+
+- (instancetype)initWithAddress:(UInt16)address updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex {
+    if (self = [super init]) {
+        _address = address;
+        _updateFirmwareImageIndex = updateFirmwareImageIndex;
+        UInt16 tem16 = _address;
+        UInt8 tem8 = _updateFirmwareImageIndex;
+        NSMutableData *mData = [NSMutableData data];
+        [mData appendData:[NSData dataWithBytes:&tem16 length:2]];
+        [mData appendData:[NSData dataWithBytes:&tem8 length:1]];
+        _parameters = mData;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length >= 3) {
+            _parameters = parameters;
+            UInt8 tem8 = 0;
+            UInt16 tem16 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem16, dataByte, 2);
+            _address = tem16;
+            memcpy(&tem8, dataByte+2, 1);
+            _updateFirmwareImageIndex = (BOOL)tem8;
         } else {
             return nil;
         }
@@ -1688,13 +1800,13 @@
     }
 }
 
-- (BOOL)isEqual:(id)object{
-    if ([object isKindOfClass:[SigAppkeyModel class]]) {
-        return [_key isEqualToString:((SigAppkeyModel *)object).key];
-    } else {
-        return NO;
-    }
-}
+//- (BOOL)isEqual:(id)object{
+//    if ([object isKindOfClass:[SigAppkeyModel class]]) {
+//        return [_key isEqualToString:((SigAppkeyModel *)object).key];
+//    } else {
+//        return NO;
+//    }
+//}
 
 - (UInt8)aid {
     if (_aid == 0 && _key && _key.length > 0) {
@@ -1991,6 +2103,8 @@
         _heartbeatPub = [[SigHeartbeatPubModel alloc] init];
         _heartbeatSub = [[NSMutableArray alloc] init];
 //        _sno = @"00000000";
+        _subnetBridgeList = [[NSMutableArray alloc] init];
+        _subnetBridgeEnable = NO;
     }
     return self;
 }
@@ -2029,6 +2143,8 @@
         _heartbeatPub = node.heartbeatPub;
         _heartbeatSub = [NSMutableArray arrayWithArray:node.heartbeatSub];
 //        _sno = node.sno;
+        _subnetBridgeList = [[NSMutableArray alloc] initWithArray:node.subnetBridgeList];
+        _subnetBridgeEnable = node.subnetBridgeEnable;
     }
     return self;
 }
@@ -2064,7 +2180,9 @@
     device.heartbeatPub = self.heartbeatPub;
     device.heartbeatSub = [NSMutableArray arrayWithArray:self.heartbeatSub];
 //    device.sno = self.sno;
-    
+    device.subnetBridgeList = [[NSMutableArray alloc] initWithArray:device.subnetBridgeList];
+    device.subnetBridgeEnable = device.subnetBridgeEnable;
+
     return device;
 }
 
@@ -2073,9 +2191,9 @@
 - (BOOL)isEqual:(id)object{
     if ([object isKindOfClass:[SigNodeModel class]]) {
         SigNodeModel *tem = (SigNodeModel *)object;
-        if (self.peripheralUUID && self.peripheralUUID.length > 0 && tem.peripheralUUID && tem.peripheralUUID.length > 0) {
+        if (self.peripheralUUID && self.peripheralUUID.length > 0 && tem.peripheralUUID && tem.peripheralUUID.length > 0 && ![tem.peripheralUUID isEqual:@"00000000000000000000000000000000"]) {
             return [self.peripheralUUID isEqualToString:tem.peripheralUUID];
-        }else if (self.macAddress && self.macAddress.length > 0 && tem.macAddress && tem.macAddress.length > 0) {
+        }else if (self.macAddress && self.macAddress.length > 0 && tem.macAddress && tem.macAddress.length > 0 && ![tem.macAddress isEqual:@"000000000000"]) {
             return [self.macAddress.uppercaseString isEqualToString:tem.macAddress.uppercaseString];
         }
         return NO;
@@ -2164,31 +2282,35 @@
 }
 
 - (NSMutableArray<NSNumber *> *)onoffAddresses{
-    return [self getAddressesWithModelID:@(SIG_MD_G_ONOFF_S)];
+    return [self getAddressesWithModelID:@(kSigModel_GenericOnOffServer_ID)];
 }
 
 - (NSMutableArray<NSNumber *> *)levelAddresses{
-    return [self getAddressesWithModelID:@(SIG_MD_G_LEVEL_S)];
+    return [self getAddressesWithModelID:@(kSigModel_GenericLevelServer_ID)];
 }
 
 - (NSMutableArray<NSNumber *> *)temperatureAddresses{
-    return [self getAddressesWithModelID:@(SIG_MD_LIGHT_CTL_TEMP_S)];
+    return [self getAddressesWithModelID:@(kSigModel_LightCTLTemperatureServer_ID)];
 }
 
 - (NSMutableArray<NSNumber *> *)HSLAddresses{
-    return [self getAddressesWithModelID:@(SIG_MD_LIGHT_HSL_S)];
+    return [self getAddressesWithModelID:@(kSigModel_LightHSLServer_ID)];
 }
 
 - (NSMutableArray<NSNumber *> *)lightnessAddresses{
-    return [self getAddressesWithModelID:@(SIG_MD_LIGHTNESS_S)];
+    return [self getAddressesWithModelID:@(kSigModel_LightLightnessServer_ID)];
 }
 
 - (NSMutableArray<NSNumber *> *)schedulerAddress{
-    return [self getAddressesWithModelID:@(SIG_MD_SCHED_S)];
+    return [self getAddressesWithModelID:@(kSigModel_SchedulerServer_ID)];
+}
+
+- (NSMutableArray<NSNumber *> *)subnetBridgeServerAddress {
+    return [self getAddressesWithModelID:@(kSigModel_SubnetBridgeServer_ID)];
 }
 
 - (NSMutableArray<NSNumber *> *)sceneAddress{
-    return [self getAddressesWithModelID:@(SIG_MD_SCENE_S)];
+    return [self getAddressesWithModelID:@(kSigModel_SceneServer_ID)];
 }
 
 - (NSMutableArray<NSNumber *> *)publishAddress{
@@ -2198,14 +2320,14 @@
 ///publish首选SIG_MD_LIGHT_CTL_S，次选SIG_MD_LIGHT_HSL_S，SIG_MD_LIGHTNESS_S，SIG_MD_G_ONOFF_S
 - (UInt16)publishModelID{
     UInt16 tem = 0;
-    if ([self getAddressesWithModelID:@(SIG_MD_LIGHT_CTL_S)].count > 0) {
-        tem = (UInt16)SIG_MD_LIGHT_CTL_S;
-    } else if ([self getAddressesWithModelID:@(SIG_MD_LIGHT_HSL_S)].count > 0){
-        tem = (UInt16)SIG_MD_LIGHT_HSL_S;
-    } else if ([self getAddressesWithModelID:@(SIG_MD_LIGHTNESS_S)].count > 0){
-        tem = (UInt16)SIG_MD_LIGHTNESS_S;
-    } else if ([self getAddressesWithModelID:@(SIG_MD_G_ONOFF_S)].count > 0){
-        tem = (UInt16)SIG_MD_G_ONOFF_S;
+    if ([self getAddressesWithModelID:@(kSigModel_LightCTLServer_ID)].count > 0) {
+        tem = (UInt16)kSigModel_LightCTLServer_ID;
+    } else if ([self getAddressesWithModelID:@(kSigModel_LightHSLServer_ID)].count > 0){
+        tem = (UInt16)kSigModel_LightHSLServer_ID;
+    } else if ([self getAddressesWithModelID:@(kSigModel_LightLightnessServer_ID)].count > 0){
+        tem = (UInt16)kSigModel_LightLightnessServer_ID;
+    } else if ([self getAddressesWithModelID:@(kSigModel_GenericOnOffServer_ID)].count > 0){
+        tem = (UInt16)kSigModel_GenericOnOffServer_ID;
     }
     return tem;
 }
@@ -2428,6 +2550,16 @@
         }
         dict[@"schedulerList"] = array;
     }
+    if (_subnetBridgeList) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *subnetBridgeList = [NSArray arrayWithArray:_subnetBridgeList];
+        for (SigSubnetBridgeModel *model in subnetBridgeList) {
+            NSDictionary *subnetBridgeDict = [model getDictionaryOfSubnetBridgeModel];
+            [array addObject:subnetBridgeDict];
+        }
+        dict[@"subnetBridgeList"] = array;
+    }
+    dict[@"subnetBridgeEnable"] = [NSNumber numberWithBool:_subnetBridgeEnable];
     return dict;
 }
 
@@ -2540,6 +2672,19 @@
             [schedulerList addObject:model];
         }
         _schedulerList = schedulerList;
+    }
+    NSMutableArray *subnetBridgeList = [NSMutableArray array];
+    if ([allKeys containsObject:@"subnetBridgeList"]) {
+        NSArray *array = dictionary[@"subnetBridgeList"];
+        for (NSDictionary *subnetBridgeDict in array) {
+            SigSubnetBridgeModel *model = [[SigSubnetBridgeModel alloc] init];
+            [model setDictionaryToSubnetBridgeModel:subnetBridgeDict];
+            [subnetBridgeList addObject:model];
+        }
+    }
+    _subnetBridgeList = subnetBridgeList;
+    if ([allKeys containsObject:@"subnetBridgeEnable"]) {
+        _subnetBridgeEnable = [dictionary[@"subnetBridgeEnable"] boolValue];
     }
 }
 
@@ -2826,8 +2971,8 @@
                         sigModelIDModel.publish.credentials = 0;
                         sigModelIDModel.publish.ttl = 0xff;
                         //json数据中，period为publish周期的毫秒数据，默认20秒
-                        sigModelIDModel.publish.period.numberOfSteps = kPublishInterval;
-                        sigModelIDModel.publish.period.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_seconds];
+                        sigModelIDModel.publish.period.numberOfSteps = SigDataSource.share.defaultPublishPeriodModel.numberOfSteps;
+                        sigModelIDModel.publish.period.resolution = SigDataSource.share.defaultPublishPeriodModel.resolution;
                         sigModelIDModel.publish.retransmit = retransmit;
                         sigModelIDModel.publish.address = [NSString stringWithFormat:@"%04lX",(long)kMeshAddress_allNodes];
                         break;
@@ -2968,6 +3113,7 @@
             //lum
             UInt16 lightness = [SigHelper.share getUint16LightnessFromUInt8Lum:lum];
             self.brightness = lightness;
+            self.HSL_Lightness = lightness;//对于HSL设备，lum改变则HSL_Lightness也需要改变。
             self.state = self.brightness != 0 ? DeviceStateOn : DeviceStateOff;
         } else if (source == self.temperatureAddresses.firstObject.intValue) {
             //temp
@@ -2993,6 +3139,21 @@
         self.state = message.state;
         self.brightness = [SigHelper.share getUint16LightnessFromUInt8Lum:message.brightness];
         self.temperature = [SigHelper.share getUint16TemperatureFromUInt8Temperature100:message.temperature];
+    } else if ([responseMessage isMemberOfClass:[SigLightLightnessLastStatus class]]) {
+        SigLightLightnessLastStatus *message = (SigLightLightnessLastStatus *)responseMessage;
+        self.brightness = message.lightness;
+        self.state = self.brightness != 0 ? DeviceStateOn : DeviceStateOff;
+    } else if ([responseMessage isMemberOfClass:[SigLightXyLStatus class]]) {
+        SigLightXyLStatus *message = (SigLightXyLStatus *)responseMessage;
+        self.brightness = message.xyLLightness;
+        self.state = self.brightness != 0 ? DeviceStateOn : DeviceStateOff;
+    } else if ([responseMessage isMemberOfClass:[SigLightLCLightOnOffStatus class]]) {
+        SigLightLCLightOnOffStatus *message = (SigLightLCLightOnOffStatus *)responseMessage;
+        if (message.remainingTime) {
+            self.state = message.targetLightOnOff;
+        } else {
+            self.state = message.presentLightOnOff;
+        }
     } else {
 //        TeLogWarn(@"Node response status Model is Undefined.");
     }
@@ -3488,19 +3649,19 @@
 }
 
 - (BOOL)isConfigurationServer {
-    return [self getIntModelID] == kConfigurationServerModelId;
+    return [self getIntModelID] == kSigModel_ConfigurationServer_ID;
 }
 
 - (BOOL)isConfigurationClient {
-    return [self getIntModelID] == kConfigurationClientModelId;
+    return [self getIntModelID] == kSigModel_ConfigurationClient_ID;
 }
 
 - (BOOL)isHealthServer {
-    return [self getIntModelID] == kHealthServerModelId;
+    return [self getIntModelID] == kSigModel_HealthServer_ID;
 }
 
 - (BOOL)isHealthClient {
-    return [self getIntModelID] == kHealthClientModelId;
+    return [self getIntModelID] == kSigModel_HealthClient_ID;
 }
 
 /// Adds the given Application Key Index to the bound keys.
@@ -3930,6 +4091,186 @@
     [coder encodeObject:_UUIDString forKey:kSigOOBModel_UUIDString_key];
     [coder encodeObject:_OOBString forKey:kSigOOBModel_OOBString_key];
     [coder encodeObject:_lastEditTimeString forKey:kSigOOBModel_lastEditTimeString_key];
+}
+
+@end
+
+
+@implementation SigSubnetBridgeModel
+
+- (NSDictionary *)getDictionaryOfSubnetBridgeModel {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    dict[@"directions"] = [NSNumber numberWithBool:self.directions];
+    dict[@"netKeyIndex1"] = [NSString stringWithFormat:@"%04X",self.netKeyIndex1];
+    dict[@"netKeyIndex2"] = [NSString stringWithFormat:@"%04X",self.netKeyIndex2];
+    dict[@"address1"] = [NSString stringWithFormat:@"%04X",self.address1];
+    dict[@"address2"] = [NSString stringWithFormat:@"%04X",self.address2];
+    return dict;
+}
+
+- (void)setDictionaryToSubnetBridgeModel:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:@"directions"]) {
+        self.directions = (SigDirectionsFieldValues)[dictionary[@"directions"] intValue];
+    }
+    if ([allKeys containsObject:@"netKeyIndex1"]) {
+        _netKeyIndex1 = [LibTools uint16From16String:dictionary[@"netKeyIndex1"]];
+    }
+    if ([allKeys containsObject:@"netKeyIndex2"]) {
+        _netKeyIndex2 = [LibTools uint16From16String:dictionary[@"netKeyIndex2"]];
+    }
+    if ([allKeys containsObject:@"address1"]) {
+        _address1 = [LibTools uint16From16String:dictionary[@"address1"]];
+    }
+    if ([allKeys containsObject:@"address2"]) {
+        _address2 = [LibTools uint16From16String:dictionary[@"address2"]];
+    }
+}
+
+- (instancetype)initWithDirections:(SigDirectionsFieldValues)directions netKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 address1:(UInt16)address1 address2:(UInt16)address2 {
+    if (self = [super init]) {
+        _directions = directions;
+        _netKeyIndex1 = netKeyIndex1;
+        _netKeyIndex2 = netKeyIndex2;
+        _address1 = address1;
+        _address2 = address2;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length >= 8) {
+            UInt8 tem8 = 0;
+            UInt16 tem16 = 0;
+            UInt32 tem32 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            _directions = tem8;
+            memcpy(&tem32, dataByte+1, 3);
+            _netKeyIndex2 = (tem32 & 0xFFFFFF) >> 12;
+            _netKeyIndex1 = (tem32 & 0xFFFFFF) & 0xFFF;
+            memcpy(&tem16, dataByte+4, 2);
+            _address1 = tem16;
+            memcpy(&tem16, dataByte+6, 2);
+            _address2 = tem16;
+        }
+    }
+    return self;
+}
+
+- (NSString *)getDescription {
+    NSString *tem = [NSString stringWithFormat:@"Direction:%d(%@)\nNetKeyIndex1:0x%04X\nNetKeyIndex2:0x%04X\nAddress1:0x%04X\nAddress2:0x%04X",_directions,[SigHelper.share getDetailOfSigDirectionsFieldValues:_directions],_netKeyIndex1,_netKeyIndex2,_address1,_address2];
+    
+    return tem;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = 0;
+    UInt16 tem16 = 0;
+    UInt32 tem32 = 0;
+    tem8 = _directions;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem32 = _netKeyIndex2;
+    tem32 = (tem32 << 12) | _netKeyIndex1;
+    data = [NSData dataWithBytes:&tem32 length:4];
+    [mData appendData:[data subdataWithRange:NSMakeRange(0, 3)]];
+    
+    tem16 = _address1;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem16 = _address2;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    return mData;
+}
+
+@end
+
+
+@implementation SigBridgeSubnetModel
+
+- (instancetype)initWithNetKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 {
+    if (self = [super init]) {
+        _netKeyIndex1 = netKeyIndex1;
+        _netKeyIndex2 = netKeyIndex2;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length >= 3) {
+            UInt32 tem32 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem32, dataByte, 3);
+            _netKeyIndex2 = (tem32 & 0xFFFFFF) >> 12;
+            _netKeyIndex1 = (tem32 & 0xFFFFFF) & 0xFFF;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt32 tem32 = 0;
+    tem32 = _netKeyIndex2;
+    tem32 = (tem32 << 12) | _netKeyIndex1;
+    NSData *data = [NSData dataWithBytes:&tem32 length:4];
+    [mData appendData:[data subdataWithRange:NSMakeRange(0, 3)]];
+    return mData;
+}
+
+@end
+
+
+@implementation SigBridgedAddressesModel
+
+- (instancetype)initWithAddress1:(UInt16)address1 address2:(UInt16)address2 directions:(SigDirectionsFieldValues)directions {
+    if (self = [super init]) {
+        _address1 = address1;
+        _address2 = address2;
+        _directions = directions;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length >= 8) {
+            UInt8 tem8 = 0;
+            UInt16 tem16 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem16, dataByte, 2);
+            _address1 = tem16;
+            memcpy(&tem16, dataByte+2, 2);
+            _address2 = tem16;
+            memcpy(&tem8, dataByte+4, 1);
+            _directions = tem8;
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = 0;
+    UInt16 tem16 = 0;
+    tem16 = _address1;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem16 = _address2;
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem8 = _directions;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
 }
 
 @end

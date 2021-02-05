@@ -213,6 +213,8 @@ typedef enum : NSUInteger {
                 }
                 [SigBearer.share startMeshConnectWithComplete:nil];
                 dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf.selectDevices removeAllObjects];
+                    [weakSelf.tableView reloadData];
                     [weakSelf userAbled:YES];
                 });
             }];
@@ -235,6 +237,7 @@ typedef enum : NSUInteger {
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_MeshOTAItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_MeshOTAItemCellID];
     self.allDevices = [NSMutableArray array];
     self.selectDevices = [NSMutableArray array];
+    [SDKLibCommand setBluetoothCentralUpdateStateCallback:nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated{
@@ -285,7 +288,12 @@ typedef enum : NSUInteger {
         }
         [itemCell.selectButton addAction:^(UIButton *button) {
             if (!button.selected) {
-                weakSelf.selectDevices = [NSMutableArray arrayWithArray:weakSelf.allDevices];
+                weakSelf.selectDevices = [NSMutableArray array];
+                for (AddDeviceStateModel *m in weakSelf.allDevices) {
+                    if (m.state == AddStateScan) {
+                        [weakSelf.selectDevices addObject:m];
+                    }
+                }
             } else {
                 [weakSelf.selectDevices removeAllObjects];
             }
@@ -329,12 +337,14 @@ typedef enum : NSUInteger {
         }
         
         [itemCell.selectButton addAction:^(UIButton *button) {
-            if ([weakSelf.selectDevices containsObject:model]) {
-                [weakSelf.selectDevices removeObject:model];
-            }else{
-                [weakSelf.selectDevices addObject:model];
+            if (model.state == AddStateScan) {
+                if ([weakSelf.selectDevices containsObject:model]) {
+                    [weakSelf.selectDevices removeObject:model];
+                }else{
+                    [weakSelf.selectDevices addObject:model];
+                }
+                [weakSelf.tableView reloadData];
             }
-            [weakSelf.tableView reloadData];
         }];
     }
 }
@@ -351,16 +361,23 @@ typedef enum : NSUInteger {
     if (indexPath.row == 0) {
         MeshOTAItemCell *itemCell = [tableView cellForRowAtIndexPath:indexPath];
         if (!itemCell.selectButton.selected) {
-            self.selectDevices = [NSMutableArray arrayWithArray:self.allDevices];
+            self.selectDevices = [NSMutableArray array];
+            for (AddDeviceStateModel *m in self.allDevices) {
+                if (m.state == AddStateScan) {
+                    [self.selectDevices addObject:m];
+                }
+            }
         } else {
             [self.selectDevices removeAllObjects];
         }
     } else {
         AddDeviceStateModel *model = self.allDevices[indexPath.row - 1];
-        if ([self.selectDevices containsObject:model]) {
-            [self.selectDevices removeObject:model];
-        }else{
-            [self.selectDevices addObject:model];
+        if (model.state == AddStateScan) {
+            if ([self.selectDevices containsObject:model]) {
+                [self.selectDevices removeObject:model];
+            }else{
+                [self.selectDevices addObject:model];
+            }
         }
     }
     [self.tableView reloadData];

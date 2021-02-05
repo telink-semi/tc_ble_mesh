@@ -67,6 +67,7 @@
 #pragma mark add node entrance
 - (IBAction)addNewDevice:(UIBarButtonItem *)sender {
     BOOL isRemoteAdd = [[[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType] boolValue];
+    [SDKLibCommand setBluetoothCentralUpdateStateCallback:nil];
     if (isRemoteAdd) {
         TeLogVerbose(@"click remote add device");
         
@@ -182,8 +183,8 @@
     if (!self.needDelayReloadData) {
         self.needDelayReloadData = YES;
         self.isDelaying = NO;
+        self.source = [NSMutableArray arrayWithArray:SigDataSource.share.curNodes];
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.source = [NSMutableArray arrayWithArray:SigDataSource.share.curNodes];
             [self.collectionView reloadData];
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(delayFinish) object:nil];
             [self performSelector:@selector(delayFinish) withObject:nil afterDelay:0.1];
@@ -412,11 +413,23 @@
 #pragma mark - SigMessageDelegate
 
 - (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
-    if ([message isKindOfClass:[SigGenericOnOffStatus class]] || [message isKindOfClass:[SigTelinkOnlineStatusMessage class]]) {
+    if ([message isKindOfClass:[SigGenericOnOffStatus class]]
+        || [message isKindOfClass:[SigTelinkOnlineStatusMessage class]]
+        || [message isKindOfClass:[SigLightLightnessStatus class]]
+        || [message isKindOfClass:[SigLightLightnessLastStatus class]]
+        || [message isKindOfClass:[SigLightCTLStatus class]]
+        || [message isKindOfClass:[SigLightHSLStatus class]]
+        || [message isKindOfClass:[SigLightXyLStatus class]]
+        || [message isKindOfClass:[SigLightLCLightOnOffStatus class]]) {
 //        [self reloadCollectionView];
         [self delayReloadCollectionView];
     }
 }
+
+- (void)didReceiveSigSecureNetworkBeaconMessage:(SigSecureNetworkBeacon *)message {
+    TeLogInfo(@"%@",message);
+}
+
 #pragma mark - SigBluetoothDelegate
 
 /// 需要过滤的设备，返回YES则过滤，返回NO则不过滤。

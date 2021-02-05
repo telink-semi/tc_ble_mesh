@@ -32,6 +32,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface SigLowerTransportPdu : NSObject
+@property (nonatomic,strong) SigNetworkPdu *networkPduModel;
+
 /// Source Address.
 @property (nonatomic,assign) UInt16 source;
 /// Destination Address.

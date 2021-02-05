@@ -88,7 +88,8 @@
         }
         _sequenceZero = segment.sequenceZero;
         UInt32 ack = 0;
-        for (SigSegmentedMessage *seg in segments) {
+        NSArray *temArray = [NSArray arrayWithArray:segments];
+        for (SigSegmentedMessage *seg in temArray) {
             if (seg != nil && ![seg isEqual:[NSNull null]]) {
                 ack |= 1 << seg.segmentOffset;
             }

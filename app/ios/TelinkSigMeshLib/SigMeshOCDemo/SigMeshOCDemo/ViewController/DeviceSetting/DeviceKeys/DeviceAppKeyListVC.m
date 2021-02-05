@@ -68,7 +68,8 @@
     __weak typeof(self) weakSelf = self;
     [vc setModel:self.model];
     [vc setBackAppKeyModel:^(SigAppkeyModel * _Nonnull appKeyModel) {
-        [weakSelf addAppKeyToDevice:appKeyModel];
+//        [weakSelf addAppKeyToDevice:appKeyModel];
+        [weakSelf keyBindWithAppKey:appKeyModel];
     }];
     [self.navigationController pushViewController:vc animated:YES];
 }
@@ -187,9 +188,9 @@
     for (SigNodeKeyModel *nodeKey in self.model.appKeys) {
         for (SigAppkeyModel *netKey in SigDataSource.share.appKeys) {
             if (nodeKey.index == netKey.index) {
-                if (![tem containsObject:netKey]) {
+//                if (![tem containsObject:netKey]) {
                     [tem addObject:netKey];
-                }
+//                }
                 break;
             }
         }
@@ -225,10 +226,11 @@
 }
 
 - (void)keyBindWithAppKey:(SigAppkeyModel *)appKey {
-    NSString *msg = [NSString stringWithFormat:@"Are you sure KeyBind appKey(compositionDataGet+appKeyAdd+modelAppBind*N) to index:0x%04lX key:%@",(long)appKey.index,appKey.key];
-    [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
+//    NSString *msg = [NSString stringWithFormat:@"Are you sure KeyBind appKey(compositionDataGet+appKeyAdd+modelAppBind*N) to index:0x%04lX key:%@",(long)appKey.index,appKey.key];
+    __weak typeof(self) weakSelf = self;
+//    [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [ShowTipsHandle.share show:@"KeyBind..."];
+            [ShowTipsHandle.share show:@"add appkey and KeyBind..."];
         });
         NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
         UInt8 keyBindType = type.integerValue;
@@ -240,21 +242,30 @@
                 keyBindType = KeyBindTpye_Normal;
             }
         }
-
+        if (cpsData && cpsData.length > 0) {
+            cpsData = [cpsData subdataWithRange:NSMakeRange(1, cpsData.length - 1)];
+        }
+        
         [SDKLibCommand keyBind:self.model.address appkeyModel:appKey keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             dispatch_async(dispatch_get_main_queue(), ^{
+                SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:appKey.index updated:NO];
+                if (![weakSelf.model.appKeys containsObject:nodeKeyModel]) {
+                    [weakSelf.model.appKeys addObject:nodeKeyModel];
+                }
+                [SigDataSource.share saveLocationData];
+                [weakSelf performSelectorOnMainThread:@selector(refreshUI) withObject:nil waitUntilDone:YES];
                 [ShowTipsHandle.share show:@"KeyBind success!"];
-                [ShowTipsHandle.share delayHidden:3.0];
+                [ShowTipsHandle.share delayHidden:2.0];
             });
         } fail:^(NSError * _Nonnull error) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"KeyBind fail! error=%@",error]];
-                [ShowTipsHandle.share delayHidden:3.0];
+                [ShowTipsHandle.share delayHidden:2.0];
             });
         }];
-    } cancel:^(UIAlertAction *action) {
-        
-    }];
+//    } cancel:^(UIAlertAction *action) {
+//
+//    }];
 }
 
 #pragma mark - UITableViewDataSource
@@ -266,11 +277,12 @@
     KeyCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(KeyCell.class) forIndexPath:indexPath];
     SigAppkeyModel *model = self.sourceArray[indexPath.row];
     [cell setAppKeyModel:model];
-    [cell.editButton setImage:[UIImage imageNamed:@"ic_keybind"] forState:UIControlStateNormal];
-    __weak typeof(self) weakSelf = self;
-    [cell.editButton addAction:^(UIButton *button) {
-        [weakSelf keyBindWithAppKey:model];
-    }];
+    cell.editButton.hidden = YES;
+//    [cell.editButton setImage:[UIImage imageNamed:@"ic_keybind"] forState:UIControlStateNormal];
+//    __weak typeof(self) weakSelf = self;
+//    [cell.editButton addAction:^(UIButton *button) {
+//        [weakSelf keyBindWithAppKey:model];
+//    }];
     return cell;
 }
 

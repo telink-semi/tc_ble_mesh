@@ -30,9 +30,12 @@
 #import "ShareInVC.h"
 #import "FileChooseVC.h"
 #import "UIViewController+Message.h"
+#import "ScanCodeVC.h"
 
 @interface ShareInVC ()
-@property (weak, nonatomic) IBOutlet UITextView *inTipTextView;
+@property (weak, nonatomic) IBOutlet UIButton *selectJsonButton;
+@property (weak, nonatomic) IBOutlet UIButton *selectQRCodeButton;
+@property (strong, nonatomic) ScanCodeVC *scanCodeVC;
 
 @end
 
@@ -41,11 +44,32 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    
-    self.inTipTextView.text = @"Import JSON:\n\n1. Iphone connect to computer that install iTunes.\n2. Click on the iTunes phone icon in the upper left corner of iTunes into the iphone interface.\n3. Select \"file sharing\" in the left of the iTunes, then find and click on the demo APP in the application of \"TelinkSigMesh\", wait for iTunes load file.\n4. After file is loaded, drag the files on the computer \"mesh.json\" into the right side of the \"TelinkSigMesh\", replace the old file and reopen the APP, the APP will load json data file automatically.\n5. Click IMPORT button to choose new json file and load it.\n\n导入JSON数据操作，步骤如下：\n\n1. 将手机连接到安装了iTunes的电脑上。\n2. 点击iTunes左上角的手机图标进入iTunes设备详情界面。\n3. 选择iTunes左侧的“文件共享”，然后在应用中找到并点击demo APP “TelinkSigMesh”，等待iTunes加载文件。\n4. 文件加载完成后，将电脑上的json文件拖入右侧的“TelinkSigMesh”的文稿中。\n5. APP点击IMPORT按钮选择刚刚的JSON文件进行加载。";
+    self.selectJsonButton.selected = YES;
+    self.selectQRCodeButton.selected = NO;
+}
+
+- (IBAction)clickSelectJsonFile:(UIButton *)sender {
+    self.selectJsonButton.selected = YES;
+    self.selectQRCodeButton.selected = NO;
+
+}
+
+- (IBAction)clickSelectQRCode:(UIButton *)sender {
+    self.selectJsonButton.selected = NO;
+    self.selectQRCodeButton.selected = YES;
+
 }
 
 - (IBAction)clickImportButton:(UIButton *)sender {
+    if (self.selectJsonButton.selected) {
+        [self importMeshByJsonFile];
+    } else if (self.selectQRCodeButton.selected) {
+        [self importMeshByQRCode];
+    }
+
+}
+
+- (void)importMeshByJsonFile {
     FileChooseVC *vc = (FileChooseVC *)[UIStoryboard initVC:ViewControllerIdentifiers_FileChooseViewControllerID storybroad:@"Setting"];
     __weak typeof(self) weakSelf = self;
     [vc setBackJsonData:^(NSData * _Nonnull jsonData, NSString * _Nonnull jsonName) {
@@ -57,15 +81,17 @@
     [self.navigationController pushViewController:vc animated:YES];
 }
 
+- (void)importMeshByQRCode {
+    [self.navigationController pushViewController:self.scanCodeVC animated:YES];
+}
+
 ///加载json文件到本地(json data->SigDataSource。)
 - (void)loadJsonData:(NSData *)data jaonName:(NSString *)name{
     NSOperationQueue *operation = [[NSOperationQueue alloc] init];
     __weak typeof(self) weakSelf = self;
     [operation addOperationWithBlock:^{
         NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        NSString *oldMeshUUID = SigDataSource.share.meshUUID;
         NSDictionary *dict = [LibTools getDictionaryWithJsonString:str];
-        [SigDataSource.share setDictionaryToDataSource:dict];
         BOOL result = dict != nil;
         if (result) {
             NSString *tipString = [NSString stringWithFormat:@"import %@ success!",name];
@@ -78,67 +104,7 @@
             return;
         }
 
-        BOOL needChangeProvisionerAddress = NO;//修改手机本地节点的地址
-        BOOL reStartSequenceNumber = NO;//修改手机本地节点使用的发包序列号sno
-        BOOL hasPhoneUUID = NO;
-        NSString *curPhoneUUID = [SigDataSource.share getCurrentProvisionerUUID];
-        NSArray *provisioners = [NSArray arrayWithArray:SigDataSource.share.provisioners];
-        for (SigProvisionerModel *provision in provisioners) {
-            if ([provision.UUID isEqualToString:curPhoneUUID]) {
-                hasPhoneUUID = YES;
-                break;
-            }
-        }
-        if (hasPhoneUUID) {
-            // v3.1.0, 存在
-            BOOL isSameMesh = [SigDataSource.share.meshUUID isEqualToString:oldMeshUUID];
-            if (isSameMesh) {
-                // v3.1.0, 存在，且为相同mesh网络，覆盖JSON，且使用本地的sno和ProvisionerAddress
-                needChangeProvisionerAddress = NO;
-                reStartSequenceNumber = NO;
-            } else {
-                // v3.1.0, 存在，但为不同mesh网络，获取provision，修改为新的ProvisionerAddress，sno从0开始
-                needChangeProvisionerAddress = YES;
-                reStartSequenceNumber = YES;
-            }
-        } else {
-            // v3.1.0, 不存在，覆盖并新建provisioner
-            needChangeProvisionerAddress = NO;
-            reStartSequenceNumber = YES;
-        }
-        
-        //重新计算sno
-        if (reStartSequenceNumber) {
-            [[NSUserDefaults standardUserDefaults] removeObjectForKey:kCurrentMeshProvisionAddress_key];
-            [SigDataSource.share setLocationSno:0];
-        }
-
-        UInt16 maxAddr = SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
-        NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.nodes];
-        for (SigNodeModel *node in nodes) {
-            NSInteger curMax = node.address + node.elements.count - 1;
-            if (curMax > maxAddr) {
-                maxAddr = curMax;
-            }
-        }
-        if (needChangeProvisionerAddress) {
-            //修改手机的本地节点的地址
-            UInt16 newProvisionAddress = maxAddr + 1;
-            [SigDataSource.share changeLocationProvisionerNodeAddressToAddress:newProvisionAddress];
-            TeLogDebug(@"已经使用了address=0x%x作为本地地址",newProvisionAddress);
-            //修改下一次添加设备使用的地址
-            [SigDataSource.share saveLocationProvisionAddress:maxAddr + 1];
-        } else {
-            //修改下一次添加设备使用的地址
-            [SigDataSource.share saveLocationProvisionAddress:maxAddr];
-        }
-        TeLogDebug(@"下一次添加设备可以使用的地址address=0x%x",SigDataSource.share.provisionAddress);
-
-//        SigDataSource.share.curNetkeyModel = nil;
-//        SigDataSource.share.curAppkeyModel = nil;
-        [SigDataSource.share checkExistLocationProvisioner];
-        [SigDataSource.share saveLocationData];
-        [SigDataSource.share.scanList removeAllObjects];
+        [weakSelf importMeshWithDictionary:dict];
     }];
 }
 
@@ -149,6 +115,156 @@
             
         }];
     });
+}
+
+- (ScanCodeVC *)scanCodeVC {
+    if (!_scanCodeVC) {
+        _scanCodeVC = [ScanCodeVC scanCodeVC];
+        __weak typeof(self) weakSelf = self;
+        [_scanCodeVC scanDataViewControllerBackBlock:^(id content) {
+            //AnalysisShareDataVC
+            NSString *uuidString = (NSString *)content;
+            if (uuidString.length && [LibTools validateUUID:uuidString]) {
+                [weakSelf getTelinkJsonWithUUID:uuidString];
+            }else{
+                //hasn't data
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                [weakSelf showTips:@"QRCode is error."];
+                return;
+            }
+        }];
+    }
+    return _scanCodeVC;
+}
+
+- (void)getTelinkJsonWithUUID:(NSString *)uuid {
+    __weak typeof(self) weakSelf = self;
+    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        TeLogDebug(@"SigBearer close %@",(successful?@"successful":@"fail"));
+        [TelinkHttpManager.share downloadJsonDictionaryWithUUID:uuid didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (err) {
+                    NSString *errstr = [NSString stringWithFormat:@"%@",err];
+                    TeLogInfo(@"%@",errstr);
+                    [weakSelf showTips:errstr];
+                    [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                } else {
+                    TeLogInfo(@"result=%@",result);
+                    NSDictionary *dic = (NSDictionary *)result;
+                    BOOL isSuccess = [dic[@"isSuccess"] boolValue];
+                    if (isSuccess) {
+                        [weakSelf showDownloadJsonSuccess:[LibTools getDictionaryWithJsonString:dic[@"data"]] uuid:uuid];
+                    }else{
+                        [weakSelf showTips:dic[@"msg"]];
+                        [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                    }
+                }
+            });
+        }];
+    }];
+}
+
+- (void)showDownloadJsonSuccess:(NSDictionary *)jsonDict uuid:(NSString *)uuid {
+    __weak typeof(self) weakSelf = self;
+    UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:@"download success" message:@"APP will replace locat mesh data." preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *alertT = [UIAlertAction actionWithTitle:@"replace mesh" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        NSLog(@"replace mesh");
+        [weakSelf replaceMesh:jsonDict uuid:uuid];
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+    }];
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        NSLog(@"Cancel");
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+    }];
+    [actionSheet addAction:alertT];
+    [actionSheet addAction:alertF];
+    [self presentViewController:actionSheet animated:YES completion:nil];
+}
+
+- (void)replaceMesh:(NSDictionary *)dict uuid:(NSString *)uuid {
+    BOOL result = dict != nil;
+    if (result) {
+        NSString *tipString = [NSString stringWithFormat:@"import uuid:%@ success!",uuid];
+        [self showTips:tipString];
+        TeLogDebug(@"%@",tipString);
+    } else {
+        NSString *tipString = [NSString stringWithFormat:@"import uuid:%@ fail!",uuid];
+        [self showTips:tipString];
+        TeLogDebug(@"%@",tipString);
+        return;
+    }
+    
+    [self importMeshWithDictionary:dict];
+}
+
+- (void)importMeshWithDictionary:(NSDictionary *)dict {
+    NSString *oldMeshUUID = SigDataSource.share.meshUUID;
+    [SigDataSource.share setDictionaryToDataSource:dict];
+
+    BOOL needChangeProvisionerAddress = NO;//修改手机本地节点的地址
+    BOOL reStartSequenceNumber = NO;//修改手机本地节点使用的发包序列号sno
+    BOOL hasPhoneUUID = NO;
+    NSString *curPhoneUUID = [SigDataSource.share getCurrentProvisionerUUID];
+    NSArray *provisioners = [NSArray arrayWithArray:SigDataSource.share.provisioners];
+    for (SigProvisionerModel *provision in provisioners) {
+        if ([provision.UUID isEqualToString:curPhoneUUID]) {
+            hasPhoneUUID = YES;
+            break;
+        }
+    }
+    
+    [SigDataSource.share checkExistLocationProvisioner];
+    if (hasPhoneUUID) {
+        // v3.1.0, 存在
+        BOOL isSameMesh = [SigDataSource.share.meshUUID isEqualToString:oldMeshUUID];
+        if (isSameMesh) {
+            // v3.1.0, 存在，且为相同mesh网络，覆盖JSON，且使用本地的sno和ProvisionerAddress
+            needChangeProvisionerAddress = NO;
+            reStartSequenceNumber = NO;
+        } else {
+            // v3.1.0, 存在，但为不同mesh网络，获取provision，修改为新的ProvisionerAddress，sno从0开始
+            needChangeProvisionerAddress = YES;
+            reStartSequenceNumber = YES;
+        }
+    } else {
+        // v3.1.0, 不存在，覆盖并新建provisioner
+        needChangeProvisionerAddress = NO;
+        reStartSequenceNumber = YES;
+    }
+    //重新计算sno
+    if (reStartSequenceNumber) {
+        [[NSUserDefaults standardUserDefaults] removeObjectForKey:kCurrentMeshProvisionAddress_key];
+        [SigDataSource.share setLocationSno:0];
+    }
+    UInt16 maxAddr = SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
+    NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.nodes];
+    for (SigNodeModel *node in nodes) {
+        NSInteger curMax = node.address + node.elements.count - 1;
+        if (curMax > maxAddr) {
+            maxAddr = curMax;
+        }
+    }
+    if (needChangeProvisionerAddress) {
+        //修改手机的本地节点的地址
+        UInt16 newProvisionAddress = maxAddr + 1;
+        [SigDataSource.share changeLocationProvisionerNodeAddressToAddress:newProvisionAddress];
+        TeLogDebug(@"已经使用了address=0x%x作为本地地址",newProvisionAddress);
+        //修改已经使用的设备地址
+        [SigDataSource.share saveLocationProvisionAddress:newProvisionAddress];
+    } else {
+        //修改已经使用的设备地址
+        [SigDataSource.share saveLocationProvisionAddress:maxAddr];
+    }
+    TeLogDebug(@"下一次添加设备可以使用的地址address=0x%x",SigDataSource.share.provisionAddress);
+    
+//    SigDataSource.share.curNetkeyModel = nil;
+//    SigDataSource.share.curAppkeyModel = nil;
+    [SigDataSource.share saveLocationData];
+    [SigDataSource.share.scanList removeAllObjects];
+}
+
+-(void)dealloc{
+    TeLogDebug(@"");
 }
 
 @end

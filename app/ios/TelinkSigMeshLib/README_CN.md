@@ -1,6 +1,6 @@
 # TelinkSigMeshLib
 
-version: v3.2.4
+version: v3.3.2
 
 ## 关于
 
@@ -32,7 +32,7 @@ TelinkSigMeshLib库用于SIG设备的组网、绑定、收发消息。
 
 ## 要求环境
 
-* Xcode 10及以上.
+* Xcode 11.0及以上.
 * 一个支持蓝牙功能的系统是iOS9及以上的苹果设备。
 
 ## 集成步骤

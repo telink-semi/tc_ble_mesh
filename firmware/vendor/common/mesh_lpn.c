@@ -35,6 +35,7 @@
 #include "proj_lib/mesh_crypto/sha256_telink.h"
 #include "mesh_common.h"
 #include "vendor/common/app_heartbeat.h"
+#include "blt_soft_timer.h"
 #if(HCI_ACCESS == HCI_USE_UART)
 #include "proj/drivers/uart.h"
 #endif
@@ -46,7 +47,7 @@
 #endif
 
 //u8 fri_request_retry_max = FRI_REQ_RETRY_MAX;
-u8 lpn_deep_retention_en = PM_DEEPSLEEP_RETENTION_ENABLE;
+lpn_sub_list_event_t mesh_lpn_subsc_pending;
 u8 mesh_lpn_rx_master_key = 0;
 const u32 mesh_lpn_key_map[] = {SW1_GPIO, SW2_GPIO};
 #define	MESH_LPN_CMD_KEY		        (SW2_GPIO)
@@ -62,7 +63,6 @@ u8 lpn_provision_ok = 0;
 #if FEATURE_LOWPOWER_EN
 u8 lpn_mode = LPN_MODE_NORMAL;
 u32 lpn_mode_tick = 0;
-mesh_lpn_sleep_t  lpn_sleep;
 u32 lpn_wakeup_tick = 0;
 
 STATIC_ASSERT(LPN_ADV_INTERVAL_MS > (FRI_ESTABLISH_REC_DELAY_MS + FRI_ESTABLISH_WIN_MS + 10));//FRI_ESTABLISH_PERIOD_MS
@@ -71,14 +71,17 @@ STATIC_ASSERT(LPN_POLL_TIMEOUT_100MS * 100 >= FRI_POLL_INTERVAL_MS * 2); // time
 STATIC_ASSERT(SUB_LIST_MAX_LPN <= SUB_LIST_MAX);    // SUB_LIST_MAX_LPN should be equal to sub_list_max later
 STATIC_ASSERT(SUB_LIST_MAX_LPN == SUB_LIST_MAX_IN_ONE_MSG);    // comfirm later
 
-
+#if GATT_LPN_EN
+STATIC_ASSERT(MESH_DLE_MODE != MESH_DLE_MODE_EXTEND_BEAR); // extend bear need extend adv for friend ship
+#endif
 
 mesh_fri_ship_proc_lpn_t fri_ship_proc_lpn = {};	// for VC
 mesh_lpn_subsc_list_t lpn_subsc_list;
 mesh_subsc_list_retry_t subsc_list_retry = {};  // for retry procedure
 mesh_lpn_par_t mesh_lpn_par = {0};
 
-STATIC_ASSERT(((GET_ADV_INTERVAL_MS(ADV_INTERVAL_MAX))* TRANSMIT_CNT_DEF < FRI_ESTABLISH_REC_DELAY_MS) && (FRI_REC_DELAY_MS > FRI_ESTABLISH_REC_DELAY_MS));
+STATIC_ASSERT((FRI_REC_DELAY_MS > FRI_ESTABLISH_REC_DELAY_MS));
+
 
 int is_friend_ship_link_ok_lpn()
 {
@@ -104,7 +107,7 @@ void friend_cmd_send_poll()
 {
 	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)(&mesh_lpn_par.poll), sizeof(mesh_ctl_fri_poll_t),"send friend poll:",0);
     fri_ship_proc_lpn.poll_tick = clock_time()|1;
-    mesh_tx_cmd_layer_upper_ctl(CMD_CTL_POLL, (u8 *)(&mesh_lpn_par.poll), sizeof(mesh_ctl_fri_poll_t), ele_adr_primary, mesh_lpn_par.FriAdr,0);
+    mesh_tx_cmd_layer_upper_ctl(CMD_CTL_POLL, (u8 *)(&mesh_lpn_par.poll), sizeof(mesh_ctl_fri_poll_t), ele_adr_primary, mesh_lpn_par.FriAdr,0);	
 }
 
 void friend_cmd_send_subsc_add(u8 *par_subsc, u32 len)  // only LPN support
@@ -173,6 +176,7 @@ void friend_subsc_rmv(u16 *adr_list, u32 subsc_cnt)
 void mesh_friend_ship_set_st_lpn(u8 st)
 {
     fri_ship_proc_lpn.status = st;
+	mesh_lpn_adv_interval_update(1);
 }
 
 int is_in_mesh_friend_st_lpn()
@@ -197,6 +201,98 @@ void mesh_friend_ship_clear_LPN()
     memcpy(&mesh_lpn_par.req, &req_bacup, sizeof(req_bacup));
 }
 
+int mesh_lpn_subsc_pending_add(u16 op, u16 addr)
+{
+	mesh_lpn_subsc_pending.op = op;
+	mesh_lpn_subsc_pending.sub_addr = addr;
+	return 0;
+}
+
+void mesh_lpn_gatt_adv_refresh()
+{
+#if (GATT_LPN_EN)
+	if(lpn_provision_ok && gatt_adv_send_flag){
+		blt_soft_timer_update(&mesh_lpn_send_gatt_adv, ADV_INTERVAL_MS*1000);
+	}
+#else
+	gatt_adv_send_flag = !lpn_provision_ok;
+#endif
+}
+//------------softer timer cb function----------------------//
+int mesh_lpn_send_gatt_adv()
+{
+	if(gatt_adv_send_flag && (BLS_LINK_STATE_ADV == blt_state)){
+		lpn_quick_tx(0);
+		return 0;
+	}
+	return -1;
+}
+
+int mesh_lpn_send_mesh_cmd()
+{
+	int ret = 0;
+	if(my_fifo_get(&mesh_adv_cmd_fifo)){
+		lpn_quick_tx(1);
+		ret = 1;
+	}
+	return ret;
+}
+
+int mesh_lpn_rcv_delay_wakeup(void)
+{
+	app_enable_scan_all_device ();
+	bls_phy_scan_mode(1);
+	bls_pm_setSuspendMask (SUSPEND_DISABLE); // not enter sleep to receive packets	
+	return -1;
+}
+extern u8 blt_busy;
+
+int mesh_lpn_poll_md_wakeup(void)
+{
+	ENABLE_SUSPEND_MASK;
+	mesh_friend_ship_stop_poll();
+	if(mesh_lpn_send_mesh_cmd()){// fifo not empty, send first, maybe status message
+		extern u8 blt_busy;
+		if(is_busy_segment_or_reliable_flow()){
+			if(is_busy_tx_seg(0) && is_tx_seg_one_round_ok()){
+				blt_soft_timer_update(&mesh_lpn_poll_md_wakeup, FRI_LPN_WAIT_SEG_ACK_MS * 1000);// wait for ACK from destination
+			}
+			blt_busy = 1;// need run mesh_loop_process			
+		}
+		else{
+			blt_busy = 0; // not run mesh_loop_process to save time
+		}
+		return 0;
+	}
+	else if(mesh_lpn_subsc_pending.op){
+		if(CMD_CTL_SUBS_LIST_ADD == mesh_lpn_subsc_pending.op){
+			friend_subsc_add(&mesh_lpn_subsc_pending.sub_addr, 1);
+		}
+		else if(CMD_CTL_SUBS_LIST_REMOVE == mesh_lpn_subsc_pending.op){
+			friend_subsc_rmv(&mesh_lpn_subsc_pending.sub_addr, 1);
+		}
+		mesh_lpn_subsc_pending.op = 0;
+		return -1;
+	}
+	else{
+		mesh_friend_ship_start_poll();
+	}
+	return -1;
+}
+
+int mesh_lpn_tx_seg_wakeup(void)
+{
+	mesh_lpn_send_mesh_cmd();
+	return -1;
+}
+
+int mesh_lpn_poll_seg_ack_wakeup(void)
+{
+	mesh_friend_ship_start_poll();
+	return -1;
+}
+
+//------------end softer timer cb function----------------------//
 void mesh_friend_ship_proc_LPN(u8 *bear)
 {
     if(blt_state == BLS_LINK_STATE_CONN){
@@ -302,9 +398,8 @@ void mesh_friend_ship_proc_LPN(u8 *bear)
                 if(is_friend_ship_link_ok_lpn()){
                     mesh_lpn_par.poll.FSN = 0;   // init
                     // send poll
-                    fri_ship_proc_lpn.poll_retry = FRI_GET_UPDATE_RETRY_MAX + 1;
-                    friend_cmd_send_poll();
-                    
+                    fri_ship_proc_lpn.poll_retry = FRI_GET_UPDATE_RETRY_MAX + 1;					
+                    friend_cmd_send_poll();					
                     t_rec_delay_and_win = mesh_lpn_par.req.RecDelay + mesh_lpn_par.offer.RecWin;
                     mesh_friend_ship_set_st_lpn(FRI_ST_UPDATE);
                 }else{
@@ -453,6 +548,7 @@ void mesh_friend_ship_start_poll()
 
 void mesh_friend_ship_stop_poll()
 {
+	blt_soft_timer_delete(&mesh_lpn_rcv_delay_wakeup);
 	fri_ship_proc_lpn.poll_retry = 0;
 }
 
@@ -473,9 +569,9 @@ void subsc_add_rmv_test(int add)
 void lpn_subsc_list_update_by_sub_set_cmd(u16 op, u16 sub_adr)
 {
     if((CFG_MODEL_SUB_ADD == op)||(CFG_MODEL_SUB_VIRTUAL_ADR_ADD == op)){
-        friend_subsc_add(&sub_adr, 1);
+		mesh_lpn_subsc_pending_add(CMD_CTL_SUBS_LIST_ADD, sub_adr);
     }else if((CFG_MODEL_SUB_DEL == op)||(CFG_MODEL_SUB_VIRTUAL_ADR_DEL == op)){
-        friend_subsc_rmv(&sub_adr, 1);  // check other model later
+		mesh_lpn_subsc_pending_add(CMD_CTL_SUBS_LIST_REMOVE, sub_adr);
     }else if(((CFG_MODEL_SUB_OVER_WRITE == op)||(CFG_MODEL_SUB_VIRTUAL_ADR_OVER_WRITE == op))
     	   ||(CFG_MODEL_SUB_DEL_ALL == op)){
     }
@@ -513,7 +609,7 @@ void lpn_node_io_init()
         gpio_set_wakeup (mesh_lpn_key_map[i], WAKEUP_LEVEL_LPN, 1);         // level : 1 (high); 0 (low)
         cpu_set_gpio_wakeup (mesh_lpn_key_map[i], WAKEUP_LEVEL_LPN, 1);     // level : 1 (high); 0 (low)
     }
-    gpio_core_wakeup_enable_all (1);
+    bls_pm_setWakeupSource(PM_WAKEUP_PAD);
 #endif
 
 #if LPN_VENDOR_SENSOR_EN
@@ -521,51 +617,41 @@ void lpn_node_io_init()
 #endif
 }
 
-void mesh_lpn_sleep_prepare(u16 op, u32 sleep_ms)
+void mesh_lpn_sleep_prepare(u16 op)
 {
-    lpn_sleep.sleep_ready = 0;  	// set in app_advertise_prepare_handler() ->mesh_lpn_sleep_set_ready()  later.
-    lpn_sleep.sleep_ms = sleep_ms;
-    lpn_sleep.op = op;
-    lpn_sleep.tick_tx = clock_time();
-}
+	if(is_lpn_support_and_en && (BLS_LINK_STATE_CONN != blt_state)){
+		ENABLE_SUSPEND_MASK;
+		rf_set_tx_rx_off();// disable tx rx in manual mode,must 	
+		CLEAR_ALL_RFIRQ_STATUS;
+		if(CMD_CTL_REQUEST == op){
+			blt_soft_timer_update(&mesh_lpn_rcv_delay_wakeup, FRI_ESTABLISH_REC_DELAY_MS*1000);
+		}
+		else if((CMD_CTL_POLL == op) || (CMD_CTL_SUBS_LIST_REMOVE == op) || (CMD_CTL_SUBS_LIST_ADD == op)){
+			blt_soft_timer_update(&mesh_lpn_rcv_delay_wakeup, mesh_lpn_par.req.RecDelay*1000);
+		}
+		else if(CMD_ST_NORMAL_UNSEG == op){
 
-void mesh_lpn_sleep_set_ready()
-{
-    lpn_sleep.sleep_ready = 1;
-    //lpn_debug_alter_debug_pin(0);
-}
+		}
+		else if(CMD_ST_NORMAL_SEG == op){
+			if(mesh_tx_seg_par.busy){
+				blt_soft_timer_update(&mesh_lpn_poll_md_wakeup, CMD_INTERVAL_MS * 2 * 1000);
+		    }
+		}
+		else if(CMD_ST_POLL_MD == op){
+			blt_soft_timer_update(&mesh_lpn_poll_md_wakeup, FRI_POLL_DELAY_FOR_MD_MS * 1000);
+			#if !WIN32
+			blt_rxfifo.rptr = blt_rxfifo.wptr - 1;// clear buf, blt_rxfifo.rptr will ++ in lib
+		    #endif
+		}
+		else if(CMD_CTL_UPDATE == op){
+			#if !WIN32
+			blt_rxfifo.rptr = blt_rxfifo.wptr - 1;// clear buf, blt_rxfifo.rptr will ++ in lib
+		    #endif
+		}
+		else{//CMD_ST_SLEEP
 
-void mesh_lpn_sleep_later_op(u16 op, u32 sleep_ms)	// sleep at mesh_lpn_proc_suspend()
-{
-    mesh_lpn_sleep_prepare(op, sleep_ms);
-    mesh_lpn_sleep_set_ready();
-}
-
-void mesh_lpn_sleep_enter_normal_unseg()
-{
-    mesh_lpn_sleep_prepare(CMD_ST_NORMAL_UNSEG, FRI_POLL_INTERVAL_MS);
-}
-
-void mesh_lpn_sleep_enter_normal_seg()
-{
-    mesh_lpn_sleep_prepare(CMD_ST_NORMAL_SEG, CMD_INTERVAL_MS * 2);	// 0xf0
-}
-
-void mesh_lpn_sleep_enter_later()
-{
-    mesh_lpn_sleep_prepare(CMD_ST_SLEEP, FRI_POLL_INTERVAL_MS);
-    #if !WIN32
-    my_fifo_reset(&blt_rxfifo);     // clear buf
-    #endif
-}
-
-u32 mesh_lpn_get_sleep_time()
-{
-	u32 time_cost_ms = (clock_time() - lpn_sleep.tick_tx)/CLOCK_SYS_CLOCK_1MS;
-	if(time_cost_ms < lpn_sleep.sleep_ms){
-		return (lpn_sleep.sleep_ms - time_cost_ms);
+		}
 	}
-	return 0;
 }
 
 void suspend_enter(u32 sleep_ms, int deep_retention_flag)
@@ -578,11 +664,7 @@ void suspend_enter(u32 sleep_ms, int deep_retention_flag)
     sleep_mode = deep_retention_flag ? DEEPSLEEP_MODE_RET_SRAM_LOW32K : SUSPEND_MODE;
     #endif
 	
-	u8 pm_wakeup_type = PM_WAKEUP_TIMER;//in receive delay window(lpn_sleep.op is in range of 1~0x100), not allow pad wakeup.
-	if((lpn_sleep.op==0) || (lpn_sleep.op>0x100)){
-		pm_wakeup_type |= PM_WAKEUP_PAD;  
-	}
-    cpu_sleep_wakeup(sleep_mode, pm_wakeup_type, clock_time() + sleep_ms*CLOCK_SYS_CLOCK_1MS);
+    cpu_sleep_wakeup(sleep_mode, PM_WAKEUP_TIMER, clock_time() + sleep_ms*CLOCK_SYS_CLOCK_1MS);
 	lpn_wakeup_tick = clock_time();
 #endif
 }
@@ -625,9 +707,9 @@ int is_lpn_key_cmd_tx_trigger(int sleep_en)
             #endif
 
             if(mesh_tx_seg_par.busy){
-                mesh_lpn_sleep_enter_normal_seg();
+                mesh_lpn_sleep_prepare(CMD_ST_NORMAL_SEG);
             }else{
-                mesh_lpn_sleep_enter_normal_unseg();
+                mesh_lpn_sleep_prepare(CMD_ST_NORMAL_UNSEG);
             }
             // should disable RX
         }else{
@@ -655,7 +737,7 @@ void lpn_key_factory_reset_check()
             if(clock_time_exceed(long_tick, LONG_PRESS_TRIGGER_MS*1000)){
                 key_press = KEY_PRESSED_LONG;
                 irq_disable();
-                kick_out(); // reboot inside // show_factory_reset();
+                kick_out(1); // reboot inside // show_factory_reset();
                 detkey = 0;
                 
                 break;
@@ -671,6 +753,7 @@ void lpn_key_factory_reset_check()
         }
     }while(detkey);
 
+#if !GATT_LPN_EN
     if(KEY_PRESSED_SHORT == key_press){
         if(LPN_MODE_GATT_OTA == lpn_mode){
             lpn_mode_set(LPN_MODE_NORMAL);
@@ -678,6 +761,7 @@ void lpn_key_factory_reset_check()
             lpn_mode_set(LPN_MODE_GATT_OTA);
         }
     }
+#endif
 }
 
 #if DEBUG_SUSPEND
@@ -692,92 +776,6 @@ void cpu_sleep_wakeup_core_debug()
     }
 }
 #endif
-
-void mesh_lpn_suspend_timer_ll(int sleep_ms, int io_wakeup_en, int deep_retention_flag)
-{
-	if(!sleep_ms && !io_wakeup_en){
-		return ;
-	}
-	
-    u8 r = irq_disable();
-    #if (!DEBUG_SUSPEND)
-    usb_dp_pullup_en (0);
-	//light_onoff_all(0);
-    #endif
-    lpn_debug_set_current_pin(0);
-
-    if(sleep_ms){
-        #if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
-        suspend_enter(sleep_ms, deep_retention_flag);
-        #else
-        #define SLEEP_TIME_MAX_MS       (3000)
-        while(sleep_ms){
-            if(sleep_ms > SLEEP_TIME_MAX_MS){
-                suspend_enter(SLEEP_TIME_MAX_MS, deep_retention_flag);
-                sleep_ms -= SLEEP_TIME_MAX_MS;
-            }else{
-                suspend_enter(sleep_ms, deep_retention_flag);
-                sleep_ms = 0;
-            }
-        }
-        #endif
-    }else{
-        suspend_enter(1000, 0);   // wait for key release and then suspend
-        #if DEBUG_SUSPEND
-        cpu_sleep_wakeup_core_debug();
-        #else
-        cpu_sleep_wakeup(0, PM_WAKEUP_CORE, 0) ;
-        #endif
-    }
-    
-    lpn_debug_set_current_pin(1);
-    #if (!DEBUG_SUSPEND)
-    usb_dp_pullup_en (1);       // recover  to initial status
-    #endif
-    active_time = clock_time ();
-
-    #if !WIN32
-    my_fifo_reset(&blt_rxfifo);		// clear buf
-    if(blt_state == BLS_LINK_STATE_ADV){
-        reg_system_tick_irq = clock_time() + 15*CLOCK_SYS_CLOCK_1MS;   // make sure adv send check
-    }
-    irq_clr_src();
-    #endif
-    system_time_run();          // check time
-    lpn_debug_set_current_pin(0);
-    irq_restore (r);
-    lpn_debug_set_current_pin(1);
-}
-
-void mesh_lpn_suspend_timer(int sleep_ms, int deep_retention_flag)
-{
-#if(HCI_LOG_FW_EN&&!DEBUG_SUSPEND)
-	unsigned char uart_tx_is_busy();
-	u32 begin_tick = clock_time();
-	while(uart_tx_is_busy ()&& (clock_time() - begin_tick) < 500*CLOCK_SYS_CLOCK_1MS);
-#endif
-	mesh_lpn_suspend_timer_ll(sleep_ms, 0, deep_retention_flag);
-	if(deep_retention_flag){
-	    // should never run here.
-        LOG_MSG_ERR(TL_LOG_COMMON,0,0,"enter retention sleep error, please check GPIO state", 0);
-    }
-}
-
-void mesh_lpn_stop_to_wait_io_wakeup()
-{
-#if 1
-    mesh_lpn_suspend_timer_ll(0, 1, 0);
-#else
-    //if(is_lpn_support_and_en){
-        u8 r = irq_disable();
-        usb_dp_pullup_en (0);
-        cpu_sleep_wakeup(0, PM_WAKEUP_CORE, 0) ;
-        usb_dp_pullup_en (1);       // recover  to initial status
-        active_time = clock_time ();
-        irq_restore (r);
-    //}
-#endif
-}
 
 int mesh_friend_offer_is_valid(mesh_ctl_fri_offer_t *p_offer)
 {
@@ -826,12 +824,12 @@ int lpn_rx_offer_handle(u8 *bear)
 
 void mesh_friend_ship_retry()
 {
-    if(fri_ship_proc_lpn.req_retrys++ < FRI_REQ_RETRY_MAX){
-        mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);
+    if(fri_ship_proc_lpn.req_retrys++ < FRI_REQ_RETRY_MAX){      
     }else{
-        mesh_friend_ship_proc_init_lpn();
-        mesh_lpn_sleep_enter_later();
+        mesh_friend_ship_proc_init_lpn();        
     }
+	mesh_lpn_sleep_prepare(CMD_ST_SLEEP);
+	mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);
 }
 
 void lpn_no_offer_handle()  // only call after send request message during establish friend ship
@@ -841,11 +839,9 @@ void lpn_no_offer_handle()  // only call after send request message during estab
         #if WIN32
             u16 rand_ms = 0;
         #else
-            u16 rand_ms = (rand() & 0x7F);
+            //u16 rand_ms = (rand() & 0x7F);
         #endif
             mesh_friend_ship_retry();   // should be before suspend,because of deep retention.
-            mesh_lpn_suspend_timer(FRI_REQ_TIMEOUT_MS + rand_ms - FRI_ESTABLISH_PERIOD_MS, lpn_deep_retention_en);
-            // can't add any function here, because of deep retention.
         }else{
             mesh_friend_ship_retry();
         }
@@ -857,123 +853,13 @@ void lpn_no_offer_handle()  // only call after send request message during estab
     }
 }
 
-#if PM_DEEPSLEEP_RETENTION_ENABLE
-lpn_deep_handle_t lpn_deep_handle = {0};
-
-#define MESH_LPN_SUSPEND_TYPE       HANDLE_RETENTION_DEEP_PRE
-#else
-#define MESH_LPN_SUSPEND_TYPE       HANDLE_SUSPEND_NORMAL
-#endif
-
-/*
-    func: include request interval and poll interval.
-*/
-void suspend_handle_next_poll_interval(int handle_type)
-{
-#if PM_DEEPSLEEP_RETENTION_ENABLE
-    lpn_deep_handle.type = handle_type;
-    lpn_deep_handle.event = LPN_SUSPEND_EVENT_NEXT_POLL_INV;
-#endif
-    int deep_retention_flag = (handle_type != HANDLE_SUSPEND_NORMAL);
-    if(is_friend_ship_link_ok_lpn()){
-        if(handle_type & HANDLE_RETENTION_DEEP_PRE){
-            lpn_debug_alter_debug_pin(0);
-            lpn_debug_set_irq_pin(0);
-            #if 0   // test
-            mesh_lpn_stop_to_wait_io_wakeup();
-                #if (!DEBUG_SUSPEND)
-            mesh_lpn_wakeup_key = mesh_lpn_wakeup_key_io_get();
-                #endif
-            #else
-            mesh_lpn_suspend_timer(FRI_POLL_INTERVAL_MS, deep_retention_flag);
-            #endif
-            /* it should never run here, if "handle_type" is HANDLE_RETENTION_DEEP_PRE,
-                     after wakeup,it will jump to user_init_deepRetn()->suspend_handle_next_poll_interval_().
-                  */
-        }
-
-        if(handle_type & HANDLE_RETENTION_DEEP_AFTER){
-            lpn_debug_alter_debug_pin(1);
-            lpn_debug_alter_debug_pin(0);
-            
-            if(0 == is_lpn_key_cmd_tx_trigger(1)){
-                mesh_friend_ship_start_poll();
-            }
-        }
-    }else{
-        if(handle_type & HANDLE_RETENTION_DEEP_PRE){
-            u32 adv_inv_1 = 0;
-            #if (LPN_ADV_INTERVAL_EN)
-            adv_inv_1 = LPN_ADV_INTERVAL_MS - FRI_ESTABLISH_PERIOD_MS;
-                #if PM_DEEPSLEEP_RETENTION_ENABLE
-            lpn_deep_handle.type = HANDLE_RETENTION_DEEP_ADV_PRE;   // type after wakeup
-            lpn_deep_handle.adv_cnt = 1;            // confirm later
-            mesh_lpn_suspend_timer(adv_inv_1, 1);       // reboot here, if deep
-                #else
-            send_gatt_adv_right_now();
-            mesh_lpn_suspend_timer(adv_inv_1, 0);
-                #endif
-            #endif
-            u32 rand_val = rand() & 0x7f;    // 0--128ms
-            mesh_lpn_suspend_timer(FRI_REQ_RETRY_IDLE_MS + rand_val - adv_inv_1, deep_retention_flag);
-            
-            /* it should never run here, if "handle_type" is HANDLE_RETENTION_DEEP_PRE,
-                       after wakeup,it will jump to user_init_deepRetn()->suspend_handle_next_poll_interval_().
-                   */
-        }
-        
-        #if PM_DEEPSLEEP_RETENTION_ENABLE
-        if(handle_type & HANDLE_RETENTION_DEEP_ADV_PRE){
-            u32 adv_inv_1 = LPN_ADV_INTERVAL_MS - FRI_ESTABLISH_PERIOD_MS;
-            lpn_deep_handle.type = HANDLE_RETENTION_DEEP_PRE;   // type after wakeup
-            lpn_deep_handle.adv_cnt = 0;            // confirm later
-            send_gatt_adv_right_now();
-            if(blt_state == BLS_LINK_STATE_ADV){
-                u32 rand_val = rand() & 0x7f;    // 0--128ms
-                mesh_lpn_suspend_timer(FRI_REQ_RETRY_IDLE_MS + rand_val - adv_inv_1, 1);
-            }else{ // BLS_LINK_STATE_CONN
-                //mesh_lpn_sleep_enter_later();   // preset sleep parameters when BLE disconnect.
-                mesh_lpn_sleep_later_op(CMD_ST_SLEEP, FRI_POLL_INTERVAL_MS);   // preset sleep parameters when BLE disconnect.
-            }
-        }
-        #endif
-        
-        if(handle_type & HANDLE_RETENTION_DEEP_AFTER){
-            //mesh_lpn_stop_to_wait_io_wakeup();
-            //if(0 == is_lpn_key_cmd_tx_trigger()){ // check in mesh_lpn_proc_suspend_()
-                mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);    // restart establish
-            //}
-        }
-    }
-}
-
-void suspend_handle_wakeup_rx(int handle_type)
-{
-#if PM_DEEPSLEEP_RETENTION_ENABLE
-    lpn_deep_handle.type = handle_type;
-    lpn_deep_handle.event = LPN_SUSPEND_EVENT_WAKEUP_RX;
-#endif
-
-    if(handle_type & HANDLE_RETENTION_DEEP_PRE){
-        lpn_debug_alter_debug_pin(0);
-        mesh_lpn_suspend_timer(mesh_lpn_get_sleep_time(), (handle_type != HANDLE_SUSPEND_NORMAL));
-        /* it should never run here, if "handle_type" is HANDLE_RETENTION_DEEP_PRE,
-                 after wakeup,it will jump to user_init_deepRetn()->suspend_handle_wakeup_rx_().
-            */
-    }
-    
-    if(handle_type & HANDLE_RETENTION_DEEP_AFTER){
-        if(CMD_ST_POLL_MD == lpn_sleep.op){
-            mesh_friend_ship_start_poll();
-        }
-        lpn_debug_alter_debug_pin(0);
-        memset(&lpn_sleep, 0, sizeof(lpn_sleep));   // init
-    }
-}
-
 void mesh_lpn_proc_suspend ()
 {
-    // don't send command in mesh_lpn_proc_suspend(), if not it will cause nested, because lpn_quick_tx_and_suspend().
+	if((BLS_LINK_STATE_CONN != blt_state) && is_friend_ship_link_ok_lpn()){
+	    extern u8 blt_busy;
+		blt_busy = 0; // triger pm in blt_sdk_main_loop
+	}
+	
     lpn_key_factory_reset_check(); // include mesh_lpn_wakeup_key_io_get_();   // check release
     if(LPN_MODE_GATT_OTA == lpn_mode){
         // use BLE PM flow: BLE_REMOTE_PM_ENABLE
@@ -1010,7 +896,7 @@ void mesh_lpn_proc_suspend ()
 		#endif
 	}else{
 	    if(!is_provision_success()){
-	        if(!is_provision_working()){   // not being provision
+	        if(!is_provision_working() && !blcOta.ota_start_flag){   // not being provision
     	        if(clock_time_exceed(0, LPN_SCAN_PROVISION_START_TIMEOUT_MS*1000)){
     	            light_onoff_all(0);
                     cpu_sleep_wakeup(1, PM_WAKEUP_PAD, 0);
@@ -1019,97 +905,47 @@ void mesh_lpn_proc_suspend ()
 	        }
 	    }else{
     	    if((!lpn_provision_ok) && node_binding_tick && clock_time_exceed(node_binding_tick, LPN_START_REQUEST_AFTER_BIND_MS*1000)){
-    	        start_reboot();//lpn_provision_ok = 1;
+				lpn_provision_ok = 1;// provison and key bind finish
+				gatt_adv_send_flag = GATT_LPN_EN;				
+				mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);
+				if(BLS_LINK_STATE_CONN == blt_state){
+					bls_ll_terminateConnection(0x13); // disconnet to establish friendship
+				}
     	    }
 	    }
 	    return ;
 	}
-	
-    if(lpn_sleep.op && is_lpn_support_and_en){
-        if((CMD_ST_SLEEP != lpn_sleep.op)/*&&(CMD_ST_NORMAL_SEG != lpn_sleep.op)*/){
-            if(0 == lpn_sleep.sleep_ready){
-                return ;
-            }
-        }
 
-    	if(my_fifo_get(&mesh_adv_cmd_fifo)){
-    	    #if 0
-    	    lpn_quick_tx_and_suspend(0);     // may nested loop,
-    	    #else
-    	    lpn_quick_send_adv();
-    	    return ;
-    	    #endif
-    	}
-		
-		if(mesh_lpn_key_not_release()&&((lpn_sleep.op==0)||(lpn_sleep.op>=0x100))){//detect key release, if lpn_sleep.op is in range of 1~0x100, not allow pad wakeup.
-			cpu_sleep_wakeup(0, PM_WAKEUP_TIMER, clock_time()+40*1000*sys_tick_per_us);
-			return;
-		}
-
-        u8 r = irq_disable();
-        if((CMD_ST_SLEEP == lpn_sleep.op) || (CMD_ST_NORMAL_UNSEG == lpn_sleep.op)){
-            // enter to long sleep
-            memset(&lpn_sleep, 0, sizeof(lpn_sleep));
-            if(!fri_ship_proc_lpn.status){
-                suspend_handle_next_poll_interval(MESH_LPN_SUSPEND_TYPE);
-            }
-        }else if(CMD_ST_NORMAL_SEG == lpn_sleep.op){    // no need to enter retention deep sleep
-            // wake up for send next segment packet
-            mesh_lpn_suspend_timer(mesh_lpn_get_sleep_time(), 0);
-			mesh_friend_ship_stop_poll();
-            if(mesh_tx_seg_par.busy){
-                if(is_tx_seg_one_round_ok()){
-	                memset(&lpn_sleep, 0, sizeof(lpn_sleep));   // no need
-					mesh_lpn_suspend_timer(FRI_LPN_WAIT_SEG_ACK_MS, 0);	// wait for ACK from destination
-					mesh_friend_ship_start_poll();
-				}
-            }
-        }else{
-            // wake up for rx after send ctrl op, such as POLL,...
-            // can't use HANDLE_RETENTION_DEEP_PRE now, because it is from lpn_quick_tx_and_suspend(), not at the end of main loop
-            suspend_handle_wakeup_rx(HANDLE_SUSPEND_NORMAL);
-        }
-        irq_restore(r);
-    }
+	return;
 }
 
 void mesh_main_loop_LPN()
 {
 }
 
-void suspend_quick_check()
-{
-    if(lpn_sleep.sleep_ready || lpn_sleep.op){
-        mesh_lpn_proc_suspend();    // run only when send ctrl messages, so no need care it is not at the last of main loop.
-    }
-}
-
-u8 send_gatt_adv_now_flag = 0;
-void send_gatt_adv_right_now() // must be in irq disable state.
-{
-    send_gatt_adv_now_flag = 1;
-    blt_send_adv2scan_mode(1);
-    send_gatt_adv_now_flag = 0;
-}
-
-void lpn_quick_tx_and_suspend(int suspend, u8 op)
+extern void blt_adv_expect_time_refresh(u8 en);
+u8 mesh_lpn_quick_tx_flag = 0;
+void lpn_quick_tx(u8 is_mesh_msg)
 {
     u8 r = irq_disable();
+	blt_adv_expect_time_refresh(0);
+	mesh_lpn_quick_tx_flag = is_mesh_msg;
 	blt_send_adv2scan_mode(1);
+	mesh_lpn_quick_tx_flag = 0;
+	blt_adv_expect_time_refresh(1);
     lpn_debug_alter_debug_pin(0);
-    if(suspend){
-        #if LPN_ADV_EN
-        static u32 tick_adv_lpn;
-        if((CMD_CTL_REQUEST == op)||(CMD_CTL_POLL == op)){
-            if(clock_time_exceed(tick_adv_lpn, 1000*1000)){
-                tick_adv_lpn = clock_time();
-                send_gatt_adv_right_now();
-            }
-        }
-        #endif
-        suspend_quick_check(); // tx handle ok
-    }
     irq_restore(r);
+}
+
+int mesh_lpn_adv_interval_update(u8 adv_tick_refresh)
+{
+	u16 interval = (LPN_MODE_GATT_OTA == lpn_mode) ? ADV_INTERVAL_MS:(is_lpn_support_and_en?(is_friend_ship_link_ok_lpn() ? FRI_POLL_INTERVAL_MS:FRI_REQ_TIMEOUT_MS):GET_ADV_INTERVAL_MS(ADV_INTERVAL_MIN));
+	int ret = bls_ll_setAdvParam_interval(interval, 0);
+	if(adv_tick_refresh){
+		extern u32 blt_advExpectTime;
+		blt_advExpectTime = clock_time() + blta.adv_interval;
+	}
+	return ret;
 }
 
 void lpn_mode_set(int mode)
@@ -1117,37 +953,20 @@ void lpn_mode_set(int mode)
     if(LPN_MODE_GATT_OTA == mode){
         LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"SW1:enter GATT OTA",0);
         lpn_mode = LPN_MODE_GATT_OTA;
-        #if 1 // BLE
-        bls_ll_setAdvParam_interval(ADV_INTERVAL_MS, ADV_INTERVAL_RANDOM_MS);
-        blc_ll_initPowerManagement_module();        //pm module:         optional
-        #if MCU_CORE_TYPE == MCU_CORE_8269
-		bls_pm_setSuspendMask (SUSPEND_ADV | SUSPEND_CONN);
-		#else
-        bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN);// | DEEPSLEEP_RETENTION_CONN // TBD: retention connect
-		blc_pm_setDeepsleepRetentionThreshold(50, 30);
-        blc_pm_setDeepsleepRetentionEarlyWakeupTiming(400);
-		#endif
-        #endif
-        memset(&lpn_sleep, 0, sizeof(lpn_sleep));   // init
+		ENABLE_SUSPEND_MASK;
         mesh_friend_ship_proc_init_lpn();
         lpn_mode_tick = clock_time();
     }else if(LPN_MODE_NORMAL == mode){
         LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"SW1:exit GATT OTA",0);
         lpn_mode = LPN_MODE_NORMAL;
-        #if 1 // restore BLE parameter
-        bls_ll_setAdvParam_interval(ADV_INTERVAL_MIN, 0);
-        extern ll_module_pm_callback_t  ll_module_pm_cb;
-        ll_module_pm_cb = 0; // blc_ll_initPowerManagement_module();
-        bls_pm_setSuspendMask (SUSPEND_DISABLE);
-        #endif
         mesh_friend_ship_set_st_lpn(FRI_ST_REQUEST);    // start to send friend request flow
         lpn_mode_tick = 0;
         cfg_led_event_stop();
     }
+	mesh_lpn_adv_interval_update(1);
 }
 #else
-void suspend_quick_check(){}
-void lpn_quick_tx_and_suspend(int suspend, u8 op){}
+void lpn_quick_tx(u8 is_mesh_msg){}
 #endif 
 
 

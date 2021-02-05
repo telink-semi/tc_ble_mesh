@@ -137,11 +137,11 @@ typedef enum : NSUInteger {
     //获取当前设备的详细状态数据(亮度、色温、HSL)
     //Attention: app get online status use access_cmd_onoff_get() in publish since v2.7.0, so demo should get light and temprature at node detail vc.
     //modelID 0x1303:Light CTL Get
-    BOOL hasCTLGet = [self.model getAddressesWithModelID:@(SIG_MD_LIGHT_CTL_S)].count > 0;
+    BOOL hasCTLGet = [self.model getAddressesWithModelID:@(kSigModel_LightCTLServer_ID)].count > 0;
     //modelID 0x1300:Light Lightness Get
-    BOOL hasLightnessGet = [self.model getAddressesWithModelID:@(SIG_MD_LIGHTNESS_S)].count > 0;
+    BOOL hasLightnessGet = [self.model getAddressesWithModelID:@(kSigModel_LightLightnessServer_ID)].count > 0;
 
-    if (self.model.lightnessAddresses.count > 0 && self.model.temperatureAddresses.count > 0 && hasCTLGet) {
+    if (self.model.lightnessAddresses.count > 0 && self.model.temperatureAddresses.count > 0 && hasCTLGet && self.model.state != DeviceStateOutOfLine) {
         //get light and temprature
         __weak typeof(self) weakSelf = self;
         [DemoCommand getCTLWithNodeAddress:self.model.address responseMacCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLightCTLStatus * _Nonnull responseMessage) {
@@ -151,7 +151,7 @@ typedef enum : NSUInteger {
                 [weakSelf performSelectorOnMainThread:@selector(getHSL) withObject:nil waitUntilDone:YES];
             }
         }];
-    }else if (self.model.lightnessAddresses.count > 0 && hasLightnessGet) {
+    }else if (self.model.lightnessAddresses.count > 0 && hasLightnessGet && self.model.state != DeviceStateOutOfLine) {
         //get light
         __weak typeof(self) weakSelf = self;
         [DemoCommand getLumWithNodeAddress:self.model.address responseMacCount:1 successCallback:^(UInt16 source, UInt16 destination, SigLightLightnessStatus * _Nonnull responseMessage) {
@@ -165,7 +165,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)getHSL{
-    BOOL hasHSLGet = [self.model getAddressesWithModelID:@(SIG_MD_LIGHT_HSL_S)].count > 0;
+    BOOL hasHSLGet = [self.model getAddressesWithModelID:@(kSigModel_LightHSLServer_ID)].count > 0;
     //v3.3.0新增逻辑：开灯时才获取HSL，关灯不获取HSL，因为关灯时HSL值都是0，获取HSL没有意义。
     if (self.model.HSLAddresses.count > 0 && hasHSLGet && self.model.state == DeviceStateOn) {
         __weak typeof(self) weakSelf = self;
@@ -369,6 +369,8 @@ typedef enum : NSUInteger {
             self.hasNextBrightness = YES;
             self.nextBrightness = value;
         }
+        //如果UI是HSL的UI，需要联动修改HSL的滑竿。
+        [self changeUIBylightnessOfHSLModel:value/100.0];
     } else if (type.uiType == ModelUITypeTemp) {
         if (!self.hadChangeTempareture) {
             self.nextTempareture = value;
@@ -438,11 +440,27 @@ typedef enum : NSUInteger {
     [DemoCommand changeLevelWithAddress:address level:level responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericLevelStatus * _Nonnull responseMessage) {
         TeLogDebug(@"control level success.");
         dispatch_async(dispatch_get_main_queue(), ^{
+            //根据回包进行HSL的滑竿进行联动。
+            if (weakSelf.model.HSLAddresses.count > 0) {
+                weakSelf.colorModel = [weakSelf getColorWithH:weakSelf.model.HSL_Hue100 S:weakSelf.model.HSL_Saturation100 L:weakSelf.model.HSL_Lightness100];
+            }
             [weakSelf.tableView reloadData];
         });
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
         
     }];
+}
+
+- (void)changeUIBylightnessOfHSLModel:(CGFloat)lightnessOfHSLModel {
+    if (self.model.HSLAddresses.count > 0) {
+        for (ModelType *m in self.dataSource) {
+            if (m.uiType == ModelUITypeHSL) {
+                ColorModelCell *cell = (ColorModelCell *)[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:[self.dataSource indexOfObject:m] inSection:0]];
+                [cell changeUIWithHslModelLightSliderValue:lightnessOfHSLModel];
+                break;
+            }
+        }
+    }
 }
 
 @end

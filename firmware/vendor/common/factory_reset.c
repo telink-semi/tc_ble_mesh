@@ -414,7 +414,7 @@ int factory_reset(){
 }
 #endif
 
-void kick_out(){
+void kick_out(int led_en){
 	#if !WIN32
 	// add terminate cmd 
 	if(bls_ll_isConnectState()){
@@ -431,7 +431,9 @@ void kick_out(){
 	show_factory_reset();
 #else
     #if !WIN32
-    show_factory_reset();
+    if(led_en){
+        show_factory_reset();
+    }
     start_reboot();
     #endif
 #endif

@@ -36,7 +36,6 @@
 #define CEIL_8(val)                     CEIL_DIV(val, 8)
 #define GET_BLOCK_SIZE(log)             (1 << log)
 // ------
-#define PTS_TEST_OTA_EN                 (PTS_TEST_EN || 0)
 #define BLOB_TRANSFER_WITHOUT_FW_UPDATE_EN  (PTS_TEST_OTA_EN || 1)
 
 #define MESH_OTA_R04                    1
@@ -144,9 +143,9 @@
 #define MESH_OTA_BLOCK_SIZE_LOG_MIN     (8)
 #define MESH_OTA_BLOCK_SIZE_LOG_MAX     (8)
 #else
-#define MESH_OTA_CHUNK_SIZE             (256)   // must 256
-#define MESH_OTA_BLOCK_SIZE_LOG_MIN     (12)    // for 4k erase
-#define MESH_OTA_BLOCK_SIZE_LOG_MAX     (12)    // for 4k erase
+#define MESH_OTA_CHUNK_SIZE             (208)   // =(((DELTA_EXTEND_AND_NORMAL + 11 - 3)/16)*16) // need 16 align 
+#define MESH_OTA_BLOCK_SIZE_LOG_MIN     (18)    // for 4k erase // in order to check missing only once
+#define MESH_OTA_BLOCK_SIZE_LOG_MAX     (18)    // for 4k erase // in order to check missing only once
 #endif
 #define MESH_OTA_BLOCK_SIZE_MIN         (1 << MESH_OTA_BLOCK_SIZE_LOG_MIN)
 #define MESH_OTA_BLOCK_SIZE_MAX         (1 << MESH_OTA_BLOCK_SIZE_LOG_MAX)
@@ -168,7 +167,7 @@
 
 
 #if MD_MESH_OTA_EN
-    #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)
+    #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE ||MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 #define FW_ADD_BYTE_EN      0
     #else
 #define FW_ADD_BYTE_EN      0
@@ -481,7 +480,7 @@ typedef struct{
 	u16 node_cnt;    // update node cnt
 	u16 node_num;    // for check all
 	u32 blob_size;
-	u16 bk_size_current;
+	u32 bk_size_current;
 	u16 chunk_num;
 	u16 adr_distr_node;
 	u8 miss_chunk_test_flag;
@@ -499,8 +498,8 @@ typedef struct{
 	fw_update_start_t start;            // 0x08
 	blob_block_start_t block_start;     // 0x18:2 byte align here
 	u32 blob_trans_start_tick;
+	u32 bk_size_current;
 	u16 client_mtu_size;                // 0x1C
-	u16 bk_size_current;
 	u8 blk_crc_tlk_mask[(MESH_OTA_BLOCK_MAX + 7)/8];
 	u8 miss_mask[MESH_OTA_CHUNK_NUM_MAX_CEIL];
 	u8 blob_block_rx_ok;                // 
@@ -522,6 +521,11 @@ typedef struct{
 typedef struct{
     
 }blob_trans_srv_proc_t;
+
+enum{
+    VC_MESH_OTA_ONLY_ONE_NODE_SELF = 1,
+    VC_MESH_OTA_ONLY_ONE_NODE_CONNECTED = 2,
+};
 
 // -----------
 extern fw_distribut_srv_proc_t fw_distribut_srv_proc;
@@ -614,7 +618,7 @@ void APP_RefreshProgressBar(u16 bk_current, u16 bk_total, u16 chunk_cur, u16 chu
 void APP_report_mesh_ota_apply_status(u16 adr_src, fw_update_status_t *p);
 u16 APP_get_GATT_connect_addr();
 void APP_set_mesh_ota_pause_flag(u8 val);
-int is_mesh_ota_and_only_VC_update();
+int mesh_ota_and_only_one_node_check();
 void check_and_clear_mesh_ota_master_wait_ack();
 u32 soft_crc32_ota_flash(u32 addr, u32 len, u32 crc_init,u32 *out_crc_type1_blk);
 int mesh_ota_slave_need_ota(fw_metadata_t *p_metadata, int len);

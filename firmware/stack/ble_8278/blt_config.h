@@ -74,6 +74,13 @@ static inline void blc_app_loadCustomizedParameters(void)
 
 
 
+#if 1
+#define		BLS_TELINK_MESH_SCAN_MODE_ENABLE				1
+#define 	BLS_TELINK_WHITE_LIST_ENABLE					0
+#define 	RAMCODE_OPTIMIZE_CONN_POWER_NEGLECT_ENABLE		1
+#define 	DEEP_RET_ENTRY_CONDITIONS_OPTIMIZATION_EN		1
+#endif
+
 
 
 

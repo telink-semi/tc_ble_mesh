@@ -73,7 +73,9 @@ typedef void(^SendPacketsFinishCallback)(void);
 
 
 @interface SigBearer : NSObject
+/// SigBearerDelegate只用于SDK内部，外部不需要使用该delegate。
 @property (nonatomic, weak) id <SigBearerDelegate>delegate;
+/// SigBearerDataDelegate给用户使用，通知上层蓝牙连接成功、setFilter成功、蓝牙断开成功。
 @property (nonatomic, weak) id <SigBearerDataDelegate>dataDelegate;
 @property (nonatomic, assign) BOOL isAutoReconnect;//标记是否自动重连（ota和添加流程不需要自动重连）
 @property (nonatomic, copy) SendPacketsFinishCallback sendPacketFinishBlock;

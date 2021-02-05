@@ -3144,9 +3144,148 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0xB60D
 
 /// 8.4.2.11 Firmware Distribution Apply
-/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.89)
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.102)
 @interface SigFirmwareDistributionApply : SigAcknowledgedGenericMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB616
+
+/// 8.4.2.13 Firmware Distribution Upload Get
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.104)
+@interface SigFirmwareDistributionUploadGet : SigAcknowledgedGenericMessage
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB617
+
+/// 8.4.2.14 Firmware Distribution Upload Start
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.104)
+@interface SigFirmwareDistributionUploadStart : SigAcknowledgedGenericMessage
+/// Time To Live value used in a firmware image upload.
+@property (nonatomic,assign) UInt8 uploadTTL;
+/// Used to compute the timeout of the firmware image upload.
+@property (nonatomic,assign) UInt16 uploadTimeoutBase;
+/// BLOB identifier for the firmware image.
+@property (nonatomic,assign) UInt64 uploadBLOBID;
+/// Firmware image size (in octets).
+@property (nonatomic,assign) UInt32 uploadFirmwareSize;
+/// Size of the Upload Firmware Metadata field.
+@property (nonatomic,assign) UInt8 uploadFirmwareMetadataLength;
+/// Vendor-specific firmware metadata (C.1). Size is 1 to 255. (C.1: If the value of the Upload Firmware Metadata Length field is greater than 0, the Upload Firmware Metadata field shall be present; otherwise, the Upload Firmware Metadata field shall be omitted.)
+@property (nonatomic,strong) NSData *uploadFirmwareMetadata;
+/// The Firmware ID identifying the firmware image being uploaded. Size is Variable.
+@property (nonatomic,strong) NSData *uploadFirmwareID;
+- (instancetype)initWithUploadTTL:(UInt8)uploadTTL uploadTimeoutBase:(UInt16)uploadTimeoutBase uploadBLOBID:(UInt64)uploadBLOBID uploadFirmwareSize:(UInt32)uploadFirmwareSize uploadFirmwareMetadataLength:(UInt8)uploadFirmwareMetadataLength uploadFirmwareMetadata:(NSData *)uploadFirmwareMetadata uploadFirmwareID:(NSData *)uploadFirmwareID;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB618
+
+/// 8.4.2.15 Firmware Distribution Upload OOB Start
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.105)
+@interface SigFirmwareDistributionUploadOOBStart : SigAcknowledgedGenericMessage
+/// Length of the Upload URI field.
+@property (nonatomic,assign) UInt8 uploadURILength;
+/// URI for the firmware image source. Size is 1 to 255.
+@property (nonatomic,strong) NSData *uploadURI;
+/// The Firmware ID value used to generate the URI query string. Size is Variable.
+@property (nonatomic,strong) NSData *uploadFirmwareID;
+- (instancetype)initWithUploadURILength:(UInt8)uploadURILength uploadURI:(NSData *)uploadURI uploadFirmwareID:(NSData *)uploadFirmwareID;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB619
+
+/// 8.4.2.16 Firmware Distribution Upload Cancel
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.105)
+@interface SigFirmwareDistributionUploadCancel : SigAcknowledgedGenericMessage
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB61A
+
+/// 8.4.2.17 Firmware Distribution Upload Status
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.105)
+@interface SigFirmwareDistributionUploadStatus : SigGenericMessage
+/// Status Code for the requesting message.
+@property (nonatomic,assign) SigFirmwareDistributionServerAndClientModelStatusType status;
+/// Phase of the firmware image upload to a Firmware Distribution Server.
+@property (nonatomic,assign) SigFirmwareUploadPhaseStateType uploadPhase;
+/// A percentage indicating the progress of the firmware image upload (Optional). (If present, the Upload Progress field shall indicate the progress of the firmware upload as a percentage. The values 0x65 to 0xFF are prohibited.)
+@property (nonatomic,assign) UInt8 uploadProgress;
+/// he Firmware ID identifying the firmware image being uploaded (C.1). Size is Variable. (C.1: When the Upload Progress field is present, the Upload Firmware ID field shall be present; otherwise, the Upload Firmware ID field shall be omitted.)
+@property (nonatomic,strong) NSData *uploadFirmwareID;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status uploadPhase:(SigFirmwareUploadPhaseStateType)uploadPhase uploadProgress:(UInt8)uploadProgress uploadFirmwareID:(NSData *)uploadFirmwareID;
+@end
+
+
+#pragma mark opcode:0xB61B
+
+/// 8.4.2.18 Firmware Distribution Firmware Get
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.106)
+@interface SigFirmwareDistributionFirmwareGet : SigAcknowledgedGenericMessage
+/// The Firmware ID identifying the firmware image to check. Size is Variable.
+@property (nonatomic,strong) NSData *firmwareID;
+- (instancetype)initWithFirmwareID:(NSData *)firmwareID;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB61D
+
+/// 8.4.2.19 Firmware Distribution Firmware Get By Index
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.106)
+@interface SigFirmwareDistributionFirmwareGetByIndex : SigAcknowledgedGenericMessage
+/// Index of the entry in the Firmware Images List state.
+@property (nonatomic,assign) UInt16 distributionFirmwareImageIndex;
+- (instancetype)initWithDistributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB61E
+
+/// 8.4.2.20 Firmware Distribution Firmware Delete
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.107)
+@interface SigFirmwareDistributionFirmwareDelete : SigAcknowledgedGenericMessage
+/// Identifies the firmware image to delete. Size is Variable.
+@property (nonatomic,strong) NSData *firmwareID;
+- (instancetype)initWithFirmwareID:(NSData *)firmwareID;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB61F
+
+/// 8.4.2.21 Firmware Distribution Firmware Delete All
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.107)
+@interface SigFirmwareDistributionFirmwareDeleteAll : SigAcknowledgedGenericMessage
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB61C
+
+/// 8.4.2.22 Firmware Distribution Firmware Status
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.107)
+@interface SigFirmwareDistributionFirmwareStatus : SigGenericMessage
+/// Status Code for the requesting message.
+@property (nonatomic,assign) SigFirmwareDistributionServerAndClientModelStatusType status;
+/// The number of firmware images stored on the Firmware Distribution Server.
+@property (nonatomic,assign) UInt16 entryCount;
+/// Index of the firmware image in the Firmware Images List state.
+@property (nonatomic,assign) UInt16 distributionFirmwareImageIndex;
+/// Identifies associated firmware image (C.1). Size is Variable. (C.1: The Firmware ID field shall be present in either of the following conditions: 1) if the Firmware Images List state lists the firmware image identified by the Distribution Firmware Image Index field; 2) if the message is sent in response to a Firmware Distribution Firmware Get message; otherwise, the Firmware ID field shall be omitted.)
+@property (nonatomic,strong) NSData *firmwareID;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status entryCount:(UInt16)entryCount distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex firmwareID:(NSData *)firmwareID;
 @end
 
 
@@ -3177,33 +3316,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 distributionFirmwareImageIndex;
 
 - (instancetype)initWithParameters:(NSData *)parameters;
-@end
+- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status distributionPhase:(SigDistributionPhaseState)distributionPhase distributionMulticastAddress:(UInt16)distributionMulticastAddress distributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(BOOL)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex;
 
-
-//#pragma mark opcode:0xB60D
-//
-///// 3.2.7 Firmware Distribution Details Get
-///// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.24)
-//@interface SigFirmwareDistributionDetailsGet : SigAcknowledgedGenericMessage
-///// Status code
-//@property (nonatomic,assign) SigFirmwareDistributionStatusType status;
-///// Company identifier
-//@property (nonatomic,assign) UInt16 companyID;
-///// Unique firmware identifier
-//@property (nonatomic,strong) NSData *firmwareID;
-//- (instancetype)initWithStatus:(SigFirmwareDistributionStatusType)status companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID;
-//- (instancetype)initWithParameters:(NSData *)parameters;
-//@end
-
-
-#pragma mark opcode:0xB60E
-
-/// 3.2.8 Firmware Distribution Details List
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.25)
-@interface SigFirmwareDistributionDetailsList : SigGenericMessage
-/// Firmware Distribution Details List
-@property (nonatomic,strong) NSMutableArray <SigNodeUpdateStatusModel *>*detailsList;
-- (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
@@ -3213,6 +3327,104 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL25.pdf  (page.83)
 @interface SigFirmwareUpdateGet : SigAcknowledgedGenericMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB60F
+
+/// 8.4.2.4 Firmware Distribution Receivers Get
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.98)
+@interface SigFirmwareDistributionReceiversGet : SigAcknowledgedGenericMessage
+/// Index of the first requested entry from the Distribution Receivers List state.
+@property (nonatomic,assign) UInt16 firstIndex;
+/// Maximum number of entries that the server includes in a Firmware Distribution Receivers List message.
+@property (nonatomic,assign) UInt16 entriesLimit;
+- (instancetype)initWithFirstIndex:(UInt16)firstIndex entriesLimit:(UInt16)entriesLimit;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB610
+
+/// 8.4.2.5 Firmware Distribution Receivers List
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06  (page.99)
+@interface SigFirmwareDistributionReceiversList : SigGenericMessage
+/// The number of entries in the Distribution Receivers List state.
+@property (nonatomic,assign) UInt16 receiversListCount;
+/// Index of the first requested entry from the Distribution Receivers List state.
+@property (nonatomic,assign) UInt16 firstIndex;
+/// List of entries (Optional), size is Variable.
+@property (nonatomic,strong) NSMutableArray <SigUpdatingNodeEntryModel *>*receiversList;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithReceiversListCount:(UInt16)receiversListCount firstIndex:(UInt16)firstIndex receiversList:(NSArray <SigUpdatingNodeEntryModel *>*)receiversList;
+@end
+
+
+#pragma mark opcode:0xB611
+
+/// 8.4.2.1 Firmware Distribution Receivers Add
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.97)
+@interface SigFirmwareDistributionReceiversAdd : SigAcknowledgedGenericMessage
+/// The Firmware Distribution Receivers Add message shall contain at least one Receiver Entry. For each Receiver Entry field in the message, the value of the Address field shall be unique.
+@property (nonatomic,strong) NSMutableArray <SigReceiverEntryModel *>*receiverEntrysList;
+- (instancetype)initWithReceiverEntrysList:(NSArray <SigReceiverEntryModel *>*)receiverEntrysList;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB612
+
+/// 8.4.2.2 Firmware Distribution Receivers Delete All
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.98)
+@interface SigFirmwareDistributionReceiversDeleteAll : SigAcknowledgedGenericMessage
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB613
+
+/// 8.4.2.3 Firmware Distribution Receivers Status
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.98)
+@interface SigFirmwareDistributionReceiversStatus : SigGenericMessage
+/// Status Code for the requesting message.
+@property (nonatomic,assign) SigFirmwareDistributionServerAndClientModelStatusType status;
+/// The number of entries in the Distribution Receivers List state.
+@property (nonatomic,assign) UInt16 receiversListCount;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status receiversListCount:(UInt16)receiversListCount;
+@end
+
+
+#pragma mark opcode:0xB614
+
+/// 8.4.2.6 Firmware Distribution Capabilities Get
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.100)
+@interface SigFirmwareDistributionCapabilitiesGet : SigAcknowledgedGenericMessage
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB615
+
+/// 8.4.2.7 Firmware Distribution Capabilities Status
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.100)
+@interface SigFirmwareDistributionCapabilitiesStatus : SigGenericMessage
+/// Maximum number of entries in the Distribution Receivers List state.
+@property (nonatomic,assign) UInt16 maxDistributionReceiversListSize;
+/// Maximum number of entries in the Firmware Images List state.
+@property (nonatomic,assign) UInt16 maxFirmwareImagesListSize;
+/// Maximum size of one firmware image (in octets).
+@property (nonatomic,assign) UInt32 maxFirmwareImageSize;
+/// Total space dedicated to storage of firmware images (in octets).
+@property (nonatomic,assign) UInt32 maxUploadSpace;
+/// Remaining available space in firmware image storage (in octets).
+@property (nonatomic,assign) UInt32 remainingUploadSpace;
+/// Value of the Out-of-Band Retrieval Supported state.
+@property (nonatomic,assign) UInt8 outOfBandRetrievalSupported;
+/// Value of the Supported URI Scheme Names state (C.1).(If present, the Supported URI Scheme Names field shall indicate the value of the Supported URI Scheme Names state.)
+@property (nonatomic,strong) NSData *supportedURISchemeNames;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithMaxDistributionReceiversListSize:(UInt16)maxDistributionReceiversListSize maxFirmwareImagesListSize:(UInt16)maxFirmwareImagesListSize maxFirmwareImageSize:(UInt32)maxFirmwareImageSize maxUploadSpace:(UInt32)maxUploadSpace remainingUploadSpace:(UInt32)remainingUploadSpace outOfBandRetrievalSupported:(UInt8)outOfBandRetrievalSupported;
 @end
 
 
@@ -3379,6 +3591,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Bit field indicating blocks that were not received (C.2), size is variable.
 @property (nonatomic,strong) NSData *blocksNotReceived;
 - (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithStatus:(SigBLOBTransferStatusType)status RFU:(UInt8)RFU transferMode:(SigTransferModeState)transferMode transferPhase:(SigTransferPhaseState)transferPhase BLOBID:(UInt64)BLOBID BLOBSize:(UInt32)BLOBSize blockSizeLog:(UInt8)blockSizeLog transferMTUSize:(UInt16)transferMTUSize blocksNotReceived:(NSData *)blocksNotReceived;
 @end
 
 
@@ -3432,6 +3645,17 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
+#pragma mark opcode:0x7C
+
+/// 7.3.1.8 BLOB Partial Block Report
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.31)
+@interface SigBLOBPartialBlockReport : SigGenericMessage
+/// List of chunks requested by the server (Optional). (If present, the Encoded Missing Chunks field shall indicate the list of the chunks requested by the BLOB Transfer Server. Each chunk is identified by a uint16 Chunk Number. The list of the Chunk Numbers is encoded using UTF-8 as defined in [18].)
+@property (nonatomic,strong) NSMutableArray <NSNumber *>*encodedMissingChunks;//[@(node.address)]
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
 #pragma mark opcode:0x7E
 
 /// 3.1.3.1.7 BLOB Block Status
@@ -3443,17 +3667,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt8 RFU;
 /// Indicates the format used to report missing chunks, size is 2 bits.
 @property (nonatomic,assign) SigBLOBBlockFormatType format;
-/// Transfer phase.
-@property (nonatomic,assign) SigTransferPhaseState transferPhase;
 /// Block’s number in a set of blocks.
 @property (nonatomic,assign) UInt16 blockNumber;
 /// Chunk Size (in octets) for the current block.
 @property (nonatomic,assign) UInt16 chunkSize;
 /// Bit field of missing chunks for this block (C.1). (C.1: If the Format field is set to Some Chunks Missing, the Missing Chunks field shall be present; otherwise, it shall not be present.)
-@property (nonatomic,strong) NSMutableArray <NSNumber *>*missingChunksList;//[@(node.address)]
+@property (nonatomic,strong) NSArray <NSNumber *>*missingChunksList;//[@(node.address)]
 /// List of chunks requested by the server (C.2). (C.2 If the Format field is set to Encoded Missing Chunks, the Encoded Missing Chunks field shall be present; otherwise, it shall not be present.)
-@property (nonatomic,strong) NSMutableArray <NSNumber *>*encodedMissingChunksList;//[@(node.address)]
+@property (nonatomic,strong) NSArray <NSNumber *>*encodedMissingChunksList;//[@(node.address)]
 - (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithStatus:(SigBLOBBlockStatusType)status RFU:(UInt8)RFU format:(SigBLOBBlockFormatType)format blockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize missingChunksList:(NSArray <NSNumber *>*)missingChunksList encodedMissingChunksList:(NSArray <NSNumber *>*)encodedMissingChunksList;
 @end
 
 
@@ -3486,6 +3709,182 @@ NS_ASSUME_NONNULL_BEGIN
 /// BLOB transfer modes supported by the server
 @property (nonatomic,assign) UInt8 supportedTransferMode;
 - (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithMinBlockSizeLog:(UInt8)minBlockSizeLog maxBlockSizeLog:(UInt8)maxBlockSizeLog maxChunksNumber:(UInt16)maxChunksNumber maxChunkSize:(UInt16)maxChunkSize maxBLOBSize:(UInt32)maxBLOBSize MTUSize:(UInt16)MTUSize supportedTransferMode:(UInt8)supportedTransferMode;
+@end
+
+
+#pragma mark - Subnet Bridge
+#pragma mark opcode:0xBF70
+
+/// 4.3.X.1 SUBNET_BRIDGE_GET
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.10)
+@interface SigSubnetBridgeGet : SigConfigMessage
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xBF71
+
+/// 4.3.X.2 SUBNET_BRIDGE_SET
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.10)
+@interface SigSubnetBridgeSet : SigConfigMessage
+/// New Subnet Bridge state.
+@property (nonatomic,assign) SigSubnetBridgeStateValues subnetBridge;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithSubnetBridge:(SigSubnetBridgeStateValues)subnetBridge;
+@end
+
+
+#pragma mark opcode:0xBF72
+
+/// 4.3.X.3 SUBNET_BRIDGE_STATUS
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.10)
+@interface SigSubnetBridgeStatus : SigGenericMessage
+/// Current Subnet Bridge state, size is 8 bytes.
+@property (nonatomic,strong) SigSubnetBridgeModel *subnetBridge;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithSubnetBridge:(SigSubnetBridgeModel *)subnetBridge;
+@end
+
+
+#pragma mark opcode:0xBF73
+
+/// 4.3.X.4 BRIDGING_TABLE_ADD
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.10)
+@interface SigBridgeTableAdd : SigConfigMessage
+/// Current Subnet Bridge state, size is 8 bytes.
+@property (nonatomic,strong) SigSubnetBridgeModel *subnetBridge;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithSubnetBridge:(SigSubnetBridgeModel *)subnetBridge;
+@end
+
+
+#pragma mark opcode:0xBF74
+
+/// 4.3.X.5 BRIDGING_TABLE_REMOVE
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.11)
+@interface SigBridgeTableRemove : SigConfigMessage
+/// NetKey Index of the first subnet, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex1;
+/// NetKey Index of the second subnet, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex2;
+/// Address of the node in the first subnet, size is 16 bits.
+@property (nonatomic, assign) UInt16 address1;
+/// Address of the node in the second subnet, size is 16 bits.
+@property (nonatomic, assign) UInt16 address2;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithNetKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 address1:(UInt16)address1 address2:(UInt16)address2;
+@end
+
+
+#pragma mark opcode:0xBF75
+
+/// 4.3.X.6 BRIDGING_TABLE_STATUS
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.12)
+@interface SigBridgeTableStatus : SigGenericMessage
+/// Status Code for the requesting message.
+@property (nonatomic, assign) SigConfigMessageStatus status;
+/// Current Subnet Bridge state, size is 8 bytes.
+@property (nonatomic,strong) SigSubnetBridgeModel *subnetBridge;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithStatus:(SigConfigMessageStatus)status subnetBridge:(SigSubnetBridgeModel *)subnetBridge;
+@end
+
+
+#pragma mark opcode:0xBF76
+
+/// 4.3.X.7 BRIDGED_SUBNETS_GET
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.13)
+@interface SigBridgeSubnetsGet : SigConfigMessage
+/// Filter to be applied when reporting the set of pairs of NetKey Indexes, size is 2 bits.
+@property (nonatomic, assign) SigFilterFieldValues filter;
+/// Prohibited, size is 2 bits.
+@property (nonatomic, assign) UInt8 prohibited;
+/// NetKey Index of any of the subnets, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex;
+/// Start offset in units of pairs of NetKey Indexes to read, size is 8 bits.
+@property (nonatomic, assign) UInt8 startIndex;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithFilter:(SigFilterFieldValues)filter prohibited:(UInt8)prohibited netKeyIndex:(UInt16)netKeyIndex startIndex:(UInt8)startIndex;
+@end
+
+
+#pragma mark opcode:0xBF77
+
+/// 4.3.X.8 BRIDGED_SUBNETS_LIST
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.14)
+@interface SigBridgeSubnetsList : SigGenericMessage
+/// Filter applied to the set of pairs of NetKey Indexes, size is 2 bits.
+@property (nonatomic, assign) SigFilterFieldValues filter;
+/// Prohibited, size is 2 bits.
+@property (nonatomic, assign) UInt8 prohibited;
+/// NetKey Index used for filtering or ignored, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex;
+/// Start offset in units of bridges.
+@property (nonatomic, assign) UInt8 startIndex;
+/// Filtered set of N pairs of NetKey Indexes (optional), size is variable (24 * N).
+@property (nonatomic, strong) NSArray <SigBridgeSubnetModel *>*bridgedSubnetsList;
+
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithFilter:(SigFilterFieldValues)filter prohibited:(UInt8)prohibited netKeyIndex:(UInt16)netKeyIndex startIndex:(UInt8)startIndex bridgedSubnetsList:(NSArray <SigBridgeSubnetModel *>*)bridgedSubnetsList;
+@end
+
+
+#pragma mark opcode:0xBF78
+
+/// 4.3.X.9 BRIDGING_TABLE_GET
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.14)
+@interface SigBridgeTableGet : SigConfigMessage
+/// NetKey Index of the first subnet, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex1;
+/// NetKey Index of the second subnet, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex2;
+/// Start offset to read in units of Bridging Table state entries, size is 16 bits.
+@property (nonatomic, assign) UInt16 startIndex;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithNetKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 startIndex:(UInt16)startIndex;
+@end
+
+#pragma mark opcode:0xBF79
+
+/// 4.3.X.10 BRIDGING_TABLE_LIST
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.15)
+@interface SigBridgeTableList : SigGenericMessage
+/// Status Code for the requesting message.
+@property (nonatomic, assign) UInt8 status;
+/// NetKey Index of the first subnet, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex1;
+/// NetKey Index of the second subnet, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex2;
+/// Start offset to read in units of Bridging Table state entries, size is 16 bits.
+@property (nonatomic, assign) UInt16 startIndex;
+/// List of bridged addresses and allowed traffic directions (C.1). (C.1: If the value of the Status field is Success, the Bridged_Addresses_List field shall be optional; otherwise, the Bridged_Addresses_List field shall not be present.)
+@property (nonatomic, strong) NSArray <SigBridgedAddressesModel *>*bridgedAddressesList;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithStatus:(UInt8)status netKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 startIndex:(UInt16)startIndex bridgedAddressesList:(NSArray <SigBridgedAddressesModel *>*)bridgedAddressesList;
+@end
+
+
+#pragma mark opcode:0xBF7A
+
+/// 4.3.X.11 BRIDGE_CAPABILITY_GET
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.16)
+@interface SigBridgeCapabilityGet : SigConfigMessage
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xBF7B
+
+/// 4.3.X.12 BRIDGE_CAPABILITY_STATUS
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.16)
+@interface SigBridgeCapabilityStatus : SigGenericMessage
+/// Max Number Of Bridged Subnets state.
+@property (nonatomic, assign) UInt8 maxNumberOfBridgedSubnets;
+/// Max Number Of Bridging Table Entries state, size is 16 bits.
+@property (nonatomic, assign) UInt16 maxNumberOfBridgingTableEntries;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithMaxNumberOfBridgedSubnets:(UInt8)maxNumberOfBridgedSubnets maxNumberOfBridgingTableEntries:(UInt16)maxNumberOfBridgingTableEntries;
 @end
 
 

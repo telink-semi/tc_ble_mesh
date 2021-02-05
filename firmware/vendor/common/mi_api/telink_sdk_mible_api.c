@@ -22,6 +22,9 @@
 
 #include "telink_sdk_mible_api.h"
 #include "proj_lib/ble/ll/ll_whitelist.h"
+#include "proj/common/mempool.h"
+#include "proj/mcu/watchdog_i.h"
+
 #if MI_API_ENABLE
 #include "./libs/mijia_profiles/mi_service_server.h"
 #include "./libs/common/mible_beacon.h"
@@ -31,9 +34,33 @@
 #include "Mijia_pub_proc.h"
 #include "vendor/common/blt_soft_timer.h"
 #include "./libs/gatt_dfu/mible_dfu_main.h"
+#include "mi_config.h"
+void mi_schd_event_handler(schd_evt_t *evt_id);
 
-MYFIFO_INIT(blt_gatt_event_buf, 0x30, 8);
 telink_record_t telink_record;
+
+u32 mi_terminate_eve_tick =0;
+
+void set_mi_terminate_tick()
+{
+	mi_terminate_eve_tick = clock_time()|1;
+}
+
+void clear_mi_termiante_tick()
+{
+	mi_terminate_eve_tick = 0;
+}
+
+void mi_termiante_task_loop()
+{
+	if( blt_state == BLS_LINK_STATE_CONN&&
+		mi_terminate_eve_tick && 
+		clock_time_exceed(mi_terminate_eve_tick,30*1000*1000)){
+		mi_terminate_eve_tick = 0;
+		bls_ll_terminateConnection (0x13);
+	}
+}
+
 // call back function ,will be call by the telink api 
 u8 telink_ble_mi_app_event(u8 sub_code , u8 *p, int n)
 {
@@ -63,6 +90,7 @@ u8 telink_ble_mi_app_event(u8 sub_code , u8 *p, int n)
 		// lost rssi;
 	
 	}else if(sub_code == HCI_SUB_EVT_LE_CONNECTION_COMPLETE){
+		set_mi_terminate_tick();
 		gap_evt_t = MIBLE_GAP_EVT_CONNECTED;
 		mible_gap_connect_t *p_connect = &(gap_para_t.connect);
 		event_connection_complete_t *pc = (event_connection_complete_t *)p;
@@ -82,6 +110,7 @@ u8 telink_ble_mi_app_event(u8 sub_code , u8 *p, int n)
 		p_connect->conn_param.slave_latency = pc->latency;
 		p_connect->conn_param.conn_sup_timeout = pc->timeout;
 	}else if (sub_code == HCI_EVT_DISCONNECTION_COMPLETE){
+		clear_mi_termiante_tick();
 		gap_evt_t =  MIBLE_GAP_EVT_DISCONNECT;
 		mible_gap_disconnect_t *p_dis = &(gap_para_t.disconnect);
 		event_disconnection_t *pd = (event_disconnection_t *)p;
@@ -120,9 +149,8 @@ _attribute_ram_code_ u8 telink_ble_mi_event_callback(u8 opcode,u8 *p)
 	u16 handle_val=0;
 	evt_param_t.conn_handle =0;
 	if(opcode == ATT_OP_WRITE_REQ || opcode == ATT_OP_WRITE_CMD ){
-		u8 mi_write_buf[64];
 		handle_val = (p_w->hh<<8) + p_w->hl;
-		if(*(gAttributes[handle_val].p_perm) & ATT_PERMISSIONS_AUTHOR_WRITE){
+		if(*(gAttributes[handle_val].p_perm) & ATT_PERMISSIONS_AUTHOR){
 			evt = MIBLE_GATTS_EVT_WRITE_PERMIT_REQ;
 		}else{
 			evt = MIBLE_GATTS_EVT_WRITE;
@@ -130,11 +158,10 @@ _attribute_ram_code_ u8 telink_ble_mi_event_callback(u8 opcode,u8 *p)
 		p_write->value_handle = handle_val;
 		p_write->offset = 0;// the offset of the buffer part 
 		p_write->len = (p_w->l2cap)-3;
-		p_write->data = mi_write_buf;
-		memcpy((u8 *)(p_write->data+(p_write->offset)),p_w->dat,p_write->len);
+		p_write->data = p_w->dat;
 	}else if (opcode == ATT_OP_READ_REQ){
 		handle_val = (p_r->handle1 <<8)+ p_r->handle;
-		if(*(gAttributes[handle_val].p_perm) & ATT_PERMISSIONS_READ){
+		if(*(gAttributes[handle_val].p_perm) & ATT_PERMISSIONS_AUTHOR){
 			evt = MIBLE_GATTS_EVT_READ_PERMIT_REQ;
 		}
 		p_read->value_handle = handle_val;
@@ -152,26 +179,8 @@ int telink_ble_mi_event_cb_att(u16 conn, u8 * p)
 	rf_packet_l2cap_req_t * req = (rf_packet_l2cap_req_t *)p;
 	u8 opcode = req->opcode;
 	conn++;
-	if(opcode == ATT_OP_WRITE_REQ){
-		my_fifo_push(&blt_gatt_event_buf,(u8*)req,10+req->l2capLen,0,0);
-	}else {
-		telink_ble_mi_event_callback(opcode,p);
-	}
+	telink_ble_mi_event_callback(opcode,p);
 	return TRUE;
-}
-void telink_gatt_event_loop()
-{
-	my_fifo_buf_t *fifo = (my_fifo_buf_t *)my_fifo_get(&blt_gatt_event_buf);
-	if(blt_state == BLS_LINK_STATE_CONN){
-		if(fifo){
-			rf_packet_l2cap_req_t * req = (rf_packet_l2cap_req_t *)(fifo->data);
-			u8 opcode = req->opcode;
-			telink_ble_mi_event_callback(opcode,(u8 *)req);
-			my_fifo_pop(&blt_gatt_event_buf);
-		}
-	}else{
-		blt_gatt_event_buf.rptr = blt_gatt_event_buf.wptr;
-	}
 }
 
 // callback function ,and will call by the telink part 
@@ -382,18 +391,12 @@ mible_status_t telink_ble_mi_gatts_service_init(mible_gatts_db_t *p_server_db)
 		handle = find_handle_by_uuid_char(p_uuid_char_str->type,p_uuid_char_str->uuid128,gAttributes);
 		p_char_db[i].char_value_handle = handle;
 		// set the permit part 
-		
-		if(p_char_db[i].wr_author ){
-			*(gAttributes[handle].p_perm) |= (ATT_PERMISSIONS_AUTHOR_WRITE);
+		if(p_char_db[i].wr_author || p_char_db[i].rd_author){
+			*(gAttributes[handle].p_perm) |=(ATT_PERMISSIONS_AUTHOR);
 		}else{
-			*(gAttributes[handle].p_perm) &= ~ ATT_PERMISSIONS_AUTHOR_WRITE;
+			*(gAttributes[handle].p_perm) &= (~ATT_PERMISSIONS_AUTHOR);
 		}
-		if(p_char_db[i].rd_author ){
-			*(gAttributes[handle].p_perm) |=(ATT_PERMISSIONS_AUTHOR_READ);
-		}else{
-			*(gAttributes[handle].p_perm) &=~ ATT_PERMISSIONS_AUTHOR_READ;
-		}
-		
+
 	}
 	return MI_SUCCESS;
 
@@ -657,12 +660,14 @@ void mible_dfu_handler(mible_dfu_state_t state, mible_dfu_param_t *param)
 
     }else if(MIBLE_DFU_STATE_CANCEL == state){
         MI_LOG_INFO("state = MIBLE_DFU_STATE_CANCEL\n");
-    }else if(MIBLE_DFU_STATE_WRITEERR == state){
+    }
+    /*
+    else if(MIBLE_DFU_STATE_WRITEERR == state){
         MI_LOG_INFO("state = MIBLE_DFU_STATE_WRITEERR\n");
         mible_record_delete(RECORD_DFU_INFO);
 		// set flag and wait to reset ,when disconnect 
 		reboot_flag =1;        
-    }
+    }*/
 }
 
 void stdio_rx_handler(uint8_t* p, uint8_t l)
@@ -703,8 +708,19 @@ mible_libs_config_t msc_config = {
 };
 #endif
 
+void mi_config_init()
+{
+//extern unsigned int ota_program_offset;
+//extern unsigned int  ota_firmware_size_k;
+//#define DFU_NVM_START          (ota_program_offset)
+//#define DFU_NVM_SIZE           (ota_firmware_size_k<<10)
+	m_config.dfu_start = (ota_program_offset);
+	m_config.dfu_size = (ota_firmware_size_k<<10);
+}
+
 void telink_mi_vendor_init()
 {
+	mi_config_init();
 	stdio_service_init(stdio_rx_handler);
 	init_mi_proper_data();
 	mible_dfu_callback_register(mible_dfu_handler);
@@ -1149,7 +1165,7 @@ void mi_dectect_reset_proc()
 	// demo code to read the io part 
 	if(!gpio_read(GPIO_PD2)){
 		// reset status 
-		kick_out();
+		kick_out(1);
 	}else{
 	}	
 }
@@ -1164,6 +1180,7 @@ void mi_dispatch_led_status()
 #define MI_TEST_MODE_EN	1
 u8 mi_api_loop_run()
 {
+	mi_termiante_task_loop();
 	mi_reboot_proc();
 	mi_dispatch_led_status();
 	return TRUE;
@@ -1387,10 +1404,104 @@ void mi_schd_event_handler(schd_evt_t* p_evt_id)
 		xiaomi_publish_set_proc();
 		mi_pub_vd_sig_para_init();
 		mi_pub_send_all_status();
-    }else if (mi_schd_event_fail(p_evt_id->id)){
-        mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_TIMEOUT);
+    }else if (p_evt_id->id == SCHD_EVT_ADMIN_LOGIN_SUCCESS||
+    p_evt_id->id == SCHD_EVT_SHARE_LOGIN_SUCCESS){
+		clear_mi_termiante_tick();
+	}
+	else if (mi_schd_event_fail(p_evt_id->id)){
+		mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_TIMEOUT);
     }
 }
+
+// malloc free calloc proc part 
+#define DEFAULT_BUFFER_GROUP_NUM                 3
+
+#define BUFFER_GROUP_0                   64
+#define BUFFER_GROUP_1                   256
+#define BUFFER_GROUP_2                   1024
+#define MAX_BUFFER_SIZE                  BUFFER_GROUP_2
+
+#define BUFFER_NUM_IN_GROUP0             8
+#define BUFFER_NUM_IN_GROUP1             4
+#define BUFFER_NUM_IN_GROUP2             2
+
+MEMPOOL_DECLARE(size_0_pool, size_0_mem, BUFFER_GROUP_0, BUFFER_NUM_IN_GROUP0);
+MEMPOOL_DECLARE(size_1_pool, size_1_mem, BUFFER_GROUP_1, BUFFER_NUM_IN_GROUP1);
+MEMPOOL_DECLARE(size_2_pool, size_2_mem, BUFFER_GROUP_2, BUFFER_NUM_IN_GROUP2);
+
+mem_pool_t *memPool[DEFAULT_BUFFER_GROUP_NUM] = {&size_0_pool, &size_1_pool, &size_2_pool};
+
+void mem_pool_init(void)
+{
+	u16 size[DEFAULT_BUFFER_GROUP_NUM] = {BUFFER_GROUP_0, BUFFER_GROUP_1, BUFFER_GROUP_2};
+    u8 *mem[DEFAULT_BUFFER_GROUP_NUM] = {size_0_mem, size_1_mem, size_2_mem};
+    u8 buffCnt[DEFAULT_BUFFER_GROUP_NUM] = {BUFFER_NUM_IN_GROUP0, BUFFER_NUM_IN_GROUP1, BUFFER_NUM_IN_GROUP2};
+	
+/* reinitialize available buffer */
+    for(u8 i = 0; i < DEFAULT_BUFFER_GROUP_NUM; i++){
+        mempool_init(memPool[i], mem[i], size[i], buffCnt[i]);
+    }  
+}
+
+int get_mem_pool_idx_by_size(u32 size)
+{
+	if(size>BUFFER_GROUP_2){
+		return -1;
+	}else if (size>BUFFER_GROUP_1){
+		return 2;
+	}else if (size>BUFFER_GROUP_0){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
+void* malloc(size_t size)
+{
+	int idx = get_mem_pool_idx_by_size(size);
+	if(idx == -1){
+		return 0;
+	}
+	char *p_char = mempool_alloc(memPool[idx]);
+	return p_char;
+}
+
+void* calloc(size_t num,size_t size)
+{
+	u32 buf_cnt = num*size;
+	int idx = get_mem_pool_idx_by_size(buf_cnt);
+	if(idx == -1){
+		return 0;
+	}
+	char * p_buf = mempool_alloc(memPool[idx]);
+	if(p_buf !=0){
+		memset(p_buf,0,buf_cnt);
+	}
+	return p_buf;
+}
+// use the pointer to get the pool num 
+
+int get_mem_pool_idx_by_pointer(void *arg){
+	if((u32)arg >= (u32)(size_0_mem) && (u32)arg <= ((u32)(size_0_mem) + sizeof(size_0_mem))){
+		return 0;
+	}else if ((u32)arg >= (u32)(size_1_mem) && (u32)arg <= ((u32)(size_1_mem) + sizeof(size_1_mem))){
+		return 1;
+	}else if ((u32)arg >= (u32)(size_2_mem) && (u32)arg <= ((u32)(size_2_mem) + sizeof(size_2_mem))){
+		return 2;
+	}else{
+		return -1;
+	}
+}
+
+void free(void *FirstByte)
+{
+	int idx = get_mem_pool_idx_by_pointer(FirstByte);
+	if(idx == -1){
+		return ;
+	}
+	mempool_free(memPool[idx],FirstByte);
+}
+
 #endif 
 // user function ,and will call by the mi part 
 mible_status_t telink_ble_mi_rand_num_generator(uint8_t* p_buf, uint8_t len)
@@ -1403,5 +1514,99 @@ mible_status_t telink_ble_mi_rand_num_generator(uint8_t* p_buf, uint8_t len)
 	}
 	return MI_SUCCESS;
 }
+// ecc fun proc 
+#define CHAR_BIT	8
+typedef unsigned long mp_limb_t;
+typedef long mp_size_t;
+typedef unsigned long mp_bitcnt_t;
 
+typedef mp_limb_t *mp_ptr;
+typedef const mp_limb_t *mp_srcptr;
+
+#define GMP_LIMB_BITS (sizeof(mp_limb_t) * CHAR_BIT)
+
+#define GMP_LIMB_MAX (~ (mp_limb_t) 0)
+#define GMP_LIMB_HIGHBIT ((mp_limb_t) 1 << (GMP_LIMB_BITS - 1))
+
+#define GMP_HLIMB_BIT ((mp_limb_t) 1 << (GMP_LIMB_BITS / 2))
+#define GMP_LLIMB_MASK (GMP_HLIMB_BIT - 1)
+
+#define GMP_ULONG_BITS (sizeof(unsigned long) * CHAR_BIT)
+#define GMP_ULONG_HIGHBIT ((unsigned long) 1 << (GMP_ULONG_BITS - 1))
+
+
+// use  hardware mul32x32_64 to accelerate
+#define gmp_umul_ppmm(w1, w0, u, v)					\
+  do {												\
+    mp_limb_t __x0, __x1, __x2, __x3;				\
+    unsigned __ul, __vl, __uh, __vh;				\
+    mp_limb_t __u = (u), __v = (v);					\
+													\
+    __ul = __u & GMP_LLIMB_MASK;					\
+    __uh = __u >> (GMP_LIMB_BITS / 2);				\
+    __vl = __v & GMP_LLIMB_MASK;					\
+    __vh = __v >> (GMP_LIMB_BITS / 2);				\
+													\
+    __x0 = (mp_limb_t) __ul * __vl;					\
+    __x1 = (mp_limb_t) __ul * __vh;					\
+    __x2 = (mp_limb_t) __uh * __vl;					\
+    __x3 = (mp_limb_t) __uh * __vh;					\
+													\
+    __x1 += __x0 >> (GMP_LIMB_BITS / 2);/* this can't give carry */		\
+    __x1 += __x2;		/* but this indeed can */	\
+    if (__x1 < __x2)		/* did we get it? */	\
+      __x3 += GMP_HLIMB_BIT;	/* yes, add it in the proper pos. */	\
+													\
+    (w1) = __x3 + (__x1 >> (GMP_LIMB_BITS / 2));	\
+    (w0) = (__x1 << (GMP_LIMB_BITS / 2)) + (__x0 & GMP_LLIMB_MASK);		\
+  } while (0)
+
+
+#define gmp_add_ssaaaa(sh, sl, ah, al, bh, bl) 		\
+	  do {											\
+		mp_limb_t __x;								\
+		__x = (al) + (bl);							\
+		(sh) = (ah) + (bh) + (__x < (al));			\
+		(sl) = __x; 								\
+	  } while (0)
+#if MI_API_ENABLE
+void telink_muladd(uECC_word_t a,
+			uECC_word_t b,
+			uECC_word_t *r0,
+			uECC_word_t *r1,
+			uECC_word_t *r2)
+{
+		  //	uECC_dword_t p = (uECC_dword_t)a * b;
+		  uECC_dword_t p;
+		  uECC_word_t *p0=(uECC_word_t *)&p, *p1=(uECC_word_t *)(p0+1);
+#if MODULE_WATCHDOG_ENABLE
+			  wd_clear();
+#endif
+		  gmp_umul_ppmm((*p1), (*p0), a, b);
+		  
+		  uECC_dword_t r01; 						  //  = ((uECC_dword_t)(*r1) << uECC_WORD_BITS) | *r0;
+		  uECC_word_t *pr10=(uECC_word_t *)&r01, *pr11=(uECC_word_t *)(pr10+1);
+		  *pr10 = *r0; *pr11 = *r1;
+		  
+		  gmp_add_ssaaaa((*pr11), (*pr10), (*pr11), (*pr10), (*p1), (*p0)); // r01 += p;
+		  *r2 += (r01 < p);
+		  *r1 = *pr11;
+		  *r0 = *pr10;
+
+}
+#endif
+void mz_mul2 (unsigned int * r, unsigned int * a, int na, unsigned int b);
+void mpn_mul (unsigned int * r, unsigned int * a, int na, unsigned int * b, int nb){
+	for(int k = 0; k < na + nb; k++){
+		r[k] = 0;
+	}
+	unsigned char val = irq_disable();
+	while(nb --){
+		#if MODULE_WATCHDOG_ENABLE
+		wd_clear();
+		#endif
+		mz_mul2(r++, a, na, *b++);
+	}
+	irq_restore(val);
+}
 

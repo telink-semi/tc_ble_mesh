@@ -163,7 +163,7 @@ typedef enum : NSUInteger {
             SigScanRspModel *model = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
             SigOOBModel *oobModel = [SigDataSource.share getSigOOBModelWithUUID:model.advUuid];
             if (oobModel && oobModel.OOBString && oobModel.OOBString.length == 32) {
-                self.staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
+                weakSelf.staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
             }
             [weakSelf startAddPeripheral:peripheral];
         }
@@ -175,6 +175,8 @@ typedef enum : NSUInteger {
 }
 
 - (void)keybind{
+    TeLogVerbose(@"");
+    self.addStatus = SigAddStatusKeyBinding;
     __weak typeof(self) weakSelf = self;
     CBPeripheral *peripheral = SigBearer.share.getCurrentPeripheral;
     [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
@@ -220,7 +222,10 @@ typedef enum : NSUInteger {
             if (weakSelf.retryCount > 0) {
                 TeLogDebug(@"retry setFilter peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
                 weakSelf.retryCount --;
-                [weakSelf keybind];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(keybind) object:nil];
+                    [weakSelf performSelector:@selector(keybind) withObject:nil afterDelay:0.1];
+                });
             } else {
                 TeLogDebug(@"setFilter fail, so keybind fail.");
                 if (weakSelf.keyBindFailBlock) {
@@ -235,8 +240,10 @@ typedef enum : NSUInteger {
 }
 
 - (void)startAddPeripheral:(CBPeripheral *)peripheral {
+    TeLogVerbose(@"");
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(scanTimeout) object:nil];
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(keybind) object:nil];
     });
     self.curPeripheral = peripheral;
     __weak typeof(self) weakSelf = self;
@@ -311,7 +318,8 @@ typedef enum : NSUInteger {
             TeLogDebug(@"retry connect peripheral=%@,retry count=%d",peripheral,weakSelf.retryCount);
             weakSelf.retryCount --;
             if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
-                [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral];
+                //重试连接时如果断开连接超时会导致closeWithResult重复赋值。所以添加该延时。
+                [weakSelf performSelector:@selector(startAddPeripheral:) withObject:peripheral afterDelay:0.1];
             } else {
                 [weakSelf performSelector:@selector(scanCurrentPeripheralForKeyBind) withObject:nil];
             }

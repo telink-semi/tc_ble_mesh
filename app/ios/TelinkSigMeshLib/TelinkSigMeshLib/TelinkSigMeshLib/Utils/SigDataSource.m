@@ -56,12 +56,14 @@
         _scanList = [NSMutableArray array];
         _ivIndex = [NSString stringWithFormat:@"%08X",(unsigned int)kDefaultIvIndex];
         _encryptedArray = [NSMutableArray array];
-        _defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(SIG_MD_G_ONOFF_S),@(SIG_MD_LIGHTNESS_S),@(SIG_MD_LIGHT_CTL_S),@(SIG_MD_LIGHT_CTL_TEMP_S),@(SIG_MD_LIGHT_HSL_S)]];
+        _defaultGroupSubscriptionModels = [NSMutableArray arrayWithArray:@[@(kSigModel_GenericOnOffServer_ID),@(kSigModel_LightLightnessServer_ID),@(kSigModel_LightCTLServer_ID),@(kSigModel_LightCTLTemperatureServer_ID),@(kSigModel_LightHSLServer_ID)]];
         _defaultNodeInfos = [NSMutableArray array];
         DeviceTypeModel *model1 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_Panel];
         DeviceTypeModel *model2 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_CT];
+        DeviceTypeModel *model3 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:SigNodePID_HSL];
         [_defaultNodeInfos addObject:model1];
         [_defaultNodeInfos addObject:model2];
+        [_defaultNodeInfos addObject:model3];
         SigNetkeyModel *netkey = [[SigNetkeyModel alloc] init];
         netkey.key = @"7dd7364cd842ad18c17c74656c696e6b";
         netkey.index = 0;
@@ -95,6 +97,10 @@
         _defaultRetryCount = 2;
         _defaultAllocatedUnicastRangeHighAddress = kAllocatedUnicastRangeHighAddress;
         _defaultSnoIncrement = kSnoIncrement;
+        SigPeriodModel *periodModel = [[SigPeriodModel alloc] init];
+        periodModel.numberOfSteps = kPublishInterval;
+        periodModel.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_seconds];
+        _defaultPublishPeriodModel = periodModel;
     }
     return self;
 }
@@ -455,7 +461,7 @@
     BOOL tem = NO;
     NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
     for (SigNodeModel *node in curNodes) {
-        UInt32 option = SIG_MD_TIME_S;
+        UInt32 option = kSigModel_TimeServer_ID;
         NSArray *elementAddresses = [node getAddressesWithModelID:@(option)];
         if (elementAddresses.count > 0) {
             tem = YES;
@@ -524,7 +530,7 @@
     netkey.timestamp = timestamp;
     netkey.oldKey = @"00000000000000000000000000000000";
     netkey.key = [LibTools convertDataToHexStr:[LibTools createNetworkKey]];
-    netkey.name = @"";
+    netkey.name = @"Default NetKey";
     netkey.minSecurity = @"secure";
     [_netKeys addObject:netkey];
 
@@ -532,7 +538,7 @@
     SigAppkeyModel *appkey = [[SigAppkeyModel alloc] init];
     appkey.oldKey = @"00000000000000000000000000000000";
     appkey.key = [LibTools convertDataToHexStr:[LibTools initAppKey]];
-    appkey.name = @"";
+    appkey.name = @"Default AppKey";
     appkey.boundNetKey = 0;
     appkey.index = 0;
     [_appKeys addObject:appkey];
@@ -614,9 +620,10 @@
 - (void)deleteNodeFromMeshNetworkWithDeviceAddress:(UInt16)deviceAddress{
     @synchronized(self) {
         NSArray *nodes = [NSArray arrayWithArray:_nodes];
-        for (SigNodeModel *model in nodes) {
+        for (int i=0; i<nodes.count; i++) {
+            SigNodeModel *model = nodes[i];
             if (model.address == deviceAddress) {
-                [_nodes removeObject:model];
+                [_nodes removeObjectAtIndex:i];
                 break;
             }
         }
@@ -889,10 +896,10 @@
     return [LibTools nsstringToHex:_ivIndex];
 }
 
-- (void)updateIvIndexString:(NSString *)ivIndexString {
-    _ivIndex = ivIndexString;
-    [self saveLocationData];
-}
+//- (void)updateIvIndexString:(NSString *)ivIndexString {
+//    _ivIndex = ivIndexString;
+//    [self saveLocationData];
+//}
 
 - (int)getCurrentProvisionerIntSequenceNumber {
     if (self.curLocationNodeModel) {
@@ -911,7 +918,7 @@
         return;
     }
     if (self.curLocationNodeModel && sequenceNumber != self.getCurrentProvisionerIntSequenceNumber) {
-//        TeLogVerbose(@"更新，下一个可用的sequenceNumber=0x%x",sequenceNumber);
+        TeLogVerbose(@"更新，下一个可用的sequenceNumber=0x%x",sequenceNumber);
         [self setLocationSno:sequenceNumber];
         //sno无需存储json
 //        if (sequenceNumber >= self.getLocationSno + SigDataSource.share.defaultSnoIncrement) {
@@ -947,9 +954,9 @@
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
-- (void)setIvIndex:(NSString *)ivIndex {
-    if (![ivIndex isEqualToString:_ivIndex]) {
-        _ivIndex = ivIndex;
+- (void)updateIvIndexString:(NSString *)ivIndexString {
+    if (![ivIndexString isEqualToString:_ivIndex]) {
+        _ivIndex = ivIndexString;
         UInt32 newSequenceNumber = 0;
         _sequenceNumberOnDelegate = newSequenceNumber;
         [[NSUserDefaults standardUserDefaults] setObject:@(newSequenceNumber) forKey:kCurrenProvisionerSno_key];

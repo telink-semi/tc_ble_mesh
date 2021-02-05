@@ -171,17 +171,7 @@ _attribute_ram_code_ int main(void)
 
     /* cup_clk_init */
     cpu_wakeup_init();
-#if (CLOCK_SYS_CLOCK_HZ == 16000000)
-    clock_init(SYS_CLK_16M_Crystal);
-#elif (CLOCK_SYS_CLOCK_HZ == 24000000)
-    clock_init(SYS_CLK_24M_Crystal);
-#elif (CLOCK_SYS_CLOCK_HZ == 32000000)
-    clock_init(SYS_CLK_32M_Crystal);
-#elif (CLOCK_SYS_CLOCK_HZ == 48000000)
-    clock_init(SYS_CLK_48M_Crystal);
-#else
-    #error clock not set properly
-#endif
+    clock_init(SYS_CLK_CRYSTAL);
 
 
     // gpio_set_func(DEBUG_PIN, AS_GPIO);  // default is GPIO

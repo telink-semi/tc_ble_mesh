@@ -195,7 +195,7 @@ typedef enum : NSUInteger {
                     [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(meshConnectTimeoutBeforeGATTOTA) object:nil];
                 });
                 if (SigDataSource.share.unicastAddressOfConnected == self.currentModel.address) {
-                    [self setFilter];
+                    [weakSelf setFilter];
                 } else {
                     [weakSelf nodeIdentitySetBeforeGATTOTA];
                 }

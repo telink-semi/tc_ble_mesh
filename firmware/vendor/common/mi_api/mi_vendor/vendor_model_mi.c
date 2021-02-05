@@ -314,6 +314,36 @@ u8 get_new_mi_ssid(u8 ssid,u8 piid)
 		return 0;
 	}
 }
+vd_mi_property_changed_str property_ivi ;
+static u32 ivi_sts_cnt =0;
+
+void mi_ivi_event_loop()
+{
+	int err =-1;
+	static u32 ivi_sts_tick =0;
+	if(ivi_sts_cnt &&!is_busy_tx_segment_or_reliable_flow()&&clock_time_exceed(ivi_sts_tick,500*1000)){
+		ivi_sts_tick = clock_time();
+		err = mesh_tx_cmd2normal_primary(VD_MI_PROPERTY_STS, (u8 *)&property_ivi, sizeof(property_ivi), 0xfeff, 0);
+		if(err == 0){
+			ivi_sts_cnt--;
+		}
+	}
+}
+
+int mi_cb_ivi_event_send(u8 event_type,u8 *p_buf)
+{
+	static u8 ivi_tid =0;
+	ivi_tid++;
+	property_ivi.mi_head.ssid = 3;
+	property_ivi.mi_head.piid = 1;
+	property_ivi.type = 0;
+	property_ivi.tid = ivi_tid;
+	property_ivi.value[0] = event_type;
+	memcpy(property_ivi.value+1,p_buf,3);
+	// segment msg ,so it can received
+	ivi_sts_cnt =3;
+	return mesh_tx_cmd2normal_primary(VD_MI_PROPERTY_STS, (u8 *)&property_ivi, sizeof(property_ivi), 0xfeff, 0);
+}
 
 int mi_cb_vd_property_change(u16 ele_adr, u16 dst_adr,u8 ssid,u8 piid,model_common_t *p_com_md)
 {
@@ -430,7 +460,9 @@ int mi_cb_vd_set_property_noack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"check bind and send sts quickly  ",0);
 	}else{
 		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"use const fast inter to send ",0);
+		#if BLT_SOFTWARE_TIMER_ENABLE
 		blt_soft_timer_add(&soft_timer_proper_sts_proc, 300*1000);
+		#endif
 	}
 	return 1;
 }

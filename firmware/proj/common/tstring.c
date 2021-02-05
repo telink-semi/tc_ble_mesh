@@ -55,8 +55,7 @@ int memcmp(const void * m1, const void *m2, unsigned int n) {
 	return 0;
 }
 
-void *
-memchr(register const void * src_void, int c, unsigned int length) {
+void *memchr(register const void * src_void, int c, unsigned int length) {
 	const unsigned char *src = (const unsigned char *) src_void;
 
 	while (length-- > 0) {

@@ -73,7 +73,7 @@ typedef struct {
 
 
 
-
+extern st_ll_adv_t  blta;
 extern rf_packet_adv_t	pkt_adv;
 
 

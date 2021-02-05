@@ -50,8 +50,13 @@
 #include "proj/drivers/uart.h"
 #endif
 
+#if MESH_DLE_MODE
+MYFIFO_INIT(blt_rxfifo, DLE_RX_FIFO_SIZE, 8);
+MYFIFO_INIT(blt_txfifo, DLE_TX_FIFO_SIZE, 8); // some phones may not support DLE, so use the same count with no DLE.
+#else
 MYFIFO_INIT(blt_rxfifo, 64, 8);
 MYFIFO_INIT(blt_txfifo, 40, 8);
+#endif
 
 //u8		peer_type;
 //u8		peer_mac[12];
@@ -78,6 +83,7 @@ void test_cmd_wakeup_lpn()
 
 void friend_ship_establish_ok_cb_lpn()
 {
+	gatt_adv_send_flag = 0;
 	rf_link_light_event_callback(LGT_CMD_FRIEND_SHIP_OK);
     friend_send_current_subsc_list();
     #if LPN_VENDOR_SENSOR_EN
@@ -87,7 +93,10 @@ void friend_ship_establish_ok_cb_lpn()
 
 void friend_ship_disconnect_cb_lpn()
 {
-
+	gatt_adv_send_flag = GATT_LPN_EN;
+	if(gatt_adv_send_flag){
+		blt_soft_timer_update(&mesh_lpn_send_gatt_adv, ADV_INTERVAL_MS*1000);
+	}
 }
 
 #if (BLT_SOFTWARE_TIMER_ENABLE)
@@ -258,6 +267,11 @@ void main_loop ()
 	tick_loop ++;
 #if (BLT_SOFTWARE_TIMER_ENABLE)
 	blt_soft_timer_process(MAINLOOP_ENTRY);
+	if (blts.scan_en & BLS_FLAG_SCAN_ENABLE){
+		if(!((BLS_LINK_STATE_CONN == blt_state) && (BLE_STATE_BRX_S == ble_state))){
+			bls_phy_scan_mode(0);
+		}
+	}
 #endif
 	#if DUAL_MODE_ADAPT_EN
 	if(RF_MODE_BLE != dual_mode_proc()){    // should be before is mesh latency window()
@@ -300,6 +314,26 @@ void main_loop ()
 	#endif
 }
 
+#if (PM_DEEPSLEEP_RETENTION_ENABLE)
+_attribute_ram_code_ 
+#endif
+void user_init_peripheral(int retention_flag)
+{
+	//unprovision:ADV_INTERVAL_MIN;  provision but not friendship:FRI_REQ_TIMEOUT_MS  friendship ok:FRI_POLL_INTERVAL_MS
+	if(BLS_LINK_STATE_ADV == blt_state){
+		mesh_lpn_adv_interval_update(0);
+		if(lpn_provision_ok){
+			blc_ll_setScanEnable (0, 0);
+		}
+		else{	
+			#if (!GATT_LPN_EN)
+			bls_pm_setSuspendMask (SUSPEND_DISABLE);
+			#endif
+		}
+	}
+	lpn_node_io_init();
+}
+
 void user_init()
 {
 	mesh_global_var_init();
@@ -330,7 +364,13 @@ void user_init()
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
 #if BLE_REMOTE_PM_ENABLE
-	blc_ll_initPowerManagement_module();        //pm module:      	 optional
+	blc_ll_initPowerManagement_module();		//pm module:		 optional
+	ENABLE_SUSPEND_MASK;
+	blc_pm_setDeepsleepRetentionThreshold(50, 30); // threshold to enter retention
+	blc_pm_setDeepsleepRetentionEarlyWakeupTiming(400); // retention early wakeup time
+	bls_pm_registerFuncBeforeSuspend(app_func_before_suspend);
+#else
+	bls_pm_setSuspendMask (SUSPEND_DISABLE);
 #endif
 
 	//l2cap initialization
@@ -351,7 +391,6 @@ void user_init()
 	bls_ll_setAdvEnable(1);  //adv enable
 
 	rf_set_power_level_index (my_rf_power_index);
-	bls_pm_setSuspendMask (SUSPEND_DISABLE);//(SUSPEND_ADV | SUSPEND_CONN)
     blc_hci_le_setEventMask_cmd(HCI_LE_EVT_MASK_ADVERTISING_REPORT|HCI_LE_EVT_MASK_CONNECTION_COMPLETE);
 
 	////////////////// SPP initialization ///////////////////////////////////
@@ -378,9 +417,10 @@ void user_init()
 	//bls_set_update_chn_cb(chn_conn_update_dispatch);
 	bls_ota_registerStartCmdCb(entry_ota_mode);
 	bls_ota_registerResultIndicateCb(show_ota_result);
-
+	
+#if !GATT_LPN_EN
 	app_enable_scan_all_device ();
-
+#endif
 	// mesh_mode and layer init
 	mesh_init_all();
 
@@ -390,7 +430,7 @@ void user_init()
 	#endif
 	{bls_ota_clearNewFwDataArea();	 //must
 	}
-	lpn_node_io_init();	// should be after mesh init all
+
 	//blc_ll_initScanning_module(tbl_mac);
 	#if((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 	blc_gap_peripheral_init();    //gap initialization
@@ -405,6 +445,8 @@ void user_init()
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 1*1000*1000);
 #endif
+	user_init_peripheral(0);
+	mesh_lpn_gatt_adv_refresh();
 }
 
 #if (PM_DEEPSLEEP_RETENTION_ENABLE)
@@ -417,10 +459,17 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 	blc_ll_recoverDeepRetention();
 
 	DBG_CHN0_HIGH;    //debug
-
-    if(!is_led_busy()){
-	    light_pwm_init();
-	}
+	// should enable IRQ here, because it may use irq here, for example BLE connect.
+	irq_enable();
+	user_init_peripheral(1); 
+	extern u8 blt_busy;
+	if((BLS_LINK_STATE_ADV == blt_state) && is_friend_ship_link_ok_lpn() && (!my_fifo_get(&mesh_adv_cmd_fifo)) && ( (0 == fri_ship_proc_lpn.poll_tick) || clock_time_exceed(fri_ship_proc_lpn.poll_tick, FRI_POLL_INTERVAL_MS*1000/2)) &&
+		blt_busy){ // not soft timer wakeup
+		mesh_friend_ship_start_poll();
+	}	
+//  if(!is_led_busy()){
+//	    light_pwm_init();   // cost about 1.5ms
+//	}
 	
 #if (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();
@@ -428,25 +477,7 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 #if ADC_ENABLE
 	adc_drv_init();
 #endif
-
-    lpn_node_io_init();
-
-    // should enable IRQ here, because it may use irq here, for example BLE connect.
-    irq_enable();
-    
-    if(HANDLE_RETENTION_DEEP_PRE == lpn_deep_handle.type){
-        if(LPN_SUSPEND_EVENT_NEXT_POLL_INV == lpn_deep_handle.event){
-            suspend_handle_next_poll_interval(HANDLE_RETENTION_DEEP_AFTER);
-        }else if(LPN_SUSPEND_EVENT_WAKEUP_RX == lpn_deep_handle.event){
-            suspend_handle_wakeup_rx(HANDLE_RETENTION_DEEP_AFTER);
-        }
-    }
-    else if(HANDLE_RETENTION_DEEP_ADV_PRE == lpn_deep_handle.type){
-        suspend_handle_next_poll_interval(HANDLE_RETENTION_DEEP_ADV_PRE);
-        // while(1){}      // have been reboot if it's not BLE connected.
-    }
-
-    memset(&lpn_deep_handle, 0, sizeof(lpn_deep_handle)); // init
+  
     lpn_wakeup_tick = clock_time();
 }
 #endif

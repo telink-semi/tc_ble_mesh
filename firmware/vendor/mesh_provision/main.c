@@ -26,7 +26,7 @@
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/ble/ll/ll.h"
-
+#include "vendor/common/mesh_common.h"
 extern void user_init();
 extern void main_loop ();
 
@@ -110,15 +110,7 @@ _attribute_ram_code_ int main (void)    //must run in ramcode
 
 	gpio_init( !deepRetWakeUp );  //analog resistance will keep available in deepSleep mode, so no need initialize again
 
-#if (CLOCK_SYS_CLOCK_HZ == 16000000)
-	clock_init(SYS_CLK_16M_Crystal);
-#elif (CLOCK_SYS_CLOCK_HZ == 24000000)
-	clock_init(SYS_CLK_24M_Crystal);
-#elif (CLOCK_SYS_CLOCK_HZ == 32000000)
-	clock_init(SYS_CLK_32M_Crystal);
-#elif (CLOCK_SYS_CLOCK_HZ == 48000000)
-	clock_init(SYS_CLK_48M_Crystal);
-#endif
+    clock_init(SYS_CLK_CRYSTAL);
 
 	
 #if	(PM_DEEPSLEEP_RETENTION_ENABLE)

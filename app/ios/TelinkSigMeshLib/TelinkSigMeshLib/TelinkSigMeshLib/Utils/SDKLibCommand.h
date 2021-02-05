@@ -34,9 +34,10 @@ NS_ASSUME_NONNULL_BEGIN
 @class SigMessageHandle,SigTransitionTime,SigMeshMessage,SigBaseMeshMessage,SigPublish,SigTimeModel,SigFilterStatus;
 @class SigConfigAppKeyStatus,SigConfigAppKeyList,SigConfigBeaconStatus,SigConfigCompositionDataStatus,SigConfigDefaultTtlStatus,SigConfigFriendStatus,SigConfigGATTProxyStatus,SigConfigKeyRefreshPhaseStatus,SigConfigModelPublicationStatus,SigConfigModelSubscriptionStatus,SigConfigNetworkTransmitStatus,SigConfigRelayStatus,SigConfigSIGModelSubscriptionList,SigConfigVendorModelSubscriptionList,SigConfigLowPowerNodePollTimeoutStatus,SigConfigHeartbeatPublicationStatus,SigConfigHeartbeatSubscriptionStatus,SigConfigModelAppStatus,SigConfigNetKeyStatus,SigConfigNetKeyList,SigConfigNodeIdentityStatus,SigConfigNodeResetStatus,SigConfigSIGModelAppList,SigConfigVendorModelAppList;
 @class SigGenericOnOffStatus,SigGenericLevelStatus,SigGenericDefaultTransitionTimeStatus,SigGenericOnPowerUpStatus,SigGenericPowerLevelStatus,SigGenericPowerLastStatus,SigGenericPowerDefaultStatus,SigGenericPowerRangeStatus,SigGenericBatteryStatus,SigSensorDescriptorStatus,SigSensorStatus,SigSensorColumnStatus,SigSensorSeriesStatus,SigSensorCadenceStatus,SigSensorSettingsStatus,SigSensorSettingStatus,SigTimeStatus,SigTimeRoleStatus,SigTimeZoneStatus,SigTAI_UTC_DeltaStatus,SigSceneStatus,SigSceneRegisterStatus,SigSchedulerActionStatus,SigSchedulerStatus,SigLightLightnessStatus,SigLightLightnessLinearStatus,SigLightLightnessLastStatus,SigLightLightnessDefaultStatus,SigLightLightnessRangeStatus,SigLightCTLStatus,SigLightCTLTemperatureRangeStatus,SigLightCTLTemperatureStatus,SigLightCTLDefaultStatus,SigLightHSLHueStatus,SigLightHSLSaturationStatus,SigLightHSLStatus,SigLightHSLTargetStatus,SigLightHSLDefaultStatus,SigLightHSLRangeStatus,SigLightXyLStatus,SigLightXyLTargetStatus,SigLightXyLDefaultStatus,SigLightXyLRangeStatus,SigLightLCModeStatus,SigLightLCOMStatus,SigLightLCLightOnOffStatus,SigLightLCPropertyStatus;
-@class SigFirmwareUpdateInformationStatus,SigFirmwareUpdateFirmwareMetadataStatus,SigFirmwareUpdateStatus,SigFirmwareDistributionStatus,SigFirmwareDistributionDetailsList;
+@class SigFirmwareUpdateInformationStatus,SigFirmwareUpdateFirmwareMetadataStatus,SigFirmwareUpdateStatus,SigFirmwareDistributionStatus,SigFirmwareDistributionReceiversList,SigFirmwareDistributionReceiversStatus,SigFirmwareDistributionReceiversList,SigFirmwareDistributionCapabilitiesStatus,SigFirmwareDistributionUploadStatus,SigFirmwareDistributionFirmwareStatus;
 @class SigBLOBTransferStatus,SigObjectBlockTransferStatus,SigBLOBBlockStatus,SigBLOBInformationStatus;
 @class SigRemoteProvisioningScanCapabilitiesStatus,SigRemoteProvisioningScanStatus,SigRemoteProvisioningLinkStatus;
+@class SigSubnetBridgeStatus,SigBridgeTableStatus,SigBridgeSubnetsList,SigBridgeTableList,SigBridgeCapabilityStatus;
 
 typedef void(^resultBlock)(BOOL isResponseAll, NSError * _Nullable error);
 typedef void(^ErrorBlock)(NSError * _Nullable error);
@@ -123,13 +124,22 @@ typedef void(^responseFirmwareInformationStatusMessageBlock)(UInt16 source,UInt1
 typedef void(^responseFirmwareUpdateFirmwareMetadataStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareUpdateFirmwareMetadataStatus *responseMessage);
 typedef void(^responseFirmwareUpdateStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareUpdateStatus *responseMessage);
 typedef void(^responseFirmwareDistributionStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareDistributionStatus *responseMessage);
-typedef void(^responseFirmwareDistributionDetailsListMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareDistributionDetailsList *responseMessage);
+typedef void(^responseFirmwareDistributionReceiversStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareDistributionReceiversStatus *responseMessage);
+typedef void(^responseFirmwareDistributionReceiversListMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareDistributionReceiversList *responseMessage);
+typedef void(^responseFirmwareDistributionCapabilitiesStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareDistributionCapabilitiesStatus *responseMessage);
+typedef void(^responseFirmwareDistributionUploadStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareDistributionUploadStatus *responseMessage);
+typedef void(^responseFirmwareDistributionFirmwareStatusMessageBlock)(UInt16 source,UInt16 destination,SigFirmwareDistributionFirmwareStatus *responseMessage);
 
 // callback about BLOB Transfer Messages
 typedef void(^responseBLOBTransferStatusMessageBlock)(UInt16 source,UInt16 destination,SigBLOBTransferStatus *responseMessage);
 typedef void(^responseObjectBlockTransferStatusMessageBlock)(UInt16 source,UInt16 destination,SigObjectBlockTransferStatus *responseMessage);
 typedef void(^responseBLOBBlockStatusMessageBlock)(UInt16 source,UInt16 destination,SigBLOBBlockStatus *responseMessage);
 typedef void(^responseBLOBInformationStatusMessageBlock)(UInt16 source,UInt16 destination,SigBLOBInformationStatus *responseMessage);
+typedef void(^responseSubnetBridgeStatusMessageBlock)(UInt16 source,UInt16 destination,SigSubnetBridgeStatus *responseMessage);
+typedef void(^responseBridgeTableStatusMessageBlock)(UInt16 source,UInt16 destination,SigBridgeTableStatus *responseMessage);
+typedef void(^responseBridgeSubnetsListMessageBlock)(UInt16 source,UInt16 destination,SigBridgeSubnetsList *responseMessage);
+typedef void(^responseBridgeTableListMessageBlock)(UInt16 source,UInt16 destination,SigBridgeTableList *responseMessage);
+typedef void(^responseBridgeCapabilityStatusMessageBlock)(UInt16 source,UInt16 destination,SigBridgeCapabilityStatus *responseMessage);
 
 // callback about Remote Provision
 typedef void(^responseRemoteProvisioningScanCapabilitiesStatusMessageBlock)(UInt16 source,UInt16 destination,SigRemoteProvisioningScanCapabilitiesStatus *responseMessage);
@@ -254,12 +264,24 @@ typedef enum : UInt8 {
 @property (nonatomic,copy) responseFirmwareUpdateFirmwareMetadataStatusMessageBlock responseFirmwareUpdateFirmwareMetadataStatusCallBack;
 @property (nonatomic,copy) responseFirmwareUpdateStatusMessageBlock responseFirmwareUpdateStatusCallBack;
 @property (nonatomic,copy) responseFirmwareDistributionStatusMessageBlock responseFirmwareDistributionStatusCallBack;
-@property (nonatomic,copy) responseFirmwareDistributionDetailsListMessageBlock responseFirmwareDistributionDetailsListCallBack;
+@property (nonatomic,copy) responseFirmwareDistributionReceiversStatusMessageBlock responseFirmwareDistributionReceiversStatusCallBack;
+@property (nonatomic,copy) responseFirmwareDistributionReceiversListMessageBlock responseFirmwareDistributionReceiversListCallBack;
+@property (nonatomic,copy) responseFirmwareDistributionCapabilitiesStatusMessageBlock responseFirmwareDistributionCapabilitiesStatusCallBack;
+@property (nonatomic,copy) responseFirmwareDistributionUploadStatusMessageBlock responseFirmwareDistributionUploadStatusCallBack;
+@property (nonatomic,copy) responseFirmwareDistributionFirmwareStatusMessageBlock responseFirmwareDistributionFirmwareStatusCallBack;
 // callback about BLOB Transfer Messages
 @property (nonatomic,copy) responseBLOBTransferStatusMessageBlock responseBLOBTransferStatusCallBack;
 @property (nonatomic,copy) responseObjectBlockTransferStatusMessageBlock responseObjectBlockTransferStatusCallBack;
 @property (nonatomic,copy) responseBLOBBlockStatusMessageBlock responseBLOBBlockStatusCallBack;
 @property (nonatomic,copy) responseBLOBInformationStatusMessageBlock responseBLOBInformationStatusCallBack;
+
+// callback about subnet bridge
+@property (nonatomic,copy) responseSubnetBridgeStatusMessageBlock responseSubnetBridgeStatusCallBack;
+@property (nonatomic,copy) responseBridgeTableStatusMessageBlock responseBridgeTableStatusCallBack;
+@property (nonatomic,copy) responseBridgeSubnetsListMessageBlock responseBridgeSubnetsListCallBack;
+@property (nonatomic,copy) responseBridgeTableListMessageBlock responseBridgeTableListCallBack;
+@property (nonatomic,copy) responseBridgeCapabilityStatusMessageBlock responseBridgeCapabilityStatusCallBack;
+
 // callback about Remote Provision
 @property (nonatomic,copy) responseRemoteProvisioningScanCapabilitiesStatusMessageBlock responseRemoteProvisioningScanCapabilitiesStatusCallBack;
 @property (nonatomic,copy) responseRemoteProvisioningScanStatusMessageBlock responseRemoteProvisioningScanStatusCallBack;
@@ -538,7 +560,7 @@ typedef enum : UInt8 {
 
 #pragma mark - Mesh Firmware update (Mesh OTA)
 
-/* Firmware Update Messages */
+/* 8.4.1 Firmware Update model messages */
 
 + (SigMessageHandle *)firmwareUpdateInformationGetWithDestination:(UInt16)destination firstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
@@ -552,13 +574,39 @@ typedef enum : UInt8 {
 
 + (SigMessageHandle *)firmwareUpdateApplyWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
+/* 8.4.2 Firmware Distribution model messages */
+
++ (SigMessageHandle *)firmwareDistributionReceiversAddWithDestination:(UInt16)destination receiverEntrysList:(NSArray <SigReceiverEntryModel *>*)receiverEntrysList retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionReceiversStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)firmwareDistributionReceiversDeleteAllWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionReceiversStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)firmwareDistributionReceiversGetWithDestination:(UInt16)destination firstIndex:(UInt16)firstIndex entriesLimit:(UInt16)entriesLimit retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionReceiversListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)firmwareDistributionCapabilitiesGetWithDestination:(UInt16)destination firstIndex:(UInt16)firstIndex entriesLimit:(UInt16)entriesLimit retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionCapabilitiesStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
 + (SigMessageHandle *)firmwareDistributionGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 + (SigMessageHandle *)firmwareDistributionStartWithDestination:(UInt16)destination distributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(BOOL)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex distributionMulticastAddress:(NSData *)distributionMulticastAddress retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 + (SigMessageHandle *)firmwareDistributionCancelWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-//+ (SigMessageHandle *)firmwareDistributionDetailsGetWithDestination:(UInt16)destination status:(SigFirmwareDistributionStatusType)status companyID:(UInt16)companyID firmwareID:(NSData *)firmwareID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionDetailsListMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareDistributionApplyWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)firmwareDistributionUploadGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionUploadStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)firmwareDistributionUploadStartWithDestination:(UInt16)destination uploadTTL:(UInt8)uploadTTL uploadTimeoutBase:(UInt16)uploadTimeoutBase uploadBLOBID:(UInt64)uploadBLOBID uploadFirmwareSize:(UInt32)uploadFirmwareSize uploadFirmwareMetadataLength:(UInt8)uploadFirmwareMetadataLength uploadFirmwareMetadata:(NSData *)uploadFirmwareMetadata uploadFirmwareID:(NSData *)uploadFirmwareID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionUploadStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)firmwareDistributionUploadOOBStartWithDestination:(UInt16)destination uploadURILength:(UInt8)uploadURILength uploadURI:(NSData *)uploadURI uploadFirmwareID:(NSData *)uploadFirmwareID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionUploadStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)firmwareDistributionUploadCancelWithDestination:(UInt16)destination uploadURILength:(UInt8)uploadURILength uploadURI:(NSData *)uploadURI uploadFirmwareID:(NSData *)uploadFirmwareID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionUploadStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)firmwareDistributionFirmwareGetWithDestination:(UInt16)destination firmwareID:(NSData *)firmwareID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionFirmwareStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)firmwareDistributionFirmwareGetByIndexWithDestination:(UInt16)destination distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionFirmwareStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)firmwareDistributionFirmwareDeleteWithDestination:(UInt16)destination firmwareID:(NSData *)firmwareID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionFirmwareStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
+
++ (SigMessageHandle *)firmwareDistributionFirmwareDeleteAllWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareDistributionFirmwareStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 /* BLOB Transfer Messages */
 
@@ -566,8 +614,9 @@ typedef enum : UInt8 {
 
 + (SigMessageHandle *)BLOBTransferStartWithDestination:(UInt16)destination transferMode:(SigTransferModeState)transferMode BLOBID:(UInt64)BLOBID BLOBSize:(UInt32)BLOBSize BLOBBlockSizeLog:(UInt8)BLOBBlockSizeLog MTUSize:(UInt16)MTUSize retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
-+ (SigMessageHandle *)BLOBTransferAbortWithDestination:(UInt16)destination BLOBID:(UInt64)BLOBID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBTransferCancelWithDestination:(UInt16)destination BLOBID:(UInt64)BLOBID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
++ (SigMessageHandle *)BLOBBlockGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 /// BLOBBlockStart
 /// @param destination node address
@@ -580,8 +629,6 @@ typedef enum : UInt8 {
 + (SigMessageHandle *)BLOBBlockStartWithDestination:(UInt16)destination blockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 + (SigMessageHandle *)BLOBChunkTransferWithDestination:(UInt16)destination chunkNumber:(UInt16)chunkNumber chunkData:(NSData *)chunkData sendBySegmentPdu:(BOOL)sendBySegmentPdu retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount resultCallback:(resultBlock)resultCallback;
-
-+ (SigMessageHandle *)BLOBBlockGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 + (SigMessageHandle *)BLOBInformationGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
@@ -605,6 +652,7 @@ typedef enum : UInt8 {
 + (SigMessageHandle *)remoteProvisioningLinkCloseWithDestination:(UInt16)destination reason:(SigRemoteProvisioningLinkCloseStatus)reason retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseRemoteProvisioningLinkStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 + (SigMessageHandle *)remoteProvisioningPDUSendWithDestination:(UInt16)destination OutboundPDUNumber:(UInt8)outboundPDUNumber provisioningPDU:(NSData *)provisioningPDU retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount resultCallback:(resultBlock)resultCallback;
+
 
 #pragma mark - API by Telink
 
@@ -720,7 +768,7 @@ peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+provisionTyp
 + (void)keyBind:(UInt16)address appkeyModel:(SigAppkeyModel *)appkeyModel keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail;
 
 + (CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral;
-+ (void)setBluetoothCentralUpdateStateCallback:(bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback;
++ (void)setBluetoothCentralUpdateStateCallback:(_Nullable bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback;
 
 #pragma mark Scan API
 + (void)scanUnprovisionedDevicesWithResult:(bleScanPeripheralCallback)result;

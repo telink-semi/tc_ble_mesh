@@ -78,6 +78,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/SigRemoteAddManager.h>
 #import <TelinkSigMeshLib/SigBluetooth.h>
 #import <TelinkSigMeshLib/SigAddDeviceManager.h>
+#import <TelinkSigMeshLib/SigPdu.h>
 
 #else
 
@@ -112,5 +113,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLibExtensions/SigRemoteAddManager.h>
 #import <TelinkSigMeshLibExtensions/SigBluetooth.h>
 #import <TelinkSigMeshLibExtensions/SigAddDeviceManager.h>
+#import <TelinkSigMeshLibExtensions/SigPdu.h>
+#import <TelinkSigMeshLibExtensions/SDKLibCommand+subnetBridge.h>
 
 #endif

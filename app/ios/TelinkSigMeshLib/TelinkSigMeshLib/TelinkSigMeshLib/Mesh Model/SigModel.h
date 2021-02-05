@@ -30,7 +30,7 @@
 #import <Foundation/Foundation.h>
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigNetkeyDerivaties,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel   ,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0;
+@class SigNetkeyDerivaties,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel;
 typedef void(^BeaconBackCallBack)(BOOL available);
 typedef void(^responseAllMessageBlock)(UInt16 source,UInt16 destination,SigMeshMessage *responseMessage);
 
@@ -66,59 +66,6 @@ typedef void(^bleDidWriteValueForCharacteristicCallback)(CBPeripheral *periphera
 
 
 @interface ModelIDs : SigModel
-@property (nonatomic,assign) NSInteger modelIDCount;
-@property (nonatomic,strong) ModelIDModel *model1;
-@property (nonatomic,strong) ModelIDModel *model2;
-@property (nonatomic,strong) ModelIDModel *model3;
-@property (nonatomic,strong) ModelIDModel *model4;
-@property (nonatomic,strong) ModelIDModel *model5;
-@property (nonatomic,strong) ModelIDModel *model6;
-@property (nonatomic,strong) ModelIDModel *model7;
-@property (nonatomic,strong) ModelIDModel *model8;
-@property (nonatomic,strong) ModelIDModel *model9;
-@property (nonatomic,strong) ModelIDModel *model10;
-@property (nonatomic,strong) ModelIDModel *model11;
-@property (nonatomic,strong) ModelIDModel *model12;
-@property (nonatomic,strong) ModelIDModel *model13;
-@property (nonatomic,strong) ModelIDModel *model14;
-@property (nonatomic,strong) ModelIDModel *model15;
-@property (nonatomic,strong) ModelIDModel *model16;
-@property (nonatomic,strong) ModelIDModel *model17;
-@property (nonatomic,strong) ModelIDModel *model18;
-@property (nonatomic,strong) ModelIDModel *model19;
-@property (nonatomic,strong) ModelIDModel *model20;
-@property (nonatomic,strong) ModelIDModel *model21;
-@property (nonatomic,strong) ModelIDModel *model22;
-@property (nonatomic,strong) ModelIDModel *model23;
-@property (nonatomic,strong) ModelIDModel *model24;
-@property (nonatomic,strong) ModelIDModel *model25;
-@property (nonatomic,strong) ModelIDModel *model26;
-@property (nonatomic,strong) ModelIDModel *model27;
-@property (nonatomic,strong) ModelIDModel *model28;
-@property (nonatomic,strong) ModelIDModel *model29;
-@property (nonatomic,strong) ModelIDModel *model30;
-@property (nonatomic,strong) ModelIDModel *model31;
-@property (nonatomic,strong) ModelIDModel *model32;
-@property (nonatomic,strong) ModelIDModel *model33;
-@property (nonatomic,strong) ModelIDModel *model34;
-@property (nonatomic,strong) ModelIDModel *model35;
-@property (nonatomic,strong) ModelIDModel *model36;
-@property (nonatomic,strong) ModelIDModel *model37;
-@property (nonatomic,strong) ModelIDModel *model38;
-@property (nonatomic,strong) ModelIDModel *model39;
-@property (nonatomic,strong) ModelIDModel *model40;
-@property (nonatomic,strong) ModelIDModel *model41;
-@property (nonatomic,strong) ModelIDModel *model42;
-@property (nonatomic,strong) ModelIDModel *model43;
-@property (nonatomic,strong) ModelIDModel *model44;
-@property (nonatomic,strong) ModelIDModel *model45;
-@property (nonatomic,strong) ModelIDModel *model46;
-@property (nonatomic,strong) ModelIDModel *model47;
-@property (nonatomic,strong) ModelIDModel *model48;
-@property (nonatomic,strong) ModelIDModel *model49;
-@property (nonatomic,strong) ModelIDModel *model50;
-@property (nonatomic,strong) ModelIDModel *model51;
-@property (nonatomic,strong) ModelIDModel *model52;
 @property (nonatomic,strong) NSArray <ModelIDModel *>*modelIDs;//所有的modelID
 @property (nonatomic,strong) NSArray <ModelIDModel *>*defaultModelIDs;//默认keyBind的modelID
 @end
@@ -226,6 +173,7 @@ typedef void(^bleDidWriteValueForCharacteristicCallback)(CBPeripheral *periphera
 
 
 static Byte CTByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x00, (Byte) 0x32, (Byte) 0x37, (Byte) 0x69, (Byte) 0x00, (Byte) 0x07, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x19, (Byte) 0x01, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x03, (Byte) 0x00, (Byte) 0x04, (Byte) 0x00, (Byte) 0x05, (Byte) 0x00, (Byte) 0x00, (Byte) 0xfe, (Byte) 0x01, (Byte) 0xfe, (Byte) 0x02, (Byte) 0xfe, (Byte) 0x00, (Byte) 0xff, (Byte) 0x01, (Byte) 0xff, (Byte) 0x00, (Byte) 0x12, (Byte) 0x01, (Byte) 0x12, (Byte) 0x00, (Byte) 0x10, (Byte) 0x02, (Byte) 0x10, (Byte) 0x04, (Byte) 0x10, (Byte) 0x06, (Byte) 0x10, (Byte) 0x07, (Byte) 0x10, (Byte) 0x03, (Byte) 0x12, (Byte) 0x04, (Byte) 0x12, (Byte) 0x06, (Byte) 0x12, (Byte) 0x07, (Byte) 0x12, (Byte) 0x00, (Byte) 0x13, (Byte) 0x01, (Byte) 0x13, (Byte) 0x03, (Byte) 0x13, (Byte) 0x04, (Byte) 0x13, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x02, (Byte) 0x10, (Byte) 0x06, (Byte) 0x13};
+static Byte HSLByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x02, (Byte) 0x00, (Byte) 0x33, (Byte) 0x33, (Byte) 0x69, (Byte) 0x00, (Byte) 0x07, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x0E, (Byte) 0x01, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x03, (Byte) 0x00, (Byte) 0x00, (Byte) 0xFE, (Byte) 0x00, (Byte) 0xFF, (Byte) 0x00, (Byte) 0x10, (Byte) 0x02, (Byte) 0x10, (Byte) 0x04, (Byte) 0x10, (Byte) 0x06, (Byte) 0x10, (Byte) 0x07, (Byte) 0x10, (Byte) 0x00, (Byte) 0x13, (Byte) 0x01, (Byte) 0x13, (Byte) 0x07, (Byte) 0x13, (Byte) 0x08, (Byte) 0x13, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x02, (Byte) 0x10, (Byte) 0x0A, (Byte) 0x13, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x02, (Byte) 0x10, (Byte) 0x0B, (Byte) 0x13};
 static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (Byte) 0x32, (Byte) 0x37, (Byte) 0x69, (Byte) 0x00, (Byte) 0x07, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x03, (Byte) 0x00, (Byte) 0x04, (Byte) 0x00, (Byte) 0x05, (Byte) 0x00, (Byte) 0x00, (Byte) 0xfe, (Byte) 0x01, (Byte) 0xfe, (Byte) 0x02, (Byte) 0xfe, (Byte) 0x00, (Byte) 0xff, (Byte) 0x01, (Byte) 0xff, (Byte) 0x00, (Byte) 0x12, (Byte) 0x01, (Byte) 0x12, (Byte) 0x00, (Byte) 0x10, (Byte) 0x03, (Byte) 0x12, (Byte) 0x04, (Byte) 0x12, (Byte) 0x06, (Byte) 0x12, (Byte) 0x07, (Byte) 0x12, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00, (Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x05, (Byte) 0x01, (Byte) 0x00, (Byte) 0x10, (Byte) 0x03, (Byte) 0x12, (Byte) 0x04, (Byte) 0x12, (Byte) 0x06, (Byte) 0x12, (Byte) 0x07, (Byte) 0x12, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x05, (Byte) 0x01, (Byte) 0x00, (Byte) 0x10, (Byte) 0x03, (Byte) 0x12, (Byte) 0x04, (Byte) 0x12, (Byte) 0x06, (Byte) 0x12, (Byte) 0x07, (Byte) 0x12, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00};
 
 @interface DeviceTypeModel : SigModel
@@ -298,12 +246,24 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @end
 
 
-@interface SigNodeUpdateStatusModel : SigModel
+@interface SigUpdatingNodeEntryModel : SigModel
+/// least significant bits of the unicast address of the Updating node. Size is 15 bits.
 @property (nonatomic, assign) UInt16 address;
-@property (nonatomic, assign) SigUpdateStatusType status;
+/// Retrieved Update Phase state of the Updating node. Size is 4 bits.
+@property (nonatomic, assign) SigFirmwareUpdatePhaseType retrievedUpdatePhase;
+/// Status of the last operation with the Firmware Update Server. Size is 3 bits.
+@property (nonatomic, assign) SigFirmwareUpdateServerAndClientModelStatusType updateStatus;
+/// Status of the last operation with the BLOB Transfer Server. Size is 4 bits.
+@property (nonatomic, assign) SigBLOBTransferStatusType transferStatus;
+/// Progress of the BLOB transfer in 2 percent increments. Size is 6 bits.
+@property (nonatomic, assign) UInt8 transferProgress;
+/// Index of the firmware image on the Firmware Information List state that is being updated. Size is 8 bits.
+@property (nonatomic, assign) UInt8 updateFirmwareImageIndex;
 
-- (instancetype)initWithAddress:(UInt16)address status:(SigUpdateStatusType)status;
-
+@property (nonatomic, strong) NSData *parameters;
+- (instancetype)initWithAddress:(UInt16)address retrievedUpdatePhase:(SigFirmwareUpdatePhaseType)retrievedUpdatePhase updateStatus:(SigFirmwareUpdateServerAndClientModelStatusType)updateStatus transferStatus:(SigBLOBTransferStatusType)transferStatus transferProgress:(UInt8)transferProgress updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (NSString *)getDetailString;
 @end
 
 /// 8.4.1.2 Firmware Update Information Status
@@ -319,8 +279,23 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic,strong) NSData *updateURL;
 @property (nonatomic,strong) NSData *parameters;
 
+- (NSString *)getFirmwareIDString;
+- (NSString *)getUpdateURIString;
 - (instancetype)initWithParameters:(NSData *)parameters;
 
+@end
+
+
+/// Table 8.34: The format of the Receiver Entry field
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.89)
+@interface SigReceiverEntryModel : SigModel
+/// The unicast address of the Updating node.
+@property (nonatomic,assign) UInt16 address;
+/// The index of the firmware image in the Firmware Information List state to be updated.
+@property (nonatomic,assign) UInt8 updateFirmwareImageIndex;
+@property (nonatomic,strong) NSData *parameters;
+- (instancetype)initWithAddress:(UInt16)address updateFirmwareImageIndex:(UInt8)updateFirmwareImageIndex;
+- (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
@@ -742,6 +717,9 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 //暂时添加到json数据中
 @property (nonatomic,strong) NSMutableArray <SchedulerModel *>*schedulerList;
+@property (nonatomic,assign) BOOL subnetBridgeEnable;
+@property (nonatomic,strong) NSMutableArray <SigSubnetBridgeModel *>*subnetBridgeList;
+
 //@property (nonatomic, copy) NSString *sno;
 //The following properties are not stored JSON
 @property (nonatomic,assign) DeviceState state;
@@ -762,6 +740,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*HSLAddresses;//element addresses of HSL
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*lightnessAddresses;//element addresses of lightness
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*schedulerAddress;//element addresses of scheduler
+@property (nonatomic,strong) NSMutableArray <NSNumber *>*subnetBridgeServerAddress;//element addresses of subnetBridgeServer
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*sceneAddress;//element addresses of scene
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*publishAddress;//element addresses of publish
 @property (nonatomic,assign) UInt16 publishModelID;//modelID of set publish
@@ -1103,6 +1082,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 @property (nonatomic, assign) NSInteger numberOfSteps;
 
+/// 值为100、1000、10000、600000
 @property (nonatomic, assign) NSInteger resolution;
 
 - (NSDictionary *)getDictionaryOfSigPeriodModel;
@@ -1148,6 +1128,56 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic, strong) NSString *lastEditTimeString;
 - (instancetype)initWithSourceType:(OOBSourceTpye)sourceType UUIDString:(NSString *)UUIDString OOBString:(NSString *)OOBString;
 - (void)updateWithUUIDString:(NSString *)UUIDString OOBString:(NSString *)OOBString;
+@end
+
+
+/// 4.2.X+1 Bridging Table
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.9)
+@interface SigSubnetBridgeModel : SigModel
+/// Allowed directions for the bridged traffic, size is 8 bits.
+@property (nonatomic, assign) SigDirectionsFieldValues directions;
+/// NetKey Index of the first subnet, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex1;
+/// NetKey Index of the second subnet, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex2;
+/// Address of the node in the first subnet, size is 16 bits.
+@property (nonatomic, assign) UInt16 address1;
+/// Address of the node in the second subnet, size is 16 bits.
+@property (nonatomic, assign) UInt16 address2;
+@property (nonatomic,strong) NSData *parameters;
+- (NSDictionary *)getDictionaryOfSubnetBridgeModel;
+- (void)setDictionaryToSubnetBridgeModel:(NSDictionary *)dictionary;
+- (instancetype)initWithDirections:(SigDirectionsFieldValues)directions netKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2 address1:(UInt16)address1 address2:(UInt16)address2;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (NSString *)getDescription;
+@end
+
+
+/// Table 4.Y+12: Bridged_Subnets_List entry format
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.14)
+@interface SigBridgeSubnetModel : SigModel
+/// NetKey Index of the first subnet, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex1;
+/// NetKey Index of the second subnet, size is 12 bits.
+@property (nonatomic, assign) UInt16 netKeyIndex2;
+@property (nonatomic,strong) NSData *parameters;
+- (instancetype)initWithNetKeyIndex1:(UInt16)netKeyIndex1 netKeyIndex2:(UInt16)netKeyIndex2;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+/// Table 4.Y+15: Bridged_Addresses_List entry format
+/// - seeAlso: MshPRF_SBR_CR_r03.pdf  (page.16)
+@interface SigBridgedAddressesModel : SigModel
+/// Address of the node in the first subnet, size is 16 bits.
+@property (nonatomic, assign) UInt16 address1;
+/// Address of the node in the second subnet, size is 16 bits.
+@property (nonatomic, assign) UInt16 address2;
+/// Allowed directions for the bridged traffic, size is 8 bits.
+@property (nonatomic, assign) SigDirectionsFieldValues directions;
+@property (nonatomic,strong) NSData *parameters;
+- (instancetype)initWithAddress1:(UInt16)address1 address2:(UInt16)address2 directions:(SigDirectionsFieldValues)directions;
+- (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 NS_ASSUME_NONNULL_END

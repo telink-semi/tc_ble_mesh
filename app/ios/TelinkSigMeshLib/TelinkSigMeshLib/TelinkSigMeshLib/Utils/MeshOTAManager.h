@@ -30,6 +30,7 @@
 #import <Foundation/Foundation.h>
 
 typedef void(^ProgressBlock)(NSInteger progress);
+typedef void(^ProgressReceiversListBlock)(SigFirmwareDistributionReceiversList *responseMessage);
 typedef void(^FinishBlock)(NSArray <NSNumber *>*successAddresses,NSArray <NSNumber *>*failAddresses);
 
 typedef enum : UInt8 {
@@ -49,6 +50,35 @@ typedef enum : UInt8 {
     SigMeshOTAProgressFirmwareUpdateApply                 = 13,
     SigMeshOTAProgressFirmwareDistributionCancel          = 14,
 } SigMeshOTAProgress;
+
+typedef enum : UInt8 {
+    SigFirmwareUpdateProgressIdle                                         = 0,
+    SigFirmwareUpdateProgressFirmwareDistributionCapabilitiesGet          = 1,
+    SigFirmwareUpdateProgressSubscriptionAdd                              = 2,
+    SigFirmwareUpdateProgressFirmwareUpdateInformationGet                 = 3,
+    SigFirmwareUpdateProgressFirmwareUpdateFirmwareMetadataCheck          = 4,
+    SigFirmwareUpdateProgressFirmwareDistributionReceiversAdd             = 5,
+    SigFirmwareUpdateProgressFirmwareDistributionUploadStart              = 6,
+    SigFirmwareUpdateProgressInitiatorToDistributorBLOBTransferGet        = 7,
+    SigFirmwareUpdateProgressInitiatorToDistributorBLOBInformationGet     = 8,
+    SigFirmwareUpdateProgressInitiatorToDistributorBLOBTransferStart      = 9,
+    SigFirmwareUpdateProgressInitiatorToDistributorBLOBBlockStart         = 10,
+    SigFirmwareUpdateProgressInitiatorToDistributorBLOBChunkTransfer      = 11,
+    SigFirmwareUpdateProgressInitiatorToDistributorBLOBBlockGet           = 12,
+    SigFirmwareUpdateProgressFirmwareDistributionFirmwareGet              = 13,
+    SigFirmwareUpdateProgressFirmwareDistributionStart                    = 14,
+    SigFirmwareUpdateProgressFirmwareUpdateStart                          = 15,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferGet    = 16,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBInformationGet = 17,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferStart  = 18,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockStart     = 19,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer  = 20,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockGet       = 21,
+    SigFirmwareUpdateProgressFirmwareDistributionReceiversGet             = 22,
+    SigFirmwareUpdateProgressFirmwareUpdateGet                            = 23,
+    SigFirmwareUpdateProgressFirmwareUpdateApply                          = 24,
+    SigFirmwareUpdateProgressFirmwareDistributionCancel                   = 25,
+} SigFirmwareUpdateProgress;
 
 @interface MeshOTAManager : NSObject
 //==========config parameters for meshOTA R04 R04 ==========//
@@ -84,5 +114,9 @@ typedef enum : UInt8 {
 - (BOOL)isMeshOTAing;
 
 - (void)saveIsMeshOTAing:(BOOL)isMeshOTAing;
+
+- (void)startFirmwareUpdateWithDeviceAddresses:(NSArray <NSNumber *>*)deviceAddresses otaData:(NSData *)otaData incomingFirmwareMetadata:(NSData *)incomingFirmwareMetadata gattDistributionProgressHandle:(ProgressBlock)gattDistributionProgressBlock advDistributionProgressHandle:(ProgressReceiversListBlock)advDistributionProgressBlock finishHandle:(FinishBlock)finishBlock errorHandle:(ErrorBlock)errorBlock;
+
+- (void)stopFirmwareUpdate;
 
 @end

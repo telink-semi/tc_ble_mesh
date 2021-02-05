@@ -242,9 +242,10 @@ void ev_unon_timer(ev_time_event_t * e){
 /* Process time events */
 static void ev_process_timer(){
 	u32 now = clock_time();
+	#if 0 // clear this code ,and make the timer can refresh more faster 
 	if(!loop->timer_nearest || !ev_is_timer_expired(loop->timer_nearest, now))
 		return;
-	
+	#endif
 	ev_time_event_t *te = loop->timer_head;
 	ev_time_event_t *prev_head = te;
 	while(te){
@@ -256,21 +257,15 @@ static void ev_process_timer(){
 				LOG_TICK(te->id, t = te->cb(te->data));
 			}else
 #endif
-			#if 0
-			t = te->cb(te->data);
-			#else
-			te->cb(te->data);
+            
 			if(te->mode == MIBLE_TIMER_SINGLE_SHOT){
-				t = -1;
-			}else if (te->mode == MIBLE_TIMER_REPEATED){
-				t = 0;
-			}
-			#endif 
-			if(t < 0){
 				ev_unon_timer(te);		// delete timer
-			}else if(0 == t){
+				te->cb(te->data);
+			}else if (te->mode == MIBLE_TIMER_REPEATED){
+				te->cb(te->data);
 				te->t = now + te->interval;	// becare of overflow
 			}else{
+				te->cb(te->data);
 				te->interval = t * CLOCK_SYS_CLOCK_1US;
 				te->t = now + te->interval;	// becare of overflow
 			}

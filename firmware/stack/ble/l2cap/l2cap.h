@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -20,7 +20,7 @@
  *           
  *******************************************************************************************************/
 #pragma  once
-#include "stack/ble/ble_common.h"
+
 
 
 
@@ -98,6 +98,20 @@ typedef struct{
 	u8      rsvd[3];
 }para_up_req_t;
 
+
+typedef struct
+{
+	u8 *rx_p;
+	u8 *tx_p;
+	u16 max_rx_size;
+
+	u16 max_tx_size;
+//	u16 init_MTU;
+}l2cap_buff_t;
+
+extern l2cap_buff_t l2cap_buff;
+
+
 extern _attribute_aligned_(4) para_up_req_t	para_upReq;
 
 
@@ -131,12 +145,13 @@ void 		blc_l2cap_reg_att_sig_hander(void *p);//signaling pkt proc
 
 void  		blc_l2cap_SendConnParamUpdateResponse(u16 connHandle, u8 req_id, conn_para_up_rsp result);
 void 		blc_l2cap_registerConnUpdateRspCb(l2cap_conn_update_rsp_callback_t cb);
+void blc_l2cap_initMtuBuffer(u8 *pMTU_rx_buff, u16 mtu_rx_size, u8 *pMTU_tx_buff, u16 mtu_tx_size);
 
 
 
 
 /************************* Stack Interface, user can not use!!! ***************************/
-void 		blt_update_parameter_request (void);
+ble_sts_t 	blt_update_parameter_request (void);
 ble_sts_t   blc_l2cap_pushData_2_controller (u16 connHandle, u16 cid, u8 *format, int format_len, u8 *pDate, int data_len);
 
 //Master

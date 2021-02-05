@@ -78,6 +78,27 @@
 }
 
 - (void)clickSave {
+    BOOL hadBound = NO;
+    NSArray *temNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    for (SigNodeModel *node in temNodes) {
+        if (node.appKeys && node.appKeys.count > 0) {
+            for (SigNodeKeyModel *nodeKey in node.appKeys) {
+                if (nodeKey.index == self.appKeyModel.index) {
+                    hadBound = YES;
+                    break;
+                }
+            }
+            if (hadBound) {
+                break;
+            }
+        }
+    }
+    if (hadBound) {
+        [self showAlertSureWithTitle:@"Hits" message:@"Some nodes have already bound this appkey, you can`t edit it!" sure:nil];
+        /*客户需要保证绑定该AppKey的设备都在线，并且给所有绑定该AppKey的设备发送SigConfigAppKeyUpdate指令且成功后，才可以修改mesh里面的AppKey的值。此处发送逻辑过于复杂且限制太多，当前只是禁止客户进行修改操作。客户使用demoAPP时，可以通过下面的步骤实现修改mesh网络的某个AppKey的功能：可以先从设备里面移除该AppKey，再在setting界面修改AppKey，再给设备重新绑定AppKey。*/
+        return;
+    }
+
     [self.indexTF resignFirstResponder];
     [self.boundNetKeyTF resignFirstResponder];
     [self.keyTF resignFirstResponder];
@@ -147,11 +168,17 @@
         hadExist = NO;
         for (SigAppkeyModel *tem in temAppkeys) {
             if ([tem.key isEqualToString:self.keyTF.text]) {
-                if (self.isAdd) {
+                //不允许不同的NetKey下的APPkey相同
+//                if (self.isAdd) {
+                //允许不同的NetKey下的APPkey相同
+                if (self.isAdd && tem.boundNetKey == boundNetKey) {
                     hadExist = YES;
                     break;
                 } else {
-                    if (tem != self.appKeyModel) {
+                    //不允许不同的NetKey下的APPkey相同
+//                    if (tem != self.appKeyModel) {
+                    //允许不同的NetKey下的APPkey相同
+                        if (tem != self.appKeyModel && tem.boundNetKey == boundNetKey) {
                         hadExist = YES;
                         break;
                     }

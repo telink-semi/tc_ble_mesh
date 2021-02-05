@@ -66,6 +66,9 @@ extern "C" {
 #define VC_CHECK_NEXT_SEGMENT_EN		0		// must 0
 #endif
 
+#define MESH_DLE_MODE_NONE              0
+#define MESH_DLE_MODE_GATT              1       // only GATT, mesh unsegment size will still be 11 bytes.
+#define MESH_DLE_MODE_EXTEND_BEAR       2       // mesh unsegment size will depend on DLE length.
 //------------ project define-------------
 #define PROJECT_VC_DONGLE 	1
 #define PROJECT_VC_MESH 	2
@@ -95,8 +98,10 @@ extern "C" {
 
 
 
-#define ATT_TAB_SWITCH_ENABLE 	1
-
+#define ATT_TAB_SWITCH_ENABLE 				1
+#if(__PROJECT_MESH__)
+#define ATT_REPLACE_PROXY_SERVICE_EN		0 // 1:0x7fdd will not existed in att
+#endif
 
 #if WIN32
 #define TESTCASE_FLAG_ENABLE 		0	// must 0
@@ -111,12 +116,17 @@ extern "C" {
 #define DEBUG_EVB_EN 		        0   // just telink internal used, don't modity
 #endif
 
+#define PTS_TEST_OTA_EN             (PTS_TEST_EN || 0)
+
 #if __PROJECT_MESH_LPN__
 #define LPN_VENDOR_SENSOR_EN        0
 #else
 #define LPN_VENDOR_SENSOR_EN        0
 #endif
-#define GATT_LPN_EN					0
+
+#if (__PROJECT_MESH__ || __PROJECT_MESH_LPN__)
+#define GATT_LPN_EN					0   // only mesh project can enable
+#endif
 
 //------------ mesh config-------------
 #define MD_CFG_CLIENT_EN            (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__ || TESTCASE_FLAG_ENABLE)   // don't modify
@@ -133,6 +143,7 @@ extern "C" {
 #define MESH_IRONMAN_MENLO_ENABLE   7   // inclue boot_loader.bin and light.bin
 #define MESH_ZB_BL_DUAL_ENABLE      8   // mesh && zigbee normal dual mode with bootloader
 #define MESH_PIPA_ENABLE        9   // 
+#define MESH_TAIBAI_ENABLE			10
 
 #ifndef MESH_USER_DEFINE_MODE
 #if __PROJECT_MESH_PRO__
@@ -168,6 +179,18 @@ extern "C" {
 #define PROVISION_FLOW_SIMPLE_EN    1
 #define ALI_MD_TIME_EN				0
 #define ALI_NEW_PROTO_EN			0
+#elif(MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
+#define SUBSCRIPTION_SHARE_EN		1
+#define VENDOR_ID 					0x011c
+#define AIS_ENABLE					1
+#define PROVISION_FLOW_SIMPLE_EN    1
+#define ALI_MD_TIME_EN				0
+#define ALI_NEW_PROTO_EN			0
+#define DU_FW_MAIN_VER	1
+#define DU_FW_ADD_VER	0
+#define DU_FW_INFO_VER	0
+#define DU_FW_VER	((DU_FW_MAIN_VER<<12)|(DU_FW_ADD_VER<<8)|(DU_FW_INFO_VER))
+
 #elif(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
 #define SUBSCRIPTION_SHARE_EN		1
 #define VENDOR_ID 					SHA256_BLE_MESH_PID
@@ -226,6 +249,12 @@ extern "C" {
 #define PROVISION_FLOW_SIMPLE_EN    0
 #endif
 
+#if (MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
+#define DU_ENABLE 1
+#else
+#define DU_ENABLE 0
+#endif
+
 #ifndef MI_API_ENABLE
 #define MI_API_ENABLE 0
 #endif
@@ -239,12 +268,11 @@ extern "C" {
 #define DUAL_MESH_ZB_BL_EN  0
 #endif
 
+
 #if MI_API_ENABLE
-	// mi mode enable 
-	#define MSC_NONE			   0
-	#define MSC_MJSC               1
-	#define MSC_MJA1               2
-	#define MSC_TYPE 			   MSC_NONE
+	#if MCU_CORE_TYPE == MCU_CORE_8269
+	#define BLT_SOFTWARE_TIMER_ENABLE	0
+	#endif
 	#ifndef BLT_SOFTWARE_TIMER_ENABLE
 	#define BLT_SOFTWARE_TIMER_ENABLE 	1
 	#endif
@@ -256,7 +284,9 @@ extern "C" {
 #define SPIRIT_VENDOR_EN			1//must
 #else
 #define SPIRIT_PRIVATE_LPN_EN		0
-#if((MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE) || (MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE))
+#if((MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE) ||\
+	(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)||\
+	(MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE))
 #define SPIRIT_VENDOR_EN			1
 #else
 #define SPIRIT_VENDOR_EN			0 //must
@@ -400,7 +430,7 @@ extern "C" {
 #endif
 
 #ifndef MD_MESH_OTA_EN
-#if DEBUG_CFG_CMD_GROUP_AK_EN
+#if (DEBUG_CFG_CMD_GROUP_AK_EN || PTS_TEST_OTA_EN)
 #define MD_MESH_OTA_EN				1	// just for internal test.
 #elif (__PROJECT_MESH_PRO__)   // app & gateway
     #if WIN32
@@ -530,7 +560,7 @@ extern "C" {
     #else
 #define MD_DEF_TRANSIT_TIME_EN      1
     #endif
-    #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)
+    #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 #define MD_POWER_ONOFF_EN           0						// compatible with older version
     #else
 #define MD_POWER_ONOFF_EN           MD_DEF_TRANSIT_TIME_EN 	// because both of them save in same flash sector.
@@ -602,13 +632,13 @@ extern "C" {
 #define ELE_CNT_EVERY_LIGHT         1   // APP and gateway use 1 element always,
 #else
     #if (LIGHT_TYPE_SEL == LIGHT_TYPE_CT)
-        #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)
+        #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 #define ELE_CNT_EVERY_LIGHT         1   // 2, comfirm later
         #else
 #define ELE_CNT_EVERY_LIGHT         2
         #endif
     #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_HSL)
-        #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)
+        #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 #define ELE_CNT_EVERY_LIGHT         1   // 3, comfirm later
         #else
 #define ELE_CNT_EVERY_LIGHT         3
@@ -616,7 +646,7 @@ extern "C" {
     #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
 #define ELE_CNT_EVERY_LIGHT         3
     #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL)
-        #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE)
+        #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 #define ELE_CNT_EVERY_LIGHT         1   // 4, comfirm later
         #else
 #define ELE_CNT_EVERY_LIGHT         4
@@ -732,6 +762,9 @@ extern "C" {
 #endif
 #endif
 
+#if (!__PROJECT_MESH_PRO__)
+#define PROV_APP_KEY_SETUP_TIMEOUT_CHECK_EN     0
+#endif
 
 // flash save flag 
 #define SAVE_FLAG_PRE	(0xAF)
@@ -767,6 +800,19 @@ extern "C" {
 #define			IRQ_TIMER1_ENABLE  			    0
 #define			IRQ_TIME1_INTERVAL			    (1000) // unit: us
 #define			IRQ_GPIO_ENABLE  			    0
+
+#if (!WIN32)
+#define EXTENDED_ADV_ENABLE				0   // BLE extend ADV driver
+#define MESH_LONG_PACKET_EN				0   // mesh extend bear mode
+#endif
+
+#if EXTENDED_ADV_ENABLE
+#define ADV_RF_LEN_MAX					(255) // (253)
+#define ADV_PDU_LEN_MAX					(ADV_RF_LEN_MAX-6-4)    // 6: mac, 4: extend adv head;   // payload
+#else
+#define ADV_RF_LEN_MAX					(37)
+#define ADV_PDU_LEN_MAX					(ADV_RF_LEN_MAX-6)      // 6: mac
+#endif
 
 
 /* Disable C linkage for C++ Compilers: */

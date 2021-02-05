@@ -8,7 +8,7 @@ typedef unsigned char  UINT8;
 typedef unsigned short UINT16;
 
 #ifndef MEMCPY
-//#include <string.h>
+#include <string.h>
 #define MEMCPY memcpy
 #endif
 

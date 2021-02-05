@@ -10,13 +10,29 @@
 		250DAC5E258C555300EBC6CE /* BaseTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 250DAC5D258C555300EBC6CE /* BaseTableView.m */; };
 		2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 2519E64E24123D870098ABE7 /* 8258_mesh.bin */; };
 		254C656B2570FF6C00096625 /* ColorPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 254C656A2570FF6C00096625 /* ColorPickerView.m */; };
-		257DAD24259B1FFE0092A784 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
+		254EDCAE25C002400011D0A1 /* ShareTipsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 254EDCAD25C002400011D0A1 /* ShareTipsVC.m */; };
+		2589E3AA25BE63F5001B3828 /* SubnetBridgeListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3A925BE63F5001B3828 /* SubnetBridgeListVC.m */; };
+		2589E3B025BE9426001B3828 /* AddBridgeTableVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3AF25BE9426001B3828 /* AddBridgeTableVC.m */; };
+		2589E3B725BE9D85001B3828 /* BridgeTableItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3B525BE9D85001B3828 /* BridgeTableItemCell.m */; };
+		2589E3B825BE9D85001B3828 /* BridgeTableItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2589E3B625BE9D85001B3828 /* BridgeTableItemCell.xib */; };
+		2589E3E725BEA952001B3828 /* BRResultModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3CD25BEA952001B3828 /* BRResultModel.m */; };
+		2589E3E825BEA952001B3828 /* BRStringPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3D025BEA952001B3828 /* BRStringPickerView.m */; };
+		2589E3E925BEA952001B3828 /* BRDatePickerView+BR.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3D325BEA952001B3828 /* BRDatePickerView+BR.m */; };
+		2589E3EA25BEA952001B3828 /* NSDate+BRPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3D525BEA952001B3828 /* NSDate+BRPickerView.m */; };
+		2589E3EB25BEA952001B3828 /* BRDatePickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3D625BEA952001B3828 /* BRDatePickerView.m */; };
+		2589E3EC25BEA952001B3828 /* BRPickerView.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 2589E3DC25BEA952001B3828 /* BRPickerView.bundle */; };
+		2589E3ED25BEA952001B3828 /* BRPickerStyle.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3DD25BEA952001B3828 /* BRPickerStyle.m */; };
+		2589E3EE25BEA952001B3828 /* BRBaseView.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3DE25BEA952001B3828 /* BRBaseView.m */; };
+		2589E3EF25BEA952001B3828 /* NSBundle+BRPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3DF25BEA952001B3828 /* NSBundle+BRPickerView.m */; };
+		2589E3F025BEA952001B3828 /* BRAddressModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3E325BEA952001B3828 /* BRAddressModel.m */; };
+		2589E3F125BEA952001B3828 /* BRAddressPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 2589E3E625BEA952001B3828 /* BRAddressPickerView.m */; };
 		258E2B8A248A24A20078DA7C /* InfoSwitchCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B88248A24A20078DA7C /* InfoSwitchCell.m */; };
 		258E2B8B248A24A20078DA7C /* InfoSwitchCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B89248A24A20078DA7C /* InfoSwitchCell.xib */; };
 		258E2B8F248A24B50078DA7C /* InfoNextCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B8D248A24B50078DA7C /* InfoNextCell.m */; };
 		258E2B90248A24B50078DA7C /* InfoNextCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B8E248A24B50078DA7C /* InfoNextCell.xib */; };
 		258E2B94248A24D40078DA7C /* InfoButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 258E2B92248A24D40078DA7C /* InfoButtonCell.m */; };
 		258E2B95248A24D40078DA7C /* InfoButtonCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 258E2B93248A24D40078DA7C /* InfoButtonCell.xib */; };
+		259FB30825CBFAD90067CBCA /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		25ADB1F9254186310078E8D7 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25B4083E2396691A00514CB7 /* TelinkSigMeshLib.framework */; };
 		25B1204224A34A01004F7E91 /* DeviceCompositionDataVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B1204124A34A01004F7E91 /* DeviceCompositionDataVC.m */; };
 		25C07FFB24542CF200796BF9 /* 8269_mesh.bin in Resources */ = {isa = PBXBuildFile; fileRef = 25C07FFA24542CF200796BF9 /* 8269_mesh.bin */; };
@@ -200,6 +216,38 @@
 		2519E64E24123D870098ABE7 /* 8258_mesh.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = 8258_mesh.bin; sourceTree = "<group>"; };
 		254C65692570FF6C00096625 /* ColorPickerView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorPickerView.h; sourceTree = "<group>"; };
 		254C656A2570FF6C00096625 /* ColorPickerView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ColorPickerView.m; sourceTree = "<group>"; };
+		254EDCAC25C002400011D0A1 /* ShareTipsVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShareTipsVC.h; sourceTree = "<group>"; };
+		254EDCAD25C002400011D0A1 /* ShareTipsVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShareTipsVC.m; sourceTree = "<group>"; };
+		2589E3A825BE63F5001B3828 /* SubnetBridgeListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SubnetBridgeListVC.h; sourceTree = "<group>"; };
+		2589E3A925BE63F5001B3828 /* SubnetBridgeListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SubnetBridgeListVC.m; sourceTree = "<group>"; };
+		2589E3AE25BE9426001B3828 /* AddBridgeTableVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AddBridgeTableVC.h; sourceTree = "<group>"; };
+		2589E3AF25BE9426001B3828 /* AddBridgeTableVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AddBridgeTableVC.m; sourceTree = "<group>"; };
+		2589E3B425BE9D85001B3828 /* BridgeTableItemCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgeTableItemCell.h; sourceTree = "<group>"; };
+		2589E3B525BE9D85001B3828 /* BridgeTableItemCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BridgeTableItemCell.m; sourceTree = "<group>"; };
+		2589E3B625BE9D85001B3828 /* BridgeTableItemCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = BridgeTableItemCell.xib; sourceTree = "<group>"; };
+		2589E3CD25BEA952001B3828 /* BRResultModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BRResultModel.m; sourceTree = "<group>"; };
+		2589E3CE25BEA952001B3828 /* BRStringPickerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRStringPickerView.h; sourceTree = "<group>"; };
+		2589E3CF25BEA952001B3828 /* BRResultModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRResultModel.h; sourceTree = "<group>"; };
+		2589E3D025BEA952001B3828 /* BRStringPickerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BRStringPickerView.m; sourceTree = "<group>"; };
+		2589E3D125BEA952001B3828 /* BRPickerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRPickerView.h; sourceTree = "<group>"; };
+		2589E3D325BEA952001B3828 /* BRDatePickerView+BR.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "BRDatePickerView+BR.m"; sourceTree = "<group>"; };
+		2589E3D425BEA952001B3828 /* BRDatePickerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRDatePickerView.h; sourceTree = "<group>"; };
+		2589E3D525BEA952001B3828 /* NSDate+BRPickerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDate+BRPickerView.m"; sourceTree = "<group>"; };
+		2589E3D625BEA952001B3828 /* BRDatePickerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BRDatePickerView.m; sourceTree = "<group>"; };
+		2589E3D725BEA952001B3828 /* BRDatePickerView+BR.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "BRDatePickerView+BR.h"; sourceTree = "<group>"; };
+		2589E3D825BEA952001B3828 /* NSDate+BRPickerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDate+BRPickerView.h"; sourceTree = "<group>"; };
+		2589E3DA25BEA952001B3828 /* NSBundle+BRPickerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSBundle+BRPickerView.h"; sourceTree = "<group>"; };
+		2589E3DB25BEA952001B3828 /* BRPickerViewMacro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRPickerViewMacro.h; sourceTree = "<group>"; };
+		2589E3DC25BEA952001B3828 /* BRPickerView.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = BRPickerView.bundle; sourceTree = "<group>"; };
+		2589E3DD25BEA952001B3828 /* BRPickerStyle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BRPickerStyle.m; sourceTree = "<group>"; };
+		2589E3DE25BEA952001B3828 /* BRBaseView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BRBaseView.m; sourceTree = "<group>"; };
+		2589E3DF25BEA952001B3828 /* NSBundle+BRPickerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSBundle+BRPickerView.m"; sourceTree = "<group>"; };
+		2589E3E025BEA952001B3828 /* BRBaseView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRBaseView.h; sourceTree = "<group>"; };
+		2589E3E125BEA952001B3828 /* BRPickerStyle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRPickerStyle.h; sourceTree = "<group>"; };
+		2589E3E325BEA952001B3828 /* BRAddressModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BRAddressModel.m; sourceTree = "<group>"; };
+		2589E3E425BEA952001B3828 /* BRAddressPickerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRAddressPickerView.h; sourceTree = "<group>"; };
+		2589E3E525BEA952001B3828 /* BRAddressModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BRAddressModel.h; sourceTree = "<group>"; };
+		2589E3E625BEA952001B3828 /* BRAddressPickerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BRAddressPickerView.m; sourceTree = "<group>"; };
 		258E2B87248A24A20078DA7C /* InfoSwitchCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InfoSwitchCell.h; sourceTree = "<group>"; };
 		258E2B88248A24A20078DA7C /* InfoSwitchCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InfoSwitchCell.m; sourceTree = "<group>"; };
 		258E2B89248A24A20078DA7C /* InfoSwitchCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = InfoSwitchCell.xib; sourceTree = "<group>"; };
@@ -462,7 +510,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				257DAD24259B1FFE0092A784 /* TelinkSigMeshLib.framework in Frameworks */,
+				259FB30825CBFAD90067CBCA /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -484,6 +532,79 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2589E3A325BE635A001B3828 /* Subnet bridge */ = {
+			isa = PBXGroup;
+			children = (
+				2589E3A825BE63F5001B3828 /* SubnetBridgeListVC.h */,
+				2589E3A925BE63F5001B3828 /* SubnetBridgeListVC.m */,
+				2589E3AE25BE9426001B3828 /* AddBridgeTableVC.h */,
+				2589E3AF25BE9426001B3828 /* AddBridgeTableVC.m */,
+			);
+			path = "Subnet bridge";
+			sourceTree = "<group>";
+		};
+		2589E3CB25BEA952001B3828 /* BRPickerView */ = {
+			isa = PBXGroup;
+			children = (
+				2589E3CC25BEA952001B3828 /* StringPickerView */,
+				2589E3D125BEA952001B3828 /* BRPickerView.h */,
+				2589E3D225BEA952001B3828 /* DatePickerView */,
+				2589E3D925BEA952001B3828 /* Base */,
+				2589E3E225BEA952001B3828 /* AddressPickerView */,
+			);
+			path = BRPickerView;
+			sourceTree = "<group>";
+		};
+		2589E3CC25BEA952001B3828 /* StringPickerView */ = {
+			isa = PBXGroup;
+			children = (
+				2589E3CD25BEA952001B3828 /* BRResultModel.m */,
+				2589E3CE25BEA952001B3828 /* BRStringPickerView.h */,
+				2589E3CF25BEA952001B3828 /* BRResultModel.h */,
+				2589E3D025BEA952001B3828 /* BRStringPickerView.m */,
+			);
+			path = StringPickerView;
+			sourceTree = "<group>";
+		};
+		2589E3D225BEA952001B3828 /* DatePickerView */ = {
+			isa = PBXGroup;
+			children = (
+				2589E3D325BEA952001B3828 /* BRDatePickerView+BR.m */,
+				2589E3D425BEA952001B3828 /* BRDatePickerView.h */,
+				2589E3D525BEA952001B3828 /* NSDate+BRPickerView.m */,
+				2589E3D625BEA952001B3828 /* BRDatePickerView.m */,
+				2589E3D725BEA952001B3828 /* BRDatePickerView+BR.h */,
+				2589E3D825BEA952001B3828 /* NSDate+BRPickerView.h */,
+			);
+			path = DatePickerView;
+			sourceTree = "<group>";
+		};
+		2589E3D925BEA952001B3828 /* Base */ = {
+			isa = PBXGroup;
+			children = (
+				2589E3DA25BEA952001B3828 /* NSBundle+BRPickerView.h */,
+				2589E3DB25BEA952001B3828 /* BRPickerViewMacro.h */,
+				2589E3DC25BEA952001B3828 /* BRPickerView.bundle */,
+				2589E3DD25BEA952001B3828 /* BRPickerStyle.m */,
+				2589E3DE25BEA952001B3828 /* BRBaseView.m */,
+				2589E3DF25BEA952001B3828 /* NSBundle+BRPickerView.m */,
+				2589E3E025BEA952001B3828 /* BRBaseView.h */,
+				2589E3E125BEA952001B3828 /* BRPickerStyle.h */,
+			);
+			path = Base;
+			sourceTree = "<group>";
+		};
+		2589E3E225BEA952001B3828 /* AddressPickerView */ = {
+			isa = PBXGroup;
+			children = (
+				2589E3E325BEA952001B3828 /* BRAddressModel.m */,
+				2589E3E425BEA952001B3828 /* BRAddressPickerView.h */,
+				2589E3E525BEA952001B3828 /* BRAddressModel.h */,
+				2589E3E625BEA952001B3828 /* BRAddressPickerView.m */,
+			);
+			path = AddressPickerView;
+			sourceTree = "<group>";
+		};
 		25B4083A2396691A00514CB7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -572,6 +693,8 @@
 				A27C99F321F99E78006D5A09 /* ShareInVC.m */,
 				A29AABDF21A2629D0023F06C /* ShowQRCodeViewController.h */,
 				A29AABE021A2629D0023F06C /* ShowQRCodeViewController.m */,
+				254EDCAC25C002400011D0A1 /* ShareTipsVC.h */,
+				254EDCAD25C002400011D0A1 /* ShareTipsVC.m */,
 			);
 			path = Share;
 			sourceTree = "<group>";
@@ -748,6 +871,7 @@
 				25B1204024A34A01004F7E91 /* DeviceCompositionDataVC.h */,
 				25B1204124A34A01004F7E91 /* DeviceCompositionDataVC.m */,
 				25C2B5102513610B003DCB8C /* DeviceKeys */,
+				2589E3A325BE635A001B3828 /* Subnet bridge */,
 			);
 			path = DeviceSetting;
 			sourceTree = "<group>";
@@ -834,6 +958,7 @@
 				2519E64E24123D870098ABE7 /* 8258_mesh.bin */,
 				25C07FFA24542CF200796BF9 /* 8269_mesh.bin */,
 				25B408392396691A00514CB7 /* TelinkSigMeshLib.xcodeproj */,
+				2589E3CB25BEA952001B3828 /* BRPickerView */,
 				A28CA37F2181E4AB005B1DB6 /* IQKeyboardManager-master */,
 				A2944108216DDC6B0046F65A /* YZDisplayViewController */,
 			);
@@ -929,6 +1054,9 @@
 				258E2B91248A24D40078DA7C /* InfoButtonCell.h */,
 				258E2B92248A24D40078DA7C /* InfoButtonCell.m */,
 				258E2B93248A24D40078DA7C /* InfoButtonCell.xib */,
+				2589E3B425BE9D85001B3828 /* BridgeTableItemCell.h */,
+				2589E3B525BE9D85001B3828 /* BridgeTableItemCell.m */,
+				2589E3B625BE9D85001B3828 /* BridgeTableItemCell.xib */,
 				A287A9F62133F323006B0EC7 /* ColorPicker */,
 			);
 			path = View;
@@ -1154,6 +1282,7 @@
 				2519E65024123D870098ABE7 /* 8258_mesh.bin in Resources */,
 				A277EB07215A335E0001116F /* SceneItemCell.xib in Resources */,
 				25C30DE9246A40AA00F06076 /* ChooseOOBFileVC.xib in Resources */,
+				2589E3EC25BEA952001B3828 /* BRPickerView.bundle in Resources */,
 				A277EB0C215A338A0001116F /* SchedulerCell.xib in Resources */,
 				258E2B90248A24B50078DA7C /* InfoNextCell.xib in Resources */,
 				A28CA3B22181E4AD005B1DB6 /* IQKeyboardManager.bundle in Resources */,
@@ -1166,6 +1295,7 @@
 				25C2B5272513623F003DCB8C /* DeviceKeyCell.xib in Resources */,
 				A2AB8F54211012D000D73EB4 /* ChooseModelIDCell.xib in Resources */,
 				25C2B522251361C0003DCB8C /* DeviceChooseKeyVC.xib in Resources */,
+				2589E3B825BE9D85001B3828 /* BridgeTableItemCell.xib in Resources */,
 				A277EAFB215A29500001116F /* Setting.storyboard in Resources */,
 				A2864221226FFCAA0053B5E4 /* MeshOTAVC.xib in Resources */,
 				25C30DDF246A404F00F06076 /* OOBItemCell.xib in Resources */,
@@ -1202,6 +1332,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A2716BCB23331363004A17FE /* FastProvisionAddVC.m in Sources */,
+				2589E3EA25BEA952001B3828 /* NSDate+BRPickerView.m in Sources */,
 				A28CA3AE2181E4AD005B1DB6 /* IQPreviousNextView.m in Sources */,
 				A27C99F421F99E78006D5A09 /* ShareInVC.m in Sources */,
 				A286421C226FFCAA0053B5E4 /* MeshOTAItemCell.m in Sources */,
@@ -1219,11 +1350,15 @@
 				A2AB8F4A211012A800D73EB4 /* GroupCell.m in Sources */,
 				A2944122216DE45C0046F65A /* DeviceGroupViewController.m in Sources */,
 				A2A99D6921AFF30700194237 /* DebugViewController.m in Sources */,
+				2589E3EF25BEA952001B3828 /* NSBundle+BRPickerView.m in Sources */,
 				A294411C216DE1760046F65A /* SingleDeviceViewController.m in Sources */,
 				A2AB8F53211012D000D73EB4 /* ChooseModelIDCell.m in Sources */,
+				254EDCAE25C002400011D0A1 /* ShareTipsVC.m in Sources */,
+				2589E3B725BE9D85001B3828 /* BridgeTableItemCell.m in Sources */,
 				25C44FE0256CE3FA00C28E80 /* LevelAndSliderCell.m in Sources */,
 				25C2B51725136153003DCB8C /* DeviceNetKeyListVC.m in Sources */,
 				A2944114216DDC6B0046F65A /* YZDisplayViewController.m in Sources */,
+				2589E3E925BEA952001B3828 /* BRDatePickerView+BR.m in Sources */,
 				25EE0B62256B59E40063FEE1 /* ColorModelCell.m in Sources */,
 				A277EB0B215A338A0001116F /* SchedulerCell.m in Sources */,
 				25C30DDE246A404F00F06076 /* OOBItemCell.m in Sources */,
@@ -1257,26 +1392,34 @@
 				A27C99EC21F99E1E006D5A09 /* ShareVC.m in Sources */,
 				258E2B8F248A24B50078DA7C /* InfoNextCell.m in Sources */,
 				A2AB8F442110121300D73EB4 /* HomeItemCell.m in Sources */,
+				2589E3EE25BEA952001B3828 /* BRBaseView.m in Sources */,
 				A2AB8F66211013D300D73EB4 /* UIStoryboard+extension.m in Sources */,
 				A2AB8EAC2110046C00D73EB4 /* main.m in Sources */,
 				A28CA3AD2181E4AD005B1DB6 /* IQBarButtonItem.m in Sources */,
 				A23FE43822CD96760018F090 /* FileChooseVC.m in Sources */,
 				A2B27FCF215B1E4700983428 /* SchedulerDetailViewController.m in Sources */,
+				2589E3E825BEA952001B3828 /* BRStringPickerView.m in Sources */,
 				258E2B8A248A24A20078DA7C /* InfoSwitchCell.m in Sources */,
 				A2944112216DDC6B0046F65A /* UIView+Frame.m in Sources */,
 				A2AB8EDF2110063700D73EB4 /* BaseViewController.m in Sources */,
+				2589E3B025BE9426001B3828 /* AddBridgeTableVC.m in Sources */,
 				A2AB8F2621100FDD00D73EB4 /* SettingViewController.m in Sources */,
 				25C2B4FE2512F620003DCB8C /* AppKeyAddVC.m in Sources */,
 				A2AB8F2121100FDD00D73EB4 /* GroupDetailViewController.m in Sources */,
+				2589E3EB25BEA952001B3828 /* BRDatePickerView.m in Sources */,
+				2589E3ED25BEA952001B3828 /* BRPickerStyle.m in Sources */,
 				A28CA3A62181E4AD005B1DB6 /* IQUIScrollView+Additions.m in Sources */,
 				25B1204224A34A01004F7E91 /* DeviceCompositionDataVC.m in Sources */,
 				A2AB8F58211012E400D73EB4 /* ChooseBinCell.m in Sources */,
 				25C30DD9246A401300F06076 /* OOBListVC.m in Sources */,
 				254C656B2570FF6C00096625 /* ColorPickerView.m in Sources */,
 				A2944127216E057B0046F65A /* SettingItemCell.m in Sources */,
+				2589E3F025BEA952001B3828 /* BRAddressModel.m in Sources */,
 				A2AB8F2521100FDD00D73EB4 /* ReKeyBindViewController.m in Sources */,
 				A2AB8E9E2110046A00D73EB4 /* AppDelegate.m in Sources */,
 				A28CA3AC2181E4AD005B1DB6 /* IQTextView.m in Sources */,
+				2589E3E725BEA952001B3828 /* BRResultModel.m in Sources */,
+				2589E3F125BEA952001B3828 /* BRAddressPickerView.m in Sources */,
 				A2AC67092176C76800D9B3A0 /* AddDeviceViewController.m in Sources */,
 				A277EB02215A324F0001116F /* SchedulerListViewController.m in Sources */,
 				A2896898216EE262003A0A72 /* DeviceSubscriptionListViewController.m in Sources */,
@@ -1289,6 +1432,7 @@
 				A29AABE121A2629D0023F06C /* ShowQRCodeViewController.m in Sources */,
 				A2B84E4021DC679E00461263 /* DeviceControlViewController.m in Sources */,
 				A2B849DA2117EC0700E4FF19 /* UIViewController+Message.m in Sources */,
+				2589E3AA25BE63F5001B3828 /* SubnetBridgeListVC.m in Sources */,
 				A2944115216DDC6B0046F65A /* YZFlowLayout.m in Sources */,
 				A28CA3A72181E4AD005B1DB6 /* IQUITextFieldView+Additions.m in Sources */,
 				A2AB8F0221100B5700D73EB4 /* OTAFileSource.m in Sources */,
@@ -1495,7 +1639,7 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 6;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
@@ -1511,7 +1655,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.0;
+				MARKETING_VERSION = 3.3.2;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"$(inherited)",
@@ -1530,7 +1674,7 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "";
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
@@ -1545,7 +1689,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.0;
+				MARKETING_VERSION = 3.3.2;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"$(inherited)",

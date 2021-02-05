@@ -27,7 +27,6 @@ typedef enum {
     MIBLE_DFU_STATE_VERIFY,
     MIBLE_DFU_STATE_SWITCH,
     MIBLE_DFU_STATE_CANCEL,
-    MIBLE_DFU_STATE_WRITEERR
 } mible_dfu_state_t;
 
 typedef struct {

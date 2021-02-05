@@ -29,6 +29,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (weak, nonatomic) id <ColorModelCellDelegate>delegate;
 
+- (void)changeUIWithHslModelLightSliderValue:(CGFloat)lightSliderValue;
+
 @end
 
 NS_ASSUME_NONNULL_END

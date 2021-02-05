@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -29,7 +29,6 @@ typedef int (*blc_hci_tx_handler_t) (void);
 typedef int (*blc_hci_handler_t) (unsigned char *p, int n);
 typedef int (*blc_hci_app_handler_t) (unsigned char *p);
 
-extern blc_hci_handler_t			blc_master_handler;
 
 
 #define			HCI_FLAG_EVENT_PHYTEST_2_WIRE_UART			(1<<23)
@@ -92,7 +91,6 @@ int 		blc_hci_sendACLData2Host (u16 handle, u8 *p);
 
 void set_blc_hci_flag_fun(unsigned char flag);
 int blc_hci_send_data (u32 h, u8 *para, int n);
-void blc_enable_hci_master_handler ();
 
 
 
@@ -105,7 +103,6 @@ int blc_hci_tx_to_usb (void);
 int blc_hci_tx_to_btusb (void);
 
 int blc_hci_handler (u8 *p, int n);
-int blm_hci_handler (u8 *p, int n);
 int blc_hci_send_event (u32 h, u8 *para, int n);
 
 int blc_hci_proc (void);

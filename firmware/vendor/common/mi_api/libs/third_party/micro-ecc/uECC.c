@@ -2,13 +2,6 @@
 
 #include "uECC.h"
 #include "uECC_config.h"
-#include "uECC_vli.h"
-#include "vendor/common/mi_api/telink_sdk_mible_api.h"
-#include "proj/mcu/watchdog_i.h"
-
-#ifndef NULL
-#define NULL 0
-#endif
 
 #ifndef uECC_RNG_MAX_TRIES
     #define uECC_RNG_MAX_TRIES 64
@@ -191,8 +184,7 @@ static cmpresult_t uECC_vli_cmp_unsafe(const uECC_word_t *left,
 #if default_RNG_defined
 static uECC_RNG_Function g_rng_function = &default_RNG;
 #else
-uECC_RNG_Function g_rng_function = 0;
-// static uECC_RNG_Function g_rng_function = 0;
+static uECC_RNG_Function g_rng_function = 0;
 #endif
 
 void uECC_set_rng(uECC_RNG_Function rng_function) {
@@ -371,71 +363,17 @@ uECC_VLI_API uECC_word_t uECC_vli_sub(uECC_word_t *result,
 }
 #endif /* !asm_sub */
 
-#define CHAR_BIT	8
-typedef unsigned long mp_limb_t;
-typedef long mp_size_t;
-typedef unsigned long mp_bitcnt_t;
-
-typedef mp_limb_t *mp_ptr;
-typedef const mp_limb_t *mp_srcptr;
-
-#define GMP_LIMB_BITS (sizeof(mp_limb_t) * CHAR_BIT)
-
-#define GMP_LIMB_MAX (~ (mp_limb_t) 0)
-#define GMP_LIMB_HIGHBIT ((mp_limb_t) 1 << (GMP_LIMB_BITS - 1))
-
-#define GMP_HLIMB_BIT ((mp_limb_t) 1 << (GMP_LIMB_BITS / 2))
-#define GMP_LLIMB_MASK (GMP_HLIMB_BIT - 1)
-
-#define GMP_ULONG_BITS (sizeof(unsigned long) * CHAR_BIT)
-#define GMP_ULONG_HIGHBIT ((unsigned long) 1 << (GMP_ULONG_BITS - 1))
-
-
-// use  hardware mul32x32_64 to accelerate
-#define gmp_umul_ppmm(w1, w0, u, v)					\
-  do {												\
-    mp_limb_t __x0, __x1, __x2, __x3;				\
-    unsigned __ul, __vl, __uh, __vh;				\
-    mp_limb_t __u = (u), __v = (v);					\
-													\
-    __ul = __u & GMP_LLIMB_MASK;					\
-    __uh = __u >> (GMP_LIMB_BITS / 2);				\
-    __vl = __v & GMP_LLIMB_MASK;					\
-    __vh = __v >> (GMP_LIMB_BITS / 2);				\
-													\
-    __x0 = (mp_limb_t) __ul * __vl;					\
-    __x1 = (mp_limb_t) __ul * __vh;					\
-    __x2 = (mp_limb_t) __uh * __vl;					\
-    __x3 = (mp_limb_t) __uh * __vh;					\
-													\
-    __x1 += __x0 >> (GMP_LIMB_BITS / 2);/* this can't give carry */		\
-    __x1 += __x2;		/* but this indeed can */	\
-    if (__x1 < __x2)		/* did we get it? */	\
-      __x3 += GMP_HLIMB_BIT;	/* yes, add it in the proper pos. */	\
-													\
-    (w1) = __x3 + (__x1 >> (GMP_LIMB_BITS / 2));	\
-    (w0) = (__x1 << (GMP_LIMB_BITS / 2)) + (__x0 & GMP_LLIMB_MASK);		\
-  } while (0)
-
-
-#define gmp_add_ssaaaa(sh, sl, ah, al, bh, bl) 		\
-	  do {											\
-		mp_limb_t __x;								\
-		__x = (al) + (bl);							\
-		(sh) = (ah) + (bh) + (__x < (al));			\
-		(sl) = __x; 								\
-	  } while (0)
-	
-#if MI_API_ENABLE
-#if 0&&!asm_mult || (uECC_SQUARE_FUNC && !asm_square) || \
+#if (MI_API_ENABLE)&&!asm_mult || (uECC_SQUARE_FUNC && !asm_square) || \
     (uECC_SUPPORTS_secp256k1 && (uECC_OPTIMIZATION_LEVEL > 0) && \
         ((uECC_WORD_SIZE == 1) || (uECC_WORD_SIZE == 8)))
-_attribute_ram_code_ static void muladd(uECC_word_t a,
+static void muladd(uECC_word_t a,
                    uECC_word_t b,
                    uECC_word_t *r0,
                    uECC_word_t *r1,
                    uECC_word_t *r2) {
-#if uECC_WORD_SIZE == 8 && !SUPPORTS_INT128
+#if uECC_PLATFORM == uECC_telink
+    telink_muladd(a,b,r0,r1,r2);
+#elif uECC_WORD_SIZE == 8 && !SUPPORTS_INT128
     uint64_t a0 = a & 0xffffffffull;
     uint64_t a1 = a >> 32;
     uint64_t b0 = b & 0xffffffffull;
@@ -461,51 +399,26 @@ _attribute_ram_code_ static void muladd(uECC_word_t a,
     *r1 += (p1 + (*r0 < p0));
     *r2 += ((*r1 < p1) || (*r1 == p1 && *r0 < p0));
 #else
-#if 1
-    //    uECC_dword_t p = (uECC_dword_t)a * b;
-	uECC_dword_t p;
-	uECC_word_t *p0=(uECC_word_t *)&p, *p1=(uECC_word_t *)(p0+1);
-	#if MODULE_WATCHDOG_ENABLE
-		wd_clear();
-	#endif
-	gmp_umul_ppmm((*p1), (*p0), a, b);
-
-    uECC_dword_t r01;							//  = ((uECC_dword_t)(*r1) << uECC_WORD_BITS) | *r0;
-	uECC_word_t *pr10=(uECC_word_t *)&r01, *pr11=(uECC_word_t *)(pr10+1);
-	*pr10 = *r0; *pr11 = *r1;
-
-    gmp_add_ssaaaa((*pr11), (*pr10), (*pr11), (*pr10), (*p1), (*p0)); // r01 += p;
+    uECC_dword_t p = (uECC_dword_t)a * b;
+    uECC_dword_t r01 = ((uECC_dword_t)(*r1) << uECC_WORD_BITS) | *r0;
+    r01 += p;
     *r2 += (r01 < p);
-    *r1 = *pr11;
-    *r0 = *pr10;	
-	#endif
-	
+    *r1 = r01 >> uECC_WORD_BITS;
+    *r0 = (uECC_word_t)r01;
 #endif
 }
 #endif /* muladd needed */
-#endif
+
 #if !asm_mult
-
-void mz_mul2 (unsigned int * r, unsigned int * a, int na, unsigned int b);
-static void mpn_mul (unsigned int * r, unsigned int * a, int na, unsigned int * b, int nb){
-	for(int k = 0; k < na + nb; k++){
-		r[k] = 0;
-	}
-	unsigned char val = irq_disable();
-	while(nb --){
-		#if MODULE_WATCHDOG_ENABLE
-		wd_clear();
-		#endif
-		mz_mul2(r++, a, na, *b++);
-	}
-	irq_restore(val);
-}
-
 uECC_VLI_API void uECC_vli_mult(uECC_word_t *result,
                                 const uECC_word_t *left,
                                 const uECC_word_t *right,
                                 wordcount_t num_words) {
-#if 0
+#if uECC_PLATFORM == uECC_telink
+    extern void mpn_mul (unsigned int * r, unsigned int * a, int na, unsigned int * b, int nb);
+    mpn_mul((unsigned int *)result,(unsigned int *)left,(int)num_words,
+            (unsigned int *)right,(int)num_words);
+#else
     uECC_word_t r0 = 0;
     uECC_word_t r1 = 0;
     uECC_word_t r2 = 0;
@@ -531,9 +444,6 @@ uECC_VLI_API void uECC_vli_mult(uECC_word_t *result,
         r2 = 0;
     }
     result[num_words * 2 - 1] = r0;
-#else
-	mpn_mul((unsigned int *)result,(unsigned int *)left,(int)num_words,
-			(unsigned int *)right,(int)num_words);
 #endif 
 }
 #endif /* !asm_mult */
@@ -541,8 +451,6 @@ uECC_VLI_API void uECC_vli_mult(uECC_word_t *result,
 #if uECC_SQUARE_FUNC
 
 #if !asm_square
-#if(0)
-
 static void mul2add(uECC_word_t a,
                     uECC_word_t b,
                     uECC_word_t *r0,
@@ -589,7 +497,7 @@ static void mul2add(uECC_word_t a,
     *r0 = (uECC_word_t)r01;
 #endif
 }
-#endif
+
 uECC_VLI_API void uECC_vli_square(uECC_word_t *result,
                                   const uECC_word_t *left,
                                   wordcount_t num_words) {
@@ -1050,9 +958,8 @@ uECC_VLI_API void uECC_vli_bytesToNative(uint8_t *native,
 }
 
 #else
-	#if MI_API_ENABLE
-#if 0
-uECC_VLI_API void uECC_vli_nativeToBytes(uint8_t *bytes,
+
+void uECC_vli_nativeToBytes(uint8_t *bytes,
                                          int num_bytes,
                                          const uECC_word_t *native) {
     wordcount_t i;
@@ -1061,9 +968,8 @@ uECC_VLI_API void uECC_vli_nativeToBytes(uint8_t *bytes,
         bytes[i] = native[b / uECC_WORD_SIZE] >> (8 * (b % uECC_WORD_SIZE));
     }
 }
-#endif
-#if 0
-uECC_VLI_API void uECC_vli_bytesToNative(uECC_word_t *native,
+
+void uECC_vli_bytesToNative(uECC_word_t *native,
                                          const uint8_t *bytes,
                                          int num_bytes) {
     wordcount_t i;
@@ -1074,8 +980,7 @@ uECC_VLI_API void uECC_vli_bytesToNative(uECC_word_t *native,
             (uECC_word_t)bytes[i] << (8 * (b % uECC_WORD_SIZE));
     }
 }
-#endif
-	#endif
+
 #endif /* uECC_WORD_SIZE */
 
 /* Generates a random integer in the range 0 < random < top.
@@ -1138,7 +1043,7 @@ int uECC_shared_secret(const uint8_t *public_key,
                        const uint8_t *private_key,
                        uint8_t *secret,
                        uECC_Curve curve) {
-    uECC_word_t *_public = (uECC_word_t *)public_key; 			// [uECC_MAX_WORDS * 2];
+    uECC_word_t _public[uECC_MAX_WORDS * 2];
     uECC_word_t _private[uECC_MAX_WORDS];
 
     uECC_word_t tmp[uECC_MAX_WORDS];
@@ -1150,7 +1055,7 @@ int uECC_shared_secret(const uint8_t *public_key,
 
 #if uECC_VLI_NATIVE_LITTLE_ENDIAN
     bcopy((uint8_t *) _private, private_key, num_bytes);
-    //bcopy((uint8_t *) _public, public_key, num_bytes*2);
+    bcopy((uint8_t *) _public, public_key, num_bytes*2);
 #else
     uECC_vli_bytesToNative(_private, private_key, BITS_TO_BYTES(curve->num_n_bits));
     uECC_vli_bytesToNative(_public, public_key, num_bytes);

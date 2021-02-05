@@ -87,6 +87,7 @@ typedef struct blt_soft_timer_t {
 //return 0 means Fail, others OK
 int 	blt_soft_timer_add(blt_timer_callback_t func, u32 interval_us);
 int 	blt_soft_timer_delete(blt_timer_callback_t func);
+int 	blt_soft_timer_update(blt_timer_callback_t func, u32 interval_us);
 
 
 

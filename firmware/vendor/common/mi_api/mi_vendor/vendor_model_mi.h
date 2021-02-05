@@ -184,7 +184,14 @@ int mi_vd_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack);
 int mi_vd_light_onoff_st_publish(u8 idx);
 int mi_vd_light_onoff_st_publish2(u8 idx);
 int vd_mi_proper_sts_publish(u8 idx);
+void mi_ivi_event_loop();
 
+#define MI_IVI_POWERON 		0 // upload sno
+#define MI_SNO_OVERFLOW		1 // upload sno
+#define MI_RCV_BEACON		2 // upload mac
+#define MI_RCV_BEACON_SAR	3 // upload mac
+
+int mi_cb_ivi_event_send(u8 event_type,u8 *p_buf);
 
 int mi_mesh_search_model_id_by_op_vendor(mesh_op_resource_t *op_res, u16 op, u8 tx_flag);
 int is_mi_cmd_with_tid_vendor(u8 *tid_pos_out, u16 op, u8 tid_pos_vendor_app);

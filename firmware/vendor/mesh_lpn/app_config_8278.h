@@ -89,7 +89,7 @@ extern "C" {
 #define BLE_IR_ENABLE					0
 
 #ifndef BLT_SOFTWARE_TIMER_ENABLE
-#define BLT_SOFTWARE_TIMER_ENABLE		0
+#define BLT_SOFTWARE_TIMER_ENABLE		1
 #endif
 
 //////////////////////////// KEYSCAN/MIC  GPIO //////////////////////////////////

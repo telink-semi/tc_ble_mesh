@@ -4,9 +4,9 @@
 #define __MI_SPEC_MAIN_H__
 
 /* Includes ------------------------------------------------------------------*/
-//#include <stddef.h>
-//#include <stdlib.h>
-//#include <string.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 #include "mible_api.h"
 #include "mible_log.h"
 #include "mible_trace.h"
@@ -17,7 +17,7 @@
 
 
 #define MIBLE_SPEC_TIMER_PERIOD         20
-#define MIBLE_SPEC_VERSION              1
+#define MIBLE_SPEC_VERSION              2
 
 #define MIBLE_SPEC_OP_SET_PROPERTY      0x00
 #define MIBLE_SPEC_OP_SET_PROPERTY_RSP  0x01
@@ -30,9 +30,9 @@
 
 
 #if defined ( __CC_ARM )
-__packed struct spec_property_s{
+struct spec_property_s{
     uint8_t        siid;
-    uint8_t        piid;
+    uint16_t        piid;
     uint8_t        type;
     uint16_t        len;	  
     void*           val;
@@ -41,7 +41,7 @@ __packed struct spec_property_s{
 #elif defined ( __GNUC__ )
 struct spec_property_s{
     uint8_t        siid;
-    uint8_t        piid;
+    uint16_t        piid;
     uint8_t        type;
     uint16_t        len;	  
     void*           val;
@@ -64,7 +64,7 @@ mible_status_t mible_set_properties_rsp(uint16_t tid, uint8_t p_num, spec_proper
 mible_status_t mible_get_properties_rsp(uint16_t tid, uint8_t p_num, spec_property_t* array);
 mible_status_t mible_action_rsp(uint16_t tid, int16_t code);
 mible_status_t mible_properties_changed(uint8_t p_num, spec_property_t* array);
-mible_status_t mible_event_occured(uint8_t siid, uint8_t eiid, uint8_t p_num, spec_property_t* array);
+mible_status_t mible_event_occured(uint8_t siid, uint16_t eiid, uint8_t p_num, spec_property_t* array);
 
 typedef enum {
     MIBLE_SPEC_CMD_SET_PROPERTY,

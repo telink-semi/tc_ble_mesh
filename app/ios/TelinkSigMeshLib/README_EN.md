@@ -33,7 +33,7 @@ bind model to appkey.
 
 ## Requirements
 
-* Xcode 10 or newer.
+* Xcode 11.0 or newer.
 * An iOS 9.0 or newer device with BLE capabilities.
 
 ## Setting up the library

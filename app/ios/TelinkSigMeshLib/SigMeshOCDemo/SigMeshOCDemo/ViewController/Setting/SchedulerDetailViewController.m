@@ -103,7 +103,7 @@
 
 - (void)normalSetting{
     [super normalSetting];
-    self.title = [NSString stringWithFormat:@"%llu",self.model.schedulerID];
+    self.title = [NSString stringWithFormat:@"Index:0x%llX",self.model.schedulerID];
     
     UIButton *button = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 20, 20)];
     [button setTitle:@"setTime" forState:UIControlStateNormal];

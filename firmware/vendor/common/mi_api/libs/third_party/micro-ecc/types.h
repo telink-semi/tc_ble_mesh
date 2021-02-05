@@ -4,7 +4,25 @@
 #define _UECC_TYPES_H_
 
 #ifndef uECC_PLATFORM
-   #define uECC_PLATFORM uECC_arch_other
+    #if __AVR__
+        #define uECC_PLATFORM uECC_avr
+    #elif defined(__telink__)
+        #define uECC_PLATFORM uECC_telink
+    #elif defined(__thumb2__) || defined(_M_ARMT) /* I think MSVC only supports Thumb-2 targets */
+        #define uECC_PLATFORM uECC_arm_thumb2
+    #elif defined(__thumb__)
+        #define uECC_PLATFORM uECC_arm_thumb
+    #elif defined(__arm__) || defined(_M_ARM)
+        #define uECC_PLATFORM uECC_arm
+    #elif defined(__aarch64__)
+        #define uECC_PLATFORM uECC_arm64
+    #elif defined(__i386__) || defined(_M_IX86) || defined(_X86_) || defined(__I86__)
+        #define uECC_PLATFORM uECC_x86
+    #elif defined(__amd64__) || defined(_M_X64)
+        #define uECC_PLATFORM uECC_x86_64
+    #else
+        #define uECC_PLATFORM uECC_arch_other
+    #endif
 #endif
 
 #ifndef uECC_ARM_USE_UMAAL
@@ -40,7 +58,7 @@
 #if ((uECC_PLATFORM == uECC_arm || uECC_PLATFORM == uECC_arm_thumb || \
         uECC_PLATFORM ==  uECC_arm_thumb2) && \
      (uECC_WORD_SIZE != 4))
-    #pragma message ("uECC_WORD_SIZE must be 4 for ARM")
+    //#pragma message ("uECC_WORD_SIZE must be 4 for ARM")
     #undef uECC_WORD_SIZE
     #define uECC_WORD_SIZE 4
 #endif

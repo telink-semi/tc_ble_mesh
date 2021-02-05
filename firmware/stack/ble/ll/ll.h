@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -259,7 +259,7 @@ extern ll_SetExtAdv_Enable_callback_t pFunc_ll_SetAdv_Enable;
 typedef int (*l2cap_handler_t) (u16 conn, u8 * p);
 extern l2cap_handler_t	blc_l2cap_handler;
 
-
+typedef int (*ll_rpa_tmo_mainloop_callback_t)(void);
 typedef int (*ll_host_mainloop_callback_t)(void);
 typedef int (*ll_enc_done_callback_t)(u16 connHandle);
 
@@ -286,6 +286,7 @@ void 		blc_ll_registerConnectionTerminateHandler(ll_conn_terminate_handler_t  ha
 
 
 typedef int (*blt_LTK_req_callback_t)(u16 handle, u8* rand, u16 ediv);
+typedef int (*blt_update_err_callback_t)(u8 *);	// add by weixiong
 
 
 
@@ -341,6 +342,7 @@ void 		blc_ll_recoverDeepRetention(void);
 bool 		blc_ll_isBrxBusy (void);
 
 void 		blc_ll_init_max_md_nums(u8 num);
+u8 			adv_filter_proc(u8 *raw_pkt ,u8 blt_sts);	// add by weixiong
 
 
 static inline void  blc_ll_set_CustomedAdvScanAccessCode(u32 accss_code)
@@ -369,7 +371,7 @@ ble_sts_t 		blc_hci_writeSuggestedDefaultTxDataLength (u16 tx, u16 txtime);
 ble_sts_t		blc_hci_receiveHostACLData(u16 connHandle, u8 PB_Flag, u8 BC_Flag, u8 *pData );
 
 
-
+void 			blc_ll_registerRpaTmoMainloopCallback (ll_rpa_tmo_mainloop_callback_t cb);
 void 			blc_ll_registerHostMainloopCallback (ll_host_mainloop_callback_t cb);
 void 			blc_ll_registerConnectionEncryptionDoneCallback(ll_enc_done_callback_t  cb);
 

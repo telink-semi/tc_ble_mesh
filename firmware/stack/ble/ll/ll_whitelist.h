@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -102,18 +102,7 @@ typedef struct {
 } ll_whiteListTbl_t;
 
 
-typedef struct {
-	u8 type;
-	u8 address[BLE_ADDR_LEN];
-	u8 reserved;
-	u8 irk[16];
-} rl_addr_t;
 
-typedef struct {
-	rl_addr_t	tbl[MAX_WHITE_IRK_LIST_SIZE];
-	u8 			idx;
-	u8			en;
-} ll_ResolvingListTbl_t;
 
 
 
@@ -172,18 +161,6 @@ ble_sts_t ll_whiteList_getSize(u8 *returnPublicAddrListSize) ;
 
 
 
-ble_sts_t  ll_resolvingList_add(u8 peerIdAddrType, u8 *peerIdAddr, u8 *peer_irk, u8 *local_irk);
-ble_sts_t  ll_resolvingList_delete(u8 peerIdAddrType, u8 *peerIdAddr);
-
-ble_sts_t  ll_resolvingList_reset(void);
-ble_sts_t  ll_resolvingList_getSize(u8 *Size);
-
-ble_sts_t  ll_resolvingList_getPeerResolvableAddr (u8 peerIdAddrType, u8* peerIdAddr, u8* peerResolvableAddr); //not available now
-ble_sts_t  ll_resolvingList_getLocalResolvableAddr(u8 peerIdAddrType, u8* peerIdAddr, u8* LocalResolvableAddr); //not available now
-
-ble_sts_t  ll_resolvingList_setAddrResolutionEnable (u8 resolutionEn);
-
-ble_sts_t  ll_resolvingList_setResolvablePrivateAddrTimer (u16 timeout_s);   //not available now
 
 
 
@@ -196,13 +173,10 @@ u8 * ll_searchAddrInWhiteListTbl(u8 type, u8 *addr);
 
 u8 * ll_searchAddrInResolvingListTbl(u8 *addr);  //addr must be RPA
 
-u8 * ll_searchAddr_in_WhiteList_and_ResolvingList(u8 type, u8 *addr);
-
 bool smp_quickResolvPrivateAddr(u8 *key, u8 *addr);
 
 
 extern ll_whiteListTbl_t	ll_whiteList_tbl;
-extern ll_ResolvingListTbl_t	ll_resolvingList_tbl;
 
 
 

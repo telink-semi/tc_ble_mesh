@@ -1,17 +1,122 @@
+## V3.3.1
+### Bug Fixes
+
+* N/A
+
+### Features	
+
+* (Firmware) add the default device name in customized OTA mode. if it was used, the device name of new firmware will not be checked by the node when OTA.
+
+### Performance Improvements
+
+* (Firmware) improve the receiving success rate of extend adv mode. only "liblt_8258_mesh_extend_adv.a" need to be updated.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) å¢åŠ å®¢æˆ·å®šåˆ¶OTAæ¨¡å¼ä¸‹çš„é»˜è®¤device nameã€‚å½“èŠ‚ç‚¹ä½¿ç”¨æ­¤nameæ—¶ï¼ŒèŠ‚ç‚¹å°†ä¸æ£€æŸ¥ new firmware çš„device nameã€‚
+
+### Performance Improvements
+
+* (Firmware) æ”¹å–„ extend ADV mode çš„æ”¶åŒ…æˆåŠŸç‡ã€‚ä»…æ›´æ–°liblt_8258_mesh_extend_adv.a å³å¯ã€‚
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* ä¸ºé¿å…ç¼–è¯‘é”™è¯¯ä»¥åŠåŠŸèƒ½ä¸¢å¤±ï¼Œå‡çº§SDKæ—¶ï¼Œè¯·ç¡®è®¤æ›´æ–°å…¨éƒ¨SDKæ–‡ä»¶ã€‚
+
+## V3.3.0
+### Bug Fixes
+
+* (iOS APP) fix bug: encryption and decryption fail if AID of AppKey is 0.
+* (iOS APP) fix bug: when many segment messages are received continuously and the ack messages are continuous response, the APP will crash.
+
+### Features	
+
+* (Firmware/Android/iOS) add 825x DLE(Data Length Extend) function.
+* (Firmware) add 825x extend ADV mode for mesh OTA. time cost of OTA is about 4 minutes. disabled by default.
+* (Firmware) support to modify the max number of subscription address by SUB_LIST_MAX.
+* (Firmware) add long sleep mode (more than 1 hour) by the function of "cpu_long_sleep_wakeup".
+* (Firmware) add 8258_mesh_monitor project.
+* (Firmware) add customized protocol of Provision and OTA.
+* (Firmware) add customized process of IV update procedure.
+* (Android APP) add function: only the nodes which selected by user can be provisioned.
+
+### Performance Improvements
+
+* (Firmware) improve the sleep processing flow of mesh_LPN project by using soft timer.
+* (Firmware) package customer's source codes into library.
+* (Android APP) improve the color setting UI in HSL mode.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+
+### Bug Fixes
+
+* (iOS APP) ä¿®å¤AppKeyçš„AIDä¸º0æ—¶meshæ•°æ®åŒ…åŠ è§£å¯†å¼‚å¸¸çš„bugã€‚
+* (iOS APP) ä¿®å¤bugï¼šå½“è¿ç»­æ”¶åˆ°å¤šä¸ªsegment messageï¼Œæ‰§è¡Œè¿ç»­å›å¤å¤šä¸ªSigSegmentAcknowledgmentMessageæ—¶ï¼Œä¼šå‘ç”ŸAPPå¼‚å¸¸é€€å‡ºçš„é—®é¢˜ã€‚
+
+### Features
+
+* (Firmware/Android/iOS) å¢åŠ 825x DLE(Data Length Extend)åŠŸèƒ½ã€‚
+* (Firmware) å¢åŠ 825x æ‰©å±•å¹¿æ’­åŒ…æ¨¡å¼çš„mesh OTAï¼Œå‡çº§æ—¶é—´ä¸º4åˆ†é’Ÿå·¦å³ã€‚é»˜è®¤å…³é—­ã€‚
+* (Firmware) æ”¯æŒé€šè¿‡ä¿®æ”¹SUB_LIST_MAXæ¥è®¾ç½®æ”¯æŒçš„æœ€å¤§åˆ†ç»„æ•°é‡ã€‚
+* (Firmware) å¢åŠ é•¿ä¼‘çœ æ¥å£å‡½æ•°(è¶…è¿‡1å°æ—¶)ï¼šcpu_long_sleep_wakeup
+* (Firmware) å¢åŠ 8258_mesh_monitorå·¥ç¨‹ã€‚
+* (Firmware) æ·»åŠ å®¢æˆ·å®šåˆ¶çš„å…¥ç½‘ä»¥åŠOTAåè®®ã€‚
+* (Firmware) æ·»åŠ å®¢æˆ·å®šåˆ¶çš„IV updateæµç¨‹çš„ç‰¹æ®Šå¤„ç†ã€‚
+* (Android APP) å¢åŠ æ”¯æŒåªå¯¹ç”¨æˆ·é€‰æ‹©çš„èŠ‚ç‚¹è¿›è¡Œé…ç½‘çš„åŠŸèƒ½ã€‚
+
+### Performance Improvements
+
+* (Firmware) æ”¹å–„mesh_LPNå·¥ç¨‹çš„ç¡çœ å¤„ç†æµç¨‹ï¼Œæ”¹ä¸ºä½¿ç”¨soft timeræ¥å®ç°ã€‚
+* (Firmware) å°è£…å®¢æˆ·ç›¸å…³çš„source codeæˆlibraryã€‚
+* (Android APP) æ”¹å–„HSLæ¨¡å¼ä¸‹çš„é¢œè‰²é€‰æ‹©UIç•Œé¢ã€‚
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* ä¸ºé¿å…ç¼–è¯‘é”™è¯¯ä»¥åŠåŠŸèƒ½ä¸¢å¤±ï¼Œå‡çº§SDKæ—¶ï¼Œè¯·ç¡®è®¤æ›´æ–°å…¨éƒ¨SDKæ–‡ä»¶ã€‚
+
+
+
+
 ## V3.2.3
 ### Bug Fixes
 
 * (Firmware) fix bug: node can't send mesh commands during GATT OTA.
 * (IOS APP) fix bug: app can't judge that have read the att_service table completely, if there is no characteristic value in the last att_service.
-* (IOS APP) fix bug: only report ¡°responseMax¡± packets to application layer when the number of packets received is bigger than "responseMax".
+* (IOS APP) fix bug: only report â€œresponseMaxâ€ packets to application layer when the number of packets received is bigger than "responseMax".
 
 ### Features	
 
 * (Firmware) gateway can send adv packets and can be connected by master. enable PROVISIONER_GATT_ADV_EN for this function, disabled by default.
 * (Firmware) the number of ota nodes is expanded to 200 in gateway project, which is defined by MESH_OTA_UPDATE_NODE_MAX.
 * (Firmware) add UART mode for 8269 master dongle project. Master dongle firmware need set HCI_ACCESS to HCI_USE_UART, and sig_mesh_tool.exe need select the "UART" button to enable this function. The default is USB mode.
-* (Firmware) add customized functions for TangSeng.(update latest customer's protocol)
-* (Firmware) add customized functions for PiPa.
 * (android APP) add API of connecting specified node and reporting the connection status to app.
 * (android APP) add the function of displaying and comparing the PID value before OTA.
 * (IOS APP) add the function of adding new NetKey and AppKey, and app can use the new key to send commands.
@@ -32,25 +137,23 @@
 
 ### Bug Fixes
 
-* (Firmware) ĞŞ¸´½ÚµãÔÚ½øĞĞ GATT OTA µÄÊ±ºò£¬²»ÄÜ·¢ËÍ mesh ÃüÁîµÄÎÊÌâ¡£
-* (IOS APP) ĞŞ¸´Èç¹ûÉè±¸×îºóÒ»¸ö·şÎñÄÚÃ»ÓĞÌØÕ÷ÖµÊ±£¬ÎŞ·¨ÅĞ¶Ï³ö¶ÁÈ¡·şÎñÁĞ±íÍê±ÏµÄÎÊÌâ¡£
-* (IOS APP) ĞŞ¸´µ±ÃüÁîµÄÊµ¼Ê»Ø°üÊıÁ¿´óÓÚ"responseMax"Ê±£¬Ö»ÉÏ±¨ÁËresponseMax¸ö»Ø°üµ½Ó¦ÓÃ²ãµÄÎÊÌâ¡£
+* (Firmware) ä¿®å¤èŠ‚ç‚¹åœ¨è¿›è¡Œ GATT OTA çš„æ—¶å€™ï¼Œä¸èƒ½å‘é€ mesh å‘½ä»¤çš„é—®é¢˜ã€‚
+* (IOS APP) ä¿®å¤å¦‚æœè®¾å¤‡æœ€åä¸€ä¸ªæœåŠ¡å†…æ²¡æœ‰ç‰¹å¾å€¼æ—¶ï¼Œæ— æ³•åˆ¤æ–­å‡ºè¯»å–æœåŠ¡åˆ—è¡¨å®Œæ¯•çš„é—®é¢˜ã€‚
+* (IOS APP) ä¿®å¤å½“å‘½ä»¤çš„å®é™…å›åŒ…æ•°é‡å¤§äº"responseMax"æ—¶ï¼Œåªä¸ŠæŠ¥äº†responseMaxä¸ªå›åŒ…åˆ°åº”ç”¨å±‚çš„é—®é¢˜ã€‚
 
 ### Features
 
-* (Firmware) Ôö¼Ógateway½Úµã·¢ËÍ¿ÉÁ¬½Ó¹ã²¥°üºÍ±»masterÁ¬½ÓµÄ¹¦ÄÜ¡£°ÑPROVISIONER_GATT_ADV_ENÖÃÎª1¿É¿ªÆôÕâ¸ö¹¦ÄÜ£¬Ä¬ÈÏÎª0.
-* (Firmware) gateway ½øĞĞmesh OTAµÄ½ÚµãÊıÔö¼Óµ½200¸ö½Úµã, ¾ßÌåÊıÁ¿¶¨ÒåÊÇMESH_OTA_UPDATE_NODE_MAX¡£
-* (Firmware) Ôö¼Ó8269 master dongleµÄ´®¿ÚÍ¨Ñ¶Ä£Ê½¡£ master dongle firmwareÅäÖÃHCI_ACCESSÎªHCI_USE_UART£¬ÉÏÎ»»úÑ¡Ôñ "UART"°´Å¥¼´¿É¡£Ä¬ÈÏÎªUSBÄ£Ê½¡£
-* (Firmware) Ôö¼Ótangseng¿Í»§µÄ¶¨ÖÆ¹¦ÄÜ£¨¸üĞÂ×îĞÂ½ÓÈëĞ­Òé£©¡£
-* (Firmware) Ôö¼ÓPiPa¿Í»§µÄ¶¨ÖÆ¹¦ÄÜ¡£
-* (android APP) Ôö¼ÓAPI½Ó¿Ú£¬ÓÃÓÚÁ¬½ÓÖ¸¶¨½Úµã£¬²¢ÇÒ°ÑÁ¬½Ó×´Ì¬ÉÏ±¨¸øapp;
-* (android APP) Ôö¼ÓÔÚOTAÇ°ÏÔÊ¾ºÍÅĞ¶ÏPIDµÄ¹¦ÄÜ;
-* (IOS APP) Ôö¼ÓÌí¼ÓĞÂµÄNetKeyºÍAppKeyµÄ¹¦ÄÜ£¬²¢ÄÜÊ¹ÓÃĞÂÌí¼ÓµÄkey·¢ËÍÖ¸Áî¡£
+* (Firmware) å¢åŠ gatewayèŠ‚ç‚¹å‘é€å¯è¿æ¥å¹¿æ’­åŒ…å’Œè¢«masterè¿æ¥çš„åŠŸèƒ½ã€‚æŠŠPROVISIONER_GATT_ADV_ENç½®ä¸º1å¯å¼€å¯è¿™ä¸ªåŠŸèƒ½ï¼Œé»˜è®¤ä¸º0.
+* (Firmware) gateway è¿›è¡Œmesh OTAçš„èŠ‚ç‚¹æ•°å¢åŠ åˆ°200ä¸ªèŠ‚ç‚¹, å…·ä½“æ•°é‡å®šä¹‰æ˜¯MESH_OTA_UPDATE_NODE_MAXã€‚
+* (Firmware) å¢åŠ 8269 master dongleçš„ä¸²å£é€šè®¯æ¨¡å¼ã€‚ master dongle firmwareé…ç½®HCI_ACCESSä¸ºHCI_USE_UARTï¼Œä¸Šä½æœºé€‰æ‹© "UART"æŒ‰é’®å³å¯ã€‚é»˜è®¤ä¸ºUSBæ¨¡å¼ã€‚
+* (android APP) å¢åŠ APIæ¥å£ï¼Œç”¨äºè¿æ¥æŒ‡å®šèŠ‚ç‚¹ï¼Œå¹¶ä¸”æŠŠè¿æ¥çŠ¶æ€ä¸ŠæŠ¥ç»™app;
+* (android APP) å¢åŠ åœ¨OTAå‰æ˜¾ç¤ºå’Œåˆ¤æ–­PIDçš„åŠŸèƒ½;
+* (IOS APP) å¢åŠ æ·»åŠ æ–°çš„NetKeyå’ŒAppKeyçš„åŠŸèƒ½ï¼Œå¹¶èƒ½ä½¿ç”¨æ–°æ·»åŠ çš„keyå‘é€æŒ‡ä»¤ã€‚
 
 ### Performance Improvements
 
-* (Firmware) È¡ÏûÖ±Á¬½ÚµãµÄ·¢°ü¼ä¸ôºÍÁ¬½Ó¼ä¸ôµÄ¹ØÁª£¬Ìá¸ß¼æÈİĞÔ¡£
-* (Firmware) ¸ÄÉÆHSL½¥±äËã·¨¡£
+* (Firmware) å–æ¶ˆç›´è¿èŠ‚ç‚¹çš„å‘åŒ…é—´éš”å’Œè¿æ¥é—´éš”çš„å…³è”ï¼Œæé«˜å…¼å®¹æ€§ã€‚
+* (Firmware) æ”¹å–„HSLæ¸å˜ç®—æ³•ã€‚
 
 ### BREAKING CHANGES
 
@@ -58,7 +161,7 @@
 
 ### Notes
 
-* Îª±ÜÃâ±àÒë´íÎóÒÔ¼°¹¦ÄÜ¶ªÊ§£¬Éı¼¶SDKÊ±£¬ÇëÈ·ÈÏ¸üĞÂÈ«²¿SDKÎÄ¼ş¡£
+* ä¸ºé¿å…ç¼–è¯‘é”™è¯¯ä»¥åŠåŠŸèƒ½ä¸¢å¤±ï¼Œå‡çº§SDKæ—¶ï¼Œè¯·ç¡®è®¤æ›´æ–°å…¨éƒ¨SDKæ–‡ä»¶ã€‚
 
 
 
@@ -72,9 +175,7 @@
 
 * update 8278 driver for A2 chip.
 * add GATT low power mode, need to enable macro of GATT_LPN_EN, disabled by default.
-* add the flow of proprietary GATT_OTA login, just customization function for customer 'Pipa', need to enable macro of MESH_PIPA_ENABLE and DUAL_OTA_NEED_LOGIN_EN.
-* add ¡°user_app_config.h¡± for user to modify some default settings. It can be use to separate user settings and application codes from SDK.
-* add customized hardware security mode and update their lib version to 1.4.1, just customization function for customer 'Tangseng'.
+* add â€œuser_app_config.hâ€ for user to modify some default settings. It can be use to separate user settings and application codes from SDK.
 * (iOS APP) support static oob provisioning and static oob database importing.
 
 ### Performance Improvements
@@ -95,9 +196,6 @@
 * (firmware) update 8278 drivers for A1.
 * (android APP) add function of static_oob provisioning.
 
-### Bug Fixes
-* (firmware) fix a bug about ota, this bug is only in the customer's project of tangseng.
-
 ### BREAKING CHANGES
 
 * N/A
@@ -111,10 +209,9 @@
 ### Features
 * add beacon functions(iBeacon&Eddystone), disabled by default.
 * enable SUBSCRIPTION_SHARE_EN as default to share group setting between the models which are in bind state.
-* LPN£ºset LED state 'on' by default. Once power up, send level status message to display in UI. Long press key SW1 to trigger factory reset function.
+* LPNï¼šset LED state 'on' by default. Once power up, send level status message to display in UI. Long press key SW1 to trigger factory reset function.
 * add a new macro FEATURE_FRIEND_EN,user can set FEATURE_FRIEND_EN to 0 to disable friend feature to reduce RAM and code size.
 * improve user experience by letting nodes which are provisioned can be shown in GATT scan window of sig_mesh_tool.exe.
-* Tangseng project: merge library of mesh1.4.0 and add vendor_publish function.
 * (android APP) switch from c-lib version to java-source version.
 * (android APP) add QR code to share network by cloud.
 * (IOS APP) cut down the size of OpenSSL file.
@@ -176,7 +273,7 @@
 ## V3.1.0
 ### Features
 * add project to support both Tmall genius and Xiaomi XiaoAI. Set MESH_USER_DEFINE_MODE to MESH_MI_SPIRIT_ENABLE. Note: must use Chip with 1M flash
-* INI command£ºif TID value is not 0, it will be used when send command. if TID is 0, it will auto be increased by stack.
+* INI commandï¼šif TID value is not 0, it will be used when send command. if TID is 0, it will auto be increased by stack.
 * 1M flash: add no pingpong OTA fuction.Please refer to PINGPONG_OTA_DISABLE.
 * Add the model of the light mode, switch ,switch with battery for the mi mode .
 * support 8278.

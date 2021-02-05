@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Sep. 18, 2015
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
@@ -63,6 +63,12 @@ typedef struct {
 	u8		conn_new_param;
 	u8		conn_winsize_next;
 	u8		rsvd1;
+
+#if (LL_FEATURE_ENABLE_LL_PRIVACY)
+	u8	    conn_peer_addr_type; //host event use addr type: 0,1,2,3
+	u8      rsvd2;
+	u8		conn_peer_addr[6];   //host event use addr
+#endif
 
 	u8 		conn_master_terminate;
 	u8		conn_terminate_reason;
@@ -160,6 +166,8 @@ u16			bls_ll_getConnectionTimeout(void);	 // if return 0, means not in connectio
 int			bls_ll_requestConnBrxEventDisable(void);
 void		bls_ll_disableConnBrxEvent(void);
 void		bls_ll_restoreConnBrxEvent(void);
+void        blt_send_adv2scan_mode(int tx_adv);	// add by weixiong
+void 		bls_phy_scan_mode (int set_chn);
 
 
 

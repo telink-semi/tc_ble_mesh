@@ -256,9 +256,12 @@ void test_cmd_tdebug()
 		static u8 test_onoff;
 		u32 len = OFFSETOF(mesh_cmd_g_onoff_set_t,transit_t);	// no delay 
 		u8 cmd_buf[32] = {0};
-		memset(cmd_buf, 0xaa, sizeof(cmd_buf));
+		//memset(cmd_buf, 0xaa, sizeof(cmd_buf));
 		mesh_cmd_g_onoff_set_t *cmd = (mesh_cmd_g_onoff_set_t *)cmd_buf;
 		cmd->onoff = (test_onoff++) & 1;
+		cmd->tid = 0;
+		cmd->transit_t = 0;
+		cmd->delay = 0;
 		if(A_key_seg){
 			len += 13;	// test segment;
 		}

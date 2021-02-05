@@ -27,9 +27,11 @@
  */
 #if !WIN32
 #include "proj/mcu/config.h"
-#endif
 #include "../../proj/mcu/analog.h"
 #include "../rf_drv.h"
+
+#endif
+
 #include "../../proj/tl_common.h"
 #include "../../vendor/common/dual_mode_adapt.h"
 #include "../pm.h"
@@ -51,6 +53,8 @@
 #elif(MCU_CORE_TYPE == MCU_CORE_8258)
     #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE || DUAL_MESH_ZB_BL_EN) // keep same with zb
 #define		MY_RF_POWER_INDEX		RF_POWER_P10p46dBm
+    #elif MI_API_ENABLE
+#define 	MY_RF_POWER_INDEX		RF_POWER_P10p46dBm
     #else
 #define		MY_RF_POWER_INDEX		RF_POWER_P3p01dBm
     #endif
@@ -65,8 +69,6 @@
 #ifndef DEV_NAME
 #define DEV_NAME                        "tModule"
 #endif
-
-#define RAMCODE_OPTIMIZE_CONN_POWER_NEGLECT_ENABLE			0
 
 enum{
 	TYPE_TLK_MESH		    = 0x000000A3,// don't change, must same with telink mesh SDK
@@ -168,7 +170,8 @@ typedef struct {
 #define		CFG_SECTOR_ADR_CALIBRATION_CODE     CFG_ADR_CALIBRATION_512K_FLASH
 #endif
 
-#if ((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)||DUAL_MESH_ZB_BL_EN||(MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269))
+#if (DUAL_MESH_ZB_BL_EN||(MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269)\
+   ||(MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_PIPA_ENABLE))
 #define AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN    (0) // must 0
 #else
 #define AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN    ((CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_512K_FLASH)||(CFG_SECTOR_ADR_MAC_CODE == CFG_ADR_MAC_1M_FLASH))
@@ -202,7 +205,7 @@ typedef struct {
 #define 		FLASH_ADR_MD_SENSOR		    0x39000
 #define 		FLASH_ADR_PROVISION_CFG_S	0x3a000
 #define			FLASH_ADR_MD_LIGHT_HSL		0x3b000 // cps before V23
-#define			FLASH_ADR_FRIEND_SHIP		0x3c000
+#define			FLASH_ADR_FRIEND_SHIP		0x3c000 // backup FLASH_ADR_MISC temporarily
 #define			FLASH_ADR_MISC				0x3d000
 #define			FLASH_ADR_RESET_CNT			0x3e000
 #if WIN32
@@ -270,10 +273,14 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #endif
 
 #if MI_API_ENABLE
-#define         MI_BLE_MESH_CER_ADR 	    0x7f000
-#endif
+#define         MI_BLE_MESH_CER_ADR 	    0x7E000// because the certi is stored in the 0x7e800
+#define 		FLASH_ADR_PAR_USER_MAX		MI_BLE_MESH_CER_ADR
+#else
 
 #define			FLASH_ADR_PAR_USER_MAX		0x80000
+#endif
+
+
 #else // 1M flash
 #if ((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_ZB_BL_DUAL_ENABLE))
 #define			FLASH_ADR_RESET_CNT			0x23000
@@ -489,9 +496,9 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 	#endif
 // 0x100 ~ 0x7ff reserve for sihui
     #if (!AIS_ENABLE)
-#define         FLASH_ADR_STATIC_OOB	    (flash_sector_calibration + 0x800)
+#define         FLASH_ADR_STATIC_OOB	    (CFG_SECTOR_ADR_CALIBRATION_CODE + 0x800)   // use const value // flash_sector_calibration
         #if (!PROVISION_FLOW_SIMPLE_EN)
-#define         FLASH_ADR_DEV_UUID	    	(flash_sector_calibration + 0x810)
+#define         FLASH_ADR_DEV_UUID	    	(CFG_SECTOR_ADR_CALIBRATION_CODE + 0x810)   // use const value // flash_sector_calibration
         #endif
     #endif
 #endif
@@ -609,6 +616,9 @@ void blc_readFlashSize_autoConfigCustomFlashSector(void);
 #elif(MCU_CORE_TYPE == MCU_CORE_8278)
 #include "stack/ble_8278/blt_config.h"
 #else
+
+#define RAMCODE_OPTIMIZE_CONN_POWER_NEGLECT_ENABLE			0
+
 typedef struct{
 	u8 conn_mark;
 	u8 ext_crystal_en;

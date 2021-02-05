@@ -21,8 +21,6 @@
  *******************************************************************************************************/
 #include "proj/tl_common.h"
 #include "sensors_model.h"
-u32 mesh_md_sensor_addr = FLASH_ADR_MD_SENSOR;
-model_sensor_t			model_sig_sensor;
 
 #if SENSOR_LIGHTING_CTRL_EN
 // MD_CLIENT_EN, SENSOR_GPIO_PIN and MD_SENSOR_EN are must be opened.
@@ -30,6 +28,9 @@ STATIC_ASSERT(MD_CLIENT_EN && MD_SENSOR_EN && SENSOR_GPIO_PIN && SENSOR_LIGHTING
 #endif
 
 #if(MD_SENSOR_EN)
+u32 mesh_md_sensor_addr = FLASH_ADR_MD_SENSOR;
+model_sensor_t			model_sig_sensor;
+
 #if MD_SENSOR_SERVER_EN
 #if !WIN32
 STATIC_ASSERT(MD_LOCATION_EN == 0);// because use same flash sector to save in mesh_save_map, and should be care of OTA new firmware which add MD_BATTERY_EN

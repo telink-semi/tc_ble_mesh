@@ -161,6 +161,7 @@ void		bls_ll_disableConnBrxEvent(void);
 void		bls_ll_restoreConnBrxEvent(void);
 //void        blt_send_adv2scan_mode(int tx_adv); // comment by weixiong in mesh
 
+void bls_phy_scan_mode (int set_chn);
 
 
 

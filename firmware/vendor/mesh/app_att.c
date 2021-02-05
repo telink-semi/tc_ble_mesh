@@ -27,7 +27,9 @@
 #include "../common/app_proxy.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "../common/app_beacon.h"
-
+#if DU_ENABLE
+#include "vendor/common/user_du.h"
+#endif
 #if(1)
 
 typedef struct
@@ -195,16 +197,27 @@ u8	 	my_OtaData 		= 0x00;
 // pb-gatt 
 u8 my_pb_gattUUID[2]=SIG_MESH_PROVISION_SERVICE;
 
-const u8 my_pb_gatt_out_UUID[2]= SIG_MESH_PROVSIION_DATA_OUT;
+#if !ATT_REPLACE_PROXY_SERVICE_EN
+const
+#endif
+u8 my_pb_gatt_out_UUID[2]= SIG_MESH_PROVSIION_DATA_OUT;
 //static u8 my_pb_gatt_out_prop = CHAR_PROP_NOTIFY;
 static u8 my_pb_gatt_out_prop = CHAR_PROP_NOTIFY;
 
-const u8 my_pb_gattOutName[]={'P','B','G','A','T','T','-','O','U','T'};
+#if !ATT_REPLACE_PROXY_SERVICE_EN
+const
+#endif
+u8 my_pb_gattOutName[]={'P','B','G','A','T','T','-','O','U','T'};
 u8 	my_pb_gattOutData[2] =MESH_PROVISON_DATA;
-
-const u8 my_pb_gatt_in_UUID[2]= SIG_MESH_PROVISION_DATA_IN;
+#if !ATT_REPLACE_PROXY_SERVICE_EN
+const
+#endif
+ u8 my_pb_gatt_in_UUID[2]= SIG_MESH_PROVISION_DATA_IN;
 static u8 my_pb_gatt_in_prop =  CHAR_PROP_WRITE_WITHOUT_RSP;
-const u8 my_pb_gattInName[]={'P','B','G','A','T','T','-','I','N'};
+#if !ATT_REPLACE_PROXY_SERVICE_EN
+const
+#endif
+u8 my_pb_gattInName[]={'P','B','G','A','T','T','-','I','N'};
 u8 	my_pb_gattInData[2] =MESH_PROVISON_DATA;
 extern u8  provision_In_ccc[2];
 extern u8  provision_Out_ccc[2];
@@ -212,18 +225,23 @@ extern u8  provision_Out_ccc[2];
 u8 my_proxy_gattUUID[2]= SIG_MESH_PROXY_SERVICE;
 
 const u8 my_proxy_out_UUID[2]= SIG_MESH_PROXY_DATA_OUT;
+#if !ATT_REPLACE_PROXY_SERVICE_EN
 static u8 my_proxy_out_prop = CHAR_PROP_NOTIFY;
+#endif
 const u8 my_proxy_out_Name[]={'P','R','O','X','Y','-','O','U','T'};
 u8 my_proxy_outData[2] =MESH_PROXY_DATA;
 
 const u8 my_proxy_in_UUID[2]= SIG_MESH_PROXY_DATA_IN;
+#if !ATT_REPLACE_PROXY_SERVICE_EN
 static u8 my_proxy_in_prop = CHAR_PROP_WRITE_WITHOUT_RSP;
+#endif
 const u8 my_proxy_in_Name[]={'P','R','O','X','Y','-','I','N'};
 u8 my_proxy_inData[2] =MESH_PROXY_DATA;
 
+#if !ATT_REPLACE_PROXY_SERVICE_EN
 u8 proxy_Out_ccc[2]={0x00,0x00};
 u8 proxy_In_ccc[2]=	{0x01,0x00};
-
+#endif
 
 int pb_gatt_provision_out_ccc_cb(void *p)
 {
@@ -238,6 +256,13 @@ int	pb_gatt_Write (void *p)
 	if(provision_In_ccc[0]==0 && provision_In_ccc[1]==0){
 		return 0;
 	}
+	#if ATT_REPLACE_PROXY_SERVICE_EN
+	extern int proxy_gatt_Write(void *p);
+	u8 service_uuid[] = SIG_MESH_PROXY_SERVICE;
+	if(0 == memcmp(my_pb_gattUUID, service_uuid, sizeof(my_pb_gattUUID) )){
+		return proxy_gatt_Write(p);
+	}
+	#endif
 	#if FEATURE_PROV_EN
 	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
 	// package the data 
@@ -443,7 +468,23 @@ u8 mi_stdio_tx_ccc[2]=	{0x00,0x00};
 u8 mi_stdio_tx_buf_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 u8 mi_stdio_tx_ccc_perm = ATT_PERMISSIONS_RDWD_AUTHOR;
 
+int mi_empty_writeback(void * p)
+{
+    return 0;
+}
+
 #endif 
+
+#if (DU_ENABLE)
+const u16 du_pri_service_uuid = 0xffb0;
+const u16 du_ctl_uuid = 0xff00;
+const u8  du_ctl_prop = CHAR_PROP_WRITE|CHAR_PROP_NOTIFY;
+u8 du_ctl_ccc[2];
+u8 du_ctl_data[8];
+const u16 du_ota_uuid = 0xff01;
+const u8  du_ota_prop = CHAR_PROP_WRITE_WITHOUT_RSP;
+u8 du_ota_data[8];
+#endif
 
 #if(AIS_ENABLE)
 const u16 ais_pri_service_uuid = 0xfeb3;
@@ -498,20 +539,20 @@ int online_st_att_write(void *pw)
 #define MAX_SERVICE_CHANGE_ATT_NUM      (5)
 #define MAX_AIS_ATT_NUM 	            (AIS_ENABLE ? 12 : 0)
 #define MAX_ONLINE_ST_ATT_NUM 	        (ONLINE_STATUS_EN ? 4 : 0)
-
+#define MAX_DU_ATT_NUM					(DU_ENABLE?6:0)
 //---
 #define ATT_NUM_START_GAP                   (1)     // line of ATT, start from 0.
 #define ATT_NUM_START_DEVICE_INFO           (ATT_NUM_START_GAP + MAX_SERVICE_GAP)
 #define ATT_NUM_START_GATT_OTA              (ATT_NUM_START_DEVICE_INFO + MAX_SERVICE_DEVICE_INFO)
 #define ATT_NUM_START_PROVISION             (ATT_NUM_START_GATT_OTA + MAX_SERVICE_GATT_OTA)
-#define ATT_NUM_START_PROXY                 (ATT_NUM_START_PROVISION + MAX_SERVICE_PROVISION)
+#define ATT_NUM_START_PROXY                 (ATT_REPLACE_PROXY_SERVICE_EN?ATT_NUM_START_PROVISION:(ATT_NUM_START_PROVISION + MAX_SERVICE_PROVISION))
 #define ATT_NUM_START_USER_DEFINE_SET_CCC   (ATT_NUM_START_PROXY + MAX_SERVICE_PROXY)
 #define ATT_NUM_START_MI_API                (ATT_NUM_START_USER_DEFINE_SET_CCC + MAX_USER_DEFINE_SET_CCC_ATT_NUM)
 #define ATT_NUM_START_SERVICE_CHANGE        (ATT_NUM_START_MI_API + MAX_MI_ATT_NUM)
 #define ATT_NUM_START_AIS                   (ATT_NUM_START_SERVICE_CHANGE + MAX_SERVICE_CHANGE_ATT_NUM)
 #define ATT_NUM_START_ONLINE_ST             (ATT_NUM_START_AIS + MAX_AIS_ATT_NUM)
-
-#define ATTRIBUTE_TOTAL_NUM                 (ATT_NUM_START_ONLINE_ST + MAX_ONLINE_ST_ATT_NUM - 1)
+#define ATT_NUM_START_DU					(ATT_NUM_START_ONLINE_ST+MAX_ONLINE_ST_ATT_NUM)
+#define ATTRIBUTE_TOTAL_NUM                 (ATT_NUM_START_DU + MAX_DU_ATT_NUM - 1)
 
 /*const */u8 PROVISION_ATT_HANDLE = (ATT_NUM_START_PROVISION + 2);  // slave
 /*const */u8 GATT_PROXY_HANDLE = (ATT_NUM_START_PROXY + 2);  // slave
@@ -585,7 +626,7 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 	{0,&mi_sec_ctrlp_ccc_perm, 2, sizeof(mi_sec_ctrlp_ccc),(u8*)(&clientCharacterCfgUUID), 	(u8*)(mi_sec_ctrlp_ccc), 0}, /*value*/   \
     \
 	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&mi_sec_auth_prop), 0}, /*prop*/   \
-	{0,&mi_sec_auth_buf_perm, 2,sizeof(mi_sec_auth_buf),(u8*)(&mi_sec_auth_uuid),	(mi_sec_auth_buf), 0, 0}, /*value*/   \
+	{0,&mi_sec_auth_buf_perm, 2,sizeof(mi_sec_auth_buf),(u8*)(&mi_sec_auth_uuid),	(mi_sec_auth_buf), &mi_empty_writeback, 0}, /*value*/   \
 	{0,&att_perm_auth_read, 2,sizeof (mi_sec_auth_str),(u8*)(&userdesc_UUID), (u8*)(mi_sec_auth_str), 0},	\
 	{0,&mi_sec_auth_ccc_perm, 2, sizeof(mi_sec_auth_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_sec_auth_ccc), 0}, /*value*/   \
     \
@@ -595,7 +636,7 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 	{0,&mi_ota_ctrl_ccc_perm, 2, sizeof(mi_ota_ctrl_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_ota_ctrl_ccc), 0}, /*value*/   \
     \
 	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&mi_ota_data_prop), 0}, /*prop*/   \
-	{0,&mi_ota_data_buf_perm, 2,sizeof(mi_ota_data_buf),(u8*)(&mi_ota_data_uuid),	(mi_ota_data_buf), 0, 0}, /*value*/   \
+	{0,&mi_ota_data_buf_perm, 2,sizeof(mi_ota_data_buf),(u8*)(&mi_ota_data_uuid),	(mi_ota_data_buf), &mi_empty_writeback, 0}, /*value*/   \
 	{0,&att_perm_auth_read, 2,sizeof (mi_ota_data_str),(u8*)(&userdesc_UUID), (u8*)(mi_ota_data_str), 0},	\
 	{0,&mi_ota_data_ccc_perm, 2, sizeof(mi_ota_data_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(mi_ota_data_ccc), 0}, /*value*/ \
 	\
@@ -643,17 +684,27 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 	{0,&att_perm_auth_read, 2,sizeof (online_st_service_desc),(u8*)(&userdesc_UUID), (u8*)(online_st_service_desc), 0},
 #endif      
 
+#if (DU_ENABLE)
+#define MY_ATTRIBUTE_DU	\
+	{MAX_DU_ATT_NUM,&att_perm_auth_read, 2,2,(u8*)(&my_primaryServiceUUID),	(u8*)(&du_pri_service_uuid), 0},\
+	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&du_ctl_prop), 0}, /*prop*/   \
+	{0,&att_perm_auth_rdwd, 2,sizeof(du_ctl_data),(u8*)(&du_ctl_uuid),	(du_ctl_data), &du_ctl_Write, 0}, /*value*/   \
+	{0,&att_perm_auth_rdwd, 2, sizeof(du_ctl_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(du_ctl_ccc), 0}, /*value*/\
+	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&du_ota_prop), 0}, /*prop*/   \
+	{0,&att_perm_auth_rdwd, 2,sizeof(du_ota_data),(u8*)(&du_ota_uuid),	(du_ota_data), &du_fw_proc, 0} /*value*/
+#endif
+
 const attribute_t my_Attributes[] = {
 	MY_ATTRIBUTE_BASE0
 	
     /* 0011 - 0019      PB-GATT*/
     {9,&att_perm_auth_read, 2,2,(u8*)(&my_primaryServiceUUID),  (u8*)(&my_pb_gattUUID), 0},
     MY_ATTRIBUTE_PB_GATT_CHAR
-    
+#if !ATT_REPLACE_PROXY_SERVICE_EN   
     /* 001a - 0022  PROXY_GATT PART*/
     {9,&att_perm_auth_read, 2,2,(u8*)(&my_primaryServiceUUID),  (u8*)(&my_proxy_gattUUID), 0},
     MY_ATTRIBUTE_PROXY_GATT_CHAR
-
+#endif
 #if USER_DEFINE_SET_CCC_ENABLE
 	// 0023 - 0026	userdefine 
 	MY_ATTRIBUTE_USER_DEFINE_SET_CCC
@@ -673,7 +724,18 @@ const attribute_t my_Attributes[] = {
 #if (ONLINE_STATUS_EN)
     MY_ATTRIBUTE_ONLINE_STATUS
 #endif      
+
+#if (DU_ENABLE)
+	MY_ATTRIBUTE_DU
+#endif
 };
+
+#if DU_ENABLE
+int bls_du_notify_rsp(u8*p_buf,int len)
+{
+	return  bls_att_pushIndicateData(ATT_NUM_START_DU+2,p_buf,len);
+}
+#endif
 
 void my_att_init(u8 mode)
 {
@@ -681,6 +743,33 @@ void my_att_init(u8 mode)
 	bls_att_setDeviceName(device_name, sizeof(DEV_NAME));
 	bls_att_setAttributeTable ((u8 *)my_Attributes);
 #if ATT_TAB_SWITCH_ENABLE
+#if ATT_REPLACE_PROXY_SERVICE_EN	
+	if(mode == GATT_PROVISION_MODE){
+		u8 proxy_uuid[2] = SIG_MESH_PROVISION_SERVICE;
+		u8 proxy_in[2] = SIG_MESH_PROVISION_DATA_IN;
+		u8 proxy_out[2] = SIG_MESH_PROVSIION_DATA_OUT;
+		memcpy(my_pb_gattUUID, proxy_uuid, sizeof(my_pb_gattUUID));
+		memcpy(my_pb_gatt_out_UUID, proxy_out, sizeof(my_pb_gatt_out_UUID));
+		u8 out_name[] = {'P','B','G','A','T','T','-','O','U','T',0};
+		memcpy(my_pb_gattOutName, out_name, sizeof(my_pb_gattOutName));
+
+		memcpy(my_pb_gatt_in_UUID, proxy_in, sizeof(my_pb_gatt_in_UUID));
+		u8 in_name[]={'P','B','G','A','T','T','-','I','N',0};
+		memcpy(my_pb_gattInName, in_name, sizeof(in_name));
+	}else if(mode == GATT_PROXY_MODE){
+		u8 proxy_uuid[2] = SIG_MESH_PROXY_SERVICE;
+		u8 proxy_in[2] = SIG_MESH_PROXY_DATA_IN;
+		u8 proxy_out[2] = SIG_MESH_PROXY_DATA_OUT;
+		memcpy(my_pb_gattUUID, proxy_uuid, sizeof(my_pb_gattUUID));
+		memcpy(my_pb_gatt_out_UUID, proxy_out, sizeof(my_proxy_gattUUID));
+		u8 out_name[sizeof(my_pb_gattOutName)] = {'P','R','O','X','Y','-','O','U','T',0};;
+		memcpy(my_pb_gattOutName, out_name, sizeof(my_pb_gattOutName));
+
+		memcpy(my_pb_gatt_in_UUID, proxy_in, sizeof(my_pb_gatt_in_UUID));
+		u8 in_name[sizeof(my_pb_gattInName)]={'P','R','O','X','Y','-','I','N',0};
+		memcpy(my_pb_gattInName, in_name, sizeof(in_name));
+	}
+#else
     u8 unused_gattUUID[2] = SIG_MESH_ATT_UNUSED;
 	if(mode == GATT_PROVISION_MODE){
         u8 pb_gattUUID[2]=SIG_MESH_PROVISION_SERVICE;
@@ -691,6 +780,7 @@ void my_att_init(u8 mode)
 		memcpy(my_pb_gattUUID, unused_gattUUID, sizeof(my_pb_gattUUID));
 		memcpy(my_proxy_gattUUID, proxy_gattUUID, sizeof(my_proxy_gattUUID));
 	}
+#endif
 #endif 
 }
 

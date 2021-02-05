@@ -92,7 +92,7 @@
     return self.manager.state == CBCentralManagerStatePoweredOn;
 }
 
-- (void)setBluetoothCentralUpdateStateCallback:(bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback {
+- (void)setBluetoothCentralUpdateStateCallback:(_Nullable bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback {
     _bluetoothCentralUpdateStateCallback = bluetoothCentralUpdateStateCallback;
 }
 
@@ -248,6 +248,7 @@
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
         TeLogError(@"Bluetooth is not power on.")
     }
+    self.bluetoothConnectPeripheralCallback = nil;
     __weak typeof(self) weakSelf = self;
     NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
     [oprationQueue addOperationWithBlock:^{
@@ -256,15 +257,15 @@
         for (CBPeripheral *p in tem) {
             if (p.state == CBPeripheralStateConnected || p.state == CBPeripheralStateConnecting) {
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-                [weakSelf cancelConnectionPeripheral:p timeout:4-0.1 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
+                [weakSelf cancelConnectionPeripheral:p timeout:2-0.1 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
                     dispatch_semaphore_signal(semaphore);
                 }];
-                //Most provide 4 seconds to disconnect bluetooth connection
-                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
+                //Most provide 2 seconds to disconnect bluetooth connection
+                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.0));
             }
         }
         if (weakSelf.currentPeripheral) {
-            [weakSelf cancelConnectionPeripheral:weakSelf.currentPeripheral timeout:5.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
+            [weakSelf cancelConnectionPeripheral:weakSelf.currentPeripheral timeout:2.0 resultBlock:^(CBPeripheral * _Nonnull peripheral, BOOL successful) {
                 [weakSelf ressetParameters];
                 weakSelf.currentPeripheral = nil;
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -655,6 +656,7 @@
     //v3.3.0,用于过滤重复的sequenceNumber，设备连接成功则清除当前缓存的设备返回的旧的最大sequenceNumber字典。(因为所有设备断电时设备端的sequenceNumber会归零。)
     [[NSUserDefaults standardUserDefaults] setValue:@{} forKey:SigDataSource.share.meshUUID];
     [[NSUserDefaults standardUserDefaults] synchronize];
+    SigMeshLib.share.secureNetworkBeacon = nil;
     if ([peripheral isEqual:self.currentPeripheral]) {
         [self addConnectedPeripheralToLocations:peripheral];
         [self connectPeripheralFinish];

@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 public@telink-semi.com;
+ * @author	 BLE Group
  * @date     Jun. 28, 2019
  *
  * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.

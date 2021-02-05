@@ -392,6 +392,7 @@
             TeLogInfo(@"response last segment, sent ack.");
             [self sendAckForSegments:@[segment] withTtl:ttl];
         }
+        message.networkPduModel = networkPdu;
         return message;
     }else{
         // If a message is composed of multiple segments, they all need to
@@ -452,6 +453,7 @@
                 }
                 [self sendAckForSegments:allSegments withTtl:ttl];
             }
+            message.networkPduModel = networkPdu;
             return message;
         } else {
             // The Provisioner shall send block acknowledgment only if the message was
@@ -612,7 +614,7 @@
 ///               has to be not `nil`.
 ///   - ttl:      Initial Time To Live (TTL) value.
 - (void)sendAckForSegments:(NSArray <SigSegmentedMessage *>*)segments withTtl:(UInt8)ttl {
-    SigSegmentAcknowledgmentMessage *ack = [[SigSegmentAcknowledgmentMessage alloc] initForSegments:segments];
+    SigSegmentAcknowledgmentMessage *ack = [[SigSegmentAcknowledgmentMessage alloc] initForSegments:[NSArray arrayWithArray:segments]];
     ack.ivIndex = SigDataSource.share.curNetkeyModel.ivIndex;
     ack.networkKey = SigDataSource.share.curNetkeyModel;
     if ([self segmentsArrayIsComplete:segments]) {
@@ -779,11 +781,11 @@
 ///                         on Network Layer.
 /// - parameter ttl:        Initial Time To Live (TTL) value.
 - (void)sendAckForSegments:(NSArray <SigSegmentedMessage *>*)segments usingNetworkKey:(SigNetkeyModel *)networkKey withTtl:(UInt8)ttl {
-    SigSegmentAcknowledgmentMessage *ack = [[SigSegmentAcknowledgmentMessage alloc] initForSegments:segments];
+    SigSegmentAcknowledgmentMessage *ack = [[SigSegmentAcknowledgmentMessage alloc] initForSegments:[NSArray arrayWithArray:segments]];
     if ([self segmentsArrayIsComplete:segments]) {
         _acknowledgments[@(ack.destination)] = ack;
     }
-    [_networkManager.networkLayer sendLowerTransportPdu:ack ofType:SigPduType_networkPdu withTtl:ttl];
+    [self sendAckSigSegmentAcknowledgmentMessage:ack withTtl:ttl];
 }
 
 /// Returns whether all the segments were received.

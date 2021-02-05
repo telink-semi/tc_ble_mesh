@@ -126,7 +126,7 @@ int mesh_cmd_sig_private_node_identity_sts(u8 *par, int par_len, mesh_cb_fun_par
 int mesh_cmd_sig_private_node_identity_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_private_node_identity_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 void mesh_prov_para_random_proc();
-void mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts);
+int mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts);
 
 #else
 #define mesh_privacy_init            				(0)

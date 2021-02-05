@@ -56,12 +56,21 @@
 #include "proj/drivers/uart.h"
 #endif
 
-#if DEBUG_CFG_CMD_GROUP_AK_EN
-MYFIFO_INIT(blt_rxfifo, 64, 128);
+#define BLT_RX_FIFO_SIZE        (MESH_DLE_MODE ? DLE_RX_FIFO_SIZE : 64)
+#define BLT_TX_FIFO_SIZE        (MESH_DLE_MODE ? DLE_TX_FIFO_SIZE : 40)
+#if GATT_LPN_EN
+MYFIFO_INIT(blt_rxfifo, BLT_RX_FIFO_SIZE, 8); //adv_filter_proc() reserve (BLE_RCV_FIFO_MAX_CNT+2) buf while gatt connecting, mesh adv will be filtered
+MYFIFO_INIT(blt_txfifo, BLT_TX_FIFO_SIZE, 16); // set to 16, because there is no blt_notify_fifo_
 #else
-MYFIFO_INIT(blt_rxfifo, 64, 16);
+    #if DEBUG_CFG_CMD_GROUP_AK_EN
+MYFIFO_INIT(blt_rxfifo, BLT_RX_FIFO_SIZE, 128);  // some phones may not support DLE, so use the same count with no DLE.
+    #else
+MYFIFO_INIT(blt_rxfifo, BLT_RX_FIFO_SIZE, 16);  // some phones may not support DLE, so use the same count with no DLE.
+    #endif
+
+#define BLT_TX_FIFO_CNT         (MESH_BLE_NOTIFY_FIFO_EN ? 32 : 128) // set to 128 in extend mode, because there is no blt_notify_fifo_
+MYFIFO_INIT(blt_txfifo, BLT_TX_FIFO_SIZE, BLT_TX_FIFO_CNT);  // some phones may not support DLE, so use the same count with no DLE.
 #endif
-MYFIFO_INIT(blt_txfifo, 40, 32);
 
 
 
@@ -223,7 +232,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#if 0 // FEATURE_FRIEND_EN
 			fn_update_RecWin(get_RecWin_connected());
 			#endif
+			#if !DU_ENABLE
 			mesh_service_change_report();
+			#endif
 		}
 
 	//------------ connection update complete -------------------------------
@@ -416,8 +427,8 @@ void main_loop ()
 	
 	mesh_loop_process();
 	#if MI_API_ENABLE
-	telink_gatt_event_loop();
 	ev_main();
+	mi_ivi_event_loop();
 	mi_vendor_cfg_rsp_proc();
 	#if XIAOMI_MODULE_ENABLE
 	mi_api_loop_run();
@@ -445,6 +456,11 @@ void main_loop ()
 	#if MI_SWITCH_LPN_EN
 	mi_mesh_lowpower_loop();
 	#endif	
+	#if MESH_MONITOR_EN
+    if(is_provision_success() && node_binding_tick && clock_time_exceed(node_binding_tick, 3*1000*1000)){
+		monitor_mode_en = 1;
+    }
+	#endif
 }
 
 #if IRQ_TIMER1_ENABLE
@@ -500,7 +516,15 @@ void user_init()
 	usb_id_init();
 	usb_log_init();
 	usb_dp_pullup_en (1);  //open USB enum
+	#if 0
+	// use to create the certify part .
+	static u32 A_debug_simu =0x55;
+	irq_disable();
+	A_debug_simu = mi_mesh_otp_program_simulation();
+	while(1);
+	#else
 
+	#endif
 	////////////////// BLE stack initialization ////////////////////////////////////
 #if (DUAL_VENDOR_EN)
 	mesh_common_retrieve(FLASH_ADR_PROVISION_CFG_S);
@@ -517,6 +541,9 @@ void user_init()
 	blc_ll_initBasicMCU();                      //mandatory
 	blc_ll_initStandby_module(tbl_mac);				//mandatory
 #endif
+#if (EXTENDED_ADV_ENABLE)
+    mesh_blc_ll_initExtendedAdv();
+#endif
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
 
@@ -529,6 +556,7 @@ void user_init()
 	#endif
 	blc_pm_setDeepsleepRetentionThreshold(50, 30);
 	blc_pm_setDeepsleepRetentionEarlyWakeupTiming(400);
+	bls_pm_registerFuncBeforeSuspend(app_func_before_suspend);
 #else
 	bls_pm_setSuspendMask (SUSPEND_DISABLE);//(SUSPEND_ADV | SUSPEND_CONN)
 #endif
@@ -538,6 +566,9 @@ void user_init()
 	blc_l2cap_register_handler (app_l2cap_packet_receive); // define the l2cap part 
 	///////////////////// USER application initialization ///////////////////
 
+#if EXTENDED_ADV_ENABLE
+	/*u8 status = */mesh_blc_ll_setExtAdvParamAndEnable();
+#endif
 	u8 status = bls_ll_setAdvParam( ADV_INTERVAL_MIN, ADV_INTERVAL_MAX, \
 			 	 	 	 	 	     ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, \
 			 	 	 	 	 	     0,  NULL,  BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
@@ -618,6 +649,8 @@ void user_init()
 	my_att_init (provision_mag.gatt_mode);
 	blc_att_setServerDataPendingTime_upon_ClientCmd(10);
 #if MI_API_ENABLE
+	mem_pool_init();
+
     #if DUAL_VENDOR_EN
     if(DUAL_VENDOR_ST_ALI != provision_mag.dual_vendor_st) // mac have been set to ali mode before.
     #endif
@@ -662,7 +695,9 @@ void user_init()
 		blt_rxfifo.num = 64;
 	}
 #endif
-
+#if MESH_MONITOR_EN
+	monitor_mode_en = is_provision_success();
+#endif
     CB_USER_INIT();
 
 
@@ -689,16 +724,17 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 	blc_ll_recoverDeepRetention();
 
 	DBG_CHN0_HIGH;    //debug
-	
-    light_pwm_init();
+    // should enable IRQ here, because it may use irq here, for example BLE connect which need start IRQ quickly.
+    irq_enable();
+
+//    light_pwm_init();   // cost about 1.5ms
+
 #if (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();
 #endif
 #if ADC_ENABLE
 	adc_drv_init();
 #endif
-    // should enable IRQ here, because it may use irq here, for example BLE connect.
-    // irq_enable();
 }
 #endif
 

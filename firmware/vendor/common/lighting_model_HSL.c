@@ -44,23 +44,26 @@ s16 get_Hue_delta_value(u16 hue_target, u16 hue_present) // hue is a circular pa
 	u16 Tmp_Current_hue = hue_present;
 	u32 Tmp_caulate_val = 0;
 	if(hue_target > Tmp_Current_hue){
-		Tmp_caulate_val = Tmp_Current_hue + 0x8000;
+		Tmp_caulate_val = Tmp_Current_hue + HSL_HUE_CNT_TOTAL_HALF;
 		if(hue_target > Tmp_caulate_val){
-			result = (hue_target - 65535) + (0 - Tmp_Current_hue);
+			result = (hue_target - HSL_HUE_CNT_TOTAL) + (0 - Tmp_Current_hue);  // must be zero not HSL_HUE_MIN
 		}else{
 			result = hue_target - Tmp_Current_hue ;
 		}
 	}else{
-		Tmp_caulate_val = hue_target + 0x8000;
+		Tmp_caulate_val = hue_target + HSL_HUE_CNT_TOTAL_HALF;
 		if(Tmp_Current_hue > Tmp_caulate_val){
-			result = (65535 - Tmp_Current_hue) + (hue_target);
+			result = (HSL_HUE_CNT_TOTAL - Tmp_Current_hue) + (hue_target - 0);  // must be zero not HSL_HUE_MIN
 		}else{
 			result =  hue_target - Tmp_Current_hue;
 		}
 	}
 
-	//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"Current_hsl_hue 0x%4x\r\n", Tmp_Current_hue);
-	//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"Set_hsl_hue 0x%4x\r\n", hue_target);
+    #if 0
+	LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"Current_hsl_hue 0x%04x", Tmp_Current_hue);
+	LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"Set_hsl_hue 0x%04x", hue_target);
+	LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"Delta_hsl_hue %d\r\n", result);
+	#endif
 
 	return result;
 }

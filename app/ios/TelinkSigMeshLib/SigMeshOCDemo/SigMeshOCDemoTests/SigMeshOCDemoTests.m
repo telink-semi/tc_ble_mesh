@@ -62,11 +62,11 @@
 
 /// 测试解密共享文件夹的json文件`TelinkSDKMeshJsonData`
 - (void)testGetDecryptTelinkSDKMeshJsonData {
-//    NSLog(@"%@",SigLogger.share.getDecryptTelinkSDKMeshJsonData);
-    
-//    NSString *key = [[NSBundle mainBundle] bundleIdentifier];
-    NSString *key = @"com.Ledvance.smartapp";
-    NSLog(@"%@",[SigLogger.share getDecryptTelinkSDKMeshJsonDataWithPassword:key]);
+    //1.
+    NSLog(@"%@",SigLogger.share.getDecryptTelinkSDKMeshJsonData);
+    //2.
+//    NSString *key = @"com.telink.TelinkSDKMeshJsonData";
+//    NSLog(@"%@",[SigLogger.share getDecryptTelinkSDKMeshJsonDataWithPassword:key]);
 }
 
 /// 测试SigProvisionerModel创建及Unicast分配
@@ -105,4 +105,39 @@
     }
 }
 
+- (void)testSubnetBridge {
+    SigSubnetBridgeStatus *status1 = [[SigSubnetBridgeStatus alloc] init];
+    SigSubnetBridgeModel *model = [[SigSubnetBridgeModel alloc] initWithDirections:SigDirectionsFieldValues_bidirectional netKeyIndex1:0x001 netKeyIndex2:0x000 address1:0x0100 address2:0x0004];
+    SigSubnetBridgeStatus *status2 = [[SigSubnetBridgeStatus alloc] initWithSubnetBridge:model];
+    SigSubnetBridgeStatus *status3 = [[SigSubnetBridgeStatus alloc] initWithParameters:status2.parameters];
+    NSLog(@"status1=%@",status1.parameters);
+    NSLog(@"status2=%@",status2.parameters);
+    NSLog(@"status3=%@",status3.parameters);
+    
+    SigBridgeSubnetModel *model1 = [[SigBridgeSubnetModel alloc] init];
+    SigBridgeSubnetModel *model2 = [[SigBridgeSubnetModel alloc] initWithNetKeyIndex1:0x001 netKeyIndex2:0x000];
+    SigBridgeSubnetModel *model3 = [[SigBridgeSubnetModel alloc] initWithParameters:model2.parameters];
+    NSLog(@"model1=%@",model1.parameters);
+    NSLog(@"model2=%@",model2.parameters);
+    NSLog(@"model3=%@",model3.parameters);
+}
+
+- (void)testSigPeriodModel {
+    SigPeriodModel *model1 = [[SigPeriodModel alloc] init];
+    model1.numberOfSteps = 15;
+    model1.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_hundredsOfMilliseconds];
+    NSLog(@"model1=%f",[LibTools getIntervalWithSigPeriodModel:model1]);
+    SigPeriodModel *model2 = [[SigPeriodModel alloc] init];
+    model2.numberOfSteps = 25;
+    model2.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_seconds];
+    NSLog(@"model2=%f",[LibTools getIntervalWithSigPeriodModel:model2]);
+    SigPeriodModel *model3 = [[SigPeriodModel alloc] init];
+    model3.numberOfSteps = 35;
+    model3.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_tensOfSeconds];
+    NSLog(@"model3=%f",[LibTools getIntervalWithSigPeriodModel:model3]);
+    SigPeriodModel *model4 = [[SigPeriodModel alloc] init];
+    model4.numberOfSteps = 45;
+    model4.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_tensOfMinutes];
+    NSLog(@"model4=%f",[LibTools getIntervalWithSigPeriodModel:model4]);
+}
 @end

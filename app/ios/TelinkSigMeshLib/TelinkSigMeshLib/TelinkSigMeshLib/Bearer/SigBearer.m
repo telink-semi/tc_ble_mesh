@@ -671,9 +671,13 @@
 - (void)meshConnectTimeout {
     TeLogDebug(@"");
     __weak typeof(self) weakSelf = self;
-    [self stopMeshConnectWithComplete:^(BOOL successful) {
+    if (self.isAutoReconnect) {
         [weakSelf startMeshConnectFail];
-    }];
+    } else {
+        [self stopMeshConnectWithComplete:^(BOOL successful) {
+            [weakSelf startMeshConnectFail];
+        }];
+    }
 }
 
 - (void)startAutoConnect {
@@ -792,7 +796,9 @@
 //    }
     __weak typeof(self) weakSelf = self;
     [self closeWithResult:^(BOOL successful) {
-        [weakSelf performSelectorOnMainThread:@selector(startAutoConnect) withObject:nil waitUntilDone:YES];
+        if (weakSelf.isAutoReconnect) {
+            [weakSelf performSelectorOnMainThread:@selector(startAutoConnect) withObject:nil waitUntilDone:YES];
+        }
     }];
 }
 

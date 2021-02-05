@@ -44,6 +44,9 @@
 
 #define PM_DCDC_DELAY_DURATION      		1000
 
+#define EARLYWAKEUP_TIME_MS_DEEP	2
+#define	tick_32k_tick_per_ms		32
+#define PM_EMPTYRUN_TIME_US			2
 
 
 #define PM_LONG_SLEEP_WAKEUP_EN			    0 //if user need to make MCU sleep for a long time that is more than 268s, this macro need to be enabled and use "pm_long_sleep_wakeup" function
@@ -162,7 +165,7 @@ extern _attribute_aligned_(4) pm_tim_recover_t			pm_timRecover;
 #endif
 
 
-typedef int (*suspend_handler_t)(void);
+typedef int (*suspend_handler_t)(unsigned int wakeup_tick);
 extern  suspend_handler_t 		 func_before_suspend;
 
 typedef void (*check_32k_clk_handler_t)(void);
@@ -369,4 +372,14 @@ void soft_reboot_dly13ms_use24mRC(void);
  * @return     indicate whether the cpu is wake up successful.
  */
 int pm_long_sleep_wakeup (SleepMode_TypeDef sleep_mode, SleepWakeupSrc_TypeDef wakeup_src, unsigned int  SleepDurationUs);
+
 #endif
+/**
+ * @brief      This function servers to wake up the cpu from sleep mode.
+ * @param[in]  sleep_mode - sleep mode type select.
+ * @param[in]  wakeup_src - wake up source select.
+ * @param[in]  wakeup_tick - the time of sleep.unit is 31.25us,1ms = 32.
+ * @return     indicate whether the cpu is wake up successful.
+ */
+int cpu_long_sleep_wakeup(SleepMode_TypeDef sleep_mode,  SleepWakeupSrc_TypeDef wakeup_src, unsigned int  wakeup_tick);
+
