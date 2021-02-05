@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     SceneListActivity.java 
+ * @file SceneListActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -28,24 +28,22 @@ import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.telink.ble.mesh.core.message.config.ConfigStatus;
-import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.model.Scene;
-import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
-import com.telink.ble.mesh.ui.adapter.SceneListAdapter;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
-import com.telink.ble.mesh.core.message.config.ConfigMessage;
+import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.scene.SceneDeleteMessage;
 import com.telink.ble.mesh.core.message.scene.SceneRegisterStatusMessage;
+import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
+import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.Scene;
+import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
+import com.telink.ble.mesh.ui.adapter.SceneListAdapter;
 import com.telink.ble.mesh.util.MeshLogger;
-
 
 import java.util.List;
 
@@ -147,7 +145,7 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
     }
 
     private void deleteNextDevice() {
-        if (deleteIndex > tarScene.states.size() - 1) {
+        if (tarScene == null || deleteIndex > tarScene.states.size() - 1) {
             sceneList.remove(tarScene);
             TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getApplicationContext());
             tarScene = null;
@@ -157,9 +155,8 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
         } else {
             NodeInfo deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo()
                     .getDeviceByMeshAddress(tarScene.states.get(deleteIndex).address);
-
             // remove offline device
-            if (deviceInfo.getOnOff() == -1) {
+            if (deviceInfo == null || deviceInfo.getOnOff() == -1) {
 //                tarScene.deleteDevice(deviceInfo);
                 deleteIndex++;
                 deleteNextDevice();
@@ -201,6 +198,7 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
 
     @Override
     public void performed(Event<String> event) {
+        if (tarScene == null) return;
         if (event.getType().equals(SceneRegisterStatusMessage.class.getName())) {
             StatusNotificationEvent statusEvent = (StatusNotificationEvent) event;
             NotificationMessage notificationMessage = statusEvent.getNotificationMessage();

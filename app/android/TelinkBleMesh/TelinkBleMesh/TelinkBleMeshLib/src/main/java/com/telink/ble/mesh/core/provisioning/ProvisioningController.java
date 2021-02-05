@@ -171,6 +171,9 @@ public class ProvisioningController {
 
     private static final long TIMEOUT_PROVISIONING = 60 * 1000;
 
+    /**
+     * certificate record fragment size
+     */
     private static final int MAX_FRAGMENT_SIZE = 20;
 
     private Handler delayHandler;

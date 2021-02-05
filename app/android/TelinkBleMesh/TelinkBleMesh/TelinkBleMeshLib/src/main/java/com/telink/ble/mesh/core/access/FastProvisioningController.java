@@ -77,7 +77,7 @@ public class FastProvisioningController {
     /**
      * mesh get address timeout
      */
-    private static final int FAST_SCANNING_TIMEOUT = 1500;
+    private static final int FAST_SCANNING_TIMEOUT = 3500;
 
     /**
      * confirm check timeout

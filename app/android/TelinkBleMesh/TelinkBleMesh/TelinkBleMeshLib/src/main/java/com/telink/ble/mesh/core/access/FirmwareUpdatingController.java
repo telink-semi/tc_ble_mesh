@@ -529,7 +529,7 @@ public class FirmwareUpdatingController {
                     executeUpdatingAction();
                 }
             } else {
-                onUpdatingFail(STATE_FAIL, "all node failed when executing action");
+                onUpdatingFail(STATE_FAIL, "all nodes failed when executing action");
             }
         } else {
             int meshAddress = nodes.get(nodeIndex).getMeshAddress();

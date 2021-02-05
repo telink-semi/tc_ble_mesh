@@ -51,6 +51,7 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
+import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
@@ -60,6 +61,7 @@ import com.telink.ble.mesh.ui.adapter.DeviceAutoProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -155,6 +157,8 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
 
 
         System.arraycopy(serviceData, 0, deviceUUID, 0, uuidLen);
+        final int oobInfo = MeshUtils.bytes2Integer(serviceData, 16, 2, ByteOrder.LITTLE_ENDIAN);
+
         NetworkingDevice localNode = getNodeByUUID(deviceUUID);
         if (localNode != null) {
             MeshLogger.d("device exists");
@@ -171,6 +175,9 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         }
 
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice.device, deviceUUID, address);
+        if (AppSettings.DRAFT_FEATURES_ENABLE) {
+            provisioningDevice.setOobInfo(oobInfo);
+        }
 
         // check if oob exists
         byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
@@ -196,6 +203,9 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
             NetworkingDevice device = new NetworkingDevice(nodeInfo);
             device.bluetoothDevice = advertisingDevice.device;
             device.state = NetworkingState.PROVISIONING;
+            if (AppSettings.DRAFT_FEATURES_ENABLE) {
+                device.oobInfo = oobInfo;
+            }
             devices.add(device);
             mListAdapter.notifyDataSetChanged();
         } else {
@@ -278,6 +288,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
 
         NetworkingDevice pvDevice = getProcessingNode();
         pvDevice.state = NetworkingState.PROVISION_FAIL;
+
         pvDevice.addLog("Provisioning", event.getDesc());
         mListAdapter.notifyDataSetChanged();
     }

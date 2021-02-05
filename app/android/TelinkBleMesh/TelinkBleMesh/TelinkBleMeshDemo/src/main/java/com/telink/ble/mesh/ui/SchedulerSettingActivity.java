@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     SchedulerSettingActivity.java 
+ * @file SchedulerSettingActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -33,27 +33,26 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.model.MeshInfo;
-import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.model.UnitConvert;
-import com.telink.ble.mesh.ui.adapter.BaseSelectableListAdapter;
-import com.telink.ble.mesh.ui.adapter.SelectableListAdapter;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.scheduler.SchedulerActionSetMessage;
 import com.telink.ble.mesh.core.message.scheduler.SchedulerActionStatusMessage;
 import com.telink.ble.mesh.core.message.time.TimeSetMessage;
 import com.telink.ble.mesh.core.message.time.TimeStatusMessage;
+import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.Scheduler;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
+import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.UnitConvert;
+import com.telink.ble.mesh.ui.adapter.BaseSelectableListAdapter;
+import com.telink.ble.mesh.ui.adapter.SelectableListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
-
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -357,8 +356,11 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
                 break;
             case R.id.rb_action_scene:
                 action = 0x02;
+                if (TextUtils.isEmpty(et_scene.getText().toString())) {
+                    toastMsg("input scene id when select recall scene id");
+                    return;
+                }
                 sceneId = Integer.parseInt(et_scene.getText().toString());
-
                 break;
 
             default:
@@ -573,7 +575,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
     public void performed(Event<String> event) {
         String eventType = event.getType();
         if (eventType.equals(TimeStatusMessage.class.getName())) {
-            TimeStatusMessage timeStatusMessage = (TimeStatusMessage) ((StatusNotificationEvent)event).getNotificationMessage().getStatusMessage();
+            TimeStatusMessage timeStatusMessage = (TimeStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
 
             MeshLogger.d("time status: " + timeStatusMessage.getTaiSeconds());
             runOnUiThread(new Runnable() {

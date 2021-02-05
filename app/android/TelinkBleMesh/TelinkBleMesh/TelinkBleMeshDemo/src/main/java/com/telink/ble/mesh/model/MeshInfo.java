@@ -350,6 +350,9 @@ public class MeshInfo implements Serializable, Cloneable {
         }
     }
 
+    public void resetProvisionIndex(int index) {
+        this.provisionIndex = index;
+    }
 
     @Override
     public Object clone() throws CloneNotSupportedException {

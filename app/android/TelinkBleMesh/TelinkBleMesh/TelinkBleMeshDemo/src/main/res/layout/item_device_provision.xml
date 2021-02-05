@@ -67,7 +67,7 @@
             android:layout_marginLeft="8dp"
             android:layout_weight="1"
             android:text="device connected"
-            android:textSize="11sp" />
+            android:textSize="10sp" />
 
         <ProgressBar
             android:id="@+id/pb_provision"

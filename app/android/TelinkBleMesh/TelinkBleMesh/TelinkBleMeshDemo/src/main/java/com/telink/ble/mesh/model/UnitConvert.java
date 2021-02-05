@@ -47,8 +47,16 @@ public final class UnitConvert {
      * @return lum 0-100
      */
     public static int level2lum(short level) {
-
-        int re = (((level + 32768) * 100) / 65535);
+        int lightness = level + 32768;
+        int fix = 0;
+        if (lightness != 0) {
+            final int levelUnit = 65535 / 100 / 2;
+            if (lightness < levelUnit + 2) {
+                lightness = levelUnit * 2;
+            }
+            fix = levelUnit;
+        }
+        int re = (((lightness + fix) * 100) / 65535);
         MeshLogger.log("level2lum: " + level + " re: " + re);
         return re;
     }

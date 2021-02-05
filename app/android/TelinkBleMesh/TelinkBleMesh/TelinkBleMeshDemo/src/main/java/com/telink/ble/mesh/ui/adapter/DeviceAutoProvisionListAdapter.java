@@ -30,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
@@ -61,6 +62,7 @@ public class DeviceAutoProvisionListAdapter extends BaseRecyclerViewAdapter<Devi
         holder.tv_state = itemView.findViewById(R.id.tv_state);
         holder.iv_device = itemView.findViewById(R.id.iv_device);
         holder.pb_provision = itemView.findViewById(R.id.pb_provision);
+        holder.iv_cert = itemView.findViewById(R.id.iv_cert);
         return holder;
     }
 
@@ -87,7 +89,11 @@ public class DeviceAutoProvisionListAdapter extends BaseRecyclerViewAdapter<Devi
             deviceDesc += " - mac: " + nodeInfo.macAddress;
         }
         holder.tv_device_info.setText(deviceDesc);
+
         holder.tv_state.setText(device.state.desc);
+
+        boolean certVisible = MeshUtils.isCertSupported(device.oobInfo);
+        holder.iv_cert.setVisibility(certVisible ? View.VISIBLE : View.GONE);
 
         if (device.state == NetworkingState.PROVISIONING || device.state == NetworkingState.BINDING
                 || device.state == NetworkingState.TIME_PUB_SETTING) {
@@ -97,6 +103,7 @@ public class DeviceAutoProvisionListAdapter extends BaseRecyclerViewAdapter<Devi
             if (device.state == NetworkingState.PROVISION_FAIL) {
                 holder.pb_provision.setSecondaryProgress(100);
                 holder.pb_provision.setProgress(0);
+                holder.tv_state.setText(device.logs.get(device.logs.size() - 1).logMessage);
             } else if (device.nodeInfo.bound) {
                 holder.pb_provision.setProgress(100);
                 holder.pb_provision.setSecondaryProgress(0);
@@ -109,7 +116,7 @@ public class DeviceAutoProvisionListAdapter extends BaseRecyclerViewAdapter<Devi
 
     class ViewHolder extends RecyclerView.ViewHolder {
         // device icon
-        public ImageView iv_device;
+        public ImageView iv_device, iv_cert;
         // device mac, provisioning state
         public TextView tv_device_info, tv_state;
         ProgressBar pb_provision;

@@ -5,8 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/colorBg"
     android:orientation="vertical"
-    android:padding="8dp"
-    android:paddingBottom="24dp">
+    android:padding="8dp">
 
 
     <LinearLayout
@@ -172,6 +171,9 @@
                 android:progress="10" />
         </LinearLayout>
 
+        <View
+            android:layout_width="0dp"
+            android:layout_height="24dp" />
     </LinearLayout>
 
 </ScrollView>
