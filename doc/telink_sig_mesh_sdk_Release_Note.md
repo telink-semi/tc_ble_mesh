@@ -1,3 +1,53 @@
+## V3.3.2
+### Bug Fixes
+
+* (iOS APP) fix bug: When the IVI of the app is different from that of device, decryption will fail because IVI of the device was not be used. all customers need to update to the iOS version.
+* (iOS APP) fix bug: fail to disable log_saving function.
+
+### Features	
+
+* (Firmware) update flash driver(synchronized with "825x_BLE_SDK_3_4_1 patch 001"). must be updated if the functions of getting flash UID or flah protection were used.
+* (Firmware) add extend_ADV mode for 8258 LPN. current SDK support extend_ADV mode for 8258 mesh, 8258 gateway and 8258 LPN.
+* (Android APP) support multiple network keys and application keys.
+* (iOS APP) add API of 'defaultPublishPeriodModel' to set default publish parameters.
+
+### Performance Improvements
+
+* (Android APP) change provisioner's unicast address range from 0x0100 to 0x0400.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+
+### Bug Fixes
+
+* (iOS APP) fix bug: 修复bug：当app的ivi和节点的不一致时，SDK未根据设备端返回的ivi进行解密导致解密失败。所有客户都需要升级iOS版本。
+* (iOS APP) fix bug: SDK的日志保存功能无法关闭。
+
+### Features
+
+* (Firmware) 更新 flash driver 同步到825x_BLE_SDK_3_4_1 patch 001。如客户需要读取flash UID 或者 使用保护功能，请务必更新。
+* (Firmware) 增加支持 8258 LPN 的扩展广播包功能。当前SDK支持 8258 mesh，8258 gateway和8258 LPN的扩展广播包功能。
+* (Android APP) 增加支持多个network key 和 application key的应用。
+* (iOS APP) 增加用于配置 默认publish参数的API: defaultPublishPeriodModel。
+
+### Performance Improvements
+
+* (Android APP) 修改provisioner的每一个组网地址段的范围，从 0x0100 改为 0x0400。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
 ## V3.3.1
 ### Bug Fixes
 
