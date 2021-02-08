@@ -56,6 +56,11 @@
 #include "proj/drivers/uart.h"
 #endif
 
+#if DU_ENABLE
+#include "vendor/common/user_du.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
+#endif
+
 #define BLT_RX_FIFO_SIZE        (MESH_DLE_MODE ? DLE_RX_FIFO_SIZE : 64)
 #define BLT_TX_FIFO_SIZE        (MESH_DLE_MODE ? DLE_TX_FIFO_SIZE : 40)
 #if GATT_LPN_EN
@@ -421,11 +426,22 @@ void main_loop ()
 
 	////////////////////////////////////// UI entry /////////////////////////////////
 	//  add spp UI task:
+	// du proc
+	#if DU_ENABLE
+	du_loop_proc();
+	#endif
+	#if !DU_LPN_EN
 	proc_ui();
 	proc_led();
 	factory_reset_cnt_check();
-	
+	#endif
+	#if DU_LPN_EN
+	if(is_provision_success()||mi_mesh_get_state()){
+		mesh_loop_process();
+	}
+	#else
 	mesh_loop_process();
+	#endif
 	#if MI_API_ENABLE
 	ev_main();
 	mi_ivi_event_loop();
@@ -453,7 +469,7 @@ void main_loop ()
 	#if DEBUG_IV_UPDATE_TEST_EN
 	iv_index_test_button_firmware();
 	#endif
-	#if MI_SWITCH_LPN_EN
+	#if (MI_SWITCH_LPN_EN||DU_LPN_EN)
 	mi_mesh_lowpower_loop();
 	#endif	
 	#if MESH_MONITOR_EN
@@ -549,7 +565,7 @@ void user_init()
 
 #if (BLE_REMOTE_PM_ENABLE)
 	blc_ll_initPowerManagement_module();        //pm module:      	 optional
-	#if MI_SWITCH_LPN_EN
+	#if (MI_SWITCH_LPN_EN||DU_LPN_EN)
 	bls_pm_setSuspendMask (SUSPEND_DISABLE);
 	#else
 	bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
@@ -663,7 +679,7 @@ void user_init()
 	#if 0 // XIAOMI_MODULE_ENABLE
 	test_mi_api_part(); // just for test
 	#endif
-	#if MI_SWITCH_LPN_EN
+	#if (MI_SWITCH_LPN_EN||DU_LPN_EN) // use 16M will save power
 	mi_mesh_switch_sys_mode(16000000);
 	mi_mesh_sleep_init();
 	#endif
@@ -690,6 +706,11 @@ void user_init()
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 200*1000);
 #endif
+
+#if DU_ENABLE
+	du_ui_proc_init()
+#endif
+
 #if DEBUG_CFG_CMD_GROUP_AK_EN
 	if(blt_rxfifo.num >64){
 		blt_rxfifo.num = 64;
@@ -709,7 +730,12 @@ _attribute_ram_code_ void user_init_deepRetn(void)
     blc_app_loadCustomizedParameters();
 	blc_ll_initBasicMCU();   //mandatory
 	rf_set_power_level_index (my_rf_power_index);
-#if MI_SWITCH_LPN_EN
+	blc_ll_recoverDeepRetention();
+
+	DBG_CHN0_HIGH;    //debug
+    // should enable IRQ here, because it may use irq here, for example BLE connect which need start IRQ quickly.
+    irq_enable();
+	#if (MI_SWITCH_LPN_EN||DU_LPN_EN)
 		if(bltPm.appWakeup_flg){ // it may have the rate not response by the event tick part ,so we should use the distance
 			if(mi_mesh_sleep_time_exceed_adv_iner()){
 				mi_mesh_sleep_init();
@@ -719,14 +745,10 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 			mi_mesh_sleep_init();
 			bls_pm_setSuspendMask (SUSPEND_DISABLE);
 		}
-#endif
-
-	blc_ll_recoverDeepRetention();
-
-	DBG_CHN0_HIGH;    //debug
-    // should enable IRQ here, because it may use irq here, for example BLE connect which need start IRQ quickly.
-    irq_enable();
-
+	#endif
+	#if DU_ENABLE
+	du_ui_proc_init_deep();
+	#endif
 //    light_pwm_init();   // cost about 1.5ms
 
 #if (HCI_ACCESS == HCI_USE_UART)	//uart

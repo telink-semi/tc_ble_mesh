@@ -555,14 +555,14 @@ u8 set_pro_record_request(pro_trans_record_request *p_rec_req ,u16 rec_id,u16 fr
 	return 1;
 }
 
-u8 set_pro_record_rsp(pro_trans_record_rsp *p_rec_rsp,u8 sts,u16 rec_id,u16 frag_offset,u16 total,u8 *p_data)
+u8 set_pro_record_rsp(pro_trans_record_rsp *p_rec_rsp,u8 sts,u16 rec_id,u16 frag_offset,u16 total,u8 *p_data,u16 data_len)
 {
 	p_rec_rsp->header.type = PRO_REC_RSP;
 	p_rec_rsp->sts = sts;
 	p_rec_rsp->rec_id = swap_u16_data(rec_id);
 	p_rec_rsp->frag_off = swap_u16_data(frag_offset);
 	p_rec_rsp->total_len = swap_u16_data(total);
-	memcpy(p_rec_rsp->data , p_data, total);
+	memcpy(p_rec_rsp->data , p_data, data_len);
 	return 1;
 }
 
@@ -1090,31 +1090,29 @@ void mesh_set_pro_auth(u8 *p_auth, u8 len)
 	return;
 }
 
-u8 mesh_prov_oob_auth_data(mesh_prov_oob_str *p_prov_oob)
+int mesh_prov_oob_auth_data(mesh_prov_oob_str *p_prov_oob)
 {
 	
 	pro_trans_start *p_start = &(p_prov_oob->start);
-	u8 ret =0;
+	int err = -1;
 	if(p_start->authMeth == MESH_NO_OOB) {
 		memset(pro_auth ,0,sizeof(pro_auth));
 		#if WIN32
 		memset(gatt_pro_auth, 0x00, sizeof(gatt_pro_auth));
 		#endif
-		ret = 1;
+		err = 0;
 	}else if (p_start->authMeth == MESH_STATIC_OOB){
 	#if WIN32
         u8 prov_oob_static[32] = {0}; // must 32 byte for sha256 output.
-		#if VC_APP_ENABLE
-		int err = -1;
 		err = get_auth_value_by_uuid(gatt_provision_mag.device_uuid, prov_oob_static);
-		#endif		
-		memcpy(gatt_pro_auth, prov_oob_static, 16);
+		if(0 == err){
+			memcpy(gatt_pro_auth, prov_oob_static, 16);
+		}
 	#else
 		#if PTS_TEST_EN
 		mesh_set_pro_auth(con_prov_static_oob,sizeof(con_prov_static_oob));
 		#endif
 	#endif 
-		ret =1;
 	}else if (p_start->authMeth == MESH_OUTPUT_OOB){
 		// need to input the para part 
 		if(p_prov_oob->oob_outAct == MESH_OUT_ACT_BLINK){
@@ -1124,11 +1122,11 @@ u8 mesh_prov_oob_auth_data(mesh_prov_oob_str *p_prov_oob)
 			memcpy(tmp_auth,(u8 *)(&prov_oob_output_auth),4);
 			endianness_swap_u32(tmp_auth);
 			memcpy(pro_auth+12,tmp_auth,4);
-			ret = 1;
+			err = 0;
 		}else if (p_prov_oob->oob_outAct == MESH_OUT_ACT_NUMBERIC){
 			memset(pro_auth,0,sizeof(pro_auth));
 			pro_auth[15]= prov_auth_val;
-			ret = 1;
+			err = 0;
 		}else if (p_prov_oob->oob_outAct == MESH_OUT_ACT_ALPHA){
 				
 		}
@@ -1141,12 +1139,12 @@ u8 mesh_prov_oob_auth_data(mesh_prov_oob_str *p_prov_oob)
 			mesh_set_pro_auth((u8 *)const_mesh_auth_input_no_oob,sizeof(const_mesh_auth_input_no_oob));
 		}
 		
-		ret =1;
+		err = 0;
 	}
-	return ret ;
+	return err ;
 }
 
-
+#define FORCE_START_WITH_NO_OOB		0
 u8 set_start_para_by_capa(mesh_prov_oob_str *p_prov_oob)
 {
 	pro_trans_start *p_start = &(p_prov_oob->start);
@@ -1156,6 +1154,9 @@ u8 set_start_para_by_capa(mesh_prov_oob_str *p_prov_oob)
 	if(p_start->authMeth == MESH_NO_OOB || p_start->authMeth == MESH_STATIC_OOB){
 		p_start->authAct =0;
 		p_start->authSize = 0;
+#if FORCE_START_WITH_NO_OOB
+		p_start->authMeth = MESH_NO_OOB;
+#endif
 	}else if (p_start->authMeth == MESH_OUTPUT_OOB ){
 		p_start->authAct = p_prov_oob->oob_outAct ;
 		p_start->authSize = p_prov_oob->oob_outsize ;
@@ -1392,7 +1393,12 @@ int provisionee_gatt_rcv_rec_req_rsp(mesh_pro_data_structer *p_notify,mesh_pro_d
 	u8 cert_buf[MAX_PROV_FRAG_SIZE*2];
 	u16 cert_len;
 	cert_item_rsp(p_req->rec_id,p_req->frag_off,p_req->frag_max_size,cert_buf,&cert_len);
-	set_pro_record_rsp(p_rsp,RECORD_PROV_SUC,p_req->rec_id,p_req->frag_off,cert_len,cert_buf);
+	/*
+	set_pro_record_rsp(p_rsp,RECORD_PROV_SUC,p_req->rec_id,p_req->frag_off,
+						use_cert_id_get_len(p_req->rec_id),cert_len,cert_buf);
+	*/
+	set_pro_record_rsp(p_rsp,RECORD_PROV_SUC,p_req->rec_id,p_req->frag_off,
+						use_cert_id_get_len(p_req->rec_id),cert_buf,cert_len);
 	return (sizeof(pro_trans_record_rsp)- MAX_PROV_FRAG_SIZE + cert_len);
 }
 	#endif
@@ -1655,7 +1661,7 @@ void mesh_adv_provision_retry()
 		prov_para.cmd_send_start_tick = clock_time();
 	}
 	if(	prov_para.cmd_retry_flag &&
-		clock_time_exceed(prov_para.cmd_send_tick ,MESH_LONG_PACKET_EN ? (300*1000) : (100*1000))){
+		clock_time_exceed(prov_para.cmd_send_tick ,EXTENDED_ADV_ENABLE ? (300*1000) : (100*1000))){
 		
 		if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)>2){//make sure enough buf
 			return;
@@ -2769,7 +2775,7 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 				if(prov_oob.start.pubKey == MESH_PUB_KEY_WITH_OOB){
 					// not need to exchange the part of the pubkey ,just need to send the pubkey
 					// only need to send the comfirm command 
-					if(!mesh_prov_oob_auth_data(&prov_oob)){
+					if(mesh_prov_oob_auth_data(&prov_oob)){
 					    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"prov oob is invalid",0);
 						return ;
 					}
@@ -2817,7 +2823,7 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 					#endif
 					SET_TC_FIFO(TSCRIPT_MESH_RX,(u8 *)(&rcv_pb),rcv_pb.transStart.total_len+11);
 					LOG_MSG_INFO(TL_LOG_PROVISION, 0, 0,"rcv dev pub key:",0);
-					if(!mesh_prov_oob_auth_data(&prov_oob)){
+					if(mesh_prov_oob_auth_data(&prov_oob)){
 					    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"prov oob info is invalid",0);
 						return ;
 					}
@@ -3139,7 +3145,7 @@ void mesh_prov_proc_loop()
 #if WIN32 
 STATIC_ASSERT(sizeof(VC_node_info) <= 4096*128);
 #else
-	#if DEBUG_CFG_CMD_GROUP_AK_EN
+	#if VC_NODE_INFO_MULTI_SECTOR_EN
 STATIC_ASSERT(sizeof(VC_node_info) <= 4096*2);	// because only one sector for it now
 	#else
 STATIC_ASSERT(sizeof(VC_node_info) <= 4096);	// because only one sector for it now
@@ -3152,7 +3158,7 @@ void save_vc_node_info_all()
     // erase all the store vc node info part 
     // erase_vc_node_info(); // no need erase, write directly later
 #else
-	#if DEBUG_CFG_CMD_GROUP_AK_EN
+	#if VC_NODE_INFO_MULTI_SECTOR_EN
 	u8 cnt = (sizeof(VC_node_info)+4095)/4096;
 	for(u8 i=0;i<cnt;i++){
 		flash_erase_sector(FLASH_ADR_VC_NODE_INFO+0x1000*i);

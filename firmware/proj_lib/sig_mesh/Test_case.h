@@ -225,6 +225,9 @@ typedef enum{
 	CL_DFM_PMS_BV_01		= 0x04120203,
 	CL_DFM_PMS_BI_01		= 0x04120204,
 	CL_DFM_PMS_BI_02		= 0x04120205,
+
+//subnet bridge 
+	NODE_SBR_NET_BV_01		= 0x04140101,
 //generic client models
 	//generic onoff client
 	CL_GOO_BV_01	= 0x84080101,

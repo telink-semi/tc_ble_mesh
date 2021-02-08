@@ -24,7 +24,7 @@
 #include "proj_lib/ble/ll/ll_whitelist.h"
 #include "proj/common/mempool.h"
 #include "proj/mcu/watchdog_i.h"
-
+#include "vendor/common/blt_soft_timer.h"
 #if MI_API_ENABLE
 #include "./libs/mijia_profiles/mi_service_server.h"
 #include "./libs/common/mible_beacon.h"
@@ -32,7 +32,6 @@
 #include "common/mible_beacon_internal.h"
 #include "mible_log.h"
 #include "Mijia_pub_proc.h"
-#include "vendor/common/blt_soft_timer.h"
 #include "./libs/gatt_dfu/mible_dfu_main.h"
 #include "mi_config.h"
 void mi_schd_event_handler(schd_evt_t *evt_id);
@@ -1199,94 +1198,6 @@ u8 mi_test_random_delay()
 #endif
 
 
-#if MI_SWITCH_LPN_EN
-#define MI_SLEEP_INTERVAL 	1140
-#define MI_RUN_INTERVAL		60
-
-#define MI_MESH_RUN_MODE 	0
-#define MI_MESH_SLEEP_MODE 	1
-typedef struct{
-    u32 last_tick;
-	u32 run_ms;
-	u32 sleep_ms;
-	u32 mode;
-}mi_mesh_sleep_pre_t;
-extern void blt_adv_expect_time_refresh(u8 en);
-void mi_mesh_blt_send_adv2_scan_mode()
-{
-	#if MI_SWITCH_LPN_EN
-	blt_adv_expect_time_refresh(0);
-	blt_send_adv2scan_mode(1);
-	blt_adv_expect_time_refresh(1);
-	#endif
-}
-
-mi_mesh_sleep_pre_t	mi_mesh_sleep_time={0, MI_RUN_INTERVAL,MI_SLEEP_INTERVAL,MI_MESH_RUN_MODE};
-
-int soft_timer_proc_mi_beacon(void)
-{
-	//gpio 0 toggle to see the effect
-	DBG_CHN4_TOGGLE;
-	static u32 mi_beacon_cnt ;
-	mi_beacon_cnt++;
-	mi_mesh_blt_send_adv2_scan_mode();
-	if(mi_beacon_cnt == 2){
-		mi_beacon_cnt =0;
-		return -1;
-	}else{
-		return 0;
-	}
-}
-
-void mi_mesh_sleep_init()
-{
-	mi_mesh_sleep_time.last_tick = clock_time()|1;
-	mi_mesh_sleep_time.mode = MI_MESH_RUN_MODE;
-	blt_soft_timer_add(&soft_timer_proc_mi_beacon, 20*1000);
-}
-
-u8 mi_mesh_sleep_time_exceed_adv_iner()
-{
-	if(clock_time_exceed(mi_mesh_sleep_time.last_tick,(MI_RUN_INTERVAL+MI_SLEEP_INTERVAL)*1000)){//1.26s
-		return 1;
-	}else{
-		return 0;
-	}
-}
-
-int soft_timer_proc_mesh_cmd(void)
-{
-	//gpio 0 toggle to see the effect
-	DBG_CHN4_TOGGLE;
-	mi_mesh_blt_send_adv2_scan_mode();
-	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) == 0){
-		return -1;
-	}else{
-		return 0;
-	}
-}
-
-void mi_mesh_lowpower_loop()
-{
-	if(blt_state == BLS_LINK_STATE_CONN){ // in the ble connection mode ,it will not trigger the deep mode ,and stop the mesh adv sending part 
-		bls_pm_setSuspendMask (SUSPEND_DISABLE);
-		blt_soft_timer_delete(&soft_timer_proc_mesh_cmd);
-	}else if (blt_state == BLS_LINK_STATE_ADV){
-		if( clock_time_exceed(mi_mesh_sleep_time.last_tick,mi_mesh_sleep_time.run_ms *1000) &&
-			mi_mesh_sleep_time.mode == MI_MESH_RUN_MODE){
-			mi_mesh_sleep_time.mode = MI_MESH_SLEEP_MODE;
-			if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0){
-				blt_soft_timer_add(&soft_timer_proc_mesh_cmd, 50*1000);
-			}
-			bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
-		}
-	}
-}
-#endif
-
-
-
-
 u8 test_mi_api_part()
 {
 #if XIAOMI_TEST_CODE_ENABLE
@@ -1609,4 +1520,117 @@ void mpn_mul (unsigned int * r, unsigned int * a, int na, unsigned int * b, int 
 	}
 	irq_restore(val);
 }
+
+#if (MI_SWITCH_LPN_EN||DU_LPN_EN)
+#if DU_LPN_EN
+#define MI_RUN_INTERVAL		 3
+#define MI_SLEEP_INTERVAL 	 (DU_ADV_INTER_MS-MI_RUN_INTERVAL)
+#define SOFT_TIMER_INTER_LPN 10
+#else
+#define MI_SLEEP_INTERVAL 	1140
+#define MI_RUN_INTERVAL		60
+#define SOFT_TIMER_INTER_LPN 50
+#endif
+#define MI_MESH_RUN_MODE 	0
+#define MI_MESH_SLEEP_MODE 	1
+typedef struct{
+    u32 last_tick;
+	u32 run_ms;
+	u32 sleep_ms;
+	u32 mode;
+}mi_mesh_sleep_pre_t;
+extern void blt_adv_expect_time_refresh(u8 en);
+void mi_mesh_blt_send_adv2_scan_mode()
+{
+	#if MI_SWITCH_LPN_EN||DU_LPN_EN
+	blt_adv_expect_time_refresh(0);
+	blt_send_adv2scan_mode(1);
+	blt_adv_expect_time_refresh(1);
+	#endif
+}
+
+mi_mesh_sleep_pre_t	mi_mesh_sleep_time={0, MI_RUN_INTERVAL,MI_SLEEP_INTERVAL,MI_MESH_RUN_MODE};
+
+int soft_timer_proc_mi_beacon(void)
+{
+	//gpio 0 toggle to see the effect
+	DBG_CHN4_TOGGLE;
+	static u32 mi_beacon_cnt ;
+	mi_beacon_cnt++;
+	mi_mesh_blt_send_adv2_scan_mode();
+	if(mi_beacon_cnt == 2){
+		mi_beacon_cnt =0;
+		return -1;
+	}else{
+		return 0;
+	}
+}
+
+void mi_mesh_sleep_init()
+{
+	mi_mesh_sleep_time.last_tick = clock_time()|1;
+	mi_mesh_sleep_time.mode = MI_MESH_RUN_MODE;
+	//blt_soft_timer_update(&soft_timer_proc_mi_beacon, SOFT_TIMER_INTER_LPN*1000);
+}
+
+u8 mi_mesh_sleep_time_exceed_adv_iner()
+{
+	if(clock_time_exceed(mi_mesh_sleep_time.last_tick,(MI_RUN_INTERVAL+MI_SLEEP_INTERVAL)*1000)){//1.26s
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
+int soft_timer_proc_mesh_cmd(void)
+{
+	//gpio 0 toggle to see the effect
+	DBG_CHN4_TOGGLE;
+	mi_mesh_blt_send_adv2_scan_mode();
+	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) == 0){
+		return -1;
+	}else{
+		return 0;
+	}
+}
+u8 mi_busy_state =0;
+void mi_mesh_state_set(u8 state)
+{
+	mi_busy_state = state;
+	if(state == 0){
+		// set back to normal state 
+		mi_mesh_sleep_init();
+	}else{
+
+	}
+}
+u8 mi_mesh_get_state()
+{
+	return mi_busy_state;
+}
+
+void mi_mesh_lowpower_loop()
+{
+	if(blt_state == BLS_LINK_STATE_CONN || mi_mesh_get_state()){ // in the ble connection mode ,it will not trigger the deep mode ,and stop the mesh adv sending part 
+		bls_pm_setSuspendMask (SUSPEND_DISABLE);
+		if(mi_mesh_get_state()){
+			blt_soft_timer_add((blt_timer_callback_t)&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000);
+		}else{
+			blt_soft_timer_delete((blt_timer_callback_t)&soft_timer_proc_mesh_cmd);
+		}
+	}else if (blt_state == BLS_LINK_STATE_ADV){
+		if( clock_time_exceed(mi_mesh_sleep_time.last_tick,mi_mesh_sleep_time.run_ms *1000) &&
+			mi_mesh_sleep_time.mode == MI_MESH_RUN_MODE){
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"run mode proc0",0);
+			mi_mesh_sleep_time.mode = MI_MESH_SLEEP_MODE;
+			if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0){
+				//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"run mode proc1",0);
+				blt_soft_timer_update(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000);
+			}
+			bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
+		}
+	}
+}
+#endif
+
 

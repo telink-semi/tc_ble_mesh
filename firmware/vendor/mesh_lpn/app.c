@@ -52,7 +52,11 @@
 
 #if MESH_DLE_MODE
 MYFIFO_INIT(blt_rxfifo, DLE_RX_FIFO_SIZE, 8);
+    #if (MESH_BLE_NOTIFY_FIFO_EN)
 MYFIFO_INIT(blt_txfifo, DLE_TX_FIFO_SIZE, 8); // some phones may not support DLE, so use the same count with no DLE.
+    #else
+MYFIFO_INIT(blt_txfifo, DLE_TX_FIFO_SIZE, 16); // because composition data will be pushed into fifo continuously.
+    #endif
 #else
 MYFIFO_INIT(blt_rxfifo, 64, 8);
 MYFIFO_INIT(blt_txfifo, 40, 8);
@@ -209,12 +213,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 
 void proc_ui()
 {
-	static u32 tick, scan_io_interval_us = 40000;
-	if (!clock_time_exceed (tick, scan_io_interval_us))
-	{
-		return;
-	}
-	tick = clock_time();
+	
 
 	//static u32 A_req_tick;
 	static u8 fri_request_send = 1;
@@ -228,33 +227,7 @@ void proc_ui()
         //}
 	}
 
-	#if 0
-	static u8 st_sw1_last;	
-	u8 st_sw1 = !gpio_read(SW1_GPIO);
-	
-	if(!(st_sw1_last)&&st_sw1){
-	    scan_io_interval_us = 100*1000; // fix dithering
-	}
-	st_sw1_last = st_sw1;
-	#endif
-
-	#if 0
-	static u8 st_sw2_last;	
-	u8 st_sw2 = !gpio_read(SW2_GPIO);
-	
-	if(!(st_sw2_last)&&st_sw2){ // dispatch just when you press the button 
-		//trigger the unprivison data packet 
-		static u8 beacon_data_num;
-		beacon_data_num =1;
-		mesh_provision_para_reset();
-		while(beacon_data_num--){
-			unprov_beacon_send(MESH_UNPROVISION_BEACON_WITH_URI,0);
-		}
-		prov_para.initial_pro_roles = MESH_INI_ROLE_NODE;
-	    scan_io_interval_us = 100*1000; // fix dithering
-	}
-	st_sw2_last = st_sw2;
-	#endif
+	lpn_proc_keyboard(0, 0, 0);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -326,12 +299,15 @@ void user_init_peripheral(int retention_flag)
 			blc_ll_setScanEnable (0, 0);
 		}
 		else{	
-			#if (!GATT_LPN_EN)
 			bls_pm_setSuspendMask (SUSPEND_DISABLE);
-			#endif
 		}
 	}
 	lpn_node_io_init();
+}
+
+void  lpn_set_sleep_wakeup (u8 e, u8 *p, int n)
+{
+	bls_pm_setWakeupSource(PM_WAKEUP_PAD);
 }
 
 void user_init()
@@ -361,6 +337,9 @@ void user_init()
 	blc_ll_initBasicMCU();                      //mandatory
 	blc_ll_initStandby_module(tbl_mac);				//mandatory
 #endif
+#if (EXTENDED_ADV_ENABLE)
+    mesh_blc_ll_initExtendedAdv();
+#endif
 	blc_ll_initAdvertising_module(tbl_mac); 	//adv module: 		 mandatory for BLE slave,
 	blc_ll_initSlaveRole_module();				//slave module: 	 mandatory for BLE slave,
 #if BLE_REMOTE_PM_ENABLE
@@ -369,6 +348,8 @@ void user_init()
 	blc_pm_setDeepsleepRetentionThreshold(50, 30); // threshold to enter retention
 	blc_pm_setDeepsleepRetentionEarlyWakeupTiming(400); // retention early wakeup time
 	bls_pm_registerFuncBeforeSuspend(app_func_before_suspend);
+	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_ENTER, &lpn_set_sleep_wakeup);	
+	bls_app_registerEventCallback (BLT_EV_FLAG_GPIO_EARLY_WAKEUP, &lpn_proc_keyboard);
 #else
 	bls_pm_setSuspendMask (SUSPEND_DISABLE);
 #endif
@@ -377,6 +358,10 @@ void user_init()
 	//blc_l2cap_register_handler (blc_l2cap_packet_receive);
 	blc_l2cap_register_handler (app_l2cap_packet_receive);
 	///////////////////// USER application initialization ///////////////////
+
+#if EXTENDED_ADV_ENABLE
+	/*u8 status = */mesh_blc_ll_setExtAdvParamAndEnable();
+#endif
 	u8 status = bls_ll_setAdvParam( ADV_INTERVAL_MIN, ADV_INTERVAL_MAX, \
 			 	 	 	 	 	     ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, \
 			 	 	 	 	 	     0,  NULL,  BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
@@ -418,9 +403,8 @@ void user_init()
 	bls_ota_registerStartCmdCb(entry_ota_mode);
 	bls_ota_registerResultIndicateCb(show_ota_result);
 	
-#if !GATT_LPN_EN
 	app_enable_scan_all_device ();
-#endif
+
 	// mesh_mode and layer init
 	mesh_init_all();
 

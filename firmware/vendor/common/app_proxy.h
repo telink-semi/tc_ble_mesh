@@ -130,8 +130,7 @@ typedef struct{
 
 typedef struct{
 	u8 filter_type;
-	list_mag_str white_list;
-	list_mag_str black_list;
+	u16 addr_list[MAX_LIST_LEN];
 	#if MD_DF_EN
 	u8 proxy_client_type;
 	direct_proxy_server_t directed_server[NET_KEY_MAX];
@@ -150,13 +149,11 @@ typedef struct{
 }mesh_proxy_protocol_sar_t;
 extern mesh_proxy_protocol_sar_t  proxy_sar;
 
-extern void proxy_cfg_list_init();
 extern u8 proxy_config_dispatch(u8 *p,u8 len );
 extern u8 proxy_filter_change_by_mesh_net(u16 unicast_adr);
 
 extern u8 set_proxy_adv_pkt(u8 *p ,u8 *pRandom,mesh_net_key_t *p_netkey,u8*p_len);
 
-extern u8 find_data_in_mag_list(u16 src,proxy_config_mag_str *p_mag_list);
 extern proxy_config_mag_str proxy_mag;
 extern int is_valid_adv_with_proxy_filter(u16 src);
 extern void proxy_cfg_list_init_upon_connection();
@@ -169,5 +166,14 @@ int proxy_adv_calc_with_node_identity(u8 random[8],u8 node_key[16],u16 ele_adr,u
 int proxy_adv_calc_with_private_net_id(u8 random[8],u8 net_id[8],u8 idk[16],u8 hash[8]);
 int proxy_adv_calc_with_private_node_identity(u8 random[8],u8 node_key[16],u16 ele_adr,u8 hash[8]);
 
+extern u8 proxy_Out_ccc[2];
+extern u8 proxy_In_ccc[2];
+extern u8 provision_In_ccc[2];
+extern u8 provision_Out_ccc[2];
+void reset_all_ccc();
+int pb_gatt_provision_out_ccc_cb(void *p);
+int	pb_gatt_Write (void *p);
+int proxy_out_ccc_cb(void *p);
+int proxy_gatt_Write(void *p);
 #endif 
 

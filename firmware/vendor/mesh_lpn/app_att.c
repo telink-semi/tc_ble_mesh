@@ -206,8 +206,6 @@ const u8 my_pb_gatt_in_UUID[2]= SIG_MESH_PROVISION_DATA_IN;
 static u8 my_pb_gatt_in_prop =  CHAR_PROP_WRITE_WITHOUT_RSP;
 const u8 my_pb_gattInName[]={'P','B','G','A','T','T','-','I','N'};
 u8 	my_pb_gattInData[2] =MESH_PROVISON_DATA;
-extern u8  provision_In_ccc[2];
-extern u8  provision_Out_ccc[2];
 
 u8 my_proxy_gattUUID[2]= SIG_MESH_PROXY_SERVICE;
 
@@ -221,120 +219,13 @@ static u8 my_proxy_in_prop = CHAR_PROP_WRITE_WITHOUT_RSP;
 const u8 my_proxy_in_Name[]={'P','R','O','X','Y','-','I','N'};
 u8 my_proxy_inData[2] =MESH_PROXY_DATA;
 
-u8 proxy_Out_ccc[2]={0x00,0x00};
-u8 proxy_In_ccc[2]=	{0x01,0x00};
-
-
-int pb_gatt_provision_out_ccc_cb(void *p)
-{
-	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
-	provision_Out_ccc[0] = pw->dat[0];
-	provision_Out_ccc[1] = pw->dat[1];
-	beacon_send.conn_beacon_flag =1;
-	return 1;	
-}
-int	pb_gatt_Write (void *p)
-{
-	if(provision_In_ccc[0]==0 && provision_In_ccc[1]==0){
-		return 0;
-	}
-	#if FEATURE_PROV_EN
-	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
-	// package the data 
-	if(!pkt_pb_gatt_data(pw,L2CAP_PROVISON_TYPE,proxy_para_buf,&proxy_para_len)){
-		return 0;
-	}
-	dispatch_pb_gatt(proxy_para_buf ,proxy_para_len);
-	#endif 
-	return 1;
-}
-
 #if USER_DEFINE_SET_CCC_ENABLE
 const  u8 my_userdefine_service_UUID[16]= TELINK_USERDEFINE_GATT;
 static u8 my_userdefine_prop		= CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP|CHAR_PROP_NOTIFY|CHAR_PROP_INDICATE;
 u8	 	  my_userdefine_dat 		= 0x00;
 const u8  my_userderdefine[4] = {'U', 'S', 'E','R'};
 const u8  my_userdefine_UUID[16]= TELINK_USERDEFINE_UUID;
-
-int set_ccc_diaptch(void *p)
-{
-	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
-	provision_Out_ccc[0] = pw->dat[0];
-	provision_Out_ccc[1] = pw->dat[1];
-	beacon_send.conn_beacon_flag =1;
-	return 1;
-}
 #endif
-
-int proxy_out_ccc_cb(void *p)
-{
-	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
-	proxy_Out_ccc[0] = pw->dat[0];
-	proxy_Out_ccc[1] = pw->dat[1];
-	beacon_send.conn_beacon_flag =1;
-	beacon_send.tick = clock_time();
-	return 1;	
-}
-
-int proxy_gatt_Write(void *p)
-{
-	if(proxy_In_ccc[0]==0 && proxy_In_ccc[1]==0){
-		return 0;
-	}
-	#if FEATURE_PROXY_EN
-	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
-	pb_gatt_proxy_str *p_gatt = (pb_gatt_proxy_str *)(pw->dat);
-	mesh_cmd_bear_unseg_t *p_bear = (mesh_cmd_bear_unseg_t *)proxy_para_buf;
-	
-	if(p_gatt->msgType == MSG_PROXY_CONFIG ){
-		if(!pkt_pb_gatt_data(pw,L2CAP_PROXY_TYPE,(u8 *)&p_bear->nw,&proxy_para_len)){
-			return 0;
-		}
-		p_bear->trans_par_val=TRANSMIT_DEF_PAR;
-		p_bear->len=proxy_para_len+1;
-		p_bear->type=MESH_ADV_TYPE_MESSAGE;
-		// different dispatch 
-		//send the data by the SIG MESH layer 
-		if(0 == mesh_rc_data_cfg_gatt((u8 *)p_bear)){
-		    proxy_config_dispatch((u8 *)&p_bear->nw,proxy_para_len);
-		}
-	}else if (p_gatt->msgType == MSG_MESH_BEACON){
-		if(!pkt_pb_gatt_data(pw,L2CAP_BEACON_TYPE,(u8 *)&p_bear->beacon,&proxy_para_len)){
-			return 0;
-		}
-		if(SECURE_BEACON == p_bear->beacon.type){
-			p_bear->len =23;
-			//mesh_bear_tx2mesh((u8 *)p_bear, TRANSMIT_DEF_PAR_BEACON);
-			int err = mesh_rc_data_beacon_sec(&p_bear->len, 0);		
-			if(err != 100){
-                //LOG_MSG_INFO(TL_LOG_IV_UPDATE,&p_bear->len, p_bear->len+1,"RX GATT beacon,nk arr idx:%d, new:%d, pkt:",mesh_key.netkey_sel_dec,mesh_key.new_netkey_dec);
-			}
-		}else if (PRIVACY_BEACON == p_bear->beacon.type){
-			// no handle for other beacon now
-			#if MD_PRIVACY_BEA
-			p_bear->len =28;
-			int err = mesh_rc_data_beacon_privacy(&p_bear->len, 0);		
-			if(err != 100){
-                LOG_MSG_INFO(TL_LOG_IV_UPDATE,&p_bear->len, p_bear->len+1,"RX prrivacy GATT beacon,nk arr idx:%d, new:%d, pkt:",mesh_key.netkey_sel_dec,mesh_key.new_netkey_dec);
-			}
-			#endif
-		}else{
-			// no handle for other beacon now
-		}
-	}else if(p_gatt->msgType == MSG_NETWORK_PDU){
-		if(!pkt_pb_gatt_data(pw,L2CAP_NETWORK_TYPE,(u8 *)&p_bear->nw,&proxy_para_len)){
-			return 0;
-		}
-		// and then how to use the data ,make a demo to turn on or turn off the light 
-		p_bear->trans_par_val = TRANSMIT_DEF_PAR;
-		p_bear->len = proxy_para_len+1;
-		p_bear->type=MESH_ADV_TYPE_MESSAGE;
-		mesh_nw_pdu_from_gatt_handle((u8 *)p_bear);
-	}else{
-	}
-#endif
-	return 0;
-}
 
 const u16  mi_gerneric_service  = SERVICE_UUID_GENERIC_ATTRIBUTE;
 const u16 mi_service_change_uuid = 0x2a05;
@@ -489,7 +380,7 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 #define MY_ATTRIBUTE_USER_DEFINE_SET_CCC           \
 	{MAX_USER_DEFINE_SET_CCC_ATT_NUM,&att_perm_auth_read, 2,16,(u8*)(&my_primaryServiceUUID), 	(u8*)(&my_userdefine_service_UUID), 0},\
 	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&my_userdefine_prop), 0}, /*prop*/   \
-	{0,&att_perm_auth_rdwd,16,sizeof(my_userdefine_dat),(u8*)(&my_userdefine_UUID), (&my_userdefine_dat), &set_ccc_diaptch, 0}, /*value*/   \
+	{0,&att_perm_auth_rdwd,16,sizeof(my_userdefine_dat),(u8*)(&my_userdefine_UUID), (&my_userdefine_dat), &pb_gatt_provision_out_ccc_cb, 0}, /*value*/   \
 	{0,&att_perm_auth_read, 2,sizeof (my_userderdefine),(u8*)(&userdesc_UUID), (u8*)(my_userderdefine), 0},
 #endif
 

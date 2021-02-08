@@ -107,6 +107,11 @@ void telink_mi_vendor_init();
 void mi_reboot_proc();
 unsigned char  mi_ota_is_busy();
 u8 telink_record_clean_cpy();
+void mi_mesh_state_set(u8 state);
+u8 mi_mesh_get_state();
+void mi_mesh_sleep_init();
+void mi_mesh_lowpower_loop();
+
 
 
 

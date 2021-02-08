@@ -165,7 +165,7 @@ extern "C" {
 #endif
 
 /////////////////// MODULE /////////////////////////////////
-#if (MI_SWITCH_LPN_EN || GATT_LPN_EN)
+#if (MI_SWITCH_LPN_EN || GATT_LPN_EN||DU_LPN_EN)
 #define BLE_REMOTE_PM_ENABLE			1
 #else
 #define BLE_REMOTE_PM_ENABLE			0

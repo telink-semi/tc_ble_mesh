@@ -519,21 +519,22 @@ typedef struct{
     u8 pro_bearerCode;
 	u8 pro_fail_code;
 	u8 attention_value;
+	u8 rfu;
 	u32 cmd_send_tick;
 	u32 cmd_send_start_tick;
+	u32 rand_gen_s;
+	u32 priv_rand_gen_s;
 	u8  cmd_retry_flag;
 	u8  ack_retry_flag;
 	u8  link_close_flag;
 	u8  link_close_cnt;
 	u8  rsp_ack_transnum;
 	u8  random[8];
-	u32 rand_gen_s;
 	u8  oob_info[2];// the oob info is small endiness, in the unprovision beacon is bigendiness,in the prrovision adv is small endiness
 	u8  device_uuid[16];
 	u8 priv_random[13];
 	u8 cert_base_en;
-	u8 rfu[2];
-	u32 priv_rand_gen_s;
+	u8 rfu1[2];
 	u8 ele_cnt;
 	u8 key_bind_lock;
 	u8 dkri;
@@ -811,7 +812,7 @@ extern u8 set_pro_complete(mesh_pro_data_structer *p_str);
 extern u8 set_pro_fail(mesh_pro_data_structer *p_str ,u8 fail_code);
 
 extern u8 set_pro_record_request(pro_trans_record_request *p_rec_req ,u16 rec_id,u16 frag_offset,u16 max_size);
-extern u8 set_pro_record_rsp(pro_trans_record_rsp *p_rec_rsp,u8 sts,u16 rec_id,u16 frag_offset,u16 total,u8 *p_data);
+extern u8 set_pro_record_rsp(pro_trans_record_rsp *p_rec_rsp,u8 sts,u16 rec_id,u16 frag_offset,u16 total,u8 *p_data,u16 data_len);
 extern u8 set_pro_record_get(pro_trans_record_get *p_rec_get);
 extern u8 set_pro_record_list(pro_trans_record_list *p_rec_list , u16 prov_exten, 
 											u16 *p_list,u32 cnt);
@@ -858,7 +859,7 @@ extern void set_pro_init_role(u8 role);
 
 extern void set_provisioner_para(u8 *p_net_key,u16 key_index,u8 flags,u8 *p_ivi,u16 unicast);
 
-extern u8 mesh_prov_oob_auth_data(mesh_prov_oob_str *p_prov_oob);
+extern int mesh_prov_oob_auth_data(mesh_prov_oob_str *p_prov_oob);
 extern void check_oob_out_timeout();
 extern void send_comfirm_no_pubkey_cmd();
 extern u8 adv_provision_state_dispatch(pro_PB_ADV * p_adv);

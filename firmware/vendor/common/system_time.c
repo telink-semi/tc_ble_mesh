@@ -100,17 +100,22 @@ void system_time_run(){
             u32 inc_100ms = (system_time_ms % 100 + interval_cnt) / 100;
 			system_time_ms += interval_cnt;
 						
-			if(!(FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN || GATT_LPN_EN || __PROJECT_MESH_SWITCH__)){ // (!is_lpn_support_and_en){ // it will cost several tens ms from wake up
+			if(!(FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN || GATT_LPN_EN || __PROJECT_MESH_SWITCH__||DU_LPN_EN)){ // (!is_lpn_support_and_en){ // it will cost several tens ms from wake up
+                #if (PM_DEEPSLEEP_RETENTION_ENABLE)
+                // no need to run system_timer_handle_ms_,
+                // and it will take too much time to run system_timer_handle_ms_() for low power device which is wakeup after a long time sleep.
+                #else
 			    foreach(i,interval_cnt){
 			        system_timer_handle_ms();
 			    }
+			    #endif
 			}
 			
 			if(inc_100ms){
                 u32 inc_s = (system_time_100ms % 10 + inc_100ms) / 10;
     			system_time_100ms += inc_100ms;
 				
-                if(is_lpn_support_and_en || SPIRIT_PRIVATE_LPN_EN || __PROJECT_MESH_SWITCH__){ // it will cost several ms from wake up
+                if(is_lpn_support_and_en || SPIRIT_PRIVATE_LPN_EN || __PROJECT_MESH_SWITCH__||DU_LPN_EN){ // it will cost several ms from wake up
                     system_timer_handle_100ms();	// only run once to save time
 				}else{
 					foreach(i,inc_100ms){

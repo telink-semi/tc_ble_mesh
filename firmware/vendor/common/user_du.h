@@ -112,7 +112,6 @@ typedef struct{
 	u32 crc;
 	u32 ota_suc;
 	u32 ota_suc_tick;
-	u8  buf[240*16];
 	
 }du_ota_str;
 
@@ -120,6 +119,27 @@ void test_du_sha256_cal();
 int	du_ctl_Write (void *p);
 int du_fw_proc(void *p);
 u8 du_adv_proc(rf_packet_adv_t * p);
-void du_ota_suc_proc();
+int du_vd_event_send(u8*p_buf,u8 len,u16 dst);
+int du_vd_temp_event_send(u16 op,u16 val,u16 dst);
+void du_loop_proc();
+void du_vd_send_loop_proc();
+void du_ui_proc_init();
+void du_ui_proc_init_deep();
+void du_set_gateway_adr(u16 adr);
+void du_get_gateway_adr_init();
+void du_bind_end_proc(u16 adr);
+
+extern u32 du_busy_tick ;
+
+#define VD_DU_TEMP_CMD 	0x010d
+#define VD_DU_HUMI_CMD 	0x010F
+#define VD_DU_POWER_CMD	0x0549
+
+#define VD_DU_GROUP_DST	0xF000
+typedef struct{
+	u8 tid;
+	u16 op;
+	u16 val;
+}vd_du_event_t;
 
 #endif

@@ -130,7 +130,6 @@ void mesh_revert_network()
 	#endif
 }
 
-#if !(ANDROID_APP_ENABLE || IOS_APP_ENABLE)
 u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid)
 {
 	u8 node_ele_cnt = 1;
@@ -154,11 +153,11 @@ u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid)
 	}
 	return node_ele_cnt;
 }
-#endif
 
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
 void mesh_fast_prov_start(u16 pid)
 {
+#if (FAST_PROVISION_ENABLE)
 	fast_prov.pid = pid;
 	fast_prov.cur_sts = fast_prov.last_sts = FAST_PROV_START;
 	fast_prov.start_tick = clock_time()|1;
@@ -181,6 +180,7 @@ void mesh_fast_prov_start(u16 pid)
 	memcpy(fast_prov.net_info.appkey_set.appkey, mesh_key.net_key[nk_array_idx][0].app_key[ak_array_idx].key, 16);
 
 	cache_init(ADR_ALL_NODES);
+#endif
 }
 
 #define CACHE_MAC_MAX_NUM 	32
@@ -217,12 +217,12 @@ void mesh_fast_prov_reliable_finish_handle()
 				u8 device_key[16];
 				memset(device_key, 0x00, sizeof(device_key));
 				memcpy(device_key, fast_prov_mac_buf[fast_prov_r_idx-1].mac, OFFSETOF(fast_prov_mac_st,pid));
-				
-				#if  (ANDROID_APP_ENABLE || IOS_APP_ENABLE)
-				mesh_fast_prov_node_info_callback(device_key, fast_prov.prov_addr, fast_prov_mac_buf[fast_prov_r_idx-1].pid);				
-				#endif
+								
 				u8 node_ele_cnt = mesh_fast_prov_get_ele_cnt_callback(fast_prov_mac_buf[fast_prov_r_idx-1].pid);
 				VC_node_dev_key_save(fast_prov.prov_addr, device_key, node_ele_cnt);
+#if  (VC_APP_ENABLE)
+				mesh_fast_prov_node_info_callback(device_key, fast_prov.prov_addr, fast_prov_mac_buf[fast_prov_r_idx-1].pid);				
+#endif
 				fast_prov.prov_addr += node_ele_cnt;
 				#if WIN32
 				set_win32_prov_unicast_adr(fast_prov.prov_addr);
@@ -433,7 +433,7 @@ void mesh_fast_prov_proc()
 			mac_addr_get_t mac_get;
 			mac_get.pid = fast_prov.pid;
 			mac_get.ele_addr = fast_prov.prov_addr;
-			SendOpParaDebug_vendor(ADR_ALL_NODES, CACHE_MAC_MAX_NUM, VD_MESH_ADDR_GET, (u8 *)&fast_prov.pid, sizeof(mac_addr_get_t), VD_MESH_ADDR_GET_STS, 0);
+			SendOpParaDebug_vendor(ADR_ALL_NODES, CACHE_MAC_MAX_NUM, VD_MESH_ADDR_GET, (u8 *)&mac_get, sizeof(mac_addr_get_t), VD_MESH_ADDR_GET_STS, 0);
 			}
 			break;
 		case FAST_PROV_SET_ADDR:{

@@ -53,6 +53,12 @@ extern "C" {
 #define DEBUG_CFG_CMD_GROUP_AK_EN		0       // not for user
 #define DEBUG_CFG_CMD_GROUP_USE_AK(addr)    (DEBUG_CFG_CMD_GROUP_AK_EN && (addr & 0x8000))
 
+#if(DEBUG_CFG_CMD_GROUP_AK_EN)
+#define VC_NODE_INFO_MULTI_SECTOR_EN	1		
+#else
+#define VC_NODE_INFO_MULTI_SECTOR_EN	0		// use 2 or more sector to save VC_node_info(default use one sector, max support 200 nodes)
+#endif
+
 #define SHOW_VC_SELF_NO_NW_ENC		1
 #define SHOW_VC_SELF_NW_ENC			2	// can not send reliable cmd with segment, such as netkey add,...
 
@@ -124,8 +130,10 @@ extern "C" {
 #define LPN_VENDOR_SENSOR_EN        0
 #endif
 
-#if (__PROJECT_MESH__ || __PROJECT_MESH_LPN__)
-#define GATT_LPN_EN					0   // only mesh project can enable
+#if (__PROJECT_MESH__)
+#define GATT_LPN_EN					0   // only mesh and lpn project can enable
+#elif(__PROJECT_MESH_LPN__)
+#define GATT_LPN_EN					0   // only mesh and lpn project can enable
 #endif
 
 //------------ mesh config-------------
@@ -191,6 +199,7 @@ extern "C" {
 #define DU_FW_INFO_VER	0
 #define DU_FW_VER	((DU_FW_MAIN_VER<<12)|(DU_FW_ADD_VER<<8)|(DU_FW_INFO_VER))
 
+
 #elif(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
 #define SUBSCRIPTION_SHARE_EN		1
 #define VENDOR_ID 					SHA256_BLE_MESH_PID
@@ -250,8 +259,15 @@ extern "C" {
 #endif
 
 #if (MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
-#define DU_ENABLE 1
+#define DU_ENABLE 	1
+#define DU_LPN_EN	0
+	#if DU_LPN_EN
+		#define DU_ADV_INTER_MS				1700
+		#define DU_ADV_INTER_VAL			(DU_ADV_INTER_MS*1000/625)
+		#define BLT_SOFTWARE_TIMER_ENABLE	1
+	#endif
 #else
+#define DU_LPN_EN	0
 #define DU_ENABLE 0
 #endif
 
@@ -802,8 +818,8 @@ extern "C" {
 #define			IRQ_GPIO_ENABLE  			    0
 
 #if (!WIN32)
-#define EXTENDED_ADV_ENABLE				0   // BLE extend ADV driver
-#define MESH_LONG_PACKET_EN				0   // mesh extend bear mode
+// extend adv should be running on the chip with 64k or more RAM.
+#define EXTENDED_ADV_ENABLE				0   // BLE mesh extend ADV
 #endif
 
 #if EXTENDED_ADV_ENABLE

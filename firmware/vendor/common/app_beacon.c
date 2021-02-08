@@ -30,22 +30,7 @@
 #include "proj/common/types.h"
 #include "app_privacy_beacon.h"
 
-u8  provision_In_ccc[2]={0x01,0x00};// set it can work enable 
-u8  provision_Out_ccc[2]={0x00,0x00}; 
-#if !ATT_REPLACE_PROXY_SERVICE_EN
-extern u8 proxy_Out_ccc[2];
-extern u8 proxy_In_ccc[2];
-#endif
-void reset_all_ccc()
-{
-	// wait for the whole dispatch 
-	beacon_send.conn_beacon_flag =1;
-	memset(provision_Out_ccc,0,sizeof(provision_Out_ccc));
-	#ifndef WIN32 
-	memset(proxy_Out_ccc,0,sizeof(proxy_Out_ccc));
-	#endif 
-	return ;
-}
+
 
 int mesh_beacon_send_proc()
 {
@@ -62,6 +47,7 @@ int mesh_beacon_send_proc()
 		}
 		return err;
 	}else{
+		beacon_send.conn_beacon_flag =1;
 		reset_all_ccc(); 
 	}
 	// dispatch when connected whether it need to send the unprovisioned beacon 

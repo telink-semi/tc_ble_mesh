@@ -52,10 +52,10 @@
 
 //----------------------------------- test
 #if DONGLE_PROVISION_EN
-	#if DEBUG_CFG_CMD_GROUP_AK_EN
-#define MESH_NODE_MAX_NUM       305
+	#if VC_NODE_INFO_MULTI_SECTOR_EN
+#define MESH_NODE_MAX_NUM       400
 	#else
-#define MESH_NODE_MAX_NUM       200	// comfirm later
+#define MESH_NODE_MAX_NUM       200
 	#endif
 #else
 	#if WIN32
@@ -328,6 +328,9 @@ extern const u8	const_tbl_scanRsp [9] ;
 #if MI_SWITCH_LPN_EN
 #define ADV_INTERVAL_MIN		(ADV_INTERVAL_1_2_S)
 #define ADV_INTERVAL_MAX		(ADV_INTERVAL_1_2_S)
+#elif DU_LPN_EN
+#define ADV_INTERVAL_MIN		(DU_ADV_INTER_VAL)
+#define ADV_INTERVAL_MAX		(DU_ADV_INTER_VAL)
 #elif SPIRIT_PRIVATE_LPN_EN
 #define ADV_INTERVAL_MIN		(ADV_INTERVAL_360MS)
 #define ADV_INTERVAL_MAX		(ADV_INTERVAL_360MS)
@@ -342,6 +345,9 @@ extern const u8	const_tbl_scanRsp [9] ;
 #if MI_API_ENABLE
 	#if MI_SWITCH_LPN_EN
 #define ADV_INTERVAL_MS			(20)   // no random 20ms
+#define ADV_INTERVAL_MS_PROVED	(20)
+	#elif DU_LPN_EN
+#define ADV_INTERVAL_MS			(20)   // no random 40ms
 #define ADV_INTERVAL_MS_PROVED	(20)	
 	#else
 #define ADV_INTERVAL_MS			(100)   // with random (0~30ms)
@@ -375,8 +381,13 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define TRANSMIT_CNT_DEF		(7)
 #define TRANSMIT_INVL_STEPS_DEF	(1)
 	#else
+	#if DU_ENABLE
+#define TRANSMIT_CNT_DEF		(7)
+#define TRANSMIT_INVL_STEPS_DEF	(0)
+	#else
 #define TRANSMIT_CNT_DEF		(5)
 #define TRANSMIT_INVL_STEPS_DEF	(2)
+	#endif
 	#endif
 #endif
 #define TRANSMIT_DEF_PAR		(model_sig_cfg_s.nw_transmit.val)
@@ -792,7 +803,7 @@ typedef struct{
 #define ADV_EXTEND_PAYLOAD_MAX      (255 - (6 + 4)) //  6: mac; 4: extend header;
 #define BEAR_EXTEND_MAX             (ADV_EXTEND_PAYLOAD_MAX + OFFSETOF(mesh_cmd_bear_unseg_t, len))
 
-#define DELTA_EXTEND_AND_NORMAL     (ADV_EXTEND_PAYLOAD_MAX - 31)
+#define CONST_DELTA_EXTEND_AND_NORMAL   (ADV_EXTEND_PAYLOAD_MAX - 31)
 
 #if MESH_DLE_MODE
 #define DLE_RX_FIFO_SIZE            GET_ALIGN_CEIL(DLE_LEN_MAX_RX + 24, 16) //max: 288
@@ -803,14 +814,22 @@ typedef struct{
 #endif
 
 #if WIN32
-#define GET_DELTA_EXTEND_BEAR       (isVC_DLEModeExtendBearer() ? DELTA_EXTEND_AND_NORMAL : 0)
-#define MESH_BEAR_SIZE              (sizeof(mesh_cmd_bear_unseg_t) + DELTA_EXTEND_AND_NORMAL) // buffer default support DLE length
+#define GET_DELTA_EXTEND_BEAR       (isVC_DLEModeExtendBearer() ? CONST_DELTA_EXTEND_AND_NORMAL : 0)
+#define MESH_BEAR_SIZE              (sizeof(mesh_cmd_bear_unseg_t) + CONST_DELTA_EXTEND_AND_NORMAL) // buffer default support DLE length
 #else
-#define GET_DELTA_EXTEND_BEAR       (tx_bear_extend_en ? DELTA_EXTEND_AND_NORMAL : 0) // used in library
+#define GET_DELTA_EXTEND_BEAR       (tx_bear_extend_en ? CONST_DELTA_EXTEND_AND_NORMAL : 0) // used in library
 #define MESH_BEAR_SIZE              (sizeof(mesh_cmd_bear_unseg_t) + GET_DELTA_EXTEND_BEAR)
 #endif
 
 #define MESH_UNSEGMENT_MAX_SIZE     (ACCESS_WITH_MIC_LEN_MAX_UNSEG + GET_DELTA_EXTEND_BEAR)
+
+#if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR)&&(!GATT_LPN_EN))
+#define DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF  GET_ALIGN_CEIL(CONST_DELTA_EXTEND_AND_NORMAL, 4)
+#else
+#define DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF  0
+#endif
+
+
 
 typedef struct{
     union{
@@ -1673,7 +1692,7 @@ void mesh_tx_reliable_tick_refresh_proc(int rx_seg_flag, u16 adr_src);
 u8 key_refresh_phase_get(u8 nk_array_idx);
 int mesh_key_refresh_phase_handle(u8 phase_set, mesh_net_key_t *p_net_key);
 void mesh_key_refresh_rx_fri_update(u8 KeyRefresh);
-int is_key_refresh_use_new_key(u8 nk_array_idx);
+int is_key_refresh_use_new_key(u8 nk_array_idx, bool4 rx_flag);
 int is_key_refresh_use_old_and_new_key(u8 nk_array_idx);
 void key_refresh_phase_set(u8 phase, mesh_net_key_t *p_net_key);
 void mesh_nk_update_self_and_change2phase2(const u8 *nk, u16 key_idx);

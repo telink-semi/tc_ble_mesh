@@ -143,7 +143,7 @@
 #define MESH_OTA_BLOCK_SIZE_LOG_MIN     (8)
 #define MESH_OTA_BLOCK_SIZE_LOG_MAX     (8)
 #else
-#define MESH_OTA_CHUNK_SIZE             (208)   // =(((DELTA_EXTEND_AND_NORMAL + 11 - 3)/16)*16) // need 16 align 
+#define MESH_OTA_CHUNK_SIZE             (208)   // =(((CONST_DELTA_EXTEND_AND_NORMAL + 11 - 3)/16)*16) // need 16 align 
 #define MESH_OTA_BLOCK_SIZE_LOG_MIN     (18)    // for 4k erase // in order to check missing only once
 #define MESH_OTA_BLOCK_SIZE_LOG_MAX     (18)    // for 4k erase // in order to check missing only once
 #endif

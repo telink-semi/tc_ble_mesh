@@ -30,7 +30,9 @@
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor_model.h"
 #include "fast_provision_model.h"
-
+#if DU_ENABLE
+#include "user_du.h"
+#endif
 #if ALI_MD_TIME_EN
 #include "user_ali_time.h"
 #endif
@@ -813,6 +815,14 @@ int cb_vd_trans_time_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 }
 #endif
 
+#if DU_ENABLE
+int cb_vd_du_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	return 1;
+}
+
+#endif
+
 #if !WIN32
 const 
 #endif
@@ -837,6 +847,10 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
     {VD_MSG_ATTR_UPD_TIME_RSP, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_msg_attr_upd_time_rsp, STATUS_NONE},
 		#endif
     #endif
+
+	#if DU_ENABLE
+	{VD_LPN_REPROT, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_report, VD_LPN_REPROT},
+	#endif
     
 #elif(VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
     #if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)

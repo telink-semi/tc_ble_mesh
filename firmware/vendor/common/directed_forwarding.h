@@ -150,6 +150,62 @@ enum{
 
 
 #define GET_LANE_GUARD_INTERVAL_MS(guard_interval)		(guard_interval?LANE_GUARD_INTERVAL_10S:LANE_GUARD_INTERVAL_2S)
+
+// directed forwarding message
+typedef struct{
+	u8 directed_forwarding;
+	u8 directed_relay;
+	u8 directed_proxy;
+	u8 directed_proxy_use_directed_default;
+	u8 directed_friend;
+}directed_control_t;
+
+typedef struct{
+	u8  metric_type:3;	
+	u8  path_lifetime:2;
+	u8  rfu:3;
+}path_metric_t;
+
+typedef struct{
+	s8 default_rssi_threshold;
+	s8 rssi_margin;
+}rssi_threshold_t;
+
+typedef struct{
+	u16 node_paths;
+	u16 relay_paths;
+	u16 proxy_paths;
+	u16 friend_paths;
+}directed_paths_t;
+
+typedef struct{
+	u16 path_monitoring_interval;
+	u16 path_discovery_retry_interval;
+	u8 path_discovery_interval:1;
+	u8 lane_discovery_guard_interval:1;
+	u8 prohibited:6;
+}discovery_timing_t;
+
+typedef struct{
+	directed_control_t directed_control;
+	path_metric_t path_metric;
+	u8 max_concurrent_init;
+	u8 wanted_lanes;
+	u8 two_way_path;
+	u8 path_echo_interval;
+}mesh_directed_subnet_state_t;
+
+typedef struct{
+	mesh_directed_subnet_state_t subnet_state[NET_KEY_MAX];
+	mesh_transmit_t transmit;
+	mesh_transmit_t relay_transmit;
+	rssi_threshold_t rssi_threshold;
+	directed_paths_t directed_paths;
+	discovery_timing_t discovery_timing;
+	mesh_transmit_t	control_transmit;
+	mesh_transmit_t	control_relay_transmit;
+}mesh_directed_forward_t;
+
 typedef struct{
 	u16 netkey_index;
 	directed_control_t directed_control;	
@@ -549,10 +605,6 @@ typedef struct{
 	model_client_common_t clnt;
 #endif
 }model_df_cfg_t;
-
-
-extern u32 mesh_md_df_addr;
-extern model_df_cfg_t 	model_sig_df_cfg;
 
 int is_directed_forwarding_en(u16 netkey_offset);
 int is_directed_relay_en(u16 netkey_offset);

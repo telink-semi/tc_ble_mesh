@@ -169,7 +169,7 @@ _attribute_ram_code_ int main(void)
 {
     T_DBG_CNT[0]++;
 
-    /* cup_clk_init */
+    /* cpu_clk_init */
     cpu_wakeup_init();
     clock_init(SYS_CLK_CRYSTAL);
 

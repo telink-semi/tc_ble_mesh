@@ -716,7 +716,7 @@ void dual_mode_zigbee_init(void){
 	reg_dma_rf_tx_addr = (u16)(u32)(rf_tx_buf);
 
 	//u8 * raw_pkt = (u8 *) (blt_rxfifo_b + (blt_rxfifo.wptr & (blt_rxfifo.num-1)) * blt_rxfifo.size);
-	rf_recv_mode_250k_new(FLD_DMA_WR_MEM, (128>>4), (u16)((u32)raw_pkt));
+	rf_recv_mode_250k_new(FLD_DMA_WR_MEM, (blt_rxfifo.size>>4), (u16)((u32)raw_pkt));
 	bufIdx = 0;
 	rf_drv_250k_new();
 

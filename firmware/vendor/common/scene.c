@@ -38,6 +38,9 @@
 #if (MD_SCENE_EN)
 model_scene_t	model_sig_scene;
 u32 mesh_md_scene_addr = FLASH_ADR_MD_SCENE;
+
+STATIC_ASSERT((sizeof(model_scene_t) + 4) <= (4096 - 96));    // one sector, 4: sizeof save flag; 96: margin
+
 #if MD_SERVER_EN
 
 scene_proc_t	scene_proc[LIGHT_CNT];

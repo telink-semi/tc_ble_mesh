@@ -33,7 +33,13 @@
 
 
 #if(AIS_ENABLE)
+	#if DU_ENABLE
+#include "user_du.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
+#define AIS_DEVICE_NAME	"Mesh__Du"
+	#else
 #define AIS_DEVICE_NAME	"Mesh Ali"
+	#endif
 u8 ais_pri_data_set(u8 *p)
 {
 	u8 device_name[]={AIS_DEVICE_NAME};
@@ -184,7 +190,7 @@ void user_set_def_sub_adr()
 
 void user_system_time_proc()
 {
-#if(AIS_ENABLE)
+#if(AIS_ENABLE && !SPIRIT_PRIVATE_LPN_EN)
 	sha256_dev_uuid_str *p_uuid = (sha256_dev_uuid_str *)prov_para.device_uuid;
 	if((p_uuid->adv_flag == 0)&&(clock_time_exceed_s(beacon_send.start_time_s, 10*60))){
 		beacon_send.inter = 60*1000*1000;
@@ -197,6 +203,10 @@ void user_system_time_proc()
 int user_node_rc_link_open_callback()
 {
 	#if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE ||MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
+		#if DU_LPN_EN
+	mi_mesh_state_set(1);
+	du_busy_tick = clock_time();
+		#endif
 	sha256_dev_uuid_str *p_uuid = (sha256_dev_uuid_str *)prov_para.device_uuid;
 	if(p_uuid->adv_flag){
 		return 0;

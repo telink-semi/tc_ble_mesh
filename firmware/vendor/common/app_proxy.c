@@ -27,15 +27,170 @@
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "app_privacy_beacon.h"
 #include "directed_forwarding.h"
+#include "subnet_bridge.h"
 proxy_config_mag_str proxy_mag;
 mesh_proxy_protocol_sar_t  proxy_sar;
 u8 proxy_filter_initial_mode = FILTER_WHITE_LIST;
 
-void proxy_cfg_list_init()
+//------------------------------att cb-----------------------------
+#if !ATT_REPLACE_PROXY_SERVICE_EN
+u8 proxy_Out_ccc[2]={0x00,0x00};
+u8 proxy_In_ccc[2]=	{0x01,0x00};
+#endif
+
+u8  provision_In_ccc[2]={0x01,0x00};// set it can work enable 
+u8  provision_Out_ccc[2]={0x00,0x00}; 
+
+void reset_all_ccc()
 {
-	memset((u8 *)&proxy_mag,0,sizeof(proxy_config_mag_str));
+	// wait for the whole dispatch 	
+	memset(provision_Out_ccc,0,sizeof(provision_Out_ccc));
+	#ifndef WIN32 
+	memset(proxy_Out_ccc,0,sizeof(proxy_Out_ccc));
+	#endif 
 	return ;
 }
+
+int pb_gatt_provision_out_ccc_cb(void *p)
+{
+	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
+	provision_Out_ccc[0] = pw->dat[0];
+	provision_Out_ccc[1] = pw->dat[1];
+	beacon_send.conn_beacon_flag =1;
+	return 1;	
+}
+
+int	pb_gatt_Write (void *p)
+{
+	if(provision_In_ccc[0]==0 && provision_In_ccc[1]==0){
+		return 0;
+	}
+	#if ATT_REPLACE_PROXY_SERVICE_EN
+	extern int proxy_gatt_Write(void *p);
+	u8 service_uuid[] = SIG_MESH_PROXY_SERVICE;
+	if(0 == memcmp(my_pb_gattUUID, service_uuid, sizeof(my_pb_gattUUID) )){
+		return proxy_gatt_Write(p);
+	}
+	#endif
+	#if FEATURE_PROV_EN
+	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
+	// package the data 
+	if(!pkt_pb_gatt_data(pw,L2CAP_PROVISON_TYPE,proxy_para_buf,&proxy_para_len)){
+		return 0;
+	}
+	dispatch_pb_gatt(proxy_para_buf ,proxy_para_len);
+	#endif 
+	return 1;
+}
+
+int proxy_out_ccc_cb(void *p)
+{
+	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
+	proxy_Out_ccc[0] = pw->dat[0];
+	proxy_Out_ccc[1] = pw->dat[1];
+	beacon_send.conn_beacon_flag =1;
+	beacon_send.tick = clock_time();
+
+#if (MD_DF_EN&&MD_SERVER_EN&&!WIN32)
+	proxy_mag.proxy_client_type = UNSET_CLIENT;
+	for(int i=0; i<NET_KEY_MAX; i++){
+		proxy_mag.directed_server[i].use_directed = (DIRECTED_PROXY_USE_DEFAULT_ENABLE == model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_proxy_use_directed_default);
+		proxy_mag.directed_server[i].client_addr = ADR_UNASSIGNED;
+		proxy_mag.directed_server[i].client_2nd_ele_cnt = 0;			
+		mesh_directed_proxy_capa_report(i);
+	}
+#endif
+	return 1;	
+}
+
+int proxy_gatt_Write(void *p)
+{
+	if(proxy_In_ccc[0]==0 && proxy_In_ccc[1]==0){
+		return 0;
+	}
+	#if FEATURE_PROXY_EN
+	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
+	pb_gatt_proxy_str *p_gatt = (pb_gatt_proxy_str *)(pw->dat);
+	mesh_cmd_bear_unseg_t *p_bear = (mesh_cmd_bear_unseg_t *)proxy_para_buf;
+	
+	if(p_gatt->msgType == MSG_PROXY_CONFIG ){
+		if(!pkt_pb_gatt_data(pw,L2CAP_PROXY_TYPE,(u8 *)&p_bear->nw,&proxy_para_len)){
+			return 0;
+		}
+		p_bear->trans_par_val=TRANSMIT_DEF_PAR;
+		p_bear->len=proxy_para_len+1;
+		p_bear->type=MESH_ADV_TYPE_MESSAGE;
+		// different dispatch 
+		//send the data by the SIG MESH layer 
+		if(0 == mesh_rc_data_cfg_gatt((u8 *)p_bear)){
+		    proxy_config_dispatch((u8 *)&p_bear->nw,proxy_para_len);
+		}
+	}else if (p_gatt->msgType == MSG_MESH_BEACON){
+		if(!pkt_pb_gatt_data(pw,L2CAP_BEACON_TYPE,(u8 *)&p_bear->beacon,&proxy_para_len)){
+			return 0;
+		}
+		if(SECURE_BEACON == p_bear->beacon.type){
+			p_bear->len =23;
+			//mesh_bear_tx2mesh((u8 *)p_bear, TRANSMIT_DEF_PAR_BEACON);
+			int err = mesh_rc_data_beacon_sec(&p_bear->len, 0);		
+			if(err != 100){
+                LOG_MSG_INFO(TL_LOG_IV_UPDATE,&p_bear->len, p_bear->len+1,"RX secure GATT beacon,nk arr idx:%d, new:%d, pkt:",mesh_key.netkey_sel_dec,mesh_key.new_netkey_dec);
+			}
+		}else if (PRIVACY_BEACON == p_bear->beacon.type){
+			// no handle for other beacon now
+			#if MD_PRIVACY_BEA
+			p_bear->len =28;
+			int err = mesh_rc_data_beacon_privacy(&p_bear->len, 0);		
+			if(err != 100){
+                LOG_MSG_INFO(TL_LOG_IV_UPDATE,&p_bear->len, p_bear->len+1,"RX prrivacy GATT beacon,nk arr idx:%d, new:%d, pkt:",mesh_key.netkey_sel_dec,mesh_key.new_netkey_dec);
+			}
+			#endif
+		}else{
+			// no handle for other beacon now
+		}
+	}else if(p_gatt->msgType == MSG_NETWORK_PDU){
+		if(!pkt_pb_gatt_data(pw,L2CAP_NETWORK_TYPE,(u8 *)&p_bear->nw,&proxy_para_len)){
+			return 0;
+		}
+		// and then how to use the data ,make a demo to turn on or turn off the light 
+		p_bear->trans_par_val = TRANSMIT_DEF_PAR;
+		p_bear->len=proxy_para_len+1;
+		p_bear->type=MESH_ADV_TYPE_MESSAGE;
+		mesh_nw_pdu_from_gatt_handle((u8 *)p_bear);
+		#if DF_TEST_MODE_EN
+		extern void cfg_led_event (u32 e);
+		cfg_led_event(LED_EVENT_FLASH_2HZ_2S);
+		#endif
+	}
+#if MESH_RX_TEST
+	else if((p_gatt->msgType == MSG_RX_TEST_PDU)&&(p_gatt->data[0] == 0xA3) && (p_gatt->data[1] == 0xFF)){
+		u8 par[10];
+		memset(par,0x00,sizeof(par));
+		u16 adr_dst = p_gatt->data[2] + (p_gatt->data[3]<<8);
+		u8 rsp_max = p_gatt->data[4];	
+		par[0] = p_gatt->data[6]&0x01;//on_off	
+		u8 ack = p_gatt->data[5];
+		u32 send_tick = clock_time();
+		memcpy(par+4, &send_tick, 4);
+		par[8] = p_gatt->data[6];// cur count
+		u8 pkt_nums_send = p_gatt->data[7];
+		par[3] = p_gatt->data[8];// pkt_nums_ack	
+		u32 par_len = 9;
+		if(p_gatt->data[7] > 1){// unseg:11  seg:8
+			par_len = 12*pkt_nums_send-6;
+		}
+		extern u16 mesh_rsp_rec_addr;
+		mesh_rsp_rec_addr = p_gatt->data[9] + (p_gatt->data[10]<<8);
+		SendOpParaDebug(adr_dst, rsp_max, ack ? G_ONOFF_SET : G_ONOFF_SET_NOACK, 
+						   (u8 *)&par, par_len);
+	}
+#endif
+	else{
+	}
+#endif
+	return 0;
+}
+//-----------------------------end att cb-----------------------------
 
 void set_proxy_initial_mode(u8 special_mode)
 {
@@ -52,68 +207,26 @@ void set_proxy_initial_mode(u8 special_mode)
 void proxy_cfg_list_init_upon_connection()
 {
 	memset(&proxy_mag, 0x00, sizeof(proxy_mag));
-	if(proxy_filter_initial_mode == FILTER_WHITE_LIST){
-		proxy_mag.filter_type = FILTER_WHITE_LIST;
-		memset((u8 *)&proxy_mag.white_list,0,sizeof(list_mag_str));	
-	}else{
-		proxy_mag.filter_type = FILTER_BLACK_LIST;
-		memset((u8 *)&proxy_mag.black_list,0,sizeof(list_mag_str));	
-	}
+	proxy_mag.filter_type = proxy_filter_initial_mode;
 
-	#if (MD_DF_EN&&MD_SERVER_EN&&!WIN32)
-	proxy_mag.proxy_client_type = UNSET_CLIENT;
-	for(int i=0; i<NET_KEY_MAX; i++){
-		proxy_mag.directed_server[i].use_directed = (DIRECTED_PROXY_USE_DEFAULT_ENABLE == model_sig_df_cfg.directed_forward.subnet_state[i].directed_control.directed_proxy_use_directed_default);
-		proxy_mag.directed_server[i].client_addr = ADR_UNASSIGNED;
-		proxy_mag.directed_server[i].client_2nd_ele_cnt = 0;			
-		mesh_directed_proxy_capa_report(i);
-	}
-	#endif
 	return ;
 }
 
-u8 find_data_in_list(u16 dst, list_mag_str *p_list_dst)
+int find_data_in_list(u16 dst)
 {
-	u8 i=0;
-	for(i=0;i<MAX_LIST_LEN;i++){
-		if(dst == p_list_dst->list_data[i]){
-			return 1;
+	int idx = -1;
+	foreach(i,MAX_LIST_LEN){
+		if(dst == proxy_mag.addr_list[i]){
+			idx = i;
+			break;
 		}
 	}
-	return 0;
+	return idx;
 }
 
-// use this function to filter the data 
-u8 find_data_in_mag_list(u16 src,proxy_config_mag_str *p_mag_list)
+int is_addr_in_proxy_list(u16 dst)
 {
-	list_mag_str *p_list= NULL ;
-	if(p_mag_list->filter_type == FILTER_WHITE_LIST){
-		p_list = &(p_mag_list->white_list);
-	}else if(p_mag_list->filter_type == FILTER_BLACK_LIST){
-		p_list = &(p_mag_list->black_list);
-	}else{}
-	return find_data_in_list(src,p_list);
-}
-
-u8 filter_data_in_mag_list(u16 src,proxy_config_mag_str *p_mag_list)
-{
-	list_mag_str *p_list= NULL ;
-	if(p_mag_list->filter_type == FILTER_WHITE_LIST){
-		p_list = &(p_mag_list->white_list);
-		if(find_data_in_list(src,p_list)){
-			return 1;
-		}else{
-			return 0;
-		}
-	}else if(p_mag_list->filter_type == FILTER_BLACK_LIST){
-		p_list = &(p_mag_list->black_list);
-		if(find_data_in_list(src,p_list)){
-			return 0;
-		}else{
-			return 1;
-		}
-	}
-	return 0;
+	return (-1 != find_data_in_list(dst));
 }
 
 int is_valid_adv_with_proxy_filter(u16 src)
@@ -121,7 +234,7 @@ int is_valid_adv_with_proxy_filter(u16 src)
 	int valid = 1;
 	if(src == PROXY_CONFIG_FILTER_DST_ADR){
 	}else{
-		valid = filter_data_in_mag_list(src,&proxy_mag);
+		valid = (FILTER_WHITE_LIST == proxy_mag.filter_type) ? is_addr_in_proxy_list(src):!is_addr_in_proxy_list(src);
 		if(!valid){
 			static u16 filter_error_cnt;	filter_error_cnt++;
 		}
@@ -130,114 +243,62 @@ int is_valid_adv_with_proxy_filter(u16 src)
 	return valid;
 }
 
-u8 get_list_cnt(list_mag_str *p_list_dst)
+int get_list_cnt()
 {
-	u8 i;
-	u8 cnt=0;
-	u8 *p_list_mask = p_list_dst->list_idx;
-	for(i=0;i<MAX_LIST_LEN;i++){
-		if(BIT(i%8)&(p_list_mask[i/8])){
-			cnt++;
+	int cnt=0;
+	foreach(i,MAX_LIST_LEN){
+		if(0 == proxy_mag.addr_list[i]){
+			break;
 		}
+		cnt++;
 	}
 	return cnt;
 }
 
-u8 add_data_to_list(u16 src ,list_mag_str *p_list_dst)
+int add_data_to_list(u16 src)
 {
-    u8 find_result = find_data_in_list(src,p_list_dst);
-    u8 idx;
-    if(find_result){
-        return 2;
+    if(is_addr_in_proxy_list(src)){
+        return 0;
     }
-	
-	if(get_list_cnt(p_list_dst) >= MAX_LIST_LEN){
-		return 0;
-	}
 
-	for(idx =0;idx<MAX_LIST_LEN;idx++){
-		if(p_list_dst->list_data[idx] == 0){
-			break;
-		}
-	}
-	if(idx != MAX_LIST_LEN){
-		p_list_dst->list_data[idx] = src;
-		p_list_dst->list_idx[idx/8]|= BIT(idx%8);
-		return 1;
-	}
-	return 0;
-}
-
-u8 delete_data_from_list(u16 src ,list_mag_str *p_list_dst)
-{
 	u8 idx;
-	u8 find_result = find_data_in_list(src,p_list_dst);
-	if(!find_result){
-        return 2;
-	}
-	if(get_list_cnt(p_list_dst)<=0){
-		return 0;
-	}
-
 	for(idx =0;idx<MAX_LIST_LEN;idx++){
-		if(p_list_dst->list_data[idx] == src){
-			break;
+		if(0 == proxy_mag.addr_list[idx]){
+			proxy_mag.addr_list[idx] = src;
+			return 0;
 		}
 	}
-	if(idx != MAX_LIST_LEN){
-		p_list_dst->list_data[idx] = 0 ;
-		p_list_dst->list_idx[idx/8] &= ~(BIT(idx%8));
-		return 1;
+	
+	return -1;
+}
+
+int delete_data_from_list(u16 src)
+{
+	int idx = find_data_in_list(src);
+	if((-1 == idx) || (get_list_cnt()>=MAX_LIST_LEN)){
+        return -1;
 	}
+
+	proxy_mag.addr_list[idx] = 0;
+	memcpy(&proxy_mag.addr_list[idx], &proxy_mag.addr_list[idx+1], 2*(MAX_LIST_LEN-(idx+1)));
 	return 0;
 }
 
-u8 cpy_list2buf(u8 *p_buf,list_mag_str *p_list_dst)
+int send_filter_sts(mesh_cmd_nw_t *p_nw)
 {
-	u8 idx ;
-	u8 cnt=0;
-	u8 len ;
-	for(idx=0;idx<MAX_LIST_LEN;idx++){
-		if(BIT(idx%8)& p_list_dst->list_idx[idx/8] ){
-			memcpy(p_buf+cnt*2,p_list_dst->list_data+idx,2);
-			cnt++;
-		}
-	}
-	len = cnt*2;
-	return len;
-}
-
-int send_filter_sts(list_mag_str *p_list_dst,mesh_cmd_nw_t *p_nw)
-{
+	int err = -1;
 	mesh_filter_sts_str mesh_filter_sts;
 	memset(&mesh_filter_sts,0,sizeof(mesh_filter_sts_str));
 	u8 filter_sts = PROXY_FILTER_STATUS; 
 	mesh_filter_sts.fil_type = proxy_mag.filter_type;
-	mesh_filter_sts.list_size = get_list_cnt(p_list_dst);
+	mesh_filter_sts.list_size = get_list_cnt();
 	// swap the list size part 
 	endianness_swap_u16((u8 *)(&mesh_filter_sts.list_size));
 #if 1
-	mesh_tx_cmd_layer_cfg_primary(filter_sts,(u8 *)(&mesh_filter_sts),sizeof(mesh_filter_sts),PROXY_CONFIG_FILTER_DST_ADR);
+	err = mesh_tx_cmd_layer_cfg_primary(filter_sts,(u8 *)(&mesh_filter_sts),sizeof(mesh_filter_sts),PROXY_CONFIG_FILTER_DST_ADR);
 #else
-// add the filter data part for debug 
-	u8 tmp_dat[3+MAX_LIST_LEN*2];
-	u8 tmp_dat_len =0;
-	memcpy(tmp_dat,(u8 *)&mesh_filter_sts,sizeof(mesh_filter_sts));
-	tmp_dat_len = cpy_list2buf(tmp_dat+3,p_list_dst)+sizeof(mesh_filter_sts);
-	mesh_tx_cmd_layer_cfg_primary(PROXY_FILTER_STATUS,tmp_dat,tmp_dat_len,p_nw->dst);
 #endif 
-	return 0;
-}
-
-list_mag_str * get_filter_pointer(u8 filter_type)
-{
-	list_mag_str * p_list;
-	if(filter_type == FILTER_WHITE_LIST){
-		p_list = &(proxy_mag.white_list);
-	}else {
-		p_list = &(proxy_mag.black_list);
-	}
-	return p_list;
+	return err;
 }
 
 #ifdef WIN32
@@ -249,11 +310,10 @@ void set_pair_login_ok(u8 val)
 
 u8 proxy_proc_filter_mesh_cmd(u16 src)
 {
-    list_mag_str *p_list_dst = get_filter_pointer(proxy_mag.filter_type);
     if(proxy_mag.filter_type == FILTER_WHITE_LIST){
-        return add_data_to_list(src ,p_list_dst);
+        return add_data_to_list(src);
     }else if (proxy_mag.filter_type == FILTER_BLACK_LIST){
-        return delete_data_from_list(src,p_list_dst);
+        return delete_data_from_list(src);
     }else{
 
     }
@@ -264,23 +324,19 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 {
 	mesh_cmd_nw_t *p_nw = (mesh_cmd_nw_t *)(p);
 	proxy_config_pdu_sr *p_str = (proxy_config_pdu_sr *)(p_nw->data);
-	list_mag_str *p_list_dst;
 	u8 *p_addr = p_str->para;
 	u8 para_len;
 	u16 proxy_unicast=0;
 	u8 i=0;
 	// if not set ,use the white list 
-	p_list_dst = &(proxy_mag.white_list);
-	p_list_dst = get_filter_pointer(proxy_mag.filter_type);
 	SET_TC_FIFO(TSCRIPT_PROXY_SERVICE, (u8 *)p_str, len-17);
 	switch(p_str->opcode & 0x3f){
 		case PROXY_FILTER_SET_TYPE:
 			// switch the list part ,and if switch ,it should clear the certain list 
 			LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"set filter type %d ",p_str->para[0]);
 			proxy_mag.filter_type = p_str->para[0];
-			p_list_dst = get_filter_pointer(proxy_mag.filter_type);
-			memset(p_list_dst,0,sizeof(list_mag_str));
-			send_filter_sts(p_list_dst,p_nw);
+			memset(proxy_mag.addr_list, 0, sizeof(proxy_mag.addr_list));
+			send_filter_sts(p_nw);
 			pair_login_ok = 1;
 			#if MD_DF_EN
 			if(FILTER_BLACK_LIST ==  proxy_mag.filter_type){
@@ -301,9 +357,9 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 				endianness_swap_u16(p_addr+2*i);
 				// suppose the data is little endiness 
 				proxy_unicast = p_addr[2*i]+(p_addr[2*i+1]<<8);
-				add_data_to_list(proxy_unicast ,p_list_dst);
+				add_data_to_list(proxy_unicast);
 			}
-			send_filter_sts(p_list_dst,p_nw);
+			send_filter_sts(p_nw);
 			pair_login_ok = 1;
 			break;
 		case PROXY_FILTER_RM_ADR:
@@ -313,9 +369,9 @@ u8 proxy_config_dispatch(u8 *p,u8 len )
 			for(i=0;i<para_len/2;i++){
 				endianness_swap_u16(p_addr+2*i);
 				proxy_unicast = p_addr[2*i]+(p_addr[2*i+1]<<8);
-				delete_data_from_list(proxy_unicast ,p_list_dst);
+				delete_data_from_list(proxy_unicast);
 			}
-			send_filter_sts(p_list_dst,p_nw);
+			send_filter_sts(p_nw);
 			break;
 		#if (MD_DF_EN&&!WIN32)
 		case DIRECTED_PROXY_CONTROL:{

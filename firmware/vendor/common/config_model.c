@@ -148,7 +148,7 @@ int mesh_cmd_sig_cfg_friend_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 				    #endif
 					mesh_directed_forwarding_bind_state_update();
 					#if PTS_TEST_EN
-					mesh_common_store(FLASH_ADR_MD_DF);
+					mesh_common_store(FLASH_ADR_MD_DF_SBR);
 					#endif
 				}
 				
@@ -201,7 +201,7 @@ int mesh_cmd_sig_cfg_gatt_proxy_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 				#ifndef WIN32
 				mesh_directed_forwarding_bind_state_update();
 				#if PTS_TEST_EN
-				mesh_common_store(FLASH_ADR_MD_DF);
+				mesh_common_store(FLASH_ADR_MD_DF_SBR);
 				#endif
 				// send terminate cmd 
 				if(blt_state == BLS_LINK_STATE_CONN){

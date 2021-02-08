@@ -79,7 +79,7 @@ extern "C" {
 #define TRANSITION_TIME_DEFAULT_VAL (0x00)  // 0x41: 1 second // 0x00: means no default transition time
 
 /////////////////// MODULE /////////////////////////////////
-#define BLE_REMOTE_PM_ENABLE			0
+#define BLE_REMOTE_PM_ENABLE			1
 #if BLE_REMOTE_PM_ENABLE
 #define PM_DEEPSLEEP_RETENTION_ENABLE   1   // must
 #else

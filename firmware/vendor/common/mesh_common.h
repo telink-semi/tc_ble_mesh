@@ -137,6 +137,7 @@ void mesh_global_var_init();
 void mesh_tid_save(int ele_idx);
 void mesh_vd_init();
 void lpn_node_io_init();
+void lpn_proc_keyboard (u8 e, u8 *p, int n);
 void entry_ota_mode(void);
 void set_mesh_ota_type();
 void set_firmware_type_init();
@@ -174,6 +175,7 @@ u32 get_mesh_pub_interval_ms(u32 model_id, bool4 sig_model, mesh_pub_period_t *p
 void publish_when_powerup();
 int is_need_response_to_self(u16 adr_dst, u16 op);
 int app_func_before_suspend();
+void beacon_str_disable();
 
 #if GATEWAY_ENABLE
 typedef u8 (*access_layer_dst_addr)(mesh_cmd_nw_t *p_nw);

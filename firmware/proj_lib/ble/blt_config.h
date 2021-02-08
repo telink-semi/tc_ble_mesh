@@ -56,7 +56,11 @@
     #elif MI_API_ENABLE
 #define 	MY_RF_POWER_INDEX		RF_POWER_P10p46dBm
     #else
-#define		MY_RF_POWER_INDEX		RF_POWER_P3p01dBm
+	#if DU_ENABLE
+#define		MY_RF_POWER_INDEX		RF_POWER_P7p02dBm
+	#else
+#define		MY_RF_POWER_INDEX		RF_POWER_P3p01dBm	
+	#endif
     #endif
 #elif(MCU_CORE_TYPE == MCU_CORE_8278)
 #define		MY_RF_POWER_INDEX		RF_POWER_P3p50dBm
@@ -210,18 +214,18 @@ typedef struct {
 #define			FLASH_ADR_RESET_CNT			0x3e000
 #if WIN32
 #define			FLASH_ADR_MD_PROPERTY		0x40000
-#define			FLASH_ADR_MD_DF				0x41000 
+#define			FLASH_ADR_MD_DF_SBR			0x41000 
 #else
 #define			FLASH_ADR_MD_PROPERTY		0x3f000 // just test
-#define			FLASH_ADR_MD_DF				0x3f000 // just test
+#define			FLASH_ADR_MD_DF_SBR			0x3f000 // just test
 #endif
 
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
 	#if WIN32
 #define 		FLASH_ADR_VC_NODE_INFO		0x80000		//  from 0x00000 to 0x40000 (256K)
 	#else
-		#if DEBUG_CFG_CMD_GROUP_AK_EN
-#define         FLASH_ADR_VC_NODE_INFO      0x78000 // vcnode info
+		#if VC_NODE_INFO_MULTI_SECTOR_EN
+#define         FLASH_ADR_VC_NODE_INFO      0x78000 // vcnode info, occupy sector num dependent on  MESH_NODE_MAX_NUM
 		#else
 #define 		FLASH_ADR_VC_NODE_INFO		0x3f000		//
 		#endif
@@ -524,6 +528,9 @@ enum{
     HCI_GATEWAY_CMD_MESH_OTA_ADR_SEND = 0x13,// HCI send back the static oob information 
     HCI_GATEWAY_CMD_MESH_COMMUNICATE_TEST = 0x14,// HCI send back the static oob information
     HCI_GATEWAY_CMD_MESH_RX_TEST        = 0x15,
+    HCI_GATEWAY_CMD_SET_EXTEND_ADV_OPTION = 0x16,
+    HCI_GATEWAY_CMD_FAST_PROV_START		=0x17,
+    
 	// rsp cmd part 
 	HCI_GATEWAY_RSP_UNICAST	=0x80,
 	HCI_GATEWAY_RSP_OP_CODE	=0X81,
@@ -540,6 +547,7 @@ enum{
 	HCI_GATEWAY_CMD_SEND_MESH_OTA_STS	= 0x98,
 	HCI_GATEWAY_CMD_SEND_UUID   = 0x99,
 	HCI_GATEWAY_CMD_SEND_IVI    = 0x9a,
+	HCI_GATEWAY_CMD_SEND_EXTEND_ADV_OPTION = 0x9b,
 	HCI_GATEWAY_CMD_SEND_SRC_CMD = 0x9c,
 	HCI_GATEWAY_CMD_SEND_SNO_RSP    = 0xa0,
 	HCI_GATEWAY_CMD_SEND       = 0xb1,

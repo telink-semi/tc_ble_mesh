@@ -31,14 +31,17 @@
 #define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (0))
 #define VENDOR_MD_LIGHT_S2              ((0x0002<<16) | (0))
 #else
-    #if AIS_ENABLE
-#define TEMP_VD_ID_MODEL                (SHA256_BLE_MESH_PID)   // TEMP_VD_ID_MODEL is just use in this file.
-    #else
+    
 #define TEMP_VD_ID_MODEL                (VENDOR_ID)
-    #endif
+	#if DU_ENABLE
+#define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (TEMP_VD_ID_MODEL))
+#define VENDOR_MD_LIGHT_S               ((0x0002<<16) | (TEMP_VD_ID_MODEL))
+#define VENDOR_MD_LIGHT_S2              ((0x0003<<16) | (TEMP_VD_ID_MODEL))
+	#else
 #define VENDOR_MD_LIGHT_S               ((0x0000<<16) | (TEMP_VD_ID_MODEL))
 #define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (TEMP_VD_ID_MODEL))
 #define VENDOR_MD_LIGHT_S2              ((0x0002<<16) | (TEMP_VD_ID_MODEL))
+	#endif
 #endif
 
 // op cmd 11xxxxxx yyyyyyyy yyyyyyyy (vendor)
@@ -66,6 +69,9 @@
 		#endif
     #endif
 
+	#if DU_ENABLE
+#define VD_LPN_REPROT					0xF9// report event .
+	#endif
 #elif(VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
 // ------ 0xC0 to 0xDF for telink used
     #if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)

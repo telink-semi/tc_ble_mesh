@@ -494,61 +494,6 @@ typedef struct{
 	u16 sub_adr[SUB_LIST_MAX];
 }mesh_cfg_model_sub_list_vendor_t;
 
-// directed forwarding message
-typedef struct{
-	u8 directed_forwarding;
-	u8 directed_relay;
-	u8 directed_proxy;
-	u8 directed_proxy_use_directed_default;
-	u8 directed_friend;
-}directed_control_t;
-
-typedef struct{
-	u8  metric_type:3;	
-	u8  path_lifetime:2;
-	u8  rfu:3;
-}path_metric_t;
-
-typedef struct{
-	s8 default_rssi_threshold;
-	s8 rssi_margin;
-}rssi_threshold_t;
-
-typedef struct{
-	u16 node_paths;
-	u16 relay_paths;
-	u16 proxy_paths;
-	u16 friend_paths;
-}directed_paths_t;
-
-typedef struct{
-	u16 path_monitoring_interval;
-	u16 path_discovery_retry_interval;
-	u8 path_discovery_interval:1;
-	u8 lane_discovery_guard_interval:1;
-	u8 prohibited:6;
-}discovery_timing_t;
-
-typedef struct{
-	directed_control_t directed_control;
-	path_metric_t path_metric;
-	u8 max_concurrent_init;
-	u8 wanted_lanes;
-	u8 two_way_path;
-	u8 path_echo_interval;
-}mesh_directed_subnet_state_t;
-
-typedef struct{
-	mesh_directed_subnet_state_t subnet_state[NET_KEY_MAX];
-	mesh_transmit_t transmit;
-	mesh_transmit_t relay_transmit;
-	rssi_threshold_t rssi_threshold;
-	directed_paths_t directed_paths;
-	discovery_timing_t discovery_timing;
-	mesh_transmit_t	control_transmit;
-	mesh_transmit_t	control_relay_transmit;
-}mesh_directed_forward_t;
-
 //--------------------------------------- generic model
 enum{
     PAR_TYPE_PUB_ADR = 0,
@@ -1688,6 +1633,7 @@ extern const u16 my_fwRevisionUUID;
 extern u8 my_fwRevisionCharacter;
 #define FW_REVISION_VALUE_LEN       (9)
 extern const u8  my_fwRevision_value [FW_REVISION_VALUE_LEN];
+extern u8 g_gw_extend_adv_option;
 
 #define TEST_CNT 100
 typedef struct{
@@ -1701,4 +1647,10 @@ typedef struct{
 	u32 send_tick;
 } mesh_rcv_t;
 
+enum{
+    EXTEND_ADV_OPTION_NONE      = 0,    // not support extend adv
+    EXTEND_ADV_OPTION_ADV_ONLY  = 1,    // only mesh OTA command use extend adv
+    EXTEND_ADV_OPTION_ALL       = 2,    // all command use extend adv
+    EXTEND_ADV_OPTION_MAX,
+};
 

@@ -74,9 +74,6 @@ extern "C" {
 #ifndef	MESH_DLE_MODE
 #define MESH_DLE_MODE		    0
 #endif
-#ifndef	MESH_LONG_PACKET_EN
-#define MESH_LONG_PACKET_EN		0
-#endif
 #ifndef	EXTENDED_ADV_ENABLE
 #define EXTENDED_ADV_ENABLE		0
 #endif

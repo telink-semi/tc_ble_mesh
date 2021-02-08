@@ -1001,14 +1001,16 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 	// subnet bridge
 	{SUBNET_BRIDGE_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_subnet_bridge_get,SUBNET_BRIDGE_STATUS},
 	{SUBNET_BRIDGE_SET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_subnet_bridge_set,SUBNET_BRIDGE_STATUS},
-    {SUBNET_BRIDGE_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_subnet_bridge_status,STATUS_NONE},    
+    {SUBNET_BRIDGE_STATUS,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_subnet_bridge_status,STATUS_NONE},    
     {BRIDGING_TABLE_ADD,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_add,BRIDGING_TABLE_STATUS},
 	{BRIDGING_TABLE_REMOVE,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_remove,BRIDGING_TABLE_STATUS},
-    {BRIDGING_TABLE_STATUS,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_bridging_tbl_status,STATUS_NONE},
+    {BRIDGING_TABLE_STATUS,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridging_tbl_status,STATUS_NONE},
 	{BRIDGED_SUBNETS_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridged_subnets_get,BRIDGED_SUBNETS_LIST},
-    {BRIDGED_SUBNETS_LIST,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_bridged_subnets_list,STATUS_NONE},	
+    {BRIDGED_SUBNETS_LIST,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridged_subnets_list,STATUS_NONE},	
 	{BRIDGING_TABLE_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridging_tbl_get,BRIDGING_TABLE_LIST},
-    {BRIDGING_TABLE_LIST,1,SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,mesh_cmd_sig_cfg_bridging_tbl_list,STATUS_NONE},
+    {BRIDGING_TABLE_LIST,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridging_tbl_list,STATUS_NONE},	
+	{BRIDGE_CAPABILITY_GET,0,SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_BRIDGE_CFG_SERVER,mesh_cmd_sig_cfg_bridge_capa_get,BRIDGE_CAPABILITY_STATUS},
+    {BRIDGE_CAPABILITY_STATUS,1,SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,mesh_cmd_sig_cfg_bridging_tbl_list,STATUS_NONE},
 #endif
 
 #if MD_REMOTE_PROV  
@@ -1459,6 +1461,27 @@ int is_cmd_with_tid(u8 *tid_pos_out, u16 op, u8 *par, u8 tid_pos_vendor_app)
     return cmd_with_tid;
 }
 
+u32 get_op_rsp(u16 op)
+{
+    mesh_op_resource_t op_res;
+    if(0 == mesh_search_model_id_by_op(&op_res, op, 1)){
+        return op_res.op_rsp;
+    }
+    return STATUS_NONE;
+}
+
+int is_reliable_cmd(u16 op, u32 vd_op_rsp)
+{
+    #if VC_SUPPORT_ANY_VENDOR_CMD_EN
+    if(IS_VENDOR_OP(op)){
+        return ((vd_op_rsp & 0xff) != STATUS_NONE_VENDOR_OP_VC);
+    }
+    #endif
+    
+    return (STATUS_NONE != get_op_rsp(op));
+}
+
+
 // ----------
 #define GET_ARRAR_MODEL_AND_COUNT(model, cb_pub)    (u8 *)&model, cb_pub, sizeof(model[0]), ARRAY_SIZE(model), 1
 #define GET_SINGLE_MODEL_AND_COUNT(model, cb_pub)   (u8 *)&model, cb_pub, sizeof(model),    1,                 0
@@ -1472,19 +1495,19 @@ const mesh_model_resource_t MeshSigModelResource[] = {
     {SIG_MD_HEALTH_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.clnt, 0)},  // change to multy element model later. 
 #if MD_DF_EN
     #if MD_SERVER_EN
-    {SIG_MD_DF_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_df_cfg.srv, 0)},
+    {SIG_MD_DF_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.df_cfg.srv, 0)},
     #endif
     #if MD_CLIENT_EN
-    {SIG_MD_DF_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_df_cfg.clnt, 0)},
+    {SIG_MD_DF_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.df_cfg.clnt, 0)},
     #endif
 #endif
 
 #if MD_SBR_EN
     #if MD_SERVER_EN
-    {SIG_MD_BRIDGE_CFG_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_bridge_cfg.srv, 0)},
+    {SIG_MD_BRIDGE_CFG_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.bridge_cfg.srv, 0)},
     #endif
     #if MD_CLIENT_EN
-    {SIG_MD_BRIDGE_CFG_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_bridge_cfg.clnt, 0)},
+    {SIG_MD_BRIDGE_CFG_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.bridge_cfg.clnt, 0)},
     #endif
 #endif
 

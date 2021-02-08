@@ -27,6 +27,7 @@
 #include "vendor/common/app_heartbeat.h"
 #include "vendor/common/app_health.h"
 #include "vendor/common/directed_forwarding.h"
+#include "subnet_bridge.h"
 #include "vendor/common/mesh_ota.h"
 #include "vendor/common/lighting_model_LC.h"
 #include "version.h"
@@ -55,7 +56,16 @@
 /** @addtogroup Mesh_Common
   * @{
   */
-  
+#if EXTENDED_ADV_ENABLE
+rf_packet_adv_t	pkt_adv = {	// redefine to replace the weak define in library.
+	sizeof (rf_packet_adv_t) - 4,		// dma_len
+	{LL_TYPE_ADV_IND, 0, 0, 0, 0},					// type
+	sizeof (rf_packet_adv_t) - 6,		// rf_len
+	{0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5},	// advA
+	// data
+};
+#endif
+
 /** @defgroup Mesh_Node
   * @brief Mesh Node Code.
   * @{
@@ -112,15 +122,9 @@ u8 proxy_message_between_gatt_and_adv_en = 0;
 u8 proxy_message_between_gatt_and_adv_en = FEATURE_PROXY_EN;
 #endif
 
-#if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR)&&(!GATT_LPN_EN))
-#define DELTA_EXTEND_AND_NORMAL_ALIGN4      GET_ALIGN_CEIL(DELTA_EXTEND_AND_NORMAL, 4)
-#else
-#define DELTA_EXTEND_AND_NORMAL_ALIGN4      0
-#endif
-
-MYFIFO_INIT(mesh_adv_cmd_fifo, sizeof(mesh_cmd_bear_unseg_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4, MESH_ADV_CMD_BUF_CNT);
+MYFIFO_INIT(mesh_adv_cmd_fifo, sizeof(mesh_cmd_bear_unseg_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF, MESH_ADV_CMD_BUF_CNT);
 #if (FEATURE_RELAY_EN || WIN32)
-MYFIFO_INIT_NO_RET(mesh_adv_fifo_relay, sizeof(mesh_relay_buf_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4, MESH_ADV_BUF_RELAY_CNT);
+MYFIFO_INIT_NO_RET(mesh_adv_fifo_relay, sizeof(mesh_relay_buf_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF, MESH_ADV_BUF_RELAY_CNT);
 #endif
 
 #if MESH_BLE_NOTIFY_FIFO_EN
@@ -1439,7 +1443,7 @@ mesh_app_key_t *mesh_tx_access_key_get(u8 *mat, u8 akf)
 			return 0;
 		}
 
-		int new_key_flag = is_key_refresh_use_new_key(p_mat->nk_array_idx);
+		int new_key_flag = is_key_refresh_use_new_key(p_mat->nk_array_idx, 0);
 		LOG_MSG_INFO(TL_LOG_MESH,0,0,"mesh_tx_access_key_get:print index part%d,%d,%d  ",p_mat->nk_array_idx,new_key_flag,p_mat->ak_array_idx);
 		p_key_str = &(mesh_key.net_key[p_mat->nk_array_idx][new_key_flag].app_key[p_mat->ak_array_idx]);
 		
@@ -1539,6 +1543,11 @@ void net_key_del2(mesh_net_key_t *p_key)
 		mesh_directed_proxy_capa_report(key_offset);
 	}
 #endif	
+
+#if (MD_SBR_EN&&!WIN32)
+	mesh_subnet_bridge_bind_state_update();
+	mesh_model_store(1, SIG_MD_BRIDGE_CFG_SERVER);
+#endif
 	memset(p_key, 0, sizeof(mesh_net_key_t));
 	mesh_key_save();
 }
@@ -1594,10 +1603,13 @@ int get_mesh_net_key_offset(u16 key_idx)
 {
 	int offset = -1;
 	foreach(i,NET_KEY_MAX){
-		mesh_net_key_t *p_netkey = &mesh_key.net_key[i][0];
-		if((p_netkey->valid)&&(key_idx == p_netkey->index)){
-			return i;
-		}
+		u32 cnt = is_key_refresh_use_old_and_new_key(i) ? 2 : 1;
+    	foreach(k,cnt){
+			mesh_net_key_t *p_netkey = &mesh_key.net_key[i][0];
+			if((p_netkey->valid)&&(key_idx == p_netkey->index)){
+				return i;
+			}
+    	}
 	}
     return offset;
 }
@@ -2794,8 +2806,8 @@ mesh_md_adr_map_t mesh_md_adr_map[] = {
 	{1, {SIG_MD_G_LOCATION_S, SIG_MD_G_LOCATION_SETUP_S, SIG_MD_G_LOCATION_C, -1, -1, -1}, FLASH_ADR_MD_SENSOR},
 #elif((MD_SENSOR_EN || MD_BATTERY_EN))
 	{1, {SIG_MD_SENSOR_S, SIG_MD_SENSOR_SETUP_S, SIG_MD_SENSOR_C, SIG_MD_G_BAT_S, SIG_MD_G_BAT_C, -1}, FLASH_ADR_MD_SENSOR},
-#elif(MD_DF_EN&&PTS_TEST_EN)
-	{1, {SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C, -1, -1, -1, -1}, FLASH_ADR_MD_DF},
+#elif((MD_DF_EN || MD_SBR_EN ))
+	{1, {SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C, SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT, -1, -1}, FLASH_ADR_MD_DF_SBR},
 #endif
 };
 
@@ -2847,8 +2859,8 @@ const mesh_save_map_t mesh_save_map[] = {
 #endif
 #if(MD_PROPERTY_EN)
 	{FLASH_ADR_MD_PROPERTY, (u8 *)&model_sig_property, &mesh_md_property_addr, sizeof(model_sig_property)},
-#elif(MD_DF_EN&&PTS_TEST_EN)
-	{FLASH_ADR_MD_DF, (u8 *)&model_sig_df_cfg, &mesh_md_df_addr, sizeof(model_sig_df_cfg)},
+#elif((MD_DF_EN || MD_SBR_EN))
+	{FLASH_ADR_MD_DF_SBR, (u8 *)&model_sig_g_df_sbr_cfg, &mesh_md_df_sbr_addr, sizeof(model_sig_g_df_sbr_cfg)},
 #endif
 	{FLASH_ADR_MD_VD_LIGHT, (u8 *)&model_vd_light, &mesh_md_vd_light_addr, sizeof(model_vd_light)},
 #if (ALI_MD_TIME_EN)
@@ -4147,10 +4159,6 @@ void mesh_loop_process()
 	#if MD_MESH_OTA_EN
 	mesh_ota_proc();
 	#endif
-	// du proc
-	#if DU_ENABLE
-	du_ota_suc_proc();
-	#endif
 	// mesh proc 
 	#if (!(DEBUG_MESH_DONGLE_IN_VC_EN && (!IS_VC_PROJECT)))
 	mesh_seg_ack_poll();
@@ -4266,7 +4274,7 @@ void mesh_init_all()
     provision_random_data_init();
 	mesh_provision_para_init(node_ident_random);
 	//unprovision beacon send part 
-	#if(!GATT_LPN_EN)
+	#if (!(DU_LPN_EN || (GATT_LPN_EN && __PROJECT_MESH__)))
 	beacon_str_init();
 	#endif
 	mesh_node_init();
@@ -4920,6 +4928,10 @@ u8 get_directed_friend_dependent_ele_cnt(u16 netkey_offset, u16 addr){return 0;}
 int directed_forwarding_dependents_update_start(u16 netkey_offset, u8 type, u16 path_enpoint, u16 dependent_addr, u8 dependent_ele_cnt){return 0;}
 #endif
 
+#if (0 == MD_SBR_EN)
+int is_subnet_bridge_en(){return 0;}
+int get_subnet_bridge_index(u16 netkey_index, u16 src, u16 dst){return -1;}
+#endif
 #if (SLEEP_FUNCTION_DISABLE && ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)))
 /*
 @ This function should not be called anytime
@@ -5178,11 +5190,7 @@ u32 mesh_max_payload_get (u32 ctl, bool4 extend_adv_short_unseg)
     mesh_cmd_lt_ctl_seg_t *p_lt_ctl_seg = NULL;
     mesh_cmd_lt_seg_t *p_lt_seg = NULL;
     
-    #if WIN32
-    u8 delta_extend_len = isVC_DLEModeExtendBearer() ? DELTA_EXTEND_AND_NORMAL : 0;
-    #else
     u8 delta_extend_len = GET_DELTA_EXTEND_BEAR;
-    #endif
 
     #if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) || WIN32)
     if(extend_adv_short_unseg){
@@ -5193,10 +5201,30 @@ u32 mesh_max_payload_get (u32 ctl, bool4 extend_adv_short_unseg)
     return ((ctl ? sizeof(p_lt_ctl_seg->data) : sizeof(p_lt_seg->data)) + delta_extend_len);
 }
 
+#if (GATEWAY_ENABLE && EXTENDED_ADV_ENABLE)
+u8 g_gw_extend_adv_option = EXTEND_ADV_OPTION_ADV_ONLY;
+#endif
+
 int is_extend_unseg2short_unseg(u16 op)
 {
+#if (WIN32 || (GATEWAY_ENABLE && EXTENDED_ADV_ENABLE))
+    #if WIN32
+    u8 option_val = isVC_DLEModeExtendBearer();
+    #else
+    u8 option_val = g_gw_extend_adv_option;
+    #endif
+    
+    if(EXTEND_ADV_OPTION_ALL == option_val){ // all op use extend adv
+        return 0;
+    }else if(EXTEND_ADV_OPTION_NONE == option_val){ // all op use extend adv
+        return 1;
+    }
+#endif
+
+    // -- EXTEND_ADV_OPTION_ADV_ONLY
 #if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) || WIN32)
-    if((BLOB_CHUNK_TRANSFER == op)||(BLOB_BLOCK_STATUS == op)){  // TODO : only Chunk data now.
+    if((FW_UPDATE_START == op)||(BLOB_CHUNK_TRANSFER == op)||(BLOB_BLOCK_STATUS == op)){  // TODO : only Chunk data now.
+        // use update start message to check whether node support extend adv
         return 0;
     }else{
         return 1;

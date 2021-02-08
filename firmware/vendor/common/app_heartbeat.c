@@ -20,8 +20,12 @@
  *           
  *******************************************************************************************************/
 #include "app_heartbeat.h"
-
+#if DU_LPN_EN
+#include "user_du.h"
+u8 heartbeat_en =0;
+#else
 u8 heartbeat_en =1;
+#endif
 u8 hb_sts_change = 0;
 u32 hb_pub_100ms =0;
 u32 hb_sub_100ms =0;
@@ -97,6 +101,10 @@ int mesh_cmd_sig_heartbeat_pub_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 	hb_pub_100ms = clock_time_100ms()-BIT(31);  // Ali required, send once at once after received command.
 #endif
 	mesh_common_store(FLASH_ADR_MD_CFG_S);
+#if DU_LPN_EN
+	du_bind_end_proc(cb_par->adr_src);
+#endif
+
 	return err;
 }
 

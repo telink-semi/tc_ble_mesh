@@ -507,6 +507,11 @@ void mesh_ota_comm_test()
 }
 #endif
 
+u8 gateway_upload_extend_adv_option(u8 option_val)
+{
+    return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_EXTEND_ADV_OPTION,(u8 *)&option_val,sizeof(option_val));
+}
+
 u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 {
 	if(len<=0){
@@ -619,6 +624,23 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 		mesh_tx_comm_cmd(comm_adr_dst);
 	}
 	#endif
+	else if (op_code == HCI_GATEWAY_CMD_SET_EXTEND_ADV_OPTION){
+	    u8 option_val = p[1];
+	    #if EXTENDED_ADV_ENABLE
+	    g_gw_extend_adv_option = option_val;
+	    #else
+	    if(option_val){
+	        LOG_MSG_ERR(TL_LOG_NODE_BASIC,0,0,"not support extend adv option:%d",option_val);
+	    }
+	    option_val = EXTEND_ADV_OPTION_NONE;
+	    #endif
+	    LOG_MSG_LIB(TL_LOG_NODE_BASIC,0,0,"set extend adv option:%d",option_val);
+	    gateway_upload_extend_adv_option(option_val);
+	}
+	else if(op_code == HCI_GATEWAY_CMD_FAST_PROV_START ){
+		u16 pid = p[1] + (p[2]<<8);
+		mesh_fast_prov_start(pid);
+	}
 	return 1;
 }
 

@@ -682,22 +682,11 @@ u32 mesh_lpn_wakeup_key_io_get()
 	return 0;
 }
 
-u8 mesh_lpn_key_not_release()
-{
-	if(key_not_release&&(mesh_lpn_wakeup_key_io_get()==0)){
-		key_not_release++;
-		if(key_not_release == 3){
-			key_not_release = 0;
-		}
-	}
-	return key_not_release;
-}
-
 int is_lpn_key_cmd_tx_trigger(int sleep_en)
 {
     int trigger_flag = 0;
-    static u32 lpn_cmd_key_last = 0;
     u32 key_val = mesh_lpn_wakeup_key_io_get();
+	
     if(MESH_LPN_CMD_KEY == key_val){
         if(sleep_en){
             #if 0   // test add/remove subscription list
@@ -713,14 +702,11 @@ int is_lpn_key_cmd_tx_trigger(int sleep_en)
             }
             // should disable RX
         }else{
-            if(0 == lpn_cmd_key_last){
-                test_cmd_wakeup_lpn();
-            }
+            test_cmd_wakeup_lpn();
         }
         
         trigger_flag = 1;
     }
-    lpn_cmd_key_last = key_val;
     
     return trigger_flag;
 }
@@ -746,6 +732,9 @@ void lpn_key_factory_reset_check()
             }
             
             if(blt_state != BLS_LINK_STATE_CONN){
+				#if(MCU_CORE_TYPE == MCU_CORE_8278)
+				sleep_ms(1); //8278 can't call cpu_sleep_wakeup within 400us after retention wakeup
+				#endif
                 cpu_sleep_wakeup(0, PM_WAKEUP_TIMER, clock_time()+KEY_SCAN_INTERVAL_MS*1000*sys_tick_per_us);
             }
         }else{
@@ -753,7 +742,6 @@ void lpn_key_factory_reset_check()
         }
     }while(detkey);
 
-#if !GATT_LPN_EN
     if(KEY_PRESSED_SHORT == key_press){
         if(LPN_MODE_GATT_OTA == lpn_mode){
             lpn_mode_set(LPN_MODE_NORMAL);
@@ -761,7 +749,32 @@ void lpn_key_factory_reset_check()
             lpn_mode_set(LPN_MODE_GATT_OTA);
         }
     }
-#endif
+}
+
+void lpn_proc_keyboard (u8 e, u8 *p, int n)
+{
+	if(e == BLT_EV_FLAG_GPIO_EARLY_WAKEUP){
+	}
+	else{
+	}
+	
+	static u32 tick, scan_io_interval_us = 40000;
+	if (!clock_time_exceed (tick, scan_io_interval_us))
+	{
+		return;
+	}
+	tick = clock_time();
+	
+	lpn_key_factory_reset_check(); // include mesh_lpn_wakeup_key_io_get_(); 
+	
+	#if (FRI_ESTABLISH_WIN_MS > 100)
+	_attribute_no_retention_bss_ static u8 st_sw2_last;
+	u8 st_sw2 = !gpio_read(MESH_LPN_CMD_KEY);
+	if(!(st_sw2_last)&&st_sw2){
+	    is_lpn_key_cmd_tx_trigger(0);
+	}
+	st_sw2_last = st_sw2;
+	#endif
 }
 
 #if DEBUG_SUSPEND
@@ -860,7 +873,6 @@ void mesh_lpn_proc_suspend ()
 		blt_busy = 0; // triger pm in blt_sdk_main_loop
 	}
 	
-    lpn_key_factory_reset_check(); // include mesh_lpn_wakeup_key_io_get_();   // check release
     if(LPN_MODE_GATT_OTA == lpn_mode){
         // use BLE PM flow: BLE_REMOTE_PM_ENABLE
         if(blt_state != BLS_LINK_STATE_CONN){
@@ -876,15 +888,6 @@ void mesh_lpn_proc_suspend ()
     }
     
 	if(lpn_provision_ok){
-	    #if (FRI_ESTABLISH_WIN_MS > 100)
-	    if(FRI_ST_OFFER == fri_ship_proc_lpn.status){ // MCU is active and waiting for rx offer.
-            static u32 tick_lpn_key_scan;
-	        if(clock_time_exceed(tick_lpn_key_scan, KEY_SCAN_INTERVAL_MS * 1000)){
-	            tick_lpn_key_scan = clock_time();
-	            is_lpn_key_cmd_tx_trigger(0);    // check key and tx command
-	        }
-	    }
-	    #endif
 	    
         if(blt_state == BLS_LINK_STATE_CONN){
             return ;
@@ -939,7 +942,7 @@ void lpn_quick_tx(u8 is_mesh_msg)
 
 int mesh_lpn_adv_interval_update(u8 adv_tick_refresh)
 {
-	u16 interval = (LPN_MODE_GATT_OTA == lpn_mode) ? ADV_INTERVAL_MS:(is_lpn_support_and_en?(is_friend_ship_link_ok_lpn() ? FRI_POLL_INTERVAL_MS:FRI_REQ_TIMEOUT_MS):GET_ADV_INTERVAL_MS(ADV_INTERVAL_MIN));
+	u16 interval = (LPN_MODE_GATT_OTA == lpn_mode) ? ADV_INTERVAL_MS:(is_lpn_support_and_en?(is_friend_ship_link_ok_lpn() ? FRI_POLL_INTERVAL_MS:FRI_REQ_TIMEOUT_MS):GET_ADV_INTERVAL_MS(ADV_INTERVAL_UNIT));
 	int ret = bls_ll_setAdvParam_interval(interval, 0);
 	if(adv_tick_refresh){
 		extern u32 blt_advExpectTime;

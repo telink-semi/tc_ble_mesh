@@ -7,11 +7,15 @@
 #include "fast_provision_model.h"
 #include "proj_lib/ble/service/ble_ll_ota.h"
 #include "proj_lib/mesh_crypto/aes_cbc.h"
-
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
+#include "blt_soft_timer.h"
 #if DU_ENABLE
+#include "vendor_model.h"
 #define SHORT_LOACL_NAME  "DUMESH"
 const u8 du_local_name[6]=SHORT_LOACL_NAME;
 #define DU_MAGIC_CODE 0x44496F54
+_attribute_no_retention_data_  u8  du_ota_buf[240*16];
+
 void du_create_input_string(char *p_input,u16 rand,u32 pid,u8 *p_mac,u8 *p_secret)
 {
 	u8 idx =0;
@@ -205,15 +209,15 @@ void buffer_chk_cmd_proc(u8*pbuf)
 	du_buf_chk_str *p_chk = (du_buf_chk_str *)pbuf;
 	du_buf_chk_sts_str chk_sts;
 	//when we receive all the segment buf part 
-	if(du_soft_crc32(p_ota->buf,p_ota->buf_idx,0) == p_chk->crc32){
+	if(du_soft_crc32(du_ota_buf,p_ota->buf_idx,0) == p_chk->crc32){
 		// if the image_offset is 0,we need to change the buf to 0xff,and after finish ,we need to change back to 0x4f
 		if(p_ota->image_offset <=8){
-			p_ota->crc = du_soft_crc32(p_ota->buf,p_ota->buf_idx,0);
-			p_ota->buf[8]= 0xff;
+			p_ota->crc = du_soft_crc32(du_ota_buf,p_ota->buf_idx,0);
+			du_ota_buf[8]= 0xff;
 		}else{
-			p_ota->crc = du_soft_crc32(p_ota->buf,p_ota->buf_idx,p_ota->crc);
+			p_ota->crc = du_soft_crc32(du_ota_buf,p_ota->buf_idx,p_ota->crc);
 		}
-		flash_write_page(ota_program_offset+p_ota->image_offset,p_ota->buf_idx,p_ota->buf);
+		flash_write_page(ota_program_offset+p_ota->image_offset,p_ota->buf_idx,du_ota_buf);
 		p_ota->image_offset+=p_ota->buf_idx;
 		p_ota->buf_idx =0 ;// clear all the fw part
 		chk_sts.sts = 1;
@@ -227,8 +231,8 @@ void buffer_chk_cmd_proc(u8*pbuf)
 int use_flash_to_get_crc32()
 {
 	// get the first 8 bytes
-	u8 *p_buf = p_ota->buf;
-	u32 buf_size = sizeof(p_ota->buf);
+	u8 *p_buf = du_ota_buf;
+	u32 buf_size = sizeof(du_ota_buf);
 	u32 img_size = p_ota->image_size;
 	u32 idx =0;
 	u32 crc=0;
@@ -237,16 +241,16 @@ int use_flash_to_get_crc32()
 	img_size -= buf_size;
 	// change the 8th byte to 0x4b
 	p_buf[8]=0x4b;
-	crc =du_soft_crc32(p_ota->buf,buf_size,0);
+	crc =du_soft_crc32(du_ota_buf,buf_size,0);
 	while(img_size){
 		if(img_size >= buf_size){
 			flash_read_page(ota_program_offset+idx,buf_size,p_buf);
-			crc =du_soft_crc32(p_ota->buf,buf_size,crc);
+			crc =du_soft_crc32(du_ota_buf,buf_size,crc);
 			img_size-=buf_size;
 			idx+=buf_size;
 		}else{
 			flash_read_page(ota_program_offset+idx,img_size,p_buf);
-			crc =du_soft_crc32(p_ota->buf,img_size,crc);
+			crc =du_soft_crc32(du_ota_buf,img_size,crc);
 			img_size =0;
 		}
 	}
@@ -274,6 +278,134 @@ void du_ota_suc_proc()
 		ota_set_flag();
 		start_reboot();
 	}
+}
+#if DU_LPN_EN
+
+typedef struct{
+	u8 sw;
+	u8 sw_last;
+	u8 press_down;
+	u8 press_on;
+	u32 on_tick;
+	u32 down_tick;
+}sw_proc_t;
+sw_proc_t sw_but;
+u32 du_busy_tick =0;
+static u32 du_loop_tick =0;
+void du_key_board_long_press_detect()
+{
+	sw_but.sw = !gpio_read(SW1_GPIO);
+	if(!(sw_but.sw_last)&&sw_but.sw){// press on 
+	   	sw_but.press_on++;
+		sw_but.on_tick = clock_time();
+		sw_but.down_tick = clock_time();
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"press on ",0);
+	}
+	if(sw_but.sw_last && !sw_but.sw){// press down
+		sw_but.press_down++;
+		sw_but.down_tick = clock_time();
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"press down ",0);
+	}
+	sw_but.sw_last = sw_but.sw;
+	if(sw_but.press_on && clock_time_exceed(sw_but.on_tick,10*1000*1000)){
+		// long press trigger to enter provision mode 
+		sw_but.press_on = 0;
+		sw_but.on_tick = clock_time();
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"long_press",0);
+		mi_mesh_state_set(1);
+		du_busy_tick = clock_time();
+		beacon_str_init();
+	}
+	if(sw_but.press_down && clock_time_exceed(sw_but.press_down,1*1000*1000)){
+		
+		if(sw_but.press_on == 1){
+			//single press
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"single_press",0);
+		}else if (sw_but.press_on == 2){
+			// twice press
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"twice_press",0);
+		}
+		// clear all the sts ,press end 
+		memset(&sw_but,0,sizeof(sw_but));
+	}
+}
+
+u32 du_bind_tick =0;
+void du_bind_end_proc(u16 adr)
+{
+	du_busy_tick = clock_time();//refresh the busy tick 
+	du_bind_tick = clock_time()|1;
+	du_set_gateway_adr(adr);
+}
+
+void du_bind_end_loop()
+{
+	if(du_bind_tick && clock_time_exceed(du_bind_tick,10*1000*1000)){
+		du_bind_tick = 0;
+		mi_mesh_state_set(0);
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"finish join into net ,back to deep mode",0);
+	}
+}
+
+void du_busy_proc()
+{
+
+	if(mi_mesh_get_state() && clock_time_exceed(du_busy_tick,60*1000*1000)){
+		du_busy_tick = clock_time();
+		mi_mesh_state_set(0);
+		beacon_str_disable();
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"back to normal mode",0);
+	}
+}
+
+
+void du_key_board_proc()
+{
+	static u32 du_log_tick =0;
+	if(clock_time_exceed(du_log_tick,40*1000))//40ms print every time 
+	{
+		du_log_tick = clock_time();
+		du_key_board_long_press_detect();
+	}
+}
+#endif
+
+
+void du_loop_proc()
+{
+	du_ota_suc_proc();
+	#if DU_LPN_EN
+	du_key_board_proc();
+	du_busy_proc();
+	du_bind_end_loop();
+	// demo send cmd.
+	if(is_provision_success()&&
+		!mi_mesh_get_state()&&
+		clock_time_exceed(du_loop_tick,15*1000*1000)){
+		du_loop_tick = clock_time();
+		du_vd_send_loop_proc();
+	}
+	#endif
+}
+
+void du_lpn_suspend_enter()
+{
+	bls_pm_setWakeupSource(PM_WAKEUP_PAD);  // GPIO_WAKEUP_MODULE needs to be wakened
+}
+void du_ui_proc_init()
+{
+	du_get_gateway_adr_init();
+	gpio_set_wakeup (SW1_GPIO, Level_Low, 1);
+	cpu_set_gpio_wakeup (SW1_GPIO, Level_Low,1);  //drive pin pad high wakeup deepsleep
+	bls_pm_setWakeupSource(PM_WAKEUP_PAD);  // GPIO_WAKEUP_MODULE needs to be wakened
+	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_ENTER, (blt_event_callback_t)&du_lpn_suspend_enter);
+}
+
+void du_ui_proc_init_deep()
+{
+	gpio_set_wakeup (SW1_GPIO, Level_Low, 1);
+	cpu_set_gpio_wakeup (SW1_GPIO, Level_Low,1);  //drive pin pad high wakeup deepsleep
+	bls_pm_setWakeupSource(PM_WAKEUP_PAD);	// GPIO_WAKEUP_MODULE needs to be wakened
 }
 
 void magic_code_chk_proc(u8* pbuf)
@@ -330,10 +462,67 @@ int du_fw_proc(void *p)
 {
 	rf_packet_att_data_t *p_w = (rf_packet_att_data_t*)p;
 	u32 len = p_w->l2cap-3;
-	memcpy(p_ota->buf+p_ota->buf_idx,p_w->dat,len);
+	memcpy(du_ota_buf+p_ota->buf_idx,p_w->dat,len);
 	p_ota->buf_idx +=len;
 
 	return 1;
 }
+#define DU_STORE_ADR	0x7e000
+u16 du_gateway_adr =0;
+void du_set_gateway_adr(u16 adr)
+{
+	du_gateway_adr = adr;
+	flash_erase_sector(DU_STORE_ADR);
+	flash_write_page(DU_STORE_ADR,sizeof(du_gateway_adr),(u8 *)(&du_gateway_adr));
+}
+
+void du_get_gateway_adr_init()
+{
+	flash_read_page(DU_STORE_ADR,sizeof(du_gateway_adr),(u8 *)(&du_gateway_adr));
+}
+
+int du_vd_event_send(u8*p_buf,u8 len,u16 dst)
+{
+	return mesh_tx_cmd2normal(VD_LPN_REPROT, (u8 *)p_buf, len,ele_adr_primary,dst,0);
+}
+
+vd_du_event_t vd_du;
+
+int du_vd_temp_event_send(u16 op,u16 val,u16 dst)
+{
+	static u8 du_tid =0;
+	du_tid++;
+	vd_du.tid = du_tid;
+	vd_du.op = op;
+	vd_du.val = val;
+	return du_vd_event_send((u8*)&vd_du,sizeof(vd_du),dst);
+}
+
+void du_vd_send_loop_proc()
+{
+	if(blt_state == BLS_LINK_STATE_ADV){
+		//(data/ 100 - 273.15),20 degree is 27315+2000
+		du_vd_temp_event_send(VD_DU_TEMP_CMD,27315+2000,du_gateway_adr);
+		du_vd_temp_event_send(VD_DU_TEMP_CMD,27315+2000,du_gateway_adr);
+		du_vd_temp_event_send(VD_DU_TEMP_CMD,27315+2000,VD_DU_GROUP_DST);
+	}
+}
+
+
+#if 0 // wait to retry 2times ,to send 24 times 
+void mi_ivi_event_loop()
+{
+	int err =-1;
+	static u32 ivi_sts_tick =0;
+	if(ivi_sts_cnt &&!is_busy_tx_segment_or_reliable_flow()&&clock_time_exceed(ivi_sts_tick,500*1000)){
+		ivi_sts_tick = clock_time();
+		err = mesh_tx_cmd2normal_primary(VD_MI_PROPERTY_STS, (u8 *)&property_ivi, sizeof(property_ivi), 0xfeff, 0);
+		if(err == 0){
+			ivi_sts_cnt--;
+		}
+	}
+}
+#endif
+
 #endif
 

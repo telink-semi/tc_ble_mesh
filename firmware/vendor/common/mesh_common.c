@@ -201,7 +201,7 @@ MYFIFO_INIT(hci_tx_fifo, HCI_TX_FIFO_SIZE, HCI_TX_FIFO_NUM); // include adv pkt 
 #if (IS_VC_PROJECT)
 MYFIFO_INIT(hci_rx_fifo, 512, 4);   // max play load 382
 #else
-#define UART_DATA_SIZE              (MESH_LONG_PACKET_EN ? 280 : 72)    // increase or decrease 16bytes for each step.
+#define UART_DATA_SIZE              (EXTENDED_ADV_ENABLE ? 280 : 72)    // increase or decrease 16bytes for each step.
 #define HCI_RX_FIFO_SIZE            (UART_DATA_SIZE + 4 + 4)    // 4: sizeof DMA len;  4: margin reserve(can't reveive valid data, because UART_DATA_SIZE is max value of DMA len)
 STATIC_ASSERT(HCI_RX_FIFO_SIZE % 16 == 0);
 
@@ -281,6 +281,11 @@ void beacon_str_init()
 	beacon_send.en = 1;
 	beacon_send.inter = MAX_BEACON_SEND_INTERVAL;
 	return ;
+}
+
+void beacon_str_disable()
+{
+	beacon_send.en = 0;
 }
 
 static u8 mesh_seg_must_enable =0;
@@ -1488,9 +1493,9 @@ int mesh_adv_tx_test()
 
 static inline int send_adv_every_prepare_cb()
 {
-    return (MI_SWITCH_LPN_EN || SPIRIT_PRIVATE_LPN_EN || GATT_LPN_EN
+    return (MI_SWITCH_LPN_EN || SPIRIT_PRIVATE_LPN_EN || (GATT_LPN_EN && !FEATURE_LOWPOWER_EN) ||DU_LPN_EN
             #if FEATURE_LOWPOWER_EN
-            || (LPN_MODE_GATT_OTA == lpn_mode)
+            || (LPN_MODE_GATT_OTA == lpn_mode) || is_lpn_support_and_en
             #endif
             );
 }
@@ -1535,10 +1540,12 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
                 }
                 gatt_adv_inv_us = 0;   // TX in next loop
             }else{
-                #if (FEATURE_LOWPOWER_EN || GATT_LPN_EN)
-                if((LPN_MODE_GATT_OTA == lpn_mode) || GATT_LPN_EN){
+                #if (FEATURE_LOWPOWER_EN)
+                if((LPN_MODE_GATT_OTA == lpn_mode) || is_lpn_support_and_en){
                     set_random_adv_delay_normal_adv(ADV_INTERVAL_RANDOM_MS);
                 }
+				#elif(GATT_LPN_EN)
+					set_random_adv_delay_normal_adv(ADV_INTERVAL_RANDOM_MS);
                 #endif
             
                 gatt_adv_tick = clock_time();
@@ -1554,7 +1561,7 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
     				adv_inter = ADV_INTERVAL_MS;
     			#endif
     			
-    			#if MI_SWITCH_LPN_EN
+    			#if (MI_SWITCH_LPN_EN||DU_LPN_EN)
     			gatt_adv_inv_us = adv_inter; // use const 20ms mi_beacon interval 
     			#else
                 gatt_adv_inv_us = (adv_inter - 10 - 5 + ((rand() % 3)*10)) * 1000; // random (0~20 + 0~10)ms // -10: next loop delay, -5: margin for clock_time_exceed.
@@ -1635,9 +1642,9 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
 
 int app_advertise_prepare_handler (rf_packet_adv_t * p)
 {
-#if MESH_LONG_PACKET_EN
+#if EXTENDED_ADV_ENABLE
     if(blt_state == BLS_LINK_STATE_CONN){
-        if(abs( (int)(bltc.connExpectTime - clock_time()) ) < 8000 * sys_tick_per_us){
+        if(abs( (int)(bltc.connExpectTime - clock_time()) ) < 5000 * sys_tick_per_us){
     		return 0;
     	}
 	}
@@ -1727,7 +1734,7 @@ int app_advertise_prepare_handler (rf_packet_adv_t * p)
                             
         if(!adv_retry_flag){
 			#if (!MESH_RX_TEST)   // because is 10ms interval for TEST mode: mesh_conn_param_update_req()
-        	if(MI_SWITCH_LPN_EN || SPIRIT_PRIVATE_LPN_EN){ // BLS_LINK_STATE_CONN == blt_state || should not depend CI.
+        	if(MI_SWITCH_LPN_EN || SPIRIT_PRIVATE_LPN_EN||DU_LPN_EN){ // BLS_LINK_STATE_CONN == blt_state || should not depend CI.
         	    mesh_tx_cmd_busy_cnt = 0;
             }else
             #endif
@@ -2001,7 +2008,7 @@ void APP_reset_vendor_id(u16 vd_id)
 void vendor_id_check_and_update() //confirm cps and vendor model
 {
     if(DUAL_VENDOR_ST_ALI == provision_mag.dual_vendor_st){
-        traversal_cps_reset_vendor_id(SHA256_BLE_MESH_PID);
+        traversal_cps_reset_vendor_id(VENDOR_ID);
         vendor_md_cb_pub_st_set2ali();
     }
 }
@@ -2198,7 +2205,12 @@ void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 	p_mat->rsp_max = rsp_max;
 	#if GATEWAY_ENABLE
 	if(OP_TYPE_VENDOR == GET_OP_TYPE(op)){
-	    p_mat->op_rsp |= (g_vendor_id << 8); // init as default vendor id first
+	    // initial as local vendor id at first, and it will be replaced if command is from INI.
+	    u32 op_rsp = get_op_rsp(op);
+	    if(STATUS_NONE != op_rsp){
+	        p_mat->op_rsp = op_rsp & 0xFF;
+	    }
+	    p_mat->op_rsp |= (g_vendor_id << 8);
 	}
 	#endif
 	
@@ -3220,7 +3232,7 @@ void tl_log_msg_dbg(u16 module,u8 *pbuf,int len,char  *format,...)
 
 #if !WIN32
 #if HCI_LOG_FW_EN
-_attribute_no_retention_bss_ char log_dst[MESH_LONG_PACKET_EN ? 512 : 256];// make sure enough RAM
+_attribute_no_retention_bss_ char log_dst[EXTENDED_ADV_ENABLE ? 512 : 256];// make sure enough RAM
 int LogMsgModdule_uart_mode(u8 *pbuf,int len,char *log_str,char *format, va_list list)
 {
     #if (GATEWAY_ENABLE)
@@ -3273,7 +3285,7 @@ _PRINT_FUN_RAMCODE_ int LogMsgModule_io_simu(u8 *pbuf,int len,char *log_str,char
 	if((head_len + get_len_Bin2Text(len))> sizeof(log_dst)){
         // no need, have been check buf max in printf_Bin2Text. // return 0;
 	}
-	u8 dump_len = printf_Bin2Text((char *)(log_dst+head_len), sizeof(log_dst) - head_len, (char *)(pbuf), len);
+	u32 dump_len = printf_Bin2Text((char *)(log_dst+head_len), sizeof(log_dst) - head_len, (char *)(pbuf), len);
 	uart_simu_send_bytes((u8 *)log_dst, head_len+dump_len);
 	return 1;
 }
