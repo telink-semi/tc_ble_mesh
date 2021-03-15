@@ -103,7 +103,10 @@ public class DeviceAutoProvisionListAdapter extends BaseRecyclerViewAdapter<Devi
             if (device.state == NetworkingState.PROVISION_FAIL) {
                 holder.pb_provision.setSecondaryProgress(100);
                 holder.pb_provision.setProgress(0);
-                holder.tv_state.setText(device.logs.get(device.logs.size() - 1).logMessage);
+                if (device.logs.size() > 0) {
+                    holder.tv_state.setText(device.logs.get(device.logs.size() - 1).logMessage);
+                }
+
             } else if (device.nodeInfo.bound) {
                 holder.pb_provision.setProgress(100);
                 holder.pb_provision.setSecondaryProgress(0);

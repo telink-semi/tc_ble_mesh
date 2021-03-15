@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     MeshGetAddressMessage.java 
+ * @file MeshGetAddressMessage.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.fastpv;
 
@@ -25,12 +25,14 @@ import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.generic.GenericMessage;
 
-
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class MeshGetAddressMessage extends GenericMessage {
 
     private int pid;
+
+    private int address = 0;
 
     public static MeshGetAddressMessage getSimple(int destinationAddress, int appKeyIndex, int rspMax, int pid) {
         MeshGetAddressMessage message = new MeshGetAddressMessage(destinationAddress, appKeyIndex);
@@ -56,11 +58,22 @@ public class MeshGetAddressMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return MeshUtils.integer2Bytes(this.pid, 2, ByteOrder.LITTLE_ENDIAN);
+        if (address == 0) {
+            return MeshUtils.integer2Bytes(this.pid, 2, ByteOrder.LITTLE_ENDIAN);
+        } else {
+            return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN)
+                    .putShort((short) pid)
+                    .putShort((short) address)
+                    .array();
+        }
     }
 
 
     public void setPid(int pid) {
         this.pid = pid;
+    }
+
+    public void setAddress(int address) {
+        this.address = address;
     }
 }
