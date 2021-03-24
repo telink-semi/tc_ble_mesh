@@ -4197,6 +4197,14 @@ void mesh_loop_process()
 		check_and_send_next_segment_pkt();
 	}
 	#endif	
+	
+#if (BATT_CHECK_ENABLE)
+    static u32 lowBattDet_tick   = 0;
+	if(battery_get_detect_enable() && clock_time_exceed(lowBattDet_tick, 500000) ){
+		lowBattDet_tick = clock_time();
+		app_battery_power_check(VBAT_ALRAM_THRES_MV);  //2000 mV low battery
+	}
+#endif
 }
 
 // for the adv will not send adv at the same time to control 

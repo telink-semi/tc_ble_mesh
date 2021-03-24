@@ -110,6 +110,16 @@ extern "C" {
 #endif
 #endif
 
+#define BATT_CHECK_ENABLE       			1   //must enable
+#if (BATT_CHECK_ENABLE)
+//telink device: you must choose one gpio with adc function to output high level(voltage will equal to vbat), then use adc to measure high level voltage
+	//use PB7 output high level, then adc measure this high level voltage
+	#define GPIO_VBAT_DETECT				GPIO_PB7
+	#define PB7_FUNC						AS_GPIO
+	#define PB7_INPUT_ENABLE				0
+	#define ADC_INPUT_PCHN					B7P    //corresponding  ADC_InputPchTypeDef in adc.h
+#endif
+
 #define ADC_ENABLE		0
 #if ADC_ENABLE
 #define ADC_BASE_MODE	1	//GPIO voltage
