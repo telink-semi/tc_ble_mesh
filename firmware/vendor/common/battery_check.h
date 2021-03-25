@@ -24,14 +24,15 @@
 #define BATTERY_CHECK_H_
 
 
-#define VBAT_ALRAM_THRES_MV				2000   // 2000 mV low battery alarm
+#define VBAT_ALRAM_THRES_MV				(2000)   // 2000 mV low battery alarm
 
 
 
 void battery_set_detect_enable (int en);
 int  battery_get_detect_enable (void);
 
-int app_battery_power_check(u16 alram_vol_mv);
+int app_battery_power_check(u16 alram_vol_mv, int loop_flag);
+void app_battery_power_check_and_sleep_handle(int loop_flag);
 
 
 #endif /* APP_BATTDET_H_ */

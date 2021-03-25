@@ -75,7 +75,7 @@ _attribute_data_retention_  u16     batt_vol_mv;
 #endif
 
 
-
+//STATIC_ASSERT(GPIO_VBAT_DETECT != UART_RX_PIN);
 
 void battery_set_detect_enable (int en)
 {
@@ -168,8 +168,9 @@ _attribute_ram_code_ void adc_vbat_detect_init(void)
 }
 
 
-_attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv)
+_attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag)
 {
+    int ret_slept_flag = 0;
 	u16 temp;
 	int i,j;
 
@@ -281,7 +282,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv)
 
 
 	if(batt_vol_mv < alram_vol_mv){
-
+        #if 0
 		#if (1 && BLT_APP_LED_ENABLE)  //led indicate
 			gpio_set_output_en(GPIO_LED, 1);  //output enable
 			for(int k=0;k<3;k++){
@@ -302,6 +303,13 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv)
 		}
 
 		cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_PAD, 0);  //deepsleep
+		#else
+		ret_slept_flag = 1;
+		analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0) | (BIT(LOW_BATT_FLG)| (loop_flag ? BIT(LOW_BATT_LOOP_FLG) : 0)));  //mark
+		cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_TIMER, clock_time() + 50*CLOCK_SYS_CLOCK_1MS);  //
+		#endif
+	}else{
+	    // DEEP_ANA_REG0 can not be cleared here, because it will be used in light pwm init.
 	}
 
 
@@ -368,6 +376,61 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv)
 	}
 #endif
 
+    return ret_slept_flag;
+}
+
+#ifndef VBAT_ALRAM_CHECK_INTERVAL_MS
+#define VBAT_ALRAM_CHECK_INTERVAL_MS	(500)
+#endif
+
+/* GPIO_VBAT_DETECT: 825x/827x default PC5, because: 
+ * PB0,PB2,PB3,PC5 is not included in 32pin, 24pin chip
+ * PB0, PB2, PB3 are used in 8258 48pin dongle, so select PC5 as default 
+*/
+
+/*****************************************************************************************
+ Note: battery check must do before any flash write/erase operation, cause flash write/erase
+	   under a low or unstable power supply will lead to error flash operation
+
+	   Some module initialization may involve flash write/erase, include: OTA initialization,
+			SMP initialization, ..
+			So these initialization must be done after  battery check
+*****************************************************************************************/
+void app_battery_power_check_and_sleep_handle(int loop_flag)
+{
+#if 1 // deep
+    u16 alarm_thres = VBAT_ALRAM_THRES_MV;
+    if(loop_flag){
+        static u32 lowBattDet_tick   = 0;
+    	if(battery_get_detect_enable() && clock_time_exceed(lowBattDet_tick, VBAT_ALRAM_CHECK_INTERVAL_MS * 1000)){
+    	    if((0 == lowBattDet_tick) && (analog_read(DEEP_ANA_REG0) & BIT(LOW_BATT_FLG))){
+                analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0)  & (~ (BIT(LOW_BATT_FLG)|BIT(LOW_BATT_LOOP_FLG))));  //clear
+    	    }
+    		lowBattDet_tick = clock_time();
+            app_battery_power_check(alarm_thres, loop_flag);  //2.0 V
+        }
+    }else{ // user init
+        if(analog_read(DEEP_ANA_REG0) & BIT(LOW_BATT_FLG)){
+            app_battery_power_check(alarm_thres + 200, loop_flag);  //2.2 V
+        }else{
+            app_battery_power_check(alarm_thres, loop_flag);  //2.0 V
+        }
+    }
+#else // suspend, need to config sleep type in app_battery_power_check_
+    u16 alram_vol_mv = VBAT_ALRAM_THRES_MV; //2.0 V
+    int cnt = 10;
+    while(cnt--){
+        int ret_slept_flag = app_battery_power_check(alram_vol_mv); // may suspend inside
+        if(ret_slept_flag){
+            alram_vol_mv = VBAT_ALRAM_THRES_MV + 200;    //2.2 V
+            if(0 == cnt){
+                cpu_sleep_wakeup(SUSPEND_MODE, 0, 0);  // no wake up
+            }
+        }else{
+            break;
+        }
+	}
+#endif
 }
 
 #endif

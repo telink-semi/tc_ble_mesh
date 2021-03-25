@@ -606,7 +606,9 @@ enum{
 
 enum{
     OTA_REBOOT_FLAG                   	= 0,
-};
+    LOW_BATT_FLG                   	    = 1,
+    LOW_BATT_LOOP_FLG                   = 2,	// 0 means check by user_init, 1 means by main loop
+};/*DEEP_ANA_REG0*/
 
 
 extern u32 flash_sector_mac_address;

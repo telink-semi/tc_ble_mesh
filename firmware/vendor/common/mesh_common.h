@@ -32,6 +32,7 @@
 #include "time_model.h"
 #include "scheduler.h"
 #include "mesh_property.h"
+#include "vendor/common/battery_check.h"
 #if (!WIN32 && EXTENDED_ADV_ENABLE)
 #include "../../stack/ble/ll/ll_ext_adv.h"
 #endif

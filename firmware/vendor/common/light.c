@@ -259,7 +259,7 @@ void light_res_sw_load()
 			#if(WIN32)
 			if(ONPOWER_UP_STORE == ONPOWER_UP_VAL(i)){
 			#else
-			if((ONPOWER_UP_STORE == ONPOWER_UP_VAL(i)) || ((ST_TRANS_LIGHTNESS == k) && (analog_read(DEEP_ANA_REG0)&BIT(OTA_REBOOT_FLAG)))){
+			if((ONPOWER_UP_STORE == ONPOWER_UP_VAL(i)) || ((ST_TRANS_LIGHTNESS == k) && (analog_read(DEEP_ANA_REG0)&(BIT(OTA_REBOOT_FLAG)|BIT(LOW_BATT_FLG))))){
 			#endif
 				level_poweron = get_on_power_up_last(p_save);
 			}
@@ -355,7 +355,7 @@ void light_pwm_init()
             light_transition_onoff_manual(G_OFF, 0, i);
             if(onoff_present && CB_USER_LIGHT_INIT_ON_CONDITION()){
 				#if !MI_SWITCH_LPN_EN
-				light_transition_onoff_manual(G_ON, (analog_read(DEEP_ANA_REG0)&BIT(OTA_REBOOT_FLAG))?0:edch_is_exist()?g_def_trans_time_val(i):0, i);
+				light_transition_onoff_manual(G_ON, (analog_read(DEEP_ANA_REG0)&(BIT(OTA_REBOOT_FLAG)|BIT(LOW_BATT_LOOP_FLG)))?0:edch_is_exist()?g_def_trans_time_val(i):0, i);
 				#endif
 			}
         }

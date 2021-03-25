@@ -4199,11 +4199,7 @@ void mesh_loop_process()
 	#endif	
 	
 #if (BATT_CHECK_ENABLE)
-    static u32 lowBattDet_tick   = 0;
-	if(battery_get_detect_enable() && clock_time_exceed(lowBattDet_tick, 500000) ){
-		lowBattDet_tick = clock_time();
-		app_battery_power_check(VBAT_ALRAM_THRES_MV);  //2000 mV low battery
-	}
+	app_battery_power_check_and_sleep_handle(1);
 #endif
 }
 

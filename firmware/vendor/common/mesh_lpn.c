@@ -454,7 +454,7 @@ void lpn_debug_set_current_pin(u8 level)
 
 void lpn_debug_set_debug_pin(u8 level)
 {
-    #define DEBUG_PIN_MESH      GPIO_PB7
+    //#define DEBUG_PIN_MESH      GPIO_PB7 // conflic with GPIO_VBAT_DETECT	// TBD
     gpio_set_func(DEBUG_PIN_MESH, AS_GPIO);
     gpio_set_output_en(DEBUG_PIN_MESH, 1);
     gpio_write(DEBUG_PIN_MESH, level);
