@@ -204,54 +204,6 @@ _attribute_ram_code_ void flash_erase_sector(unsigned long addr){
 	irq_restore(r);
 }
 
-_attribute_ram_code_ void flash_write_page_256(u32 addr, u32 len, const u8 *buf){
-#if MI_API_ENABLE
-	// for the customer will change the otp base adr .
-	/*
-	if(!is_valid_sector_addr(addr)){
-		return ;
-	}
-	*/
-#endif
-
-	u8 r = irq_disable();
-
-	// important:  buf must not reside at flash, such as constant string.  If that case, pls copy to memory first before write
-	flash_send_cmd(FLASH_WRITE_ENABLE_CMD);
-	flash_send_cmd(FLASH_WRITE_CMD);
-	flash_send_addr(addr);
-
-	u32 i;
-	for(i = 0; i < len; ++i){
-		mspi_write(buf[i]);		/* write data */
-		mspi_wait();
-	}
-	mspi_high();
-	flash_wait_done();
-
-	irq_restore(r);
-}
-
-#define PAGE_SIZE     256
-#if (PINGPONG_OTA_DISABLE)
-_attribute_ram_code_
-#endif
-void flash_write_page(unsigned long addr, unsigned long len, const unsigned char *buf){
-    u32 len_empty = PAGE_SIZE - (u8)addr;
-    while(len){
-        if(len >= len_empty){
-            flash_write_page_256(addr, len_empty, buf);
-            len -= len_empty;
-            addr += len_empty;
-            buf += len_empty;
-            len_empty = PAGE_SIZE;
-        }else{
-            flash_write_page_256(addr, len, buf);
-            len = 0;
-        }
-    }
-}
-
 /**
  * @brief 		This function reads the content from a page to the buf.
  * @param[in]   addr	- the start address of the page.
@@ -280,184 +232,67 @@ _attribute_ram_code_ void flash_read_page(unsigned long addr, unsigned long len,
 	irq_restore(r);
 }
 
-#if(HOMEKIT_EN)
-
-void flash_write_data (unsigned long addr, unsigned long len, unsigned char *buf)
+/**
+ * @brief 		This function writes the buffer's content to the flash.
+ * @param[in]   addr	- the start address of the area.
+ * @param[in]   len		- the length(in byte) of content needs to write into the flash.
+ * @param[in]   buf		- the start address of the content needs to write into.
+ * @return 		none.
+ */
+_attribute_ram_code_ void flash_write_page_ram(unsigned long addr, unsigned long len, const unsigned char *buf)
 {
-	int ns = 256 - (addr & 0xff);
-	do {
-		int nw = len > ns ? ns : len;
-		flash_write_page (addr, nw, buf);
-		ns = 256;
+#if MI_API_ENABLE
+	// for the customer will change the otp base adr .
+	/*
+	if(!is_valid_sector_addr(addr)){
+		return ;
+	}
+	*/
+#endif
+
+	unsigned char r = irq_disable();
+
+	// important:  buf must not reside at flash, such as constant string.  If that case, pls copy to memory first before write
+	flash_send_cmd(FLASH_WRITE_ENABLE_CMD);
+	flash_send_cmd(FLASH_WRITE_CMD);
+	flash_send_addr(addr);
+
+	unsigned int i;
+	for(i = 0; i < len; ++i){
+		mspi_write(buf[i]);
+		mspi_wait();
+	}
+	mspi_high();
+	flash_wait_done();
+
+	irq_restore(r);
+}
+
+/**
+ * @brief 		This function writes the buffer's content to the flash.
+ * @param[in]   addr	- the start address of the area.
+ * @param[in]   len		- the length(in byte) of content needs to write into the flash.
+ * @param[in]   buf		- the start address of the content needs to write into.
+ * @return 		none.
+ * @note        the funciton support cross-page writing,which means the len of buf can bigger than 256.
+ */
+#if (PINGPONG_OTA_DISABLE)
+_attribute_ram_code_
+#endif
+void flash_write_page(unsigned long addr, unsigned long len, const unsigned char *buf)
+{
+	unsigned int ns = PAGE_SIZE - (addr & (PAGE_SIZE - 1));
+	int nw = 0;
+
+	do{
+		nw = len > ns ? ns :len;
+		flash_write_page_ram(addr, nw, buf);
+		ns = PAGE_SIZE;
 		addr += nw;
 		buf += nw;
 		len -= nw;
-	} while (len > 0);
+	}while(len > 0);
 }
-
-void flash_write_val(unsigned long adr, unsigned long flag_invalid, unsigned long dat)
-{
-	unsigned long p = 0xffffffff;
-	int i;
-	for (i=0; i<1024; i++)
-	{
-		flash_read_page(adr + i *4, 4, (unsigned char *)&p);
-		if (p == 0xffffffff)
-		{
-			break;
-		}
-		else if (p != flag_invalid)
-		{
-			if (i == 1023)
-			{
-				flash_erase_sector (adr);
-				i = 0;
-			}
-			else
-			{
-				flash_write_data (adr + i * 4, 4, (unsigned char *)&flag_invalid);
-				i++;
-			}
-			break;
-		}
-	}
-	flash_write_data (adr + i * 4, 4, (unsigned char *)&dat);
-}
-
-unsigned long flash_read_val(unsigned long adr, unsigned long flag_invalid)
-{
-	unsigned long p = 0xffffffff;
-	int i = 0;
-	for (i=0; i<1024; i++)
-	{
-		flash_read_page(adr + i *4, 4, (unsigned char *)&p);
-		if (p == 0xffffffff)
-		{
-			break;
-		}
-		else if (p != flag_invalid)
-		{
-			return p;
-		}
-	}
-	if( i>1000 )
-		flash_erase_sector (adr);
-	return flag_invalid;
-}
-
-
-void flash_write_long_val(unsigned long adr, unsigned long flag_invalid, unsigned char* dat, unsigned char len)
-{
-	unsigned long p = 0xffffffff;
-	int i;
-	int data_len = len / 4;
-	for (i=0; i<(1024-data_len);)
-	{
-		flash_read_page(adr + i *4, 4, (unsigned char *)&p);
-		if (p == 0xffffffff)
-		{
-			break;
-		}
-		else if (p != flag_invalid)
-		{
-			if (i >= 1024-data_len)
-			{
-				flash_erase_sector (adr);
-				i = 0;
-				break;
-			}
-			else
-			{
-				flash_write_data (adr + i * 4, 4, (unsigned char *)&flag_invalid);
-				i+=data_len;
-				break;
-			}
-		}
-		i+=data_len;
-	}
-	flash_write_data (adr + i * 4, len, dat);
-
-}
-
-unsigned long flash_read_long_val(unsigned long adr, unsigned long flag_invalid, unsigned char* dat, unsigned char len)
-{
-	unsigned long p = 0xffffffff;
-
-	int data_len = (len + 3) / 4;		//+3 to make len to be true len.
-	int i = 0;
-	for ( i=0; i<(1024-data_len); )
-	{
-		flash_read_page(adr + i *4, 4, (unsigned char *)&p);
-
-		if( p == 0xffffffff )
-		{
-			break;
-		}
-		else if (p != flag_invalid)
-		{
-			flash_read_page(adr + i * 4, len, dat);
-			return p;
-		}
-		i+=data_len;
-	}
-	if( i >= 1000 )
-		flash_erase_sector (adr);
-	return flag_invalid;
-}
-
-unsigned long flash_subregion_write_val (unsigned long adr, unsigned long flag_invalid, unsigned long dat, unsigned long num)
-{
-	unsigned long p = 0xffffffff;
-	int i;
-	for (i=0; i<num; i++)
-	{
-		flash_read_page(adr + i *4, 4, (unsigned char *)&p);
-		if (p == 0xffffffff)
-		{
-			break;
-		}
-		else if (p != flag_invalid)
-		{
-			if (i >= (num - 1))
-			{
-				return flag_invalid;
-			}
-			else
-			{
-				flash_write_data (adr + i * 4, 4, (unsigned char *)&flag_invalid);
-				i++;
-			}
-			break;
-		}
-	}
-	flash_write_data (adr + i * 4, 4, (unsigned char *)&dat);
-
-	return 1;
-}
-
-unsigned long flash_subregion_read_val (unsigned long adr, unsigned long flag_invalid, unsigned long num)
-{
-	unsigned long p = 0xffffffff;
-	int i = 0;
-	for (i=0; i<num; i++)
-	{
-		flash_read_page(adr + i *4, 4, (unsigned char *)&p);
-		if (p == 0xffffffff)
-		{
-			break;
-		}
-		else if (p != flag_invalid)
-		{
-			return p;
-		}
-	}
-
-	//if((i>1000) || (i>num))
-	//	flash_erase_sector (adr);
-
-	return flag_invalid;
-}
-#endif
 
 #if (!((MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269)))
 /**

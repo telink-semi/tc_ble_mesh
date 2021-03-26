@@ -47,7 +47,7 @@
 
 #include "compiler.h"
 
-
+#define PAGE_SIZE		256
 #define FLASH_LOCK_EN          0
 
 /**
