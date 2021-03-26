@@ -391,9 +391,8 @@ u8 mesh_cmd_sig_cfg_model_sub_set2(u16 op, u16 sub_adr, u8 *uuid, model_common_t
 				}
 				
 				mesh_sub_par_set(p_model, save_index, sub_adr, uuid);
-				#if VIRTUAL_ADDR_ENABLE
 				add_ok = 1;
-				#else
+				#if !VIRTUAL_ADDR_ENABLE
 				if(uuid){
 					add_ok = 0;
 				}
