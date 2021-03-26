@@ -68,6 +68,16 @@ extern "C" {
 #define PRINT_DEBUG_INFO                    1
 #endif
 
+#define BATT_CHECK_ENABLE       			1   //must enable
+#if (BATT_CHECK_ENABLE)
+//telink device: you must choose one gpio with adc function to output high level(voltage will equal to vbat), then use adc to measure high level voltage
+	//use PC5 output high level, then adc measure this high level voltage
+	#define GPIO_VBAT_DETECT				GPIO_PC5
+	#define PC5_FUNC						AS_GPIO
+	#define PC5_INPUT_ENABLE				0
+	#define ADC_INPUT_PCHN					C5P    //corresponding  ADC_InputPchTypeDef in adc.h
+#endif
+
 #define ADC_ENABLE		0
 #if ADC_ENABLE
 #define ADC_BASE_MODE	1	//GPIO voltage

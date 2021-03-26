@@ -22,7 +22,8 @@
 
 #include "tl_common.h"
 #include "drivers.h"
-#include "stack/ble/ble.h"
+#include "proj_lib/ble/blt_config.h"
+//#include "stack/ble/ble.h"
 
 #include "battery_check.h"
 
@@ -305,8 +306,13 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
 		cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_PAD, 0);  //deepsleep
 		#else
 		ret_slept_flag = 1;
-		analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0) | (BIT(LOW_BATT_FLG)| (loop_flag ? BIT(LOW_BATT_LOOP_FLG) : 0)));  //mark
+		    #if __PROJECT_BOOTLOADER__
+		sleep_us(50*1000);
+		REG_ADDR8(0x6f) = 0x20;  //reboot
+		    #else
+        analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0) | (BIT(LOW_BATT_FLG)| (loop_flag ? BIT(LOW_BATT_LOOP_FLG) : 0)));  //mark
 		cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_TIMER, clock_time() + 50*CLOCK_SYS_CLOCK_1MS);  //
+		    #endif
 		#endif
 	}else{
 	    // DEEP_ANA_REG0 can not be cleared here, because it will be used in light pwm init.
@@ -403,9 +409,13 @@ void app_battery_power_check_and_sleep_handle(int loop_flag)
     if(loop_flag){
         static u32 lowBattDet_tick   = 0;
     	if(battery_get_detect_enable() && clock_time_exceed(lowBattDet_tick, VBAT_ALRAM_CHECK_INTERVAL_MS * 1000)){
+    	    #if __PROJECT_BOOTLOADER__
+    	    // clear by product image
+    	    #else
     	    if((0 == lowBattDet_tick) && (analog_read(DEEP_ANA_REG0) & BIT(LOW_BATT_FLG))){
                 analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0)  & (~ (BIT(LOW_BATT_FLG)|BIT(LOW_BATT_LOOP_FLG))));  //clear
     	    }
+    	    #endif
     		lowBattDet_tick = clock_time();
             app_battery_power_check(alarm_thres, loop_flag);  //2.0 V
         }

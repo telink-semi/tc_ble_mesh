@@ -180,6 +180,11 @@ _attribute_ram_code_ int main(void)
     gpio_write(DEBUG_PIN, 0);           //LED OFF
     //sha256_test_fun();
 
+#if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(0); //battery check must do before OTA relative operation
+#endif
+
+
     //WaitMs(500);
     //gpio_write(DEBUG_PIN, 0); //LED Off
     //WaitMs(500);
