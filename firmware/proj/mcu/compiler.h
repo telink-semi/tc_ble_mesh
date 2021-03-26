@@ -42,6 +42,11 @@
 // #define _inline_ 				extern __attribute__ ((gnu_inline)) inline
 #define __WEAK                  __attribute__((weak))   // user can define their own function
 
+//---- just for driver, not for user
+#define _attribute_ram_code_sec_      		__attribute__((section(".ram_code")))
+#define _attribute_ram_code_sec_noinline_	__attribute__((section(".ram_code"))) __attribute__((noinline))
+//---- end
+
 #include "config.h"
 
 #if ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))

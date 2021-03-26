@@ -50,7 +50,7 @@
  * @brief     MID = 0x1460c8 Flash include GD25LD80C.
  */
 
-#include "../compiler.h"
+#include "compiler.h"
 
 
 /**

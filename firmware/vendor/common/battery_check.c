@@ -383,7 +383,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
 #define VBAT_ALRAM_CHECK_INTERVAL_MS	(500)
 #endif
 
-/* GPIO_VBAT_DETECT: 825x/827x default PC5, because: 
+/* GPIO_VBAT_DETECT: 825x/827x default use PC5, because: 
  * PB0,PB2,PB3,PC5 is not included in 32pin, 24pin chip
  * PB0, PB2, PB3 are used in 8258 48pin dongle, so select PC5 as default 
 */

@@ -1,10 +1,10 @@
 /********************************************************************************************************
  * @file	flash_mesh_extend.c
  *
- * @brief	This is the source file for b85
+ * @brief	This is the source file for B85
  *
  * @author	Driver Group
- * @date	2018
+ * @date	May 8,2018
  *
  * @par     Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *          All rights reserved.
@@ -50,6 +50,51 @@
 #include "proj/drivers/spi_i.h"
 #include "proj/mcu/watchdog_i.h"
 #include "proj_lib/ble/blt_config.h"
+
+u32 flash_sector_mac_address = CFG_SECTOR_ADR_MAC_CODE;
+u32 flash_sector_calibration = CFG_SECTOR_ADR_CALIBRATION_CODE;
+
+#if AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN
+void blc_readFlashSize_autoConfigCustomFlashSector(void)
+{
+#if (((MCU_CORE_TYPE == MCU_CORE_8267)||(MCU_CORE_TYPE == MCU_CORE_8269)) \
+    || (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE) || DUAL_MESH_ZB_BL_EN)
+    // always use fixed customized address
+#else
+	u8 *temp_buf;
+	unsigned int mid = flash_read_mid();
+	temp_buf = (u8 *)&mid;
+	u8	flash_cap = temp_buf[2];
+
+    if(CFG_ADR_MAC_512K_FLASH == CFG_SECTOR_ADR_MAC_CODE){
+    	if(flash_cap == FLASH_SIZE_1M){
+    	    #define MAC_SIZE_CHECK      (6)
+    	    u8 mac_null[MAC_SIZE_CHECK] = {0xff,0xff,0xff,0xff,0xff,0xff};
+    	    u8 mac_512[MAC_SIZE_CHECK], mac_1M[MAC_SIZE_CHECK];
+    	    flash_read_page(CFG_ADR_MAC_512K_FLASH, MAC_SIZE_CHECK, mac_512);
+    	    flash_read_page(CFG_ADR_MAC_1M_FLASH, MAC_SIZE_CHECK, mac_1M);
+    	    if((0 == memcmp(mac_512,mac_null, MAC_SIZE_CHECK))
+    	     &&(0 != memcmp(mac_1M,mac_null, MAC_SIZE_CHECK))){
+        		flash_sector_mac_address = CFG_ADR_MAC_1M_FLASH;
+        		flash_sector_calibration = CFG_ADR_CALIBRATION_1M_FLASH;
+    		}
+    	}
+	}else if(CFG_ADR_MAC_1M_FLASH == CFG_SECTOR_ADR_MAC_CODE){
+	    if(flash_cap != FLASH_SIZE_1M){
+            while(1){ // please check your Flash size
+                #if(MODULE_WATCHDOG_ENABLE)
+                wd_clear();
+                #endif
+            }
+		}
+	}
+
+	flash_set_capacity(flash_cap);
+#endif
+}
+#endif
+
+
 
 #if(HOMEKIT_EN)
 

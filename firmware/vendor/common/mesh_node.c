@@ -2962,7 +2962,7 @@ void mesh_flash_write_replace(u32 adr, const u8 *in, u32 size)
 		flash_read_page(adr_read, len_read, data_read);
 		foreach(i,len_read){
 			if(data_read[i] != p_in[i]){
-				flash_write_page(adr_read+i, 1, &p_in[i]);
+				flash_write_page(adr_read+i, 1, (u8 *)&p_in[i]);
 			}
 		}
 		
@@ -2974,7 +2974,7 @@ void mesh_flash_write_replace(u32 adr, const u8 *in, u32 size)
 
 void flash_write_with_check(u32 adr, u32 size, const u8 *in)
 {
-	flash_write_page(adr, size, in);
+	flash_write_page(adr, size, (u8 *)in);
 	mesh_flash_write_check(adr, in, size);
 }
 
