@@ -370,6 +370,9 @@ void main_loop ()
 	#endif	
 	////////////////////////////////////// UI entry /////////////////////////////////
 	//  add spp UI task:
+#if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(1);
+#endif
 	proc_ui();
 	proc_led();
 	factory_reset_cnt_check();
@@ -427,6 +430,9 @@ void spirit_lpn_ui_init(){
 
 void user_init()
 {
+    #if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(0); //battery check must do before OTA relative operation
+    #endif
 	lpn_provision_ok = is_net_key_save();
 	#if DEBUG_EVB_EN
 	set_sha256_init_para_mode(1);	// must 1

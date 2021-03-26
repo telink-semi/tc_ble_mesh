@@ -426,6 +426,9 @@ void main_loop ()
 
 	////////////////////////////////////// UI entry /////////////////////////////////
 	//  add spp UI task:
+#if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(1);
+#endif
 	// du proc
 	#if DU_ENABLE
 	du_loop_proc();
@@ -512,6 +515,10 @@ void test_ecdsa_sig_verify2()
 
 void user_init()
 {
+    #if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(0); //battery check must do before OTA relative operation
+    #endif
+    
 	#if DEBUG_EVB_EN
 	    set_sha256_init_para_mode(1);	// must 1
 	#else

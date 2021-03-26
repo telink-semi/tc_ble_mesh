@@ -4197,10 +4197,6 @@ void mesh_loop_process()
 		check_and_send_next_segment_pkt();
 	}
 	#endif	
-	
-#if (BATT_CHECK_ENABLE)
-	app_battery_power_check_and_sleep_handle(1);
-#endif
 }
 
 // for the adv will not send adv at the same time to control 

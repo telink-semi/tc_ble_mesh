@@ -21,14 +21,14 @@
  *******************************************************************************************************/
 
 #include "tl_common.h"
-#include "drivers.h"
+#if (BATT_CHECK_ENABLE)
 #include "proj_lib/ble/blt_config.h"
+//#include "drivers.h"
 //#include "stack/ble/ble.h"
 
 #include "battery_check.h"
 
 
-#if (BATT_CHECK_ENABLE)
 
 #define DBG_ADC_ON_RF_PKT			0
 #define DBG_ADC_SAMPLE_DAT			0

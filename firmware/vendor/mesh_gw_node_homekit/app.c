@@ -1534,6 +1534,9 @@ void main_loop ()
 
 	////////////////////////////////////// UI entry /////////////////////////////////
 	//  add spp UI task:
+#if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(1);
+#endif
 	proc_ui();
 	proc_led();
 	factory_reset_cnt_check();
@@ -1558,6 +1561,9 @@ void main_loop ()
 
 void user_init()
 {
+    #if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(0); //battery check must do before OTA relative operation
+    #endif
 	user_sha256_data_proc();
 	enable_mesh_provision_buf();
 	mesh_global_var_init();

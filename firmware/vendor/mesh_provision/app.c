@@ -707,6 +707,9 @@ void main_loop ()
 
 	////////////////////////////////////// UI entry /////////////////////////////////
 	//  add spp UI task:
+#if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(1);
+#endif
 	proc_ui();
 	proc_led();
 	factory_reset_cnt_check();
@@ -732,6 +735,9 @@ void main_loop ()
 
 void user_init()
 {
+    #if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(0); //battery check must do before OTA relative operation
+    #endif
 	enable_mesh_provision_buf();
 	mesh_global_var_init();
 	set_blc_hci_flag_fun(0);// disable the hci part of for the lib .

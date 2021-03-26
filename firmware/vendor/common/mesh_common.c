@@ -2044,10 +2044,6 @@ mesh_global_var_init(): run in mesh_init_all() and before read parameters in fla
 */
 void mesh_global_var_init()
 {
-#if (BATT_CHECK_ENABLE)
-    app_battery_power_check_and_sleep_handle(0); //battery check must do before OTA relative operation
-#endif
-
     //get_fw_id();    // must first
 #if !WIN32
 	blc_readFlashSize_autoConfigCustomFlashSector();
