@@ -23,7 +23,8 @@
 #ifndef BATTERY_CHECK_H_
 #define BATTERY_CHECK_H_
 
-
+#define MANNUAL_MODE_GET_ADC_SAMPLE_RESULT  0
+#define VBAT_LEAKAGE_PROTECT_EN				0
 #define VBAT_ALRAM_THRES_MV				(2000)   // 2000 mV low battery alarm
 
 
@@ -33,6 +34,7 @@ int  battery_get_detect_enable (void);
 
 int app_battery_power_check(u16 alram_vol_mv, int loop_flag);
 void app_battery_power_check_and_sleep_handle(int loop_flag);
+void battery_power_low_handle(int loop_flag);
 
 
 #endif /* APP_BATTDET_H_ */
