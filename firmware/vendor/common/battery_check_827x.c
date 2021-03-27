@@ -21,13 +21,12 @@
  *******************************************************************************************************/
 
 #include "tl_common.h"
-#include "drivers.h"
-#include "stack/ble/ble.h"
+#include "proj_lib/ble/blt_config.h"
+//#include "drivers.h"
+//#include "stack/ble/ble.h"
 
 #include "battery_check.h"
-
-
-#if (BATT_CHECK_ENABLE)
+#if (BATT_CHECK_ENABLE && (MCU_CORE_TYPE == MCU_CORE_8278))
 
 #define DBG_ADC_ON_RF_PKT			0
 #define DBG_ADC_SAMPLE_DAT			0
@@ -443,8 +442,9 @@ _attribute_ram_code_ int app_battery_power_check(u16 threshold_deep_vol_mv, u16 
 
 }
 #else
-_attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv)
+_attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag)
 {
+    int ret_slept_flag = 0;
 	u16 temp;
 	int i,j;
 
@@ -568,7 +568,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv)
 
 
 	if(batt_vol_mv < alram_vol_mv){
-
+        #if 0
 		#if (1 && BLT_APP_LED_ENABLE)  //led indicate
 			gpio_set_output_en(GPIO_LED, 1);  //output enable
 			for(int k=0;k<3;k++){
@@ -589,6 +589,12 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv)
 		}
 
 		cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_PAD, 0);  //deepsleep
+	    #else
+        battery_power_low_handle(loop_flag);
+        ret_slept_flag = 1;
+	    #endif
+	}else{
+	    // DEEP_ANA_REG0 can not be cleared here, because it will be used in light pwm init.
 	}
 
 
@@ -655,6 +661,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv)
 	}
 #endif
 
+    return ret_slept_flag;
 }
 #endif
 #endif

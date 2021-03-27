@@ -22,6 +22,7 @@
 
 #include "tl_common.h"
 #if (BATT_CHECK_ENABLE)
+#if (MCU_CORE_TYPE == MCU_CORE_8258)
 #include "proj_lib/ble/blt_config.h"
 //#include "drivers.h"
 //#include "stack/ble/ble.h"
@@ -305,14 +306,8 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
 
 		cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_PAD, 0);  //deepsleep
 		#else
+		battery_power_low_handle(loop_flag);
 		ret_slept_flag = 1;
-		    #if __PROJECT_BOOTLOADER__
-		sleep_us(50*1000);
-		REG_ADDR8(0x6f) = 0x20;  //reboot
-		    #else
-        analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0) | (BIT(LOW_BATT_FLG)| (loop_flag ? BIT(LOW_BATT_LOOP_FLG) : 0)));  //mark
-		cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_TIMER, clock_time() + 50*CLOCK_SYS_CLOCK_1MS);  //
-		    #endif
 		#endif
 	}else{
 	    // DEEP_ANA_REG0 can not be cleared here, because it will be used in light pwm init.
@@ -384,6 +379,10 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
 
     return ret_slept_flag;
 }
+#endif
+
+
+
 
 #ifndef VBAT_ALRAM_CHECK_INTERVAL_MS
 #define VBAT_ALRAM_CHECK_INTERVAL_MS	(500)
@@ -393,6 +392,17 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
  * PB0,PB2,PB3,PC5 is not included in 32pin, 24pin chip
  * PB0, PB2, PB3 are used in 8258 48pin dongle, so select PC5 as default 
 */
+
+void battery_power_low_handle(int loop_flag)
+{
+    #if __PROJECT_BOOTLOADER__
+    sleep_us(50*1000);
+    REG_ADDR8(0x6f) = 0x20;  //reboot
+    #else
+    analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0) | (BIT(LOW_BATT_FLG)| (loop_flag ? BIT(LOW_BATT_LOOP_FLG) : 0)));  //mark
+    cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_TIMER, clock_time() + 50*CLOCK_SYS_CLOCK_1MS);  //
+    #endif
+}
 
 /*****************************************************************************************
  Note: battery check must do before any flash write/erase operation, cause flash write/erase
