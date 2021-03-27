@@ -21,15 +21,15 @@
  *******************************************************************************************************/
 
 #include "tl_common.h"
-#if (BATT_CHECK_ENABLE)
-#if (MCU_CORE_TYPE == MCU_CORE_8258)
 #include "proj_lib/ble/blt_config.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 //#include "drivers.h"
 //#include "stack/ble/ble.h"
 
 #include "battery_check.h"
 
-
+#if (BATT_CHECK_ENABLE)
+#if (MCU_CORE_TYPE == MCU_CORE_8258)
 
 #define DBG_ADC_ON_RF_PKT			0
 #define DBG_ADC_SAMPLE_DAT			0
@@ -306,6 +306,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
 
 		cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_PAD, 0);  //deepsleep
 		#else
+		LOG_BATTERY_CHECK_DEBUG(0,0,"battery low, loop:%d, current:%d, thres:%d", loop_flag, batt_vol_mv, alram_vol_mv);
 		battery_power_low_handle(loop_flag);
 		ret_slept_flag = 1;
 		#endif
@@ -379,6 +380,8 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
 
     return ret_slept_flag;
 }
+#else
+extern u16     batt_vol_mv;
 #endif
 
 
@@ -393,7 +396,9 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
  * PB0, PB2, PB3 are used in 8258 48pin dongle, so select PC5 as default 
 */
 
-void battery_power_low_handle(int loop_flag)
+
+
+_attribute_no_inline_ void battery_power_low_handle(int loop_flag)
 {
     #if __PROJECT_BOOTLOADER__
     sleep_us(50*1000);
@@ -412,7 +417,7 @@ void battery_power_low_handle(int loop_flag)
 			SMP initialization, ..
 			So these initialization must be done after  battery check
 *****************************************************************************************/
-void app_battery_power_check_and_sleep_handle(int loop_flag)
+_attribute_no_inline_ void app_battery_power_check_and_sleep_handle(int loop_flag)
 {
 #if 1 // deep
     u16 alarm_thres = VBAT_ALRAM_THRES_MV;
@@ -428,6 +433,9 @@ void app_battery_power_check_and_sleep_handle(int loop_flag)
     	    #endif
     		lowBattDet_tick = clock_time();
             app_battery_power_check(alarm_thres, loop_flag);  //2.0 V
+            if(batt_vol_mv < 2500){
+                LOG_BATTERY_CHECK_DEBUG(0,0,"battery loop normal, current:%d, ana reg0:0x%x", batt_vol_mv, analog_read(DEEP_ANA_REG0));
+            }
         }
     }else{ // user init
         if(analog_read(DEEP_ANA_REG0) & BIT(LOW_BATT_FLG)){
@@ -435,6 +443,7 @@ void app_battery_power_check_and_sleep_handle(int loop_flag)
         }else{
             app_battery_power_check(alarm_thres, loop_flag);  //2.0 V
         }
+		LOG_BATTERY_CHECK_DEBUG(0,0,"battery user init normal, current:%d, ana reg0:0x%x", batt_vol_mv, analog_read(DEEP_ANA_REG0));
     }
 #else // suspend, need to config sleep type in app_battery_power_check_
     u16 alram_vol_mv = VBAT_ALRAM_THRES_MV; //2.0 V

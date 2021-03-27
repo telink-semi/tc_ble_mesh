@@ -27,6 +27,7 @@
 #define VBAT_LEAKAGE_PROTECT_EN				0
 #define VBAT_ALRAM_THRES_MV				(2000)   // 2000 mV low battery alarm
 
+#define LOG_BATTERY_CHECK_DEBUG(pbuf,len,format,...)    //LOG_MSG_LIB(LOG_GET_LEVEL_MODULE(TL_LOG_LEVEL_LIB,TL_LOG_NODE_SDK),pbuf,len,format,__VA_ARGS__)
 
 
 void battery_set_detect_enable (int en);

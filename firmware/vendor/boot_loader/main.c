@@ -124,6 +124,9 @@ _attribute_ram_code_ void boot_load_with_ota_check(u32 addr_load)
         {
             for (int i=0; i<fw_size; i+=256)
             {
+                #if (BATT_CHECK_ENABLE)
+                app_battery_power_check_and_sleep_handle(1);
+                #endif
                 if ((i & 0xfff) == 0)
                 {
                     flash_erase_sector (addr_load + i);
@@ -139,6 +142,9 @@ _attribute_ram_code_ void boot_load_with_ota_check(u32 addr_load)
     
         //erase the new firmware
         for (int i = 0; i < ((fw_size + 4095)/4096); i++) {
+            #if (BATT_CHECK_ENABLE)
+            app_battery_power_check_and_sleep_handle(1);
+            #endif
             flash_erase_sector(FLASH_ADR_UPDATE_NEW_FW + i*4096);
         }
     }

@@ -21,12 +21,13 @@
  *******************************************************************************************************/
 
 #include "tl_common.h"
+#if (BATT_CHECK_ENABLE && (MCU_CORE_TYPE == MCU_CORE_8278))
 #include "proj_lib/ble/blt_config.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 //#include "drivers.h"
 //#include "stack/ble/ble.h"
 
 #include "battery_check.h"
-#if (BATT_CHECK_ENABLE && (MCU_CORE_TYPE == MCU_CORE_8278))
 
 #define DBG_ADC_ON_RF_PKT			0
 #define DBG_ADC_SAMPLE_DAT			0
@@ -590,6 +591,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
 
 		cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_PAD, 0);  //deepsleep
 	    #else
+		LOG_BATTERY_CHECK_DEBUG(0,0,"battery low, loop:%d, current:%d, thres:%d", loop_flag, batt_vol_mv, alram_vol_mv);
         battery_power_low_handle(loop_flag);
         ret_slept_flag = 1;
 	    #endif
