@@ -37,7 +37,7 @@
 
 //_attribute_data_retention_	u8		adc_first_flg = 1;
 _attribute_data_retention_	u8 		lowBattDet_enable = 1;
-							u8      adc_hw_initialized = 0;   //note: can not be retention variable
+_attribute_no_retention_data_ u8      adc_hw_initialized = 0;   //note: can not be retention variable
 _attribute_data_retention_  u16     batt_vol_mv;
 
 
