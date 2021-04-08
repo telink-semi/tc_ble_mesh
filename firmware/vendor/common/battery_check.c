@@ -405,7 +405,13 @@ _attribute_no_inline_ void battery_power_low_handle(int loop_flag)
     REG_ADDR8(0x6f) = 0x20;  //reboot
     #else
     analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0) | (BIT(LOW_BATT_FLG)| (loop_flag ? BIT(LOW_BATT_LOOP_FLG) : 0)));  //mark
+    #if __PROJECT_MESH_SWITCH__
+	extern void mesh_switch_init();
+	mesh_switch_init();
+	cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_PAD, 0);
+	#else
     cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_TIMER, clock_time() + 50*CLOCK_SYS_CLOCK_1MS);  //
+    #endif
     #endif
 }
 
