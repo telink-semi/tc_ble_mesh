@@ -93,14 +93,6 @@ typedef enum{
 }flash_status_typedef_e;
 
 /**
- * @brief     flash uid type definition
- */
-typedef enum{
-	FLASH_TYPE_8BYTE_UID   = 8,
-	FLASH_TYPE_16BYTE_UID  = 16,
-}flash_uid_typedef_e;
-
-/**
  * @brief     flash uid cmd definition
  */
 typedef enum{
@@ -200,6 +192,15 @@ unsigned long flash_subregion_read_val (unsigned long adr, unsigned long flag_in
 /**
  * @brief	  	This function serves to read MID of flash(MAC id).
  * @return    	MID of the flash(3 bytes).
+ * @note        Attention: Before calling the FLASH function, please check the power supply voltage of the chip.
+ *              Only if the detected voltage is greater than the safe voltage value, the FLASH function can be called.
+ *              Taking into account the factors such as power supply fluctuations, the safe voltage value needs to be greater
+ *              than the minimum chip operating voltage. For the specific value, please make a reasonable setting according
+ *              to the specific application and hardware circuit.
+ *
+ *              Risk description: When the chip power supply voltage is relatively low, due to the unstable power supply,
+ *              there may be a risk of error in the operation of the flash (especially for the write and erase operations.
+ *              If an abnormality occurs, the firmware and user data may be rewritten, resulting in the final Product failure)
  */
 unsigned int flash_read_raw_mid(void);
 
@@ -224,8 +225,7 @@ unsigned int flash_read_mid(void);
  * @brief	  	This function serves to read UID of flash.Before reading UID of flash, you must read MID of flash.
  * 				and then you can look up the related table to select the idcmd and read UID of flash.
  * @param[in] 	idcmd	- different flash vendor have different read-uid command. E.g: GD/PUYA:0x4B; XTX: 0x5A
- * @param[in] 	buf		- store UID of flash
- * @param[in] 	uidtype	- the number of uid bytes.
+ * @param[in] 	buf		- store UID of flash.
  * @return    	none.
  * @note        Attention: Before calling the FLASH function, please check the power supply voltage of the chip.
  *              Only if the detected voltage is greater than the safe voltage value, the FLASH function can be called.
@@ -237,7 +237,7 @@ unsigned int flash_read_mid(void);
  *              there may be a risk of error in the operation of the flash (especially for the write and erase operations.
  *              If an abnormality occurs, the firmware and user data may be rewritten, resulting in the final Product failure)
  */
-void flash_read_uid(unsigned char idcmd,unsigned char *buf, flash_uid_typedef_e uidtype);
+void flash_read_uid(unsigned char idcmd, unsigned char *buf);
 
 /*******************************************************************************************************************
  *												Primary interface
@@ -245,8 +245,8 @@ void flash_read_uid(unsigned char idcmd,unsigned char *buf, flash_uid_typedef_e 
 
 /**
  * @brief		This function serves to read flash mid and uid,and check the correctness of mid and uid.
- * @param[out]	flash_mid	- Flash Manufacturer ID
- * @param[out]	flash_uid	- Flash Unique ID
+ * @param[out]	flash_mid	- Flash Manufacturer ID.
+ * @param[out]	flash_uid	- Flash Unique ID.
  * @return		0: flash no uid or not a known flash model 	 1:the flash model is known and the uid is read.
  * @note        Attention: Before calling the FLASH function, please check the power supply voltage of the chip.
  *              Only if the detected voltage is greater than the safe voltage value, the FLASH function can be called.
@@ -258,7 +258,7 @@ void flash_read_uid(unsigned char idcmd,unsigned char *buf, flash_uid_typedef_e 
  *              there may be a risk of error in the operation of the flash (especially for the write and erase operations.
  *              If an abnormality occurs, the firmware and user data may be rewritten, resulting in the final Product failure)
  */
-int flash_read_mid_uid_with_check( unsigned int *flash_mid ,unsigned char *flash_uid);
+int flash_read_mid_uid_with_check( unsigned int *flash_mid, unsigned char *flash_uid);
 
 
 

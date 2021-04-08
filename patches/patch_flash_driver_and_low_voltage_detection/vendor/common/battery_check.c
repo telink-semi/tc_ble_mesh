@@ -405,7 +405,13 @@ _attribute_no_inline_ void battery_power_low_handle(int loop_flag)
     REG_ADDR8(0x6f) = 0x20;  //reboot
     #else
     analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0) | (BIT(LOW_BATT_FLG)| (loop_flag ? BIT(LOW_BATT_LOOP_FLG) : 0)));  //mark
+    #if __PROJECT_MESH_SWITCH__
+	extern void mesh_switch_init();
+	mesh_switch_init();
+	cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_PAD, 0);
+	#else
     cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_TIMER, clock_time() + 50*CLOCK_SYS_CLOCK_1MS);  //
+    #endif
     #endif
 }
 
@@ -423,7 +429,14 @@ _attribute_no_inline_ void app_battery_power_check_and_sleep_handle(int loop_fla
     u16 alarm_thres = VBAT_ALRAM_THRES_MV;
     if(loop_flag){
         static u32 lowBattDet_tick   = 0;
-    	if(battery_get_detect_enable() && clock_time_exceed(lowBattDet_tick, VBAT_ALRAM_CHECK_INTERVAL_MS * 1000)){
+    	if(battery_get_detect_enable() && (clock_time_exceed(lowBattDet_tick, VBAT_ALRAM_CHECK_INTERVAL_MS * 1000)
+		#if(__PROJECT_MESH_SWITCH__)
+		|| pm_is_deepPadWakeup() // 32k rc not run without PM_WAKEUP_TIMER  // 
+		#endif
+		)){
+			#if(__PROJECT_MESH_SWITCH__)
+			pmParam.is_pad_wakeup = 0;  // only for retention deep sleep, not for deep sleep.
+			#endif
     	    #if __PROJECT_BOOTLOADER__
     	    // clear by product image
     	    #else
