@@ -430,12 +430,12 @@ _attribute_no_inline_ void app_battery_power_check_and_sleep_handle(int loop_fla
     if(loop_flag){
         static u32 lowBattDet_tick   = 0;
     	if(battery_get_detect_enable() && (clock_time_exceed(lowBattDet_tick, VBAT_ALRAM_CHECK_INTERVAL_MS * 1000)
-		#if(__PROJECT_MESH_SWITCH___)
-		|| pm_is_deepPadWakeup() // 32k rc not run without PM_WAKEUP_TIMER
+		#if(__PROJECT_MESH_SWITCH__)
+		|| pm_is_deepPadWakeup() // 32k rc not run without PM_WAKEUP_TIMER  // 
 		#endif
 		)){
-			#if(__PROJECT_MESH_SWITCH___)
-			pmParam.is_pad_wakeup = 0;
+			#if(__PROJECT_MESH_SWITCH__)
+			pmParam.is_pad_wakeup = 0;  // only for retention deep sleep, not for deep sleep.
 			#endif
     	    #if __PROJECT_BOOTLOADER__
     	    // clear by product image
