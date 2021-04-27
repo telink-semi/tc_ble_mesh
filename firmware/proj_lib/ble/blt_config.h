@@ -605,9 +605,9 @@ enum{
 };
 
 enum{
-    OTA_REBOOT_FLAG                   	= 0,
-    LOW_BATT_FLG                   	    = 1,
-    LOW_BATT_LOOP_FLG                   = 2,	// 0 means check by user_init, 1 means by main loop
+    FLD_OTA_REBOOT_FLAG                 = BIT(0),
+    FLD_LOW_BATT_FLG                   	= BIT(1),
+    FLD_LOW_BATT_LOOP_FLG             	= BIT(2),	// 0 means check by user_init, 1 means by main loop
 };/*DEEP_ANA_REG0*/
 
 
