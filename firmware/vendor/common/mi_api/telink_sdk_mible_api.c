@@ -639,6 +639,9 @@ void mible_dfu_handler(mible_dfu_state_t state, mible_dfu_param_t *param)
 #define RECORD_DFU_INFO                                        5
 
     if(MIBLE_DFU_STATE_START == state){
+		#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
+		check_and_set_1p95v_to_zbit_flash();
+		#endif
         MI_LOG_INFO("state = MIBLE_DFU_STATE_START\n");
 		mi_ota_downing =1;
     }

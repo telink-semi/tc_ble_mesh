@@ -263,6 +263,9 @@ int otaWrite(void * p)
 		}
 		
 		//log_event(TR_T_ota_start);
+		#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
+		check_and_set_1p95v_to_zbit_flash();
+		#endif
 	}
 	else if(ota_adr == CMD_OTA_END){
 		//log_event(TR_T_ota_end);
@@ -562,6 +565,9 @@ int ais_ota_req(u8 *p)
 	}
 	
 	if(ais_gatt_auth.auth_ok){	
+#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
+		check_and_set_1p95v_to_zbit_flash();
+#endif
 		ais_msg_rsp.enc_flag = 1;
 		AES128_pkcs7_padding(ais_msg_rsp.data, sizeof(ais_ota_rsp_t), ais_msg_rsp.data);
 		aes_cbc_encrypt(ais_msg_rsp.data, sizeof(ais_ota_rsp_t), &ctx, ais_gatt_auth.ble_key, iv);

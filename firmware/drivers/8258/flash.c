@@ -53,10 +53,13 @@
 
 
 
+_attribute_data_retention_    unsigned char zbit_flash_flag = 0;
 _attribute_data_retention_   _attribute_aligned_(4)	Flash_CapacityDef	flash_capacity;
 /*******************************************************************************************************************
  *												Primary interface
  ******************************************************************************************************************/
+
+
 
 /**
  * @brief		This function to determine whether the flash is busy..
@@ -602,6 +605,44 @@ int flash_read_mid_uid_with_check(unsigned int *flash_mid, unsigned char *flash_
 }
 #endif
 
+
+
+/**
+ * @brief		This function serves to find whether it is zb flash.
+ * @param[in]	none.
+ * @return		1 - is zb flash;   0 - is not zb flash.
+ */
+unsigned char flash_is_zb(void)
+{
+	unsigned int flash_mid  = flash_read_mid();
+	if((flash_mid == 0x13325E)||(flash_mid == 0x14325E))
+	{
+		return 1;
+	}
+	return 0;
+}
+
+/**
+ * @brief		This function serves to calibration the flash voltage(VDD_F),if the flash has the calib_value,we will use it,either will
+ * 				trim vdd_f to 1.95V(2b'111 the max) if the flash is zb.
+ * @param[in]	vol - the voltage which you want to set.
+ * @return		none.
+ */
+void flash_vdd_f_calib(void)
+{
+	unsigned char calib_value = flash_get_vdd_f_calib_value();
+	if((0xff == calib_value) || (0 != (calib_value & 0xf8)))
+	{
+		if(flash_is_zb())
+		{
+			analog_write(0x0c, (analog_read(0x0c) | FLASH_VOLTAGE_1V95));
+		}
+	}
+	else
+	{
+		analog_write(0x0c, ((analog_read(0x0c) & 0xf8)  | calib_value));
+	}
+}
 
 void flash_set_capacity(Flash_CapacityDef flash_cap)
 {

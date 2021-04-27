@@ -146,6 +146,8 @@ typedef struct {
 #define		CALIB_OFFSET_ADC_VREF								(0xC0)
 #define		CALIB_OFFSET_FIRMWARE_SIGNKEY						(0x180)
     #endif
+#define     CALIB_OFFSET_FLASH_VREF								0x1c0
+
 /** Calibration Information end ***/
 
 /**************************** 128 K Flash *****************************/

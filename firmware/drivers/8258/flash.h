@@ -101,29 +101,42 @@ typedef enum{
 }flash_uid_cmddef_e;
 
 /**
- * @brief     flash capacity definition
- * Call flash_read_mid function to get the size of flash capacity.
- * Example is as follows:
- * unsigned char temp_buf[4];
- * flash_read_mid(temp_buf);
- * The value of temp_buf[2] reflects flash capacity.
+ * @brief	flash capacity definition
+ *			Call flash_read_mid function to get the size of flash capacity.
+ *			Example is as follows:
+ *			unsigned int mid = flash_read_mid();
+ *			The value of (mid&0x00ff0000)>>16 reflects flash capacity.
  */
 typedef enum {
-    FLASH_SIZE_64K     = 0x10,
-    FLASH_SIZE_128K    = 0x11,
-    FLASH_SIZE_256K    = 0x12,
-    FLASH_SIZE_512K    = 0x13,
-    FLASH_SIZE_1M      = 0x14,
-    FLASH_SIZE_2M      = 0x15,
-    FLASH_SIZE_4M      = 0x16,
-    FLASH_SIZE_8M      = 0x17,
+	FLASH_SIZE_64K 	= 0x10,
+	FLASH_SIZE_128K = 0x11,
+	FLASH_SIZE_256K = 0x12,
+	FLASH_SIZE_512K = 0x13,
+	FLASH_SIZE_1M 	= 0x14,
+	FLASH_SIZE_2M 	= 0x15,
+	FLASH_SIZE_4M 	= 0x16,
+	FLASH_SIZE_8M 	= 0x17,
 } Flash_CapacityDef;
 
-
+/**
+ * @brief	flash voltage definition
+ */
+typedef enum {
+    FLASH_VOLTAGE_1V95     = 0x07,
+    FLASH_VOLTAGE_1V9      = 0x06,
+    FLASH_VOLTAGE_1V85     = 0x05,
+    FLASH_VOLTAGE_1V8      = 0x04,
+    FLASH_VOLTAGE_1V75     = 0x03,
+    FLASH_VOLTAGE_1V7      = 0x02,
+    FLASH_VOLTAGE_1V65     = 0x01,
+    FLASH_VOLTAGE_1V6      = 0x00,
+} Flash_VoltageDef;
 
 /*******************************************************************************************************************
  *												Primary interface
  ******************************************************************************************************************/
+
+extern  unsigned char zbit_flash_flag;
 
 /**
  * @brief 		This function serves to erase a sector.
@@ -220,7 +233,6 @@ unsigned int flash_read_raw_mid(void);
  *              If an abnormality occurs, the firmware and user data may be rewritten, resulting in the final Product failure)
  */
 unsigned int flash_read_mid(void);
-
 /**
  * @brief	  	This function serves to read UID of flash.Before reading UID of flash, you must read MID of flash.
  * 				and then you can look up the related table to select the idcmd and read UID of flash.
@@ -260,7 +272,53 @@ void flash_read_uid(unsigned char idcmd, unsigned char *buf);
  */
 int flash_read_mid_uid_with_check( unsigned int *flash_mid, unsigned char *flash_uid);
 
+/**
+ * @brief		This function serves to find whether it is zb flash.
+ * @param[in]	none.
+ * @return		1 - is zb flash;   0 - is not zb flash.
+ */
+unsigned char flash_is_zb(void);
 
+/**
+ * @brief		This function serves to calibration the flash voltage(VDD_F),if the flash has the calib_value,we will use it,either will
+ * 				trim vdd_f to 1.95V(2b'111 the max) if the flash is zb.
+ * @param[in]	vol - the voltage which you want to set.
+ * @return		none.
+ */
+void flash_vdd_f_calib(void);
+
+/**
+ * @brief		This function serves to get the vdd_f calibration value.
+ * @param[in]	none.
+ * @return		none.
+ */
+static inline unsigned char flash_get_vdd_f_calib_value(void)
+{
+	unsigned int mid = flash_read_mid();
+	unsigned char dcdc_flash_volatage = 0;
+	switch((mid & 0xff0000) >> 16)
+	{
+	case(FLASH_SIZE_64K):
+		flash_read_page(0xe1c0, 1, &dcdc_flash_volatage);
+		break;
+	case(FLASH_SIZE_128K):
+		flash_read_page(0x1e1c0, 1, &dcdc_flash_volatage);
+		break;
+	case(FLASH_SIZE_512K):
+		flash_read_page(0x771c0, 1, &dcdc_flash_volatage);
+		break;
+	case(FLASH_SIZE_1M):
+		flash_read_page(0x7e1c0, 1, &dcdc_flash_volatage);
+		break;
+	case(FLASH_SIZE_2M):
+		flash_read_page(0x1fe1c0, 1, &dcdc_flash_volatage);
+		break;
+	default:
+		dcdc_flash_volatage = 0xff;
+		break;
+	}
+	return dcdc_flash_volatage;
+}
 
 void flash_set_capacity(Flash_CapacityDef flash_cap);
 
