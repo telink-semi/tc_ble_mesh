@@ -46,6 +46,13 @@ static inline void blc_app_setExternalCrystalCapEnable(u8  en)
 
 }
 
+static inline void check_and_set_1p95v_to_zbit_flash()
+{
+	if(1 == zbit_flash_flag){ // use "== 1"" should be better than "ture"
+		analog_write(0x09, ((analog_read(0x09) & 0x8f) | (FLASH_VOLTAGE_1V95 << 4)));	 	//ldo mode flash ldo trim 1.95V
+		analog_write(0x0c, ((analog_read(0x0c) & 0xf8) | FLASH_VOLTAGE_1V9));				//dcdc mode flash ldo trim 1.90V
+	}
+}
 
 
 static inline void blc_app_loadCustomizedParameters(void)
@@ -58,6 +65,23 @@ static inline void blc_app_loadCustomizedParameters(void)
 			 analog_write(0x8A, cap_frqoft );
 		 }
 	 }
+
+	if(!pm_is_MCU_deepRetentionWakeup()){
+		zbit_flash_flag = flash_is_zb();
+	}
+
+	u16 calib_value = *(unsigned short*)(flash_sector_calibration+CALIB_OFFSET_FLASH_VREF);
+
+	if((0xffff == calib_value) || (0 != (calib_value & 0xf8f8)))
+	{
+		check_and_set_1p95v_to_zbit_flash();
+	}
+	else
+	{
+		analog_write(0x09, ((analog_read(0x09) & 0x8f)  | ((calib_value & 0xff00) >> 4) ));
+		analog_write(0x0c, ((analog_read(0x0c) & 0xf8)  | (calib_value & 0xff)));
+	}
+
 }
 #endif
 
@@ -185,6 +209,14 @@ static inline void blc_app_loadCustomizedParameters(void)
 #endif
 
 
+
+#ifndef ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN
+#define ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN					1
+#endif
+
+#ifndef ZBIT_FLASH_BRX4B_WRITE__EN
+#define ZBIT_FLASH_BRX4B_WRITE__EN									0
+#endif
 
 
 ///////////////////////////////////////dbg channels///////////////////////////////////////////
