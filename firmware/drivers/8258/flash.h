@@ -322,7 +322,7 @@ static inline unsigned char flash_get_vdd_f_calib_value(void)
 	}
 	return dcdc_flash_volatage;
 }
-#else if (MCU_CORE_TYPE == MCU_CORE_8278)
+#elif (MCU_CORE_TYPE == MCU_CORE_8278)
 /**
  * @brief		This function serves to get the vdd_f calibration value.
  * @param[in]	none.
