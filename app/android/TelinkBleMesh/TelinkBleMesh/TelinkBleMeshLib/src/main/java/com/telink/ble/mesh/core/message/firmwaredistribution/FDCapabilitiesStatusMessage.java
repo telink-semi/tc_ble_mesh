@@ -42,14 +42,14 @@ public class FDCapabilitiesStatusMessage extends StatusMessage implements Parcel
      * Maximum number of entries in the Distribution Receivers List state
      * 2 bytes
      */
-    public int maxReceiversListSize;
+    private int maxReceiversListSize;
 
     /**
      * Max Firmware Images List Size
      * Maximum number of entries in the Firmware Images List state
      * 2 bytes
      */
-    private int maxImagesListSize;
+    public int maxImagesListSize;
 
     /**
      * Max Firmware Image Size

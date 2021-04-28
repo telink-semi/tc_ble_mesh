@@ -411,4 +411,5 @@ public class NodeInfo implements Serializable {
     public boolean isOffline() {
         return this.onOff == ON_OFF_STATE_OFFLINE;
     }
+
 }

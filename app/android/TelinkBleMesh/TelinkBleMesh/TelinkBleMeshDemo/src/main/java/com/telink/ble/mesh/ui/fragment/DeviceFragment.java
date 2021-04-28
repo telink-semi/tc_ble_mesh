@@ -56,6 +56,7 @@ import com.telink.ble.mesh.ui.RemoteProvisionActivity;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.OnlineDeviceListAdapter;
 import com.telink.ble.mesh.ui.test.ConnectionTestActivity;
+import com.telink.ble.mesh.ui.test.OnOffTestActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -130,7 +131,6 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 return false;
             }
         });
-        view.findViewById(R.id.tv_provision).setOnClickListener(this);
         view.findViewById(R.id.tv_on).setOnClickListener(this);
         view.findViewById(R.id.tv_off).setOnClickListener(this);
         view.findViewById(R.id.tv_cmd).setOnClickListener(this);
@@ -278,8 +278,8 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 break;
 
             case R.id.btn_test:
-                startActivity(new Intent(getActivity(), ConnectionTestActivity.class));
-//                startActivity(new Intent(getActivity(), OnOffTestActivity.class));
+//                startActivity(new Intent(getActivity(), ConnectionTestActivity.class));
+                startActivity(new Intent(getActivity(), OnOffTestActivity.class));
                 break;
         }
     }

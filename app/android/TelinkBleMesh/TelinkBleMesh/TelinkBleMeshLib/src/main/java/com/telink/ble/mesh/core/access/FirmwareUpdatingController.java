@@ -310,7 +310,7 @@ public class FirmwareUpdatingController {
                 this.step = STEP_SET_SUBSCRIPTION;
             }*/
             if (this.isGattMode) {
-                this.gattAddress = this.nodes.get(0).getMeshAddress();
+                this.gattAddress = this.nodes.get(0).meshAddress;
             }
             this.step = STEP_SET_SUBSCRIPTION;
             executeUpdatingAction();
@@ -532,7 +532,7 @@ public class FirmwareUpdatingController {
                 onUpdatingFail(STATE_FAIL, "all nodes failed when executing action");
             }
         } else {
-            int meshAddress = nodes.get(nodeIndex).getMeshAddress();
+            int meshAddress = nodes.get(nodeIndex).meshAddress;
             log(String.format("action executing: " + getStepDesc(step) + " -- %04X", meshAddress));
             switch (this.step) {
                 case STEP_GET_FIRMWARE_INFO:
@@ -540,7 +540,7 @@ public class FirmwareUpdatingController {
                     break;
 
                 case STEP_SET_SUBSCRIPTION:
-                    int eleAdr = nodes.get(nodeIndex).getUpdatingEleAddress();
+                    int eleAdr = nodes.get(nodeIndex).updatingEleAddress;
                     int modelId = MeshSigModel.SIG_MD_OBJ_TRANSFER_S.modelId;
                     onMeshMessagePrepared(ModelSubscriptionSetMessage.getSimple(meshAddress,
                             ModelSubscriptionSetMessage.MODE_ADD,
@@ -660,7 +660,7 @@ public class FirmwareUpdatingController {
         MeshUpdatingDevice updatingNode;
         while (iterator.hasNext()) {
             updatingNode = iterator.next();
-            if (updatingNode.getState() == MeshUpdatingDevice.STATE_FAIL) {
+            if (updatingNode.state == MeshUpdatingDevice.STATE_FAIL) {
                 iterator.remove();
             }
         }
@@ -712,7 +712,7 @@ public class FirmwareUpdatingController {
             return;
         }
 
-        if (nodes.get(nodeIndex).getMeshAddress() != src) {
+        if (nodes.get(nodeIndex).meshAddress != src) {
             log("unexpected notification src", MeshLogger.LEVEL_WARN);
             return;
         }
@@ -1052,25 +1052,25 @@ public class FirmwareUpdatingController {
 
     private MeshUpdatingDevice getDeviceByAddress(int meshAddress) {
         for (MeshUpdatingDevice device : nodes) {
-            if (device.getMeshAddress() == meshAddress) return device;
+            if (device.meshAddress == meshAddress) return device;
         }
         return null;
     }
 
 
     private void onDeviceFail(MeshUpdatingDevice device, String desc) {
-        log(String.format("node updating fail: %04X -- " + desc, device.getMeshAddress()));
-        device.setState(MeshUpdatingDevice.STATE_FAIL);
+        log(String.format("node updating fail: %04X -- " + desc, device.meshAddress));
+        device.state = (MeshUpdatingDevice.STATE_FAIL);
         onStateUpdate(STATE_DEVICE_FAIL,
-                String.format("node updating fail: %04X -- ", device.getMeshAddress()),
+                String.format("node updating fail: %04X -- ", device.meshAddress),
                 device);
     }
 
     private void onDeviceSuccess(MeshUpdatingDevice device) {
-        log(String.format("node updating success: %04X -- ", device.getMeshAddress()));
-        device.setState(MeshUpdatingDevice.STATE_SUCCESS);
+        log(String.format("node updating success: %04X -- ", device.meshAddress));
+        device.state = (MeshUpdatingDevice.STATE_SUCCESS);
         onStateUpdate(STATE_DEVICE_SUCCESS,
-                String.format("node updating success: %04X -- ", device.getMeshAddress()),
+                String.format("node updating success: %04X -- ", device.meshAddress),
                 device);
     }
 

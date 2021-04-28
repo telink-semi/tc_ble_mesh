@@ -42,7 +42,7 @@ public class TimeGetMessage extends LightingMessage {
 
     @Override
     public int getOpcode() {
-        return Opcode.TIME_STATUS.value;
+        return Opcode.TIME_GET.value;
     }
 
     @Override

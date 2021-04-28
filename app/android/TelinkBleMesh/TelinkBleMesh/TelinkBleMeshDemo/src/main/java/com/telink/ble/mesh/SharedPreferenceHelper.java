@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     SharedPreferenceHelper.java 
+ * @file SharedPreferenceHelper.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh;
 
@@ -25,7 +25,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.telink.ble.mesh.core.MeshUtils;
+import com.telink.ble.mesh.core.access.fu.UpdatePolicy;
 import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.MeshLogger;
 
 
 /**
@@ -57,6 +59,10 @@ public class SharedPreferenceHelper {
     private static final String KEY_DLE_ENABLE = "com.telink.bluetooth.light.KEY_DLE_ENABLE";
 
     private static final String KEY_AUTO_PV = "com.telink.bluetooth.light.KEY_AUTO_PV";
+
+    private static final String KEY_DIST_ADR = "com.telink.bluetooth.light.KEY_DIST_ADR";
+
+    private static final String KEY_APPLY_POLICY = "com.telink.bluetooth.light.KEY_APPLY_POLICY";
 
     public static boolean isFirstLoad(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
@@ -162,5 +168,23 @@ public class SharedPreferenceHelper {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_AUTO_PV, enable).apply();
     }
+
+
+    /*public static void setMeshOTAState(Context context, int distAddress, UpdatePolicy policy) {
+        MeshLogger.d("save meshOTA state: distAdr - " + distAddress + " -- " + policy);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putInt(KEY_DIST_ADR, distAddress)
+                .putString(KEY_APPLY_POLICY, policy.name())
+                .apply();
+    }
+
+    public static void clearMeshOTAState(Context context) {
+        MeshLogger.d("clear meshOTA state -- ");
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putInt(KEY_DIST_ADR, 0)
+                .putString(KEY_APPLY_POLICY, "")
+                .apply();
+    }*/
+
 
 }

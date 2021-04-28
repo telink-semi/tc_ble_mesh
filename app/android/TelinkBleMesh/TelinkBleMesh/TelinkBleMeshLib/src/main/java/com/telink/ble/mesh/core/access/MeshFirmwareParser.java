@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     MeshFirmwareParser.java 
+ * @file MeshFirmwareParser.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,9 +17,11 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.access;
+
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.zip.CRC32;
 
@@ -84,7 +86,9 @@ public class MeshFirmwareParser {
     }
 
     public void resetBlock() {
-        curBlockIndex = -1;
+        curChunkIndex = -1;
+        MeshLogger.d("reset block : " + curBlockIndex + " -- " + curChunkIndex);
+        // curBlockIndex = -1;
     }
 
     public boolean hasNextBlock() {
@@ -111,9 +115,10 @@ public class MeshFirmwareParser {
      */
     public boolean validateProgress() {
         // Math.ceil(mBlockSize/mChunkSize)
-        float chunkNumberOffset = curBlockIndex * (mBlockSize / mChunkSize) + (curChunkIndex + 1);
+        final int MAX_PROGRESS = 99; // 99 or 100
+        float chunkNumberOffset = curBlockIndex * ((float) mBlockSize / mChunkSize) + (curChunkIndex + 1);
         // max 99
-        int progress = (int) (chunkNumberOffset * 99 / totalChunkNumber);
+        int progress = (int) (chunkNumberOffset * MAX_PROGRESS / totalChunkNumber);
         if (progress <= this.progress) {
             return false;
         }

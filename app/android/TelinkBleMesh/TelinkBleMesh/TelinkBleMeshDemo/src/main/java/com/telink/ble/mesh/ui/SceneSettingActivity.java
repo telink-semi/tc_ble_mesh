@@ -237,7 +237,7 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
     }
 
     @Override
-    public void onStatusChanged(BaseSelectableListAdapter adapter) {
+    public void onSelectStatusChanged(BaseSelectableListAdapter adapter) {
         if (adapter == mDeviceAdapter) {
             cb_device.setChecked(mDeviceAdapter.allSelected());
         }

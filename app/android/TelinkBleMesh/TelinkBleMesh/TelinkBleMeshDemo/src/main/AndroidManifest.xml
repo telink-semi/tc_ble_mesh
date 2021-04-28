@@ -88,10 +88,7 @@
             android:name="com.telink.ble.mesh.ui.SceneListActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden" />
-        <activity
-            android:name="com.telink.ble.mesh.ui.ModelListActivity"
-            android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateAlwaysHidden" />
+
         <activity
             android:name="com.telink.ble.mesh.ui.SettingsActivity"
             android:screenOrientation="portrait"
@@ -175,6 +172,10 @@
         <activity android:name="com.telink.ble.mesh.ui.MeshInfoActivity" />
         <activity android:name="com.telink.ble.mesh.ui.SubnetBridgeActivity" />
         <activity android:name="com.telink.ble.mesh.ui.BridgingTableAddActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.test.ResponseTestActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.test.IntervalTestActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.FUActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.FUDeviceSelectActivity" />
 
     </application>
 

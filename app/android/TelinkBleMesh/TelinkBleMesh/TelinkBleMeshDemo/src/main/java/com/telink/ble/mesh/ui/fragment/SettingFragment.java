@@ -21,6 +21,7 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.fragment;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -30,18 +31,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
+
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.ui.DebugActivity;
+import com.telink.ble.mesh.ui.FUActivity;
 import com.telink.ble.mesh.ui.MeshInfoActivity;
-import com.telink.ble.mesh.ui.MeshOTAActivity;
 import com.telink.ble.mesh.ui.SceneListActivity;
 import com.telink.ble.mesh.ui.SettingsActivity;
 import com.telink.ble.mesh.ui.ShareActivity;
+import com.telink.ble.mesh.ui.test.IntervalTestActivity;
+import com.telink.ble.mesh.ui.test.ResponseTestActivity;
 import com.telink.ble.mesh.util.ContextUtil;
-
-import androidx.appcompat.widget.Toolbar;
 
 /**
  * setting
@@ -49,6 +53,10 @@ import androidx.appcompat.widget.Toolbar;
 
 public class SettingFragment extends BaseFragment implements View.OnClickListener {
     View ll_location_setting;
+    private final String[] TEST_ACTION = {
+            "Response Test",
+            "Interval Test"};
+    private AlertDialog cmdDialog;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -74,6 +82,7 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
         ll_location_setting = view.findViewById(R.id.ll_location_setting);
         view.findViewById(R.id.btn_location_setting).setOnClickListener(this);
         view.findViewById(R.id.btn_location_ignore).setOnClickListener(this);
+        view.findViewById(R.id.view_tests).setOnClickListener(this);
 
         if (AppSettings.DRAFT_FEATURES_ENABLE) {
             view.findViewById(R.id.view_mesh_ota).setVisibility(View.VISIBLE);
@@ -113,7 +122,7 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
                 startActivity(new Intent(getActivity(), ShareActivity.class));
                 break;
             case R.id.view_mesh_ota:
-                startActivity(new Intent(getActivity(), MeshOTAActivity.class));
+                startActivity(new Intent(getActivity(), FUActivity.class));
                 break;
 
             case R.id.view_mesh_info:
@@ -127,7 +136,31 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
                 SharedPreferenceHelper.setLocationIgnore(getActivity(), true);
                 ll_location_setting.setVisibility(View.GONE);
                 break;
+
+            case R.id.view_tests:
+                showActionDialog();
+                break;
         }
+    }
+
+    private void showActionDialog() {
+        if (cmdDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setItems(TEST_ACTION, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (which == 0) {
+                        startActivity(new Intent(getActivity(), ResponseTestActivity.class));
+                    } else if (which == 1) {
+                        startActivity(new Intent(getActivity(), IntervalTestActivity.class));
+                    }
+                    cmdDialog.dismiss();
+                }
+            });
+            builder.setTitle("Select Test Actions");
+            cmdDialog = builder.create();
+        }
+        cmdDialog.show();
     }
 
     private String getVersion() {

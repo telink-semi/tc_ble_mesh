@@ -169,4 +169,10 @@
 
 
     <string name="enable_subnet_bridge">Enable Subnet Bridge</string>
+
+    <string name="init_progress">Initiate progress(%d):</string>
+
+    <string name="dist_progress">Distribute progress(%d):</string>
+
+
 </resources>

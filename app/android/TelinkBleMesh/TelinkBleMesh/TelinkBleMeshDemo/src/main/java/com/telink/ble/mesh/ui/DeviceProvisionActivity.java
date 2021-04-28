@@ -103,10 +103,20 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
      * title refresh icon
      */
     private MenuItem refreshItem;
+
+    /**
+     * handler
+     */
     private Handler mHandler = new Handler();
 
+    /**
+     * is setting publication if time model exist in composition data
+     */
     private boolean isPubSetting = false;
 
+    /**
+     * is scanning for unprovisioned device
+     */
     private boolean isScanning = false;
 
     @Override

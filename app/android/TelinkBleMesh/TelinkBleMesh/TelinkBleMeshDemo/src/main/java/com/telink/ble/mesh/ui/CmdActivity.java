@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     CmdActivity.java 
+ * @file CmdActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -39,6 +39,7 @@ import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
+import com.telink.ble.mesh.core.networking.AccessType;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
@@ -53,6 +54,7 @@ import java.util.Locale;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.RecyclerView;
 
 
 /**
@@ -60,6 +62,8 @@ import androidx.appcompat.widget.Toolbar;
  */
 
 public class CmdActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
+
+    private final String[] ACCESS_TYPES = {"Application(App Key)", "Device(Device Key)"};
 
     /**
      * preset messages
@@ -80,11 +84,11 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
     private int appKeyIndex;
 
     private View ll_name;
-    private EditText et_actions, et_dst_adr, et_opcode,
+    private EditText et_ac_type, et_actions, et_dst_adr, et_opcode,
             et_rsp_opcode, et_rsp_max, et_retry_cnt, et_params, et_ttl, et_tid, et_name;
     private TextView tv_params_preview;
     private ImageView iv_toggle;
-    private AlertDialog mShowPresetDialog;
+    private AlertDialog mShowPresetDialog, accessDialog;
 
     private static final int MSG_APPEND_LOG = 0x202;
 
@@ -94,6 +98,8 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
     private TextView tv_log;
     private ScrollView sv_log;
     private View ll_content;
+
+    private AccessType selectedType = AccessType.APPLICATION;
 
     private Handler logHandler = new Handler() {
         @Override
@@ -129,6 +135,8 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         ll_name = findViewById(R.id.ll_name);
         et_params = findViewById(R.id.et_params);
         et_params.addTextChangedListener(new HexFormatTextWatcher(tv_params_preview));
+        et_ac_type = findViewById(R.id.et_ac_type);
+        et_ac_type.setOnClickListener(this);
         et_actions = findViewById(R.id.et_actions);
         et_actions.setOnClickListener(this);
 
@@ -141,6 +149,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
 
         onActionSelect(0);
+        onAccessTypeSelect(0);
         TelinkMeshApplication.getInstance().addEventListener(OnOffStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(StatusNotificationEvent.EVENT_TYPE_NOTIFICATION_MESSAGE_UNKNOWN, this);
     }
@@ -184,6 +193,9 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.et_ac_type:
+                showAccessDialog();
+                break;
             case R.id.et_actions:
                 showActionDialog();
                 break;
@@ -262,12 +274,13 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         int tidPosition;
         if (TextUtils.isEmpty(tidInput)) {
             tidPosition = -1;
-        }else {
-            tidPosition = Integer.valueOf(tidInput);
+        } else {
+            tidPosition = Integer.parseInt(tidInput);
         }
 
 
         MeshMessage meshMessage = new MeshMessage();
+        meshMessage.setAccessType(selectedType);
         meshMessage.setDestinationAddress(dstAdr);
         meshMessage.setOpcode(opcode);
         meshMessage.setParams(params);
@@ -283,6 +296,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
     private void resetUI(MeshMessage meshMessage) {
         if (meshMessage == null) return;
 
+        final AccessType accessType = meshMessage.getAccessType();
         final int dstAdr = meshMessage.getDestinationAddress();
         final int opcode = meshMessage.getOpcode();
         final byte[] params = meshMessage.getParams();
@@ -292,6 +306,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         final int ttl = meshMessage.getTtl();
         final int tidPosition = meshMessage.getTidPosition();
 
+        et_ac_type.setText(accessType == AccessType.APPLICATION ? ACCESS_TYPES[0] : ACCESS_TYPES[1]);
         et_dst_adr.setText(String.format("%04X", dstAdr));
 
         et_opcode.setText(MeshUtils.formatIntegerByHex(opcode));
@@ -305,6 +320,15 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         et_retry_cnt.setText(String.valueOf(retryCnt));
         et_ttl.setText(String.valueOf(ttl));
         et_tid.setText(tidPosition < 0 ? "" : String.valueOf(tidPosition));
+    }
+
+    private void onAccessTypeSelect(int position) {
+        if (position == 0) {
+            selectedType = AccessType.APPLICATION;
+        } else {
+            selectedType = AccessType.DEVICE;
+        }
+        et_ac_type.setText(ACCESS_TYPES[position]);
     }
 
     private void onActionSelect(int position) {
@@ -364,7 +388,6 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         et_opcode.setText("");
         et_params.setText("");
         et_rsp_opcode.setText("");
-
         et_rsp_max.setText("0");
         et_retry_cnt.setText(String.valueOf(MeshMessage.DEFAULT_RETRY_CNT));
         et_ttl.setText(String.valueOf(MeshMessage.DEFAULT_TTL));
@@ -382,6 +405,23 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
 //        meshMessage.setTtl(5);
         meshMessage.setTidPosition(tidPosition);
         return meshMessage;
+    }
+
+
+    private void showAccessDialog() {
+        if (accessDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setItems(ACCESS_TYPES, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    onAccessTypeSelect(which);
+                    accessDialog.dismiss();
+                }
+            });
+            builder.setTitle("Types");
+            accessDialog = builder.create();
+        }
+        accessDialog.show();
     }
 
     private void showActionDialog() {

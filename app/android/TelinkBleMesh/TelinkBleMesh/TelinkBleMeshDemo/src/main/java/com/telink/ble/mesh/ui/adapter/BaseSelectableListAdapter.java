@@ -36,7 +36,7 @@ public abstract class BaseSelectableListAdapter<V extends RecyclerView.ViewHolde
 
 
     public interface SelectStatusChangedListener {
-        void onStatusChanged(BaseSelectableListAdapter adapter);
+        void onSelectStatusChanged(BaseSelectableListAdapter adapter);
     }
 
     public void setStatusChangedListener(SelectStatusChangedListener statusChangedListener) {

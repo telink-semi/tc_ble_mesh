@@ -8,17 +8,6 @@
 
     <include layout="@layout/title" />
 
-    <TextView
-        android:id="@+id/tv_provision"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/main_bg_click"
-        android:gravity="center"
-        android:padding="8dp"
-        android:text="Provision"
-        android:textColor="#fff"
-        android:visibility="gone" />
-
 
     <LinearLayout
         android:id="@+id/ll_cmd"

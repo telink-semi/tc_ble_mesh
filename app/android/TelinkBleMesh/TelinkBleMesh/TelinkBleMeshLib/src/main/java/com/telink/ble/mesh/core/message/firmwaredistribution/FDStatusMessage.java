@@ -185,4 +185,20 @@ public class FDStatusMessage extends StatusMessage implements Parcelable {
         dest.writeInt(RFU);
         dest.writeInt(distImageIndex);
     }
+
+    @Override
+    public String toString() {
+        return "FDStatusMessage{" +
+                "status=" + status +
+                ", distPhase=" + distPhase +
+                ", distMulticastAddress=" + distMulticastAddress +
+                ", distAppKeyIndex=" + distAppKeyIndex +
+                ", distTTL=" + distTTL +
+                ", distTimeoutBase=" + distTimeoutBase +
+                ", distTransferMode=" + distTransferMode +
+                ", updatePolicy=" + updatePolicy +
+                ", RFU=" + RFU +
+                ", distImageIndex=" + distImageIndex +
+                '}';
+    }
 }

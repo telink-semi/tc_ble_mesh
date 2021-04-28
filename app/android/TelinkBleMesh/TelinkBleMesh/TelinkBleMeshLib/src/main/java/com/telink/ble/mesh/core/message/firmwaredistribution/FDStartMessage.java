@@ -3,13 +3,16 @@ package com.telink.ble.mesh.core.message.firmwaredistribution;
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 /**
  * The Firmware Distribution Start message is an acknowledged message sent by a Firmware Distribution Client to start the firmware image distribution to the Updating nodes in the Distribution Receivers List.
  * The response to a Firmware Distribution Start message is a Firmware Distribution Status message.
+ *
  * @see
  */
 public class FDStartMessage extends UpdatingMessage {
-
 
     /**
      * Distribution AppKey Index
@@ -46,6 +49,7 @@ public class FDStartMessage extends UpdatingMessage {
      */
     public int updatePolicy;
 
+
     /**
      * Reserved for Future Use
      * 5 bits
@@ -63,8 +67,10 @@ public class FDStartMessage extends UpdatingMessage {
      * Distribution Multicast Address
      * Multicast address used in a firmware image distribution
      * 16 or 128 bits
+     * 16 bit group address currently
      */
     public int distributionMulticastAddress;
+
 
     public FDStartMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
@@ -86,5 +92,18 @@ public class FDStartMessage extends UpdatingMessage {
         return Opcode.FD_STATUS.value;
     }
 
+    @Override
+    public byte[] getParams() {
 
+        byte modePolicyType = (byte) ((distributionTransferMode & 0b11)
+                | ((updatePolicy & 0b1) << 2));
+
+        return ByteBuffer.allocate(8 + 2).order(ByteOrder.LITTLE_ENDIAN)
+                .putShort((short) distributionAppKeyIndex)
+                .put((byte) distributionTTL)
+                .putShort((short) distributionTimeoutBase)
+                .put(modePolicyType)
+                .putShort((short) distributionImageIndex)
+                .putShort((short) distributionMulticastAddress).array();
+    }
 }

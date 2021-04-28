@@ -58,14 +58,17 @@ public abstract class StatusMessage implements Parcelable {
             Object msgClass = null;
             try {
                 msgClass = messageClass.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
+                if (msgClass instanceof StatusMessage) {
+                    StatusMessage statusMessage = (StatusMessage) msgClass;
+                    if (params != null) {
+                        statusMessage.parse(params);
+                    }
+                    return statusMessage;
+                }
+            } catch (InstantiationException | IllegalAccessException | RuntimeException e) {
                 e.printStackTrace();
             }
-            if (msgClass instanceof StatusMessage) {
-                StatusMessage statusMessage = (StatusMessage) msgClass;
-                statusMessage.parse(params);
-                return statusMessage;
-            }
+
         }
 
         return null;

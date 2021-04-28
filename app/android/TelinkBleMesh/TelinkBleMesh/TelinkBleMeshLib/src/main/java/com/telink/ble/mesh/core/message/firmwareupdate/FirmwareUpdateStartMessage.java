@@ -38,7 +38,7 @@ public class FirmwareUpdateStartMessage extends UpdatingMessage {
      * Time To Live value to use during firmware image transfer
      * 1 byte
      */
-    private byte updateTtl = DEFAULT_UPDATE_TTL;
+    public byte updateTtl = DEFAULT_UPDATE_TTL;
 
     /**
      * Used to compute the timeout of the firmware image transfer
@@ -46,19 +46,19 @@ public class FirmwareUpdateStartMessage extends UpdatingMessage {
      * using blockSize
      * 2 bytes
      */
-    private int updateTimeoutBase;
+    public int updateTimeoutBase;
 
     /**
      * BLOB identifier for the firmware image
      * 8 bytes
      */
-    private long updateBLOBID;
+    public long updateBLOBID;
 
     /**
      * Index of the firmware image in the Firmware Information List state to be updated
      * 1 byte
      */
-    private int updateFirmwareImageIndex;
+    public int updateFirmwareImageIndex;
 
     /**
      * Vendor-specific firmware metadata
@@ -66,7 +66,7 @@ public class FirmwareUpdateStartMessage extends UpdatingMessage {
      * the Incoming Firmware Metadata field shall be present.
      * 1-255 bytes
      */
-    private byte[] metadata;
+    public byte[] metadata;
 
     public static FirmwareUpdateStartMessage getSimple(int destinationAddress, int appKeyIndex,
                                                        int updateTimeoutBase, long blobId, byte[] metadata) {
@@ -102,20 +102,40 @@ public class FirmwareUpdateStartMessage extends UpdatingMessage {
         return bf.array();
     }
 
+    public byte getUpdateTtl() {
+        return updateTtl;
+    }
+
     public void setUpdateTtl(byte updateTtl) {
         this.updateTtl = updateTtl;
+    }
+
+    public int getUpdateTimeoutBase() {
+        return updateTimeoutBase;
     }
 
     public void setUpdateTimeoutBase(int updateTimeoutBase) {
         this.updateTimeoutBase = updateTimeoutBase;
     }
 
+    public long getUpdateBLOBID() {
+        return updateBLOBID;
+    }
+
     public void setUpdateBLOBID(long updateBLOBID) {
         this.updateBLOBID = updateBLOBID;
     }
 
+    public int getUpdateFirmwareImageIndex() {
+        return updateFirmwareImageIndex;
+    }
+
     public void setUpdateFirmwareImageIndex(int updateFirmwareImageIndex) {
         this.updateFirmwareImageIndex = updateFirmwareImageIndex;
+    }
+
+    public byte[] getMetadata() {
+        return metadata;
     }
 
     public void setMetadata(byte[] metadata) {

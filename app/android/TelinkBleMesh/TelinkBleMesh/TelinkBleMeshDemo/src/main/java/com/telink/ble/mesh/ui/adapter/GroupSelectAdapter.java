@@ -108,7 +108,7 @@ public class GroupSelectAdapter extends BaseSelectableListAdapter<GroupSelectAda
             int position = (int) buttonView.getTag();
             mGroups.get(position).selected = isChecked;
             if (statusChangedListener != null) {
-                statusChangedListener.onStatusChanged(GroupSelectAdapter.this);
+                statusChangedListener.onSelectStatusChanged(GroupSelectAdapter.this);
             }
         }
     };

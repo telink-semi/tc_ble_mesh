@@ -21,7 +21,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:src="@drawable/ic_bulb_off" />
+            android:src="@drawable/ic_bulb_on" />
 
         <TextView
             android:id="@+id/tv_device_info"
@@ -53,14 +53,5 @@
             android:layout_margin="8dp" />
 
     </LinearLayout>
-
-    <!--<ProgressBar
-        android:id="@+id/pb_ota"
-        style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:indeterminate="false"
-        android:secondaryProgressTint="@color/red" />-->
 
 </androidx.cardview.widget.CardView>

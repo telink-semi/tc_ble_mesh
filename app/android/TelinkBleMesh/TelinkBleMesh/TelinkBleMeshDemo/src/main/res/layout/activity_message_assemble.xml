@@ -33,6 +33,7 @@
                 android:gravity="center"
                 android:inputType="none"
                 android:text="vendor-on"
+                android:textSize="12sp"
                 android:textColor="@color/colorPrimary"
                 android:textStyle="bold" />
 
@@ -56,11 +57,18 @@
                     android:textSize="@dimen/info_text_size" />
 
                 <EditText
+                    android:id="@+id/et_ac_type"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:enabled="false"
-                    android:text="Application"
-                    android:textSize="@dimen/msg_input_size" />
+                    android:drawableEnd="@drawable/ic_arrow_down"
+                    android:drawableTint="@color/colorPrimary"
+                    android:focusable="false"
+                    android:gravity="center"
+                    android:textSize="11sp"
+                    android:inputType="none"
+                    android:text="Application(App Key)"
+                    android:textColor="@color/colorPrimary"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 

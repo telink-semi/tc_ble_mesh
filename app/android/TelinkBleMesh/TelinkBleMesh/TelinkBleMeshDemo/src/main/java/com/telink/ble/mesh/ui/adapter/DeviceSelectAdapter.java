@@ -114,7 +114,7 @@ public class DeviceSelectAdapter extends BaseSelectableListAdapter<DeviceSelectA
             int position = (int) buttonView.getTag();
             mDevices.get(position).selected = isChecked;
             if (statusChangedListener != null) {
-                statusChangedListener.onStatusChanged(DeviceSelectAdapter.this);
+                statusChangedListener.onSelectStatusChanged(DeviceSelectAdapter.this);
             }
         }
     };

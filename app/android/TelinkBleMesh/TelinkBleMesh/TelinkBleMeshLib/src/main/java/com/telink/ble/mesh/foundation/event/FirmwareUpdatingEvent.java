@@ -28,6 +28,8 @@ import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.foundation.Event;
 
 /**
+ * @deprecated
+ * @see com.telink.ble.mesh.core.access.fu.FUCallback
  * Created by kee on 2017/8/30.
  */
 

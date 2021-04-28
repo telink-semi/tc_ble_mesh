@@ -76,8 +76,6 @@ public class TelinkMeshApplication extends MeshApplication {
     public void onCreate() {
         super.onCreate();
         mThis = this;
-        // 2018-11-20T10:05:20-08:00
-        // 2020-07-27T15:15:29+0800
         HandlerThread offlineCheckThread = new HandlerThread("offline check thread");
         offlineCheckThread.start();
         mOfflineCheckHandler = new Handler(offlineCheckThread.getLooper());
@@ -86,9 +84,6 @@ public class TelinkMeshApplication extends MeshApplication {
         MeshLogger.d(meshInfo.toString());
         AppCrashHandler.init(this);
         closePErrorDialog();
-//        byte[] data = Arrays.hexToBytes("BA0536160EE76CD499E7C49845CD5");
-//        MeshLogger.d(Arrays.bytesToHexString(data));
-
     }
 
     private void closePErrorDialog() {

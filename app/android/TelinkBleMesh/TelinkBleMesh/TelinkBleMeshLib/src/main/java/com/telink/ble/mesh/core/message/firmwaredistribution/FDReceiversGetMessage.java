@@ -3,6 +3,9 @@ package com.telink.ble.mesh.core.message.firmwaredistribution;
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 public class FDReceiversGetMessage extends UpdatingMessage {
 
     /**
@@ -41,5 +44,9 @@ public class FDReceiversGetMessage extends UpdatingMessage {
         return Opcode.FD_RECEIVERS_LIST.value;
     }
 
-
+    @Override
+    public byte[] getParams() {
+        return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN)
+                .putShort((short) firstIndex).putShort((short) entriesLimit).array();
+    }
 }

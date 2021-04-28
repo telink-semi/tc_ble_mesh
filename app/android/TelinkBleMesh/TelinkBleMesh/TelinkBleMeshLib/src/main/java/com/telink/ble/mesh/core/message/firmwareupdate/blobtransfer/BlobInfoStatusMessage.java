@@ -165,5 +165,44 @@ public class BlobInfoStatusMessage extends StatusMessage implements Parcelable {
         return supportedTransferMode;
     }
 
+    public void setMinBlockSizeLog(int minBlockSizeLog) {
+        this.minBlockSizeLog = minBlockSizeLog;
+    }
 
+    public void setMaxBlockSizeLog(int maxBlockSizeLog) {
+        this.maxBlockSizeLog = maxBlockSizeLog;
+    }
+
+    public void setMaxTotalChunks(int maxTotalChunks) {
+        this.maxTotalChunks = maxTotalChunks;
+    }
+
+    public void setMaxChunkSize(int maxChunkSize) {
+        this.maxChunkSize = maxChunkSize;
+    }
+
+    public void setMaxBLOBSize(int maxBLOBSize) {
+        this.maxBLOBSize = maxBLOBSize;
+    }
+
+    public void setServerMTUSize(int serverMTUSize) {
+        this.serverMTUSize = serverMTUSize;
+    }
+
+    public void setSupportedTransferMode(int supportedTransferMode) {
+        this.supportedTransferMode = supportedTransferMode;
+    }
+
+    @Override
+    public String toString() {
+        return "BlobInfoStatusMessage{" +
+                "minBlockSizeLog=" + minBlockSizeLog +
+                ", maxBlockSizeLog=" + maxBlockSizeLog +
+                ", maxTotalChunks=" + maxTotalChunks +
+                ", maxChunkSize=" + maxChunkSize +
+                ", maxBLOBSize=" + maxBLOBSize +
+                ", serverMTUSize=" + serverMTUSize +
+                ", supportedTransferMode=" + supportedTransferMode +
+                '}';
+    }
 }

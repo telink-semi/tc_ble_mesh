@@ -190,6 +190,30 @@ public class BlobBlockStatusMessage extends StatusMessage implements Parcelable 
         return encodedMissingChunks;
     }
 
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public void setFormat(int format) {
+        this.format = format;
+    }
+
+    public void setBlockNumber(int blockNumber) {
+        this.blockNumber = blockNumber;
+    }
+
+    public void setChunkSize(int chunkSize) {
+        this.chunkSize = chunkSize;
+    }
+
+    public void setMissingChunks(List<Integer> missingChunks) {
+        this.missingChunks = missingChunks;
+    }
+
+    public void setEncodedMissingChunks(List<Integer> encodedMissingChunks) {
+        this.encodedMissingChunks = encodedMissingChunks;
+    }
+
     @Override
     public String toString() {
         return "BlobBlockStatusMessage{" +

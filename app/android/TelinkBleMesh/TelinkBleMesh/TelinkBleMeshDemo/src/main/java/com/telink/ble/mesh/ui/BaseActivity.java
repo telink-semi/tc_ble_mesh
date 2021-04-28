@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     BaseActivity.java 
+ * @file BaseActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -62,6 +62,8 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
     private AlertDialog locationWarningDialog;
 
     private AlertDialog bleStateDialog;
+
+    private AlertDialog tipDialog;
 
 
     @Override
@@ -109,8 +111,9 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
     }
 
     public void toastMsg(CharSequence s) {
-
         if (this.toast != null) {
+//            if (this.toast.)
+//            this.toast.cancel();
             this.toast.setView(this.toast.getView());
             this.toast.setDuration(Toast.LENGTH_SHORT);
             this.toast.setText(s);
@@ -135,6 +138,18 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
         }
         confirmDialogBuilder.setMessage(msg);
         confirmDialogBuilder.show();
+    }
+
+    public void showTipDialog(String msg) {
+        if (tipDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setCancelable(true);
+            builder.setTitle("Tip");
+            builder.setMessage(msg);
+            builder.setPositiveButton("Confirm", null);
+            tipDialog = builder.create();
+        }
+        tipDialog.show();
     }
 
     public void showLocationDialog() {

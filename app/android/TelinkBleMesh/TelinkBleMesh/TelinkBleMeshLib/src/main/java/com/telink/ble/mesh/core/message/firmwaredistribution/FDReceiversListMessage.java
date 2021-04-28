@@ -24,9 +24,14 @@ package com.telink.ble.mesh.core.message.firmwaredistribution;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.StatusMessage;
+import com.telink.ble.mesh.util.MeshLogger;
 
+import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * response to a Firmware Distribution Receivers Get message
@@ -53,7 +58,7 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
      * List of entries
      * Optional
      */
-    private List<DistributionReceiver> List;
+    private List<DistributionReceiver> receiversList;
 
     public FDReceiversListMessage() {
     }
@@ -77,7 +82,30 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
 
     @Override
     public void parse(byte[] params) {
+        int index = 0;
+        this.receiversListCount = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
+        index += 2;
+        this.firstIndex = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
+        index += 2;
 
+        receiversList = new ArrayList<>();
+        DistributionReceiver receiver;
+        while (params.length - index >= 5) {
+            receiver = new DistributionReceiver();
+            int misc = MeshUtils.bytes2Integer(params, index, 4, ByteOrder.LITTLE_ENDIAN);
+            receiver.address = misc & 0x7FFF;
+            receiver.retrievedUpdatePhase = (byte) ((misc >> 15) & 0x0F);
+            receiver.updateStatus = (byte) ((misc >> 19) & 0x07);
+            receiver.transferStatus = (byte) ((misc >> 22) & 0x0F);
+            receiver.transferProgress = (byte) ((misc >> 26) & 0x3F);
+//            MeshLogger.d(String.format(Locale.getDefault(), " list  -- %d - %d -%d -%d -%d", receiver.address,
+//                    receiver.retrievedUpdatePhase,
+//                    receiver.updateStatus, receiver.transferStatus, receiver.transferProgress));
+            index += 4;
+            receiver.imageIndex = params[index++];
+            receiversList.add(receiver);
+//            if (params.length - index < 5) break;
+        }
     }
 
     @Override
@@ -89,6 +117,18 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(receiversListCount);
         dest.writeInt(firstIndex);
+    }
+
+    public int getReceiversListCount() {
+        return receiversListCount;
+    }
+
+    public int getFirstIndex() {
+        return firstIndex;
+    }
+
+    public List<DistributionReceiver> getReceiversList() {
+        return receiversList;
     }
 
     static public class DistributionReceiver {
@@ -133,5 +173,16 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
          */
         public byte imageIndex;
 
+        @Override
+        public String toString() {
+            return "DistributionReceiver{" +
+                    "address=" + address +
+                    ", retrievedUpdatePhase=" + retrievedUpdatePhase +
+                    ", updateStatus=" + updateStatus +
+                    ", transferStatus=" + transferStatus +
+                    ", transferProgress=" + transferProgress +
+                    ", imageIndex=" + imageIndex +
+                    '}';
+        }
     }
 }

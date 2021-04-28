@@ -297,7 +297,9 @@ public class MeshInfo implements Serializable, Cloneable {
 
 
     public void saveOrUpdate(Context context) {
+        MeshLogger.d("save meshInfo start - " + System.currentTimeMillis());
         FileSystem.writeAsObject(context, FILE_NAME, this);
+        MeshLogger.d("save meshInfo complete - " + System.currentTimeMillis());
     }
 
 

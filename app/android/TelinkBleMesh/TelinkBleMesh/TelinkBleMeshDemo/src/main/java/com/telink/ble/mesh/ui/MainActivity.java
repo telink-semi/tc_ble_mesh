@@ -21,6 +21,8 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
@@ -29,6 +31,12 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
+import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.NotificationMessage;
+import com.telink.ble.mesh.core.message.firmwaredistribution.FDCancelMessage;
+import com.telink.ble.mesh.core.message.firmwaredistribution.FDStartMessage;
+import com.telink.ble.mesh.core.message.firmwaredistribution.FDStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.DistributionStatus;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
 import com.telink.ble.mesh.core.message.time.TimeSetMessage;
 import com.telink.ble.mesh.demo.R;
@@ -38,8 +46,11 @@ import com.telink.ble.mesh.foundation.MeshConfiguration;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
+import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.AutoConnectParameters;
 import com.telink.ble.mesh.model.AppSettings;
+import com.telink.ble.mesh.model.FUCache;
+import com.telink.ble.mesh.model.FUCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.UnitConvert;
@@ -49,6 +60,7 @@ import com.telink.ble.mesh.ui.fragment.SettingFragment;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -63,6 +75,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     private Fragment groupFragment;
     private SettingFragment settingFragment;
     private Handler mHandler = new Handler();
+    private AlertDialog meshOTATipsDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,8 +85,11 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         TelinkMeshApplication.getInstance().addEventListener(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_EMPTY, this);
+        TelinkMeshApplication.getInstance().addEventListener(FDStatusMessage.class.getName(), this);
         startMeshService();
         resetNodeState();
+
+        FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
     }
 
     private void initBottomNav() {
@@ -89,12 +105,21 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 .commit();
     }
 
+    /**
+     * init and setup mesh network
+     */
     private void startMeshService() {
+        // init
         MeshService.getInstance().init(this, TelinkMeshApplication.getInstance());
+
+        // convert meshInfo to mesh configuration
         MeshConfiguration meshConfiguration = TelinkMeshApplication.getInstance().getMeshInfo().convertToConfiguration();
         MeshService.getInstance().setupMeshNetwork(meshConfiguration);
+
+        // check if system bluetooth enabled
         MeshService.getInstance().checkBluetoothState();
-        // set DLE enable
+
+        /// set DLE enable
         MeshService.getInstance().resetDELState(SharedPreferenceHelper.isDleEnable(this));
     }
 
@@ -121,6 +146,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     protected void onResume() {
         super.onResume();
         this.autoConnect();
+//        showMeshOTATipsDialog(2);
     }
 
 
@@ -145,14 +171,73 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
                 OnOffGetMessage message = OnOffGetMessage.getSimple(0xFFFF, appKeyIndex, rspMax);
                 MeshService.getInstance().sendMeshMessage(message);
+            } else {
+                MeshLogger.log("online status enabled");
             }
             sendTimeStatus();
-//            } else {
-//                MeshLogger.log("online status enabled");
-//            }
+            checkMeshOtaState();
+
         } else if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
             mHandler.removeCallbacksAndMessages(null);
+        } else if (event.getType().equals(FDStatusMessage.class.getName())) {
+            NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
+            int msgSrc = notificationMessage.getSrc();
+            FUCache fuCache = FUCacheService.getInstance().get();
+            if (fuCache != null && fuCache.distAddress == msgSrc) {
+                FDStatusMessage fdStatusMessage = (FDStatusMessage) notificationMessage.getStatusMessage();
+                if (fdStatusMessage.status == DistributionStatus.SUCCESS.code && fdStatusMessage.distPhase == 0) {
+                    MeshLogger.d("clear meshOTA state");
+                    FUCacheService.getInstance().clear(this);
+                }
+            }
         }
+    }
+
+    /**
+     * check if last mesh OTA flow completed,
+     * if mesh OTA is still running , show MeshOTA tips dialog
+     */
+    public void checkMeshOtaState() {
+        FUCache fuCache = FUCacheService.getInstance().get();
+        if (fuCache != null) {
+            MeshLogger.d("check FU state: distAdr-" + fuCache.distAddress);
+            showMeshOTATipsDialog(fuCache.distAddress);
+        } else {
+            MeshLogger.d("FU state: idle");
+        }
+    }
+
+    public void showMeshOTATipsDialog(final int distributorAddress) {
+        if (meshOTATipsDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            DialogInterface.OnClickListener dialogBtnClick = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if (which == DialogInterface.BUTTON_POSITIVE) {
+                        // GO
+                        startActivity(new Intent(MainActivity.this, FUActivity.class)
+                                .putExtra(FUActivity.KEY_FU_CONTINUE, true));
+                    } else if (which == DialogInterface.BUTTON_NEGATIVE) {
+                        // STOP
+                        FDCancelMessage cancelMessage = FDCancelMessage.getSimple(distributorAddress, 0);
+                        MeshService.getInstance().sendMeshMessage(cancelMessage);
+                    } else if (which == DialogInterface.BUTTON_NEUTRAL) {
+                        dialog.dismiss();
+                    }
+                }
+            };
+
+            builder.setTitle("Warning - MeshOTA is still running")
+                    .setMessage("MeshOTA distribution is still running, continue?\n" +
+                            "click GO to enter MeshOTA processing page \n"
+                            + "click STOP to stop distribution \n" +
+                            "click IGNORE to dismiss dialog")
+                    .setPositiveButton("GO", dialogBtnClick)
+                    .setNegativeButton("STOP", dialogBtnClick)
+                    .setNeutralButton("IGNORE", null);
+            meshOTATipsDialog = builder.create();
+        }
+        meshOTATipsDialog.show();
     }
 
     public void sendTimeStatus() {

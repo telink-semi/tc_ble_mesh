@@ -55,7 +55,7 @@ public class OnOffSetMessage extends GenericMessage {
         message.setResponseMax(rspMax);
         // for test
         //        message.ack = false;
-//        message.isComplete = true;
+        //        message.isComplete = true;
         return message;
     }
 

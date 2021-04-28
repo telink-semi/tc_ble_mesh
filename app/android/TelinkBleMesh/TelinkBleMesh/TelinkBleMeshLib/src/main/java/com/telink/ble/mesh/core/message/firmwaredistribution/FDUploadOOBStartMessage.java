@@ -28,7 +28,7 @@ public class FDUploadOOBStartMessage extends UpdatingMessage {
      * The Firmware ID value used to generate the URI query string
      * Variable length
      */
-    public int uploadFirmwareID;
+    public byte[] uploadFirmwareID;
 
     public FDUploadOOBStartMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);

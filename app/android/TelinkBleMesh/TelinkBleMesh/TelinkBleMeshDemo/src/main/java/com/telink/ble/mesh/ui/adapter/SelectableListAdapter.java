@@ -99,7 +99,7 @@ public class SelectableListAdapter extends BaseSelectableListAdapter<SelectableL
             int position = (int) buttonView.getTag();
             beans[position].selected = isChecked;
             if (statusChangedListener != null) {
-                statusChangedListener.onStatusChanged(SelectableListAdapter.this);
+                statusChangedListener.onSelectStatusChanged(SelectableListAdapter.this);
             }
         }
     };

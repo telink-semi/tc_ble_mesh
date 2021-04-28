@@ -38,6 +38,8 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.AppSettings;
+import com.telink.ble.mesh.model.FUCache;
+import com.telink.ble.mesh.model.FUCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -224,6 +226,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         MeshService.getInstance().idle(true);
+                        FUCacheService.getInstance().clear(SettingsActivity.this);
                         MeshInfo meshInfo = MeshInfo.createNewMesh(SettingsActivity.this);
                         TelinkMeshApplication.getInstance().setupMesh(meshInfo);
                         MeshService.getInstance().setupMeshNetwork(meshInfo.convertToConfiguration());

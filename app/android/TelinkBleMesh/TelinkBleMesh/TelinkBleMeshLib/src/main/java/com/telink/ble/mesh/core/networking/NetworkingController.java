@@ -250,7 +250,7 @@ public class NetworkingController {
     private static final int PROXY_FILTER_INIT_TIMEOUT = 5 * 1000;
 
     /**
-     * networking pud sending prepared queue
+     * networking pdu sending prepared queue
      */
     private final Queue<byte[]> mNetworkingQueue = new ConcurrentLinkedQueue<>();
 
@@ -273,6 +273,7 @@ public class NetworkingController {
 
     public void setup(MeshConfiguration configuration) {
         this.clear();
+        this.resetDirectAddress();
         this.initIvIndex = configuration.ivIndex;
         this.ivIndex = initIvIndex & MeshUtils.UNSIGNED_INTEGER_MAX;
         int seqNo = configuration.sequenceNumber;
@@ -301,7 +302,6 @@ public class NetworkingController {
         this.mNetworkingQueue.clear();
         this.lastSeqAuth = 0;
         this.lastSegSrc = 0;
-        this.directAddress = 0;
         this.lastSegComplete = true;
         this.deviceSequenceNumberMap.clear();
         this.receivedSegmentedMessageBuffer.clear();
@@ -309,6 +309,10 @@ public class NetworkingController {
         this.mResponseMessageBuffer.clear();
         this.isIvUpdating = false;
         this.lastSegComplete = true;
+    }
+
+    public void resetDirectAddress() {
+        this.directAddress = 0;
     }
 
     public void addDeviceKey(int unicastAddress, byte[] deviceKey) {
@@ -753,7 +757,7 @@ public class NetworkingController {
     }
 
     private void onNetworkingPduPrepared(byte[] payload, int dstAddress) {
-        log("networking pud prepared: " + Arrays.bytesToHexString(payload, ":") + " busy?-" + networkingBusy);
+        log("networking pdu prepared: " + Arrays.bytesToHexString(payload, ":") + " busy?-" + networkingBusy);
 
         synchronized (mNetworkBusyLock) {
             if (!networkingBusy) {
@@ -786,12 +790,12 @@ public class NetworkingController {
             payload = mNetworkingQueue.poll();
         }
         if (payload == null) {
-            log("networking pud poll: null");
+            log("networking pdu poll: null");
             synchronized (mNetworkBusyLock) {
                 networkingBusy = false;
             }
         } else {
-            log("networking pud poll: " + Arrays.bytesToHexString(payload, ":"));
+            log("networking pdu poll: " + Arrays.bytesToHexString(payload, ":"));
             if (mNetworkingBridge != null) {
                 mNetworkingBridge.onCommandPrepared(ProxyPDU.TYPE_NETWORK_PDU, payload);
             }
@@ -919,6 +923,7 @@ public class NetworkingController {
                     log("filter init action not started!", MeshLogger.LEVEL_WARN);
                     return;
                 }
+                log(String.format("reset direct address: %04X", src));
                 this.directAddress = src;
                 proxyFilterInitStep++;
                 if (proxyFilterInitStep == PROXY_FILTER_INIT_STEP_SET_TYPE) {
@@ -1144,6 +1149,15 @@ public class NetworkingController {
      * @param success if command response received
      */
     private void onReliableMessageComplete(boolean success) {
+
+        // clear networking packet sending queue
+        log("clear network buffer");
+        synchronized (mNetworkingQueue) {
+            mDelayHandler.removeCallbacks(networkingSendingTask);
+            networkingBusy = false;
+            mNetworkingQueue.clear();
+        }
+
         mDelayHandler.removeCallbacks(reliableMessageTimeoutTask);
         int opcode = mSendingReliableMessage.getOpcode();
         int rspMax = mSendingReliableMessage.getResponseMax();
@@ -1160,6 +1174,8 @@ public class NetworkingController {
                 }
             }
         }
+
+
         if (mNetworkingBridge != null) {
             mNetworkingBridge.onReliableMessageComplete(success, opcode, rspMax, rspCount);
         }

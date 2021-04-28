@@ -228,6 +228,10 @@ public class MeshService implements MeshController.EventCallback {
         mController.idle(disconnect);
     }
 
+    public void disconnect(){
+        mController.disconnect();
+    }
+
     public void startGattConnection(GattConnectionParameters parameters) {
         mController.startGattConnection(parameters);
     }

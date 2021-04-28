@@ -34,6 +34,12 @@ import com.telink.ble.mesh.core.message.config.NodeIdentityStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
 import com.telink.ble.mesh.core.message.config.SubnetBridgeStatusMessage;
 import com.telink.ble.mesh.core.message.fastpv.MeshAddressStatusMessage;
+import com.telink.ble.mesh.core.message.firmwaredistribution.FDCapabilitiesStatusMessage;
+import com.telink.ble.mesh.core.message.firmwaredistribution.FDFirmwareStatusMessage;
+import com.telink.ble.mesh.core.message.firmwaredistribution.FDReceiversListMessage;
+import com.telink.ble.mesh.core.message.firmwaredistribution.FDReceiversStatusMessage;
+import com.telink.ble.mesh.core.message.firmwaredistribution.FDStatusMessage;
+import com.telink.ble.mesh.core.message.firmwaredistribution.FDUploadStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareMetadataStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateStatusMessage;
@@ -144,6 +150,14 @@ public class MeshStatus {
             register(Opcode.FIRMWARE_UPDATE_INFORMATION_STATUS.value, FirmwareUpdateInfoStatusMessage.class);
             register(Opcode.FIRMWARE_UPDATE_FIRMWARE_METADATA_STATUS.value, FirmwareMetadataStatusMessage.class);
             register(Opcode.FIRMWARE_UPDATE_STATUS.value, FirmwareUpdateStatusMessage.class);
+
+            // mesh firmware distribution
+            register(Opcode.FD_STATUS.value, FDStatusMessage.class);
+            register(Opcode.FD_CAPABILITIES_STATUS.value, FDCapabilitiesStatusMessage.class);
+            register(Opcode.FD_RECEIVERS_STATUS.value, FDReceiversStatusMessage.class);
+            register(Opcode.FD_RECEIVERS_LIST.value, FDReceiversListMessage.class);
+            register(Opcode.FD_UPLOAD_STATUS.value, FDUploadStatusMessage.class);
+            register(Opcode.FD_FIRMWARE_STATUS.value, FDFirmwareStatusMessage.class);
 
             /// blob transfer
             register(Opcode.BLOB_BLOCK_STATUS.value, BlobBlockStatusMessage.class);

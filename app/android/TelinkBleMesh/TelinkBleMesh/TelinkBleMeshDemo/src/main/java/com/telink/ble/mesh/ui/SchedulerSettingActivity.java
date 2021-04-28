@@ -600,7 +600,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
     }
 
     @Override
-    public void onStatusChanged(BaseSelectableListAdapter adapter) {
+    public void onSelectStatusChanged(BaseSelectableListAdapter adapter) {
         if (adapter == monthsAdapter) {
             cb_month_all.setChecked(monthsAdapter.allSelected());
         } else if (adapter == weeksAdapter) {

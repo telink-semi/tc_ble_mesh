@@ -209,9 +209,12 @@ public class ProvisioningController {
 
     private byte[] provisionerRandom;
 
+    private byte[] provisionerConfirm;
+
     private byte[] deviceRandom;
 
     private byte[] deviceConfirm;
+
 
 //    private byte[] deviceKey;
 
@@ -240,7 +243,6 @@ public class ProvisioningController {
         this.mProvisioningDevice = device;
         delayHandler.removeCallbacks(provisioningTimeoutTask);
         delayHandler.postDelayed(provisioningTimeoutTask, TIMEOUT_PROVISIONING);
-
 
         // draft feature
         final int oobInfo = device.getOobInfo();
@@ -412,7 +414,8 @@ public class ProvisioningController {
 
 
     private void sendConfirm() {
-        ProvisioningConfirmPDU confirmPDU = new ProvisioningConfirmPDU(getConfirm());
+        provisionerConfirm = getConfirm();
+        ProvisioningConfirmPDU confirmPDU = new ProvisioningConfirmPDU(provisionerConfirm);
         updateProvisioningState(STATE_CONFIRM_SENT, "Send confirm");
         sendProvisionPDU(confirmPDU);
     }
@@ -440,7 +443,14 @@ public class ProvisioningController {
         }
 
         updateProvisioningState(STATE_CONFIRM_RECEIVED, "Confirm received");
+
         deviceConfirm = confirm;
+
+        if (Arrays.equals(provisionerConfirm, deviceConfirm)) {
+            onProvisionFail("received the same confirm as local");
+            return;
+        }
+
         sendRandom();
     }
 
@@ -453,6 +463,13 @@ public class ProvisioningController {
 
         updateProvisioningState(STATE_RANDOM_RECEIVED, "Random received");
         deviceRandom = random;
+
+
+        if (Arrays.equals(provisionerRandom, deviceRandom)) {
+            onProvisionFail("received the same random as local");
+            return;
+        }
+
         boolean pass = checkDeviceConfirm(random);
         if (pass) {
             sendProvisionData();

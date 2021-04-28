@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     MeshOTADeviceSelectAdapter.java 
+ * @file MeshOTADeviceSelectAdapter.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.adapter;
 
@@ -43,21 +43,19 @@ import java.util.Set;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * mesh ota adapter
+ * firmware update device list
  * Created by kee on 2017/8/18.
  */
-public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOTADeviceSelectAdapter.ViewHolder> {
+public class FUDeviceSelectAdapter extends BaseSelectableListAdapter<FUDeviceSelectAdapter.ViewHolder> {
 
     private Context mContext;
     private List<NodeInfo> mDevices;
     private boolean started = false;
     private Set<MeshUpdatingDevice> completeNodes;
-    private Map<Integer, String> versions;
 
-    public MeshOTADeviceSelectAdapter(Context context, List<NodeInfo> devices, Map<Integer, String> versions) {
+    public FUDeviceSelectAdapter(Context context, List<NodeInfo> devices) {
         this.mContext = context;
         this.mDevices = devices;
-        this.versions = versions;
     }
 
     public void setStarted(boolean started) {
@@ -86,9 +84,9 @@ public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOT
         notifyDataSetChanged();
     }
 
-    public void selectPid(int pid){
+    public void selectPid(int pid) {
         for (NodeInfo deviceInfo : mDevices) {
-            deviceInfo.selected = isFirmwareUpdateSupport(deviceInfo) &&  deviceInfo.compositionData.pid == pid && !deviceInfo.isOffline();
+            deviceInfo.selected = isFirmwareUpdateSupport(deviceInfo) && deviceInfo.compositionData.pid == pid && !deviceInfo.isOffline();
         }
         notifyDataSetChanged();
     }
@@ -96,7 +94,7 @@ public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOT
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_device_select_mesh_ota, parent, false);
+        View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_fu_device_select, parent, false);
         ViewHolder holder = new ViewHolder(itemView);
         holder.iv_device = itemView.findViewById(R.id.iv_device);
         holder.tv_device_info = itemView.findViewById(R.id.tv_device_info);
@@ -124,7 +122,8 @@ public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOT
                 String.format("%04X", deviceInfo.meshAddress),
                 pidInfo));
         boolean support = isFirmwareUpdateSupport(deviceInfo);
-        holder.tv_version.setText(support ? "FwId:" + getDeviceFirmwareId(deviceInfo) : "not support");
+//        holder.tv_version.setText(support ? "FwId:" + getDeviceFirmwareId(deviceInfo) : "not support");
+        holder.tv_version.setText(support ? "" : "not support");
         holder.cb_device.setTag(position);
         holder.cb_device.setChecked(deviceInfo.selected);
         if (deviceInfo.getOnOff() != -1 && support) {
@@ -153,22 +152,11 @@ public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOT
         return nodeInfo.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1;
     }
 
-
-    private String getDeviceFirmwareId(NodeInfo deviceInfo) {
-        if (versions == null) return "NULL";
-        for (Integer adr : versions.keySet()) {
-            if (adr == deviceInfo.meshAddress) {
-                return versions.get(adr);
-            }
-        }
-        return "NULL";
-    }
-
     private int getDeviceState(NodeInfo deviceInfo) {
         if (completeNodes == null || completeNodes.size() == 0) return 0;
         for (MeshUpdatingDevice node : completeNodes) {
-            if (node.getMeshAddress() == deviceInfo.meshAddress) {
-                return node.getState();
+            if (node.meshAddress == deviceInfo.meshAddress) {
+                return node.state;
             }
         }
         return 0;
@@ -180,7 +168,7 @@ public class MeshOTADeviceSelectAdapter extends BaseSelectableListAdapter<MeshOT
             int position = (int) buttonView.getTag();
             mDevices.get(position).selected = isChecked;
             if (statusChangedListener != null) {
-                statusChangedListener.onStatusChanged(MeshOTADeviceSelectAdapter.this);
+                statusChangedListener.onSelectStatusChanged(FUDeviceSelectAdapter.this);
             }
         }
     };

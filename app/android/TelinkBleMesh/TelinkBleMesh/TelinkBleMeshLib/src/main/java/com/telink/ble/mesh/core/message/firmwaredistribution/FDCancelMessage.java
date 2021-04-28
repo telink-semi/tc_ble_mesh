@@ -1,5 +1,6 @@
 package com.telink.ble.mesh.core.message.firmwaredistribution;
 
+import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
 
@@ -10,6 +11,7 @@ import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
  */
 public class FDCancelMessage extends UpdatingMessage {
 
+    private boolean ack = true;
 
     public FDCancelMessage(int destinationAddress, int appKeyIndex) {
         super(destinationAddress, appKeyIndex);
@@ -26,9 +28,17 @@ public class FDCancelMessage extends UpdatingMessage {
         return Opcode.FD_CANCEL.value;
     }
 
+    public boolean isAck() {
+        return ack;
+    }
+
+    public void setAck(boolean ack) {
+        this.ack = ack;
+    }
+
     @Override
     public int getResponseOpcode() {
-        return Opcode.FD_STATUS.value;
+        return ack ? Opcode.FD_STATUS.value : MeshMessage.OPCODE_INVALID;
     }
 
 }

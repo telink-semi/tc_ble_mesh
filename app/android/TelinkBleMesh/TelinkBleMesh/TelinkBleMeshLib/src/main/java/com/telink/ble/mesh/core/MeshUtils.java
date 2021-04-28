@@ -27,13 +27,8 @@ import com.telink.ble.mesh.core.ble.MeshScanRecord;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.util.Arrays;
 
-import java.io.ByteArrayInputStream;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
-import java.security.Signature;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.ECPublicKey;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -55,6 +50,14 @@ public final class MeshUtils {
     public static final long TAI_OFFSET_SECOND = 946684800;
 
     public static final long UNSIGNED_INTEGER_MAX = 0xFFFFFFFFL;
+
+    /**
+     * sign used as message source address or dest address
+     * if is valued, the message should be recognized as local message, and should not send out
+     */
+    public static final int LOCAL_MESSAGE_ADDRESS = 0;
+
+
 
     private static SecureRandom rng;
 

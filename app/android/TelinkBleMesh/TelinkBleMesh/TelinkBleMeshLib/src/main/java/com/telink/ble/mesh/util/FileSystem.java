@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     FileSystem.java 
+ * @file FileSystem.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.util;
 
@@ -79,7 +79,7 @@ public abstract class FileSystem {
 
         if (!file.exists())
             return null;
-
+        MeshLogger.d("obj file size: " + file.length());
         FileInputStream fis = null;
         ObjectInputStream ois = null;
 
@@ -101,6 +101,21 @@ public abstract class FileSystem {
         }
 
         return result;
+    }
+
+    /**
+     * delete file
+     *
+     * @param fileName file in app file dir
+     */
+    public static void deleteFile(Context context, String fileName) {
+        File dir = context.getFilesDir();
+        File file = new File(dir, fileName);
+        if (file.delete()) {
+            MeshLogger.d("file delete success");
+        } else {
+            MeshLogger.d("file delete fail");
+        }
     }
 
     public static File getSettingPath() {

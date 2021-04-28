@@ -3,6 +3,8 @@ package com.telink.ble.mesh.core.message.firmwaredistribution;
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.List;
 
 public class FDReceiversAddMessage extends UpdatingMessage {
@@ -33,6 +35,18 @@ public class FDReceiversAddMessage extends UpdatingMessage {
         return Opcode.FD_RECEIVERS_STATUS.value;
     }
 
+    @Override
+    public byte[] getParams() {
+        if (entries == null || entries.size() == 0) {
+            return null;
+        }
+        ByteBuffer buffer = ByteBuffer.allocate(3 * entries.size()).order(ByteOrder.LITTLE_ENDIAN);
+        for (ReceiverEntry entry : entries) {
+            buffer.putShort((short) entry.address).put((byte) entry.imageIndex);
+        }
+        return buffer.array();
+    }
+
     static public class ReceiverEntry {
         /**
          * The unicast address of the Updating node
@@ -46,6 +60,11 @@ public class FDReceiversAddMessage extends UpdatingMessage {
          * 1 byte
          */
         public int imageIndex;
+
+        public ReceiverEntry(int address, int imageIndex) {
+            this.address = address;
+            this.imageIndex = imageIndex;
+        }
     }
 
 
