@@ -296,7 +296,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
 		#endif
 
 
-		analog_write(USED_DEEP_ANA_REG,  analog_read(USED_DEEP_ANA_REG) | LOW_BATT_FLG);  //mark
+		analog_write(USED_DEEP_ANA_REG,  analog_read(USED_DEEP_ANA_REG) | FLD_LOW_BATT_FLG);  //mark
 
 		u32 pin[] = KB_DRIVE_PINS;
 		for (int i=0; i<(sizeof (pin)/sizeof(*pin)); i++)
@@ -404,7 +404,7 @@ _attribute_no_inline_ void battery_power_low_handle(int loop_flag)
     sleep_us(50*1000);
     REG_ADDR8(0x6f) = 0x20;  //reboot
     #else
-    analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0) | (BIT(LOW_BATT_FLG)| (loop_flag ? BIT(LOW_BATT_LOOP_FLG) : 0)));  //mark
+    analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0) | (FLD_LOW_BATT_FLG| (loop_flag ? FLD_LOW_BATT_LOOP_FLG : 0)));  //mark
     #if __PROJECT_MESH_SWITCH__
 	extern void mesh_switch_init();
 	mesh_switch_init();
@@ -440,8 +440,8 @@ _attribute_no_inline_ void app_battery_power_check_and_sleep_handle(int loop_fla
     	    #if __PROJECT_BOOTLOADER__
     	    // clear by product image
     	    #else
-    	    if((0 == lowBattDet_tick) && (analog_read(DEEP_ANA_REG0) & BIT(LOW_BATT_FLG))){
-                analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0)  & (~ (BIT(LOW_BATT_FLG)|BIT(LOW_BATT_LOOP_FLG))));  //clear
+    	    if((0 == lowBattDet_tick) && (analog_read(DEEP_ANA_REG0) & FLD_LOW_BATT_FLG)){
+                analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0)  & (~ (FLD_LOW_BATT_FLG|FLD_LOW_BATT_LOOP_FLG)));  //clear
     	    }
     	    #endif
     		lowBattDet_tick = clock_time();
@@ -451,7 +451,7 @@ _attribute_no_inline_ void app_battery_power_check_and_sleep_handle(int loop_fla
             }
         }
     }else{ // user init
-        if(analog_read(DEEP_ANA_REG0) & BIT(LOW_BATT_FLG)){
+        if(analog_read(DEEP_ANA_REG0) & FLD_LOW_BATT_FLG){
             app_battery_power_check(alarm_thres + 200, loop_flag);  //2.2 V
         }else{
             app_battery_power_check(alarm_thres, loop_flag);  //2.0 V

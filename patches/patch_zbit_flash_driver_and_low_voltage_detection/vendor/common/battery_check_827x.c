@@ -370,18 +370,18 @@ _attribute_ram_code_ int app_battery_power_check(u16 threshold_deep_vol_mv, u16 
 
 		if(batt_vol_mv <= threshold_suspend_vol_mv)//  bat_vol<1.8v  enter suspend
 		{
-			analog_write(USED_DEEP_ANA_REG,  analog_read(USED_DEEP_ANA_REG) | LOW_BATT_FLG | LOW_BATT_SUSPEND_FLG);  //mark
+			analog_write(USED_DEEP_ANA_REG,  analog_read(USED_DEEP_ANA_REG) | FLD_LOW_BATT_FLG | LOW_BATT_SUSPEND_FLG);  //mark
 			cpu_sleep_wakeup(SUSPEND_MODE, PM_WAKEUP_PAD, 0);  //suspend
 		}
 		else  //1.8v<bat_vol<2.0v  enter deep sleep
 		{
-			analog_write(USED_DEEP_ANA_REG,  analog_used_deep_reg | LOW_BATT_FLG & (~LOW_BATT_SUSPEND_FLG));  //mark
+			analog_write(USED_DEEP_ANA_REG,  analog_used_deep_reg | FLD_LOW_BATT_FLG & (~LOW_BATT_SUSPEND_FLG));  //mark
 			cpu_sleep_wakeup(DEEPSLEEP_MODE, PM_WAKEUP_PAD, 0);  //deepsleep
 		}
 	}
 	else
 	{
-		analog_write(USED_DEEP_ANA_REG,  analog_read(USED_DEEP_ANA_REG) & (~(LOW_BATT_FLG | LOW_BATT_SUSPEND_FLG)));  //mark
+		analog_write(USED_DEEP_ANA_REG,  analog_read(USED_DEEP_ANA_REG) & (~(FLD_LOW_BATT_FLG | LOW_BATT_SUSPEND_FLG)));  //mark
 	}
 
 #if (DBG_ADC_ON_RF_PKT) //debug
@@ -581,7 +581,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
 		#endif
 
 
-		analog_write(USED_DEEP_ANA_REG,  analog_read(USED_DEEP_ANA_REG) | LOW_BATT_FLG);  //mark
+		analog_write(USED_DEEP_ANA_REG,  analog_read(USED_DEEP_ANA_REG) | FLD_LOW_BATT_FLG);  //mark
 
 		u32 pin[] = KB_DRIVE_PINS;
 		for (int i=0; i<(sizeof (pin)/sizeof(*pin)); i++)
