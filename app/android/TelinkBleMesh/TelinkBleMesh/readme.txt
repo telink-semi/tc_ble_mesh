@@ -1,3 +1,8 @@
+main activity 中注释了 autoConnect
+meshOTA activity 修改了start方法
+
+meshMessage, 添加messageId,  中添加callback, 用来获取 回复和 消息发送完成(boolean: 是否发送成功)的状态
+
 
 version record
 
@@ -9,20 +14,29 @@ subnet bridge:
 1. Enable Subnet Bridge
 2. Bridging Table
 
+// todo
+需要有一个回复状态的统计, 发送全开全关指令, 统计回复所有设备状态的时间
+
+
+
+300次开关灯, 500ms interval.
+
+
 
 
 
 mesh OTA 进度:
 1. initiator 和 distributor的流程基本梳理完成
 2. firmware distribution (FD) 相关的 message(firmwaredistribution包中) 已经创建完成, 细节方面, 如 注释, 消息opcode, rspOpcode 都未检查;
-3. 需打通 initiator , distributor , updating nodes 各角色间的消息流转
+3. 需打通 initiator , distributorType , updating nodes 各角色间的消息流转
 4. 流程参考  firmware_update_flow.txt 文件
 
-todo:
-1. MeshOTA 页面中添加 app as distributor
-2. MeshOTA 页面中检查直连设备设备是否支持 distributor, 如果设备不支持, 则使用app作为 distributor
-3. Take Over 接管
+在 initiator 和 distributorType 中都持有一个BlobTransfer
 
+todo:
+1. MeshOTA 页面中添加 app as distributorType
+2. MeshOTA 页面中检查直连设备设备是否支持 distributorType, 如果设备不支持, 则使用app作为 distributorType
+3. Take Over 接管
 
 
 V3.3.2 (skip V3.3.1 which only update firmware)

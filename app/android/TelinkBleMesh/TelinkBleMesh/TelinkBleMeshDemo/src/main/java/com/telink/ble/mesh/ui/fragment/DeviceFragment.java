@@ -33,6 +33,8 @@ import android.widget.TextView;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.message.config.CompositionDataGetMessage;
+import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
 import com.telink.ble.mesh.demo.R;
@@ -41,6 +43,7 @@ import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
+import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
@@ -189,6 +192,7 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         TelinkMeshApplication.getInstance().addEventListener(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_RESET, this);
         TelinkMeshApplication.getInstance().addEventListener(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, this);
+        TelinkMeshApplication.getInstance().addEventListener(CompositionDataStatusMessage.class.getName(), this);
     }
 
     @Override
@@ -268,8 +272,6 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 break;
 
             case R.id.tv_cmd:
-//                byte[] config = TelinkMeshApplication.getInstance().getMeshLib().getConfigInfo();
-//                MeshLogger.log("config: " + Arrays.bytesToHexString(config, ":"));
                 startActivity(new Intent(getActivity(), CmdActivity.class));
                 break;
 
@@ -293,6 +295,11 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 || eventType.equals(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED)
                 || eventType.equals(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN)) {
             refreshUI();
+        } else if (eventType.equals(CompositionDataStatusMessage.class.getName())) {
+            StatusNotificationEvent notificationEvent = (StatusNotificationEvent) event;
+            CompositionDataStatusMessage statusMessage = (CompositionDataStatusMessage) notificationEvent.getNotificationMessage().getStatusMessage();
+            MeshLogger.d("cps status page: " + statusMessage.getPage());
+            MeshLogger.d("cps status: " + statusMessage.getCompositionData().toString());
         }
     }
 

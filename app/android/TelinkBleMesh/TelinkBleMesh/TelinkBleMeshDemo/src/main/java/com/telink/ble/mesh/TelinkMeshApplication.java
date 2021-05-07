@@ -26,6 +26,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 
 import com.telink.ble.mesh.core.Encipher;
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.StatusMessage;
@@ -34,6 +35,8 @@ import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlTemperatureStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
+import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.OnlineStatusInfo;
 import com.telink.ble.mesh.foundation.MeshApplication;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
@@ -41,10 +44,14 @@ import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.foundation.event.OnlineStatusEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.AppSettings;
+import com.telink.ble.mesh.model.GroupInfo;
+import com.telink.ble.mesh.model.MeshAppKey;
 import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.UnitConvert;
+import com.telink.ble.mesh.model.json.AddressRange;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.FileSystem;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -57,6 +64,7 @@ import java.security.KeyPair;
 import java.security.Signature;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -122,6 +130,54 @@ public class TelinkMeshApplication extends MeshApplication {
         } else {
             meshInfo = (MeshInfo) configObj;
         }
+//        meshInfo = createTestMesh();
+    }
+
+    private MeshInfo createTestMesh() {
+        MeshInfo meshInfo = new MeshInfo();
+
+        meshInfo.meshNetKeyList = new ArrayList<>();
+        final int KEY_COUNT = 1;
+        final String[] NET_KEY_NAMES = {"Default Net Key"};
+        final String[] APP_KEY_NAMES = {"Default App Key"};
+        for (int i = 0; i < KEY_COUNT; i++) {
+            meshInfo.meshNetKeyList.add(new MeshNetKey(NET_KEY_NAMES[i], i,
+                    Arrays.hexToBytes("12F08D8C4D071A15D2492BEEE628AF0E")));
+            meshInfo.appKeyList.add(new MeshAppKey(APP_KEY_NAMES[i],
+                    i,
+                    Arrays.hexToBytes("B22AEFE003E7FE09662020D6CBC5E76E"),
+                    i));
+        }
+
+        meshInfo.ivIndex = 0;
+        meshInfo.sequenceNumber = 0;
+        meshInfo.nodes = new ArrayList<>();
+        meshInfo.localAddress = 0x0001;
+        meshInfo.resetProvisionIndex(2);
+        meshInfo.provisionerUUID = Arrays.bytesToHexString(MeshUtils.generateRandom(16));
+
+        meshInfo.groups = new ArrayList<>();
+        meshInfo.unicastRange = new ArrayList<>();
+        meshInfo.unicastRange.add(new AddressRange(0x01, 0x400));
+        meshInfo.addressTopLimit = 0x0400;
+
+        GroupInfo group;
+        for (int i = 0; i < 8; i++) {
+            group = new GroupInfo();
+            group.address = i | 0xC000;
+            group.name = "group-" + i;
+            meshInfo.groups.add(group);
+        }
+
+
+        NodeInfo nodeInfo = new NodeInfo();
+        nodeInfo.meshAddress = 2;
+        nodeInfo.deviceKey = Arrays.hexToBytes("C0871EB77FE43190531D8B1F126B26DE");
+        nodeInfo.compositionData = new CompositionData();
+        nodeInfo.bound = true;
+        meshInfo.nodes.add(nodeInfo);
+        return meshInfo;
+
     }
 
     public void setupMesh(MeshInfo mesh) {

@@ -82,7 +82,7 @@ public class GattConnection extends BluetoothGattCallback {
     /**
      * connection timeout used on {@link #connect()}
      */
-    private static final int CONNECTION_TIMEOUT = 10 * 1000;
+    private static final int CONNECTION_TIMEOUT = 30 * 1000;
 
     private static final int DISCONNECTION_TIMEOUT = 2 * 1000;
 

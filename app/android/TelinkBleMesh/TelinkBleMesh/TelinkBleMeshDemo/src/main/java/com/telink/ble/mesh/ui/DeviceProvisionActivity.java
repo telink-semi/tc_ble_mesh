@@ -226,6 +226,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.meshAddress = -1;
         nodeInfo.deviceUUID = deviceUUID;
+        MeshLogger.d("device found -> device uuid : " + Arrays.bytesToHexString(deviceUUID));
         nodeInfo.macAddress = advertisingDevice.device.getAddress();
 
         NetworkingDevice processingDevice = new NetworkingDevice(nodeInfo);
@@ -262,6 +263,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         // check if oob exists
         byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
+        oob = new byte[]{(byte) 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         if (oob != null) {
             provisioningDevice.setAuthValue(oob);
         } else {

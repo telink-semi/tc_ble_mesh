@@ -32,6 +32,7 @@ import org.spongycastle.crypto.macs.CMac;
 import org.spongycastle.crypto.modes.CCMBlockCipher;
 import org.spongycastle.crypto.params.AEADParameters;
 import org.spongycastle.crypto.params.KeyParameter;
+import org.spongycastle.jcajce.provider.digest.SHA256;
 import org.spongycastle.jce.ECNamedCurveTable;
 import org.spongycastle.jce.interfaces.ECPublicKey;
 import org.spongycastle.jce.spec.ECNamedCurveParameterSpec;
@@ -362,6 +363,10 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         return data;
     }
 
+    public static byte[] sha256(byte[] text) {
+        SHA256.Digest Digest = new SHA256.Digest();
+        return Digest.digest(text);
+    }
 
     /**
      * check version & time & Serial Number

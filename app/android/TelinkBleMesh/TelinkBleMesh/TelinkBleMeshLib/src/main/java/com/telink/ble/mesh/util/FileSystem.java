@@ -26,6 +26,7 @@ import android.os.Environment;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -131,16 +132,26 @@ public abstract class FileSystem {
         }
         File file = new File(dir, filename);
 
-        FileOutputStream fos;
+        FileOutputStream fos = null;
         try {
             if (!file.exists())
                 file.createNewFile();
             fos = new FileOutputStream(file);
             fos.write(content.getBytes());
             fos.flush();
-            fos.close();
+            fos.getFD().sync();
             return file;
         } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
         }
 
         return null;

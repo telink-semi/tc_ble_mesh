@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     RemoteProvisioningDevice.java 
+ * @file RemoteProvisioningDevice.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.entity;
 
@@ -39,6 +39,11 @@ public class RemoteProvisioningDevice extends ProvisioningDevice {
 
     // proxy address
     private int serverAddress;
+
+    /**
+     * device revision cannot obtained on provision, so encAuth should be set by user
+     */
+    private boolean encAuth;
 
 
     public RemoteProvisioningDevice(byte rssi, byte[] uuid, int serverAddress) {
@@ -101,6 +106,14 @@ public class RemoteProvisioningDevice extends ProvisioningDevice {
 
     public void setServerAddress(int serverAddress) {
         this.serverAddress = serverAddress;
+    }
+
+    public boolean isEncAuth() {
+        return encAuth;
+    }
+
+    public void setEncAuth(boolean encAuth) {
+        this.encAuth = encAuth;
     }
 
     @Override

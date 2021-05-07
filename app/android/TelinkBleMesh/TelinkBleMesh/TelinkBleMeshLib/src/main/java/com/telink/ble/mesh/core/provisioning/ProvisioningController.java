@@ -226,6 +226,8 @@ public class ProvisioningController {
      */
     private ProvisioningDevice mProvisioningDevice;
 
+    private boolean encAuth;
+
     public ProvisioningController(HandlerThread handlerThread) {
         this.delayHandler = new Handler(handlerThread.getLooper());
     }
@@ -238,9 +240,10 @@ public class ProvisioningController {
         return mProvisioningDevice;
     }
 
-    public void begin(@NonNull ProvisioningDevice device) {
-        log("begin -- " + Arrays.bytesToHexString(device.getDeviceUUID()));
+    public void begin(@NonNull ProvisioningDevice device, boolean encAuth) {
+        log("begin -- " + Arrays.bytesToHexString(device.getDeviceUUID()) + " -- encAuth -" + encAuth);
         this.mProvisioningDevice = device;
+        this.encAuth = encAuth;
         delayHandler.removeCallbacks(provisioningTimeoutTask);
         delayHandler.postDelayed(provisioningTimeoutTask, TIMEOUT_PROVISIONING);
 
@@ -317,11 +320,39 @@ public class ProvisioningController {
 
     private byte[] getAuthValue() {
         if (pvCapability.staticOOBSupported() && mProvisioningDevice.getAuthValue() != null) {
-            return mProvisioningDevice.getAuthValue();
+            if (encAuth) {
+                log("get encode auth");
+                return getEncodedAuth(mProvisioningDevice.getAuthValue());
+            } else {
+                log("get origin auth");
+                return mProvisioningDevice.getAuthValue();
+            }
         } else {
             return AUTH_NO_OOB;
         }
     }
+
+
+    /**
+     * encode auth value in static-oob
+     */
+    private byte[] getEncodedAuth(byte[] originAuth) {
+        byte[] authResult = originAuth.clone();
+        byte[] input = confirmAssembly();
+        byte[] tmpAuth = Encipher.sha256(input);
+        for (int i = 0; i < authResult.length; i++) {
+            authResult[i] = (byte) (authResult[i] ^ tmpAuth[i]);
+        }
+        return authResult;
+    }
+
+    private byte[] getEncodedConfirm(byte[] confirm) {
+        byte[] tmpConfirm = Encipher.sha256(confirm);
+        byte[] result = new byte[16];
+        System.arraycopy(tmpConfirm, 0, result, 0, 16);
+        return result;
+    }
+
 
     private void updateProvisioningState(int state, String desc) {
         log("provisioning state update: state -- " + state + " desc -- " + desc);
@@ -414,7 +445,14 @@ public class ProvisioningController {
 
 
     private void sendConfirm() {
-        provisionerConfirm = getConfirm();
+        final byte[] confirm = getConfirm();
+        log("origin confirm - " + Arrays.bytesToHexString(confirm));
+        if (encAuth) {
+            provisionerConfirm = getEncodedConfirm(confirm);
+        } else {
+            provisionerConfirm = confirm;
+        }
+
         ProvisioningConfirmPDU confirmPDU = new ProvisioningConfirmPDU(provisionerConfirm);
         updateProvisioningState(STATE_CONFIRM_SENT, "Send confirm");
         sendProvisionPDU(confirmPDU);
@@ -618,8 +656,10 @@ public class ProvisioningController {
         buffer.put(authenticationValue);
         final byte[] confirmationData = buffer.array();
 
-        final byte[] confirmationValue = Encipher.aesCmac(confirmationData, confirmationKey);
-
+        byte[] confirmationValue = Encipher.aesCmac(confirmationData, confirmationKey);
+        if (encAuth) {
+            confirmationValue = getEncodedConfirm(confirmationValue);
+        }
         if (java.util.Arrays.equals(confirmationValue, deviceConfirm)) {
             log("Confirmation values check pass");
             return true;
