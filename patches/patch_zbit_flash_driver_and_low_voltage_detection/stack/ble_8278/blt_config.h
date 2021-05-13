@@ -60,11 +60,16 @@ static inline void blc_app_loadCustomizedParameters(void)
 	 if(!blt_miscParam.ext_cap_en)
 	 {
 		 //customize freq_offset adjust cap value, if not customized, default ana_81 is 0xd0
-		 u8 cap_frqoft = *(unsigned char*) (flash_sector_calibration + CALIB_OFFSET_CAP_INFO);
-		 if( cap_frqoft != 0xff ){
-			 analog_write(0x8A, cap_frqoft );
+		 //for 512K Flash, flash_sector_calibration equals to 0x77000
+		 //for 1M  Flash, flash_sector_calibration equals to 0xFE000
+		 if(flash_sector_calibration){
+			 u8 cap_frqoft = *(unsigned char*) (flash_sector_calibration + CALIB_OFFSET_CAP_INFO);
+			 if( cap_frqoft != 0xff ){
+				 analog_write(0x8A, (analog_read(0x8A) & 0xc0)|(cap_frqoft & 0x3f));
+			 }
 		 }
 	 }
+
 
 	if(!pm_is_MCU_deepRetentionWakeup()){
 		zbit_flash_flag = flash_is_zb();
