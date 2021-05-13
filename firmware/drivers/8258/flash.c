@@ -660,8 +660,8 @@ void flash_vdd_f_calib(void)
 	{
 		if(flash_is_zb())
 		{
-			analog_write(0x09, ((analog_read(0x09) & 0x8f) | (FLASH_VOLTAGE_1V95 << 4)));    //ldo mode flash ldo trim 1.95V
-			analog_write(0x0c, ((analog_read(0x0c) & 0xf8) | FLASH_VOLTAGE_1V9));				//dcdc mode flash ldo trim 1.90V
+			analog_write(0x09, ((analog_read(0x09) & 0x8f) | (FLASH_VOLTAGE_1V95 << 4)));    		//ldo mode flash ldo trim 1.95V
+			analog_write(0x0c, ((analog_read(0x0c) & 0xf8) | FLASH_VOLTAGE_1V9));					//dcdc mode flash ldo trim 1.90V
 		}
 	}
 	else
