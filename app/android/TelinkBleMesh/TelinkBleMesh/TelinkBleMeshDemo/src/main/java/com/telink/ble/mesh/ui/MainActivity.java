@@ -75,7 +75,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     private Fragment groupFragment;
     private SettingFragment settingFragment;
     private Handler mHandler = new Handler();
-    private AlertDialog meshOTATipsDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -175,8 +174,12 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 MeshLogger.log("online status enabled");
             }
             sendTimeStatus();
-            checkMeshOtaState();
-
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    checkMeshOtaState();
+                }
+            }, 3 * 1000);
         } else if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
             mHandler.removeCallbacksAndMessages(null);
         } else if (event.getType().equals(FDStatusMessage.class.getName())) {
@@ -208,36 +211,34 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     }
 
     public void showMeshOTATipsDialog(final int distributorAddress) {
-        if (meshOTATipsDialog == null) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            DialogInterface.OnClickListener dialogBtnClick = new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (which == DialogInterface.BUTTON_POSITIVE) {
-                        // GO
-                        startActivity(new Intent(MainActivity.this, FUActivity.class)
-                                .putExtra(FUActivity.KEY_FU_CONTINUE, true));
-                    } else if (which == DialogInterface.BUTTON_NEGATIVE) {
-                        // STOP
-                        FDCancelMessage cancelMessage = FDCancelMessage.getSimple(distributorAddress, 0);
-                        MeshService.getInstance().sendMeshMessage(cancelMessage);
-                    } else if (which == DialogInterface.BUTTON_NEUTRAL) {
-                        dialog.dismiss();
-                    }
-                }
-            };
 
-            builder.setTitle("Warning - MeshOTA is still running")
-                    .setMessage("MeshOTA distribution is still running, continue?\n" +
-                            "click GO to enter MeshOTA processing page \n"
-                            + "click STOP to stop distribution \n" +
-                            "click IGNORE to dismiss dialog")
-                    .setPositiveButton("GO", dialogBtnClick)
-                    .setNegativeButton("STOP", dialogBtnClick)
-                    .setNeutralButton("IGNORE", null);
-            meshOTATipsDialog = builder.create();
-        }
-        meshOTATipsDialog.show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        DialogInterface.OnClickListener dialogBtnClick = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == DialogInterface.BUTTON_POSITIVE) {
+                    // GO
+                    startActivity(new Intent(MainActivity.this, FUActivity.class)
+                            .putExtra(FUActivity.KEY_FU_CONTINUE, true));
+                } else if (which == DialogInterface.BUTTON_NEGATIVE) {
+                    // STOP
+                    FDCancelMessage cancelMessage = FDCancelMessage.getSimple(distributorAddress, 0);
+                    MeshService.getInstance().sendMeshMessage(cancelMessage);
+                } else if (which == DialogInterface.BUTTON_NEUTRAL) {
+                    dialog.dismiss();
+                }
+            }
+        };
+
+        builder.setTitle("Warning - MeshOTA is still running")
+                .setMessage("MeshOTA distribution is still running, continue?\n" +
+                        "click GO to enter MeshOTA processing page \n"
+                        + "click STOP to stop distribution \n" +
+                        "click IGNORE to dismiss dialog")
+                .setPositiveButton("GO", dialogBtnClick)
+                .setNegativeButton("STOP", dialogBtnClick)
+                .setNeutralButton("IGNORE", null);
+        builder.show();
     }
 
     public void sendTimeStatus() {

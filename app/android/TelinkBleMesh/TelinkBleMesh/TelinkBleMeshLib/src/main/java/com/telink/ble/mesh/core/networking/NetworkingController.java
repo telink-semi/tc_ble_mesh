@@ -86,7 +86,7 @@ public class NetworkingController {
     private boolean dleEnabled = false;
 
     // segmentedAccessLength = unsegmentedAccessLength + 1
-    public static int unsegmentedAccessLength = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE;
+    public static int unsegmentedAccessLength = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
 
 
     private static final int DEFAULT_SEQUENCE_NUMBER_UPDATE_STEP = 0x100;
@@ -720,6 +720,10 @@ public class NetworkingController {
 
         // 960
 //        long timeout = 1280 + queueSize * NETWORKING_INTERVAL;
+
+        // for test
+//        long timeout = (dleEnabled ? 5120 : 2560) + queueSize * NETWORKING_INTERVAL;
+
         long timeout = (dleEnabled ? 2560 : 1280) + queueSize * NETWORKING_INTERVAL;
         log("reliable message timeout:" + timeout);
         return timeout;

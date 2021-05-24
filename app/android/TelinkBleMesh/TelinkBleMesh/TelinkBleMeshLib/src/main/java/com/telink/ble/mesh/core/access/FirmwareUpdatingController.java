@@ -68,6 +68,7 @@ import java.util.Locale;
  * Mesh firmware updating
  * Created by kee on 2020/04/13.
  */
+@Deprecated
 public class FirmwareUpdatingController {
 
     private final String LOG_TAG = "FwUpdate";

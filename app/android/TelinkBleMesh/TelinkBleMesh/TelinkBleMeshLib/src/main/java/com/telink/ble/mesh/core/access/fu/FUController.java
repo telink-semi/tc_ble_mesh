@@ -67,6 +67,8 @@ public class FUController implements FUActionHandler {
 
     private boolean isDirectUpdating = false;
 
+    private int connectedAddress;
+
 
     public FUController(HandlerThread thread) {
         handler = new Handler(thread.getLooper());
@@ -85,13 +87,14 @@ public class FUController implements FUActionHandler {
     /**
      * start or continue firmware update flow
      */
-    public void begin(FirmwareUpdateConfiguration configuration, int directAddress) {
+    public void begin(FirmwareUpdateConfiguration configuration, int connectedAddress) {
         this.configuration = configuration;
         this.updatePolicy = configuration.getUpdatePolicy();
         this.deviceList = configuration.getUpdatingDevices();
         this.distributorAddress = configuration.getDistributorAddress();
         this.appKeyIndex = configuration.getAppKeyIndex();
-        this.isDirectUpdating = isDirectUpdating(directAddress);
+        this.connectedAddress = connectedAddress;
+        this.isDirectUpdating = isConnectedNodeUpdating(connectedAddress);
         this.distributorAssist.resetConfig(configuration);
         log("FU begin - " + this.updatePolicy + "  isContinue ? " + configuration.isContinue() + " -- " + currentState);
         if (currentState == FUState.IDLE && !configuration.isContinue()) {
@@ -107,6 +110,7 @@ public class FUController implements FUActionHandler {
             if (currentState == FUState.UPDATE_RECHECKING) {
                 distributorAssist.recheckFirmware(true);
             } else {
+                onFUStateUpdate(FUState.DISTRIBUTING_BY_DEVICE, null);
                 fetchProgressState();
             }
         }
@@ -141,7 +145,7 @@ public class FUController implements FUActionHandler {
             final FDReceiversListMessage.DistributionReceiver frsReceiver = receiverList.get(0);
             MeshLogger.d("first receiver : " + frsReceiver.toString());
             int transferProgress = frsReceiver.transferProgress * 2;
-            onTransferProgress(transferProgress, BlobTransferType.MESH);
+            onTransferProgress(transferProgress, BlobTransferType.MESH_DIST);
 //            actionHandler.onTransferProgress(transferProgress, BlobTransferType.MESH);
             if (transferProgress >= 100) {
                 int phase = frsReceiver.retrievedUpdatePhase;
@@ -182,7 +186,7 @@ public class FUController implements FUActionHandler {
     }
 
 
-    private boolean isDirectUpdating(int directAddress) {
+    private boolean isConnectedNodeUpdating(int directAddress) {
         if (configuration == null || configuration.getUpdatingDevices() == null) return false;
         for (MeshUpdatingDevice device : configuration.getUpdatingDevices()) {
             if (device.meshAddress == directAddress) {
@@ -224,7 +228,7 @@ public class FUController implements FUActionHandler {
     }
 
     public void interruptByDisconnect() {
-        onComplete("firmware update complete as device disconnected");
+        onComplete(false, "firmware update failed as device disconnected");
     }
 
     /**
@@ -234,7 +238,7 @@ public class FUController implements FUActionHandler {
         log(String.format("updating command complete: opcode-%04X success?-%b", opcode, success));
         if (success) return; //  skip success state
         if (opcode == Opcode.FD_RECEIVERS_LIST.value) {
-            onComplete("receiver list command send fail");
+            onComplete(false, "receiver list command send fail");
             return;
         }
         if (initiator.isRunning()) {
@@ -309,10 +313,11 @@ public class FUController implements FUActionHandler {
         }
     }
 
-    private void onComplete(String desc) {
-        log("firmware update complete - " + desc);
+    private void onComplete(boolean success, String desc) {
+        log("firmware update complete - " + desc + " -- " + success);
         handler.removeCallbacksAndMessages(null);
-        onFUStateUpdate(FUState.UPDATE_COMPLETE, desc);
+        final FUState fuState = success ? FUState.UPDATE_COMPLETE : FUState.UPDATE_FAIL;
+        onFUStateUpdate(fuState, desc);
         clear();
     }
 
@@ -336,15 +341,15 @@ public class FUController implements FUActionHandler {
             case INITIATE:
                 if (!success) {
                     onFUStateUpdate(FUState.INITIATE_FAIL, null);
-                    onComplete(desc);
+                    onComplete(false, desc);
                     return;
                 }
                 onFUStateUpdate(FUState.INITIATE_SUCCESS, null);
                 if (distributorAddress == MeshUtils.LOCAL_MESSAGE_ADDRESS) {
                     // distribute by locality
-                    log("start distribution by APP");
+                    log("start distribution by phone");
                     onFUStateUpdate(FUState.DISTRIBUTING_BY_PHONE, null);
-                    distributor.begin(configuration);
+                    distributor.begin(configuration, connectedAddress);
                 } else {
                     // distribute by direct connected device, gatt connection can be terminated
                     log("start distribution by remote device -- > end");
@@ -364,14 +369,14 @@ public class FUController implements FUActionHandler {
                         log("direct device will lose disconnection - 0");
                     }
                 } else {
-                    onComplete(desc);
+                    onComplete(false, desc);
                 }
 
                 break;
 
             case DISTRIBUTE_ASSIST:
                 if (!success) {
-                    onComplete(desc);
+                    onComplete(false, desc);
                     return;
                 }
                 if (currentState == FUState.UPDATE_APPLYING) {
@@ -394,7 +399,7 @@ public class FUController implements FUActionHandler {
                 } else if (currentState == FUState.UPDATE_RECHECKING) {
                     // recheck firmware complete
                     cancelDistribution();
-                    onComplete(desc);
+                    onComplete(true, desc);
                 }
                 break;
         }

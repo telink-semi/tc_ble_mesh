@@ -90,7 +90,7 @@ public class BlobTransferStartMessage extends UpdatingMessage {
 
     @Override
     public byte[] getParams() {
-        final byte modeValue = (byte) (transferMode.mode << 6);
+        final byte modeValue = (byte) (transferMode.value << 6);
 
         return ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN)
                 .put(modeValue)

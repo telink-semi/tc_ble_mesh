@@ -15,9 +15,11 @@ import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobBlockSta
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobChunkTransferMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobInfoGetMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobInfoStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobPartialBlockReportMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobTransferGetMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobTransferStartMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobTransferStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.TransferMode;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.TransferStatus;
 import com.telink.ble.mesh.core.networking.NetworkingController;
 import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
@@ -61,7 +63,7 @@ class BlobTransfer {
     /**
      * blob block transfer start
      */
-    private static final int STEP_BLOB_BLOCK_TRANSFER_START = 8;
+    private static final int STEP_BLOB_BLOCK_START = 8;
 
     /**
      * sending chunk data
@@ -90,7 +92,7 @@ class BlobTransfer {
     /**
      * direction of blob sending
      */
-    private BlobTransferType transferType = BlobTransferType.LOCAL;
+    private BlobTransferType transferType = BlobTransferType.LOCAL_INIT;
 
 
     private Handler delayHandler;
@@ -123,16 +125,29 @@ class BlobTransfer {
 
     private int groupAddress;
 
+    /**
+     * max missing chunk number in each block for progress calculate
+     */
+    private int pullMaxChunkNumber;
+
+    private int pullProgress = -1;
+
+    /**
+     * last
+     */
+    private TransferMode transferMode = TransferMode.PUSH;
+
     public BlobTransfer(HandlerThread handlerThread, BlobTransferCallback callback) {
         this.delayHandler = new Handler(handlerThread.getLooper());
         this.transferCallback = callback;
     }
 
     /**
-     * @param type BlobTransferType
-     * @param distributorAddress if type is BlobTransferType.LOCAL or BlobTransferType.GATT, distributorAddress is needed
+     * @param type          BlobTransferType
+     * @param directAddress transfer blob to local or direct connected address used when type is BlobTransferType.LOCAL or BlobTransferType.GATT,
+     *                      otherwise not used
      */
-    public void resetParams(FirmwareUpdateConfiguration configuration, BlobTransferType type, int distributorAddress) {
+    public void resetParams(FirmwareUpdateConfiguration configuration, BlobTransferType type, int directAddress) {
         this.firmwareData = configuration.getFirmwareData();
         this.dleLength = configuration.getDleLength();
         this.blobId = configuration.getBlobId();
@@ -141,9 +156,10 @@ class BlobTransfer {
 
         this.targetDevices.clear();
         this.transferType = type;
-        if (type == BlobTransferType.LOCAL || type == BlobTransferType.GATT) {
-            this.targetDevices.add(new TargetDevice(distributorAddress));
+        if (type == BlobTransferType.LOCAL_INIT || type == BlobTransferType.GATT_INIT) {
+            this.targetDevices.add(new TargetDevice(directAddress));
         } else {
+            // BlobTransferType.MESH
             for (MeshUpdatingDevice device : configuration.getUpdatingDevices()) {
                 this.targetDevices.add(new TargetDevice(device.meshAddress));
             }
@@ -158,6 +174,7 @@ class BlobTransfer {
 
         log("blob transfer begin -- " + this.transferType);
         step = STEP_BLOB_TRANSFER_GET;
+        this.pullProgress = -1;
         nextAction();
     }
 
@@ -203,6 +220,7 @@ class BlobTransfer {
 
                     BlobTransferStartMessage blobTransferStartMessage = BlobTransferStartMessage.getSimple(meshAddress, appKeyIndex,
                             blobId, objectSize, blockSizeLog, mtu);
+                    blobTransferStartMessage.setTransferMode(transferMode);
                     onTransferMessagePrepared(blobTransferStartMessage);
                     break;
 
@@ -210,7 +228,7 @@ class BlobTransfer {
                     onTransferMessagePrepared(BlobTransferGetMessage.getSimple(meshAddress, appKeyIndex));
                     break;
 
-                case STEP_BLOB_BLOCK_TRANSFER_START:
+                case STEP_BLOB_BLOCK_START:
                     if (nodeIndex == 0) {
                         if (firmwareParser.hasNextBlock()) {
                             firmwareParser.nextBlock();
@@ -228,7 +246,12 @@ class BlobTransfer {
                     break;
 
                 case STEP_BLOB_CHUNK_SENDING:
-                    sendChunks();
+                    if (transferMode == TransferMode.PUSH) {
+                        sendChunks();
+                    } else {
+                        log("waiting for pull request");
+                    }
+
                     break;
 
                 case STEP_GET_BLOB_BLOCK:
@@ -246,7 +269,8 @@ class BlobTransfer {
         switch (mixFormat) {
             case BlobBlockStatusMessage.FORMAT_NO_CHUNKS_MISSING:
                 log("no chunks missing");
-                step = STEP_BLOB_BLOCK_TRANSFER_START;
+                step = STEP_BLOB_BLOCK_START;
+                pullMaxChunkNumber = 0;
                 nextAction();
                 break;
 
@@ -262,7 +286,7 @@ class BlobTransfer {
                 // resend missing chunks
                 log("resend missing chunks");
                 missingChunkIndex = 0;
-                resendMissingChunks();
+                sendMissingChunks();
                 break;
         }
     }
@@ -335,7 +359,7 @@ class BlobTransfer {
         boolean fail = (step == STEP_BLOB_TRANSFER_GET && opcode == Opcode.BLOB_TRANSFER_GET.value)
                 || (step == STEP_GET_BLOB_INFO && opcode == Opcode.BLOB_INFORMATION_GET.value)
                 || (step == STEP_BLOB_TRANSFER_START && opcode == Opcode.BLOB_TRANSFER_START.value)
-                || (step == STEP_BLOB_BLOCK_TRANSFER_START && opcode == Opcode.BLOB_BLOCK_START.value)
+                || (step == STEP_BLOB_BLOCK_START && opcode == Opcode.BLOB_BLOCK_START.value)
                 || (step == STEP_GET_BLOB_BLOCK && opcode == Opcode.BLOB_BLOCK_GET.value);
         if (fail) {
             onDeviceFail(targetDevices.get(nodeIndex), "device transfer command send fail");
@@ -347,9 +371,11 @@ class BlobTransfer {
     }
 
     public void onTransferSegmentComplete(boolean success) {
-        if (transferType == BlobTransferType.GATT && step == STEP_BLOB_CHUNK_SENDING) {
+        if (transferType == BlobTransferType.GATT_INIT && step == STEP_BLOB_CHUNK_SENDING) {
             if (success) {
-                sendChunks();
+                if (transferMode == TransferMode.PUSH) {
+                    sendChunks();
+                }
             } else {
                 onTransferComplete(false, "chunk send fail -- segment message send fail");
             }
@@ -389,24 +415,22 @@ class BlobTransfer {
             case BLOB_BLOCK_STATUS:
                 onBlobBlockStatus(message);
                 break;
+
+            case BLOB_PARTIAL_BLOCK_REPORT:
+                onBlobPartialBlockReport((BlobPartialBlockReportMessage) message.getStatusMessage());
+                break;
         }
     }
 
     private void sendChunks() {
         byte[] chunkData = firmwareParser.nextChunk();
         final int chunkIndex = firmwareParser.currentChunkIndex();
-        /*if (test) {
-            if (firmwareParser.currentChunkIndex() == 2) {
-                byte[] missingChunkData = firmwareParser.nextChunk();
-                test = false;
-            }
-        }*/
         if (chunkData != null) {
             validateUpdatingProgress();
             BlobChunkTransferMessage blobChunkTransferMessage = generateChunkTransferMessage(chunkIndex, chunkData);
             log("next chunk transfer msg: " + blobChunkTransferMessage.toString());
             onTransferMessagePrepared(blobChunkTransferMessage);
-            if (transferType == BlobTransferType.GATT) {
+            if (transferType == BlobTransferType.GATT_INIT) {
 
                 int len = chunkData.length + 3;
                 boolean isSegment = len > dleLength;
@@ -429,12 +453,21 @@ class BlobTransfer {
      * validate blob transfer progress
      */
     private void validateUpdatingProgress() {
-        if (firmwareParser.validateProgress()) {
-            final int progress = firmwareParser.getProgress();
-            log("chunk sending progress: " + progress);
-            transferCallback.onTransferProgressUpdate(progress, transferType);
+        if (transferMode == TransferMode.PUSH) {
+            if (firmwareParser.validateProgress()) {
+                final int progress = firmwareParser.getProgress();
+                log("chunk sending progress: " + progress);
+                transferCallback.onTransferProgressUpdate(progress, transferType);
 //            onStateUpdate(STATE_PROGRESS, "progress update", progress);
+            }
+        } else if (transferMode == TransferMode.PULL) {
+            int progress = firmwareParser.getProgressAt(firmwareParser.currentBlockIndex(), pullMaxChunkNumber);
+            if (this.pullProgress != progress) {
+                this.pullProgress = progress;
+                transferCallback.onTransferProgressUpdate(progress, transferType);
+            }
         }
+
     }
 
 
@@ -448,21 +481,30 @@ class BlobTransfer {
     }
 
 
-    private void resendMissingChunks() {
+    private void sendMissingChunks() {
         if (missingChunkIndex >= missingChunks.size()) {
             // all missing chunk sent
             log("all missing chunks sent complete: " + missingChunkIndex);
-            checkMissingChunks();
+            if (transferMode == TransferMode.PUSH) {
+                checkMissingChunks();
+            }
         } else {
             int chunkNumber = missingChunks.get(missingChunkIndex);
-            log("missing chunks: " + chunkNumber);
+            log("send missing chunk at : " + firmwareParser.currentBlockIndex() + " - " + chunkNumber);
             byte[] chunkData = firmwareParser.chunkAt(chunkNumber);
             if (chunkData == null) {
                 log("chunk index overflow when resending chunk: " + chunkNumber);
                 return;
             }
+            if (transferMode == TransferMode.PULL) {
+                if (pullMaxChunkNumber < chunkNumber) {
+                    pullMaxChunkNumber = chunkNumber;
+                }
+                validateUpdatingProgress();
+            }
             BlobChunkTransferMessage blobChunkTransferMessage = generateChunkTransferMessage(chunkNumber, chunkData);
             onTransferMessagePrepared(blobChunkTransferMessage);
+            delayHandler.removeCallbacks(missingChunkSendingTask);
             delayHandler.postDelayed(missingChunkSendingTask, getChunkSendingInterval());
         }
     }
@@ -503,10 +545,15 @@ class BlobTransfer {
     private long getChunkSendingInterval() {
         // relay 320 ms
 
-        if (this.transferType == BlobTransferType.LOCAL) {
+        if (this.transferType == BlobTransferType.LOCAL_INIT) {
             log("chunk sending interval: " + 30);
-            return 30;
-        } else if (this.transferType == BlobTransferType.GATT) {
+            return 3;
+        } else if (this.transferType == BlobTransferType.GATT_INIT || this.transferType == BlobTransferType.GATT_DIST) {
+            if (transferMode == TransferMode.PULL) {
+                log("chunk sending interval: " + 10);
+                return 10;
+            }
+
             log("chunk sending interval: " + 100);
             return 100;
         }
@@ -531,7 +578,7 @@ class BlobTransfer {
         @Override
         public void run() {
             missingChunkIndex++;
-            resendMissingChunks();
+            sendMissingChunks();
         }
     };
 
@@ -544,7 +591,9 @@ class BlobTransfer {
 
     private BlobChunkTransferMessage generateChunkTransferMessage(int chunkNumber, byte[] chunkData) {
         int address;
-        if (this.transferType == BlobTransferType.LOCAL || this.transferType == BlobTransferType.GATT) {
+        if (this.transferType == BlobTransferType.LOCAL_INIT
+                || this.transferType == BlobTransferType.GATT_INIT
+                || this.transferType == BlobTransferType.GATT_DIST) {
             // only one device
             address = this.targetDevices.get(0).address;
         } else {
@@ -557,7 +606,7 @@ class BlobTransfer {
      * response of {@link BlobTransferStartMessage}
      */
     private void onBlobTransferStatus(BlobTransferStatusMessage transferStatusMessage) {
-        log("object transfer status: " + transferStatusMessage.toString());
+        log("blob transfer status: " + transferStatusMessage.toString());
         if (step == STEP_BLOB_TRANSFER_START || step == STEP_BLOB_TRANSFER_GET) {
             UpdateStatus status = UpdateStatus.valueOf(transferStatusMessage.getStatus());
 
@@ -576,14 +625,13 @@ class BlobTransfer {
 
     }
 
-
     /**
      * response of BLOCK_GET
      * {@link #checkMissingChunks()}
      * {@link BlobBlockStartMessage}
      */
     private void onBlobBlockStatus(NotificationMessage message) {
-        if (step != STEP_GET_BLOB_BLOCK && step != STEP_BLOB_BLOCK_TRANSFER_START) {
+        if (step != STEP_GET_BLOB_BLOCK && step != STEP_BLOB_BLOCK_START) {
             return;
         }
         BlobBlockStatusMessage blobBlockStatusMessage = (BlobBlockStatusMessage) message.getStatusMessage();
@@ -594,7 +642,7 @@ class BlobTransfer {
             onDeviceFail(targetDevices.get(nodeIndex), "block status err");
         } else {
             // only check chunk missing when STEP_GET_BLOB_BLOCK
-            if (step == STEP_GET_BLOB_BLOCK) {
+            if (step == STEP_GET_BLOB_BLOCK || (step == STEP_BLOB_BLOCK_START && transferMode == TransferMode.PULL)) {
                 int format = blobBlockStatusMessage.getFormat();
 
                 mixFormat(format);
@@ -623,19 +671,63 @@ class BlobTransfer {
     }
 
     /**
+     * only used at pull mode
+     */
+    private void onBlobPartialBlockReport(BlobPartialBlockReportMessage reportMessage) {
+
+        final ArrayList<Integer> encodedMissingChunks = reportMessage.getEncodedMissingChunks();
+        if (encodedMissingChunks.size() == 0) {
+            log("no missing chunks in PartialBlockReport ");
+            pullMaxChunkNumber = 0;
+            checkMissingChunks();
+        } else {
+            StringBuilder missingDesc = new StringBuilder();
+            for (int index : encodedMissingChunks) {
+                missingDesc.append(" -- ").append(index);
+            }
+            log("PartialBlockReport " + firmwareParser.currentBlockIndex() + " - " + encodedMissingChunks.size() + " - " + missingDesc);
+            delayHandler.removeCallbacks(missingChunkSendingTask);
+            this.missingChunks = encodedMissingChunks;
+            this.missingChunkIndex = 0;
+            this.mixFormat = BlobBlockStatusMessage.FORMAT_ENCODED_MISSING_CHUNKS;
+            sendMissingChunks();
+        }
+    }
+
+    /**
      * response of {@link BlobInfoStatusMessage}
      */
-    private void onBlobInfoStatus(BlobInfoStatusMessage objectInfoStatusMessage) {
+    private void onBlobInfoStatus(BlobInfoStatusMessage blobInfoStatusMessage) {
 
 
-        log("object info status: " + objectInfoStatusMessage.toString());
+        log("object info status: " + blobInfoStatusMessage.toString());
         if (step != STEP_GET_BLOB_INFO) {
             log("not at STEP_GET_BLOB_INFO");
             return;
         }
-        int blockSize = (int) Math.pow(2, objectInfoStatusMessage.getMaxBlockSizeLog());
-        int chunkSize = objectInfoStatusMessage.getMaxChunkSize();
+        int blockSize = (int) Math.pow(2, blobInfoStatusMessage.getMaxBlockSizeLog());
+        int chunkSize = blobInfoStatusMessage.getMaxChunkSize();
+
+        final boolean pushSupported = blobInfoStatusMessage.isPushModeSupported();
+        final boolean pullSupported = blobInfoStatusMessage.isPullModeSupported();
+
+        // use push mode when transfer to direct connected device
+        final boolean gattTransfer = this.transferType == BlobTransferType.GATT_DIST || this.transferType == BlobTransferType.GATT_INIT;
+        if (pullSupported) {
+            if (pushSupported) {
+                this.transferMode = gattTransfer ? TransferMode.PUSH : TransferMode.PULL;
+            } else {
+                this.transferMode = TransferMode.PULL;
+            }
+        } else if (pushSupported) {
+            this.transferMode = TransferMode.PUSH;
+        }
+
+
+        log("refresh transfer mode: " + this.transferMode);
+
         log("chunk size : " + chunkSize + " block size: " + blockSize);
+
         this.firmwareParser.reset(firmwareData, blockSize, chunkSize);
         nodeIndex++;
         nextAction();
@@ -656,7 +748,7 @@ class BlobTransfer {
             case STEP_GET_BLOB_INFO:
                 return "get-blob-info";
 
-            case STEP_BLOB_BLOCK_TRANSFER_START:
+            case STEP_BLOB_BLOCK_START:
                 return "blob-block-transfer-start";
 
             case STEP_BLOB_CHUNK_SENDING:

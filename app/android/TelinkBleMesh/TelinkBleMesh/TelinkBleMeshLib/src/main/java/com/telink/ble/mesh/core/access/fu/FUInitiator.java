@@ -167,7 +167,7 @@ class FUInitiator implements BlobTransferCallback {
         this.updatePolicy = configuration.getUpdatePolicy();
         this.distributorAddress = distributorAddress;
         this.type = distributorAddress == MeshUtils.LOCAL_MESSAGE_ADDRESS ?
-                BlobTransferType.LOCAL : BlobTransferType.GATT;
+                BlobTransferType.LOCAL_INIT : BlobTransferType.GATT_INIT;
         transfer.resetParams(configuration, type, distributorAddress);
         log("initiator begin : node size - " + nodes.size() + " -- distAdr - " + distributorAddress);
 
@@ -296,7 +296,7 @@ class FUInitiator implements BlobTransferCallback {
                 startMessage.distributionAppKeyIndex = appKeyIndex;
                 startMessage.distributionTTL = 0xFF;
                 startMessage.distributionTimeoutBase = 0;
-                startMessage.distributionTransferMode = TransferMode.PUSH.mode;
+                startMessage.distributionTransferMode = TransferMode.PUSH.value;
                 startMessage.updatePolicy = updatePolicy.value;
                 startMessage.distributionImageIndex = 0;
                 startMessage.distributionMulticastAddress = groupAddress;

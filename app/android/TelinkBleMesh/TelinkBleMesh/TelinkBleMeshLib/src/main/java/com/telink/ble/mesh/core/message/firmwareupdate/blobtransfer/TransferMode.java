@@ -34,17 +34,17 @@ public enum TransferMode {
 
     Prohibited(0x03, "Prohibited");
 
-    public final int mode;
+    public final int value;
     public final String desc;
 
-    TransferMode(int mode, String desc) {
-        this.mode = mode;
+    TransferMode(int value, String desc) {
+        this.value = value;
         this.desc = desc;
     }
 
     public static TransferMode valueOf(int mode) {
         for (TransferMode status : values()) {
-            if (status.mode == mode) return status;
+            if (status.value == mode) return status;
         }
         return Prohibited;
     }

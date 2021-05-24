@@ -40,7 +40,6 @@ import com.telink.ble.mesh.core.access.AccessBridge;
 import com.telink.ble.mesh.core.access.BindingBearer;
 import com.telink.ble.mesh.core.access.BindingController;
 import com.telink.ble.mesh.core.access.FastProvisioningController;
-import com.telink.ble.mesh.core.access.FirmwareUpdatingController;
 import com.telink.ble.mesh.core.access.RemoteProvisioningController;
 import com.telink.ble.mesh.core.access.fu.FUController;
 import com.telink.ble.mesh.core.access.fu.FUState;
@@ -689,12 +688,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     /**
      * start or continue meshOTA (firmware update),
-     *
-     * @param meshOtaParameters
      */
     void startMeshOTA(MeshOtaParameters meshOtaParameters) {
-//        this.actionMode = Mode.MODE_MESH_OTA;
-//        firmwareUpdateService.begin((FirmwareUpdateConfiguration) meshOtaParameters.get(Parameters.ACTION_MESH_OTA_CONFIG));
         if (!validateActionMode(Mode.MODE_MESH_OTA)) {
             log("mesh updating running currently");
             return;
@@ -733,9 +728,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         if (actionMode == targetMode) {
             return false;
         } else {
-            /*if (actionMode == MODE_AUTO_CONNECT) {
-                onMeshEvent(MeshEvent.EVENT_TYPE_DISCONNECTED);
-            }*/
             if (actionMode == Mode.MODE_REMOTE_PROVISION) {
                 mRemoteProvisioningController.clear();
             } else if (actionMode == Mode.MODE_PROVISION) {
@@ -800,6 +792,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     private void onMeshEvent(String eventType, String desc) {
+        log("mesh event: " + eventType + " -- " + desc);
         MeshEvent meshEvent = new MeshEvent(this, eventType, desc);
         onEventPrepared(meshEvent);
     }
@@ -1210,8 +1203,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                     mRemoteProvisioningController.clear();
                     onRemoteProvisioningComplete(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_FAIL, device, "connection interrupt");
                 } else if (actionMode == Mode.MODE_MESH_OTA) {
-                    onMeshUpdatingComplete();
                     fuController.interruptByDisconnect();
+                    onMeshUpdatingComplete();
                 } else if (actionMode == Mode.MODE_PROVISION
                         || actionMode == Mode.MODE_BIND || actionMode == Mode.MODE_OTA
                         || actionMode == Mode.MODE_GATT_CONNECTION

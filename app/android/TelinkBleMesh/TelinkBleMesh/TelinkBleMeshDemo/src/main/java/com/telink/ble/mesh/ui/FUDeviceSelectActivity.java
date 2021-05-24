@@ -32,27 +32,19 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshSigModel;
-import com.telink.ble.mesh.core.message.NotificationMessage;
-import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoGetMessage;
-import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoStatusMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
-import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
-import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.ui.adapter.BaseSelectableListAdapter;
 import com.telink.ble.mesh.ui.adapter.FUDeviceSelectAdapter;
-import com.telink.ble.mesh.util.Arrays;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -67,17 +59,12 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
     /**
      * view adapter
      */
-    private FUDeviceSelectAdapter mDeviceAdapter;
+    private FUDeviceSelectAdapter normalDeviceAdapter, lpnDeviceAdapter;
 
     /**
      * local mesh info
      */
     private MeshInfo mesh;
-
-    /**
-     * local devices
-     */
-    private List<NodeInfo> devices;
 
     /**
      * updating devices
@@ -87,11 +74,9 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
     /**
      * UIView
      */
-    private CheckBox cb_device;
+    private CheckBox cb_device, cb_lpn;
 
-    private Button btn_confirm;
-    private RecyclerView rv_device;
-
+    List<NodeInfo> normalDevices, lpnDevices;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,23 +94,45 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
 
     private void initView() {
         cb_device = findViewById(R.id.cb_device);
-        rv_device = findViewById(R.id.rv_device);
+        cb_lpn = findViewById(R.id.cb_lpn);
 
+        RecyclerView rv_device = findViewById(R.id.rv_device);
+        RecyclerView rv_lpn = findViewById(R.id.rv_lpn);
         rv_device.setLayoutManager(new LinearLayoutManager(this));
+        rv_lpn.setLayoutManager(new LinearLayoutManager(this));
+
+        /*
+         * local devices
+         */
+        normalDevices = new ArrayList<>();
+        lpnDevices = new ArrayList<>();
         if (mesh.nodes != null) {
             for (NodeInfo deviceInfo : mesh.nodes) {
                 deviceInfo.selected = false;
+                if (deviceInfo.isLpn()) {
+                    lpnDevices.add(deviceInfo);
+                } else {
+                    normalDevices.add(deviceInfo);
+                }
             }
         }
-        devices = mesh.nodes;
+//        normalDevice = mesh.nodes;
 
-        mDeviceAdapter = new FUDeviceSelectAdapter(this, devices);
-        mDeviceAdapter.setStatusChangedListener(this);
-        rv_device.setAdapter(mDeviceAdapter);
-        cb_device.setChecked(mDeviceAdapter.allSelected());
-        btn_confirm = findViewById(R.id.btn_confirm);
+        normalDeviceAdapter = new FUDeviceSelectAdapter(this, normalDevices);
+        normalDeviceAdapter.setStatusChangedListener(this);
+        rv_device.setAdapter(normalDeviceAdapter);
+        cb_device.setChecked(normalDeviceAdapter.allSelected());
+
+        lpnDeviceAdapter = new FUDeviceSelectAdapter(this, lpnDevices);
+        lpnDeviceAdapter.setStatusChangedListener(this);
+        rv_lpn.setAdapter(lpnDeviceAdapter);
+        cb_lpn.setChecked(lpnDeviceAdapter.allSelected());
+
+
+        Button btn_confirm = findViewById(R.id.btn_confirm);
         btn_confirm.setOnClickListener(this);
         cb_device.setOnClickListener(this);
+        cb_lpn.setOnClickListener(this);
     }
 
     private void addEventListeners() {
@@ -167,7 +174,7 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
                 break;
 
             case R.id.cb_device:
-                mDeviceAdapter.setAll(!mDeviceAdapter.allSelected());
+                normalDeviceAdapter.setAll(!normalDeviceAdapter.allSelected());
                 break;
         }
     }
@@ -175,7 +182,17 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
 
     public List<NodeInfo> getSelectedNodes() {
         List<NodeInfo> nodes = null;
-        for (NodeInfo deviceInfo : mesh.nodes) {
+
+        for (NodeInfo deviceInfo : normalDevices) {
+            if (deviceInfo.selected && deviceInfo.getOnOff() != -1 && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1) {
+                if (nodes == null) {
+                    nodes = new ArrayList<>();
+                }
+                nodes.add(deviceInfo);
+            }
+        }
+
+        for (NodeInfo deviceInfo : lpnDevices) {
             if (deviceInfo.selected && deviceInfo.getOnOff() != -1 && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1) {
                 if (nodes == null) {
                     nodes = new ArrayList<>();
@@ -188,8 +205,10 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
 
     @Override
     public void onSelectStatusChanged(BaseSelectableListAdapter adapter) {
-        if (adapter == mDeviceAdapter) {
-            cb_device.setChecked(mDeviceAdapter.allSelected());
+        if (adapter == normalDeviceAdapter) {
+            cb_device.setChecked(normalDeviceAdapter.allSelected());
+        } else if (adapter == lpnDeviceAdapter) {
+            cb_lpn.setChecked(lpnDeviceAdapter.allSelected());
         }
     }
 
@@ -205,7 +224,7 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mDeviceAdapter.notifyDataSetChanged();
+                    normalDeviceAdapter.notifyDataSetChanged();
                 }
             });
         }

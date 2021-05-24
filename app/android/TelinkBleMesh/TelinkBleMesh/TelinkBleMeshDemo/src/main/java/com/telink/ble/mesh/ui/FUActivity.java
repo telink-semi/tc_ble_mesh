@@ -30,6 +30,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -49,7 +50,6 @@ import com.telink.ble.mesh.core.access.fu.FUCallback;
 import com.telink.ble.mesh.core.access.fu.FUState;
 import com.telink.ble.mesh.core.access.fu.UpdatePolicy;
 import com.telink.ble.mesh.core.message.NotificationMessage;
-import com.telink.ble.mesh.core.message.firmwaredistribution.FDCancelMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDReceiversListMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoGetMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoStatusMessage;
@@ -166,7 +166,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
      */
     private Button btn_start, btn_get_version;
     private RecyclerView rv_device;
-    private RadioGroup rg_dist, rg_policy;
+    private RadioGroup rg_dist; // rg_policy
     private RadioButton rb_device, rb_phone, rb_plc_ver_apl, rb_plc_ver;
     private ProgressBar pb_init, pb_dist;
     private LinearLayout ll_policy;
@@ -323,7 +323,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         enableUI(true);
         // for test
 //        readFirmware("/storage/emulated/0/kee/sigMesh/8258_mesh_test_OTA.bin");
-//        readFirmware("/storage/emulated/0/kee/sigMesh/20210422_mesh_OTA/8258_mesh_V4.3_for_OTA.bin");
+        readFirmware("/storage/emulated/0/kee/sigMesh/20210422_mesh_OTA/8258_mesh_V4.3_for_OTA.bin");
 
         infoHandler.obtainMessage(MSG_INFO, "IDLE").sendToTarget();
     }
@@ -334,6 +334,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         if (fuCache == null) {
             infoHandler.obtainMessage(MSG_INFO, "firmware update cache error").sendToTarget();
         } else {
+            MeshLogger.d("fuCache : " + fuCache.toString());
             this.distAddress = fuCache.distAddress;
             this.updatePolicy = fuCache.updatePolicy;
             this.updatingDevices = fuCache.updatingDeviceList;
@@ -344,6 +345,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             rb_device.setChecked(true);
             infoHandler.obtainMessage(MSG_INIT_PROGRESS, 100, -1).sendToTarget();
             rb_plc_ver_apl.setChecked(this.updatePolicy == UpdatePolicy.VerifyAndApply);
+            rb_plc_ver.setChecked(this.updatePolicy == UpdatePolicy.VerifyOnly);
             deviceAdapter.resetDevices(this.updatingDevices);
 
             MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
@@ -399,7 +401,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         rb_phone = findViewById(R.id.rb_phone);
         rb_plc_ver_apl = findViewById(R.id.rb_plc_ver_apl);
         rb_plc_ver = findViewById(R.id.rb_plc_ver);
-        rg_policy = findViewById(R.id.rg_policy);
+//        rg_policy = findViewById(R.id.rg_policy);
         rg_dist.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -407,12 +409,21 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
                 distributorType = checkedId == R.id.rb_device ? DistributorType.DEVICE : DistributorType.PHONE;
             }
         });
-        rg_policy.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+        rb_plc_ver_apl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                updatePolicy = checkedId == R.id.rb_plc_ver_apl ? UpdatePolicy.VerifyAndApply : UpdatePolicy.VerifyOnly;
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked)
+                    updatePolicy = UpdatePolicy.VerifyAndApply;
             }
         });
+        rb_plc_ver.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked)
+                    updatePolicy = UpdatePolicy.VerifyOnly;
+            }
+        });
+
 
         logInfoAdapter = new LogInfoAdapter(this, logInfoList);
 
@@ -423,7 +434,8 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         // firmware info
         TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdateInfoStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(FDReceiversListMessage.class.getName(), this);
-        TelinkMeshApplication.getInstance().addEventListener(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, this);
+//        TelinkMeshApplication.getInstance().addEventListener(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, this);
+        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
     }
 
     @Override
@@ -448,7 +460,6 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         bottomDialog = new BottomSheetDialog(this);
         View view = getLayoutInflater().inflate(R.layout.dialog_bottom_list, null);
 //        BottomSheetBehavior behavior = BottomSheetBehavior.from((View)dialog.getParent());
-        MeshLogger.d("dialog view - " + view.toString());
         bottomDialog.setContentView(view);
         rv_log = view.findViewById(R.id.rv_log_sheet);
         rv_log.setLayoutManager(new LinearLayoutManager(this));
@@ -582,17 +593,8 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     public void performed(Event<String> event) {
 
         final String eventType = event.getType();
-        if (eventType.equals(MeshEvent.EVENT_TYPE_DISCONNECTED)
-                || eventType.equals(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED)) {
-            if (eventType.equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
-                infoHandler.obtainMessage(0, "Device Disconnected").sendToTarget();
-            }
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    deviceAdapter.notifyDataSetChanged();
-                }
-            });
+        if (eventType.equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
+            infoHandler.obtainMessage(MSG_INFO, "GATT Disconnected").sendToTarget();
         } else if (eventType.equals(FirmwareUpdateInfoStatusMessage.class.getName())) {
             final NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
             FirmwareUpdateInfoStatusMessage infoStatusMessage = (FirmwareUpdateInfoStatusMessage) notificationMessage.getStatusMessage();
@@ -753,7 +755,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     @Override
     public void onTransferProgress(int progress, BlobTransferType transferType) {
         onLog("null", "transfer progress update: " + progress + " type - " + transferType, MeshLogger.DEFAULT_LEVEL);
-        if (transferType != BlobTransferType.MESH) {
+        if (transferType == BlobTransferType.GATT_INIT || transferType == BlobTransferType.LOCAL_INIT) {
             // to distributor
             infoHandler.obtainMessage(MSG_INIT_PROGRESS, progress, -1).sendToTarget();
         } else {

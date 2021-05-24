@@ -93,11 +93,20 @@ class FUDistributor implements BlobTransferCallback {
         this.actionHandler = actionHandler;
     }
 
-    void begin(FirmwareUpdateConfiguration configuration) {
+    void begin(FirmwareUpdateConfiguration configuration, int connectedAddress) {
         this.appKeyIndex = configuration.getAppKeyIndex();
-        transfer.resetParams(configuration, BlobTransferType.MESH, 0);
+
+        log("begin - " + configuration.getUpdatingDevices().size());
         this.nodes = configuration.getUpdatingDevices();
-        log("begin - " + nodes.size());
+        if (this.nodes.size() == 1 && this.nodes.get(0).meshAddress == connectedAddress) {
+            // only direct connected node need update
+            transfer.resetParams(configuration, BlobTransferType.GATT_DIST, connectedAddress);
+        }else {
+            // transfer by mesh
+            transfer.resetParams(configuration, BlobTransferType.MESH_DIST, -1);
+        }
+
+
         this.metadata = configuration.getMetadata();
         this.blobId = configuration.getBlobId();
         this.step = STEP_UPDATE_START;
@@ -179,7 +188,7 @@ class FUDistributor implements BlobTransferCallback {
 
     private void onDistributeComplete(boolean success, String desc) {
         if (success) {
-            actionHandler.onTransferProgress(100, BlobTransferType.MESH);
+            actionHandler.onTransferProgress(100, BlobTransferType.MESH_DIST);
         }
         log("distribute complete : success ? " + success + " -- " + desc);
         this.step = STEP_IDLE;

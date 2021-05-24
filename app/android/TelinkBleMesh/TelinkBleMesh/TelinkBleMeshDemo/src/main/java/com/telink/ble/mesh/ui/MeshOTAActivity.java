@@ -92,6 +92,7 @@ import java.util.Set;
  * batch firmware update by mesh
  * Created by kee on 2018/9/18.
  */
+@Deprecated
 public class MeshOTAActivity extends BaseActivity implements View.OnClickListener,
         BaseSelectableListAdapter.SelectStatusChangedListener,
         EventListener<String>, FUCallback {
@@ -575,7 +576,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
             FDUploadStatusMessage uploadStatusMessage = (FDUploadStatusMessage) notificationMessage.getStatusMessage();
             int uploadProgress = uploadStatusMessage.uploadProgress;
             if (DistributorType.DEVICE == distributorType) {
-                onTransferProgress(uploadProgress, BlobTransferType.MESH);
+                onTransferProgress(uploadProgress, BlobTransferType.MESH_DIST);
             }
         }
     }
@@ -709,7 +710,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
     @Override
     public void onTransferProgress(int progress, BlobTransferType transferType) {
         onLog("null", "transfer progress update: " + progress + " type - " + transferType, MeshLogger.DEFAULT_LEVEL);
-        if (transferType != BlobTransferType.MESH) {
+        if (transferType != BlobTransferType.MESH_DIST) {
             // to distributor
             infoHandler.obtainMessage(MSG_INIT_PROGRESS, progress, -1).sendToTarget();
         } else {

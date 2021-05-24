@@ -15,6 +15,7 @@ import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoGetMess
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoStatusMessage;
 import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
+import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.List;
@@ -54,6 +55,8 @@ public class RemoteDistributorAssist {
 
     private int distributorAddress;
 
+    private byte[] newFirmwareId;
+
     RemoteDistributorAssist(HandlerThread handlerThread, FUActionHandler actionHandler) {
         handler = new Handler(handlerThread.getLooper());
         this.actionHandler = actionHandler;
@@ -66,6 +69,7 @@ public class RemoteDistributorAssist {
         this.distributorAddress = configuration.getDistributorAddress();
         this.devices = configuration.getUpdatingDevices();
         this.appKeyIndex = configuration.getAppKeyIndex();
+        this.newFirmwareId = configuration.getFirmwareId();
         deviceIndex = 0;
     }
 
@@ -175,8 +179,12 @@ public class RemoteDistributorAssist {
         if (devices == null) return;
         for (MeshUpdatingDevice device : devices) {
             if (device.meshAddress == src) {
-                device.firmwareId = (infoEntry.currentFirmwareID);
-                onDeviceStateUpdate(device, MeshUpdatingDevice.STATE_SUCCESS, "device firmware id updated");
+                if (Arrays.equals(newFirmwareId, infoEntry.currentFirmwareID)) {
+                    device.firmwareId = (infoEntry.currentFirmwareID);
+                    onDeviceStateUpdate(device, MeshUpdatingDevice.STATE_SUCCESS, "device firmware id updated");
+                } else {
+                    onDeviceStateUpdate(device, MeshUpdatingDevice.STATE_FAIL, "device firmware id not updated");
+                }
                 break;
             }
         }

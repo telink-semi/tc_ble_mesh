@@ -16,6 +16,7 @@ public enum FUState {
     INITIATE_SUCCESS(1,
             "initiate distributor success"
     ),
+
     INITIATE_FAIL(2,
             "initiate distributor fail"
     ),
@@ -46,7 +47,10 @@ public enum FUState {
 
 
     UPDATE_COMPLETE(10,
-            "firmware update complete"),
+            "complete"),
+
+    UPDATE_FAIL(11,
+            "fail"),
     ;
 
     public final int value;

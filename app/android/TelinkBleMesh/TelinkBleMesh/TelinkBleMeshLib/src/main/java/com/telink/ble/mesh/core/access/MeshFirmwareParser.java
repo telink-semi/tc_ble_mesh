@@ -126,6 +126,12 @@ public class MeshFirmwareParser {
         return true;
     }
 
+    public int getProgressAt(int blockIndex, int chunkIndex) {
+        final int MAX_PROGRESS = 99; // 99 or 100
+        float chunkNumberOffset = blockIndex * ((float) mBlockSize / mChunkSize) + (chunkIndex + 1);
+        return (int) (chunkNumberOffset * MAX_PROGRESS / totalChunkNumber);
+    }
+
     public int getProgress() {
         return progress;
     }

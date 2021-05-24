@@ -77,6 +77,7 @@ import androidx.recyclerview.widget.RecyclerView;
  * batch firmware update by mesh
  * Created by kee on 2018/9/18.
  */
+@Deprecated
 public class MeshOTAActivity_bak extends BaseActivity implements View.OnClickListener, BaseSelectableListAdapter.SelectStatusChangedListener, EventListener<String> {
 
 
