@@ -1,6 +1,7 @@
 package com.telink.ble.mesh.core.access.fu;
 
 import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.TransferMode;
 
 interface BlobTransferCallback {
 
@@ -17,6 +18,12 @@ interface BlobTransferCallback {
      * @param progress 0-100
      */
     void onTransferProgressUpdate(int progress, BlobTransferType transferType);
+
+
+    /**
+     * transfer start
+     */
+    void onTransferStart(TransferMode transferMode);
 
     /**
      * blob transfer complete

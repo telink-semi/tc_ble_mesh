@@ -111,6 +111,11 @@ public class FirmwareUpdateConfiguration {
      */
     private int distributorAddress = 0;
 
+    /**
+     * direct connected address
+     */
+    private int proxyAddress;
+
 
     public FirmwareUpdateConfiguration(List<MeshUpdatingDevice> updatingDevices,
                                        byte[] firmwareData,
@@ -242,6 +247,14 @@ public class FirmwareUpdateConfiguration {
         if (this.callback != null) {
             this.callback.onDeviceStateUpdate(updatingDevice, desc);
         }
+    }
+
+    public int getProxyAddress() {
+        return proxyAddress;
+    }
+
+    public void setProxyAddress(int proxyAddress) {
+        this.proxyAddress = proxyAddress;
     }
 
     @Override

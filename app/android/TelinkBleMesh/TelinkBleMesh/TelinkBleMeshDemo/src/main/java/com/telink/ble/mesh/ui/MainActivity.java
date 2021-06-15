@@ -203,10 +203,10 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     public void checkMeshOtaState() {
         FUCache fuCache = FUCacheService.getInstance().get();
         if (fuCache != null) {
-            MeshLogger.d("check FU state: distAdr-" + fuCache.distAddress);
+            MeshLogger.d("FU cache: distAdr-" + fuCache.distAddress);
             showMeshOTATipsDialog(fuCache.distAddress);
         } else {
-            MeshLogger.d("FU state: idle");
+            MeshLogger.d("FU cache: not found");
         }
     }
 

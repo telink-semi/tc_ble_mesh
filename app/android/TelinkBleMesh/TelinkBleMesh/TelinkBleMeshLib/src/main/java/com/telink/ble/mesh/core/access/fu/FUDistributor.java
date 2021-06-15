@@ -6,11 +6,13 @@ import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateApplyMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateCancelMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateGetMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateStartMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.UpdatePhase;
 import com.telink.ble.mesh.core.message.firmwareupdate.UpdateStatus;
+import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.TransferMode;
 import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -54,6 +56,17 @@ class FUDistributor implements BlobTransferCallback {
 
     public int step = STEP_IDLE;
 
+
+    /**
+     * update get
+     */
+    public static final int STEP_UPDATE_CONTINUE = 0x10;
+
+    /**
+     * update stop
+     */
+    public static final int STEP_UPDATE_STOP = 0x11;
+
     /**
      * params: update ttl
      */
@@ -88,34 +101,58 @@ class FUDistributor implements BlobTransferCallback {
 
     private BlobTransfer transfer;
 
+    private boolean isContinue;
+
+    private int connectedAddress;
+
     FUDistributor(HandlerThread handlerThread, FUActionHandler actionHandler) {
         transfer = new BlobTransfer(handlerThread, this);
         this.actionHandler = actionHandler;
     }
 
-    void begin(FirmwareUpdateConfiguration configuration, int connectedAddress) {
+    void begin(FirmwareUpdateConfiguration configuration, int connectedAddress, boolean isContinue) {
         this.appKeyIndex = configuration.getAppKeyIndex();
-
-        log("begin - " + configuration.getUpdatingDevices().size());
+        this.connectedAddress = connectedAddress;
+        this.isContinue = isContinue;
+        log("begin - " + configuration.getUpdatingDevices().size() + " -- isContinue? " + isContinue);
         this.nodes = configuration.getUpdatingDevices();
+        BlobTransferType transferType;
+        int directAddress;
         if (this.nodes.size() == 1 && this.nodes.get(0).meshAddress == connectedAddress) {
             // only direct connected node need update
-            transfer.resetParams(configuration, BlobTransferType.GATT_DIST, connectedAddress);
-        }else {
+            transferType = BlobTransferType.GATT_DIST;
+            directAddress = connectedAddress;
+        } else {
             // transfer by mesh
-            transfer.resetParams(configuration, BlobTransferType.MESH_DIST, -1);
+            transferType = BlobTransferType.MESH_DIST;
+            directAddress = -1;
         }
-
+        transfer.resetParams(configuration, transferType, directAddress);
 
         this.metadata = configuration.getMetadata();
         this.blobId = configuration.getBlobId();
-        this.step = STEP_UPDATE_START;
+
+        if (isContinue) {
+            this.step = STEP_UPDATE_CONTINUE;
+        } else {
+            this.step = STEP_UPDATE_START;
+            this.actionHandler.onTransferProgress(0, transferType);
+        }
         nodeIndex = 0;
         nextAction();
     }
 
     BlobTransfer getTransfer() {
         return transfer;
+    }
+
+    void stop() {
+        if (this.step != STEP_IDLE) {
+            this.transfer.clear();
+            this.step = STEP_UPDATE_STOP;
+            nodeIndex = 0;
+            nextAction();
+        }
     }
 
     void clear() {
@@ -129,6 +166,12 @@ class FUDistributor implements BlobTransferCallback {
         return step != STEP_IDLE;
     }
 
+    void holdTransfer() {
+        log("hold transfer :" + this.step);
+        if (this.step == STEP_BLOB_TRANSFER) {
+            transfer.hold();
+        }
+    }
 
     public void onDistributeCommandFailed(int opcode) {
 
@@ -150,6 +193,11 @@ class FUDistributor implements BlobTransferCallback {
     @Override
     public void onTransferProgressUpdate(int progress, BlobTransferType transferType) {
         this.actionHandler.onTransferProgress(progress, transferType);
+    }
+
+    @Override
+    public void onTransferStart(TransferMode transferMode) {
+        this.actionHandler.onTransferStart(transferMode);
     }
 
     @Override
@@ -222,6 +270,11 @@ class FUDistributor implements BlobTransferCallback {
                 return;
             }
 
+            if (step == STEP_UPDATE_STOP) {
+                onDistributeComplete(false, "update stopped");
+                return;
+            }
+
             removeFailedDevices();
 
             // check if has available nodes
@@ -249,7 +302,13 @@ class FUDistributor implements BlobTransferCallback {
                 onMeshMessagePrepared(applyMessage);
             } else if (this.step == STEP_BLOB_TRANSFER) {
                 log("blob transfer start");
-                transfer.begin();
+                transfer.begin(isContinue);
+            } else if (this.step == STEP_UPDATE_CONTINUE) {
+                FirmwareUpdateGetMessage getMessage = FirmwareUpdateGetMessage.getSimple(connectedAddress, appKeyIndex);
+                onMeshMessagePrepared(getMessage);
+            } else if (this.step == STEP_UPDATE_STOP) {
+                FirmwareUpdateCancelMessage cancelMessage = FirmwareUpdateCancelMessage.getSimple(meshAddress, appKeyIndex);
+                onMeshMessagePrepared(cancelMessage);
             }
         }
 
@@ -304,33 +363,47 @@ class FUDistributor implements BlobTransferCallback {
      * @param firmwareUpdateStatusMessage status
      */
     private void onFirmwareUpdateStatus(FirmwareUpdateStatusMessage firmwareUpdateStatusMessage) {
-        log("firmware info status: " + firmwareUpdateStatusMessage.toString());
+        log("firmware update status: " + firmwareUpdateStatusMessage.toString());
         final UpdateStatus status = UpdateStatus.valueOf(firmwareUpdateStatusMessage.getStatus() & 0xFF);
 
         if (status != UpdateStatus.SUCCESS) {
             onDeviceFail(nodes.get(nodeIndex), "firmware update status err");
         } else {
-            final int step = this.step;
+//            final int step = this.step;
             /*boolean pass = (step == STEP_UPDATE_START && phase == FirmwareUpdateStatusMessage.PHASE_IN_PROGRESS)
                     || (step == STEP_UPDATE_GET && phase == FirmwareUpdateStatusMessage.PHASE_READY)
                     || (step == STEP_UPDATE_APPLY && phase == FirmwareUpdateStatusMessage.PHASE_IDLE);*/
-            boolean pass = true;
-            if (!pass) {
-                onDeviceFail(nodes.get(nodeIndex), "firmware update phase err");
-            } else {
-                final UpdatePhase phase = UpdatePhase.valueOf(firmwareUpdateStatusMessage.getPhase() & 0xFF);
-                if (step == STEP_UPDATE_APPLY) {
-                    if (phase == UpdatePhase.VERIFICATION_SUCCESS
-                            || phase == UpdatePhase.APPLYING_UPDATE) {
-                        onDeviceApplySuccess(nodes.get(nodeIndex));
+            final UpdatePhase phase = UpdatePhase.valueOf(firmwareUpdateStatusMessage.getPhase() & 0xFF);
+            if (step == STEP_UPDATE_CONTINUE) {
+                boolean pass = phase == UpdatePhase.TRANSFER_ACTIVE;
+                if (pass) {
+                    this.step = STEP_BLOB_TRANSFER;
+                    nextAction();
+                } else {
+                    onDistributeComplete(false, "continue distribute error : device may have been rebooted");
+                }
+            } else if (step == STEP_UPDATE_START || step == STEP_UPDATE_GET || step == STEP_UPDATE_APPLY
+                    || step == STEP_UPDATE_STOP) {
+                boolean pass = true;
+                if (!pass) {
+                    onDeviceFail(nodes.get(nodeIndex), "firmware update phase err");
+                } else {
+                    if (step == STEP_UPDATE_APPLY) {
+                        if (phase == UpdatePhase.VERIFICATION_SUCCESS
+                                || phase == UpdatePhase.APPLYING_UPDATE) {
+                            onDeviceApplySuccess(nodes.get(nodeIndex));
+                        } else {
+                            onDeviceFail(nodes.get(nodeIndex), "phase error when update apply");
+                        }
                     } else {
-                        onDeviceFail(nodes.get(nodeIndex), "phase error when update apply");
+                        // start, get or stop complete
                     }
                 }
+                nodeIndex++;
+                nextAction();
             }
+
         }
-        nodeIndex++;
-        nextAction();
     }
 
 

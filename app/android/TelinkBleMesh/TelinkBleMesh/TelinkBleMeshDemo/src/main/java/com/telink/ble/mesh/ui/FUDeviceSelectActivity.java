@@ -184,7 +184,8 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
         List<NodeInfo> nodes = null;
 
         for (NodeInfo deviceInfo : normalDevices) {
-            if (deviceInfo.selected && deviceInfo.getOnOff() != -1 && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1) {
+            // deviceInfo.getOnOff() != -1 &&
+            if (deviceInfo.selected && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1) {
                 if (nodes == null) {
                     nodes = new ArrayList<>();
                 }
@@ -193,7 +194,8 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
         }
 
         for (NodeInfo deviceInfo : lpnDevices) {
-            if (deviceInfo.selected && deviceInfo.getOnOff() != -1 && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1) {
+            // deviceInfo.selected && deviceInfo.getOnOff() != -1 &&
+            if (deviceInfo.selected && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1) {
                 if (nodes == null) {
                     nodes = new ArrayList<>();
                 }

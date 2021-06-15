@@ -434,7 +434,7 @@ public class FirmwareUpdatingController {
         final int unsegLen = NetworkingController.unsegmentedAccessLength;
         final int segLen = unsegLen + 1;
         int segmentCnt = chunkMsgLen == unsegLen ? 1 : (chunkMsgLen % segLen == 0 ? chunkMsgLen / segLen : (chunkMsgLen / segLen + 1));
-        long interval = segmentCnt * NetworkingController.NETWORKING_INTERVAL;
+        long interval = segmentCnt * NetworkingController.netPktSendInterval;
 //        final long min = 5 * 1000;
         // use 5000 when DLE disabled, use 300 when DLE enabled
         final long min = unsegLen == NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT ? 5 * 1000 : 300;

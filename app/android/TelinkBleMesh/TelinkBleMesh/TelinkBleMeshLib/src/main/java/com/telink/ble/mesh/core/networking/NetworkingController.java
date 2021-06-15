@@ -237,8 +237,6 @@ public class NetworkingController {
     // reliable
     private final Object RELIABLE_SEGMENTED_LOCK = new Object();
 
-    private static final int RELIABLE_MESSAGE_TIMEOUT = 960; // 2 * 1000
-
     private Set<Integer> mResponseMessageBuffer = new LinkedHashSet<>();
 
     private int proxyFilterInitStep = 0;
@@ -254,7 +252,17 @@ public class NetworkingController {
      */
     private final Queue<byte[]> mNetworkingQueue = new ConcurrentLinkedQueue<>();
 
-    public static final long NETWORKING_INTERVAL = 320; // 240 ms
+    /**
+     *
+     */
+    public static final long NETWORK_INTERVAL_FOR_FU = 180; // 240 ms // 320
+
+    public static final long NETWORK_INTERVAL_DEFAULT = 240; // 240 ms // 320
+
+    /**
+     * network packet sent to un-direct connected node should push to queue, and send periodically
+     */
+    public static long netPktSendInterval = NETWORK_INTERVAL_DEFAULT; // 240 ms // 320
 
     private final Object mNetworkBusyLock = new Object();
 
@@ -703,7 +711,7 @@ public class NetworkingController {
             synchronized (mNetworkingQueue) {
                 queueSize = mNetworkingQueue.size();
             }
-            timeout = relayTimeout + segmentAckTimeout + queueSize * NETWORKING_INTERVAL;
+            timeout = relayTimeout + segmentAckTimeout + queueSize * netPktSendInterval;
         } else {
             // receive
             timeout = relayTimeout + segmentAckTimeout;
@@ -723,8 +731,14 @@ public class NetworkingController {
 
         // for test
 //        long timeout = (dleEnabled ? 5120 : 2560) + queueSize * NETWORKING_INTERVAL;
-
-        long timeout = (dleEnabled ? 2560 : 1280) + queueSize * NETWORKING_INTERVAL;
+        long timeout = queueSize * netPktSendInterval;
+        final MeshMessage meshMessage = mSendingReliableMessage;
+        if (meshMessage != null) {
+            timeout += meshMessage.getRetryInterval();
+        } else {
+//            timeout = (dleEnabled ? 2560 : 1280) + ;
+            timeout += MeshMessage.DEFAULT_RETRY_INTERVAL;
+        }
         log("reliable message timeout:" + timeout);
         return timeout;
     }
@@ -804,7 +818,7 @@ public class NetworkingController {
                 mNetworkingBridge.onCommandPrepared(ProxyPDU.TYPE_NETWORK_PDU, payload);
             }
             mDelayHandler.removeCallbacks(networkingSendingTask);
-            mDelayHandler.postDelayed(networkingSendingTask, NETWORKING_INTERVAL);
+            mDelayHandler.postDelayed(networkingSendingTask, netPktSendInterval);
         }
     }
 

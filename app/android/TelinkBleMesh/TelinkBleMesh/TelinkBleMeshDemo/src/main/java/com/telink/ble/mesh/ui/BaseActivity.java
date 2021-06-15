@@ -53,7 +53,7 @@ import androidx.appcompat.widget.Toolbar;
  */
 public class BaseActivity extends AppCompatActivity implements EventListener<String> {
 
-    private AlertDialog.Builder confirmDialogBuilder;
+    private AlertDialog confirmDialogBuilder;
     protected Toast toast;
     protected final String TAG = getClass().getSimpleName();
     private AlertDialog mWaitingDialog;
@@ -123,21 +123,26 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
 
     public void showConfirmDialog(String msg, DialogInterface.OnClickListener confirmClick) {
         if (confirmDialogBuilder == null) {
-            confirmDialogBuilder = new AlertDialog.Builder(this);
-            confirmDialogBuilder.setCancelable(true);
-            confirmDialogBuilder.setTitle("Warning");
-//            confirmDialogBuilder.setMessage(msg);
-            confirmDialogBuilder.setPositiveButton("Confirm", confirmClick);
-
-            confirmDialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setCancelable(true);
+            builder.setTitle("Warning");
+            builder.setPositiveButton("Confirm", confirmClick);
+            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     dialog.dismiss();
                 }
             });
+            confirmDialogBuilder = builder.create();
         }
         confirmDialogBuilder.setMessage(msg);
         confirmDialogBuilder.show();
+    }
+
+    public void dismissConfirmDialog() {
+        if (confirmDialogBuilder != null && confirmDialogBuilder.isShowing()) {
+            confirmDialogBuilder.dismiss();
+        }
     }
 
     public void showTipDialog(String msg) {
@@ -273,7 +278,7 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
             if (!SharedPreferenceHelper.isLocationIgnore(this)) {
                 boolean showDialog;
                 if (this instanceof MainActivity) {
-                    showDialog = MeshService.getInstance().getCurrentMode() == MeshController.Mode.MODE_AUTO_CONNECT;
+                    showDialog = MeshService.getInstance().getCurrentMode() == MeshController.Mode.AUTO_CONNECT;
                 } else {
                     showDialog = true;
                 }

@@ -505,16 +505,7 @@ public class GattConnection extends BluetoothGattCallback {
 
 
     private void onServicesDiscoveredComplete(List<BluetoothGattService> services) {
-        /*StringBuffer serviceInfo = new StringBuffer("\n");
-
-        for (BluetoothGattService service : services) {
-            serviceInfo.append(service.getUuid().toString()).append("\n");
-            for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
-                serviceInfo.append("chara: \t");
-                serviceInfo.append(characteristic.getUuid().toString()).append("\n");
-            }
-        }
-        log("services: " + serviceInfo);*/
+//        printServiceInfo(services);
         log("service discover complete");
         if (mConnectionCallback != null) {
             mConnectionCallback.onServicesDiscovered(services);
@@ -522,6 +513,18 @@ public class GattConnection extends BluetoothGattCallback {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             this.mGatt.requestMtu(MTU_SIZE_MAX);
         }
+    }
+
+    private void printServiceInfo(List<BluetoothGattService> services) {
+        StringBuilder serviceInfo = new StringBuilder("\n");
+        for (BluetoothGattService service : services) {
+            serviceInfo.append(service.getUuid().toString()).append("\n");
+            for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
+                serviceInfo.append("chara: \t");
+                serviceInfo.append(characteristic.getUuid().toString()).append("\n");
+            }
+        }
+        log("services: " + serviceInfo);
     }
 
     private void onDisconnected() {

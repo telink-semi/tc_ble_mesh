@@ -78,7 +78,8 @@ public class FUDeviceSelectAdapter extends BaseSelectableListAdapter<FUDeviceSel
 
     public void setAll(boolean selected) {
         for (NodeInfo deviceInfo : mDevices) {
-            if (isFirmwareUpdateSupport(deviceInfo) && deviceInfo.getOnOff() != -1)
+            //  && deviceInfo.getOnOff() != -1
+            if (isFirmwareUpdateSupport(deviceInfo))
                 deviceInfo.selected = selected;
         }
         notifyDataSetChanged();
@@ -126,7 +127,8 @@ public class FUDeviceSelectAdapter extends BaseSelectableListAdapter<FUDeviceSel
         holder.tv_version.setText(support ? "" : "not support");
         holder.cb_device.setTag(position);
         holder.cb_device.setChecked(deviceInfo.selected);
-        if (deviceInfo.getOnOff() != -1 && support) {
+        // deviceInfo.getOnOff() != -1 &&
+        if (support) {
             holder.cb_device.setEnabled(!started);
             holder.cb_device.setOnCheckedChangeListener(this.checkedChangeListener);
         } else {

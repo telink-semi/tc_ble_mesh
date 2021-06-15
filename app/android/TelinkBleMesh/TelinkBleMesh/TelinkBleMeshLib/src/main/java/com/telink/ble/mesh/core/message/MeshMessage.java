@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     MeshMessage.java 
+ * @file MeshMessage.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message;
 
@@ -56,6 +56,11 @@ public class MeshMessage {
     public static final int OPCODE_INVALID = -1;
 
     public static final int DEFAULT_TTL = 10;
+
+    /**
+     * ms
+     */
+    public static final int DEFAULT_RETRY_INTERVAL = 1280;
 
     /**
      * message opcode
@@ -103,6 +108,8 @@ public class MeshMessage {
 
     protected int retryCnt = DEFAULT_RETRY_CNT;
 
+    protected long retryInterval = DEFAULT_RETRY_INTERVAL;
+
     protected int responseMax = 0;
 
     /**
@@ -111,7 +118,6 @@ public class MeshMessage {
      * @see com.telink.ble.mesh.core.networking.NetworkingController#tid
      */
 //    protected boolean containsTid = false;
-
 
 
 //    boolean reliable = false;
@@ -262,5 +268,13 @@ public class MeshMessage {
 
     public void setSegmented(boolean segmented) {
         isSegmented = segmented;
+    }
+
+    public long getRetryInterval() {
+        return retryInterval;
+    }
+
+    public void setRetryInterval(long retryInterval) {
+        this.retryInterval = retryInterval;
     }
 }

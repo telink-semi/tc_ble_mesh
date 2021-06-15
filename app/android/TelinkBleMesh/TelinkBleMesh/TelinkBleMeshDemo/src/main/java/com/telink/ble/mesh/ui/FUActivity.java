@@ -178,6 +178,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     private BottomSheetDialog bottomDialog;
     private RecyclerView rv_log;
 
+    private AlertDialog.Builder exitWarningAlert;
     /**
      * firmware info read from selected file
      */
@@ -221,7 +222,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     /**
      * is mesh-OTA complete
      */
-    private boolean isComplete = false;
+    private boolean isComplete = true;
 
 
     /**
@@ -277,6 +278,34 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         checkIsContinue();
     }
 
+    private void showWarningDialog() {
+        if (exitWarningAlert == null) {
+            exitWarningAlert = new AlertDialog.Builder(this);
+            exitWarningAlert.setCancelable(true);
+            exitWarningAlert.setTitle("Warning");
+            exitWarningAlert.setMessage("Mesh OTA is still running, stop it ? \n click STOP to stop updating; \n click FORCE CLOSE to exit; click CANCEL to dismiss dialog");
+            exitWarningAlert.setNegativeButton("Stop", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    MeshService.getInstance().stopMeshOta();
+                }
+            });
+            exitWarningAlert.setNeutralButton("FORCE CLOSE", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    finish();
+                }
+            });
+            exitWarningAlert.setPositiveButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+        }
+        exitWarningAlert.show();
+    }
+
     private void checkIsContinue() {
         Intent intent = getIntent();
         boolean isContinue = intent.getBooleanExtra(KEY_FU_CONTINUE, false);
@@ -322,8 +351,9 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     private void startNewUpdating() {
         enableUI(true);
         // for test
-//        readFirmware("/storage/emulated/0/kee/sigMesh/8258_mesh_test_OTA.bin");
-        readFirmware("/storage/emulated/0/kee/sigMesh/20210422_mesh_OTA/8258_mesh_V4.3_for_OTA.bin");
+        readFirmware("/storage/emulated/0/kee/sigMesh/8258_mesh_test_OTA.bin");
+//        readFirmware("/storage/emulated/0/kee/sigMesh/20210422_mesh_OTA/8258_mesh_V4.3_for_OTA.bin");
+
 
         infoHandler.obtainMessage(MSG_INFO, "IDLE").sendToTarget();
     }
@@ -360,6 +390,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             configuration.setContinue(true);
 
             MeshOtaParameters meshOtaParameters = new MeshOtaParameters(configuration);
+            isComplete = false;
             MeshService.getInstance().startMeshOta(meshOtaParameters);
 
             infoHandler.obtainMessage(MSG_INFO, "continue firmware update...").sendToTarget();
@@ -439,12 +470,14 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     }
 
     @Override
-    public void finish() {
-        super.finish();
-        if (!isComplete) {
-            MeshService.getInstance().stopMeshOta();
+    public void onBackPressed() {
+        if (isComplete) {
+            super.onBackPressed();
+        } else {
+            showWarningDialog();
         }
     }
+
 
     @Override
     protected void onDestroy() {
@@ -531,10 +564,12 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
                 configuration.setUpdatePolicy(updatePolicy);
                 configuration.setDistributorType(distributorType);
                 configuration.setDistributorAddress(distAddress);
+                configuration.setProxyAddress(directAddress);
                 configuration.setCallback(this);
                 configuration.setFirmwareId(firmwareId);
 
                 MeshOtaParameters meshOtaParameters = new MeshOtaParameters(configuration);
+                isComplete = false;
                 MeshService.getInstance().startMeshOta(meshOtaParameters);
                 break;
 
@@ -544,7 +579,14 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
             case R.id.btn_get_version:
                 meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-                FirmwareUpdateInfoGetMessage infoGetMessage = FirmwareUpdateInfoGetMessage.getSimple(0xFFFF,
+                int address;
+                if (updatingDevices != null && updatingDevices.size() == 1) {
+                    address = updatingDevices.get(0).meshAddress;
+                } else {
+                    address = 0xFFFF;
+                }
+
+                FirmwareUpdateInfoGetMessage infoGetMessage = FirmwareUpdateInfoGetMessage.getSimple(address,
                         meshInfo.getDefaultAppKeyIndex());
                 infoGetMessage.setResponseMax(0);
                 if (MeshService.getInstance().sendMeshMessage(infoGetMessage)) {
@@ -554,7 +596,6 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
                         }
                         deviceAdapter.notifyDataSetChanged();
                     }
-
                 } else {
                     toastMsg("get firmware fail");
                 }
@@ -580,11 +621,31 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
     private void appendLog(String logInfo) {
         logInfoList.add(new LogInfo("FW-UPDATE", logInfo, MeshLogger.LEVEL_DEBUG));
-        if (bottomDialog.isShowing()) {
-            logInfoAdapter.notifyDataSetChanged();
-            rv_log.smoothScrollToPosition(logInfoList.size() - 1);
-        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (bottomDialog.isShowing()) {
+                    logInfoAdapter.notifyDataSetChanged();
+                    rv_log.smoothScrollToPosition(logInfoList.size() - 1);
+                }
+            }
+        });
+
     }
+
+    private final Runnable RECONNECT_TASK = new Runnable() {
+        @Override
+        public void run() {
+            showConfirmDialog("Device reconnect fail, quit mesh OTA ? ", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    MeshService.getInstance().idle(true);
+                    isComplete = true;
+                    infoHandler.obtainMessage(MSG_INFO, "Quit !!!").sendToTarget();
+                }
+            });
+        }
+    };
 
     /****************************************************************
      * events - start
@@ -594,7 +655,11 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
         final String eventType = event.getType();
         if (eventType.equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
-            infoHandler.obtainMessage(MSG_INFO, "GATT Disconnected").sendToTarget();
+            if (!isComplete) {
+                delayHandler.removeCallbacks(RECONNECT_TASK);
+                delayHandler.postDelayed(RECONNECT_TASK, 3 * 60 * 1000);
+            }
+            infoHandler.obtainMessage(MSG_INFO, "GATT disconnected").sendToTarget();
         } else if (eventType.equals(FirmwareUpdateInfoStatusMessage.class.getName())) {
             final NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
             FirmwareUpdateInfoStatusMessage infoStatusMessage = (FirmwareUpdateInfoStatusMessage) notificationMessage.getStatusMessage();
@@ -636,6 +701,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
      ****************************************************************/
 
     private void onDeviceOtaFail(MeshUpdatingDevice updatingDevice, String desc) {
+        updatingDevice.state = MeshUpdatingDevice.STATE_FAIL;
         appendLog("device update fail - " + updatingDevice.meshAddress + " --- " + desc);
         runOnUiThread(new Runnable() {
             @Override
@@ -715,7 +781,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
     @Override
     public void onLog(String tag, String log, int logLevel) {
-        MeshLogger.log(log, tag, logLevel);
+//        MeshLogger.log(log, tag, logLevel);
         /*
         logInfoList.add(new LogInfo(tag, log, logLevel));
         if (bottomDialog.isShowing()) {
@@ -727,6 +793,8 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     @Override
     public void onStateUpdated(FUState state, String extraInfo) {
         String info = state.desc + (extraInfo == null ? "" : (" - " + extraInfo));
+        dismissConfirmDialog();
+        delayHandler.removeCallbacks(RECONNECT_TASK);
         infoHandler.obtainMessage(MSG_INFO, info).sendToTarget();
         if (state == FUState.DISTRIBUTING_BY_DEVICE && distributorType == DistributorType.DEVICE) {
             FUCache fuCache = new FUCache();
@@ -737,9 +805,15 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
             FUCacheService.getInstance().save(this, fuCache);
             // If the direct connected device is selected as distributor, check distribution progress after initiate distributor success
-        }/* else if (state == FUState.UPDATE_COMPLETE) {
-            FUCacheService.getInstance().clear(this);
-        }*/
+        }
+        if (state == FUState.UPDATE_FAIL) {
+            for (MeshUpdatingDevice device : updatingDevices) {
+                onDeviceOtaFail(device, "update fail");
+            }
+        }
+        if (state == FUState.UPDATE_COMPLETE || state == FUState.UPDATE_FAIL) {
+            this.isComplete = true;
+        }
     }
 
     @Override

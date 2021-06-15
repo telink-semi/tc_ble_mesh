@@ -12,6 +12,7 @@ import com.telink.ble.mesh.core.message.firmwaredistribution.FDCancelMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDReceiversGetMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDReceiversListMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.UpdatePhase;
+import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.TransferMode;
 import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -107,12 +108,45 @@ public class FUController implements FUActionHandler {
              * 3. 设备apply完
              */
 //            currentState = FUState.DISTRIBUTING_BY_DEVICE;
-            if (currentState == FUState.UPDATE_RECHECKING) {
+
+            if (currentState == FUState.DISTRIBUTING_BY_PHONE) {
+                //
+                log("begin -> distributing by phone");
+                onFUStateUpdate(FUState.DISTRIBUTING_BY_PHONE, null);
+                distributor.begin(configuration, connectedAddress, true);
+            } else if (currentState == FUState.UPDATE_RECHECKING) {
+                log("begin -> rechecking firmware");
                 distributorAssist.recheckFirmware(true);
             } else {
                 onFUStateUpdate(FUState.DISTRIBUTING_BY_DEVICE, null);
                 fetchProgressState();
             }
+        }
+    }
+
+    public void stop() {
+        if (isInitiating()) {
+            onComplete(false, "initiate stopped");
+        } else if (isDistributingByPhone()) {
+            distributor.stop();
+        } else if (isDistributingByDevice()) {
+            cancelDistribution();
+            onComplete(false, "device distribute stopped");
+        }
+    }
+
+    public boolean isInitiating() {
+        return currentState == FUState.INITIATING;
+    }
+
+    public boolean isDistributingByPhone() {
+        return currentState == FUState.DISTRIBUTING_BY_PHONE;
+    }
+
+    public void hold() {
+        log("hold dist " + distributor.isRunning());
+        if (distributor.isRunning()) {
+            distributor.holdTransfer();
         }
     }
 
@@ -200,7 +234,7 @@ public class FUController implements FUActionHandler {
      * if distributing by device or later, auto connect mesh
      */
     public boolean needAutoConnect() {
-        return currentState.value >= FUState.DISTRIBUTING_BY_DEVICE.value;
+        return currentState.value >= FUState.DISTRIBUTING_BY_PHONE.value;
     }
 
     public boolean isRunning() {
@@ -227,8 +261,8 @@ public class FUController implements FUActionHandler {
         }
     }
 
-    public void interruptByDisconnect() {
-        onComplete(false, "firmware update failed as device disconnected");
+    public void dispatchError(String errorMsg) {
+        onComplete(false, errorMsg);
     }
 
     /**
@@ -286,7 +320,7 @@ public class FUController implements FUActionHandler {
      * current action: distributing by device
      */
     public boolean isDistributingByDevice() {
-        return currentState == FUState.DISTRIBUTING_BY_DEVICE && configuration != null && configuration.getDistributorType() == DistributorType.DEVICE;
+        return currentState == FUState.DISTRIBUTING_BY_DEVICE;
     }
 
 
@@ -346,10 +380,10 @@ public class FUController implements FUActionHandler {
                 }
                 onFUStateUpdate(FUState.INITIATE_SUCCESS, null);
                 if (distributorAddress == MeshUtils.LOCAL_MESSAGE_ADDRESS) {
-                    // distribute by locality
+                    // distribute by phone
                     log("start distribution by phone");
                     onFUStateUpdate(FUState.DISTRIBUTING_BY_PHONE, null);
-                    distributor.begin(configuration, connectedAddress);
+                    distributor.begin(configuration, connectedAddress, false);
                 } else {
                     // distribute by direct connected device, gatt connection can be terminated
                     log("start distribution by remote device -- > end");
@@ -413,7 +447,15 @@ public class FUController implements FUActionHandler {
 
     @Override
     public boolean onMessagePrepared(MeshMessage meshMessage) {
+        meshMessage.setRetryInterval(5 * 1000);
         return this.accessBridge.onAccessMessagePrepared(meshMessage, AccessBridge.MODE_FIRMWARE_UPDATING);
+    }
+
+    @Override
+    public void onTransferStart(TransferMode transferMode) {
+        if (configuration != null) {
+            configuration.dispatchFUState(FUState.TRANSFER_START, transferMode.desc);
+        }
     }
 
     @Override
@@ -425,7 +467,7 @@ public class FUController implements FUActionHandler {
 
     @Override
     public void onActionLog(String tag, String log, int logLevel) {
-//        MeshLogger.log(log, LOG_TAG, logLevel);
+        MeshLogger.log(log, LOG_TAG, logLevel);
         if (configuration != null) {
             configuration.dispatchLogInfo(tag, log, logLevel);
         }

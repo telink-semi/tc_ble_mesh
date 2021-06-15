@@ -47,10 +47,13 @@ public enum FUState {
 
 
     UPDATE_COMPLETE(10,
-            "complete"),
+            "update complete"),
 
     UPDATE_FAIL(11,
-            "fail"),
+            "update fail"),
+
+    TRANSFER_START(12,
+            "blob transfer started"),
     ;
 
     public final int value;

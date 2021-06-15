@@ -288,7 +288,7 @@ class FUInitiator implements BlobTransferCallback {
 
             case STEP_BLOB_TRANSFER:
                 log("start blob transfer from initiator to distributor");
-                transfer.begin();
+                transfer.begin(false);
                 break;
 
             case STEP_DST_START:
@@ -485,6 +485,11 @@ class FUInitiator implements BlobTransferCallback {
     @Override
     public void onTransferProgressUpdate(int progress, BlobTransferType transferType) {
         actionHandler.onTransferProgress(progress, transferType);
+    }
+
+    @Override
+    public void onTransferStart(TransferMode transferMode) {
+        actionHandler.onTransferStart(transferMode);
     }
 
     @Override

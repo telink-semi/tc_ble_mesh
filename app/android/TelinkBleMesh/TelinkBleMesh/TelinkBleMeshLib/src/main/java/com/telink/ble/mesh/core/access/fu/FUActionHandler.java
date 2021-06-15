@@ -1,6 +1,7 @@
 package com.telink.ble.mesh.core.access.fu;
 
 import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.TransferMode;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 
 interface FUActionHandler {
@@ -10,6 +11,8 @@ interface FUActionHandler {
     void onActionComplete(boolean success, FUAction action, String desc);
 
     boolean onMessagePrepared(MeshMessage meshMessage);
+
+    void onTransferStart(TransferMode transferMode);
 
     void onTransferProgress(int progress, BlobTransferType transferType);
 

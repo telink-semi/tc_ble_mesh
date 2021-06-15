@@ -37,7 +37,7 @@ public class MeshEvent extends Event<String> {
 
     public static final String EVENT_TYPE_MESH_RESET = "com.telink.sig.mesh.EVENT_TYPE_MESH_RESET";
 
-    public static final String EVENT_TYPE_MESH_LOGIN = "com.telink.sig.mesh.EVENT_TYPE_MESH_LOGIN";
+//    public static final String EVENT_TYPE_MESH_LOGIN = "com.telink.sig.mesh.EVENT_TYPE_MESH_LOGIN";
 
     private String desc;
 

@@ -118,7 +118,7 @@ public class EventBus<T> {
 
         this.mEventQueue.add(event);
 
-        MeshLogger.log("post event : " + event.getType() + "--" + event.getClass().getSimpleName());
+//        MeshLogger.log("post event : " + event.getType() + "--" + event.getClass().getSimpleName());
 
         synchronized (this.mLock) {
             if (!this.processing)
