@@ -59,6 +59,14 @@
 
     <string name="enable_dle">Enable DLE Mode Extend Bearer</string>
 
+    <string name="extend_bearer_title">Extend Bearer Mode</string>
+
+    <string name="extend_bearer_no">No Extend</string>
+
+    <string name="extend_bearer_gatt">Extend GATT Only</string>
+
+    <string name="extend_bearer_gatt_adv">Extend GATT &amp; ADV</string>
+
     <string name="enable_fast_provision">Fast Provision</string>
 
     <string name="enable_no_oob">Use No-OOB automatically</string>
@@ -150,7 +158,15 @@
         DLE selected action will change mesh upper layer segmentation bound:
         \n\n\tDisabled ->  segment bound is 11;
         \n\n\tEnabled ->  segment bound is 225.
-        \n\n\nSee [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT] and [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE] in [NetworkingController].
+        \n\n\nSee [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT] and [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG] in [NetworkingController].
+
+    </string>
+
+    <string name="extend_mode_tip">
+        DLE selected action will change mesh upper layer segmentation bound:
+        \n\n\tDisabled ->  segment bound is 11;
+        \n\n\tEnabled ->  segment bound is 225.
+        \n\n\nSee [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT] and [UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG] in [NetworkingController].
 
     </string>
 

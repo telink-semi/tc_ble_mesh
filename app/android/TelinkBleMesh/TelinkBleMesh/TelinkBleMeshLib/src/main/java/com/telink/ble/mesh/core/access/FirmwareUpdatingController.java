@@ -286,8 +286,7 @@ public class FirmwareUpdatingController {
             return;
         }
         test = true;
-        this.isGattMode = configuration.isSingleAndDirect();
-        this.dleLength = configuration.getDleLength();
+//        this.dleLength = configuration.getDleLength();
         this.firmwareData = configuration.getFirmwareData();
         if (firmwareData.length < 6) {
             return;
@@ -431,7 +430,8 @@ public class FirmwareUpdatingController {
         // 208
         // chunk size + opcode(1 byte)
         final int chunkMsgLen = firmwareParser.getChunkSize() + 1;
-        final int unsegLen = NetworkingController.unsegmentedAccessLength;
+//        final int unsegLen = NetworkingController.unsegmentedAccessLength;
+        final int unsegLen = 11;
         final int segLen = unsegLen + 1;
         int segmentCnt = chunkMsgLen == unsegLen ? 1 : (chunkMsgLen % segLen == 0 ? chunkMsgLen / segLen : (chunkMsgLen / segLen + 1));
         long interval = segmentCnt * NetworkingController.netPktSendInterval;

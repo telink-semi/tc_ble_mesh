@@ -31,10 +31,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
-import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDCancelMessage;
-import com.telink.ble.mesh.core.message.firmwaredistribution.FDStartMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.DistributionStatus;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
@@ -119,7 +117,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         MeshService.getInstance().checkBluetoothState();
 
         /// set DLE enable
-        MeshService.getInstance().resetDELState(SharedPreferenceHelper.isDleEnable(this));
+        MeshService.getInstance().resetExtendBearerMode(SharedPreferenceHelper.getExtendBearerMode(this));
     }
 
     private void resetNodeState() {
@@ -188,6 +186,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
             FUCache fuCache = FUCacheService.getInstance().get();
             if (fuCache != null && fuCache.distAddress == msgSrc) {
                 FDStatusMessage fdStatusMessage = (FDStatusMessage) notificationMessage.getStatusMessage();
+                MeshLogger.d("FDStatus in main : " + fdStatusMessage.toString());
                 if (fdStatusMessage.status == DistributionStatus.SUCCESS.code && fdStatusMessage.distPhase == 0) {
                     MeshLogger.d("clear meshOTA state");
                     FUCacheService.getInstance().clear(this);

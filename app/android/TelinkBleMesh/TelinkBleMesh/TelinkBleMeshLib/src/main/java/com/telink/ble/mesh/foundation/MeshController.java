@@ -61,6 +61,7 @@ import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.config.NodeIdentity;
 import com.telink.ble.mesh.core.message.config.NodeIdentitySetMessage;
 import com.telink.ble.mesh.core.message.config.NodeIdentityStatusMessage;
+import com.telink.ble.mesh.core.networking.ExtendBearerMode;
 import com.telink.ble.mesh.core.networking.NetworkingBridge;
 import com.telink.ble.mesh.core.networking.NetworkingController;
 import com.telink.ble.mesh.core.provisioning.ProvisioningBridge;
@@ -844,9 +845,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         return isLogin && mGattConnection.enableOnlineStatus();
     }
 
-    public void resetDELState(boolean enable) {
+    public void resetExtendBearerMode(ExtendBearerMode extendBearerMode) {
         if (mNetworkingController != null) {
-            mNetworkingController.enableDLE(enable);
+            mNetworkingController.setExtendBearerMode(extendBearerMode);
         }
     }
 
@@ -1122,16 +1123,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         }
         if (directDevice != null) {
             devices.add(directDevice);
-            if (devices.size() == 1) {
-                // update gatt connection when OTA start
-//                mGattConnection.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
-                configuration.setSingleAndDirect(true);
-                configuration.setDleLength(mNetworkingController.getSegmentAccessLength());
-            } else {
-                configuration.setSingleAndDirect(false);
-            }
-
         }
+        configuration.setExtendBearerMode(mNetworkingController.getExtendBearerMode());
     }
 
 

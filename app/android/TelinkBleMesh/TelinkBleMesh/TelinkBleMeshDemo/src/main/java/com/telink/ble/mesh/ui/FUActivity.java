@@ -50,7 +50,7 @@ import com.telink.ble.mesh.core.access.fu.FUCallback;
 import com.telink.ble.mesh.core.access.fu.FUState;
 import com.telink.ble.mesh.core.access.fu.UpdatePolicy;
 import com.telink.ble.mesh.core.message.NotificationMessage;
-import com.telink.ble.mesh.core.message.firmwaredistribution.FDReceiversListMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.AdditionalInformation;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoGetMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareUpdateInfoStatusMessage;
 import com.telink.ble.mesh.demo.R;
@@ -66,7 +66,6 @@ import com.telink.ble.mesh.model.FUCache;
 import com.telink.ble.mesh.model.FUCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.ui.adapter.FUDeviceAdapter;
 import com.telink.ble.mesh.ui.adapter.LogInfoAdapter;
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
@@ -351,7 +350,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     private void startNewUpdating() {
         enableUI(true);
         // for test
-        readFirmware("/storage/emulated/0/kee/sigMesh/8258_mesh_test_OTA.bin");
+//        readFirmware("/storage/emulated/0/kee/sigMesh/8258_mesh_test_OTA.bin");
 //        readFirmware("/storage/emulated/0/kee/sigMesh/20210422_mesh_OTA/8258_mesh_V4.3_for_OTA.bin");
 
 
@@ -464,7 +463,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
         // firmware info
         TelinkMeshApplication.getInstance().addEventListener(FirmwareUpdateInfoStatusMessage.class.getName(), this);
-        TelinkMeshApplication.getInstance().addEventListener(FDReceiversListMessage.class.getName(), this);
+//        TelinkMeshApplication.getInstance().addEventListener(FirmwareMetadataStatusMessage.class.getName(), this);
 //        TelinkMeshApplication.getInstance().addEventListener(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
     }
@@ -711,16 +710,6 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         });
     }
 
-    private void onDeviceOtaSuccess(MeshUpdatingDevice updatingDevice) {
-        appendLog("device update success - " + updatingDevice.meshAddress);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                deviceAdapter.notifyDataSetChanged();
-            }
-        });
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -818,11 +807,22 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
     @Override
     public void onDeviceStateUpdate(MeshUpdatingDevice device, String desc) {
-        int state = device.state;
-        if (state == MeshUpdatingDevice.STATE_SUCCESS) {
-            onDeviceOtaSuccess(device);
-        } else if (state == MeshUpdatingDevice.STATE_FAIL) {
-            onDeviceOtaFail(device, desc);
+        appendLog("device state update - " + device.meshAddress);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                deviceAdapter.notifyDataSetChanged();
+            }
+        });
+        if (device.state == MeshUpdatingDevice.STATE_SUCCESS) {
+            final AdditionalInformation addInfo = device.additionalInformation;
+            if (addInfo == AdditionalInformation.NODE_UNPROVISIONED) {
+                appendLog("device will be removed : " + device.meshAddress);
+                mesh.removeDeviceByMeshAddress(device.meshAddress);
+                mesh.saveOrUpdate(this);
+            } else if (addInfo == AdditionalInformation.CPS_CHANGED_1 || addInfo == AdditionalInformation.CPS_CHANGED_2) {
+                //
+            }
         }
     }
 

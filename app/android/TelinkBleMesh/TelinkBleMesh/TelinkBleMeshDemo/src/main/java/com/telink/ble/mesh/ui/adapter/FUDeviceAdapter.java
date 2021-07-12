@@ -22,19 +22,15 @@
 package com.telink.ble.mesh.ui.adapter;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.telink.ble.mesh.core.message.MeshSigModel;
+import com.telink.ble.mesh.core.message.firmwareupdate.AdditionalInformation;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.model.NodeInfo;
@@ -42,8 +38,6 @@ import com.telink.ble.mesh.ui.IconGenerator;
 import com.telink.ble.mesh.util.Arrays;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * mesh ota adapter
@@ -96,16 +90,32 @@ public class FUDeviceAdapter extends BaseRecyclerViewAdapter<FUDeviceAdapter.Vie
         String fwDesc = support ? "FwId:" + (deviceInfo.firmwareId == null ? "NULL" : Arrays.bytesToHexString(deviceInfo.firmwareId)) : "not support";
         holder.tv_version.setText(fwDesc);
         int deviceState = deviceInfo.state;
-        if (deviceState == MeshUpdatingDevice.STATE_INITIAL) {
-            holder.iv_complete.setImageResource(R.drawable.ic_mesh_ota);
+
+        if (deviceState == MeshUpdatingDevice.STATE_FAIL) {
+            holder.iv_complete.setImageResource(R.drawable.ic_mesh_ota_fail);
+        } else if (deviceState == MeshUpdatingDevice.STATE_SUCCESS) {
+            holder.iv_complete.setImageResource(R.drawable.ic_mesh_ota_complete);
         } else {
-            if (deviceState == MeshUpdatingDevice.STATE_FAIL) {
-                holder.iv_complete.setImageResource(R.drawable.ic_mesh_ota_fail);
-            } else {
-                holder.iv_complete.setImageResource(R.drawable.ic_mesh_ota_complete);
-            }
+            holder.iv_complete.setImageResource(R.drawable.ic_mesh_ota);
         }
-        holder.tv_dev_state.setText("state: " + deviceInfo.getStateDesc());
+
+
+        holder.tv_dev_state.setText(String.format("state: %s\nadditional: %s", deviceInfo.getStateDesc(), getAdditionalDesc(deviceInfo.additionalInformation)));
+    }
+
+    private String getAdditionalDesc(AdditionalInformation additionalInformation) {
+        if (additionalInformation == null) return "NULL";
+        switch (additionalInformation) {
+            case No_changes:
+                return "No changes to CPS";
+            case CPS_CHANGED_1:
+                return "CPS changed, remote pv is not supported";
+            case CPS_CHANGED_2:
+                return "CPS changed, remote pv is supported";
+            case NODE_UNPROVISIONED:
+                return "Node unprovisioned, device will be removed after successful update";
+        }
+        return "";
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

@@ -21,6 +21,7 @@ import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobTransfer
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobTransferStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.TransferMode;
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.TransferStatus;
+import com.telink.ble.mesh.core.networking.ExtendBearerMode;
 import com.telink.ble.mesh.core.networking.NetworkingController;
 import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
@@ -116,7 +117,7 @@ class BlobTransfer {
      */
     private int mixFormat = -1;
 
-    private int dleLength = 11;
+    private ExtendBearerMode extendBearerMode;
 
     private BlobTransferCallback transferCallback;
 
@@ -150,7 +151,7 @@ class BlobTransfer {
      */
     public void resetParams(FirmwareUpdateConfiguration configuration, BlobTransferType type, int directAddress) {
         this.firmwareData = configuration.getFirmwareData();
-        this.dleLength = configuration.getDleLength();
+        this.extendBearerMode = configuration.getExtendBearerMode();
         this.blobId = configuration.getBlobId();
         this.appKeyIndex = configuration.getAppKeyIndex();
         this.groupAddress = configuration.getGroupAddress();
@@ -469,12 +470,12 @@ class BlobTransfer {
         if (chunkData != null) {
             validateUpdatingProgress();
             BlobChunkTransferMessage blobChunkTransferMessage = generateChunkTransferMessage(chunkIndex, chunkData);
-            log("next chunk transfer msg: " + blobChunkTransferMessage.toString());
+            log("next chunk transfer msg: " + blobChunkTransferMessage.toString() + " - extendBearerMode - " + extendBearerMode);
             onTransferMessagePrepared(blobChunkTransferMessage);
             if (transferType == BlobTransferType.GATT_INIT) {
 
                 int len = chunkData.length + 3;
-                boolean isSegment = len > dleLength;
+                boolean isSegment = len > getSegmentLen();
                 if (!isSegment) {
                     // if not segmented message, send next
                     sendChunks();
@@ -488,6 +489,12 @@ class BlobTransfer {
                     + " chunk -- " + firmwareParser.currentChunkIndex());
             checkMissingChunks();
         }
+    }
+
+    private int getSegmentLen() {
+        int segLen = extendBearerMode == ExtendBearerMode.NONE ? NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT : NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
+        log("segment len: " + segLen);
+        return segLen;
     }
 
     /**
@@ -601,7 +608,7 @@ class BlobTransfer {
             // 208
             // chunk size + opcode(1 byte)
             final int chunkMsgLen = firmwareParser.getChunkSize() + 1;
-            final int unsegLen = NetworkingController.unsegmentedAccessLength;
+            final int unsegLen = getSegmentLen();
             final int segLen = unsegLen + 1;
             int segmentCnt = chunkMsgLen == unsegLen ? 1 : (chunkMsgLen % segLen == 0 ? chunkMsgLen / segLen : (chunkMsgLen / segLen + 1));
             result = segmentCnt * NetworkingController.netPktSendInterval;
@@ -640,6 +647,8 @@ class BlobTransfer {
         } else {
             if (firmwareParser.getChunkSize() <= 8 && this.targetDevices.size() == 1) {
                 address = this.targetDevices.get(0).address;
+            } else if (transferMode == TransferMode.PULL) {
+                address = this.targetDevices.get(0).address; // for LPN
             } else {
                 address = groupAddress;
             }

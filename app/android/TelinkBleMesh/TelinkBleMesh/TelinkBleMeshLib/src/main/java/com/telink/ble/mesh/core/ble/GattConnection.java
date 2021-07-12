@@ -27,6 +27,7 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
@@ -159,6 +160,7 @@ public class GattConnection extends BluetoothGattCallback {
         enableNotifications();
         writeCCCForPx();
 //        writeCCCForPv();
+
     }
 
     public void provisionInit() {
@@ -292,6 +294,8 @@ public class GattConnection extends BluetoothGattCallback {
             gattRequest.serviceUUID = provisionService.getUuid();
             gattRequest.characteristicUUID = UUIDInfo.CHARACTERISTIC_PB_OUT;
             sendRequest(gattRequest);
+
+
         }
 
         BluetoothGattService proxyService = getProxyService(false);

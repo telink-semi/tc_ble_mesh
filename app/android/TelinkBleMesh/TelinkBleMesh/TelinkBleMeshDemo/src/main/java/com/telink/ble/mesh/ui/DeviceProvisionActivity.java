@@ -203,6 +203,9 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     }
 
     private void onDeviceFound(AdvertisingDevice advertisingDevice) {
+
+//        if (!advertisingDevice.device.getAddress().toUpperCase().contains("00:1B:DC:08:E2:DA"))return; /// for pts test
+
         // provision service data: 15:16:28:18:[16-uuid]:[2-oobInfo]
         byte[] serviceData = MeshUtils.getMeshServiceData(advertisingDevice.scanRecord, true);
         if (serviceData == null || serviceData.length < 17) {
@@ -218,6 +221,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         final int oobInfo = MeshUtils.bytes2Integer(serviceData, 16, 2, ByteOrder.LITTLE_ENDIAN);
 
+
         if (deviceExists(deviceUUID)) {
             MeshLogger.d("device exists");
             return;
@@ -226,7 +230,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.meshAddress = -1;
         nodeInfo.deviceUUID = deviceUUID;
-        MeshLogger.d("device found -> device uuid : " + Arrays.bytesToHexString(deviceUUID));
+        MeshLogger.d("device found -> device uuid : " + Arrays.bytesToHexString(deviceUUID) + " -- oobInfo: " + oobInfo + " -- certSupported?" + MeshUtils.isCertSupported(oobInfo));
         nodeInfo.macAddress = advertisingDevice.device.getAddress();
 
         NetworkingDevice processingDevice = new NetworkingDevice(nodeInfo);

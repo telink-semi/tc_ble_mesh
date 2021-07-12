@@ -33,12 +33,14 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
+
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.networking.ExtendBearerMode;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.AppSettings;
-import com.telink.ble.mesh.model.FUCache;
 import com.telink.ble.mesh.model.FUCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.util.Arrays;
@@ -49,11 +51,15 @@ import com.telink.ble.mesh.util.MeshLogger;
  */
 public class SettingsActivity extends BaseActivity implements View.OnClickListener {
 
-    private Switch switch_log, switch_private, switch_remote_prov, switch_fast_prov, switch_no_oob, switch_dle, switch_auto_provision;
-    private EditText et_net_key, et_app_key;
+    private Switch switch_log, switch_private, switch_remote_prov, switch_fast_prov, switch_no_oob, switch_auto_provision;
+    private EditText et_extend, et_net_key, et_app_key;
     private MeshInfo mesh;
     private TextView tv_online_status;
-
+    private AlertDialog extendDialog;
+    private final String[] EXTEND_TYPES = new String[]{
+            "No Extend",
+            "Extend GATT Only",
+            "Extend GATT & ADV",};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,16 +130,6 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
             }
         });
 
-        switch_dle = findViewById(R.id.switch_dle);
-        switch_dle.setChecked(SharedPreferenceHelper.isDleEnable(this));
-        switch_dle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                MeshService.getInstance().resetDELState(isChecked);
-                SharedPreferenceHelper.setDleEnable(SettingsActivity.this, isChecked);
-            }
-        });
-
         switch_auto_provision = findViewById(R.id.switch_auto_provision);
         switch_auto_provision.setChecked(SharedPreferenceHelper.isAutoPvEnable(this));
         switch_auto_provision.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -154,14 +150,16 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         findViewById(R.id.iv_tip_default_bound).setOnClickListener(this);
         findViewById(R.id.iv_tip_no_oob).setOnClickListener(this);
         findViewById(R.id.tv_select_database).setOnClickListener(this);
-        findViewById(R.id.iv_tip_dle).setOnClickListener(this);
         findViewById(R.id.iv_tip_fast_prov).setOnClickListener(this);
-
+        et_extend = findViewById(R.id.et_extend_type);
+        et_extend.setOnClickListener(this);
         et_net_key = findViewById(R.id.et_net_key);
         et_app_key = findViewById(R.id.et_app_key);
         showMeshInfo();
         tv_online_status = findViewById(R.id.tv_online_status);
         tv_online_status.setText(AppSettings.ONLINE_STATUS_ENABLE ? R.string.online_status_enabled : R.string.online_status_disabled);
+
+        onExtendTypeSelect(SharedPreferenceHelper.getExtendBearerMode(this).ordinal());
     }
 
     private void showMeshInfo() {
@@ -236,20 +234,39 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                 });
                 break;
 
-            case R.id.iv_tip_dle:
-                startActivity(
-                        new Intent(this, TipsActivity.class)
-                                .putExtra(TipsActivity.INTENT_KEY_TIP_RES_ID, R.string.dle_tip)
-                );
-                break;
-
             case R.id.iv_tip_fast_prov:
                 startActivity(
                         new Intent(this, TipsActivity.class)
                                 .putExtra(TipsActivity.INTENT_KEY_TIP_RES_ID, R.string.fast_pv_tip)
                 );
                 break;
+
+            case R.id.et_extend_type:
+                showExtendDialog();
+                break;
         }
+    }
+
+    private void showExtendDialog() {
+        if (extendDialog == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setItems(EXTEND_TYPES, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    onExtendTypeSelect(which);
+                    extendDialog.dismiss();
+                }
+            });
+            builder.setTitle("Types");
+            extendDialog = builder.create();
+        }
+        extendDialog.show();
+    }
+
+    private void onExtendTypeSelect(int position) {
+        et_extend.setText(EXTEND_TYPES[position]);
+        MeshService.getInstance().resetExtendBearerMode(ExtendBearerMode.values()[position]);
+        SharedPreferenceHelper.setExtendBearerMode(SettingsActivity.this, ExtendBearerMode.values()[position]);
     }
 
 

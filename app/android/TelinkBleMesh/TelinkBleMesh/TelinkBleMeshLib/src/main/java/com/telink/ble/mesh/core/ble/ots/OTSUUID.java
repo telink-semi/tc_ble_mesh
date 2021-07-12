@@ -28,7 +28,7 @@ public class OTSUUID {
     public static final UUID OBJECT_ACTION_CONTROL_POINT = UUID.fromString("2AC5)");
 
     /**
-     * oLCP
+     * OLCP
      */
     public static final UUID OBJECT_LIST_CONTROL_POINT = UUID.fromString("2AC6)");
 

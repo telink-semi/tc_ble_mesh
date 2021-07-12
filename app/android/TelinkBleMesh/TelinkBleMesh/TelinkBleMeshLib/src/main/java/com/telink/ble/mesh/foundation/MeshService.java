@@ -25,6 +25,7 @@ import android.content.Context;
 
 import com.telink.ble.mesh.core.ble.GattRequest;
 import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.networking.ExtendBearerMode;
 import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
 import com.telink.ble.mesh.foundation.parameter.AutoConnectParameters;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
@@ -277,11 +278,13 @@ public class MeshService implements MeshController.EventCallback {
         return mController.getOnlineStatus();
     }
 
+
     /**
-     * @param enable if enable DLE, this will change mesh segmentation bound
+     *
+     * @param extendBearerMode new mode
      */
-    public void resetDELState(boolean enable) {
-        mController.resetDELState(enable);
+    public void resetExtendBearerMode(ExtendBearerMode extendBearerMode) {
+        mController.resetExtendBearerMode(extendBearerMode);
     }
 
     /********************************************************************************

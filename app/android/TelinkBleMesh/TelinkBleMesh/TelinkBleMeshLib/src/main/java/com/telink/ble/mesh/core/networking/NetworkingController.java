@@ -79,14 +79,15 @@ public class NetworkingController {
 
 //    private static final int SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = 12;
 
-    public static final int UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE = 225;
+    public static final int UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG = 225;
 
 //    private static final int SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH + 1;
 
-    private boolean dleEnabled = false;
+    //    private boolean dleEnabled = false;
+    private ExtendBearerMode extendBearerMode;
 
     // segmentedAccessLength = unsegmentedAccessLength + 1
-    public static int unsegmentedAccessLength = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
+//    public int unsegmentedAccessLength = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
 
 
     private static final int DEFAULT_SEQUENCE_NUMBER_UPDATE_STEP = 0x100;
@@ -327,14 +328,25 @@ public class NetworkingController {
         this.deviceKeyMap.put(unicastAddress, deviceKey);
     }
 
-    public void enableDLE(boolean enable) {
-        this.dleEnabled = enable;
-        unsegmentedAccessLength = enable ? UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DLE : UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
-        log("enableDLE: " + enable + " -- value : " + unsegmentedAccessLength);
+    public void setExtendBearerMode(ExtendBearerMode extendBearerMode) {
+        log("setExtendBearerMode: " + extendBearerMode);
+        this.extendBearerMode = extendBearerMode;
     }
 
-    public int getSegmentAccessLength() {
-        return unsegmentedAccessLength;
+    public ExtendBearerMode getExtendBearerMode() {
+        return extendBearerMode;
+    }
+
+    private int getSegmentAccessLength(int dstAddress) {
+        switch (extendBearerMode) {
+            case NONE:
+                return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
+            case GATT:
+                return dstAddress == directAddress ? UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG : UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
+            case GATT_ADV:
+                return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
+        }
+        return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
     }
 
     public void removeDeviceKey(int unicastAddress) {
@@ -493,7 +505,8 @@ public class NetworkingController {
         byte[] accessPduData = accessPDU.toByteArray();
 
 //        boolean segmented = accessPduData.length > UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH;
-        boolean segmented = accessPduData.length > unsegmentedAccessLength;
+        final int segmentLen = getSegmentAccessLength(dst);
+        boolean segmented = accessPduData.length > segmentLen;
         meshMessage.setSegmented(segmented);
         if (segmented) {
             synchronized (RELIABLE_SEGMENTED_LOCK) {
@@ -558,7 +571,7 @@ public class NetworkingController {
                     mSendingReliableMessage = meshMessage;
 //                    restartReliableMessageTimeoutTask(); //
                 }
-                SparseArray<SegmentedAccessMessagePDU> segmentedAccessMessages = createSegmentedAccessMessage(upperPDU.getEncryptedPayload(), akf, aid, aszmic, sequenceNumber);
+                SparseArray<SegmentedAccessMessagePDU> segmentedAccessMessages = createSegmentedAccessMessage(upperPDU.getEncryptedPayload(), akf, aid, aszmic, sequenceNumber, segmentLen);
                 if (segmentedAccessMessages.size() == 0) return false;
 
                 log("send segmented access message");
@@ -1564,9 +1577,9 @@ public class NetworkingController {
         return lowerTransportPduMap;
     }*/
 
-    private SparseArray<SegmentedAccessMessagePDU> createSegmentedAccessMessage(byte[] encryptedUpperTransportPDU, byte akf, byte aid, int aszmic, int sequenceNumber) {
+    private SparseArray<SegmentedAccessMessagePDU> createSegmentedAccessMessage(byte[] encryptedUpperTransportPDU, byte akf, byte aid, int aszmic, int sequenceNumber, int segmentLen) {
 
-        final int segmentedAccessLen = unsegmentedAccessLength + 1;
+        final int segmentedAccessLen = segmentLen + 1;
         byte[] seqNoBuffer = MeshUtils.integer2Bytes(sequenceNumber, 3, ByteOrder.BIG_ENDIAN);
         // 13 lowest bits
         int seqZero = ((seqNoBuffer[1] & 0x1F) << 8) | (seqNoBuffer[2] & 0xFF);

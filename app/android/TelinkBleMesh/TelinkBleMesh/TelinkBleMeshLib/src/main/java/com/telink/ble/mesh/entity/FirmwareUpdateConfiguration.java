@@ -26,7 +26,9 @@ import com.telink.ble.mesh.core.access.fu.FUCallback;
 import com.telink.ble.mesh.core.access.fu.FUState;
 import com.telink.ble.mesh.core.access.fu.BlobTransferType;
 import com.telink.ble.mesh.core.access.fu.UpdatePolicy;
+import com.telink.ble.mesh.core.networking.ExtendBearerMode;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -81,15 +83,8 @@ public class FirmwareUpdateConfiguration {
      */
     private int firmwareIndex = 0;
 
-    /**
-     * if only update direct connected device
-     */
-    private boolean singleAndDirect = false;
 
-    /**
-     * DLE length
-     */
-    private int dleLength;
+    private ExtendBearerMode extendBearerMode;
 
     /**
      * 0 means using APP as distributor,
@@ -149,20 +144,12 @@ public class FirmwareUpdateConfiguration {
         return blobId;
     }
 
-    public boolean isSingleAndDirect() {
-        return singleAndDirect;
+    public ExtendBearerMode getExtendBearerMode() {
+        return extendBearerMode;
     }
 
-    public void setSingleAndDirect(boolean singleAndDirect) {
-        this.singleAndDirect = singleAndDirect;
-    }
-
-    public int getDleLength() {
-        return dleLength;
-    }
-
-    public void setDleLength(int dleLength) {
-        this.dleLength = dleLength;
+    public void setExtendBearerMode(ExtendBearerMode extendBearerMode) {
+        this.extendBearerMode = extendBearerMode;
     }
 
     public byte[] getMetadata() {
@@ -262,10 +249,18 @@ public class FirmwareUpdateConfiguration {
         return "FirmwareUpdateConfiguration{" +
                 "updatingDevices=" + updatingDevices.size() +
                 ", firmwareData=" + firmwareData.length +
-                ", metadata=" + metadata.length +
+                ", metadata=" + Arrays.toString(metadata) +
                 ", appKeyIndex=" + appKeyIndex +
                 ", groupAddress=" + groupAddress +
                 ", blobId=" + blobId +
+                ", firmwareId=" + Arrays.toString(firmwareId) +
+                ", firmwareIndex=" + firmwareIndex +
+                ", distributorType=" + distributorType +
+                ", callback=" + callback +
+                ", updatePolicy=" + updatePolicy +
+                ", isContinue=" + isContinue +
+                ", distributorAddress=" + distributorAddress +
+                ", proxyAddress=" + proxyAddress +
                 '}';
     }
 }

@@ -89,6 +89,7 @@ public class RemoteDistributorAssist {
     void confirmDistribute() {
         // check distribute util distribute phase is completed
         log("confirm distribute after(ms) : " + CONFIRM_INTERVAL);
+        step = STEP_DIST_GET;
         handler.removeCallbacks(DIST_GET_TASK);
         handler.postDelayed(DIST_GET_TASK, CONFIRM_INTERVAL);
     }

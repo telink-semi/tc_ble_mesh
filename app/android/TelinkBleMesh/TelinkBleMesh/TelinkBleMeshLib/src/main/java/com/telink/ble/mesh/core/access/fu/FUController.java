@@ -97,7 +97,7 @@ public class FUController implements FUActionHandler {
         this.connectedAddress = connectedAddress;
         this.isDirectUpdating = isConnectedNodeUpdating(connectedAddress);
         this.distributorAssist.resetConfig(configuration);
-        log("FU begin - " + this.updatePolicy + "  isContinue ? " + configuration.isContinue() + " -- " + currentState);
+        log("FU begin - " + this.updatePolicy + "  isContinue ? " + configuration.isContinue() + " -- " + currentState + " -- " + configuration.toString());
         if (currentState == FUState.IDLE && !configuration.isContinue()) {
             startInitiate();
         } else {
@@ -187,13 +187,19 @@ public class FUController implements FUActionHandler {
                     // rebooted, check firmware
                     onFUStateUpdate(FUState.UPDATE_RECHECKING, "device may reboot complete");
                     distributorAssist.recheckFirmware(true);
+                } else if (phase == UpdatePhase.TRANSFER_ERROR.code) {
+                    onComplete(false, "phase error");
                 } else {
                     MeshLogger.d("onProgressState : " + currentState);
 
                     if (updatePolicy == UpdatePolicy.VerifyOnly) {
-                        // apply all devices update
-                        onFUStateUpdate(FUState.UPDATE_APPLYING, null);
-                        distributorAssist.applyDistribute();
+                        if (phase == UpdatePhase.VERIFICATION_FAILED.code || phase == UpdatePhase.VERIFICATION_SUCCESS.code) {
+                            // apply all devices update
+                            onFUStateUpdate(FUState.UPDATE_APPLYING, null);
+                            distributorAssist.applyDistribute();
+                        } else {
+                            startProgressCheckTask();
+                        }
                     } else {
                         if (isDirectUpdating) {
                             // gatt will be terminated
@@ -201,16 +207,27 @@ public class FUController implements FUActionHandler {
                             onFUStateUpdate(FUState.UPDATE_RECHECKING, null);
                             log("waiting for disconnect -- 1");
                         } else {
-                            //
-                            onFUStateUpdate(FUState.DISTRIBUTE_CONFIRMING, null);
-                            distributorAssist.confirmDistribute();
+                            if (phase == UpdatePhase.APPLYING_UPDATE.code) {
+                                onFUStateUpdate(FUState.DISTRIBUTE_CONFIRMING, null);
+                                distributorAssist.confirmDistribute();
+                            } else {
+                                // distribute not complete
+                                startProgressCheckTask();
+                            }
+
                         }
                     }
                 }
 
             } else {
                 // check progress
-                startProgressCheckTask();
+                int phase = frsReceiver.retrievedUpdatePhase;
+                if (phase == UpdatePhase.TRANSFER_ACTIVE.code) {
+                    startProgressCheckTask();
+                } else {
+                    onComplete(false, "phase error - progress not 100 ");
+                }
+
             }
         } else {
             // no receivers, recheck all firmware id
@@ -349,6 +366,7 @@ public class FUController implements FUActionHandler {
 
     private void onComplete(boolean success, String desc) {
         log("firmware update complete - " + desc + " -- " + success);
+        cancelDistribution();
         handler.removeCallbacksAndMessages(null);
         final FUState fuState = success ? FUState.UPDATE_COMPLETE : FUState.UPDATE_FAIL;
         onFUStateUpdate(fuState, desc);
@@ -432,7 +450,7 @@ public class FUController implements FUActionHandler {
                     distributorAssist.recheckFirmware(false);
                 } else if (currentState == FUState.UPDATE_RECHECKING) {
                     // recheck firmware complete
-                    cancelDistribution();
+
                     onComplete(true, desc);
                 }
                 break;

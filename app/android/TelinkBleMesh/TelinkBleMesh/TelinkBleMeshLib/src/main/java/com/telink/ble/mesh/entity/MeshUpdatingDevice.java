@@ -24,6 +24,8 @@ package com.telink.ble.mesh.entity;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.telink.ble.mesh.core.message.firmwareupdate.AdditionalInformation;
+
 import java.io.Serializable;
 
 /**
@@ -37,6 +39,8 @@ public class MeshUpdatingDevice implements Serializable, Parcelable {
     public static final int STATE_SUCCESS = 1;
 
     public static final int STATE_FAIL = 2;
+
+    public static final int STATE_METADATA_RSP = 3;
 
     /**
      * firmware info updated
@@ -65,6 +69,11 @@ public class MeshUpdatingDevice implements Serializable, Parcelable {
     public byte[] firmwareId;
 
     /**
+     * AdditionalInformation in metadata
+     */
+    public AdditionalInformation additionalInformation = null;
+
+    /**
      * is low power node
      */
     public boolean isLpn = false;
@@ -91,6 +100,8 @@ public class MeshUpdatingDevice implements Serializable, Parcelable {
                 return "Update Fail";
             case STATE_SUCCESS:
                 return "Update Success";
+            case STATE_METADATA_RSP:
+                return "Metadata RSP";
         }
         return "";
     }

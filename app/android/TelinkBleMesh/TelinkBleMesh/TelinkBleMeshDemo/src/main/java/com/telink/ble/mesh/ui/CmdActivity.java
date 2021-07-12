@@ -59,10 +59,42 @@ import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by kee on 2017/8/17.
+ * INI cmd example:
+ * 0xa3, 0xff,  0x00, 0x00,   0x00, 0x00,   0x02        0x00        0xff, 0xff  0xc2, 0x11, 0x02    0xc4, 0x01, 0x01, 0x00
+ * flag         netKeyIndex   appKeyIndex   retryCnt    rsp_max     dst         opcode              rsp
  */
 
 public class CmdActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
 
+    /**
+     * INI cmd example:
+     * #reference: app_mesh.h
+     * <p>
+     * typedef struct{
+     * u16 nk_idx;
+     * u16 ak_idx;
+     * u8 retry_cnt;   // only for reliable command
+     * u8 rsp_max;     // only for reliable command
+     * u16 adr_dst;
+     * u8 op;
+     * u8 par[MESH_CMD_ACCESS_LEN_MAX];
+     * }mesh_bulk_cmd_par_t;
+     * <p>
+     * typedef struct{
+     * u8 op;
+     * u16 vendor_id;
+     * u8 op_rsp;
+     * u8 tid_pos;
+     * u8 par[MESH_CMD_ACCESS_LEN_MAX];
+     * }mesh_vendor_par_ini_t;
+     */
+
+    // {(byte) 0xa3, (byte) 0xff, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, (byte) 0xff, (byte) 0xff, (byte) 0xc2, 0x11, 0x02, (byte) 0xc4, 0x01, 0x01, 0x00}
+    /// default 0xa3ff, network_key_index: 0x0000, app_key_index: 0x0000, retry_cnt: 0x02, rsp_max: 0x00 (00 equals 01 )
+
+    /**
+     * message type, use application key for common message, use device key for config message
+     */
     private final String[] ACCESS_TYPES = {"Application(App Key)", "Device(Device Key)"};
 
     /**
@@ -76,8 +108,9 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             "Vendor Off NO-ACK",
             "Generic On",
             "Generic Off",
-            "[Custom]"};
-    // add new
+            "[Custom]" // custom message
+    };
+
 
     private final int MSG_DST_ADR = 0xFFFF;
 

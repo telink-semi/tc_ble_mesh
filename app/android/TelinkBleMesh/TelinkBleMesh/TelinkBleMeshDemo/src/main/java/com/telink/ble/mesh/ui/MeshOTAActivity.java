@@ -91,6 +91,7 @@ import java.util.Set;
 /**
  * batch firmware update by mesh
  * Created by kee on 2018/9/18.
+ * @see FUActivity
  */
 @Deprecated
 public class MeshOTAActivity extends BaseActivity implements View.OnClickListener,

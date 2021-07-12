@@ -18,6 +18,7 @@ import com.telink.ble.mesh.core.message.firmwaredistribution.FDStartMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDStatusMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDUploadStartMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDUploadStatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.AdditionalInformation;
 import com.telink.ble.mesh.core.message.firmwareupdate.DistributionStatus;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareMetadataCheckMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.FirmwareMetadataStatusMessage;
@@ -102,7 +103,7 @@ class FUInitiator implements BlobTransferCallback {
     /**
      * node address | ignore
      */
-    private List<MeshUpdatingDevice> nodes;
+    private List<MeshUpdatingDevice> updatingDevices;
 
 //    private int[] nodeAddresses;
 
@@ -126,7 +127,7 @@ class FUInitiator implements BlobTransferCallback {
     /**
      * operation index
      */
-    private int nodeIndex;
+    private int deviceIndex;
 
     private int metadataIndex = 0;
 
@@ -154,12 +155,12 @@ class FUInitiator implements BlobTransferCallback {
      */
     void begin(FirmwareUpdateConfiguration configuration,
                int distributorAddress) {
-        this.nodes = configuration.getUpdatingDevices();
+        this.updatingDevices = configuration.getUpdatingDevices();
         this.metadata = configuration.getMetadata();
         this.groupAddress = configuration.getGroupAddress();
         this.appKeyIndex = configuration.getAppKeyIndex();
         this.blobId = configuration.getBlobId();
-        if (!configuration.isContinue()){
+        if (!configuration.isContinue()) {
             this.firmwareSize = configuration.getFirmwareData().length;
         }
 
@@ -169,7 +170,7 @@ class FUInitiator implements BlobTransferCallback {
         this.type = distributorAddress == MeshUtils.LOCAL_MESSAGE_ADDRESS ?
                 BlobTransferType.LOCAL_INIT : BlobTransferType.GATT_INIT;
         transfer.resetParams(configuration, type, distributorAddress);
-        log("initiator begin : node size - " + nodes.size() + " -- distAdr - " + distributorAddress);
+        log("initiator begin : node size - " + updatingDevices.size() + " -- distAdr - " + distributorAddress);
 
         this.step = STEP_DST_CAP_GET;
         nextAction();
@@ -220,7 +221,7 @@ class FUInitiator implements BlobTransferCallback {
              */
             case STEP_DST_RECEIVERS_ADD:
                 List<FDReceiversAddMessage.ReceiverEntry> entryList = new ArrayList<>();
-                for (MeshUpdatingDevice updatingDevice : nodes) {
+                for (MeshUpdatingDevice updatingDevice : updatingDevices) {
                     entryList.add(new FDReceiversAddMessage.ReceiverEntry(updatingDevice.meshAddress,
                             0));
                 }
@@ -253,7 +254,7 @@ class FUInitiator implements BlobTransferCallback {
             case STEP_UPDATE_INFO_GET: //get firmware update info of updating nodes
             case STEP_UPDATE_METADATA_CHECK: // get update metadata check
             case STEP_SUB_SET: //sub set (grouping)
-                if (nodeIndex >= nodes.size()) {
+                if (deviceIndex >= updatingDevices.size()) {
                     // all nodes executed
 
                     log("current step complete: " + (step));
@@ -261,14 +262,14 @@ class FUInitiator implements BlobTransferCallback {
                     removeFailedDevices();
 
                     // check if has available nodes
-                    if (nodes.size() != 0) {
-                        nodeIndex = 0;
+                    if (updatingDevices.size() != 0) {
+                        deviceIndex = 0;
                         log("next step: " + (step + 1));
                         step++;
                         nextAction();
                     }
                 } else {
-                    int meshAddress = nodes.get(nodeIndex).meshAddress;
+                    int meshAddress = updatingDevices.get(deviceIndex).meshAddress;
                     log(String.format("action executing: " + (step) + " -- %04X", meshAddress));
                     if (this.step == STEP_UPDATE_INFO_GET) {
                         onMeshMessagePrepared(FirmwareUpdateInfoGetMessage.getSimple(meshAddress, appKeyIndex));
@@ -277,7 +278,7 @@ class FUInitiator implements BlobTransferCallback {
                                 metadataIndex,
                                 metadata));
                     } else if (this.step == STEP_SUB_SET) {
-                        int eleAdr = nodes.get(nodeIndex).updatingEleAddress;
+                        int eleAdr = updatingDevices.get(deviceIndex).updatingEleAddress;
                         int modelId = MeshSigModel.SIG_MD_OBJ_TRANSFER_S.modelId;
                         onMeshMessagePrepared(ModelSubscriptionSetMessage.getSimple(meshAddress,
                                 ModelSubscriptionSetMessage.MODE_ADD,
@@ -299,7 +300,8 @@ class FUInitiator implements BlobTransferCallback {
                 startMessage.distributionTransferMode = TransferMode.PUSH.value;
                 startMessage.updatePolicy = updatePolicy.value;
                 startMessage.distributionImageIndex = 0;
-                startMessage.distributionMulticastAddress = groupAddress;
+                startMessage.distributionMulticastAddress = 0;
+//                startMessage.distributionMulticastAddress = groupAddress;
                 onMeshMessagePrepared(startMessage);
                 break;
         }
@@ -328,12 +330,12 @@ class FUInitiator implements BlobTransferCallback {
 
         // message received from updating devices
         if (step == STEP_UPDATE_INFO_GET || step == STEP_UPDATE_METADATA_CHECK || step == STEP_SUB_SET) {
-            if (nodes.size() <= nodeIndex) {
+            if (updatingDevices.size() <= deviceIndex) {
                 log("node index overflow");
                 return;
             }
 
-            if (nodes.get(nodeIndex).meshAddress != src) {
+            if (updatingDevices.get(deviceIndex).meshAddress != src) {
                 log("unexpected notification src");
                 return;
             }
@@ -380,8 +382,8 @@ class FUInitiator implements BlobTransferCallback {
         } else if ((step == STEP_UPDATE_INFO_GET && opcode == Opcode.FIRMWARE_UPDATE_INFORMATION_GET.value)
                 || (step == STEP_UPDATE_METADATA_CHECK && opcode == Opcode.FIRMWARE_UPDATE_FIRMWARE_METADATA_STATUS.value)
                 || (step == STEP_SUB_SET && opcode == Opcode.CFG_MODEL_SUB_STATUS.value)) {
-            onDeviceFail(nodes.get(nodeIndex), "updating node init command fail");
-            nodeIndex++;
+            onDeviceFail(updatingDevices.get(deviceIndex), "updating node init command fail");
+            deviceIndex++;
             nextAction();
         } else if (step == STEP_BLOB_TRANSFER) {
             transfer.onTransferCommandFail(opcode);
@@ -428,7 +430,7 @@ class FUInitiator implements BlobTransferCallback {
         int companyId = firmwareInfoStatusMessage.getListCount();
         List<FirmwareUpdateInfoStatusMessage.FirmwareInformationEntry> firmwareInformationList
                 = firmwareInfoStatusMessage.getFirmwareInformationList();
-        nodeIndex++;
+        deviceIndex++;
         nextAction();
     }
 
@@ -439,9 +441,18 @@ class FUInitiator implements BlobTransferCallback {
             return;
         }
         if (status != UpdateStatus.SUCCESS) {
-            onDeviceFail(nodes.get(nodeIndex), "metadata check error: " + status.desc);
+            onDeviceFail(updatingDevices.get(deviceIndex), "metadata check error: " + status.desc);
+        } else {
+            MeshUpdatingDevice device = updatingDevices.get(deviceIndex);
+            device.additionalInformation = AdditionalInformation.valueOf(metadataStatusMessage.getAdditionalInformation());
+            device.state = (MeshUpdatingDevice.STATE_METADATA_RSP);
+            if (actionHandler != null) {
+                actionHandler.onDeviceUpdate(device, "device metadata check complete");
+            }
         }
-        nodeIndex++;
+
+
+        deviceIndex++;
         nextAction();
     }
 
@@ -452,9 +463,9 @@ class FUInitiator implements BlobTransferCallback {
             return;
         }
         if (subscriptionStatusMessage.getStatus() != ConfigStatus.SUCCESS.code) {
-            onDeviceFail(nodes.get(nodeIndex), "grouping status err " + subscriptionStatusMessage.getStatus());
+            onDeviceFail(updatingDevices.get(deviceIndex), "grouping status err " + subscriptionStatusMessage.getStatus());
         }
-        nodeIndex++;
+        deviceIndex++;
         nextAction();
     }
 
@@ -542,7 +553,7 @@ class FUInitiator implements BlobTransferCallback {
     }
 
     private void removeFailedDevices() {
-        Iterator<MeshUpdatingDevice> iterator = nodes.iterator();
+        Iterator<MeshUpdatingDevice> iterator = updatingDevices.iterator();
         MeshUpdatingDevice updatingNode;
         while (iterator.hasNext()) {
             updatingNode = iterator.next();
@@ -554,7 +565,7 @@ class FUInitiator implements BlobTransferCallback {
 
     private MeshUpdatingDevice getDeviceByAddress(int address) {
         for (MeshUpdatingDevice device :
-                this.nodes) {
+                this.updatingDevices) {
             if (device.meshAddress == address) return device;
         }
         return null;
