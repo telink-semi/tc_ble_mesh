@@ -19,7 +19,8 @@
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
  *           
  *******************************************************************************************************/
-
+
+
 #ifndef _TELINK_SDK_MIBLE_API_C_
 #define _TELINK_SDK_MIBLE_API_C_
 #include "./mijia_ble_api/mible_api.h"
@@ -40,6 +41,7 @@
 #if MI_API_ENABLE
 #include "./libs/third_party/mbedtls/sha256_hkdf.h"
 #include "./libs/mi_config.h"
+#include "mible_mesh_api.h"
 #endif
 extern attribute_t* gAttributes;
 
@@ -70,7 +72,7 @@ mible_status_t telink_ble_mi_gatts_value_get(uint16_t srv_handle, uint16_t value
 mible_status_t telink_ble_mi_gatts_notify_or_indicate(uint16_t conn_handle, uint16_t srv_handle,
     uint16_t char_value_handle, uint8_t offset, uint8_t* p_value,
     uint8_t len, uint8_t type);
-mible_status_t telink_ble_mi_rand_num_generator(uint8_t* p_buf, uint8_t len);
+int telink_rand_num_generator(uint8_t* p_buf, uint8_t len);
 mible_status_t telink_ble_mi_aes128_encrypt(const uint8_t* key,
     const uint8_t* plaintext, uint8_t plen,
     uint8_t* ciphertext);
@@ -93,7 +95,6 @@ mible_status_t telink_mi_timer_stop(void* timer_id);
 void telink_record_eve_cb(uint16_t record_id,mible_status_t sts,mible_arch_event_t eve);
 void mi_certify_part_init();
 void set_adv_mi_prehandler(rf_packet_adv_t *p);
-void advertise_init();
 void telink_record_part_init();
 uint8_t buf_is_empty_or_not(uint8_t* p_data,uint8_t len);
 void telink_gatt_event_loop();
@@ -117,9 +118,8 @@ void mi_mesh_lowpower_loop();
 
 u8 mi_api_loop_run();
 
-u8 test_mi_api_part();
 #define RECORD_RESERVE_SPACE 	16
-#define EV_TIMER_MAX_CNT 	4
+#define EV_TIMER_MAX_CNT 	12
 typedef struct{
 	uint16_t rec_id;
 	uint8_t len ;

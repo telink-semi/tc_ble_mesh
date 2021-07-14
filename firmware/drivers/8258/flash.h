@@ -45,6 +45,7 @@
  *******************************************************************************************************/
 #pragma once
 
+#include "proj/tl_common.h"
 #include "compiler.h"
 
 
@@ -287,6 +288,8 @@ unsigned char flash_is_zb(void);
  */
 void flash_vdd_f_calib(void);
 
+
+#if (MCU_CORE_TYPE == MCU_CORE_8258)
 /**
  * @brief		This function serves to get the vdd_f calibration value.
  * @param[in]	none.
@@ -308,7 +311,7 @@ static inline unsigned char flash_get_vdd_f_calib_value(void)
 		flash_read_page(0x771c0, 1, &dcdc_flash_volatage);
 		break;
 	case(FLASH_SIZE_1M):
-		flash_read_page(0x7e1c0, 1, &dcdc_flash_volatage);
+		flash_read_page(0xfe1c0, 1, &dcdc_flash_volatage);
 		break;
 	case(FLASH_SIZE_2M):
 		flash_read_page(0x1fe1c0, 1, &dcdc_flash_volatage);
@@ -319,7 +322,40 @@ static inline unsigned char flash_get_vdd_f_calib_value(void)
 	}
 	return dcdc_flash_volatage;
 }
-
+#elif (MCU_CORE_TYPE == MCU_CORE_8278)
+/**
+ * @brief		This function serves to get the vdd_f calibration value.
+ * @param[in]	none.
+ * @return		none.
+ */
+static inline unsigned short flash_get_vdd_f_calib_value(void)
+{
+	unsigned int mid = flash_read_mid();
+	unsigned short flash_volatage = 0;
+	switch((mid & 0xff0000) >> 16)
+	{
+	case(FLASH_SIZE_64K):
+		flash_read_page(0xe1c0, 2, (unsigned char*)&flash_volatage);
+		break;
+	case(FLASH_SIZE_128K):
+		flash_read_page(0x1e1c0, 2, (unsigned char*)&flash_volatage);
+		break;
+	case(FLASH_SIZE_512K):
+		flash_read_page(0x771c0, 2, (unsigned char*)&flash_volatage);
+		break;
+	case(FLASH_SIZE_1M):
+		flash_read_page(0xfe1c0, 2, (unsigned char*)&flash_volatage);
+		break;
+	case(FLASH_SIZE_2M):
+		flash_read_page(0x1fe1c0, 2, (unsigned char*)&flash_volatage);
+		break;
+	default:
+		flash_volatage = 0xff;
+		break;
+	}
+	return flash_volatage;
+}
+#endif
 void flash_set_capacity(Flash_CapacityDef flash_cap);
 
 Flash_CapacityDef flash_get_capacity(void);

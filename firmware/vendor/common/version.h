@@ -29,9 +29,11 @@
 #include "../../proj/mcu/config.h"
 #include "mesh_config.h"
 
-#define VERSION_GET(low, high)      ((low)|(high << 8))
+#define VERSION_GET(ver_high, ver_low)      ((ver_high)|(ver_low << 8))      // big endian
 
-#define FW_VERSION_TELINK_RELEASE   (VERSION_GET(0x33, 0x33))       // user can't modify
+#define FW_VERSION_TELINK_RELEASE_3 (VERSION_GET(0x33, 0x33)|((0x34)<<16))  // user can't modify    // big endian
+
+#define FW_VERSION_TELINK_RELEASE   (FW_VERSION_TELINK_RELEASE_3 & 0xffff)    // user can't modify
 
 #define PID_UNKNOW              (0x0000)
 // ------ light ------
@@ -44,6 +46,10 @@
 #define PID_SWITCH              (0x0301)
 // ------ SPIRIT_LPN ------
 #define PID_SPIRIT_LPN          (0x0401)
+
+// ------ HOME KIT ------
+// from 0xC000 -- 0xFFFF
+
 
 /*
 MESH_PID_SEL : PID is product ID,
@@ -98,7 +104,11 @@ format: please refer to spec "4.2.1.1 Composition Data Page 0"
 //#error: must define PID, VID, no default value.
 #endif
 
+	#if DU_ENABLE
+#define BUILD_VERSION		DU_PID	// if value change, must make clean. same sequence with cps
+	#else
 #define BUILD_VERSION		(MESH_PID_SEL|(MESH_VID << 16))	// if value change, must make clean. same sequence with cps
+	#endif
 
 // -- 
 #define RUN_254K_IN_20000_EN 0 // enable to run 254K in 0x20000(default is 124k), disable to save RAM	

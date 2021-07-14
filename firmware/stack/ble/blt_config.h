@@ -47,7 +47,7 @@ static inline void blc_app_setExternalCrystalCapEnable(u8  en)
 
 static inline void check_and_set_1p95v_to_zbit_flash()
 {
-	if(zbit_flash_flag){
+	if(1 == zbit_flash_flag){ // use "== 1"" should be better than "ture"
 		analog_write(0x0c, ((analog_read(0x0c) & 0xf8)  | 0x7));//1.95
 	}
 }

@@ -41,6 +41,7 @@ static inline u32 clock_time_s(){
     return system_time_s;
 }
 
+void system_time_init();
 void system_time_run();
 u32 clock_time_exceed_ms(u32 ref, u32 span_ms);
 u32 clock_time_exceed_100ms(u32 ref, u32 span_100ms);

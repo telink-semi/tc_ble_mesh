@@ -51,7 +51,11 @@ extern "C" {
 #elif DUAL_VENDOR_EN
 #define FLASH_1M_ENABLE         0
 #else
-#define FLASH_1M_ENABLE         0
+	#if MI_API_ENABLE
+#define FLASH_1M_ENABLE        	1
+	#else
+#define FLASH_1M_ENABLE        	0	
+	#endif
 #endif
 
 #if FLASH_1M_ENABLE
@@ -99,7 +103,7 @@ extern "C" {
 #endif
 
 #ifndef HCI_LOG_FW_EN
-#define HCI_LOG_FW_EN   0
+#define HCI_LOG_FW_EN   (0 || DEBUG_LOG_SETTING_DEVELOP_MODE_EN)
 #if HCI_LOG_FW_EN
 	#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 #define DEBUG_INFO_TX_PIN           		(PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1 ? GPIO_PB6 : GPIO_PD7)

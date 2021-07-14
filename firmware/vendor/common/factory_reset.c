@@ -361,7 +361,10 @@ int factory_reset() // 1M flash
         flash_erase_sector(FLASH_ADR_USER_MESH_START + i*0x1000);
     }
 	#endif
-	
+	#if DU_ENABLE
+	flash_erase_sector(DU_STORE_ADR);
+	flash_erase_sector(DU_OTA_REBOOT_ADR);
+	#endif
 	CB_USER_FACTORY_RESET_ADDITIONAL();
     flash_erase_sector(FLASH_ADR_RESET_CNT);    // at last should be better, when power off during factory reset erase.
     irq_restore(r);
@@ -400,6 +403,11 @@ int factory_reset(){
 		#endif
 	}
 
+	#if DU_ENABLE
+	flash_erase_sector(DU_STORE_ADR);
+	flash_erase_sector(DU_OTA_REBOOT_ADR);
+	#endif
+
 	#if DUAL_MODE_ADAPT_EN
 	if(DUAL_MODE_NOT_SUPPORT != dual_mode_state){   // dual_mode_state have been init before
 	    set_firmware_type_init();
@@ -423,6 +431,7 @@ void kick_out(int led_en){
 	#endif
 	sleep_us(500000);   // wait tx buffer send completed.
     factory_reset();
+	
     #if DUAL_MODE_WITH_TLK_MESH_EN
     UI_resotre_TLK_4K_with_check();
     #endif

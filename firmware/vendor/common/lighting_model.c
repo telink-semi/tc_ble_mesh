@@ -240,13 +240,6 @@ void model_pub_check_set_bind_all(st_pub_list_t *pub_list, mesh_cb_fun_par_t *cb
 	    model_pub_check_set(level_set_st, (u8 *)(&(model_sig_light_xyl.srv[light_idx])), SIG_MD_LIGHT_XYL_S == p_res->id);    
     }
 #endif
-
-#if MI_API_ENABLE
-	if(pub_list->st[ST_TRANS_MI_VENDOR_STS]){
-		model_pub_check_set(pub_list->st[ST_TRANS_MI_VENDOR_STS], (u8 *)(&(model_vd_light.srv[0])), MIOT_SEPC_VENDOR_MODEL_SER == p_res->id);    
-	}
-#endif
-
 }
 
 /**
@@ -607,15 +600,6 @@ int mesh_cmd_sig_lightness_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	if(err){
 		return 0;
 	}
-	#if MI_API_ENABLE
-	// have transmit and delay 
-	mesh_cmd_lightness_set_t *p_set = (mesh_cmd_lightness_set_t *)par;
-	if(par_len == sizeof(mesh_cmd_lightness_set_t)){
-		mi_pub_sigmodel_inter(p_set->transit_t,p_set->delay,1);
-	}else{
-		mi_pub_sigmodel_inter(0,0,0);
-	}
-	#endif
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_lightness_st_rsp(cb_par);
 	}else{
@@ -941,14 +925,6 @@ int mesh_cmd_sig_light_ctl_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     if(err){
         return err;
     }
-    #if MI_API_ENABLE
-	// have transmit and delay 
-	if(par_len == sizeof(mesh_cmd_light_ctl_set_t)){
-		mi_pub_sigmodel_inter(p_set->transit_t,p_set->delay,1);
-	}else{
-		mi_pub_sigmodel_inter(0,0,0);
-	}
-	#endif
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_light_ctl_st_rsp(cb_par);
 	}else{

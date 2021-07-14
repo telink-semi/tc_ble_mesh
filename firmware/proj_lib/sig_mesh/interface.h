@@ -411,7 +411,7 @@ return :
         none
 **************************************************************/
 
-extern void flash_write_page(u32 addr, u32 len, const u8 *buf);
+extern void flash_write_page(u32 addr, u32 len, u8 *buf);
 
 /******************* flash_read_page ****************************
 function :read the cfg file by the way of using adr 
@@ -591,8 +591,6 @@ void mesh_heartbeat_cb_data(u16 src, u16 dst,u8 *p_hb);
 
 void remote_prov_capa_sts_cb(u8 max_item,u8 active_scan);
 void remote_prov_scan_report_cb(u8 *par,u8 len);
-u16 get_win32_prov_unicast_adr();
-int set_win32_prov_unicast_adr(u16 adr);
 u8 get_win32_ele_cnt(u8 pid);
 
 

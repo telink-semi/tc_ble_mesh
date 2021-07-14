@@ -14,8 +14,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+#if !WIN32
 #include <stdbool.h>
+#endif
 #include <stdint.h>
 #include "vendor/common/user_config.h"
 #ifndef NULL
@@ -124,11 +125,14 @@
 
 #define CRITICAL_SECTION_ENTER()
 #define CRITICAL_SECTION_EXIT()
-//#define MI_LOG_ENABLED 1
-
-#define MI_PRINTF(...)							my_printf_uart(__VA_ARGS__)	
-#define MI_HEXDUMP(base_addr, bytes)			my_printf_uart_hexdump(base_addr,bytes)
-
+#define MI_LOG_ENABLED	1
+#if MI_LOG_ENABLED==1
+#define MI_PRINTF(...)                      mible_log_printf(__VA_ARGS__)
+#define MI_HEXDUMP(array_base, array_size)  mible_log_hexdump(array_base, array_size)
+#else
+#define MI_PRINTF(...)
+#define MI_HEXDUMP(base_addr, bytes)
+#endif
 
 #define TRACE_INIT(pin)
 #define TRACE_ENTER(pin)

@@ -316,6 +316,10 @@ int otaWrite(void * p)
 
                     if(!is_valid_tlk_fw_buf(req->dat+10)){
                         err_flg = OTA_FW_CHECK_ERR;
+                    #if 1 // GATT policy, depend on user
+                    }else if(0 == ota_is_valid_pid_vid((fw_id_t *)(req->dat+4), 1)){
+                        err_flg = OTA_FW_CHECK_ERR;
+                    #endif
                     }else{
     				    #if ENCODE_OTA_BIN_EN
     				    if(need_check_type != FW_CHECK_AGTHM2){

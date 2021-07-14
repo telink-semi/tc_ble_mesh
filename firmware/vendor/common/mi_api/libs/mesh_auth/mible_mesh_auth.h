@@ -2,6 +2,7 @@
 #define __MIBLE_MESH_AUTH_H__
 #include <stdint.h>
 #include <stdbool.h>
+#include "mi_config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,6 +41,7 @@ extern "C" {
 #define SYS_DEV_INFO_GET                    (SYS_TYPE+2)
 #define SYS_LINK_PARAM_CONFIG               (SYS_TYPE+4)
 #define SYS_RXFER_TEST                      (SYS_TYPE+5)
+#define SYS_MCU_INFO_READ                   (SYS_TYPE+6)
 
 #define ERR_TYPE                            0xE0UL
 #define ERR_NOT_REGISTERED                  (ERR_TYPE)
@@ -70,7 +72,9 @@ typedef enum {
     SCHD_EVT_OOB_REQUEST                    = 0x0E,
     SCHD_EVT_MSC_SELF_TEST_PASS             = 0x0F,
     SCHD_EVT_MSC_SELF_TEST_FAIL             = 0x10,
-    SCHD_EVT_INTERNAL                       = 0x11
+    SCHD_EVT_INTERNAL                       = 0x11,
+    SCHD_EVT_MCU_INFO_FOUND                 = 0x12,
+    SCHD_EVT_MCU_INFO_NOT_FOUND             = 0x13,
 } schd_evt_id_t;
 
 
@@ -140,6 +144,10 @@ typedef struct {
     mi_msc_power_manage_t msc_onoff;
     void *p_msc_iic_config;
 } mible_libs_config_t;
+
+#if defined(MI_MESH_ENABLED) && (HAVE_MSC==0XFF)
+extern mible_libs_config_t *msc_cfg;
+#endif
 
 void set_mi_unauthorization(void);
 

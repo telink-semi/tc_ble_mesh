@@ -184,7 +184,7 @@ extern "C" {
 /////////////////// Clock  /////////////////////////////////
 #define	USE_SYS_TICK_PER_US
 #define CLOCK_SYS_TYPE  		CLOCK_TYPE_PLL	//  one of the following:  CLOCK_TYPE_PLL, CLOCK_TYPE_OSC, CLOCK_TYPE_PAD, CLOCK_TYPE_ADC
-#define CLOCK_SYS_CLOCK_HZ  	16000000
+#define CLOCK_SYS_CLOCK_HZ  	48000000
 
 //////////////////Extern Crystal Type///////////////////////
 #define CRYSTAL_TYPE			XTAL_12M		//  extern 12M crystal

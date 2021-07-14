@@ -54,6 +54,15 @@ enum{
 	ERR_TYPE_SAR,
 };
 
+typedef struct{
+	u16 val;
+}u16_struct;    // for u8 buffer which not sure u16 align.
+
+typedef struct{
+	u32 val;
+}u32_struct;    // for u8 buffer which not sure u32 align.
+
+
 #if 1   // test firmware size
 #define NOP_TEST_BYTE_50       \
     CLOCK_DLY_5_CYC;CLOCK_DLY_5_CYC;CLOCK_DLY_5_CYC;CLOCK_DLY_5_CYC;CLOCK_DLY_5_CYC
@@ -75,6 +84,11 @@ enum{
 #else
 #define MESH_RSP_BASE_DELAY_STEP			18  //unit:ADV_INTERVAL_MIN(10ms)
 #endif
+#define MESH_RSP_RANDOM_DELAY_320ms			32 //unit:ADV_INTERVAL_MIN(10ms)			
+#define MESH_RSP_RANDOM_DELAY_500ms			50 //unit:ADV_INTERVAL_MIN(10ms)			
+#define MESH_RSP_RANDOM_DELAY_1S			100 //unit:ADV_INTERVAL_MIN(10ms)			
+#define MESH_RSP_RANDOM_DELAY_2S			200 //unit:ADV_INTERVAL_MIN(10ms)
+#define MESH_RSP_RANDOM_DELAY_3S			300 //unit:ADV_INTERVAL_MIN(10ms)
 
 #define MESH_POWERUP_BASE_TIME				200
 
@@ -192,6 +206,7 @@ u8 mesh_access_layer_dst_addr_valid(mesh_cmd_nw_t *p_nw);
 
 extern u8 gatt_adv_send_flag;
 extern u16 g_vendor_id;
+extern u16 g_msg_vd_id;
 extern u32 g_vendor_md_light_vc_s;
 extern u32 g_vendor_md_light_vc_s2;
 extern u32 g_vendor_md_light_vc_c;
@@ -304,7 +319,6 @@ void wd_clear_lib();
 void bls_ota_set_fwSize_and_fwBootAddr(int firmware_size_k, int boot_addr);
 void mesh_cfg_cmd_force_seg_set(material_tx_cmd_t *p,mesh_match_type_t *p_match_type);
 void mesh_secure_beacon_loop_proc();
-u16 mi_share_model_sub(u16 op,u16 ele_adr,u16 sub_adr,u8 *uuid,u32 model_id);
 int mesh_cmd_sig_cfg_model_sub_cb(u8 st,mesh_cfg_model_sub_set_t * p_sub_set,bool4 sig_model,u16 adr_src);
 void start_reboot(void);
 void blc_l2cap_register_pre_handler(void *p);
@@ -317,10 +331,15 @@ u16 swap_u16_data(u16 swap);
 void mesh_seg_must_en(u8 en);
 int mesh_dev_key_candi_decrypt_cb( u16 src_adr,int dirty_flag ,const u8* ac_backup ,unsigned char *r_an, 
 											       unsigned char* ac, int len_ut, int mic_length);
-u8 mesh_pub_retransmit_para_en();
 void mi_vendor_cfg_rsp_proc();
 void set_random_adv_delay(int en);
 void bls_l2cap_requestConnParamUpdate_Normal();
+int telink_rand_num_generator(u8* p_buf, u8 len);
+int is_need_send_sec_nw_beacon();
+
+// ----------- mesh_log.c -------
+const char * get_op_string(u16 op, const char *str_in);
+
 
 // ------------ clock -----------
 #if (CHIP_TYPE >= CHIP_TYPE_8258)

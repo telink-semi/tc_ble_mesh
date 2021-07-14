@@ -38,7 +38,7 @@ typedef struct{
 extern my_fifo_t fast_prov_mac_fifo;
 
 void mesh_device_key_set_default();
-void mesh_fast_prov_start(u16 pid);
+void mesh_fast_prov_start(u16 pid, u16 start_addr);
 void mesh_fast_prov_rsp_handle(mesh_rc_rsp_t *rsp);
 int mesh_fast_prov_sts_set(u8 sts_set);
 void mesh_fast_prov_val_init();
@@ -61,8 +61,6 @@ int cb_vd_mesh_addr_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int cb_vd_mesh_primary_addr_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int cb_vd_mesh_provison_data_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int cb_vd_mesh_provision_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-u16 get_win32_prov_unicast_adr();
-int set_win32_prov_unicast_adr(u16 adr);
 u8 get_win32_ele_cnt(u8 pid);
 void mesh_fast_prov_node_info_callback(u8 *dev_key, u16 node_addr, u16 pid);
 u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid);

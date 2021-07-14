@@ -115,9 +115,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#endif
 			
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
-			send_to_hci = mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD);
+			send_to_hci = (0 == mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD));
 			#else
-			send_to_hci = app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1);
+			send_to_hci = (0 == app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1));
 			#endif
 		}
 
@@ -267,14 +267,13 @@ void test_sig_mesh_cmd_fun()
 int get_mesh_adv_interval()
 {
 	u8 *p_buf = my_fifo_get(&mesh_adv_cmd_fifo);
-	mesh_cmd_bear_unseg_t *p_bear = (mesh_cmd_bear_unseg_t *)p_buf;
+	mesh_cmd_bear_t *p_bear = (mesh_cmd_bear_t *)p_buf;
     mesh_transmit_t *p_trans_par = (mesh_transmit_t *)&p_bear->trans_par_val;
 	u32 interval_step = 0;
-	if(p_bear->type & RSP_DELAY_FLAG){
+	if(BEAR_TX_PAR_TYPE_RSP_DELAY == p_bear->tx_head.par_type){
 		extern u8 mesh_rsp_random_delay_step;
 		interval_step = mesh_rsp_random_delay_step;
-	}
-	else{
+	}else{
 		interval_step = p_trans_par->invl_steps+1;
 	}
 	return interval_step*10000;
@@ -554,16 +553,11 @@ void user_init()
 	//mi_mesh_otp_program_simulation();
 	blc_att_setServerDataPendingTime_upon_ClientCmd(1);
 	telink_record_part_init();
-	#if 0 // XIAOMI_MODULE_ENABLE
-	test_mi_api_part(); // just for test
-	#endif
 	blc_l2cap_register_pre_handler(telink_ble_mi_event_cb_att);// for telink event callback
-	advertise_init();
 	mi_sevice_init();
-	mi_scheduler_init(20, mi_schd_event_handler, NULL, NULL, NULL);
+	//mi_scheduler_init(20, mi_schd_event_handler, NULL, NULL, NULL);
 #endif 
-	extern u32 system_time_tick;
-	system_time_tick = clock_time();
+	system_time_init();
 #if TESTCASE_FLAG_ENABLE
 	memset(&model_sig_cfg_s.hb_sub, 0x00, sizeof(mesh_heartbeat_sub_str)); // init para for test
 #endif

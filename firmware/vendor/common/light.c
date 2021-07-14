@@ -181,11 +181,18 @@ s16 get_on_power_up_last(sw_level_save_t *p_save)
 	return (p_save->onoff ? p_save->last : LEVEL_OFF);
 }
 
+#if (!WIN32)
 #if KEEP_ONOFF_STATE_AFTER_OTA
 void set_keep_onoff_state_after_ota()
 {
 	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) | FLD_OTA_REBOOT_FLAG);
 }
+
+void clr_keep_onoff_state_after_ota()
+{
+	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) & (~ FLD_OTA_REBOOT_FLAG));
+}
+#endif
 #endif
 
 void mesh_global_var_init_light_sw()
@@ -360,6 +367,10 @@ void light_pwm_init()
 			}
         }
     }
+
+    #if KEEP_ONOFF_STATE_AFTER_OTA
+    clr_keep_onoff_state_after_ota();
+    #endif
 #endif
 }
 #else

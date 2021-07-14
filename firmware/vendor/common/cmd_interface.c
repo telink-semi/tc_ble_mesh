@@ -426,12 +426,12 @@ int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_l
 	directed_proxy_ctl_t proxy_ctl;
 	memset(&proxy_ctl, 0x00, sizeof(proxy_ctl));
 	proxy_ctl.use_directed = use_directed;
-	proxy_ctl.addr_range.range_start = range_start;
+	proxy_ctl.addr_range.range_start_b = range_start;
 	if(range_len > 1){
-		proxy_ctl.addr_range.length_present = 1;
+		proxy_ctl.addr_range.length_present_b = 1;
 		proxy_ctl.addr_range.range_length = range_len;
 	}
-	u8 par_len = OFFSETOF(directed_proxy_ctl_t, addr_range) + (proxy_ctl.addr_range.length_present?3:2);
+	u8 par_len = OFFSETOF(directed_proxy_ctl_t, addr_range) + (proxy_ctl.addr_range.length_present_b?3:2);
 	#if WIN32
 	LOG_MSG_INFO(TL_LOG_NODE_BASIC,(u8 *)&proxy_ctl,par_len ,"mesh_directed_proxy_control_set",0);
 	#endif

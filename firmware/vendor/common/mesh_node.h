@@ -60,6 +60,7 @@ typedef struct{
 #else
 #define GET_KEY_INDEX_LEN(cnt)		        ((cnt/2) * 3 + (cnt&1) * 2)
 #define GET_PAR_LEN_FROM_RSP(len, size_op)  (len - 4 - size_op)
+#define GET_RSP_LEN_FROM_PAR(len, size_op)  (len + 4 + size_op)
 
 static inline u16 GET_KEY_INDEX_L(u8 *p){
 	return (p[0]+((p[1]&0x0f)<<8));
@@ -182,10 +183,19 @@ enum{
 #define SIG_MD_DF_CFG_C					0xBF31
 #define SIG_MD_BRIDGE_CFG_SERVER		0xBF32
 #define SIG_MD_BRIDGE_CFG_CLIENT		0xBF33
-#define SIG_MD_PRIVATE_BEACON_SERVER 	0x000a
-#define SIG_MD_PRIVATE_BEACON_CLIENT	0x000b
+#define SIG_MD_PRIVATE_BEACON_SERVER 	0xBF40
+#define SIG_MD_PRIVATE_BEACON_CLIENT	0xBF41
 
-
+#define SIG_MD_ON_DEMAND_PROXY_S		0xBF50
+#define SIG_MD_ON_DEMAND_PROXY_C		0xBF51
+#define SIG_MD_SAR_CFG_S				0xBF52
+#define SIG_MD_SAR_CFG_C				0xBF53
+#define SIG_MD_OP_AGG_S					0xBF54
+#define SIG_MD_OP_AGG_C					0xBF55
+#define SIG_MD_LARGE_CPS_S				0xBF56
+#define SIG_MD_LARGE_CPS_C				0xBF57
+#define SIG_MD_SOLI_PDU_RPL_CFG_S		0xBF58
+#define SIG_MD_SOLI_PDU_RPL_CFG_C		0xBF59
 
 
 #define SIG_MD_G_ONOFF_S                0x1000
@@ -249,6 +259,8 @@ enum{
 
 
 //--------------------------------------- config model
+#define NO_TX_RSP2SELF_EN               (!MD_CLIENT_EN)   // to save 
+
 #if(0 == TESTCASE_FLAG_ENABLE)
 	#if (GATEWAY_ENABLE&&__PROJECT_MESH_PRO__)
 #define SUB_LIST_MAX                    (2)
@@ -408,6 +420,31 @@ typedef struct{
 		};
 	};
 }mesh_transmit_t;
+
+typedef struct{
+	u8 sar_seg_invl_step:4;
+	u8 sar_uni_retrans_cnt:4;
+	u8 sar_uni_retrans_cnt_no_ack:4;
+	u8 sar_uni_retrans_invl_step:4;
+	u8 sar_uni_retrans_invl_incre:4;
+	u8 sar_multi_retrans_cnt:4;
+	u8 sar_multi_retrans_invl:4;
+	u8 rfu:4;
+}sar_transmitter_t;
+
+typedef struct{
+	u8 sar_seg_thres:5;
+	u8 sar_ack_delay_inc:3;	
+#if 0 // pts revert the para
+	u8 sar_rcv_seg_invl_step:4;
+	u8 sar_discard_timeout:4;
+#else
+	u8 sar_discard_timeout:4;
+	u8 sar_rcv_seg_invl_step:4;	
+#endif
+	u8 sar_ack_retrans_cnt:2;
+	u8 rfu:6;
+}sar_receiver_t;
 
 typedef struct{
 	u8 relay;
@@ -845,6 +882,13 @@ typedef struct{
 //--------------------SIG SERVER MODEL
 typedef struct{
     model_common_t com;             // must first
+#if MD_SAR_EN
+	sar_transmitter_t sar_transmitter;
+	sar_receiver_t sar_receiver;
+#endif
+#if MD_ON_DEMAND_PROXY_EN
+	u8 on_demand_proxy;
+#endif
     u8 rfu1[8];
 	u8 sec_nw_beacon;
 	u8 ttl_def;
@@ -1241,6 +1285,8 @@ typedef struct{
 #endif
 #if DISTRIBUTOR_UPDATE_CLIENT_EN
 	model_client_common_t fw_distr_clnt;	// client
+#endif
+#if DISTRIBUTOR_UPDATE_SERVER_EN
     model_g_light_s_t fw_distr_srv;         // server
 	model_client_common_t fw_update_clnt;	// client   // may use
 	model_client_common_t blob_trans_clnt;	// client   // may use
@@ -1437,6 +1483,7 @@ int mesh_nid_check(u8 nid);
 void mesh_friend_key_refresh(mesh_net_key_t *new_key);
 void mesh_friend_key_RevokingOld(mesh_net_key_t *new_key);
 void mesh_friend_key_update_all_nk(u8 lpn_idx, u8 nk_arr_idx);
+int  mesh_get_ivi_cur_val_little();
 void mesh_increase_ivi(u8 *p_ivi);
 void mesh_decrease_ivi(u8 *p_ivi);
 int mesh_ivi_greater_or_equal(const u8 *p_ivi1, const u8 *p_ivi2, u32 val);
@@ -1452,6 +1499,7 @@ int mesh_provision_par_set(u8 *prov_pars);
 u8 mesh_provision_and_bind_self(u8 *p_prov_data, u8 *p_dev_key, u16 appkey_idx, u8 *p_app_key);
 mesh_net_key_t * mesh_get_netkey_by_idx(u16 key_idx);
 mesh_net_key_t * is_mesh_net_key_exist(u16 key_idx);
+int is_netkey_index_prohibited(u16 key_idx);
 int get_mesh_net_key_offset(u16 key_idx);
 int is_net_key_save();
 void model_pub_st_cb_re_init_lc_srv(cb_pub_st_t cb);
@@ -1542,6 +1590,7 @@ void mesh_service_change_report();
 #define MESH_PARA_RETRIEVE_VAL      1
 #define MESH_PARA_STORE_VAL         0
 int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u32 size,u8 flag);
+void mesh_seg_rx_init();
 void mesh_seg_ack_poll_rx();
 void mesh_seg_ack_poll_tx();
 void blc_pm_select_none();
@@ -1551,7 +1600,6 @@ void mesh_key_node_identity_set_prov_set();
 void mesh_switch_identity_proc();// run in loop
 int is_pkt_notify_only(u16 dst_adr, int relay_flag);
 u32 get_reliable_interval_ms_min();
-u32 get_reliable_interval_ms_max();
 void prov_random_proc(u8 *p_random);
 void mesh_node_refresh_binding_tick();
 u64 mul32x32_64(u32 a, u32 b);
@@ -1575,10 +1623,12 @@ u32 get_blk_crc_tlk_type2(u32 crc_init, u8 *data, u32 len);
 int is_valid_tlk_fw_buf(u8 *p_flag);
 void power_on_io_proc(u8 i);
 unsigned char ble_moudle_id_is_kmadongle();
-void mesh_ivi_proc_cb(u8 search_flag);
 void mesh_blc_ll_initExtendedAdv();
 u8 mesh_blc_ll_setExtAdvParamAndEnable();
 void mesh_blc_ll_setExtAdvData(u8 adv_pdu_len, u8 *data);
+void mesh_ivi_event_cb(u8 search_flag);
+void mesh_netkey_cb(u8 idx,u16 op);
+
 
 
 extern u16 ele_adr_primary;

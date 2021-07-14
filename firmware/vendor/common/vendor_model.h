@@ -31,16 +31,21 @@
 #define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (0))
 #define VENDOR_MD_LIGHT_S2              ((0x0002<<16) | (0))
 #else
-    
-#define TEMP_VD_ID_MODEL                (VENDOR_ID)
+#define VENDOR_ID_2ND_ENABLE			0			// enable in some platform
+
+#if VENDOR_ID_2ND_ENABLE
+#define VENDOR_ID_2ND                	(VENDOR_ID)	// user can define the second vendor id
+#else
+#define VENDOR_ID_2ND                	(VENDOR_ID)
+#endif
 	#if DU_ENABLE
-#define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (TEMP_VD_ID_MODEL))
-#define VENDOR_MD_LIGHT_S               ((0x0002<<16) | (TEMP_VD_ID_MODEL))
-#define VENDOR_MD_LIGHT_S2              ((0x0003<<16) | (TEMP_VD_ID_MODEL))
+#define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (VENDOR_ID))
+#define VENDOR_MD_LIGHT_S               ((0x0002<<16) | (VENDOR_ID))
+#define VENDOR_MD_LIGHT_S2              ((0x0003<<16) | (VENDOR_ID_2ND))
 	#else
-#define VENDOR_MD_LIGHT_S               ((0x0000<<16) | (TEMP_VD_ID_MODEL))
-#define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (TEMP_VD_ID_MODEL))
-#define VENDOR_MD_LIGHT_S2              ((0x0002<<16) | (TEMP_VD_ID_MODEL))
+#define VENDOR_MD_LIGHT_S               ((0x0000<<16) | (VENDOR_ID))
+#define VENDOR_MD_LIGHT_C               ((0x0001<<16) | (VENDOR_ID))
+#define VENDOR_MD_LIGHT_S2              ((0x0002<<16) | (VENDOR_ID_2ND))
 	#endif
 #endif
 
@@ -71,6 +76,10 @@
 
 	#if DU_ENABLE
 #define VD_LPN_REPROT					0xF9// report event .
+#define VD_TIME_REQ						0xF8// TIME REQ
+#define VD_TIME_REQ_ACK					0xFA// TIME REQ ACK
+#define VD_TIME_CMD						0xFD// client send time proc 
+#define VD_TIME_RSP						0xFF// server send time rsp 
 	#endif
 #elif(VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
 // ------ 0xC0 to 0xDF for telink used
@@ -252,6 +261,18 @@ static inline int is_vendor_extend_op(u16 op)
 #define OPERATION_NOT_SUPPORT		0x82
 #define PARAMETER_ERROR				0x83
 #define DEVICE_STS_ERR				0x84
+
+typedef struct{
+	u8 tid;
+	u16 op;
+	u32 time;
+}time_cmd_str;
+
+typedef struct{
+	u8 tid;
+	u16 op;
+	u8 sts;
+}time_cmd_rsp_str;
 
 typedef struct{
 	u8 tid;

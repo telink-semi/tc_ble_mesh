@@ -1,9 +1,9 @@
 #pragma once
 #include "vendor/common/version.h"    // include mesh_config.h inside.
 
-
+#define DEVELOPER_VERSION           0001
 #define USE_MIBLE_OTA          1
-#define USE_GATT_SPEC          0
+#define USE_GATT_SPEC          1
 #define MI_MESH_ENABLED 1
 // mi mode enable 
 	#define MSC_NONE			   0
@@ -70,15 +70,19 @@
 #endif
 
 #define PRODUCT_ID              TL_CUSTOMER_PRODUCT_ID
-//#define MODEL_NAME              "xiaomi.dev.ble"
+#if (TL_CUSTOMER_PRODUCT_ID == 889)
+#define MODEL_NAME              "xiaomi.dev.ble"
+#else
 #define MODEL_NAME              "lemesh.light.test04"
-
+#endif
 #if (TL_CUSTOMER_PRODUCT_ID == MI_LEISHI_TEST_PID)
 #define LS_TEST_ENABLE 			1
 #else
 #define LS_TEST_ENABLE 			0
 #endif
 #define MAX_ATT_MTU		132
+#define POTP_BASE              ((uint8_t*)0xFB000UL)
+
 //extern unsigned int ota_program_offset;
 //extern unsigned int  ota_firmware_size_k;
 //#define DFU_NVM_START          (ota_program_offset)

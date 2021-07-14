@@ -189,7 +189,7 @@ static inline int is_valid_sector_addr(u32 addr)
     #if FLASH_1M_ENABLE
 	if(((addr & 0xFFFFF000) == MI_BLE_MESH_CER_ADR) || (addr >= 0x100000))
     #else
-	if((addr >= MI_BLE_MESH_CER_ADR)&&
+	if(((addr & 0xFFFFF000) == MI_BLE_MESH_CER_ADR || (addr >= 0x80000))&&
 	    (!(((flash_sector_mac_address == CFG_ADR_MAC_1M_FLASH) && (addr == FLASH_ADR_EDCH_PARA)))))
     #endif
 	{
@@ -581,11 +581,13 @@ int flash_read_mid_uid_with_check(unsigned int *flash_mid, unsigned char *flash_
 	   ZB25WD10A	0x4b	0x11325E	ZB
 	   ZB25WD40B	0x4b	0x13325E	ZB
 	   ZB25WD80B	0x4b	0x14325E	ZB
+	   ZB25WD20A	0x4b	0x12325E	ZB	The actual capacity is 256K, but the nominal value is 128KB.
+											The software cannot do capacity adaptation and requires special customer special processing.
 
 	   The uid of the early ZB25WD40B (mid is 0x13325E) is 8 bytes. If you read 16 bytes of uid,
 	   the next 8 bytes will be read as 0xff. Later, the uid of ZB25WD40B has been switched to 16 bytes.
 	 */
-	if((*flash_mid == 0x1160C8)||(*flash_mid == 0x1360C8)||(*flash_mid == 0x1460C8)||(*flash_mid == 0x11325E)||(*flash_mid == 0x13325E)||(*flash_mid == 0x14325E)){
+	if((*flash_mid == 0x1160C8)||(*flash_mid == 0x1360C8)||(*flash_mid == 0x1460C8)||(*flash_mid == 0x11325E)||(*flash_mid == 0x12325E)||(*flash_mid == 0x13325E)||(*flash_mid == 0x14325E)){
 		flash_read_uid(FLASH_READ_UID_CMD_GD_PUYA_ZB_UT, (unsigned char *)flash_uid);
 	}else{
 		return 0;
@@ -615,13 +617,14 @@ int flash_read_mid_uid_with_check(unsigned int *flash_mid, unsigned char *flash_
 unsigned char flash_is_zb(void)
 {
 	unsigned int flash_mid  = flash_read_mid();
-	if((flash_mid == 0x13325E)||(flash_mid == 0x14325E))
+	if((flash_mid == 0x13325E)||(flash_mid == 0x14325E)||(flash_mid == 0x11325E)||(flash_mid == 0x12325E)) // include 825x, 827x
 	{
 		return 1;
 	}
 	return 0;
 }
 
+#if (MCU_CORE_TYPE == MCU_CORE_8258)
 /**
  * @brief		This function serves to calibration the flash voltage(VDD_F),if the flash has the calib_value,we will use it,either will
  * 				trim vdd_f to 1.95V(2b'111 the max) if the flash is zb.
@@ -643,6 +646,31 @@ void flash_vdd_f_calib(void)
 		analog_write(0x0c, ((analog_read(0x0c) & 0xf8)  | calib_value));
 	}
 }
+#elif (MCU_CORE_TYPE == MCU_CORE_8278)
+/**
+ * @brief		This function serves to calibration the flash voltage(VDD_F),if the flash has the calib_value,we will use it,either will
+ * 				trim vdd_f to 1.95V(2b'111 the max) if the flash is zb.
+ * @param[in]	vol - the voltage which you want to set.
+ * @return		none.
+ */
+void flash_vdd_f_calib(void)
+{
+	unsigned short calib_value = flash_get_vdd_f_calib_value();
+	if((0xffff == calib_value) || (0 != (calib_value & 0xf8f8)))
+	{
+		if(flash_is_zb())
+		{
+			analog_write(0x09, ((analog_read(0x09) & 0x8f) | (FLASH_VOLTAGE_1V95 << 4)));    		//ldo mode flash ldo trim 1.95V
+			analog_write(0x0c, ((analog_read(0x0c) & 0xf8) | FLASH_VOLTAGE_1V9));					//dcdc mode flash ldo trim 1.90V
+		}
+	}
+	else
+	{
+		analog_write(0x09, ((analog_read(0x09) & 0x8f)  | ((calib_value & 0xff00) >> 4) ));
+		analog_write(0x0c, ((analog_read(0x0c) & 0xf8)  | (calib_value & 0xff)));
+	}
+}
+#endif
 
 void flash_set_capacity(Flash_CapacityDef flash_cap)
 {

@@ -35,7 +35,50 @@
 
 #define BLE_MI_MAX_DATA_LEN (GATT_MTU_SIZE_DEFAULT - 3) /**< Maximum length of data (in bytes) that can be transmitted to the peer by the Xiaomi  service module. */
 
+#define MIBLE_SYSINFO_SUPPORT_OPCODE_NUM    8
+#define MIBLE_SYSINFO_SUPPORT_OPCODE        0x00
+#define MIBLE_SYSINFO_MCU_VERSION           0x01
+#define MIBLE_SYSINFO_DEVICE_SN             0x02
+#define MIBLE_SYSINFO_HARDWARE_VERSION      0x03
+#define MIBLE_SYSINFO_LATITUDE              0x04
+#define MIBLE_SYSINFO_LONGITUDE             0x05
+#define MIBLE_SYSINFO_VENDOR1               0x06
+#define MIBLE_SYSINFO_VENDOR2               0x07
+#define MIBLE_SYSINFO_ERROR_CODE            0xFF
+
+typedef enum {
+    DEV_INFO_SUPPORT     = 0x00,
+    DEV_INFO_MCU_VERSION,
+    DEV_INFO_DEVICE_SN,
+    DEV_INFO_HARDWARE_VERSION,
+    DEV_INFO_LATITUDE,
+    DEV_INFO_LONGITUDE,
+    DEV_INFO_VENDOR1,
+    DEV_INFO_VENDOR2,
+} dev_info_type_t;
+
+typedef struct {
+    int     code;
+    uint8_t *buff;
+    uint8_t len;
+} dev_info_t;
+
+
 typedef void (* mi_service_evt_handler_t)(uint8_t is_connected);
+
+typedef void (* mi_service_devinfo_callback_t)(dev_info_type_t type, dev_info_t* data);
+
+typedef void (* gatt_spec_init_t)(uint16_t conn_handle, uint16_t srv_handle, uint16_t read_handle, uint16_t write_handle);
+typedef void (* gatt_spec_deinit_t)(void);
+typedef void (* gatt_spec_write_t)(uint8_t *pdata, uint16_t len);
+typedef void (* gatt_spec_recv_t)(uint8_t *pdata, uint16_t len);
+
+typedef struct {
+    gatt_spec_init_t    init;
+    gatt_spec_deinit_t  deinit;
+    gatt_spec_write_t   write;
+    gatt_spec_recv_t    recv;
+} mible_gatt_spec_func_t;
 
 /**@brief Function for initializing the Xiaomi Service.
  */
@@ -69,7 +112,12 @@ int set_wifi_status(uint8_t status);
 
 /* internal api */
 void mi_service_event_register(mi_service_evt_handler_t h);
+int mi_service_devinfo_callback_register(mi_service_devinfo_callback_t cb);
+int mi_spec_callback_register(mible_gatt_spec_func_t cb);
+
 uint32_t opcode_send(uint32_t status);
 uint32_t opcode_recv(void);
+uint32_t sysinfo_send(uint8_t* p_value, uint8_t len);
+//void miio_bt_get_dev_info(dev_info_type_t type, dev_info_t* buf);
 
 #endif // __MI_SERVICE_SECURE_H__

@@ -40,6 +40,8 @@ mible_status_t mible_gap_scan_start(mible_gap_scan_type_t scan_type,
 
 mible_status_t mible_gap_scan_stop(void);
 
+mible_status_t mible_gap_scan_param_get(mible_gap_scan_param_t *scan_param);
+
 mible_status_t mible_gap_adv_start(mible_gap_adv_param_t *p_adv_param);
 
 mible_status_t mible_gap_adv_data_set(uint8_t const * p_data, uint8_t dlen,
@@ -97,6 +99,9 @@ mible_status_t mible_gattc_write_cmd(uint16_t conn_handle, uint16_t handle,
 mible_status_t mible_timer_create(void** p_timer_id,
 		mible_timer_handler timeout_handler, mible_timer_mode mode);
 
+mible_status_t mible_user_timer_create(void** p_timer_id,
+        mible_timer_handler timeout_handler, mible_timer_mode mode);
+
 mible_status_t mible_timer_delete(void* timer_id);
 
 mible_status_t mible_timer_start(void* timer_id, uint32_t timeout_value,
@@ -127,12 +132,12 @@ mible_status_t mible_iic_init(const iic_config_t * p_config, mible_handler_t han
 
 void mible_iic_uninit(void);
 
-mible_status_t mible_iic_tx(uint8_t addr, uint8_t * p_out, uint16_t len,uint8_t no_stop);
-
+mible_status_t mible_iic_tx(uint8_t addr, uint8_t * p_out, uint16_t len,
+		bool no_stop);
 
 mible_status_t mible_iic_rx(uint8_t addr, uint8_t * p_in, uint16_t len);
 
-int mible_iic_scl_pin_read(uint8_t port, uint16_t pin);
+int mible_iic_scl_pin_read(uint8_t port, uint8_t pin);
 
 int mible_gap_register(mible_gap_callback_t cb);
 
@@ -140,11 +145,6 @@ int mible_gattc_register(mible_gattc_callback_t cb);
 
 int mible_gatts_register(mible_gatts_callback_t cb);
 
-int mible_arch_register(mible_arch_callback_t cb);
-
-int mible_gap_register(mible_gap_callback_t cb);
-int mible_gattc_register(mible_gattc_callback_t cb);
-int mible_gatts_register(mible_gatts_callback_t cb);
 int mible_arch_register(mible_arch_callback_t cb);
 
 mible_status_t mible_nvm_init(void);
@@ -155,7 +155,12 @@ mible_status_t mible_nvm_read(void * p_data, uint32_t length, uint32_t address);
 
 mible_status_t mible_upgrade_firmware(void);
 
-mible_status_t mible_upgrade_firmware_fail(void);
+mible_status_t mible_reboot(void);
 
+mible_status_t mible_set_tx_power(int16_t power);
+
+int mible_log_printf(const char * sFormat, ...);
+
+int mible_log_hexdump(void* array_base, uint16_t array_size);
 
 #endif

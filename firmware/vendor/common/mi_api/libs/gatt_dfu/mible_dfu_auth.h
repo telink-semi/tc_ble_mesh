@@ -10,8 +10,8 @@
 #include "cryptography/mi_crypto_backend_mbedtls.h"
 
 /* Exported types ------------------------------------------------------------*/
-
-typedef struct {
+#if defined ( __CC_ARM )
+__PACKED typedef struct {
     uint8_t    tag[512];
     uint8_t    server_der_crt[512];
     uint8_t    developer_der_crt[512];
@@ -20,7 +20,17 @@ typedef struct {
     uint8_t    pack_sig[64];
     uint8_t    pack_sha[32];
 } dfu_ctx_t;
-
+#elif defined   ( __GNUC__ )
+typedef struct __PACKED{
+    uint8_t    tag[512];
+    uint8_t    server_der_crt[512];
+    uint8_t    developer_der_crt[512];
+    msc_crt_t  server_crt;
+    msc_crt_t  developer_crt;
+    uint8_t    pack_sig[64];
+    uint8_t    pack_sha[32];
+} dfu_ctx_t;
+#endif
 /* Exported constants --------------------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 

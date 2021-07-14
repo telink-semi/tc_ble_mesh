@@ -38,7 +38,7 @@
 #include "vendor/common/app_heartbeat.h"
 
 // ------- friend node && LPN common
-u8 mesh_subsc_adr_cnt_get (mesh_cmd_bear_unseg_t *p_br)
+u8 mesh_subsc_adr_cnt_get (mesh_cmd_bear_t *p_br)
 {
     u32 len_lt = mesh_lt_len_get_by_bear(p_br);
     return (len_lt - 1)/2;
@@ -104,7 +104,8 @@ void friend_cmd_send_fn(u8 lpn_idx, u8 op)  // always need.
 
 #if (FEATURE_FRIEND_EN || FEATURE_LOWPOWER_EN)
 // cache data should be not encryption. p_bear should have been big endianness
-void mesh_friend_logmsg(mesh_cmd_bear_unseg_t *p_bear_big, u8 len)
+// @ par: len:  from "trans_par_val"
+void mesh_friend_logmsg(mesh_cmd_bear_t *p_bear_big, u8 len)
 {
 	#if (DEBUG_PROXY_FRIEND_SHIP && WIN32)
 	extern u8 log_en_lpn1,log_en_lpn2;
@@ -112,10 +113,10 @@ void mesh_friend_logmsg(mesh_cmd_bear_unseg_t *p_bear_big, u8 len)
 	endianness_swap_u16((u8 *)&adr_dst);
 	if((log_en_lpn1 && (adr_dst == (PROXY_FRIEND_SHIP_MAC_LPN1 & 0xff)))
 	 || (log_en_lpn2 && (adr_dst == (PROXY_FRIEND_SHIP_MAC_LPN2 & 0xff)))){
-		LOG_MSG_WARN(TL_LOG_FRIEND,(u8 *)p_bear_big, len,"mesh_friend_logmsg:send message to LPN_win32: \r\n",0);
+		LOG_MSG_WARN(TL_LOG_FRIEND,(u8 *)&p_bear_big->trans_par_val, min(26,len),"mesh_friend_logmsg:send message to LPN_win32: \r\n",0);
 	}
 	#else
-	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_bear_big, len,"mesh_friend_logmsg:send message to LPN: \r\n",0);
+	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)&p_bear_big->trans_par_val, min(26,len),"mesh_friend_logmsg:send message to LPN: \r\n",0);
 	#endif
 }
 
@@ -272,48 +273,43 @@ int is_cmd2lpn(u16 adr_dst)
 	return 0;
 }
 
-int friend_cache_check_replace(u8 lpn_idx, mesh_cmd_bear_unseg_t *bear_big)
+int friend_cache_check_replace(u8 lpn_idx, mesh_cmd_bear_t *bear_big)
 {
-    int replace = 0;
-    if(bear_big->nw.ctl){
-        u8 op = bear_big->lt_ctl_unseg.opcode;
-        if((CMD_CTL_UPDATE==op)||(CMD_CTL_ACK==op)){
-            u8 r = irq_disable();
-            mesh_cmd_bear_unseg_t *p_buf_bear;
-            u8 cnt = my_fifo_data_cnt_get(fn_other_par[lpn_idx].p_cache);
-            foreach(i,cnt){
-                p_buf_bear = (mesh_cmd_bear_unseg_t *)my_fifo_get_offset(fn_other_par[lpn_idx].p_cache, i);
-                // is big endianness in cache buff
-                u8 op_buf = p_buf_bear->lt_ctl_unseg.opcode;
-                if(CMD_CTL_UPDATE==op_buf){
-                    if(i){  // the last one have been sent, just wait for check need retry or not.
-                        replace = 1;    // always 1
-                        memcpy(p_buf_bear->nw.sno, bear_big->nw.sno, 3);
-                        if(memcmp(p_buf_bear->lt_ctl_unseg.data, bear_big->lt_ctl_unseg.data,sizeof(mesh_ctl_fri_update_t))){
-                            memcpy(&p_buf_bear->lt_ctl_unseg.data, bear_big->lt_ctl_unseg.data, sizeof(mesh_ctl_fri_update_t));
-                        }
-                        break;
-                    }
-                }else if(CMD_CTL_ACK==op_buf){
-                    if(p_buf_bear->lt_ctl_ack.seqzero == bear_big->lt_ctl_ack.seqzero){
-                        replace = 1;
-                        memcpy(p_buf_bear->nw.sno, bear_big->nw.sno, 3);
+    int replace = FN_CACHE_REPLACE_NONE; //0;
+	u8 r = irq_disable();
+    mesh_cmd_bear_t *p_buf_bear;
+    my_fifo_t *p_cache_fifo = fn_other_par[lpn_idx].p_cache;
+    u8 cnt = my_fifo_data_cnt_get(p_cache_fifo);
+	
+    foreach(i,cnt){
+		p_buf_bear = (mesh_cmd_bear_t *)my_fifo_get_offset(p_cache_fifo, i);
+		// is big endianness in cache buff
+		if(p_buf_bear->nw.ctl){
+            u8 op_buf = p_buf_bear->lt_ctl_unseg.opcode;
+    		if(CMD_CTL_UPDATE == op_buf){
+                // should not replace directly, because of sno cache, and can be discarded only.
+				// it will be discarded in "FN Cache retry" of mesh_friend_ship_proc_FN_() when receive "POLL".
+                // if "update" is the last one, there is no need replaced here but discarded in "FN Cache retry" is enough.
+    		}else if(CMD_CTL_ACK == op_buf){// the first one should be also replaced.
+			    if(bear_big->nw.ctl && (CMD_CTL_ACK == bear_big->lt_ctl_unseg.opcode)){
+    				if((bear_big->nw.src == p_buf_bear->nw.src) && (p_buf_bear->lt_ctl_ack.seqzero == bear_big->lt_ctl_ack.seqzero)){// replace old seg ack
+    					replace = (i == 0) ? FN_CACHE_REPLACE_AND_OVERWRITE : FN_CACHE_REPLACE_ONLY;
+    				 	// memcpy(p_buf_bear->nw.sno, bear_big->nw.sno, 3); // should not change sno because sno cache.
                         memcpy(&p_buf_bear->lt_ctl_ack.seg_map, &bear_big->lt_ctl_ack.seg_map, 4);
                         break;
-                    }
-                }
-            }
-            irq_restore(r);
-        }
-    }
-
+    				}
+    			}
+    		}
+		}
+	}
+	irq_restore(r);
     return replace;
 }
 
 mesh_fri_ship_other_t * mesh_fri_cmd2cache(u8 *p_bear_big, u8 len_nw, u8 adv_type, u8 trans_par_val, u16 F2L_bit)
 {
     int err = 0;
-    mesh_cmd_bear_unseg_t *p_br_big = (mesh_cmd_bear_unseg_t *)p_bear_big;
+    mesh_cmd_bear_t *p_br_big = (mesh_cmd_bear_t *)p_bear_big;
     mesh_fri_ship_other_t *p_other = 0;
     
     // fifo packet
@@ -330,7 +326,7 @@ mesh_fri_ship_other_t * mesh_fri_cmd2cache(u8 *p_bear_big, u8 len_nw, u8 adv_typ
 		    
 		    // big endianness and not encryption in FIFO
 		    int replace = friend_cache_check_replace(i, p_br_big);
-		    if(0 == replace){
+		    if(FN_CACHE_REPLACE_NONE == replace){
 				int overwrite = (my_fifo_free_cnt_get(p_other->p_cache) == 0);
 		        err = my_fifo_push_adv(p_other->p_cache, (u8 *)p_br_big, mesh_bear_len_get(p_br_big), 1);
 				if(!err){
@@ -340,6 +336,8 @@ mesh_fri_ship_other_t * mesh_fri_cmd2cache(u8 *p_bear_big, u8 len_nw, u8 adv_typ
 		        }else{
 					p_other = 0;
 		        }
+		    }else if(FN_CACHE_REPLACE_AND_OVERWRITE == replace){
+                p_other->cache_overwrite = 1;
 		    }
 	    }
     }
@@ -400,7 +398,7 @@ int mesh_tx_cmd_add_packet_fn2lpn(u8 *p_bear)
     use_mesh_adv_fifo_fn2lpn = 0;
     return mesh_tx_cmd_add_packet(p_bear);
     #else
-    mesh_cmd_bear_unseg_t *p = (mesh_cmd_bear_unseg_t *)p_bear;
+    mesh_cmd_bear_t *p = (mesh_cmd_bear_t *)p_bear;
     if(pts_test_en || fn2lpn_no_retransmit){
 	    p->trans_par_val = 0x10;    // FN-BV16 / BV19 require no more than NW PDU. comfirm later.
 	}
@@ -527,7 +525,7 @@ inline u8* mesh_friend_ship_cache_check(my_fifo_t *f)
 
 int is_poll_cmd(mesh_cmd_nw_t *p_nw)
 {
-    mesh_cmd_bear_unseg_t *p_bear = CONTAINER_OF(p_nw,mesh_cmd_bear_unseg_t,nw);
+    mesh_cmd_bear_t *p_bear = CONTAINER_OF(p_nw,mesh_cmd_bear_t,nw);
     return (p_bear->nw.ctl && (CMD_CTL_POLL == p_bear->lt_ctl_unseg.opcode));
 }
 
@@ -539,6 +537,18 @@ int is_in_mesh_friend_st_fn(u8 lpn_idx)
 		return 0;
 	}
 }
+
+#if GATEWAY_ENABLE
+int is_in_mesh_friend_st_fn_all()
+{
+	for(int i=0;i<MAX_LPN_NUM;i++){
+		if(is_in_mesh_friend_st_fn(i)){
+			return 1;
+		}
+	}
+	return 0;
+}
+#endif
 
 u32 mesh_friend_local_delay(u8 lpn_idx)		// for FN
 {
@@ -579,7 +589,7 @@ void mesh_friend_set_delay_par_poll(u8 lpn_idx, u8 *rsp, u32 timeStamp)
     p_delay->tick = timeStamp;
     p_delay->poll_rsp = rsp;
 
-	mesh_friend_logmsg((mesh_cmd_bear_unseg_t *)rsp, ((mesh_cmd_bear_unseg_t *)rsp)->len + 2);
+	mesh_friend_logmsg((mesh_cmd_bear_t *)rsp, ((mesh_cmd_bear_t *)rsp)->len + 2);
 }
 
 void mesh_friend_set_delay_par(u8 delay_type, u8 lpn_idx, u16 adr_dst, u16 par_val)
@@ -591,6 +601,57 @@ void mesh_friend_set_delay_par(u8 delay_type, u8 lpn_idx, u16 adr_dst, u16 par_v
     p_delay->par_val = par_val;
 }
 
+u8 * get_cache_buf_for_poll(u32 lpn_idx, int poll_retry_flag, int check_again_flag)
+{
+	u32 i = lpn_idx;
+	my_fifo_t *f_cache = fn_other_par[i].p_cache;
+	u8 *p_br_cache = mesh_friend_ship_cache_check(f_cache);
+	
+	if(0 == poll_retry_flag){
+		if(p_br_cache){
+			if(fn_other_par[i].cache_overwrite){
+				fn_other_par[i].cache_overwrite = 0;
+			}else{
+				my_fifo_pop(f_cache);
+			}
+		}
+		p_br_cache = mesh_friend_ship_cache_check(f_cache);
+		if(p_br_cache){
+			LOG_MSG_LIB(TL_LOG_FRIEND,p_br_cache+OFFSETOF(mesh_cmd_bear_t, len), 16,"FN Cache message of NW(Big endian):",0);
+		}else{
+			#if FN_PRIVATE_SEG_CACHE_EN
+			if(is_friend_seg_cache_busy()){
+				friend_seg_cache2friend_cache(BIT(i));
+			}else
+			#endif
+			{
+				friend_cmd_send_fn(i, CMD_CTL_UPDATE);	  // push to cache
+			}
+			p_br_cache = mesh_friend_ship_cache_check(f_cache);
+		}
+	}else{
+		if(check_again_flag){
+			LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"FN Cache check again",0);
+		}else{
+			LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"FN Cache retry",0);
+		}
+		
+		if(fn_other_par[i].cache_overwrite){
+			fn_other_par[i].cache_overwrite = 0;
+		}
+		
+		if(my_fifo_data_cnt_get(f_cache) > 1){
+			mesh_cmd_bear_t *p_bear_tmp = (mesh_cmd_bear_t *)p_br_cache;
+			if(p_bear_tmp->nw.ctl && (CMD_CTL_UPDATE == p_bear_tmp->lt_ctl_unseg.opcode)){
+				my_fifo_pop(f_cache);
+				p_br_cache = mesh_friend_ship_cache_check(f_cache);
+			}
+		}					
+	}
+
+	return p_br_cache;
+}
+
 void mesh_friend_response_delay_proc_fn(u8 lpn_idx)
 {
     fn_ctl_rsp_delay_t *p_delay = &fn_ctl_rsp_delay[lpn_idx];
@@ -598,13 +659,17 @@ void mesh_friend_response_delay_proc_fn(u8 lpn_idx)
     if(p_delay->delay_type && clock_time_exceed(p_delay->tick, fn_req[lpn_idx].RecDelay * 1000 - 1800)){    // 1800us: encryption pkt time
         if(DELAY_POLL == p_delay->delay_type){
             if(p_delay->poll_rsp){
+            	if(fn_other_par[lpn_idx].cache_overwrite){
+            		p_delay->poll_rsp = get_cache_buf_for_poll(lpn_idx, 1, 1); // cache_overwrite will be clear inside.
+            	}
+				
 				u8 bear_temp_buf[MESH_BEAR_SIZE];
-                mesh_cmd_bear_unseg_t *bear_temp = (mesh_cmd_bear_unseg_t *)bear_temp_buf; // TODO DLE
-                memcpy(bear_temp, p_delay->poll_rsp, min(MESH_BEAR_SIZE, mesh_bear_len_get((mesh_cmd_bear_unseg_t *)p_delay->poll_rsp)));
+                mesh_cmd_bear_t *bear_temp = (mesh_cmd_bear_t *)bear_temp_buf; // TODO DLE
+                memcpy(bear_temp, p_delay->poll_rsp, min(MESH_BEAR_SIZE, mesh_bear_len_get((mesh_cmd_bear_t *)p_delay->poll_rsp)));
 				u8 bear_tx_len = mesh_bear_len_get(bear_temp);
 				//LOG_MSG_LIB(TL_LOG_FRIEND,0, 0 ,"bear_tx_len=%d\r\n", bear_tx_len);
                 if(bear_tx_len <= MESH_BEAR_SIZE){
-    	            //LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)&bear_temp.len, bear_temp.len+1,"Data for poll:",0);
+    	            LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)&bear_temp->len, min(26,bear_temp->len+1),"Data for poll:",0); // long log make take too mush time to response in time
                     
                     mesh_sec_msg_enc_nw_rf_buf((u8 *)(&bear_temp->nw), mesh_lt_len_get_by_bear(bear_temp), FRIENDSHIP, lpn_idx,0,fn_other_par[lpn_idx].nk_sel_dec_fn, 0);
                     mesh_tx_cmd_add_packet_fn2lpn((u8 *)bear_temp);
@@ -682,7 +747,7 @@ void mesh_friend_ship_proc_FN(u8 *bear)
                 friend_ship_disconnect_fn(i, FS_DISCONNECT_TYPE_CLEAR);
 	        }
 	    }else{
-	        mesh_cmd_bear_unseg_t *p_bear = (mesh_cmd_bear_unseg_t *)bear;
+	        mesh_cmd_bear_t *p_bear = (mesh_cmd_bear_t *)bear;
 	        mesh_cmd_nw_t *p_nw = &p_bear->nw;
 	        mesh_cmd_lt_ctl_unseg_t *p_lt_ctl_unseg = &p_bear->lt_ctl_unseg;
 	        u8 op = p_lt_ctl_unseg->opcode;
@@ -718,7 +783,7 @@ void mesh_friend_ship_proc_FN(u8 *bear)
 				#if DEBUG_SUSPEND
 	            static u8 mesh_lpn_debug_req3;mesh_lpn_debug_req3++;
 				#endif
-	            LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_req, sizeof(mesh_ctl_fri_req_t),"rcv friend request:",0);
+	            LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_req, sizeof(mesh_ctl_fri_req_t),"rcv friend request sno:0x%x par:",p_nw->sno[0]|(p_nw->sno[1]<<8)|(p_nw->sno[2]<<16));
 	            fn_other_par[i].LPNAdr = p_nw->src;
 	            fn_other_par[i].FriAdr = ele_adr_primary;
 	            fn_other_par[i].p_cache = &mesh_fri_cache_fifo[i];
@@ -748,7 +813,7 @@ void mesh_friend_ship_proc_FN(u8 *bear)
                     return ;
                 }
 				#endif
-	            LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_poll, sizeof(mesh_ctl_fri_poll_t),"rcv friend poll:",0);
+	            LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_poll, sizeof(mesh_ctl_fri_poll_t),"rcv friend poll sno:0x%x par:",p_nw->sno[0]|(p_nw->sno[1]<<8)|(p_nw->sno[2]<<16));
 	            if(proc_fn->offer_tick){
 					fn_other_par[i].link_ok = 1;
 	                mesh_friend_ship_proc_init_fn(i);    // init parameters after establish friend ship
@@ -761,35 +826,11 @@ void mesh_friend_ship_proc_FN(u8 *bear)
                     return ;
 	            }
 	            
-	            my_fifo_t *f_cache = fn_other_par[i].p_cache;
-	            u8 *p_br_cache = mesh_friend_ship_cache_check(f_cache);
-	            
-	            if(fn_poll[i].FSN != p_poll->FSN){
-	                fn_poll[i].FSN = p_poll->FSN;
-	                if(p_br_cache){
-                        if(fn_other_par[i].cache_overwrite){
-                            fn_other_par[i].cache_overwrite = 0;
-                        }else{
-                            my_fifo_pop(f_cache);
-	                    }
-	                }
-	                p_br_cache = mesh_friend_ship_cache_check(f_cache);
-	                if(p_br_cache){
-                        LOG_MSG_LIB(TL_LOG_FRIEND,p_br_cache+1, 16,"FN Cache message of NW(Big endian):",0);
-	                }else{
-	                	#if FN_PRIVATE_SEG_CACHE_EN
-	                    if(is_friend_seg_cache_busy()){
-	                        friend_seg_cache2friend_cache(BIT(i));
-	                    }else
-	                    #endif
-	                    {
-	                        friend_cmd_send_fn(i, CMD_CTL_UPDATE);    // push to cache
-	                    }
-	                    p_br_cache = mesh_friend_ship_cache_check(f_cache);
-	                }
-	            }else{
-                    LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"FN Cache retry",0);
-	            }
+	            int poll_retry_flag = (fn_poll[i].FSN == p_poll->FSN);
+				if(0 == poll_retry_flag){
+					fn_poll[i].FSN = p_poll->FSN;
+				}
+				u8 *p_br_cache = get_cache_buf_for_poll(i, poll_retry_flag, 0);
 
                 adv_report_extend_t *p_extend = get_adv_report_extend(&p_bear->len);
                 u32 timeStamp = p_extend->timeStamp;
@@ -863,7 +904,7 @@ u8 g_max_lpn_num = MAX_LPN_NUM;
 STATIC_ASSERT(MAX_LPN_NUM <= 16);	// because F2L is 16bit
 
 // mesh_friend_seg_cache_t friend_seg_cache;
-u8 mesh_fri_cache_fifo_b[MAX_LPN_NUM][(sizeof(mesh_cmd_bear_unseg_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF) * (1 << FN_CACHE_SIZE_LOG)]={{0}};
+u8 mesh_fri_cache_fifo_b[MAX_LPN_NUM][(sizeof(mesh_cmd_bear_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF) * (1 << FN_CACHE_SIZE_LOG)]={{0}};
 my_fifo_t mesh_fri_cache_fifo[MAX_LPN_NUM] = {};//{,,0,0, name##_b};
 
 mesh_ctl_fri_poll_t fn_poll[MAX_LPN_NUM] = {};
@@ -875,7 +916,7 @@ fn_ctl_rsp_delay_t fn_ctl_rsp_delay[MAX_LPN_NUM] = {};
 
 mesh_fri_ship_proc_fn_t fri_ship_proc_fn[MAX_LPN_NUM] = {};
 
-MYFIFO_INIT(mesh_adv_fifo_fn2lpn, (sizeof(mesh_cmd_bear_unseg_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF), 4);
+MYFIFO_INIT(mesh_adv_fifo_fn2lpn, (sizeof(mesh_cmd_bear_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF), 4);
 
 #endif
 
@@ -989,10 +1030,10 @@ mesh_fri_ship_other_t * mesh_fri_cmd2cache(u8 *p_bear_big, u8 len_nw, u8 adv_typ
 int is_unicast_friend_msg_to_lpn(mesh_cmd_nw_t *p_nw){return 0;}
 void mesh_rc_segment_handle_fn(mesh_match_type_t *p_match_type, mesh_cmd_nw_t *p_nw){}
 void mesh_friend_ship_proc_FN(u8 *bear){}
-int friend_cache_check_replace(u8 lpn_idx, mesh_cmd_bear_unseg_t *bear_big){return 0;}
+int friend_cache_check_replace(u8 lpn_idx, mesh_cmd_bear_t *bear_big){return 0;}
 u8 get_tx_nk_arr_idx_friend(u16 adr, u16 op){return 0;}
     #if (0 == FEATURE_LOWPOWER_EN)
-void mesh_friend_logmsg(mesh_cmd_bear_unseg_t *p_bear_big, u8 len){}
+void mesh_friend_logmsg(mesh_cmd_bear_t *p_bear_big, u8 len){}
     #endif
 int is_unicast_friend_msg_from_lpn(mesh_cmd_nw_t *p_nw){return 0;}
 u32 get_current_poll_timeout_timer_fn(u16 lpn_adr){return 0;};
