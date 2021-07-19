@@ -2803,7 +2803,7 @@ void mesh_receive_ivi_plus_one_in_normal_cb()
 	//set searching mode enter IV Index Recovery procedure
     mesh_iv_update_enter_search_mode();
 #elif(MESH_USER_DEFINE_MODE == MESH_MI_ENABLE||MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
-	mesh_iv_idx_init(iv_idx_st.cur+1, 1);
+
 #endif	
 }
 /*
