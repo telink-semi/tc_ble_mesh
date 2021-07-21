@@ -145,6 +145,15 @@ int 	blt_soft_timer_update(blt_timer_callback_t func, u32 interval_us)
 	return blt_soft_timer_add(func, interval_us);
 }
 
+int is_soft_timer_exist(blt_timer_callback_t func)
+{
+	for(int i=0; i<blt_timer.currentNum; i++){
+		if(func == blt_timer.timer[i].cb){
+			return 1;
+		}
+	}
+	return 0;
+}
 
 void  	blt_soft_timer_process(int type)
 {

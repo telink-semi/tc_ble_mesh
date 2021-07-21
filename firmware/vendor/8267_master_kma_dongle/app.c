@@ -339,6 +339,10 @@ int app_l2cap_handler (u16 conn_handle, u8 *raw_pkt)
 			#endif
 			//u16 slave_ota_handle;
 		}
+		else if (pAtt->opcode == ATT_OP_READ_RSP){
+			// the read rsp is opcode ,value.
+			tc_set_fifo(DONGLE_REPROT_READ_RSP,(u8*)&(pAtt->opcode)+1,pAtt->l2capLen-1);
+		}
 		else if(pAtt->opcode == ATT_OP_HANDLE_VALUE_NOTI)  //slave handle notify
 		{
 			if(attHandle == HID_HANDLE_CONSUME_REPORT)

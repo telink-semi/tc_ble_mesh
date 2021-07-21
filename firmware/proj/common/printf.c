@@ -280,44 +280,25 @@ int my_printf_uart_hexdump(unsigned char *p_buf,int len )
 	#endif
 }
 
-int my_printf_uart(const char *format,...){
+int my_printf_uart(const char *format,va_list args)
+{
     #if HCI_LOG_FW_EN
         #if MI_API_ENABLE
 	if(mi_ota_is_busy()){
 		return 1;
 	}
 	    #endif
-	va_list args;
 	unsigned char **pp_buf;
 	unsigned char *p_buf;
 	unsigned int len =0;
 	p_buf = printf_uart;
 	pp_buf = &(p_buf);
-	va_start( args, format );
+	//va_start( args, format );
 	len = print((char **)pp_buf, format, args);
 	uart_simu_send_bytes(printf_uart,len);
 	#endif
 	return 1;
 	
-	#if 0
-	unsigned int idx =0;
-	u8 head[2] = {HCI_LOG};
-	while(len){
-		if(len>MAX_PRINT_STRING_CNT){
-			head[1]= MAX_PRINT_STRING_CNT+2;
-			my_fifo_push_hci_tx_fifo(buf+idx ,MAX_PRINT_STRING_CNT,head,2);
-			idx+=MAX_PRINT_STRING_CNT;
-			len-=MAX_PRINT_STRING_CNT;
-		}else{
-			head[1]= len+2;
-			my_fifo_push_hci_tx_fifo(buf+idx ,len,head,2);
-			len =0;
-			idx =0;
-		}
-	}
-	return	0;
-	#endif
-
 }
 
 int my_printf(const char *format, ...) {

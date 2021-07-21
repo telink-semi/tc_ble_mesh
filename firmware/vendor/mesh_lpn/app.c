@@ -51,12 +51,8 @@
 #endif
 
 #if MESH_DLE_MODE
-MYFIFO_INIT(blt_rxfifo, DLE_RX_FIFO_SIZE, 8);
-    #if (MESH_BLE_NOTIFY_FIFO_EN)
+MYFIFO_INIT_NO_RET(blt_rxfifo, DLE_RX_FIFO_SIZE, 8);
 MYFIFO_INIT(blt_txfifo, DLE_TX_FIFO_SIZE, 8); // some phones may not support DLE, so use the same count with no DLE.
-    #else
-MYFIFO_INIT(blt_txfifo, DLE_TX_FIFO_SIZE, 16); // because composition data will be pushed into fifo continuously.
-    #endif
 #else
 MYFIFO_INIT(blt_rxfifo, 64, 8);
 MYFIFO_INIT(blt_txfifo, 40, 8);
@@ -138,9 +134,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 			}
 			
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
-			send_to_hci = mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD);
+			send_to_hci = (0 == mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD));
 			#else
-			send_to_hci = app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1);
+			send_to_hci = (0 == app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1));
 			#endif
 		}
 
@@ -240,8 +236,14 @@ void main_loop ()
 	tick_loop ++;
 #if (BLT_SOFTWARE_TIMER_ENABLE)
 	blt_soft_timer_process(MAINLOOP_ENTRY);
+	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
+		if(!is_soft_timer_exist(&mesh_lpn_poll_md_wakeup)){
+			mesh_lpn_sleep_prepare(CMD_ST_NORMAL_UNSEG); 	
+		}
+	}
 	if (blts.scan_en & BLS_FLAG_SCAN_ENABLE){
 		if(!((BLS_LINK_STATE_CONN == blt_state) && (BLE_STATE_BRX_S == ble_state))){
+			reg_rf_irq_mask |= FLD_RF_IRQ_RX;
 			bls_phy_scan_mode(0);
 		}
 	}
@@ -311,6 +313,9 @@ void user_init_peripheral(int retention_flag)
 void  lpn_set_sleep_wakeup (u8 e, u8 *p, int n)
 {
 	bls_pm_setWakeupSource(PM_WAKEUP_PAD);
+	if(lpn_provision_ok){
+		blc_ll_setScanEnable (0, 0); // not scan after suspend wakeup
+	}
 }
 
 void user_init()
@@ -429,8 +434,7 @@ void user_init()
 	mesh_scan_rsp_init();
 	my_att_init (provision_mag.gatt_mode);
 	blc_att_setServerDataPendingTime_upon_ClientCmd(10);
-	extern u32 system_time_tick;
-	system_time_tick = clock_time();
+	system_time_init();
 #if (BLT_SOFTWARE_TIMER_ENABLE)
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 1*1000*1000);
@@ -453,8 +457,8 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 	irq_enable();
 	user_init_peripheral(1); 
 	extern u8 blt_busy;
-	if((BLS_LINK_STATE_ADV == blt_state) && is_friend_ship_link_ok_lpn() && (!my_fifo_get(&mesh_adv_cmd_fifo)) && ( (0 == fri_ship_proc_lpn.poll_tick) || clock_time_exceed(fri_ship_proc_lpn.poll_tick, FRI_POLL_INTERVAL_MS*1000/2)) &&
-		blt_busy){ // not soft timer wakeup
+	if((BLS_LINK_STATE_ADV == blt_state) && is_friend_ship_link_ok_lpn() && (!my_fifo_get(&mesh_adv_cmd_fifo)) && ( (0 == fri_ship_proc_lpn.poll_tick) || clock_time_exceed(fri_ship_proc_lpn.poll_tick, get_lpn_poll_interval_ms()*1000/2)) &&
+		blt_busy && !mesh_lpn_subsc_pending.op){ // not soft timer wakeup
 		mesh_friend_ship_start_poll();
 	}	
 //  if(!is_led_busy()){

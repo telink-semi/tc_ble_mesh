@@ -198,6 +198,13 @@ int mesh_cmd_sig_attention_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 int mesh_cmd_sig_attention_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err =-1;
+#if PTS_TEST_EN
+	if(par_len > 1){ // parameter length invalid		
+		err = OP_AGG_UNKNOWN_MSG;//in op agg pts case, need report Message parameters not understood by the identified model
+		return err;
+	}
+#endif
+
 	model_health_common_t *p_model = (model_health_common_t *)cb_par->model;
 	model_sig_health.srv.health_mag.attention_timer = par[0];
 	if(HEALTH_ATTENTION_SET_NOACK != cb_par->op){
@@ -206,12 +213,6 @@ int mesh_cmd_sig_attention_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	else{
 		err = 0;
 	}
-	return err;
-}
-int mesh_cmd_sig_attention_set_unrel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
-{
-	int err =-1;
-	mesh_cmd_sig_attention_set(par, par_len,cb_par);
 	return err;
 }
 int mesh_cmd_sig_attention_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)

@@ -71,7 +71,8 @@ int mesh_beacon_send_proc()
 
 int check_pkt_is_unprovision_beacon(u8 *dat)
 {
-	beacon_str *p_beacon = (beacon_str *) (dat-1);
+	mesh_cmd_bear_t *p_bear = CONTAINER_OF((mesh_cmd_nw_t *)dat, mesh_cmd_bear_t, nw);;
+	beacon_str *p_beacon = (beacon_str *)p_bear;
 	if(	p_beacon->bea_data.header.type == MESH_ADV_TYPE_BEACON&&
 		p_beacon->bea_data.beacon_type == UNPROVISION_BEACON){
 		return 0;
@@ -107,7 +108,7 @@ u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash){
 
 u8 beacon_test_case(u8*p_tc,u8 len )
 {
-    beacon_str  beaconData = {0};
+    beacon_str  beaconData = {{0}};
 	beaconData.trans_par_val = TRANSMIT_DEF_PAR_BEACON;
 	beaconData.bea_testcase_id.header.len = 10;
 	beaconData.bea_testcase_id.header.type = MESH_ADV_TYPE_TESTCASE_ID;
@@ -118,14 +119,19 @@ u8 beacon_test_case(u8*p_tc,u8 len )
 }
 
 // mode =1; with uri , mode =0 means without uri 
-#define URI_DATA    {0x17,0x2f,0x2f,0x77,0x77,0x77,0x2e,0x65,\
-					 0x78,0x61,0x6d,0x70,0x6c,0x65,0x2e,0x63,\
-					 0x6f,0x6d,0x2f,0x6d,0x65,0x73,0x68,0x2f,\
-					 0x70,0x72,0x6f,0x64,0x75,0x63,0x74,0x73,\
-					 0x2f,0x6c,0x69,0x67,0x68,0x74,0x2d,0x73,\
-					 0x77,0x69,0x74,0x63,0x68,0x2d,0x76,0x33\
-					}
-// URI_HASH             {0xD9,0x74,0x78,0xb3};  // sample data for URI_DATA
+//#define URI_DATA    {0x17,0x2f,0x2f,0x50,0x54,0x53,0x2e,0x43,0x4f,0x4d}
+// URI_HASH             {72 26 a2 7f};  // sample data for URI_DATA
+
+
+u8  is_unprovision_beacon_with_uri(event_adv_report_t *report)
+{
+	if(report->len == 25){
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
 
 int unprov_beacon_send(u8 mode ,u8 blt_sts)
 {
@@ -140,7 +146,7 @@ int unprov_beacon_send(u8 mode ,u8 blt_sts)
 	URI Hash : d97478b3667f4839487469c72b8e5e9e
 	Beacon : 0070cf7c9732a345b691494810d2e9cbf44020d97478b3
 */
-    beacon_str  beaconData = {0};
+    beacon_str  beaconData = {{0}};
 
 	if(mode == MESH_UNPROVISION_BEACON_WITH_URI){
 		u8 hash_tmp[16];
@@ -169,7 +175,7 @@ int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 		p_netkey += 1;		// use new key
 	}
 
-    mesh_cmd_bear_unseg_t bc_bear;
+    mesh_cmd_bear_t bc_bear;
     memset(&bc_bear, 0, sizeof(bc_bear));
     bc_bear.type = MESH_ADV_TYPE_BEACON;
     bc_bear.len = 23; // 1+1+sizeof(mesh_beacon_sec_nw_t)+8;
@@ -187,13 +193,15 @@ int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 	#endif
     mesh_sec_beacon_auth(p_netkey->bk, (u8 *)&p_bc_sec->flag, 0);
     if(blt_sts){
-        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"app tx beacon with GATT,IV index step%d: ",iv_idx_st.update_proc_flag);
-        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(&bc_bear.len), bc_bear.len+1,"secure NW beacon:",0);
-		#if WIN32
-		prov_write_data_trans((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,MSG_MESH_BEACON);
+    	#if WIN32
+		err = prov_write_data_trans((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,MSG_MESH_BEACON);
 		#else
 		err = notify_pkts((u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_sec_nw_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
 		#endif
+		if(0 == err){	
+			LOG_MSG_LIB(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"app tx beacon with GATT,IV index step%d: ",iv_idx_st.update_proc_flag);
+			LOG_MSG_LIB(TL_LOG_IV_UPDATE,(&bc_bear.len), bc_bear.len+1,"tx GATT secure NW beacon:",0);
+		}
 	}else{
 		// static u32 iv_idx_st_A1;iv_idx_st_A1++;
     	err = mesh_bear_tx2mesh_and_gatt((u8 *)&bc_bear, MESH_ADV_TYPE_BEACON, TRANSMIT_DEF_PAR_BEACON);
@@ -204,6 +212,9 @@ int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts)
 {
 	int err = -1;
+	if(0 == is_need_send_sec_nw_beacon()){
+		return err;
+	}
 	if(!is_provision_success()||MI_API_ENABLE){// in the mi mode will never send secure beacon .
 		return err;
 	}
@@ -212,7 +223,16 @@ int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts)
 		if(!p_netkey_base->valid){
 			continue;
 		}
+		#if TESTCASE_FLAG_ENABLE
+		/* in the pts private beacon proxy bv-07c , it should not send 
+		two secure beacon on gatt connection , other wise the filter sts will fail*/
 		err = mesh_tx_sec_nw_beacon(p_netkey_base, blt_sts);
+		if(blt_sts && beacon_send.conn_beacon_flag ){
+			break;
+		}
+		#else
+		err = mesh_tx_sec_nw_beacon(p_netkey_base, blt_sts);
+		#endif
 	}
 	return err;
 }

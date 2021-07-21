@@ -27,6 +27,7 @@
 #endif 
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
+#include "proj_lib/mesh_crypto/mesh_crypto.h"
 #include "vendor/common/user_config.h"
 #include "directed_forwarding.h"
 #include "app_heartbeat.h"
@@ -35,6 +36,65 @@ model_sig_cfg_s_t 		model_sig_cfg_s;  // configuration server model
 #if MD_CFG_CLIENT_EN
 model_client_common_t   model_sig_cfg_c;
 #endif
+
+#if MD_ON_DEMAND_PROXY_EN
+u32 mesh_on_demand_proxy_time = 0; // max 256s, clock_time() is enough
+#endif
+
+int mesh_sec_prov_comfirmation_key_fun(unsigned char *key, unsigned char *input, int n, unsigned char ecdh[32],unsigned char auth[32],u8 hmac)
+{
+	#if PROV_EPA_EN
+	if(hmac){
+		mesh_sec_prov_confirmation_key_hmac(key,input,n,ecdh,auth);
+	}else
+	#endif
+	{
+		mesh_sec_prov_confirmation_key(key,input,n,ecdh);
+	}
+	return 0;
+}
+
+
+int mesh_sec_prov_confirmation_fun(unsigned char *cfm, unsigned char *input, int n, unsigned char ecdh[32],
+				unsigned char random[32],unsigned char auth[32],u8 hmac)
+{
+	#if PROV_EPA_EN
+	if(hmac){
+		mesh_sec_prov_confirmation_hmac(cfm,input,n,ecdh,random,auth);
+	}
+	else
+	#endif
+	{
+		mesh_sec_prov_confirmation(cfm,input,n,ecdh,random,auth);
+	}
+	return 0;
+}
+
+void mesh_sec_prov_salt_fun(unsigned char prov_salt[16],unsigned char *input,unsigned char randomProv[32], unsigned char randomDev[32],u8 hmac)
+{
+	#if PROV_EPA_EN
+	if(hmac){
+		mesh_sec_prov_salt_hmac(prov_salt,input,randomProv,randomDev);
+	}else
+	#endif
+	{
+		mesh_sec_prov_salt(prov_salt,input,randomProv,randomDev);
+	}
+}
+
+int mesh_sec_prov_session_key_fun(unsigned char sk[16], unsigned char *sn, unsigned char *input, int n, unsigned char ecdh[32],
+									unsigned char randomProv[32], unsigned char randomDev[32],u8 hmac)
+{
+	#if PROV_EPA_EN
+	if(hmac){
+		mesh_sec_prov_session_key_hmac(sk,sn,input,n,ecdh,randomProv,randomDev);
+	}else
+	#endif
+	{
+		mesh_sec_prov_session_key(sk,sn,input,n,ecdh,randomProv,randomDev);
+	}
+	return 0;
+}
 
 u8 mesh_get_network_transmit()
 {
@@ -98,14 +158,6 @@ int mesh_cmd_sig_cfg_sec_nw_bc_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 	return -1;
 }
 
-int mesh_cmd_sig_cfg_sec_nw_bc_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
-{
-    int err = 0;
-    if(cb_par->model){  // model may be Null for status message
-    }
-    return err;
-}
-
 int mesh_cmd_sig_cfg_def_ttl_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     return mesh_tx_cmd_rsp_cfg_model(CFG_DEFAULT_TTL_STATUS, &model_sig_cfg_s.ttl_def, 1, cb_par->adr_src);
@@ -120,14 +172,6 @@ int mesh_cmd_sig_cfg_def_ttl_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
 		return mesh_cmd_sig_cfg_def_ttl_get(par, par_len, cb_par);
     }
     return  -1;
-}
-
-int mesh_cmd_sig_cfg_def_ttl_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
-{
-    int err = 0;
-    if(cb_par->model){  // model may be Null for status message
-    }
-    return err;
 }
 
 int mesh_cmd_sig_cfg_friend_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -146,8 +190,8 @@ int mesh_cmd_sig_cfg_friend_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 				    #if FEATURE_FRIEND_EN
 				    mesh_friend_ship_init_all();
 				    #endif
-					mesh_directed_forwarding_bind_state_update();
-					#if PTS_TEST_EN
+					#if MD_DF_EN
+					mesh_directed_forwarding_bind_state_update();					
 					mesh_common_store(FLASH_ADR_MD_DF_SBR);
 					#endif
 				}
@@ -168,14 +212,6 @@ int mesh_cmd_sig_cfg_friend_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		return mesh_cmd_sig_cfg_friend_get(par, par_len, cb_par);
     }
     return -1;
-}
-
-int mesh_cmd_sig_cfg_friend_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
-{
-    int err = 0;
-    if(cb_par->model){  // model may be Null for status message
-    }
-    return err;
 }
 
 int mesh_cmd_sig_cfg_gatt_proxy_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -199,14 +235,16 @@ int mesh_cmd_sig_cfg_gatt_proxy_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 			// and the if the proxy state is being set to 0 ,the connection will be terminate 
 			if (model_sig_cfg_s.gatt_proxy == GATT_PROXY_SUPPORT_DISABLE ){
 				#ifndef WIN32
+				#if MD_DF_EN
 				mesh_directed_forwarding_bind_state_update();
-				#if PTS_TEST_EN
 				mesh_common_store(FLASH_ADR_MD_DF_SBR);
 				#endif
+				#if !GATT_LPN_EN
 				// send terminate cmd 
 				if(blt_state == BLS_LINK_STATE_CONN){
 					bls_ll_terminateConnection(0x13);
 				}
+				#endif
 				#endif
 			}	
 		}else{
@@ -225,14 +263,6 @@ int mesh_cmd_sig_cfg_gatt_proxy_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
     }
 	
     return -1;
-}
-
-int mesh_cmd_sig_cfg_gatt_proxy_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
-{
-    int err = 0;
-    if(cb_par->model){  // model may be Null for status message
-    }
-    return err;
 }
 
 int mesh_cmd_sig_cfg_relay_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -264,14 +294,6 @@ int mesh_cmd_sig_cfg_relay_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     return -1;
 }
 
-int mesh_cmd_sig_cfg_relay_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
-{
-    int err = 0;
-    if(cb_par->model){  // model may be Null for status message
-    }
-    return err;
-}
-
 int mesh_cmd_sig_cfg_nw_transmit_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     return mesh_tx_cmd_rsp_cfg_model(CFG_NW_TRANSMIT_STATUS, (u8 *)&model_sig_cfg_s.nw_transmit, sizeof(mesh_transmit_t), cb_par->adr_src);
@@ -285,15 +307,6 @@ int mesh_cmd_sig_cfg_nw_transmit_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb
 	#endif
     return mesh_cmd_sig_cfg_nw_transmit_get(par, par_len, cb_par);
 }
-
-int mesh_cmd_sig_cfg_nw_transmit_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
-{
-    int err = 0;
-    if(cb_par->model){  // model may be Null for status message
-    }
-    return err;
-}
-
 
 #define SUB_ADR_DEF_VAL			(0xffff)
 #define IS_VALID_SUB_ADR(adr)	(adr && (adr != 0xffff))
@@ -506,5 +519,145 @@ int mesh_sec_msg_dec_virtual_ll(u16 ele_adr, u32 model_id, bool4 sig_model,
 	}
 	return -1;
 }
+#endif
+
+#if MD_SAR_EN
+int mesh_cmd_sig_cfg_sar_transmitter_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    return mesh_tx_cmd_rsp_cfg_model(CFG_SAR_TRANSMITTER_STATUS, (u8 *)&model_sig_cfg_s.sar_transmitter, sizeof(model_sig_cfg_s.sar_transmitter), cb_par->adr_src);
+}
+
+int mesh_cmd_sig_cfg_sar_transmitter_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	memcpy(&model_sig_cfg_s.sar_transmitter, par, sizeof(sar_transmitter_t));
+	model_sig_cfg_s.sar_transmitter.rfu = 0;
+	mesh_model_store_cfg_s();
+    return mesh_cmd_sig_cfg_sar_transmitter_get(par, par_len, cb_par);
+}
+
+int mesh_cmd_sig_cfg_sar_receiver_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{  
+	return mesh_tx_cmd_rsp_cfg_model(CFG_SAR_RECEIVER_STATUS, (u8 *)&model_sig_cfg_s.sar_receiver, sizeof(model_sig_cfg_s.sar_receiver), cb_par->adr_src);
+}
+
+int mesh_cmd_sig_cfg_sar_receiver_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    memcpy(&model_sig_cfg_s.sar_receiver, par, sizeof(model_sig_cfg_s.sar_receiver));
+	model_sig_cfg_s.sar_receiver.rfu = 0;
+	mesh_model_store_cfg_s();
+    return mesh_cmd_sig_cfg_sar_receiver_get(par, par_len, cb_par);
+}
+#endif
+
+#if MD_ON_DEMAND_PROXY_EN
+int mesh_cmd_sig_cfg_on_demand_proxy_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{  
+	return mesh_tx_cmd_rsp_cfg_model(cb_par->op_rsp, &model_sig_cfg_s.on_demand_proxy, 1, cb_par->adr_src);
+}
+
+int mesh_cmd_sig_cfg_on_demand_proxy_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	model_sig_cfg_s.on_demand_proxy = par[0];
+	mesh_model_store_cfg_s();
+    return mesh_cmd_sig_cfg_on_demand_proxy_get(par, par_len, cb_par);
+}
+
+#endif
+
+int mesh_cmd_sig_cfg_sec_nw_bc_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    int err = 0;
+    if(cb_par->model){  // model may be Null for status message
+    }
+    return err;
+}
+
+int mesh_cmd_sig_cfg_def_ttl_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    int err = 0;
+    if(cb_par->model){  // model may be Null for status message
+    }
+    return err;
+}
+
+int mesh_cmd_sig_cfg_friend_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    int err = 0;
+    if(cb_par->model){  // model may be Null for status message
+    }
+    return err;
+}
+
+int mesh_cmd_sig_cfg_gatt_proxy_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    int err = 0;
+    if(cb_par->model){  // model may be Null for status message
+    }
+    return err;
+}
+
+int mesh_cmd_sig_cfg_relay_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    int err = 0;
+    if(cb_par->model){  // model may be Null for status message
+    }
+    return err;
+}
+
+int mesh_cmd_sig_cfg_nw_transmit_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    int err = 0;
+    if(cb_par->model){  // model may be Null for status message
+    }
+    return err;
+}
+
+#if MD_CLIENT_EN
+#if MD_SAR_EN
+int mesh_cmd_sig_cfg_sar_transmitter_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    int err = 0;
+    if(cb_par->model){  // model may be Null for status message
+    }
+    return err;
+}
+
+int mesh_cmd_sig_cfg_sar_receiver_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    int err = 0;
+    if(cb_par->model){  // model may be Null for status message
+    }
+    return err;
+}
+#endif
+
+#if MD_ON_DEMAND_PROXY_EN
+int mesh_cmd_sig_cfg_on_demand_proxy_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    int err = 0;
+    if(cb_par->model){  // model may be Null for status message
+    }
+    return err;
+}
+#endif
+
+#if MD_LARGE_CPS_EN
+int mesh_cmd_sig_cfg_large_cps_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    int err = 0;
+    if(cb_par->model){  // model may be Null for status message
+    }
+    return err;
+}
+
+int mesh_cmd_sig_cfg_models_metadata_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    int err = 0;
+    if(cb_par->model){  // model may be Null for status message
+    }
+    return err;
+}
+#endif
+
 #endif
 

@@ -92,6 +92,7 @@ typedef enum{
 	AD_TYPE_SIMPLE_PAIR_RAND,
 	AD_TYPE_TK_VALUE,
 	AD_TYPE_URI = 0x24,
+	AD_TYPE_BEACON = 0x2b,
 }AD_TYPE_ENUM;
 
 enum{
@@ -179,7 +180,7 @@ typedef struct{
 			u8 uuid[16];
 			u8 timeout;
 		};
-		u8 dkri;
+		u8 dkri;//nppi procedure
 	};
 }remote_prov_link_open;
 
@@ -242,7 +243,7 @@ extern model_remote_prov_t model_remote_prov;
 extern u8 node_devkey_candi[16];
 
 #define MAX_SCAN_ITEMS_UUID_CNT 4
-#define ACTIVE_SCAN_ENABLE  0
+
 typedef struct{
     u8 status ;
     u8 PRScanningState;
@@ -279,6 +280,7 @@ typedef struct{
 typedef struct{
 	// different extend scan security para
 	u8 mac_adr[6];
+	u8 uri_hash[4];
 	u16 nid;
 	u16 src_adr;
 	// extend scan para
@@ -286,10 +288,11 @@ typedef struct{
     u8 ADTypeFilter[MAX_ADTYPE_FILTER_CNT];
     u8 uuid[16];
     u8 time_s;
-    u32 tick_s;
+    u32 tick_100ms;
 	// extend result and end condition 
 	u8 end_flag;
 	u8 active_scan;
+	u8 uuid_flag;
     rp_extend_scan_report_str report;
 }remote_prov_extend_scan_str;
 
@@ -332,13 +335,15 @@ typedef struct{
 	u32 rp_now_s;
 	u8 link_timeout;
 	u8 link_dkri;
+	u8 link_uuid[16];
     // rp link adr 
     u16 link_adr;
+	u8 net_id;
     // remote prov sts 
     remote_proc_pdu_sts_str rp_pdu;
 	//extend scan sts part , the extend feature is independent
     remote_prov_extend_scan_str rp_extend[MAX_EXTEND_SCAN_CNT];
-	#if WIN32 
+	#if __PROJECT_MESH_PRO__ 
 	u8 dkri_cli;
 	u16 adr_src;
 	u8 dev_candi[16];
@@ -395,6 +400,8 @@ void mesh_cmd_sig_rp_loop_proc();
 u8 mesh_pr_sts_work_or_not();
 int mesh_cmd_sig_send_rp_pdu_send(u8 *par,int par_len);
 void mesh_prov_pdu_send_retry_clear();
+void mesh_rp_netkey_del_cb(u8 idx,u16 op);
+void mesh_prov_pdu_send_retry_set(pro_PB_ADV *p_adv,u8 flag);
 
 // remote prov client part 
 typedef struct{
@@ -470,17 +477,26 @@ void mesh_rp_pdu_retry_send();
 void mesh_rp_client_para_reset();
 void mesh_rp_dkri_end_cb();
 int mesh_cmd_extend_loop_cb(event_adv_report_t *report);
-u8 conn_adv_type_is_valid_in_extend(u8* p_adv);
+u8 conn_adv_type_is_valid_in_extend(u8* p_rf_pkt);
 u8 mesh_extend_scan_proc_is_valid();
+int send_rp_scan_start(u16 adr,u8 limit,u8 timeout);
+int send_rp_extend_scan_start(u16 adr,u8* p_adtype,u8 cnt);
+void mesh_rp_server_set_link_sts(u8 sts);
+int mesh_cmd_conn_prov_adv_cb(event_adv_report_t *report);
 
 #if WIN32
 void mesh_prov_set_cli_dkri(u8 dkri);
 void mesh_prov_set_adr_dev_candi(u16 adr,u8 *p_dev);
 u8 mesh_prov_dkri_is_valid();
 void mesh_prov_dev_candi_store_proc(u16 cmd_src);
-
-
 #endif
+
+void gw_get_rp_mode(u8 en);
+extern u16 seg_filter_adr;
+void gw_rp_send_invite();
+extern u8 rp_dev_mac[6];
+extern u8 rp_dev_uuid[16];
+void gw_rp_timeout_proc();
 
 #endif
 

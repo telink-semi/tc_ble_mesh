@@ -189,7 +189,7 @@ static inline int is_valid_sector_addr(u32 addr)
     #if FLASH_1M_ENABLE
 	if(((addr & 0xFFFFF000) == MI_BLE_MESH_CER_ADR) || (addr >= 0x100000))
     #else
-	if((addr >= MI_BLE_MESH_CER_ADR)&&
+	if(((addr & 0xFFFFF000) == MI_BLE_MESH_CER_ADR || (addr >= 0x80000))&&
 	    (!(((flash_sector_mac_address == CFG_ADR_MAC_1M_FLASH) && (addr == FLASH_ADR_EDCH_PARA)))))
     #endif
 	{

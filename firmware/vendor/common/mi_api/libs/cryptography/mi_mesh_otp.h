@@ -13,6 +13,18 @@
 #define OTP_META_DATA       0xF1
 #define OTP_FREE_ITEM       0xFFFF
 
+typedef struct {
+    char        name[4];
+    uint16_t    version;
+    uint16_t    size;
+} otp_head_t;
+
+typedef struct {
+    uint16_t            type;
+    uint16_t            len;
+    uint8_t             value[1];
+} otp_item_t;
+
 typedef int (*uart_sync_tx_t)(uint8_t const * const out, uint16_t olen);
 typedef int (*uart_sync_rx_t)(uint8_t * const in, uint16_t max_ilen);
 typedef void (*dbg_flash_lock_func_t)(void);

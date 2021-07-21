@@ -31,7 +31,7 @@
 
 #if 0
 #if SEC_MES_DEBUG_EN
-mesh_cmd_bear_seg_t B_test_cmd = {
+mesh_cmd_bear_t B_test_cmd = {
     /*.trans_par_val = */0,
     /*.len =       */0,
     /*.type =     */MESH_ADV_TYPE_MESSAGE,
@@ -39,19 +39,19 @@ mesh_cmd_bear_seg_t B_test_cmd = {
 
 void mesh_message6()
 {
-    mesh_cmd_bear_seg_t *p_bear = (mesh_cmd_bear_seg_t *)&B_test_cmd;
+    mesh_cmd_bear_t *p_bear = (mesh_cmd_bear_t *)&B_test_cmd;
     if(mesh_adv_tx_cmd_sno < 0x3129ab){
         mesh_adv_tx_cmd_sno = 0x3129ab;
     }
     
     // lower layer
-    //p_bear->lt.aid = 0;
-    p_bear->lt.akf = 0;
-    //p_bear->lt.seg = 1;
-    //p_bear->lt.segN = 1;
-    //p_bear->lt.segO = 0;
-    //p_bear->lt.seqzero = sno;// & BIT_MASK_LEN(13);
-    p_bear->lt.szmic = 0;
+    //p_bear->lt_seg.aid = 0;
+    p_bear->lt_seg.akf = 0;
+    //p_bear->lt_seg.seg = 1;
+    //p_bear->lt_seg.segN = 1;
+    //p_bear->lt_seg.segO = 0;
+    //p_bear->lt_seg.seqzero = sno;// & BIT_MASK_LEN(13);
+    p_bear->lt_seg.szmic = 0;
     
     // network layer
     //p_bear->nw.nid = 0x68;
@@ -96,16 +96,16 @@ void mesh_message_fri_msg()
 #endif
 
 #if SEC_MES_DEBUG_EN
-    mesh_cmd_bear_seg_t *p_bear = (mesh_cmd_bear_seg_t *)&B_test_cmd;
+    mesh_cmd_bear_t *p_bear = (mesh_cmd_bear_t *)&B_test_cmd;
 
     // lower layer
-    //p_bear->lt.aid = 0;
-    p_bear->lt.akf = 0;
-    //p_bear->lt.seg = 1;
-    //p_bear->lt.segN = 1;
-    //p_bear->lt.segO = 0;
-    //p_bear->lt.seqzero = sno;// & BIT_MASK_LEN(13);
-    p_bear->lt.szmic = 0;
+    //p_bear->lt_seg.aid = 0;
+    p_bear->lt_seg.akf = 0;
+    //p_bear->lt_seg.seg = 1;
+    //p_bear->lt_seg.segN = 1;
+    //p_bear->lt_seg.segO = 0;
+    //p_bear->lt_seg.seqzero = sno;// & BIT_MASK_LEN(13);
+    p_bear->lt_seg.szmic = 0;
     
     // network layer
     //p_bear->nw.nid = 0x68;

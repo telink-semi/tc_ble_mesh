@@ -52,11 +52,8 @@ extern "C" {
 
 #define DEBUG_CFG_CMD_GROUP_AK_EN		0       // not for user
 #define DEBUG_CFG_CMD_GROUP_USE_AK(addr)    (DEBUG_CFG_CMD_GROUP_AK_EN && (addr & 0x8000))
-
-#if(DEBUG_CFG_CMD_GROUP_AK_EN)
-#define VC_NODE_INFO_MULTI_SECTOR_EN	1		
-#else
-#define VC_NODE_INFO_MULTI_SECTOR_EN	0		// use 2 or more sector to save VC_node_info(default use one sector, max support 200 nodes)
+#if (!WIN32)
+#define DEBUG_LOG_SETTING_DEVELOP_MODE_EN	0	//
 #endif
 
 #define SHOW_VC_SELF_NO_NW_ENC		1
@@ -162,7 +159,20 @@ extern "C" {
 #define MESH_USER_DEFINE_MODE 	MESH_NORMAL_MODE
 #endif
 #endif
-
+#if WIN32
+#define PROV_EPA_EN				1
+#elif __PROJECT_MESH_PRO__
+#define PROV_EPA_EN				1
+#else
+#define PROV_EPA_EN				0
+#endif
+#if (TESTCASE_FLAG_ENABLE)
+#define PROV_AUTH_LEAK_REFLECT_EN		0
+#define PROV_AUTH_LEAK_RECREATE_KEY_EN	0
+#else
+#define PROV_AUTH_LEAK_REFLECT_EN		1
+#define PROV_AUTH_LEAK_RECREATE_KEY_EN	1
+#endif
 // vendor id list
 #define SHA256_BLE_MESH_PID		0x01A8
 #define VENDOR_ID_MI		    0x038F
@@ -170,12 +180,9 @@ extern "C" {
 // mi product type 
 #define MI_PRODUCT_TYPE_CT_LIGHT		0x01
 #define MI_PRODUCT_TYPE_LAMP			0x02
-
-
 #define MI_PRODUCT_TYPE_ONE_ONOFF		0x11
 #define MI_PRODUCT_TYPE_TWO_ONOFF		0x12
 #define MI_PRODUCT_TYPE_THREE_ONOFF		0x13
-
 #define MI_PRODUCT_TYPE_PLUG			0x21
 #define MI_PRODUCT_TYPE_FANS			0x30
 
@@ -194,10 +201,17 @@ extern "C" {
 #define PROVISION_FLOW_SIMPLE_EN    1
 #define ALI_MD_TIME_EN				0
 #define ALI_NEW_PROTO_EN			0
-#define DU_FW_MAIN_VER	1
-#define DU_FW_ADD_VER	0
-#define DU_FW_INFO_VER	0
-#define DU_FW_VER	((DU_FW_MAIN_VER<<12)|(DU_FW_ADD_VER<<8)|(DU_FW_INFO_VER))
+#define DU_FW_MAIN_VER				1
+#define DU_FW_ADD_VER				0
+#define DU_FW_INFO_VER				0
+#define DU_FW_VER					((DU_FW_MAIN_VER<<12)|(DU_FW_ADD_VER<<8)|(DU_FW_INFO_VER))
+#define DU_PID                  	0x006b2d1d
+
+#if(DU_PID == 0x006b2d1d)
+#define DU_BIND_CHECK_EN            1
+#else
+#define DU_BIND_CHECK_EN            0
+#endif
 
 
 #elif(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
@@ -215,15 +229,36 @@ extern "C" {
 #define PROVISION_FLOW_SIMPLE_EN    0
 #define MI_API_ENABLE               1
 #define MI_SWITCH_LPN_EN			0   // only support 825x serials 
-#define STEP_PUB_MODE_EN 			1
+
+//#define MI_MESH_TEMPLATE_LIGHTNESS		0
+#define MI_MESH_TEMPLATE_LIGHTCTL			1
+//#define MI_MESH_TEMPLATE_ONE_KEY_SWITCH	2
+//#define MI_MESH_TEMPLATE_TWO_KEY_SWITCH	3
+//#define MI_MESH_TEMPLATE_THREE_KEY_SWITCH	4
+//#define MI_MESH_TEMPLATE_FAN				5
+
+#if  defined(MI_MESH_TEMPLATE_LIGHTNESS)
+#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_LAMP
+#elif defined(MI_MESH_TEMPLATE_LIGHTCTL)
+#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_CT_LIGHT
+#elif defined(MI_MESH_TEMPLATE_ONE_KEY_SWITCH)
+#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_ONE_ONOFF
+#elif defined(MI_MESH_TEMPLATE_TWO_KEY_SWITCH)
+#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_TWO_ONOFF
+#elif defined(MI_MESH_TEMPLATE_THREE_KEY_SWITCH)
+#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_THREE_ONOFF
+#elif defined(MI_MESH_TEMPLATE_FAN)
+#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_FANS
+#endif
+/*
 	#if MI_SWITCH_LPN_EN
 #define BLT_SOFTWARE_TIMER_ENABLE	1
-#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_ONE_ONOFF
+#define MI_PRODUCT_TYPE				LIGHT_TYPE_PANEL
 	#else
-#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_CT_LIGHT	
+#define MI_PRODUCT_TYPE				LIGHT_TYPE_CT	
 	#endif
+*/
 #elif(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
-#define STEP_PUB_MODE_EN 			1
 #define SUBSCRIPTION_SHARE_EN		1
 #define VENDOR_ID                   VENDOR_ID_MI // use mi vendor_id and mi mac by default
 #define AIS_ENABLE					1
@@ -233,7 +268,6 @@ extern "C" {
 #define MI_SWITCH_LPN_EN			0   // only support 825x serials 
 	#if MI_SWITCH_LPN_EN
 #define BLT_SOFTWARE_TIMER_ENABLE	1
-#define STEP_PUB_MODE_EN 			1
 #define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_ONE_ONOFF
 	#else
 #define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_CT_LIGHT	
@@ -262,6 +296,7 @@ extern "C" {
 #define DU_ENABLE 	1
 #define DU_LPN_EN	0
 	#if DU_LPN_EN
+		#define RTC_USE_32K_RC_ENABLE		1
 		#define DU_ADV_INTER_MS				1700
 		#define DU_ADV_INTER_VAL			(DU_ADV_INTER_MS*1000/625)
 		#define BLT_SOFTWARE_TIMER_ENABLE	1
@@ -446,7 +481,7 @@ extern "C" {
 #endif
 
 #ifndef MD_MESH_OTA_EN
-#if (DEBUG_CFG_CMD_GROUP_AK_EN || PTS_TEST_OTA_EN)
+#if (DEBUG_CFG_CMD_GROUP_AK_EN)
 #define MD_MESH_OTA_EN				1	// just for internal test.
 #elif (__PROJECT_MESH_PRO__)   // app & gateway
     #if WIN32
@@ -455,7 +490,7 @@ extern "C" {
 #define MD_MESH_OTA_EN				0   // dufault disable before released by SIG.
     #endif
 #else
-	#if ((MESH_USER_DEFINE_MODE == MESH_MI_ENABLE) || (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL) || __PROJECT_MESH_LPN__ || SPIRIT_PRIVATE_LPN_EN || (LIGHT_TYPE_SEL == TYPE_TOOTH_BRUSH))
+	#if ((MESH_USER_DEFINE_MODE == MESH_MI_ENABLE) || (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL) || SPIRIT_PRIVATE_LPN_EN || (LIGHT_TYPE_SEL == TYPE_TOOTH_BRUSH))
 #define MD_MESH_OTA_EN				0   // must 0
     #elif (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 #define MD_MESH_OTA_EN				0	// 
@@ -467,10 +502,23 @@ extern "C" {
 #endif
 #endif
 
-#if (MD_MESH_OTA_EN && (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__))
+#if (MD_MESH_OTA_EN)
+	#if(__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
 #define DISTRIBUTOR_UPDATE_CLIENT_EN    1
-#else
-#define DISTRIBUTOR_UPDATE_CLIENT_EN    0
+#define DISTRIBUTOR_UPDATE_SERVER_EN    DISTRIBUTOR_UPDATE_CLIENT_EN
+		#if (WIN32 && DISTRIBUTOR_UPDATE_CLIENT_EN)
+#define INITIATOR_CLIENT_EN             1   // only app or VC enable
+		#endif
+	#else
+#define DISTRIBUTOR_UPDATE_CLIENT_EN    0	// must 0
+		#if (!__PROJECT_MESH_LPN__)
+#define DISTRIBUTOR_UPDATE_SERVER_EN    0   // include distribute server, update client and blob transfer client model
+		#endif
+	#endif
+#endif
+
+#if (DISTRIBUTOR_UPDATE_SERVER_EN && DISTRIBUTOR_UPDATE_CLIENT_EN)
+#define DISTRIBUTOR_START_TLK_EN        1   // only used in internal to be compatible with old version INI. 
 #endif
 
 #define MD_ONOFF_EN                 1   // must 1
@@ -479,6 +527,14 @@ extern "C" {
 #if SENSOR_LIGHTING_CTRL_EN
 #define SENSOR_GPIO_PIN             GPIO_PD5
 #define SENSOR_LIGHTING_CTRL_ON_MS  10000       // ms
+#endif
+
+#if WIN32
+#define MD_PRIVACY_BEA			1
+#define PRIVATE_PROXY_FUN_EN	1
+#else
+#define MD_PRIVACY_BEA			0
+#define PRIVATE_PROXY_FUN_EN	0
 #endif
 
 #if WIN32
@@ -492,6 +548,11 @@ extern "C" {
 #define MD_BATTERY_EN				1
 #define MD_DF_EN					1
 #define MD_SBR_EN					1
+#define MD_SAR_EN					1
+#define MD_ON_DEMAND_PROXY_EN		1
+#define	MD_OP_AGG_EN				1
+#define MD_LARGE_CPS_EN				1
+#define MD_SOLI_PDU_RPL_EN			1
 #if DEBUG_SHOW_VC_SELF_EN
 #define MD_SERVER_EN                1   // SIG and vendor MD
 #else
@@ -513,6 +574,11 @@ extern "C" {
 #define MD_BATTERY_EN				0
 #define MD_DF_EN					0
 #define MD_SBR_EN					0
+#define MD_SAR_EN					0
+#define MD_ON_DEMAND_PROXY_EN		(0 && MD_PRIVACY_BEA)
+#define	MD_OP_AGG_EN				0
+#define MD_LARGE_CPS_EN				0
+#define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
 
 #define MD_SERVER_EN                1   // SIG and vendor MD
 #define MD_CLIENT_EN                1   // just SIG MD
@@ -556,6 +622,11 @@ extern "C" {
 #define MD_BATTERY_EN				0
 #define MD_DF_EN					0
 #define MD_SBR_EN					0
+#define MD_SAR_EN					0
+#define MD_ON_DEMAND_PROXY_EN		0
+#define	MD_OP_AGG_EN				0
+#define MD_LARGE_CPS_EN				0
+#define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
 
 		#if(__PROJECT_MESH_GW_NODE__)
 #define MD_SERVER_EN                1  
@@ -589,6 +660,11 @@ extern "C" {
 #define MD_BATTERY_EN				0
 #define MD_DF_EN					0
 #define MD_SBR_EN					0
+#define MD_SAR_EN					0
+#define MD_ON_DEMAND_PROXY_EN		0
+#define	MD_OP_AGG_EN				0
+#define MD_LARGE_CPS_EN				0
+#define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
 
 #define MD_SERVER_EN                1   // SIG and vendor MD
 #define MD_CLIENT_EN                0   // just SIG MD
@@ -608,14 +684,6 @@ extern "C" {
     #endif
 #endif
 
-#if WIN32
-#define MD_PRIVACY_BEA			1
-#define PRIVATE_PROXY_FUN_EN	1
-#else
-#define MD_PRIVACY_BEA			0
-#define PRIVATE_PROXY_FUN_EN	0
-#endif
-
 #ifndef MD_REMOTE_PROV
 #if (WIN32)
 #define MD_REMOTE_PROV              1
@@ -625,9 +693,22 @@ extern "C" {
 #define MD_REMOTE_PROV              0   // must 0
 #elif (__PROJECT_MESH__)
 #define MD_REMOTE_PROV              0   // dufault disable before released by SIG.
+#elif (__PROJECT_MESH_PRO__)
+#define MD_REMOTE_PROV              0   // dufault disable before released by SIG.
 #else
-#define MD_REMOTE_PROV              0   // must 0, only project_mesh support now. dufault disable before released by SIG.
+#define MD_REMOTE_PROV              0   // must 0, other project not support now. dufault disable before released by SIG.
 #endif
+#endif
+
+#if	MD_REMOTE_PROV
+#define REMOTE_PROV_SCAN_GATT_EN	0
+#define URI_DATA_ADV_ENABLE		1
+#define ACTIVE_SCAN_ENABLE  0
+
+#else
+#define REMOTE_PROV_SCAN_GATT_EN	0
+#define URI_DATA_ADV_ENABLE		0
+#define ACTIVE_SCAN_ENABLE  0
 #endif
 
 #define MD_SENSOR_EN	    (MD_SENSOR_SERVER_EN || MD_SENSOR_CLIENT_EN)
@@ -638,7 +719,9 @@ extern "C" {
 
 #define FACTORY_TEST_MODE_ENABLE    1
 #define MANUAL_FACTORY_RESET_TX_STATUS_EN       0
+#if (!WIN32)
 #define KEEP_ONOFF_STATE_AFTER_OTA	0
+#endif
 #define DF_TEST_MODE_EN  			(0&&MD_DF_EN)
 
 //------------ mesh config(user can config) end -------------
@@ -721,7 +804,11 @@ extern "C" {
 #define FEATURE_RELAY_EN		0
 #define FEATURE_PROXY_EN 		1
 #else
+	#if DU_ENABLE
+#define FEATURE_FRIEND_EN		0
+	#else
 #define FEATURE_FRIEND_EN 		1   // WIN 32 should be suport disable: model_sig_cfg_s.frid
+	#endif
 #define FEATURE_LOWPOWER_EN		0
 #define FEATURE_PROV_EN 		1
     #if (0 == NODE_CAN_SEND_ADV_FLAG)
@@ -817,8 +904,12 @@ extern "C" {
 #define			IRQ_TIME1_INTERVAL			    (1000) // unit: us
 #define			IRQ_GPIO_ENABLE  			    0
 
-#if (!WIN32)
+#if (WIN32)
+// support extend adv as default, by selecting value of "Extend Adv" item.
+#else
 // extend adv should be running on the chip with 64k or more RAM.
+// as default, only some OTA op code use extend adv defined in is_extend_unseg2short_unseg() for compatibility.
+// if needed, user can change the rule defined in is_extend_unseg2short_unseg_.
 #define EXTENDED_ADV_ENABLE				0   // BLE mesh extend ADV
 #endif
 

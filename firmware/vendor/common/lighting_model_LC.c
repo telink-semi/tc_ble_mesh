@@ -40,7 +40,9 @@ u32 mesh_md_light_lc_addr = FLASH_ADR_MD_LIGHT_LC;
 u16 prop_publish_id_sel = LC_PROP_ID_LightnessOn;
 
 #if MD_SERVER_EN
+#if !TESTCASE_FLAG_ENABLE
 STATIC_ASSERT(MD_SENSOR_CLIENT_EN);
+#endif
 
 #define GET_LC_PROP_LEN(type)   \
     ((LC_PROP_TYPE_LUXLEVEL == type) ? LEN_LC_PROP_LUXLEVEL :\

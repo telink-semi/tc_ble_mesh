@@ -25,9 +25,9 @@
 
 #if defined(MI_BLE_ENABLED) && (!HAVE_MSC)
 #define MIBLE_AUTH_MODE            2
-#define MIBLE_LIB_MAJOR            1
-#define MIBLE_LIB_MINOR            1
-#define MIBLE_LIB_REVISION         4
+#define MIBLE_LIB_MAJOR            2
+#define MIBLE_LIB_MINOR            0
+#define MIBLE_LIB_REVISION         0
 #elif defined(MI_BLE_ENABLED) && (HAVE_MSC)
 #define MIBLE_AUTH_MODE            1
 #define MIBLE_LIB_MAJOR            2
@@ -35,10 +35,10 @@
 #define MIBLE_LIB_REVISION         3
 #elif defined(MI_MESH_ENABLED)
 #define MIBLE_AUTH_MODE            1
-#define MIBLE_LIB_MAJOR            1
-#define MIBLE_LIB_MINOR            4
-#define MIBLE_LIB_REVISION         5
-#if (HAVE_MSC==0)
+#define MIBLE_LIB_MAJOR            2
+#define MIBLE_LIB_MINOR            0
+#define MIBLE_LIB_REVISION         3
+#if (HAVE_MSC==0) || (HAVE_MSC==0xFF)
 #define HAVE_OTP_PKI               1
 #else
 #define HAVE_OTP_PKI               0
@@ -67,10 +67,8 @@
 /**
  * @note Model name got from xiaomi IoT developer platform.
  */
-#define DEFAULT_MODEL			"xiaomi.dev.ble"
-
 #ifndef MODEL_NAME
-#define MODEL_NAME              DEFAULT_MODEL
+#define MODEL_NAME              "xiaomi.dev.ble"
 #endif
 
 
@@ -92,11 +90,11 @@
 #endif
 
 #ifndef OBJ_ADV_INTERVAL_MS
-#define OBJ_ADV_INTERVAL_MS    50
+#define OBJ_ADV_INTERVAL_MS    30
 #endif
 
 #ifndef OBJ_ADV_TIMEOUT_MS
-#define OBJ_ADV_TIMEOUT_MS     1500
+#define OBJ_ADV_TIMEOUT_MS     1000
 #endif
 
 
@@ -208,6 +206,14 @@
 #define RXFER_VERBOSE          0
 #endif
 
+/* POTP CONFIG */
+#ifndef POTP_BASE
+#define POTP_BASE              ((uint8_t*)0x7E800UL)
+#endif
+
+#ifndef POTP_FULL_SIZE
+#define POTP_FULL_SIZE         2048
+#endif
 
 typedef struct {
     const char *   developer_version;
@@ -225,6 +231,11 @@ typedef struct {
 } mi_config_t;
 
 extern mi_config_t m_config;
+extern uint8_t *m_otp_base;
+extern uint16_t m_otp_size;
+#if defined(MI_MESH_ENABLED) && (HAVE_MSC==0XFF)
+extern uint8_t is_msc_exist;
+#endif
 
 #endif  /* __MI_CONFIG_H__ */ 
 

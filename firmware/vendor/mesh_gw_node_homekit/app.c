@@ -1061,9 +1061,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#endif
 			
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
-			send_to_hci = mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD);
+			send_to_hci = (0 == mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD));
 			#else
-			send_to_hci = app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1);
+			send_to_hci = (0 == app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1));
 			#endif
 		}
 
@@ -1705,8 +1705,7 @@ void user_init()
 	mesh_scan_rsp_init();
 	my_att_init (provision_mag.gatt_mode);
 	blc_att_setServerDataPendingTime_upon_ClientCmd(10);
-	extern u32 system_time_tick;
-	system_time_tick = clock_time();
+	system_time_init();
 	
     bls_ll_setAdvEnable(1);  //adv enable
 	advertise_begin_tick = clock_time();

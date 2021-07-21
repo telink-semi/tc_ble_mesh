@@ -3,6 +3,25 @@
 
 #include "mible_type.h"
 #include "mible_port.h"
+#include "ble_spec/mi_spec_type.h"
+
+#if defined ( __CC_ARM )
+__PACKED typedef struct{
+    uint16_t            obj_id;
+    int                 code;
+    uint8_t            *value;
+    uint8_t            *len;
+}property_operation_obj_t;
+#elif defined   ( __GNUC__ )
+typedef struct __PACKED{
+    uint16_t            obj_id;
+    int                 code;
+    uint8_t            *value;
+    uint8_t            *len;
+}property_operation_obj_t;
+#endif
+
+typedef void (* property_operation_objid_callback_t)(property_operation_obj_t *o);
 
 typedef enum {
     MI_EVT_BASE          = 0x0000,
@@ -104,7 +123,7 @@ mible_status_t mibeacon_adv_stop(void);
  * OBJ_ADV_TIMEOUT_MS  : the time one object will be continuously sent.
  *
  */
-int mibeacon_obj_enque(uint16_t nm, uint8_t len, void *val, uint8_t stop_adv);
+int mibeacon_obj_enque(uint16_t nm, uint8_t len, void *val, uint8_t stop_adv, uint8_t isUrgent);
 
 
 /**
@@ -114,7 +133,7 @@ int mibeacon_obj_enque(uint16_t nm, uint8_t len, void *val, uint8_t stop_adv);
  *          [in] piid: property id
  *          [in] len: length of the property value
  *          [in] val: pointer to the property value
- *          [in] stop_adv: When the object queue is sent out, it will SHUTDOWN BLE advertising
+ *          [in] isUrgent: if enqueue this object into a high priority queue
  *
  * @return  MI_SUCCESS             Successfully enqueued a object into the object queue.
  *          MI_ERR_DATA_SIZE       Object value length is too long.
@@ -133,7 +152,7 @@ int mibeacon_obj_enque(uint16_t nm, uint8_t len, void *val, uint8_t stop_adv);
  * OBJ_ADV_TIMEOUT_MS  : the time one object will be continuously sent.
  *
  */
-int mibeacon_property_changed(uint8_t siid, uint16_t piid, uint8_t len, void* val, uint8_t stop_adv);
+int mibeacon_property_changed(uint8_t siid, uint16_t piid, property_value_t *newValue, uint8_t isUrgent);
  
 /**
  * @brief   Enqueue a SPEC event into the mibeacon object tx queue.
@@ -141,7 +160,7 @@ int mibeacon_property_changed(uint8_t siid, uint16_t piid, uint8_t len, void* va
  * @param   [in] siid: service id
  *          [in] eiid: event id
  *          [in] val: user should build properties value into parameter "val" in order
- *          [in] stop_adv: When the object queue is sent out, it will SHUTDOWN BLE advertising
+ *          [in] isUrgent: if enqueue this object into a high priority queue
  *
  * @return  MI_SUCCESS             Successfully enqueued a object into the object queue.
  *          MI_ERR_DATA_SIZE       Object value length is too long.
@@ -164,6 +183,49 @@ int mibeacon_property_changed(uint8_t siid, uint16_t piid, uint8_t len, void* va
  * OBJ_ADV_TIMEOUT_MS  : the time one object will be continuously sent.
  *
  */
-int mibeacon_event_occurred(uint8_t siid, uint16_t eiid, uint8_t len, void* val, uint8_t stop_adv);
+int mibeacon_event_occurred(uint8_t siid, uint16_t eiid, arguments_t *newArgs, uint8_t isUrgent);
+
+
+/**
+ * @brief   mibeacon set adv_timeout to stop adv
+ *
+ * @param   [in] timeout: timeout to stop adv , number of milliseconds
+ *
+ * @note    timeout == 0  means to stop adv immediately
+ *
+ * @note    timeout == 0xFFFFFFFF  means not to stop adv
+ *
+ * @note    timeout == 30min (30*60*1000) is recommended
+ *
+ * The mibeacon object is an adv message contains the status or event. BLE gateway
+ * can receive the beacon message (by BLE scanning) and upload it to server for
+ * triggering customized home automation scene.
+ *
+ * OBJ_QUEUE_SIZE      : max num of objects can be concurrency advertising
+ *                      ( actually, it will be sent one by one )
+ * OBJ_ADV_INTERVAL    : the object adv interval
+ * OBJ_ADV_TIMEOUT_MS  : the time one object will be continuously sent.
+ *
+ */
+int mibeacon_set_adv_timeout(uint32_t timeout);
+
+int mibeacon_get_registered_state(void);
+
+void advertising_init(uint8_t solicite_bind);
+
+mible_status_t advertising_start(uint16_t adv_interval_ms);
+
+void advertising_stop(void);
+
+/**
+ *@brief    register property get call back
+ */
+int mible_user_property_get_callback_register(property_operation_objid_callback_t user_prop_get_cb, uint16_t adv_interval_ms);
+
+ /**
+ *@brief    add an object into the period adv list
+ *@param    [in]obj_id: the object id to be added into the list
+ */
+int mibeacon_period_obj_add(uint16_t obj_id);
 
 #endif

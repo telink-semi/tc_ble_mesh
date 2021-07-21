@@ -28,6 +28,8 @@
 #pragma pack(1)
 #endif
 
+#define URI_DATA    {0x17,0x2f,0x2f,0x50,0x54,0x53,0x2e,0x43,0x4f,0x4d}
+
 typedef struct {
 	u8 len;
 	u8 type;
@@ -60,6 +62,7 @@ typedef struct {
 	u8 authValue[8];
 }secure_net_pk;
 typedef struct {
+	bear_head_t tx_head;
 	u8 trans_par_val;
 	union{
 		beacon_dat_without_uri_pk bea_out_uri;
@@ -105,7 +108,6 @@ typedef enum{
 	OOB_IN_MANUL,
 	OOB_ON_DEVICE,
 }OOB_INFO_FIELD;
-extern beacon_str  beaconData;
 
 u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info);
 u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash);
@@ -120,6 +122,7 @@ void beacon_str_init();
 int check_pkt_is_unprovision_beacon(u8 *dat);
 extern beacon_send_str beacon_send;
 int mesh_tx_sec_private_beacon_proc(u8 blt_sts);
+u8  is_unprovision_beacon_with_uri(event_adv_report_t *report);
 
 
 #endif 

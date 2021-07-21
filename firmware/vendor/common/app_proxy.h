@@ -118,11 +118,6 @@ enum{
 };
 
 typedef struct{
-	u16 list_data[MAX_LIST_LEN];
-	u8 list_idx[(MAX_LIST_LEN+7)/8];
-}list_mag_str;
-
-typedef struct{
 	u8 use_directed;
 	u16 client_addr;
 	u8 	client_2nd_ele_cnt;

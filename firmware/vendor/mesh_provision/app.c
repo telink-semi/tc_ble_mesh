@@ -45,6 +45,7 @@
 #include "stack/ble/gap/gap.h"
 #include "vendor/common/blt_soft_timer.h"
 #include "proj/drivers/rf_pa.h"
+#include "../common/remote_prov.h"
 
 #if (HCI_ACCESS==HCI_USE_UART)
 #include "proj/drivers/uart.h"
@@ -115,9 +116,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#endif
 			
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
-			send_to_hci = mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD);
+			send_to_hci = (0 == mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD));
 			#else
-			send_to_hci = app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1);
+			send_to_hci = (0 == app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1));
 			#endif
 		}
 
@@ -348,6 +349,18 @@ u8 gateway_upload_node_info(u16 unicast)
 	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_NODE_INFO,(u8 *)p_info,sizeof(VC_node_info_t));
 }
 
+#if FAST_PROVISION_ENABLE
+int fast_provision_upload_node_info(u16 unicast, u16 pid)
+{
+	fast_prov_node_info_t node_info;
+	VC_node_info_t * p_info = get_VC_node_info(unicast,1);
+	node_info.pid = pid;
+	memcpy(&node_info.node_info, p_info, sizeof(VC_node_info_t));
+	
+	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_NODE_INFO,(u8 *)&node_info,sizeof(node_info));
+}
+#endif
+
 u8 gateway_upload_provision_self_sts(u8 sts)
 {
 	u8 buf[26];
@@ -541,8 +554,7 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 		
 	}else if (op_code == HCI_GATEWAY_CMD_SET_NODE_PARA){
 		// set the provisionee's netinfo para 
-		provison_net_info_str *p_net;
-		p_net = (provison_net_info_str *)(p+1);
+		provison_net_info_str *p_net = (provison_net_info_str *)(p+1);
 		// set the pro_data infomation 
 		set_provisionee_para(p_net->net_work_key,p_net->key_index,
 								p_net->flags,p_net->iv_index,p_net->unicast_address);
@@ -639,7 +651,39 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 	}
 	else if(op_code == HCI_GATEWAY_CMD_FAST_PROV_START ){
 		u16 pid = p[1] + (p[2]<<8);
-		mesh_fast_prov_start(pid);
+		u16 addr = p[3] + (p[4]<<8);
+		mesh_fast_prov_start(pid, addr);
+	}else if (op_code == HCI_GATEWAY_CMD_RP_MODE_SET){
+		#if GATEWAY_ENABLE&&MD_REMOTE_PROV
+		gw_get_rp_mode(p[1]);
+		#endif
+	}else if (op_code == HCI_GATEWAY_CMD_RP_SCAN_START_SET){
+		#if GATEWAY_ENABLE&&MD_REMOTE_PROV
+		gw_rp_scan_start();
+		#endif
+	}else if (op_code == HCI_GATEWAY_CMD_RP_LINK_OPEN){
+		#if GATEWAY_ENABLE&&MD_REMOTE_PROV
+		u16 adr = p[1] + (p[2]<<8);
+		u8 *p_uuid = p+3;
+		mesh_rp_proc_en(1);
+		mesh_rp_proc_set_node_adr(adr);
+		mesh_cmd_sig_rp_cli_send_link_open(adr,p_uuid,0);
+		mesh_rp_client_set_prov_sts(RP_PROV_IDLE_STS);
+		mesh_seg_filter_adr_set(adr);
+		memcpy(rp_dev_mac,p_uuid+10,6);
+		memcpy(rp_dev_uuid,p_uuid,16);
+		#endif
+	}else if (op_code == HCI_GATEWAY_CMD_RP_START){
+		#if GATEWAY_ENABLE&&MD_REMOTE_PROV
+		// set the provisionee's netinfo para 
+		provison_net_info_str *p_net = (provison_net_info_str *)(p+1);
+		// set the pro_data infomation 
+		set_provisionee_para(p_net->net_work_key,p_net->key_index,
+								p_net->flags,p_net->iv_index,p_net->unicast_address);
+		provision_mag.unicast_adr_last = p_net->unicast_address;
+		// need to send invite first.
+		gw_rp_send_invite();
+		#endif
 	}
 	return 1;
 }
@@ -842,8 +886,7 @@ void user_init()
 	mesh_scan_rsp_init();
 	my_att_init (provision_mag.gatt_mode);
 	blc_att_setServerDataPendingTime_upon_ClientCmd(10);
-	extern u32 system_time_tick;
-	system_time_tick = clock_time();
+	system_time_init();
 #if (BLT_SOFTWARE_TIMER_ENABLE)
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 1*1000*1000);

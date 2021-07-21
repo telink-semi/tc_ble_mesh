@@ -169,9 +169,6 @@ enum ST_TRANS_TYPE{
     #if (LIGHT_TYPE_CT_EN)
 	ST_TRANS_CTL_D_UV,              // no level model related, assign at the end should be better.
     #endif
-	#if (MI_API_ENABLE)
-	ST_TRANS_MI_VENDOR_STS,
-	#endif
 	ST_TRANS_MAX,
     ST_TRANS_PUB_ONOFF = ST_TRANS_MAX,  // just use for publish,
 };
@@ -423,6 +420,7 @@ void increase_rx_onoff_cnt();
 u16 get_rx_cnts();
 void light_transition_onoff_manual(u8 onoff, u8 transit_t, u8 light_idx);
 void set_keep_onoff_state_after_ota();
+void clr_keep_onoff_state_after_ota();
 
 
 static inline u16 get_lightness_present(int light_idx)

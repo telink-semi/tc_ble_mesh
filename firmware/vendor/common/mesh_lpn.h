@@ -50,7 +50,7 @@ void lpn_debug_alter_debug_pin(int reset);
 void friend_cmd_send_poll();
 void mesh_friend_ship_start_poll();
 void mesh_feature_set_lpn();
-void lpn_quick_tx(u8 is_mesh_msg);
+void lpn_quick_tx(u8 is_quick_tx);
 int lpn_rx_offer_handle(u8 *bear);
 void lpn_no_offer_handle();
 void subsc_add_rmv_test(int add);
@@ -70,6 +70,7 @@ int mesh_lpn_rcv_delay_wakeup(void);
 int mesh_lpn_poll_md_wakeup(void);
 int mesh_lpn_adv_interval_update(u8 adv_tick_refresh);
 int mesh_lpn_subsc_pending_add(u16 op, u16 addr);
+u32 get_lpn_poll_interval_ms();
 
 enum{
     HANDLE_NONE                     = 0,
@@ -107,3 +108,5 @@ typedef struct{
 	u16 op;
 	u16 sub_addr;
 }lpn_sub_list_event_t;
+
+extern lpn_sub_list_event_t mesh_lpn_subsc_pending;

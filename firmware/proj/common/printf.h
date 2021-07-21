@@ -30,7 +30,8 @@
 int my_printf(const char *fmt, ...);
 int my_sprintf(char* s, const char *fmt, ...);
 
-int my_printf_uart(const char *format,...);
+int my_printf_uart(const char *format,va_list args);
+
 int my_printf_uart_hexdump(unsigned char *p_buf,int len );
 int print(char **out, const char *format, va_list args) ;
 int printf_Bin2Text (char *lpD, int lpD_len_max, char *lpS, int n);

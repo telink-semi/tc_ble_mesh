@@ -112,6 +112,7 @@ extern u32 mesh_md_pri_beacon_addr;
 void mesh_node_identity_refresh();
 void mesh_private_proxy_change_by_gatt_proxy(u8 private_sts,u8 *p_private_proxy);
 int mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t);
+void mesh_key_add_trigger_beacon_send(u8 idx);
 
 
 #if MD_SERVER_EN
@@ -127,6 +128,7 @@ int mesh_cmd_sig_private_node_identity_get(u8 *par, int par_len, mesh_cb_fun_par
 int mesh_cmd_sig_private_node_identity_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 void mesh_prov_para_random_proc();
 int mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts);
+void generate_non_reslov_mac(u8*p_mac);
 
 #else
 #define mesh_privacy_init            				(0)

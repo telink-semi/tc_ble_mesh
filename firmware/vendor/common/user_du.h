@@ -14,12 +14,15 @@
 #define DU_START_OTA_CMD				0x86
 #define DU_START_OTA_RSP				0x87
 
-#define DU_BUFFER_CHK_CMD				0X88
-#define DU_BUFFER_CHK_RSP				0X89
-#define DU_WHOLE_IMG_CHK_CMD			0X90
-#define DU_WHOLE_IMG_CHK_RSP			0X91
-#define DU_OVERWRITE_IMG_CMD			0X92
-#define DU_OVERWRITE_IMG_RSP			0X93
+#define DU_BUFFER_CHK_CMD				0x88
+#define DU_BUFFER_CHK_RSP				0x89
+#define DU_READ_DEV_VERSION_CMD   		0x8a
+#define DU_READ_DEV_VERSION_RSP   		0x8b
+
+#define DU_WHOLE_IMG_CHK_CMD			0x90
+#define DU_WHOLE_IMG_CHK_RSP			0x91
+#define DU_OVERWRITE_IMG_CMD			0x92
+#define DU_OVERWRITE_IMG_RSP			0x93
 
 typedef struct{
 	u8 len1;//connect
@@ -36,6 +39,7 @@ typedef struct{
 	u16 cid;
 	u8 dev_type;
 	u16 ver;
+	u8 ios_mac[6];
 }du_ota_adv_str;
 
 typedef struct{
@@ -44,6 +48,7 @@ typedef struct{
 	u16 cid;
 	u8 dev_type;
 	u16 ver;
+	u8 ios_mac[6];
 }du_ota_end_adv_str;
 
 typedef struct{
@@ -102,6 +107,11 @@ typedef struct{
 }du_magic_code_rsp_str;
 
 typedef struct{
+	u8  dev_type;
+	u16 ver;
+}du_dev_version_rsp_str;
+
+typedef struct{
 	u32 break_point;
 	u32 rand_code;
 	u32 seg_size;// supose the segbuf is 244
@@ -110,36 +120,74 @@ typedef struct{
 	u32 image_size;
 	u32 image_offset;
 	u32 crc;
-	u32 ota_suc;
-	u32 ota_suc_tick;
-	
+	u32 ota_suc;	
 }du_ota_str;
-
+extern du_ota_str *p_ota;
 void test_du_sha256_cal();
 int	du_ctl_Write (void *p);
 int du_fw_proc(void *p);
 u8 du_adv_proc(rf_packet_adv_t * p);
-int du_vd_event_send(u8*p_buf,u8 len,u16 dst);
-int du_vd_temp_event_send(u16 op,u16 val,u16 dst);
+int du_vd_event_set(u8*p_buf,u8 len,u16 dst);
+//int du_vd_temp_event_send(u16 op,u16 val,u16 dst);
 void du_loop_proc();
 void du_vd_send_loop_proc();
 void du_ui_proc_init();
 void du_ui_proc_init_deep();
-void du_set_gateway_adr(u16 adr);
-void du_get_gateway_adr_init();
 void du_bind_end_proc(u16 adr);
+void du_bls_ll_setAdvEnable(int adv_enable);
+void du_adv_enable_proc(void);
+void du_prov_bind_check();
+void du_time_req_start_proc();
 
-extern u32 du_busy_tick ;
+void update_du_busy_s(u8 delay_s);
+
+void du_set_gateway_adr(u16 adr);
+u16  du_get_gateway_adr(void);
+void du_write_gateway_adr(u16 adr);
+u16  du_read_gateway_adr(void);
+u8   du_get_bind_flag(void);
+
+
 
 #define VD_DU_TEMP_CMD 	0x010d
 #define VD_DU_HUMI_CMD 	0x010F
 #define VD_DU_POWER_CMD	0x0549
+#define VD_DU_THP_CMD	0x0A01
+#define VD_DU_TIME		0XF01F
 
-#define VD_DU_GROUP_DST	0xF000
 typedef struct{
 	u8 tid;
 	u16 op;
-	u16 val;
+}du_time_req;
+
+
+#define VD_DU_GROUP_DST	0xF000
+typedef struct{
+	u8  tid;
+	u16 op;
+	u8  val[5];
+}vd_du_event_str;
+
+typedef struct{
+	vd_du_event_str op_str;
+	u8              op_str_len;
+	u16             gateway_adr;
 }vd_du_event_t;
+
+typedef struct{
+	u16 temp;
+	u16 humi;
+	u8  power;
+}htp_para;
+
+extern u8 du_ota_reboot_flag;
+void du_ota_set_reboot_flag(void);
+void du_ota_clr_reboot_flag(void);
+u16  du_ota_get_reboot_flag(void);
+void du_ota_suc_reboot(void);
+
+void du_ota_set_flag(u8 value);
+u8   du_ota_get_flag(void);
+
 
 #endif

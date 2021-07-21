@@ -28,7 +28,7 @@
 #define DIRECTED_PROXY_EN					FEATURE_PROXY_EN
 #define DIRECTED_FRIEND_EN					FEATURE_FRIEND_EN
 
-#define MAX_FIXED_PATH						32
+#define MAX_FIXED_PATH						(PTS_TEST_EN?4:32)
 #define MAX_NON_FIXED_PATH					(PTS_TEST_EN?4:64)
 #define MAX_DEPENDENT_NUM					(MAX_LPN_NUM+2) // 2 for directed client
 
@@ -156,7 +156,7 @@ typedef struct{
 	u8 directed_forwarding;
 	u8 directed_relay;
 	u8 directed_proxy;
-	u8 directed_proxy_use_directed_default;
+	u8 directed_proxy_directed_default;
 	u8 directed_friend;
 }directed_control_t;
 
@@ -192,7 +192,8 @@ typedef struct{
 	u8 max_concurrent_init;
 	u8 wanted_lanes;
 	u8 two_way_path;
-	u8 path_echo_interval;
+	u8 unicast_echo_interval;
+	u8 multicast_echo_interval;
 }mesh_directed_subnet_state_t;
 
 typedef struct{
@@ -278,27 +279,24 @@ typedef struct{
 	u8  dependent_target_list_size;
 	u16 addr[1];
 }forwarding_tbl_dependengts_delete_t;
-
-enum{
- 	DEPENDENT_GET_PATH_ORIGIN_MATCH = BIT(0),
- 	DEPENDENT_GET_DESTINATION_MATCH = BIT(1),
-};
  
 typedef struct{
 	u16 netkey_index:12;
-	u16 dependents_list_mask:2;
+	u16 path_origin_mask:1;
+	u16 path_target_mask:1;
 	u16 fixed_path_flag:1;
 	u16 prohibited:1;
 	u16 start_index;
 	u16 path_origin;
 	u16 destination;
-	u16 update_identifier; // optinal
+	u16 up_id; // optinal
 }forwarding_tbl_dependents_get_t;
 
 typedef struct{
 	u8 status;
 	u16 netkey_index:12;
-	u16 dependents_list_mask:2;
+	u16 path_origin_mask:1;
+	u16 path_target_mask:1;
 	u16 fixed_path_flag:1;
 	u16 prohibited:1;
 	u16 start_index;
@@ -438,13 +436,15 @@ typedef struct{
 
 typedef struct{
 	u16 netkey_index;
-	u8 path_echo_interval;
+	u8 unicast_echo_interval;
+	u8 multicast_echo_interval;
 }path_echo_interval_set_t;
 
 typedef struct{
 	u8 status;
 	u16 netkey_index;
-	u8 path_echo_interval;
+	u8 unicast_echo_interval;
+	u8 multicast_echo_interval;
 }path_echo_interval_sts_t;
 
 typedef struct{
