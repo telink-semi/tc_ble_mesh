@@ -182,4 +182,64 @@ public abstract class FileSystem {
 
         return "";
     }
+
+
+    public static File writeByteArray(File dir, String filename, byte[] array) {
+
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        File file = new File(dir, filename);
+
+        FileOutputStream fos = null;
+        try {
+            if (!file.exists())
+                file.createNewFile();
+            fos = new FileOutputStream(file);
+            fos.write(array);
+            fos.flush();
+            fos.getFD().sync();
+            return file;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+
+        return null;
+    }
+
+    public static byte[] readByteArray(File file) {
+        if (!file.exists())
+            return null;
+        FileInputStream fis = null;
+        byte[] certData;
+        try {
+            fis = new FileInputStream(file);
+            certData = new byte[fis.available()];
+            fis.read(certData);
+            return certData;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                    fis = null;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+        return null;
+    }
 }

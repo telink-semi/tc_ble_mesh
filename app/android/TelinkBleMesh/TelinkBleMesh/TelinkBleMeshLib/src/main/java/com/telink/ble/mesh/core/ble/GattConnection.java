@@ -479,7 +479,7 @@ public class GattConnection extends BluetoothGattCallback {
     }
 
     public boolean refreshCache() {
-        if (Build.VERSION.SDK_INT >= 27) return false;
+//        if (Build.VERSION.SDK_INT >= 27) return false;
         if (mGatt == null) {
             log("refresh error: gatt null");
             return false;

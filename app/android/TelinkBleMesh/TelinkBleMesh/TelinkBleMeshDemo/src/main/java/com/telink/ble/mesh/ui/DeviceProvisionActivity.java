@@ -55,6 +55,7 @@ import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
 import com.telink.ble.mesh.model.AppSettings;
+import com.telink.ble.mesh.model.CertCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
@@ -259,6 +260,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         byte[] deviceUUID = processingDevice.nodeInfo.deviceUUID;
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(processingDevice.bluetoothDevice, processingDevice.nodeInfo.deviceUUID, address);
+        provisioningDevice.setRootCert(CertCacheService.getInstance().getRootCert());
         provisioningDevice.setOobInfo(processingDevice.oobInfo);
         processingDevice.state = NetworkingState.PROVISIONING;
         processingDevice.addLog(NetworkingDevice.TAG_PROVISION, "action start -> 0x" + String.format("%04X", address));

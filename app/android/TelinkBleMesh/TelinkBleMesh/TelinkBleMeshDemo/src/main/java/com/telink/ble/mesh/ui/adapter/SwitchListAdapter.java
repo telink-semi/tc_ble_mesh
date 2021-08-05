@@ -75,10 +75,10 @@ public class SwitchListAdapter extends BaseRecyclerViewAdapter<SwitchListAdapter
         int adr = mAdrList.get(position);
         holder.tv_ele.setText("ele adr: " + adr);
         holder.switch_ele.setTag(adr);
-        holder.switch_ele.setOnCheckedChangeListener(switchChangeListner);
+        holder.switch_ele.setOnCheckedChangeListener(switchChangeListener);
     }
 
-    private CompoundButton.OnCheckedChangeListener switchChangeListner = new CompoundButton.OnCheckedChangeListener() {
+    private CompoundButton.OnCheckedChangeListener switchChangeListener = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             int adr = (int) buttonView.getTag();

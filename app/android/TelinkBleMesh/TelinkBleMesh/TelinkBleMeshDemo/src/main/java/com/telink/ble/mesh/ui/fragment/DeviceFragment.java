@@ -33,7 +33,6 @@ import android.widget.TextView;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.core.message.config.CompositionDataGetMessage;
 import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
@@ -47,6 +46,7 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
+import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.ui.CmdActivity;
 import com.telink.ble.mesh.ui.DeviceAutoProvisionActivity;
 import com.telink.ble.mesh.ui.DeviceProvisionActivity;
@@ -55,10 +55,10 @@ import com.telink.ble.mesh.ui.FastProvisionActivity;
 import com.telink.ble.mesh.ui.KeyBindActivity;
 import com.telink.ble.mesh.ui.LogActivity;
 import com.telink.ble.mesh.ui.MainActivity;
+import com.telink.ble.mesh.ui.RemoteControlSettingActivity;
 import com.telink.ble.mesh.ui.RemoteProvisionActivity;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.OnlineDeviceListAdapter;
-import com.telink.ble.mesh.ui.test.ConnectionTestActivity;
 import com.telink.ble.mesh.ui.test.OnOffTestActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -107,7 +107,7 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 }
                 if (cmdSent) {
                     for (NodeInfo deviceInfo : mDevices) {
-                        deviceInfo.setOnOff(-1);
+                        deviceInfo.setOnlineState(OnlineState.OFFLINE);
                     }
                     mAdapter.notifyDataSetChanged();
                 }
@@ -151,10 +151,10 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         mAdapter.setOnItemClickListener(new BaseRecyclerViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                if (mDevices.get(position).getOnOff() == -1) return;
+                if (mDevices.get(position).isOffline()) return;
 
                 int onOff = 0;
-                if (mDevices.get(position).getOnOff() == 0) {
+                if (mDevices.get(position).getOnlineState() == OnlineState.OFF) {
                     onOff = 1;
                 }
 
@@ -174,10 +174,18 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                     toastMsg("device info null!");
                     return false;
                 }
-                MeshLogger.d("deviceKey: " + (Arrays.bytesToHexString(deviceInfo.deviceKey)));
+                /*if (deviceInfo.compositionData != null){
+                    MeshLogger.d("device cps: " + deviceInfo.compositionData.toString());
+                }*/
+//                MeshLogger.d("deviceKey: " + (Arrays.bytesToHexString(deviceInfo.deviceKey)));
                 Intent intent;
                 if (deviceInfo.bound) {
-                    intent = new Intent(getActivity(), DeviceSettingActivity.class);
+                    // remote control device
+                    if (deviceInfo.compositionData.pid == 0x0301) {
+                        intent = new Intent(getActivity(), RemoteControlSettingActivity.class);
+                    } else {
+                        intent = new Intent(getActivity(), DeviceSettingActivity.class);
+                    }
                 } else {
                     intent = new Intent(getActivity(), KeyBindActivity.class);
                 }

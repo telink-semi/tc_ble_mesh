@@ -76,7 +76,7 @@ public class MeshUpdatingDevice implements Serializable, Parcelable {
     /**
      * is low power node
      */
-    public boolean isLpn = false;
+    public int pid = 0;
 
     /**
      * contains firmware update models
@@ -92,6 +92,30 @@ public class MeshUpdatingDevice implements Serializable, Parcelable {
     public MeshUpdatingDevice() {
     }
 
+    protected MeshUpdatingDevice(Parcel in) {
+        meshAddress = in.readInt();
+        updatingEleAddress = in.readInt();
+        state = in.readInt();
+        pidInfo = in.readString();
+        firmwareId = in.createByteArray();
+        pid = in.readInt();
+        isSupported = in.readByte() != 0;
+        isOnline = in.readByte() != 0;
+        selected = in.readByte() != 0;
+    }
+
+    public static final Creator<MeshUpdatingDevice> CREATOR = new Creator<MeshUpdatingDevice>() {
+        @Override
+        public MeshUpdatingDevice createFromParcel(Parcel in) {
+            return new MeshUpdatingDevice(in);
+        }
+
+        @Override
+        public MeshUpdatingDevice[] newArray(int size) {
+            return new MeshUpdatingDevice[size];
+        }
+    };
+
     public String getStateDesc() {
         switch (state) {
             case STATE_INITIAL:
@@ -106,16 +130,9 @@ public class MeshUpdatingDevice implements Serializable, Parcelable {
         return "";
     }
 
-    protected MeshUpdatingDevice(Parcel in) {
-        meshAddress = in.readInt();
-        updatingEleAddress = in.readInt();
-        state = in.readInt();
-        pidInfo = in.readString();
-        firmwareId = in.createByteArray();
-        isLpn = in.readByte() != 0;
-        isSupported = in.readByte() != 0;
-        isOnline = in.readByte() != 0;
-        selected = in.readByte() != 0;
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     @Override
@@ -125,26 +142,9 @@ public class MeshUpdatingDevice implements Serializable, Parcelable {
         dest.writeInt(state);
         dest.writeString(pidInfo);
         dest.writeByteArray(firmwareId);
-        dest.writeByte((byte) (isLpn ? 1 : 0));
+        dest.writeInt(pid);
         dest.writeByte((byte) (isSupported ? 1 : 0));
         dest.writeByte((byte) (isOnline ? 1 : 0));
         dest.writeByte((byte) (selected ? 1 : 0));
     }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Creator<MeshUpdatingDevice> CREATOR = new Creator<MeshUpdatingDevice>() {
-        @Override
-        public MeshUpdatingDevice createFromParcel(Parcel in) {
-            return new MeshUpdatingDevice(in);
-        }
-
-        @Override
-        public MeshUpdatingDevice[] newArray(int size) {
-            return new MeshUpdatingDevice[size];
-        }
-    };
 }

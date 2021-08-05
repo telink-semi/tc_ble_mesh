@@ -351,7 +351,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         enableUI(true);
         // for test
 //        readFirmware("/storage/emulated/0/kee/sigMesh/8258_mesh_test_OTA.bin");
-//        readFirmware("/storage/emulated/0/kee/sigMesh/20210422_mesh_OTA/8258_mesh_V4.3_for_OTA.bin");
+        readFirmware("/storage/emulated/0/kee/sigMesh/20210422_mesh_OTA/8258_mesh_V4.3_for_OTA.bin");
 
 
         infoHandler.obtainMessage(MSG_INFO, "IDLE").sendToTarget();
@@ -822,6 +822,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
                 mesh.saveOrUpdate(this);
             } else if (addInfo == AdditionalInformation.CPS_CHANGED_1 || addInfo == AdditionalInformation.CPS_CHANGED_2) {
                 //
+
             }
         }
     }

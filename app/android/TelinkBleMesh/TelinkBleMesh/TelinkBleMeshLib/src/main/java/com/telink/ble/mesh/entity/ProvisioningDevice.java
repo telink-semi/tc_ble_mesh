@@ -121,6 +121,8 @@ public class ProvisioningDevice implements Parcelable {
      */
     protected byte[] deviceKey = null;
 
+    protected byte[] rootCert = null;
+
     protected ProvisioningCapabilityPDU deviceCapability = null;
 
     public ProvisioningDevice(BluetoothDevice bluetoothDevice, byte[] deviceUUID, int unicastAddress) {
@@ -157,6 +159,7 @@ public class ProvisioningDevice implements Parcelable {
         authValue = in.createByteArray();
         provisioningState = in.readInt();
         deviceKey = in.createByteArray();
+        rootCert = in.createByteArray();
     }
 
     public static final Creator<ProvisioningDevice> CREATOR = new Creator<ProvisioningDevice>() {
@@ -287,6 +290,14 @@ public class ProvisioningDevice implements Parcelable {
         this.autoUseNoOOB = autoUseNoOOB;
     }
 
+    public byte[] getRootCert() {
+        return rootCert;
+    }
+
+    public void setRootCert(byte[] rootCert) {
+        this.rootCert = rootCert;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -306,6 +317,7 @@ public class ProvisioningDevice implements Parcelable {
         dest.writeByteArray(authValue);
         dest.writeInt(provisioningState);
         dest.writeByteArray(deviceKey);
+        dest.writeByteArray(rootCert);
     }
 
     @Override

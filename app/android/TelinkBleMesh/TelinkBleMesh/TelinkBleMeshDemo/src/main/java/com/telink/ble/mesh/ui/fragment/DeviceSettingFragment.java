@@ -303,7 +303,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                 break;
 
             case R.id.view_pub:
-                if (deviceInfo.getOnOff() == -1 || pubModel == null) return;
+                if (deviceInfo.isOffline() || pubModel == null) return;
 
                 int pubAdr = 0;
                 if (cb_pub.isChecked()) {

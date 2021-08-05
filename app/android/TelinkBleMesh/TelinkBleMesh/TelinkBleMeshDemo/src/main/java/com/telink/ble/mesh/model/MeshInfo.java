@@ -215,7 +215,7 @@ public class MeshInfo implements Serializable, Cloneable {
 
         int result = 0;
         for (NodeInfo device : nodes) {
-            if (device.getOnOff() != -1) {
+            if (!device.isOffline()) {
                 result++;
             }
         }
@@ -234,7 +234,7 @@ public class MeshInfo implements Serializable, Cloneable {
         }
         int result = 0;
         for (NodeInfo device : nodes) {
-            if (device.getOnOff() != -1) {
+            if (!device.isOffline()) {
                 for (int addr : device.subList) {
                     if (addr == groupAddress) {
                         result++;

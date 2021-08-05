@@ -39,7 +39,6 @@ import com.telink.ble.mesh.ui.adapter.DeviceSelectAdapter;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
-import com.telink.ble.mesh.core.message.config.ConfigMessage;
 import com.telink.ble.mesh.core.message.scene.SceneDeleteMessage;
 import com.telink.ble.mesh.core.message.scene.SceneRegisterStatusMessage;
 import com.telink.ble.mesh.core.message.scene.SceneStoreMessage;
@@ -209,7 +208,7 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
         if (devices != null) {
             int adr;
             for (NodeInfo deviceInfo : devices) {
-                if (deviceInfo.getOnOff() == -1) {
+                if (deviceInfo.isOffline()) {
                     continue;
                 }
 

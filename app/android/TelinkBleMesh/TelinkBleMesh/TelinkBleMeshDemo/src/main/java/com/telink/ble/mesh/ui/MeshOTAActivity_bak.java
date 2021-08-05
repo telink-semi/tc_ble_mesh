@@ -339,7 +339,7 @@ public class MeshOTAActivity_bak extends BaseActivity implements View.OnClickLis
     public List<NodeInfo> getSelectedNodes() {
         List<NodeInfo> nodes = null;
         for (NodeInfo deviceInfo : mesh.nodes) {
-            if (deviceInfo.selected && deviceInfo.getOnOff() != -1 && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1) {
+            if (deviceInfo.selected && !deviceInfo.isOffline() && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1) {
                 if (nodes == null) {
                     nodes = new ArrayList<>();
                 }

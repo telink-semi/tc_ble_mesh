@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     DevicesInGroupAdapter.java 
+ * @file DevicesInGroupAdapter.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.adapter;
 
@@ -31,6 +31,7 @@ import android.widget.TextView;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.util.Arrays;
 
 import java.util.List;
@@ -69,7 +70,7 @@ public class DevicesInGroupAdapter extends BaseRecyclerViewAdapter<DevicesInGrou
 
         NodeInfo device = mDevices.get(position);
 
-        if (device.getOnOff() == -1) {
+        if (device.isOffline()) {
             holder.img_icon.setImageResource(R.drawable.icon_light_offline);
             holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.black));
         } else {
@@ -79,7 +80,7 @@ public class DevicesInGroupAdapter extends BaseRecyclerViewAdapter<DevicesInGrou
                 holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.black));
             }
 
-            if (device.getOnOff() == 0)
+            if (device.isOn())
                 holder.img_icon.setImageResource(R.drawable.icon_light_off);
             else {
                 holder.img_icon.setImageResource(R.drawable.icon_light_on);

@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     SceneListAdapter.java 
+ * @file SceneListAdapter.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.adapter;
 
@@ -31,6 +31,9 @@ import android.widget.TextView;
 
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.Scene;
 import com.telink.ble.mesh.ui.IconGenerator;
 import com.telink.ble.mesh.ui.SceneSettingActivity;
@@ -154,7 +157,9 @@ public class SceneListAdapter extends BaseRecyclerViewAdapter<SceneListAdapter.V
             super.onBindViewHolder(holder, position);
 
             Scene.SceneState state = innerDevices.get(position);
-            holder.iv_device.setImageResource(IconGenerator.generateDeviceIconRes(state.onOff));
+            NodeInfo nodeInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(state.address);
+            int pid = (nodeInfo != null && nodeInfo.compositionData != null) ? nodeInfo.compositionData.pid : 0;
+            holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.getBySt(state.onOff)));
             holder.tv_device_info.setText(mContext.getString(R.string.scene_state_desc,
                     state.address,
                     getOnOffDesc(state.onOff)));

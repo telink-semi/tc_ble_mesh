@@ -795,7 +795,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     private void onBluetoothEvent(int state, String desc) {
-        log("bluetooth event: " + state + " -- " + desc);
         BluetoothEvent event = new BluetoothEvent(this, BluetoothEvent.EVENT_TYPE_BLUETOOTH_STATE_CHANGE);
         event.setState(state);
         event.setDesc(desc);
@@ -803,7 +802,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     private void onMeshEvent(String eventType, String desc) {
-        log("mesh event: " + eventType + " -- " + desc);
         MeshEvent meshEvent = new MeshEvent(this, eventType, desc);
         onEventPrepared(meshEvent);
     }
@@ -1680,19 +1678,20 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     private void onProvisionFailed(ProvisioningDevice provisioningDevice, String desc) {
         log("provisioning failed: " + desc + " -- " + provisioningDevice.getUnicastAddress());
-        onProvisionComplete();
+        onProvisionComplete(false);
         postProvisioningEvent(ProvisioningEvent.EVENT_TYPE_PROVISION_FAIL, provisioningDevice, desc);
     }
 
     private void onProvisionSuccess(ProvisioningDevice provisioningDevice, String desc) {
-        onProvisionComplete();
+        onProvisionComplete(true);
         this.directDeviceAddress = provisioningDevice.getUnicastAddress();
         postProvisioningEvent(ProvisioningEvent.EVENT_TYPE_PROVISION_SUCCESS, provisioningDevice, desc);
     }
 
-    private void onProvisionComplete() {
+    private void onProvisionComplete(boolean success) {
         isActionStarted = false;
-        idle(false);
+        // disconnect when provision fail
+        idle(!success);
     }
 
     @Override

@@ -92,10 +92,10 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
         if (AppSettings.DRAFT_FEATURES_ENABLE) {
             findViewById(R.id.ll_rp).setVisibility(View.VISIBLE);
-            findViewById(R.id.line_rp).setVisibility(View.VISIBLE);
+            findViewById(R.id.ll_cert).setVisibility(View.VISIBLE);
         } else {
             findViewById(R.id.ll_rp).setVisibility(View.GONE);
-            findViewById(R.id.line_rp).setVisibility(View.GONE);
+            findViewById(R.id.ll_cert).setVisibility(View.GONE);
         }
 
         switch_remote_prov.setChecked(SharedPreferenceHelper.isRemoteProvisionEnable(this));
@@ -151,6 +151,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         findViewById(R.id.iv_tip_no_oob).setOnClickListener(this);
         findViewById(R.id.tv_select_database).setOnClickListener(this);
         findViewById(R.id.iv_tip_fast_prov).setOnClickListener(this);
+        findViewById(R.id.tv_cert).setOnClickListener(this);
         et_extend = findViewById(R.id.et_extend_type);
         et_extend.setOnClickListener(this);
         et_net_key = findViewById(R.id.et_net_key);
@@ -243,6 +244,10 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
             case R.id.et_extend_type:
                 showExtendDialog();
+                break;
+
+            case R.id.tv_cert:
+                startActivity(new Intent(this, CertListActivity.class));
                 break;
         }
     }

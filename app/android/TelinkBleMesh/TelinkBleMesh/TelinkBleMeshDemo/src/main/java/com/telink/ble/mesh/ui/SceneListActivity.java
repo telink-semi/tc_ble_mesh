@@ -98,7 +98,7 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
                 for (Scene.SceneState state : tarScene.states) {
                     // offline
                     NodeInfo localDevice = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(state.address);
-                    if (localDevice != null && localDevice.getOnOff() == -1) {
+                    if (localDevice != null && localDevice.isOffline()) {
                         hasOffline = true;
                     }
                 }
@@ -156,7 +156,7 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
             NodeInfo deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo()
                     .getDeviceByMeshAddress(tarScene.states.get(deleteIndex).address);
             // remove offline device
-            if (deviceInfo == null || deviceInfo.getOnOff() == -1) {
+            if (deviceInfo == null || deviceInfo.isOffline()) {
 //                tarScene.deleteDevice(deviceInfo);
                 deleteIndex++;
                 deleteNextDevice();

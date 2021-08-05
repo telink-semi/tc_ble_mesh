@@ -34,6 +34,7 @@ import com.telink.ble.mesh.core.message.firmwareupdate.AdditionalInformation;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.ui.IconGenerator;
 import com.telink.ble.mesh.util.Arrays;
 
@@ -79,8 +80,8 @@ public class FUDeviceAdapter extends BaseRecyclerViewAdapter<FUDeviceAdapter.Vie
         super.onBindViewHolder(holder, position);
 
         MeshUpdatingDevice deviceInfo = mDevices.get(position);
-        final int deviceType = deviceInfo.isLpn ? 1 : 0;
-        holder.iv_device.setImageResource(IconGenerator.getIcon(deviceType, NodeInfo.ON_OFF_STATE_ON));
+        final int pid = deviceInfo.pid;
+        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON));
         String pidInfo = deviceInfo.pidInfo;
         holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc_mesh_ota,
                 String.format("%04X", deviceInfo.meshAddress),

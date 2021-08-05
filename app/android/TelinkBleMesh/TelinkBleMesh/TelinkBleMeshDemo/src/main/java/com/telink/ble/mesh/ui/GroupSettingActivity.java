@@ -149,10 +149,10 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
         mAdapter.setOnItemClickListener(new BaseRecyclerViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                if (innerDevices.get(position).getOnOff() == -1) return;
+                if (innerDevices.get(position).isOffline()) return;
 
                 byte onOff = 0;
-                if (innerDevices.get(position).getOnOff() == 0) {
+                if (innerDevices.get(position).isOff()) {
                     onOff = 1;
                 }
                 int address = innerDevices.get(position).meshAddress;

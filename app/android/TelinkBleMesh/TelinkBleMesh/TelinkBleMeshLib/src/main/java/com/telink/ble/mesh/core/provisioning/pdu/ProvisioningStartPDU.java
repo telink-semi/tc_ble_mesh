@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     ProvisioningStartPDU.java 
+ * @file ProvisioningStartPDU.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.provisioning.pdu;
 
@@ -65,10 +65,11 @@ public class ProvisioningStartPDU implements ProvisioningStatePDU {
      */
     public byte authenticationSize;
 
-    public static ProvisioningStartPDU getSimple(boolean staticOOBSupported) {
+    public static ProvisioningStartPDU getSimple(boolean useOOBPublicKey, boolean staticOOBSupported) {
         ProvisioningStartPDU startPDU = new ProvisioningStartPDU();
         startPDU.algorithm = 0;
-        startPDU.publicKey = 0;
+        startPDU.publicKey = (byte) (useOOBPublicKey ? 1 : 0);
+//        startPDU.publicKey = 0;
         startPDU.authenticationMethod = staticOOBSupported ? AuthenticationMethod.StaticOOB.value :
                 AuthenticationMethod.NoOOB.value;
         startPDU.authenticationAction = 0;

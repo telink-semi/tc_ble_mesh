@@ -32,6 +32,7 @@ import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.NotificationMessage;
+import com.telink.ble.mesh.core.message.firmwaredistribution.DistributionPhase;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDCancelMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.DistributionStatus;
@@ -47,10 +48,12 @@ import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.AutoConnectParameters;
 import com.telink.ble.mesh.model.AppSettings;
+import com.telink.ble.mesh.model.CertCacheService;
 import com.telink.ble.mesh.model.FUCache;
 import com.telink.ble.mesh.model.FUCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.ui.fragment.DeviceFragment;
 import com.telink.ble.mesh.ui.fragment.GroupFragment;
@@ -87,6 +90,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         resetNodeState();
 
         FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
+        CertCacheService.getInstance().load(this); // load cert cache
     }
 
     private void initBottomNav() {
@@ -124,7 +128,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         MeshInfo mesh = TelinkMeshApplication.getInstance().getMeshInfo();
         if (mesh.nodes != null) {
             for (NodeInfo deviceInfo : mesh.nodes) {
-                deviceInfo.setOnOff(-1);
+                deviceInfo.setOnlineState(OnlineState.OFFLINE);
                 deviceInfo.lum = 0;
                 deviceInfo.temp = 0;
             }
@@ -149,8 +153,19 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
     private void autoConnect() {
         MeshLogger.log("main auto connect");
-//        MeshService.getInstance().autoConnect(new AutoConnectParameters(AutoConnectFilterType.NODE_IDENTITY));
-        MeshService.getInstance().autoConnect(new AutoConnectParameters());
+        MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+        if (meshInfo.nodes.size() == 0) {
+            MeshService.getInstance().idle(true);
+        } else {
+            int directAdr = MeshService.getInstance().getDirectConnectedNodeAddress();
+            NodeInfo nodeInfo = meshInfo.getDeviceByMeshAddress(directAdr);
+            if (nodeInfo != null && nodeInfo.compositionData != null && nodeInfo.compositionData.pid == AppSettings.PID_REMOTE) {
+                // if direct connected device is remote-control, disconnect
+                MeshService.getInstance().idle(true);
+            }
+            MeshService.getInstance().autoConnect(new AutoConnectParameters());
+        }
+
     }
 
 
@@ -187,9 +202,16 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
             if (fuCache != null && fuCache.distAddress == msgSrc) {
                 FDStatusMessage fdStatusMessage = (FDStatusMessage) notificationMessage.getStatusMessage();
                 MeshLogger.d("FDStatus in main : " + fdStatusMessage.toString());
-                if (fdStatusMessage.status == DistributionStatus.SUCCESS.code && fdStatusMessage.distPhase == 0) {
-                    MeshLogger.d("clear meshOTA state");
-                    FUCacheService.getInstance().clear(this);
+                if (fdStatusMessage.status == DistributionStatus.SUCCESS.code) {
+                    if (fdStatusMessage.distPhase == DistributionPhase.IDLE.value) {
+                        MeshLogger.d("clear meshOTA state");
+                        FUCacheService.getInstance().clear(this);
+                    } else if (fdStatusMessage.distPhase == DistributionPhase.CANCELING_UPDATE.value) {
+                        // if canceling, resend cancel
+                        FDCancelMessage cancelMessage = FDCancelMessage.getSimple(fuCache.distAddress, 0);
+                        MeshService.getInstance().sendMeshMessage(cancelMessage);
+                    }
+
                 }
             }
         }
@@ -224,7 +246,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                     FDCancelMessage cancelMessage = FDCancelMessage.getSimple(distributorAddress, 0);
                     MeshService.getInstance().sendMeshMessage(cancelMessage);
                 } else if (which == DialogInterface.BUTTON_NEUTRAL) {
-                    dialog.dismiss();
+                    FUCacheService.getInstance().clear(MainActivity.this);
                 }
             }
         };
@@ -233,10 +255,10 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 .setMessage("MeshOTA distribution is still running, continue?\n" +
                         "click GO to enter MeshOTA processing page \n"
                         + "click STOP to stop distribution \n" +
-                        "click IGNORE to dismiss dialog")
+                        "click CLEAR to clear cache")
                 .setPositiveButton("GO", dialogBtnClick)
                 .setNegativeButton("STOP", dialogBtnClick)
-                .setNeutralButton("IGNORE", null);
+                .setNeutralButton("CLEAR", dialogBtnClick);
         builder.show();
     }
 

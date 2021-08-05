@@ -37,7 +37,6 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.IconGenerator;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -115,8 +114,8 @@ public class FUDeviceSelectAdapter extends BaseSelectableListAdapter<FUDeviceSel
         super.onBindViewHolder(holder, position);
 
         NodeInfo deviceInfo = mDevices.get(position);
-        final int deviceType = deviceInfo.compositionData != null && deviceInfo.compositionData.lowPowerSupport() ? 1 : 0;
-        holder.iv_device.setImageResource(IconGenerator.getIcon(deviceType, deviceInfo.getOnOff()));
+        final int pid = deviceInfo.compositionData != null ? deviceInfo.compositionData.pid : 0;
+        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, deviceInfo.getOnlineState()));
         String pidInfo = deviceInfo.getPidDesc();
 
         holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc_mesh_ota,

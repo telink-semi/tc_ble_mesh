@@ -25,7 +25,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 
-import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
@@ -35,7 +34,6 @@ import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlTemperatureStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
-import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.OnlineStatusInfo;
 import com.telink.ble.mesh.foundation.MeshApplication;
@@ -50,20 +48,16 @@ import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
+import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.model.json.AddressRange;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.FileSystem;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import java.io.ByteArrayInputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.security.KeyPair;
-import java.security.Signature;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -200,7 +194,7 @@ public class TelinkMeshApplication extends MeshApplication {
         if (MeshEvent.EVENT_TYPE_DISCONNECTED.equals(eventType)) {
             AppSettings.ONLINE_STATUS_ENABLE = false;
             for (NodeInfo nodeInfo : meshInfo.nodes) {
-                nodeInfo.setOnOff(NodeInfo.ON_OFF_STATE_OFFLINE);
+                nodeInfo.setOnlineState(OnlineState.OFFLINE);
             }
         }
     }
@@ -217,10 +211,10 @@ public class TelinkMeshApplication extends MeshApplication {
                 int onOff = onOffStatusMessage.isComplete() ? onOffStatusMessage.getTargetOnOff() : onOffStatusMessage.getPresentOnOff();
                 for (NodeInfo nodeInfo : meshInfo.nodes) {
                     if (nodeInfo.meshAddress == message.getSrc()) {
-                        if (nodeInfo.getOnOff() != onOff) {
+                        if (nodeInfo.getOnlineState().st != onOff) {
                             statusChangedNode = nodeInfo;
                         }
-                        nodeInfo.setOnOff(onOff);
+                        nodeInfo.setOnlineState(OnlineState.getBySt(onOff));
                         break;
                     }
                 }
@@ -303,10 +297,10 @@ public class TelinkMeshApplication extends MeshApplication {
     private boolean onLumStatus(NodeInfo nodeInfo, int lum) {
         boolean statusChanged = false;
         int tarOnOff = lum > 0 ? 1 : 0;
-        if (nodeInfo.getOnOff() != tarOnOff) {
+        if (nodeInfo.getOnlineState().st != tarOnOff) {
             statusChanged = true;
         }
-        nodeInfo.setOnOff(tarOnOff);
+        nodeInfo.setOnlineState(OnlineState.getBySt(tarOnOff));
         if (nodeInfo.lum != lum) {
             statusChanged = true;
             nodeInfo.lum = lum;
@@ -355,10 +349,10 @@ public class TelinkMeshApplication extends MeshApplication {
                 /*if (deviceInfo.getOnOff() != onOff){
 
                 }*/
-                if (deviceInfo.getOnOff() != onOff) {
+                if (deviceInfo.getOnlineState().st != onOff) {
                     statusChangedNode = deviceInfo;
                 }
-                deviceInfo.setOnOff(onOff);
+                deviceInfo.setOnlineState(OnlineState.getBySt(onOff));
                 if (deviceInfo.lum != onlineStatusInfo.status[0]) {
                     statusChangedNode = deviceInfo;
                     deviceInfo.lum = onlineStatusInfo.status[0];

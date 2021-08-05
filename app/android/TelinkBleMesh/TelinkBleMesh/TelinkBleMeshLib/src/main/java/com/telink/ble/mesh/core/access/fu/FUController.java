@@ -406,7 +406,8 @@ public class FUController implements FUActionHandler {
                     // distribute by direct connected device, gatt connection can be terminated
                     log("start distribution by remote device -- > end");
                     onFUStateUpdate(FUState.DISTRIBUTING_BY_DEVICE, null);
-                    fetchProgressState();
+                    startProgressCheckTask();
+//                    fetchProgressState();
                 }
                 break;
 

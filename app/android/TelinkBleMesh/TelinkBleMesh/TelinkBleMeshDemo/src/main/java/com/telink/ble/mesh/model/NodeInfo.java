@@ -45,16 +45,6 @@ public class NodeInfo implements Serializable {
 
 
     /**
-     * on/off state
-     */
-    public static final int ON_OFF_STATE_ON = 1;
-
-    public static final int ON_OFF_STATE_OFF = 0;
-
-    public static final int ON_OFF_STATE_OFFLINE = -1;
-
-
-    /**
      * primary element unicast address
      */
     public int meshAddress;
@@ -100,7 +90,7 @@ public class NodeInfo implements Serializable {
      * device on off state
      * 0:off 1:on -1:offline
      */
-    private int onOff = ON_OFF_STATE_OFFLINE;
+    private OnlineState onlineState = OnlineState.OFFLINE;
 
     /**
      * composition data
@@ -143,23 +133,23 @@ public class NodeInfo implements Serializable {
     private OfflineCheckTask offlineCheckTask = new OfflineCheckTask() {
         @Override
         public void run() {
-            onOff = -1;
+            onlineState = OnlineState.OFFLINE;
             MeshLogger.log("offline check task running");
             TelinkMeshApplication.getInstance().dispatchEvent(new NodeStatusChangedEvent(TelinkMeshApplication.getInstance(), NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, NodeInfo.this));
         }
     };
 
-    public int getOnOff() {
-        return onOff;
+    public OnlineState getOnlineState() {
+        return onlineState;
     }
 
-    public void setOnOff(int onOff) {
-        this.onOff = onOff;
+    public void setOnlineState(OnlineState onlineState) {
+        this.onlineState = onlineState;
         if (publishModel != null) {
             Handler handler = TelinkMeshApplication.getInstance().getOfflineCheckHandler();
             handler.removeCallbacks(offlineCheckTask);
             int timeout = publishModel.period * 3 + 2;
-            if (this.onOff != -1 && timeout > 0) {
+            if (this.onlineState != OnlineState.OFFLINE && timeout > 0) {
                 handler.postDelayed(offlineCheckTask, timeout);
             }
         }
@@ -179,7 +169,7 @@ public class NodeInfo implements Serializable {
 
         Handler handler = TelinkMeshApplication.getInstance().getOfflineCheckHandler();
         handler.removeCallbacks(offlineCheckTask);
-        if (this.publishModel != null && this.onOff != -1) {
+        if (this.publishModel != null && this.onlineState != OnlineState.OFFLINE) {
             int timeout = publishModel.period * 3 + 2;
             if (timeout > 0) {
                 handler.postDelayed(offlineCheckTask, timeout);
@@ -241,24 +231,13 @@ public class NodeInfo implements Serializable {
         return -1;
     }
 
-    public String getOnOffDesc() {
-        if (this.onOff == 1) {
-            return "ON";
-        } else if (this.onOff == 0) {
-            return "OFF";
-        } else if (this.onOff == -1) {
-            return "OFFLINE";
-        }
-        return "UNKNOWN";
-    }
-
     /**
      * get on/off model element info
      * in panel , multi on/off may exist in different element
      *
-     * @return adr
+     * @return element adr list
      */
-    public List<Integer> getOnOffEleAdrList() {
+    public List<Integer> getEleListByModel(int targetModelId) {
         if (compositionData == null) return null;
         List<Integer> addressList = new ArrayList<>();
 
@@ -268,7 +247,7 @@ public class NodeInfo implements Serializable {
         for (CompositionData.Element element : compositionData.elements) {
             if (element.sigModels != null) {
                 for (int modelId : element.sigModels) {
-                    if (modelId == MeshSigModel.SIG_MD_G_ONOFF_S.modelId) {
+                    if (modelId == targetModelId) {
                         addressList.add(eleAdr++);
                         continue outer;
                     }
@@ -408,8 +387,26 @@ public class NodeInfo implements Serializable {
         return this.compositionData != null && this.compositionData.lowPowerSupport();
     }
 
+    /**
+     * is node offline
+     */
     public boolean isOffline() {
-        return this.onOff == ON_OFF_STATE_OFFLINE;
+        return this.onlineState == OnlineState.OFFLINE;
     }
 
+
+    /**
+     * is node on
+     */
+    public boolean isOn() {
+        return this.onlineState == OnlineState.ON;
+    }
+
+
+    /**
+     * is node off
+     */
+    public boolean isOff() {
+        return this.onlineState == OnlineState.OFF;
+    }
 }

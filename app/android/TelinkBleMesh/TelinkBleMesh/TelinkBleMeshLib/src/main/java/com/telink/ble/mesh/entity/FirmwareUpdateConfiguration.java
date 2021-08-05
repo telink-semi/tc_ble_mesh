@@ -248,7 +248,7 @@ public class FirmwareUpdateConfiguration {
     public String toString() {
         return "FirmwareUpdateConfiguration{" +
                 "updatingDevices=" + updatingDevices.size() +
-                ", firmwareData=" + firmwareData.length +
+                ", firmwareData=" + (firmwareData == null ? 0 : firmwareData.length) +
                 ", metadata=" + Arrays.toString(metadata) +
                 ", appKeyIndex=" + appKeyIndex +
                 ", groupAddress=" + groupAddress +

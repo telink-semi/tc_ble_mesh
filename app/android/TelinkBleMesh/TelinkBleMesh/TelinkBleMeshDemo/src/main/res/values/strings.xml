@@ -73,6 +73,8 @@
 
     <string name="oob_database">OOB Database</string>
 
+    <string name="root_cert">Root Cert</string>
+
     <string name="oob_info">UUID: %s\nOOB : %s\n(%s)</string>
 
     <string name="hex_input">0123456789abcdefABCDEF</string>

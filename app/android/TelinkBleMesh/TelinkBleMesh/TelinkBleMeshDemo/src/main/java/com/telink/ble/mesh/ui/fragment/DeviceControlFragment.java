@@ -95,7 +95,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
         lumEleInfo = deviceInfo.getLumEleInfo();
         tempEleInfo = deviceInfo.getTempEleInfo();
         hslEleAdr = deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_LIGHT_HSL_S.modelId);
-        onOffEleAdrList = deviceInfo.getOnOffEleAdrList();
+        onOffEleAdrList = deviceInfo.getEleListByModel(MeshSigModel.SIG_MD_G_ONOFF_S.modelId);
 
         initView(view);
         setVisibility();

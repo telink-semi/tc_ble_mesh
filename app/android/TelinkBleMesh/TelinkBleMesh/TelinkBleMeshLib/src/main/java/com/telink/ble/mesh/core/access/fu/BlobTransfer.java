@@ -413,7 +413,7 @@ class BlobTransfer {
     }
 
     public void onTransferSegmentComplete(boolean success) {
-        if (transferType == BlobTransferType.GATT_INIT && step == STEP_BLOB_CHUNK_SENDING) {
+        if ((transferType == BlobTransferType.GATT_INIT || transferType == BlobTransferType.GATT_DIST) && step == STEP_BLOB_CHUNK_SENDING) {
             if (success) {
                 if (transferMode == TransferMode.PUSH) {
                     sendChunks();
@@ -472,7 +472,7 @@ class BlobTransfer {
             BlobChunkTransferMessage blobChunkTransferMessage = generateChunkTransferMessage(chunkIndex, chunkData);
             log("next chunk transfer msg: " + blobChunkTransferMessage.toString() + " - extendBearerMode - " + extendBearerMode);
             onTransferMessagePrepared(blobChunkTransferMessage);
-            if (transferType == BlobTransferType.GATT_INIT) {
+            if (transferType == BlobTransferType.GATT_INIT || transferType == BlobTransferType.GATT_DIST) {
 
                 int len = chunkData.length + 3;
                 boolean isSegment = len > getSegmentLen();
@@ -480,6 +480,7 @@ class BlobTransfer {
                     // if not segmented message, send next
                     sendChunks();
                 }
+                // else , waiting for segment block ack complete
             } else {
                 // for LOCAL or MESH type, send chunk by timer
                 delayHandler.postDelayed(chunkSendingTask, getChunkSendingInterval());

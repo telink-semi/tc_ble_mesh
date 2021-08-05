@@ -163,7 +163,7 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
                     device.updatingEleAddress = (node.getTargetEleAdr(MeshSigModel.SIG_MD_OBJ_TRANSFER_S.modelId));
                     device.isSupported = node.getTargetEleAdr(MeshSigModel.SIG_MD_FW_UPDATE_S.modelId) != -1;
                     device.pidInfo = node.getPidDesc();
-                    device.isLpn = node.isLpn();
+                    device.pid = node.compositionData.pid;
                     updatingDevices.add(device);
                 }
 

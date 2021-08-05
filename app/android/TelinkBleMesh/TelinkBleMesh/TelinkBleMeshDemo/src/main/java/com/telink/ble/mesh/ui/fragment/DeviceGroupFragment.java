@@ -31,7 +31,6 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
-import com.telink.ble.mesh.core.message.config.ConfigMessage;
 import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.config.ModelSubscriptionSetMessage;
 import com.telink.ble.mesh.core.message.config.ModelSubscriptionStatusMessage;
@@ -90,7 +89,7 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
         mAdapter.setOnItemClickListener(new BaseRecyclerViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                if (deviceInfo.getOnOff() != -1)
+                if (!deviceInfo.isOffline())
                     setDeviceGroupInfo(allGroups.get(position).address
                             , allGroups.get(position).selected ? 1 : 0);
             }
@@ -195,7 +194,7 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
             @Override
             public void run() {
                 mAdapter.setEnabled(
-                        deviceInfo.isLpn() || deviceInfo.getOnOff() != -1);
+                        deviceInfo.isLpn() || !deviceInfo.isOffline());
             }
         });
     }

@@ -134,7 +134,7 @@ public final class MeshUtils {
      */
     public static int bytes2Integer(byte[] buffer, ByteOrder order) {
         int re = 0;
-        int valLen = (buffer.length > 4 ? 4 : buffer.length);
+        int valLen = Math.min(buffer.length, 4);
         for (int i = 0; i < valLen; i++) {
             if (order == ByteOrder.LITTLE_ENDIAN) {
                 re |= (buffer[i] & 0xFF) << (8 * i);
@@ -228,10 +228,10 @@ public final class MeshUtils {
         return (a & UNSIGNED_INTEGER_MAX) - (b & UNSIGNED_INTEGER_MAX);
     }
 
-    static final String FORMAT_1_BYTES = "%02X";
-    static final String FORMAT_2_BYTES = "%04X";
-    static final String FORMAT_3_BYTES = "%06X";
-    static final String FORMAT_4_BYTES = "%08X";
+    private static final String FORMAT_1_BYTES = "%02X";
+    private static final String FORMAT_2_BYTES = "%04X";
+    private static final String FORMAT_3_BYTES = "%06X";
+    private static final String FORMAT_4_BYTES = "%08X";
 
     public static String formatIntegerByHex(int value) {
         if (value <= -1) {

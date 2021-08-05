@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     FileSelectActivity.java 
+ * @file FileSelectActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.file;
 
@@ -56,6 +56,8 @@ public class FileSelectActivity extends AppCompatActivity {
 
     public static final String KEY_SUFFIX = "com.telink.file.selector.suffix";
 
+    public static final String KEY_TITLE = "com.telink.file.selector.title";
+
     public static final String KEY_RESULT = "Result";
 
     private static final int REQUEST_CODE_SEARCH = 0x01;
@@ -70,6 +72,8 @@ public class FileSelectActivity extends AppCompatActivity {
     private static final String DEFAULT_FILE_SUFFIX = ".bin";
 
     private String fileSuffix = DEFAULT_FILE_SUFFIX;
+
+    private static final String DEFAULT_TITLE = "File Selector";
 
     private static final int SORT_BY_NAME = 0x00;
 
@@ -101,11 +105,12 @@ public class FileSelectActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_select);
-        initTitle();
+
         Intent intent = getIntent();
         if (intent.hasExtra(KEY_SUFFIX)) {
             fileSuffix = intent.getStringExtra(KEY_SUFFIX);
         }
+        initTitle(intent.getStringExtra(KEY_TITLE));
         initView();
         getCacheDirPath();
         update();
@@ -141,10 +146,10 @@ public class FileSelectActivity extends AppCompatActivity {
     }
 
 
-    private void initTitle() {
+    private void initTitle(String title) {
         Toolbar toolbar = findViewById(R.id.title_bar);
         TextView tv_title = toolbar.findViewById(R.id.tv_title);
-        tv_title.setText("File Selector");
+        tv_title.setText(title == null ? DEFAULT_TITLE : title);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

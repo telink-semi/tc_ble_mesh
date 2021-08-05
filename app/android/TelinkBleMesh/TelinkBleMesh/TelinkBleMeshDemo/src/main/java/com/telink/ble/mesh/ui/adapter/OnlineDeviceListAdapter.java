@@ -74,8 +74,8 @@ public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDevic
         super.onBindViewHolder(holder, position);
 
         NodeInfo device = mDevices.get(position);
-        final int deviceType = device.compositionData != null && device.compositionData.lowPowerSupport() ? 1 : 0;
-        holder.img_icon.setImageResource(IconGenerator.getIcon(deviceType, device.getOnOff()));
+        final int pid = device.compositionData != null ? device.compositionData.pid : 0;
+        holder.img_icon.setImageResource(IconGenerator.getIcon(pid, device.getOnlineState()));
 
         if (device.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress()) {
             holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));

@@ -153,7 +153,7 @@ public class DeviceSettingActivity extends BaseActivity implements EventListener
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ll_offline.setVisibility(deviceInfo.getOnOff() == -1 ? View.VISIBLE : View.GONE);
+                ll_offline.setVisibility(deviceInfo.isOffline() ? View.VISIBLE : View.GONE);
             }
         });
     }

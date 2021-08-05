@@ -52,6 +52,7 @@ import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
 import com.telink.ble.mesh.model.AppSettings;
+import com.telink.ble.mesh.model.CertCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
@@ -192,6 +193,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
                 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
         });*/
+        provisioningDevice.setRootCert(CertCacheService.getInstance().getRootCert());
         ProvisioningParameters provisioningParameters = new ProvisioningParameters(provisioningDevice);
         if (MeshService.getInstance().startProvisioning(provisioningParameters)) {
 

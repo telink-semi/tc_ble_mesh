@@ -173,11 +173,11 @@ public class GroupSelectAdapter extends BaseSelectableListAdapter<GroupSelectAda
             super.onBindViewHolder(holder, position);
 
             NodeInfo deviceInfo = innerDevices.get(position);
-            final int deviceType = deviceInfo.compositionData != null && deviceInfo.compositionData.lowPowerSupport() ? 1 : 0;
-            holder.iv_device.setImageResource(IconGenerator.getIcon(deviceType, deviceInfo.getOnOff()));
+            final int pid = deviceInfo.compositionData != null ? deviceInfo.compositionData.pid : 0;
+            holder.iv_device.setImageResource(IconGenerator.getIcon(pid, deviceInfo.getOnlineState()));
             holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc,
                     String.format("%04X", deviceInfo.meshAddress),
-                    deviceInfo.getOnOffDesc()));
+                    deviceInfo.getOnlineState().toString()));
 
         }
 

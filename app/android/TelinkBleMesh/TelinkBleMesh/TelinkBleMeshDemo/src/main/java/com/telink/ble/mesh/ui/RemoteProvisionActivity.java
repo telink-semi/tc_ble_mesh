@@ -50,6 +50,7 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.foundation.parameter.ProvisioningParameters;
 import com.telink.ble.mesh.foundation.parameter.ScanParameters;
+import com.telink.ble.mesh.model.CertCacheService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
@@ -208,7 +209,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
             final boolean autoUseNoOOB = SharedPreferenceHelper.isNoOOBEnable(this);
             provisioningDevice.setAutoUseNoOOB(autoUseNoOOB);
         }
-
+        provisioningDevice.setRootCert(CertCacheService.getInstance().getRootCert());
         ProvisioningParameters provisioningParameters = new ProvisioningParameters(provisioningDevice);
         if (MeshService.getInstance().startProvisioning(provisioningParameters)) {
             NodeInfo nodeInfo = new NodeInfo();
@@ -548,7 +549,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
     private HashSet<Integer> getAvailableServerAddresses() {
         HashSet<Integer> serverAddresses = new HashSet<>();
         for (NodeInfo nodeInfo : meshInfo.nodes) {
-            if (nodeInfo.getOnOff() != NodeInfo.ON_OFF_STATE_OFFLINE) {
+            if (!nodeInfo.isOffline()) {
                 serverAddresses.add(nodeInfo.meshAddress);
             }
         }

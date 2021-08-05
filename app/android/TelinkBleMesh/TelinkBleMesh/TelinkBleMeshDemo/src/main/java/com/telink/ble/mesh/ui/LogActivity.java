@@ -113,8 +113,8 @@ public class LogActivity extends BaseActivity {
             public void run() {
                 SimpleDateFormat mDateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.getDefault());
                 final StringBuilder sb = new StringBuilder("TelinkLog\n");
-                for (LogInfo logInfo :
-                        MeshLogger.logInfoList) {
+                final LogInfo[] logs = MeshLogger.logInfoList.toArray(new LogInfo[]{});
+                for (LogInfo logInfo : logs) {
                     sb.append(mDateFormat.format(logInfo.millis)).append("/").append(logInfo.tag).append(":")
                             .append(logInfo.logMessage).append("\n");
                 }

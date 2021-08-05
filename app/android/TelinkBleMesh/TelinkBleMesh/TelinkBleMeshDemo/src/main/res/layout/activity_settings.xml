@@ -113,50 +113,54 @@
                     android:layout_height="wrap_content" />
 
             </LinearLayout>
-
-            <View
-                android:id="@+id/line_rp"
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_margin="4dp"
-                android:background="@color/gray" />
-
+            <!--     remote provision       -->
             <LinearLayout
-                android:id="@+id/ll_rp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/enable_remote_provision"
-                    android:textSize="12sp" />
-
-
-                <ImageView
-                    android:id="@+id/iv_tip_remote_prov"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_tip"
-                    android:tint="@color/grey" />
+                android:id="@+id/ll_rp"
+                android:orientation="vertical">
 
                 <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_margin="4dp"
+                    android:background="@color/gray" />
 
-                <Switch
-                    android:id="@+id/switch_remote_prov"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:padding="4dp">
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/enable_remote_provision"
+                        android:textSize="12sp" />
+
+
+                    <ImageView
+                        android:id="@+id/iv_tip_remote_prov"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_tip"
+                        android:tint="@color/grey" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <Switch
+                        android:id="@+id/switch_remote_prov"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
             </LinearLayout>
-
             <!--      extend bearer mode      -->
 
             <View
@@ -248,6 +252,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center_vertical"
                 android:orientation="vertical"
                 android:padding="4dp">
 
@@ -259,6 +264,41 @@
                     android:drawableTint="@color/grey"
                     android:text="@string/oob_database"
                     android:textSize="12sp" />
+
+            </LinearLayout>
+
+
+            <!-- root cert -->
+
+            <LinearLayout
+                android:id="@+id/ll_cert"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_margin="4dp"
+                    android:background="@color/gray" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:id="@+id/tv_cert"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawableRight="@drawable/ic_arrow_right"
+                        android:drawableTint="@color/grey"
+                        android:text="@string/root_cert"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
 
             </LinearLayout>
 

@@ -21,8 +21,12 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core;
 
+import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import org.spongycastle.asn1.ASN1OctetString;
+import org.spongycastle.asn1.ASN1Primitive;
+import org.spongycastle.asn1.DEROctetString;
 import org.spongycastle.crypto.BlockCipher;
 import org.spongycastle.crypto.CipherParameters;
 import org.spongycastle.crypto.InvalidCipherTextException;
@@ -50,13 +54,17 @@ import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.CertificateFactory;
+import java.security.cert.PKIXParameters;
 import java.security.cert.X509Certificate;
+import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Set;
 
 import javax.crypto.KeyAgreement;
 
@@ -369,9 +377,6 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
     }
 
     /**
-     * check version & time & Serial Number
-     * <p>
-     * <p>
      * "ecdsa-with-SHA256"
      * check certificate data and return inner public key
      *
@@ -384,26 +389,27 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
             factory = CertificateFactory.getInstance("X.509");
 
             X509Certificate certificate = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(cerData));
+            MeshLogger.d("certificate info: " + certificate.toString());
+
+            /**
+             * get and check X509 version
+             */
             if (certificate.getVersion() != 3) {
                 MeshLogger.d("version check err");
                 return null;
             }
 
-            int serialNumber = certificate.getSerialNumber().intValue();
+
+            /*int serialNumber = certificate.getSerialNumber().intValue();
             if (serialNumber != 4096) {
                 MeshLogger.d("serial number check err");
                 return null;
-            }
+            }*/
 
             /**
              * check datetime validity
              */
             certificate.checkValidity();
-
-            /**
-             * get X509 version
-             */
-            certificate.getVersion();
 
             /**
              * get subject names ,
@@ -416,6 +422,7 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
 //            verifier.initVerify(certificate.getPublicKey()); // This cert is signed by CA
             verifier.initVerify(certificate); // This cert is signed by CA
             verifier.update(certificate.getTBSCertificate());  //TBS is to get the "To Be Signed" part of the certificate - .getEncoded() gets the whole cert, which includes the signature
+
             boolean result = verifier.verify(certificate.getSignature());
 
 
@@ -450,4 +457,100 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
             return null;
         }
     }
+
+
+    public static X509Certificate checkCertificateByCa(byte[] cerData, byte[] caData) {
+        CertificateFactory factory = null;
+        try {
+            factory = CertificateFactory.getInstance("X.509");
+
+            X509Certificate certificate = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(cerData));
+            MeshLogger.d("certificate info: " + certificate.toString());
+
+            /**
+             * get and check X509 version
+             */
+            if (certificate.getVersion() != 3) {
+                MeshLogger.d("version check err");
+                return null;
+            }
+
+
+            /*int serialNumber = certificate.getSerialNumber().intValue();
+            if (serialNumber != 4096) {
+                MeshLogger.d("serial number check err");
+                return null;
+            }*/
+
+            /**
+             * check datetime validity
+             */
+            certificate.checkValidity();
+
+            /**
+             * get subject names ,
+             */
+            certificate.getSubjectAlternativeNames();
+            certificate.getExtendedKeyUsage();
+
+            X509Certificate caCert = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(caData));
+            certificate.verify(caCert.getPublicKey());
+//            Signature verifier = Signature.getInstance(certificate.getSigAlgName(), "SC");
+//            verifier.initVerify(certificate); // This cert is signed by CA
+//            verifier.update(certificate.getTBSCertificate());  //TBS is to get the "To Be Signed" part of the certificate - .getEncoded() gets the whole cert, which includes the signature
+
+//            boolean result = verifier.verify(certificate.getSignature());
+            MeshLogger.d("signature validation pass");
+            return certificate;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static byte[] getPublicKeyInCert(X509Certificate certificate) {
+        java.security.interfaces.ECPublicKey pk = (java.security.interfaces.ECPublicKey) certificate.getPublicKey();
+        byte[] keyX = pk.getW().getAffineX().toByteArray();
+        if (keyX.length > 32) {
+            byte[] x = new byte[32];
+            System.arraycopy(keyX, 1, x, 0, 32);
+            keyX = x;
+        } else if (keyX.length < 32) {
+            byte[] x = new byte[32];
+            System.arraycopy(keyX, 0, x, 32 - keyX.length, keyX.length);
+            keyX = x;
+        }
+        byte[] keyY = pk.getW().getAffineY().toByteArray();
+        if (keyY.length > 32) {
+            byte[] y = new byte[32];
+            System.arraycopy(keyY, 1, y, 0, 32);
+            keyY = y;
+        } else if (keyY.length < 32) {
+            byte[] y = new byte[32];
+            System.arraycopy(keyY, 0, y, 32 - keyY.length, keyY.length);
+            keyY = y;
+        }
+
+        byte[] pubKeyKey = new byte[keyX.length + keyY.length];
+        System.arraycopy(keyX, 0, pubKeyKey, 0, keyX.length);
+        System.arraycopy(keyY, 0, pubKeyKey, keyX.length, keyY.length);
+        MeshLogger.d("public key in cert: " + Arrays.bytesToHexString(pubKeyKey));
+        return pubKeyKey;
+    }
+
+    public static byte[] getStaticOOBInCert(X509Certificate certificate) {
+//        Set<String> nces = certificate.getNonCriticalExtensionOIDs();
+        final String staticOOBKey = "2.25.234763379998062148653007332685657680359";
+        byte[] extension = certificate.getExtensionValue(staticOOBKey);
+
+        if (extension == null || extension.length < 16) {
+            return null;
+        }
+        byte[] oob = new byte[16];
+        System.arraycopy(extension, extension.length - 16, oob, 0, 16);
+        MeshLogger.d("static oob in cert: " + Arrays.bytesToHexString(oob));
+        return oob;
+    }
+
 }
