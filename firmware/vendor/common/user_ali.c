@@ -72,10 +72,21 @@ u8 con_sec_data[16];
 	u8  con_mac_address[6]={0x6e,0x79,0x12,0x75,0x60,0xd4};//small endiness
 	u8 con_sec_data[16];
 	#else
+		#if DU_ENABLE
+	//006ae731
+	u32 con_product_id=DU_PID;// little endiness 
+	//882d53f66826
+	u8  con_mac_address[6]={0xc1,0x2d,0x6f,0xda,0xe0,0xcc};//small endiness
+	//968829854b47b5dfb09d9edfcc8b9a0f
+	u8 con_sec_data[16]={0x54,0x26,0x27,0xd3,	0x60,0x58,0x94,0xcf,
+						 0x48,0xa9,0xc8,0x1c,	0x8b,0x8c,0x78,0xc0};
+		#else
 	u32 con_product_id=7003001;// little endiness 
 	u8  con_mac_address[6]={0x7D,0x79,0x12,0x75,0x60,0xd4};//small endiness
 	u8 con_sec_data[16]={0x49,0x22,0xeb,0x7a,	0x0a,0x45,0x81,0x8d,
 						 0xa4,0x34,0x7c,0xd4,	0xed,0x1b,0x4c,0xf9};
+
+		#endif
 	#endif
 	#define SIZE_CON_SEC_DATA   (sizeof(con_sec_data))
 #endif
@@ -139,7 +150,7 @@ void set_dev_uuid_for_sha256()
 	sha256_dev_uuid_str dev_uuid;
 	sha256_dev_uuid_str *p_uuid = &dev_uuid;
 	memset(p_uuid,0,sizeof(sha256_dev_uuid_str));
-	p_uuid->cid = SHA256_BLE_MESH_PID;
+	p_uuid->cid = VENDOR_ID;
 	p_uuid->adv_ver = 0x01;
 	p_uuid->ser_fun = 1;
 	p_uuid->ota_en =1;

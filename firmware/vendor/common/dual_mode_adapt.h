@@ -32,6 +32,11 @@
 #define DUAL_MODE_FW_ADDR_SIGMESH   (0x80000)   // if modify, must modify __FW_OFFSET to the same,
 #define DUAL_MODE_FW_ADDR_ZIGBEE    (0xC0000)
 #else
+    #if __PROJECT_BOOTLOADER__
+// because bootloader need to have the same product image address, such as FLASH_ADR_UPDATE_NEW_FW
+#error please set MESH_USER_DEFINE_MODE to a mode that needed bootloader, such as MESH_ZB_BL_DUAL_ENABLE which is same with product image.
+    #endif
+
 #define DUAL_MODE_FW_ADDR_SIGMESH   (0x00000)
 #define DUAL_MODE_FW_ADDR_ZIGBEE    (0x40000)
 #endif

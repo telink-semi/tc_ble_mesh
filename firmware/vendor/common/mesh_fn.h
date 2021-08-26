@@ -34,6 +34,12 @@ enum{
     FS_DISCONNECT_TYPE_RX_REQUEST   = 3, // receive request when being keeping friend ship.
 };
 
+enum{
+    FN_CACHE_REPLACE_NONE           = 0,
+    FN_CACHE_REPLACE_ONLY           = 1,
+    FN_CACHE_REPLACE_AND_OVERWRITE  = 2,
+};
+
 void mesh_feature_set_fn();
 void fn_update_RecWin(u8 RecWin);
 u32 get_RecWin_connected();
@@ -49,6 +55,7 @@ int mesh_tx_cmd_layer_upper_ctl_FN(u8 op, u8 *par, u32 len_par, u16 adr_dst);
 void mesh_iv_update_start_poll_fn(u8 iv_update_by_sno, u8 beacon_iv_update_pkt_flag);
 u16 mesh_group_match_friend(u16 adr);
 int fn_cache_get_extend_adv_short_unseg(u32 ctl, u8 len_ut_max_single_seg_rx);
+int is_in_mesh_friend_st_fn_all();
 
 
 extern u8 g_max_lpn_num;

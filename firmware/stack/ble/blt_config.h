@@ -45,7 +45,12 @@ static inline void blc_app_setExternalCrystalCapEnable(u8  en)
 
 }
 
-
+static inline void check_and_set_1p95v_to_zbit_flash()
+{
+	if(1 == zbit_flash_flag){ // use "== 1"" should be better than "ture"
+		analog_write(0x0c, ((analog_read(0x0c) & 0xf8)  | 0x7));//1.95
+	}
+}
 
 
 extern u32 flash_sector_mac_address;
@@ -59,12 +64,28 @@ static inline void blc_app_loadCustomizedParameters(void)
 		 //for 512K Flash, flash_sector_calibration equals to 0x77000
 		 //for 1M  Flash, flash_sector_calibration equals to 0xFE000
 		 if(flash_sector_calibration){
-			 u8 cap_frqoft = *(unsigned char*) (flash_sector_calibration + CALIB_OFFSET_CAP_INFO);
-			 if( cap_frqoft != 0xff ){
+			u8 cap_frqoft = *(unsigned char*) (flash_sector_calibration + CALIB_OFFSET_CAP_INFO);
+			if( cap_frqoft != 0xff ){
 				 analog_write(0x8A, (analog_read(0x8A) & 0xc0)|(cap_frqoft & 0x3f));
-			 }
+			}
 		 }
 	 }
+
+	if(!pm_is_MCU_deepRetentionWakeup()){
+		zbit_flash_flag = flash_is_zb();
+	}
+
+	u8 calib_value = *(unsigned char*)(flash_sector_calibration+CALIB_OFFSET_FLASH_VREF);
+
+	if((0xff == calib_value))
+	{
+		check_and_set_1p95v_to_zbit_flash();
+	}
+	else
+	{
+		analog_write(0x0c, ((analog_read(0x0c) & 0xf8)  | (calib_value&0x7)));
+	}
+
 }
 
 
@@ -216,6 +237,14 @@ static inline void blc_app_loadCustomizedParameters(void)
 #endif
 
 
+
+#ifndef ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN
+#define ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN					1
+#endif
+
+#ifndef ZBIT_FLASH_BRX4B_WRITE__EN
+#define ZBIT_FLASH_BRX4B_WRITE__EN									0
+#endif
 
 
 ///////////////////////////////////////dbg channels///////////////////////////////////////////

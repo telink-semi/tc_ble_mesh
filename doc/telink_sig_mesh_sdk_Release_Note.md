@@ -1,3 +1,103 @@
+## V3.3.3
+### Features
+* Support ZBit flash.
+* Improve the efficiency of ota when using ZBit flash. 
+* Calibrate the flash vref according to the reading value from flash. 
+* add low voltage detection function: if low voltage is detected, the chip will enter sleep state. for more details, please refer to the codes of 'BATT_CHECK_ENABLE'.
+
+### BUG FIXS
+  - N/A
+
+### BREAKING CHANGES
+* Flash: Modify some Flash API usage for compitible.
+* void flash_read_mid(unsigned char* mid) change to unsigned int flash_read_mid(void),the mid from 3byte change to 4byte.
+* The API of flash_read_status、flash_write_status not provide to external use,you need use the API in the directory of flash depend on mid(eg:flash_write_status_midxxxxxx).
+* The first argument of API int flash_read_mid_uid_with_check( unsigned int *flash_mid ,unsigned char *flash_uid),flash_mid need 4byte space.The second argument need 16byte,has two case,8byte or 16byte,if the flash only has 8byte uid,flash_uid[8:15] will be clear to zero.
+* The API of flash_lock,flash_unlock will be instead of flash_lock_midxxxxxx and flash_unlock_midxxxxxx.
+
+
+
+### Features
+* 支持ZBit flash。
+* 根据校准值校准Flash电压。
+* 当使用ZBit Flash时提升OTA效率。
+* 增加低电压检测功能：如果检测到低电压，芯片进入休眠状态。具体请参考BATT_CHECK_ENABLE对应的代码。
+
+### Bug fixs
+* N/A
+
+### BREAKING CHANGES
+* Flash:为兼容不同的Flash型号，Flash驱动结构做了调整，修改了部分Flash接口调用方式。
+* void flash_read_mid(unsigned char* mid) 改为 unsigned int flash_read_mid(void),mid由3byte改为4byte,最高byte用于区分mid相同但是功能存在差异的flash。
+* 为兼容不同型号的Flash,flash_read_status、flash_write_status不提供给外部使用，需要使用对应接口时，需要根据mid去选择flash目录下的接口(例如：flash_write_status_midxxxxxx)。
+* 接口int flash_read_mid_uid_with_check( unsigned int *flash_mid ,unsigned char *flash_uid)的第一个参数flash_mid需要4个字节空间，第二个参数需要16byte空间，
+现有flash的uid有两种情况，一种16byte，一种8byte，如果是8byte，flash_uid[8:15]会被清零。
+* 接口flash_lock、flash_unlock由flash_lock_midxxxxxx和flash_unlock_midxxxxxx替代。
+
+
+
+## V3.3.2
+### Bug Fixes
+
+* (iOS APP) fix bug: When the IVI of the app is different from that of device, decryption will fail because IVI of the device was not be used. all customers need to update to the iOS version.
+* (iOS APP) fix bug: fail to disable log_saving function.
+
+### Features	
+
+* (Firmware) update flash driver(synchronized with "825x_BLE_SDK_3_4_1 patch 001"). must be updated if the functions of getting flash UID or flah protection were used.
+* (Firmware) add extend_ADV mode for 8258 LPN. current SDK support extend_ADV mode for 8258 mesh, 8258 gateway and 8258 LPN.
+* (Android APP) support multiple network keys and application keys.
+* (iOS APP) add API of 'defaultPublishPeriodModel' to set default publish parameters.
+
+### Performance Improvements
+
+* (Android APP) change provisioner's unicast address range from 0x0100 to 0x0400.
+
+### BREAKING CHANGES
+
+* Flash(B85)
+  * Modify some Flash API usage for compitible:
+  * void flash_read_mid(unsigned char\* mid) change to unsigned int flash_read_mid(void),the mid from 3byte change to 4byte.
+  * The API of flash_read_status、flash_write_status not provide to external use,you need use the API in the directory of flash depend on mid(eg:flash_write_status_midxxxxxx).
+  * The first argument of API int flash_read_mid_uid_with_check( unsigned int \*flash_mid ,unsigned char \*flash_uid),flash_mid need 4byte space.The second argument need 16byte,has two case,8byte or 16byte,if the flash only has 8byte uid,flash_uid\[8:15\] will be clear to zero.
+  * The API of flash_lock,flash_unlock,flash_read_otp,flash_write_otp,flash_erase_otp,flash_lock_otp will be instead of flash_lock_midxxxxxx,flash_unlock_midxxxxxx,flash_read_otp_midxxxxxx,flash_write_otp_midxxxxxx,flash_erase_otp_midxxxxxx,flash_lock_otp_midxxxxxx.
+  * delete the useless API.
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+
+### Bug Fixes
+
+* (iOS APP) fix bug: 修复bug：当app的ivi和节点的不一致时，SDK未根据设备端返回的ivi进行解密导致解密失败。所有客户都需要升级iOS版本。
+* (iOS APP) fix bug: SDK的日志保存功能无法关闭。
+
+### Features
+
+* (Firmware) 更新 flash driver 同步到825x_BLE_SDK_3_4_1 patch 001。如客户需要读取flash UID 或者 使用保护功能，请务必更新。
+* (Firmware) 增加支持 8258 LPN 的扩展广播包功能。当前SDK支持 8258 mesh，8258 gateway和8258 LPN的扩展广播包功能。
+* (Android APP) 增加支持多个network key 和 application key的应用。
+* (iOS APP) 增加用于配置 默认publish参数的API: defaultPublishPeriodModel。
+
+### Performance Improvements
+
+* (Android APP) 修改provisioner的每一个组网地址段的范围，从 0x0100 改为 0x0400。
+
+### BREAKING CHANGES
+
+* Flash(B85)
+  * 为兼容不同的Flash型号，Flash驱动结构做了调整，修改了部分Flash接口调用方式：
+  * void flash_read_mid(unsigned char\* mid) 改为 unsigned int flash_read_mid(void),mid由3byte改为4byte,最高byte用于区分mid相同但是功能存在差异的flash。
+  * 为兼容不同型号的Flash,flash_read_status、flash_write_status不提供给外部使用，需要使用对应接口时，需要根据mid去选择flash目录下的接口(例如：flash_write_status_midxxxxxx)。
+  * 接口int flash_read_mid_uid_with_check( unsigned int \*flash_mid ,unsigned char \*flash_uid)的第一个参数flash_mid需要4个字节空间，第二个参数需要16byte空间，现有flash的uid有两种情况，一种16byte，一种8byte，如果是8byte，flash_uid\[8:15\]会被清零。
+  * 接口flash_lock、flash_unlock、flash_read_otp、flash_write_otp、flash_erase_otp、flash_lock_otp由flash_lock_midxxxxxx、flash_unlock_midxxxxxx、flash_read_otp_midxxxxxx、flash_write_otp_midxxxxxx、flash_erase_otp_midxxxxxx、flash_lock_otp_midxxxxxx替代。
+  * 删除不使用的接口。
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
 ## V3.3.1
 ### Bug Fixes
 

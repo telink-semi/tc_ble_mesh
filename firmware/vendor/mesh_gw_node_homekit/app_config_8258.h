@@ -31,7 +31,11 @@ extern "C" {
 #define PCBA_8258_DONGLE_48PIN          1
 #define PCBA_8258_C1T139A30_V1_0        2
 #define PCBA_8258_C1T139A30_V1_2        3
+#if (MFI_ENABLE)
 #define PCBA_8258_SEL			PCBA_8258_C1T139A30_V1_2
+#else
+#define PCBA_8258_SEL			PCBA_8258_DONGLE_48PIN
+#endif
 
 
 #define _USER_CONFIG_DEFINED_	1	// must define this macro to make others known
@@ -71,8 +75,22 @@ extern "C" {
 
 #define HCI_LOG_FW_EN   0
 #if HCI_LOG_FW_EN
+#if (PCBA_8258_SEL == PCBA_8258_DONGLE_48PIN)
+#define DEBUG_INFO_TX_PIN           		GPIO_PB2
+#else
 #define DEBUG_INFO_TX_PIN           		GPIO_PC7
+#endif
 #define PRINT_DEBUG_INFO                    1
+#endif
+
+#define BATT_CHECK_ENABLE       			1   //must enable
+#if (BATT_CHECK_ENABLE)
+//telink device: you must choose one gpio with adc function to output high level(voltage will equal to vbat), then use adc to measure high level voltage
+	//use PC5 output high level, then adc measure this high level voltage
+	#define GPIO_VBAT_DETECT				GPIO_PC5
+	#define PC5_FUNC						AS_GPIO
+	#define PC5_INPUT_ENABLE				0
+	#define ADC_INPUT_PCHN					C5P    //corresponding  ADC_InputPchTypeDef in adc.h
 #endif
 
 #define ADC_ENABLE		0

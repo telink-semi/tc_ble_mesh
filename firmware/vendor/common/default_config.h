@@ -74,12 +74,22 @@ extern "C" {
 #ifndef	MESH_DLE_MODE
 #define MESH_DLE_MODE		    0
 #endif
-#ifndef	MESH_LONG_PACKET_EN
-#define MESH_LONG_PACKET_EN		0
-#endif
 #ifndef	EXTENDED_ADV_ENABLE
 #define EXTENDED_ADV_ENABLE		0
 #endif
+#ifndef	DUAL_OTA_NEED_LOGIN_EN
+#define DUAL_OTA_NEED_LOGIN_EN	0
+#endif
+#ifndef	ENCODE_OTA_BIN_EN
+#define ENCODE_OTA_BIN_EN      	0
+#endif
+#ifndef	DISTRIBUTOR_UPDATE_CLIENT_EN
+#define DISTRIBUTOR_UPDATE_CLIENT_EN		0
+#endif
+#ifndef	DISTRIBUTOR_UPDATE_SERVER_EN
+#define DISTRIBUTOR_UPDATE_SERVER_EN      	0
+#endif
+
 
 #if __PROJECT_MESH_PRO__
 #define MESH_BLE_NOTIFY_FIFO_EN     0

@@ -124,6 +124,9 @@ _attribute_ram_code_ void boot_load_with_ota_check(u32 addr_load)
         {
             for (int i=0; i<fw_size; i+=256)
             {
+                #if (BATT_CHECK_ENABLE)
+                app_battery_power_check_and_sleep_handle(1);
+                #endif
                 if ((i & 0xfff) == 0)
                 {
                     flash_erase_sector (addr_load + i);
@@ -139,6 +142,9 @@ _attribute_ram_code_ void boot_load_with_ota_check(u32 addr_load)
     
         //erase the new firmware
         for (int i = 0; i < ((fw_size + 4095)/4096); i++) {
+            #if (BATT_CHECK_ENABLE)
+            app_battery_power_check_and_sleep_handle(1);
+            #endif
             flash_erase_sector(FLASH_ADR_UPDATE_NEW_FW + i*4096);
         }
     }
@@ -169,7 +175,7 @@ _attribute_ram_code_ int main(void)
 {
     T_DBG_CNT[0]++;
 
-    /* cup_clk_init */
+    /* cpu_clk_init */
     cpu_wakeup_init();
     clock_init(SYS_CLK_CRYSTAL);
 
@@ -179,6 +185,13 @@ _attribute_ram_code_ int main(void)
     gpio_set_input_en(DEBUG_PIN, 0);    //disable input
     gpio_write(DEBUG_PIN, 0);           //LED OFF
     //sha256_test_fun();
+
+	blc_app_loadCustomizedParameters();		// call to handle zbit flash
+
+#if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(0); //battery check must do before OTA relative operation
+#endif
+
 
     //WaitMs(500);
     //gpio_write(DEBUG_PIN, 0); //LED Off

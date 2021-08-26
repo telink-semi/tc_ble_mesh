@@ -51,9 +51,18 @@
 #if MI_API_ENABLE
 #include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #include "vendor/common/mi_api/libs/mijia_profiles/mi_service_server.h"
+#include "vendor/common/mi_api/libs/mesh_auth/mible_mesh_auth.h"
+#include "vendor/common/mi_api/telink_sdk_mesh_api.h"
+#include "gatt_dfu/mible_dfu_main.h"
+#include "mible_log.h"
 #endif 
 #if (HCI_ACCESS==HCI_USE_UART)
 #include "proj/drivers/uart.h"
+#endif
+
+#if DU_ENABLE
+#include "vendor/common/user_du.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #endif
 
 #define BLT_RX_FIFO_SIZE        (MESH_DLE_MODE ? DLE_RX_FIFO_SIZE : 64)
@@ -67,8 +76,11 @@ MYFIFO_INIT(blt_rxfifo, BLT_RX_FIFO_SIZE, 128);  // some phones may not support 
     #else
 MYFIFO_INIT(blt_rxfifo, BLT_RX_FIFO_SIZE, 16);  // some phones may not support DLE, so use the same count with no DLE.
     #endif
-
+	#if DU_LPN_EN
+#define BLT_TX_FIFO_CNT			32// low down the rentention cost part .
+	#else
 #define BLT_TX_FIFO_CNT         (MESH_BLE_NOTIFY_FIFO_EN ? 32 : 128) // set to 128 in extend mode, because there is no blt_notify_fifo_
+	#endif
 MYFIFO_INIT(blt_txfifo, BLT_TX_FIFO_SIZE, BLT_TX_FIFO_CNT);  // some phones may not support DLE, so use the same count with no DLE.
 #endif
 
@@ -178,6 +190,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 		{
 			event_adv_report_t *pa = (event_adv_report_t *)p;
 			#if MD_REMOTE_PROV
+				#if REMOTE_PROV_SCAN_GATT_EN
+			mesh_cmd_conn_prov_adv_cb(pa);// only for the remote gatt-provision proc part.
+				#endif
 			mesh_cmd_extend_loop_cb(pa);
 			#endif
 			if(LL_TYPE_ADV_NONCONN_IND != (pa->event_type & 0x0F)){
@@ -197,9 +212,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#endif
 			
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
-			send_to_hci = mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD);
+			send_to_hci = (0 == mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD));
 			#else
-			send_to_hci = app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1);
+			send_to_hci = (0 == app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1));
 			#endif
 		}
 
@@ -212,7 +227,20 @@ int app_event_handler (u32 h, u8 *p, int n)
 			 	 	 	 	 	     ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, \
 			 	 	 	 	 	     0,  NULL,  BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
 			#endif
-			
+			#if MI_API_ENABLE
+			mible_status_t status = MI_SUCCESS;
+            if (NULL == mible_conn_timer){
+                status = mible_timer_create(&mible_conn_timer, mible_conn_timeout_cb,
+                                                               MIBLE_TIMER_SINGLE_SHOT);
+            }
+			if (MI_SUCCESS != status){
+                MI_LOG_ERROR("mible_conn_timer: fail, timer is not created");
+            }else{
+        		mible_conn_handle = 1;
+                mible_timer_start(mible_conn_timer, 20*1000, NULL);
+                MI_LOG_DEBUG("mible_conn_timer: succ, timer is created");
+            }
+			#endif
 			event_connection_complete_t *pc = (event_connection_complete_t *)p;
 			if (!pc->status)							// status OK
 			{
@@ -221,6 +249,11 @@ int app_event_handler (u32 h, u8 *p, int n)
 				//peer_type = pc->peer_adr_type;
 				//memcpy (peer_mac, pc->mac, 6);
 			}
+			#if DU_LPN_EN
+	        LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"connect suc",0);			
+			blc_ll_setScanEnable (0, 0);
+			mi_mesh_state_set(0);
+			#endif
 			#if DEBUG_BLE_EVENT_ENABLE
 			rf_link_light_event_callback(LGT_CMD_BLE_CONN);
 			#endif
@@ -252,10 +285,20 @@ int app_event_handler (u32 h, u8 *p, int n)
 		#if MI_SWITCH_LPN_EN
 		mi_mesh_switch_sys_mode(16000000);
 		#endif
+		#if DU_ENABLE
+		clock_init(SYS_CLK_16M_Crystal);
+		blc_ll_setScanEnable (BLS_FLAG_SCAN_ENABLE | BLS_FLAG_ADV_IN_SLAVE_MODE, 0);
+		if(p_ota->ota_suc){
+			//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"ota reboot ,when ble is disconnct!",0);
+			du_ota_suc_reboot();			
+		}
+		#endif
 		event_disconnection_t	*pd = (event_disconnection_t *)p;
 		//app_led_en (pd->handle, 0);
 		#if MI_API_ENABLE
 		telink_ble_mi_app_event(HCI_EVT_DISCONNECTION_COMPLETE,p,n);
+		mible_conn_handle = 0xffff;
+		mible_timer_stop(mible_conn_timer);
 		#endif 
 		//terminate reason
 		if(pd->reason == HCI_ERR_CONN_TIMEOUT){
@@ -267,6 +310,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		else if(pd->reason == SLAVE_TERMINATE_CONN_ACKED || pd->reason == SLAVE_TERMINATE_CONN_TIMEOUT){
 
 		}
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"disconnect reason is %x",pd->reason);
 		#if DEBUG_BLE_EVENT_ENABLE
 		rf_link_light_event_callback(LGT_CMD_BLE_ADV);
 		#endif 
@@ -421,15 +465,31 @@ void main_loop ()
 
 	////////////////////////////////////// UI entry /////////////////////////////////
 	//  add spp UI task:
+#if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(1);
+#endif
+	// du proc
+	#if DU_ENABLE
+	du_loop_proc();
+	#endif
+	#if !DU_LPN_EN
 	proc_ui();
 	proc_led();
 	factory_reset_cnt_check();
-	
+	#endif
+	#if DU_LPN_EN
+	if(is_provision_success()||mi_mesh_get_state()){
+		mesh_loop_process();
+	}else{
+		#if RTC_USE_32K_RC_ENABLE
+		system_time_run();
+		#endif
+	} 
+	#else
 	mesh_loop_process();
+	#endif
 	#if MI_API_ENABLE
 	ev_main();
-	mi_ivi_event_loop();
-	mi_vendor_cfg_rsp_proc();
 	#if XIAOMI_MODULE_ENABLE
 	mi_api_loop_run();
 	#endif
@@ -453,7 +513,7 @@ void main_loop ()
 	#if DEBUG_IV_UPDATE_TEST_EN
 	iv_index_test_button_firmware();
 	#endif
-	#if MI_SWITCH_LPN_EN
+	#if (MI_SWITCH_LPN_EN||DU_LPN_EN)
 	mi_mesh_lowpower_loop();
 	#endif	
 	#if MESH_MONITOR_EN
@@ -496,6 +556,10 @@ void test_ecdsa_sig_verify2()
 
 void user_init()
 {
+    #if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(0); //battery check must do before OTA relative operation
+    #endif
+    
 	#if DEBUG_EVB_EN
 	    set_sha256_init_para_mode(1);	// must 1
 	#else
@@ -515,6 +579,16 @@ void user_init()
 
 	usb_id_init();
 	usb_log_init();
+	#if TESTCASE_FLAG_ENABLE
+		// need to have a simulate insert
+	usb_dp_pullup_en (0);  //open USB enum
+	gpio_set_func(GPIO_DP,AS_GPIO);
+	gpio_set_output_en(GPIO_DP,1);
+	gpio_write(GPIO_DP,0);
+	sleep_us(20000);
+	gpio_set_func(GPIO_DP,AS_USB);
+	usb_dp_pullup_en (1);  //open USB enum
+	#endif
 	usb_dp_pullup_en (1);  //open USB enum
 	#if 0
 	// use to create the certify part .
@@ -549,7 +623,7 @@ void user_init()
 
 #if (BLE_REMOTE_PM_ENABLE)
 	blc_ll_initPowerManagement_module();        //pm module:      	 optional
-	#if MI_SWITCH_LPN_EN
+	#if (MI_SWITCH_LPN_EN||DU_LPN_EN)
 	bls_pm_setSuspendMask (SUSPEND_DISABLE);
 	#else
 	bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
@@ -629,7 +703,7 @@ void user_init()
 	#endif	
 	{
 		#if MI_API_ENABLE
-			#define RECORD_DFU_INFO   5
+			//fix the mi ota ,when uncomplete ,it need to goon after power on 
 			u32 adr_record;
 			if(!find_record_adr(RECORD_DFU_INFO,&adr_record)){
 				bls_ota_clearNewFwDataArea();
@@ -660,23 +734,19 @@ void user_init()
 	//mi_mesh_otp_program_simulation();
 	blc_att_setServerDataPendingTime_upon_ClientCmd(1);
 	telink_record_part_init();
-	#if 0 // XIAOMI_MODULE_ENABLE
-	test_mi_api_part(); // just for test
-	#endif
-	#if MI_SWITCH_LPN_EN
+	#if (MI_SWITCH_LPN_EN||DU_LPN_EN) // use 16M will save power
 	mi_mesh_switch_sys_mode(16000000);
 	mi_mesh_sleep_init();
 	#endif
+	
+	#if !DU_ENABLE
 	blc_l2cap_register_pre_handler(telink_ble_mi_event_cb_att);// for telink event callback
-	advertise_init();
+	#endif
 	mi_service_init();
 	telink_mi_vendor_init();
-	//cfg_led_event(LED_EVENT_FLASH_4HZ_3T);
-	//cfg_led_event(LED_EVENT_FLASH_1HZ_3S);
 	}
 #endif 
-	extern u32 system_time_tick;
-	system_time_tick = clock_time();
+	system_time_init();
 #if TESTCASE_FLAG_ENABLE
 	memset(&model_sig_cfg_s.hb_sub, 0x00, sizeof(mesh_heartbeat_sub_str)); // init para for test
 #endif
@@ -690,6 +760,11 @@ void user_init()
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 200*1000);
 #endif
+
+#if DU_ENABLE
+	du_ui_proc_init()
+#endif
+
 #if DEBUG_CFG_CMD_GROUP_AK_EN
 	if(blt_rxfifo.num >64){
 		blt_rxfifo.num = 64;
@@ -709,7 +784,12 @@ _attribute_ram_code_ void user_init_deepRetn(void)
     blc_app_loadCustomizedParameters();
 	blc_ll_initBasicMCU();   //mandatory
 	rf_set_power_level_index (my_rf_power_index);
-#if MI_SWITCH_LPN_EN
+	blc_ll_recoverDeepRetention();
+
+	DBG_CHN0_HIGH;    //debug
+    // should enable IRQ here, because it may use irq here, for example BLE connect which need start IRQ quickly.
+    irq_enable();
+	#if (MI_SWITCH_LPN_EN||DU_LPN_EN)
 		if(bltPm.appWakeup_flg){ // it may have the rate not response by the event tick part ,so we should use the distance
 			if(mi_mesh_sleep_time_exceed_adv_iner()){
 				mi_mesh_sleep_init();
@@ -719,14 +799,10 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 			mi_mesh_sleep_init();
 			bls_pm_setSuspendMask (SUSPEND_DISABLE);
 		}
-#endif
-
-	blc_ll_recoverDeepRetention();
-
-	DBG_CHN0_HIGH;    //debug
-    // should enable IRQ here, because it may use irq here, for example BLE connect which need start IRQ quickly.
-    irq_enable();
-
+	#endif
+	#if DU_ENABLE
+	du_ui_proc_init_deep();
+	#endif
 //    light_pwm_init();   // cost about 1.5ms
 
 #if (HCI_ACCESS == HCI_USE_UART)	//uart

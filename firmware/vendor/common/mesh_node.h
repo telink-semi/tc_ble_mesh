@@ -60,6 +60,7 @@ typedef struct{
 #else
 #define GET_KEY_INDEX_LEN(cnt)		        ((cnt/2) * 3 + (cnt&1) * 2)
 #define GET_PAR_LEN_FROM_RSP(len, size_op)  (len - 4 - size_op)
+#define GET_RSP_LEN_FROM_PAR(len, size_op)  (len + 4 + size_op)
 
 static inline u16 GET_KEY_INDEX_L(u8 *p){
 	return (p[0]+((p[1]&0x0f)<<8));
@@ -182,10 +183,19 @@ enum{
 #define SIG_MD_DF_CFG_C					0xBF31
 #define SIG_MD_BRIDGE_CFG_SERVER		0xBF32
 #define SIG_MD_BRIDGE_CFG_CLIENT		0xBF33
-#define SIG_MD_PRIVATE_BEACON_SERVER 	0x000a
-#define SIG_MD_PRIVATE_BEACON_CLIENT	0x000b
+#define SIG_MD_PRIVATE_BEACON_SERVER 	0xBF40
+#define SIG_MD_PRIVATE_BEACON_CLIENT	0xBF41
 
-
+#define SIG_MD_ON_DEMAND_PROXY_S		0xBF50
+#define SIG_MD_ON_DEMAND_PROXY_C		0xBF51
+#define SIG_MD_SAR_CFG_S				0xBF52
+#define SIG_MD_SAR_CFG_C				0xBF53
+#define SIG_MD_OP_AGG_S					0xBF54
+#define SIG_MD_OP_AGG_C					0xBF55
+#define SIG_MD_LARGE_CPS_S				0xBF56
+#define SIG_MD_LARGE_CPS_C				0xBF57
+#define SIG_MD_SOLI_PDU_RPL_CFG_S		0xBF58
+#define SIG_MD_SOLI_PDU_RPL_CFG_C		0xBF59
 
 
 #define SIG_MD_G_ONOFF_S                0x1000
@@ -249,6 +259,8 @@ enum{
 
 
 //--------------------------------------- config model
+#define NO_TX_RSP2SELF_EN               (!MD_CLIENT_EN)   // to save 
+
 #if(0 == TESTCASE_FLAG_ENABLE)
 	#if (GATEWAY_ENABLE&&__PROJECT_MESH_PRO__)
 #define SUB_LIST_MAX                    (2)
@@ -410,6 +422,31 @@ typedef struct{
 }mesh_transmit_t;
 
 typedef struct{
+	u8 sar_seg_invl_step:4;
+	u8 sar_uni_retrans_cnt:4;
+	u8 sar_uni_retrans_cnt_no_ack:4;
+	u8 sar_uni_retrans_invl_step:4;
+	u8 sar_uni_retrans_invl_incre:4;
+	u8 sar_multi_retrans_cnt:4;
+	u8 sar_multi_retrans_invl:4;
+	u8 rfu:4;
+}sar_transmitter_t;
+
+typedef struct{
+	u8 sar_seg_thres:5;
+	u8 sar_ack_delay_inc:3;	
+#if 0 // pts revert the para
+	u8 sar_rcv_seg_invl_step:4;
+	u8 sar_discard_timeout:4;
+#else
+	u8 sar_discard_timeout:4;
+	u8 sar_rcv_seg_invl_step:4;	
+#endif
+	u8 sar_ack_retrans_cnt:2;
+	u8 rfu:6;
+}sar_receiver_t;
+
+typedef struct{
 	u8 relay;
 	mesh_transmit_t transmit;
 }mesh_cfg_model_relay_set_t;
@@ -493,61 +530,6 @@ typedef struct{
 	u32 model_id;
 	u16 sub_adr[SUB_LIST_MAX];
 }mesh_cfg_model_sub_list_vendor_t;
-
-// directed forwarding message
-typedef struct{
-	u8 directed_forwarding;
-	u8 directed_relay;
-	u8 directed_proxy;
-	u8 directed_proxy_use_directed_default;
-	u8 directed_friend;
-}directed_control_t;
-
-typedef struct{
-	u8  metric_type:3;	
-	u8  path_lifetime:2;
-	u8  rfu:3;
-}path_metric_t;
-
-typedef struct{
-	s8 default_rssi_threshold;
-	s8 rssi_margin;
-}rssi_threshold_t;
-
-typedef struct{
-	u16 node_paths;
-	u16 relay_paths;
-	u16 proxy_paths;
-	u16 friend_paths;
-}directed_paths_t;
-
-typedef struct{
-	u16 path_monitoring_interval;
-	u16 path_discovery_retry_interval;
-	u8 path_discovery_interval:1;
-	u8 lane_discovery_guard_interval:1;
-	u8 prohibited:6;
-}discovery_timing_t;
-
-typedef struct{
-	directed_control_t directed_control;
-	path_metric_t path_metric;
-	u8 max_concurrent_init;
-	u8 wanted_lanes;
-	u8 two_way_path;
-	u8 path_echo_interval;
-}mesh_directed_subnet_state_t;
-
-typedef struct{
-	mesh_directed_subnet_state_t subnet_state[NET_KEY_MAX];
-	mesh_transmit_t transmit;
-	mesh_transmit_t relay_transmit;
-	rssi_threshold_t rssi_threshold;
-	directed_paths_t directed_paths;
-	discovery_timing_t discovery_timing;
-	mesh_transmit_t	control_transmit;
-	mesh_transmit_t	control_relay_transmit;
-}mesh_directed_forward_t;
 
 //--------------------------------------- generic model
 enum{
@@ -900,6 +882,13 @@ typedef struct{
 //--------------------SIG SERVER MODEL
 typedef struct{
     model_common_t com;             // must first
+#if MD_SAR_EN
+	sar_transmitter_t sar_transmitter;
+	sar_receiver_t sar_receiver;
+#endif
+#if MD_ON_DEMAND_PROXY_EN
+	u8 on_demand_proxy;
+#endif
     u8 rfu1[8];
 	u8 sec_nw_beacon;
 	u8 ttl_def;
@@ -1296,6 +1285,8 @@ typedef struct{
 #endif
 #if DISTRIBUTOR_UPDATE_CLIENT_EN
 	model_client_common_t fw_distr_clnt;	// client
+#endif
+#if DISTRIBUTOR_UPDATE_SERVER_EN
     model_g_light_s_t fw_distr_srv;         // server
 	model_client_common_t fw_update_clnt;	// client   // may use
 	model_client_common_t blob_trans_clnt;	// client   // may use
@@ -1492,6 +1483,7 @@ int mesh_nid_check(u8 nid);
 void mesh_friend_key_refresh(mesh_net_key_t *new_key);
 void mesh_friend_key_RevokingOld(mesh_net_key_t *new_key);
 void mesh_friend_key_update_all_nk(u8 lpn_idx, u8 nk_arr_idx);
+int  mesh_get_ivi_cur_val_little();
 void mesh_increase_ivi(u8 *p_ivi);
 void mesh_decrease_ivi(u8 *p_ivi);
 int mesh_ivi_greater_or_equal(const u8 *p_ivi1, const u8 *p_ivi2, u32 val);
@@ -1507,6 +1499,7 @@ int mesh_provision_par_set(u8 *prov_pars);
 u8 mesh_provision_and_bind_self(u8 *p_prov_data, u8 *p_dev_key, u16 appkey_idx, u8 *p_app_key);
 mesh_net_key_t * mesh_get_netkey_by_idx(u16 key_idx);
 mesh_net_key_t * is_mesh_net_key_exist(u16 key_idx);
+int is_netkey_index_prohibited(u16 key_idx);
 int get_mesh_net_key_offset(u16 key_idx);
 int is_net_key_save();
 void model_pub_st_cb_re_init_lc_srv(cb_pub_st_t cb);
@@ -1597,6 +1590,7 @@ void mesh_service_change_report();
 #define MESH_PARA_RETRIEVE_VAL      1
 #define MESH_PARA_STORE_VAL         0
 int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u32 size,u8 flag);
+void mesh_seg_rx_init();
 void mesh_seg_ack_poll_rx();
 void mesh_seg_ack_poll_tx();
 void blc_pm_select_none();
@@ -1606,7 +1600,6 @@ void mesh_key_node_identity_set_prov_set();
 void mesh_switch_identity_proc();// run in loop
 int is_pkt_notify_only(u16 dst_adr, int relay_flag);
 u32 get_reliable_interval_ms_min();
-u32 get_reliable_interval_ms_max();
 void prov_random_proc(u8 *p_random);
 void mesh_node_refresh_binding_tick();
 u64 mul32x32_64(u32 a, u32 b);
@@ -1630,10 +1623,12 @@ u32 get_blk_crc_tlk_type2(u32 crc_init, u8 *data, u32 len);
 int is_valid_tlk_fw_buf(u8 *p_flag);
 void power_on_io_proc(u8 i);
 unsigned char ble_moudle_id_is_kmadongle();
-void mesh_ivi_proc_cb(u8 search_flag);
 void mesh_blc_ll_initExtendedAdv();
 u8 mesh_blc_ll_setExtAdvParamAndEnable();
 void mesh_blc_ll_setExtAdvData(u8 adv_pdu_len, u8 *data);
+void mesh_ivi_event_cb(u8 search_flag);
+void mesh_netkey_cb(u8 idx,u16 op);
+
 
 
 extern u16 ele_adr_primary;
@@ -1688,6 +1683,7 @@ extern const u16 my_fwRevisionUUID;
 extern u8 my_fwRevisionCharacter;
 #define FW_REVISION_VALUE_LEN       (9)
 extern const u8  my_fwRevision_value [FW_REVISION_VALUE_LEN];
+extern u8 g_gw_extend_adv_option;
 
 #define TEST_CNT 100
 typedef struct{
@@ -1701,4 +1697,10 @@ typedef struct{
 	u32 send_tick;
 } mesh_rcv_t;
 
+enum{
+    EXTEND_ADV_OPTION_NONE      = 0,    // not support extend adv
+    EXTEND_ADV_OPTION_ADV_ONLY  = 1,    // only mesh OTA command use extend adv
+    EXTEND_ADV_OPTION_ALL       = 2,    // all command use extend adv
+    EXTEND_ADV_OPTION_MAX,
+};
 

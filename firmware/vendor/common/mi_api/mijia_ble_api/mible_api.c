@@ -223,6 +223,17 @@ __WEAK mible_status_t mible_gap_scan_stop(void)
 }
 
 /**
+ * @brief   Get scan param
+ * @param   [out] scan_param: scan interval and window
+ * @return  MI_SUCCESS             Successfully stopped scanning procedure.
+ *          MI_ERR_INVALID_STATE   Not in scanning state.
+ * */
+__WEAK mible_status_t mible_gap_scan_param_get(mible_gap_scan_param_t *scan_param)
+{
+    return MI_SUCCESS;
+}
+
+/**
  * @brief   Start advertising
  * @param   [in] p_adv_param : pointer to advertising parameters, see
  * mible_gap_adv_param_t for details
@@ -305,6 +316,7 @@ __WEAK mible_status_t mible_gap_connect(mible_gap_scan_param_t scan_param,
  * */
 __WEAK mible_status_t mible_gap_disconnect(uint16_t conn_handle)
 {
+	bls_ll_terminateConnection (0x13);
     return MI_SUCCESS;
 }
 
@@ -611,6 +623,25 @@ __WEAK mible_status_t mible_timer_create(void** p_timer_id,
 }
 
 /**
+ * @brief   Create a timer.
+ * @param   [out] p_timer_id: a pointer to timer id address which can uniquely identify the timer.
+ *          [in] timeout_handler: a pointer to a function which can be
+ * called when the timer expires.
+ *          [in] mode: repeated or single shot.
+ * @return  MI_SUCCESS             If the timer was successfully created.
+ *          MI_ERR_INVALID_PARAM   Invalid timer id supplied.
+ *          MI_ERR_INVALID_STATE   timer module has not been initialized or the
+ * timer is running.
+ *          MI_ERR_NO_MEM          timer pool is full.
+ *
+ * */
+__WEAK mible_status_t mible_user_timer_create(void** p_timer_id,
+        mible_timer_handler timeout_handler, mible_timer_mode mode)
+{
+    return telink_mi_timer_create(p_timer_id,timeout_handler,mode);
+}
+
+/**
  * @brief   Delete a timer.
  * @param   [in] timer_id: timer id
  * @return  MI_SUCCESS             If the timer was successfully deleted.
@@ -738,7 +769,9 @@ __WEAK mible_status_t mible_record_write(uint16_t record_id, const uint8_t* p_da
  * */
 __WEAK mible_status_t mible_rand_num_generator(uint8_t* p_buf, uint8_t len)
 {
-    return telink_ble_mi_rand_num_generator(p_buf,len);
+	extern int telink_rand_num_generator(uint8_t* p_buf, uint8_t len);
+    telink_rand_num_generator(p_buf,len);
+    return MI_SUCCESS;
 }
 
 /**
@@ -813,7 +846,6 @@ void msc_iic_init(void)
  *          MI_ERR_INVALID_PARAM    p_config or handler is a NULL pointer.
  *              
  * */
-
 __WEAK mible_status_t mible_iic_init(const iic_config_t * p_config,
         mible_handler_t handler)
 {
@@ -864,7 +896,8 @@ __WEAK void mible_iic_uninit(void)
  *          When tx procedure complete, the handler provided by mible_iic_init() should be called,
  * and the iic event should be passed as a argument. 
  * */
-__WEAK mible_status_t mible_iic_tx(uint8_t addr, uint8_t * p_out, uint16_t len,uint8_t no_stop)
+__WEAK mible_status_t mible_iic_tx(uint8_t addr, uint8_t * p_out, uint16_t len,
+bool no_stop)
 {
 	#if HAVE_MSC
     u8 ret = IIC_EVT_XFER_DONE;
@@ -888,7 +921,7 @@ __WEAK mible_status_t mible_iic_tx(uint8_t addr, uint8_t * p_out, uint16_t len,u
 }
 
 /**
- * @brief   Function for reciving data to a IIC slave.
+ * @brief   Function for receiving data from a IIC slave.
  * @param   [in] addr:   Address of a specific slave device (only 7 LSB).
  *          [out] p_in:  Pointer to rx data
  *          [in] len:    Data length
@@ -929,7 +962,7 @@ __WEAK mible_status_t mible_iic_rx(uint8_t addr, uint8_t * p_in, uint16_t len)
  * @return  1: High (Idle)
  *          0: Low (Busy)
  * */
-__WEAK int mible_iic_scl_pin_read(uint8_t port, uint16_t pin)
+__WEAK int mible_iic_scl_pin_read(uint8_t port, uint8_t pin)
 {
     return MI_SUCCESS;
 }
@@ -938,8 +971,7 @@ extern u32		ota_program_offset;
 
 __WEAK mible_status_t mible_nvm_init(void)
 {
-	//empty ,not need to init the flash read and write part 
-	return MI_SUCCESS;
+    return MI_SUCCESS;
 }
 
 /**
@@ -995,13 +1027,76 @@ __WEAK mible_status_t mible_nvm_write(void * p_data, uint32_t length, uint32_t a
 
 __WEAK mible_status_t mible_upgrade_firmware(void)
 {
-	telink_mible_upgrade_firmware();
-	return MI_SUCCESS;
-}
-__WEAK mible_status_t mible_upgrade_firmware_fail(void)
-{
-	start_reboot();
+    telink_mible_upgrade_firmware();
 	return MI_SUCCESS;
 }
 
+/**
+ *@brief    reboot device.
+ *@return   0: success, negetive value: failure
+ */
+__WEAK mible_status_t mible_reboot(void)
+{
+	start_reboot();
+    return MI_ERR_BUSY;
+}
+
+/**
+ *@brief    set node tx power.
+ *@param    [in] power : TX power in 0.1 dBm steps.
+ *@return   0: success, negetive value: failure
+ */
+__WEAK mible_status_t mible_set_tx_power(int16_t power)
+{
+#if (CHIP_TYPE != CHIP_TYPE_8269)
+	uint8_t tx_gain;
+	if(power <= -200){//-20dbm
+		#if (CHIP_TYPE == CHIP_TYPE_8258)
+		tx_gain = RF_POWER_N19p27dBm;  
+		#else
+		tx_gain = RF_POWER_N18p40dBm; 
+		#endif
+	}else if (power <= 0){//0dbm
+		#if (CHIP_TYPE == CHIP_TYPE_8258)
+		tx_gain = RF_POWER_P0p04dBm;  
+		#else
+		tx_gain = RF_POWER_N0p28dBm; 
+		#endif
+	}else if (power <= 30){//3dbm
+		#if (CHIP_TYPE == CHIP_TYPE_8258)
+			tx_gain = RF_POWER_P3p01dBm;  
+		#else
+			tx_gain = RF_POWER_P3p13dBm; 
+		#endif
+	}else if (power <= 40){//4dbm
+		#if (CHIP_TYPE == CHIP_TYPE_8258)
+			tx_gain = RF_POWER_P3p94dBm;  
+		#else
+			tx_gain = RF_POWER_P3p99dBm; 
+		#endif
+	}else {//7.5dbm
+		#if (CHIP_TYPE == CHIP_TYPE_8258)
+			tx_gain = RF_POWER_P7p41dBm;  
+		#else
+			tx_gain = RF_POWER_P7p80dBm; 
+		#endif
+	}
+	rf_set_power_level_index(tx_gain);
+#endif
+    return MI_SUCCESS;
+}
+
+__WEAK int mible_log_printf(const char * sFormat, ...)
+{	
+	va_list list;
+	va_start( list, sFormat );
+	my_printf_uart(sFormat,list);
+    return MI_SUCCESS;
+}
+
+__WEAK int mible_log_hexdump(void* array_base, uint16_t array_size)
+{
+	my_printf_uart_hexdump(array_base, array_size);
+	return MI_SUCCESS;
+}
 

@@ -99,6 +99,7 @@ int 	blt_soft_timer_delete_by_index(u8 index);
 
 
 int is_timer_expired(blt_timer_callback_t *e);
+int is_soft_timer_exist(blt_timer_callback_t func);
 
 #endif
 #endif /* BLT_SOFT_TIMER_H_ */

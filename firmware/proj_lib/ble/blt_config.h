@@ -56,7 +56,11 @@
     #elif MI_API_ENABLE
 #define 	MY_RF_POWER_INDEX		RF_POWER_P10p46dBm
     #else
-#define		MY_RF_POWER_INDEX		RF_POWER_P3p01dBm
+	#if DU_ENABLE
+#define		MY_RF_POWER_INDEX		RF_POWER_P7p02dBm
+	#else
+#define		MY_RF_POWER_INDEX		RF_POWER_P3p01dBm	
+	#endif
     #endif
 #elif(MCU_CORE_TYPE == MCU_CORE_8278)
 #define		MY_RF_POWER_INDEX		RF_POWER_P3p50dBm
@@ -142,6 +146,8 @@ typedef struct {
 #define		CALIB_OFFSET_ADC_VREF								(0xC0)
 #define		CALIB_OFFSET_FIRMWARE_SIGNKEY						(0x180)
     #endif
+#define     CALIB_OFFSET_FLASH_VREF								0x1c0
+
 /** Calibration Information end ***/
 
 /**************************** 128 K Flash *****************************/
@@ -210,18 +216,22 @@ typedef struct {
 #define			FLASH_ADR_RESET_CNT			0x3e000
 #if WIN32
 #define			FLASH_ADR_MD_PROPERTY		0x40000
-#define			FLASH_ADR_MD_DF				0x41000 
+#define			FLASH_ADR_MD_DF_SBR			0x41000 
+#define			FLASH_ADR_MD_OP_AGG			0x42000 
+#define			FLASH_ADR_MD_SOLI_PDU_RPL	0x43000
 #else
 #define			FLASH_ADR_MD_PROPERTY		0x3f000 // just test
-#define			FLASH_ADR_MD_DF				0x3f000 // just test
+#define			FLASH_ADR_MD_DF_SBR			0x3f000 // just test
+#define			FLASH_ADR_MD_OP_AGG			0x3f000 // just test
+#define			FLASH_ADR_MD_SOLI_PDU_RPL	0x3f000 // just test
 #endif
 
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
 	#if WIN32
 #define 		FLASH_ADR_VC_NODE_INFO		0x80000		//  from 0x00000 to 0x40000 (256K)
 	#else
-		#if DEBUG_CFG_CMD_GROUP_AK_EN
-#define         FLASH_ADR_VC_NODE_INFO      0x78000 // vcnode info
+		#if VC_NODE_INFO_MULTI_SECTOR_EN
+#define         FLASH_ADR_VC_NODE_INFO      0x78000 // vcnode info, occupy sector num dependent on  MESH_NODE_MAX_NUM
 		#else
 #define 		FLASH_ADR_VC_NODE_INFO		0x3f000		//
 		#endif
@@ -263,6 +273,12 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 
 //                      MI_BLE_MESH_CER_ADR	        0x7F000 // don't modify
 #elif(AIS_ENABLE)
+#if(MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
+#define DU_STORE_ADR		0x7e000
+#define DU_OTA_REBOOT_ADR	0x7f000
+
+#endif
+
 #define 		FLASH_ADR_THREE_PARA_ADR	0x78000
 #define         FLASH_ADR_THREE_PARA_ADR_0x100_0xF00    //please refer to "FLASH_ADR_EDCH_PARA"
     #if (ALI_MD_TIME_EN)
@@ -355,7 +371,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 // FLASH_ADR_AREA_1_END to start of user is reserve for telink
 /*******SIG mesh vendor define here, from FLASH_ADR_USER_MESH_END ~ FLASH_ADR_USER_MESH_START, vendor define from behined to head should be better, .*/
 #define			FLASH_ADR_USER_MESH_START	0xD2000
-#if(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
+#if(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_MI_ENABLE)
 #define 		FLASH_ADR_MI_RECORD		    0xD2000
 #define 		FLASH_ADR_MI_RECORD_TMP	    0xD3000
 #define 		FLASH_ADR_MI_RECORD_MAX	    0xD4000
@@ -413,7 +429,13 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #if (MI_API_ENABLE)
 #define         MI_BLE_MESH_CER_ADR 	        0xFB000
 #endif
-    
+
+#if(MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
+#define DU_STORE_ADR	0xFC000
+#define DU_OTA_REBOOT_ADR	0xFD000
+
+#endif
+
 #if(AIS_ENABLE)
 #define 		FLASH_ADR_THREE_PARA_ADR		0xFC000
 #define         FLASH_ADR_THREE_PARA_ADR_0x100_0xF00    //please refer to "FLASH_ADR_EDCH_PARA"
@@ -524,6 +546,13 @@ enum{
     HCI_GATEWAY_CMD_MESH_OTA_ADR_SEND = 0x13,// HCI send back the static oob information 
     HCI_GATEWAY_CMD_MESH_COMMUNICATE_TEST = 0x14,// HCI send back the static oob information
     HCI_GATEWAY_CMD_MESH_RX_TEST        = 0x15,
+    HCI_GATEWAY_CMD_SET_EXTEND_ADV_OPTION = 0x16,
+    HCI_GATEWAY_CMD_FAST_PROV_START		=0x17,
+
+	HCI_GATEWAY_CMD_RP_MODE_SET			  = 0x18,
+	HCI_GATEWAY_CMD_RP_SCAN_START_SET     = 0x19,
+	HCI_GATEWAY_CMD_RP_LINK_OPEN		  = 0x1a,
+	HCI_GATEWAY_CMD_RP_START			  = 0x1b,
 	// rsp cmd part 
 	HCI_GATEWAY_RSP_UNICAST	=0x80,
 	HCI_GATEWAY_RSP_OP_CODE	=0X81,
@@ -540,6 +569,7 @@ enum{
 	HCI_GATEWAY_CMD_SEND_MESH_OTA_STS	= 0x98,
 	HCI_GATEWAY_CMD_SEND_UUID   = 0x99,
 	HCI_GATEWAY_CMD_SEND_IVI    = 0x9a,
+	HCI_GATEWAY_CMD_SEND_EXTEND_ADV_OPTION = 0x9b,
 	HCI_GATEWAY_CMD_SEND_SRC_CMD = 0x9c,
 	HCI_GATEWAY_CMD_SEND_SNO_RSP    = 0xa0,
 	HCI_GATEWAY_CMD_SEND       = 0xb1,
@@ -549,6 +579,9 @@ enum{
 	HCI_GATEWAY_CMD_SEND_BACK_VC = 0xb5,
 	HCI_GATEWAY_CMD_LOG_STRING	= 0xb6,
 	HCI_GATEWAY_CMD_LOG_BUF		= 0xb7,
+	
+	HCI_GATEWAY_CMD_RP_SCAN_RSP = 0xC0,
+	HCI_GATEWAY_CMD_RP_SCAN_REPORT_RSP = 0xc1,
 	
 };
 //---------hci_cmd_from_usb
@@ -567,6 +600,8 @@ enum{
 	HCI_CMD_ADV_DEBUG_MESH_LED	= 0xFFA7,			// control LED
 	HCI_CMD_BULK_SET_PAR2USB	= 0xFFA8,
 	HCI_CMD_SET_VC_PAR			= 0xFFAA,
+	HCI_CMD_MESH_OTA_INITIATOR_START	= 0xFFAB,
+	HCI_CMD_MESH_PTS_TEST_CASE_CMD		= 0xFFAC,
 	//
 	HCI_CMD_KMA_DONGLE_SET_MAC  			= 0xFFE0,
 	HCI_CMD_KMA_DONGLE_SPP_TEST_DATA		= 0xFFE1,
@@ -597,8 +632,11 @@ enum{
 };
 
 enum{
-    OTA_REBOOT_FLAG                   	= 0,
-};
+    FLD_OTA_REBOOT_FLAG                 = BIT(0),
+    FLD_LOW_BATT_FLG                   	= BIT(1),
+    FLD_LOW_BATT_LOOP_FLG             	= BIT(2),	// 0 means check by user_init, 1 means by main loop
+    FLD_MESH_OTA_100_FLAG               = BIT(3),
+};/*DEEP_ANA_REG0*/
 
 
 extern u32 flash_sector_mac_address;

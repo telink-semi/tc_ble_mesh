@@ -97,6 +97,16 @@ extern "C" {
 #define PRINT_DEBUG_INFO                    1
 #endif
 
+#define BATT_CHECK_ENABLE       			1   //must enable
+#if (BATT_CHECK_ENABLE)
+//telink device: you must choose one gpio with adc function to output high level(voltage will equal to vbat), then use adc to measure high level voltage
+	//use PC5 output high level, then adc measure this high level voltage
+	#define GPIO_VBAT_DETECT				GPIO_PC5
+	#define PC5_FUNC						AS_GPIO
+	#define PC5_INPUT_ENABLE				0
+	#define ADC_INPUT_PCHN					C5P    //corresponding  ADC_InputPchTypeDef in adc.h
+#endif
+
 #define ADC_ENABLE		0
 #if ADC_ENABLE
 #define ADC_BASE_MODE	1	//GPIO voltage
@@ -119,10 +129,20 @@ extern "C" {
 /////////////////// mesh project config /////////////////////////////////
 #define TRANSITION_TIME_DEFAULT_VAL (0x00)  // 0x41: 1 second // 0x00: means no default transition time
 
-#define MESH_DLE_MODE               0 // MESH_DLE_MODE_GATT
-#if MESH_DLE_MODE
+#if EXTENDED_ADV_ENABLE
+#define MESH_DLE_MODE               MESH_DLE_MODE_EXTEND_BEAR
+#define DLE_LEN_MAX_RX              (MAX_OCTETS_DATA_LEN_EXTENSION) // must MAX_OCTETS_DATA_LEN_EXTENSION
+#define DLE_LEN_MAX_TX              (40)
+#elif GATT_LPN_EN
+#define MESH_DLE_MODE               MESH_DLE_MODE_GATT
+#define DLE_LEN_MAX_RX              (56)
+#define DLE_LEN_MAX_TX              (40)
+#else
+#define MESH_DLE_MODE               0 //MESH_DLE_MODE_EXTEND_BEAR // MESH_DLE_MODE_GATT
+    #if MESH_DLE_MODE
 #define DLE_LEN_MAX_RX              (MAX_OCTETS_DATA_LEN_EXTENSION)
 #define DLE_LEN_MAX_TX              (40)
+    #endif
 #endif
 
 /////////////////// MODULE /////////////////////////////////

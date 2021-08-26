@@ -28,7 +28,7 @@
 #define DIRECTED_PROXY_EN					FEATURE_PROXY_EN
 #define DIRECTED_FRIEND_EN					FEATURE_FRIEND_EN
 
-#define MAX_FIXED_PATH						32
+#define MAX_FIXED_PATH						(PTS_TEST_EN?4:32)
 #define MAX_NON_FIXED_PATH					(PTS_TEST_EN?4:64)
 #define MAX_DEPENDENT_NUM					(MAX_LPN_NUM+2) // 2 for directed client
 
@@ -150,6 +150,63 @@ enum{
 
 
 #define GET_LANE_GUARD_INTERVAL_MS(guard_interval)		(guard_interval?LANE_GUARD_INTERVAL_10S:LANE_GUARD_INTERVAL_2S)
+
+// directed forwarding message
+typedef struct{
+	u8 directed_forwarding;
+	u8 directed_relay;
+	u8 directed_proxy;
+	u8 directed_proxy_directed_default;
+	u8 directed_friend;
+}directed_control_t;
+
+typedef struct{
+	u8  metric_type:3;	
+	u8  path_lifetime:2;
+	u8  rfu:3;
+}path_metric_t;
+
+typedef struct{
+	s8 default_rssi_threshold;
+	s8 rssi_margin;
+}rssi_threshold_t;
+
+typedef struct{
+	u16 node_paths;
+	u16 relay_paths;
+	u16 proxy_paths;
+	u16 friend_paths;
+}directed_paths_t;
+
+typedef struct{
+	u16 path_monitoring_interval;
+	u16 path_discovery_retry_interval;
+	u8 path_discovery_interval:1;
+	u8 lane_discovery_guard_interval:1;
+	u8 prohibited:6;
+}discovery_timing_t;
+
+typedef struct{
+	directed_control_t directed_control;
+	path_metric_t path_metric;
+	u8 max_concurrent_init;
+	u8 wanted_lanes;
+	u8 two_way_path;
+	u8 unicast_echo_interval;
+	u8 multicast_echo_interval;
+}mesh_directed_subnet_state_t;
+
+typedef struct{
+	mesh_directed_subnet_state_t subnet_state[NET_KEY_MAX];
+	mesh_transmit_t transmit;
+	mesh_transmit_t relay_transmit;
+	rssi_threshold_t rssi_threshold;
+	directed_paths_t directed_paths;
+	discovery_timing_t discovery_timing;
+	mesh_transmit_t	control_transmit;
+	mesh_transmit_t	control_relay_transmit;
+}mesh_directed_forward_t;
+
 typedef struct{
 	u16 netkey_index;
 	directed_control_t directed_control;	
@@ -222,27 +279,24 @@ typedef struct{
 	u8  dependent_target_list_size;
 	u16 addr[1];
 }forwarding_tbl_dependengts_delete_t;
-
-enum{
- 	DEPENDENT_GET_PATH_ORIGIN_MATCH = BIT(0),
- 	DEPENDENT_GET_DESTINATION_MATCH = BIT(1),
-};
  
 typedef struct{
 	u16 netkey_index:12;
-	u16 dependents_list_mask:2;
+	u16 path_origin_mask:1;
+	u16 path_target_mask:1;
 	u16 fixed_path_flag:1;
 	u16 prohibited:1;
 	u16 start_index;
 	u16 path_origin;
 	u16 destination;
-	u16 update_identifier; // optinal
+	u16 up_id; // optinal
 }forwarding_tbl_dependents_get_t;
 
 typedef struct{
 	u8 status;
 	u16 netkey_index:12;
-	u16 dependents_list_mask:2;
+	u16 path_origin_mask:1;
+	u16 path_target_mask:1;
 	u16 fixed_path_flag:1;
 	u16 prohibited:1;
 	u16 start_index;
@@ -382,13 +436,15 @@ typedef struct{
 
 typedef struct{
 	u16 netkey_index;
-	u8 path_echo_interval;
+	u8 unicast_echo_interval;
+	u8 multicast_echo_interval;
 }path_echo_interval_set_t;
 
 typedef struct{
 	u8 status;
 	u16 netkey_index;
-	u8 path_echo_interval;
+	u8 unicast_echo_interval;
+	u8 multicast_echo_interval;
 }path_echo_interval_sts_t;
 
 typedef struct{
@@ -549,10 +605,6 @@ typedef struct{
 	model_client_common_t clnt;
 #endif
 }model_df_cfg_t;
-
-
-extern u32 mesh_md_df_addr;
-extern model_df_cfg_t 	model_sig_df_cfg;
 
 int is_directed_forwarding_en(u16 netkey_offset);
 int is_directed_relay_en(u16 netkey_offset);

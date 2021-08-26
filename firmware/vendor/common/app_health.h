@@ -128,7 +128,6 @@ extern int mesh_cmd_sig_period_set_unrel(u8 *par, int par_len, mesh_cb_fun_par_t
 extern int mesh_cmd_sig_period_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 extern int mesh_cmd_sig_attention_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 extern int mesh_cmd_sig_attention_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_attention_set_unrel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 extern int mesh_cmd_sig_attention_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 
 

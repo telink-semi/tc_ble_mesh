@@ -34,6 +34,9 @@
 
 
 #define MAX_PEM_CERT_LEN 0x300
+extern u8 der_cert_buf[MAX_PEM_CERT_LEN];
+extern u32 der_buf_len;
+
 		// suppose the max record id is 16
 #define MAX_PROV_RECORD_CNT 	16
 
@@ -52,9 +55,10 @@ void cert_id_get(u16 *p_id,u32 *p_cnt);
 
 void prov_clear_all_rec();
 void prov_set_rec_id(u16 *p_rec,u8 len);
-int prov_set_buf_len(u16 rec_id,u16 offset,u8 *p_buf,u32 len);
+int prov_set_buf_len(u16 rec_id,u16 offset,u8 *p_buf,u32 len,u32 total);
 int prov_use_rec_id_get_pubkey(u16 rec_id,u8 *p_pubkey);
 int cert_item_rsp(u16 id,u16 offset,u16 max_size,u8 *p_buf,u16 *p_len);
+u32  use_cert_id_get_len(u8 id);
 
 void record_mag_init();
 void record_mag_set(u16 rec_id,u16 max_size,u16 offset);

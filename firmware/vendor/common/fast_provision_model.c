@@ -61,11 +61,11 @@ int mesh_reset_network(u8 provision_enable)
 	mesh_iv_idx_init(iv_idx_st.cur, 0);
 //init model info
 	mesh_common_reset_all();
+	provision_mag.gatt_mode = GATT_PROVISION_MODE;// because retrive in mesh_common_reset_all	
 	if(!provision_enable){
 		mesh_gatt_adv_beacon_enable(0);
 	}else{
 		mesh_gatt_adv_beacon_enable(1);	
-		provision_mag.gatt_mode = GATT_PROVISION_MODE;// because retrive in mesh_common_reset_all
 	}
 //att table
 	#if !WIN32
@@ -75,7 +75,7 @@ int mesh_reset_network(u8 provision_enable)
 //set default key
 	memset(mesh_key.net_key, 0, sizeof(mesh_key_t)-OFFSETOF(mesh_key_t,net_key));
 	mesh_init_flag = 1;
-	factory_test_key_bind(1);
+	factory_test_key_bind(1);// provision_mag.gatt_mode must be GATT_PROVISION_MODE here to avoid save in mesh_model_retrieve_and_store
 	mesh_init_flag = 0;
 //provision random
 	provision_random_data_init(); // will init in provisioning
@@ -103,7 +103,7 @@ void mesh_revert_network()
 		mesh_app_key_set(APPKEY_ADD, p_set->appkey, GET_APPKEY_INDEX(p_set->net_app_idx), GET_NETKEY_INDEX(p_set->net_app_idx), 1);
 
 		if(get_all_appkey_cnt() == 1){
-		u16 app_key_idx = GET_NETKEY_INDEX(p_set->net_app_idx);
+		u16 app_key_idx = GET_APPKEY_INDEX(p_set->net_app_idx);
 		 ev_handle_traversal_cps(EV_TRAVERSAL_BIND_APPKEY, (u8 *)&app_key_idx);
 		}
 
@@ -118,7 +118,10 @@ void mesh_revert_network()
 		mesh_flash_retrieve();	
 		mesh_provision_para_init(node_ident_random);
 	}
-
+	
+	#if (GATEWAY_ENABLE&&FAST_PROVISION_ENABLE)
+	gateway_upload_keybind_event(MESH_KEYBIND_EVE_SUC);
+	#endif
 	#if WIN32
 	App_key_bind_end_callback(MESH_APP_KEY_BIND_EVENT_SUC); 
 	#endif
@@ -130,7 +133,6 @@ void mesh_revert_network()
 	#endif
 }
 
-#if !(ANDROID_APP_ENABLE || IOS_APP_ENABLE)
 u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid)
 {
 	u8 node_ele_cnt = 1;
@@ -154,12 +156,13 @@ u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid)
 	}
 	return node_ele_cnt;
 }
-#endif
 
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
-void mesh_fast_prov_start(u16 pid)
+void mesh_fast_prov_start(u16 pid, u16 start_addr)
 {
+#if (FAST_PROVISION_ENABLE)
 	fast_prov.pid = pid;
+	fast_prov.prov_addr = start_addr;
 	fast_prov.cur_sts = fast_prov.last_sts = FAST_PROV_START;
 	fast_prov.start_tick = clock_time()|1;
 	fast_prov.pending = 0;
@@ -169,18 +172,22 @@ void mesh_fast_prov_start(u16 pid)
 	memcpy(fast_prov.net_info.pro_data.iv_index, iv_idx_st.cur, 4);
 	u8 nk_array_idx = get_nk_arr_idx_first_valid();
     u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
+	if((NET_KEY_MAX==nk_array_idx)|| (APP_KEY_MAX==ak_array_idx)){
+		return;
+	}
+#if GATEWAY_ENABLE
+	appkey_bind_all(1, mesh_key.net_key[nk_array_idx][0].app_key[ak_array_idx].index, 0); // vc tool only send appkey_add in fast provision mode
+#endif
 	fast_prov.net_info.pro_data.key_index = mesh_key.net_key[nk_array_idx][0].index;
 	memcpy(fast_prov.net_info.pro_data.net_work_key, mesh_key.net_key[nk_array_idx][0].key, 16);
 	fast_prov.net_info.pro_data.unicast_address = ele_adr_primary;
-	#if WIN32
-	fast_prov.prov_addr = get_win32_prov_unicast_adr();
-	#endif
 
 	u32 net_app_idx = (fast_prov.net_info.pro_data.key_index&0x0FFF) | (mesh_key.net_key[nk_array_idx][0].app_key[ak_array_idx].index<<12);
 	memcpy(fast_prov.net_info.appkey_set.net_app_idx, &net_app_idx, 3);
 	memcpy(fast_prov.net_info.appkey_set.appkey, mesh_key.net_key[nk_array_idx][0].app_key[ak_array_idx].key, 16);
 
 	cache_init(ADR_ALL_NODES);
+#endif
 }
 
 #define CACHE_MAC_MAX_NUM 	32
@@ -217,16 +224,17 @@ void mesh_fast_prov_reliable_finish_handle()
 				u8 device_key[16];
 				memset(device_key, 0x00, sizeof(device_key));
 				memcpy(device_key, fast_prov_mac_buf[fast_prov_r_idx-1].mac, OFFSETOF(fast_prov_mac_st,pid));
-				
-				#if  (ANDROID_APP_ENABLE || IOS_APP_ENABLE)
-				mesh_fast_prov_node_info_callback(device_key, fast_prov.prov_addr, fast_prov_mac_buf[fast_prov_r_idx-1].pid);				
-				#endif
+								
 				u8 node_ele_cnt = mesh_fast_prov_get_ele_cnt_callback(fast_prov_mac_buf[fast_prov_r_idx-1].pid);
 				VC_node_dev_key_save(fast_prov.prov_addr, device_key, node_ele_cnt);
-				fast_prov.prov_addr += node_ele_cnt;
-				#if WIN32
-				set_win32_prov_unicast_adr(fast_prov.prov_addr);
+				#if GATEWAY_ENABLE
+				fast_provision_upload_node_info(fast_prov.prov_addr, fast_prov_mac_buf[fast_prov_r_idx-1].pid);
 				#endif
+				#if  (VC_APP_ENABLE)
+				mesh_fast_prov_node_info_callback(device_key, fast_prov.prov_addr, fast_prov_mac_buf[fast_prov_r_idx-1].pid);				
+				#endif
+				fast_prov.prov_addr += node_ele_cnt;
+
 				if(fast_prov_r_idx == fast_prov_w_idx){
 					mesh_fast_prov_sts_set(fast_prov.last_sts);
 				}
@@ -377,7 +385,7 @@ void mesh_fast_provision_timeout()
 
 void mesh_fast_prov_proc()
 {
-	if(is_busy_segment_or_reliable_flow()){
+	if(is_busy_tx_segment_or_reliable_flow()){
 		return ;
 	}
 
@@ -433,20 +441,18 @@ void mesh_fast_prov_proc()
 			mac_addr_get_t mac_get;
 			mac_get.pid = fast_prov.pid;
 			mac_get.ele_addr = fast_prov.prov_addr;
-			SendOpParaDebug_vendor(ADR_ALL_NODES, CACHE_MAC_MAX_NUM, VD_MESH_ADDR_GET, (u8 *)&fast_prov.pid, sizeof(mac_addr_get_t), VD_MESH_ADDR_GET_STS, 0);
+			SendOpParaDebug_vendor(ADR_ALL_NODES, CACHE_MAC_MAX_NUM, VD_MESH_ADDR_GET, (u8 *)&mac_get, sizeof(mac_addr_get_t), VD_MESH_ADDR_GET_STS, 0);
 			}
 			break;
 		case FAST_PROV_SET_ADDR:{
-			LOG_MSG_INFO(TL_LOG_COMMON,0,0,"FAST_PROV_SET_ADDR", 0);
+			LOG_MSG_INFO(TL_LOG_NODE_BASIC,0,0,"FAST_PROV_SET_ADDR", 0);
 			g_reliable_retry_cnt_def = RELIABLE_RETRY_CNT_DEF;
 			mac_addr_set_t addr_set;
 			//memcpy(addr_set.mac, fast_prov.mac_ele_info.mac, sizeof(addr_set.mac));
 			u8 *p_mac = mesh_fast_prov_get_mac_from_buf();
 			if(p_mac != 0){
 				memcpy(addr_set.mac, p_mac, sizeof(addr_set.mac));		
-				#if WIN32
 				addr_set.ele_addr = fast_prov.prov_addr;
-				#endif
 				SendOpParaDebug_vendor(fast_prov_mac_buf[fast_prov_r_idx-1].default_addr, 1, VD_MESH_ADDR_SET,(u8 *)&addr_set, sizeof(mac_addr_set_t), VD_MESH_ADDR_SET_STS, 0);
 			}
 			}

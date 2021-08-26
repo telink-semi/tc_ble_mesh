@@ -14,19 +14,35 @@ typedef struct
     int hour, min, sec;         /**< Time. */
 } msc_crt_time;
 
-typedef struct {
+#if defined ( __CC_ARM )
+__PACKED typedef struct {
     unsigned char *p;
     size_t len;
 } msc_crt_item_t;
 
 #define MSC_CRT_SIG_SZ 64
-typedef struct {
+__PACKED typedef struct {
     msc_crt_item_t tbs;                /* to be signed */
     msc_crt_item_t pub;                /* public key */
     msc_crt_item_t sn;                 /* serial number */
     msc_crt_item_t sub_o;              /* subject O */
     unsigned char sig[MSC_CRT_SIG_SZ]; /* signature */
 } msc_crt_t;
+#elif defined   ( __GNUC__ )
+typedef struct __PACKED{
+    unsigned char *p;
+    size_t len;
+} msc_crt_item_t;
+
+#define MSC_CRT_SIG_SZ 64
+typedef struct __PACKED{
+    msc_crt_item_t tbs;                /* to be signed */
+    msc_crt_item_t pub;                /* public key */
+    msc_crt_item_t sn;                 /* serial number */
+    msc_crt_item_t sub_o;              /* subject O */
+    unsigned char sig[MSC_CRT_SIG_SZ]; /* signature */
+} msc_crt_t;
+#endif
 
 /**
  * @brief x509 DER crt parse

@@ -30,7 +30,9 @@
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor_model.h"
 #include "fast_provision_model.h"
-
+#if DU_ENABLE
+#include "user_du.h"
+#endif
 #if ALI_MD_TIME_EN
 #include "user_ali_time.h"
 #endif
@@ -243,7 +245,7 @@ int mesh_tx_cmd_indica_retry(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_
 	mesh_match_type_t match_type;
 	u8 nk_array_idx = get_nk_arr_idx_first_valid();
 	u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, 1);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, 1, 0);
     mesh_match_group_mac(&match_type, mat.adr_dst, mat.op, 1, mat.adr_src);
 	
 	memcpy(&mesh_indication_retry.mat, &mat, sizeof(material_tx_cmd_t));
@@ -488,7 +490,7 @@ int cb_vd_msg_attr_upd_time_rsp(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 #endif
 #endif
 
-#if MD_CLIENT_EN
+#if MD_CLIENT_VENDOR_EN
 int cb_vd_group_g_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = 0;
@@ -813,70 +815,159 @@ int cb_vd_trans_time_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 }
 #endif
 
+#if DU_ENABLE
+int cb_vd_du_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	return 1;
+}
+
+int cb_vd_du_time_req(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	return 1;
+}
+
+int cb_vd_du_time_req_ack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	vd_du_event_str  *p_event = (vd_du_event_str*)par;
+	if(p_event->op == VD_DU_TIME){
+		if(p_event->val[0] == 0x01){
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du gatewaye support sync utc time",0);
+			#if DU_LPN_EN
+			// reserve 3s for the sending part 
+				update_du_busy_s(5);
+			#endif
+			
+		}else if(p_event->val[0] == 0x00){				
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du gatewaye not support sync time",0);	
+			#if DU_LPN_EN
+			// reserve 3s for the sending part 
+				update_du_busy_s(0);
+			#endif			
+		}
+	}
+
+	return 1;
+}
+
+
+int cb_vd_du_time_cmd(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	// get the utc time
+	time_cmd_str *time = (time_cmd_str *)par;
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"tid is %02x,op is %04x,time_stamp is %08x",
+				time->tid,time->op,time->time);
+	// rsp the ack part 
+	time_cmd_rsp_str time_rsp;
+	time_rsp.tid = time->tid;
+	time_rsp.op = VD_DU_TIME;
+	time_rsp.sts = 1;
+	u8 retry_times =3; // rsp 3 times will enough 
+	while(retry_times--){
+		mesh_tx_cmd2normal(VD_TIME_RSP,(u8*)&time_rsp,sizeof(time_rsp),ele_adr_primary,du_get_gateway_adr(),0);		
+	}
+	#if DU_LPN_EN
+	// reserve 3s for the sending part 
+	update_du_busy_s(2); 
+	#endif
+	return 1;
+}
+
+
+int cb_vd_du_time_cmd_rsp(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	return 1;
+}
+
+#endif
+
 #if !WIN32
 const 
 #endif
 mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
 #if (VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_SPIRIT)
     #if 0 // DEBUG_VENDOR_CMD_EN // just for sample, default disable, 
-    {VD_GROUP_G_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, VD_GROUP_G_STATUS},
-	{VD_GROUP_G_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_get, VD_GROUP_G_STATUS},
-	{VD_GROUP_G_SET_NOACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, STATUS_NONE},
-    {VD_GROUP_G_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_group_g_status, STATUS_NONE},
+    CMD_NO_STR(VD_GROUP_G_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, VD_GROUP_G_STATUS),
+	CMD_NO_STR(VD_GROUP_G_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_get, VD_GROUP_G_STATUS),
+	CMD_NO_STR(VD_GROUP_G_SET_NOACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, STATUS_NONE),
+    CMD_NO_STR(VD_GROUP_G_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_group_g_status, STATUS_NONE),
     #endif
     
     #if SPIRIT_VENDOR_EN
-	{VD_MSG_ATTR_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_msg_attr_get, VD_MSG_ATTR_STS},
-	{VD_MSG_ATTR_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_msg_attr_set, VD_MSG_ATTR_STS},
-	{VD_MSG_ATTR_SET_NACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_msg_attr_set, STATUS_NONE},
-    {VD_MSG_ATTR_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_msg_attr_status, STATUS_NONE},
-    {VD_MSG_ATTR_INDICA, 0, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_msg_attr_indication, VD_MSG_ATTR_CONFIRM},
-    {VD_MSG_ATTR_CONFIRM, 1, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_msg_attr_confirm, STATUS_NONE},
+	CMD_NO_STR(VD_MSG_ATTR_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_msg_attr_get, VD_MSG_ATTR_STS),
+	CMD_NO_STR(VD_MSG_ATTR_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_msg_attr_set, VD_MSG_ATTR_STS),
+	CMD_NO_STR(VD_MSG_ATTR_SET_NACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_msg_attr_set, STATUS_NONE),
+    CMD_NO_STR(VD_MSG_ATTR_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_msg_attr_status, STATUS_NONE),
+    CMD_NO_STR(VD_MSG_ATTR_INDICA, 0, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_msg_attr_indication, VD_MSG_ATTR_CONFIRM),
+    CMD_NO_STR(VD_MSG_ATTR_CONFIRM, 1, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_msg_attr_confirm, STATUS_NONE),
 		#if ALI_MD_TIME_EN
-    {VD_MSG_ATTR_UPD_TIME_REQ, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_msg_attr_upd_time_req, STATUS_NONE},
-    {VD_MSG_ATTR_UPD_TIME_RSP, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_msg_attr_upd_time_rsp, STATUS_NONE},
+    CMD_NO_STR(VD_MSG_ATTR_UPD_TIME_REQ, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_msg_attr_upd_time_req, STATUS_NONE),
+    CMD_NO_STR(VD_MSG_ATTR_UPD_TIME_RSP, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_msg_attr_upd_time_rsp, STATUS_NONE),
 		#endif
     #endif
+
+	#if DU_ENABLE
+	CMD_NO_STR(VD_LPN_REPROT, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_report, VD_LPN_REPROT),
+	CMD_NO_STR(VD_TIME_REQ, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_time_req, STATUS_NONE),
+	CMD_NO_STR(VD_TIME_REQ_ACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_du_time_req_ack, STATUS_NONE),
+	CMD_NO_STR(VD_TIME_CMD, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_du_time_cmd, 0),
+	CMD_NO_STR(VD_TIME_RSP, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_time_cmd_rsp, VD_TIME_RSP),
+	#endif
     
 #elif(VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
     #if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)
-	{VD_EXTEND_CMD0, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, 0, STATUS_NONE},
+	CMD_NO_STR(VD_EXTEND_CMD0, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, 0, STATUS_NONE),
     #elif DRAFT_FEAT_VD_MD_EN
     // add by user
     #elif (DEBUG_VENDOR_CMD_EN)
-	{VD_RC_KEY_REPORT, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_key_report, STATUS_NONE},
+	CMD_NO_STR(VD_RC_KEY_REPORT, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_key_report, STATUS_NONE),
 	
-    {VD_GROUP_G_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, VD_GROUP_G_STATUS},
-	{VD_GROUP_G_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_get, VD_GROUP_G_STATUS},
-	{VD_GROUP_G_SET_NOACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, STATUS_NONE},
-    {VD_GROUP_G_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_group_g_status, STATUS_NONE},
+    CMD_NO_STR(VD_GROUP_G_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, VD_GROUP_G_STATUS),
+	CMD_NO_STR(VD_GROUP_G_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_get, VD_GROUP_G_STATUS),
+	CMD_NO_STR(VD_GROUP_G_SET_NOACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, STATUS_NONE),
+    CMD_NO_STR(VD_GROUP_G_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_group_g_status, STATUS_NONE),
     #endif
         
     #if (FAST_PROVISION_ENABLE)
-	{VD_MESH_RESET_NETWORK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_reset_network, STATUS_NONE},
-	{VD_MESH_ADDR_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_get_addr, VD_MESH_ADDR_GET_STS},
-	{VD_MESH_ADDR_GET_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_mesh_addr_sts, STATUS_NONE},
-	{VD_MESH_ADDR_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_set_addr, VD_MESH_ADDR_SET_STS},
-	{VD_MESH_ADDR_SET_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_mesh_addr_sts, STATUS_NONE},
-    {VD_MESH_PROV_DATA_SET, 1, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_set_provision_data, STATUS_NONE},
-    {VD_MESH_PROV_CONFIRM, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_provision_confirm, VD_MESH_PROV_CONFIRM_STS},
-    {VD_MESH_PROV_CONFIRM_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_mesh_provison_data_sts, STATUS_NONE},
-    {VD_MESH_PROV_COMPLETE, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_provision_complete, STATUS_NONE},
+	CMD_NO_STR(VD_MESH_RESET_NETWORK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_reset_network, STATUS_NONE),
+	CMD_NO_STR(VD_MESH_ADDR_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_get_addr, VD_MESH_ADDR_GET_STS),
+	CMD_NO_STR(VD_MESH_ADDR_GET_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_mesh_addr_sts, STATUS_NONE),
+	CMD_NO_STR(VD_MESH_ADDR_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_set_addr, VD_MESH_ADDR_SET_STS),
+	CMD_NO_STR(VD_MESH_ADDR_SET_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_mesh_addr_sts, STATUS_NONE),
+    CMD_NO_STR(VD_MESH_PROV_DATA_SET, 1, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_set_provision_data, STATUS_NONE),
+    CMD_NO_STR(VD_MESH_PROV_CONFIRM, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_provision_confirm, VD_MESH_PROV_CONFIRM_STS),
+    CMD_NO_STR(VD_MESH_PROV_CONFIRM_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_mesh_provison_data_sts, STATUS_NONE),
+    CMD_NO_STR(VD_MESH_PROV_COMPLETE, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_provision_complete, STATUS_NONE),
 	#else
 		#if DEBUG_CFG_CMD_GROUP_AK_EN
-	{VD_MESH_TRANS_TIME_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_trans_time_get, VD_MESH_TRANS_TIME_STS},
-	{VD_MESH_TRANS_TIME_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_trans_time_set, VD_MESH_TRANS_TIME_STS},
-	{VD_MESH_TRANS_TIME_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_trans_time_sts, STATUS_NONE},
+	CMD_NO_STR(VD_MESH_TRANS_TIME_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_trans_time_get, VD_MESH_TRANS_TIME_STS),
+	CMD_NO_STR(VD_MESH_TRANS_TIME_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_trans_time_set, VD_MESH_TRANS_TIME_STS),
+	CMD_NO_STR(VD_MESH_TRANS_TIME_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_trans_time_sts, STATUS_NONE),
 		#endif
     #endif
     
     #if (LPN_VENDOR_SENSOR_EN)
-    {VD_LPN_SENSOR_GET,0,VENDOR_MD_LIGHT_C,VENDOR_MD_LIGHT_S,cb_vd_lpn_sensor_get,VD_LPN_SENSOR_STATUS},
-    {VD_LPN_SENSOR_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_lpn_sensor_sts, STATUS_NONE},
+    CMD_NO_STR(VD_LPN_SENSOR_GET,0,VENDOR_MD_LIGHT_C,VENDOR_MD_LIGHT_S,cb_vd_lpn_sensor_get,VD_LPN_SENSOR_STATUS),
+    CMD_NO_STR(VD_LPN_SENSOR_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_lpn_sensor_sts, STATUS_NONE),
     #endif
 #endif
 
     USER_MESH_CMD_VD_ARRAY
+};
+
+#if VENDOR_ID_2ND_ENABLE
+mesh_cmd_sig_func_t mesh_cmd_vd_func2[] = {
+	#if (DEBUG_VENDOR_CMD_EN)	
+	CMD_NO_STR(VD_GROUP_G_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, VD_GROUP_G_STATUS),
+	CMD_NO_STR(VD_GROUP_G_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_group_g_status, STATUS_NONE),
+	#endif
+};
+#endif
+
+mesh_vd_func_t mesh_vd_id_func[] = {
+	{VENDOR_ID, (mesh_cmd_sig_func_t *)&mesh_cmd_vd_func, ARRAY_SIZE(mesh_cmd_vd_func)},
+	#if VENDOR_ID_2ND_ENABLE
+	{VENDOR_ID_2ND, (mesh_cmd_sig_func_t *)&mesh_cmd_vd_func2, ARRAY_SIZE(mesh_cmd_vd_func2)},
+	#endif
 };
 
 #if WIN32
@@ -894,16 +985,30 @@ void APP_set_vd_id_mesh_cmd_vd_func(u16 vd_id)
 // don't modify mesh_search_model_id_by_op_vendor()
 int mesh_search_model_id_by_op_vendor(mesh_op_resource_t *op_res, u16 op, u8 tx_flag)
 {
-    foreach_arr(i,mesh_cmd_vd_func){
-        if(op == mesh_cmd_vd_func[i].op){
-            op_res->cb = mesh_cmd_vd_func[i].cb;
-            op_res->op_rsp = mesh_cmd_vd_func[i].op_rsp;
+	mesh_vd_func_t *p_vd_func = 0;
+	foreach_arr(i,mesh_vd_id_func){
+		if(g_msg_vd_id == mesh_vd_id_func[i].vd_id){
+			p_vd_func = &mesh_vd_id_func[i];
+		}
+	}
+
+	if(0== p_vd_func){
+		return -1;
+	}
+	
+    for(u32 i=0; i<p_vd_func->num; i++){
+        if(op == p_vd_func->func[i].op){
+            op_res->cb = p_vd_func->func[i].cb;
+            op_res->op_rsp = p_vd_func->func[i].op_rsp;
             op_res->sig = 0;
-            op_res->status_cmd = mesh_cmd_vd_func[i].status_cmd ? 1 : 0;
+            op_res->status_cmd = p_vd_func->func[i].status_cmd ? 1 : 0;
+            #if LOG_OP_STRING_EN
+            op_res->op_string = p_vd_func->func[i].op_string;
+            #endif
             if(tx_flag){
-                op_res->id = mesh_cmd_vd_func[i].model_id_tx;
+                op_res->id = p_vd_func->func[i].model_id_tx;
             }else{
-                op_res->id = mesh_cmd_vd_func[i].model_id_rx;
+                op_res->id = p_vd_func->func[i].model_id_rx;
             }
             return 0;
         }
@@ -951,7 +1056,7 @@ int vd_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack)
 	vd_light_onoff_set_t par = {0};
 	par.sub_op = onoff;
 	par.tid = 0;
-
+	//vendor opcode with g_vendor_id default, user can set g_msg_vd_id to specify vendor id
 	return SendOpParaDebug(adr_dst, rsp_max, ack ? VD_GROUP_G_SET : VD_GROUP_G_SET_NOACK, 
 						   (u8 *)&par, sizeof(vd_light_onoff_set_t));
 #endif	

@@ -33,7 +33,13 @@
 
 
 #if(AIS_ENABLE)
+	#if DU_ENABLE
+#include "user_du.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
+#define AIS_DEVICE_NAME	"Mesh__Du"
+	#else
 #define AIS_DEVICE_NAME	"Mesh Ali"
+	#endif
 u8 ais_pri_data_set(u8 *p)
 {
 	u8 device_name[]={AIS_DEVICE_NAME};
@@ -119,7 +125,7 @@ void user_node_oob_set()
             u8 oob[16] = {0xff};
 			mesh_set_dev_auth(oob,sizeof(oob));
         }else{
-			u8 oob[16] = {0};
+			u8 oob[32] = {0};
 			if(memcmp(dev_auth, oob, 16)){
 				set_node_prov_para_no_pubkey_static_oob();// static oob
 			}
@@ -131,14 +137,6 @@ void user_node_oob_set()
     }
 }
 
-u8 user_mac_proc()
-{
-	if(AIS_ENABLE && !MI_API_ENABLE){// not need to set the tbl mac address
-		return 1;
-	}else{
-        return 0;
-	}
-}
 
 #if MD_SERVER_EN
 void user_power_on_proc()
@@ -162,9 +160,11 @@ void user_mesh_cps_init()
 {
 	if(AIS_ENABLE){
 		//gp_page0->head.cid = g_vendor_id;     // have been set default value
+		#if !DU_ENABLE
 		gp_page0->head.pid = 0;
 		gp_page0->head.vid = 0x0001;
 		gp_page0->head.crpl = 100;
+		#endif
 	}else{
 	    // use pre-define value
 	}
@@ -184,12 +184,15 @@ void user_set_def_sub_adr()
 
 void user_system_time_proc()
 {
-#if(AIS_ENABLE)
+#if(AIS_ENABLE && !SPIRIT_PRIVATE_LPN_EN)
+	#if !DU_ENABLE
+	// in the du mode ,it will not stop send unprovision beacon 
 	sha256_dev_uuid_str *p_uuid = (sha256_dev_uuid_str *)prov_para.device_uuid;
 	if((p_uuid->adv_flag == 0)&&(clock_time_exceed_s(beacon_send.start_time_s, 10*60))){
 		beacon_send.inter = 60*1000*1000;
 		p_uuid->adv_flag = 1;
 	}
+	#endif
 #endif
 }
 
@@ -197,6 +200,12 @@ void user_system_time_proc()
 int user_node_rc_link_open_callback()
 {
 	#if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE ||MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
+		#if DU_ENABLE
+			#if DU_LPN_EN
+			mi_mesh_state_set(1);
+			#endif
+			update_du_busy_s(60);
+		#endif
 	sha256_dev_uuid_str *p_uuid = (sha256_dev_uuid_str *)prov_para.device_uuid;
 	if(p_uuid->adv_flag){
 		return 0;
@@ -210,8 +219,13 @@ int user_node_rc_link_open_callback()
 void mesh_provision_para_init(u8 *p_random)
 {
 	mesh_provision_para_reset();
+	#if URI_DATA_ADV_ENABLE
+	prov_para.oob_info[0]=BIT(OOB_URI);
+	prov_para.oob_info[1]=0x00;
+	#else
 	prov_para.oob_info[0]=0x00;
 	prov_para.oob_info[1]=0x00;
+	#endif
 	provision_mag.pro_stop_flag = 1;// make the provisioner to initial state to stop
 	//provision_mag.unicast_adr_last =1;
 	prov_para.ele_cnt =1;

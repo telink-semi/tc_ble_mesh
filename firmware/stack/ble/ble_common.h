@@ -551,7 +551,7 @@ typedef struct{
 	u8  rf_len;				//LEN(6)_RFU(2)
 
 	u8	advA[6];			//address
-	#if (MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR)
+	#if (MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR || EXTENDED_ADV_ENABLE)
 	u8  data[249];          // 255 -6(mac)
 	#else
 	u8	data[31];			//0-31 byte

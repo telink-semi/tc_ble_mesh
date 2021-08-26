@@ -102,9 +102,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 			}
 			
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
-			send_to_hci = mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD);
+			send_to_hci = (0 == mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD));
 			#else
-			send_to_hci = app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1);
+			send_to_hci = (0 == app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1));
 			#endif
 		}
 
@@ -479,6 +479,9 @@ void main_loop ()
 
 	////////////////////////////////////// UI entry /////////////////////////////////
 	//  add spp UI task:
+#if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(1);
+#endif
 	proc_ui();
 	proc_led();
 	
@@ -501,6 +504,9 @@ void main_loop ()
 
 void user_init()
 {
+    #if (BATT_CHECK_ENABLE)
+    app_battery_power_check_and_sleep_handle(0); //battery check must do before OTA relative operation
+    #endif
     switch_project_flag = 1;
 	mesh_global_var_init();
 	set_blc_hci_flag_fun(0);// disable the hci part of for the lib .
@@ -600,8 +606,7 @@ void user_init()
 	mesh_scan_rsp_init();
 	my_att_init (provision_mag.gatt_mode);
 	blc_att_setServerDataPendingTime_upon_ClientCmd(10);
-	extern u32 system_time_tick;
-	system_time_tick = clock_time();
+	system_time_init();
 #if (BLT_SOFTWARE_TIMER_ENABLE)
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 1*1000*1000);

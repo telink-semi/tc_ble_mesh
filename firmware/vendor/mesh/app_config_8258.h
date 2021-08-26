@@ -51,7 +51,11 @@ extern "C" {
 #elif DUAL_VENDOR_EN
 #define FLASH_1M_ENABLE         0
 #else
-#define FLASH_1M_ENABLE         0
+	#if MI_API_ENABLE
+#define FLASH_1M_ENABLE        	1
+	#else
+#define FLASH_1M_ENABLE        	0	
+	#endif
 #endif
 
 #if FLASH_1M_ENABLE
@@ -99,7 +103,7 @@ extern "C" {
 #endif
 
 #ifndef HCI_LOG_FW_EN
-#define HCI_LOG_FW_EN   0
+#define HCI_LOG_FW_EN   (0 || DEBUG_LOG_SETTING_DEVELOP_MODE_EN)
 #if HCI_LOG_FW_EN
 	#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 #define DEBUG_INFO_TX_PIN           		(PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1 ? GPIO_PB6 : GPIO_PD7)
@@ -108,6 +112,16 @@ extern "C" {
 	#endif
 #define PRINT_DEBUG_INFO                    1
 #endif
+#endif
+
+#define BATT_CHECK_ENABLE       			1   //must enable
+#if (BATT_CHECK_ENABLE)
+//telink device: you must choose one gpio with adc function to output high level(voltage will equal to vbat), then use adc to measure high level voltage
+	//use PC5 output high level, then adc measure this high level voltage
+	#define GPIO_VBAT_DETECT				GPIO_PC5
+	#define PC5_FUNC						AS_GPIO
+	#define PC5_INPUT_ENABLE				0
+	#define ADC_INPUT_PCHN					C5P    //corresponding  ADC_InputPchTypeDef in adc.h
 #endif
 
 #define ADC_ENABLE		0
@@ -165,7 +179,7 @@ extern "C" {
 #endif
 
 /////////////////// MODULE /////////////////////////////////
-#if (MI_SWITCH_LPN_EN || GATT_LPN_EN)
+#if (MI_SWITCH_LPN_EN || GATT_LPN_EN||DU_LPN_EN)
 #define BLE_REMOTE_PM_ENABLE			1
 #else
 #define BLE_REMOTE_PM_ENABLE			0
