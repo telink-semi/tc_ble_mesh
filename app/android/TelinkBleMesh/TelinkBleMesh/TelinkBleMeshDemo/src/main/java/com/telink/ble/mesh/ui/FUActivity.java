@@ -350,14 +350,17 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     private void startNewUpdating() {
         enableUI(true);
         // for test
-//        readFirmware("/storage/emulated/0/kee/sigMesh/8258_mesh_test_OTA.bin");
-        readFirmware("/storage/emulated/0/kee/sigMesh/20210422_mesh_OTA/8258_mesh_V4.3_for_OTA.bin");
+//        readFirmware("/storage/emulated/0/kee/sigMesh/8258_mesh_test_OTA.bin"); // little
+        readFirmware("/storage/emulated/0/.a0kee/8258_mesh_LPN_noRebootWhenError.bin"); // lpn
+
+//        readFirmware("/storage/emulated/0/kee/sigMesh/20210422_mesh_OTA/8258_mesh_V4.3_for_OTA.bin");
 
 
         infoHandler.obtainMessage(MSG_INFO, "IDLE").sendToTarget();
     }
 
     private void continueFirmwareUpdate() {
+        MeshLogger.d("continue mesh OTA  --- ");
         enableUI(false);
         FUCache fuCache = FUCacheService.getInstance().get();
         if (fuCache == null) {
@@ -378,7 +381,8 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             deviceAdapter.resetDevices(this.updatingDevices);
 
             MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-            FirmwareUpdateConfiguration configuration = new FirmwareUpdateConfiguration(updatingDevices,
+
+            FirmwareUpdateConfiguration configuration = new FirmwareUpdateConfiguration(getUpdatingDevices(),
                     this.firmwareData, this.metadata,
                     meshInfo.getDefaultAppKeyIndex(), MESH_OTA_GROUP_ADDRESS);
             configuration.setUpdatePolicy(updatePolicy);
@@ -396,6 +400,20 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         }
     }
 
+
+    private List<MeshUpdatingDevice> getUpdatingDevices() {
+        List<MeshUpdatingDevice> meshUpdatingDevices = new ArrayList<>();
+        try {
+            for (MeshUpdatingDevice device :
+                    updatingDevices) {
+                meshUpdatingDevices.add((MeshUpdatingDevice) device.clone());
+            }
+            return meshUpdatingDevices;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     private void initView() {
         rv_device = findViewById(R.id.rv_device);
@@ -557,7 +575,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
                 this.metadata = new byte[8];
                 System.arraycopy(this.firmwareData, 2, this.metadata, 0, 4);
 
-                FirmwareUpdateConfiguration configuration = new FirmwareUpdateConfiguration(updatingDevices,
+                FirmwareUpdateConfiguration configuration = new FirmwareUpdateConfiguration(getUpdatingDevices(),
                         this.firmwareData, this.metadata,
                         meshInfo.getDefaultAppKeyIndex(), MESH_OTA_GROUP_ADDRESS);
                 configuration.setUpdatePolicy(updatePolicy);
@@ -619,6 +637,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     }
 
     private void appendLog(String logInfo) {
+        MeshLogger.d("mesh-OTA appendLog: " + logInfo);
         logInfoList.add(new LogInfo("FW-UPDATE", logInfo, MeshLogger.LEVEL_DEBUG));
         runOnUiThread(new Runnable() {
             @Override
@@ -681,12 +700,15 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
                     }
                 }
                 if (updated) {
+                    MeshLogger.d("firmware updated ");
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             deviceAdapter.notifyDataSetChanged();
                         }
                     });
+                } else {
+                    MeshLogger.d("firmware not updated");
                 }
 
             }
@@ -807,7 +829,14 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
     @Override
     public void onDeviceStateUpdate(MeshUpdatingDevice device, String desc) {
-        appendLog("device state update - " + device.meshAddress);
+        appendLog("device state update - adr: " + device.meshAddress + " - state: " + device.state + " - " + desc);
+        for (MeshUpdatingDevice dev : updatingDevices) {
+            if (dev.meshAddress == device.meshAddress) {
+                dev.state = device.state;
+                dev.additionalInformation = device.additionalInformation;
+                break;
+            }
+        }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

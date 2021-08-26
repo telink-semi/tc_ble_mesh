@@ -114,9 +114,12 @@ public class LogActivity extends BaseActivity {
                 SimpleDateFormat mDateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.getDefault());
                 final StringBuilder sb = new StringBuilder("TelinkLog\n");
                 final LogInfo[] logs = MeshLogger.logInfoList.toArray(new LogInfo[]{});
+                System.out.println("logs: " + logs.length);
                 for (LogInfo logInfo : logs) {
-                    sb.append(mDateFormat.format(logInfo.millis)).append("/").append(logInfo.tag).append(":")
-                            .append(logInfo.logMessage).append("\n");
+                    if (logInfo != null) {
+                        sb.append(mDateFormat.format(logInfo.millis)).append("/").append(logInfo.tag).append(":")
+                                .append(logInfo.logMessage).append("\n");
+                    }
                 }
                 saveLogInFile(fileName, sb.toString());
                 mHandler.post(new Runnable() {

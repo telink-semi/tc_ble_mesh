@@ -32,7 +32,7 @@ import java.io.Serializable;
  * Mesh firmware updating device
  * Created by kee on 2019/10/10.
  */
-public class MeshUpdatingDevice implements Serializable, Parcelable {
+public class MeshUpdatingDevice implements Serializable, Parcelable, Cloneable {
 
     public static final int STATE_INITIAL = 0;
 
@@ -89,6 +89,8 @@ public class MeshUpdatingDevice implements Serializable, Parcelable {
 
     public boolean selected = false;
 
+    public boolean isLpn = false;
+
     public MeshUpdatingDevice() {
     }
 
@@ -102,6 +104,7 @@ public class MeshUpdatingDevice implements Serializable, Parcelable {
         isSupported = in.readByte() != 0;
         isOnline = in.readByte() != 0;
         selected = in.readByte() != 0;
+        isLpn = in.readByte() != 0;
     }
 
     public static final Creator<MeshUpdatingDevice> CREATOR = new Creator<MeshUpdatingDevice>() {
@@ -146,5 +149,11 @@ public class MeshUpdatingDevice implements Serializable, Parcelable {
         dest.writeByte((byte) (isSupported ? 1 : 0));
         dest.writeByte((byte) (isOnline ? 1 : 0));
         dest.writeByte((byte) (selected ? 1 : 0));
+        dest.writeByte((byte) (isLpn ? 1 : 0));
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }

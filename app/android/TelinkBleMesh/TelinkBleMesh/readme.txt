@@ -1,3 +1,55 @@
+
+直连节点meshOTA升级时, 强制使用 长包模式, 这样可以快速发包.
+ 例如
+
+
+
+
+
+
+
+
+
+
+
+
+TODO : 1. network transmit , relay, ttl
+
+log 改为默认打开
+
+3.3.2@RC01
+内部测试版本: 添加遥控器设备支持, 包名为 com.telink.ble.mesh.demo.rmt
+    1.  遥控器设备, 添加可以配置 publish client model 功能 , 默认为四个
+    2.  长按 remote, 需要直连到 遥控器设备, 退出后需要断开遥控器设备的连接
+
+3.3.2@RC02
+内部测试版本:  distribute start 指令中的 multicast Address 只有一个节点且为LPN时才设置为0, 其它设置为group address
+
+3.3.2@RC03
+内部测试版本:
+    1. 更新遥控器设备连接规则: 添加MeshAdvFilter选项, 用于只连接nodeIdentity设备;
+    2. 使能页面中modelId 可编辑状态, 并校验modelId是否存在
+
+3.3.2@RC04
+内部测试版本: 0816 10:07
+    1. 直连节点meshOTA升级时, 强制使用 长包模式, 这样可以快速发包. 判断opcode 为 0x7D, 则...
+    2. mesh light verify only 模式失败: 可能是app 发送apply时间早了点, 改为在 多次发送
+    3. blobTransfer 中 TransferMode 如果同时支持 pull, push, 那优先选择push, 并且 chunkSize 强制改为 208
+
+
+/// 添加遥控器设备类型:
+
+
+
+// todo additional info 为 3 时, 不等回读版本号成功
+
+
+// todo meshMessage 中添加对retry 间隔的配置
+
+添加extend bearer
+
+
+// meshOTA
 main activity 中注释了 autoConnect
 meshOTA activity 修改了start方法
 
@@ -31,15 +83,15 @@ mesh OTA 进度:
 3. 需打通 initiator , distributorType , updating nodes 各角色间的消息流转
 4. 流程参考  firmware_update_flow.txt 文件
 
-在 initiator 和 distributorType 中都持有一个BlobTransfer
+在 initiator 和 distributor 中都持有一个BlobTransfer
 
 todo:
 1. MeshOTA 页面中添加 app as distributorType
 2. MeshOTA 页面中检查直连设备设备是否支持 distributorType, 如果设备不支持, 则使用app作为 distributorType
-3. Take Over 接管
 
 
-V3.3.2 (skip V3.3.1 which only update firmware)
+
+V3.3.2 (skip V3.3.1 that only update firmware)
 
 1. Add support for subnet bridge in draft feature;
     draft feature中添加对subnet bridge 支持

@@ -26,26 +26,26 @@ public enum DistributionStatus {
 
     SUCCESS(0x00, "The message was processed successfully"),
 
-    OUT_OF_RESOURCES(0x01, "Insufficient resources on the node"),
+    INSUFFICIENT_RESOURCES(0x01, "Insufficient resources on the node"),
 
-    INVALID_APPKEY_INDEX(0x02, "The AppKey identified by the AppKey Index is not known to the node"),
+    WRONG_PHASE(0x02, "The operation cannot be performed while the server is in the current phase"),
 
-    NODES_LIST_EMPTY(0x03, "There are no Updating nodes in the Nodes List state"),
+    INTERNAL_ERROR(0x03, "An internal error occurred on the node"),
 
 
-    INVALID_PHASE(0x04, "The operation cannot be performed while the server is in the current phase"),
+    FIRMWARE_NOT_FOUND(0x04, "The requested firmware image is not stored on the Distributor"),
 
-    FIRMWARE_NOT_FOUND(0x05, "The requested firmware image is not stored on the Distributor"),
+    INVALID_APPKEY_INDEX(0x05, "The AppKey identified by the AppKey Index is not known to the node"),
 
-    BUSY_WITH_TRANSFER(0x06, "Another upload is in progress"),
+    RECEIVERS_LIST_EMPTY(0x06, "There are no Updating nodes in the Distribution Receivers List state"),
 
-    URI_NOT_SUPPORTED(0x07, "The URI scheme name indicated by the Update URI is not supported"),
+    BUSY_WITH_DISTRIBUTION(0x07, "Another firmware image distribution is in progress"),
 
-    URI_MALFORMED(0x08, "The format of the Update URI is invalid"),
+    BUSY_WITH_UPLOAD(0x08, "Another upload is in progress"),
 
-    DISTRIBUTOR_BUSY(0x09, "Another firmware image distribution is in progress"),
+    URI_NOT_SUPPORTED(0x09, "The URI scheme name indicated by the Update URI is not supported"),
 
-    INTERNAL_ERROR(0x0A, "An internal error occurred on the node"),
+    URI_MALFORMED(0x0A, "The format of the Update URI is invalid"),
 
     UNKNOWN_ERROR(0xFF, "unknown error");
 

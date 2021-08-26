@@ -177,7 +177,7 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 /*if (deviceInfo.compositionData != null){
                     MeshLogger.d("device cps: " + deviceInfo.compositionData.toString());
                 }*/
-//                MeshLogger.d("deviceKey: " + (Arrays.bytesToHexString(deviceInfo.deviceKey)));
+                MeshLogger.d("deviceKey: " + (Arrays.bytesToHexString(deviceInfo.deviceKey)));
                 Intent intent;
                 if (deviceInfo.bound) {
                     // remote control device

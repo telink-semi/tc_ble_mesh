@@ -49,6 +49,7 @@ import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.ui.CompositionDataActivity;
+import com.telink.ble.mesh.ui.DeviceConfigActivity;
 import com.telink.ble.mesh.ui.DeviceOtaActivity;
 import com.telink.ble.mesh.ui.ModelSettingActivity;
 import com.telink.ble.mesh.ui.NodeNetKeyActivity;
@@ -98,7 +99,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         cb_relay.setChecked(deviceInfo.isRelayEnable());
         view.findViewById(R.id.view_cps).setOnClickListener(this);
         view.findViewById(R.id.view_pub).setOnClickListener(this);
-        view.findViewById(R.id.view_relay).setOnClickListener(this);
+        view.findViewById(R.id.view_config).setOnClickListener(this);
         view.findViewById(R.id.view_sub).setOnClickListener(this);
         view.findViewById(R.id.view_ota).setOnClickListener(this);
         view.findViewById(R.id.view_net_key).setOnClickListener(this);
@@ -325,7 +326,8 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                 }
                 break;
 
-            case R.id.view_relay:
+            case R.id.view_config:
+                startActivity(new Intent(getActivity(), DeviceConfigActivity.class).putExtra("meshAddress", deviceInfo.meshAddress));
 //                boolean relayResult = MeshService.getInstance().cfgCmdRelaySet(deviceInfo.meshAddress, deviceInfo.isRelayEnable() ? 0 : 1);
                 // todo mesh interface
                 /*boolean relayResult = MeshService.getInstance().setRelay(deviceInfo.meshAddress, deviceInfo.isRelayEnable() ? 0 : 1, null);

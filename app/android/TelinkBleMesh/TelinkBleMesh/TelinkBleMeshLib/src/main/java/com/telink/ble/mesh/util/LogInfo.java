@@ -29,8 +29,8 @@ import java.io.Serializable;
  */
 
 public class LogInfo implements Serializable {
-    public String tag;
-    public long millis;
+    public String tag = "";
+    public long millis = 0;
     public int level;
     public String logMessage;
     public long threadId;

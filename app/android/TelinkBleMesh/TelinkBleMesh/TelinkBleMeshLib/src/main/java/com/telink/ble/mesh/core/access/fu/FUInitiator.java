@@ -267,6 +267,8 @@ class FUInitiator implements BlobTransferCallback {
                         log("next step: " + (step + 1));
                         step++;
                         nextAction();
+                    } else {
+                        onInitComplete(false, "all device failed when initiate");
                     }
                 } else {
                     int meshAddress = updatingDevices.get(deviceIndex).meshAddress;
@@ -300,8 +302,18 @@ class FUInitiator implements BlobTransferCallback {
                 startMessage.distributionTransferMode = TransferMode.PUSH.value;
                 startMessage.updatePolicy = updatePolicy.value;
                 startMessage.distributionImageIndex = 0;
-                startMessage.distributionMulticastAddress = 0;
-//                startMessage.distributionMulticastAddress = groupAddress;
+
+
+                // !isLpn, 直连 , 不管是pull 还是 push, 都用单播地址, 为了发包更快速
+
+
+                // only one updating device and it is LPN
+                if (updatingDevices.size() == 1 && updatingDevices.get(0).isLpn) {
+                    startMessage.distributionMulticastAddress = 0;
+                } else {
+                    startMessage.distributionMulticastAddress = groupAddress;
+                }
+                log("distribute start address: " + startMessage.distributionMulticastAddress);
                 onMeshMessagePrepared(startMessage);
                 break;
         }

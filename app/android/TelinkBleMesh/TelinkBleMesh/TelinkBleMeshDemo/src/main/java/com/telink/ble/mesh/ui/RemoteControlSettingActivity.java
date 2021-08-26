@@ -37,6 +37,7 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.ConnectionFilter;
+import com.telink.ble.mesh.entity.MeshAdvFilter;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
@@ -124,6 +125,9 @@ public class RemoteControlSettingActivity extends BaseActivity implements EventL
         connSt = STATE_CONNECTING;
         refreshUI();
         ConnectionFilter connectionFilter = new ConnectionFilter(ConnectionFilter.TYPE_MESH_ADDRESS, deviceInfo.meshAddress);
+
+        // remote device only use node identity
+        connectionFilter.advFilter = MeshAdvFilter.NODE_ID_ONLY;
         MeshService.getInstance().startGattConnection(new GattConnectionParameters(connectionFilter));
     }
 

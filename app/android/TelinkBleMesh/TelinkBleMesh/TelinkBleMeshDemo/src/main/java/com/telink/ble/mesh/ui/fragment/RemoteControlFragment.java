@@ -47,6 +47,7 @@ import com.telink.ble.mesh.core.message.lighting.HslSetMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessGetMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessSetMessage;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.ModelPublication;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
@@ -120,9 +121,26 @@ public class RemoteControlFragment extends BaseFragment {
             return;
         }
         int modelId = Integer.valueOf(mdlIdInput, 16);
+        if (!checkModelId(modelId, position)) {
+            Toast.makeText(getActivity(), "model id not exists", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         ModelPublication modelPublication = ModelPublication.createDefault(eleAdr, pubAdr, appKeyIndex, 0, modelId, true);
         ModelPublicationSetMessage publicationSetMessage = new ModelPublicationSetMessage(deviceInfo.meshAddress, modelPublication);
         MeshService.getInstance().sendMeshMessage(publicationSetMessage);
+    }
+
+    private boolean checkModelId(int modelId, int position) {
+        CompositionData.Element element = deviceInfo.compositionData.elements.get(position);
+        for (int mid : element.sigModels) {
+            if (mid == modelId) return true;
+        }
+
+        for (int mid : element.vendorModels) {
+            if (mid == modelId) return true;
+        }
+        return false;
     }
 
 

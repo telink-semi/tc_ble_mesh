@@ -73,6 +73,7 @@ import com.telink.ble.mesh.entity.ConnectionFilter;
 import com.telink.ble.mesh.entity.FastProvisioningConfiguration;
 import com.telink.ble.mesh.entity.FastProvisioningDevice;
 import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
+import com.telink.ble.mesh.entity.MeshAdvFilter;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.entity.ProvisioningDevice;
 import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
@@ -1473,6 +1474,26 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         return false;
     }
 
+    private boolean validateNetworkId(byte[] scanRecord) {
+        MeshScanRecord sr = MeshScanRecord.parseFromBytes(scanRecord);
+        if (sr == null) return false;
+        byte[] serviceData = sr.getServiceData(ParcelUuid.fromString(UUIDInfo.SERVICE_PROXY.toString()));
+        if (serviceData != null && serviceData.length >= 9) {
+            int type = serviceData[0];
+            if (type == PROXY_ADV_TYPE_NETWORK_ID) {
+                // validate network id matches
+                final int networkIdLen = 8;
+                byte[] advertisingNetworkId = new byte[networkIdLen];
+                System.arraycopy(serviceData, 1, advertisingNetworkId, 0, networkIdLen);
+                boolean networkIdCheck = Arrays.equals(networkId, advertisingNetworkId);
+                log("check network id pass? " + networkIdCheck);
+                return networkIdCheck;
+            } else {
+                log("check network id error: not broadcasting network id type");
+            }
+        }
+        return false;
+    }
 
     private boolean validateNodeIdentity(byte[] serviceData) {
         if (this.networkIdentityKey == null || meshConfiguration.deviceKeyMap.size() == 0 || serviceData.length < 17)
@@ -1543,14 +1564,23 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 switch (filter.type) {
                     case ConnectionFilter.TYPE_MESH_ADDRESS:
                         int nodeAddress = (int) filter.target;
-                        long during = System.currentTimeMillis() - lastNodeSetTimestamp;
-                        if (isProxyReconnect && during < TARGET_PROXY_CONNECT_TIMEOUT) {
+                        if (filter.advFilter == MeshAdvFilter.NODE_ID_ONLY) {
                             connectIntent = validateTargetNodeIdentity(scanRecord, nodeAddress);
+                            break;
+                        } else if (filter.advFilter == MeshAdvFilter.NETWORK_ID_ONLY) {
+                            connectIntent = validateNetworkId(scanRecord);
                         } else {
-                            connectIntent = validateProxyAdv(scanRecord);
-                        }
-                        if (connectIntent && directDeviceAddress == nodeAddress) {
-                            reconnectTarget = device;
+                            // any
+                            long during = System.currentTimeMillis() - lastNodeSetTimestamp;
+                            if (isProxyReconnect && during < TARGET_PROXY_CONNECT_TIMEOUT) {
+                                connectIntent = validateTargetNodeIdentity(scanRecord, nodeAddress);
+                            } else {
+                                connectIntent = validateProxyAdv(scanRecord);
+                            }
+                            if (connectIntent && directDeviceAddress == nodeAddress) {
+                                reconnectTarget = device;
+                            }
+
                         }
                         break;
 

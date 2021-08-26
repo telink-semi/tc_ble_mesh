@@ -26,6 +26,7 @@ import android.os.Parcelable;
 
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.StatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.UpdatePhase;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.nio.ByteOrder;
@@ -142,6 +143,7 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
          * Retrieved Update Phase
          * Retrieved Update Phase state of the Updating node
          * 4 bits
+         * @see UpdatePhase
          */
         public byte retrievedUpdatePhase;
         /**

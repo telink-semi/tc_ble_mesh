@@ -97,6 +97,10 @@ public class FUController implements FUActionHandler {
         this.connectedAddress = connectedAddress;
         this.isDirectUpdating = isConnectedNodeUpdating(connectedAddress);
         this.distributorAssist.resetConfig(configuration);
+        if (this.deviceList == null || this.deviceList.size() == 0) {
+            onComplete(false, "device list empty");
+            return;
+        }
         log("FU begin - " + this.updatePolicy + "  isContinue ? " + configuration.isContinue() + " -- " + currentState + " -- " + configuration.toString());
         if (currentState == FUState.IDLE && !configuration.isContinue()) {
             startInitiate();

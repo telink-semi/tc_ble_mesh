@@ -86,7 +86,7 @@ public class SharedPreferenceHelper {
 
     public static boolean isLogEnable(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(KEY_LOG_ENABLE, false);
+        return sharedPreferences.getBoolean(KEY_LOG_ENABLE, true);
     }
 
     public static void setLogEnable(Context context, boolean enable) {

@@ -26,6 +26,7 @@ import android.os.Parcelable;
 
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.StatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.DistributionStatus;
 
 import java.nio.ByteOrder;
 
@@ -42,6 +43,7 @@ public class FDStatusMessage extends StatusMessage implements Parcelable {
      * Status
      * Status Code for the requesting message
      * 8 bits
+     * @see DistributionStatus
      */
     public int status;
 
@@ -49,6 +51,7 @@ public class FDStatusMessage extends StatusMessage implements Parcelable {
      * Distribution Phase
      * Phase of the firmware image distribution
      * 8 bits
+     * @see DistributionPhase
      */
     public int distPhase;
 

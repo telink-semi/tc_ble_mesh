@@ -46,12 +46,11 @@ public class MeshLogger {
 
     public static final int DEFAULT_LEVEL = LEVEL_DEBUG;
 
-    // Logger.getGlobal();
 //    public static Logger logger = Logger.getLogger(GLOBAL_TAG);
 
     private static boolean print = true;
 
-    private static boolean record = false;
+    private static boolean record = true;
 
 
     public static void enableRecord(boolean enable) {

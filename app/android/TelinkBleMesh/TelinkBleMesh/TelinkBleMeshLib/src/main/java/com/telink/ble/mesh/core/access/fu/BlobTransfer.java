@@ -41,6 +41,7 @@ class BlobTransfer {
 
     private final String LOG_TAG = "BlobTransfer";
 
+    private static final long PARTIAL_WAITING_TIMEOUT = 5 * 1000;
 
     /**
      * blob transfer get
@@ -158,6 +159,7 @@ class BlobTransfer {
 
         this.targetDevices.clear();
         this.transferType = type;
+        log("transfer begin: " + type);
         if (type == BlobTransferType.LOCAL_INIT || type == BlobTransferType.GATT_INIT) {
             this.targetDevices.add(new TargetDevice(directAddress));
         } else {
@@ -270,6 +272,7 @@ class BlobTransfer {
                             sendChunks();
                         } else {
                             log("waiting for pull request");
+                            restartParRptWaiting();
                         }
 
                         break;
@@ -285,16 +288,43 @@ class BlobTransfer {
         }
     };
 
+    /**
+     * only used in pull mode
+     * start partial report waiting task when start block send by pull  or received last partial report
+     * if timeout , set state failed
+     */
+    private void restartParRptWaiting() {
+        delayHandler.removeCallbacks(PARTIAL_REPORT_WAITING_TASK);
+        delayHandler.postDelayed(PARTIAL_REPORT_WAITING_TASK, PARTIAL_WAITING_TIMEOUT);
+    }
+
+    /**
+     * only used in pull mode
+     * stop partial report waiting task when block send complete
+     */
+    private void stopParRptWaiting() {
+        delayHandler.removeCallbacks(PARTIAL_REPORT_WAITING_TASK);
+    }
+
+    private final Runnable PARTIAL_REPORT_WAITING_TASK = new Runnable() {
+        @Override
+        public void run() {
+            onTransferComplete(false, "partial report waiting timeout");
+        }
+    };
+
     private void nextAction() {
         int delay;
-        if (transferType == BlobTransferType.LOCAL_INIT) {
+        if (transferType == BlobTransferType.LOCAL_INIT || transferType == BlobTransferType.GATT_DIST) {
             delay = 0;
         } else {
             delay = 300;
         }
+//        delay = 0;
+        log("action: " + getStepDesc(step) + " -- node index -- " + nodeIndex);
         delayHandler.removeCallbacks(ACTION_TASK);
         delayHandler.postDelayed(ACTION_TASK, delay);
-        log("action: " + getStepDesc(step) + " -- node index -- " + nodeIndex);
+
     }
 
     private void onGetBlobBlockComplete() {
@@ -354,7 +384,7 @@ class BlobTransfer {
             return;
         }*/
 
-        meshMessage.setRetryCnt(10);
+        meshMessage.setRetryCnt(10); // ble stack may cache the packets and the mesh message may not receive response , so set retry count larger to wait for longer time
         log("mesh message prepared: " + meshMessage.getClass().getSimpleName()
                 + String.format(" opcode: 0x%04X -- dst: 0x%04X", meshMessage.getOpcode(), meshMessage.getDestinationAddress()));
         if (transferCallback != null) {
@@ -493,7 +523,12 @@ class BlobTransfer {
     }
 
     private int getSegmentLen() {
-        int segLen = extendBearerMode == ExtendBearerMode.NONE ? NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT : NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
+        int segLen;
+        if (transferType == BlobTransferType.GATT_INIT || transferType == BlobTransferType.GATT_DIST) {
+            segLen = NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
+        } else {
+            segLen = extendBearerMode == ExtendBearerMode.NONE ? NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT : NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
+        }
         log("segment len: " + segLen);
         return segLen;
     }
@@ -537,6 +572,8 @@ class BlobTransfer {
             if (transferMode == TransferMode.PUSH) {
                 checkMissingChunks();
             }
+
+            // if pull mode, check
         } else {
             int chunkNumber = missingChunks.get(missingChunkIndex);
             log("send missing chunk at : " + firmwareParser.currentBlockIndex() + " - " + chunkNumber);
@@ -595,7 +632,7 @@ class BlobTransfer {
         // relay 320 ms
         long result;
         if (this.transferType == BlobTransferType.LOCAL_INIT) {
-            result = 5;
+            result = 1;
         } else if (this.transferType == BlobTransferType.GATT_INIT || this.transferType == BlobTransferType.GATT_DIST) {
             if (transferMode == TransferMode.PULL) {
                 result = 10;
@@ -644,7 +681,7 @@ class BlobTransfer {
                 || this.transferType == BlobTransferType.GATT_INIT
                 || this.transferType == BlobTransferType.GATT_DIST) {
             // only one device
-            address = this.targetDevices.get(0).address;
+            address = this.targetDevices.get(0).address; // if long packet , waiting for block ack
         } else {
             if (firmwareParser.getChunkSize() <= 8 && this.targetDevices.size() == 1) {
                 address = this.targetDevices.get(0).address;
@@ -736,9 +773,11 @@ class BlobTransfer {
         final ArrayList<Integer> encodedMissingChunks = reportMessage.getEncodedMissingChunks();
         if (encodedMissingChunks.size() == 0) {
             log("no missing chunks in PartialBlockReport ");
+            stopParRptWaiting();
             pullMaxChunkNumber = 0;
             checkMissingChunks();
         } else {
+            restartParRptWaiting();
             StringBuilder missingDesc = new StringBuilder();
             for (int index : encodedMissingChunks) {
                 missingDesc.append(" -- ").append(index);
@@ -771,6 +810,7 @@ class BlobTransfer {
 
         // use push mode when transfer to direct connected device
         final boolean gattTransfer = this.transferType == BlobTransferType.GATT_DIST || this.transferType == BlobTransferType.GATT_INIT;
+        log("blob info: pushSupported - " + pushSupported + " -- pullSupported: " + pullSupported + " -- gattTransfer: " + gattTransfer);
         if (pullSupported) {
             if (pushSupported) {
                 this.transferMode = gattTransfer ? TransferMode.PUSH : TransferMode.PULL;
@@ -780,12 +820,14 @@ class BlobTransfer {
         } else if (pushSupported) {
             this.transferMode = TransferMode.PUSH;
         }
-
+//        this.transferMode = TransferMode.PULL;
 
         log("refresh transfer mode: " + this.transferMode);
 
+        if (pullSupported && pushSupported && this.transferMode == TransferMode.PUSH) {
+            chunkSize = 208;
+        }
         log("chunk size : " + chunkSize + " block size: " + blockSize);
-
         this.firmwareParser.reset(firmwareData, blockSize, chunkSize);
         nodeIndex++;
         nextAction();

@@ -206,7 +206,7 @@ class FUDistributor implements BlobTransferCallback {
         if (success) {
             nextStep();
         } else {
-            onDistributeComplete(false, "blob transfer fail when distribute");
+            onDistributeComplete(false, "blob transfer fail when distribute - " + desc);
         }
     }
 
@@ -368,6 +368,8 @@ class FUDistributor implements BlobTransferCallback {
 
         if (status != UpdateStatus.SUCCESS) {
             onDeviceFail(nodes.get(nodeIndex), "firmware update status err");
+            nodeIndex++;
+            nextAction();
         } else {
 //            final int step = this.step;
             /*boolean pass = (step == STEP_UPDATE_START && phase == FirmwareUpdateStatusMessage.PHASE_IN_PROGRESS)

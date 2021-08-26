@@ -52,7 +52,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:digits="@string/hex_input"
-                android:enabled="false"
                 android:textSize="@dimen/msg_input_size" />
 
         </LinearLayout>
@@ -86,7 +85,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="TIP: set pubAdr 0 to cancel publication"
+                android:text="TIP: set pubAdr 0 to reset default publication"
                 android:textSize="10sp"
                 android:textStyle="italic" />
 

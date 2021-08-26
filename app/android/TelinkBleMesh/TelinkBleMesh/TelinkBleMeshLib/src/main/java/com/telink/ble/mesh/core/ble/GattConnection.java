@@ -571,12 +571,14 @@ public class GattConnection extends BluetoothGattCallback {
             if (this.mConnectionState != CONN_STATE_CONNECTED)
                 return false;
         }
-        mGattRequestQueue.add(gattRequest);
+        synchronized (mGattRequestQueue) {
+            mGattRequestQueue.add(gattRequest);
+        }
         postRequest();
         return true;
     }
 
-    private void postRequest() {
+    private synchronized void postRequest() {
         synchronized (COMMAND_PROCESSING_LOCK) {
             if (isRequestProcessing) {
                 return;
@@ -908,7 +910,7 @@ public class GattConnection extends BluetoothGattCallback {
                     descriptor.setValue(data);
                     if (!this.mGatt.writeDescriptor(descriptor)) {
                         success = false;
-                        errorMsg = "write characteristic error";
+                        errorMsg = "write descriptor error";
                     }
                 } else {
                     success = false;
@@ -1257,7 +1259,7 @@ public class GattConnection extends BluetoothGattCallback {
                 if (gattRequest != null) {
 
                     boolean retry = onRequestTimeout(gattRequest);
-
+                    log("retry timeout request ? " + retry);
                     if (retry) {
                         processRequest(gattRequest);
                     } else {

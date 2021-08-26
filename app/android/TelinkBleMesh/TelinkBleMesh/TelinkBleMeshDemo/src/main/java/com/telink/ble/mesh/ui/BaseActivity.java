@@ -300,4 +300,11 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
             }
         }
     }
+
+    protected void showItemSelectDialog(String title, String[] items, DialogInterface.OnClickListener onClickListener) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(items, onClickListener);
+        builder.setTitle(title);
+        builder.show();
+    }
 }

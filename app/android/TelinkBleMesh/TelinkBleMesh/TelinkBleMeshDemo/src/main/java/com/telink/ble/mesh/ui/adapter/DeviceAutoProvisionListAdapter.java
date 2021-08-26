@@ -35,6 +35,8 @@ import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.OnlineState;
+import com.telink.ble.mesh.ui.IconGenerator;
 import com.telink.ble.mesh.util.Arrays;
 
 import java.util.List;
@@ -77,12 +79,8 @@ public class DeviceAutoProvisionListAdapter extends BaseRecyclerViewAdapter<Devi
         NetworkingDevice device = mDevices.get(position);
 
         NodeInfo nodeInfo = device.nodeInfo;
-        int iconRes = R.drawable.ic_bulb_on;
-        if (nodeInfo.compositionData != null && nodeInfo.compositionData.lowPowerSupport()) {
-            iconRes = R.drawable.ic_low_power;
-        }
-        holder.iv_device.setImageResource(iconRes);
-
+        int pid = (nodeInfo != null && nodeInfo.compositionData != null) ? nodeInfo.compositionData.pid : 0;
+        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON));
 //        holder.tv_name.setText(mDevices.get(position).getAddress());
         String deviceDesc = mContext.getString(R.string.device_prov_desc, "0x" + String.format("%04X", nodeInfo.meshAddress), Arrays.bytesToHexString(nodeInfo.deviceUUID));
         if (!TextUtils.isEmpty(nodeInfo.macAddress)) {

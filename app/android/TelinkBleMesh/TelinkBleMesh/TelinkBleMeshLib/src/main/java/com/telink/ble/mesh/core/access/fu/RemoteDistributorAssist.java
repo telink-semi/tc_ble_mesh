@@ -45,6 +45,8 @@ public class RemoteDistributorAssist {
 
     private static final long CONFIRM_INTERVAL = 10 * 1000;
 
+    private static final long APPLY_INTERVAL = 10 * 1000;
+
     private int deviceIndex = 0;
 
     private FUActionHandler actionHandler;
@@ -80,11 +82,18 @@ public class RemoteDistributorAssist {
 
 
     void applyDistribute() {
-        log("app all");
+        log("apply distribution");
         step = STEP_DIST_APPLYING;
         deviceIndex = 0;
         executeAction();
     }
+
+    private final Runnable APPLY_TASK = new Runnable() {
+        @Override
+        public void run() {
+            applyDistribute();
+        }
+    };
 
     void confirmDistribute() {
         // check distribute util distribute phase is completed
@@ -153,7 +162,14 @@ public class RemoteDistributorAssist {
     private void onDistributeStatus(NotificationMessage message) {
         if (step == STEP_DIST_APPLYING) {
             FDStatusMessage fdStatusMessage = (FDStatusMessage) message.getStatusMessage();
-            onAssistComplete(fdStatusMessage.status == DistributionStatus.SUCCESS.code, "distribute apply complete");
+            if (fdStatusMessage.status == DistributionStatus.WRONG_PHASE.code && fdStatusMessage.distPhase == DistributionPhase.TRANSFER_ACTIVE.value) {
+                log("waiting for next apply action...");
+                handler.removeCallbacks(APPLY_TASK);
+                handler.postDelayed(APPLY_TASK, APPLY_INTERVAL);
+            } else {
+                onAssistComplete(fdStatusMessage.status == DistributionStatus.SUCCESS.code, "distribute apply complete");
+            }
+
         } else if (step == STEP_DIST_GET) {
             FDStatusMessage fdStatusMessage = (FDStatusMessage) message.getStatusMessage();
             if (fdStatusMessage.status == DistributionStatus.SUCCESS.code) {

@@ -57,11 +57,12 @@ public class DebugActivity extends BaseActivity implements View.OnClickListener 
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_iv:
-//                MeshService.getInstance().ivTest();
+
+
                 break;
 
             case R.id.btn_sno:
-//                MeshService.getInstance().snoTest();
+
                 break;
 
         }

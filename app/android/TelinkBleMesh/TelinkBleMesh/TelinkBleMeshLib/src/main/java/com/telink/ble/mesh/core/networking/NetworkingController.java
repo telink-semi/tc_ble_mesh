@@ -30,6 +30,7 @@ import android.util.SparseLongArray;
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.networking.beacon.MeshBeaconPDU;
 import com.telink.ble.mesh.core.networking.beacon.SecureNetworkBeacon;
 import com.telink.ble.mesh.core.networking.transport.lower.LowerTransportPDU;
@@ -337,7 +338,10 @@ public class NetworkingController {
         return extendBearerMode;
     }
 
-    private int getSegmentAccessLength(int dstAddress) {
+    private int getSegmentAccessLength(int dstAddress, int opcode) {
+        if (dstAddress == directAddress && opcode == Opcode.BLOB_CHUNK_TRANSFER.value) {
+            return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
+        }
         switch (extendBearerMode) {
             case NONE:
                 return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
@@ -484,6 +488,7 @@ public class NetworkingController {
         int dst = meshMessage.getDestinationAddress();
         int src = localAddress;
         int aszmic = meshMessage.getSzmic();
+        int opcode = meshMessage.getOpcode();
         byte akf = meshMessage.getAccessType().akf;
         byte aid;
         if (meshMessage.getAccessType() == AccessType.APPLICATION) {
@@ -505,7 +510,7 @@ public class NetworkingController {
         byte[] accessPduData = accessPDU.toByteArray();
 
 //        boolean segmented = accessPduData.length > UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH;
-        final int segmentLen = getSegmentAccessLength(dst);
+        final int segmentLen = getSegmentAccessLength(dst, opcode);
         boolean segmented = accessPduData.length > segmentLen;
         meshMessage.setSegmented(segmented);
         if (segmented) {
