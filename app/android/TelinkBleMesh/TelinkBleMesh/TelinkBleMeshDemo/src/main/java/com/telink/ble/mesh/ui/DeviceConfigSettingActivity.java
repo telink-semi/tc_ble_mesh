@@ -22,7 +22,6 @@
 package com.telink.ble.mesh.ui;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -30,7 +29,6 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -39,30 +37,18 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.core.message.MeshMessage;
-import com.telink.ble.mesh.core.message.config.DefaultTTLGetMessage;
-import com.telink.ble.mesh.core.message.config.DefaultTTLSetMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
-import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.ReliableMessageProcessEvent;
-import com.telink.ble.mesh.model.ConfigState;
 import com.telink.ble.mesh.model.DeviceConfig;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
-import com.telink.ble.mesh.ui.adapter.DeviceConfigListAdapter;
-import com.telink.ble.mesh.ui.widget.EditableRecyclerView;
-import com.telink.ble.mesh.util.MeshLogger;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * container for device control , group,  device settings
@@ -118,7 +104,7 @@ public class DeviceConfigSettingActivity extends BaseActivity implements EventLi
 
             case RELAY:
 //                initRelayConfigView();
-                initRelayConfigViewSp();
+                initRelayConfigView();
                 break;
 
             case SECURE_NETWORK_BEACON:
@@ -158,21 +144,13 @@ public class DeviceConfigSettingActivity extends BaseActivity implements EventLi
     }
 
 
-    private void initRelayConfigViewSp() {
+    private void initRelayConfigView() {
         LinearLayout parentLayout = findViewById(R.id.ll_parent);
-        View view = LayoutInflater.from(this).inflate(R.layout.layout_cfg_relay_spinner, parentLayout);
+        View view = LayoutInflater.from(this).inflate(R.layout.layout_cfg_relay, parentLayout);
         final String[] RELAY_OPTIONS = new String[]{"Enabled", "Disabled"};
         final int[] selectedIndex = {0};
-        final AppCompatSpinner spinner = view.findViewById(R.id.sp_relay);
-
-        spinner.setDropDownWidth(400);
-        spinner.setDropDownHorizontalOffset(100);
-        spinner.setDropDownVerticalOffset(100);
-        spinner.setSelection(0);
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this,
-                R.layout.layout_config_spinner_item, R.id.tv_name, RELAY_OPTIONS);
-        spinner.setAdapter(spinnerAdapter);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        final AppCompatSpinner spinner = view.findViewById(R.id.sp);
+        initSpinner(spinner, RELAY_OPTIONS, new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 selectedIndex[0] = position;
@@ -193,57 +171,26 @@ public class DeviceConfigSettingActivity extends BaseActivity implements EventLi
         });
     }
 
-    private void initRelayConfigView() {
-        LinearLayout parentLayout = findViewById(R.id.ll_parent);
-        View view = LayoutInflater.from(this).inflate(R.layout.layout_config_relay, parentLayout);
-        final String[] RELAY_OPTIONS = new String[]{"Enabled", "Disabled"};
-        final int[] selectedIndex = {0};
-        final EditText et_input = view.findViewById(R.id.et_input);
-
-        et_input.setText(RELAY_OPTIONS[selectedIndex[0]]);
-        et_input.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showItemSelectDialog("Select Relay Value", RELAY_OPTIONS, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        selectedIndex[0] = which;
-                        et_input.setText(RELAY_OPTIONS[selectedIndex[0]]);
-                    }
-                });
-            }
-        });
-
-        findViewById(R.id.btn_confirm).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(DeviceConfigSettingActivity.this, RELAY_OPTIONS[selectedIndex[0]], Toast.LENGTH_SHORT).show();
-
-            }
-        });
-    }
 
     /**
      * show secure beacon
      */
     private void initBeaconConfigView() {
         LinearLayout parentLayout = findViewById(R.id.ll_parent);
-        View view = LayoutInflater.from(this).inflate(R.layout.layout_config_beacon, parentLayout);
+        View view = LayoutInflater.from(this).inflate(R.layout.layout_cfg_beacon, parentLayout);
         final String[] BEACON_OPTIONS = new String[]{"Open the Broadcasting", "Close the Broadcasting"};
         final int[] selectedIndex = {0};
-        final EditText et_input = view.findViewById(R.id.et_input);
 
-        et_input.setText(BEACON_OPTIONS[selectedIndex[0]]);
-        et_input.setOnClickListener(new View.OnClickListener() {
+        final AppCompatSpinner spinner = view.findViewById(R.id.sp);
+        initSpinner(spinner, BEACON_OPTIONS, new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onClick(View v) {
-                showItemSelectDialog("Select Beacon Value", BEACON_OPTIONS, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        selectedIndex[0] = which;
-                        et_input.setText(BEACON_OPTIONS[selectedIndex[0]]);
-                    }
-                });
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedIndex[0] = position;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
             }
         });
 
@@ -251,7 +198,6 @@ public class DeviceConfigSettingActivity extends BaseActivity implements EventLi
             @Override
             public void onClick(View v) {
                 Toast.makeText(DeviceConfigSettingActivity.this, BEACON_OPTIONS[selectedIndex[0]], Toast.LENGTH_SHORT).show();
-
             }
         });
     }
@@ -259,22 +205,19 @@ public class DeviceConfigSettingActivity extends BaseActivity implements EventLi
 
     private void initProxyConfigView() {
         LinearLayout parentLayout = findViewById(R.id.ll_parent);
-        View view = LayoutInflater.from(this).inflate(R.layout.layout_config_proxy, parentLayout);
+        View view = LayoutInflater.from(this).inflate(R.layout.layout_cfg_proxy, parentLayout);
         final String[] PROXY_OPTIONS = new String[]{"Enabled", "Disabled"};
         final int[] selectedIndex = {0};
-        final EditText et_input = view.findViewById(R.id.et_input);
-
-        et_input.setText(PROXY_OPTIONS[selectedIndex[0]]);
-        et_input.setOnClickListener(new View.OnClickListener() {
+        final AppCompatSpinner spinner = view.findViewById(R.id.sp);
+        initSpinner(spinner, PROXY_OPTIONS, new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onClick(View v) {
-                showItemSelectDialog("Select Relay Value", PROXY_OPTIONS, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        selectedIndex[0] = which;
-                        et_input.setText(PROXY_OPTIONS[selectedIndex[0]]);
-                    }
-                });
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedIndex[0] = position;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
             }
         });
 
@@ -282,14 +225,55 @@ public class DeviceConfigSettingActivity extends BaseActivity implements EventLi
             @Override
             public void onClick(View v) {
                 Toast.makeText(DeviceConfigSettingActivity.this, PROXY_OPTIONS[selectedIndex[0]], Toast.LENGTH_SHORT).show();
-
             }
         });
     }
 
 
+    private void initSingleSettingView(final String[] values) {
+        LinearLayout parentLayout = findViewById(R.id.ll_parent);
+        View view = LayoutInflater.from(this).inflate(R.layout.layout_cfg_proxy, parentLayout);
+        final int[] selectedIndex = {0};
+        final AppCompatSpinner spinner = view.findViewById(R.id.sp);
+        initSpinner(spinner, values, new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedIndex[0] = position;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        findViewById(R.id.btn_confirm).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(DeviceConfigSettingActivity.this, values[selectedIndex[0]], Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
+
+
+
+
     private void showSendWaitingDialog(String message) {
         showWaitingDialog(message);
+    }
+
+
+    private void initSpinner(AppCompatSpinner spinner, String[] values, AdapterView.OnItemSelectedListener itemSelectedListener) {
+        spinner.setDropDownWidth(400);
+        spinner.setDropDownHorizontalOffset(100);
+        spinner.setDropDownVerticalOffset(100);
+        spinner.setSelection(0);
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this,
+                R.layout.layout_config_spinner_item, R.id.tv_name, values);
+        spinner.setAdapter(spinnerAdapter);
+        spinner.setOnItemSelectedListener(itemSelectedListener);
     }
 
     @Override
@@ -346,5 +330,38 @@ public class DeviceConfigSettingActivity extends BaseActivity implements EventLi
         }
 
     }
+
+    /*
+
+    private void initRelayConfigView() {
+        LinearLayout parentLayout = findViewById(R.id.ll_parent);
+        View view = LayoutInflater.from(this).inflate(R.layout.layout_config_relay, parentLayout);
+        final String[] RELAY_OPTIONS = new String[]{"Enabled", "Disabled"};
+        final int[] selectedIndex = {0};
+        final EditText et_input = view.findViewById(R.id.et_input);
+
+        et_input.setText(RELAY_OPTIONS[selectedIndex[0]]);
+        et_input.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showItemSelectDialog("Select Relay Value", RELAY_OPTIONS, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        selectedIndex[0] = which;
+                        et_input.setText(RELAY_OPTIONS[selectedIndex[0]]);
+                    }
+                });
+            }
+        });
+
+        findViewById(R.id.btn_confirm).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(DeviceConfigSettingActivity.this, RELAY_OPTIONS[selectedIndex[0]], Toast.LENGTH_SHORT).show();
+
+            }
+        });
+    }
+     */
 
 }

@@ -99,9 +99,6 @@ public class NodeInfo implements Serializable {
     public CompositionData compositionData = null;
 
 
-    // is relay enabled
-    private boolean relayEnable = true;
-
     /**
      * scheduler
      */
@@ -130,13 +127,35 @@ public class NodeInfo implements Serializable {
     public boolean selected = false;
 
 
-    private OfflineCheckTask offlineCheckTask = new OfflineCheckTask() {
-        @Override
-        public void run() {
-            onlineState = OnlineState.OFFLINE;
-            MeshLogger.log("offline check task running");
-            TelinkMeshApplication.getInstance().dispatchEvent(new NodeStatusChangedEvent(TelinkMeshApplication.getInstance(), NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, NodeInfo.this));
-        }
+    /**
+     * configs
+     */
+
+    // default TTL
+    public byte defaultTTL = 0x0A;
+
+    // is relay enabled
+    public boolean relayEnable = true;
+
+    // relay retransmit, include count and steps
+    public byte relayRetransmit = 0x15;
+
+    // is secure network beacon opened
+    public boolean beaconOpened = true;
+
+    // is gatt proxy enabled
+    public boolean gattProxyEnable = true;
+
+    // is friend enabled
+    public boolean friendEnable = true;
+
+    // network retransmit
+    public byte networkRetransmit = 0x15;
+
+    private OfflineCheckTask offlineCheckTask = (OfflineCheckTask) () -> {
+        onlineState = OnlineState.OFFLINE;
+        MeshLogger.log("offline check task running");
+        TelinkMeshApplication.getInstance().dispatchEvent(new NodeStatusChangedEvent(TelinkMeshApplication.getInstance(), NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, NodeInfo.this));
     };
 
     public OnlineState getOnlineState() {
@@ -175,14 +194,6 @@ public class NodeInfo implements Serializable {
                 handler.postDelayed(offlineCheckTask, timeout);
             }
         }
-    }
-
-    public boolean isRelayEnable() {
-        return relayEnable;
-    }
-
-    public void setRelayEnable(boolean relayEnable) {
-        this.relayEnable = relayEnable;
     }
 
     public Scheduler getSchedulerByIndex(byte index) {

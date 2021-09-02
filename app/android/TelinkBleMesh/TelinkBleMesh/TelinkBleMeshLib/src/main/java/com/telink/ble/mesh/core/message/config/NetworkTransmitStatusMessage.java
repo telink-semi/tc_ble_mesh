@@ -30,12 +30,14 @@ import com.telink.ble.mesh.core.message.StatusMessage;
  * Created by kee on 2019/9/10.
  */
 
+/**
+ * @see com.telink.ble.mesh.core.message.Opcode#CFG_NW_TRANSMIT_STATUS
+ */
 public class NetworkTransmitStatusMessage extends StatusMessage implements Parcelable {
 
-    private int count;
+    public int count;
 
-    private int intervalSteps;
-
+    public int intervalSteps;
 
     public NetworkTransmitStatusMessage() {
     }
@@ -60,7 +62,6 @@ public class NetworkTransmitStatusMessage extends StatusMessage implements Parce
 
     @Override
     public void parse(byte[] data) {
-        int index = 0;
         this.count = data[0] & 0b111;
         this.intervalSteps = (data[0] & 0xFF) >> 3;
     }

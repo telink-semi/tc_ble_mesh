@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     NetworkTransmitSetMessage.java 
+ * @file NetworkTransmitSetMessage.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.config;
 
@@ -34,12 +34,20 @@ public class NetworkTransmitSetMessage extends ConfigMessage {
 
 
     // networkTransmitCount, default is 5
-    private int count;
+    public int count;
 
 
     // networkTransmitIntervalSteps, default is 2
     // transmission interval = (Network Transmit Interval Steps + 1) * 10
-    private int intervalSteps;
+    public int intervalSteps;
+
+    public static NetworkTransmitSetMessage getSimple(int destinationAddress, int count, int intervalSteps) {
+        NetworkTransmitSetMessage message = new NetworkTransmitSetMessage(destinationAddress);
+        message.count = count;
+        message.intervalSteps = intervalSteps;
+        return message;
+    }
+
 
     public NetworkTransmitSetMessage(int destinationAddress) {
         super(destinationAddress);

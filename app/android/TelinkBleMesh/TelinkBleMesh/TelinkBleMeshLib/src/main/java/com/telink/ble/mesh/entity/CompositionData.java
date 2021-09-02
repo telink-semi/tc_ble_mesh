@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     CompositionData.java 
+ * @file CompositionData.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.entity;
 
@@ -246,7 +246,8 @@ public class CompositionData implements Serializable, Parcelable {
          */
         public List<Integer> vendorModels;
 
-        public Element(){}
+        public Element() {
+        }
 
         protected Element(Parcel in) {
             location = in.readInt();
@@ -294,16 +295,20 @@ public class CompositionData implements Serializable, Parcelable {
         for (int i = 0; i < elements.size(); i++) {
             element = elements.get(i);
             elementInfo.append("element ").append(i).append(" : \n");
-            elementInfo.append("SIG\n");
+            elementInfo.append("location: ").append(element.location).append("\n");
+            elementInfo.append("SIG models-").append(element.sigModels.size()).append(":");
             String sig;
             for (int j = 0; j < element.sigModels.size(); j++) {
                 sig = String.format("%04X", element.sigModels.get(j));
-                elementInfo.append(sig).append("\n");
+                elementInfo.append(sig).append(" ");
             }
-            elementInfo.append("VENDOR\n");
+            elementInfo.append("\n");
+//            elementInfo.append("VENDOR\n");
+            elementInfo.append("Vendor models-").append(element.vendorModels.size()).append(":");
             for (int j = 0; j < element.vendorModels.size(); j++) {
-                elementInfo.append(String.format("%08X", element.vendorModels.get(j))).append("\n");
+                elementInfo.append(String.format("%08X", element.vendorModels.get(j))).append("\t");
             }
+            elementInfo.append("\n");
         }
 
         return "CompositionData{" +
@@ -312,7 +317,7 @@ public class CompositionData implements Serializable, Parcelable {
                 ", vid=" + String.format("%04X", vid) +
                 ", crpl=" + String.format("%04X", crpl) +
                 ", features=" + String.format("%04X", features) +
-                ", elements=" + elementInfo +
+                ", elements=\n" + elementInfo +
                 '}';
     }
 }

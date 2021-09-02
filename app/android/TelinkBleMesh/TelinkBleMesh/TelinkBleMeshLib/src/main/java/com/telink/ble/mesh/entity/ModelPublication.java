@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     ModelPublication.java 
+ * @file ModelPublication.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 
 package com.telink.ble.mesh.entity;
@@ -36,7 +36,10 @@ import java.nio.ByteOrder;
  */
 public final class ModelPublication implements Serializable, Parcelable {
 
-    public static final int CREDENTIAL_FLAG_DEFAULT = 0b1;
+    /**
+     * changed from 1 to 0, because of device may not have friend key
+     */
+    public static final int CREDENTIAL_FLAG_DEFAULT = 0b0;
 
     public static final int RFU_DEFAULT = 0x00;
 
@@ -73,6 +76,8 @@ public final class ModelPublication implements Serializable, Parcelable {
 
     /**
      * 1 bit
+     * 0 Master security material is used for Publishing
+     * 1 Friendship security material is used for Publishing， used on LPN
      */
     public int credentialFlag = CREDENTIAL_FLAG_DEFAULT;
 

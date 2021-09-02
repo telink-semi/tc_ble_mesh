@@ -24,6 +24,7 @@ package com.telink.ble.mesh;
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.access.MeshFirmwareParser;
+import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.util.Arrays;
 
 import org.junit.Assert;
@@ -194,7 +195,7 @@ public class MeshTest {
             }
 
             int serialNumber = certificate.getSerialNumber().intValue();
-            if (serialNumber != 4096){
+            if (serialNumber != 4096) {
                 System.out.println("serial number check err");
             }
 
@@ -261,8 +262,11 @@ public class MeshTest {
     }
 
 
-    private void initSign() {
-
+    @Test
+    public void testCpsData() {
+        byte[] bytes = Arrays.hexToBytes("110207003333690007000000100100000200030000120112021200100110031204120512061207120812001101111102000000000A0100100110031204120512061207120812001101111102000000000A0100100110031204120512061207120812001101111102000000000A01001001100312041205120612071208120011011111020000");
+        CompositionData compositionData = CompositionData.from(bytes);
+        System.out.println("cps: " + compositionData.toString());
     }
 
 }

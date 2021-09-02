@@ -96,7 +96,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         cb_pub = view.findViewById(R.id.cb_pub);
         cb_relay = view.findViewById(R.id.cb_relay);
         cb_pub.setChecked(deviceInfo.isPubSet());
-        cb_relay.setChecked(deviceInfo.isRelayEnable());
+        cb_relay.setChecked(deviceInfo.relayEnable);
         view.findViewById(R.id.view_cps).setOnClickListener(this);
         view.findViewById(R.id.view_pub).setOnClickListener(this);
         view.findViewById(R.id.view_config).setOnClickListener(this);

@@ -38,17 +38,17 @@ public class NodeIdentityStatusMessage extends StatusMessage implements Parcelab
     /**
      * 1 byte
      */
-    private int status;
+    public int status;
 
     /**
      * 2 bytes
      */
-    private int netKeyIndex;
+    public int netKeyIndex;
 
     /**
      * 1 byte
      */
-    private int identity;
+    public int identity;
 
     public NodeIdentityStatusMessage() {
     }

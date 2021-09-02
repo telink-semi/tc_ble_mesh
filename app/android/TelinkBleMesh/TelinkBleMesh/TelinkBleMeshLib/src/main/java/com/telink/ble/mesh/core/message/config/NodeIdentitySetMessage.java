@@ -33,9 +33,17 @@ import java.nio.ByteOrder;
 
 public class NodeIdentitySetMessage extends ConfigMessage {
 
-    private int netKeyIndex;
+    public int netKeyIndex;
 
-    private int identity;
+    public byte identity;
+
+
+    public static NodeIdentitySetMessage getSimple(int destinationAddress, int netKeyIndex, byte identity){
+        NodeIdentitySetMessage message = new NodeIdentitySetMessage(destinationAddress);
+        message.netKeyIndex = netKeyIndex;
+        message.identity = identity;
+        return message;
+    }
 
     public NodeIdentitySetMessage(int destinationAddress) {
         super(destinationAddress);
@@ -66,7 +74,7 @@ public class NodeIdentitySetMessage extends ConfigMessage {
         this.netKeyIndex = netKeyIndex;
     }
 
-    public void setIdentity(int identity) {
+    public void setIdentity(byte identity) {
         this.identity = identity;
     }
 }

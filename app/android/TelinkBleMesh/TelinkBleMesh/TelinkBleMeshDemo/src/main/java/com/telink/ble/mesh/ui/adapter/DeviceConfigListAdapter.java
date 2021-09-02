@@ -94,7 +94,7 @@ public class DeviceConfigListAdapter extends BaseRecyclerViewAdapter<DeviceConfi
         holder.tv_cfg_name.setText(deviceConfig.configState.name);
         // "definition" +
         holder.tv_cfg_def.setText(deviceConfig.configState.definition);
-        holder.tv_cfg_val.setText("value: " + deviceConfig);
+        holder.tv_cfg_val.setText("value: " + deviceConfig.desc);
 
         holder.ll_expand.setTag(position);
         Drawable drawable = deviceConfig.expanded ? mContext.getResources().getDrawable(R.drawable.ic_arrow_down) : mContext.getResources().getDrawable(R.drawable.ic_arrow_right);

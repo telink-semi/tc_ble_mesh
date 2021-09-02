@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:padding="8dp"
         android:text="Relay: "
+        android:textColor="@color/colorPrimary"
         android:textSize="12sp" />
 
 </FrameLayout>

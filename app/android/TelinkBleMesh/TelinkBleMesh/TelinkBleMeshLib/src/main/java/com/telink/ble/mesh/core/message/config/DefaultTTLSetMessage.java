@@ -61,12 +61,4 @@ public class DefaultTTLSetMessage extends ConfigMessage {
     public byte[] getParams() {
         return new byte[]{newTTL};
     }
-
-    /**
-     * @deprecated
-     */
-    private boolean isSigModel(int modelIdentifier) {
-        return modelIdentifier <= 0xFFFF;
-    }
-
 }

@@ -24,12 +24,18 @@ package com.telink.ble.mesh.core.message;
 import android.util.SparseArray;
 
 import com.telink.ble.mesh.core.message.config.AppKeyStatusMessage;
+import com.telink.ble.mesh.core.message.config.BeaconStatusMessage;
 import com.telink.ble.mesh.core.message.config.BridgingTableStatusMessage;
 import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
+import com.telink.ble.mesh.core.message.config.DefaultTTLStatusMessage;
+import com.telink.ble.mesh.core.message.config.FriendStatusMessage;
+import com.telink.ble.mesh.core.message.config.GattProxyStatusMessage;
+import com.telink.ble.mesh.core.message.config.KeyRefreshPhaseStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelAppStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelPublicationStatusMessage;
 import com.telink.ble.mesh.core.message.config.ModelSubscriptionStatusMessage;
 import com.telink.ble.mesh.core.message.config.NetKeyStatusMessage;
+import com.telink.ble.mesh.core.message.config.NetworkTransmitStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeIdentityStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
 import com.telink.ble.mesh.core.message.config.SubnetBridgeStatusMessage;
@@ -121,6 +127,14 @@ public class MeshStatus {
 
             register(Opcode.SUBNET_BRIDGE_STATUS.value, SubnetBridgeStatusMessage.class);
             register(Opcode.BRIDGING_TABLE_STATUS.value, BridgingTableStatusMessage.class);
+
+            /// configs
+            register(Opcode.CFG_NW_TRANSMIT_STATUS.value, NetworkTransmitStatusMessage.class);
+            register(Opcode.CFG_BEACON_STATUS.value, BeaconStatusMessage.class);
+            register(Opcode.CFG_DEFAULT_TTL_STATUS.value, DefaultTTLStatusMessage.class);
+            register(Opcode.CFG_FRIEND_STATUS.value, FriendStatusMessage.class);
+            register(Opcode.CFG_GATT_PROXY_STATUS.value, GattProxyStatusMessage.class);
+            register(Opcode.CFG_KEY_REFRESH_PHASE_STATUS.value, KeyRefreshPhaseStatusMessage.class);
 
             // generic
             register(Opcode.G_ONOFF_STATUS.value, OnOffStatusMessage.class);

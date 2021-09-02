@@ -4,30 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
+    android:padding="8dp"
     android:orientation="vertical"
     app:cardCornerRadius="4dp"
     app:cardPreventCornerOverlap="false"
     app:cardUseCompatPadding="true">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/tv_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Relay: "
-            android:textSize="12sp" />
-
-        <androidx.appcompat.widget.AppCompatSpinner
-            android:id="@+id/sp_relay"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-
-    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -36,11 +17,11 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Retransmit Count(3 bits): 0x"
+            android:text="Transmit Count(3 bits): 0x"
             android:textSize="@dimen/info_text_size" />
 
         <EditText
-            android:id="@+id/et_ret_cnt"
+            android:id="@+id/et_trans_cnt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:digits="@string/hex_input"
@@ -55,11 +36,11 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Retransmit Interval Steps(5 bits): 0x"
+            android:text="Transmit Interval Steps(5 bits): 0x"
             android:textSize="@dimen/info_text_size" />
 
         <EditText
-            android:id="@+id/et_ret_step"
+            android:id="@+id/et_trans_step"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:digits="@string/hex_input"
