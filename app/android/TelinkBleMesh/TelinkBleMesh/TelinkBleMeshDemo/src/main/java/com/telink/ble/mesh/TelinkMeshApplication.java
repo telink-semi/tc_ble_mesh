@@ -148,7 +148,7 @@ public class TelinkMeshApplication extends MeshApplication {
         meshInfo.nodes = new ArrayList<>();
         meshInfo.localAddress = 0x0001;
         meshInfo.resetProvisionIndex(2);
-        meshInfo.provisionerUUID = Arrays.bytesToHexString(MeshUtils.generateRandom(16));
+        meshInfo.provisionerUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
 
         meshInfo.groups = new ArrayList<>();
         meshInfo.unicastRange = new ArrayList<>();

@@ -27,11 +27,13 @@ import com.telink.ble.mesh.core.ble.MeshScanRecord;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.util.Arrays;
 
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.UUID;
 
 import androidx.annotation.NonNull;
 
@@ -56,7 +58,6 @@ public final class MeshUtils {
      * if is valued, the message should be recognized as local message, and should not send out
      */
     public static final int LOCAL_MESSAGE_ADDRESS = 0;
-
 
 
     private static SecureRandom rng;
@@ -286,5 +287,27 @@ public final class MeshUtils {
     public static boolean isPvRecordSupported(int oobInfo) {
         return (oobInfo & MeshUtils.bit(8)) != 0;
     }
+
+
+    public static byte[] uuidToByteArray(String uuid) {
+        return  uuidToByteArray(UUID.fromString(uuid));
+    }
+
+
+    public static byte[] uuidToByteArray(UUID uuid) {
+        ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
+        bb.putLong(uuid.getMostSignificantBits());
+        bb.putLong(uuid.getLeastSignificantBits());
+        return bb.array();
+    }
+
+    public static String byteArrayToUuid(byte[] bytes) {
+        ByteBuffer bb = ByteBuffer.wrap(bytes);
+        long high = bb.getLong();
+        long low = bb.getLong();
+        UUID uuid = new UUID(high, low);
+        return uuid.toString();
+    }
+
 
 }

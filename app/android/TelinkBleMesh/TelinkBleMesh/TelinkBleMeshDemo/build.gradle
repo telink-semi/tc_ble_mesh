@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 29
     defaultConfig {
-        applicationId "com.telink.ble.mesh.demo.dle" // for meshOTA dle
+        applicationId "com.telink.ble.mesh.demo" // for meshOTA dle
 //        applicationId "com.telink.ble.mesh.demo.rmt" // for remote
         minSdkVersion 21
         targetSdkVersion 26

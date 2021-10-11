@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     MeshStorage.java 
+ * @file MeshStorage.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.model.json;
 
@@ -30,7 +30,7 @@ import java.util.List;
 
 /**
  * Created by kee on 2018/9/10.
- *
+ * <p>
  * change type of period in publish from integer to object
  * add HeartbeatPublication and HeartbeatSubscription
  */
@@ -64,6 +64,8 @@ public class MeshStorage {
 
     public String timestamp;
 
+    public boolean partial = false;
+
     public List<Provisioner> provisioners;
 
     public List<NetworkKey> netKeys;
@@ -78,6 +80,7 @@ public class MeshStorage {
     public List<Group> groups;
 
     public List<Scene> scenes;
+
 
     /**
      * custom
@@ -159,6 +162,7 @@ public class MeshStorage {
         public String deviceKey;
         public String security;
         public List<NodeKey> netKeys;
+        public boolean excluded = false;
         public boolean configComplete;
         public String name;
         public String cid;
@@ -172,7 +176,7 @@ public class MeshStorage {
         public Transmit relayRetransmit;
         public List<NodeKey> appKeys;
         public List<Element> elements;
-        public boolean blacklisted;
+//        public boolean blacklisted; // removed in R10
 
         // heartbeatPub
         public HeartbeatPublication heartbeatPub;

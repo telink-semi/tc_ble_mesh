@@ -80,7 +80,7 @@
                     style="?android:attr/borderlessButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Set >>"
+                    android:text="Set"
                     android:textColor="@color/colorPrimary" />
             </LinearLayout>
         </LinearLayout>

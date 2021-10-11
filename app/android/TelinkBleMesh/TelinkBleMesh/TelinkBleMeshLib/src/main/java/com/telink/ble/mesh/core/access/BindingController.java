@@ -324,6 +324,7 @@ public class BindingController {
                         }
                     } else {
                         log("model id error");
+                        modelIndex++;
                         bindNextModel();
                     }
                 }

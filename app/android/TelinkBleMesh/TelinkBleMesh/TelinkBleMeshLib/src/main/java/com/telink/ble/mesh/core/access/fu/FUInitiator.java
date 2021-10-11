@@ -491,6 +491,7 @@ class FUInitiator implements BlobTransferCallback {
     }
 
     private void onUploadStatus(FDUploadStatusMessage uploadStatusMessage) {
+        log("upload status: " + uploadStatusMessage.toString());
         if (step != STEP_DST_UPLOAD_START) {
             log("not at STEP_DST_UPLOAD_START");
             return;

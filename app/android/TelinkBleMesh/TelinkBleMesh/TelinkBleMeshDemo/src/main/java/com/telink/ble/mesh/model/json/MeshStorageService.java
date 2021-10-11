@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 public class MeshStorageService {
     private static MeshStorageService instance = new MeshStorageService();
@@ -149,7 +150,7 @@ public class MeshStorageService {
     private MeshStorage meshToJson(MeshInfo mesh, List<MeshNetKey> selectedNetKeys) {
         MeshStorage meshStorage = new MeshStorage();
 
-        meshStorage.meshUUID = Arrays.bytesToHexString(MeshUtils.generateRandom(16), "").toUpperCase();
+        meshStorage.meshUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
 //        long time = MeshUtils.getTaiTime();
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault());
@@ -334,7 +335,7 @@ public class MeshStorageService {
         int maxRangeHigh = -1;
         int tmpHigh;
         for (MeshStorage.Provisioner provisioner : meshStorage.provisioners) {
-            if (mesh.provisionerUUID.equals(provisioner.UUID)) {
+            if (UUID.fromString(mesh.provisionerUUID).equals(UUID.fromString(provisioner.UUID))) {
                 localProvisioner = provisioner;
                 maxRangeHigh = -1;
                 break;
@@ -418,7 +419,9 @@ public class MeshStorageService {
                 if (!isProvisionerNode(meshStorage, node)) {
                     deviceInfo = new NodeInfo();
                     deviceInfo.meshAddress = MeshUtils.hexString2Int(node.unicastAddress, ByteOrder.BIG_ENDIAN);
-                    deviceInfo.deviceUUID = (Arrays.hexToBytes(node.UUID.replace(":", "").replace("-", "")));
+//                    deviceInfo.deviceUUID =  Arrays.hexToBytes(node.UUID.replace(":", "").replace("-", ""));
+                    deviceInfo.deviceUUID = MeshUtils.uuidToByteArray(node.UUID);
+
                     deviceInfo.elementCnt = node.elements == null ? 0 : node.elements.size();
                     deviceInfo.deviceKey = Arrays.hexToBytes(node.deviceKey);
 
@@ -510,7 +513,7 @@ public class MeshStorageService {
     // convert nodeInfo(mesh.java) to node(json)
     public MeshStorage.Node convertDeviceInfoToNode(NodeInfo deviceInfo, int appKeyIndex) {
         MeshStorage.Node node = new MeshStorage.Node();
-        node.UUID = Arrays.bytesToHexString(deviceInfo.deviceUUID).toUpperCase();
+        node.UUID = MeshUtils.byteArrayToUuid(deviceInfo.deviceUUID);
         node.unicastAddress = String.format("%04X", deviceInfo.meshAddress);
 
         if (deviceInfo.deviceKey != null) {
@@ -753,7 +756,7 @@ public class MeshStorageService {
     // check if node is provisioner
     private boolean isProvisionerNode(MeshStorage meshStorage, MeshStorage.Node node) {
         for (MeshStorage.Provisioner provisioner : meshStorage.provisioners) {
-            if (provisioner.UUID.equals(node.UUID)) {
+            if (UUID.fromString(provisioner.UUID).equals(UUID.fromString(node.UUID))) {
                 return true;
             }
         }

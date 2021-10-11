@@ -422,7 +422,7 @@ public class MeshInfo implements Serializable, Cloneable {
         meshInfo.provisionIndex = DEFAULT_LOCAL_ADDRESS + 1; // 0x0002
 
 //        meshInfo.provisionerUUID = SharedPreferenceHelper.getLocalUUID(context);
-        meshInfo.provisionerUUID = Arrays.bytesToHexString(MeshUtils.generateRandom(16));
+        meshInfo.provisionerUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
 
         meshInfo.groups = new ArrayList<>();
         meshInfo.unicastRange = new ArrayList<>();
