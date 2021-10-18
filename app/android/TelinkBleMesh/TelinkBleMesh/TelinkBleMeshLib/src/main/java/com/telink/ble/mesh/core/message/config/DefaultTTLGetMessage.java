@@ -28,6 +28,8 @@ import java.nio.ByteOrder;
 
 /**
  * The Config Default TTL Get is an acknowledged message used to get the current Default TTL state of a node.
+ * <p>
+ * The response to a Config Default TTL Get message is a Config Default TTL Status message {@link DefaultTTLStatusMessage}.
  */
 public class DefaultTTLGetMessage extends ConfigMessage {
 

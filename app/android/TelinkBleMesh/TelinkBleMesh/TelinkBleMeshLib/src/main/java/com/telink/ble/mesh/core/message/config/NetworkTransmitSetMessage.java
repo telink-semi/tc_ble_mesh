@@ -27,9 +27,7 @@ import com.telink.ble.mesh.core.message.Opcode;
  * set network transmit params
  * Network transmit params are used when node sending network pdu from self -- source address is self --
  * Meanwhile relay params are used when relay network pdu, generally smaller than network transmit
- * Created by kee on 2020/03/20.
  */
-
 public class NetworkTransmitSetMessage extends ConfigMessage {
 
 

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DefaultTTLGetMessage.java
+ * @file BeaconGetMessage.java
  *
  * @brief for TLSR chips
  *

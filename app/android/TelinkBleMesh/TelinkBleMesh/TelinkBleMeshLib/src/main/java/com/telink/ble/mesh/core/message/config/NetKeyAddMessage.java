@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file AppKeyAddMessage.java
+ * @file NetKeyAddMessage.java
  *
  * @brief for TLSR chips
  *
@@ -27,7 +27,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * Created by kee on 2019/8/12.
+ * The Config NetKey Add is an acknowledged message used to add a NetKey to a NetKey List on a node.
+ * The added NetKey is then used by the node to authenticate and decrypt messages it receives, as well as authenticate and encrypt messages it sends.
+ *
+ * The response to a Config NetKey Add message is a Config NetKey Status message.
+ *
  */
 
 public class NetKeyAddMessage extends ConfigMessage {

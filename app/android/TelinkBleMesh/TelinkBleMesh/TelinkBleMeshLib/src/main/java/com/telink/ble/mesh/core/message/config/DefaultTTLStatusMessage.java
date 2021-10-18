@@ -38,7 +38,9 @@ import java.nio.ByteOrder;
  */
 public class DefaultTTLStatusMessage extends StatusMessage implements Parcelable {
 
-
+    /**
+     * Default TTL
+     */
     public byte ttl;
 
 

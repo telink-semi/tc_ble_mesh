@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     NodeResetMessage.java 
+ * @file NodeResetMessage.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,15 +17,16 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.config;
 
 import com.telink.ble.mesh.core.message.Opcode;
 
 /**
- * Node reset
- * Created by kee on 2019/8/12.
+ * The Config Node Reset is an acknowledged message used to reset a node (other than a Provisioner) and remove it from the network.
+ * <p>
+ * The response to a Config Node Reset message is a Config Node Reset Status message.
  */
 
 public class NodeResetMessage extends ConfigMessage {

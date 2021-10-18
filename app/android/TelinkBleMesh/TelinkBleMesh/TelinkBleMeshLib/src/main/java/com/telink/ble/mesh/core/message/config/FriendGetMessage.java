@@ -25,6 +25,9 @@ import com.telink.ble.mesh.core.message.Opcode;
 
 /**
  * The Config Friend Get is an acknowledged message used to get the current Friend state of a node
+ * <p>
+ * The response to a Config Friend Get message is a Config Friend Status message.
+ * {@link FriendStatusMessage}
  */
 public class FriendGetMessage extends ConfigMessage {
 

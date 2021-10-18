@@ -3,12 +3,12 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 29
     defaultConfig {
-        applicationId "com.telink.ble.mesh.demo" // for meshOTA dle
+        applicationId "com.telink.ble.mesh.demo.rels" // for meshOTA dle
 //        applicationId "com.telink.ble.mesh.demo.rmt" // for remote
         minSdkVersion 21
         targetSdkVersion 26
         versionCode 3
-        versionName "3.3.2@RC04"
+        versionName "3.3.2@RC05" // RC05 for release test 1011
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

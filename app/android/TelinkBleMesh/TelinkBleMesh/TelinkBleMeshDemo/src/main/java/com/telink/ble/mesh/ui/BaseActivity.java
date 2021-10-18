@@ -112,13 +112,10 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
 
     public void toastMsg(CharSequence s) {
         if (this.toast != null) {
-//            if (this.toast.)
-//            this.toast.cancel();
-            this.toast.setView(this.toast.getView());
-            this.toast.setDuration(Toast.LENGTH_SHORT);
-            this.toast.setText(s);
-            this.toast.show();
+            this.toast.cancel();
         }
+        this.toast = Toast.makeText(this, s, Toast.LENGTH_SHORT);
+        this.toast.show();
     }
 
     public void showConfirmDialog(String msg, DialogInterface.OnClickListener confirmClick) {

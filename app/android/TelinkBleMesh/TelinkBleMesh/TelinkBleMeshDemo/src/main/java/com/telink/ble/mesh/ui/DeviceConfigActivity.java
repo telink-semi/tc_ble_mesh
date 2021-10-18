@@ -136,6 +136,10 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
         TelinkMeshApplication.getInstance().addEventListener(KeyRefreshPhaseStatusMessage.class.getName(), this);
 
         TelinkMeshApplication.getInstance().addEventListener(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_COMPLETE, this);
+
+        TelinkMeshApplication.getInstance().addEventListener(RelayStatusMessage.class.getName(), this);
+        TelinkMeshApplication.getInstance().addEventListener(NodeIdentityStatusMessage.class.getName(), this);
+
         refreshUI();
     }
 
@@ -230,9 +234,11 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
             case DEFAULT_TTL:
                 meshMessage = new DefaultTTLGetMessage(adr);
                 break;
+
             case RELAY:
                 meshMessage = new RelayGetMessage(adr);
                 break;
+
             case SECURE_NETWORK_BEACON:
                 meshMessage = new BeaconGetMessage(adr);
                 break;
@@ -242,7 +248,7 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
                 break;
 
             case NODE_IDENTITY:
-                meshMessage = new NodeIdentityGetMessage(adr);
+                meshMessage = new NodeIdentityGetMessage(adr, netKeyIndex);
                 break;
 
             case FRIEND:
@@ -252,7 +258,6 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
             case KEY_REFRESH_PHASE:
                 meshMessage = KeyRefreshPhaseGetMessage.getSimple(adr, netKeyIndex);
                 break;
-
 
             case NETWORK_TRANSMIT:
                 meshMessage = new NetworkTransmitGetMessage(adr);
@@ -363,9 +368,9 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
             }
             int steps = Integer.parseInt(stepInput);
 
-
+            byte value = (byte) (selectedIndex[0] == 0 ? 1 : 0);
             RelaySetMessage setMessage = RelaySetMessage.getSimple(deviceInfo.meshAddress,
-                    (byte) selectedIndex[0], (byte) count, (byte) steps);
+                    value, (byte) count, (byte) steps);
             boolean cmdSent = MeshService.getInstance().sendMeshMessage(setMessage);
             if (cmdSent) {
                 showSendWaitingDialog("setting Relay ...");

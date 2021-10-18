@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file ModelAppStatusMessage.java
+ * @file BeaconStatusMessage.java
  *
  * @brief for TLSR chips
  *
@@ -30,8 +30,8 @@ import com.telink.ble.mesh.core.message.StatusMessage;
  * The Config Beacon Status is an unacknowledged message used to report the current Secure Network Beacon state of a node
  * <p>
  * response of {@link BeaconGetMessage} {@link BeaconSetMessage}
- *
- * @see com.telink.ble.mesh.core.message.Opcode#CFG_BEACON_STATUS
+ * <p>
+ * {@link com.telink.ble.mesh.core.message.Opcode#CFG_BEACON_STATUS}
  */
 public class BeaconStatusMessage extends StatusMessage implements Parcelable {
 
