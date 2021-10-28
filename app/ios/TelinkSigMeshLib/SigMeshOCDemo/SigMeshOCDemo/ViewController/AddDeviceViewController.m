@@ -58,6 +58,11 @@
     self.goBackButton.enabled = NO;
     [self.goBackButton setBackgroundColor:[UIColor lightGrayColor]];
     NSData *key = [SigDataSource.share curNetKey];
+    if (SigDataSource.share.curNetkeyModel.phase == distributingKeys) {
+        if (SigDataSource.share.curNetkeyModel.oldKey) {
+            key = [LibTools nsstringToHex:SigDataSource.share.curNetkeyModel.oldKey];
+        }
+    }
     UInt16 provisionAddress = [SigDataSource.share provisionAddress];
 
     if (provisionAddress == 0) {
@@ -67,7 +72,7 @@
     
     __weak typeof(self) weakSelf = self;
     NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
-    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
         TeLogVerbose(@"successful=%d",successful);
         if (successful) {
             TeLogInfo(@"stop mesh success.");
@@ -86,6 +91,11 @@
             } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                 if (identify && address != 0) {
                     currentProvisionAddress = address;
+                    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
+                    if (node && node.isRemote) {
+                        [node addDefaultPublicAddressToRemote];
+                        [SigDataSource.share saveLocationData];
+                    }
                     [weakSelf updateDeviceKeyBind:currentAddUUID address:currentProvisionAddress isSuccess:YES];
                     TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
                 }
@@ -94,7 +104,7 @@
                 TeLogInfo(@"addDevice keybind fail error:%@",error);
             } finish:^{
                 TeLogInfo(@"addDevice finish.");
-                [SigBearer.share startMeshConnectWithComplete:nil];
+                [SDKLibCommand startMeshConnectWithComplete:nil];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [weakSelf addDeviceFinish];
                 });
@@ -137,6 +147,7 @@
         scanModel = [[SigScanRspModel alloc] init];
         scanModel.uuid = uuid;
     }
+    scanModel.address = 0;
     model.scanRspModel = scanModel;
 //    model.scanRspModel.address = address;
     model.state = AddDeviceModelStateProvisionFail;
@@ -174,7 +185,7 @@
 
 - (IBAction)clickGoBack:(UIButton *)sender {
 //    __weak typeof(self) weakSelf = self;
-//    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+//    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
 //        dispatch_async(dispatch_get_main_queue(), ^{
 //            [weakSelf.navigationController popViewControllerAnimated:YES];
 //        });

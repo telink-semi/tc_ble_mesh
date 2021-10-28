@@ -30,7 +30,17 @@
 #import <Foundation/Foundation.h>
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigNetkeyDerivaties,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel;
+
+#define OP_TYPE_SIG1         1
+#define OP_TYPE_SIG2         2
+#define OP_TYPE_VENDOR         3
+#define BIT(n)                          ( 1<<(n) )
+#define SIZE_OF_OP(op)    ((op & BIT(7)) ? ((op & BIT(6)) ? OP_TYPE_VENDOR : OP_TYPE_SIG2) : OP_TYPE_SIG1)
+#define GET_OP_TYPE(op)    (SIZE_OF_OP(op))
+#define IS_VENDOR_OP(op)    (GET_OP_TYPE(op) == OP_TYPE_VENDOR)
+
+
+@class SigNetkeyDerivaties,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel,SigMeshAddress;
 typedef void(^BeaconBackCallBack)(BOOL available);
 typedef void(^responseAllMessageBlock)(UInt16 source,UInt16 destination,SigMeshMessage *responseMessage);
 
@@ -116,7 +126,7 @@ typedef void(^bleDidWriteValueForCharacteristicCallback)(CBPeripheral *periphera
 @property (nonatomic, assign) UInt16 address;
 @property (nonatomic, strong) NSString *advName;//广播包中的CBAdvertisementDataLocalNameKey
 @property (nonatomic, strong) NSString *advUuid;//未添加的设备广播包中的CBAdvertisementDataServiceDataKey中的UUID（bytes:0-15），cid和pid为其前四个字节
-@property (nonatomic, assign) OobInformation advOobInformation;//未添加的设备广播包中的CBAdvertisementDataServiceDataKey中的oob信息（bytes:16-17）
+@property (nonatomic, assign) struct OobInformation advOobInformation;//未添加的设备广播包中的CBAdvertisementDataServiceDataKey中的oob信息（bytes:16-17）
 @property (nonatomic, strong) NSDictionary<NSString *,id> *advertisementData;//扫描到的蓝牙设备广播包完整数据
 @property (nonatomic, assign) BOOL provisioned;//YES表示已经入网。
 
@@ -129,7 +139,7 @@ typedef void(^bleDidWriteValueForCharacteristicCallback)(CBPeripheral *periphera
 @property (nonatomic, assign) UInt16 reportNodeAddress;
 @property (nonatomic, strong) NSData *reportNodeUUID;
 @property (nonatomic, assign) int RSSI;//负值
-@property (nonatomic, assign) OobInformation oob;
+@property (nonatomic, assign) struct OobInformation oob;
 @property (nonatomic, strong) NSString *macAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 //- (instancetype)initWithPar:(UInt8 *)par len:(UInt8)len;
@@ -175,6 +185,7 @@ typedef void(^bleDidWriteValueForCharacteristicCallback)(CBPeripheral *periphera
 static Byte CTByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x00, (Byte) 0x32, (Byte) 0x37, (Byte) 0x69, (Byte) 0x00, (Byte) 0x07, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x19, (Byte) 0x01, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x03, (Byte) 0x00, (Byte) 0x04, (Byte) 0x00, (Byte) 0x05, (Byte) 0x00, (Byte) 0x00, (Byte) 0xfe, (Byte) 0x01, (Byte) 0xfe, (Byte) 0x02, (Byte) 0xfe, (Byte) 0x00, (Byte) 0xff, (Byte) 0x01, (Byte) 0xff, (Byte) 0x00, (Byte) 0x12, (Byte) 0x01, (Byte) 0x12, (Byte) 0x00, (Byte) 0x10, (Byte) 0x02, (Byte) 0x10, (Byte) 0x04, (Byte) 0x10, (Byte) 0x06, (Byte) 0x10, (Byte) 0x07, (Byte) 0x10, (Byte) 0x03, (Byte) 0x12, (Byte) 0x04, (Byte) 0x12, (Byte) 0x06, (Byte) 0x12, (Byte) 0x07, (Byte) 0x12, (Byte) 0x00, (Byte) 0x13, (Byte) 0x01, (Byte) 0x13, (Byte) 0x03, (Byte) 0x13, (Byte) 0x04, (Byte) 0x13, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x02, (Byte) 0x10, (Byte) 0x06, (Byte) 0x13};
 static Byte HSLByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x02, (Byte) 0x00, (Byte) 0x33, (Byte) 0x33, (Byte) 0x69, (Byte) 0x00, (Byte) 0x07, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x0E, (Byte) 0x01, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x03, (Byte) 0x00, (Byte) 0x00, (Byte) 0xFE, (Byte) 0x00, (Byte) 0xFF, (Byte) 0x00, (Byte) 0x10, (Byte) 0x02, (Byte) 0x10, (Byte) 0x04, (Byte) 0x10, (Byte) 0x06, (Byte) 0x10, (Byte) 0x07, (Byte) 0x10, (Byte) 0x00, (Byte) 0x13, (Byte) 0x01, (Byte) 0x13, (Byte) 0x07, (Byte) 0x13, (Byte) 0x08, (Byte) 0x13, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x02, (Byte) 0x10, (Byte) 0x0A, (Byte) 0x13, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x02, (Byte) 0x10, (Byte) 0x0B, (Byte) 0x13};
 static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (Byte) 0x32, (Byte) 0x37, (Byte) 0x69, (Byte) 0x00, (Byte) 0x07, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x03, (Byte) 0x00, (Byte) 0x04, (Byte) 0x00, (Byte) 0x05, (Byte) 0x00, (Byte) 0x00, (Byte) 0xfe, (Byte) 0x01, (Byte) 0xfe, (Byte) 0x02, (Byte) 0xfe, (Byte) 0x00, (Byte) 0xff, (Byte) 0x01, (Byte) 0xff, (Byte) 0x00, (Byte) 0x12, (Byte) 0x01, (Byte) 0x12, (Byte) 0x00, (Byte) 0x10, (Byte) 0x03, (Byte) 0x12, (Byte) 0x04, (Byte) 0x12, (Byte) 0x06, (Byte) 0x12, (Byte) 0x07, (Byte) 0x12, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00, (Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x05, (Byte) 0x01, (Byte) 0x00, (Byte) 0x10, (Byte) 0x03, (Byte) 0x12, (Byte) 0x04, (Byte) 0x12, (Byte) 0x06, (Byte) 0x12, (Byte) 0x07, (Byte) 0x12, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x05, (Byte) 0x01, (Byte) 0x00, (Byte) 0x10, (Byte) 0x03, (Byte) 0x12, (Byte) 0x04, (Byte) 0x12, (Byte) 0x06, (Byte) 0x12, (Byte) 0x07, (Byte) 0x12, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00};
+static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (Byte) 0x33, (Byte) 0x33, (Byte) 0x69, (Byte) 0x00, (Byte) 0x0a, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x05, (Byte) 0x01, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x03, (Byte) 0x00, (Byte) 0x00, (Byte) 0x10, (Byte) 0x02, (Byte) 0x10, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00};
 
 @interface DeviceTypeModel : SigModel
 @property (nonatomic, assign) UInt16 CID;
@@ -183,6 +194,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 - (instancetype)initWithCID:(UInt16)cid PID:(UInt16)pid;
 - (instancetype)initWithCID:(UInt16)cid PID:(UInt16)pid compositionData:(NSData *)cpsData;
+- (void)setCompositionData:(NSData *)compositionData;
 
 @end
 
@@ -205,14 +217,6 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @end
 
 
-#define OP_TYPE_SIG1         1
-#define OP_TYPE_SIG2         2
-#define OP_TYPE_VENDOR         3
-#define BIT(n)                          ( 1<<(n) )
-#define SIZE_OF_OP(op)    ((op & BIT(7)) ? ((op & BIT(6)) ? OP_TYPE_VENDOR : OP_TYPE_SIG2) : OP_TYPE_SIG1)
-#define GET_OP_TYPE(op)    (SIZE_OF_OP(op))
-#define IS_VENDOR_OP(op)    (GET_OP_TYPE(op) == OP_TYPE_VENDOR)
-
 /// sig model struct: mesh_bulk_cmd_par_t, vendor model struct: mesh_vendor_par_ini_t. It is sig model command when vendorId is 0, and It is vendor model command when vendorId isn't 0. sig model config: netkeyIndex, appkeyIndex, retryCount, responseMax, address, opcode, commandData.
 @interface IniCommandModel : SigModel
 @property (nonatomic, assign) UInt16 netkeyIndex;
@@ -220,24 +224,30 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic, assign) UInt8 retryCount;// only for reliable command
 @property (nonatomic, assign) UInt8 responseMax;// only for reliable command
 @property (nonatomic, assign) UInt16 address;
+@property (nonatomic, strong) SigMeshAddress *meshAddressModel;// may be Uint16 or 16 bytes Label UUID.
 @property (nonatomic, assign) UInt16 opcode;// SigGenericOnOffSet:0x8202. SigGenericOnOffSetUnacknowledged:0x8203. VendorOnOffSet:0xC4, VendorOnOffSetUnacknowledged:0xC3.
 @property (nonatomic, assign) UInt16 vendorId;// 0 means sig model command, other means vendor model command.
 @property (nonatomic, assign) UInt8 responseOpcode;// response of VendorOnOffSet:0xC4.
 @property (nonatomic, assign) BOOL needTid;
+@property (nonatomic, assign) UInt8 tidPosition;
 @property (nonatomic, assign) UInt8 tid;
 @property (nonatomic, strong, nullable) NSData *commandData;//max length is MESH_CMD_ACCESS_LEN_MAX. SigGenericOnOffSet: commandData of turn on without TransitionTime and delay is {0x01,0x00,0x00}. commandData of turn off without TransitionTime and delay is {0x00,0x00,0x00}
 
 @property (nonatomic, copy) responseAllMessageBlock responseCallBack;
 @property (nonatomic, assign) BOOL hasReceiveResponse;
 
-@property (nonatomic,strong) SigNetkeyModel *netkeyA;
-@property (nonatomic,strong) SigAppkeyModel *appkeyA;
-@property (nonatomic,strong) SigIvIndex *ivIndexA;
+//这3个参数的作用是配置当前SDKLibCommand指令实际使用到的key和ivIndex，只有fastProvision流程使用了特殊的key和ivIndex，其它指令使用默认值。
+@property (nonatomic,strong) SigNetkeyModel *curNetkey;
+@property (nonatomic,strong) SigAppkeyModel *curAppkey;
+@property (nonatomic,strong) SigIvIndex *curIvIndex;
 @property (nonatomic,assign) NSTimeInterval timeout;
+
+@property (nonatomic,assign) BOOL isEncryptByDeviceKey;// default is NO.
 
 /// create sig model ini command
 - (instancetype)initSigModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt16)opcode commandData:(NSData *)commandData;
 /// create vebdor model ini command
+- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode tidPosition:(UInt8)tidPosition tid:(UInt8)tid commandData:(nullable NSData *)commandData;
 - (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode needTid:(BOOL)needTid tid:(UInt8)tid commandData:(nullable NSData *)commandData;
 /// create model by ini data
 /// @param iniCommandData ini data, eg: "a3ff000000000200ffffc21102c4020100"
@@ -391,7 +401,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 /// An integer 0 o 1 that represents whether master security (0) materials or friendship security material (1) are used.
 @property (nonatomic,assign) int credentials;
 /// The object describes the number of times a message is published and the interval between retransmissions of the published message.
-@property (nonatomic,strong) SigRetransmit *retransmit;
+@property (nonatomic,strong)  SigRetransmit *retransmit;
 
 /// Creates an instance of Publish object.
 /// @param stringDestination The publication address.
@@ -553,6 +563,12 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 @property (nonatomic, strong) NSMutableArray <SigRangeModel *>*allocatedUnicastRange;
 
+/*JSON中存储格式为：
+ "standardUUID": {
+ "type": "string",
+ "name": "UUID",
+ "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}
+ */
 @property (nonatomic, copy) NSString *UUID;
 
 @property (nonatomic, copy) NSString *provisionerName;
@@ -561,13 +577,13 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 
 /**
- create new provisioner by count of exist provisioners.
+ create new provisioner by count of exist provisioners.（已弃用，请使用'initWithExistProvisionerMaxHighAddressUnicast:andProvisionerUUID:'）
 
  @param count count of exist provisioners
  @param provisionerUUID new provisioner's uuid
  @return SigProvisionerModel model
  */
--(instancetype)initWithExistProvisionerCount:(UInt16)count andProvisionerUUID:(NSString *)provisionerUUID;
+-(instancetype)initWithExistProvisionerCount:(UInt16)count andProvisionerUUID:(NSString *)provisionerUUID DEPRECATED_MSG_ATTRIBUTE("Use 'initWithExistProvisionerMaxHighAddressUnicast:andProvisionerUUID:' instead");;
 
 - (instancetype)initWithExistProvisionerMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast andProvisionerUUID:(NSString *)provisionerUUID;
 
@@ -589,6 +605,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 - (NSDictionary *)getDictionaryOfSigRangeModel;
 - (void)setDictionaryToSigRangeModel:(NSDictionary *)dictionary;
+- (instancetype)initWithMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast;
 
 @end
 
@@ -633,7 +650,8 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 @property (nonatomic, copy) NSString *name;
 
-@property (nonatomic, assign) NSInteger number;
+//@property (nonatomic, assign) NSInteger number;
+@property (nonatomic, copy) NSString *number;
 
 @property (nonatomic, strong) NSMutableArray <NSString *>*addresses;
 
@@ -690,15 +708,20 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 @property (nonatomic, copy) NSString *cid;
 
-@property (nonatomic, assign) bool blacklisted;
-
+//@property (nonatomic, assign) bool blacklisted;
+/*JSON中存储格式为：
+ "standardUUID": {
+ "type": "string",
+ "name": "UUID",
+ "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}
+ */
 @property (nonatomic, copy) NSString *UUID;
 
 @property (nonatomic, copy) NSString *security;
 
 @property (nonatomic, copy) NSString *crpl;
 
-@property (nonatomic, assign) NSInteger defaultTTL;
+@property (nonatomic, assign) UInt8 defaultTTL;
 
 @property (nonatomic, copy) NSString *pid;
 
@@ -707,13 +730,16 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 @property (nonatomic, copy) NSString *deviceKey;
 
 @property (nonatomic, copy) NSString *macAddress;//new add the mac to json, get mac from scanResponse's Manufacturer Data.
-
+//默认为nil，不需要存储json。配置过才存储到json里面
 @property (nonatomic, strong) SigHeartbeatPubModel *heartbeatPub;
+//默认为nil，不需要存储json。配置过才存储到json里面
+@property (nonatomic, strong) SigHeartbeatSubModel *heartbeatSub;
 
 @property (nonatomic, strong) NSMutableArray<SigElementModel *> *elements;
 @property (nonatomic, strong) NSMutableArray<SigNodeKeyModel *> *netKeys;
 @property (nonatomic, strong) NSMutableArray<SigNodeKeyModel *> *appKeys;//node isn't unbound when appkeys is empty.
-@property (nonatomic, strong) NSMutableArray<SigHeartbeatSubModel *> *heartbeatSub;
+/// The excluded property contains a Boolean value that is set to “true” when the node is in the process of being deleted and is excluded from the new network key distribution during the Key Refresh procedure; otherwise, it is set to “false”.
+@property (nonatomic, assign) bool excluded;
 
 //暂时添加到json数据中
 @property (nonatomic,strong) NSMutableArray <SchedulerModel *>*schedulerList;
@@ -795,6 +821,9 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 - (BOOL)isSensor;
 
+/// 返回当前节点是否是遥控器。
+- (BOOL)isRemote;
+
 /// Returns list of Network Keys known to this Node.
 - (NSArray <SigNetkeyModel *>*)getNetworkKeys;
 
@@ -812,8 +841,8 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 ///            the given address, `false` otherwise.
 - (BOOL)hasAllocatedAddr:(UInt16)addr;
 
-- (SigModelIDModel *)getModelIDModelWithModelID:(UInt16)modelID;
-- (SigModelIDModel *)getModelIDModelWithModelID:(UInt16)modelID andElementAddress:(UInt16)elementAddress;
+- (SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID;
+- (SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID andElementAddress:(UInt16)elementAddress;
 
 - (NSDictionary *)getDictionaryOfSigNodeModel;
 - (void)setDictionaryToSigNodeModel:(NSDictionary *)dictionary;
@@ -825,40 +854,58 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 - (void)updateNodeStatusWithBaseMeshMessage:(SigBaseMeshMessage *)responseMessage source:(UInt16)source;
 
+- (void)addDefaultPublicAddressToRemote;
+
 @end
 
+
+@interface SigExclusionModel : NSObject
+/// The ivIndex property contains the integer value of the IV index of the mesh network that was in use while the unicast addresses were marked as excluded.
+@property (nonatomic, assign) NSInteger ivIndex;
+/// The addresses property contains an array of 4-character hexadecimal strings, representing the excluded unicast addresses.
+@property (nonatomic, strong) NSMutableArray <NSString *>*addresses;
+
+- (NSDictionary *)getDictionaryOfSigExclusionModel;
+- (void)setDictionaryToSigExclusionModel:(NSDictionary *)dictionary;
+
+@end
+
+
+/// The Relay Retransmit state is a composite state that controls parameters of retransmission of the Network PDU relayed by the node.(Interval在json存储10~320，SDK内存装换为0~31使用)
 @interface SigRelayretransmitModel : NSObject
-/// Number of retransmissions for relay messages.
-/// The value is in range from 1 to 8.
-@property (nonatomic, assign) NSInteger count;
-/// The interval (in milliseconds) between retransmissions
-/// (from 10 to 320 ms in 10 ms steps).
-@property (nonatomic, assign) NSInteger interval;
-/// Number of 10-millisecond steps between transmissions.
-@property (nonatomic, assign) UInt8 steps;
+/// Number of retransmissions on advertising bearer for each Network PDU relayed by the node.
+/// For example, a value of 0b000 represents a single transmission with no retransmissions, and a value of 0b111 represents a single transmission and 7 retransmissions for a total of 8 transmissions.
+@property (nonatomic, assign) NSInteger relayRetransmitCount;
+/// The Relay Retransmit Interval Steps field is a 5-bit value representing the number of 10 millisecond steps that controls the interval between message retransmissions of the Network PDU relayed by the node.
+/// The retransmission interval is calculated using the formula:
+/// retransmission interval = (Relay Retransmit Interval Steps + 1) * 10
+@property (nonatomic, assign) NSInteger relayRetransmitIntervalSteps;
+
+- (UInt8)getIntervalOfJsonFile;
+- (void)setIntervalOfJsonFile:(UInt8)intervalOfJsonFile;
 
 - (NSDictionary *)getDictionaryOfSigRelayretransmitModel;
 - (void)setDictionaryToSigRelayretransmitModel:(NSDictionary *)dictionary;
 
 @end
 
-/// The object represents parameters of the transmissions of network layer messages originating from a mesh node.
+/// The object represents parameters of the transmissions of network layer messages originating from a mesh node.(Interval在json存储10~320，SDK内存装换为0~31使用)
 @interface SigNetworktransmitModel : NSObject
-/// Number of retransmissions for relay messages.
-/// The value is in range from 1 to 8.
-@property (nonatomic, assign) NSInteger count;
-/// The interval (in milliseconds) between retransmissions
-/// (from 10 to 320 ms in 10 ms steps).
-@property (nonatomic, assign) NSInteger interval;
-/// Number of 10-millisecond steps between transmissions.
-- (UInt8)septs;
+/// The Network Transmit Count field is a 3-bit value that controls the number of message transmissions of the Network PDU originating from the node. The number of transmissions is the Transmit Count + 1.
+/// For example a value of 0b000 represents a single transmission and a value of 0b111 represents 8 transmissions.
+@property (nonatomic, assign) NSInteger networkTransmitCount;
+/// The Network Transmit Interval Steps field is a 5-bit value representing the number of 10 millisecond steps that controls the interval between message transmissions of Network PDUs originating from the node.
+/// The transmission interval is calculated using the formula:
+/// transmission interval = (Network Retransmit Interval Steps + 1) * 10
+/// Each transmission should be perturbed by a random value between 0 to 10 milliseconds between each transmission.
+/// For example, a value of 0b10000 represents a transmission interval between 170 and 180 milliseconds between each transmission.
+@property (nonatomic, assign) NSInteger networkTransmitIntervalSteps;
+
+- (UInt8)getIntervalOfJsonFile;
+- (void)setIntervalOfJsonFile:(UInt8)intervalOfJsonFile;
 
 /// The interval in as `TimeInterval` in seconds.
-- (NSTimeInterval)timeInterval;
-
-- (instancetype)initWithSigConfigNetworkTransmitSet:(SigConfigNetworkTransmitSet *)request;
-
-- (instancetype)initWithSigConfigNetworkTransmitStatus:(SigConfigNetworkTransmitStatus *)status;
+//- (NSTimeInterval)timeInterval;
 
 - (NSDictionary *)getDictionaryOfSigNetworktransmitModel;
 - (void)setDictionaryToSigNetworktransmitModel:(NSDictionary *)dictionary;
@@ -1115,7 +1162,7 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 
 @property (nonatomic, copy) NSString *destination;
 
-@property (nonatomic, assign) NSInteger period;
+//@property (nonatomic, assign) NSInteger period;
 
 - (NSDictionary *)getDictionaryOfSigHeartbeatSubModel;
 - (void)setDictionaryToSigHeartbeatSubModel:(NSDictionary *)dictionary;

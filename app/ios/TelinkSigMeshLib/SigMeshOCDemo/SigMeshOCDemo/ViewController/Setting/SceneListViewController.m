@@ -48,7 +48,7 @@
     __weak typeof(self) weakSelf = self;
     //set recall scene block
     [cell setClickRecallBlock:^{
-        [DemoCommand recallSceneWithAddress:kMeshAddress_allNodes sceneId:model.number responseMaxCount:(int)model.actionList.count ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
+        [DemoCommand recallSceneWithAddress:kMeshAddress_allNodes sceneId:[LibTools uint16From16String:model.number] responseMaxCount:(int)model.actionList.count ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
             TeLogDebug(@"recall scene:%hu,status:%d",responseMessage.targetScene,responseMessage.statusCode);
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
             
@@ -108,7 +108,7 @@
 
 - (void)clickAdd{
     SigSceneModel *model = [[SigSceneModel alloc] init];
-    model.number = [[SigDataSource share] getNewSceneAddress];
+    model.number = [NSString stringWithFormat:@"%04X",[[SigDataSource share] getNewSceneAddress]];
     model.name = [NSString stringWithFormat:@"scene:0x%lX",(long)model.number];
     SceneDetailViewController *vc = (SceneDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SceneDetailViewControllerID storybroad:@"Setting"];
     vc.model = model;
@@ -122,7 +122,7 @@
         if (indexPath != nil) {
             SigSceneModel *model = [self.source[indexPath.item] copy];
             TeLogDebug(@"%@",indexPath);
-            NSString *msg = [NSString stringWithFormat:@"Are you sure delete scene:0x%X",(int)model.number];
+            NSString *msg = [NSString stringWithFormat:@"Are you sure delete scene:0x%@",model.number];
             if (model.actionList) {
                 BOOL hasOutLine = NO;
                 NSArray *actionList = [NSArray arrayWithArray:model.actionList];
@@ -134,7 +134,7 @@
                     }
                 }
                 if (hasOutLine) {
-                    msg = [NSString stringWithFormat:@"There are some nodes offline, are you sure delete scene:0x%X",(int)model.number];
+                    msg = [NSString stringWithFormat:@"There are some nodes offline, are you sure delete scene:0x%@",model.number];
                 }
             }
             __weak typeof(self) weakSelf = self;
@@ -166,7 +166,7 @@
             while (delArray.count > 0) {
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                 ActionModel *curAction = delArray.firstObject;
-                [DemoCommand delSceneWithAddress:curAction.address sceneId:scene.number responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+                [DemoCommand delSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:scene.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                     TeLogDebug(@"responseMessage.statusCode=%d",responseMessage.statusCode);
                     [delArray removeObject:curAction];
                     dispatch_semaphore_signal(semaphore);

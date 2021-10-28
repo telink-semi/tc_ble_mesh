@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -3119,7 +3119,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Mode of the transfer, szie is 2 bits.
 @property (nonatomic,assign) SigTransferModeState distributionTransferMode;
 /// Firmware update policy, szie is 1 bits.
-@property (nonatomic,assign) BOOL updatePolicy;
+@property (nonatomic,assign) SigUpdatePolicyType updatePolicy;
 /// Reserved for Future Use. Size is 5 bits.
 @property (nonatomic,assign) UInt8 RFU;
 /// Index of the firmware image in the Firmware Images List state to use during firmware image distribution.
@@ -3127,7 +3127,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Multicast address used in a firmware image distribution. Size is 16 bits or 128 bits.
 @property (nonatomic,strong) NSData *distributionMulticastAddress;
 
-- (instancetype)initWithDistributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(BOOL)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex distributionMulticastAddress:(NSData *)distributionMulticastAddress;
+- (instancetype)initWithDistributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(SigUpdatePolicyType)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex distributionMulticastAddress:(NSData *)distributionMulticastAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -3217,12 +3217,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) SigFirmwareDistributionServerAndClientModelStatusType status;
 /// Phase of the firmware image upload to a Firmware Distribution Server.
 @property (nonatomic,assign) SigFirmwareUploadPhaseStateType uploadPhase;
-/// A percentage indicating the progress of the firmware image upload (Optional). (If present, the Upload Progress field shall indicate the progress of the firmware upload as a percentage. The values 0x65 to 0xFF are prohibited.)
+/// A percentage indicating the progress of the firmware image upload (Optional). Size is 7 bits.  (If present, the Upload Progress field shall indicate the progress of the firmware upload as a percentage. The values 0x65 to 0xFF are prohibited.)
 @property (nonatomic,assign) UInt8 uploadProgress;
+/// A bit indicating whether the Upload is done in-band or out-of-band (C.1). YES mean has oob.
+@property (nonatomic,assign) BOOL uploadType;
 /// he Firmware ID identifying the firmware image being uploaded (C.1). Size is Variable. (C.1: When the Upload Progress field is present, the Upload Firmware ID field shall be present; otherwise, the Upload Firmware ID field shall be omitted.)
 @property (nonatomic,strong) NSData *uploadFirmwareID;
 - (instancetype)initWithParameters:(NSData *)parameters;
-- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status uploadPhase:(SigFirmwareUploadPhaseStateType)uploadPhase uploadProgress:(UInt8)uploadProgress uploadFirmwareID:(NSData *)uploadFirmwareID;
+- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status uploadPhase:(SigFirmwareUploadPhaseStateType)uploadPhase uploadProgress:(UInt8)uploadProgress uploadType:(BOOL)uploadType uploadFirmwareID:(NSData *)uploadFirmwareID;
 @end
 
 
@@ -3309,14 +3311,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// Mode of the transfer, szie is 2 bits (C.1).
 @property (nonatomic,assign) SigTransferModeState distributionTransferMode;
 /// Firmware update policy, szie is 1 bits (C.1).
-@property (nonatomic,assign) BOOL updatePolicy;
+@property (nonatomic,assign) SigUpdatePolicyType updatePolicy;
 /// Reserved for Future Use. Size is 5 bits (C.1).
 @property (nonatomic,assign) UInt8 RFU;
 /// Index of the firmware image in the Firmware Images List state to use during firmware image distribution (C.1).
 @property (nonatomic,assign) UInt16 distributionFirmwareImageIndex;
 
 - (instancetype)initWithParameters:(NSData *)parameters;
-- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status distributionPhase:(SigDistributionPhaseState)distributionPhase distributionMulticastAddress:(UInt16)distributionMulticastAddress distributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(BOOL)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex;
+- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status distributionPhase:(SigDistributionPhaseState)distributionPhase distributionMulticastAddress:(UInt16)distributionMulticastAddress distributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(SigUpdatePolicyType)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex;
 
 @end
 
@@ -3651,7 +3653,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.31)
 @interface SigBLOBPartialBlockReport : SigGenericMessage
 /// List of chunks requested by the server (Optional). (If present, the Encoded Missing Chunks field shall indicate the list of the chunks requested by the BLOB Transfer Server. Each chunk is identified by a uint16 Chunk Number. The list of the Chunk Numbers is encoded using UTF-8 as defined in [18].)
-@property (nonatomic,strong) NSMutableArray <NSNumber *>*encodedMissingChunks;//[@(node.address)]
+@property (nonatomic,strong) NSMutableArray <NSNumber *>*encodedMissingChunks;//[@(MissingChunkIndex)]
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -3707,9 +3709,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Maximum payload size supported by the server
 @property (nonatomic,assign) UInt16 MTUSize;
 /// BLOB transfer modes supported by the server
-@property (nonatomic,assign) UInt8 supportedTransferMode;
+@property (nonatomic,assign) struct SigSupportedTransferMode supportedTransferMode;
 - (instancetype)initWithParameters:(NSData *)parameters;
-- (instancetype)initWithMinBlockSizeLog:(UInt8)minBlockSizeLog maxBlockSizeLog:(UInt8)maxBlockSizeLog maxChunksNumber:(UInt16)maxChunksNumber maxChunkSize:(UInt16)maxChunkSize maxBLOBSize:(UInt32)maxBLOBSize MTUSize:(UInt16)MTUSize supportedTransferMode:(UInt8)supportedTransferMode;
+- (instancetype)initWithMinBlockSizeLog:(UInt8)minBlockSizeLog maxBlockSizeLog:(UInt8)maxBlockSizeLog maxChunksNumber:(UInt16)maxChunksNumber maxChunkSize:(UInt16)maxChunkSize maxBLOBSize:(UInt32)maxBLOBSize MTUSize:(UInt16)MTUSize supportedTransferMode:(struct SigSupportedTransferMode)supportedTransferMode;
 @end
 
 

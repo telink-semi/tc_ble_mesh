@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -32,39 +32,25 @@
 #import "SigLowerTransportPdu.h"
 #import "OpenSSLHelper.h"
 
-struct InvitePdu {
-    UInt8 type;
-    UInt8 timer;
-};
-
-struct StartPdu {
-    UInt8 type;
-    Algorithm algorithm;
-    PublicKeyType publicKeyType;
-    AuthenticationMethod authenticationMethod;
-    UInt8 authenticationAction;//OutputAction or InputAction
-    UInt8 authenticationSize;
-};
-
-struct PublicKeyPdu {
-    UInt8 type;
-    UInt8 publicKey[64];
-};
-
-struct ConfirmationPdu {
-    UInt8 type;
-    UInt8 confirmation[16];
-};
-
-struct RandomPdu {
-    UInt8 type;
-    UInt8 random[16];
-};
-
-struct EncryptedDataWithMicPdu {
-    UInt8 type;
-    UInt8 encryptedDataWithMic[33];
-};
+//struct PublicKeyPdu {
+//    UInt8 type;
+//    UInt8 publicKey[64];
+//};
+//
+//struct ConfirmationPdu {
+//    UInt8 type;
+//    UInt8 confirmation[16];
+//};
+//
+//struct RandomPdu {
+//    UInt8 type;
+//    UInt8 random[16];
+//};
+//
+//struct EncryptedDataWithMicPdu {
+//    UInt8 type;
+//    UInt8 encryptedDataWithMic[33];
+//};
 
 @implementation SigPdu
 - (instancetype)init {
@@ -79,125 +65,679 @@ struct EncryptedDataWithMicPdu {
 
 @implementation SigProvisioningPdu
 
-- (instancetype)initProvisioningInvitePduWithAttentionTimer:(UInt8)timer {
-    if (self = [super init]) {
-        self.pduData = [self getProvisioningInvitePduWithAttentionTimer:timer];
++ (Class)getProvisioningPduClassWithProvisioningPduType:(SigProvisioningPduType)provisioningPduType {
+    Class messageType = nil;
+    switch (provisioningPduType) {
+        case SigProvisioningPduType_invite:
+            messageType = [SigProvisioningInvitePdu class];
+            break;
+        case SigProvisioningPduType_capabilities:
+            messageType = [SigProvisioningCapabilitiesPdu class];
+            break;
+        case SigProvisioningPduType_start:
+            messageType = [SigProvisioningStartPdu class];
+            break;
+        case SigProvisioningPduType_publicKey:
+            messageType = [SigProvisioningPublicKeyPdu class];
+            break;
+        case SigProvisioningPduType_inputComplete:
+            messageType = [SigProvisioningInputCompletePdu class];
+            break;
+        case SigProvisioningPduType_confirmation:
+            messageType = [SigProvisioningConfirmationPdu class];
+            break;
+        case SigProvisioningPduType_random:
+            messageType = [SigProvisioningRandomPdu class];
+            break;
+        case SigProvisioningPduType_data:
+            messageType = [SigProvisioningDataPdu class];
+            break;
+        case SigProvisioningPduType_complete:
+            messageType = [SigProvisioningCompletePdu class];
+            break;
+        case SigProvisioningPduType_failed:
+            messageType = [SigProvisioningFailedPdu class];
+            break;
+        case SigProvisioningPduType_recordRequest:
+            messageType = [SigProvisioningRecordRequestPdu class];
+            break;
+        case SigProvisioningPduType_recordResponse:
+            messageType = [SigProvisioningRecordResponsePdu class];
+            break;
+        case SigProvisioningPduType_recordsGet:
+            messageType = [SigProvisioningInvitePdu class];
+            break;
+        case SigProvisioningPduType_recordsList:
+            messageType = [SigProvisioningRecordsListPdu class];
+            break;
+        default:
+            break;
     }
-    return self;
+    return messageType;
 }
 
-- (instancetype)initProvisioningstartPduWithAlgorithm:(Algorithm)algorithm publicKeyType:(PublicKeyType)publicKeyType authenticationMethod:(AuthenticationMethod)method authenticationAction:(UInt8)authenticationAction authenticationSize:(UInt8)authenticationSize {
-    if (self = [super init]) {
-        self.pduData = [self getProvisioningstartPduWithAlgorithm:algorithm publicKeyType:publicKeyType authenticationMethod:method authenticationAction:authenticationAction authenticationSize:authenticationSize];
-    }
-    return self;
-}
+//- (instancetype)initProvisioningPublicKeyPduWithPublicKey:(NSData *)publicKey {
+//    if (self = [super init]) {
+//        self.pduData = [self getProvisioningPublicKeyPduWithPublicKey:publicKey];
+//    }
+//    return self;
+//}
+//
+//- (instancetype)initProvisioningConfirmationPduWithConfirmation:(NSData *)confirmation {
+//    if (self = [super init]) {
+//        self.pduData = [self getProvisioningConfirmationPduWithConfirmation:confirmation];
+//    }
+//    return self;
+//}
 
-- (instancetype)initProvisioningPublicKeyPduWithPublicKey:(NSData *)publicKey {
-    if (self = [super init]) {
-        self.pduData = [self getProvisioningPublicKeyPduWithPublicKey:publicKey];
-    }
-    return self;
-}
+//- (instancetype)initProvisioningRandomPduWithRandom:(NSData *)random {
+//    if (self = [super init]) {
+//        self.pduData = [self getProvisioningRandomPduWithRandom:random];
+//    }
+//    return self;
+//}
 
-- (instancetype)initProvisioningConfirmationPduWithConfirmation:(NSData *)confirmation {
-    if (self = [super init]) {
-        self.pduData = [self getProvisioningConfirmationPduWithConfirmation:confirmation];
-    }
-    return self;
-}
+//- (instancetype)initProvisioningEncryptedDataWithMicPduWithEncryptedData:(NSData *)encryptedData {
+//    if (self = [super init]) {
+//        self.pduData = [self getProvisioningEncryptedDataWithMicPduWithEncryptedData:encryptedData];
+//    }
+//    return self;
+//}
 
-- (instancetype)initProvisioningRandomPduWithRandom:(NSData *)random {
-    if (self = [super init]) {
-        self.pduData = [self getProvisioningRandomPduWithRandom:random];
-    }
-    return self;
-}
+/// The Provisioner sends a Provisioning Record Request PDU to request a provisioning record fragment (a part of a provisioning record; see Section 5.4.2.6) from the device.
+/// @param recordID Identifies the provisioning record for which the request is made (see Section 5.4.2.6).
+/// @param fragmentOffset The starting offset of the requested fragment in the provisioning record data.
+/// @param fragmentMaximumSize The maximum size of the provisioning record fragment that the Provisioner can receive.
+//- (instancetype)initProvisioningRecordRequestPDUWithRecordID:(UInt16)recordID fragmentOffset:(UInt16)fragmentOffset fragmentMaximumSize:(UInt16)fragmentMaximumSize {
+//    if (self = [super init]) {
+//        NSMutableData *mData = [NSMutableData data];
+//        UInt8 tem8 = SigProvisioningPduType_recordRequest;
+//        [mData appendData:[NSData dataWithBytes:&tem8 length:1]];
+//        UInt16 tem16 = CFSwapInt16BigToHost(recordID);
+//        [mData appendData:[NSData dataWithBytes:&tem16 length:2]];
+//        tem16 = CFSwapInt16BigToHost(fragmentOffset);
+//        [mData appendData:[NSData dataWithBytes:&tem16 length:2]];
+//        tem16 = CFSwapInt16BigToHost(fragmentMaximumSize);
+//        [mData appendData:[NSData dataWithBytes:&tem16 length:2]];
+//        self.provisionType = SigProvisioningPduType_recordRequest;
+//        self.pduData = mData;
+//    }
+//    return self;
+//}
 
-- (instancetype)initProvisioningEncryptedDataWithMicPduWithEncryptedData:(NSData *)encryptedData {
-    if (self = [super init]) {
-        self.pduData = [self getProvisioningEncryptedDataWithMicPduWithEncryptedData:encryptedData];
-    }
-    return self;
-}
+/// The Provisioner sends a Provisioning Records Get PDU to request the list of IDs of the provisioning records that are stored on a device.
+//- (instancetype)initProvisioningRecordsGetPDU {
+//    if (self = [super init]) {
+//        NSMutableData *mData = [NSMutableData data];
+//        UInt8 tem8 = SigProvisioningPduType_recordsGet;
+//        [mData appendData:[NSData dataWithBytes:&tem8 length:1]];
+//        self.provisionType = SigProvisioningPduType_recordsGet;
+//        self.pduData = mData;
+//    }
+//    return self;
+//}
 
-+ (void)analysisProvisioningCapabilities:(struct ProvisioningCapabilities *)provisioningCapabilities withData:(NSData *)data {
-    if (data.length != 12) {
-        TeLogWarn(@"receive pdu isn't ProvisioningCapabilitiesPDU.")
-        return;
-    }
-    
-    Byte *byte = (Byte *)data.bytes;
-    memcpy(provisioningCapabilities, byte, 12);
-    if (provisioningCapabilities->pduType == SigProvisioningPduType_capabilities) {
-        TeLogVerbose(@"analysis ProvisioningCapabilitiesPDU success.")
-    }else{
-        TeLogVerbose(@"analysis ProvisioningCapabilitiesPDU fail.")
-        memcpy(provisioningCapabilities, 0, 12);
-    }
-}
-
-/// document in Mesh_v1.0.pdf 5.4.1 Page 238.
-- (NSData *)getProvisioningInvitePduWithAttentionTimer:(UInt8)timer {
-    //SigProvisioningPduType_invite + timer
-    struct InvitePdu pdu = {};
-    pdu.type = SigProvisioningPduType_invite;
-    pdu.timer = timer;
-    NSData *pduData = [NSData dataWithBytes:&pdu length:sizeof(pdu)];
-    return pduData;
-}
-
-/// document in Mesh_v1.0.pdf 5.4.1.3 Page 241.
-- (NSData *)getProvisioningstartPduWithAlgorithm:(Algorithm)algorithm publicKeyType:(PublicKeyType)publicKeyType authenticationMethod:(AuthenticationMethod)method authenticationAction:(UInt8)authenticationAction authenticationSize:(UInt8)authenticationSize{
-    //SigProvisioningPduType_start + Algorithm + Public Key type + authenticationMethod + authenticationAction + authenticationSize
-    struct StartPdu pdu = {};
-    pdu.type = SigProvisioningPduType_start;
-    pdu.algorithm = algorithm;
-    pdu.publicKeyType = publicKeyType;
-    pdu.authenticationMethod = method;
-    pdu.authenticationSize = authenticationSize;
-    NSData *pduData = [NSData dataWithBytes:&pdu length:sizeof(pdu)];
-    return pduData;
-}
+//+ (void)analysisProvisioningCapabilities:(struct ProvisioningCapabilities *)provisioningCapabilities withData:(NSData *)data {
+//    if (data.length != 12) {
+//        TeLogWarn(@"receive pdu isn't ProvisioningCapabilitiesPDU.")
+//        return;
+//    }
+//    
+//    Byte *byte = (Byte *)data.bytes;
+//    memcpy(provisioningCapabilities, byte, 12);
+//    if (provisioningCapabilities->pduType == SigProvisioningPduType_capabilities) {
+//        TeLogVerbose(@"analysis ProvisioningCapabilitiesPDU success.")
+//    }else{
+//        TeLogVerbose(@"analysis ProvisioningCapabilitiesPDU fail.")
+//        memcpy(provisioningCapabilities, 0, 12);
+//    }
+//}
 
 /// document in Mesh_v1.0.pdf 5.4.1.4 Page 243.
-- (NSData *)getProvisioningPublicKeyPduWithPublicKey:(NSData *)publicKey {
-    struct PublicKeyPdu pdu = {};
-    pdu.type = SigProvisioningPduType_publicKey;
-    UInt8 *byte = (UInt8 *)publicKey.bytes;
-    memcpy(pdu.publicKey, byte, publicKey.length);//64bytes
-    NSData *pduData = [NSData dataWithBytes:&pdu length:sizeof(pdu)];
-    return pduData;
-}
-
-/// document in Mesh_v1.0.pdf 5.4.1.6 Page 243.
-- (NSData *)getProvisioningConfirmationPduWithConfirmation:(NSData *)confirmation {
-    struct ConfirmationPdu pdu = {};
-    pdu.type = SigProvisioningPduType_confirmation;
-    UInt8 *byte = (UInt8 *)confirmation.bytes;
-    memcpy(pdu.confirmation, byte, confirmation.length);//16bytes
-    NSData *pduData = [NSData dataWithBytes:&pdu length:sizeof(pdu)];
-    return pduData;
-}
+//- (NSData *)getProvisioningPublicKeyPduWithPublicKey:(NSData *)publicKey {
+//    struct PublicKeyPdu pdu = {};
+//    pdu.type = SigProvisioningPduType_publicKey;
+//    UInt8 *byte = (UInt8 *)publicKey.bytes;
+//    memcpy(pdu.publicKey, byte, publicKey.length);//64bytes
+//    NSData *pduData = [NSData dataWithBytes:&pdu length:sizeof(pdu)];
+//    return pduData;
+//}
+//
+///// document in Mesh_v1.0.pdf 5.4.1.6 Page 243.
+//- (NSData *)getProvisioningConfirmationPduWithConfirmation:(NSData *)confirmation {
+//    struct ConfirmationPdu pdu = {};
+//    pdu.type = SigProvisioningPduType_confirmation;
+//    UInt8 *byte = (UInt8 *)confirmation.bytes;
+//    memcpy(pdu.confirmation, byte, confirmation.length);//16bytes
+//    NSData *pduData = [NSData dataWithBytes:&pdu length:sizeof(pdu)];
+//    return pduData;
+//}
 
 /// document in Mesh_v1.0.pdf 5.4.1.7 Page 243.
-- (NSData *)getProvisioningRandomPduWithRandom:(NSData *)random {
-    struct RandomPdu pdu = {};
-    pdu.type = SigProvisioningPduType_random;
-    UInt8 *byte = (UInt8 *)random.bytes;
-    memcpy(pdu.random, byte, random.length);//16bytes
-    NSData *pduData = [NSData dataWithBytes:&pdu length:sizeof(pdu)];
-    return pduData;
-}
+//- (NSData *)getProvisioningRandomPduWithRandom:(NSData *)random {
+//    struct RandomPdu pdu = {};
+//    pdu.type = SigProvisioningPduType_random;
+//    UInt8 *byte = (UInt8 *)random.bytes;
+//    memcpy(pdu.random, byte, random.length);//16bytes
+//    NSData *pduData = [NSData dataWithBytes:&pdu length:sizeof(pdu)];
+//    return pduData;
+//}
 
 /// document in Mesh_v1.0.pdf 5.4.1.8 Page 244.
-- (NSData *)getProvisioningEncryptedDataWithMicPduWithEncryptedData:(NSData *)encryptedData {
-    struct EncryptedDataWithMicPdu pdu = {};
-    pdu.type = SigProvisioningPduType_data;
-    UInt8 *byte = (UInt8 *)encryptedData.bytes;
-    memcpy(pdu.encryptedDataWithMic, byte, encryptedData.length);//25bytes(EncryptedData)+8bytes(Mic)
-    NSData *pduData = [NSData dataWithBytes:&pdu length:sizeof(pdu)];
-    return pduData;
+//- (NSData *)getProvisioningEncryptedDataWithMicPduWithEncryptedData:(NSData *)encryptedData {
+//    struct EncryptedDataWithMicPdu pdu = {};
+//    pdu.type = SigProvisioningPduType_data;
+//    UInt8 *byte = (UInt8 *)encryptedData.bytes;
+//    memcpy(pdu.encryptedDataWithMic, byte, encryptedData.length);//25bytes(EncryptedData)+8bytes(Mic)
+//    NSData *pduData = [NSData dataWithBytes:&pdu length:sizeof(pdu)];
+//    return pduData;
+//}
+
+@end
+
+
+@implementation SigProvisioningInvitePdu
+
+- (instancetype)initWithAttentionDuration:(UInt8)attentionDuration {
+    if (self = [super init]) {
+        self.provisionType = SigProvisioningPduType_invite;
+        _attentionDuration = attentionDuration;
+        NSMutableData *mData = [NSMutableData data];
+        UInt8 tem8 = self.provisionType;
+        NSData *data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem8 = attentionDuration;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        self.pduData = mData;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningCapabilitiesPdu
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length == 12) {
+            self.pduData = [NSData dataWithData:parameters];
+            UInt8 tem8 = 0;
+            UInt16 tem16 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            if (tem8 == SigProvisioningPduType_capabilities) {
+                self.provisionType = SigProvisioningPduType_capabilities;
+                memcpy(&tem8, dataByte+1, 1);
+                _numberOfElements = tem8;
+                memcpy(&tem16, dataByte+2, 2);
+                _algorithms.value = tem16;
+                memcpy(&tem8, dataByte+4, 1);
+                _publicKeyType = tem8;
+                memcpy(&tem8, dataByte+5, 1);
+                _staticOobType.value = tem8;
+                memcpy(&tem8, dataByte+6, 1);
+                _outputOobSize = tem8;
+                memcpy(&tem16, dataByte+7, 2);
+                _outputOobActions.value = tem16;
+                memcpy(&tem8, dataByte+9, 1);
+                _outputOobSize = tem8;
+                memcpy(&tem16, dataByte+10, 2);
+                _outputOobActions.value = tem16;
+                return self;
+            } else {
+                return nil;
+            }
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (NSString *)getCapabilitiesString {
+    NSString *string = [NSString stringWithFormat:@"\n------ Capabilities ------\nNumber of elements: %d\nAlgorithms: %@\nPublic Key Type: %@\nStatic OOB Type: %@\nOutput OOB Size: %d\nOutput OOB Actions: %d\nInput OOB Size: %d\nInput OOB Actions: %d\n--------------------------",_numberOfElements,_algorithms.fipsP256EllipticCurve == 1 ?@"FIPS P-256 Elliptic Curve":@"None",_publicKeyType == PublicKeyType_noOobPublicKey ?@"No OOB Public Key":@"OOB Public Key",_staticOobType.staticOobInformationAvailable == 1 ?@"YES":@"None",_outputOobSize,_outputOobActions.value,_inputOobSize,_inputOobActions.value];
+    return string;
+}
+
+@end
+
+
+@implementation SigProvisioningStartPdu
+
+- (instancetype)initWithAlgorithm:(Algorithm)algorithm publicKeyType:(PublicKeyType)publicKeyType authenticationMethod:(AuthenticationMethod)authenticationMethod authenticationAction:(UInt8)authenticationAction authenticationSize:(UInt8)authenticationSize {
+    if (self = [super init]) {
+        self.provisionType = SigProvisioningPduType_start;
+        _algorithm = algorithm;
+        _publicKeyType = publicKeyType;
+        _authenticationMethod = authenticationMethod;
+        _authenticationAction = authenticationAction;
+        _authenticationSize = authenticationSize;
+        
+        NSMutableData *mData = [NSMutableData data];
+        UInt8 tem8 = self.provisionType;
+        NSData *data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem8 = algorithm;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem8 = publicKeyType;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem8 = authenticationMethod;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem8 = authenticationAction;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem8 = authenticationSize;
+        data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        self.pduData = mData;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningPublicKeyPdu
+
+- (instancetype)initWithPublicKey:(NSData *)publicKey {
+    if (self = [super init]) {
+        self.provisionType = SigProvisioningPduType_publicKey;
+        if (publicKey.length == 64) {
+            _publicKey = publicKey;
+            _publicKeyX = [publicKey subdataWithRange:NSMakeRange(0, 32)];
+            _publicKeyY = [publicKey subdataWithRange:NSMakeRange(32, 32)];
+            NSMutableData *mData = [NSMutableData data];
+            UInt8 tem8 = self.provisionType;
+            NSData *data = [NSData dataWithBytes:&tem8 length:1];
+            [mData appendData:data];
+            [mData appendData:_publicKey];
+            self.pduData = mData;
+        } else {
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithPublicKeyX:(NSData *)publicKeyX publicKeyY:(NSData *)publicKeyY {
+    if (self = [super init]) {
+        self.provisionType = SigProvisioningPduType_publicKey;
+        if (publicKeyX.length == 32 && publicKeyY.length == 32) {
+            NSMutableData *mdata = [NSMutableData dataWithData:publicKeyX];
+            [mdata appendData:publicKeyY];
+            _publicKey = mdata;
+            _publicKeyX = publicKeyX;
+            _publicKeyY = publicKeyY;
+            NSMutableData *mData = [NSMutableData data];
+            UInt8 tem8 = self.provisionType;
+            NSData *data = [NSData dataWithBytes:&tem8 length:1];
+            [mData appendData:data];
+            [mData appendData:_publicKey];
+            self.pduData = mData;
+        } else {
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length == 65) {
+            self.pduData = [NSData dataWithData:parameters];
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            if (tem8 == SigProvisioningPduType_publicKey) {
+                self.provisionType = SigProvisioningPduType_publicKey;
+                _publicKey = [parameters subdataWithRange:NSMakeRange(1, parameters.length-1)];
+                _publicKeyX = [parameters subdataWithRange:NSMakeRange(1, 32)];
+                _publicKeyY = [parameters subdataWithRange:NSMakeRange(33, 32)];
+                return self;
+            } else {
+                return nil;
+            }
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningInputCompletePdu
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.provisionType = SigProvisioningPduType_inputComplete;
+        NSMutableData *mData = [NSMutableData data];
+        UInt8 tem8 = self.provisionType;
+        NSData *data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        self.pduData = mData;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length == 1) {
+            self.pduData = [NSData dataWithData:parameters];
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            if (tem8 == SigProvisioningPduType_inputComplete) {
+                self.provisionType = SigProvisioningPduType_inputComplete;
+                return self;
+            } else {
+                return nil;
+            }
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningConfirmationPdu
+
+- (instancetype)initWithConfirmation:(NSData *)confirmation {
+    if (self = [super init]) {
+        self.provisionType = SigProvisioningPduType_confirmation;
+        if (confirmation && confirmation.length == 16) {
+            NSMutableData *mData = [NSMutableData data];
+            UInt8 tem8 = self.provisionType;
+            NSData *data = [NSData dataWithBytes:&tem8 length:1];
+            [mData appendData:data];
+            [mData appendData:confirmation];
+            self.pduData = mData;
+        } else {
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length == 17) {
+            self.pduData = [NSData dataWithData:parameters];
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            if (tem8 == SigProvisioningPduType_confirmation) {
+                self.provisionType = SigProvisioningPduType_confirmation;
+                _confirmation = [parameters subdataWithRange:NSMakeRange(1, parameters.length-1)];
+                return self;
+            } else {
+                return nil;
+            }
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningRandomPdu
+
+- (instancetype)initWithRandom:(NSData *)random {
+    if (self = [super init]) {
+        self.provisionType = SigProvisioningPduType_random;
+        if (random && random.length == 16) {
+            NSMutableData *mData = [NSMutableData data];
+            UInt8 tem8 = self.provisionType;
+            NSData *data = [NSData dataWithBytes:&tem8 length:1];
+            [mData appendData:data];
+            [mData appendData:random];
+            self.pduData = mData;
+        } else {
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length == 17) {
+            self.pduData = [NSData dataWithData:parameters];
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            if (tem8 == SigProvisioningPduType_random) {
+                self.provisionType = SigProvisioningPduType_random;
+                _random = [parameters subdataWithRange:NSMakeRange(1, parameters.length-1)];
+                return self;
+            } else {
+                return nil;
+            }
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningDataPdu
+
+- (instancetype)initWithEncryptedProvisioningData:(NSData *)encryptedProvisioningData provisioningDataMIC:(NSData *)provisioningDataMIC {
+    if (self = [super init]) {
+        self.provisionType = SigProvisioningPduType_data;
+        if (encryptedProvisioningData && encryptedProvisioningData.length == 25 && provisioningDataMIC && provisioningDataMIC.length == 8) {
+            NSMutableData *mData = [NSMutableData data];
+            UInt8 tem8 = self.provisionType;
+            NSData *data = [NSData dataWithBytes:&tem8 length:1];
+            [mData appendData:data];
+            [mData appendData:encryptedProvisioningData];
+            [mData appendData:provisioningDataMIC];
+            self.pduData = mData;
+        } else {
+            return nil;
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningCompletePdu
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.provisionType = SigProvisioningPduType_complete;
+        NSMutableData *mData = [NSMutableData data];
+        UInt8 tem8 = self.provisionType;
+        NSData *data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        self.pduData = mData;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length == 1) {
+            self.pduData = [NSData dataWithData:parameters];
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            if (tem8 == SigProvisioningPduType_complete) {
+                self.provisionType = SigProvisioningPduType_complete;
+                return self;
+            } else {
+                return nil;
+            }
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningFailedPdu
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length == 2) {
+            self.pduData = [NSData dataWithData:parameters];
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            if (tem8 == SigProvisioningPduType_failed) {
+                self.provisionType = SigProvisioningPduType_failed;
+                memcpy(&tem8, dataByte+1, 1);
+                _errorCode = tem8;
+                return self;
+            } else {
+                return nil;
+            }
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningRecordRequestPdu
+
+- (instancetype)initWithRecordID:(UInt16)recordID fragmentOffset:(UInt16)fragmentOffset fragmentMaximumSize:(UInt16)fragmentMaximumSize {
+    if (self = [super init]) {
+        self.provisionType = SigProvisioningPduType_recordRequest;
+        _recordID = recordID;
+        _fragmentOffset = fragmentOffset;
+        _fragmentMaximumSize = fragmentMaximumSize;
+        NSMutableData *mData = [NSMutableData data];
+        UInt16 tem16 = 0;
+        UInt8 tem8 = self.provisionType;
+        NSData *data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        tem16 = CFSwapInt16BigToHost(recordID);
+        data = [NSData dataWithBytes:&tem16 length:2];
+        [mData appendData:data];
+        tem16 = CFSwapInt16BigToHost(fragmentOffset);
+        data = [NSData dataWithBytes:&tem16 length:2];
+        [mData appendData:data];
+        tem16 = CFSwapInt16BigToHost(fragmentMaximumSize);
+        data = [NSData dataWithBytes:&tem16 length:2];
+        [mData appendData:data];
+        self.pduData = mData;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningRecordResponsePdu
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length >= 8) {
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            if (tem8 == SigProvisioningPduType_recordResponse) {
+                self.provisionType = SigProvisioningPduType_recordResponse;
+                self.pduData = [NSData dataWithData:parameters];
+                memcpy(&tem8, dataByte+1, 1);
+                _status = tem8;
+                UInt16 tem16 = 0;
+                memcpy(&tem16, dataByte+2, 2);
+                UInt16 host16 = CFSwapInt16BigToHost(tem16);
+                _recordID = host16;
+                memcpy(&tem16, dataByte+4, 2);
+                host16 = CFSwapInt16BigToHost(tem16);
+                _fragmentOffset = host16;
+                memcpy(&tem16, dataByte+6, 2);
+                host16 = CFSwapInt16BigToHost(tem16);
+                _totalLength = host16;
+                if (parameters.length > 8) {
+                    _data = [parameters subdataWithRange:NSMakeRange(8, parameters.length - 8)];
+                }
+            } else {
+                return nil;
+            }
+        }else{
+            return nil;
+        }
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningRecordsGetPdu
+
+- (instancetype)init {
+    if (self = [super init]) {
+        self.provisionType = SigProvisioningPduType_recordsGet;
+        NSMutableData *mData = [NSMutableData data];
+        UInt8 tem8 = self.provisionType;
+        NSData *data = [NSData dataWithBytes:&tem8 length:1];
+        [mData appendData:data];
+        self.pduData = mData;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigProvisioningRecordsListPdu
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length >= 3) {
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            if (tem8 == SigProvisioningPduType_recordsList) {
+                self.provisionType = SigProvisioningPduType_recordsList;
+                self.pduData = [NSData dataWithData:parameters];
+                Byte *pduByte = (Byte *)parameters.bytes;
+                UInt16 tem16 = 0;
+                memcpy(&tem16, pduByte+1, 2);
+                _provisioningExtensions = tem16;
+                NSMutableArray *mArray = [NSMutableArray array];
+                while ((mArray.count + 1) * 2 + 1 + 2 <= parameters.length) {
+                    memcpy(&tem16, pduByte+1+2+2*mArray.count, 2);
+                    UInt16 host16 = CFSwapInt16BigToHost(tem16);
+                    [mArray addObject:@(host16)];
+                }
+                _recordsList = mArray;
+            } else {
+                return nil;
+            }
+        }else{
+            return nil;
+        }
+    }
+    return self;
 }
 
 @end
@@ -244,7 +784,7 @@ struct EncryptedDataWithMicPdu {
                 index -= 1;
             }
         }
-        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
+//        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
         for (SigNetkeyDerivaties *keys in keySets) {
             // Deobfuscate CTL, TTL, SEQ and SRC.
             NSData *deobfuscatedData = [OpenSSLHelper.share deobfuscate:pdu ivIndex:index privacyKey:keys.privacyKey];
@@ -339,7 +879,7 @@ struct EncryptedDataWithMicPdu {
             [keySets addObject:networkKey.keys];
         }
         if (networkKey.oldKeys != nil && networkKey.oldNid == _nid) {
-            [keySets addObject:networkKey.keys];
+            [keySets addObject:networkKey.oldKeys];
         }
         if (keySets.count == 0) {
             return nil;
@@ -353,7 +893,7 @@ struct EncryptedDataWithMicPdu {
                 index -= 1;
             }
         }
-        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
+//        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
         for (SigNetkeyDerivaties *keys in keySets) {
             // Deobfuscate CTL, TTL, SEQ and SRC.
             NSData *deobfuscatedData = [OpenSSLHelper.share deobfuscate:pdu ivIndex:index privacyKey:keys.privacyKey];
@@ -426,6 +966,9 @@ struct EncryptedDataWithMicPdu {
         _networkKey = lowerTransportPdu.networkKey;
         _ivi = (UInt8)(index&0x01);
         _nid = _networkKey.nid;
+        if (_networkKey.phase == distributingKeys) {
+            _nid = _networkKey.oldNid;
+        }
         _type = lowerTransportPdu.type;
         _source = lowerTransportPdu.source;
         _destination = lowerTransportPdu.destination;
@@ -659,7 +1202,7 @@ struct EncryptedDataWithMicPdu {
     }
     NSArray *allKeys = dictionary.allKeys;
     if ([allKeys containsObject:@"networkKey"]) {
-        for (SigNetkeyModel *model in SigDataSource.share.netKeys) {
+        for (SigNetkeyModel *model in SigMeshLib.share.dataSource.netKeys) {
             if ([model.key isEqualToString:dictionary[@"networkKey"]]) {
                 _networkKey = model;
                 break;
@@ -881,162 +1424,182 @@ struct EncryptedDataWithMicPdu {
 @end
 
 
-@implementation SigProvisioningResponse
-
-- (instancetype)initWithData:(NSData *)data {
-    if (self = [super init]) {
-        if (data == nil || data.length == 0) {
-            TeLogDebug(@"response data error.")
-            return nil;
-        }
-        
-        if (data.length >= 1) {
-            UInt8 type = 0;
-            memcpy(&type, data.bytes, 1);
-            if (type == 0 || type > 9) {
-                TeLogDebug(@"response data pduType error.")
-                return nil;
-            }
-            self.type = type;
-        }
-        self.responseData = data;
-        switch (self.type) {
-            case SigProvisioningPduType_capabilities:
-            {
-                TeLogDebug(@"receive capabilities.");
-                struct ProvisioningCapabilities tem = {};
-                [SigProvisioningPdu analysisProvisioningCapabilities:&tem withData:data];
-                self.capabilities = tem;
-                NSData *d = nil;
-                self.publicKey = d;
-                self.confirmation = d;
-                self.random = d;
-                self.error = 0;
-            }
-                break;
-            case SigProvisioningPduType_publicKey:
-            {
-                TeLogDebug(@"receive publicKey.");
-                self.publicKey = [data subdataWithRange:NSMakeRange(1, data.length - 1)];
-                struct ProvisioningCapabilities tem = {};
-                memset(&tem, 0, 12);
-                self.capabilities = tem;
-                NSData *d = nil;
-                self.confirmation = d;
-                self.random = d;
-                self.error = 0;
-            }
-                break;
-            case SigProvisioningPduType_inputComplete:
-            case SigProvisioningPduType_complete:
-            {
-                TeLogDebug(@"receive inputComplete or complete.");
-                struct ProvisioningCapabilities tem = {};
-                memset(&tem, 0, 12);
-                self.capabilities = tem;
-                NSData *d = nil;
-                self.publicKey = d;
-                self.confirmation = d;
-                self.random = d;
-                self.error = 0;
-                
-            }
-                break;
-            case SigProvisioningPduType_confirmation:
-            {
-                TeLogDebug(@"receive confirmation.");
-                self.confirmation = [data subdataWithRange:NSMakeRange(1, data.length - 1)];
-                struct ProvisioningCapabilities tem = {};
-                memset(&tem, 0, 12);
-                self.capabilities = tem;
-                NSData *d = nil;
-                self.publicKey = d;
-                self.random = d;
-                self.error = 0;
-            }
-                break;
-            case SigProvisioningPduType_random:
-            {
-                TeLogDebug(@"receive random.");
-                self.random = [data subdataWithRange:NSMakeRange(1, data.length - 1)];
-                struct ProvisioningCapabilities tem = {};
-                memset(&tem, 0, 12);
-                self.capabilities = tem;
-                NSData *d = nil;
-                self.publicKey = d;
-                self.confirmation = d;
-                self.error = 0;
-            }
-                break;
-            case SigProvisioningPduType_failed:
-            {
-                TeLogDebug(@"receive failed.");
-                if (data.length != 2) {
-                    TeLogDebug(@"response data length error.")
-                    return nil;
-                }
-                UInt8 status = 0;
-                memcpy(&status, data.bytes+1, 1);
-                if (status == 0) {
-                    TeLogDebug(@"provision response fail data, but analysis status error.")
-                    return nil;
-                }
-                struct ProvisioningCapabilities tem = {};
-                memset(&tem, 0, 12);
-                self.capabilities = tem;
-                NSData *d = nil;
-                self.publicKey = d;
-                self.confirmation = d;
-                self.error = status;
-            }
-                break;
-            default:
-                break;
-        }
-    }
-    return self;
-}
-
-- (BOOL)isValid {
-    switch (self.type) {
-        case SigProvisioningPduType_capabilities:
-        {
-            struct ProvisioningCapabilities tem = self.capabilities;
-            struct ProvisioningCapabilities zero = {};
-            memset(&zero, 0, 12);
-            return memcmp(&tem, &zero, 12) != 0;
-        }
-            break;
-        case SigProvisioningPduType_publicKey:
-        {
-            return self.publicKey != nil;
-        }
-            break;
-        case SigProvisioningPduType_inputComplete:
-        case SigProvisioningPduType_complete:
-        {
-            return YES;
-        }
-            break;
-        case SigProvisioningPduType_confirmation:
-        {
-            return self.confirmation != nil && self.confirmation.length == 16;
-        }
-            break;
-        case SigProvisioningPduType_random:
-        {
-            return self.random != nil && self.random.length == 16;
-        }
-            break;
-        case SigProvisioningPduType_failed:
-        {
-            return self.error != 0;
-        }
-            break;
-        default:
-            break;
-    }
-    return NO;
-}
-
-@end
+//@implementation SigProvisioningResponse
+//
+//- (instancetype)initWithData:(NSData *)data {
+//    if (self = [super init]) {
+//        if (data == nil || data.length == 0) {
+//            TeLogDebug(@"response data error.")
+//            return nil;
+//        }
+//        
+//        if (data.length >= 1) {
+//            UInt8 type = 0;
+//            memcpy(&type, data.bytes, 1);
+//            if (type == 0 || type > 0x0D) {
+//                TeLogDebug(@"response data pduType error.")
+//                return nil;
+//            }
+//            self.type = type;
+//        }
+//        self.responseData = data;
+//        switch (self.type) {
+//            case SigProvisioningPduType_capabilities:
+//            {
+//                TeLogDebug(@"receive capabilities.");
+//                SigProvisioningCapabilitiesPdu *pdu = [[SigProvisioningCapabilitiesPdu alloc] initWithParameters:data];
+////                struct ProvisioningCapabilities tem = {};
+////                [SigProvisioningPdu analysisProvisioningCapabilities:&tem withData:data];
+//                self.capabilities = pdu;
+//                NSData *d = nil;
+//                self.publicKey = d;
+//                self.confirmation = d;
+//                self.random = d;
+//                self.error = 0;
+//            }
+//                break;
+//            case SigProvisioningPduType_publicKey:
+//            {
+//                TeLogDebug(@"receive publicKey.");
+//                self.publicKey = [data subdataWithRange:NSMakeRange(1, data.length - 1)];
+////                struct ProvisioningCapabilities tem = {};
+////                memset(&tem, 0, 12);
+//                self.capabilities = nil;
+//                NSData *d = nil;
+//                self.confirmation = d;
+//                self.random = d;
+//                self.error = 0;
+//            }
+//                break;
+//            case SigProvisioningPduType_inputComplete:
+//            case SigProvisioningPduType_complete:
+//            {
+//                TeLogDebug(@"receive inputComplete or complete.");
+////                struct ProvisioningCapabilities tem = {};
+////                memset(&tem, 0, 12);
+//                self.capabilities = nil;
+//                NSData *d = nil;
+//                self.publicKey = d;
+//                self.confirmation = d;
+//                self.random = d;
+//                self.error = 0;
+//                
+//            }
+//                break;
+//            case SigProvisioningPduType_confirmation:
+//            {
+//                TeLogDebug(@"receive confirmation.");
+//                self.confirmation = [data subdataWithRange:NSMakeRange(1, data.length - 1)];
+////                struct ProvisioningCapabilities tem = {};
+////                memset(&tem, 0, 12);
+//                self.capabilities = nil;
+//                NSData *d = nil;
+//                self.publicKey = d;
+//                self.random = d;
+//                self.error = 0;
+//            }
+//                break;
+//            case SigProvisioningPduType_random:
+//            {
+//                TeLogDebug(@"receive random.");
+//                self.random = [data subdataWithRange:NSMakeRange(1, data.length - 1)];
+////                struct ProvisioningCapabilities tem = {};
+////                memset(&tem, 0, 12);
+//                self.capabilities = nil;
+//                NSData *d = nil;
+//                self.publicKey = d;
+//                self.confirmation = d;
+//                self.error = 0;
+//            }
+//                break;
+//            case SigProvisioningPduType_failed:
+//            {
+//                TeLogDebug(@"receive failed.");
+//                if (data.length != 2) {
+//                    TeLogDebug(@"response data length error.")
+//                    return nil;
+//                }
+//                UInt8 status = 0;
+//                memcpy(&status, data.bytes+1, 1);
+//                if (status == 0) {
+//                    TeLogDebug(@"provision response fail data, but analysis status error.")
+//                    return nil;
+//                }
+////                struct ProvisioningCapabilities tem = {};
+////                memset(&tem, 0, 12);
+//                self.capabilities = nil;
+//                NSData *d = nil;
+//                self.publicKey = d;
+//                self.confirmation = d;
+//                self.error = status;
+//            }
+//                break;
+//            case SigProvisioningPduType_recordResponse:
+//            {
+//                SigProvisioningRecordResponseModel *responseModel = [[SigProvisioningRecordResponseModel alloc] initWithResponseData:[data subdataWithRange:NSMakeRange(1, data.length-1)]];
+//                self.recordResponseModel = responseModel;
+//            }
+//                break;
+//            case SigProvisioningPduType_recordsList:
+//            {
+//                SigProvisioningRecordsListModel *responseModel = [[SigProvisioningRecordsListModel alloc] initWithResponseData:[data subdataWithRange:NSMakeRange(1, data.length-1)]];
+//                self.recordListModel = responseModel;
+//            }
+//                break;
+//            default:
+//                break;
+//        }
+//    }
+//    return self;
+//}
+//
+//- (BOOL)isValid {
+//    switch (self.type) {
+//        case SigProvisioningPduType_capabilities:
+//        {
+//            return self.capabilities != nil && self.capabilities.pduData.length == 12;
+//        }
+//            break;
+//        case SigProvisioningPduType_publicKey:
+//        {
+//            return self.publicKey != nil;
+//        }
+//            break;
+//        case SigProvisioningPduType_inputComplete:
+//        case SigProvisioningPduType_complete:
+//        {
+//            return YES;
+//        }
+//            break;
+//        case SigProvisioningPduType_confirmation:
+//        {
+//            return self.confirmation != nil && self.confirmation.length == 16;
+//        }
+//            break;
+//        case SigProvisioningPduType_random:
+//        {
+//            return self.random != nil && self.random.length == 16;
+//        }
+//            break;
+//        case SigProvisioningPduType_failed:
+//        {
+//            return self.error != 0;
+//        }
+//            break;
+//        case SigProvisioningPduType_recordResponse:
+//        {
+//            return self.responseData.length >= 7;
+//        }
+//            break;
+//        case SigProvisioningPduType_recordsList:
+//        {
+//            return self.responseData.length >= 4;
+//        }
+//            break;
+//        default:
+//            break;
+//    }
+//    return NO;
+//}
+//
+//@end

@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -47,6 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) NSData *transportPdu;
 /// The raw data of Upper Transport Layer PDU.
 @property (nonatomic,strong) NSData *upperTransportPdu;
+
+@property (nonatomic,strong) SigNetworkPdu *networkPdu;
 
 @end
 

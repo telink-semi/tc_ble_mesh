@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -77,7 +77,7 @@
 + (NSArray <NSNumber *>*)decodeLimit:(int)limit indexesFromData:(NSData *)data atOffset:(int)offset {
     NSInteger size = data.length - offset;
     if (limit == 0 || size < 2) {
-        TeLogDebug(@"limit is 0, or data.length is short.");
+//        TeLogDebug(@"limit is 0, or data.length is short.");
         return [NSArray array];
     }
     if (limit == 1 || size == 2) {
@@ -1025,7 +1025,6 @@
 - (instancetype)init {
     if (self = [super init]) {
         self.opCode = SigOpCode_configBeaconStatus;
-        _page = 0;
     }
     return self;
 }
@@ -1033,7 +1032,6 @@
 - (instancetype)initWithEnable:(BOOL)enable {
     if (self = [super init]) {
         self.opCode = SigOpCode_configBeaconStatus;
-        _page = 0;
         _isEnabled = enable;
     }
     return self;
@@ -1042,7 +1040,6 @@
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_configBeaconStatus;
-        _page = 0;
         if (parameters == nil || parameters.length == 0) {
             return nil;
         }
@@ -2848,9 +2845,9 @@
     return [NSData dataWithBytes:&tem length:1];
 }
 
-- (NSTimeInterval)interval {
-    return (NSTimeInterval)(_steps+1)/100;
-}
+//- (NSTimeInterval)interval {
+//    return (NSTimeInterval)(_steps+1)/100;
+//}
 
 - (Class)responseType {
     return [SigConfigNetworkTransmitStatus class];
@@ -2916,8 +2913,8 @@
             _count = 0;
             _steps = 0;
         }else{
-            _count = transmit.count;
-            _steps = transmit.septs;
+            _count = transmit.networkTransmitCount;
+            _steps = transmit.networkTransmitIntervalSteps;
         }
     }
     return self;
@@ -3069,15 +3066,6 @@
         _state = state;
         _count = MIN(7, count);
         _steps = MIN(63, steps);
-    }
-    return self;
-}
-
-- (instancetype)initWithNode:(SigNodeModel *)node {
-    if (self = [super init]) {
-        _state = node.features.relayFeature <= 2 ? node.features.relayFeature : SigNodeFeaturesState_notSupported;
-        _count = (node.relayRetransmit.count < 1 ? 1 : node.relayRetransmit.count) - 1;
-        _steps = node.relayRetransmit.steps < 1 ? 0 : node.relayRetransmit.steps;
     }
     return self;
 }

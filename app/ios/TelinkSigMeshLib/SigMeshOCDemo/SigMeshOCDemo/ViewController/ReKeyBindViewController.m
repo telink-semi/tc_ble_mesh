@@ -81,12 +81,17 @@
         [SDKLibCommand keyBind:self.model.address appkeyModel:SigDataSource.share.curAppkeyModel keyBindType:keyBindType productID:productID cpsData:cpsData keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
             [weakSelf performSelectorOnMainThread:@selector(showKeyBindSuccess) withObject:nil waitUntilDone:YES];
             weakSelf.hasClickKeyBind = NO;
+            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
+            if (node && node.isRemote) {
+                [node addDefaultPublicAddressToRemote];
+                [SigDataSource.share saveLocationData];
+            }
         } fail:^(NSError * _Nonnull error) {
             [weakSelf performSelectorOnMainThread:@selector(showKeyBindFail) withObject:nil waitUntilDone:YES];
             weakSelf.hasClickKeyBind = NO;
         }];
     } else {
-        [SigBearer.share startMeshConnectWithComplete:^(BOOL successful) {
+        [SDKLibCommand startMeshConnectWithComplete:^(BOOL successful) {
             if (successful) {
                 [weakSelf performSelectorOnMainThread:@selector(keyBind:) withObject:nil waitUntilDone:YES];
             } else {
@@ -128,7 +133,7 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(showKeyBindFail) object:nil];
     });
     [ShowTipsHandle.share hidden];
-    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
             TeLogDebug(@"stopMeshConnect success");
         } else {

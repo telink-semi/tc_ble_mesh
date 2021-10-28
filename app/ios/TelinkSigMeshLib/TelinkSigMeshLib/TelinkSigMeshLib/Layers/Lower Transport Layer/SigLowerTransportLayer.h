@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -56,6 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 缓存APP端向设备端发送Segment Acknowlegment Messages的定时器。(告诉设备端一个Segment长包中哪个包丢失了或者所有包都接收了。)
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*acknowledgmentTimers;
 
+@property (nonatomic,strong) SigLowerTransportPdu *unSegmentLowerTransportPdu;
 
 
 /// The initial TTL values.
@@ -101,56 +102,6 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// - parameter pdu: The Upper Transport PDU.
 - (void)cancelSendingSegmentedUpperTransportPdu:(SigUpperTransportPdu *)pdu;
-
-///// This method handles the Unprovisioned Device Beacon.
-/////
-///// The curernt implementation does nothing, as remote provisioning is
-///// currently not supported.
-/////
-///// - parameter unprovisionedDeviceBeacon: The Unprovisioned Device Beacon received.
-//- (void)handleUnprovisionedDeviceBeacon:(SigUnprovisionedDeviceBeacon *)unprovisionedDeviceBeacon;
-
-///// This method handles the Secure Network Beacon.
-///// It will set the proper IV Index and IV Update Active flag for the Network Key
-///// that matches Network ID and change the Key Refresh Phase based on the
-///// key refresh flag specified in the beacon.
-/////
-///// - parameter secureNetworkBeacon: The Secure Network Beacon received.
-//- (void)handleSecureNetworkBeacon:(SigSecureNetworkBeacon *)secureNetworkBeacon;
-
-
-
-
-
-///// This method tries to send the Upper Transport Message.
-/////
-///// - parameter pdu:         The Upper Transport PDU to be sent.
-///// - parameter isSegmented: `True` if the message should be sent as segmented, `false` otherwise.
-///// - parameter networkKey:  The Network Key to be used to encrypt the message on
-/////                          on Network Layer.
-//- (void)sendUpperTransportPdu:(SigUpperTransportPdu *)pdu asSegmentedMessage:(BOOL)isSegmented usingNetworkKey:(SigNetkeyModel *)networkKey;
-
-///// This method tries to send the Segment Acknowledgment Message to the
-///// given address. It will try to send if the local Provisioner is set and
-///// has the Unicast Address assigned.
-/////
-///// If the `transporter` throws an error during sending, this error will be ignored.
-/////
-///// - parameter segments:   The array of message segments, of which at least one
-/////                         has to be not `nil`.
-///// - parameter networkKey: The Network Key to be used to encrypt the message on
-/////                         on Network Layer.
-///// - parameter ttl:        Initial Time To Live (TTL) value.
-//- (void)sendAckForSegments:(NSArray <SigSegmentedMessage *>*)segments usingNetworkKey:(SigNetkeyModel *)networkKey withTtl:(UInt8)ttl;
-
-///// Sends all non-`nil` segments from `outgoingSegments` map from the given
-///// `sequenceZero` key.
-/////
-///// - parameter sequenceZero: The key to get segments from the map.
-//- (void)sendSegmentsForSequenceZero:(UInt16)sequenceZero limit:(int)limit;
-//
-//- (void)sendSegmentsForSequenceZero:(UInt16)sequenceZero;//limit=10
-
 
 @end
 

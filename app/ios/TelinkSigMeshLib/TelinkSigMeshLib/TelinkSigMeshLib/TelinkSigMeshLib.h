@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -52,6 +52,8 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #define kExistMeshOTA   (NO)
 /*是否存在remote provision功能*/
 #define kExistRemoteProvision   (NO)
+/*是否存在CertificateBasedProvision功能*/
+#define kExistCertificateBasedProvision   (NO)
 #import <TelinkSigMeshLib/SigConst.h>
 #import <TelinkSigMeshLib/SigEnumeration.h>
 #import <TelinkSigMeshLib/SigStruct.h>
@@ -79,6 +81,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/SigBluetooth.h>
 #import <TelinkSigMeshLib/SigAddDeviceManager.h>
 #import <TelinkSigMeshLib/SigPdu.h>
+#import <TelinkSigMeshLib/ConnectTools.h>
 
 #else
 
@@ -87,6 +90,8 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #define kExistMeshOTA   (YES)
 /*是否存在remote provision功能*/
 #define kExistRemoteProvision   (YES)
+/*是否存在CertificateBasedProvision功能*/
+#define kExistCertificateBasedProvision   (YES)
 #import <TelinkSigMeshLibExtensions/SigConst.h>
 #import <TelinkSigMeshLibExtensions/SigEnumeration.h>
 #import <TelinkSigMeshLibExtensions/SigStruct.h>
@@ -115,5 +120,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLibExtensions/SigAddDeviceManager.h>
 #import <TelinkSigMeshLibExtensions/SigPdu.h>
 #import <TelinkSigMeshLibExtensions/SDKLibCommand+subnetBridge.h>
+#import <TelinkSigMeshLibExtensions/SDKLibCommand+certificate.h>
+#import <TelinkSigMeshLibExtensions/ConnectTools.h>
 
 #endif

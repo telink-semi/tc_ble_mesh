@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -52,11 +52,12 @@
 }
 
 - (SigMeshMessageSecurity)security {
-    return SigMeshMessageSecurityLow;
+//    return SigMeshMessageSecurityLow;
+    return SigMeshLib.share.dataSource.security;
 }
 
 - (BOOL)isSegmented {
-    return [self accessPdu].length > SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
+    return [self accessPdu].length > SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
 }
 
 /// The Access Layer PDU data that will be sent.

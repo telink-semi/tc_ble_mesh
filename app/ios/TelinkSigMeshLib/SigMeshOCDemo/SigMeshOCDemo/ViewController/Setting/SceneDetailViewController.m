@@ -195,7 +195,7 @@
                 TeLogDebug(@"getSceneRegisterStatusWithAddress ResponseModel=%@",responseMessage.parameters);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 if (error == nil) {
-                    [DemoCommand saveSceneWithAddress:curAction.address sceneId:weakSelf.model.number responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+                    [DemoCommand saveSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                         TeLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage.parameters);
                     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                         if (error == nil) {
@@ -211,7 +211,7 @@
         while (delArray.count > 0) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             ActionModel *curAction = delArray.firstObject;
-            [DemoCommand delSceneWithAddress:curAction.address sceneId:weakSelf.model.number responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+            [DemoCommand delSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                 TeLogDebug(@"delSceneWithAddress ResponseModel=%@",responseMessage);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
                 if (error == nil) {

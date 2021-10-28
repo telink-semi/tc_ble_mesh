@@ -435,7 +435,7 @@
                         return self;
                     }
                     NSString *suuidString = ((CBUUID *)suuids.firstObject).UUIDString;
-                    BOOL provisionAble = [suuidString  isEqualToString: kPBGATTService];
+                    BOOL provisionAble = [suuidString  isEqualToString: kPBGATTService] || [suuidString  isEqualToString:[LibTools change16BitsUUIDTO128Bits:kPBGATTService]];
                     _provisioned = !provisionAble;
                     if (provisionAble) {
                         // 未入网
@@ -450,7 +450,7 @@
                             _advUuid = [LibTools convertDataToHexStr:[advDataServiceData subdataWithRange:NSMakeRange(0, 16)]];
                         }
                         if (advDataServiceData.length >= 18) {
-                            OobInformation oob = {};
+                            struct OobInformation oob = {};
                             oob.value = [LibTools uint16FromBytes:[advDataServiceData subdataWithRange:NSMakeRange(16, 2)]];
                             _advOobInformation = oob;
                         }
@@ -506,7 +506,7 @@
             if (parameters.length >= 19) {
                 UInt16 tem16 = 0;
                 memcpy(&tem16, dataByte+17, 2);
-                OobInformation oob = {};
+                struct OobInformation oob = {};
                 oob.value = tem16;
                 _oob = oob;
             }
@@ -671,19 +671,24 @@
             UInt8 temPage = 0;
             NSData *pageData = [NSData dataWithBytes:&temPage length:1];
             NSMutableData *mData = [NSMutableData dataWithData:pageData];
-            if (pid == 7) {
+            if (pid == SigNodePID_Panel) {
                 //set default compositionData of panel
                 NSData *data = [NSData dataWithBytes:PanelByte length:sizeof(PanelByte)];
                 [mData appendData:data];
                 compositionData = [[SigPage0 alloc] initWithParameters:mData];
-            }else if (pid == 2) {
+            }else if (pid == SigNodePID_HSL) {
                 //set default compositionData of HSL
                 NSData *data = [NSData dataWithBytes:HSLByte length:sizeof(HSLByte)];
                 [mData appendData:data];
                 compositionData = [[SigPage0 alloc] initWithParameters:mData];
-            }else if (pid == 1) {
+            }else if (pid == SigNodePID_CT) {
                 //set default compositionData of CT
                 NSData *data = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
+                [mData appendData:data];
+                compositionData = [[SigPage0 alloc] initWithParameters:mData];
+            }else if (pid == SigNodePID_LPN) {
+                //set default compositionData of LPN
+                NSData *data = [NSData dataWithBytes:LPNByte length:sizeof(LPNByte)];
                 [mData appendData:data];
                 compositionData = [[SigPage0 alloc] initWithParameters:mData];
             }
@@ -729,10 +734,29 @@
     return self;
 }
 
+- (void)setCompositionData:(NSData *)compositionData {
+    UInt8 temPage = 0;
+    NSData *pageData = [NSData dataWithBytes:&temPage length:1];
+    NSMutableData *mData = [NSMutableData dataWithData:pageData];
+    [mData appendData:compositionData];
+    _defaultCompositionData = [[SigPage0 alloc] initWithParameters:mData];
+}
+
 @end
 
 
 @implementation IniCommandModel
+
+- (instancetype)init {
+    if (self = [super init]) {
+        _hasReceiveResponse = NO;
+        _isEncryptByDeviceKey = NO;
+        _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
+        _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
+        _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
+    }
+    return self;
+}
 
 - (instancetype)initSigModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt16)opcode commandData:(NSData *)commandData {
     if (self = [super init]) {
@@ -744,6 +768,32 @@
         _address = address;
         _opcode = opcode;
         _commandData = commandData;
+        _isEncryptByDeviceKey = NO;
+        _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
+        _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
+        _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
+    }
+    return self;
+}
+
+- (instancetype)initVendorModelIniCommandWithNetkeyIndex:(UInt16)netkeyIndex appkeyIndex:(UInt16)appkeyIndex retryCount:(UInt8)retryCount responseMax:(UInt8)responseMax address:(UInt16)address opcode:(UInt8)opcode vendorId:(UInt16)vendorId responseOpcode:(UInt8)responseOpcode tidPosition:(UInt8)tidPosition tid:(UInt8)tid commandData:(nullable NSData *)commandData {
+    if (self = [super init]) {
+        _hasReceiveResponse = NO;
+        _netkeyIndex = netkeyIndex;
+        _appkeyIndex = appkeyIndex;
+        _retryCount = retryCount;
+        _responseMax = responseMax;
+        _address = address;
+        _opcode = opcode;
+        _vendorId = vendorId;
+        _responseOpcode = responseOpcode;
+        _tidPosition = tidPosition;
+        _tid = tid;
+        _commandData = commandData;
+        _isEncryptByDeviceKey = NO;
+        _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
+        _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
+        _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     }
     return self;
 }
@@ -759,9 +809,14 @@
         _opcode = opcode;
         _vendorId = vendorId;
         _responseOpcode = responseOpcode;
+        _tidPosition = 0;
         _needTid = needTid;
         _tid = tid;
         _commandData = commandData;
+        _isEncryptByDeviceKey = NO;
+        _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
+        _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
+        _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     }
     return self;
 }
@@ -771,6 +826,7 @@
         if (iniCommandData.length < 11) {
             return nil;
         }
+        _isEncryptByDeviceKey = NO;
         Byte *pu = (Byte *)[iniCommandData bytes];
         unsigned int temp = 0;
         memcpy(&temp, pu+2, 2);
@@ -803,9 +859,10 @@
             temp = 0;
             memcpy(&temp, pu+14, 1);
             _needTid = temp != 0;
-            if (_needTid) {
+            _tidPosition = temp;
+            if (temp != 0) {
                 if (iniCommandData.length >= 15+temp) {
-                    _commandData = [iniCommandData subdataWithRange:NSMakeRange(15, temp-1)];
+                    _commandData = [iniCommandData subdataWithRange:NSMakeRange(15, iniCommandData.length-15)];
                     memcpy(&temp, pu+15+temp-1, 1);
                     _tid = temp;
                 }
@@ -820,6 +877,9 @@
                 _commandData = [iniCommandData subdataWithRange:NSMakeRange(10+size_op, iniCommandData.length-(10+size_op))];
             }
         }
+        _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
+        _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
+        _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     }
     return self;
 }
@@ -1051,6 +1111,7 @@
     return self;
 }
 
+/// 3.4.2.3 Virtual address
 /// Creates a Mesh Address based on the virtual label.
 - (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel {
     if (self = [super init]) {
@@ -1058,7 +1119,7 @@
         
         // Calculate the 16-bit virtual address based on the 128-bit label.
         NSData *salt = [OpenSSLHelper.share calculateSalt:[@"vtad" dataUsingEncoding:kCFStringEncodingASCII]];
-        NSData *hash = [OpenSSLHelper.share calculateCMAC:[LibTools nsstringToHex:_virtualLabel.UUIDString] andKey:salt];
+        NSData *hash = [OpenSSLHelper.share calculateCMAC:[LibTools nsstringToHex:[LibTools meshUUIDToUUID:_virtualLabel.UUIDString]] andKey:salt];
         UInt16 address = CFSwapInt16HostToBig([LibTools uint16FromBytes:[hash subdataWithRange:NSMakeRange(14, 2)]]);
         address |= 0x8000;
         address &= 0xBFFF;
@@ -1418,11 +1479,11 @@
 
 - (SigIvIndex *)ivIndex {
     if (_ivIndex) {
-        if (_ivIndex.index == [LibTools uint32From16String:SigDataSource.share.ivIndex]) {
+        if (_ivIndex.index == [LibTools uint32From16String:SigMeshLib.share.dataSource.ivIndex]) {
             return _ivIndex;
         }
     }
-    _ivIndex = [[SigIvIndex alloc] initWithIndex:[LibTools uint32From16String:SigDataSource.share.ivIndex] updateActive:NO];
+    _ivIndex = [[SigIvIndex alloc] initWithIndex:[LibTools uint32From16String:SigMeshLib.share.dataSource.ivIndex] updateActive:NO];
     return _ivIndex;
 }
 
@@ -1527,7 +1588,11 @@
         dict[@"provisionerName"] = _provisionerName;
     }
     if (_UUID) {
-        dict[@"UUID"] = _UUID;
+        if (_UUID.length == 32) {
+            dict[@"UUID"] = [LibTools UUIDToMeshUUID:_UUID];
+        } else if (_UUID.length == 36) {
+            dict[@"UUID"] = _UUID;
+        }
     }
     if (_allocatedUnicastRange) {
         NSMutableArray *array = [NSMutableArray array];
@@ -1568,7 +1633,12 @@
         _provisionerName = dictionary[@"provisionerName"];
     }
     if ([allKeys containsObject:@"UUID"]) {
-        _UUID = dictionary[@"UUID"];
+        NSString *str = dictionary[@"UUID"];
+        if (str.length == 32) {
+            _UUID = [LibTools UUIDToMeshUUID:str];
+        } else if (str.length == 36) {
+            _UUID = str;
+        }
     }
     if ([allKeys containsObject:@"allocatedUnicastRange"]) {
         NSMutableArray *allocatedUnicastRange = [NSMutableArray array];
@@ -1626,8 +1696,8 @@
         //源码版本v3.3.0及以后，间隔0x0400，短地址分配范围：0x0001~0x03FF，0x0400~0x07FF，0x0800~0x0BFF，0x0C00~0x0FFF,...,0x7C00~0x7FFF.
         self.allocatedUnicastRange = [NSMutableArray array];
         SigRangeModel *range2 = [[SigRangeModel alloc] init];
-        range2.lowAddress = [NSString stringWithFormat:@"%04X",kAllocatedUnicastRangeLowAddress + (count == 0 ? 0 : (count*(SigDataSource.share.defaultAllocatedUnicastRangeHighAddress+1)-1))];
-        range2.highAddress = [NSString stringWithFormat:@"%04X",SigDataSource.share.defaultAllocatedUnicastRangeHighAddress + (count == 0 ? 0 : count*(SigDataSource.share.defaultAllocatedUnicastRangeHighAddress+1))];
+        range2.lowAddress = [NSString stringWithFormat:@"%04X",kAllocatedUnicastRangeLowAddress + (count == 0 ? 0 : (count*(SigMeshLib.share.dataSource.defaultAllocatedUnicastRangeHighAddress+1)-1))];
+        range2.highAddress = [NSString stringWithFormat:@"%04X",SigMeshLib.share.dataSource.defaultAllocatedUnicastRangeHighAddress + (count == 0 ? 0 : count*(SigMeshLib.share.dataSource.defaultAllocatedUnicastRangeHighAddress+1))];
         [self.allocatedUnicastRange addObject:range2];
         
         self.allocatedSceneRange = [NSMutableArray array];
@@ -1660,7 +1730,7 @@
         self.allocatedUnicastRange = [NSMutableArray array];
         SigRangeModel *range2 = [[SigRangeModel alloc] init];
         range2.lowAddress = [NSString stringWithFormat:@"%04X",maxHighAddressUnicast + 1];
-        UInt16 highAddress = maxHighAddressUnicast + SigDataSource.share.defaultAllocatedUnicastRangeHighAddress - (maxHighAddressUnicast == 0 ? 1 : 0);
+        UInt16 highAddress = maxHighAddressUnicast + SigMeshLib.share.dataSource.defaultAllocatedUnicastRangeHighAddress - (maxHighAddressUnicast == 0 ? 1 : 0);
         if (highAddress > 0x7FFF) {
             highAddress = 0x7FFF;
         }
@@ -1681,7 +1751,7 @@
 
 - (SigNodeModel *)node {
     SigNodeModel *tem = nil;
-    NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.nodes];
+    NSArray *nodes = [NSArray arrayWithArray:SigMeshLib.share.dataSource.nodes];
     for (SigNodeModel *model in nodes) {
         if ([model.UUID isEqualToString:_UUID]) {
             tem = model;
@@ -1726,6 +1796,19 @@
 
 - (NSInteger)hightIntAddress{
     return [LibTools uint16From16String:self.highAddress];
+}
+
+- (instancetype)initWithMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast {
+    if (self = [super init]) {
+        //源码版本v3.3.0及以后，间隔0x0400，短地址分配范围：0x0001~0x03FF，0x0400~0x07FF，0x0800~0x0BFF，0x0C00~0x0FFF,...,0x7C00~0x7FFF.
+        _lowAddress = [NSString stringWithFormat:@"%04X",maxHighAddressUnicast + 1];
+        UInt16 highAddress = maxHighAddressUnicast + SigMeshLib.share.dataSource.defaultAllocatedUnicastRangeHighAddress - (maxHighAddressUnicast == 0 ? 1 : 0);
+        if (highAddress > 0x7FFF) {
+            highAddress = 0x7FFF;
+        }
+        _highAddress = [NSString stringWithFormat:@"%04X",highAddress];
+    }
+    return self;
 }
 
 @end
@@ -1824,7 +1907,7 @@
 
 - (SigNetkeyModel *)getCurrentBoundNetKey {
     SigNetkeyModel *tem = nil;
-    NSArray *netKeys = [NSArray arrayWithArray:SigDataSource.share.netKeys];
+    NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *model in netKeys) {
         if (model.index == _boundNetKey) {
             tem = model;
@@ -1870,7 +1953,10 @@
     if (_name) {
         dict[@"name"] = _name;
     }
-    dict[@"number"] = [NSString stringWithFormat:@"%04lX",(long)_number];
+    if (_number) {
+        dict[@"number"] = _number;
+    }
+//    dict[@"number"] = [NSString stringWithFormat:@"%04lX",(long)_number];
     if (self.addresses) {
         NSMutableArray *array = [NSMutableArray array];
         NSMutableArray *addresses = [NSMutableArray arrayWithArray:self.addresses];
@@ -1900,10 +1986,13 @@
         _name = dictionary[@"name"];
     }
     if ([allKeys containsObject:@"number"]) {
-        if ([dictionary[@"number"] isKindOfClass:[NSString class]]) {
-            _number = [LibTools uint16From16String:dictionary[@"number"]];
-        }
+        _number = dictionary[@"number"];
     }
+//    if ([allKeys containsObject:@"number"]) {
+//        if ([dictionary[@"number"] isKindOfClass:[NSString class]]) {
+//            _number = [LibTools uint16From16String:dictionary[@"number"]];
+//        }
+//    }
     if ([allKeys containsObject:@"addresses"]) {
         NSMutableArray *addresses = [NSMutableArray array];
         NSArray *array = dictionary[@"addresses"];
@@ -2031,8 +2120,22 @@
     return _meshAddress;
 }
 
-- (UInt16)intAddress{
-    return [LibTools uint16From16String:self.address];
+- (UInt16)intAddress {
+    if (_address && _address.length == 4) {
+        return [LibTools uint16From16String:self.address];
+    } else {
+        return [self intVirtualAddress];
+    }
+}
+
+- (UInt16)intVirtualAddress {
+    UInt16 tem = 0;
+    if (_address && _address.length == 16) {
+        //message22
+        //16字节的Label UUID：0073e7e4d8b9440faf8415df4c56c0e1转2字节的DST (Virtual Address)：b529
+        
+    }
+    return tem;
 }
 
 - (BOOL)isOn{
@@ -2049,7 +2152,7 @@
 
 - (NSMutableArray <SigNodeModel *>*)groupDevices{
     NSMutableArray *tem = [[NSMutableArray alloc] init];
-    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    NSArray *curNodes = [NSArray arrayWithArray:SigMeshLib.share.dataSource.curNodes];
     for (SigNodeModel *model in curNodes) {
         if ([model.getGroupIDs containsObject:@(self.intAddress)]) {
             [tem addObject:model];
@@ -2060,7 +2163,7 @@
 
 - (NSMutableArray <SigNodeModel *>*)groupOnlineDevices{
     NSMutableArray *tem = [[NSMutableArray alloc] init];
-    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    NSArray *curNodes = [NSArray arrayWithArray:SigMeshLib.share.dataSource.curNodes];
     for (SigNodeModel *model in curNodes) {
         if ([model.getGroupIDs containsObject:@(self.intAddress)] && model.state != DeviceStateOutOfLine) {
             [tem addObject:model];
@@ -2094,17 +2197,19 @@
         _relayRetransmit = [[SigRelayretransmitModel alloc] init];
         _networkTransmit = [[SigNetworktransmitModel alloc] init];
         
-        _secureNetworkBeacon = NO;
+        _defaultTTL = 10;
+        _secureNetworkBeacon = YES;
         _configComplete = NO;
-        _blacklisted = NO;
+//        _blacklisted = NO;
         _HSL_Hue = 0;
         _HSL_Saturation = 0;
         _HSL_Lightness = 0;
-        _heartbeatPub = [[SigHeartbeatPubModel alloc] init];
-        _heartbeatSub = [[NSMutableArray alloc] init];
+        _heartbeatPub = nil;
+        _heartbeatSub = nil;
 //        _sno = @"00000000";
         _subnetBridgeList = [[NSMutableArray alloc] init];
         _subnetBridgeEnable = NO;
+        _excluded = false;
     }
     return self;
 }
@@ -2122,7 +2227,7 @@
         _configComplete = node.configComplete;
         _vid = node.vid;
         _cid = node.cid;
-        _blacklisted = node.blacklisted;
+//        _blacklisted = node.blacklisted;
         _peripheralUUID = node.peripheralUUID;
         _security = node.security;
         _crpl = node.crpl;
@@ -2141,10 +2246,11 @@
         _temperature = node.temperature;
         _schedulerList = [NSMutableArray arrayWithArray:node.schedulerList];
         _heartbeatPub = node.heartbeatPub;
-        _heartbeatSub = [NSMutableArray arrayWithArray:node.heartbeatSub];
+        _heartbeatSub = node.heartbeatSub;
 //        _sno = node.sno;
         _subnetBridgeList = [[NSMutableArray alloc] initWithArray:node.subnetBridgeList];
         _subnetBridgeEnable = node.subnetBridgeEnable;
+        _excluded = node.excluded;
     }
     return self;
 }
@@ -2159,7 +2265,7 @@
     device.configComplete = self.configComplete;
     device.vid = self.vid;
     device.cid = self.cid;
-    device.blacklisted = self.blacklisted;
+//    device.blacklisted = self.blacklisted;
     device.peripheralUUID = self.peripheralUUID;
     device.security = self.security;
     device.crpl = self.crpl;
@@ -2178,11 +2284,11 @@
     device.temperature = self.temperature;
     device.schedulerList = [NSMutableArray arrayWithArray:self.schedulerList];
     device.heartbeatPub = self.heartbeatPub;
-    device.heartbeatSub = [NSMutableArray arrayWithArray:self.heartbeatSub];
+    device.heartbeatSub = self.heartbeatSub;
 //    device.sno = self.sno;
-    device.subnetBridgeList = [[NSMutableArray alloc] initWithArray:device.subnetBridgeList];
-    device.subnetBridgeEnable = device.subnetBridgeEnable;
-
+    device.subnetBridgeList = [[NSMutableArray alloc] initWithArray:self.subnetBridgeList];
+    device.subnetBridgeEnable = self.subnetBridgeEnable;
+    device.excluded = self.excluded;
     return device;
 }
 
@@ -2205,6 +2311,10 @@
 - (BOOL)isSensor{
     return self.features.lowPowerFeature == SigNodeFeaturesState_enabled;
 //    return [LibTools uint16From16String:self.cid] == 0x201;
+}
+
+- (BOOL)isRemote {
+    return [LibTools uint16From16String:self.pid] == 0x301;
 }
 
 - (UInt8)HSL_Hue100{
@@ -2262,7 +2372,7 @@
         } else {
             [self.schedulerList addObject:model];
         }
-        [SigDataSource.share saveLocationData];
+        [SigMeshLib.share.dataSource saveLocationData];
     }
 }
 
@@ -2350,18 +2460,18 @@
 }
 
 - (NSString *)peripheralUUID{
-    if (self.address == SigDataSource.share.curLocationNodeModel.address) {
+    if (self.address == SigMeshLib.share.dataSource.curLocationNodeModel.address) {
         //location node's uuid
         return _UUID;
     }
     //new code:use in v3.0.0 and later
-    SigEncryptedModel *model = [SigDataSource.share getSigEncryptedModelWithAddress:self.address];
+    SigEncryptedModel *model = [SigMeshLib.share.dataSource getSigEncryptedModelWithAddress:self.address];
     _peripheralUUID = model.peripheralUUID;
     if ((!_peripheralUUID || _peripheralUUID.length == 0) && self.address != 0) {
-        SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithAddress:self.address];
+        SigScanRspModel *rspModel = [SigMeshLib.share.dataSource getScanRspModelWithAddress:self.address];
         _peripheralUUID = rspModel.uuid;
         if ((!_peripheralUUID || _peripheralUUID.length == 0) && self.macAddress != nil && self.macAddress.length > 0) {
-            rspModel = [SigDataSource.share getScanRspModelWithMac:self.macAddress];
+            rspModel = [SigMeshLib.share.dataSource getScanRspModelWithMac:self.macAddress];
             _peripheralUUID = rspModel.uuid;
         }
     }
@@ -2377,14 +2487,14 @@
     }
     NSString *tem = nil;
     if (_peripheralUUID && _peripheralUUID.length > 0) {
-        SigScanRspModel *model = [SigDataSource.share getScanRspModelWithUUID:_peripheralUUID];
+        SigScanRspModel *model = [SigMeshLib.share.dataSource getScanRspModelWithUUID:_peripheralUUID];
         if (model) {
             tem = model.macAddress;
         }
     }
     if (tem == nil) {
         if (self.address != 0) {
-            SigScanRspModel *model = [SigDataSource.share getScanRspModelWithAddress:self.address];
+            SigScanRspModel *model = [SigMeshLib.share.dataSource getScanRspModelWithAddress:self.address];
             if (model) {
                 tem = model.macAddress;
             }
@@ -2397,7 +2507,7 @@
 /// Returns list of Network Keys known to this Node.
 - (NSArray <SigNetkeyModel *>*)getNetworkKeys {
     NSMutableArray *tem = [NSMutableArray array];
-    NSArray *netKeys = [NSArray arrayWithArray:SigDataSource.share.netKeys];
+    NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *key in netKeys) {
         BOOL has = NO;
         NSArray *all = [NSArray arrayWithArray:_netKeys];
@@ -2424,7 +2534,7 @@
     return addr >= self.address && addr <= self.lastUnicastAddress;
 }
 
-- (SigModelIDModel *)getModelIDModelWithModelID:(UInt16)modelID {
+- (SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID {
     SigModelIDModel *model = nil;
     NSArray *elements = [NSArray arrayWithArray:self.elements];
     for (SigElementModel *element in elements) {
@@ -2443,7 +2553,7 @@
     return model;
 }
 
-- (SigModelIDModel *)getModelIDModelWithModelID:(UInt16)modelID andElementAddress:(UInt16)elementAddress {
+- (SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID andElementAddress:(UInt16)elementAddress {
     SigModelIDModel *model = nil;
     NSArray *elements = [NSArray arrayWithArray:self.elements];
     for (SigElementModel *element in elements) {
@@ -2491,9 +2601,13 @@
     if (_cid) {
         dict[@"cid"] = _cid;
     }
-    dict[@"blacklisted"] = [NSNumber numberWithBool:_blacklisted];
+//    dict[@"blacklisted"] = [NSNumber numberWithBool:_blacklisted];
     if (_UUID) {
-        dict[@"UUID"] = [LibTools meshUUIDToUUID:_UUID];
+        if (_UUID.length == 32) {
+            dict[@"UUID"] = [LibTools UUIDToMeshUUID:_UUID];
+        } else if (_UUID.length == 36) {
+            dict[@"UUID"] = _UUID;
+        }
     }
     if (_security) {
         dict[@"security"] = _security;
@@ -2511,9 +2625,13 @@
     if (_deviceKey) {
         dict[@"deviceKey"] = _deviceKey;
     }
-//    if (_sno) {
-//        dict[@"sno"] = _sno;
-//    }
+    dict[@"excluded"] = [NSNumber numberWithBool:_excluded];
+    if (_heartbeatPub) {
+        dict[@"heartbeatPub"] = [_heartbeatPub getDictionaryOfSigHeartbeatPubModel];
+    }
+    if (_heartbeatSub) {
+        dict[@"heartbeatSub"] = [_heartbeatSub getDictionaryOfSigHeartbeatSubModel];
+    }
     if (_elements) {
         NSMutableArray *array = [NSMutableArray array];
         NSArray *elements = [NSArray arrayWithArray:_elements];
@@ -2541,7 +2659,7 @@
         }
         dict[@"appKeys"] = array;
     }
-    if (_schedulerList) {
+    if (_schedulerList && _schedulerList.count > 0) {
         NSMutableArray *array = [NSMutableArray array];
         NSArray *schedulerList = [NSArray arrayWithArray:_schedulerList];
         for (SchedulerModel *model in schedulerList) {
@@ -2601,11 +2719,16 @@
     if ([allKeys containsObject:@"cid"]) {
         _cid = dictionary[@"cid"];
     }
-    if ([allKeys containsObject:@"blacklisted"]) {
-        _blacklisted = [dictionary[@"blacklisted"] boolValue];
-    }
+//    if ([allKeys containsObject:@"blacklisted"]) {
+//        _blacklisted = [dictionary[@"blacklisted"] boolValue];
+//    }
     if ([allKeys containsObject:@"UUID"]) {
-        _UUID = [LibTools meshUUIDToUUID:dictionary[@"UUID"]];
+        NSString *str = dictionary[@"UUID"];
+        if (str.length == 32) {
+            _UUID = [LibTools UUIDToMeshUUID:str];
+        } else if (str.length == 36) {
+            _UUID = str;
+        }
     }
     if ([allKeys containsObject:@"security"]) {
         _security = dictionary[@"security"];
@@ -2625,9 +2748,17 @@
     if ([allKeys containsObject:@"deviceKey"]) {
         _deviceKey = dictionary[@"deviceKey"];
     }
-//    if ([allKeys containsObject:@"sno"]) {
-//        _sno = dictionary[@"sno"];
-//    }
+    if ([allKeys containsObject:@"excluded"]) {
+        _excluded = [dictionary[@"excluded"] boolValue];
+    }
+    if ([allKeys containsObject:@"heartbeatPub"]) {
+        _heartbeatPub = [[SigHeartbeatPubModel alloc] init];
+        [_heartbeatPub setDictionaryToSigHeartbeatPubModel:dictionary[@"heartbeatPub"]];
+    }
+    if ([allKeys containsObject:@"heartbeatSub"]) {
+        _heartbeatSub = [[SigHeartbeatSubModel alloc] init];
+        [_heartbeatSub setDictionaryToSigHeartbeatSubModel:dictionary[@"heartbeatSub"]];
+    }
 
     if ([allKeys containsObject:@"elements"]) {
         NSMutableArray *elements = [NSMutableArray array];
@@ -2710,9 +2841,13 @@
     if (_cid) {
         dict[@"cid"] = _cid;
     }
-    dict[@"blacklisted"] = [NSNumber numberWithBool:_blacklisted];
+//    dict[@"blacklisted"] = [NSNumber numberWithBool:_blacklisted];
     if (_UUID) {
-        dict[@"UUID"] = [LibTools meshUUIDToUUID:_UUID];
+        if (_UUID.length == 32) {
+            dict[@"UUID"] = [LibTools UUIDToMeshUUID:_UUID];
+        } else if (_UUID.length == 36) {
+            dict[@"UUID"] = _UUID;
+        }
     }
     if (_security) {
         dict[@"security"] = _security;
@@ -2730,9 +2865,13 @@
     if (_deviceKey) {
         dict[@"deviceKey"] = _deviceKey;
     }
-//    if (_sno) {
-//        dict[@"sno"] = _sno;
-//    }
+    dict[@"excluded"] = [NSNumber numberWithBool:_excluded];
+    if (_heartbeatPub) {
+        dict[@"heartbeatPub"] = [_heartbeatPub getDictionaryOfSigHeartbeatPubModel];
+    }
+    if (_heartbeatSub) {
+        dict[@"heartbeatSub"] = [_heartbeatSub getDictionaryOfSigHeartbeatSubModel];
+    }
     if (_elements) {
         NSMutableArray *array = [NSMutableArray array];
         NSArray *elements = [NSArray arrayWithArray:_elements];
@@ -2875,6 +3014,12 @@
 - (void)setAddress:(UInt16)address{
     _address = address;
     self.unicastAddress = [NSString stringWithFormat:@"%04X",address];
+    if (_elements && _elements.count) {
+        NSArray *array = [NSArray arrayWithArray:_elements];
+        for (SigElementModel *element in array) {
+            element.parentNodeAddress = address;
+        }
+    }
 }
 
 ///获取该设备的所有组号
@@ -2888,7 +3033,12 @@
                 //[NSString]->[NSNumber]
                 NSArray *subscribe = [NSArray arrayWithArray:modelIDModel.subscribe];
                 for (NSString *groupIDString in subscribe) {
-                    NSNumber *groupNumber = @([LibTools uint16From16String:groupIDString]);
+                    NSNumber *groupNumber = nil;
+                    if (groupIDString.length == 4) {
+                        groupNumber = @([LibTools uint16From16String:groupIDString]);
+                    } else {
+                        groupNumber = @([LibTools getVirtualAddressOfLabelUUID:groupIDString]);
+                    }
                     if (![tem containsObject:groupNumber]) {
                         [tem addObject:groupNumber];
                     }
@@ -2902,7 +3052,7 @@
 ///新增设备的组号
 - (void)addGroupID:(NSNumber *)groupID{
     @synchronized (self) {
-        NSArray *allOptions = SigDataSource.share.defaultGroupSubscriptionModels;
+        NSArray *allOptions = SigMeshLib.share.dataSource.defaultGroupSubscriptionModels;
         for (NSNumber *modelID in allOptions) {
             NSArray *elements = [NSArray arrayWithArray:self.elements];
             for (SigElementModel *element in elements) {
@@ -2928,7 +3078,7 @@
 ///删除设备的组号
 - (void)deleteGroupID:(NSNumber *)groupID{
     @synchronized (self) {
-        NSArray *allOptions = SigDataSource.share.defaultGroupSubscriptionModels;
+        NSArray *allOptions = SigMeshLib.share.dataSource.defaultGroupSubscriptionModels;
         for (NSNumber *modelID in allOptions) {
             NSArray *elements = [NSArray arrayWithArray:self.elements];
             for (SigElementModel *element in elements) {
@@ -2971,8 +3121,8 @@
                         sigModelIDModel.publish.credentials = 0;
                         sigModelIDModel.publish.ttl = 0xff;
                         //json数据中，period为publish周期的毫秒数据，默认20秒
-                        sigModelIDModel.publish.period.numberOfSteps = SigDataSource.share.defaultPublishPeriodModel.numberOfSteps;
-                        sigModelIDModel.publish.period.resolution = SigDataSource.share.defaultPublishPeriodModel.resolution;
+                        sigModelIDModel.publish.period.numberOfSteps = SigMeshLib.share.dataSource.defaultPublishPeriodModel.numberOfSteps;
+                        sigModelIDModel.publish.period.resolution = SigMeshLib.share.dataSource.defaultPublishPeriodModel.resolution;
                         sigModelIDModel.publish.retransmit = retransmit;
                         sigModelIDModel.publish.address = [NSString stringWithFormat:@"%04lX",(long)kMeshAddress_allNodes];
                         break;
@@ -3159,6 +3309,91 @@
     }
 }
 
+- (void)addDefaultPublicAddressToRemote {
+    TeLogInfo(@"addDefaultPublicAddressToRemote");
+    for (int i=0; i < self.elements.count; i++) {
+        SigElementModel *element = self.elements[i];
+        for (SigModelIDModel *model in element.models) {
+            if (model.getIntModelID == kSigModel_GenericOnOffClient_ID) {
+                SigPublishModel *pM = [[SigPublishModel alloc] init];
+                pM.index = SigMeshLib.share.dataSource.curAppkeyModel.index;
+                pM.credentials = 0;
+                pM.ttl = 0xFF;
+                SigRetransmitModel *rM = [[SigRetransmitModel alloc] init];
+                rM.count = 5;
+                rM.interval = 2;
+                pM.retransmit = rM;
+                SigPeriodModel *per = [[SigPeriodModel alloc] init];
+                per.numberOfSteps = 0;
+                per.resolution = 100;
+                pM.period = per;
+                pM.address = [NSString stringWithFormat:@"%04X",0xC000+i];
+                model.publish = pM;
+                break;
+            }
+        }
+    }
+}
+
+@end
+
+
+@implementation SigExclusionModel
+
+- (instancetype)init {
+    if (self = [super init]) {
+        _addresses = [NSMutableArray array];
+    }
+    return self;
+}
+
+- (NSDictionary *)getDictionaryOfSigExclusionModel {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    dict[@"ivIndex"] = [NSNumber numberWithInteger:_ivIndex];
+    if (self.addresses) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSMutableArray *addresses = [NSMutableArray arrayWithArray:self.addresses];
+        for (NSString *str in addresses) {
+            [array addObject:str];
+        }
+        dict[@"addresses"] = array;
+    }
+    return dict;
+}
+
+- (void)setDictionaryToSigExclusionModel:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:@"ivIndex"]) {
+        _ivIndex = [dictionary[@"ivIndex"] integerValue];
+    }
+    if ([allKeys containsObject:@"addresses"]) {
+        NSMutableArray *addresses = [NSMutableArray array];
+        NSArray *array = dictionary[@"addresses"];
+        for (NSString *str in array) {
+            [addresses addObject:str];
+        }
+        _addresses = addresses;
+    }
+}
+
+- (BOOL)isEqual:(id)object{
+    if ([object isKindOfClass:[SigExclusionModel class]]) {
+        return _ivIndex == ((SigExclusionModel *)object).ivIndex;
+    } else {
+        return NO;
+    }
+}
+
+- (nonnull id)copyWithZone:(nullable NSZone *)zone {
+    SigExclusionModel *model = [[[self class] alloc] init];
+    model.ivIndex = self.ivIndex;
+    model.addresses = [[NSMutableArray alloc] initWithArray:self.addresses];
+    return model;
+}
+
 @end
 
 
@@ -3166,8 +3401,8 @@
 
 - (NSDictionary *)getDictionaryOfSigRelayretransmitModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-    dict[@"count"] = @(_count);
-    dict[@"interval"] = @(_interval);
+    dict[@"count"] = @(_relayRetransmitCount);
+    dict[@"interval"] = @([self getIntervalOfJsonFile]);
     return dict;
 }
 
@@ -3177,21 +3412,25 @@
     }
     NSArray *allKeys = dictionary.allKeys;
     if ([allKeys containsObject:@"count"]) {
-        _count = [dictionary[@"count"] integerValue];
+        _relayRetransmitCount = [dictionary[@"count"] integerValue];
     }
     if ([allKeys containsObject:@"interval"]) {
-        _interval = [dictionary[@"interval"] integerValue];
+        [self setIntervalOfJsonFile:[dictionary[@"interval"] integerValue]];
     }
 }
 
-- (UInt8)steps {
-    return (UInt8)(_interval / 10) - 1;
+- (UInt8)getIntervalOfJsonFile {
+    return (UInt8)(10 * (_relayRetransmitIntervalSteps + 1));
+}
+
+- (void)setIntervalOfJsonFile:(UInt8)intervalOfJsonFile {
+    _relayRetransmitIntervalSteps = (UInt8)(intervalOfJsonFile / 10) - 1;
 }
 
 - (instancetype)init {
     if (self = [super init]) {
-        _count = 1;
-        _interval = 10;
+        _relayRetransmitCount = 5;
+        _relayRetransmitIntervalSteps = 2;
     }
     return self;
 }
@@ -3203,8 +3442,8 @@
 
 - (NSDictionary *)getDictionaryOfSigNetworktransmitModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-    dict[@"count"] = @(_count);
-    dict[@"interval"] = @(_interval);
+    dict[@"count"] = @(_networkTransmitCount);
+    dict[@"interval"] = @([self getIntervalOfJsonFile]);
     return dict;
 }
 
@@ -3214,43 +3453,30 @@
     }
     NSArray *allKeys = dictionary.allKeys;
     if ([allKeys containsObject:@"count"]) {
-        _count = [dictionary[@"count"] integerValue];
+        _networkTransmitCount = [dictionary[@"count"] integerValue];
     }
     if ([allKeys containsObject:@"interval"]) {
-        _interval = [dictionary[@"interval"] integerValue];
+        [self setIntervalOfJsonFile:[dictionary[@"interval"] integerValue]];
     }
 }
 
-/// Number of 10-millisecond steps between transmissions.
-- (UInt8)septs {
-    return (UInt8)(_interval / 10) - 1;
+- (UInt8)getIntervalOfJsonFile {
+    return (UInt8)(10 * (_networkTransmitIntervalSteps + 1));
+}
+
+- (void)setIntervalOfJsonFile:(UInt8)intervalOfJsonFile {
+    _networkTransmitIntervalSteps = (UInt8)(intervalOfJsonFile / 10) - 1;
 }
 
 /// The interval in as `TimeInterval` in seconds.
-- (NSTimeInterval)timeInterval {
-    return (NSTimeInterval)_interval / 1000.0;
-}
+//- (NSTimeInterval)timeInterval {
+//    return (NSTimeInterval)_interval / 1000.0;
+//}
 
 - (instancetype)init {
     if (self = [super init]) {
-        _count = 1;
-        _interval = 10;
-    }
-    return self;
-}
-
-- (instancetype)initWithSigConfigNetworkTransmitSet:(SigConfigNetworkTransmitSet *)request {
-    if (self = [super init]) {
-        _count = request.count + 1;
-        _interval = (UInt16)(request.steps + 1) * 10;
-    }
-    return self;
-}
-
-- (instancetype)initWithSigConfigNetworkTransmitStatus:(SigConfigNetworkTransmitStatus *)status {
-    if (self = [super init]) {
-        _count = status.count + 1;
-        _interval = (UInt16)(status.steps + 1) * 10;
+        _networkTransmitCount = 5;
+        _networkTransmitIntervalSteps = 2;
     }
     return self;
 }
@@ -3468,7 +3694,7 @@
 }
 
 - (SigNodeModel * _Nullable)getParentNode {
-    return [SigDataSource.share getNodeWithAddress:_parentNodeAddress];
+    return [SigMeshLib.share.dataSource getNodeWithAddress:_parentNodeAddress];
 }
 
 - (SigLocation)getSigLocation {
@@ -4035,7 +4261,7 @@
     if (_destination) {
         dict[@"destination"] = _destination;
     }
-    dict[@"period"] = @(_period);
+//    dict[@"period"] = @(_period);
     return dict;
 }
 
@@ -4050,9 +4276,9 @@
     if ([allKeys containsObject:@"destination"]) {
         _destination = dictionary[@"destination"];
     }
-    if ([allKeys containsObject:@"period"]) {
-        _period = [dictionary[@"period"] integerValue];
-    }
+//    if ([allKeys containsObject:@"period"]) {
+//        _period = [dictionary[@"period"] integerValue];
+//    }
 }
 
 @end

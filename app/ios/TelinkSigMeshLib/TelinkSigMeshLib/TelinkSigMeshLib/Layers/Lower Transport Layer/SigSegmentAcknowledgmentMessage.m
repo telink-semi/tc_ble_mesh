@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -35,6 +35,24 @@
 - (instancetype)init {
     if (self = [super init]) {
         self.type = SigLowerTransportPduType_controlMessage;
+    }
+    return self;
+}
+
+- (instancetype)initBusySegmentAcknowledgmentMessageWithNetworkPdu:(SigNetworkPdu *)networkPdu {
+    if (self = [super init]) {
+        self.type = SigLowerTransportPduType_controlMessage;
+        _opCode = 0x00;
+        _isOnBehalfOfLowPowerNode = false;// Friendship is not supported.
+        /// Last 13 bits of the sequence number are known as seqZero.
+        UInt16 sequenceZero = (UInt16)(networkPdu.sequence & 0x1FFF);
+        _sequenceZero = sequenceZero;
+        _blockAck = 0;
+        UInt32 bigAck = 0;
+        self.upperTransportPdu = [NSData dataWithBytes:&bigAck length:4];
+        self.source = networkPdu.destination;
+        self.destination = networkPdu.source;
+        self.networkKey = networkPdu.networkKey;
     }
     return self;
 }
@@ -78,7 +96,7 @@
         _opCode = 0x00;
         _isOnBehalfOfLowPowerNode = false;// Friendship is not supported.
         SigSegmentedMessage *segment = segments.firstObject;
-        if (segments == nil || ![segment isKindOfClass:SigSegmentedMessage.class]) {
+        if (segment == nil || ![segment isKindOfClass:SigSegmentedMessage.class]) {
             for (SigSegmentedMessage *tem in segments) {
                 if (tem != nil && ![tem isEqual:[NSNull null]] && [tem isKindOfClass:SigSegmentedMessage.class]) {
                     segment = tem;
@@ -97,7 +115,7 @@
         _blockAck = ack;
         UInt32 bigAck = CFSwapInt32HostToBig(ack);
         self.upperTransportPdu = [NSData dataWithBytes:&bigAck length:4];
-        TeLogInfo(@"node response last segment,send response is acknowledged.ack.blockAck=0x%x,sequenceZero=0x%X,upperTransportPdu=%@",ack,_sequenceZero,self.upperTransportPdu);
+//        TeLogInfo(@"node response last segment,send response is acknowledged.ack.blockAck=0x%x,sequenceZero=0x%X,upperTransportPdu=%@",ack,_sequenceZero,self.upperTransportPdu);
         // Assuming all segments have the same source and destination addresses and network key.
         // Swaping source with destination. Destination here is guaranteed to be a Unicast Address.
         self.source = segment.destination;

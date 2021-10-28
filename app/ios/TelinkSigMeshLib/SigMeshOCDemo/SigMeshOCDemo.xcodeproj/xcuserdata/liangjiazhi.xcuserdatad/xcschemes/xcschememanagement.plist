@@ -4,15 +4,28 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>SigMeshOCDemo copy.xcscheme_^#shared#^_</key>
+		<key>SigMeshOCDemo.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>3</integer>
 		</dict>
-		<key>SigMeshOCDemo.xcscheme_^#shared#^_</key>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>25589A0E272115D700F4F880</key>
 		<dict>
-			<key>orderHint</key>
-			<integer>1</integer>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>25589A29272115DB00F4F880</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>25589A33272115DB00F4F880</key>
+		<dict>
+			<key>primary</key>
+			<true/>
 		</dict>
 	</dict>
 </dict>

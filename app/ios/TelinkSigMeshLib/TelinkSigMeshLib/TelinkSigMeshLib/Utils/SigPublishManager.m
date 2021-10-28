@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -56,7 +56,7 @@
     
     [self stopCheckOfflineTimerWithAddress:@(adr)];
     
-    SigNodeModel *device = [SigDataSource.share getNodeWithAddress:adr];
+    SigNodeModel *device = [SigMeshLib.share.dataSource getNodeWithAddress:adr];
     if (device) {
         if (device.hasPublishFunction && device.hasOpenPublish) {
             device.state = DeviceStateOutOfLine;
@@ -70,7 +70,7 @@
 }
 
 - (void)startCheckOfflineTimerWithAddress:(NSNumber *)address{
-    SigNodeModel *device = [SigDataSource.share getNodeWithAddress:address.intValue];
+    SigNodeModel *device = [SigMeshLib.share.dataSource getNodeWithAddress:address.intValue];
     if (device && device.hasPublishFunction && device.hasOpenPublish && device.hasPublishPeriod) {
         [self stopCheckOfflineTimerWithAddress:address];
         __weak typeof(self) weakSelf = self;

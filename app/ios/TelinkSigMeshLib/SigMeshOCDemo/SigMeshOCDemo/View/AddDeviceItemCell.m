@@ -32,6 +32,7 @@
 @implementation AddDeviceItemCell{
     __weak IBOutlet UIView *_bgView;
     __weak IBOutlet UIImageView *_icon;
+    __weak IBOutlet UIImageView *_icon_cert;
     __weak IBOutlet UILabel *_nameLabel;
     __weak IBOutlet UILabel *_stateLabel;
 }
@@ -47,6 +48,7 @@
 - (void)updateContent:(AddDeviceModel *)model{
     _nameLabel.text = [NSString stringWithFormat:@"adr:0x%X\nmac:%@",model.scanRspModel.address,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
     _nameLabel.font = [UIFont systemFontOfSize:10.0];
+    _icon_cert.hidden = !model.scanRspModel.advOobInformation.supportForCertificateBasedProvisioning;
     switch (model.state) {
         case AddDeviceModelStateBinding:
             _stateLabel.text = @"BINDING";

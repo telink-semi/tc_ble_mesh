@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -126,5 +126,19 @@
 /// @param key The 128-bit key.
 /// @return A byte array of encrypted data using the key. The size of the returned  array is equal to the size of input data.
 - (NSData *)calculateEvalueWithData:(NSData *)someData andKey:(NSData *)key;
+
+
+/// check version & time & Serial Number
+///
+/// "ecdsa-with-SHA256"
+/// check certificate data and return inner public key
+/// @param cerData certificate data formatted by x509 DeviceCertificate der.
+/// @param superCerData certificate data formatted by x509 IntermediateCertificate der.
+/// @return public key.
+- (NSData *)checkCertificate:(NSData *)cerData withSuperCertificate:(NSData *)superCerData;
+
+- (NSData *)getStaticOOBDataFromCertificate:(NSData *)cerData;
+
+- (BOOL)checkUserCertificates:(NSArray <NSData *>*)userCerDatas withRootCertificate:(NSData *)rootCerData;
 
 @end

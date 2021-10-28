@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -92,23 +92,19 @@
     [_accessLayer sendMessage:message fromElement:element toDestination:destination withTtl:initialTtl usingApplicationKey:applicationKey command:command];
 }
 
-- (void)sendMeshMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey {
-    [_accessLayer sendMessage:message fromElement:element toDestination:destination withTtl:initialTtl usingApplicationKey:applicationKey];
+- (void)sendConfigMessage:(SigConfigMessage *)configMessage toDestination:(UInt16)destination withTtl:(UInt8)initialTtl command:(SDKLibCommand *)command {
+    [_accessLayer sendSigConfigMessage:configMessage toDestination:destination withTtl:initialTtl command:command];
 }
 
-- (void)sendConfigMessage:(SigConfigMessage *)configMessage toDestination:(UInt16)destination withTtl:(UInt8)initialTtl {
-    [_accessLayer sendSigConfigMessage:configMessage toDestination:destination withTtl:initialTtl];
-}
-
-- (void)replyToMessageSentToOrigin:(UInt16)origin withMessage:(SigMeshMessage *)message toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet {
+- (void)replyToMessageSentToOrigin:(UInt16)origin withMessage:(SigMeshMessage *)message toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
     SigElementModel *primaryElement = _manager.dataSource.curLocationNodeModel.elements.firstObject;
     if (primaryElement) {
-        [_accessLayer replyToMessageSentToOrigin:origin withMeshMessage:message fromElement:primaryElement toDestination:destination usingKeySet:keySet];
+        [_accessLayer replyToMessageSentToOrigin:origin withMeshMessage:message fromElement:primaryElement toDestination:destination usingKeySet:keySet command:command];
     }
 }
 
-- (void)replyToMessageSentToOrigin:(UInt16)origin withMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet {
-    [_accessLayer replyToMessageSentToOrigin:origin withMeshMessage:message fromElement:element toDestination:destination usingKeySet:keySet];
+- (void)replyToMessageSentToOrigin:(UInt16)origin withMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
+    [_accessLayer replyToMessageSentToOrigin:origin withMeshMessage:message fromElement:element toDestination:destination usingKeySet:keySet command:command];
 }
 
 - (void)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message {
@@ -156,12 +152,5 @@
         }
     });
 }
-
-#pragma mark - new api
-
-//- (void)setFilter:(SigNetkeyModel *)netkeyModel {
-//    TeLogDebug(@"netkeyModel=%@",netkeyModel);
-//    [self.networkLayer updateProxyFilterUsingNetworkKey:netkeyModel];
-//}
 
 @end

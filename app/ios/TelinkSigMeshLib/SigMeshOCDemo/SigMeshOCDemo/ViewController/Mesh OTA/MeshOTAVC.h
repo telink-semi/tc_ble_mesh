@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -30,5 +30,7 @@
 #import <UIKit/UIKit.h>
 
 @interface MeshOTAVC : UIViewController
+
+@property (nonatomic, assign) BOOL isContinue;//是否是继续meshOTA流程
 
 @end

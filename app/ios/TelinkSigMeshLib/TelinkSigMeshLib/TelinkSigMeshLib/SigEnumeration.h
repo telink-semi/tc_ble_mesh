@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -32,28 +32,38 @@
 
 /// Table 5.14: Provisioning PDU types.
 /// - seeAlso: Mesh_v1.0.pdf  (page.238)
+/// Table 5.18: Provisioning PDU types.
+/// - seeAlso: MshPRFd1.1r11_clean.pdf  (page.488)
 typedef enum : UInt8 {
     /// Invites a device to join a mesh network
-    SigProvisioningPduType_invite        = 0,
+    SigProvisioningPduType_invite         = 0x00,
     /// Indicates the capabilities of the device
-    SigProvisioningPduType_capabilities  = 1,
+    SigProvisioningPduType_capabilities   = 0x01,
     /// Indicates the provisioning method selected by the Provisioner based on the capabilities of the device
-    SigProvisioningPduType_start         = 2,
+    SigProvisioningPduType_start          = 0x02,
     /// Contains the Public Key of the device or the Provisioner
-    SigProvisioningPduType_publicKey     = 3,
+    SigProvisioningPduType_publicKey      = 0x03,
     /// Indicates that the user has completed inputting a value
-    SigProvisioningPduType_inputComplete = 4,
+    SigProvisioningPduType_inputComplete  = 0x04,
     /// Contains the provisioning confirmation value of the device or the Provisioner
-    SigProvisioningPduType_confirmation  = 5,
+    SigProvisioningPduType_confirmation   = 0x05,
     /// Contains the provisioning random value of the device or the Provisioner
-    SigProvisioningPduType_random        = 6,
+    SigProvisioningPduType_random         = 0x06,
     /// Includes the assigned unicast address of the primary element, a network key, NetKey Index, Flags and the IV Index
-    SigProvisioningPduType_data          = 7,
+    SigProvisioningPduType_data           = 0x07,
     /// Indicates that provisioning is complete
-    SigProvisioningPduType_complete      = 8,
+    SigProvisioningPduType_complete       = 0x08,
     /// Indicates that provisioning was unsuccessful
-    SigProvisioningPduType_failed        = 9,
-    /// RFU, Reserved for Future Use, 0x0A–0xFF.
+    SigProvisioningPduType_failed         = 0x09,
+    /// Indicates a request to retrieve a provisioning record fragment from the device
+    SigProvisioningPduType_recordRequest  = 0x0A,
+    /// Contains a provisioning record fragment or an error status, sent in response to a Provisioning Record Request
+    SigProvisioningPduType_recordResponse = 0x0B,
+    /// Indicates a request to retrieve the list of IDs of the provisioning records that the unprovisioned device supports.
+    SigProvisioningPduType_recordsGet     = 0x0C,
+    /// Contains the list of IDs of the provisioning records that the unprovisioned device supports.
+    SigProvisioningPduType_recordsList    = 0x0D,
+    /// RFU, Reserved for Future Use, 0x0E–0xFF.
 } SigProvisioningPduType;
 
 typedef enum : UInt16 {
@@ -127,6 +137,7 @@ typedef enum : UInt8 {
     PublicKeyType_noOobPublicKey = 0,
     /// OOB Public Key is used. The key must contain the full value of the Public Key, depending on the chosen algorithm.
     PublicKeyType_oobPublicKey   = 1,
+    /// 0x02–0xFF, Prohibited.
 } PublicKeyType;
 
 /// The authentication method chosen for provisioning.
@@ -672,6 +683,14 @@ typedef enum : UInt8 {
     ProvisionigState_complete,
     /// The provisioning has failed because of a local error.
     ProvisionigState_fail,
+    /// The manager is requesting Provisioning Records Get.
+    ProvisionigState_recordsGet,
+    /// Provisioning Records List were received.
+    ProvisionigState_recordsLsit,
+    /// The manager is requesting Provisioning Record.
+    ProvisionigState_recordRequest,
+    /// Provisioning Record Response were received.
+    ProvisionigState_recordResponse,
 } ProvisionigState;
 
 /// Table 5.38: Provisioning error codes.
@@ -1141,10 +1160,10 @@ typedef enum : UInt8 {
 /// 4.2.10 SecureNetworkBeacon
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.141)
 typedef enum : UInt8 {
-    //The node is not broadcasting a Secure Network beacon.
-    SigSecureNetworkBeaconState_open,
     //The node is broadcasting a Secure Network beacon.
-    SigSecureNetworkBeaconState_close,
+    SigSecureNetworkBeaconState_close = 0,
+    //The node is not broadcasting a Secure Network beacon.
+    SigSecureNetworkBeaconState_open = 1,
 } SigSecureNetworkBeaconState;
 
 /// 4.2.11 GATTProxy
@@ -1242,15 +1261,13 @@ typedef enum : UInt8 {
     SigUpdateStatusType_cancel     = 0x02,
 } SigUpdateStatusType;
 
-/// Update Policy field values:
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.26)
+/// Table 8.17: Update Policy state values
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.87)
 typedef enum : UInt8 {
-    /// Do not apply new firmware when Object transfer is completed.
-    SigUpdatePolicyType_none       = 0x00,
-    /// Apply new firmware when Object transfer is completed.
-    SigUpdatePolicyType_autoUpdate = 0x01,
-    /// Reserved for Future Use, 0x02~0xFF
-    SigUpdatePolicyType_RFU,
+    /// The Firmware Distribution Server verifies that firmware image distribution completed successfully but does not apply the update. The Initiator (the Firmware Distribution Client) initiates firmware image application.
+    SigUpdatePolicyType_verifyOnly       = 0x00,
+    /// The Firmware Distribution Server verifies that firmware image distribution completed successfully and then applies the firmware update.
+    SigUpdatePolicyType_verifyAndApply = 0x01,
 } SigUpdatePolicyType;
 
 /// Firmware Update Status Values
@@ -1353,12 +1370,12 @@ typedef enum       : UInt8 {
     SigFirmwareUploadPhaseStateType_idle              = 0x00,
     /// The Store Firmware procedure is being executed.
     SigFirmwareUploadPhaseStateType_transferActive    = 0x01,
-    /// The Store Firmware OOB procedure is being executed.
-    SigFirmwareUploadPhaseStateType_OOBTransferActive = 0x02,
+//    /// The Store Firmware OOB procedure is being executed.
+//    SigFirmwareUploadPhaseStateType_OOBTransferActive = 0x02,
     /// The Store Firmware procedure or Store Firmware OOB procedure failed.
-    SigFirmwareUploadPhaseStateType_transferError     = 0x03,
+    SigFirmwareUploadPhaseStateType_transferError     = 0x02,
     /// The Store Firmware procedure or the Store Firmware OOB procedure completed successfully.
-    SigFirmwareUploadPhaseStateType_transferSuccess   = 0x04,
+    SigFirmwareUploadPhaseStateType_transferSuccess   = 0x03,
     /// Prohibited : 0x05–0xFF
 } SigFirmwareUploadPhaseStateType;
 
@@ -1496,7 +1513,7 @@ typedef enum       : UInt8 {
 } SigTransferPhaseState;
 
 /// Table 8.16: Distribution Phase state values
-/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.76)
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.87)
 typedef enum       : UInt8 {
     /// No firmware distribution is in progress.
     SigDistributionPhaseState_idle            = 0x00,
