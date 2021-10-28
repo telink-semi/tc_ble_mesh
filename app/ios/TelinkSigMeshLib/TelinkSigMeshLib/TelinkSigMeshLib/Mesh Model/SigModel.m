@@ -3664,6 +3664,16 @@
     return [self getIntModelID] == kSigModel_HealthClient_ID;
 }
 
+/// 返回是否是强制使用deviceKey加解密的modelID，是则无需进行keyBind操作。
+- (BOOL)isDeviceKeyModelID {
+    BOOL tem = NO;
+    int modelID = [self getIntModelID];
+    if (modelID == kSigModel_ConfigurationServer_ID || modelID == kSigModel_ConfigurationClient_ID || modelID == kSigModel_RemoteProvisionServer_ID || modelID == kSigModel_RemoteProvisionClient_ID || modelID == kSigModel_DF_CFG_S_ID || modelID == kSigModel_DF_CFG_C_ID || modelID == kSigModel_SubnetBridgeServer_ID || modelID == kSigModel_SubnetBridgeClient_ID || modelID == kSigModel_PrivateBeaconServer_ID || modelID == kSigModel_PrivateBeaconClient_ID || modelID == kSigModel_SAR_CFG_S_ID || modelID == kSigModel_SAR_CFG_C_ID || modelID == kSigModel_ON_DEMAND_PROXY_S_ID || modelID == kSigModel_ON_DEMAND_PROXY_C_ID || modelID == kSigModel_LARGE_CPS_S_ID || modelID == kSigModel_LARGE_CPS_C_ID) {
+        tem = YES;
+    }
+    return tem;
+}
+
 /// Adds the given Application Key Index to the bound keys.
 ///
 /// - paramter applicationKeyIndex: The Application Key index to bind.

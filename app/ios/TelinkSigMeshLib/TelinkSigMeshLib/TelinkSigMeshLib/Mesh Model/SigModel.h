@@ -969,6 +969,8 @@ static Byte PanelByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x07, (Byte) 0x00, (
 - (BOOL)isConfigurationClient;
 - (BOOL)isHealthServer;
 - (BOOL)isHealthClient;
+/// 返回是否是强制使用deviceKey加解密的modelID，是则无需进行keyBind操作。
+- (BOOL)isDeviceKeyModelID;
 
 /// Adds the given Application Key Index to the bound keys.
 ///
