@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -45,7 +45,7 @@ typedef void(^AddSingleDeviceSuccessOfFastProvisionCallBack)(NSData *deviceKey,N
 + (SigFastProvisionAddManager *)share;
 
 
-/// start FastProvision
+/// start FastProvision with only one PID
 /// @param provisionAddress  new unicastAddress for unprovision device.
 /// @param productId  product id of unprovision device, 0xffff means provision all unprovision device, but develop can't use 0xffff in this api.
 /// @param compositionData compositionData of node in this productId.
@@ -55,6 +55,17 @@ typedef void(^AddSingleDeviceSuccessOfFastProvisionCallBack)(NSData *deviceKey,N
 /// @param singleSuccess callback when SDK add single devcie successful.
 /// @param finish callback when fast provision finish, fast provision successful when error is nil.
 - (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productId:(UInt16)productId compositionData:(NSData *)compositionData currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned scanResponseCallback:(ScanCallbackOfFastProvisionCallBack)scanResponseBlock startProvisionCallback:(StartProvisionCallbackOfFastProvisionCallBack)startProvisionBlock addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish;
+
+
+/// start FastProvision with some PIDs
+/// @param provisionAddress  new unicastAddress for unprovision device.
+/// @param productIds  product id of unprovision device, 0xffff means provision all unprovision device, but develop can't use 0xffff in this api. Develop need input a list of product id of unprovision device, this api will check the composition data of them, if any composition data is non-existent in SigDataSource.share.defaultNodeInfos, this api will callback finish with error immediately.
+/// @param unprovisioned current Connected Node Is Unprovisioned?
+/// @param scanResponseBlock callback when SDK scaned unprovision devcie successful.
+/// @param startProvisionBlock callback when SDK start provision devcie.
+/// @param singleSuccess callback when SDK add single devcie successful.
+/// @param finish callback when fast provision finish, fast provision successful when error is nil.
+- (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productIds:(NSArray <NSNumber *>*)productIds currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned scanResponseCallback:(ScanCallbackOfFastProvisionCallBack)scanResponseBlock startProvisionCallback:(StartProvisionCallbackOfFastProvisionCallBack)startProvisionBlock addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish;
 
 #pragma mark - command
 

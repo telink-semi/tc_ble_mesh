@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -71,7 +71,7 @@
 - (void)startScanSingleUnProvisionNode {
     __weak typeof(self) weakSelf = self;
     SigBearer.share.isAutoReconnect = NO;
-    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
         if (weakSelf.isAdding) {
             if (successful) {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -132,7 +132,22 @@
 - (void)startFastProvision {
     UInt16 provisionAddress = SigDataSource.share.provisionAddress;
     __weak typeof(self) weakSelf = self;
-    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:76] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+//    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:sizeof(CTByte)] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+//        [weakSelf updateScanedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+//    } startProvisionCallback:^{
+//        [weakSelf updateStartProvision];
+//    } addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+//        TeLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
+//        [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+//    } finish:^(NSError * _Nullable error) {
+//        TeLogInfo(@"error=%@",error);
+//        [weakSelf addFinish];
+//        [SDKLibCommand startMeshConnectWithComplete:nil];
+//        [weakSelf userAbled:YES];
+//        weakSelf.isAdding = NO;
+//    }];
+    //注意：如果客户的compositionData不是默认的数据，需要开发者新增或者修改SigDataSource.share.defaultNodeInfos里面的数据。
+    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productIds:@[@(SigNodePID_CT),@(SigNodePID_HSL),@(SigNodePID_Panel),@(SigNodePID_LPN)] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
         [weakSelf updateScanedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
     } startProvisionCallback:^{
         [weakSelf updateStartProvision];
@@ -142,18 +157,10 @@
     } finish:^(NSError * _Nullable error) {
         TeLogInfo(@"error=%@",error);
         [weakSelf addFinish];
-        [SigBearer.share startMeshConnectWithComplete:nil];
+        [SDKLibCommand startMeshConnectWithComplete:nil];
         [weakSelf userAbled:YES];
         weakSelf.isAdding = NO;
     }];
-//    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:76] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
-//        TeLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
-//        [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
-//    } finish:^(NSError * _Nullable error) {
-//        TeLogInfo(@"error=%@",error);
-//        [weakSelf userAbled:YES];
-//        weakSelf.isAdding = NO;
-//    }];
 }
 
 - (void)userAbled:(BOOL)able{
@@ -254,7 +261,7 @@
                 if (error) {
                     TeLogError(@"setFilter fail!!!");
                     //失败后逻辑：断开连接，再返回
-                    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+                    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [weakSelf.navigationController popViewControllerAnimated:YES];
                         });
