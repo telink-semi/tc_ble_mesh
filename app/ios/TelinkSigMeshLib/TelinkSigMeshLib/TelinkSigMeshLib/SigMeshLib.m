@@ -44,6 +44,7 @@ static SigMeshLib *shareLib = nil;
     dispatch_once(&tempOnce, ^{
         shareLib = [[SigMeshLib alloc] init];
         shareLib.isReceiveSegmentPDUing = NO;
+        shareLib.sourceOfReceiveSegmentPDU = 0;
         shareLib.commands = [NSMutableArray array];
         shareLib.dataSource = SigDataSource.share;
         [shareLib config];

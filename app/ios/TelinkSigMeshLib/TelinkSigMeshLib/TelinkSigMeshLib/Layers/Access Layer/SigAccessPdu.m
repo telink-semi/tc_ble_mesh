@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -36,7 +36,12 @@
     if (_message == nil) {
         return NO;
     }
-    return _accessPdu.length > SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength || _message.isSegmented;
+//新增判断：SigTelinkExtendBearerMode_extendGATTOnly模式只对直连节点发送DLE长包，非直连节点发送短包。
+    if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+        return _accessPdu.length > kUnsegmentedMessageLowerTransportPDUMaxLength || _message.isSegmented;
+    } else {
+        return _accessPdu.length > SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength || _message.isSegmented;
+    }
 }
 
 - (int)segmentsCount {
@@ -48,10 +53,18 @@
     }
     switch (_message.security) {
         case SigMeshMessageSecurityLow:
-            return 1 + (int)((_accessPdu.length + 3) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+            if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+                return 1 + (int)((_accessPdu.length + 3) / (kUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+            } else {
+                return 1 + (int)((_accessPdu.length + 3) / (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+            }
             break;
         case SigMeshMessageSecurityHigh:
-            return 1 + (int)((_accessPdu.length + 7) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+            if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+                return 1 + (int)((_accessPdu.length + 7) / (kUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+            } else {
+                return 1 + (int)((_accessPdu.length + 7) / (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+            }
             break;
         default:
             break;

@@ -114,6 +114,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign,readonly) double networkTransmitInterval;//defount is (0b1111+1)*10=320ms.
 
 @property (nonatomic,assign) BOOL isReceiveSegmentPDUing;
+@property (nonatomic,assign) UInt16 sourceOfReceiveSegmentPDU;
 @property (nonatomic,strong,nullable) SigSecureNetworkBeacon *secureNetworkBeacon;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));

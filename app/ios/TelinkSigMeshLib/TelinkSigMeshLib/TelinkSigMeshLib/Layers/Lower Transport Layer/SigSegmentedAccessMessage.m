@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -97,10 +97,15 @@
         _sequence = pdu.sequence;
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
-        int lowerBound = (int)(offset * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+        
+        UInt16 unsegmentedMessageLowerTransportPDUMaxLength = SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
+        if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && pdu.destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+            unsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
+        }
+        int lowerBound = (int)(offset * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((unsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (unsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
         self.upperTransportPdu = segment;
         self.userInitiated = pdu.userInitiated;
     }
@@ -108,12 +113,10 @@
 
 }
 
-/// Creates a Segment of an Access Message object from the Upper Transport PDU
-/// with given segment offset.
-///
-/// - parameter pdu: The segmented Upper Transport PDU.
-/// - parameter networkKey: The Network Key to encrypt the PCU with.
-/// - parameter offset: The segment offset.
+/// Creates a Segment of an Access Message object from the Upper Transport PDU with given segment offset.
+/// @param pdu The segmented Upper Transport PDU.
+/// @param networkKey The Network Key to encrypt the PCU with.
+/// @param offset The segment offset.
 - (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey offset:(UInt8)offset {
     if (self = [super init]) {
         self.type = SigLowerTransportPduType_accessMessage;
@@ -128,10 +131,15 @@
         _sequence = pdu.sequence;
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
-        int lowerBound = (int)(offset * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+        
+        UInt16 unsegmentedMessageLowerTransportPDUMaxLength = SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
+        if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && pdu.destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+            unsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
+        }
+        int lowerBound = (int)(offset * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((unsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (unsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
         self.upperTransportPdu = segment;
     }
     return self;
