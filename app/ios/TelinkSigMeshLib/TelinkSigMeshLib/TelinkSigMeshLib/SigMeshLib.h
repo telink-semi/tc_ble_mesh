@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -172,7 +172,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Sends the Proxy Configuration Message to the connected Proxy Node.
 /// @param message The Proxy Configuration message to be sent.
 /// @param command The command save message and callback.
-- (void)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command;
+- (SigMessageHandle *)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command;
 
 /// Sends the telink's onlineStatus command.
 /// @param message The onlineStatus message to be sent.
@@ -186,6 +186,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// cancel all commands and retry of commands and retry of segment PDU.
 - (void)cleanAllCommandsAndRetry;
+- (void)cleanAllCommandsAndRetryWhenMeshDisconnected;
 
 /// Returns whether SigMeshLib is busy. YES means busy.
 - (BOOL)isBusyNow;
