@@ -31,6 +31,36 @@
 #import "SigBluetooth.h"
 #import "SigProvisioningData.h"
 #import "SigAuthenticationModel.h"
+#import "OpenSSLHelper.h"
+#import "SigECCEncryptHelper.h"
+
+#define kFragmentMaximumSize    (20)
+
+/// Table 5.53: Provisioning records
+/// - seeAlso: MshPRFd1.1r11_clean-472-529.pdf  (page.42)
+typedef enum : UInt16 {
+    SigProvisioningRecordID_CertificateBasedProvisioningURI = 0x0000,
+    SigProvisioningRecordID_DeviceCertificate               = 0x0001,
+    SigProvisioningRecordID_IntermediateCertificate1        = 0x0002,
+    SigProvisioningRecordID_IntermediateCertificate2        = 0x0003,
+    SigProvisioningRecordID_IntermediateCertificate3        = 0x0004,
+    SigProvisioningRecordID_IntermediateCertificate4        = 0x0005,
+    SigProvisioningRecordID_IntermediateCertificate5        = 0x0006,
+    SigProvisioningRecordID_IntermediateCertificate6        = 0x0007,
+    SigProvisioningRecordID_IntermediateCertificate7        = 0x0008,
+    SigProvisioningRecordID_IntermediateCertificate8        = 0x0009,
+    SigProvisioningRecordID_IntermediateCertificate9        = 0x000A,
+    SigProvisioningRecordID_IntermediateCertificate10       = 0x000B,
+    SigProvisioningRecordID_IntermediateCertificate11       = 0x000C,
+    SigProvisioningRecordID_IntermediateCertificate12       = 0x000D,
+    SigProvisioningRecordID_IntermediateCertificate13       = 0x000E,
+    SigProvisioningRecordID_IntermediateCertificate14       = 0x000F,
+    SigProvisioningRecordID_IntermediateCertificate15       = 0x0010,
+    SigProvisioningRecordID_CompleteLocalName               = 0x0011,
+    SigProvisioningRecordID_Appearance                      = 0x0012,
+} SigProvisioningRecordID;
+
+typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
 
 @interface SigProvisioningManager ()
 @property (nonatomic, assign) UInt16 unicastAddress;
@@ -39,6 +69,15 @@
 @property (nonatomic,copy) addDevice_prvisionSuccessCallBack provisionSuccessBlock;
 @property (nonatomic,copy) ErrorBlock failBlock;
 @property (nonatomic, assign) BOOL isProvisionning;
+@property (nonatomic, assign) UInt16 totalLength;
+//@property (nonatomic, strong) NSMutableData *deviceCertificateData;
+@property (nonatomic, strong) SigProvisioningRecordsListPdu *recordsListPdu;
+@property (nonatomic, strong) NSMutableDictionary <NSNumber *,NSData *>*certificateDict;
+@property (nonatomic, assign) UInt16 currentRecordID;
+
+@property (nonatomic,strong) NSData *devicePublicKey;//certificate-base获取到的devicePublicKey
+@property (nonatomic, assign) BOOL provisionAuthLeakEnable;//当前provision实际漏洞修复开关
+
 @end
 
 @implementation SigProvisioningManager
@@ -306,6 +345,123 @@
         }
     } else {
         TeLogError(@"unsupport provision type.");
+    }
+}
+
+/// founcation4: provision (If CBPeripheral's state isn't CBPeripheralStateConnected, SDK will connect CBPeripheral in this api. )
+/// @param peripheral CBPeripheral of CoreBluetooth will be provision.
+/// @param unicastAddress address of new device.
+/// @param networkKey networkKey
+/// @param netkeyIndex netkeyIndex
+/// @param provisionType ProvisionTpye_NoOOB means oob data is 16 bytes zero data, ProvisionTpye_StaticOOB means oob data is get from HTTP API.
+/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionTpye_StaticOOB.
+/// @param provisionSuccess callback when provision success.
+/// @param fail callback when provision fail.
+- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+    //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
+    [SigECCEncryptHelper.share eccInit];
+
+    self.staticOobData = nil;
+    self.unicastAddress = unicastAddress;
+    self.provisionSuccessBlock = provisionSuccess;
+    self.failBlock = fail;
+    self.unprovisionedDevice = [SigMeshLib.share.dataSource getScanRspModelWithUUID:[SigBearer.share getCurrentPeripheral].identifier.UUIDString];
+    SigNetkeyModel *provisionNet = nil;
+    NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
+    for (SigNetkeyModel *net in netKeys) {
+        if (([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[LibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
+            provisionNet = net;
+            break;
+        }
+    }
+    if (provisionNet == nil) {
+        TeLogError(@"error network key.");
+        return;
+    }
+    self.certificateDict = [NSMutableDictionary dictionary];
+    self.currentRecordID = 0;
+    
+    __weak typeof(self) weakSelf = self;
+    [self getProvisionAuthLeakWithTimeout:2.0 callback:^(SigProvisionAuthLeak authLeak) {
+        if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_enable && !authLeak) {
+            TeLogError(@"device is noSuport provisionAuthLeak! provision will fail!");
+            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
+        } else if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_disable && authLeak) {
+            TeLogError(@"device is suport provisionAuthLeak! provision will fail!");
+            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
+        } else {
+            weakSelf.provisionAuthLeakEnable = authLeak;
+        }
+        TeLogInfo(@"provisionAuthLeakEnable=%d",weakSelf.provisionAuthLeakEnable);
+        
+        [weakSelf reset];
+        [SigBearer.share setBearerProvisioned:NO];
+        weakSelf.networkKey = provisionNet;
+        weakSelf.isProvisionning = YES;
+        TeLogInfo(@"start certificateBasedProvision.");
+        
+        if (provisionType == ProvisionTpye_NoOOB || provisionType == ProvisionTpye_StaticOOB) {
+            if (peripheral.state == CBPeripheralStateConnected) {
+                TeLogVerbose(@"start RecordsGet.");
+                [weakSelf sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+                    [weakSelf sentProvisioningRecordsGetWithResponse:response];
+                }];
+            } else {
+                TeLogVerbose(@"start connect for provision.");
+                [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
+                    if (successful) {
+                        TeLogVerbose(@"connect successful.");
+                        [weakSelf provisionWithPeripheral:peripheral unicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex provisionType:provisionType staticOOBData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
+                    } else {
+                        if (fail) {
+                            NSError *err = [NSError errorWithDomain:@"Provision fail, because connect fail before provision." code:-1 userInfo:nil];
+                            fail(err);
+                        }
+                    }
+                }];
+            }
+        } else {
+            TeLogError(@"unsupport provision type.");
+        }
+    }];
+}
+
+#pragma mark step0:getProvisionAuthLeak
+- (void)getProvisionAuthLeakWithTimeout:(NSTimeInterval)timeout callback:(ProvisionAuthLeakBlock)block {
+    TeLogInfo(@"\n\n==========provision:step0\n\n");
+    CBPeripheral *curPeripheral = SigBearer.share.getCurrentPeripheral;
+    if (curPeripheral && curPeripheral.state == CBPeripheralStateConnected) {
+        CBCharacteristic *firmwareRevisionCharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kFirmwareRevisionCharacteristicsID OfPeripheral:curPeripheral];
+        if (firmwareRevisionCharacteristic && (firmwareRevisionCharacteristic.properties & CBCharacteristicPropertyRead)) {
+            [SigBluetooth.share readCharachteristicWithCharacteristic:firmwareRevisionCharacteristic ofPeripheral:curPeripheral timeout:timeout complete:^(CBCharacteristic * _Nonnull characteristic, BOOL successful) {
+                if (successful) {
+                    if (firmwareRevisionCharacteristic.value && firmwareRevisionCharacteristic.value.length > 1) {
+                        UInt8 tem8 = 0;
+                        Byte *dataByte = (Byte *)firmwareRevisionCharacteristic.value.bytes;
+                        memcpy(&tem8, dataByte+firmwareRevisionCharacteristic.value.length-2, 1);
+                        if (block) {
+                            block(tem8 == 1 ? SigProvisionAuthLeak_enable : SigProvisionAuthLeak_disable);
+                        }
+                    } else {
+                        if (block) {
+                            block(SigProvisionAuthLeak_disable);
+                        }
+                    }
+                } else {
+                    if (block) {
+                        block(SigProvisionAuthLeak_disable);
+                    }
+                }
+            }];
+        } else {
+            if (block) {
+                block(SigProvisionAuthLeak_disable);
+            }
+        }
+    } else {
+        if (block) {
+            block(SigProvisionAuthLeak_disable);
+        }
     }
 }
 
@@ -652,8 +808,181 @@
     }
 }
 
-- (void)showCapabilitiesLog:(struct ProvisioningCapabilities)capabilities {
-    TeLogInfo(@"\n------ Capabilities ------\nNumber of elements: %d\nAlgorithms: %@\nPublic Key Type: %@\nStatic OOB Type: %@\nOutput OOB Size: %d\nOutput OOB Actions: %d\nInput OOB Size: %d\nInput OOB Actions: %d\n--------------------------",capabilities.numberOfElements,capabilities.algorithms.fipsP256EllipticCurve == 1 ?@"FIPS P-256 Elliptic Curve":@"None",capabilities.publicKeyType == PublicKeyType_noOobPublicKey ?@"No OOB Public Key":@"OOB Public Key",capabilities.staticOobType.staticOobInformationAvailable == 1 ?@"YES":@"None",capabilities.outputOobSize,capabilities.outputOobActions.value,capabilities.inputOobSize,capabilities.inputOobActions.value);
+
+/// The Provisioner sends a Provisioning Record Request PDU to request a provisioning record fragment (a part of a provisioning record; see Section 5.4.2.6) from the device.
+/// @param recordID Identifies the provisioning record for which the request is made (see Section 5.4.2.6).
+/// @param fragmentOffset The starting offset of the requested fragment in the provisioning record data.
+/// @param fragmentMaximumSize The maximum size of the provisioning record fragment that the Provisioner can receive.
+/// @param timeout timeout of this pdu.
+/// @param block response of this pdu.
+- (void)sentProvisioningRecordRequestWithRecordID:(UInt16)recordID fragmentOffset:(UInt16)fragmentOffset fragmentMaximumSize:(UInt16)fragmentMaximumSize timeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+    TeLogInfo(@"\n\n==========provision: Record Request PDU\n\n");
+    self.provisionResponseBlock = block;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisioningRecordRequestTimeout) object:nil];
+        [self performSelector:@selector(sentProvisioningRecordRequestTimeout) withObject:nil afterDelay:timeout];
+    });
+    
+    SigProvisioningRecordRequestPdu *pdu = [[SigProvisioningRecordRequestPdu alloc] initWithRecordID:recordID fragmentOffset:fragmentOffset fragmentMaximumSize:fragmentMaximumSize];
+    self.state = ProvisionigState_recordRequest;
+    [self sendPdu:pdu];
+}
+
+- (void)sentProvisioningRecordRequestWithResponse:(SigProvisioningPdu *)response {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisioningRecordRequestTimeout) object:nil];
+    });
+    if (response.provisionType == SigProvisioningPduType_recordResponse) {
+        SigProvisioningRecordResponsePdu *recordResponsePdu = (SigProvisioningRecordResponsePdu *)response;
+        self.state = ProvisionigState_recordResponse;
+        self.totalLength = recordResponsePdu.totalLength;
+        NSMutableData *mData = [NSMutableData dataWithData:self.certificateDict[@(self.currentRecordID)]];
+        [mData appendData:recordResponsePdu.data];
+        self.certificateDict[@(self.currentRecordID)] = mData;
+    }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
+        self.state = ProvisionigState_fail;
+        SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
+        TeLogDebug(@"sentProvisioningRecordRequest error = %lu",(unsigned long)failedPdu.errorCode);
+    }else{
+        TeLogDebug(@"sentProvisioningRecordRequest:no handel this response data");
+    }
+}
+
+- (void)sentProvisioningRecordRequestTimeout {
+    TeLogInfo(@"sentProvisioningRecordRequestTimeout");
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisioningRecordRequestTimeout) object:nil];
+    });
+    if (self.provisionResponseBlock) {
+        self.provisionResponseBlock(nil);
+    }
+}
+
+/// The Provisioner sends a Provisioning Records Get PDU to request the list of IDs of the provisioning records that are stored on a device.
+/// @param timeout timeout of this pdu.
+/// @param block response of this pdu.
+- (void)sentProvisioningRecordsGetWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+    TeLogInfo(@"\n\n==========provision: Records Get PDU\n\n");
+    self.provisionResponseBlock = block;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisioningRecordsGetTimeout) object:nil];
+        [self performSelector:@selector(sentProvisioningRecordsGetTimeout) withObject:nil afterDelay:timeout];
+    });
+    
+    SigProvisioningRecordsGetPdu *pdu = [[SigProvisioningRecordsGetPdu alloc] init];
+    self.state = ProvisionigState_recordsGet;
+    [self sendPdu:pdu];
+}
+
+- (void)sentProvisioningRecordsGetWithResponse:(SigProvisioningPdu *)response {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisioningRecordsGetTimeout) object:nil];
+    });
+    if (response.provisionType == SigProvisioningPduType_recordsList) {
+        SigProvisioningRecordsListPdu *recordsListPdu = (SigProvisioningRecordsListPdu *)response;
+        self.state = ProvisionigState_recordsLsit;
+        TeLogInfo(@"response=%@,data=%@,recordsList=%@",response,recordsListPdu.pduData,recordsListPdu.recordsList);
+        if ([recordsListPdu.recordsList containsObject:@(SigProvisioningRecordID_DeviceCertificate)]) {
+            //5.4.2.6.3 Provisioning records,recordID=1是Device Certificate的数据。
+            self.recordsListPdu = recordsListPdu;
+            [self getCertificate];
+        } else {
+            self.state = ProvisionigState_fail;
+            TeLogDebug(@"sentProvisioningRecordsGet error = %@",@"Certificate-based device hasn`t recordID=1.");
+        }
+    }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
+        self.state = ProvisionigState_fail;
+        SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
+        TeLogDebug(@"sentProvisioningRecordsGet error = %lu",(unsigned long)failedPdu.errorCode);
+    }else{
+        TeLogDebug(@"sentProvisioningRecordsGet:no handel this response data");
+    }
+}
+
+- (void)sentProvisioningRecordsGetTimeout {
+    TeLogInfo(@"sentProvisioningRecordsGetTimeout");
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisioningRecordsGetTimeout) object:nil];
+    });
+    if (self.provisionResponseBlock) {
+        self.provisionResponseBlock(nil);
+    }
+}
+
+- (void)getCertificate {
+    self.certificateDict = [NSMutableDictionary dictionary];
+    
+    __weak typeof(self) weakSelf = self;
+    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
+    [oprationQueue addOperationWithBlock:^{
+        //这个block语句块在子线程中执行
+        NSLog(@"oprationQueue");
+        NSArray *list = [NSArray arrayWithArray:weakSelf.recordsListPdu.recordsList];
+        for (NSNumber *recordNumber in list) {
+            UInt16 recordID = (UInt16)[recordNumber intValue];
+            weakSelf.currentRecordID = recordID;
+            weakSelf.totalLength = 0;
+            weakSelf.certificateDict[recordNumber] = [NSMutableData data];
+            BOOL result = [weakSelf getCertificateFragmentWithRecordID:recordID];
+            do {
+                if (result) {
+                    if (weakSelf.certificateDict[recordNumber].length == weakSelf.totalLength) {
+                        //获取证书所有分段完成
+                        break;
+                    } else {
+                        //继续获取下一分段证书
+                        result = [weakSelf getCertificateFragmentWithRecordID:recordID];
+                    }
+                } else {
+                    //获取证书失败
+                    break;
+                }
+            } while (weakSelf.certificateDict[recordNumber].length != weakSelf.totalLength);
+        }
+        
+        if (weakSelf.certificateDict.count > 0) {
+            NSData *root = SigDataSource.share.defaultRootCertificateData;
+            BOOL result = [OpenSSLHelper.share checkUserCertificates:weakSelf.certificateDict.allValues withRootCertificate:root];
+            if (result == NO) {
+                TeLogDebug(@"=====>根证书验证失败,check certificate fail.");
+                weakSelf.state = ProvisionigState_fail;
+                return;
+            }
+        }
+
+        NSData *publicKey = [OpenSSLHelper.share checkCertificate:weakSelf.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)] withSuperCertificate:weakSelf.certificateDict[@(SigProvisioningRecordID_IntermediateCertificate1)]];
+        if (publicKey && publicKey.length == 64) {
+            NSData *tem = [OpenSSLHelper.share getStaticOOBDataFromCertificate:weakSelf.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)]];
+            if (tem && tem.length) {
+                weakSelf.staticOobData = [NSData dataWithData:tem];
+            }
+            TeLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@,staticOOB=%@",[LibTools convertDataToHexStr:weakSelf.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)]],[LibTools convertDataToHexStr:publicKey],[LibTools convertDataToHexStr:weakSelf.staticOobData])
+            weakSelf.devicePublicKey = publicKey;
+            weakSelf.state = ProvisionigState_ready;
+            [weakSelf getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+                [weakSelf getCapabilitiesResultWithResponse:response];
+            }];
+        } else {
+            TeLogDebug(@"=====>证书验证失败,check certificate fail.");
+            weakSelf.state = ProvisionigState_fail;
+        }
+    }];
+}
+
+- (BOOL)getCertificateFragmentWithRecordID:(UInt16)recordID {
+    __weak typeof(self) weakSelf = self;
+    __block BOOL getSuccess = NO;
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    [self sentProvisioningRecordRequestWithRecordID:recordID fragmentOffset:self.certificateDict[@(self.currentRecordID)].length fragmentMaximumSize:kFragmentMaximumSize timeout:2 callback:^(SigProvisioningPdu * _Nullable response) {
+        [weakSelf sentProvisioningRecordRequestWithResponse:response];
+        if (response && response.provisionType == SigProvisioningPduType_recordResponse) {
+            getSuccess = YES;
+        }
+        dispatch_semaphore_signal(semaphore);
+    }];
+    //Most provide 2 seconds to getDeviceCertificate
+    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.0));
+    return getSuccess;
 }
 
 @end
