@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -62,7 +62,7 @@ log 写法1：测试验证线程
 /*
 log 写法2：
 */
-# define TeLog(fmt, ...) TelinkLogWithFile(YES,(@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);
+#define TeLog(fmt, ...) TelinkLogWithFile(YES,(@"[%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);
 
 #define TeLogError(fmt, ...) if (SigLogger.share.logLevel & SigLogFlagError) {\
 TelinkLogWithFile(SigLogger.share.logLevel & SigLogFlagError,(@"[Error][%s Line %d] " fmt), __func__, __LINE__, ##__VA_ARGS__);\
