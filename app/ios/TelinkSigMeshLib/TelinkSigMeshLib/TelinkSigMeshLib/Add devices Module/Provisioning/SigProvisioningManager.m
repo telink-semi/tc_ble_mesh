@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -86,16 +86,14 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
     if (self = [super init]) {
         _state = ProvisionigState_ready;
         _isProvisionning = NO;
+        _attentionDuration = 0;
     }
     return self;
 }
 
-/**
- This method get the Capabilities of the device.
-
- @param attentionTimer This value determines for how long (in seconds) the device shall remain attracting human's attention by blinking, flashing, buzzing, etc. The value 0 disables Attention Timer.
- */
-- (void)identifyWithAttentionTimer:(UInt8)attentionTimer {
+/// This method get the Capabilities of the device.
+/// @param attentionDuration 0x00, Off; 0x01–0xFF, On, remaining time in seconds.
+- (void)identifyWithAttentionDuration:(UInt8)attentionDuration {
     
     // Has the provisioning been restarted?
     if (self.state == ProvisionigState_fail) {
@@ -113,8 +111,9 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
 
     self.state = ProvisionigState_requestingCapabilities;
     
-    SigProvisioningPdu *pdu = [[SigProvisioningPdu alloc] initProvisioningInvitePduWithAttentionTimer:attentionTimer];
-    [self sendPdu:pdu andAccumulateToData:self.provisioningData];
+    SigProvisioningInvitePdu *pdu = [[SigProvisioningInvitePdu alloc] initWithAttentionDuration:attentionDuration];
+    self.provisioningData.provisioningInvitePDUValue = [pdu.pduData subdataWithRange:NSMakeRange(1, pdu.pduData.length-1)];
+    [self sendPdu:pdu];
 }
 
 - (void)setState:(ProvisionigState)state{
@@ -122,7 +121,7 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
     if (state == ProvisionigState_fail) {
         [self reset];
         __weak typeof(self) weakSelf = self;
-        [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
             if (weakSelf.failBlock) {
                 NSError *err = [NSError errorWithDomain:@"provision fail." code:-1 userInfo:nil];
                 weakSelf.failBlock(err);
@@ -132,33 +131,22 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
 }
 
 - (BOOL)isDeviceSupported{
-    if (self.provisioningCapabilities.pduType != SigProvisioningPduType_capabilities || self.provisioningCapabilities.numberOfElements == 0) {
+    if (self.provisioningCapabilities.provisionType != SigProvisioningPduType_capabilities || self.provisioningCapabilities.numberOfElements == 0) {
         TeLogError(@"Capabilities is error.");
         return NO;
     }
     return self.provisioningCapabilities.algorithms.fipsP256EllipticCurve == 1;
 }
 
-/// This method sends the provisioning request to the device over the Bearer specified in the init. Additionally, it adds the request payload to given inputs. Inputs are required in device authorization.
-///
-/// - parameter request: The request to be sent.
-/// - parameter inputs:  The Provisioning Inputs.
-- (void)sendPdu:(SigProvisioningPdu *)pdu andAccumulateToData:(SigProvisioningData *)data {
-    NSData *pduData = pdu.pduData;
-    // The first byte is the type. We only accumulate payload.
-    [data accumulatePduData:[pduData subdataWithRange:NSMakeRange(1, pduData.length - 1)]];
-    [self sendPdu:pdu];
-}
-
 - (void)provisionSuccess{
     UInt16 address = self.provisioningData.unicastAddress;
     UInt8 ele_count = self.provisioningCapabilities.numberOfElements;
-    [SigDataSource.share saveLocationProvisionAddress:address+ele_count-1];
+    [SigMeshLib.share.dataSource saveLocationProvisionAddress:address+ele_count-1];
     NSData *devKeyData = self.provisioningData.deviceKey;
     TeLogInfo(@"deviceKey=%@",devKeyData);
     
     self.unprovisionedDevice.address = address;
-    [SigDataSource.share updateScanRspModelToDataSource:self.unprovisionedDevice];
+    [SigMeshLib.share.dataSource updateScanRspModelToDataSource:self.unprovisionedDevice];
     
     SigNodeModel *model = [[SigNodeModel alloc] init];
     [model setAddress:address];
@@ -186,17 +174,19 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
     compositionData.elements = elements;
     model.compositionData = compositionData;
     
-    [SigDataSource.share addAndSaveNodeToMeshNetworkWithDeviceModel:model];
+    [SigMeshLib.share.dataSource addAndSaveNodeToMeshNetworkWithDeviceModel:model];
 }
 
 /// This method should be called when the OOB value has been received and Auth Value has been calculated. It computes and sends the Provisioner Confirmation to the device.
-///
-/// - parameter value: The 16 byte long Auth Value.
+/// @param data The 16 byte long Auth Value.
 - (void)authValueReceivedData:(NSData *)data {
     SigAuthenticationModel *auth = nil;
     self.authenticationModel = auth;
     [self.provisioningData provisionerDidObtainAuthValue:data];
-    SigProvisioningPdu *pdu = [[SigProvisioningPdu alloc] initProvisioningConfirmationPduWithConfirmation:self.provisioningData.provisionerConfirmation];
+    NSData *provisionerConfirmationData = [self.provisioningData provisionerConfirmationWithProvisionAuthLeakEnable:self.provisionAuthLeakEnable];
+    SigProvisioningConfirmationPdu *pdu = [[SigProvisioningConfirmationPdu alloc] initWithConfirmation:provisionerConfirmationData];
+//    TeLogInfo(@"app端的Confirmation=%@",[LibTools convertDataToHexStr:provisionerConfirmationData]);
+
     [self sendPdu:pdu];
 }
 
@@ -226,15 +216,18 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
 }
 
 - (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+    //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
+    [SigECCEncryptHelper.share eccInit];
+    
     self.staticOobData = nil;
     self.unicastAddress = unicastAddress;
     self.provisionSuccessBlock = provisionSuccess;
     self.failBlock = fail;
-    self.unprovisionedDevice = [SigDataSource.share getScanRspModelWithUUID:[SigBearer.share getCurrentPeripheral].identifier.UUIDString];
+    self.unprovisionedDevice = [SigMeshLib.share.dataSource getScanRspModelWithUUID:[SigBearer.share getCurrentPeripheral].identifier.UUIDString];
     SigNetkeyModel *provisionNet = nil;
-    NSArray *netKeys = [NSArray arrayWithArray:SigDataSource.share.netKeys];
+    NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *net in netKeys) {
-        if ([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] && netkeyIndex == net.index) {
+        if (([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[LibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
             provisionNet = net;
             break;
         }
@@ -243,40 +236,56 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
         TeLogError(@"error network key.");
         return;
     }
-    [self reset];
-    [SigBearer.share setBearerProvisioned:NO];
-    self.networkKey = provisionNet;
-    self.isProvisionning = YES;
     __weak typeof(self) weakSelf = self;
-    TeLogInfo(@"start provision.");
-    [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
-        [SigMeshLib.share cleanAllCommandsAndRetry];
-        if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
-            if (weakSelf.isProvisionning) {
-                TeLogInfo(@"disconnect in provisioning，provision fail.");
-                if (fail) {
-                    weakSelf.isProvisionning = NO;
-                    NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
-                    fail(err);
+    [self getProvisionAuthLeakWithTimeout:2.0 callback:^(SigProvisionAuthLeak authLeak) {
+        if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_enable && !authLeak) {
+            TeLogError(@"device is noSuport provisionAuthLeak! provision will fail!");
+            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
+        } else if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_disable && authLeak) {
+            TeLogError(@"device is suport provisionAuthLeak! provision will fail!");
+            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
+        } else {
+            weakSelf.provisionAuthLeakEnable = authLeak;
+        }
+        TeLogInfo(@"provisionAuthLeakEnable=%d",weakSelf.provisionAuthLeakEnable);
+        
+        [weakSelf reset];
+        [SigBearer.share setBearerProvisioned:NO];
+        weakSelf.networkKey = provisionNet;
+        weakSelf.isProvisionning = YES;
+        TeLogInfo(@"start provision.");
+        [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
+            [SigMeshLib.share cleanAllCommandsAndRetry];
+            if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
+                if (weakSelf.isProvisionning) {
+                    TeLogInfo(@"disconnect in provisioning，provision fail.");
+                    if (fail) {
+                        weakSelf.isProvisionning = NO;
+                        NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
+                        fail(err);
+                    }
                 }
             }
-        }
-    }];
-    [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-        [weakSelf getCapabilitiesResultWithResponse:response];
+        }];
+        [weakSelf getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+            [weakSelf getCapabilitiesResultWithResponse:response];
+        }];
     }];
 }
 
 - (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOobData:(NSData *)oobData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+    //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
+    [SigECCEncryptHelper.share eccInit];
+
     self.staticOobData = oobData;
     self.unicastAddress = unicastAddress;
     self.provisionSuccessBlock = provisionSuccess;
     self.failBlock = fail;
-    self.unprovisionedDevice = [SigDataSource.share getScanRspModelWithUUID:[SigBearer.share getCurrentPeripheral].identifier.UUIDString];
+    self.unprovisionedDevice = [SigMeshLib.share.dataSource getScanRspModelWithUUID:[SigBearer.share getCurrentPeripheral].identifier.UUIDString];
     SigNetkeyModel *provisionNet = nil;
-    NSArray *netKeys = [NSArray arrayWithArray:SigDataSource.share.netKeys];
+    NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *net in netKeys) {
-        if ([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] && netkeyIndex == net.index) {
+        if (([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[LibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
             provisionNet = net;
             break;
         }
@@ -285,27 +294,41 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
         TeLogError(@"error network key.");
         return;
     }
-    [self reset];
-    [SigBearer.share setBearerProvisioned:NO];
-    self.networkKey = provisionNet;
-    self.isProvisionning = YES;
     __weak typeof(self) weakSelf = self;
-    TeLogInfo(@"start provision.");
-    [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
-        [SigMeshLib.share cleanAllCommandsAndRetry];
-        if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
-            if (weakSelf.isProvisionning) {
-                TeLogInfo(@"disconnect in provisioning，provision fail.");
-                if (fail) {
-                    weakSelf.isProvisionning = NO;
-                    NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
-                    fail(err);
+    [self getProvisionAuthLeakWithTimeout:2.0 callback:^(SigProvisionAuthLeak authLeak) {
+        if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_enable && !authLeak) {
+            TeLogError(@"device is noSuport provisionAuthLeak! provision will fail!");
+            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
+        } else if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_disable && authLeak) {
+            TeLogError(@"device is suport provisionAuthLeak! provision will fail!");
+            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
+        } else {
+            weakSelf.provisionAuthLeakEnable = authLeak;
+        }
+        TeLogInfo(@"provisionAuthLeakEnable=%d",weakSelf.provisionAuthLeakEnable);
+        
+        [weakSelf reset];
+        [SigBearer.share setBearerProvisioned:NO];
+        weakSelf.networkKey = provisionNet;
+        weakSelf.isProvisionning = YES;
+        TeLogInfo(@"start provision.");
+        [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
+            [SigMeshLib.share cleanAllCommandsAndRetry];
+            if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
+                if (weakSelf.isProvisionning) {
+                    TeLogInfo(@"disconnect in provisioning，provision fail.");
+                    if (fail) {
+                        weakSelf.isProvisionning = NO;
+                        NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
+                        fail(err);
+                    }
                 }
             }
-        }
-    }];
-    [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningResponse * _Nullable response) {
-        [weakSelf getCapabilitiesResultWithResponse:response];
+        }];
+        [weakSelf getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+            [weakSelf getCapabilitiesResultWithResponse:response];
+        }];
+
     }];
 }
 
@@ -319,6 +342,9 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
 - (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(NSData * _Nullable)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+    //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
+    [SigECCEncryptHelper.share eccInit];
+
     if (provisionType == ProvisionTpye_NoOOB || provisionType == ProvisionTpye_StaticOOB) {
         if (peripheral.state == CBPeripheralStateConnected) {
             if (provisionType == ProvisionTpye_NoOOB) {
@@ -473,7 +499,7 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
         [self performSelector:@selector(getCapabilitiesTimeout) withObject:nil afterDelay:timeout];
     });
-    [self identifyWithAttentionTimer:0];
+    [self identifyWithAttentionDuration:self.attentionDuration];
 }
 
 #pragma mark step2:start
@@ -497,26 +523,36 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
         return;
     }
     
+    if (self.provisionAuthLeakEnable) {
+        self.provisionAuthLeakEnable = NO;
+    }
+    
     self.provisionResponseBlock = block;
 
     [self.provisioningData generateProvisionerRandomAndProvisionerPublicKey];
     
     // Send Provisioning Start request.
     self.state = ProvisionigState_provisioning;
-    [self.provisioningData prepareWithNetwork:SigDataSource.share networkKey:self.networkKey unicastAddress:self.unicastAddress];
-    PublicKey *publicKey = [[PublicKey alloc] initWithPublicKeyType:PublicKeyType_noOobPublicKey];
+    [self.provisioningData prepareWithNetwork:SigMeshLib.share.dataSource networkKey:self.networkKey unicastAddress:self.unicastAddress];
+    PublicKey *publicKey = [[PublicKey alloc] initWithPublicKeyType:self.provisioningCapabilities.publicKeyType];
     AuthenticationMethod authenticationMethod = AuthenticationMethod_noOob;
 
-    SigProvisioningPdu *startPdu = [[SigProvisioningPdu alloc] initProvisioningstartPduWithAlgorithm:Algorithm_fipsP256EllipticCurve publicKeyType:publicKey.publicKeyType authenticationMethod:authenticationMethod authenticationAction:0 authenticationSize:0];
-    [self sendPdu:startPdu andAccumulateToData:self.provisioningData];
+    SigProvisioningStartPdu *startPdu = [[SigProvisioningStartPdu alloc] initWithAlgorithm:Algorithm_fipsP256EllipticCurve publicKeyType:publicKey.publicKeyType authenticationMethod:authenticationMethod authenticationAction:0 authenticationSize:0];
+    self.provisioningData.provisioningStartPDUValue = [startPdu.pduData subdataWithRange:NSMakeRange(1, startPdu.pduData.length-1)];
+    [self sendPdu:startPdu];
     self.authenticationMethod = authenticationMethod;
     // Send the Public Key of the Provisioner.
-    SigProvisioningPdu *publicPdu = [[SigProvisioningPdu alloc] initProvisioningPublicKeyPduWithPublicKey:self.provisioningData.provisionerPublicKey];
-    [self sendPdu:publicPdu andAccumulateToData:self.provisioningData];
+    SigProvisioningPublicKeyPdu *publicPdu = [[SigProvisioningPublicKeyPdu alloc] initWithPublicKey:self.provisioningData.provisionerPublicKey];
+    [self sendPdu:publicPdu];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
         [self performSelector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) withObject:nil afterDelay:timeout];
+        if (self.provisioningCapabilities.publicKeyType == PublicKeyType_oobPublicKey) {
+            //if use oob public key, needn`t waith devicePublicKey response, use devicePublicKey from certificate.
+            SigProvisioningPublicKeyPdu *devicePublicKeyPdu = [[SigProvisioningPublicKeyPdu alloc] initWithPublicKey:self.devicePublicKey];
+            [self sentStartProvisionPduAndPublicKeyPduWithResponse:devicePublicKeyPdu];
+        }
     });
 }
 
@@ -547,20 +583,26 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
     
     // Send Provisioning Start request.
     self.state = ProvisionigState_provisioning;
-    [self.provisioningData prepareWithNetwork:SigDataSource.share networkKey:self.networkKey unicastAddress:self.unicastAddress];
-    PublicKey *publicKey = [[PublicKey alloc] initWithPublicKeyType:PublicKeyType_noOobPublicKey];
+    [self.provisioningData prepareWithNetwork:SigMeshLib.share.dataSource networkKey:self.networkKey unicastAddress:self.unicastAddress];
+    PublicKey *publicKey = [[PublicKey alloc] initWithPublicKeyType:self.provisioningCapabilities.publicKeyType];
     AuthenticationMethod authenticationMethod = AuthenticationMethod_staticOob;
 
-    SigProvisioningPdu *startPdu = [[SigProvisioningPdu alloc] initProvisioningstartPduWithAlgorithm:Algorithm_fipsP256EllipticCurve publicKeyType:publicKey.publicKeyType authenticationMethod:authenticationMethod authenticationAction:0 authenticationSize:0];
-    [self sendPdu:startPdu andAccumulateToData:self.provisioningData];
+    SigProvisioningStartPdu *startPdu = [[SigProvisioningStartPdu alloc] initWithAlgorithm:Algorithm_fipsP256EllipticCurve publicKeyType:publicKey.publicKeyType authenticationMethod:authenticationMethod authenticationAction:0 authenticationSize:0];
+    self.provisioningData.provisioningStartPDUValue = [startPdu.pduData subdataWithRange:NSMakeRange(1, startPdu.pduData.length-1)];
+    [self sendPdu:startPdu];
     self.authenticationMethod = authenticationMethod;
     // Send the Public Key of the Provisioner.
-    SigProvisioningPdu *publicPdu = [[SigProvisioningPdu alloc] initProvisioningPublicKeyPduWithPublicKey:self.provisioningData.provisionerPublicKey];
-    [self sendPdu:publicPdu andAccumulateToData:self.provisioningData];
+    SigProvisioningPublicKeyPdu *publicPdu = [[SigProvisioningPublicKeyPdu alloc] initWithPublicKey:self.provisioningData.provisionerPublicKey];
+    [self sendPdu:publicPdu];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
         [self performSelector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) withObject:nil afterDelay:timeout];
+        if (self.provisioningCapabilities.publicKeyType == PublicKeyType_oobPublicKey) {
+            //if use oob public key, needn`t waith devicePublicKey response, use devicePublicKey from certificate.
+            SigProvisioningPublicKeyPdu *devicePublicKeyPdu = [[SigProvisioningPublicKeyPdu alloc] initWithPublicKey:self.devicePublicKey];
+            [self sentStartProvisionPduAndPublicKeyPduWithResponse:devicePublicKeyPdu];
+        }
     });
 }
 
@@ -591,7 +633,7 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
 - (void)sentProvisionRandomPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
     TeLogInfo(@"\n\n==========provision:step4\n\n");
     self.provisionResponseBlock = block;
-    SigProvisioningPdu *pdu = [[SigProvisioningPdu alloc] initProvisioningRandomPduWithRandom:self.provisioningData.provisionerRandom];
+    SigProvisioningRandomPdu *pdu = [[SigProvisioningRandomPdu alloc] initWithRandom:self.provisioningData.provisionerRandom];
     [self sendPdu:pdu];
 
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -605,7 +647,9 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
 - (void)sentProvisionEncryptedDataWithMicPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
     TeLogInfo(@"\n\n==========provision:step5\n\n");
     self.provisionResponseBlock = block;
-    SigProvisioningPdu *pdu = [[SigProvisioningPdu alloc] initProvisioningEncryptedDataWithMicPduWithEncryptedData:self.provisioningData.encryptedProvisioningDataWithMic];
+    NSData *provisioningData = self.provisioningData.getProvisioningData;
+    NSData *encryptedProvisioningDataAndMic = [self.provisioningData getEncryptedProvisioningDataAndMicWithProvisioningData:provisioningData];
+    SigProvisioningDataPdu *pdu = [[SigProvisioningDataPdu alloc] initWithEncryptedProvisioningData:[encryptedProvisioningDataAndMic subdataWithRange:NSMakeRange(0, 25)] provisioningDataMIC:[encryptedProvisioningDataAndMic subdataWithRange:NSMakeRange(25, 8)]];
     [self sendPdu:pdu];
 
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -615,15 +659,15 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
     });
 }
 
-- (void)getCapabilitiesResultWithResponse:(SigProvisioningResponse *)response {
+- (void)getCapabilitiesResultWithResponse:(SigProvisioningPdu *)response {
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCapabilitiesTimeout) object:nil];
     });
-    if (response.type == SigProvisioningPduType_capabilities) {
-        [self showCapabilitiesLog:response.capabilities];
-        struct ProvisioningCapabilities capabilities = response.capabilities;
-        self.provisioningCapabilities = capabilities;
-        [self.provisioningData accumulatePduData:[response.responseData subdataWithRange:NSMakeRange(1, response.responseData.length - 1)]];
+    if (response.provisionType == SigProvisioningPduType_capabilities) {
+        SigProvisioningCapabilitiesPdu *capabilitiesPdu = (SigProvisioningCapabilitiesPdu *)response;
+        TeLogInfo(@"%@",capabilitiesPdu.getCapabilitiesString);
+        self.provisioningCapabilities = capabilitiesPdu;
+        self.provisioningData.provisioningCapabilitiesPDUValue = [capabilitiesPdu.pduData subdataWithRange:NSMakeRange(1, capabilitiesPdu.pduData.length-1)];
         self.state = ProvisionigState_capabilitiesReceived;
         if (self.unicastAddress == 0) {
             self.state = ProvisionigState_fail;
@@ -633,14 +677,14 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
                 //设备端支持staticOOB
                 if (self.staticOobData) {
                     TeLogVerbose(@"static OOB device, do static OOB provision, staticOobData=%@",self.staticOobData);
-                    [self sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:self.staticOobData timeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                    [self sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:self.staticOobData timeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                         [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
                     }];
                 } else {
-                    if (SigDataSource.share.addStaticOOBDevcieByNoOOBEnable) {
+                    if (SigMeshLib.share.dataSource.addStaticOOBDevcieByNoOOBEnable) {
                         //SDK当前设置了兼容模式（即staticOOB设备可以通过noOOB provision的方式进行添加）
                         TeLogVerbose(@"static OOB device,do no OOB provision");
-                        [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                        [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                             [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
                         }];
                     } else {
@@ -653,14 +697,15 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
             } else {
                 //设备端不支持staticOOB
                 TeLogVerbose(@"no OOB device,do no OOB provision");
-                [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+                [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                     [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
                 }];
             }
         }
-    }else if (!response || response.type == SigProvisioningPduType_failed) {
+    }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisionigState_fail;
-        TeLogDebug(@"getCapabilities error = %lu",(unsigned long)response.error);
+        SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
+        TeLogDebug(@"getCapabilities error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
         TeLogDebug(@"getCapabilities:no handel this response data");
     }
@@ -676,26 +721,29 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
     }
 }
 
-- (void)sentStartProvisionPduAndPublicKeyPduWithResponse:(SigProvisioningResponse *)response {
+- (void)sentStartProvisionPduAndPublicKeyPduWithResponse:(SigProvisioningPdu *)response {
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
     });
-    TeLogInfo(@"device public key back:%@",response.responseData);
-    if (response.type == SigProvisioningPduType_publicKey) {
-        [self.provisioningData accumulatePduData:[response.responseData subdataWithRange:NSMakeRange(1, response.responseData.length - 1)]];
-        [self.provisioningData provisionerDidObtainWithDevicePublicKey:response.publicKey];
+    if (response.provisionType == SigProvisioningPduType_publicKey) {
+        SigProvisioningPublicKeyPdu *publicKeyPdu = (SigProvisioningPublicKeyPdu *)response;
+        TeLogInfo(@"device public key back:%@",[LibTools convertDataToHexStr:publicKeyPdu.publicKey]);
+        self.provisioningData.devicePublicKey = publicKeyPdu.publicKey;
+        [self.provisioningData provisionerDidObtainWithDevicePublicKey:publicKeyPdu.publicKey];
         if (self.provisioningData.sharedSecret && self.provisioningData.sharedSecret.length > 0) {
+            TeLogInfo(@"APP端SharedSecret=%@",[LibTools convertDataToHexStr:self.provisioningData.sharedSecret]);
             __weak typeof(self) weakSelf = self;
-            [self sentProvisionConfirmationPduWithTimeout:kProvisionConfirmationTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+            [self sentProvisionConfirmationPduWithTimeout:kProvisionConfirmationTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                 [weakSelf sentProvisionConfirmationPduWithResponse:response];
             }];
-        }else{
+        } else {
             TeLogDebug(@"calculate SharedSecret fail.");
             self.state = ProvisionigState_fail;
         }
-    }else if (!response || response.type == SigProvisioningPduType_failed) {
+    }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisionigState_fail;
-        TeLogDebug(@"sentStartProvisionPduAndPublicKeyPdu error = %lu",(unsigned long)response.error);
+        SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
+        TeLogDebug(@"sentStartProvisionPduAndPublicKeyPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
         TeLogDebug(@"sentStartProvisionPduAndPublicKeyPdu:no handel this response data");
     }
@@ -711,23 +759,30 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
     }
 }
 
-- (void)sentProvisionConfirmationPduWithResponse:(SigProvisioningResponse *)response {
+- (void)sentProvisionConfirmationPduWithResponse:(SigProvisioningPdu *)response {
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
     });
-    TeLogInfo(@"device confirmation back:%@",response.responseData);
-    if (response.type == SigProvisioningPduType_confirmation) {
-        [self.provisioningData provisionerDidObtainWithDeviceConfirmation:response.confirmation];
+    if (response.provisionType == SigProvisioningPduType_confirmation) {
+        SigProvisioningConfirmationPdu *confirmationPdu = (SigProvisioningConfirmationPdu *)response;
+        TeLogInfo(@"device confirmation back:%@",[LibTools convertDataToHexStr:confirmationPdu.confirmation]);
+        [self.provisioningData provisionerDidObtainWithDeviceConfirmation:confirmationPdu.confirmation];
+        if ([[self.provisioningData provisionerConfirmationWithProvisionAuthLeakEnable:self.provisionAuthLeakEnable] isEqualToData:confirmationPdu.confirmation]) {
+            TeLogDebug(@"Confirmation of device is equal to confirmation of provisioner!");
+            self.state = ProvisionigState_fail;
+            return;
+        }
         __weak typeof(self) weakSelf = self;
-        [self sentProvisionRandomPduWithTimeout:kProvisionRandomTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+        [self sentProvisionRandomPduWithTimeout:kProvisionRandomTimeout callback:^(SigProvisioningPdu * _Nullable response) {
             [weakSelf sentProvisionRandomPduWithResponse:response];
         }];
-    }else if (!response || response.type == SigProvisioningPduType_failed) {
+    }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
         });
         self.state = ProvisionigState_fail;
-        TeLogDebug(@"sentProvisionConfirmationPdu error = %lu",(unsigned long)response.error);
+        SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
+        TeLogDebug(@"sentProvisionConfirmationPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
         TeLogDebug(@"sentProvisionConfirmationPdu:no handel this response data");
     }
@@ -743,25 +798,32 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
     }
 }
 
-- (void)sentProvisionRandomPduWithResponse:(SigProvisioningResponse *)response {
+- (void)sentProvisionRandomPduWithResponse:(SigProvisioningPdu *)response {
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionRandomPduTimeout) object:nil];
     });
-    TeLogInfo(@"device random back:%@",response.responseData);
-    if (response.type == SigProvisioningPduType_random) {
-        [self.provisioningData provisionerDidObtainWithDeviceRandom:response.random];
-        if (![self.provisioningData validateConfirmation]) {
+    if (response.provisionType == SigProvisioningPduType_random) {
+        SigProvisioningRandomPdu *randomPdu = (SigProvisioningRandomPdu *)response;
+        TeLogInfo(@"device random back:%@",randomPdu.random);
+        [self.provisioningData provisionerDidObtainWithDeviceRandom:randomPdu.random];
+        if ([self.provisioningData.provisionerRandom isEqualToData:randomPdu.random]) {
+            TeLogDebug(@"Random of device is equal to random of provisioner!");
+            self.state = ProvisionigState_fail;
+            return;
+        }
+        if (![self.provisioningData validateConfirmationWithProvisionAuthLeakEnable:self.provisionAuthLeakEnable]) {
             TeLogDebug(@"validate Confirmation fail");
             self.state = ProvisionigState_fail;
             return;
         }
         __weak typeof(self) weakSelf = self;
-        [self sentProvisionEncryptedDataWithMicPduWithTimeout:kSentProvisionEncryptedDataWithMicTimeout callback:^(SigProvisioningResponse * _Nullable response) {
+        [self sentProvisionEncryptedDataWithMicPduWithTimeout:kSentProvisionEncryptedDataWithMicTimeout callback:^(SigProvisioningPdu * _Nullable response) {
             [weakSelf sentProvisionEncryptedDataWithMicPduWithResponse:response];
         }];
-    }else if (!response || response.type == SigProvisioningPduType_failed) {
+    }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisionigState_fail;
-        TeLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)response.error);
+        SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
+        TeLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
         TeLogDebug(@"sentProvisionRandomPdu:no handel this response data");
     }
@@ -777,23 +839,24 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
     }
 }
 
-- (void)sentProvisionEncryptedDataWithMicPduWithResponse:(SigProvisioningResponse *)response {
+- (void)sentProvisionEncryptedDataWithMicPduWithResponse:(SigProvisioningPdu *)response {
     TeLogInfo(@"\n\n==========provision end.\n\n");
-    TeLogInfo(@"device provision result back:%@",response.responseData);
+    TeLogInfo(@"device provision result back:%@",response.pduData);
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionEncryptedDataWithMicPduTimeout) object:nil];
     });
-    if (response.type == SigProvisioningPduType_complete) {
+    if (response.provisionType == SigProvisioningPduType_complete) {
         [self provisionSuccess];
         [SigBearer.share setBearerProvisioned:YES];
         if (self.provisionSuccessBlock) {
             self.provisionSuccessBlock(self.unprovisionedDevice.uuid,self.unicastAddress);
         }
-    }else if (!response || response.type == SigProvisioningPduType_failed) {
+    }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisionigState_fail;
-        TeLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)response.error);
+        SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
+        TeLogDebug(@"sentProvisionEncryptedDataWithMic error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
-        TeLogDebug(@"sentProvisionRandomPdu:no handel this response data");
+        TeLogDebug(@"sentProvisionEncryptedDataWithMic:no handel this response data");
     }
     self.provisionResponseBlock = nil;
 }

@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -31,9 +31,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigProvisioningData,SigProvisioningResponse,SigAuthenticationModel;
+@class SigProvisioningData,SigAuthenticationModel;
 
-typedef void(^prvisionResponseCallBack)(SigProvisioningResponse * _Nullable response);
+typedef void(^prvisionResponseCallBack)(SigProvisioningPdu * _Nullable response);
 
 @interface SigProvisioningManager : NSObject
 @property (nonatomic,assign) AuthenticationMethod authenticationMethod;
@@ -41,10 +41,16 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningResponse * _Nullable resp
 @property (nonatomic,strong) SigProvisioningData *provisioningData;
 @property (nonatomic,copy,nullable) prvisionResponseCallBack provisionResponseBlock;
 
+/// - seeAlso: MshPRFv1.0.1.pdf  (page.240)
+/// Attention Timer state (See Section 4.2.9), default is 0.
+@property (nonatomic, assign) UInt8 attentionDuration;
+/// SDK 内部是否使用辅助算法修复provision漏洞。
+@property (nonatomic, assign) SigProvisionAuthLeak provisionAuthLeak;
+
 #pragma mark - Public properties
 
 /// The provisioning capabilities of the device. This information is retrieved from the remote device during identification process.
-@property (nonatomic, assign) struct ProvisioningCapabilities provisioningCapabilities;
+@property (nonatomic, strong, nullable) SigProvisioningCapabilitiesPdu *provisioningCapabilities;
 
 /// The Network Key to be sent to the device during provisioning.
 @property (nonatomic, strong) SigNetkeyModel *networkKey;
