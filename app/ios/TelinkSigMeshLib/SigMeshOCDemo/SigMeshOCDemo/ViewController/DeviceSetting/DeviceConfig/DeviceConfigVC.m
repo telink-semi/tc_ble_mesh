@@ -172,7 +172,7 @@
 }
 
 - (void)clickGetWithIndexPath:(NSIndexPath *)indexPath {
-    if (!SigBearer.share.isOpen && SigDataSource.share.unicastAddressOfConnected != 0) {
+    if (!SigBearer.share.isOpen || SigDataSource.share.unicastAddressOfConnected == 0) {
         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Mesh is outline!"]];
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share delayHidden:1.0];
@@ -340,7 +340,7 @@
 }
 
 - (void)clickSetWithIndexPath:(NSIndexPath *)indexPath {
-    if (!SigBearer.share.isOpen && SigDataSource.share.unicastAddressOfConnected != 0) {
+    if (!SigBearer.share.isOpen || SigDataSource.share.unicastAddressOfConnected == 0) {
         [ShowTipsHandle.share show:[NSString stringWithFormat:@"Mesh is outline!"]];
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share delayHidden:1.0];

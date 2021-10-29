@@ -177,7 +177,6 @@
 		25589C502721403F00F4F880 /* IQKeyboardReturnKeyHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589BA42721403E00F4F880 /* IQKeyboardReturnKeyHandler.m */; };
 		25589C552721408B00F4F880 /* DeviceSetting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C512721408B00F4F880 /* DeviceSetting.storyboard */; };
 		25589C562721408B00F4F880 /* Setting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C532721408B00F4F880 /* Setting.storyboard */; };
-		259AA1DA27293C370046CEB1 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25589C5F272140CF00F4F880 /* TelinkSigMeshLib.framework */; };
 		259AA1F727293FDE0046CEB1 /* BRResultModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1DD27293FDE0046CEB1 /* BRResultModel.m */; };
 		259AA1F827293FDE0046CEB1 /* BRStringPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1E027293FDE0046CEB1 /* BRStringPickerView.m */; };
 		259AA1F927293FDE0046CEB1 /* BRDatePickerView+BR.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1E327293FDE0046CEB1 /* BRDatePickerView+BR.m */; };
@@ -189,6 +188,7 @@
 		259AA1FF27293FDE0046CEB1 /* NSBundle+BRPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1EF27293FDE0046CEB1 /* NSBundle+BRPickerView.m */; };
 		259AA20027293FDE0046CEB1 /* BRAddressModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1F327293FDE0046CEB1 /* BRAddressModel.m */; };
 		259AA20127293FDE0046CEB1 /* BRAddressPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1F627293FDE0046CEB1 /* BRAddressPickerView.m */; };
+		25AC4BFD272B8B5E0041525C /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25589C5F272140CF00F4F880 /* TelinkSigMeshLib.framework */; };
 		25DD7D0B2728E58D0029037A /* CertificateListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25DD7D092728E58D0029037A /* CertificateListVC.m */; };
 		25DD7D0C2728E58D0029037A /* CertificateListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25DD7D0A2728E58D0029037A /* CertificateListVC.xib */; };
 /* End PBXBuildFile section */
@@ -563,7 +563,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				259AA1DA27293C370046CEB1 /* TelinkSigMeshLib.framework in Frameworks */,
+				25AC4BFD272B8B5E0041525C /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

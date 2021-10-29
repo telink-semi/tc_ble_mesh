@@ -53,9 +53,15 @@
 @implementation HomeViewController
 
 - (IBAction)allON:(UIButton *)sender {
-    NSInteger count = SigDataSource.share.getOnlineDevicesNumber;
+    int tem = 0;
+    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+    for (SigNodeModel *node in curNodes) {
+        if (!node.isSensor && !node.isRemote && node.isKeyBindSuccess) {
+            tem++;
+        }
+    }
     __weak typeof(self) weakSelf = self;
-    [DemoCommand switchOnOffWithIsOn:sender.tag == 100 address:kMeshAddress_allNodes responseMaxCount:(int)count ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+    [DemoCommand switchOnOffWithIsOn:sender.tag == 100 address:kMeshAddress_allNodes responseMaxCount:tem ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         [weakSelf delayReloadCollectionView];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
         
@@ -478,7 +484,7 @@
 
 #pragma  mark - SigDataSourceDelegate
 - (void)onSequenceNumberUpdate:(UInt32)sequenceNumber ivIndexUpdate:(UInt32)ivIndex {
-//    TeLogVerbose(@"本地存储数据需要更新sequenceNumber=0x%X,ivIndex=0x%X",sequenceNumber,ivIndex);
+    TeLogInfo(@"本地存储数据需要更新sequenceNumber=0x%X,ivIndex=0x%X",sequenceNumber,ivIndex);
 }
 
 /// Callback called when the unicastRange of provisioner had been changed. APP need update the json to cloud at this time!（如果APP实现了该代理方法，SDK会在当前provisioner地址还剩余10个或者更少的时候给provisioner分配一段新的地址区间。如果APP未实现该方法，SDK在但区间耗尽时超界分配地址(即- (UInt16)provisionAddress方法会返回非本区间的地址)。）
@@ -524,7 +530,7 @@
 }
 
 - (void)didReceiveSigSecureNetworkBeaconMessage:(SigSecureNetworkBeacon *)message {
-//    TeLogInfo(@"%@",message);
+    TeLogInfo(@"%@",message);
 }
 
 #pragma mark - SigBluetoothDelegate

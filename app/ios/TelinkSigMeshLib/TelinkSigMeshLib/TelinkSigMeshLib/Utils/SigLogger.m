@@ -32,7 +32,11 @@
 
 #define kTelinkSDKDebugLogData @"TelinkSDKDebugLogData"
 #define kTelinkSDKMeshJsonData @"TelinkSDKMeshJsonData"
-#define kTelinkSDKDebugLogDataSize ((double)1024*1024*200) //默认日志最大存储大小为20M。每10*60秒检查一次日志文件大小。
+#if DEBUG
+#define kTelinkSDKDebugLogDataSize ((double)1024*1024*100) //DEBUG默认日志最大存储大小为100M。每10*60秒检查一次日志文件大小。
+#else
+#define kTelinkSDKDebugLogDataSize ((double)1024*1024*20) //RELEASE默认日志最大存储大小为20M。每10*60秒检查一次日志文件大小。
+#endif
 
 @interface SigLogger ()
 @property (nonatomic, strong) BackgroundTimer *timer;

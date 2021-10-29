@@ -33,6 +33,7 @@
 #import "InfoNextCell.h"
 #import "ExtendBearerModeCell.h"
 #import "CertificateListVC.h"
+#import "UIViewController+Message.h"
 
 @interface SettingsVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -122,17 +123,28 @@
 }
 
 - (IBAction)clickResetMesh:(UIButton *)sender {
+    __weak typeof(self) weakSelf = self;
     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Wipe all mesh info?" preferredStyle:UIAlertControllerStyleAlert];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Confirm" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
         TeLogDebug(@"点击确认");
         //清除SigDataSource.share里面的所有参数（包括scanList、sequenceNumber、sequenceNumberOnDelegate），并随机生成新的默认参数。
         [SigDataSource.share resetMesh];
+        [weakSelf showTips:@"Reset mesh success!"];
     }]];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
         TeLogDebug(@"点击取消");
         
     }]];
     [self presentViewController:alertController animated:YES completion:nil];
+}
+
+- (void)showTips:(NSString *)message{
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
+            
+        }];
+    });
 }
 
 - (void)clickRootCertificateButton {
