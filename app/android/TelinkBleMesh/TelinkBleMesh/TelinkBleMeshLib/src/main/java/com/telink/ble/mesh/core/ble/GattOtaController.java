@@ -35,8 +35,8 @@ public class GattOtaController {
 
     private final String LOG_TAG = "GATT-OTA";
 
-    public static final int OTA_STATE_SUCCESS = 1;
     public static final int OTA_STATE_FAILURE = 0;
+    public static final int OTA_STATE_SUCCESS = 1;
     public static final int OTA_STATE_PROGRESS = 2;
 
     protected Handler mTimeoutHandler;

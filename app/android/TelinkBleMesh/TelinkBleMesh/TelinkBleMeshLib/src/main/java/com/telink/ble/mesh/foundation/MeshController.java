@@ -979,13 +979,16 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         if (actionMode == Mode.PROVISION) {
             ProvisioningDevice provisioningDevice = (ProvisioningDevice) mActionParams.get(Parameters.ACTION_PROVISIONING_TARGET);
             onActionStart();
-            if (provisioningDevice.getAuthValue() == null) {
+            beginProvision(false);
+
+            /// firmware not support auth enc
+            /*if (provisioningDevice.getAuthValue() == null) {
                 log("no need to get revision");
                 beginProvision(false);
             } else {
                 log("get revision");
                 getDeviceFwRevision(provisioningDevice);
-            }
+            }*/
         } else if (actionMode == Mode.FAST_PROVISION) {
             onProxyLoginSuccess();
         } else {
@@ -1308,7 +1311,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                         public void run() {
                             onConnectSuccess();
                         }
-                    }, 100);
+                    }, 200);
                 }
             }, 500);
         }
@@ -1766,7 +1769,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     public void handleNetworkInfoUpdate(int sequenceNumber, int ivIndex) {
-        log("handleNetworkInfoUpdate : " + sequenceNumber + " -- " + ivIndex);
+        log(String.format("handleNetworkInfoUpdate : sequenceNumber -- %06X | ivIndex -- %08X", sequenceNumber, ivIndex));
 
         NetworkInfoUpdateEvent networkInfoUpdateEvent = new NetworkInfoUpdateEvent(this,
                 NetworkInfoUpdateEvent.EVENT_TYPE_NETWORKD_INFO_UPDATE,

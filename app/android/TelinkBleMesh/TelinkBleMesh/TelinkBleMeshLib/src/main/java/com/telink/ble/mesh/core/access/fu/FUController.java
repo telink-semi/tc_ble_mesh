@@ -106,10 +106,11 @@ public class FUController implements FUActionHandler {
             startInitiate();
         } else {
 
-            /* 可能性
-             * 1. app 关闭再打开, 这时候查进度
-             * 2. 设备走开再重连, 类似app再打开
-             * 3. 设备apply完
+            /*
+             * may
+             * 1. app reopened, check progress
+             * 2. device disconnected and reconnect
+             * 3. device apply complete
              */
 //            currentState = FUState.DISTRIBUTING_BY_DEVICE;
 
@@ -349,6 +350,8 @@ public class FUController implements FUActionHandler {
      * start initiate by initiator
      */
     private void startInitiate() {
+        initiator.clear();
+        distributor.clear();
         onFUStateUpdate(FUState.INITIATING, null);
         initiator.begin(this.configuration, this.distributorAddress);
     }

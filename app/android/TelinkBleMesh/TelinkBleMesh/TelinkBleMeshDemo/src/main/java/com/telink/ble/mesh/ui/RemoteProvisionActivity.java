@@ -61,6 +61,8 @@ import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
@@ -303,7 +305,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
      ******************************************************************************/
     private void startRemoteScan() {
         // scan for max 2 devices
-        final byte SCAN_LIMIT = 1;
+        final byte SCAN_LIMIT = 2;
         // scan for 5 seconds
         final byte SCAN_TIMEOUT = 5;
 //        final int SERVER_ADDRESS = 0xFFFF;
@@ -328,7 +330,9 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
             enableUI(true);
             return;
         }
-        if (remoteDevices.size() > 0) {
+        remoteDevices.clear();
+        startRemoteScan();
+        /*if (remoteDevices.size() > 0) {
             remoteDevices.remove(0);
         }
 
@@ -343,7 +347,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
                 }
             }, 500);
 
-        }
+        }*/
     }
 
 
@@ -389,6 +393,11 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
             remoteDevices.add(remoteProvisioningDevice);
         }
 
+        Collections.sort(remoteDevices, (o1, o2) -> o2.getRssi() - o1.getRssi());
+        for (RemoteProvisioningDevice device :
+                remoteDevices) {
+            MeshLogger.log("sort remote device: " + " -- " + Arrays.bytesToHexString(device.getUuid()) + " -- rssi: " + device.getRssi());
+        }
     }
 
 
@@ -403,6 +412,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         }
 
         device.setUnicastAddress(address);
+        MeshLogger.d("remote allocated adr: " + address);
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.deviceUUID = device.getUuid();
 
@@ -429,16 +439,13 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         MeshService.getInstance().startRemoteProvisioning(device);
     }
 
-    private Runnable remoteScanTimeoutTask = new Runnable() {
-        @Override
-        public void run() {
-            if (remoteDevices.size() == 0) {
-                MeshLogger.log("no device found by remote scan");
-                enableUI(true);
-            } else {
-                MeshLogger.log("remote devices scanned: " + remoteDevices.size());
-                provisionNextRemoteDevice(remoteDevices.get(0));
-            }
+    private Runnable remoteScanTimeoutTask = () -> {
+        if (remoteDevices.size() == 0) {
+            MeshLogger.log("no device found by remote scan");
+            enableUI(true);
+        } else {
+            MeshLogger.log("remote devices scanned: " + remoteDevices.size());
+            provisionNextRemoteDevice(remoteDevices.get(0));
         }
     };
 

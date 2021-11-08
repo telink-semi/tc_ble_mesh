@@ -43,7 +43,7 @@ public class RemoteProvisioningDevice extends ProvisioningDevice {
     /**
      * device revision cannot obtained on provision, so encAuth should be set by user
      */
-    private boolean encAuth;
+    private boolean encAuth = false;
 
 
     public RemoteProvisioningDevice(byte rssi, byte[] uuid, int serverAddress) {

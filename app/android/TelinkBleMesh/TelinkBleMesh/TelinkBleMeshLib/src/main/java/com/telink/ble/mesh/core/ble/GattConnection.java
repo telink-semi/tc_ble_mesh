@@ -298,8 +298,6 @@ public class GattConnection extends BluetoothGattCallback {
             gattRequest.serviceUUID = provisionService.getUuid();
             gattRequest.characteristicUUID = UUIDInfo.CHARACTERISTIC_PB_OUT;
             sendRequest(gattRequest);
-
-
         }
 
         BluetoothGattService proxyService = getProxyService(false);

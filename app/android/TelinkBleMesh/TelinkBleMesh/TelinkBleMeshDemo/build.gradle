@@ -8,7 +8,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 26
         versionCode 3
-        versionName "3.3.2@RC05" // RC05 for release test 1011
+        versionName "3.3.4" // RC05 for release test 1011
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

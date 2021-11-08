@@ -177,9 +177,10 @@ class FUInitiator implements BlobTransferCallback {
     }
 
     void clear() {
-        if (this.step == STEP_BLOB_TRANSFER) {
+        transfer.clear();
+        /*if (this.step == STEP_BLOB_TRANSFER) {
             transfer.clear();
-        }
+        }*/
         this.step = STEP_IDLE;
     }
 

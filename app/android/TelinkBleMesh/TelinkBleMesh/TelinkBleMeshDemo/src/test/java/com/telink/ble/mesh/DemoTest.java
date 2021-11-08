@@ -27,6 +27,7 @@ import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.MeshAppKey;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
+import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.model.json.AddressRange;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 
@@ -97,6 +98,12 @@ public class DemoTest {
             }
             System.out.println(msg);
         }
+    }
+
+    @Test
+    public void testLum() {
+        System.out.println(UnitConvert.lum2lightness(1)); // 656
+        System.out.println(UnitConvert.lum2lightness(100)); // 65535
     }
 
 }

@@ -24,6 +24,7 @@ package com.telink.ble.mesh.ui.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.PorterDuff;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -74,7 +75,7 @@ public class CertListAdapter extends BaseRecyclerViewAdapter<CertListAdapter.Vie
         ViewHolder holder = new ViewHolder(itemView);
         holder.tv_cert_info = itemView.findViewById(R.id.tv_cert_info);
         holder.iv_next = itemView.findViewById(R.id.iv_next);
-        holder.tv_root = itemView.findViewById(R.id.tv_root);
+        holder.iv_cert = itemView.findViewById(R.id.iv_cert);
         return holder;
     }
 
@@ -94,12 +95,17 @@ public class CertListAdapter extends BaseRecyclerViewAdapter<CertListAdapter.Vie
                         + "\nAlg:" + certificate.getSigAlgName();
         holder.tv_cert_info.setText(info);
         holder.iv_next.setTag(position);
-        holder.tv_root.setVisibility(rootIndex == position ? View.VISIBLE : View.GONE);
+        if (rootIndex == position) {
+            holder.iv_cert.setColorFilter(mContext.getResources().getColor(R.color.colorAccent), PorterDuff.Mode.SRC_IN);
+        } else {
+            holder.iv_cert.setColorFilter(mContext.getResources().getColor(R.color.grey), android.graphics.PorterDuff.Mode.SRC_IN);
+        }
+//        holder.tv_root.setVisibility(rootIndex == position ? View.VISIBLE : View.GONE);
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tv_cert_info, tv_root;
-        ImageView iv_next;
+        TextView tv_cert_info;
+        ImageView iv_next, iv_cert;
 
         public ViewHolder(View itemView) {
             super(itemView);

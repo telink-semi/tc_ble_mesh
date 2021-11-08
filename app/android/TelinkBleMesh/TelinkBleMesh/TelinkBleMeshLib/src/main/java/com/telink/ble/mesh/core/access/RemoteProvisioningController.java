@@ -107,9 +107,9 @@ public class RemoteProvisioningController implements ProvisioningBridge {
     }
 
     public void begin(ProvisioningController provisioningController, RemoteProvisioningDevice remoteProvisioningDevice) {
-        log(String.format("remote provisioning begin: server -- %04X  uuid -- %s",
+        log(String.format("remote provisioning begin: server -- %04X  uuid -- %s  allocatedAdr -- %04X",
                 remoteProvisioningDevice.getServerAddress(),
-                Arrays.bytesToHexString(remoteProvisioningDevice.getUuid())));
+                Arrays.bytesToHexString(remoteProvisioningDevice.getUuid()), remoteProvisioningDevice.getUnicastAddress()));
         this.outboundNumber = OUTBOUND_INIT_VALUE;
         this.inboundPDUNumber = -1;
         this.cachePdu = null;

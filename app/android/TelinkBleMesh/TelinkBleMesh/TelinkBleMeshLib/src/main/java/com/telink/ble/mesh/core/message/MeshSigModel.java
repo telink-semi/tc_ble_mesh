@@ -177,40 +177,5 @@ public enum MeshSigModel implements Serializable {
         return null;
     }
 
-
-    /*public static MeshSigModel[] getConfigSimilarity() {
-        return new MeshSigModel[]{
-                SIG_MD_CFG_SERVER, SIG_MD_CFG_CLIENT,
-                SIG_MD_REMOTE_PROV_SERVER, SIG_MD_REMOTE_PROV_CLIENT,
-                SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C,
-                SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT,
-                SIG_MD_PRIVATE_BEACON_SERVER, SIG_MD_PRIVATE_BEACON_CLIENT
-        };
-    }*/
-
-    /*
-    const u32 MODEL_ID_DEV_KEY[] = {
-    SIG_MD_CFG_SERVER,              SIG_MD_CFG_CLIENT,
-    SIG_MD_REMOTE_PROV_SERVER,      SIG_MD_REMOTE_PROV_CLIENT,
- SIG_MD_DF_CFG_S,                SIG_MD_DF_CFG_C,
- SIG_MD_BRIDGE_CFG_SERVER,       SIG_MD_BRIDGE_CFG_CLIENT,
- SIG_MD_PRIVATE_BEACON_SERVER,   SIG_MD_PRIVATE_BEACON_CLIENT
-};
-
-#define SIG_MD_CFG_SERVER               0x0000  // for test high byte
-#define SIG_MD_CFG_CLIENT               0x0001
-//#define SIG_MD_HEALTH_SERVER            0x0002
-//#define SIG_MD_HEALTH_CLIENT            0x0003
-#define SIG_MD_REMOTE_PROV_SERVER       0x0004
-#define SIG_MD_REMOTE_PROV_CLIENT       0x0005
-#define SIG_MD_DF_CFG_S     0x0006
-#define SIG_MD_DF_CFG_C     0x0007
-#define SIG_MD_BRIDGE_CFG_SERVER  0x0008
-#define SIG_MD_BRIDGE_CFG_CLIENT  0x0009
-#define SIG_MD_PRIVATE_BEACON_SERVER  0x000a
-#define SIG_MD_PRIVATE_BEACON_CLIENT 0x000b
-
-     */
-
 }
 
