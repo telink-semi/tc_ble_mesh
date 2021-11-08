@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -31,6 +31,7 @@
 
 @interface MeshOTAItemCell : UITableViewCell
 @property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+@property (weak, nonatomic) IBOutlet UIImageView *certIcon;
 @property (weak, nonatomic) IBOutlet UIButton *selectButton;
 
 @end

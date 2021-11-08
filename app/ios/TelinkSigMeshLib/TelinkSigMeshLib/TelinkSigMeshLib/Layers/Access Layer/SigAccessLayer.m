@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -131,9 +131,7 @@
 ///
 /// The key is a value combined from the source and destination addresses.
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,SigTransaction *>*transactions;
-/// This array contains information about the expected acknowledgments
-/// for acknowledged mesh messages that have been sent, and for which
-/// the response has not been received yet.
+/// This array contains information about the expected acknowledgments for acknowledged mesh messages that have been sent, and for which the response has not been received yet.
 @property (nonatomic,strong) NSMutableArray <SigAcknowledgmentContext *>*reliableMessageContexts;
 @end
 
@@ -190,7 +188,7 @@
         [context invalidate];
         [_reliableMessageContexts removeObjectAtIndex:index];
     }
-    TeLogInfo(@"receieved:%@",accessPdu);
+//    TeLogInfo(@"receieved:%@",accessPdu);
     [self handleAccessPdu:accessPdu sendWithSigKeySet:keySet asResponseToRequest:request];
 }
 
@@ -199,15 +197,14 @@
     SigMeshMessage *m = message;
     if ([message isKindOfClass:[SigGenericMessage class]]) {
         SigGenericMessage *genericMessage = (SigGenericMessage *)message;
-        if (command.needTid && command.tid != 0) {
+        if (command.tidPosition != 0 && command.tid != 0) {
             genericMessage.tid = command.tid;
         }
         if ([genericMessage isTransactionMessage] && genericMessage.tid == 0) {
-            // Ensure there is a transaction for our destination.
             UInt32 k = [self getKeyForElement:element andDestination:destination];
             _transactions[@(k)] = _transactions[@(k)] == nil ? [[SigTransaction alloc] init] : _transactions[@(k)];
             // Should the last transaction be continued?
-            if (genericMessage.continueTransaction && [_transactions[@(k)] isActive]) {
+            if (command.hadRetryCount > 0) {
                 genericMessage.tid = [_transactions[@(k)] currentTid];
             } else {
                 // If not, start a new transaction by setting a new TID value.
@@ -216,76 +213,38 @@
             m = genericMessage;
         }
 //        TeLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
+    } else if ([message isKindOfClass:[SigIniMeshMessage class]] && command.tidPosition != 0) {
+        if (command.tidPosition != 0) {
+            UInt8 tid = command.tid;
+            if (tid == 0) {
+                UInt32 k = [self getKeyForElement:element andDestination:destination];
+                _transactions[@(k)] = _transactions[@(k)] == nil ? [[SigTransaction alloc] init] : _transactions[@(k)];
+                if (command.hadRetryCount > 0) {
+                    tid = [_transactions[@(k)] currentTid];
+                } else {
+                    tid = [_transactions[@(k)] nextTid];
+                }
+            }
+            NSMutableData *mData = [NSMutableData dataWithData:message.parameters];
+            [mData replaceBytesInRange:NSMakeRange(command.tidPosition-1, 1) withBytes:&tid length:1];
+            message.parameters = mData;
+            m = message;
+        }
     }
     SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:m sentFromLocalElement:element toDestination:destination userInitiated:YES];
     SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];
     TeLogInfo(@"Sending message:%@->%@",message.class,pdu);
     
-    // Set timers for the acknowledged messages.
-//    #warning 2019年11月10日23:44:04，类型可能不太匹配，待完善
-//    if ([message isKindOfClass:[SigAcknowledgedMeshMessage class]]) {
-//        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
-//    }else{
-//        TeLogDebug(@"非SigAcknowledgedMeshMessage子类。");
-//    }
-//    if ([SigHelper.share getResponseOpcodeWithSendOpcode:message.opCode] != 0 || [message isKindOfClass:[SigAcknowledgedMeshMessage class]]) {
-    
-    //==========telink retry by retry count in SigMeshLib==========//
-//    if ([SigHelper.share isAcknowledgedMessage:message]) {
-//        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
-//    }
-    //==========telink retry by retry count in SigMeshLib==========//
+    _networkManager.accessLayer.accessPdu = pdu;
     [_networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet command:command];
 }
 
-- (void)sendMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey {
-    // Should the TID be updated?
-    SigMeshMessage *m = message;
-    if ([message isKindOfClass:[SigGenericMessage class]]) {
-        SigGenericMessage *genericMessage = (SigGenericMessage *)message;
-        if ([genericMessage isTransactionMessage] && genericMessage.tid == 0) {
-            // Ensure there is a transaction for our destination.
-            UInt32 k = [self getKeyForElement:element andDestination:destination];
-            _transactions[@(k)] = _transactions[@(k)] == nil ? [[SigTransaction alloc] init] : _transactions[@(k)];
-            // Should the last transaction be continued?
-            if (genericMessage.continueTransaction && [_transactions[@(k)] isActive]) {
-                genericMessage.tid = [_transactions[@(k)] currentTid];
-            } else {
-                // If not, start a new transaction by setting a new TID value.
-                genericMessage.tid = [_transactions[@(k)] nextTid];
-            }
-            m = genericMessage;
-        }
-//        TeLogVerbose(@"sending message TID=0x%x",genericMessage.tid);
-    }
-    TeLogVerbose(@"Sending %@ from: %@, to: 0x%x",m,element,destination.address);
-    SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:m sentFromLocalElement:element toDestination:destination userInitiated:YES];
-    SigAccessKeySet *keySet = [[SigAccessKeySet alloc] initWithApplicationKey:applicationKey];
-    TeLogInfo(@"Sending %@",pdu);
-    
-    // Set timers for the acknowledged messages.
-//    #warning 2019年11月10日23:44:04，类型可能不太匹配，待完善
-//    if ([message isKindOfClass:[SigAcknowledgedMeshMessage class]]) {
-//        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
-//    }else{
-//        TeLogDebug(@"非SigAcknowledgedMeshMessage子类。");
-//    }
-//    if ([SigHelper.share getResponseOpcodeWithSendOpcode:message.opCode] != 0 || [message isKindOfClass:[SigAcknowledgedMeshMessage class]]) {
-    
-    //==========telink retry by retry count in SigMeshLib==========//
-//    if ([SigHelper.share isAcknowledgedMessage:message]) {
-//        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
-//    }
-    //==========telink retry by retry count in SigMeshLib==========//
-    [_networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet];
-}
-
-- (void)sendSigConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt16)initialTtl {
-    SigElementModel *element = SigDataSource.share.curLocationNodeModel.elements.firstObject;
-    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+- (void)sendSigConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt16)initialTtl command:(SDKLibCommand *)command {
+    SigElementModel *element = SigMeshLib.share.dataSource.curLocationNodeModel.elements.firstObject;
+    SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:destination];
     SigNetkeyModel *networkKey = node.getNetworkKeys.firstObject;
     if (networkKey == nil) {
-        networkKey = SigDataSource.share.curNetkeyModel;
+        networkKey = SigMeshLib.share.dataSource.curNetkeyModel;
     }
     // ConfigNetKeyDelete must not be signed using the key that is being deleted.
     if ([message isMemberOfClass:[SigConfigNetKeyDelete class]]) {
@@ -299,26 +258,11 @@
     TeLogInfo(@"Sending %@ %@",message,pdu);
     SigDeviceKeySet *keySet = [[SigDeviceKeySet alloc] initWithNetworkKey:networkKey node:node];
     
-    // Set timers for the acknowledged messages.
-    //==========telink retry by retry count in SigMeshLib==========//
-//    if ([SigHelper.share isAcknowledgedMessage:message]) {
-//        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
-//    } else {
-//        TeLogDebug(@"unAcknowledged Message.");
-//    }
-    //==========telink retry by retry count in SigMeshLib==========//
-
-//#warning 2019年11月10日23:44:04，类型可能不太匹配，待完善（SigConfigCompositionDataGet已经匹配）
-//    if ([message isKindOfClass:[SigConfigMessage class]]) {
-////        if ([message isMemberOfClass:[SigAcknowledgedConfigMessage class]]) {
-//        [self createReliableContextForSigAccessPdu:pdu sentFromElement:element withTtl:initialTtl usingKeySet:keySet];
-//    }else{
-//        TeLogDebug(@"非SigConfigMessage子类。");
-//    }
-    [_networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet];
+    _networkManager.accessLayer.accessPdu = pdu;
+    [_networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:initialTtl usingKeySet:keySet command:command];
 }
 
-- (void)replyToMessageSentToOrigin:(UInt16)origin withMeshMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet {
+- (void)replyToMessageSentToOrigin:(UInt16)origin withMeshMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
     TeLogInfo(@"Replying with %@ from: %@, to: 0x%x",message,element,destination);
     SigMeshAddress *meshAddress = [[SigMeshAddress alloc] initWithAddress:destination];
     SigAccessPdu *pdu = [[SigAccessPdu alloc] initFromMeshMessage:message sentFromLocalElement:element toDestination:meshAddress userInitiated:NO];
@@ -339,16 +283,12 @@
         if (![SigHelper.share isRelayedTTL:ttl]) {
             ttl = weakSelf.networkManager.defaultTtl;
         }
-        [weakSelf.networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:ttl usingKeySet:keySet];
+        [weakSelf.networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:ttl usingKeySet:keySet command:command];
     });
-//    [BackgroundTimer scheduledTimerWithTimeInterval:delay repeats:NO block:^(BackgroundTimer * _Nonnull t) {
-//        TeLogInfo(@"Sending %@",pdu);
-//        [weakSelf.networkManager.upperTransportLayer sendAccessPdu:pdu withTtl:nil usingKeySet:keySet];
-//    }];
 }
 
 - (void)cancelSigMessageHandle:(SigMessageHandle *)handle {
-    TeLogInfo(@"Cancelling messages with op code:0x%x, sent from:0x%x to:0x%x",(unsigned int)handle.opCode,handle.source,handle.destination);
+//    TeLogInfo(@"Cancelling messages with op code:0x%x, sent from:0x%x to:0x%x",(unsigned int)handle.opCode,handle.source,handle.destination);
     NSArray *reliableMessageContexts = [NSArray arrayWithArray:_reliableMessageContexts];
     for (SigAcknowledgmentContext *model in reliableMessageContexts) {
         if (model.request.opCode == handle.opCode && model.source == handle.source &&
@@ -363,7 +303,7 @@
 }
 
 - (void)handleAccessPdu:(SigAccessPdu *)accessPdu sendWithSigKeySet:(SigKeySet *)keySet asResponseToRequest:(SigAcknowledgedMeshMessage *)request {
-    SigNodeModel *localNode = SigDataSource.share.curLocationNodeModel;
+    SigNodeModel *localNode = SigMeshLib.share.dataSource.curLocationNodeModel;
     if (localNode == nil) {
         TeLogError(@"localNode error.");
         return;
@@ -392,48 +332,9 @@
     }
 }
 
-
-
-//- (void)handleUpperTransportPdu:(SigUpperTransportPdu *)upperTransportPdu {
-//    SigAccessPdu *accessPdu = [[SigAccessPdu alloc] initFromUpperTransportPdu:upperTransportPdu];
-//    if (accessPdu == nil) {
-//        TeLogError(@"handleUpperTransportPdu fail.");
-//        return;
-//    }
-//    [self handleAccessPdu:accessPdu];
-//}
-
-//- (void)sendMessage:(SigMeshMessage *)message toDestination:(UInt16)address applicationKey:(SigAppkeyModel *)applicationKey {
-//    SigMeshMessage *m = message;
-//    SigTransactionMessage *tranactionMessage = (SigTransactionMessage *)message;
-//    if ([tranactionMessage isMemberOfClass:[SigTransactionMessage class]] && tranactionMessage.tid == 0) {
-//        tranactionMessage.tid = _tid;
-//        // Increase the TID to the next value modulo 255.
-//        if (_tid < 255) {
-//            _tid ++;
-//        } else {
-//            _tid = 0;
-//        }
-//        m = tranactionMessage;
-//    }
-//    TeLogInfo(@"Sending data:%@ to:ox%x",message.parameters,address);
-//    [_networkManager.upperTransportLayer sendMeshMessage:m toDestination:address usingApplicationKey:applicationKey];
-//}
-
-//- (void)sendMessage:(SigConfigMessage *)message toDestination:(UInt16)destination {
-//    if (![SigHelper.share isUnicastAddress:destination]) {
-//        TeLogError(@"Address: 0x%x is not a Unicast Address.",destination);
-//        return;
-//    }
-//    if ([_networkManager.foundationLayer handleConfigMessage:message toDestination:destination]) {
-//        TeLogInfo(@"Sending data:%@ to ox%x",message.parameters,destination);
-//        [_networkManager.upperTransportLayer sendConfigMessage:message toDestination:destination];
-//    }
-//}
-
 - (Class)getMeshMessageWithOpCode:(SigOpCode)opCode {
     Class messageType = nil;
-    TeLogVerbose(@"解析opCode=0x%08x",(unsigned int)opCode);
+//    TeLogVerbose(@"解析opCode=0x%08x",(unsigned int)opCode);
     if ((opCode & 0xC00000) == 0xC00000) {
         // Vendor Messages
 //        MessageType = networkManager.meshNetworkManager.vendorTypes[opCode] ?? UnknownMessage.self
@@ -1378,7 +1279,10 @@
             case SigOpCode_BLOBInformationStatus:
                 messageType = [SigBLOBInformationStatus class];
                 break;
-    
+            case SigOpCode_BLOBPartialBlockReport:
+                messageType = [SigBLOBPartialBlockReport class];
+                break;
+
                 // subnet bridge Messages
             case SigOpCode_BridgeCapabilityGet:
                 messageType = [SigBridgeCapabilityGet class];
@@ -1423,68 +1327,17 @@
     return messageType;
 }
 
-//- (void)handleAccessPdu:(SigAccessPdu *)accessPdu {
-//    Class MessageType = [self getMeshMessageWithOpCode:accessPdu.opCode];
-//    if (MessageType != nil) {
-//        SigMeshMessage *msg = [[MessageType alloc] initWithParameters:accessPdu.parameters];
-//        if (msg) {
-////            if var unknownMessage = message as? UnknownMessage {
-////                unknownMessage.opCode = accessPdu.opCode
-////                message = unknownMessage
-////            }
-//
-//            SigConfigMessage *configMessage = (SigConfigMessage *)msg;
-//            if ([configMessage isKindOfClass:[SigConfigMessage class]]) {
-//                [_networkManager.foundationLayer handleConfigMessage:configMessage fromSourceAddress:accessPdu.source];
-//            }
-//            [_networkManager notifyAboutNewMessage:msg fromSource:accessPdu.source];
-//        }
-//    }
-//}
-
 /// This method tries to decode the Access PDU into a Message.
-///
-/// The Model Handler must support the opcode and specify to
-/// which type should the message be decoded.
-///
-/// - parameter accessPdu: The Access PDU received.
-/// - returns: The decoded message, or `nil`, if the message
-///            is not supported or invalid.
+/// The Model Handler must support the opcode and specify to which type should the message be decoded.
+/// @param accessPdu The Access PDU received.
+/// @returns The decoded message, or `nil`, if the message is not supported or invalid.
 - (SigMeshMessage *)decodeSigAccessPdu:(SigAccessPdu *)accessPdu {
-//    if (self.modelDelegate && [self getMeshMessageWithOpCode:accessPdu.opCode]) {
-        Class MessageType = [self getMeshMessageWithOpCode:accessPdu.opCode];
-        if (MessageType != nil) {
-            SigMeshMessage *msg = [[MessageType alloc] initWithParameters:accessPdu.parameters];
-            return msg;
-        }
-//    }
+    Class MessageType = [self getMeshMessageWithOpCode:accessPdu.opCode];
+    if (MessageType != nil) {
+        SigMeshMessage *msg = [[MessageType alloc] initWithParameters:accessPdu.parameters];
+        return msg;
+    }
     return nil;
 }
-
-/// This method handles the decoded message and passes it to
-/// the proper handle method, depending on its type or whether
-/// it is a response to a previously sent request.
-///
-/// - parameters:
-///   - model:   The local Model that received the message.
-///   - message: The decoded message.
-///   - source:  The Unicast Address of the Element that the message
-///              originates from.
-///   - destination: The destination address of the request.
-///   - request: The request message sent previously that this message
-///              replies to, or `nil`, if this is not a response.
-/// - returns: The response message, if the received message is an
-///            Acknowledged Mesh Message that needs to be replied.
-//- (SigMeshMessage *)getModel:(SigModelIDModel *)model didReceiveMeshMessage:(SigMeshMessage *)message fromSource:(UInt16)source sentToDestination:(SigMeshAddress *)destination asResponseTo:(SigAcknowledgedMeshMessage *)request {
-//    if (request) {
-//        [self model:model didReceiveResponse:message toAcknowledgedMessage:request fromSource:source];
-//        return nil;
-//    }else if([request isKindOfClass:[SigAcknowledgedMeshMessage class]]) {
-//        return [self getModel:model didReceiveAcknowledgedMessage:request fromSource:source sentToDestination:destination];
-//    }else{
-//        [self model:model didReceiveUnacknowledgedMessage:message fromSource:source sentToDestination:destination];
-//        return nil;
-//    }
-//}
 
 @end

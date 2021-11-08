@@ -39,7 +39,7 @@
 @implementation AppDelegate
 
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {    
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     [IQKeyboardManager sharedManager].shouldResignOnTouchOutside = YES;
     [[UINavigationBar appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor whiteColor]}];
     [[UINavigationBar appearance] setTintColor:[UIColor whiteColor]];
@@ -85,20 +85,28 @@
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
     SigDataSource.share.addStaticOOBDevcieByNoOOBEnable = addStaticOOBDevcieByNoOOBEnable.boolValue;
-
-    //demo v3.3.0新增DLE模式，demo默认关闭DLE模式。（客户定制功能）
-    NSNumber *DLEType = [[NSUserDefaults standardUserDefaults] valueForKey:kDLEType];
-    if (DLEType == nil) {
-        DLEType = [NSNumber numberWithBool:NO];
-        [[NSUserDefaults standardUserDefaults] setValue:DLEType forKey:kDLEType];
+    
+    //demo v3.3.3将原来的两种DLE模式修改3种Extend Bearer Mode。（客户定制功能）
+    NSNumber *extendBearerMode = [[NSUserDefaults standardUserDefaults] valueForKey:kExtendBearerMode];
+    if (extendBearerMode == nil) {
+        extendBearerMode = [NSNumber numberWithInt:SigTelinkExtendBearerMode_noExtend];
+        [[NSUserDefaults standardUserDefaults] setValue:extendBearerMode forKey:kExtendBearerMode];
         [[NSUserDefaults standardUserDefaults] synchronize];
     } else {
-        if (DLEType.boolValue) {
+        UInt8 extend = [extendBearerMode intValue];
+        SigDataSource.share.telinkExtendBearerMode = extend;
+        if (extend == SigTelinkExtendBearerMode_noExtend) {
+            //(默认)关闭DLE功能后，SDK的Access消息是长度大于15字节才进行segment分包。
+            SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
+        } else {
             //(可选)打开DLE功能后，SDK的Access消息是长度大于229字节才进行segment分包。
             SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = kDLEUnsegmentLength;
         }
     }
 
+    //demo v3.3.3新增provision协议漏洞修复开关，demo默认为SigProvisionAuthLeak_auto，由SDK内部自动去判断设备是否支持provision协议漏洞修复的算法。
+    SigDataSource.share.provisionAuthLeak = SigProvisionAuthLeak_auto;
+    
     //demo中setting界面显示的log信息，客户开发到后期，APP稳定后可以不集成该功能，且上架最好关闭log保存功能。(客户发送iTunes中的日志文件“TelinkSDKDebugLogData”给泰凌微即可)
     [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
 //    [SigLogger.share setSDKLogLevel:SigLogLevelAll];
@@ -117,9 +125,11 @@
 //    [SigDataSource.share.defaultGroupSubscriptionModels addObject:@(0x00000211)];//新增vendorModelID用于测试加组及vendor组控。
     
     //(可选)SDK默认实现了PID为1和7的设备的fast bind功能，其它类型的设备可通过以下接口添加该类型设备默认的nodeInfo以实现fast bind功能
+//    //示范代码：添加PID=8，composition data=TemByte的数据到SigDataSource.share.defaultNodeInfos。
 //    DeviceTypeModel *model = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:8];
+//    static Byte TemByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x00, (Byte) 0x32, (Byte) 0x37, (Byte) 0x69, (Byte) 0x00, (Byte) 0x07, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x19, (Byte) 0x01, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x03, (Byte) 0x00, (Byte) 0x04, (Byte) 0x00, (Byte) 0x05, (Byte) 0x00, (Byte) 0x00, (Byte) 0xfe, (Byte) 0x01, (Byte) 0xfe, (Byte) 0x02, (Byte) 0xfe, (Byte) 0x00, (Byte) 0xff, (Byte) 0x01, (Byte) 0xff, (Byte) 0x00, (Byte) 0x12, (Byte) 0x01, (Byte) 0x12, (Byte) 0x00, (Byte) 0x10, (Byte) 0x02, (Byte) 0x10, (Byte) 0x04, (Byte) 0x10, (Byte) 0x06, (Byte) 0x10, (Byte) 0x07, (Byte) 0x10, (Byte) 0x03, (Byte) 0x12, (Byte) 0x04, (Byte) 0x12, (Byte) 0x06, (Byte) 0x12, (Byte) 0x07, (Byte) 0x12, (Byte) 0x00, (Byte) 0x13, (Byte) 0x01, (Byte) 0x13, (Byte) 0x03, (Byte) 0x13, (Byte) 0x04, (Byte) 0x13, (Byte) 0x11, (Byte) 0x02, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x00, (Byte) 0x02, (Byte) 0x00, (Byte) 0x02, (Byte) 0x10, (Byte) 0x06, (Byte) 0x13};
 //    NSData *nodeInfoData = [NSData dataWithBytes:TemByte length:76];
-//    [model setDefultNodeInfoData:nodeInfoData];
+//    [model setCompositionData:nodeInfoData];
 //    [SigDataSource.share.defaultNodeInfos addObject:model];
 
     //(可选)SDK默认publish周期为20秒，通过修改可以修改SDK的默认publish参数，或者客户自行实现publish检测机制。
@@ -134,6 +144,10 @@
 
 //    SigDataSource.share.needPublishTimeModel = NO;
     
+    //(可选)v3.3.3新增配置项
+//    SigDataSource.share.defaultReliableIntervalOfLPN = kSDKLibCommandTimeout;
+//    SigDataSource.share.defaultReliableIntervalOfNotLPN = kSDKLibCommandTimeout * 2;
+
     return YES;
 }
 

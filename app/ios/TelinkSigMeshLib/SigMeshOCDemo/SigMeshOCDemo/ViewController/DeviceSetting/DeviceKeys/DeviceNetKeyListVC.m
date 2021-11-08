@@ -92,7 +92,9 @@
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"get node NetKey list fail! error=%@",error]];
         }
-        [ShowTipsHandle.share delayHidden:2.0];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ShowTipsHandle.share delayHidden:2.0];
+        });
     }];
 }
 
@@ -119,7 +121,9 @@
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"add NetKey to node fail! error=%@",error]];
         }
-        [ShowTipsHandle.share delayHidden:2.0];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ShowTipsHandle.share delayHidden:2.0];
+        });
     }];
 }
 
@@ -144,7 +148,9 @@
         if (error) {
             [ShowTipsHandle.share show:[NSString stringWithFormat:@"delete NetKey from node fail! error=%@",error]];
         }
-        [ShowTipsHandle.share delayHidden:2.0];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [ShowTipsHandle.share delayHidden:2.0];
+        });
     }];
 }
 

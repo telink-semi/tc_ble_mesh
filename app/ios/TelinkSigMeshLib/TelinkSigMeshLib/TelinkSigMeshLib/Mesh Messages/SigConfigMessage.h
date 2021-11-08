@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -369,7 +369,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark opcode:0x800B
 @interface SigConfigBeaconStatus : SigConfigMessage
-@property (nonatomic,assign) UInt8 page;
 /// Secure Network Beacon state.
 @property (nonatomic,assign) BOOL isEnabled;
 
@@ -734,7 +733,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// intervals.
 @property (nonatomic,assign) UInt8 steps;
 /// The interval between retransmissions, in seconds.
-- (NSTimeInterval)interval;
+//- (NSTimeInterval)interval;
 - (NSData *)parameters;
 /// Sets the Network Transmit property of the Node.
 ///
@@ -832,7 +831,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSTimeInterval)interval;
 - (NSData *)parameters;
 //- (instancetype)initWithState:(SigNodeFeaturesState)state count:(UInt8)count steps:(UInt8)steps;
-- (instancetype)initWithNode:(SigNodeModel *)node;
+//- (instancetype)initWithNode:(SigNodeModel *)node;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 

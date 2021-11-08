@@ -45,7 +45,7 @@
 
 - (void)updateContent:(SigSceneModel *)model{
     _model = model;
-    _nameLabel.text = [NSString stringWithFormat:@"sceneID:0X%X",(int)model.number];
+    _nameLabel.text = [NSString stringWithFormat:@"sceneID:0X%@",model.number];
 }
 
 - (IBAction)clickRecallScene:(UIButton *)sender {

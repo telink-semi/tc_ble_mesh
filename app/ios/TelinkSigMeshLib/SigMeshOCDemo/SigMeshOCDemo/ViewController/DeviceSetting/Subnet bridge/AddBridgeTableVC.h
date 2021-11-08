@@ -1,7 +1,7 @@
 /********************************************************************************************************
 * @file     AddBridgeTableVC.h
 *
-* @brief    Show all NetKey of node.
+* @brief    Add Bridge Table to node.
 *
 * @author       Telink, 梁家誌
 * @date         2020

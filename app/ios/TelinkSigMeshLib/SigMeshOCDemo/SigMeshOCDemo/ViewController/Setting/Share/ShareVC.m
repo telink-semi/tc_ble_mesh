@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -164,7 +164,7 @@
 
 - (void)getTelinkJsonWithUUID:(NSString *)uuid {
     __weak typeof(self) weakSelf = self;
-    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
         TeLogDebug(@"SigBearer close %@",(successful?@"successful":@"fail"));
         [TelinkHttpManager.share downloadJsonDictionaryWithUUID:uuid didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
             dispatch_async(dispatch_get_main_queue(), ^{

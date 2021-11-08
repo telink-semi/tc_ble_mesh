@@ -38,6 +38,7 @@
 #import "DeviceNetKeyListVC.h"
 #import "DeviceAppKeyListVC.h"
 #import "SubnetBridgeListVC.h"
+#import "DeviceConfigVC.h"
 
 @interface DeviceSettingViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UILabel *macLabel;
@@ -102,7 +103,7 @@
 - (void)pop{
     if (SigDataSource.share.unicastAddressOfConnected == self.model.address) {
         __weak typeof(self) weakSelf = self;
-        [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+        [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [ShowTipsHandle.share hidden];
                 [weakSelf.navigationController popViewControllerAnimated:YES];
@@ -143,9 +144,9 @@
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
     if (self.model.isSensor) {
-        return 9;
+        return 10;
     } else {
-        return 8;
+        return 9;
     }
 }
 
@@ -154,52 +155,58 @@
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     cell.stateSwitch.hidden = YES;
 #ifndef kExist
-    cell.contentView.hidden = indexPath.row == 3;
+    cell.contentView.hidden = indexPath.row == 4;
 #endif
     switch (indexPath.row) {
         case 0:
         {
-            cell.nameLabel.text = @"Composition Data";
+            cell.nameLabel.text = @"Device Config";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
         }
             break;
         case 1:
         {
-            cell.nameLabel.text = @"NetKey List";
+            cell.nameLabel.text = @"Composition Data";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
         }
             break;
         case 2:
         {
-            cell.nameLabel.text = @"AppKey List";
+            cell.nameLabel.text = @"NetKey List";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
         }
             break;
         case 3:
         {
-            cell.nameLabel.text = @"Subnet Bridge Setting";
+            cell.nameLabel.text = @"AppKey List";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
         }
             break;
         case 4:
         {
+            cell.nameLabel.text = @"Subnet Bridge Setting";
+            cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
+        }
+            break;
+        case 5:
+        {
             cell.nameLabel.text = @"Scheduler Setting";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_alarm"];
         }
             break;
-        case 5:
+        case 6:
         {
             cell.nameLabel.text = @"Subscription Models";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
         }
             break;
-        case 6:
+        case 7:
         {
             cell.nameLabel.text = @"Device OTA";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_update"];
         }
             break;
-        case 7:
+        case 8:
         {
             UInt16 option = self.model.publishModelID;
             UInt16 eleAdr = [self.model.publishAddress.firstObject intValue];
@@ -231,7 +238,7 @@
             }];
         }
             break;
-        case 8:
+        case 9:
         {
             cell.nameLabel.text = @"LPN";
             cell.iconImageView.image = [UIImage imageNamed:@"ic_battery-20-bluetooth"];
@@ -245,7 +252,7 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
 #ifndef kExist
-    if (indexPath.row == 3) {
+    if (indexPath.row == 4) {
         return 0.01f;
     }
 #endif
@@ -256,20 +263,25 @@
     switch (indexPath.row) {
         case 0:
         {
-            [self pushToCompositionDataVC];
+            [self pushToDeviceConfigVC];
         }
             break;
         case 1:
         {
-            [self pushToNetKeyListVC];
+            [self pushToCompositionDataVC];
         }
             break;
         case 2:
         {
-            [self pushToAppKeyListVC];
+            [self pushToNetKeyListVC];
         }
             break;
         case 3:
+        {
+            [self pushToAppKeyListVC];
+        }
+            break;
+        case 4:
         {
             if (self.model.subnetBridgeServerAddress.count > 0) {
                 [self pushToSubnetBridgeSettingVC];
@@ -278,7 +290,7 @@
             }
         }
             break;
-        case 4:
+        case 5:
         {
             if (self.model.schedulerAddress.count > 0) {
                 [self pushToSchedulerVC];
@@ -287,24 +299,24 @@
             }
         }
             break;
-        case 5:
+        case 6:
         {
             [self pushToSubscriptionVC];
         }
             break;
-        case 6:
+        case 7:
         {
             [self pushToDeviceOTA];
         }
             break;
-        case 7:
+        case 8:
         {
             if (self.model.publishAddress.count == 0) {
                 [self showTips:@"Node hasn't publish model"];
             }
         }
             break;
-        case 8:
+        case 9:
         {
             [self pushToSensorVC];
         }
@@ -314,6 +326,12 @@
     }
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     cell.selected = NO;
+}
+
+- (void)pushToDeviceConfigVC {
+    DeviceConfigVC *vc = [[DeviceConfigVC alloc] init];
+    vc.model = self.model;
+    [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (void)pushToCompositionDataVC{

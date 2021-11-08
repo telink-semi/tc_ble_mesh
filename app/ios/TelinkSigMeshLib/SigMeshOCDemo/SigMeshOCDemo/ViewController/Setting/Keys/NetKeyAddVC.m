@@ -82,6 +82,29 @@
 - (void)clickSave {
     [self.indexTF resignFirstResponder];
     [self.keyTF resignFirstResponder];
+    if (!self.isAdd) {
+        BOOL hadBound = NO;
+        NSArray *temNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
+        for (SigNodeModel *node in temNodes) {
+            if (node.netKeys && node.netKeys.count > 0) {
+                for (SigNodeKeyModel *nodeKey in node.netKeys) {
+                    if (nodeKey.index == self.netKeyModel.index) {
+                        hadBound = YES;
+                        break;
+                    }
+                }
+                if (hadBound) {
+                    break;
+                }
+            }
+        }
+        if (hadBound) {
+            [self showAlertSureWithTitle:@"Hits" message:@"Some nodes have already bound this netkey, you can`t edit it!" sure:nil];
+            /*客户需要保证添加了该NetKey的设备都在线，并且给所有添加了该NetKey的设备发送SigConfigNetKeyUpdate指令且成功后，才可以修改mesh里面的NetKey的值。此处发送逻辑过于复杂且限制太多，当前只是禁止客户进行修改操作。客户使用demoAPP时，可以通过下面的步骤实现修改mesh网络的某个NetKey的功能：可以先从设备里面移除该NetKey，再在setting界面修改NetKey，再给设备重新添加NetKey。*/
+            return;
+        }
+    }
+    
     if (![LibTools validateHex:self.indexTF.text.removeAllSapceAndNewlines] || self.indexTF.text.length > 4) {
         [self showTips:@"Please input `index` in range 0~0x0FFF."];
         return;

@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -44,6 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 sequenceZero;
 @property (nonatomic,assign) UInt8 segmentOffset;
 @property (nonatomic,assign) UInt8 lastSegmentNumber;
+
+- (instancetype)initBusySegmentAcknowledgmentMessageWithNetworkPdu:(SigNetworkPdu *)networkPdu;
 
 /// Creates the Segmented Acknowledgement Message from the given Network PDU.
 /// If the PDU is not valid, it will return `nil`.

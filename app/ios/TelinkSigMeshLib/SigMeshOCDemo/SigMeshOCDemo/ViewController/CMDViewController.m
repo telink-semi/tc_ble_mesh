@@ -54,7 +54,7 @@
             self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c2 11 02 c4 02 00 01";
             break;
         case 3:
-            self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c1 11 02 c4 02";
+            self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c1 11 02 c4 00";
             break;
         case 4:
             self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff c3 11 02 00 02 01 03";
@@ -72,6 +72,7 @@
     
     [self handleInTextView];
 }
+
 - (IBAction)clickSend:(UIButton *)sender {
     [self.inTextView resignFirstResponder];
     if ([self validateString:self.inTextView.text.removeAllSapceAndNewlines]) {
@@ -81,7 +82,7 @@
         [self showNewLogMessage:[NSString stringWithFormat:@"Send: %@",self.sendData]];
         __weak typeof(self) weakSelf = self;
         [SDKLibCommand sendOpINIData:self.sendData successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-            NSString *str = [NSString stringWithFormat:@"Response: opcode=0x%x, parameters=%@",responseMessage.opCode,responseMessage.parameters];
+            NSString *str = [NSString stringWithFormat:@"Response: opcode=0x%x, parameters=%@",(unsigned int)responseMessage.opCode,responseMessage.parameters];
             TeLogVerbose(@"%@",str);
             [weakSelf showNewLogMessage:str];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
@@ -104,6 +105,18 @@
 //        [SigBluetooth.share writeValue:self.sendData toPeripheral:SigBearer.share.getCurrentPeripheral forCharacteristic:otaCharacteristic type:CBCharacteristicWriteWithoutResponse];
 //        //test3:发送写蓝牙数据接口
 //        [SigBluetooth.share readCharachteristic:otaCharacteristic ofPeripheral:SigBearer.share.getCurrentPeripheral];
+    
+        
+//        IniCommandModel *ini = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyIndex:SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:1 address:2 opcode:0xC4 vendorId:kCompanyID responseOpcode:0xC4 needTid:NO tid:0 commandData:[LibTools nsstringToHex:@"383530333137536D6172745465616D2D50617373776F72642D322E34473034313233343062546573745F46616D696C793034313233343062546573745F46616D696C79313868747470733A2F2F7777772E6C656476616E63652E636F6D3030313368747470733A2F2F3139382E3132372E302E303034323262383031303030313031303432326238"]];
+//        IniCommandModel *ini = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyIndex:SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:1 address:2 opcode:0xC5 vendorId:kCompanyID responseOpcode:0xC4 tidPosition:2 tid:0 commandData:[LibTools nsstringToHex:@"7900383530333137536D6172745465616D2D50617373776F72642D322E34473034313233343062546573745F46616D696C793034313233343062546573745F46616D696C79313868747470733A2F2F7777772E6C656476616E63652E636F6D3030313368747470733A2F2F3139382E3132372E302E303034323262383031303030313031303432326238"]];
+//        [SDKLibCommand sendIniCommandModel:ini successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
+//            NSString *str = [NSString stringWithFormat:@"Response: opcode=0x%x, parameters=%@",responseMessage.opCode,responseMessage.parameters];
+//            TeLogVerbose(@"%@",str);
+//            [weakSelf showNewLogMessage:str];
+//        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//            TeLogVerbose(@"finish");
+//        }];
+        
     }
 }
 

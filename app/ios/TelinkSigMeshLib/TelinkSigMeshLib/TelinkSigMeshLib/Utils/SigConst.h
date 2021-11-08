@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -67,6 +67,7 @@ UIKIT_EXTERN NSString * const kOnlineStatusCharacteristicsID;
 /// update firmware
 UIKIT_EXTERN NSString * const kOTA_CharacteristicsID;
 UIKIT_EXTERN NSString * const kMeshOTA_CharacteristicsID;
+UIKIT_EXTERN NSString * const kFirmwareRevisionCharacteristicsID;
 
 
 //存储数据的key
@@ -89,6 +90,9 @@ UIKIT_EXTERN NSString * const kSigScanRspModel_networkIDData_key;
 UIKIT_EXTERN NSString * const kSaveMeshOTADictKey;
 /*存储在本地的数据的key，不再存储在cache中，因为苹果设备的存储快满的时候，系统会删除cache文件夹的数据*/
 UIKIT_EXTERN NSString * const kSaveLocationDataKey;//@"mesh.json"
+UIKIT_EXTERN NSString * const kExtendBearerMode;//@"kExtendBearerMode"
+UIKIT_EXTERN UInt8 const kDLEUnsegmentLength;// 229
+
 //oob
 UIKIT_EXTERN NSString * const kSigOOBModel_sourceType_key;
 UIKIT_EXTERN NSString * const kSigOOBModel_UUIDString_key;
@@ -275,6 +279,23 @@ UIKIT_EXTERN UInt16 const kSigModel_ObjectTransferServer_ID;//              = 0x
 UIKIT_EXTERN UInt16 const kSigModel_ObjectTransferClient_ID;//              = 0xFF01;
 UIKIT_EXTERN UInt16 const kSigModel_SubnetBridgeServer_ID;//                = 0xBF32;
 
+UIKIT_EXTERN UInt16 const kSigModel_DF_CFG_S_ID;//                = 0xBF30;
+UIKIT_EXTERN UInt16 const kSigModel_DF_CFG_C_ID;//                = 0xBF31;
+UIKIT_EXTERN UInt16 const kSigModel_SubnetBridgeServer_ID;//                = 0xBF32;
+UIKIT_EXTERN UInt16 const kSigModel_SubnetBridgeClient_ID;//                = 0xBF33;
+UIKIT_EXTERN UInt16 const kSigModel_PrivateBeaconServer_ID;//                = 0xBF40;
+UIKIT_EXTERN UInt16 const kSigModel_PrivateBeaconClient_ID;//                = 0xBF41;
+UIKIT_EXTERN UInt16 const kSigModel_ON_DEMAND_PROXY_S_ID;//                = 0xBF50;
+UIKIT_EXTERN UInt16 const kSigModel_ON_DEMAND_PROXY_C_ID;//                = 0xBF51;
+UIKIT_EXTERN UInt16 const kSigModel_SAR_CFG_S_ID;//                = 0xBF52;
+UIKIT_EXTERN UInt16 const kSigModel_SAR_CFG_C_ID;//                = 0xBF53;
+UIKIT_EXTERN UInt16 const kSigModel_OP_AGG_S_ID;//                = 0xBF54;
+UIKIT_EXTERN UInt16 const kSigModel_OP_AGG_C_ID;//                = 0xBF55;
+UIKIT_EXTERN UInt16 const kSigModel_LARGE_CPS_S_ID;//                = 0xBF56;
+UIKIT_EXTERN UInt16 const kSigModel_LARGE_CPS_C_ID;//                = 0xBF57;
+UIKIT_EXTERN UInt16 const kSigModel_SOLI_PDU_RPL_CFG_S_ID;//                = 0xBF58;
+UIKIT_EXTERN UInt16 const kSigModel_SOLI_PDU_RPL_CFG_C_ID;//                = 0xBF59;
+
 //旧版本使用的key start
 UIKIT_EXTERN UInt16 const SIG_MD_G_ONOFF_S;// 0x1000
 UIKIT_EXTERN UInt16 const SIG_MD_LIGHTNESS_S;// 0x1300
@@ -304,6 +325,8 @@ UIKIT_EXTERN UInt8 const kProvisionConfirmationTimeout;// 5
 UIKIT_EXTERN UInt8 const kProvisionRandomTimeout;// 5
 UIKIT_EXTERN UInt8 const kSentProvisionEncryptedDataWithMicTimeout;// 5
 UIKIT_EXTERN UInt8 const kStartMeshConnectTimeout;// 10
+UIKIT_EXTERN UInt8 const kProvisioningRecordRequestTimeout;// 10
+UIKIT_EXTERN UInt8 const kProvisioningRecordsGetTimeout;// 10
 
 UIKIT_EXTERN UInt8 const kScanNodeIdentityBeforeKeyBindTimeout;// 3
 
@@ -381,9 +404,11 @@ UIKIT_EXTERN UInt16 const kPacketAllLength;// (kPacketJsonLength+4)
 UIKIT_EXTERN UInt16 const SigNodePID_CT;// 1
 UIKIT_EXTERN UInt16 const SigNodePID_HSL;// 2
 UIKIT_EXTERN UInt16 const SigNodePID_Panel;// 7
+UIKIT_EXTERN UInt16 const SigNodePID_LPN;// 0x0201
+UIKIT_EXTERN UInt16 const SigNodePID_Switch;// 0x0301
 
 UIKIT_EXTERN float const kCMDInterval;// 0.32
-UIKIT_EXTERN float const kSDKLibCommandTimeout;// 1.0
+UIKIT_EXTERN float const kSDKLibCommandTimeout;// 1.28
 
 /*读取json里面的mesh数据后，默认新增一个增量128*/
 UIKIT_EXTERN UInt32 const kSnoIncrement;//128

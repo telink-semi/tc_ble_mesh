@@ -31,6 +31,7 @@
 #import "DeviceControlViewController.h"
 #import "DeviceGroupViewController.h"
 #import "DeviceSettingViewController.h"
+#import "DeviceRemoteVC.h"
 
 @interface SingleDeviceViewController ()
 
@@ -83,7 +84,7 @@
     [self setUpTitleEffect:^(UIColor *__autoreleasing *titleScrollViewColor, UIColor *__autoreleasing *norColor, UIColor *__autoreleasing *selColor, UIFont *__autoreleasing *titleFont, CGFloat *titleHeight, CGFloat *titleWidth) {
         *norColor = [UIColor lightGrayColor];
         *selColor = [UIColor blackColor];
-        *titleWidth = [UIScreen mainScreen].bounds.size.width / 3;
+        *titleWidth = [UIScreen mainScreen].bounds.size.width / (weakSelf.model.isRemote ? 2 : 3);
     }];
     
     // 标题渐变
@@ -105,16 +106,26 @@
 - (void)setUpAllViewController
 {
     // control
-    DeviceControlViewController *wordVc1 = (DeviceControlViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceControlViewControllerID storybroad:@"DeviceSetting"];
-    wordVc1.title = @"CONTROL";
-    wordVc1.model = self.model;
-    [self addChildViewController:wordVc1];
+    if (self.model.isRemote) {
+        DeviceRemoteVC *wordVc1 = (DeviceRemoteVC *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceRemoteVCID storybroad:@"DeviceSetting"];
+        wordVc1.title = @"CONTROL";
+        wordVc1.model = self.model;
+        [self addChildViewController:wordVc1];
+    } else {
+        DeviceControlViewController *wordVc1 = (DeviceControlViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceControlViewControllerID storybroad:@"DeviceSetting"];
+        wordVc1.title = @"CONTROL";
+        wordVc1.model = self.model;
+        [self addChildViewController:wordVc1];
+    }
     
     // group
-    DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storybroad:@"DeviceSetting"];
-    wordVc2.title = @"GROUP";
-    wordVc2.model = self.model;
-    [self addChildViewController:wordVc2];
+    // 遥控器不需要分组界面
+    if (self.model.isRemote == NO) {
+        DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storybroad:@"DeviceSetting"];
+        wordVc2.title = @"GROUP";
+        wordVc2.model = self.model;
+        [self addChildViewController:wordVc2];
+    }
     
     // settings
     DeviceSettingViewController *wordVc3 = (DeviceSettingViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSettingViewControllerID storybroad:@"DeviceSetting"];

@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -327,14 +327,15 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_genericOnOffStatus;
-        if (parameters == nil || (parameters.length != 1 && parameters.length != 3)) {
+        if (parameters == nil || parameters.length < 1) {
+//            if (parameters == nil || (parameters.length != 1 && parameters.length != 3)) {
             return nil;
         }
         UInt8 tem = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
         memcpy(&tem, dataByte, 1);
         _isOn = tem == 0x01;
-        if (parameters.length == 3) {
+        if (parameters.length >= 3) {
             memcpy(&tem, dataByte+1, 1);
             _targetState = tem == 0x01;
             memcpy(&tem, dataByte+2, 1);
@@ -610,14 +611,15 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_genericLevelStatus;
-        if (parameters == nil || (parameters.length != 2 && parameters.length != 5)) {
+        if (parameters == nil || parameters.length < 2) {
+//            if (parameters == nil || (parameters.length != 2 && parameters.length != 5)) {
             return nil;
         }
         UInt16 tem16 = 0;
         Byte *dataByte = (Byte *)parameters.bytes;
         memcpy(&tem16, dataByte, 2);
         _level = tem16;
-        if (parameters.length == 5) {
+        if (parameters.length >= 5) {
             memcpy(&tem16, dataByte+2, 2);
             _targetLevel = tem16;
             UInt8 tem = 0;
@@ -9407,7 +9409,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithDistributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(BOOL)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex distributionMulticastAddress:(NSData *)distributionMulticastAddress {
+- (instancetype)initWithDistributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(SigUpdatePolicyType)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex distributionMulticastAddress:(NSData *)distributionMulticastAddress {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareDistributionStart;
         _distributionAppKeyIndex = distributionAppKeyIndex;
@@ -9429,7 +9431,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem16 = distributionTimeoutBase;
         data = [NSData dataWithBytes:&tem16 length:2];
         [mData appendData:data];
-        tem8 = distributionTransferMode | ((updatePolicy?1:0) << 2) | ((RFU&0b11111) << 3);
+        tem8 = distributionTransferMode | ((updatePolicy == SigUpdatePolicyType_verifyAndApply ? 1 : 0) << 2) | ((RFU&0b11111) << 3);
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
         tem16 = distributionFirmwareImageIndex;
@@ -9797,14 +9799,15 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         _uploadPhase = tem8;
         if (parameters.length >= 4) {
             memcpy(&tem8, dataByte + 2, 1);
-            _uploadProgress = tem8;
+            _uploadProgress = tem8 & 0x7F;
+            _uploadType = (tem8 >> 7) & 0b1;
             _uploadFirmwareID = [parameters subdataWithRange:NSMakeRange(3, parameters.length - 3)];
         }
     }
     return self;
 }
 
-- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status uploadPhase:(SigFirmwareUploadPhaseStateType)uploadPhase uploadProgress:(UInt8)uploadProgress uploadFirmwareID:(NSData *)uploadFirmwareID {
+- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status uploadPhase:(SigFirmwareUploadPhaseStateType)uploadPhase uploadProgress:(UInt8)uploadProgress uploadType:(BOOL)uploadType uploadFirmwareID:(NSData *)uploadFirmwareID {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareDistributionUploadStatus;
         _status = status;
@@ -9822,7 +9825,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem8 = uploadPhase;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
-        tem8 = uploadProgress;
+        tem8 = uploadProgress | ((uploadType==YES?1:0) << 7);
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
         if (uploadFirmwareID && uploadFirmwareID.length > 0) {
@@ -10127,7 +10130,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status distributionPhase:(SigDistributionPhaseState)distributionPhase distributionMulticastAddress:(UInt16)distributionMulticastAddress distributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(BOOL)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex {
+- (instancetype)initWithStatus:(SigFirmwareDistributionServerAndClientModelStatusType)status distributionPhase:(SigDistributionPhaseState)distributionPhase distributionMulticastAddress:(UInt16)distributionMulticastAddress distributionAppKeyIndex:(UInt16)distributionAppKeyIndex distributionTTL:(UInt8)distributionTTL distributionTimeoutBase:(UInt16)distributionTimeoutBase distributionTransferMode:(SigTransferModeState)distributionTransferMode updatePolicy:(SigUpdatePolicyType)updatePolicy RFU:(UInt8)RFU distributionFirmwareImageIndex:(UInt16)distributionFirmwareImageIndex {
     if (self = [super init]) {
         self.opCode = SigOpCode_FirmwareDistributionStatus;
         _status = status;
@@ -10280,6 +10283,13 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         if (parameters == nil || parameters.length < 4 || ((parameters.length - 4) % 5) != 0) {
             return nil;
         }
+        UInt16 tem = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem, dataByte, 2);
+        _receiversListCount = tem;
+        memcpy(&tem, dataByte + 2, 2);
+        _firstIndex = tem;
+
         NSMutableArray *mArray = [NSMutableArray array];
         while ((mArray.count * 5 + 4) < parameters.length) {
             SigUpdatingNodeEntryModel *model = [[SigUpdatingNodeEntryModel alloc] initWithParameters:[parameters subdataWithRange:NSMakeRange(mArray.count * 5 + 4, 5)]];
@@ -11298,23 +11308,13 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         if (parameters == nil) {
             return nil;
         }
-        Byte *dataByte = (Byte *)parameters.bytes;
         if (parameters.length > 0) {
-            NSMutableArray *array = [NSMutableArray array];
-            UInt16 addressesLength = parameters.length;
-            UInt16 index = 0;
-            UInt8 tem8 = 0;
-            while (addressesLength > index) {
-                memcpy(&tem8, dataByte+index, 1);
-                for (int i=0; i<8; i++) {
-                    BOOL exist = (tem8 >> i) & 1;
-                    if (exist) {
-                        [array addObject:@(i+8*index)];
-                    }
-                }
-                index++;
+            NSArray *array = [LibTools getNumberListFromUTF8EncodeData:parameters];
+            if (array) {
+                _encodedMissingChunks = [NSMutableArray arrayWithArray:array];
+            } else {
+                _encodedMissingChunks = [NSMutableArray array];
             }
-            _encodedMissingChunks = array;
         }
     }
     return self;
@@ -11352,23 +11352,26 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         _blockNumber = tem16;
         memcpy(&tem16, dataByte+3, 2);
         _chunkSize = tem16;
-        if (parameters.length > 5) {
-            NSMutableArray *array = [NSMutableArray array];
-            UInt16 addressesLength = parameters.length - 5;
-            UInt16 index = 0;
-            while (addressesLength > index) {
-                memcpy(&tem8, dataByte+5+index, 1);
-                for (int i=0; i<8; i++) {
-                    BOOL exist = (tem8 >> i) & 1;
-                    if (exist) {
-                        [array addObject:@(i+8*index)];
+        if (_format == SigBLOBBlockFormatType_someChunksMissing) {
+            if (parameters.length > 5) {
+                NSMutableArray *array = [NSMutableArray array];
+                UInt16 addressesLength = parameters.length - 5;
+                UInt16 index = 0;
+                while (addressesLength > index) {
+                    memcpy(&tem8, dataByte+5+index, 1);
+                    for (int i=0; i<8; i++) {
+                        BOOL exist = (tem8 >> i) & 1;
+                        if (exist) {
+                            [array addObject:@(i+8*index)];
+                        }
                     }
+                    index++;
                 }
-                index++;
-            }
-            if (_format == SigBLOBBlockFormatType_someChunksMissing) {
                 _missingChunksList = array;
-            } else if (_format == SigBLOBBlockFormatType_encodedMissingChunks) {
+            }
+        } else if (_format == SigBLOBBlockFormatType_encodedMissingChunks) {
+            if (parameters.length > 5) {
+                NSMutableArray *array = [NSMutableArray arrayWithArray:[LibTools getNumberListFromUTF8EncodeData:[parameters subdataWithRange:NSMakeRange(5, parameters.length-5)]]];
                 _encodedMissingChunksList = array;
             }
         }
@@ -11384,8 +11387,16 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         _format = format;
         _blockNumber = blockNumber;
         _chunkSize = chunkSize;
-        _missingChunksList = [NSArray arrayWithArray:missingChunksList];
-        _encodedMissingChunksList = [NSArray arrayWithArray:encodedMissingChunksList];
+        if (missingChunksList) {
+            _missingChunksList = [NSArray arrayWithArray:missingChunksList];
+        } else {
+            _missingChunksList = [NSArray array];
+        }
+        if (encodedMissingChunksList) {
+            _encodedMissingChunksList = [NSArray arrayWithArray:encodedMissingChunksList];
+        } else {
+            _encodedMissingChunksList = [NSArray array];
+        }
 
         NSMutableData *mData = [NSMutableData data];
         UInt8 tem8 = 0;
@@ -11399,8 +11410,9 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem16 = chunkSize;
         data = [NSData dataWithBytes:&tem16 length:2];
         [mData appendData:data];
-        //暂时不处理该逻辑
+        //暂时不处理该逻辑，因为需要知道当前BLOB的chunks个数。
         if (format == SigBLOBBlockFormatType_someChunksMissing) {
+            TeLogError(@"暂时不处理该逻辑，因为需要知道当前BLOB的chunks个数!!!");
 //            if (missingChunksList && missingChunksList.count > 0) {
 //                for (NSNumber *num in missingChunksList) {
 //
@@ -11408,12 +11420,10 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 //                [mData appendData:blocksNotReceived];
 //            }
         } else if (format == SigBLOBBlockFormatType_encodedMissingChunks) {
-//            if (missingChunksList && missingChunksList.count > 0) {
-//                for (NSNumber *num in encodedMissingChunksList) {
-//
-//                }
-//                [mData appendData:blocksNotReceived];
-//            }
+            if (encodedMissingChunksList && encodedMissingChunksList.count > 0) {
+                NSData *encodedMissingChunksListData = [LibTools getUTF8EncodeDataFromNumberList:encodedMissingChunksList];
+                [mData appendData:encodedMissingChunksListData];
+            }
         }
         self.parameters = mData;
     }
@@ -11490,12 +11500,12 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         memcpy(&tem16, dataByte+10, 2);
         _MTUSize = tem16;
         memcpy(&tem8, dataByte+12, 1);
-        _supportedTransferMode = tem8;
+        _supportedTransferMode.value = tem8;
     }
     return self;
 }
 
-- (instancetype)initWithMinBlockSizeLog:(UInt8)minBlockSizeLog maxBlockSizeLog:(UInt8)maxBlockSizeLog maxChunksNumber:(UInt16)maxChunksNumber maxChunkSize:(UInt16)maxChunkSize maxBLOBSize:(UInt32)maxBLOBSize MTUSize:(UInt16)MTUSize supportedTransferMode:(UInt8)supportedTransferMode {
+- (instancetype)initWithMinBlockSizeLog:(UInt8)minBlockSizeLog maxBlockSizeLog:(UInt8)maxBlockSizeLog maxChunksNumber:(UInt16)maxChunksNumber maxChunkSize:(UInt16)maxChunkSize maxBLOBSize:(UInt32)maxBLOBSize MTUSize:(UInt16)MTUSize supportedTransferMode:(struct SigSupportedTransferMode)supportedTransferMode {
     if (self = [super init]) {
         self.opCode = SigOpCode_BLOBInformationStatus;
         _minBlockSizeLog = minBlockSizeLog;
@@ -11528,7 +11538,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         tem16 = MTUSize;
         data = [NSData dataWithBytes:&tem16 length:2];
         [mData appendData:data];
-        tem8 = supportedTransferMode;
+        tem8 = supportedTransferMode.value;
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
         self.parameters = mData;

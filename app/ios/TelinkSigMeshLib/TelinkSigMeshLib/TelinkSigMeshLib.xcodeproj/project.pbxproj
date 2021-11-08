@@ -163,6 +163,12 @@
 		25335F91235F06D3006C79C1 /* SDKLibCommand.h in Headers */ = {isa = PBXBuildFile; fileRef = 25335F8F235F06D3006C79C1 /* SDKLibCommand.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		254072A925C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 254072A725C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		254072AA25C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 254072A825C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m */; };
+		254AEF9925EF3E990072F2C2 /* SDKLibCommand+certificate.h in Headers */ = {isa = PBXBuildFile; fileRef = 254AEF9625EF3E990072F2C2 /* SDKLibCommand+certificate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		254AEF9B25EF3E9A0072F2C2 /* SDKLibCommand+certificate.m in Sources */ = {isa = PBXBuildFile; fileRef = 254AEF9725EF3E990072F2C2 /* SDKLibCommand+certificate.m */; };
+		2551296A26FC58AE00073F3E /* TelinkEncrypt.h in Headers */ = {isa = PBXBuildFile; fileRef = 2551296726FC58AE00073F3E /* TelinkEncrypt.h */; };
+		2551296B26FC58AE00073F3E /* TelinkEncrypt.h in Headers */ = {isa = PBXBuildFile; fileRef = 2551296726FC58AE00073F3E /* TelinkEncrypt.h */; };
+		2551296C26FC58AE00073F3E /* libTelinkEncrypt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2551296926FC58AE00073F3E /* libTelinkEncrypt.a */; };
+		2551296D26FC58AE00073F3E /* libTelinkEncrypt.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2551296926FC58AE00073F3E /* libTelinkEncrypt.a */; };
 		255394F924907A9B0095B499 /* pem2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A324907A9B0095B499 /* pem2.h */; };
 		255394FA24907A9B0095B499 /* pem2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A324907A9B0095B499 /* pem2.h */; };
 		255394FB24907A9B0095B499 /* pem.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A424907A9B0095B499 /* pem.h */; };
@@ -335,12 +341,17 @@
 		255395A224907AA50095B499 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 255394F824907A9B0095B499 /* LICENSE.txt */; };
 		256A68B92459129C00131CC4 /* TelinkHttpManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 256A68B72459129C00131CC4 /* TelinkHttpManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		256A68BA2459129C00131CC4 /* TelinkHttpManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 256A68B82459129C00131CC4 /* TelinkHttpManager.m */; };
+		25772EB2262EBB3600014699 /* ConnectTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 25772EB0262EBB3500014699 /* ConnectTools.m */; };
+		25772EB3262EBB3600014699 /* ConnectTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 25772EB0262EBB3500014699 /* ConnectTools.m */; };
+		25772EB4262EBB3600014699 /* ConnectTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 25772EB1262EBB3600014699 /* ConnectTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25772EB5262EBB3600014699 /* ConnectTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 25772EB1262EBB3600014699 /* ConnectTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		258A004023A8BA5A003D2148 /* OTAManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 258A003E23A8BA5A003D2148 /* OTAManager.m */; };
 		258A004123A8BA5A003D2148 /* OTAManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 258A003F23A8BA5A003D2148 /* OTAManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		259020902369390E005649DE /* SigProxyConfigurationMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 2590208E2369390E005649DE /* SigProxyConfigurationMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		259020912369390E005649DE /* SigProxyConfigurationMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 2590208F2369390E005649DE /* SigProxyConfigurationMessage.m */; };
 		25957ECA237AC6C100816137 /* SigGenericMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25957EC8237AC6C100816137 /* SigGenericMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25957ECB237AC6C100816137 /* SigGenericMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25957EC9237AC6C100816137 /* SigGenericMessage.m */; };
+		25A76E9A25FB5CEF00DEF34B /* CheckSampleData.m in Sources */ = {isa = PBXBuildFile; fileRef = 25A76E9925FB5CEF00DEF34B /* CheckSampleData.m */; };
 		25B8764C24850474006C76CB /* SigBluetooth.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B8764A24850474006C76CB /* SigBluetooth.m */; };
 		25B8764D24850474006C76CB /* SigBluetooth.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B8764A24850474006C76CB /* SigBluetooth.m */; };
 		25B8764E24850474006C76CB /* SigBluetooth.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B8764B24850474006C76CB /* SigBluetooth.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -356,7 +367,6 @@
 		25C30DC12469309700F06076 /* MeshOTAManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25C30DC02469309600F06076 /* MeshOTAManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25C30DC22469309700F06076 /* MeshOTAManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25C30DC02469309600F06076 /* MeshOTAManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25CE4E5B254A910E004E6F12 /* TelinkSigMeshLibTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 25CE4E5A254A910E004E6F12 /* TelinkSigMeshLibTests.m */; };
-		25CE4E5D254A910E004E6F12 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25C0AFD9235D597400846CFB /* TelinkSigMeshLib.framework */; };
 		25D88BCD2361392100D4F0F7 /* SigKeySet.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D88BC92361392100D4F0F7 /* SigKeySet.m */; };
 		25D88BCE2361392100D4F0F7 /* SigKeySet.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BCA2361392100D4F0F7 /* SigKeySet.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		25D88BCF2361392100D4F0F7 /* SigNetworkManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25D88BCB2361392100D4F0F7 /* SigNetworkManager.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -397,6 +407,7 @@
 		25D9E67F23ACD9B6001E4747 /* SigPublishManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25D9E67D23ACD9B6001E4747 /* SigPublishManager.m */; };
 		25E60F282435980B00620E29 /* SigFastProvisionAddManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 25E60F262435980B00620E29 /* SigFastProvisionAddManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25E60F292435980B00620E29 /* SigFastProvisionAddManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 25E60F272435980B00620E29 /* SigFastProvisionAddManager.m */; };
+		25F3F7D12602F51200B0C03C /* TelinkSigMeshLibExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 252895292468F13400E590F9 /* TelinkSigMeshLibExtensions.framework */; };
 		25FF2F572446EFDD0084263F /* GMEllipticCurveCrypto+hash.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FF2F4F2446EFDC0084263F /* GMEllipticCurveCrypto+hash.m */; };
 		25FF2F592446EFDD0084263F /* GMEllipticCurveCrypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 25FF2F512446EFDC0084263F /* GMEllipticCurveCrypto.h */; };
 		25FF2F5B2446EFDD0084263F /* GMEllipticCurveCrypto+hash.h in Headers */ = {isa = PBXBuildFile; fileRef = 25FF2F532446EFDC0084263F /* GMEllipticCurveCrypto+hash.h */; };
@@ -404,12 +415,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		25CE4E5E254A910E004E6F12 /* PBXContainerItemProxy */ = {
+		25F3F802260321BC00B0C03C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 25C0AFD0235D597400846CFB /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 25C0AFD8235D597400846CFB;
-			remoteInfo = TelinkSigMeshLib;
+			remoteGlobalIDString = 252894542468F13400E590F9;
+			remoteInfo = TelinkSigMeshLibExtensions;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -461,6 +472,10 @@
 		25335F8F235F06D3006C79C1 /* SDKLibCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDKLibCommand.h; sourceTree = "<group>"; };
 		254072A725C8E48200D0FF8B /* SDKLibCommand+subnetBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+subnetBridge.h"; sourceTree = "<group>"; };
 		254072A825C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+subnetBridge.m"; sourceTree = "<group>"; };
+		254AEF9625EF3E990072F2C2 /* SDKLibCommand+certificate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+certificate.h"; sourceTree = "<group>"; };
+		254AEF9725EF3E990072F2C2 /* SDKLibCommand+certificate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+certificate.m"; sourceTree = "<group>"; };
+		2551296726FC58AE00073F3E /* TelinkEncrypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TelinkEncrypt.h; sourceTree = "<group>"; };
+		2551296926FC58AE00073F3E /* libTelinkEncrypt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libTelinkEncrypt.a; sourceTree = "<group>"; };
 		255394A324907A9B0095B499 /* pem2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem2.h; sourceTree = "<group>"; };
 		255394A424907A9B0095B499 /* pem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem.h; sourceTree = "<group>"; };
 		255394A524907A9B0095B499 /* ssl3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssl3.h; sourceTree = "<group>"; };
@@ -549,12 +564,15 @@
 		2567D88524B84BD00075E7E8 /* Script.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = Script.sh; sourceTree = "<group>"; };
 		256A68B72459129C00131CC4 /* TelinkHttpManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TelinkHttpManager.h; sourceTree = "<group>"; };
 		256A68B82459129C00131CC4 /* TelinkHttpManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TelinkHttpManager.m; sourceTree = "<group>"; };
+		25772EB0262EBB3500014699 /* ConnectTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConnectTools.m; sourceTree = "<group>"; };
+		25772EB1262EBB3600014699 /* ConnectTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConnectTools.h; sourceTree = "<group>"; };
 		258A003E23A8BA5A003D2148 /* OTAManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OTAManager.m; sourceTree = "<group>"; };
 		258A003F23A8BA5A003D2148 /* OTAManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OTAManager.h; sourceTree = "<group>"; };
 		2590208E2369390E005649DE /* SigProxyConfigurationMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigProxyConfigurationMessage.h; sourceTree = "<group>"; };
 		2590208F2369390E005649DE /* SigProxyConfigurationMessage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigProxyConfigurationMessage.m; sourceTree = "<group>"; };
 		25957EC8237AC6C100816137 /* SigGenericMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigGenericMessage.h; sourceTree = "<group>"; };
 		25957EC9237AC6C100816137 /* SigGenericMessage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigGenericMessage.m; sourceTree = "<group>"; };
+		25A76E9925FB5CEF00DEF34B /* CheckSampleData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CheckSampleData.m; sourceTree = "<group>"; };
 		25B8764A24850474006C76CB /* SigBluetooth.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigBluetooth.m; sourceTree = "<group>"; };
 		25B8764B24850474006C76CB /* SigBluetooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigBluetooth.h; sourceTree = "<group>"; };
 		25B95FE8238E4DBD00244D14 /* BackgroundTimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BackgroundTimer.h; sourceTree = "<group>"; };
@@ -622,6 +640,7 @@
 			files = (
 				255395A024907AA50095B499 /* libssl.a in Frameworks */,
 				2553959E24907AA50095B499 /* libcrypto.a in Frameworks */,
+				2551296D26FC58AE00073F3E /* libTelinkEncrypt.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -631,6 +650,7 @@
 			files = (
 				2553959F24907AA50095B499 /* libssl.a in Frameworks */,
 				2553959D24907AA50095B499 /* libcrypto.a in Frameworks */,
+				2551296C26FC58AE00073F3E /* libTelinkEncrypt.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -638,16 +658,24 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				25CE4E5D254A910E004E6F12 /* TelinkSigMeshLib.framework in Frameworks */,
+				25F3F7D12602F51200B0C03C /* TelinkSigMeshLibExtensions.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		251E273925E795AD004D96C2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		2528952B2468F6F200E590F9 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				2557252025E6350900183C0E /* cert-base provision */,
 				254072A625C8E37100D0FF8B /* subnet bridge */,
 				2528952C2468F6F200E590F9 /* remote provision */,
 				2528952F2468F6F200E590F9 /* MeshOTA */,
@@ -682,9 +710,9 @@
 				25151BF82362F2AC00967668 /* SigMessageHandle.h */,
 				25151BF92362F2AC00967668 /* SigMessageHandle.m */,
 				25335CB4235ED9EE006C79C1 /* Access Layer */,
-				25335CBD235ED9EE006C79C1 /* Network Layer */,
-				25335CC3235ED9EE006C79C1 /* Lower Transport Layer */,
 				25335CCE235ED9EE006C79C1 /* Upper Transport Layer */,
+				25335CC3235ED9EE006C79C1 /* Lower Transport Layer */,
+				25335CBD235ED9EE006C79C1 /* Network Layer */,
 			);
 			path = Layers;
 			sourceTree = "<group>";
@@ -784,6 +812,7 @@
 		25335D58235ED9EF006C79C1 /* Third Library */ = {
 			isa = PBXGroup;
 			children = (
+				2551296426FC58AE00073F3E /* TelinkEncrypt */,
 				255394A024907A9B0095B499 /* OpenSSL */,
 				25FF2F4E2446EFDC0084263F /* GMEllipticCurveCrypto */,
 			);
@@ -813,6 +842,8 @@
 		25335DD4235ED9F0006C79C1 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				25772EB1262EBB3600014699 /* ConnectTools.h */,
+				25772EB0262EBB3500014699 /* ConnectTools.m */,
 				25335DD7235ED9F0006C79C1 /* SigLogger.h */,
 				25335DE0235ED9F0006C79C1 /* SigLogger.m */,
 				25335F39235EE873006C79C1 /* SigDataSource.h */,
@@ -885,6 +916,39 @@
 				254072A825C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m */,
 			);
 			path = "subnet bridge";
+			sourceTree = "<group>";
+		};
+		2551296426FC58AE00073F3E /* TelinkEncrypt */ = {
+			isa = PBXGroup;
+			children = (
+				2551296526FC58AE00073F3E /* include */,
+				2551296826FC58AE00073F3E /* lib */,
+			);
+			path = TelinkEncrypt;
+			sourceTree = "<group>";
+		};
+		2551296526FC58AE00073F3E /* include */ = {
+			isa = PBXGroup;
+			children = (
+				2551296626FC58AE00073F3E /* TelinkEncrypt */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		2551296626FC58AE00073F3E /* TelinkEncrypt */ = {
+			isa = PBXGroup;
+			children = (
+				2551296726FC58AE00073F3E /* TelinkEncrypt.h */,
+			);
+			path = TelinkEncrypt;
+			sourceTree = "<group>";
+		};
+		2551296826FC58AE00073F3E /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				2551296926FC58AE00073F3E /* libTelinkEncrypt.a */,
+			);
+			path = lib;
 			sourceTree = "<group>";
 		};
 		255394A024907A9B0095B499 /* OpenSSL */ = {
@@ -1003,6 +1067,15 @@
 			path = lib;
 			sourceTree = "<group>";
 		};
+		2557252025E6350900183C0E /* cert-base provision */ = {
+			isa = PBXGroup;
+			children = (
+				254AEF9625EF3E990072F2C2 /* SDKLibCommand+certificate.h */,
+				254AEF9725EF3E990072F2C2 /* SDKLibCommand+certificate.m */,
+			);
+			path = "cert-base provision";
+			sourceTree = "<group>";
+		};
 		25C0AFCF235D597400846CFB = {
 			isa = PBXGroup;
 			children = (
@@ -1011,6 +1084,7 @@
 				25CE4E59254A910E004E6F12 /* TelinkSigMeshLibTests */,
 				25C0AFDA235D597400846CFB /* Products */,
 				2528952A2468F13400E590F9 /* TelinkSigMeshLib copy-Info.plist */,
+				251E273925E795AD004D96C2 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1051,6 +1125,7 @@
 			isa = PBXGroup;
 			children = (
 				25CE4E5A254A910E004E6F12 /* TelinkSigMeshLibTests.m */,
+				25A76E9925FB5CEF00DEF34B /* CheckSampleData.m */,
 				25CE4E5C254A910E004E6F12 /* Info.plist */,
 			);
 			path = TelinkSigMeshLibTests;
@@ -1110,6 +1185,7 @@
 				2553950024907A9B0095B499 /* ossl_typ.h in Headers */,
 				252894B92468F13400E590F9 /* CBUUID+Hex.h in Headers */,
 				252894842468F13400E590F9 /* SigMeshLib.h in Headers */,
+				25772EB5262EBB3600014699 /* ConnectTools.h in Headers */,
 				2553953A24907A9F0095B499 /* safestack.h in Headers */,
 				252894B62468F13400E590F9 /* SigKeySet.h in Headers */,
 				252894B52468F13400E590F9 /* SigAccessLayer.h in Headers */,
@@ -1160,6 +1236,7 @@
 				2553951C24907A9D0095B499 /* asn1.h in Headers */,
 				252894A12468F13400E590F9 /* SigLowerTransportPdu.h in Headers */,
 				2528948C2468F13400E590F9 /* SigMeshMessage.h in Headers */,
+				254AEF9925EF3E990072F2C2 /* SDKLibCommand+certificate.h in Headers */,
 				2528945B2468F13400E590F9 /* SigECCEncryptHelper.h in Headers */,
 				252894612468F13400E590F9 /* OpenSSLHelper.h in Headers */,
 				2553955A24907AA10095B499 /* md4.h in Headers */,
@@ -1181,6 +1258,7 @@
 				2553950E24907A9C0095B499 /* conf_api.h in Headers */,
 				2553952824907A9E0095B499 /* ui_compat.h in Headers */,
 				2553957624907AA30095B499 /* dso.h in Headers */,
+				2551296B26FC58AE00073F3E /* TelinkEncrypt.h in Headers */,
 				252894782468F13400E590F9 /* SigProvisioningManager.h in Headers */,
 				252894762468F13400E590F9 /* ProxyProtocolHandler.h in Headers */,
 				2553957A24907AA30095B499 /* modes.h in Headers */,
@@ -1217,20 +1295,22 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				25B8764E24850474006C76CB /* SigBluetooth.h in Headers */,
+				2551296A26FC58AE00073F3E /* TelinkEncrypt.h in Headers */,
+				25335F0C235ED9F2006C79C1 /* SigLogger.h in Headers */,
+				25335F37235EE2A7006C79C1 /* SigModel.h in Headers */,
 				2553957B24907AA30095B499 /* ssl2.h in Headers */,
+				25335F50235EEBEE006C79C1 /* SigBearer.h in Headers */,
+				25335F4B235EEB93006C79C1 /* SigPdu.h in Headers */,
 				2553955124907AA00095B499 /* srp.h in Headers */,
 				2553951324907A9D0095B499 /* ui.h in Headers */,
-				25335F4B235EEB93006C79C1 /* SigPdu.h in Headers */,
 				2553956924907AA20095B499 /* ocsp.h in Headers */,
 				2553953124907A9F0095B499 /* opensslconf-x86_64.h in Headers */,
 				2553950F24907A9C0095B499 /* x509.h in Headers */,
 				2553950324907A9C0095B499 /* err.h in Headers */,
 				2553958324907AA40095B499 /* ripemd.h in Headers */,
 				2553955F24907AA10095B499 /* comp.h in Headers */,
-				25335F0C235ED9F2006C79C1 /* SigLogger.h in Headers */,
-				25335F37235EE2A7006C79C1 /* SigModel.h in Headers */,
 				2553956124907AA20095B499 /* cast.h in Headers */,
-				25335F50235EEBEE006C79C1 /* SigBearer.h in Headers */,
 				25FF2F5B2446EFDD0084263F /* GMEllipticCurveCrypto+hash.h in Headers */,
 				2553955724907AA10095B499 /* e_os2.h in Headers */,
 				2553957124907AA20095B499 /* ts.h in Headers */,
@@ -1243,7 +1323,6 @@
 				2553950724907A9C0095B499 /* blowfish.h in Headers */,
 				25335F43235EE94C006C79C1 /* LibTools.h in Headers */,
 				25335F3B235EE873006C79C1 /* SigDataSource.h in Headers */,
-				25B8764E24850474006C76CB /* SigBluetooth.h in Headers */,
 				25335F74235EF339006C79C1 /* SigAddDeviceManager.h in Headers */,
 				25335F57235EEC61006C79C1 /* SigEnumeration.h in Headers */,
 				25D88C0C2361458500D4F0F7 /* SigControlMessage.h in Headers */,
@@ -1289,6 +1368,7 @@
 				2553955D24907AA10095B499 /* aes.h in Headers */,
 				2553951524907A9D0095B499 /* kssl.h in Headers */,
 				2553951124907A9C0095B499 /* asn1_mac.h in Headers */,
+				25772EB4262EBB3600014699 /* ConnectTools.h in Headers */,
 				2553954324907AA00095B499 /* pkcs12.h in Headers */,
 				25D88C0A2361458500D4F0F7 /* SigAccessMessage.h in Headers */,
 				25D88C0F2361458500D4F0F7 /* SigSegmentAcknowledgmentMessage.h in Headers */,
@@ -1405,7 +1485,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				25CE4E5F254A910E004E6F12 /* PBXTargetDependency */,
+				25F3F803260321BC00B0C03C /* PBXTargetDependency */,
 			);
 			name = TelinkSigMeshLibTests;
 			productName = TelinkSigMeshLibTests;
@@ -1539,12 +1619,14 @@
 				252895062468F13400E590F9 /* BackgroundTimer.m in Sources */,
 				252895072468F13400E590F9 /* SigGenericMessage.m in Sources */,
 				252895082468F13400E590F9 /* SigLowerTransportLayer.m in Sources */,
+				254AEF9B25EF3E9A0072F2C2 /* SDKLibCommand+certificate.m in Sources */,
 				252895092468F13400E590F9 /* SigMeshMessage.m in Sources */,
 				254072AA25C8E48200D0FF8B /* SDKLibCommand+subnetBridge.m in Sources */,
 				2528950A2468F13400E590F9 /* SigSegmentedControlMessage.m in Sources */,
 				2528950B2468F13400E590F9 /* SigNetworkLayer.m in Sources */,
 				2528950D2468F13400E590F9 /* LibTools.m in Sources */,
 				2528950E2468F13400E590F9 /* SigUpperTransportLayer.m in Sources */,
+				25772EB3262EBB3600014699 /* ConnectTools.m in Sources */,
 				2528950F2468F13400E590F9 /* SigKeyBindManager.m in Sources */,
 				252895102468F13400E590F9 /* SigMeshLib.m in Sources */,
 				252895352468F6F300E590F9 /* MeshOTAManager.m in Sources */,
@@ -1607,6 +1689,7 @@
 				25335F0B235ED9F2006C79C1 /* SigECCEncryptHelper.m in Sources */,
 				25E60F292435980B00620E29 /* SigFastProvisionAddManager.m in Sources */,
 				25335F53235EEBEE006C79C1 /* ProxyProtocolHandler.m in Sources */,
+				25772EB2262EBB3600014699 /* ConnectTools.m in Sources */,
 				25D88C162361458500D4F0F7 /* SigSegmentAcknowledgmentMessage.m in Sources */,
 				25FF2F5E2446EFDD0084263F /* GMEllipticCurveCrypto.m in Sources */,
 				25D88C1F2361459100D4F0F7 /* SigUpperTransportPdu.m in Sources */,
@@ -1620,6 +1703,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				25A76E9A25FB5CEF00DEF34B /* CheckSampleData.m in Sources */,
 				25CE4E5B254A910E004E6F12 /* TelinkSigMeshLibTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1627,10 +1711,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		25CE4E5F254A910E004E6F12 /* PBXTargetDependency */ = {
+		25F3F803260321BC00B0C03C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 25C0AFD8235D597400846CFB /* TelinkSigMeshLib */;
-			targetProxy = 25CE4E5E254A910E004E6F12 /* PBXContainerItemProxy */;
+			target = 252894542468F13400E590F9 /* TelinkSigMeshLibExtensions */;
+			targetProxy = 25F3F802260321BC00B0C03C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1638,17 +1722,28 @@
 		252895272468F13400E590F9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/TelinkSigMeshLib/TelinkSigMeshLibPrefixHeader.pch";
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+					"SUPPORTCARTIFICATEBASED=1",
+				);
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"",
+					"\"$(SRCROOT)/TelinkSigMeshLib/Third Library/TelinkEncrypt/include/TelinkEncrypt\"",
+				);
 				INFOPLIST_FILE = "TelinkSigMeshLib copy-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -1661,13 +1756,15 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/ios/lib",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
+					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.2;
+				MARKETING_VERSION = 3.3.5;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1677,19 +1774,27 @@
 		252895282468F13400E590F9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm62;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/TelinkSigMeshLib/TelinkSigMeshLibPrefixHeader.pch";
-				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=0";
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"SUPPORTCARTIFICATEBASED=1",
+				);
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"",
+					"\"$(SRCROOT)/TelinkSigMeshLib/Third Library/TelinkEncrypt/include/TelinkEncrypt\"",
+				);
 				INFOPLIST_FILE = "TelinkSigMeshLib copy-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -1702,13 +1807,14 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/ios/lib",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
+					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.2;
+				MARKETING_VERSION = 3.3.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1720,6 +1826,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1730,6 +1840,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -1760,7 +1871,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1824,7 +1935,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1859,6 +1970,7 @@
 		25C0AFE2235D597400846CFB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
@@ -1868,10 +1980,18 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/TelinkSigMeshLib/TelinkSigMeshLibPrefixHeader.pch";
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"",
+					"\"$(SRCROOT)/TelinkSigMeshLib/Third Library/TelinkEncrypt/include/TelinkEncrypt\"",
+				);
 				INFOPLIST_FILE = TelinkSigMeshLib/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -1884,12 +2004,10 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/ios/lib",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
+					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.2;
+				MARKETING_VERSION = 3.3.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1902,6 +2020,7 @@
 		25C0AFE3235D597400846CFB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
@@ -1910,12 +2029,15 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/TelinkSigMeshLib/TelinkSigMeshLibPrefixHeader.pch";
-				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=0";
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"";
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				HEADER_SEARCH_PATHS = (
+					"\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"",
+					"\"$(SRCROOT)/TelinkSigMeshLib/Third Library/TelinkEncrypt/include/TelinkEncrypt\"",
+				);
 				INFOPLIST_FILE = TelinkSigMeshLib/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -1928,12 +2050,10 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/ios/lib",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
+					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.2;
+				MARKETING_VERSION = 3.3.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1945,9 +2065,15 @@
 		25CE4E60254A910E004E6F12 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					"TESTMODE=1",
+				);
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib\"";
 				INFOPLIST_FILE = TelinkSigMeshLibTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -1956,6 +2082,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLibTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1965,9 +2092,11 @@
 		25CE4E61254A910E004E6F12 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = "TESTMODE=1";
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib\"";
 				INFOPLIST_FILE = TelinkSigMeshLibTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -1976,6 +2105,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLibTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TARGETED_DEVICE_FAMILY = "1,2";

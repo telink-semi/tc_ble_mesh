@@ -83,6 +83,10 @@
         if (node.isSensor) {
             iconName = @"ic_battery-20-bluetooth";
         }
+        //遥控器remote特殊处理
+        if (node.isRemote) {
+            iconName = @"ic_rmt";
+        }
     }
     self.stateImageView.image = [UIImage imageNamed:iconName];
 

@@ -56,13 +56,11 @@
     BOOL isBusy = [dict[kCommandIsBusyKey] boolValue];
     dispatch_async(dispatch_get_main_queue(), ^{
         if (isBusy) {
-            TeLogInfo(@"show busy now.");
             [ShowTipsHandle.share show:Tip_CommandBusy];
             self.view.userInteractionEnabled = NO;
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(busyTimeout) object:nil];
             [self performSelector:@selector(busyTimeout) withObject:nil afterDelay:10.0];
         } else {
-            TeLogInfo(@"show no busy now.");
             if (!self.view.isUserInteractionEnabled) {
                 [ShowTipsHandle.share hidden];
             }
@@ -90,6 +88,49 @@
     [bar setBackgroundImage:bgImage forBarMetrics:UIBarMetricsDefault];
     //设置返回按钮文字为空
     self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:nil];
+    
+    [self configTabBarForiOS15];
+    [self configNavigationBarForiOS15];
+}
+
+// 配置iOS15工具条
+- (void)configTabBarForiOS15 {
+    if (@available(iOS 15.0, *)) {
+        UITabBarAppearance *bar = [[UITabBarAppearance alloc] init];
+        bar.backgroundColor = [UIColor colorWithRed:247/255.0 green:247/255.0 blue:247/255.0 alpha:1.0];
+        bar.shadowImage = [UIImage createImageWithColor:[UIColor colorWithRed:178/255.0 green:178/255.0 blue:178/255.0 alpha:1.0]];
+        self.tabBarController.tabBar.scrollEdgeAppearance = bar;
+        self.tabBarController.tabBar.standardAppearance = bar;
+    }
+}
+
+// 配置iOS15导航条
+- (void)configNavigationBarForiOS15 {
+    if (@available(iOS 15.0, *)) {
+        UINavigationBarAppearance *app = [[UINavigationBarAppearance alloc] init];
+        // 不透明背景色
+        [app configureWithOpaqueBackground];
+        // 设置背景色
+        app.backgroundColor = kDefultColor;
+        // 磨砂效果
+        app.backgroundEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
+        // 导航条底部分割线图片（这里设置为透明）
+        UIImage *image = [UIImage createImageWithColor:[UIColor clearColor]];
+        app.shadowImage = image;
+        // 导航条富文本设置
+//        app.titleTextAttributes = @{NSFontAttributeName : [UIFont boldSystemFontOfSize:17.0f], NSForegroundColorAttributeName : self.barTintColor};
+        app.titleTextAttributes = @{NSFontAttributeName : [UIFont boldSystemFontOfSize:17.0f], NSForegroundColorAttributeName : [UIColor whiteColor]};
+        // 当可滚动内容的边缘与导航栏的边缘对齐时，导航栏的外观设置。
+        self.navigationController.navigationBar.scrollEdgeAppearance = app;
+        // 标准高度导航条的外观设置(常规设置)
+        self.navigationController.navigationBar.standardAppearance = app;
+        // 应用于导航栏背景的色调。
+//        self.navigationController.navigationBar.barTintColor = self.barBackgroundColor;
+        self.navigationController.navigationBar.barTintColor = kDefultColor;
+        // 应用于导航栏按钮项的着色颜色。
+//        self.navigationController.navigationBar.tintColor = self.barTintColor;
+        self.navigationController.navigationBar.tintColor = [UIColor whiteColor];
+    }
 }
 
 - (void)blockState{

@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -63,7 +63,7 @@
             }
         }
         UInt32 tem5 = CFSwapInt32HostToBig(index);
-        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
+//        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
 
         [nonce appendData:[NSData dataWithBytes:&tem1 length:1]];
         [nonce appendData:[NSData dataWithBytes:&tem2 length:1]];
@@ -124,7 +124,7 @@
             }
         }
         UInt32 tem5 = CFSwapInt32HostToBig(index);
-        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
+//        TeLogVerbose(@"解密使用IvIndex=0x%x",index);
 
         [nonce appendData:[NSData dataWithBytes:&tem1 length:1]];
         [nonce appendData:[NSData dataWithBytes:&tem2 length:1]];
@@ -182,7 +182,8 @@
         UInt8 type = _AKF ? 0x01 : 0x02;
         // ASZMIC is set to 1 for messages that shall be sent with high security
         // (64-bit TransMIC). This is possible only for Segmented Access Messages.
-        UInt8 aszmic = security == SigMeshMessageSecurityHigh && (_accessPdu.length > 11 || pdu.isSegmented) ? 1 : 0;
+//        UInt8 aszmic = security == SigMeshMessageSecurityHigh && (_accessPdu.length > 11 || pdu.isSegmented) ? 1 : 0;
+        UInt8 aszmic = security == SigMeshMessageSecurityHigh ? 1 : 0;
         // SEQ is 24-bit value, in Big Endian.
         UInt32 sequenceBigDian = CFSwapInt32HostToBig(_sequence);
         NSData *sequenceData = [NSData dataWithBytes:&sequenceBigDian length:4];
@@ -202,9 +203,6 @@
         [nonce appendData:sourceData];
         [nonce appendData:destinationData];
         [nonce appendData:ivIndexData];
-        //==========test=========//
-        TeLogVerbose(@"==========加密使用ivIndex=0x%x",ivIndex.index);
-        //==========test=========//
 
         _transportMicSize = aszmic == 0 ? 4 : 8;
         _transportPdu = [OpenSSLHelper.share calculateCCM:_accessPdu withKey:keySet.accessKey nonce:nonce andMICSize:_transportMicSize withAdditionalData:pdu.destination.virtualLabel.getData];
@@ -253,9 +251,6 @@
         [nonce appendData:sourceData];
         [nonce appendData:destinationData];
         [nonce appendData:ivIndexData];
-        //==========test=========//
-        TeLogVerbose(@"==========加密使用ivIndex=0x%x",ivIndex.index);
-        //==========test=========//
 
         _transportMicSize = aszmic == 0 ? 4 : 8;
         _transportPdu = [OpenSSLHelper.share calculateCCM:_accessPdu withKey:keySet.accessKey nonce:nonce andMICSize:_transportMicSize withAdditionalData:pdu.destination.virtualLabel.getData];
@@ -321,7 +316,7 @@
         // message was sent as a response to a Config Message sent by this Provisioner.
         SigNodeModel *node = [meshNetwork getNodeWithAddress:accessMessage.source];
         NSData *deviceKey = [LibTools nsstringToHex:node.deviceKey];
-        TeLogVerbose(@"Try decoding using source's Node Device Key,deviceKey=%@",deviceKey);
+//        TeLogVerbose(@"Try decoding using source's Node Device Key,deviceKey=%@",deviceKey);
         SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:deviceKey];
         if (deviceKey && deviceKey.length > 0 && pdu) {
             SigDeviceKeySet *keySet = [[SigDeviceKeySet alloc] initWithNetworkKey:accessMessage.networkKey node:node];

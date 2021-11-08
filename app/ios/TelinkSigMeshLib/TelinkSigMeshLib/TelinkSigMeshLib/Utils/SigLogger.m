@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -32,7 +32,11 @@
 
 #define kTelinkSDKDebugLogData @"TelinkSDKDebugLogData"
 #define kTelinkSDKMeshJsonData @"TelinkSDKMeshJsonData"
-#define kTelinkSDKDebugLogDataSize ((double)1024*1024*20) //默认日志最大存储大小为20M。每10*60秒检查一次日志文件大小。
+#if DEBUG
+#define kTelinkSDKDebugLogDataSize ((double)1024*1024*100) //DEBUG默认日志最大存储大小为100M。每10*60秒检查一次日志文件大小。
+#else
+#define kTelinkSDKDebugLogDataSize ((double)1024*1024*20) //RELEASE默认日志最大存储大小为20M。每10*60秒检查一次日志文件大小。
+#endif
 
 @interface SigLogger ()
 @property (nonatomic, strong) BackgroundTimer *timer;
@@ -111,10 +115,22 @@
     NSInteger length = data.length;
     if (length > kTelinkSDKDebugLogDataSize) {
         NSInteger saveLength = ceil(kTelinkSDKDebugLogDataSize * 0.8);
-        NSData *saveData = [data subdataWithRange:NSMakeRange(length - saveLength, saveLength)];
+        //该写法是解决直接裁剪NSData导致部分字符串被裁剪了一般导致NSData转NSString异常，从而出现log文件很大但log的字符串却很短的bug。
+        NSData *saveData = [NSData data];
+        do {
+            if (saveData.length > 0) {
+                data = saveData;
+            }
+            NSString *oldStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            NSString *subStr = [oldStr substringFromIndex:ceil(oldStr.length * 0.2)];
+            saveData = [subStr dataUsingEncoding:NSUTF8StringEncoding];
+        } while (saveData.length > saveLength);
+        NSData *tem = [@"[replace some log]\n" dataUsingEncoding:NSUTF8StringEncoding];
+        NSMutableData *mData = [NSMutableData dataWithData:tem];
+        [mData appendData:saveData];
         handle = [NSFileHandle fileHandleForWritingAtPath:SigLogger.share.logFilePath];
         [handle truncateFileAtOffset:0];
-        [handle writeData:saveData];
+        [handle writeData:mData];
         [handle closeFile];
     }
 }
@@ -199,8 +215,8 @@ void saveMeshJsonData(id data){
             [handle writeData:(NSData *)data];
         }else{
             NSString *tempString = [[NSString alloc] initWithFormat:@"%@",data];
-            //对缓存于iTunes共享文件夹的json文件进行加密，再保存。解密调用接口__TEXT().
-            tempString = __BASE64(tempString);
+            //对缓存于iTunes共享文件夹的json文件进行加密，再保存。解密调用接口textFromBase64String.
+            tempString = [LibTools base64StringFromText:tempString];
             NSData *tempData = [tempString dataUsingEncoding:NSUTF8StringEncoding];
             [handle writeData:tempData];
         }
@@ -213,8 +229,8 @@ void saveMeshJsonData(id data){
     NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:SigLogger.share.meshJsonFilePath];
     NSData *data = [handle readDataToEndOfFile];
     NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    //对缓存于iTunes共享文件夹的json文件进行解密。加密调用接口__BASE64().
-    str = __TEXT(str);
+    //对缓存于iTunes共享文件夹的json文件进行解密。加密调用接口base64StringFromText.
+    str = [LibTools textFromBase64String:str];
     [handle closeFile];
     return str;
 }

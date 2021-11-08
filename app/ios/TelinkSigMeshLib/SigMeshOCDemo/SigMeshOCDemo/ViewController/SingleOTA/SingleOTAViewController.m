@@ -142,7 +142,7 @@
     self.otaButton.backgroundColor = self.normalColor;
     self.tableView.userInteractionEnabled = YES;
     [self showOTATips:@"OTA success"];
-    [SigBearer.share startMeshConnectWithComplete:nil];
+    [SDKLibCommand startMeshConnectWithComplete:nil];
     TeLogVerbose(@"otaSuccess");
 }
 
@@ -152,7 +152,7 @@
     self.otaButton.backgroundColor = self.normalColor;
     self.tableView.userInteractionEnabled = YES;
     [self showOTATips:@"OTA fail"];
-    [SigBearer.share startMeshConnectWithComplete:nil];
+    [SDKLibCommand startMeshConnectWithComplete:nil];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
     });
@@ -163,8 +163,12 @@
     ChooseBinCell *cell = (ChooseBinCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_ChooseBinCellID forIndexPath:indexPath];
     NSString *binString = self.source[indexPath.row];
     NSData *data = [OTAFileSource.share getDataWithBinName:binString];
-    UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
-    cell.nameLabel.text = [NSString stringWithFormat:@"%@   PID:0x%X VID:%c%c",binString,[OTAFileSource.share getPidWithOTAData:data],vid&0xff,(vid>>8)&0xff];//vid显示两个字节的ASCII
+    if (data && data.length) {
+        UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
+        cell.nameLabel.text = [NSString stringWithFormat:@"%@   PID:0x%X VID:%c%c",binString,[OTAFileSource.share getPidWithOTAData:data],vid&0xff,(vid>>8)&0xff];//vid显示两个字节的ASCII
+    } else {
+        cell.nameLabel.text = [NSString stringWithFormat:@"%@,read bin fail!",binString];//bin文件读取失败。
+    }
     cell.selectButton.selected = indexPath.row == self.selectIndex;
     return cell;
 }

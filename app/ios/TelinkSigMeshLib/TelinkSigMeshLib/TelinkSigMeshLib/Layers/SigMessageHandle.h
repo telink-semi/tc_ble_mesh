@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -46,8 +46,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 source;
 @property (nonatomic,assign) UInt16 destination;
 @property (nonatomic,strong) SigMeshLib *manager;
+@property (nonatomic,strong) SDKLibCommand *command;
 
-- (instancetype)initForMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination usingManager:(SigMeshLib *)manager;
+//- (instancetype)initForMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination usingManager:(SigMeshLib *)manager;
+
+- (instancetype)initForSDKLibCommand:(SDKLibCommand *)command usingManager:(SigMeshLib *)manager;
 
 /// Cancels sending the message.
 ///

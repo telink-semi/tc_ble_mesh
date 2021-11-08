@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -47,19 +47,14 @@ UIKIT_EXTERN NSString *const deviceKeyOfCalculateKeys;
 @property (nonatomic, strong) NSData *provisionerPublicKey;
 @property (nonatomic, strong) NSData *sharedSecret;
 
+@property (nonatomic, strong) NSData *provisioningInvitePDUValue;
+@property (nonatomic, strong) NSData *provisioningCapabilitiesPDUValue;
+@property (nonatomic, strong) NSData *provisioningStartPDUValue;
+@property (nonatomic, strong) NSData *devicePublicKey;
+
 - (instancetype)initWithAlgorithm:(Algorithm)algorithm;
 
 - (void)prepareWithNetwork:(SigDataSource *)network networkKey:(SigNetkeyModel *)networkKey unicastAddress:(UInt16)unicastAddress;
-
-/// This method adds the given PDU to the Provisioning Inputs. Provisioning Inputs are used for authenticating the Provisioner and the Unprovisioned Device.
-///
-/// This method must be called (in order) for:
-/// * Provisioning Invite
-/// * Provisioning Capabilities
-/// * Provisioning Start
-/// * Provisioner Public Key
-/// * Device Public Key
-- (void)accumulatePduData:(NSData *)data;
 
 /// Call this method when the device Public Key has been obtained. This must be called after generating keys.
 /// @param data The device Public Key.
@@ -75,14 +70,14 @@ UIKIT_EXTERN NSString *const deviceKeyOfCalculateKeys;
 - (void)provisionerDidObtainWithDeviceRandom:(NSData *)data;
 
 /// This method validates the received Provisioning Confirmation and matches it with one calculated locally based on the Provisioning Random received from the device and Auth Value.
-- (BOOL)validateConfirmation;
+- (BOOL)validateConfirmationWithProvisionAuthLeakEnable:(BOOL)provisionAuthLeakEnable;
 
 /// Returns the Provisioner Confirmation value. The Auth Value must be set prior to calling this method.
-- (NSData *)provisionerConfirmation;
+- (NSData *)provisionerConfirmationWithProvisionAuthLeakEnable:(BOOL)provisionAuthLeakEnable;
 
-/// Returns the encrypted Provisioning Data together with MIC. Data will be encrypted using Session Key and Session Nonce. For that, all properties should be set when this method is called.
-/// Returned value is 25 + 8 bytes long, where the MIC is the last 8 bytes.
-- (NSData *)encryptedProvisioningDataWithMic;
+- (NSData *)getProvisioningData;
+
+- (NSData *)getEncryptedProvisioningDataAndMicWithProvisioningData:(NSData *)provisioningData;
 
 #pragma mark - Helper methods
 
