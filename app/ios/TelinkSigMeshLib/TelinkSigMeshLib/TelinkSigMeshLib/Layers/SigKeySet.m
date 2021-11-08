@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -47,24 +47,24 @@
 }
 
 - (NSData *)accessKey {
-    if (self.networkKey.phase == distributingKeys) {
-        NSData *oldkey = self.applicationKey.getDataOldKey;
-        if (oldkey != nil && oldkey.length != 0) {
-            return oldkey;
-        }
-        return _applicationKey.getDataKey;
-    }
+//    if (self.networkKey.phase == distributingKeys) {
+//        NSData *oldkey = self.applicationKey.getDataOldKey;
+//        if (oldkey != nil && oldkey.length != 0) {
+//            return oldkey;
+//        }
+//        return _applicationKey.getDataKey;
+//    }
     return _applicationKey.getDataKey;
 }
 
 - (UInt8)aid {
-    if (self.networkKey.phase == distributingKeys) {
-        UInt8 aid = self.applicationKey.oldAid;
-        if (aid != 0) {
-            return aid;
-        }
-        return _applicationKey.aid;
-    }
+//    if (self.networkKey.phase == distributingKeys) {
+//        UInt8 aid = self.applicationKey.oldAid;
+//        if (aid != 0) {
+//            return aid;
+//        }
+//        return _applicationKey.aid;
+//    }
     return _applicationKey.aid;
 }
 

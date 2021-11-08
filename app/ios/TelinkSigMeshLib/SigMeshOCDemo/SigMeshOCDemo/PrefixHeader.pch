@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -30,17 +30,21 @@
 #ifndef PrefixHeader_pch
 #define PrefixHeader_pch
 
-#import <CoreBluetooth/CoreBluetooth.h>
+#define SCREENHEIGHT [UIScreen mainScreen].bounds.size.height
+#define SCREENWIDTH  [UIScreen mainScreen].bounds.size.width
+#define kFont(a) [UIFont systemFontOfSize:(a)]
 
-#import "BaseViewController.h"
-#import "DemoConst.h"
-#import "ShowTipsView.h"
-#import "UIStoryboard+extension.h"
+#import <CoreBluetooth/CoreBluetooth.h>
 
 //导入TelinkSigMeshLib.framework库
 //#import "TelinkSigMeshLib/TelinkSigMeshLib.h"
 //导入TelinkSigMeshLib.xcodeproj工程
 #import "TelinkSigMeshLib.h"
+
+#import "BaseViewController.h"
+#import "DemoConst.h"
+#import "ShowTipsView.h"
+#import "UIStoryboard+extension.h"
 
 #import "DemoCommand.h"
 

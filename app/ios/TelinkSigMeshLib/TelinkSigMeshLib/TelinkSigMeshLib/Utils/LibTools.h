@@ -111,11 +111,16 @@ NS_ASSUME_NONNULL_BEGIN
 /// 16进制NSString转Uint64
 + (UInt64)uint64From16String:(NSString *)string;
 
++ (UInt16)getVirtualAddressOfLabelUUID:(NSString *)string;
+
 /// D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8 -> D7C5BD184282F31A0CE00468BC0B8DE8
 + (NSString *)meshUUIDToUUID:(NSString *)uuid;
 
 /// D7C5BD184282F31A0CE00468BC0B8DE8 -> D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8
 + (NSString *)UUIDToMeshUUID:(NSString *)meshUUID;
+
+/// xxxx -> 0000xxxx-0000-1000-8000-008505f9b34fb or xxxxxxxx -> xxxxxxxx-0000-1000-8000-008505f9b34fb
++ (NSString *)change16BitsUUIDTO128Bits:(NSString *)uuid;
 
 /// SDK的版本号
 + (NSString *)getSDKVersion;
@@ -199,9 +204,6 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
 
 #pragma mark - base64加解密
 
-#define __BASE64( text )        [LibTools base64StringFromText:text]
-#define __TEXT( base64 )        [LibTools textFromBase64String:base64]
-
 /******************************************************************************
  函数名称 : + (NSString *)base64StringFromText:(NSString *)text
  函数描述 : 将文本转换为base64格式字符串
@@ -229,6 +231,17 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
 + (BOOL)validateUUID:(NSString *)uuidString;
 
 + (BOOL)validateHex:(NSString *)uuidString;
+
+#pragma mark - UTF-8相关
+
++ (NSArray <NSNumber *>*)getNumberListFromUTF8EncodeData:(NSData *)UTF8EncodeData;
+
++ (NSData *)getUTF8EncodeDataFromNumberList:(NSArray <NSNumber *>*)numberList;
+
+#pragma mark - 文件相关
+
++ (NSArray <NSString *>*)getAllFileNameWithFileType:(NSString *)fileType;
++ (NSData *)getDataWithFileName:(NSString *)fileName fileType:(NSString * _Nullable )fileType;
 
 @end
 

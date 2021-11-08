@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -520,6 +520,7 @@
             break;
         case SigOpCode_FirmwareDistributionGet:
         case SigOpCode_FirmwareDistributionStart:
+        case SigOpCode_FirmwareDistributionApply:
         case SigOpCode_FirmwareDistributionCancel:
             responseOpcode = SigOpCode_FirmwareDistributionStatus;
             break;
@@ -715,6 +716,60 @@
             break;
         case SigDirectionsFieldValues_bidirectional:
             tem = @"Directional";
+            break;
+        default:
+            break;
+    }
+    return tem;
+}
+
+- (NSString *)getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)state {
+    NSString *tem = @"not fount";
+    switch (state) {
+        case SigNodeFeaturesState_notEnabled:
+            tem = @"disable";
+            break;
+        case SigNodeFeaturesState_enabled:
+            tem = @"enable";
+            break;
+        case SigNodeFeaturesState_notSupported:
+            tem = @"not support";
+            break;
+        default:
+            break;
+    }
+    return tem;
+}
+
+- (NSString *)getDetailOfKeyRefreshPhase:(KeyRefreshPhase)phase {
+    NSString *tem = @"unknown";
+    switch (phase) {
+        case normalOperation:
+            tem = @"normalOperation";
+            break;
+        case distributingKeys:
+            tem = @"distributingKeys";
+            break;
+        case finalizing:
+            tem = @"finalizing";
+            break;
+        default:
+            break;
+    }
+    return tem;
+}
+
+- (NSString *)getDetailOfSigNodeIdentityState:(SigNodeIdentityState)state {
+    NSString *tem = @"not fount";
+    switch (state) {
+        case SigNodeIdentityState_notEnabled:
+            tem = @"stopped";
+            break;
+        case SigNodeIdentityState_enabled:
+            tem = @"running";
+            break;
+        case SigNodeIdentityState_notSupported:
+            tem = @"not supported";
             break;
         default:
             break;

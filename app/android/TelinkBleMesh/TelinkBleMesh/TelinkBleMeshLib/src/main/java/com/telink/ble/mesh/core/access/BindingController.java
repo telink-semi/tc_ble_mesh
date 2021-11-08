@@ -254,7 +254,7 @@ public class BindingController {
         for (CompositionData.Element ele : compositionData.elements) {
             if (ele.sigModels != null) {
                 for (int modelId : ele.sigModels) {
-                    if (!MeshSigModel.isConfigurationModel(modelId)) {
+                    if (!MeshSigModel.useDeviceKeyForEnc(modelId)) {
                         models.add(new BindingModel(modelId, offset, true));
                     }
                 }

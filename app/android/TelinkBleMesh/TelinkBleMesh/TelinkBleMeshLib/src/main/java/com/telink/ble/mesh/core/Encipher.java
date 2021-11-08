@@ -383,7 +383,7 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
      * @param cerData certificate data formatted by x509 der
      * @return public key
      */
-    public static byte[] checkCertificate(byte[] cerData) {
+    public static X509Certificate checkCertificate(byte[] cerData) {
         CertificateFactory factory = null;
         try {
             factory = CertificateFactory.getInstance("X.509");
@@ -426,7 +426,7 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
             boolean result = verifier.verify(certificate.getSignature());
 
 
-            java.security.interfaces.ECPublicKey pk = (java.security.interfaces.ECPublicKey) certificate.getPublicKey();
+            /*java.security.interfaces.ECPublicKey pk = (java.security.interfaces.ECPublicKey) certificate.getPublicKey();
             byte[] keyX = pk.getW().getAffineX().toByteArray();
             if (keyX.length > 32) {
                 byte[] x = new byte[32];
@@ -442,12 +442,12 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
 
             byte[] pubKeyKey = new byte[keyX.length + keyY.length];
             System.arraycopy(keyX, 0, pubKeyKey, 0, keyX.length);
-            System.arraycopy(keyY, 0, pubKeyKey, keyX.length, keyY.length);
+            System.arraycopy(keyY, 0, pubKeyKey, keyX.length, keyY.length);*/
 
             if (result) {
                 System.out.println("signature validation pass");
 //                return null;
-                return pubKeyKey;
+                return certificate;
             } else {
                 System.out.println("signature validation failed");
                 return null;
@@ -545,8 +545,10 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         byte[] extension = certificate.getExtensionValue(staticOOBKey);
 
         if (extension == null || extension.length < 16) {
+            MeshLogger.d("static oob in cert not found");
             return null;
         }
+        // oob should be 16 bytes
         byte[] oob = new byte[16];
         System.arraycopy(extension, extension.length - 16, oob, 0, 16);
         MeshLogger.d("static oob in cert: " + Arrays.bytesToHexString(oob));

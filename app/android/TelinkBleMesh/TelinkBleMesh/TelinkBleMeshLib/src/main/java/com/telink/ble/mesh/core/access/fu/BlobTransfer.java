@@ -41,7 +41,10 @@ class BlobTransfer {
 
     private final String LOG_TAG = "BlobTransfer";
 
-    private static final long PARTIAL_WAITING_TIMEOUT = 5 * 1000;
+    // lpn receive packet from friend
+    // from 5 * 1000 to 30 * 1000
+    // PTS BV6 need to be more than 67.
+    private static final long PARTIAL_WAITING_TIMEOUT = 68 * 1000;
 
     /**
      * blob transfer get
@@ -179,10 +182,10 @@ class BlobTransfer {
             // continue last action
             nextAction();
         } else {
-            if (this.step != STEP_IDLE) {
+            /*if (this.step != STEP_IDLE) {
                 onTransferComplete(false, "transfer not idle");
                 return;
-            }
+            }*/
             log("blob transfer continue: block--chunk " + firmwareParser.currentBlockIndex() + " -- " + firmwareParser.currentChunkIndex());
             // new transfer flow
             step = STEP_BLOB_TRANSFER_GET;

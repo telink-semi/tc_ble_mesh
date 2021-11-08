@@ -71,9 +71,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * devices fragment
+ * show devices in mesh
+ * refresh device online state when received notification
  * Created by kee on 2017/8/18.
  */
-
 public class DeviceFragment extends BaseFragment implements View.OnClickListener, EventListener<String> {
 
     private OnlineDeviceListAdapter mAdapter;
@@ -93,46 +94,40 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         toolbar.inflateMenu(R.menu.device_tab);
         toolbar.setNavigationIcon(R.drawable.ic_refresh);
 
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                boolean cmdSent = false;
-                if (AppSettings.ONLINE_STATUS_ENABLE) {
-                    cmdSent = MeshService.getInstance().getOnlineStatus();
-                } else {
+        toolbar.setNavigationOnClickListener(v -> {
+            boolean cmdSent;
+            if (AppSettings.ONLINE_STATUS_ENABLE) {
+                cmdSent = MeshService.getInstance().getOnlineStatus();
+            } else {
 //                    int rspMax = TelinkMeshApplication.getInstance().getMeshInfo().getOnlineCountInAll();
-                    int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
-                    OnOffGetMessage message = OnOffGetMessage.getSimple(0xFFFF, appKeyIndex, /*rspMax*/ 0);
-                    cmdSent = MeshService.getInstance().sendMeshMessage(message);
-                }
-                if (cmdSent) {
-                    for (NodeInfo deviceInfo : mDevices) {
-                        deviceInfo.setOnlineState(OnlineState.OFFLINE);
-                    }
-                    mAdapter.notifyDataSetChanged();
-                }
-
+                int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+                OnOffGetMessage message = OnOffGetMessage.getSimple(0xFFFF, appKeyIndex, /*rspMax*/ 0);
+                cmdSent = MeshService.getInstance().sendMeshMessage(message);
             }
+            if (cmdSent) {
+                for (NodeInfo deviceInfo : mDevices) {
+                    deviceInfo.setOnlineState(OnlineState.OFFLINE);
+                }
+                mAdapter.notifyDataSetChanged();
+            }
+
         });
 
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                if (item.getItemId() == R.id.item_add) {
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.item_add) {
 //                    startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
 
-                    if (SharedPreferenceHelper.isRemoteProvisionEnable(getActivity())) {
-                        startActivity(new Intent(getActivity(), RemoteProvisionActivity.class));
-                    } else if (SharedPreferenceHelper.isFastProvisionEnable(getActivity())) {
-                        startActivity(new Intent(getActivity(), FastProvisionActivity.class));
-                    } else if (SharedPreferenceHelper.isAutoPvEnable(getActivity())) {
-                        startActivity(new Intent(getActivity(), DeviceAutoProvisionActivity.class));
-                    } else {
-                        startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
-                    }
+                if (SharedPreferenceHelper.isRemoteProvisionEnable(getActivity())) {
+                    startActivity(new Intent(getActivity(), RemoteProvisionActivity.class));
+                } else if (SharedPreferenceHelper.isFastProvisionEnable(getActivity())) {
+                    startActivity(new Intent(getActivity(), FastProvisionActivity.class));
+                } else if (SharedPreferenceHelper.isAutoPvEnable(getActivity())) {
+                    startActivity(new Intent(getActivity(), DeviceAutoProvisionActivity.class));
+                } else {
+                    startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
                 }
-                return false;
             }
+            return false;
         });
         view.findViewById(R.id.tv_on).setOnClickListener(this);
         view.findViewById(R.id.tv_off).setOnClickListener(this);
@@ -148,52 +143,45 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         gv_devices.setLayoutManager(new GridLayoutManager(getActivity(), 4));
         gv_devices.setAdapter(mAdapter);
 
-        mAdapter.setOnItemClickListener(new BaseRecyclerViewAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                if (mDevices.get(position).isOffline()) return;
+        mAdapter.setOnItemClickListener(position -> {
+            if (mDevices.get(position).isOffline()) return;
 
-                int onOff = 0;
-                if (mDevices.get(position).getOnlineState() == OnlineState.OFF) {
-                    onOff = 1;
-                }
-
-                int address = mDevices.get(position).meshAddress;
-                int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
-                OnOffSetMessage onOffSetMessage = OnOffSetMessage.getSimple(address, appKeyIndex, onOff, !AppSettings.ONLINE_STATUS_ENABLE, !AppSettings.ONLINE_STATUS_ENABLE ? 1 : 0);
-                MeshService.getInstance().sendMeshMessage(onOffSetMessage);
-//                MeshService.getInstance().setOnOff(mDevices.get(position).meshAddress, onOff, !AppSettings.ONLINE_STATUS_ENABLE, !AppSettings.ONLINE_STATUS_ENABLE ? 1 : 0, 0, (byte) 0, null);
+            int onOff = 0;
+            if (mDevices.get(position).getOnlineState() == OnlineState.OFF) {
+                onOff = 1;
             }
+
+            int address = mDevices.get(position).meshAddress;
+            int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+            OnOffSetMessage onOffSetMessage = OnOffSetMessage.getSimple(address, appKeyIndex, onOff, !AppSettings.ONLINE_STATUS_ENABLE, !AppSettings.ONLINE_STATUS_ENABLE ? 1 : 0);
+            MeshService.getInstance().sendMeshMessage(onOffSetMessage);
+//                MeshService.getInstance().setOnOff(mDevices.get(position).meshAddress, onOff, !AppSettings.ONLINE_STATUS_ENABLE, !AppSettings.ONLINE_STATUS_ENABLE ? 1 : 0, 0, (byte) 0, null);
         });
 
-        mAdapter.setOnItemLongClickListener(new BaseRecyclerViewAdapter.OnItemLongClickListener() {
-            @Override
-            public boolean onLongClick(int position) {
-                NodeInfo deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(mDevices.get(position).meshAddress);
-                if (deviceInfo == null) {
-                    toastMsg("device info null!");
-                    return false;
-                }
-                /*if (deviceInfo.compositionData != null){
-                    MeshLogger.d("device cps: " + deviceInfo.compositionData.toString());
-                }*/
-                MeshLogger.d("deviceKey: " + (Arrays.bytesToHexString(deviceInfo.deviceKey)));
-                Intent intent;
-                if (deviceInfo.bound) {
-                    // remote control device
-                    if (deviceInfo.compositionData.pid == 0x0301) {
-                        intent = new Intent(getActivity(), RemoteControlSettingActivity.class);
-                    } else {
-                        intent = new Intent(getActivity(), DeviceSettingActivity.class);
-                    }
-                } else {
-                    intent = new Intent(getActivity(), KeyBindActivity.class);
-                }
-                intent.putExtra("deviceAddress", deviceInfo.meshAddress);
-                startActivity(intent);
+        mAdapter.setOnItemLongClickListener(position -> {
+            NodeInfo deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(mDevices.get(position).meshAddress);
+            if (deviceInfo == null) {
+                toastMsg("device info null!");
                 return false;
             }
-
+            /*if (deviceInfo.compositionData != null){
+                MeshLogger.d("device cps: " + deviceInfo.compositionData.toString());
+            }*/
+            MeshLogger.d("deviceKey: " + (Arrays.bytesToHexString(deviceInfo.deviceKey)));
+            Intent intent;
+            if (deviceInfo.bound) {
+                // remote control device
+                if (deviceInfo.compositionData.pid == 0x0301) {
+                    intent = new Intent(getActivity(), RemoteControlSettingActivity.class);
+                } else {
+                    intent = new Intent(getActivity(), DeviceSettingActivity.class);
+                }
+            } else {
+                intent = new Intent(getActivity(), KeyBindActivity.class);
+            }
+            intent.putExtra("deviceAddress", deviceInfo.meshAddress);
+            startActivity(intent);
+            return false;
         });
 
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);

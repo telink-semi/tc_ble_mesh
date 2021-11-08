@@ -65,16 +65,19 @@ public final class ModelPublication implements Serializable, Parcelable {
     public int elementAddress;
 
     /**
+     * Value of the publish address
      * 16 bits
      */
     public int publishAddress;
 
     /**
+     * Index of the application key
      * 12 bits
      */
     public int appKeyIndex;
 
     /**
+     * Value of the Friendship Credential Flag
      * 1 bit
      * 0 Master security material is used for Publishing
      * 1 Friendship security material is used for Publishing， used on LPN
@@ -88,26 +91,31 @@ public final class ModelPublication implements Serializable, Parcelable {
     public int rfu = RFU_DEFAULT;
 
     /**
+     * Default TTL value for the outgoing messages
      * 8 bits
      */
     public int ttl = TTL_DEFAULT;
 
     /**
+     * Period for periodic status publishing
      * 8 bits
      */
     public byte period;
 
     /**
+     * Number of retransmissions for each published message
      * 3 bits
      */
     public int retransmitCount = RETRANSMIT_COUNT_DEFAULT;
 
     /**
+     * Number of 50-millisecond steps between retransmissions
      * 5 bits
      */
     public int retransmitIntervalSteps = RETRANSMIT_INTERVAL_STEP_DEFAULT;
 
     /**
+     * SIG Model ID or Vendor Model ID
      * 16 or 32 bits
      */
     public int modelId;

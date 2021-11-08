@@ -27,7 +27,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * Created by kee on 2019/8/12.
+ * The Config Default TTL Set is an acknowledged message used to set the Default TTL state of a node
+ * <p>
+ * The response to a Config Default TTL Get message is a Config Default TTL Status message {@link DefaultTTLStatusMessage}.
  */
 
 public class DefaultTTLSetMessage extends ConfigMessage {

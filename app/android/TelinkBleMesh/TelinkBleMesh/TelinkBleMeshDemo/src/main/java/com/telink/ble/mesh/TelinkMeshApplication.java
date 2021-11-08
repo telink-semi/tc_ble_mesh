@@ -373,6 +373,9 @@ public class TelinkMeshApplication extends MeshApplication {
      * save sequence number and iv index when mesh info updated
      */
     protected void onNetworkInfoUpdate(NetworkInfoUpdateEvent networkInfoUpdateEvent) {
+        MeshLogger.d(String.format("mesh info update from local sequenceNumber-%06X ivIndex-%08X to sequenceNumber-%06X ivIndex-%08X",
+                meshInfo.sequenceNumber, meshInfo.ivIndex,
+                networkInfoUpdateEvent.getSequenceNumber(), networkInfoUpdateEvent.getIvIndex()));
         this.meshInfo.ivIndex = networkInfoUpdateEvent.getIvIndex();
         this.meshInfo.sequenceNumber = networkInfoUpdateEvent.getSequenceNumber();
         this.meshInfo.saveOrUpdate(this);

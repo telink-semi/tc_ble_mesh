@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -29,6 +29,7 @@
 
 #import "SigAddDeviceManager.h"
 #import "SigKeyBindManager.h"
+
 
 typedef enum : NSUInteger {
     SigAddStatusScanning,
@@ -67,6 +68,8 @@ typedef enum : NSUInteger {
 @property (nonatomic,assign) ProvisionTpye provisionType;
 @property (nonatomic,strong) NSData *staticOOBData;
 
+@property (nonatomic,assign) BOOL isCertificateBasedProvision;//default NO.
+
 @end
 
 @implementation SigAddDeviceManager
@@ -88,6 +91,7 @@ typedef enum : NSUInteger {
 /// function1 :add bluetooth devices (auto add)
 - (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
     self.unicastAddress = address;
+    TeLogInfo(@"更新自动添加节点的地址，API传入为0x%X",self.unicastAddress);
     self.networkKey = networkKey;
     self.netkeyIndex = netkeyIndex;
     self.appkeyModel = appkeyModel;
@@ -104,6 +108,7 @@ typedef enum : NSUInteger {
     self.fastKeybindProductID = productID;
     self.provisionType = ProvisionTpye_NoOOB;
     self.staticOOBData = nil;
+    self.isCertificateBasedProvision = NO;
     [self.tempProvisionFailList removeAllObjects];
     [self startScan];
 }
@@ -111,6 +116,34 @@ typedef enum : NSUInteger {
 /// function2 :add bluetooth device (single add)
 - (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
     self.unicastAddress = address;
+    TeLogInfo(@"更新自动添加节点的地址，API传入为0x%X",self.unicastAddress);
+    self.networkKey = networkKey;
+    self.netkeyIndex = netkeyIndex;
+    self.appkeyModel = appkeyModel;
+    self.keyBindType = type;
+    self.provisionSuccessBlock = provisionSuccess;
+    self.provisionFailBlock = provisionFail;
+    self.keyBindSuccessBlock = keyBindSuccess;
+    self.keyBindFailBlock = keyBindFail;
+    self.isAutoAddDevice = NO;
+    self.retryCount = 3;
+    self.addStatus = SigAddStatusConnectFirst;
+    self.fastKeybindCpsData = cpsData;
+    self.fastKeybindProductID = productID;
+    self.provisionType = provisionType;
+    self.staticOOBData = staticOOBData;
+    if (provisionType == ProvisionTpye_NoOOB) {
+        self.staticOOBData = nil;
+    }
+    self.isCertificateBasedProvision = NO;
+    [self.tempProvisionFailList removeAllObjects];
+    [self startAddPeripheral:peripheral];
+}
+
+- (void)startCertificateBasedWithAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
+    self.isCertificateBasedProvision = YES;
+    self.unicastAddress = address;
+    TeLogInfo(@"更新自动添加节点的地址，API传入为0x%X",self.unicastAddress);
     self.networkKey = networkKey;
     self.netkeyIndex = netkeyIndex;
     self.appkeyModel = appkeyModel;
@@ -130,7 +163,15 @@ typedef enum : NSUInteger {
         self.staticOOBData = nil;
     }
     [self.tempProvisionFailList removeAllObjects];
+#if SUPPORTCARTIFICATEBASED
     [self startAddPeripheral:peripheral];
+#else
+    if (self.provisionFailBlock) {
+        NSError *err = [NSError errorWithDomain:@"SDK not support CertificateBased provision. provision fail." code:-1 userInfo:nil];
+        self.provisionFailBlock(err);
+    }
+    [self addPeripheralFail:peripheral];
+#endif
 }
 
 /// Add Single Device (provision+keyBind)
@@ -140,7 +181,7 @@ typedef enum : NSUInteger {
 /// @param keyBindSuccess callback when keybind success.
 /// @param keyBindFail callback when keybind fail.
 - (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
-    SigAppkeyModel *appkeyModel = [SigDataSource.share getAppkeyModelWithAppkeyIndex:configModel.appkeyIndex];
+    SigAppkeyModel *appkeyModel = [SigMeshLib.share.dataSource getAppkeyModelWithAppkeyIndex:configModel.appkeyIndex];
     if (!appkeyModel || ![appkeyModel.getDataKey isEqualToData:configModel.appKey]) {
         TeLogVerbose(@"appKey is error.");
         if (provisionFail) {
@@ -157,14 +198,22 @@ typedef enum : NSUInteger {
     __weak typeof(self) weakSelf = self;
     [SigBluetooth.share scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
         if (unprovisioned && ![weakSelf.tempProvisionFailList containsObject:peripheral.identifier.UUIDString]) {
+            //自动添加新增逻辑：判断本地是否存在该UUID的OOB数据，存在则缓存到self.staticOOBData中。
+            SigScanRspModel *model = [SigMeshLib.share.dataSource getScanRspModelWithUUID:peripheral.identifier.UUIDString];
+            //SDK不支持CertificateBased添加时，自动扫描添加不会添加支持CertificateBased的设备。
+#if SUPPORTCARTIFICATEBASED
+#else
+            if (model.advOobInformation.supportForCertificateBasedProvisioning) {
+                return;
+            }
+#endif
             weakSelf.addStatus = SigAddStatusConnectFirst;
             [SigBluetooth.share stopScan];
-            //自动添加新增逻辑：判断本地是否存在该UUID的OOB数据，存在则缓存到self.staticOOBData中。
-            SigScanRspModel *model = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
-            SigOOBModel *oobModel = [SigDataSource.share getSigOOBModelWithUUID:model.advUuid];
+            SigOOBModel *oobModel = [SigMeshLib.share.dataSource getSigOOBModelWithUUID:model.advUuid];
             if (oobModel && oobModel.OOBString && oobModel.OOBString.length == 32) {
                 weakSelf.staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
             }
+            weakSelf.isCertificateBasedProvision = model.advOobInformation.supportForCertificateBasedProvisioning;
             [weakSelf startAddPeripheral:peripheral];
         }
     }];
@@ -179,7 +228,7 @@ typedef enum : NSUInteger {
     self.addStatus = SigAddStatusKeyBinding;
     __weak typeof(self) weakSelf = self;
     CBPeripheral *peripheral = SigBearer.share.getCurrentPeripheral;
-    [SDKLibCommand setFilterForProvisioner:SigDataSource.share.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
+    [SDKLibCommand setFilterForProvisioner:SigMeshLib.share.dataSource.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
         TeLogInfo(@"start keyBind.");
         weakSelf.addStatus = SigAddStatusKeyBinding;
         KeyBindTpye currentKeyBindType = KeyBindTpye_Normal;
@@ -187,8 +236,8 @@ typedef enum : NSUInteger {
             if (weakSelf.fastKeybindCpsData && weakSelf.fastKeybindCpsData.length > 0) {
                 currentKeyBindType = KeyBindTpye_Fast;
             }else{
-                SigNodeModel *node = [SigDataSource.share getNodeWithAddress:weakSelf.unicastAddress];
-                DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:[LibTools uint16From16String:node.cid] PID:[LibTools uint16From16String:node.pid]];
+                SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:weakSelf.unicastAddress];
+                DeviceTypeModel *deviceType = [SigMeshLib.share.dataSource getNodeInfoWithCID:[LibTools uint16From16String:node.cid] PID:[LibTools uint16From16String:node.pid]];
                 if (deviceType != nil) {
                     currentKeyBindType = KeyBindTpye_Fast;
                 } else {
@@ -254,27 +303,51 @@ typedef enum : NSUInteger {
                     //it need delay 500ms before sent provision invite.
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                         weakSelf.addStatus = SigAddStatusProvisioning;
-                        if (weakSelf.staticOOBData) {
-                            [SigProvisioningManager.share provisionWithUnicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex staticOobData:weakSelf.staticOOBData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-                                if (weakSelf.provisionSuccessBlock) {
-                                    weakSelf.provisionSuccessBlock(identify, address);
-                                }
-                                if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
-                                    weakSelf.addStatus = SigAddStatusConnectSecond;
-                                    [weakSelf performSelector:@selector(scanCurrentPeripheralForKeyBind) withObject:nil];
-                                } else {
-                                    [weakSelf keybind];
-                                }
-                            } fail:^(NSError * _Nonnull error) {
-                                if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
-                                    if (weakSelf.provisionFailBlock) {
-                                        weakSelf.provisionFailBlock(error);
+                        if (weakSelf.isCertificateBasedProvision == NO) {
+                            if (weakSelf.staticOOBData) {
+                                SigProvisioningManager.share.provisionAuthLeak = SigDataSource.share.provisionAuthLeak;
+                                [SigProvisioningManager.share provisionWithUnicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex staticOobData:weakSelf.staticOOBData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+                                    if (weakSelf.provisionSuccessBlock) {
+                                        weakSelf.provisionSuccessBlock(identify, address);
                                     }
-                                    [weakSelf addPeripheralFail:peripheral];
-                                }
-                            }];
+                                    if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
+                                        weakSelf.addStatus = SigAddStatusConnectSecond;
+                                        [weakSelf performSelector:@selector(scanCurrentPeripheralForKeyBind) withObject:nil];
+                                    } else {
+                                        [weakSelf keybind];
+                                    }
+                                } fail:^(NSError * _Nonnull error) {
+                                    if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
+                                        if (weakSelf.provisionFailBlock) {
+                                            weakSelf.provisionFailBlock(error);
+                                        }
+                                        [weakSelf addPeripheralFail:peripheral];
+                                    }
+                                }];
+                            } else {
+                                SigProvisioningManager.share.provisionAuthLeak = SigDataSource.share.provisionAuthLeak;
+                                [SigProvisioningManager.share provisionWithUnicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+                                    if (weakSelf.provisionSuccessBlock) {
+                                        weakSelf.provisionSuccessBlock(identify, address);
+                                    }
+                                    if (weakSelf.needDisconnectBetweenProvisionToKeyBind || [SigBluetooth.share getCharacteristicWithUUIDString:kPROXY_In_CharacteristicsID OfPeripheral:SigBearer.share.getCurrentPeripheral] == nil) {
+                                        weakSelf.addStatus = SigAddStatusConnectSecond;
+                                        [weakSelf performSelector:@selector(scanCurrentPeripheralForKeyBind) withObject:nil];
+                                    } else {
+                                        [weakSelf keybind];
+                                    }
+                                } fail:^(NSError * _Nonnull error) {
+                                    if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
+                                        if (weakSelf.provisionFailBlock) {
+                                            weakSelf.provisionFailBlock(error);
+                                        }
+                                        [weakSelf addPeripheralFail:peripheral];
+                                    }
+                                }];
+                            }
                         } else {
-                            [SigProvisioningManager.share provisionWithUnicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+                            SigProvisioningManager.share.provisionAuthLeak = SigDataSource.share.provisionAuthLeak;
+                            [SigProvisioningManager.share certificateBasedProvisionWithPeripheral:peripheral unicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex provisionType:weakSelf.provisionType staticOOBData:weakSelf.staticOOBData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                                 if (weakSelf.provisionSuccessBlock) {
                                     weakSelf.provisionSuccessBlock(identify, address);
                                 }
@@ -284,7 +357,7 @@ typedef enum : NSUInteger {
                                 } else {
                                     [weakSelf keybind];
                                 }
-                            } fail:^(NSError * _Nonnull error) {
+                            } fail:^(NSError * _Nullable error) {
                                 if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
                                     if (weakSelf.provisionFailBlock) {
                                         weakSelf.provisionFailBlock(error);
@@ -361,9 +434,9 @@ typedef enum : NSUInteger {
                             weakSelf.curPeripheral = peripheral;
                         }
                     }
-                    SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
+                    SigScanRspModel *rspModel = [SigMeshLib.share.dataSource getScanRspModelWithUUID:peripheral.identifier.UUIDString];
                     if (rspModel.nodeIdentityData && rspModel.nodeIdentityData.length == 16) {
-                        SigEncryptedModel *encryptedModel = [SigDataSource.share getSigEncryptedModelWithAddress:weakSelf.unicastAddress];
+                        SigEncryptedModel *encryptedModel = [SigMeshLib.share.dataSource getSigEncryptedModelWithAddress:weakSelf.unicastAddress];
                         if (encryptedModel && encryptedModel.identityData && encryptedModel.identityData.length == 16 && [encryptedModel.identityData isEqualToData:rspModel.nodeIdentityData]) {
                             TeLogInfo(@"keyBind start connect macAddress:%@,uuid=%@",rspModel.macAddress,rspModel.uuid);
                             [SigBluetooth.share stopScan];
@@ -397,9 +470,9 @@ typedef enum : NSUInteger {
         [self startScan];
     }else{
         self.addStatus = SigAddStatusKeyFree;
-        if (self.finishBlock) {
-            self.finishBlock();
-        }
+//        if (self.finishBlock) {
+//            self.finishBlock();
+//        }
     }
 }
 
@@ -409,9 +482,9 @@ typedef enum : NSUInteger {
         [self startScan];
     }else{
         self.addStatus = SigAddStatusKeyFree;
-        if (self.finishBlock) {
-            self.finishBlock();
-        }
+//        if (self.finishBlock) {
+//            self.finishBlock();
+//        }
     }
 }
 
@@ -425,7 +498,9 @@ typedef enum : NSUInteger {
 }
 
 - (void)refreshNextUnicastAddress {
+    TeLogInfo(@"更新自动添加节点的地址，更新前为0x%X",self.unicastAddress);
     self.unicastAddress += SigProvisioningManager.share.provisioningCapabilities.numberOfElements;
+    TeLogInfo(@"更新自动添加节点的地址，更新后为0x%X",self.unicastAddress);
 }
 
 @end

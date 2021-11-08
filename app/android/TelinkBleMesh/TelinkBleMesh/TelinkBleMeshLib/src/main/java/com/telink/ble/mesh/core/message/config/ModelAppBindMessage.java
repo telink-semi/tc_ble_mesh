@@ -27,7 +27,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * Created by kee on 2019/8/12.
+ * The Config Model App Bind is an acknowledged message used to bind an AppKey to a model.
+ *
+ * The response to a Config Model App Bind message is a Config Model App Status message.
+ * {@link ModelAppStatusMessage}
  */
 
 public class ModelAppBindMessage extends ConfigMessage {

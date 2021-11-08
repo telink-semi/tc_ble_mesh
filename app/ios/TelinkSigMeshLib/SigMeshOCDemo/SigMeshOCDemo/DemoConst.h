@@ -46,10 +46,12 @@
 #define CellIdentifiers_OnOffItemCellID  @"OnOffItemCell"
 #define CellIdentifiers_InfoSwitchCellID  @"InfoSwitchCell"
 #define CellIdentifiers_InfoNextCellID  @"InfoNextCell"
+#define CellIdentifiers_ExtendBearerModeCellID  @"ExtendBearerModeCell"
 #define CellIdentifiers_InfoButtonCellID  @"InfoButtonCell"
 #define CellIdentifiers_ColorModelCellID  @"ColorModelCell"
 #define CellIdentifiers_OnOffModelCellID  @"OnOffModelCell"
 #define CellIdentifiers_LevelAndSliderCellID  @"LevelAndSliderCell"
+#define CellIdentifiers_RemoteElementCellID  @"RemoteElementCell"
 
 
 //ViewControllerIdentifiers
@@ -82,12 +84,14 @@
 #define ViewControllerIdentifiers_ShareInViewControllerID  @"ShareInVC"
 #define ViewControllerIdentifiers_FileChooseViewControllerID  @"FileChooseVC"
 #define ViewControllerIdentifiers_MeshInfoViewControllerID  @"MeshInfoVC"
+#define ViewControllerIdentifiers_SettingsVCID  @"SettingsVC"
 #define ViewControllerIdentifiers_ChooseAndAddDeviceViewControllerID  @"ChooseAndAddDeviceVC"
-#define ViewControllerIdentifiers_DebugViewControllerID  @"DebugViewController"
 #define ViewControllerIdentifiers_ShowQRCodeViewControllerID  @"ShowQRCodeViewController"
+#define ViewControllerIdentifiers_TestVCID  @"TestVC"
 
 #define ViewControllerIdentifiers_SingleDeviceViewControllerID  @"SingleDeviceViewController"
 #define ViewControllerIdentifiers_DeviceControlViewControllerID  @"DeviceControlViewController"
+#define ViewControllerIdentifiers_DeviceRemoteVCID  @"DeviceRemoteVC"
 #define ViewControllerIdentifiers_DeviceGroupViewControllerID  @"DeviceGroupViewController"
 #define ViewControllerIdentifiers_DeviceSettingViewControllerID  @"DeviceSettingViewController"
 #define ViewControllerIdentifiers_DeviceSubscriptionListViewControllerID  @"DeviceSubscriptionListViewController"
@@ -138,11 +142,12 @@
 #define kShareWithBluetoothPointToPoint (YES)
 //setting界面显示
 #define kShowScenes (YES)
-#define kShowDebug  (NO)
 #define kshowLog        (YES)
 #define kshowShare    (YES)
 #define kshowMeshInfo    (YES)
+#define kshowMeshSettings    (YES)
 #define kshowChooseAdd    (YES)
+#define kshowTest        (YES)
 
 #define kKeyBindType  @"kKeyBindType"
 #define kRemoteAddType  @"kRemoteAddType"
@@ -150,6 +155,10 @@
 #define kDLEType  @"kDLEType"
 #define kGetOnlineStatusType  @"kGetOnlineStatusType"
 #define kAddStaticOOBDevcieByNoOOBEnable  @"kAddStaticOOBDevcieByNoOOBEnable"
+#define kDistributorAddress  @"kDistributorAddress"
+#define kDistributorPolicy  @"kDistributorPolicy"
+#define kUpdateNodeAddresses  @"kUpdateNodeAddresses"
+#define kRootCertificateName  @"kRootCertificateName"
 
 
 //app通用蓝色
@@ -166,8 +175,6 @@
 
 //默认指令的重试次数
 #define kDefaultRetryCount  (2)
-
-#define kDLEUnsegmentLength (229)
 
 #define kPublishIntervalOfDemo  (20)
 

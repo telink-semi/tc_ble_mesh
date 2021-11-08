@@ -101,9 +101,8 @@ public class NetworkingController {
      */
     private final static int THRESHOLD_SEQUENCE_NUMBER = 0xC00000;
 
+//    private final static int THRESHOLD_SEQUENCE_NUMBER = 0x88; // for test ivIndex Update
 
-    // for test
-//    private final static int THRESHOLD_SEQUENCE_NUMBER = 0x0100;
 
     /**
      * receive
@@ -133,10 +132,13 @@ public class NetworkingController {
     private SparseArray<byte[]> deviceKeyMap;
 
     /**
-     * save device sequence number and compare with sequence number in received network pdu
+     * 0x1122334400AABBCC
+     * ivIndex: 0x11223344
+     * sequenceNumber: 0xAABBCC
+     * save device sequence number(lower 24 bits) and ivIndex(higher 32 bits), compare with sequence number in received network pdu
      * if sequence number in network pud is not larger than saved sequence number, drop this pdu
      */
-    private SparseIntArray deviceSequenceNumberMap = new SparseIntArray();
+    private SparseLongArray deviceSequenceNumberMap = new SparseLongArray();
 
     /**
      * appKey and appKeyIndex map
@@ -386,18 +388,24 @@ public class NetworkingController {
      */
     public void checkSequenceNumber(byte[] networkId, byte[] beaconKey) {
         final boolean updatingNeeded = this.mSequenceNumber.get() >= THRESHOLD_SEQUENCE_NUMBER;
-        SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.createIvUpdatingBeacon((int) this.ivIndex, networkId, beaconKey, updatingNeeded);
-        this.isIvUpdating = updatingNeeded;
+
         if (isIvUpdating) {
-            this.ivIndex += 1;
+            log("beacon updating status changed by remote device ");
+        } else {
+            this.isIvUpdating = updatingNeeded;
+            if (isIvUpdating) {
+                this.ivIndex = initIvIndex + 1;
+            }
         }
-        log(networkBeacon.toString());
+        SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.createIvUpdatingBeacon((int) this.initIvIndex, networkId, beaconKey, isIvUpdating);
+        log("send beacon: " + networkBeacon.toString());
         sendMeshBeaconPdu(networkBeacon);
     }
 
     private void onIvUpdated(long newIvIndex) {
         if (newIvIndex > initIvIndex) {
             log(String.format(" iv updated to %08X", newIvIndex));
+            this.initIvIndex = (int) newIvIndex;
             this.deviceSequenceNumberMap.clear();
             this.mSequenceNumber.set(0);
             if (mNetworkingBridge != null) {
@@ -915,7 +923,8 @@ public class NetworkingController {
                 new NetworkLayerPDU.NetworkEncryptionSuite(ivIndex, this.encryptionKey, this.privacyKey, this.nid)
         );
         if (networkLayerPDU.parse(payload)) {
-            if (!validateSequenceNumber(networkLayerPDU)) {
+            log("network pdu: " + networkLayerPDU.toString());
+            if (!validateSequenceNumber(networkLayerPDU, ivIndex)) {
                 log("network pdu sequence number check err", MeshLogger.LEVEL_WARN);
                 return;
             }
@@ -937,7 +946,8 @@ public class NetworkingController {
                 new NetworkLayerPDU.NetworkEncryptionSuite(ivIndex, this.encryptionKey, this.privacyKey, this.nid)
         );
         if (proxyNetworkPdu.parse(payload)) {
-            if (!validateSequenceNumber(proxyNetworkPdu)) {
+            log("proxy pdu: " + proxyNetworkPdu.toString());
+            if (!validateSequenceNumber(proxyNetworkPdu, ivIndex)) {
                 log("proxy config pdu sequence number check err", MeshLogger.LEVEL_WARN);
                 return;
             }
@@ -990,22 +1000,53 @@ public class NetworkingController {
         }
     }
 
-    private boolean validateSequenceNumber(NetworkLayerPDU networkLayerPDU) {
+    private boolean validateSequenceNumber(NetworkLayerPDU networkLayerPDU, int pduIvIndex) {
         int src = networkLayerPDU.getSrc();
         int pduSequenceNumber = networkLayerPDU.getSeq();
-        int deviceSequenceNumber = this.deviceSequenceNumberMap.get(src, -1);
+        long valueInCache = this.deviceSequenceNumberMap.get(src, -1);
+        long deviceSequenceNumber = getSequenceNumberInCache(valueInCache);
         boolean pass = true;
-        if (deviceSequenceNumber == -1) {
-            this.deviceSequenceNumberMap.put(src, pduSequenceNumber);
+//        log(String.format("sequence in cache: src--%04X | value--%016X", src, valueInCache));
+        if (valueInCache == -1) {
+            log("put init sequence number");
+            saveSequenceCache(src, pduSequenceNumber, pduIvIndex);
         } else {
-            if (pduSequenceNumber > deviceSequenceNumber) {
-                this.deviceSequenceNumberMap.put(src, pduSequenceNumber);
+            int deviceIvIndex = getIvIndexInCache(valueInCache);
+            if (pduIvIndex > deviceIvIndex) {
+                log("network pdu - larger ivIndex received, save the new ivIndex");
+                saveSequenceCache(src, pduSequenceNumber, pduIvIndex);
+            } else if (pduIvIndex == deviceIvIndex) {
+                if (pduSequenceNumber > deviceSequenceNumber) {
+                    saveSequenceCache(src, pduSequenceNumber, pduIvIndex);
+                } else {
+                    log(String.format("validate sequence number error  src: %04X -- pdu-sno: %06X -- dev-sno: %06X", src, pduSequenceNumber, deviceSequenceNumber));
+                    pass = false;
+                }
             } else {
-                log(String.format("validate sequence number error  src: %04X -- pdu-sno: %06X -- dev-sno: %06X", src, pduSequenceNumber, deviceSequenceNumber));
+                log("network pdu error: less ivIndex pdu received");
                 pass = false;
             }
+
         }
         return pass;
+    }
+
+    /**
+     * save sequence number and ivIndex misc value
+     */
+    private void saveSequenceCache(int src, int sequenceNumber, int ivIndex) {
+        long value = ((ivIndex & 0xFFFFFFFFL) << 32) | (sequenceNumber & 0x00FFFFFFL);
+//        log(String.format("save sequence in cache src: %04X -- value: %016X", src, value));
+//        log(String.format("save sequence detail src: %04X -- ivIndex: %08X -- ivIndex: %08X", src, ivIndex, sequenceNumber));
+        this.deviceSequenceNumberMap.put(src, value);
+    }
+
+    private long getSequenceNumberInCache(long valInCache) {
+        return valInCache & 0xFFFFFF;
+    }
+
+    private int getIvIndexInCache(long valInCache) {
+        return (int) ((valInCache >> 32) & 0xFFFFFFFFL);
     }
 
     private void parseControlMessage(NetworkLayerPDU networkLayerPDU) {

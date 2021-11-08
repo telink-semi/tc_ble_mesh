@@ -61,8 +61,12 @@
     NSString *fileLocalPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
     NSArray *fileNames = [mang contentsOfDirectoryAtPath:fileLocalPath error:&error];
     for (NSString *path in fileNames) {
-        //本地512k的存储文件名为“test.bin”，不可用于OTA。包含空格的bin文件会读取失败。
-        if ([path containsString:@".bin"] && ![path containsString:@"test.bin"] && ![path containsString:@" "]) {
+//        //本地512k的存储文件名为“test.bin”，不可用于OTA。包含空格的bin文件会读取失败。
+//        if ([path containsString:@".bin"] && ![path containsString:@"test.bin"] && ![path containsString:@" "]) {
+//            [self addBinFileWithPath:path];
+//        }
+        //本地512k的存储文件名为“test.bin”，不可用于OTA。包含空格的bin文件可能会读取失败。
+        if ([path containsString:@".bin"] && ![path containsString:@"test.bin"]) {
             [self addBinFileWithPath:path];
         }
     }
@@ -127,14 +131,18 @@
 - (UInt16)getPidWithOTAData:(NSData *)data {
     UInt16 pid = 0;
     Byte *tempBytes = (Byte *)[data bytes];
-    memcpy(&pid, tempBytes + 0x2, 2);
+    if (data && data.length >= 4) {
+        memcpy(&pid, tempBytes + 0x2, 2);
+    }
     return pid;
 }
 
 - (UInt16)getVidWithOTAData:(NSData *)data {
     UInt16 vid = 0;
     Byte *tempBytes = (Byte *)[data bytes];
-    memcpy(&vid, tempBytes + 0x4, 2);
+    if (data && data.length >= 6) {
+        memcpy(&vid, tempBytes + 0x4, 2);
+    }
     return vid;
 }
 

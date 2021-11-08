@@ -38,6 +38,7 @@ import com.telink.ble.mesh.core.message.config.NetKeyStatusMessage;
 import com.telink.ble.mesh.core.message.config.NetworkTransmitStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeIdentityStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
+import com.telink.ble.mesh.core.message.config.RelayStatusMessage;
 import com.telink.ble.mesh.core.message.config.SubnetBridgeStatusMessage;
 import com.telink.ble.mesh.core.message.fastpv.MeshAddressStatusMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDCapabilitiesStatusMessage;
@@ -132,6 +133,8 @@ public class MeshStatus {
             register(Opcode.CFG_NW_TRANSMIT_STATUS.value, NetworkTransmitStatusMessage.class);
             register(Opcode.CFG_BEACON_STATUS.value, BeaconStatusMessage.class);
             register(Opcode.CFG_DEFAULT_TTL_STATUS.value, DefaultTTLStatusMessage.class);
+            register(Opcode.CFG_RELAY_STATUS.value, RelayStatusMessage.class);
+
             register(Opcode.CFG_FRIEND_STATUS.value, FriendStatusMessage.class);
             register(Opcode.CFG_GATT_PROXY_STATUS.value, GattProxyStatusMessage.class);
             register(Opcode.CFG_KEY_REFRESH_PHASE_STATUS.value, KeyRefreshPhaseStatusMessage.class);

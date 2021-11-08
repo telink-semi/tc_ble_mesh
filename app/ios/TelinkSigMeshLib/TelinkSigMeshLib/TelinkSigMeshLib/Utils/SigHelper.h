@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -93,6 +93,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)getDetailOfSigFirmwareUpdateServerAndClientModelStatusType:(SigFirmwareUpdateServerAndClientModelStatusType)statusType;
 - (NSString *)getDetailOfSigBLOBTransferStatusType:(SigBLOBTransferStatusType)statusType;
 - (NSString *)getDetailOfSigDirectionsFieldValues:(SigDirectionsFieldValues)directions;
+- (NSString *)getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)state;
+- (NSString *)getDetailOfKeyRefreshPhase:(KeyRefreshPhase)phase;
+- (NSString *)getDetailOfSigNodeIdentityState:(SigNodeIdentityState)state;
 
 @end
 

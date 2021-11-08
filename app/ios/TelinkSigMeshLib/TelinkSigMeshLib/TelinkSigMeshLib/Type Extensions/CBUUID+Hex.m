@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -57,7 +57,7 @@
 
 /// The UUID as Data.
 - (NSData *)getData {
-    return [LibTools nsstringToHex:self.UUIDString];
+    return [LibTools nsstringToHex:self.getHex];
 }
 
 @end

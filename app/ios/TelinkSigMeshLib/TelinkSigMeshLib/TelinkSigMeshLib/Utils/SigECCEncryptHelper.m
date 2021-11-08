@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -62,12 +62,12 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 }
 
 - (void)eccInit {
-    __weak typeof(self) weakSelf = self;
+//    __weak typeof(self) weakSelf = self;
     [self getECCKeyPair:^(NSData * _Nonnull publicKey, NSData * _Nonnull privateKey) {
         if (@available(iOS 10.0, *)) {
-            TeLogInfo(@"init ECC bigger than ios10, publicKey=%@,privateKey=%@",weakSelf.seckeyModel.publicKey,weakSelf.seckeyModel.privateKey);
+//            TeLogVerbose(@"init ECC bigger than ios10, publicKey=%@,privateKey=%@",weakSelf.seckeyModel.publicKey,weakSelf.seckeyModel.privateKey);
         } else {
-            TeLogInfo(@"init ECC lower than ios10, publicKey=%@,privateKey=%@",weakSelf.publicKeyLowIos10,weakSelf.privateKeyLowIos10);
+//            TeLogVerbose(@"init ECC lower than ios10, publicKey=%@,privateKey=%@",weakSelf.publicKeyLowIos10,weakSelf.privateKeyLowIos10);
         }
     }];
 }

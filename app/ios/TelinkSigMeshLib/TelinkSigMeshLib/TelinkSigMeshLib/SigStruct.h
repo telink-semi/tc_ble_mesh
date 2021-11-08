@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -54,7 +54,9 @@ struct StaticOobType {
 };
 
 /// Information that points to out-of-band (OOB) information needed for provisioning.
-typedef struct{
+/// Table 3.65: OOB Information field.
+/// - seeAlso: MshPRFd1.1r11_clean.pdf  (page.197)
+struct OobInformation {
     union{
         UInt16 value;
         struct{
@@ -65,7 +67,10 @@ typedef struct{
             UInt8 nfc :1;//val的低位第5个bit
             UInt8 number :1;//val的低位第6个bit
             UInt8 string :1;//val的低位第7个bit
-            // Bits 8-11 are reserved for future use.
+            UInt8 supportForCertificateBasedProvisioning :1;//val的低位第8个bit
+            UInt8 supportForProvisioningRecords :1;//val的低位第9个bit
+            UInt8 reservedForFutureUse1 :1;//val的低位第10个bit
+            UInt8 reservedForFutureUse2 :1;//val的低位第11个bit
             UInt8 onBox :1;//val的低位第12个bit
             UInt8 insideBox :1;//val的低位第13个bit
             UInt8 onPieceOfPaper :1;//val的低位第14个bit
@@ -73,10 +78,10 @@ typedef struct{
             UInt8 onDevice :1;//val的低位第16个bit
         };
     };
-}OobInformation;
+};
 
 /// A set of supported Output Out-of-band actions.
-typedef struct{
+struct OutputOobActions {
     union{
         UInt16 value;
         struct{
@@ -85,13 +90,23 @@ typedef struct{
             UInt8 vibrate :1;//val的低位第3个bit
             UInt8 outputNumeric :1;//val的低位第4个bit
             UInt8 outputAlphanumeric :1;//val的低位第5个bit
-            // Bits 6-16 are reserved for future use.
+            UInt8 reservedForFutureUse6 :1;//val的低位第6个bit
+            UInt8 reservedForFutureUse7 :1;//val的低位第7个bit
+            UInt8 reservedForFutureUse8 :1;//val的低位第8个bit
+            UInt8 reservedForFutureUse9 :1;//val的低位第9个bit
+            UInt8 reservedForFutureUse10 :1;//val的低位第10个bit
+            UInt8 reservedForFutureUse11 :1;//val的低位第11个bit
+            UInt8 reservedForFutureUse12 :1;//val的低位第12个bit
+            UInt8 reservedForFutureUse13 :1;//val的低位第13个bit
+            UInt8 reservedForFutureUse14 :1;//val的低位第14个bit
+            UInt8 reservedForFutureUse15 :1;//val的低位第15个bit
+            UInt8 reservedForFutureUse16 :1;//val的低位第16个bit
         };
     };
-}OutputOobActions;
+};
 
 /// A set of supported Input Out-of-band actions.
-typedef struct{
+struct InputOobActions {
     union{
         UInt16 value;
         struct{
@@ -99,10 +114,21 @@ typedef struct{
             UInt8 twist :1;//val的低位第2个bit
             UInt8 inputNumeric :1;//val的低位第3个bit
             UInt8 inputAlphanumeric :1;//val的低位第4个bit
-            // Bits 5-16 are reserved for future use.
+            UInt8 reservedForFutureUse5 :1;//val的低位第5个bit
+            UInt8 reservedForFutureUse6 :1;//val的低位第6个bit
+            UInt8 reservedForFutureUse7 :1;//val的低位第7个bit
+            UInt8 reservedForFutureUse8 :1;//val的低位第8个bit
+            UInt8 reservedForFutureUse9 :1;//val的低位第9个bit
+            UInt8 reservedForFutureUse10 :1;//val的低位第10个bit
+            UInt8 reservedForFutureUse11 :1;//val的低位第11个bit
+            UInt8 reservedForFutureUse12 :1;//val的低位第12个bit
+            UInt8 reservedForFutureUse13 :1;//val的低位第13个bit
+            UInt8 reservedForFutureUse14 :1;//val的低位第14个bit
+            UInt8 reservedForFutureUse15 :1;//val的低位第15个bit
+            UInt8 reservedForFutureUse16 :1;//val的低位第16个bit
         };
     };
-}InputOobActions;
+};
 
 struct ProvisioningCapabilities {
     union{
@@ -121,11 +147,11 @@ struct ProvisioningCapabilities {
             /// Maximum size of Output OOB supported.
             UInt8 outputOobSize;//1byte
             /// Supoprted Output OOB Actions.
-            OutputOobActions outputOobActions;//2bytes
+            struct OutputOobActions outputOobActions;//2bytes
             /// Maximum size of Input OOB supported.
             UInt8 inputOobSize;//1byte
             /// Supoprted Input OOB Actions.
-            InputOobActions inputOobActions;//2bytes
+            struct InputOobActions inputOobActions;//2bytes
         };
     };
     
@@ -165,5 +191,20 @@ typedef struct {
         };
     };
 }SigAdditionalInformation;
+
+
+/// 7.2.2.7.7 Supported Transfer Mode
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.25)
+struct SigSupportedTransferMode {
+    union{
+        UInt8 value;
+        struct{
+            /// Static OOB Information is available.
+            UInt8 PushBLOBTransfermodeBit      :1;//value的低1个bit
+            UInt8 PullBLOBTransfermodeBit      :1;//value的低位第2个bit
+            // 2-7 Reserved For Future Use
+        };
+    };
+};
 
 #endif /* SigStruct_h */

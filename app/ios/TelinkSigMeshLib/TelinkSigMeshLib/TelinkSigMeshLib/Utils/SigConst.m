@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -31,7 +31,7 @@
 
 #pragma mark - Const string
 
-NSString * const kTelinkSigMeshLibVersion = @"v3.3.2";
+NSString * const kTelinkSigMeshLibVersion = @"v3.3.5";
 
 NSString * const kNotifyCommandIsBusyOrNot = @"CommandIsBusyOrNot";
 NSString * const kCommandIsBusyKey = @"IsBusy";
@@ -56,6 +56,7 @@ NSString * const kOnlineStatusCharacteristicsID = @"00010203-0405-0607-0809-0A0B
 /// update firmware
 NSString * const kOTA_CharacteristicsID = @"00010203-0405-0607-0809-0A0B0C0D2B12";
 NSString * const kMeshOTA_CharacteristicsID = @"00010203-0405-0607-0809-0A0B0C0D7FDF";
+NSString * const kFirmwareRevisionCharacteristicsID = @"2A26";
 
 //存储数据的key
 //mesh
@@ -78,6 +79,9 @@ NSString * const kSigScanRspModel_networkIDData_key = @"sigScanRspModel_networkI
 NSString * const kSaveMeshOTADictKey = @"kSaveMeshOTADictKey";
 /*存储在本地的数据的key，不再存储在cache中，以为苹果设备的存储快满的时候，系统会删除cache文件夹的数据*/
 NSString * const kSaveLocationDataKey = @"mesh.json";
+NSString * const kExtendBearerMode = @"kExtendBearerMode";
+UInt8 const kDLEUnsegmentLength = 229;
+
 //oob
 NSString * const kSigOOBModel_sourceType_key = @"kSigOOBModel_sourceType_key";
 NSString * const kSigOOBModel_UUIDString_key = @"kSigOOBModel_UUIDString_key";
@@ -258,8 +262,25 @@ UInt16 const kSigModel_FirmwareDistributionServer_ID         = 0xFE02;
 UInt16 const kSigModel_FirmwareDistributionClient_ID         = 0xFE03;
 UInt16 const kSigModel_ObjectTransferServer_ID               = 0xFF00;
 UInt16 const kSigModel_ObjectTransferClient_ID               = 0xFF01;
-UInt16 const kSigModel_SubnetBridgeServer_ID                 = 0xBF32;
 // --------
+UInt16 const kSigModel_DF_CFG_S_ID                 = 0xBF30;
+UInt16 const kSigModel_DF_CFG_C_ID                 = 0xBF31;
+UInt16 const kSigModel_SubnetBridgeServer_ID                 = 0xBF32;
+UInt16 const kSigModel_SubnetBridgeClient_ID                 = 0xBF33;
+UInt16 const kSigModel_PrivateBeaconServer_ID                 = 0xBF40;
+UInt16 const kSigModel_PrivateBeaconClient_ID                 = 0xBF41;
+UInt16 const kSigModel_ON_DEMAND_PROXY_S_ID                 = 0xBF50;
+UInt16 const kSigModel_ON_DEMAND_PROXY_C_ID                 = 0xBF51;
+UInt16 const kSigModel_SAR_CFG_S_ID                 = 0xBF52;
+UInt16 const kSigModel_SAR_CFG_C_ID                 = 0xBF53;
+UInt16 const kSigModel_OP_AGG_S_ID                 = 0xBF54;
+UInt16 const kSigModel_OP_AGG_C_ID                 = 0xBF55;
+UInt16 const kSigModel_LARGE_CPS_S_ID                 = 0xBF56;
+UInt16 const kSigModel_LARGE_CPS_C_ID                 = 0xBF57;
+UInt16 const kSigModel_SOLI_PDU_RPL_CFG_S_ID                 = 0xBF58;
+UInt16 const kSigModel_SOLI_PDU_RPL_CFG_C_ID                 = 0xBF59;
+// --------
+
 
 //旧版本使用的key start
 UInt16 const SIG_MD_G_ONOFF_S              = 0x1000;
@@ -289,6 +310,8 @@ UInt8 const kProvisionConfirmationTimeout = 5;
 UInt8 const kProvisionRandomTimeout = 5;
 UInt8 const kSentProvisionEncryptedDataWithMicTimeout = 5;
 UInt8 const kStartMeshConnectTimeout = 5;
+UInt8 const kProvisioningRecordRequestTimeout = 10;
+UInt8 const kProvisioningRecordsGetTimeout = 10;
 
 UInt8 const kScanNodeIdentityBeforeKeyBindTimeout = 3;
 
@@ -366,9 +389,11 @@ UInt16 const kPacketAllLength = kPacketJsonLength+4;
 UInt16 const SigNodePID_CT = 1;
 UInt16 const SigNodePID_HSL = 2;
 UInt16 const SigNodePID_Panel = 7;
+UInt16 const SigNodePID_LPN = 0x0201;
+UInt16 const SigNodePID_Switch = 0x0301;
 
 float const kCMDInterval = 0.32;
-float const kSDKLibCommandTimeout = 1.0;
+float const kSDKLibCommandTimeout = 1.28;
 
 /*读取json里面的mesh数据后，默认新增一个增量128; snox增加这个增量后存储一次本地json(当前只存储手机本地，无需存储在json)*/
 UInt32 const kSnoIncrement = 128;

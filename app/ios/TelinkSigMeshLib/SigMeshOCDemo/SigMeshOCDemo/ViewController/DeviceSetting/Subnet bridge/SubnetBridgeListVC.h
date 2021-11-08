@@ -1,7 +1,7 @@
 /********************************************************************************************************
 * @file     SubnetBridgeListVC.h
 *
-* @brief    Show all NetKey of node.
+* @brief    Show SubnetBridgeList of node.
 *
 * @author       Telink, 梁家誌
 * @date         2020

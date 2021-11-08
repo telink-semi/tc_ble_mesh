@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 #define kSendOneNodeScanTimeout   (3)
 #define kScannedItemsTimeout   (5)
 
-@class SigProvisioningData,SigAuthenticationModel;
+@class SigProvisioningData,SigProvisioningCapabilitiesPdu,SigAuthenticationModel;
 typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanRemoteModel);
 
 @interface SigRemoteAddManager : NSObject
@@ -47,10 +47,14 @@ typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanR
 @property (nonatomic, strong) SigAuthenticationModel *authenticationModel;
 @property (nonatomic, strong) SigProvisioningData *provisioningData;
 
+/// - seeAlso: MshPRFv1.0.1.pdf  (page.240)
+/// Attention Timer state (See Section 4.2.9), default is 0.
+@property (nonatomic, assign) UInt8 attentionDuration;
+
 #pragma mark - Public properties
 
 /// The provisioning capabilities of the device. This information is retrieved from the remote device during identification process.
-@property (nonatomic, assign) struct ProvisioningCapabilities provisioningCapabilities;
+@property (nonatomic, strong, nullable) SigProvisioningCapabilitiesPdu *provisioningCapabilities;
 
 /// The Network Key to be sent to the device during provisioning.
 @property (nonatomic, strong) SigNetkeyModel *networkKey;

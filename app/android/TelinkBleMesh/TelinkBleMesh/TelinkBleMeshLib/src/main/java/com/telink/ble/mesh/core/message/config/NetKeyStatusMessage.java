@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     NodeIdentityStatusMessage.java 
+ * @file NodeIdentityStatusMessage.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.config;
 
@@ -30,18 +30,20 @@ import com.telink.ble.mesh.core.message.StatusMessage;
 import java.nio.ByteOrder;
 
 /**
- * Created by kee on 2019/9/10.
+ * The Config NetKey Status is an unacknowledged message used to report the status of the operation on the NetKey List.
  */
 
 public class NetKeyStatusMessage extends StatusMessage implements Parcelable {
 
     /**
      * 1 byte
+     * Status Code for the requesting message
      */
     private int status;
 
     /**
      * 2 bytes
+     * Index of the NetKey
      */
     private int netKeyIndex;
 

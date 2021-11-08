@@ -25,6 +25,9 @@ import com.telink.ble.mesh.core.message.Opcode;
 
 /**
  * The Config GATT Proxy Get is an acknowledged message used to get the current GATT Proxy state of a node
+ *
+ * The response to a Config GATT Proxy Get message is a Config GATT Proxy Status message.
+ * {@link GattProxyStatusMessage}
  */
 public class GattProxyGetMessage extends ConfigMessage {
 

@@ -30,9 +30,9 @@ import com.telink.ble.mesh.core.message.StatusMessage;
 import java.nio.ByteOrder;
 
 /**
- * Created by kee on 2019/9/10.
+ * The Config Model App Status is an unacknowledged message used to report a status for the requesting message,
+ * based on the element address, the AppKeyIndex identifying the AppKey on the AppKey List, and the ModelIdentifier.
  */
-
 public class ModelAppStatusMessage extends StatusMessage implements Parcelable {
 
     private static final int MODEL_STATUS_SIG_LEN = 7;

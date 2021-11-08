@@ -9,6 +9,17 @@
     app:cardPreventCornerOverlap="false"
     app:cardUseCompatPadding="true">
 
+    <!--<TextView
+        android:id="@+id/tv_root"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:textColor="@color/design_default_color_primary"
+        android:textSize="16sp"
+        android:text="ROOT"
+        android:textStyle="bold" />-->
+
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -17,6 +28,7 @@
         android:padding="8dp">
 
         <ImageView
+            android:id="@+id/iv_cert"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:padding="8dp"
@@ -31,22 +43,11 @@
             android:textSize="11sp" />
 
 
-        <TextView
-            android:id="@+id/tv_root"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:textColor="@color/design_default_color_primary"
-            android:textSize="16sp"
-            android:text="ROOT"
-            android:textStyle="bold" />
-
-
+<!--        android:background="?attr/selectableItemBackgroundBorderless" -->
         <ImageView
             android:id="@+id/iv_next"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="8dp"
             android:src="@drawable/ic_arrow_right"
             android:tint="@color/grey" />

@@ -3,7 +3,7 @@
 *
 * @brief    for TLSR chips
 *
-* @author     telink
+* @author       Telink, 梁家誌
 * @date     Sep. 30, 2010
 *
 * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -31,11 +31,23 @@
 
 @implementation SigMessageHandle
 
-- (instancetype)initForMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination usingManager:(SigMeshLib *)manager {
+//- (instancetype)initForMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination usingManager:(SigMeshLib *)manager {
+//    if (self = [super init]) {
+//        _opCode = message.opCode;
+//        _source = source;
+//        _destination = destination;
+//        _manager = manager;
+//    }
+//    return self;
+//}
+
+- (instancetype)initForSDKLibCommand:(SDKLibCommand *)command usingManager:(SigMeshLib *)manager {
     if (self = [super init]) {
-        _opCode = message.opCode;
-        _source = source;
-        _destination = destination;
+        if ([command.curMeshMessage isKindOfClass:[SigMeshMessage class]]) {
+            _opCode = ((SigMeshMessage *)command.curMeshMessage).opCode;
+        }
+        _source = command.source.unicastAddress;
+        _destination = command.destination.address;
         _manager = manager;
     }
     return self;

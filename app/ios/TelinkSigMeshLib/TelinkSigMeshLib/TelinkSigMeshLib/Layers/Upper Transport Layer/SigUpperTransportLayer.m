@@ -3,7 +3,7 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
+ * @author       Telink, 梁家誌
  * @date     Sep. 30, 2010
  *
  * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
@@ -52,10 +52,7 @@
 
 @interface SigUpperTransportLayer ()
 @property (nonatomic,strong) NSUserDefaults *defaults;
-/// The upper transport layer shall not transmit a new segmented
-/// Upper Transport PDU to a given destination until the previous
-/// Upper Transport PDU to that destination has been either completed
-/// or cancelled.
+/// The upper transport layer shall not transmit a new segmented Upper Transport PDU to a given destination until the previous Upper Transport PDU to that destination has been either completed or cancelled.
 ///
 /// This map contains queues of messages targetting each destination.
 @property (nonatomic,strong) NSMutableDictionary <NSNumber *,NSMutableArray <SigUpperTransportModel *>*>*queues;
@@ -79,7 +76,7 @@
             {
 //                TeLogDebug(@"lowerTransportPdu.upperTransportPdu=%@,length=%d",[LibTools convertDataToHexStr:lowerTransportPdu.transportPdu],lowerTransportPdu.transportPdu.length);
                 SigAccessMessage *accessMessage = (SigAccessMessage *)lowerTransportPdu;
-                NSDictionary *dict = [SigUpperTransportPdu decodeAccessMessage:accessMessage forMeshNetwork:SigDataSource.share];
+                NSDictionary *dict = [SigUpperTransportPdu decodeAccessMessage:accessMessage forMeshNetwork:SigMeshLib.share.dataSource];
                 if (dict && dict.allKeys.count == 2) {
                     SigUpperTransportPdu *upperTransportPdu = dict[@"SigUpperTransportPdu"];
                     SigKeySet *keySet = dict[@"SigKeySet"];
@@ -118,44 +115,26 @@
 }
 
 - (void)sendAccessPdu:(SigAccessPdu *)accessPdu withTtl:(UInt8)initialTtl usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
-    UInt32 sequence = [SigDataSource.share getCurrentProvisionerIntSequenceNumber];
-    SigNetkeyModel *networkKey = command.netkeyA;
-    SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromAccessPdu:accessPdu usingKeySet:keySet ivIndex:command.ivIndexA sequence:sequence];
-    TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
-    BOOL isSegmented = pdu.transportPdu.length > SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength || accessPdu.isSegmented;
+    UInt32 sequence = [SigMeshLib.share.dataSource getCurrentProvisionerIntSequenceNumber];
+    SigNetkeyModel *networkKey = command.curNetkey;
+    SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromAccessPdu:accessPdu usingKeySet:keySet ivIndex:command.curIvIndex sequence:sequence];
+    _networkManager.upperTransportLayer.upperTransportPdu = pdu;
+//    TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
+    BOOL isSegmented = pdu.transportPdu.length > SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength || accessPdu.isSegmented || SigMeshLib.share.dataSource.security;
+    if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && accessPdu.destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+        isSegmented = pdu.transportPdu.length > kUnsegmentedMessageLowerTransportPDUMaxLength || accessPdu.isSegmented || SigMeshLib.share.dataSource.security;
+    }
     if (isSegmented) {
         TeLogInfo(@"sending segment pdu.");
         // Enqueue the PDU. If the queue was empty, the PDU will be sent
         // immediately.
-        [self enqueueSigUpperTransportPdu:pdu initialTtl:initialTtl networkKey:networkKey ivIndex:command.ivIndexA];
+        [self enqueueSigUpperTransportPdu:pdu initialTtl:initialTtl networkKey:networkKey ivIndex:command.curIvIndex];
     } else {
         TeLogInfo(@"sending unsegment pdu.");
-        [_networkManager.lowerTransportLayer sendUnsegmentedUpperTransportPdu:pdu withTtl:initialTtl usingNetworkKey:networkKey ivIndex:command.ivIndexA];
+        [_networkManager.lowerTransportLayer sendUnsegmentedUpperTransportPdu:pdu withTtl:initialTtl usingNetworkKey:networkKey ivIndex:command.curIvIndex];
     }
 }
 
-- (void)sendAccessPdu:(SigAccessPdu *)accessPdu withTtl:(UInt8)initialTtl usingKeySet:(SigKeySet *)keySet {
-    UInt32 sequence = [SigDataSource.share getCurrentProvisionerIntSequenceNumber];
-    SigNetkeyModel *networkKey = keySet.networkKey;
-    SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromAccessPdu:accessPdu usingKeySet:keySet sequence:sequence];
-    TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
-    BOOL isSegmented = pdu.transportPdu.length > SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength || accessPdu.isSegmented;
-    if (isSegmented) {
-        TeLogInfo(@"sending segment pdu.");
-        // Enqueue the PDU. If the queue was empty, the PDU will be sent
-        // immediately.
-        [self enqueueSigUpperTransportPdu:pdu initialTtl:initialTtl networkKey:networkKey];
-    } else {
-        TeLogInfo(@"sending unsegment pdu.");
-        [_networkManager.lowerTransportLayer sendUnsegmentedUpperTransportPdu:pdu withTtl:initialTtl usingNetworkKey:networkKey];
-    }
-}
-
-/// Cancels sending all segmented messages matching given handle.
-/// Unsegmented messages are sent almost instantaneously and cannot be
-/// cancelled.
-///
-/// - parameter handle: The message handle.
 - (void)cancelHandleSigMessageHandle:(SigMessageHandle *)handle {
     BOOL shouldSendNext = NO;
     // Check if the message that is currently being sent mathes the
@@ -191,13 +170,6 @@
     }
 }
 
-/// A callback called by the lower transport layer when the segmented PDU
-/// has been sent to the given destination.
-///
-/// This method removes the sent PDU from the queue and initiates sending
-/// a next one, had it been enqueued.
-///
-/// - parameter destination: The destination address.
 - (void)lowerTransportLayerDidSendSegmentedUpperTransportPduToDestination:(UInt16)destination {
     if (_queues == nil || _queues.count == 0 || _queues[@(destination)] == nil) {
         TeLogDebug(@"_queues[destination] is empty.");
@@ -270,10 +242,9 @@
 
 /// Sends the next enqueded PDU.
 ///
-/// If the queue for the given destination does not exist or is empty,
-/// this method does nothing.
+/// If the queue for the given destination does not exist or is empty, this method does nothing.
 ///
-/// - parameter destination: The destination address.
+/// @param destination The destination address.
 - (void)sendNextToDestination:(UInt16)destination {
     NSMutableArray *array = _queues[@(destination)];
     if (array == nil || array.count == 0) {

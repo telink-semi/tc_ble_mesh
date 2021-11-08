@@ -123,13 +123,8 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
         opGroupAdr = groupAddress;
         modelIndex = 0;
         this.opType = type;
-        delayHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                // on grouping timeout
-                dismissWaitingDialog();
-            }
-        }, 5 * 1000);
+        // on grouping timeout
+        delayHandler.postDelayed(this::dismissWaitingDialog, 5 * 1000);
         setNextModel();
     }
 
@@ -186,17 +181,11 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
                 }
             }
         }
-
     }
 
     private void refreshUI() {
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mAdapter.setEnabled(
-                        deviceInfo.isLpn() || !deviceInfo.isOffline());
-            }
-        });
+        getActivity().runOnUiThread(() -> mAdapter.setEnabled(
+                deviceInfo.isLpn() || !deviceInfo.isOffline()));
     }
 
     @Override

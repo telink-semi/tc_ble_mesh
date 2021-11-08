@@ -155,7 +155,7 @@ public class CompositionData implements Serializable, Parcelable {
                     models.addAll(ele.sigModels);
                 } else {
                     for (int modelId : ele.sigModels) {
-                        if (!MeshSigModel.isConfigurationModel(modelId)) {
+                        if (!MeshSigModel.useDeviceKeyForEnc(modelId)) {
                             models.add(modelId);
                         }
                     }

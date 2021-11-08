@@ -30,6 +30,7 @@
 #import "SettingViewController.h"
 #import "SettingItemCell.h"
 #import "MeshOTAVC.h"
+#import "ResponseTestVC.h"
 
 @interface SettingViewController()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -59,7 +60,12 @@
     
     if ([titleString isEqualToString:@"Mesh OTA"]) {
         vc = [[MeshOTAVC alloc] init];
-    }else{
+    } else if ([titleString isEqualToString:@"Test"]) {
+//        vc = [[ResponseTestVC alloc] init];
+//        ((ResponseTestVC *)vc).isResponseTest = YES;
+        [self clickTest];
+        return;
+    } else {
         vc = [UIStoryboard initVC:self.vcIdentifiers[indexPath.row] storybroad:sb];
     }
     if ([titleString isEqualToString:@"Choose Add Devices"]) {
@@ -74,6 +80,28 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     return 51.0;
+}
+
+- (void)clickTest {
+    __weak typeof(self) weakSelf = self;
+    UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:@"Select Test Actions" message:nil preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *alertT1 = [UIAlertAction actionWithTitle:@"Response Test" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        ResponseTestVC *vc = [[ResponseTestVC alloc] init];
+        vc.isResponseTest = YES;
+        [weakSelf.navigationController pushViewController:vc animated:YES];
+    }];
+    [actionSheet addAction:alertT1];
+    UIAlertAction *alertT2 = [UIAlertAction actionWithTitle:@"Interval Test" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        ResponseTestVC *vc = [[ResponseTestVC alloc] init];
+        vc.isResponseTest = NO;
+        [weakSelf.navigationController pushViewController:vc animated:YES];
+    }];
+    [actionSheet addAction:alertT2];
+    UIAlertAction *alertF = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        NSLog(@"Cancel");
+    }];
+    [actionSheet addAction:alertF];
+    [self presentViewController:actionSheet animated:YES completion:nil];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -105,11 +133,6 @@
         [self.vcIdentifiers addObject:@"no found"];
     }
     #endif
-//    if (kShowDebug) {
-//        [self.source addObject:@"Debug"];
-//        [self.iconSource addObject:@"ic_model"];
-//        [self.vcIdentifiers addObject:ViewControllerIdentifiers_DebugViewControllerID];
-//    }
     if (kshowLog) {
         [self.source addObject:@"Log"];
         [self.iconSource addObject:@"ic_model"];
@@ -120,15 +143,33 @@
         [self.iconSource addObject:@"ic_model"];
         [self.vcIdentifiers addObject:ViewControllerIdentifiers_MeshInfoViewControllerID];
     }
+    if (kshowMeshSettings) {
+        [self.source addObject:@"Settings"];
+        [self.iconSource addObject:@"ic_model"];
+        [self.vcIdentifiers addObject:ViewControllerIdentifiers_SettingsVCID];
+    }
     if (kshowChooseAdd) {
         [self.source addObject:@"Choose Add Devices"];
         [self.iconSource addObject:@"ic_model"];
         [self.vcIdentifiers addObject:ViewControllerIdentifiers_ChooseAndAddDeviceViewControllerID];
     }
+#ifdef kExist
+    if (kshowTest) {
+        [self.source addObject:@"Test"];
+        [self.iconSource addObject:@"ic_model"];
+        [self.vcIdentifiers addObject:ViewControllerIdentifiers_TestVCID];
+    }
+#endif
 
     NSString *app_Version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
-    self.versionLabel.text = [NSString stringWithFormat:@"V%@",app_Version];
     
+#ifdef DEBUG
+    NSString *appBundleVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
+    self.versionLabel.text = [NSString stringWithFormat:@"V%@ Bulid:%@",app_Version,appBundleVersion];
+#else
+    self.versionLabel.text = [NSString stringWithFormat:@"V%@",app_Version];
+#endif
+
 }
 
 @end

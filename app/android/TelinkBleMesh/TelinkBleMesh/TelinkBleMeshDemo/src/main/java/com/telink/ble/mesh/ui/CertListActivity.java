@@ -21,48 +21,33 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.CertCacheService;
-import com.telink.ble.mesh.model.MeshInfo;
-import com.telink.ble.mesh.model.OOBPair;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.CertListAdapter;
-import com.telink.ble.mesh.ui.adapter.OOBListAdapter;
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
-import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * show static OOB list
@@ -94,7 +79,7 @@ public class CertListActivity extends BaseActivity {
                     startActivityForResult(new Intent(CertListActivity.this, FileSelectActivity.class).putExtra(FileSelectActivity.KEY_SUFFIX, "der")
                                     .putExtra(FileSelectActivity.KEY_TITLE, "select cert(.der)")
                             , REQUEST_CODE_SELECT_CERT);
-                } else if (item.getItemId() == R.id.item_oob_clear) {
+                } else if (item.getItemId() == R.id.item_cert_clear) {
                     showClearDialog();
                 }
                 return false;
@@ -115,12 +100,9 @@ public class CertListActivity extends BaseActivity {
                 );
             }
         });
-        mAdapter.setOnItemLongClickListener(new BaseRecyclerViewAdapter.OnItemLongClickListener() {
-            @Override
-            public boolean onLongClick(int position) {
-                showDeleteConfirmDialog(position);
-                return false;
-            }
+        mAdapter.setOnItemLongClickListener(position -> {
+            showActionsDialog(position);
+            return false;
         });
         RecyclerView rv_oob = findViewById(R.id.rv_oob);
         rv_oob.setLayoutManager(new LinearLayoutManager(this));
@@ -140,41 +122,36 @@ public class CertListActivity extends BaseActivity {
         }
     }
 
-    private void showDeleteConfirmDialog(final int position) {
+    private void showActionsDialog(final int position) {
         AlertDialog.Builder deleteDialog = new AlertDialog.Builder(this);
-        String[] title = new String[]{"delete cert", "set as ROOT cert"};
+        final boolean root = position == CertCacheService.getInstance().getRootIndex();
+        String[] title = new String[]{"delete cert", "set as ROOT cert" + (root ? "(cancel)" : "")};
         deleteDialog.setTitle("select action at: " + position);
-        deleteDialog.setItems(title, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == 0) {
-                    // delete
-                    CertCacheService.getInstance().delete(getApplicationContext(), position);
-                    certDataList.remove(position);
-                    certificateList.remove(position);
-                    mAdapter.notifyDataSetChanged();
-                } else if (which == 1) {
-                    // set root
-                    CertCacheService.getInstance().setRootIndex(getApplicationContext(), position);
-                    mAdapter.updateRootIndex(position);
-                }
-                dialog.dismiss();
+        deleteDialog.setItems(title, (dialog, which) -> {
+            if (which == 0) {
+                // delete
+                CertCacheService.getInstance().delete(getApplicationContext(), position);
+                certDataList.remove(position);
+                certificateList.remove(position);
+                mAdapter.updateRootIndex(CertCacheService.getInstance().getRootIndex());
+                mAdapter.notifyDataSetChanged();
+            } else if (which == 1) {
+                // set root
+                CertCacheService.getInstance().setRootIndex(getApplicationContext(), position);
+                mAdapter.updateRootIndex(root ? -1 : position);
             }
+            dialog.dismiss();
         });
         deleteDialog.show();
     }
 
 
     private void showClearDialog() {
-        showConfirmDialog("Wipe all oob info? ", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-                meshInfo.oobPairs.clear();
-                meshInfo.saveOrUpdate(CertListActivity.this);
-                toastMsg("Wipe oob info success");
-                mAdapter.notifyDataSetChanged();
-            }
+        showConfirmDialog("Delete all certs? ", (dialog, which) -> {
+            certDataList.clear();
+            certificateList.clear();
+            CertCacheService.getInstance().clear(getApplicationContext());
+            mAdapter.notifyDataSetChanged();
         });
     }
 
