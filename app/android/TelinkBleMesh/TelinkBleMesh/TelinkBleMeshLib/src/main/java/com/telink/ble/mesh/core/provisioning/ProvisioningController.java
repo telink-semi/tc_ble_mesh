@@ -286,14 +286,7 @@ public class ProvisioningController {
         delayHandler.postDelayed(provisioningTimeoutTask, TIMEOUT_PROVISIONING);
 
         // draft feature
-        final int oobInfo = device.getOobInfo();
-        if (MeshUtils.isCertSupported(oobInfo) && MeshUtils.isPvRecordSupported(oobInfo)) {
-            provisionRecordsGet();
-        } else {
-            provisionInvite();
-        }
-
-//        provisionInvite();
+        provisionInvite();
     }
 
     public void clear() {
