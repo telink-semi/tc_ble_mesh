@@ -39,7 +39,7 @@
 
 //_attribute_data_retention_	u8		adc_first_flg = 1;
 _attribute_data_retention_	u8 		lowBattDet_enable = 1;
-_attribute_no_retention_data_ u8      adc_hw_initialized = 0;   //note: can not be retention variable
+_attribute_no_retention_bss_ u8     adc_hw_initialized = 0;   //note: can not be retention variable
 _attribute_data_retention_  u16     batt_vol_mv;
 
 
@@ -473,6 +473,14 @@ _attribute_no_inline_ void app_battery_power_check_and_sleep_handle(int loop_fla
         }
 	}
 #endif
+}
+
+void app_battery_check_and_re_init_user_adc()
+{
+	if(adc_hw_initialized){
+		adc_drv_init(); // must init again, because have been changed to battery check setting.
+		// adc_hw_initialized = 0; // have been cleaned in adc drv init.
+	}
 }
 
 #endif
