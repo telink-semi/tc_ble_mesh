@@ -47,6 +47,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 
+/**
+ * used to build gatt connection and send gatt command
+ * read, write, enable/disable notification and receive notification
+ */
 public class GattConnection extends BluetoothGattCallback {
 
     private final String LOG_TAG = "GATT";
@@ -294,8 +298,6 @@ public class GattConnection extends BluetoothGattCallback {
             gattRequest.serviceUUID = provisionService.getUuid();
             gattRequest.characteristicUUID = UUIDInfo.CHARACTERISTIC_PB_OUT;
             sendRequest(gattRequest);
-
-
         }
 
         BluetoothGattService proxyService = getProxyService(false);

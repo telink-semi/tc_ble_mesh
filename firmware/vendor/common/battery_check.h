@@ -36,6 +36,7 @@ int  battery_get_detect_enable (void);
 int app_battery_power_check(u16 alram_vol_mv, int loop_flag);
 void app_battery_power_check_and_sleep_handle(int loop_flag);
 void battery_power_low_handle(int loop_flag);
+void app_battery_check_and_re_init_user_adc();
 
 
 #endif /* APP_BATTDET_H_ */

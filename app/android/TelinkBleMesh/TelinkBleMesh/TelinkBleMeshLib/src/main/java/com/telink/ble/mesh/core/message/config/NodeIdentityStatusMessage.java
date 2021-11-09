@@ -30,9 +30,8 @@ import com.telink.ble.mesh.core.message.StatusMessage;
 import java.nio.ByteOrder;
 
 /**
- * Created by kee on 2019/9/10.
+ * The Config Node Identity Status is an unacknowledged message used to report the current Node Identity state for a subnet
  */
-
 public class NodeIdentityStatusMessage extends StatusMessage implements Parcelable {
 
     /**

@@ -71,7 +71,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
- * auto provision
+ * auto provision device one by one
  * actions:
  * 1.scan -- success ->
  * 2.connect -- success ->
@@ -359,10 +359,6 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
             startScan();
         }
     }
-
-    /*private boolean setTimePublish(NodeInfo nodeInfo){
-        return false;
-    }*/
 
     private boolean setTimePublish(NodeInfo nodeInfo) {
         int modelId = MeshSigModel.SIG_MD_TIME_S.modelId;

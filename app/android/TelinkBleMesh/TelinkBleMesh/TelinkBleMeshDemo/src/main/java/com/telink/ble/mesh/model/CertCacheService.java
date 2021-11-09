@@ -178,7 +178,11 @@ public class CertCacheService {
     }
 
     public void setRootIndex(Context context, int i) {
-        this.rootIndex = i;
+        if (this.rootIndex == i) {
+            this.rootIndex = -1;
+        } else {
+            this.rootIndex = i;
+        }
         saveRootIndex(context);
     }
 

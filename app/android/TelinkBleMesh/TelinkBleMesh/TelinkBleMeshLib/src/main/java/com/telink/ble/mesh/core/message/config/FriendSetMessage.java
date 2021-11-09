@@ -24,7 +24,10 @@ package com.telink.ble.mesh.core.message.config;
 import com.telink.ble.mesh.core.message.Opcode;
 
 /**
- * The Config Friend Set is an acknowledged message used to set the Friend state of a node
+ * The Config Friend Set is an acknowledged message used to set the Friend state of a node.
+ * <p>
+ * The response to a Config Friend Get message is a Config Friend Status message.
+ * * {@link FriendStatusMessage}
  */
 
 public class FriendSetMessage extends ConfigMessage {

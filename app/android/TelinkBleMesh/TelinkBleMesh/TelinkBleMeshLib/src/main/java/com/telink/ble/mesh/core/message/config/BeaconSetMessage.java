@@ -26,7 +26,6 @@ import com.telink.ble.mesh.core.message.Opcode;
 /**
  * The Config Beacon Set is an acknowledged message used to set the Secure Network Beacon state of a node
  */
-
 public class BeaconSetMessage extends ConfigMessage {
 
     /**

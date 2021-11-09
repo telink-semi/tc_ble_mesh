@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     ConfigStatus.java 
+ * @file ConfigStatus.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,17 +17,20 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.config;
 
+/**
+ * This enum defines status codes for messages that contain a Status parameter.
+ * Status messages are sent only in response to properly formatted messages
+ */
 public enum ConfigStatus {
 
     SUCCESS(0x00, "Success"),
 
-    /**
-     * error code
-     */
+    // error codes
+
     INVALID_ADDRESS(0x01, "Invalid Address"),
 
     INVALID_MODEL(0x02, "Invalid Model"),
@@ -64,7 +67,14 @@ public enum ConfigStatus {
 
     UNKNOWN_ERROR(0xFF, "unknown error");
 
+    /**
+     * code value
+     */
     public final int code;
+
+    /**
+     * status description
+     */
     public final String desc;
 
     ConfigStatus(int code, String desc) {

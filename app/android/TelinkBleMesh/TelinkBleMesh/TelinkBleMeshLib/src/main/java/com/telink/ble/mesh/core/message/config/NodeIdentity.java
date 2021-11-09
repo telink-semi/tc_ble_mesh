@@ -21,7 +21,11 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.config;
 
+/**
+ * The Node Identity state determines if a node that supports the Mesh Proxy Service is advertising on a subnet using Node Identity messages.
+ */
 public enum NodeIdentity {
+
     STOPPED((byte) 0, "Node Identity for a subnet is stopped"),
 
     RUNNING((byte) 1, "Node Identity for a subnet is running"),

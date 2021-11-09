@@ -28,7 +28,7 @@ public abstract class AppSettings {
     public static boolean ONLINE_STATUS_ENABLE = false;
 
     // draft feature
-    public static final boolean DRAFT_FEATURES_ENABLE = true;
+    public static final boolean DRAFT_FEATURES_ENABLE = false;
 
 
     public static final int PID_CT = 0x01;

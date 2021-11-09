@@ -1,0 +1,347 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{00b64840-12a3-47ba-b706-a840a64b8f7d}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Grid Control Source">
+      <UniqueIdentifier>{e965e250-aad8-4723-9fb6-fa3c6448c99a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\New Cell Source">
+      <UniqueIdentifier>{eff75415-6425-441f-8b86-5b52c71b222b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{bb6f3578-749f-4fcf-a738-0303ed1a37bc}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Grid Control Headers">
+      <UniqueIdentifier>{de729269-cdd5-46ab-b539-c85f068cf639}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\New Cell Headers">
+      <UniqueIdentifier>{24caece6-45cd-4f53-a666-a86acede8fef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{b7ccc110-3fde-4222-b1dd-3140da998c16}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Files_common">
+      <UniqueIdentifier>{527700c9-d669-4d7b-9080-909658f4a5da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Files_master_func">
+      <UniqueIdentifier>{87e2b877-c631-41f5-923b-274899b6e28a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Common_Headers">
+      <UniqueIdentifier>{8142539a-713a-42aa-a4ab-ae478304a005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sig_mesh_lib">
+      <UniqueIdentifier>{affa370d-5120-4bfd-8ed2-a9df4fa31890}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\aes_ecb">
+      <UniqueIdentifier>{42cb5d04-3ee8-43b0-8445-949ec74e60a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mesh_draft_lib">
+      <UniqueIdentifier>{69b77ea9-cbd4-41b9-8354-ceefd8a0687c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="GridCtrl_src\GridCell.cpp">
+      <Filter>Source Files\Grid Control Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GridCtrl_src\GridCellBase.cpp">
+      <Filter>Source Files\Grid Control Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GridCtrl_src\GridCtrl.cpp">
+      <Filter>Source Files\Grid Control Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GridCtrl_src\GridDropTarget.cpp">
+      <Filter>Source Files\Grid Control Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GridCtrl_src\InPlaceEdit.cpp">
+      <Filter>Source Files\Grid Control Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GridCtrl_src\TitleTip.cpp">
+      <Filter>Source Files\Grid Control Source</Filter>
+    </ClCompile>
+    <ClCompile Include="NewCellTypes\GridCellCheck.cpp">
+      <Filter>Source Files\New Cell Source</Filter>
+    </ClCompile>
+    <ClCompile Include="NewCellTypes\GridCellCombo.cpp">
+      <Filter>Source Files\New Cell Source</Filter>
+    </ClCompile>
+    <ClCompile Include="NewCellTypes\GridCellDateTime.cpp">
+      <Filter>Source Files\New Cell Source</Filter>
+    </ClCompile>
+    <ClCompile Include="NewCellTypes\GridCellNumeric.cpp">
+      <Filter>Source Files\New Cell Source</Filter>
+    </ClCompile>
+    <ClCompile Include="NewCellTypes\GridURLCell.cpp">
+      <Filter>Source Files\New Cell Source</Filter>
+    </ClCompile>
+    <ClCompile Include="CTL_privision.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScanDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StdAfx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tl_ble_module.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tl_ble_moduleDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TLMeshDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="usbprt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\system_time.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\proj\common\tstring.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="lib_file\gatt_provision.c">
+      <Filter>Source Files\Files_master_func</Filter>
+    </ClCompile>
+    <ClCompile Include="lib_file\hw_fun.c">
+      <Filter>Source Files\Files_master_func</Filter>
+    </ClCompile>
+    <ClCompile Include="lib_file\host_fifo.c">
+      <Filter>Source Files\Files_master_func</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\proj\common\tutility.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_common.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="rapid_json_interface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\vendor_model.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\light.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_test_cmd.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\factory_reset.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\dual_mode_adapt.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="TL_RxTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\lighting_model.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\lighting_model_HSL.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\lighting_model_xyl.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\lighting_model_LC.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\scene.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\time_model.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\scheduler.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\generic_model.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_node.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="SerialPort.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\sensors_model.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_lpn.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_fn.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="Sig_mesh_json_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\cmd_interface.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_property.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\fast_provision_model.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\user_proc.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\user_ali.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\app_provison.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\app_beacon.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\app_health.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\app_proxy.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\app_heartbeat.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="vc_mesh_func.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="aes_ecb\aes_ecb.c">
+      <Filter>Source Files\aes_ecb</Filter>
+    </ClCompile>
+    <ClCompile Include="aes_ecb\test_ecb.c">
+      <Filter>Source Files\aes_ecb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\config_model.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\utf8_u16_convert.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ble_lt_mesh\vendor\common\mesh_log.c">
+      <Filter>Source Files\Files_common</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="tl_ble_module.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GridCtrl_src\CellRange.h">
+      <Filter>Header Files\Grid Control Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GridCtrl_src\GridCell.h">
+      <Filter>Header Files\Grid Control Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GridCtrl_src\GridCellBase.h">
+      <Filter>Header Files\Grid Control Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GridCtrl_src\GridCtrl.h">
+      <Filter>Header Files\Grid Control Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GridCtrl_src\GridDropTarget.h">
+      <Filter>Header Files\Grid Control Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GridCtrl_src\InPlaceEdit.h">
+      <Filter>Header Files\Grid Control Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GridCtrl_src\MemDC.h">
+      <Filter>Header Files\Grid Control Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GridCtrl_src\TitleTip.h">
+      <Filter>Header Files\Grid Control Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="NewCellTypes\GridCellCheck.h">
+      <Filter>Header Files\New Cell Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="NewCellTypes\GridCellCombo.h">
+      <Filter>Header Files\New Cell Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="NewCellTypes\GridCellDateTime.h">
+      <Filter>Header Files\New Cell Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="NewCellTypes\GridCellNumeric.h">
+      <Filter>Header Files\New Cell Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="NewCellTypes\GridURLCell.h">
+      <Filter>Header Files\New Cell Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="CTL_privision.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScanDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StdAfx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tl_ble_module.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tl_ble_moduleDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TLMeshDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="usbprt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_file\app_config.h">
+      <Filter>Header Files\Common_Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_file\gatt_provision.h">
+      <Filter>Header Files\Common_Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_file\hw_fun.h">
+      <Filter>Header Files\Common_Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="lib_file\host_fifo.h">
+      <Filter>Header Files\Common_Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="TL_RxTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vc_mesh_func.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="aes_ecb\aes_ecb.h">
+      <Filter>Source Files\aes_ecb</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\images.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\tl_ble_module.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="res\tl_ble_module.rc2">
+      <Filter>Resource Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+    <None Include="ClassDiagram1.cd" />
+    <None Include="ClassDiagram2.cd" />
+  </ItemGroup>
+</Project>

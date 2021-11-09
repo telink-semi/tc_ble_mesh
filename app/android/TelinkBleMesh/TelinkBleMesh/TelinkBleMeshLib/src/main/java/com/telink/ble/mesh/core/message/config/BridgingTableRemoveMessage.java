@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file AppKeyAddMessage.java
+ * @file BridgingTableRemoveMessage.java
  *
  * @brief for TLSR chips
  *

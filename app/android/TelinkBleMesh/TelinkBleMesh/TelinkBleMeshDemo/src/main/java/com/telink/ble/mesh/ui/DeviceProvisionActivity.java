@@ -516,10 +516,6 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     }
 
 
-    /*private boolean setTimePublish(NetworkingDevice networkingDevice){
-        return false;
-    }*/
-
     /**
      * set time publish after key bind success
      *

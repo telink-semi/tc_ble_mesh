@@ -27,9 +27,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * Created by kee on 2019/8/12.
+ * The Config NetKey Delete is an acknowledged message used to delete a NetKey on a NetKey List from a node.
+ * <p>
+ * The response to a Config NetKey Delete message is a Config NetKey Status message.
  */
-
 public class NetKeyDeleteMessage extends ConfigMessage {
 
 

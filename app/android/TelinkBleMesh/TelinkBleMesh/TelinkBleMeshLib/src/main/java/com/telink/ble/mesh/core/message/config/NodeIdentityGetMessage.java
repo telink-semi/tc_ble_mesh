@@ -23,13 +23,19 @@ package com.telink.ble.mesh.core.message.config;
 
 import com.telink.ble.mesh.core.message.Opcode;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 /**
  * The Config Node Identity Get is an acknowledged message used to get the current Node Identity state for a subnet
  */
 public class NodeIdentityGetMessage extends ConfigMessage {
 
-    public NodeIdentityGetMessage(int destinationAddress) {
+    public int netKeyIndex;
+
+    public NodeIdentityGetMessage(int destinationAddress, int netKeyIndex) {
         super(destinationAddress);
+        this.netKeyIndex = netKeyIndex;
     }
 
     @Override
@@ -44,7 +50,9 @@ public class NodeIdentityGetMessage extends ConfigMessage {
 
     @Override
     public byte[] getParams() {
-        return null;
+        ByteBuffer paramsBuffer = ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN)
+                .putShort((short) (netKeyIndex & 0x0FFF));
+        return paramsBuffer.array();
     }
 
 }

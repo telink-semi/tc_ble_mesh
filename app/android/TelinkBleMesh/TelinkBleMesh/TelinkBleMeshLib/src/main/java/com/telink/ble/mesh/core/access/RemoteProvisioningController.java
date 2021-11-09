@@ -107,9 +107,9 @@ public class RemoteProvisioningController implements ProvisioningBridge {
     }
 
     public void begin(ProvisioningController provisioningController, RemoteProvisioningDevice remoteProvisioningDevice) {
-        log(String.format("remote provisioning begin: server -- %04X  uuid -- %s",
+        log(String.format("remote provisioning begin: server -- %04X  uuid -- %s  allocatedAdr -- %04X",
                 remoteProvisioningDevice.getServerAddress(),
-                Arrays.bytesToHexString(remoteProvisioningDevice.getUuid())));
+                Arrays.bytesToHexString(remoteProvisioningDevice.getUuid()), remoteProvisioningDevice.getUnicastAddress()));
         this.outboundNumber = OUTBOUND_INIT_VALUE;
         this.inboundPDUNumber = -1;
         this.cachePdu = null;
@@ -291,37 +291,7 @@ public class RemoteProvisioningController implements ProvisioningBridge {
     };
 
     // draft feature
-    private void onMeshMessagePrepared(MeshMessage meshMessage) {
-        log("remote provisioning message prepared: " + meshMessage.getClass().getSimpleName()
-                + String.format(" opcode: 0x%04X -- dst: 0x%04X -- params: ", meshMessage.getOpcode(), meshMessage.getDestinationAddress())
-                + Arrays.bytesToHexString(meshMessage.getParams()));
-        if (accessBridge != null) {
-            boolean isMessageSent = accessBridge.onAccessMessagePrepared(meshMessage, AccessBridge.MODE_REMOTE_PROVISIONING);
-            if (!isMessageSent) {
-                /*
-                 * message send error
-                 */
-                int opcode = meshMessage.getOpcode();
-                log(String.format("remote provisioning message send error : %04X", opcode));
-                if (meshMessage.getOpcode() == Opcode.REMOTE_PROV_PDU_SEND.value) {
-                    synchronized (WAITING_LOCK) {
-                        outboundReportWaiting = true;
-                    }
-                    resendProvisionPdu();
-                } else {
-                    onCommandError(meshMessage.getOpcode());
-                }
-
-            } else {
-                if (meshMessage.getOpcode() == Opcode.REMOTE_PROV_PDU_SEND.value) {
-                    synchronized (WAITING_LOCK) {
-                        outboundReportWaiting = true;
-                    }
-                    resendProvisionPdu();
-                }
-            }
-        }
-    }
+    private void onMeshMessagePrepared(MeshMessage meshMessage) {}
 
 
     @Override
