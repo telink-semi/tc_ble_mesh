@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		251667C3273A0417006A302A /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25589C5F272140CF00F4F880 /* TelinkSigMeshLib.framework */; };
 		25589A14272115D700F4F880 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A13272115D700F4F880 /* AppDelegate.m */; };
 		25589A1D272115D700F4F880 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589A1B272115D700F4F880 /* Main.storyboard */; };
 		25589A1F272115DA00F4F880 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 25589A1E272115DA00F4F880 /* Assets.xcassets */; };
@@ -188,7 +189,6 @@
 		259AA1FF27293FDE0046CEB1 /* NSBundle+BRPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1EF27293FDE0046CEB1 /* NSBundle+BRPickerView.m */; };
 		259AA20027293FDE0046CEB1 /* BRAddressModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1F327293FDE0046CEB1 /* BRAddressModel.m */; };
 		259AA20127293FDE0046CEB1 /* BRAddressPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1F627293FDE0046CEB1 /* BRAddressPickerView.m */; };
-		25AC4BFD272B8B5E0041525C /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25589C5F272140CF00F4F880 /* TelinkSigMeshLib.framework */; };
 		25DD7D0B2728E58D0029037A /* CertificateListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25DD7D092728E58D0029037A /* CertificateListVC.m */; };
 		25DD7D0C2728E58D0029037A /* CertificateListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25DD7D0A2728E58D0029037A /* CertificateListVC.xib */; };
 /* End PBXBuildFile section */
@@ -563,7 +563,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				25AC4BFD272B8B5E0041525C /* TelinkSigMeshLib.framework in Frameworks */,
+				251667C3273A0417006A302A /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1770,7 +1770,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1796,7 +1796,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.5;
+				MARKETING_VERSION = 3.3.4;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1812,7 +1812,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1838,7 +1838,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.5;
+				MARKETING_VERSION = 3.3.4;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -305,7 +305,6 @@ typedef enum : NSUInteger {
                         weakSelf.addStatus = SigAddStatusProvisioning;
                         if (weakSelf.isCertificateBasedProvision == NO) {
                             if (weakSelf.staticOOBData) {
-                                SigProvisioningManager.share.provisionAuthLeak = SigDataSource.share.provisionAuthLeak;
                                 [SigProvisioningManager.share provisionWithUnicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex staticOobData:weakSelf.staticOOBData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                                     if (weakSelf.provisionSuccessBlock) {
                                         weakSelf.provisionSuccessBlock(identify, address);
@@ -325,7 +324,6 @@ typedef enum : NSUInteger {
                                     }
                                 }];
                             } else {
-                                SigProvisioningManager.share.provisionAuthLeak = SigDataSource.share.provisionAuthLeak;
                                 [SigProvisioningManager.share provisionWithUnicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                                     if (weakSelf.provisionSuccessBlock) {
                                         weakSelf.provisionSuccessBlock(identify, address);
@@ -346,7 +344,6 @@ typedef enum : NSUInteger {
                                 }];
                             }
                         } else {
-                            SigProvisioningManager.share.provisionAuthLeak = SigDataSource.share.provisionAuthLeak;
                             [SigProvisioningManager.share certificateBasedProvisionWithPeripheral:peripheral unicastAddress:weakSelf.unicastAddress networkKey:weakSelf.networkKey netkeyIndex:weakSelf.netkeyIndex provisionType:weakSelf.provisionType staticOOBData:weakSelf.staticOOBData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                                 if (weakSelf.provisionSuccessBlock) {
                                     weakSelf.provisionSuccessBlock(identify, address);

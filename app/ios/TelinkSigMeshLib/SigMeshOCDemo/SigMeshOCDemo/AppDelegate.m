@@ -103,9 +103,6 @@
             SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength = kDLEUnsegmentLength;
         }
     }
-
-    //demo v3.3.3新增provision协议漏洞修复开关，demo默认为SigProvisionAuthLeak_auto，由SDK内部自动去判断设备是否支持provision协议漏洞修复的算法。
-    SigDataSource.share.provisionAuthLeak = SigProvisionAuthLeak_auto;
     
     //demo中setting界面显示的log信息，客户开发到后期，APP稳定后可以不集成该功能，且上架最好关闭log保存功能。(客户发送iTunes中的日志文件“TelinkSDKDebugLogData”给泰凌微即可)
     [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
@@ -141,8 +138,7 @@
 
     
     SigMeshLib.share.transmissionTimerInteral = 0.600;
-
-//    SigDataSource.share.needPublishTimeModel = NO;
+    //    SigDataSource.share.needPublishTimeModel = NO;
     
     //(可选)v3.3.3新增配置项
 //    SigDataSource.share.defaultReliableIntervalOfLPN = kSDKLibCommandTimeout;

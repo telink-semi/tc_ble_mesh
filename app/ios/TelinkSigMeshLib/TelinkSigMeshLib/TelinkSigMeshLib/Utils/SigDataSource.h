@@ -134,9 +134,6 @@
 /// `isSegmented`, otherwise this field will be ignored.
 @property (nonatomic,assign) SigMeshMessageSecurity security;
 
-/// SDK 内部是否使用辅助算法修复provision漏洞。
-@property (nonatomic, assign) SigProvisionAuthLeak provisionAuthLeak;
-
 /// 非LPN节点的默认可靠发包间隔，默认值为1.28。
 @property (nonatomic, assign) float defaultReliableIntervalOfNotLPN;
 /// LPN节点的默认可靠发包间隔，默认值为2.56。

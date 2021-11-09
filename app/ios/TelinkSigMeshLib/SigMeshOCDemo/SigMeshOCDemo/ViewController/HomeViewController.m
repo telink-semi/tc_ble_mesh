@@ -484,16 +484,16 @@
 
 #pragma  mark - SigDataSourceDelegate
 - (void)onSequenceNumberUpdate:(UInt32)sequenceNumber ivIndexUpdate:(UInt32)ivIndex {
-    TeLogInfo(@"本地存储数据需要更新sequenceNumber=0x%X,ivIndex=0x%X",sequenceNumber,ivIndex);
+    TeLogVerbose(@"本地存储数据需要更新sequenceNumber=0x%X,ivIndex=0x%X",sequenceNumber,ivIndex);
 }
 
-/// Callback called when the unicastRange of provisioner had been changed. APP need update the json to cloud at this time!（如果APP实现了该代理方法，SDK会在当前provisioner地址还剩余10个或者更少的时候给provisioner分配一段新的地址区间。如果APP未实现该方法，SDK在但区间耗尽时超界分配地址(即- (UInt16)provisionAddress方法会返回非本区间的地址)。）
-/// @param unicastRange Randge model had beed change.
-/// @param provisioner provisioner of unicastRange.
-- (void)onUpdateAllocatedUnicastRange:(SigRangeModel *)unicastRange ofProvisioner:(SigProvisionerModel *)provisioner {
-    //注意：客户如果不想使用SDK分配的区间，可以从provisioner里面remove这个SDK创建的unicastRange。
-    TeLogVerbose(@"当前provisioner的地址区间已经被分配完毕，SDK自动给provisioner.uuid=%@分配新的地址区间%@~~~>%@",provisioner.UUID,unicastRange.lowAddress,unicastRange.highAddress);
-}
+///// Callback called when the unicastRange of provisioner had been changed. APP need update the json to cloud at this time!（如果APP实现了该代理方法，SDK会在当前provisioner地址还剩余10个或者更少的时候给provisioner分配一段新的地址区间。如果APP未实现该方法，SDK在但区间耗尽时超界分配地址(即- (UInt16)provisionAddress方法会返回非本区间的地址)。）
+///// @param unicastRange Randge model had beed change.
+///// @param provisioner provisioner of unicastRange.
+//- (void)onUpdateAllocatedUnicastRange:(SigRangeModel *)unicastRange ofProvisioner:(SigProvisionerModel *)provisioner {
+//    //注意：客户如果不想使用SDK分配的区间，可以从provisioner里面remove这个SDK创建的unicastRange。
+//    TeLogVerbose(@"当前provisioner的地址区间已经被分配完毕，SDK自动给provisioner.uuid=%@分配新的地址区间%@~~~>%@",provisioner.UUID,unicastRange.lowAddress,unicastRange.highAddress);
+//}
 
 #pragma  mark LongPressGesture
 - (void)cellDidPress:(UILongPressGestureRecognizer *)sender{

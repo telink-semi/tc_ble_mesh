@@ -43,6 +43,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, copy) startMeshConnectResultBlock startMeshConnectCallback;
 @property (nonatomic, copy) stopMeshConnectResultBlock stopMeshConnectCallback;
 @property (nonatomic, assign) BOOL isEnd;
+@property (nonatomic, assign) BOOL isFirstScan;//第一次扫描，1秒内扫描不到对应设备则开始连接并setFilter。后面则扫描5秒钟。
 
 @end
 
@@ -76,7 +77,11 @@ typedef enum : NSUInteger {
         [self performSelector:@selector(connectToolsTimeout) withObject:nil afterDelay:timeout];
     });
     self.isEnd = NO;
+    self.isFirstScan = NO;
     TeLogInfo(@"isAutoReconnect=%d,unicastAddressOfConnected=%d",SigBearer.share.isAutoReconnect,SigDataSource.share.unicastAddressOfConnected);
+    for (SigNodeModel *node in nodeList) {
+        TeLogInfo(@"try to connect node:0x%X",node.address);
+    }
     if (SigBearer.share.isOpen) {
         BOOL isConnected = NO;
         NSArray *array = [NSArray arrayWithArray:nodeList];
@@ -92,6 +97,7 @@ typedef enum : NSUInteger {
             [self setNodeIdentity];
         }
     } else {
+        self.isFirstScan = YES;
         [self scanNode];
     }
 }
@@ -114,6 +120,13 @@ typedef enum : NSUInteger {
             if (RSSI.intValue > weakSelf.maxRssi) {
                 self.peripheral = peripheral;
             }
+            if (weakSelf.isFirstScan) {
+                weakSelf.isFirstScan = NO;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(firstScanFinishAction) object:nil];
+                    [weakSelf performSelector:@selector(firstScanFinishAction) withObject:nil afterDelay:1.0];
+                });
+            }
             SigScanRspModel *rspModel = [SigMeshLib.share.dataSource getScanRspModelWithUUID:peripheral.identifier.UUIDString];
             if (rspModel.nodeIdentityData && rspModel.nodeIdentityData.length == 16) {
                 SigEncryptedModel *encryptedModel = nil;
@@ -127,12 +140,21 @@ typedef enum : NSUInteger {
                 if (encryptedModel && encryptedModel.identityData && encryptedModel.identityData.length == 16 && [encryptedModel.identityData isEqualToData:rspModel.nodeIdentityData]) {
                     TeLogInfo(@"start connect address:0x%X macAddress:%@",rspModel.address,rspModel.macAddress);
                     weakSelf.peripheral = peripheral;
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(firstScanFinishAction) object:nil];
+                    });
                     [SDKLibCommand stopScan];
                     [weakSelf connectPeripheral];
                 }
             }
         }
     }];
+}
+
+- (void)firstScanFinishAction {
+    TeLogInfo(@"");
+    [SDKLibCommand stopScan];
+    [self connectPeripheral];
 }
 
 - (void)connectPeripheral {

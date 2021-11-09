@@ -44,8 +44,6 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningPdu * _Nullable response)
 /// - seeAlso: MshPRFv1.0.1.pdf  (page.240)
 /// Attention Timer state (See Section 4.2.9), default is 0.
 @property (nonatomic, assign) UInt8 attentionDuration;
-/// SDK 内部是否使用辅助算法修复provision漏洞。
-@property (nonatomic, assign) SigProvisionAuthLeak provisionAuthLeak;
 
 #pragma mark - Public properties
 

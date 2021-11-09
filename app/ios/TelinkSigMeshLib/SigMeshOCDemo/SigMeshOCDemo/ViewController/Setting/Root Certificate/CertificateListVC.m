@@ -44,7 +44,7 @@
     self.title = @"Root Certificate";
     self.dataArray = [NSMutableArray arrayWithArray:[LibTools getAllFileNameWithFileType:@"der"]];
     _selectIndex = -1;
-    //demo v3.3.5新增certificate-base Provision使用的默认根证书文件名，demo不重新赋值则默认使用PTS的root.der。
+    //demo v3.3.4新增certificate-base Provision使用的默认根证书文件名，demo不重新赋值则默认使用PTS的root.der。
     NSString *rootCertificateName = [[NSUserDefaults standardUserDefaults] valueForKey:kRootCertificateName];
     if (rootCertificateName) {
         for (int i=0; i<_dataArray.count; i++) {

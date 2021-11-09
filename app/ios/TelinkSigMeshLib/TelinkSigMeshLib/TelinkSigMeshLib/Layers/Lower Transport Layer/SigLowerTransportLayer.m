@@ -229,7 +229,9 @@
     /// Last 13 bits of the sequence number are known as seqZero.
     UInt16 sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
     //==========telink need this==========//
-    [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
+    if ([SigHelper.share isUnicastAddress:pdu.destination]) {
+        [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
+    }
     //==========telink need this==========//
     UInt16 unsegmentedMessageLowerTransportPDUMaxLength = SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
     if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && pdu.destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
@@ -264,7 +266,9 @@
     /// Last 13 bits of the sequence number are known as seqZero.
     UInt16 sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
     //==========telink need this==========//
-    [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
+    if ([SigHelper.share isUnicastAddress:pdu.destination]) {
+        [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
+    }
     //==========telink need this==========//
     UInt16 unsegmentedMessageLowerTransportPDUMaxLength = SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
     if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && pdu.destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
@@ -325,18 +329,32 @@
 - (BOOL)checkAgainstReplayAttackWithNetworkPdu:(SigNetworkPdu *)networkPdu {
     //v3.3.3之后新逻辑：重放攻击只比较sequenceNumber。
     NSDictionary *oldDic = [[NSUserDefaults standardUserDefaults] objectForKey:SigMeshLib.share.dataSource.meshUUID];
-    NSNumber *lastSequenceNumber = [oldDic objectForKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
+    NSDictionary *nodeDic = [oldDic objectForKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
     UInt32 receiveSequence = networkPdu.sequence;
-    BOOL newSource = lastSequenceNumber == nil;//source为node的address
+    UInt32 receiveIvIndex = networkPdu.getDecodeIvIndex;
+    BOOL newSource = nodeDic == nil;//source为node的address
     if (!newSource) {
+        NSNumber *lastIvIndexNumber = [nodeDic objectForKey:@"ivIndex"];
+        UInt32 lastIvIndex = lastIvIndexNumber.intValue;
+        NSNumber *lastSequenceNumber = [nodeDic objectForKey:@"sequenceNumber"];
         UInt32 lastSequence = lastSequenceNumber.intValue;
-        if (lastSequence >= receiveSequence) {
-            TeLogError(@"Discarding packet (lastSequence:0x%X, receiveSequence >0x%X)",lastSequence,receiveSequence);
+        if (lastIvIndex > receiveIvIndex) {
+            TeLogError(@"Discarding packet (lastIvIndex:0x%X, receiveIvIndex >0x%X)",lastIvIndex,receiveIvIndex);
             return NO;
+        }
+        if (lastIvIndex < receiveIvIndex) {
+            //1/2/3节点上电,1/2节点更新ivIndex，3节点始终离线，1/2更新ivIndex完成再上电3节点，APP在这个流程中始终连接着1/2其中一个节点，会出现3先上报旧IvIndex加密的lightStatus包，3后再使用新IvIndex进行其它数据收发。导致后面APP控制出现回包应为sequenceNumber过小而被过滤的情况。所以新增ivIndex的缓存。
+            //处理逻辑：直接缓存该节点新的sequenceNumber和ivIndex。
+        } else {
+            if (lastSequence >= receiveSequence) {
+                TeLogError(@"Discarding packet (lastSequence:0x%X, receiveSequence >0x%X)",lastSequence,receiveSequence);
+                return NO;
+            }
         }
     }
     NSMutableDictionary *newDic = [NSMutableDictionary dictionaryWithDictionary:oldDic];
-    [newDic setValue:@(receiveSequence) forKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
+    NSDictionary *newNodeDic = [NSMutableDictionary dictionaryWithDictionary:@{@"ivIndex":@(receiveIvIndex),@"sequenceNumber":@(receiveSequence)}];
+    [newDic setValue:newNodeDic forKey:[SigHelper.share getNodeAddressString:networkPdu.source]];
     [[NSUserDefaults standardUserDefaults] setValue:newDic forKey:SigMeshLib.share.dataSource.meshUUID];
     [[NSUserDefaults standardUserDefaults] synchronize];
     return YES;

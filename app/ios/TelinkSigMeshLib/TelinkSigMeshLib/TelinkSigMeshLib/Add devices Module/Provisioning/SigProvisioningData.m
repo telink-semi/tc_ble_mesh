@@ -33,9 +33,6 @@
 #import "ec.h"
 #import "SigECCEncryptHelper.h"
 
-//该库用于修复sig的provision协议的漏洞，修复算法的代码实现不可释放给客户。
-#import "TelinkEncrypt.h"
-
 NSString *const sessionKeyOfCalculateKeys = @"sessionKeyOfCalculateKeys";
 NSString *const sessionNonceOfCalculateKeys = @"sessionNonceOfCalculateKeys";
 NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
@@ -110,18 +107,12 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 }
 
 /// This method validates the received Provisioning Confirmation and matches it with one calculated locally based on the Provisioning Random received from the device and Auth Value.
-- (BOOL)validateConfirmationWithProvisionAuthLeakEnable:(BOOL)provisionAuthLeakEnable {
+- (BOOL)validateConfirmation {
     if (!self.deviceRandom || self.deviceRandom.length == 0 || !self.authValue || self.authValue.length == 0 || !self.sharedSecret || self.sharedSecret.length == 0) {
         TeLogDebug(@"provision info is lack.");
         return NO;
     }
-    NSData *confirmation = nil;
-    if (provisionAuthLeakEnable) {
-        confirmation = [self calculateConfirmationWithRandom:self.deviceRandom authValue:[TelinkEncrypt getEncodeAuthValueWithAuthValue:self.authValue confirmationInputs:[self getConfirmationInputs]]];
-        confirmation = [TelinkEncrypt getEncodeConfirmationWithConfirmation:confirmation];
-    } else {
-        confirmation = [self calculateConfirmationWithRandom:self.deviceRandom authValue:self.authValue];
-    }
+    NSData *confirmation = [self calculateConfirmationWithRandom:self.deviceRandom authValue:self.authValue];
     if (![self.deviceConfirmation isEqualToData:confirmation]) {
         TeLogDebug(@"calculate Confirmation fail.");
         return NO;
@@ -130,14 +121,8 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 }
 
 /// Returns the Provisioner Confirmation value. The Auth Value must be set prior to calling this method.
-- (NSData *)provisionerConfirmationWithProvisionAuthLeakEnable:(BOOL)provisionAuthLeakEnable {
-    NSData *confirmation = nil;
-    if (provisionAuthLeakEnable) {
-        confirmation = [self calculateConfirmationWithRandom:self.provisionerRandom authValue:[TelinkEncrypt getEncodeAuthValueWithAuthValue:self.authValue confirmationInputs:[self getConfirmationInputs]]];
-        confirmation = [TelinkEncrypt getEncodeConfirmationWithConfirmation:confirmation];
-    } else {
-        confirmation = [self calculateConfirmationWithRandom:self.provisionerRandom authValue:self.authValue];
-    }
+- (NSData *)provisionerConfirmation {
+    NSData *confirmation = [self calculateConfirmationWithRandom:self.provisionerRandom authValue:self.authValue];
     return confirmation;
 }
 

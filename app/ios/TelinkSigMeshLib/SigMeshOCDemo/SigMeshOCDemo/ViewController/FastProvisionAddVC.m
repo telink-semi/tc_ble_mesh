@@ -80,11 +80,10 @@
                 });
                 [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
                         if (unprovisioned) {
-                            //=================test==================//
-//                            if (RSSI.intValue <= -50) {
-//                                return;
-//                            }
-                            //=================test==================//
+                            //RSSI太弱会容易出现连接失败。
+                            if (RSSI.intValue <= -70) {
+                                return;
+                            }
                         TeLogInfo(@"advertisementData=%@,rssi=%@,unprovisioned=%@",advertisementData,RSSI,unprovisioned?@"没有入网":@"已经入网");
                         dispatch_async(dispatch_get_main_queue(), ^{
                             [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanSingleUnProvisionNodeTimeout) object:nil];
@@ -125,6 +124,7 @@
 }
 
 - (void)scanSingleUnProvisionNodeTimeout {
+    [self showTips:@"There is no unprovision device nearby!"];
     [self userAbled:YES];
     self.isAdding = NO;
 }
@@ -156,6 +156,9 @@
         [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
     } finish:^(NSError * _Nullable error) {
         TeLogInfo(@"error=%@",error);
+        if (error) {
+            [weakSelf showTips:error.domain];
+        }
         [weakSelf addFinish];
         [SDKLibCommand startMeshConnectWithComplete:nil];
         [weakSelf userAbled:YES];

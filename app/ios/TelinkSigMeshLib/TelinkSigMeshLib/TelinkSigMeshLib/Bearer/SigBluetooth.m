@@ -168,7 +168,7 @@
 
 - (void)connectPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleConnectPeripheralCallback)block {
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
-        TeLogError(@"Bluetooth is not power on.")
+        TeLogError(@"Bluetooth is not power on.");
         if (block) {
             block(peripheral,NO);
         }
@@ -193,14 +193,14 @@
 /// if timeout is 0,means will not timeout forever.
 - (void)discoverServicesOfPeripheral:(CBPeripheral *)peripheral timeout:(NSTimeInterval)timeout resultBlock:(bleDiscoverServicesCallback)block {
     if (self.manager.state != CBCentralManagerStatePoweredOn) {
-        TeLogError(@"Bluetooth is not power on.")
+        TeLogError(@"Bluetooth is not power on.");
         if (block) {
             block(peripheral,NO);
         }
         return;
     }
     if (peripheral.state != CBPeripheralStateConnected) {
-        TeLogError(@"peripheral is not connected.")
+        TeLogError(@"peripheral is not connected.");
         if (block) {
             block(peripheral,NO);
         }

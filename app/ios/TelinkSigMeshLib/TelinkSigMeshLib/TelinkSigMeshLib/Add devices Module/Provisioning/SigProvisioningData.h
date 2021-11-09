@@ -70,10 +70,10 @@ UIKIT_EXTERN NSString *const deviceKeyOfCalculateKeys;
 - (void)provisionerDidObtainWithDeviceRandom:(NSData *)data;
 
 /// This method validates the received Provisioning Confirmation and matches it with one calculated locally based on the Provisioning Random received from the device and Auth Value.
-- (BOOL)validateConfirmationWithProvisionAuthLeakEnable:(BOOL)provisionAuthLeakEnable;
+- (BOOL)validateConfirmation;
 
 /// Returns the Provisioner Confirmation value. The Auth Value must be set prior to calling this method.
-- (NSData *)provisionerConfirmationWithProvisionAuthLeakEnable:(BOOL)provisionAuthLeakEnable;
+- (NSData *)provisionerConfirmation;
 
 - (NSData *)getProvisioningData;
 

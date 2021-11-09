@@ -85,6 +85,7 @@
 
 - (void)initThread{
     _receiveThread = [[NSThread alloc] initWithTarget:self selector:@selector(startThread) object:nil];
+    _receiveThread.name = @"SigBearer Thread";
     [_receiveThread start];
 }
 

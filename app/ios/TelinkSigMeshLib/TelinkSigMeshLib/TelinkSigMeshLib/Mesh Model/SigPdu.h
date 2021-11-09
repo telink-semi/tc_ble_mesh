@@ -329,6 +329,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// message.
 - (UInt32)messageSequence;
 
+- (UInt32)getDecodeIvIndex;
+
 @end
 
 
