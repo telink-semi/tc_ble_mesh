@@ -1,3 +1,61 @@
+## V3.3.4
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) add customers's customization functions: low-power and non-low-power version of mesh, OTA function.
+* (Firmware) add the functions of retention sleep, soft timer function and iv update process for mesh_switch project. Set destination address of "group control" by configuring the publish address of client model.
+* (Firmware) add the function of private fast provision for gateway. set FAST_PROVISION_ENABLE to 1.
+* (Firmware) add sdk codes of sig_mesh_tool.exe for debugging or secondary development.
+* (Android/iOS) add the identification and configuration for mesh_switch device.
+* (Android/iOS) add the function of private fast provision for LPN nodes.
+* (Android/iOS) add configuration UI to configure device's TTL, etc.
+* (iOS) add FIFO for commands, allow the application layer to push several commands at the same time.
+
+### Performance Improvements
+
+* (Firmware) modify the maximum number of device's elements from 8 to 16.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) 增加客户定制的低功耗和非低功耗版本的mesh，以及定制的OTA功能。
+* (Firmware) 增加支持mesh_switch 工程的 retention sleep模式，soft timer功能，iv update流程。可以通过配置client model的publish address 设置"组控按键"对应的目标地址。
+* (Firmware) 增加gateway支持私有的fast provision功能，设置FAST_PROVISION_ENABLE为1即可。
+* (Firmware) 增加sig_mesh_tool.exe工具对应的sdk代码，可用于debug或者二次开发的。
+* (Android/iOS) 增加mesh_switch设备的识别和配置。
+* (Android/iOS) 增加LPN节点支持私有的 fast provision入网。
+* (Android/iOS) 增加节点配置界面，用于配置节点的TTL等。
+* (iOS) 增加串行指令队列，允许应用层同时压入多条指令。
+
+### Performance Improvements
+
+* (Firmware) 更改一个节点最大支持的element 个数，由8个改为16个。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
 ## V3.3.3
 ### Features
 * Support ZBit flash.
