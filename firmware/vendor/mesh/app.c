@@ -772,7 +772,7 @@ void user_init()
 #endif
 
 #if DU_ENABLE
-	du_ui_proc_init()
+	du_ui_proc_init();
 #endif
 
 #if DEBUG_CFG_CMD_GROUP_AK_EN

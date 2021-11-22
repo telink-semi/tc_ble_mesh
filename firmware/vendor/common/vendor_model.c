@@ -818,12 +818,12 @@ int cb_vd_trans_time_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 #if DU_ENABLE
 int cb_vd_du_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 int cb_vd_du_time_req(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 int cb_vd_du_time_req_ack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -846,7 +846,7 @@ int cb_vd_du_time_req_ack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		}
 	}
 
-	return 1;
+	return 0;
 }
 
 
@@ -869,13 +869,13 @@ int cb_vd_du_time_cmd(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	// reserve 3s for the sending part 
 	update_du_busy_s(2); 
 	#endif
-	return 1;
+	return 0;
 }
 
 
 int cb_vd_du_time_cmd_rsp(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 #endif
