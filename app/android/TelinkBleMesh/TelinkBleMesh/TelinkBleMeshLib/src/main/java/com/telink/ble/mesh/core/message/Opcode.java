@@ -372,7 +372,13 @@ public enum Opcode {
     VD_MESH_PROV_DATA_SET(0x0211CA),
     VD_MESH_PROV_CONFIRM(0x0211CB),
     VD_MESH_PROV_CONFIRM_STS(0x0211CC),
-    VD_MESH_PROV_COMPLETE(0x0211CD);
+    VD_MESH_PROV_COMPLETE(0x0211CD),
+
+    // opcode aggregator
+    OP_AGGREGATOR_SEQUENCE(0x09B8),
+    OP_AGGREGATOR_STATUS(0x10B8),
+
+    ;
 
     public final int value;
     public final String info;

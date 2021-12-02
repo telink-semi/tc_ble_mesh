@@ -255,20 +255,17 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     public void showMeshOTATipsDialog(final int distributorAddress) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        DialogInterface.OnClickListener dialogBtnClick = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == DialogInterface.BUTTON_POSITIVE) {
-                    // GO
-                    startActivity(new Intent(MainActivity.this, FUActivity.class)
-                            .putExtra(FUActivity.KEY_FU_CONTINUE, true));
-                } else if (which == DialogInterface.BUTTON_NEGATIVE) {
-                    // STOP
-                    FDCancelMessage cancelMessage = FDCancelMessage.getSimple(distributorAddress, 0);
-                    MeshService.getInstance().sendMeshMessage(cancelMessage);
-                } else if (which == DialogInterface.BUTTON_NEUTRAL) {
-                    FUCacheService.getInstance().clear(MainActivity.this);
-                }
+        DialogInterface.OnClickListener dialogBtnClick = (dialog, which) -> {
+            if (which == DialogInterface.BUTTON_POSITIVE) {
+                // GO
+                startActivity(new Intent(MainActivity.this, FUActivity.class)
+                        .putExtra(FUActivity.KEY_FU_CONTINUE, true));
+            } else if (which == DialogInterface.BUTTON_NEGATIVE) {
+                // STOP
+                FDCancelMessage cancelMessage = FDCancelMessage.getSimple(distributorAddress, 0);
+                MeshService.getInstance().sendMeshMessage(cancelMessage);
+            } else if (which == DialogInterface.BUTTON_NEUTRAL) {
+                FUCacheService.getInstance().clear(MainActivity.this);
             }
         };
 
@@ -284,17 +281,14 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     }
 
     public void sendTimeStatus() {
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                long time = MeshUtils.getTaiTime();
-                int offset = UnitConvert.getZoneOffset();
-                final int address = 0xFFFF;
-                MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-                TimeSetMessage timeSetMessage = TimeSetMessage.getSimple(address, meshInfo.getDefaultAppKeyIndex(), time, offset, 1);
-                timeSetMessage.setAck(false);
-                MeshService.getInstance().sendMeshMessage(timeSetMessage);
-            }
+        mHandler.postDelayed(() -> {
+            long time = MeshUtils.getTaiTime();
+            int offset = UnitConvert.getZoneOffset();
+            final int address = 0xFFFF;
+            MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+            TimeSetMessage timeSetMessage = TimeSetMessage.getSimple(address, meshInfo.getDefaultAppKeyIndex(), time, offset, 1);
+            timeSetMessage.setAck(false);
+            MeshService.getInstance().sendMeshMessage(timeSetMessage);
         }, 1500);
     }
 

@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file     LightingMessage.java 
+ * @file     LightnessGetMessage.java 
  *
  * @brief    for TLSR chips
  *
@@ -21,19 +21,34 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.lighting;
 
-import com.telink.ble.mesh.core.message.MeshMessage;
-import com.telink.ble.mesh.core.networking.AccessType;
+import com.telink.ble.mesh.core.message.Opcode;
 
+/**
+ * Created by kee on 2019/9/19.
+ */
 
-public abstract class LightingMessage extends MeshMessage {
+public class LightnessDefaultGetMessage extends LightingMessage {
 
-    public LightingMessage() {
+    public static LightnessDefaultGetMessage getSimple(int destinationAddress, int appKeyIndex, int rspMax) {
+        LightnessDefaultGetMessage message = new LightnessDefaultGetMessage(destinationAddress, appKeyIndex);
+        message.setResponseMax(rspMax);
+        return message;
     }
 
-    public LightingMessage(int destinationAddress, int appKeyIndex) {
-        this.destinationAddress = destinationAddress;
-        this.appKeyIndex = appKeyIndex;
-        this.accessType = AccessType.APPLICATION;
+    public LightnessDefaultGetMessage(int destinationAddress, int appKeyIndex) {
+        super(destinationAddress, appKeyIndex);
     }
 
+    public LightnessDefaultGetMessage() {
+    }
+
+    @Override
+    public int getOpcode() {
+        return Opcode.LIGHTNESS_DEFULT_GET.value;
+    }
+
+    @Override
+    public int getResponseOpcode() {
+        return Opcode.LIGHTNESS_DEFULT_STATUS.value;
+    }
 }

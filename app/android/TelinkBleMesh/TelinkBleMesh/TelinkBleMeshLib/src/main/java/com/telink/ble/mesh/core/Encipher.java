@@ -29,10 +29,12 @@ import org.spongycastle.asn1.ASN1Primitive;
 import org.spongycastle.asn1.DEROctetString;
 import org.spongycastle.crypto.BlockCipher;
 import org.spongycastle.crypto.CipherParameters;
+import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.crypto.engines.AESEngine;
 import org.spongycastle.crypto.engines.AESLightEngine;
 import org.spongycastle.crypto.macs.CMac;
+import org.spongycastle.crypto.macs.HMac;
 import org.spongycastle.crypto.modes.CCMBlockCipher;
 import org.spongycastle.crypto.params.AEADParameters;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -67,6 +69,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Set;
 
 import javax.crypto.KeyAgreement;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Created by kee on 2019/7/19.
@@ -103,6 +107,8 @@ public final class Encipher {
     public static final byte[] PRSN = "prsn".getBytes();
 
     public static final byte[] PRDK = "prdk".getBytes();
+
+    public static final byte[] PRCK256 = "prck256".getBytes();
 
 
     public static KeyPair generateKeyPair() {
@@ -167,6 +173,14 @@ public final class Encipher {
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
             };
 
+    private static final byte[] SALT_KEY_ZERO_32 =
+            {
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+            };
+
     /**
      * S1
      * s1(M) = AES-CMAC ZERO (M)
@@ -176,6 +190,10 @@ public final class Encipher {
      */
     public static byte[] generateSalt(byte[] m) {
         return aesCmac(m, SALT_KEY_ZERO);
+    }
+
+    public static byte[] s2(byte[] m) {
+        return hMacSha256(m, SALT_KEY_ZERO_32);
     }
 
     /*
@@ -278,6 +296,21 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         return (byte) ((result[15]) & 0x3F);
     }
 
+
+    /**
+     * N is 32 or more octets
+     * SALT is 256 bits
+     * P is 1 or more octets
+     * The key (T) is computed as follows:
+     * T = HMAC-SHA-256 SALT (N)
+     * The output of the derivation function k5 is as follows:
+     * k5(N, SALT, P) = HMAC-SHA-256T (P)
+     */
+    public static byte[] k5(byte[] n, byte[] salt, byte[] p) {
+        byte[] t = hMacSha256(n, salt);
+        return hMacSha256(p, t);
+    }
+
     public static byte[] generateNodeIdentityHash(byte[] identityKey, byte[] random, int src) {
         int length = NODE_IDENTITY_HASH_PADDING.length + random.length + 2;
         ByteBuffer bufferHashInput = ByteBuffer.allocate(length).order(ByteOrder.BIG_ENDIAN);
@@ -375,6 +408,25 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         SHA256.Digest Digest = new SHA256.Digest();
         return Digest.digest(text);
     }
+
+
+    /**
+     * @param text
+     * @return
+     */
+    public static byte[] hMacSha256(byte[] text, byte[] key) {
+        Mac sha256_HMAC = null;
+        try {
+            sha256_HMAC = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secret_key = new SecretKeySpec(key, "HmacSHA256");
+            sha256_HMAC.init(secret_key);
+            return sha256_HMAC.doFinal(text);
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
     /**
      * "ecdsa-with-SHA256"

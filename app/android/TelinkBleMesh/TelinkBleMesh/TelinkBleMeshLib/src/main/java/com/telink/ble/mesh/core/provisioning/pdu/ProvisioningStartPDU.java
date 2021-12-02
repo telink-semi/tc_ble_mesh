@@ -34,6 +34,11 @@ public class ProvisioningStartPDU implements ProvisioningStatePDU {
      * The algorithm used for provisioning
      * 0x00: FIPS P-256 Elliptic Curve
      * 0x01–0xFF: Reserved for Future Use
+     * <p>
+     * update in epa
+     * 0x00	BTM_ECDH_P256_CMAC_AES128_AES_CCM
+     * 0x01	BTM_ECDH_P256_HMAC_SHA256_AES_CCM
+     * 0x02–0xFF	Reserved for Future Use
      */
     public byte algorithm;
 
@@ -75,6 +80,10 @@ public class ProvisioningStartPDU implements ProvisioningStatePDU {
         startPDU.authenticationAction = 0;
         startPDU.authenticationSize = 0;
         return startPDU;
+    }
+
+    public void setAlgorithm(byte algorithm) {
+        this.algorithm = algorithm;
     }
 
     public void setPublicKey(boolean publicKeyEnable) {

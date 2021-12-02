@@ -28,6 +28,9 @@ import com.telink.ble.mesh.core.message.Opcode;
  */
 public class RelayGetMessage extends ConfigMessage {
 
+    public RelayGetMessage() {
+    }
+
     public RelayGetMessage(int destinationAddress) {
         super(destinationAddress);
     }

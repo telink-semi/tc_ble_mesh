@@ -24,6 +24,7 @@ package com.telink.ble.mesh;
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.access.MeshFirmwareParser;
+import com.telink.ble.mesh.core.message.aggregator.AggregatorItem;
 import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.util.Arrays;
 
@@ -269,9 +270,35 @@ public class MeshTest {
     public void testCpsData() {
 //        byte[] bytes = Arrays.hexToBytes("110207003333690007000000100100000200030000120112021200100110031204120512061207120812001101111102000000000A0100100110031204120512061207120812001101111102000000000A0100100110031204120512061207120812001101111102000000000A01001001100312041205120612071208120011011111020000");
 
-        // shushi
+        // shushi sample
         byte[] bytes = Arrays.hexToBytes("11020305030069000200000004040000020003000010710100FE710100FF7101040011020000");
         CompositionData compositionData = CompositionData.from(bytes);
         System.out.println("cps: " + compositionData.toString());
+    }
+
+
+    public void testOpAggSequence(){
+//        AggregatorItem
+    }
+
+    @Test
+    public void testK5() {
+        /*
+        sample data in spec
+        ConfirmationSalt           : a71141ba8cb6b40f4f52b622e1c091614c73fc308f871b78ca775e769bc3ae69
+        K5 N                       : ab85843a2f6d883f62e5684b38e307335fe6e1945ecd19604105c6f23221eb69
+                                     906d73a3c7a7cb3ff730dca68a46b9c18d673f50e078202311473ebbe253669f
+        K5 SALT                    : a71141ba8cb6b40f4f52b622e1c091614c73fc308f871b78ca775e769bc3ae69
+        K5 P                       : 7072636b323536
+        K5 T                       : bb73fb226a7a26c196f3f649bf8d208eca77ae956fc31a5ab51a47267ad41815
+        ConfirmationKey            : 210c3c448152e8d59ef742aa7d22ee5ba59a38648bda6bf05c74f3e46fc2c0bb
+         */
+        byte[] salt = Arrays.hexToBytes("a71141ba8cb6b40f4f52b622e1c091614c73fc308f871b78ca775e769bc3ae69");
+        byte[] n = Arrays.hexToBytes("ab85843a2f6d883f62e5684b38e307335fe6e1945ecd19604105c6f23221eb69906d73a3c7a7cb3ff730dca68a46b9c18d673f50e078202311473ebbe253669f");
+        byte[] p = Arrays.hexToBytes("7072636b323536");
+        byte[] k5Result = Encipher.k5(n, salt, p);
+        System.out.println("k5 sample: " + Arrays.bytesToHexString(k5Result)); // 210c3c448152e8d59ef742aa7d22ee5ba59a38648bda6bf05c74f3e46fc2c0bb
+
+
     }
 }

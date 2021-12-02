@@ -30,7 +30,7 @@ import java.io.Serializable;
  */
 public class PublishModel implements Serializable {
 
-    public static final int CREDENTIAL_FLAG_DEFAULT = 0b1;
+    public static final int CREDENTIAL_FLAG_DEFAULT = 0b0;
 
     public static final int RFU_DEFAULT = 0x0C;
 

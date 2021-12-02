@@ -40,12 +40,6 @@ public class RemoteProvisioningDevice extends ProvisioningDevice {
     // proxy address
     private int serverAddress;
 
-    /**
-     * device revision cannot obtained on provision, so encAuth should be set by user
-     */
-    private boolean encAuth = false;
-
-
     public RemoteProvisioningDevice(byte rssi, byte[] uuid, int serverAddress) {
         this.rssi = rssi;
         this.uuid = uuid;
@@ -106,14 +100,6 @@ public class RemoteProvisioningDevice extends ProvisioningDevice {
 
     public void setServerAddress(int serverAddress) {
         this.serverAddress = serverAddress;
-    }
-
-    public boolean isEncAuth() {
-        return encAuth;
-    }
-
-    public void setEncAuth(boolean encAuth) {
-        this.encAuth = encAuth;
     }
 
     @Override

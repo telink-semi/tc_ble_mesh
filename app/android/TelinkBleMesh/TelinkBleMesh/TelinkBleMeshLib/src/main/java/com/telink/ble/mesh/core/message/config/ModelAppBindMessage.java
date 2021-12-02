@@ -101,12 +101,4 @@ public class ModelAppBindMessage extends ConfigMessage {
         }
         return paramsBuffer.array();
     }
-
-    /**
-     * @deprecated
-     */
-    private boolean isSigModel(int modelIdentifier) {
-        return modelIdentifier <= 0xFFFF;
-    }
-
 }

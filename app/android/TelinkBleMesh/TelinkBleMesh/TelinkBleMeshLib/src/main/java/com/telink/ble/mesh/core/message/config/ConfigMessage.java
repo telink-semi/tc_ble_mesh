@@ -32,6 +32,9 @@ import androidx.annotation.IntRange;
  */
 public abstract class ConfigMessage extends MeshMessage {
 
+    public ConfigMessage() {
+    }
+
     public ConfigMessage(@IntRange(from = 1, to = 0x7FFF) int destinationAddress) {
         this.destinationAddress = destinationAddress;
         // default rsp max

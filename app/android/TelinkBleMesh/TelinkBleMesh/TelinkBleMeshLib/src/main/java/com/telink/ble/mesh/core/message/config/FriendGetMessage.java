@@ -31,6 +31,9 @@ import com.telink.ble.mesh.core.message.Opcode;
  */
 public class FriendGetMessage extends ConfigMessage {
 
+    public FriendGetMessage() {
+    }
+
     public FriendGetMessage(int destinationAddress) {
         super(destinationAddress);
     }

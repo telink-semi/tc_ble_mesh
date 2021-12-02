@@ -33,6 +33,9 @@ import java.nio.ByteOrder;
  */
 public class DefaultTTLGetMessage extends ConfigMessage {
 
+    public DefaultTTLGetMessage() {
+    }
+
     public DefaultTTLGetMessage(int destinationAddress) {
         super(destinationAddress);
     }

@@ -120,6 +120,11 @@ public enum MeshSigModel implements Serializable {
     SIG_MD_FW_DISTRIBUT_C(0xFE03, "firmware distribute client", "OTA"),
     SIG_MD_OBJ_TRANSFER_S(0xFF00, "object transfer server", "OTA"),
     SIG_MD_OBJ_TRANSFER_C(0xFF01, "object transfer client", "OTA"),
+
+    // opcode aggregator
+    SIG_MD_CFG_OP_AGG_S(0xBF54, "opcode aggregator server", "aggregator", true),
+    SIG_MD_CFG_OP_AGG_C(0xBF55, "opcode aggregator client", "aggregator", true),
+
     ;
 
     /**

@@ -23,6 +23,7 @@ package com.telink.ble.mesh.core.message;
 
 import android.util.SparseArray;
 
+import com.telink.ble.mesh.core.message.aggregator.OpcodeAggregatorStatusMessage;
 import com.telink.ble.mesh.core.message.config.AppKeyStatusMessage;
 import com.telink.ble.mesh.core.message.config.BeaconStatusMessage;
 import com.telink.ble.mesh.core.message.config.BridgingTableStatusMessage;
@@ -199,6 +200,9 @@ public class MeshStatus {
 
             // fast provision [vendor]
             register(Opcode.VD_MESH_ADDR_GET_STS.value, MeshAddressStatusMessage.class);
+
+            // opcode aggregator
+            register(Opcode.OP_AGGREGATOR_STATUS.value, OpcodeAggregatorStatusMessage.class);
         }
 
         public static void register(MeshStatus status) {

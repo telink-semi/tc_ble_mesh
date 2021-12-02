@@ -722,6 +722,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             log("mesh updating stop: not running...");
             return;
         }
+        log("stop mesh ota");
         mNetworkingController.clear();
         fuController.stop();
 //        mFirmwareUpdatingController.stop();
@@ -877,12 +878,12 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                         "mesh message processing");
             } else {
                 // busy
-                onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_BUSY,
+                onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_ERROR,
                         false,
                         meshMessage.getOpcode(),
                         meshMessage.getResponseMax(),
                         0,
-                        "mesh message send fail: busy");
+                        "mesh message send fail");
             }
         }
         return sent;
@@ -951,23 +952,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         onEventPrepared(event);
     }
 
-    private void getDeviceFwRevision(ProvisioningDevice provisioningDevice) {
-        onGetRevisionStart(provisioningDevice, "get device firmware revision");
-        GattRequest request = GattRequest.newInstance();
-        request.type = GattRequest.RequestType.READ;
-        request.callback = REVISION_REQ_CB;
-        request.serviceUUID = UUIDInfo.SERVICE_DEVICE_INFO;
-        request.characteristicUUID = UUIDInfo.CHARACTERISTIC_FW_VERSION;
-        sendGattRequest(request);
-    }
-
-    /**
-     * @param encAuth encrypt auth value
-     */
-    private void beginProvision(boolean encAuth) {
+    private void beginProvision() {
         ProvisioningDevice provisioningDevice = (ProvisioningDevice) mActionParams.get(Parameters.ACTION_PROVISIONING_TARGET);
         onProvisionBegin(provisioningDevice, "provision begin");
-        mProvisioningController.begin(provisioningDevice, encAuth);
+        mProvisioningController.begin(provisioningDevice);
     }
 
 
@@ -977,18 +965,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     private void onConnectSuccess() {
 
         if (actionMode == Mode.PROVISION) {
-            ProvisioningDevice provisioningDevice = (ProvisioningDevice) mActionParams.get(Parameters.ACTION_PROVISIONING_TARGET);
             onActionStart();
-            beginProvision(false);
-
-            /// firmware not support auth enc
-            /*if (provisioningDevice.getAuthValue() == null) {
-                log("no need to get revision");
-                beginProvision(false);
-            } else {
-                log("get revision");
-                getDeviceFwRevision(provisioningDevice);
-            }*/
+            beginProvision();
         } else if (actionMode == Mode.FAST_PROVISION) {
             onProxyLoginSuccess();
         } else {
@@ -1357,27 +1335,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             }
         }
     };
-
-    private final GattRequest.Callback REVISION_REQ_CB = new GattRequest.Callback() {
-        @Override
-        public void success(GattRequest request, Object obj) {
-            byte[] revision = (byte[]) obj;
-            log("revision info: " + Arrays.bytesToHexString(revision));
-            beginProvision(revision.length >= 9 && revision[7] == 0x01);
-        }
-
-        @Override
-        public void error(GattRequest request, String errorMsg) {
-            beginProvision(false);
-        }
-
-        @Override
-        public boolean timeout(GattRequest request) {
-            beginProvision(false);
-            return false;
-        }
-    };
-
 
     private void onDeviceFound(AdvertisingDevice device) {
         log("on device found: " + device.device.getAddress());

@@ -25,6 +25,12 @@ import android.os.ParcelUuid;
 
 import com.telink.ble.mesh.core.ble.MeshScanRecord;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
+import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.OpcodeType;
+import com.telink.ble.mesh.core.message.StatusMessage;
+import com.telink.ble.mesh.core.message.aggregator.AggregatorItem;
+import com.telink.ble.mesh.core.message.aggregator.OpcodeAggregatorStatusMessage;
+import com.telink.ble.mesh.core.networking.AccessLayerPDU;
 import com.telink.ble.mesh.util.Arrays;
 
 import java.nio.ByteBuffer;
@@ -290,7 +296,7 @@ public final class MeshUtils {
 
 
     public static byte[] uuidToByteArray(String uuid) {
-        return  uuidToByteArray(UUID.fromString(uuid));
+        return uuidToByteArray(UUID.fromString(uuid));
     }
 
 
@@ -309,5 +315,43 @@ public final class MeshUtils {
         return uuid.toString();
     }
 
+    public static byte[] aggregateMessages(int elementAddress, List<MeshMessage> meshMessages) {
 
+        byte[] result = MeshUtils.integer2Bytes(elementAddress, 2, ByteOrder.LITTLE_ENDIAN);
+        int len;
+        boolean isLong;
+        int bufLen;
+        byte[] accessPdu;
+        for (MeshMessage msg : meshMessages) {
+            accessPdu = new AccessLayerPDU(msg.getOpcode(), msg.getParams()).toByteArray();
+            len = accessPdu.length;
+            isLong = len > 127;
+            bufLen = (isLong ? 2 : 1) + len + result.length;
+
+            ByteBuffer buffer = ByteBuffer.allocate(bufLen).order(ByteOrder.LITTLE_ENDIAN)
+                    .put(result);
+
+            len <<= 1 | (isLong ? 1 : 0);
+            if (isLong) {
+                buffer.putShort((short) len);
+            } else {
+                buffer.put((byte) len);
+            }
+            buffer.put(accessPdu);
+            result = buffer.array();
+        }
+        return result;
+    }
+
+    public static List<StatusMessage> parseOpcodeAggregatorStatus(OpcodeAggregatorStatusMessage opAggStsMsg) {
+        List<AggregatorItem> items = opAggStsMsg.statusItems;
+        if (items == null || items.size() == 0) return null;
+        List<StatusMessage> msgList = new ArrayList<>();
+        StatusMessage msg;
+        for (AggregatorItem item : items) {
+            msg = StatusMessage.createByAccessMessage(item.opcode, item.parameters);
+            msgList.add(msg);
+        }
+        return msgList;
+    }
 }

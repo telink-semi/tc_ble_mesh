@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     ProvisioningCapabilityPDU.java 
+ * @file ProvisioningCapabilityPDU.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,7 +17,7 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.provisioning.pdu;
 
@@ -30,6 +30,16 @@ package com.telink.ble.mesh.core.provisioning.pdu;
 public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
 
     private static final int LEN = 11;
+
+    /**
+     * Algorithm - BTM_ECDH_P256_CMAC_AES128_AES_CCM
+     */
+    private static final int ALG_BIT_MASK_CMAC = 0b01;
+
+    /**
+     * Algorithm - BTM_ECDH_P256_HMAC_SHA256_AES_CCM
+     */
+    private static final int ALG_BIT_MASK_HMAC = 0b10;
 
     public byte[] rawData;
 
@@ -47,6 +57,11 @@ public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
      * 2 bytes
      * bit-0: FIPS P-256 Elliptic Curve
      * bit-1--15: Reserved for Future Use
+     * <p>
+     * <p>
+     * update EPA
+     * 0	BTM_ECDH_P256_CMAC_AES128_AES_CCM
+     * 1	BTM_ECDH_P256_HMAC_SHA256_AES_CCM
      */
     public short algorithms;
 
@@ -150,7 +165,11 @@ public class ProvisioningCapabilityPDU implements ProvisioningStatePDU {
         return ProvisioningPDU.TYPE_CAPABILITIES;
     }
 
-    public boolean staticOOBSupported() {
+    public boolean isStaticOOBSupported() {
         return staticOOBType != 0;
+    }
+
+    public boolean isHMacAlgorithmSupported() {
+        return (algorithms & ALG_BIT_MASK_HMAC) != 0;
     }
 }

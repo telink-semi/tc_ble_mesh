@@ -328,16 +328,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
 
             case R.id.view_config:
                 startActivity(new Intent(getActivity(), DeviceConfigActivity.class).putExtra("meshAddress", deviceInfo.meshAddress));
-//                boolean relayResult = MeshService.getInstance().cfgCmdRelaySet(deviceInfo.meshAddress, deviceInfo.isRelayEnable() ? 0 : 1);
-                // todo mesh interface
-                /*boolean relayResult = MeshService.getInstance().setRelay(deviceInfo.meshAddress, deviceInfo.isRelayEnable() ? 0 : 1, null);
-                if (relayResult) {
-                    showWaitingDialog("processing...");
-                    delayHandler.removeCallbacks(cmdTimeoutTask);
-                    delayHandler.postDelayed(cmdTimeoutTask, 5 * 1000);
-                }*/
                 break;
-
 
             case R.id.view_net_key:
                 startActivity(new Intent(getActivity(), NodeNetKeyActivity.class)

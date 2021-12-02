@@ -1,3 +1,24 @@
+
+//
+OPCODES_AGGREGATOR_SEQUENCE
+
+    device key : ttl get /  friend get / relay get
+
+    app key: 开灯 / 亮度调节到50
+
+
+    key bind 启用 aggregator， 放在draft feature中
+    1. get cps
+
+    2. 判断是否包含 aggregator server
+
+    3. app key add 和 key bind
+
+
+// pin 码
+
+
+
 version record:
 
 

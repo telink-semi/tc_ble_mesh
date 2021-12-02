@@ -359,14 +359,14 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
                 toastMsg("pls input count");
                 return;
             }
-            int count = Integer.parseInt(countInput);
+            int count = Integer.parseInt(countInput, 16);
 
             String stepInput = et_ret_step.getText().toString().trim();
             if (stepInput.isEmpty()) {
                 toastMsg("pls input steps");
                 return;
             }
-            int steps = Integer.parseInt(stepInput);
+            int steps = Integer.parseInt(stepInput, 16);
 
             byte value = (byte) (selectedIndex[0] == 0 ? 1 : 0);
             RelaySetMessage setMessage = RelaySetMessage.getSimple(deviceInfo.meshAddress,
@@ -452,14 +452,14 @@ public class DeviceConfigActivity extends BaseActivity implements EventListener<
                 toastMsg("pls input count");
                 return;
             }
-            int count = Integer.parseInt(countInput);
+            int count = Integer.parseInt(countInput, 16);
 
             String stepInput = et_trans_step.getText().toString().trim();
             if (stepInput.isEmpty()) {
                 toastMsg("pls input steps");
                 return;
             }
-            int steps = Integer.parseInt(stepInput);
+            int steps = Integer.parseInt(stepInput, 16);
             MeshMessage message = NetworkTransmitSetMessage.getSimple(deviceInfo.meshAddress, count, steps);
             boolean cmdSent = MeshService.getInstance().sendMeshMessage(message);
             if (cmdSent) {
