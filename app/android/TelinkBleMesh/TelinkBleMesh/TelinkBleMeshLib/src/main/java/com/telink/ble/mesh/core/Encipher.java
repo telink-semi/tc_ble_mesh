@@ -24,17 +24,12 @@ package com.telink.ble.mesh.core;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import org.spongycastle.asn1.ASN1OctetString;
-import org.spongycastle.asn1.ASN1Primitive;
-import org.spongycastle.asn1.DEROctetString;
 import org.spongycastle.crypto.BlockCipher;
 import org.spongycastle.crypto.CipherParameters;
-import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.crypto.engines.AESEngine;
 import org.spongycastle.crypto.engines.AESLightEngine;
 import org.spongycastle.crypto.macs.CMac;
-import org.spongycastle.crypto.macs.HMac;
 import org.spongycastle.crypto.modes.CCMBlockCipher;
 import org.spongycastle.crypto.params.AEADParameters;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -56,17 +51,13 @@ import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.CertificateFactory;
-import java.security.cert.PKIXParameters;
 import java.security.cert.X509Certificate;
-import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Set;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.Mac;
@@ -93,7 +84,9 @@ public final class Encipher {
 
     private static final byte[] SALT_NKIK = "nkik".getBytes();
 
-    private static final byte[] SALT_BKIK = "nkbk".getBytes();
+    private static final byte[] SALT_NKBK = "nkbk".getBytes();
+
+    private static final byte[] SALT_NKPK = "nkpk".getBytes();
 
     private static final byte[] SALT_ID128 = "id128".getBytes();
 
@@ -336,7 +329,16 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
     }
 
     public static byte[] generateBeaconKey(byte[] networkKey) {
-        byte[] salt = generateSalt(SALT_BKIK);
+        byte[] salt = generateSalt(SALT_NKBK);
+        ByteBuffer buffer = ByteBuffer.allocate(SALT_ID128.length + 1);
+        buffer.put(SALT_ID128);
+        buffer.put((byte) 0x01);
+        byte[] p = buffer.array();
+        return k1(networkKey, salt, p);
+    }
+
+    public static byte[] generatePrivateBeaconKey(byte[] networkKey) {
+        byte[] salt = generateSalt(SALT_NKPK);
         ByteBuffer buffer = ByteBuffer.allocate(SALT_ID128.length + 1);
         buffer.put(SALT_ID128);
         buffer.put((byte) 0x01);

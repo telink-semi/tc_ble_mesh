@@ -447,11 +447,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     public boolean isBluetoothEnabled() {
-        return mBleScanner.isEnabled();
+        return BluetoothAdapter.getDefaultAdapter().isEnabled();
     }
 
     public void enableBluetooth() {
-        mBleScanner.enableBluetooth();
+        BluetoothAdapter.getDefaultAdapter().enable();
     }
 
     public String getCurDeviceMac() {

@@ -31,7 +31,15 @@ public abstract class MeshBeaconPDU implements PDU {
 
     public static final byte BEACON_TYPE_UNPROVISIONED_DEVICE = 0x00;
 
+    /**
+     * secure beacon
+     */
     public static final byte BEACON_TYPE_SECURE_NETWORK = 0x01;
+
+    /**
+     * mesh private beacon
+     */
+    public static final byte BEACON_TYPE_MESH_PRIVATE = 0x02;
 
     protected byte beaconType;
 

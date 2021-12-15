@@ -102,14 +102,6 @@ public class BleScanner {
         }
     }
 
-    public boolean isEnabled() {
-        return BluetoothAdapter.getDefaultAdapter().isEnabled();
-    }
-
-    public void enableBluetooth() {
-        BluetoothAdapter.getDefaultAdapter().enable();
-    }
-
     private void initDefaultScanner() {
         mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
 

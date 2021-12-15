@@ -871,18 +871,13 @@ public class NetworkingController {
 
 
     public void parseMeshBeacon(byte[] payload, byte[] networkId, byte[] networkBeaconKey) {
-        SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.from(payload);
+        SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.from(payload, networkBeaconKey);
         // validate beacon data
         if (networkBeacon != null) {
             log("SecureNetworkBeacon received: " + networkBeacon.toString());
-            if (networkBeacon.validateAuthValue(networkId, networkBeaconKey)) {
-                int ivIndex = networkBeacon.getIvIndex();
-                boolean isIvUpdating = networkBeacon.isIvUpdating();
-                onIvIndexReceived(ivIndex & MeshUtils.UNSIGNED_INTEGER_MAX, isIvUpdating);
-            } else {
-                log("network beacon check err");
-            }
-
+            int ivIndex = networkBeacon.getIvIndex();
+            boolean isIvUpdating = networkBeacon.isIvUpdating();
+            onIvIndexReceived(ivIndex & MeshUtils.UNSIGNED_INTEGER_MAX, isIvUpdating);
         } else {
             log("network beacon parse err");
         }

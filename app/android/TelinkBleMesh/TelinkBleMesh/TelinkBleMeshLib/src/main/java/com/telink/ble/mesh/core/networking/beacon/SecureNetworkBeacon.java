@@ -1,14 +1,14 @@
 /********************************************************************************************************
- * @file     SecureNetworkBeacon.java 
+ * @file SecureNetworkBeacon.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
+ * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
  *           All rights reserved.
- *           
+ *
  *			 The information contained herein is confidential and proprietary property of Telink 
  * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
  *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
@@ -17,13 +17,14 @@
  *
  * 			 Licensees are granted free, non-transferable use of the information in this 
  *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.networking.beacon;
 
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -77,7 +78,7 @@ public class SecureNetworkBeacon extends MeshBeaconPDU {
         return (flags & MASK_IV_UPDATE) != 0;
     }
 
-    public static SecureNetworkBeacon from(byte[] payload) {
+    public static SecureNetworkBeacon from(byte[] payload, byte[] beaconKey) {
         if (payload.length != LENGTH_PAYLOAD) {
             return null;
         }
@@ -93,7 +94,13 @@ public class SecureNetworkBeacon extends MeshBeaconPDU {
         index += 4;
         beacon.authenticationValue = new byte[8];
         System.arraycopy(payload, index, beacon.authenticationValue, 0, beacon.authenticationValue.length);
-        return beacon;
+        byte[] authCal = generateAuthValue(beacon, beaconKey);
+        if (Arrays.equals(authCal, beacon.authenticationValue)) {
+            return beacon;
+        } else {
+            MeshLogger.w("network beacon check err");
+            return null;
+        }
     }
 
     public static SecureNetworkBeacon createIvUpdatingBeacon(int curIvIndex, byte[] networkId, byte[] beaconKey, boolean updating) {
@@ -101,7 +108,11 @@ public class SecureNetworkBeacon extends MeshBeaconPDU {
         networkBeacon.flags = (byte) (updating ? 0b10 : 0);
         networkBeacon.networkID = networkId;
         networkBeacon.ivIndex = updating ? curIvIndex + 1 : curIvIndex;
+        networkBeacon.authenticationValue = generateAuthValue(networkBeacon, beaconKey);
+        return networkBeacon;
+    }
 
+    private static byte[] generateAuthValue(SecureNetworkBeacon networkBeacon, byte[] beaconKey) {
         final int calLen = 1 + 8 + 4;
         ByteBuffer buffer = ByteBuffer.allocate(calLen).order(ByteOrder.BIG_ENDIAN);
         buffer.put(networkBeacon.flags);
@@ -110,25 +121,9 @@ public class SecureNetworkBeacon extends MeshBeaconPDU {
         byte[] auth = Encipher.aesCmac(buffer.array(), beaconKey);
         byte[] authCal = new byte[8];
         System.arraycopy(auth, 0, authCal, 0, authCal.length);
-        networkBeacon.authenticationValue = authCal;
-        return networkBeacon;
+        return authCal;
     }
 
-    public boolean validateAuthValue(byte[] networkID, byte[] beaconKey) {
-        if (!Arrays.equals(this.networkID, networkID)) return false;
-        if (authenticationValue == null) return false;
-
-        // flags, networkId, ivIndex
-        final int calLen = 1 + 8 + 4;
-        ByteBuffer buffer = ByteBuffer.allocate(calLen).order(ByteOrder.BIG_ENDIAN);
-        buffer.put(flags);
-        buffer.put(networkID);
-        buffer.putInt(ivIndex);
-        byte[] auth = Encipher.aesCmac(buffer.array(), beaconKey);
-        byte[] authCal = new byte[8];
-        System.arraycopy(auth, 0, authCal, 0, authCal.length);
-        return Arrays.equals(authCal, this.authenticationValue);
-    }
 
     @Override
     public String toString() {

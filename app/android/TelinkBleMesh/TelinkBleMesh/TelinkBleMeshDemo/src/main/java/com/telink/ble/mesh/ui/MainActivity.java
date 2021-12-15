@@ -39,6 +39,7 @@ import com.telink.ble.mesh.core.message.firmwaredistribution.FDStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.DistributionStatus;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
 import com.telink.ble.mesh.core.message.time.TimeSetMessage;
+import com.telink.ble.mesh.core.networking.beacon.MeshPrivateBeacon;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
@@ -97,7 +98,12 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
         CertCacheService.getInstance().load(this); // load cert cache
-
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                testMeshPrivateBeacon();
+            }
+        }, 1000);
     }
 
     private void initBottomNav() {
@@ -125,6 +131,17 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void testMeshPrivateBeacon() {
+
+        byte[] netKey = Arrays.hexToBytes("f7a2a44f8e8a8029064f173ddc1e2b00");
+        byte[] pvtBeaconKey = Encipher.generatePrivateBeaconKey(netKey);
+        MeshLogger.d("private beacon key: " + Arrays.bytesToHexString(pvtBeaconKey));
+        int ivIndex = 0x1010abcc;
+
+        MeshPrivateBeacon beacon = MeshPrivateBeacon.createIvUpdatingBeacon(ivIndex, pvtBeaconKey, true);
+        MeshLogger.d("beacon: " + Arrays.bytesToHexString(beacon.toBytes()));
     }
 
     /**
