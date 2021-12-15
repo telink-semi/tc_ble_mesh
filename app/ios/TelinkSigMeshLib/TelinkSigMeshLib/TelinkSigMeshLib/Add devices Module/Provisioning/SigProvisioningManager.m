@@ -60,8 +60,6 @@ typedef enum : UInt16 {
     SigProvisioningRecordID_Appearance                      = 0x0012,
 } SigProvisioningRecordID;
 
-typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
-
 @interface SigProvisioningManager ()
 @property (nonatomic, assign) UInt16 unicastAddress;
 @property (nonatomic, strong) NSData *staticOobData;
@@ -76,7 +74,6 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
 @property (nonatomic, assign) UInt16 currentRecordID;
 
 @property (nonatomic,strong) NSData *devicePublicKey;//certificate-base获取到的devicePublicKey
-@property (nonatomic, assign) BOOL provisionAuthLeakEnable;//当前provision实际漏洞修复开关
 
 @end
 
@@ -183,7 +180,7 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
     SigAuthenticationModel *auth = nil;
     self.authenticationModel = auth;
     [self.provisioningData provisionerDidObtainAuthValue:data];
-    NSData *provisionerConfirmationData = [self.provisioningData provisionerConfirmationWithProvisionAuthLeakEnable:self.provisionAuthLeakEnable];
+    NSData *provisionerConfirmationData = [self.provisioningData provisionerConfirmation];
     SigProvisioningConfirmationPdu *pdu = [[SigProvisioningConfirmationPdu alloc] initWithConfirmation:provisionerConfirmationData];
 //    TeLogInfo(@"app端的Confirmation=%@",[LibTools convertDataToHexStr:provisionerConfirmationData]);
 
@@ -237,39 +234,26 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
         return;
     }
     __weak typeof(self) weakSelf = self;
-    [self getProvisionAuthLeakWithTimeout:2.0 callback:^(SigProvisionAuthLeak authLeak) {
-        if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_enable && !authLeak) {
-            TeLogError(@"device is noSuport provisionAuthLeak! provision will fail!");
-            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
-        } else if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_disable && authLeak) {
-            TeLogError(@"device is suport provisionAuthLeak! provision will fail!");
-            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
-        } else {
-            weakSelf.provisionAuthLeakEnable = authLeak;
-        }
-        TeLogInfo(@"provisionAuthLeakEnable=%d",weakSelf.provisionAuthLeakEnable);
-        
-        [weakSelf reset];
-        [SigBearer.share setBearerProvisioned:NO];
-        weakSelf.networkKey = provisionNet;
-        weakSelf.isProvisionning = YES;
-        TeLogInfo(@"start provision.");
-        [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
-            [SigMeshLib.share cleanAllCommandsAndRetry];
-            if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
-                if (weakSelf.isProvisionning) {
-                    TeLogInfo(@"disconnect in provisioning，provision fail.");
-                    if (fail) {
-                        weakSelf.isProvisionning = NO;
-                        NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
-                        fail(err);
-                    }
+    [self reset];
+    [SigBearer.share setBearerProvisioned:NO];
+    self.networkKey = provisionNet;
+    self.isProvisionning = YES;
+    TeLogInfo(@"start provision.");
+    [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
+        [SigMeshLib.share cleanAllCommandsAndRetry];
+        if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
+            if (weakSelf.isProvisionning) {
+                TeLogInfo(@"disconnect in provisioning，provision fail.");
+                if (fail) {
+                    weakSelf.isProvisionning = NO;
+                    NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
+                    fail(err);
                 }
             }
-        }];
-        [weakSelf getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-            [weakSelf getCapabilitiesResultWithResponse:response];
-        }];
+        }
+    }];
+    [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+        [weakSelf getCapabilitiesResultWithResponse:response];
     }];
 }
 
@@ -295,41 +279,28 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
         return;
     }
     __weak typeof(self) weakSelf = self;
-    [self getProvisionAuthLeakWithTimeout:2.0 callback:^(SigProvisionAuthLeak authLeak) {
-        if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_enable && !authLeak) {
-            TeLogError(@"device is noSuport provisionAuthLeak! provision will fail!");
-            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
-        } else if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_disable && authLeak) {
-            TeLogError(@"device is suport provisionAuthLeak! provision will fail!");
-            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
-        } else {
-            weakSelf.provisionAuthLeakEnable = authLeak;
-        }
-        TeLogInfo(@"provisionAuthLeakEnable=%d",weakSelf.provisionAuthLeakEnable);
-        
-        [weakSelf reset];
-        [SigBearer.share setBearerProvisioned:NO];
-        weakSelf.networkKey = provisionNet;
-        weakSelf.isProvisionning = YES;
-        TeLogInfo(@"start provision.");
-        [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
-            [SigMeshLib.share cleanAllCommandsAndRetry];
-            if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
-                if (weakSelf.isProvisionning) {
-                    TeLogInfo(@"disconnect in provisioning，provision fail.");
-                    if (fail) {
-                        weakSelf.isProvisionning = NO;
-                        NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
-                        fail(err);
-                    }
+    [self reset];
+    [SigBearer.share setBearerProvisioned:NO];
+    self.networkKey = provisionNet;
+    self.isProvisionning = YES;
+    TeLogInfo(@"start provision.");
+    [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
+        [SigMeshLib.share cleanAllCommandsAndRetry];
+        if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
+            if (weakSelf.isProvisionning) {
+                TeLogInfo(@"disconnect in provisioning，provision fail.");
+                if (fail) {
+                    weakSelf.isProvisionning = NO;
+                    NSError *err = [NSError errorWithDomain:@"disconnect in provisioning，provision fail." code:-1 userInfo:nil];
+                    fail(err);
                 }
             }
-        }];
-        [weakSelf getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-            [weakSelf getCapabilitiesResultWithResponse:response];
-        }];
-
+        }
     }];
+    [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+        [weakSelf getCapabilitiesResultWithResponse:response];
+    }];
+
 }
 
 /// founcation3: provision (If CBPeripheral isn't CBPeripheralStateConnected, SDK will connect CBPeripheral in this api. )
@@ -408,86 +379,34 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
     self.currentRecordID = 0;
     
     __weak typeof(self) weakSelf = self;
-    [self getProvisionAuthLeakWithTimeout:2.0 callback:^(SigProvisionAuthLeak authLeak) {
-        if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_enable && !authLeak) {
-            TeLogError(@"device is noSuport provisionAuthLeak! provision will fail!");
-            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
-        } else if (weakSelf.provisionAuthLeak == SigProvisionAuthLeak_disable && authLeak) {
-            TeLogError(@"device is suport provisionAuthLeak! provision will fail!");
-            weakSelf.provisionAuthLeakEnable = weakSelf.provisionAuthLeak;
+    [self reset];
+    [SigBearer.share setBearerProvisioned:NO];
+    self.networkKey = provisionNet;
+    self.isProvisionning = YES;
+    TeLogInfo(@"start certificateBasedProvision.");
+    
+    if (provisionType == ProvisionTpye_NoOOB || provisionType == ProvisionTpye_StaticOOB) {
+        if (peripheral.state == CBPeripheralStateConnected) {
+            TeLogVerbose(@"start RecordsGet.");
+            [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+                [weakSelf sentProvisioningRecordsGetWithResponse:response];
+            }];
         } else {
-            weakSelf.provisionAuthLeakEnable = authLeak;
-        }
-        TeLogInfo(@"provisionAuthLeakEnable=%d",weakSelf.provisionAuthLeakEnable);
-        
-        [weakSelf reset];
-        [SigBearer.share setBearerProvisioned:NO];
-        weakSelf.networkKey = provisionNet;
-        weakSelf.isProvisionning = YES;
-        TeLogInfo(@"start certificateBasedProvision.");
-        
-        if (provisionType == ProvisionTpye_NoOOB || provisionType == ProvisionTpye_StaticOOB) {
-            if (peripheral.state == CBPeripheralStateConnected) {
-                TeLogVerbose(@"start RecordsGet.");
-                [weakSelf sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-                    [weakSelf sentProvisioningRecordsGetWithResponse:response];
-                }];
-            } else {
-                TeLogVerbose(@"start connect for provision.");
-                [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
-                    if (successful) {
-                        TeLogVerbose(@"connect successful.");
-                        [weakSelf provisionWithPeripheral:peripheral unicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex provisionType:provisionType staticOOBData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
-                    } else {
-                        if (fail) {
-                            NSError *err = [NSError errorWithDomain:@"Provision fail, because connect fail before provision." code:-1 userInfo:nil];
-                            fail(err);
-                        }
-                    }
-                }];
-            }
-        } else {
-            TeLogError(@"unsupport provision type.");
-        }
-    }];
-}
-
-#pragma mark step0:getProvisionAuthLeak
-- (void)getProvisionAuthLeakWithTimeout:(NSTimeInterval)timeout callback:(ProvisionAuthLeakBlock)block {
-    TeLogInfo(@"\n\n==========provision:step0\n\n");
-    CBPeripheral *curPeripheral = SigBearer.share.getCurrentPeripheral;
-    if (curPeripheral && curPeripheral.state == CBPeripheralStateConnected) {
-        CBCharacteristic *firmwareRevisionCharacteristic = [SigBluetooth.share getCharacteristicWithUUIDString:kFirmwareRevisionCharacteristicsID OfPeripheral:curPeripheral];
-        if (firmwareRevisionCharacteristic && (firmwareRevisionCharacteristic.properties & CBCharacteristicPropertyRead)) {
-            [SigBluetooth.share readCharachteristicWithCharacteristic:firmwareRevisionCharacteristic ofPeripheral:curPeripheral timeout:timeout complete:^(CBCharacteristic * _Nonnull characteristic, BOOL successful) {
+            TeLogVerbose(@"start connect for provision.");
+            [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
                 if (successful) {
-                    if (firmwareRevisionCharacteristic.value && firmwareRevisionCharacteristic.value.length > 1) {
-                        UInt8 tem8 = 0;
-                        Byte *dataByte = (Byte *)firmwareRevisionCharacteristic.value.bytes;
-                        memcpy(&tem8, dataByte+firmwareRevisionCharacteristic.value.length-2, 1);
-                        if (block) {
-                            block(tem8 == 1 ? SigProvisionAuthLeak_enable : SigProvisionAuthLeak_disable);
-                        }
-                    } else {
-                        if (block) {
-                            block(SigProvisionAuthLeak_disable);
-                        }
-                    }
+                    TeLogVerbose(@"connect successful.");
+                    [weakSelf provisionWithPeripheral:peripheral unicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex provisionType:provisionType staticOOBData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
                 } else {
-                    if (block) {
-                        block(SigProvisionAuthLeak_disable);
+                    if (fail) {
+                        NSError *err = [NSError errorWithDomain:@"Provision fail, because connect fail before provision." code:-1 userInfo:nil];
+                        fail(err);
                     }
                 }
             }];
-        } else {
-            if (block) {
-                block(SigProvisionAuthLeak_disable);
-            }
         }
     } else {
-        if (block) {
-            block(SigProvisionAuthLeak_disable);
-        }
+        TeLogError(@"unsupport provision type.");
     }
 }
 
@@ -522,11 +441,7 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
         TeLogError(@"current node's bearer isn't open.");
         return;
     }
-    
-    if (self.provisionAuthLeakEnable) {
-        self.provisionAuthLeakEnable = NO;
-    }
-    
+        
     self.provisionResponseBlock = block;
 
     [self.provisioningData generateProvisionerRandomAndProvisionerPublicKey];
@@ -767,7 +682,7 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
         SigProvisioningConfirmationPdu *confirmationPdu = (SigProvisioningConfirmationPdu *)response;
         TeLogInfo(@"device confirmation back:%@",[LibTools convertDataToHexStr:confirmationPdu.confirmation]);
         [self.provisioningData provisionerDidObtainWithDeviceConfirmation:confirmationPdu.confirmation];
-        if ([[self.provisioningData provisionerConfirmationWithProvisionAuthLeakEnable:self.provisionAuthLeakEnable] isEqualToData:confirmationPdu.confirmation]) {
+        if ([[self.provisioningData provisionerConfirmation] isEqualToData:confirmationPdu.confirmation]) {
             TeLogDebug(@"Confirmation of device is equal to confirmation of provisioner!");
             self.state = ProvisionigState_fail;
             return;
@@ -811,7 +726,7 @@ typedef void(^ProvisionAuthLeakBlock)(SigProvisionAuthLeak authLeak);
             self.state = ProvisionigState_fail;
             return;
         }
-        if (![self.provisioningData validateConfirmationWithProvisionAuthLeakEnable:self.provisionAuthLeakEnable]) {
+        if (![self.provisioningData validateConfirmation]) {
             TeLogDebug(@"validate Confirmation fail");
             self.state = ProvisionigState_fail;
             return;

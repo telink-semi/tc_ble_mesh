@@ -1633,12 +1633,6 @@ typedef enum : UInt8 {
     /// 0x03–0xFF Reserved for Future Use.
 } SigProvisioningRecordResponseStatus;
 
-typedef enum : UInt8 {
-    SigProvisionAuthLeak_disable = 0x00,//无论设备是否打开PROV_AUTH_LEAK_EN，APP端都不启用辅助算法修复provision漏洞。
-    SigProvisionAuthLeak_enable = 0x01,//无论设备是否打开PROV_AUTH_LEAK_EN，APP端都启用辅助算法修复provision漏洞。
-    SigProvisionAuthLeak_auto = 0x02,//APP端根据从设备端实时读取数据来判定是否启用辅助算法修复provision漏洞。
-} SigProvisionAuthLeak;
-
 /// telink私有定义的Extend Bearer Mode，SDK默认是使用0，特殊用户需要用到2。
 typedef enum : UInt8 {
     SigTelinkExtendBearerMode_noExtend = 0x00,//segment发包中的单个分包的UpperTransportPDU最大长度都是标准sig定义的12字节。

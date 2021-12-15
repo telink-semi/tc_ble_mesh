@@ -113,7 +113,6 @@
     periodModel.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_seconds];
     _defaultPublishPeriodModel = periodModel;
     _security = SigMeshMessageSecurityLow;
-    _provisionAuthLeak = SigProvisionAuthLeak_auto;
     _defaultReliableIntervalOfNotLPN = kSDKLibCommandTimeout;
     _defaultReliableIntervalOfLPN = kSDKLibCommandTimeout * 2;
     //默认为写死的pts的root.der根证书

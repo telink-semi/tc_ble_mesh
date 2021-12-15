@@ -959,6 +959,16 @@
     return nil;
 }
 
+- (UInt32)getDecodeIvIndex {
+    UInt32 index = _networkKey.ivIndex.index;
+    if (_ivi != (index & 0x01)) {
+        if (index > 0) {
+            index -= 1;
+        }
+    }
+    return index;
+}
+
 - (instancetype)initWithEncodeLowerTransportPdu:(SigLowerTransportPdu *)lowerTransportPdu pduType:(SigPduType)pduType withSequence:(UInt32)sequence andTtl:(UInt8)ttl ivIndex:(SigIvIndex *)ivIndex {
     if (self = [super init]) {
         UInt32 index = ivIndex.index;

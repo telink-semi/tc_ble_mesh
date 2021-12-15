@@ -31,7 +31,7 @@
 
 #pragma mark - Const string
 
-NSString * const kTelinkSigMeshLibVersion = @"v3.3.5";
+NSString * const kTelinkSigMeshLibVersion = @"v3.3.4";
 
 NSString * const kNotifyCommandIsBusyOrNot = @"CommandIsBusyOrNot";
 NSString * const kCommandIsBusyKey = @"IsBusy";

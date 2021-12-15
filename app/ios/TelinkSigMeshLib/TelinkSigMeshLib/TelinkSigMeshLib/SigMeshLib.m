@@ -586,6 +586,11 @@ static SigMeshLib *shareLib = nil;
 }
 
 - (void)handleResultCallback:(SDKLibCommand *)command error:(NSError *)error {
+    [self.commands removeObject:command];
+    BOOL hasNextCommand = NO;
+    if (self.commands && self.commands.count > 0) {
+        hasNextCommand = YES;
+    }
     if (command && command.resultCallback) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (error) {
@@ -595,8 +600,7 @@ static SigMeshLib *shareLib = nil;
             }
         });
     }
-    [self.commands removeObject:command];
-    if (self.commands && self.commands.count > 0) {
+    if (hasNextCommand) {
         SDKLibCommand *nextCommand = self.commands.firstObject;
         __weak typeof(self) weakSelf = self;
         if (nextCommand.commandType == SigCommandType_meshMessage) {

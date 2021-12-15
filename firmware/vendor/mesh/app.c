@@ -68,7 +68,7 @@
 #define BLT_RX_FIFO_SIZE        (MESH_DLE_MODE ? DLE_RX_FIFO_SIZE : 64)
 #define BLT_TX_FIFO_SIZE        (MESH_DLE_MODE ? DLE_TX_FIFO_SIZE : 40)
 #if GATT_LPN_EN
-MYFIFO_INIT(blt_rxfifo, BLT_RX_FIFO_SIZE, 8); //adv_filter_proc() reserve (BLE_RCV_FIFO_MAX_CNT+2) buf while gatt connecting, mesh adv will be filtered
+MYFIFO_INIT(blt_rxfifo, BLT_RX_FIFO_SIZE, 8); //adv_filter_proc() reserve (BLE_RCV_FIFO_MAX_CNT+2) buf while gatt connecting.
 MYFIFO_INIT(blt_txfifo, BLT_TX_FIFO_SIZE, 16); // set to 16, because there is no blt_notify_fifo_
 #else
     #if DEBUG_CFG_CMD_GROUP_AK_EN
@@ -382,6 +382,10 @@ void proc_ui()
 	}
 	st_sw2_last = st_sw2;
 	#endif
+	
+	#if IV_UPDATE_TEST_EN
+	mesh_iv_update_test_initiate();
+	#endif
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -433,7 +437,7 @@ void main_loop ()
 #endif
 	mesh_loop_proc_prior(); // priority loop, especially for 8269
 //	test_simu_io_user_define_proc();
-	#if DUAL_MODE_ADAPT_EN
+	#if DUAL_MESH_ZB_BL_EN
 	if(RF_MODE_BLE != dual_mode_proc()){    // should be before is mesh latency window()
         proc_ui();
         proc_led();
@@ -441,7 +445,9 @@ void main_loop ()
 		return ;
 	}
 	#endif
-	
+	#if DUAL_MESH_SIG_PVT_EN
+	dual_mode_proc();
+	#endif
 	#if SIG_MESH_LOOP_PROC_10MS_EN
 	if(is_mesh_latency_window()){
 	    return ;
@@ -501,6 +507,10 @@ void main_loop ()
     if(clock_time_exceed(adc_check_time, 1000*1000)){
         adc_check_time = clock_time();
 		static u16 T_adc_val;
+		
+		#if (BATT_CHECK_ENABLE)
+		app_battery_check_and_re_init_user_adc();
+		#endif
 		#if(MCU_CORE_TYPE == MCU_CORE_8269)     
         T_adc_val = adc_BatteryValueGet();
 		#else
@@ -680,7 +690,7 @@ void user_init()
 	#endif
 #endif
 	#if ADC_ENABLE
-	adc_drv_init();
+	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, beause battery check may not be called in user init.
 	#endif
 	rf_pa_init();
 	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);
@@ -706,11 +716,11 @@ void user_init()
 			//fix the mi ota ,when uncomplete ,it need to goon after power on 
 			u32 adr_record;
 			if(!find_record_adr(RECORD_DFU_INFO,&adr_record)){
-				bls_ota_clearNewFwDataArea();
+				bls_ota_clearNewFwDataArea(0);
 				telink_record_clean_cpy();// trigger clean recycle ,and it will not need to clean in the conn state
 			}
 		#else
-		bls_ota_clearNewFwDataArea();	 //must
+		bls_ota_clearNewFwDataArea(0);	 //must
 		#endif
 	}
 	//blc_ll_initScanning_module(tbl_mac);
@@ -762,7 +772,7 @@ void user_init()
 #endif
 
 #if DU_ENABLE
-	du_ui_proc_init()
+	du_ui_proc_init();
 #endif
 
 #if DEBUG_CFG_CMD_GROUP_AK_EN

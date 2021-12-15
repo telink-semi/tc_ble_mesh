@@ -3117,7 +3117,7 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
-    command.timeout = 2.0;//link open 超时为2秒。
+    command.timeout = SigMeshLib.share.dataSource.defaultReliableIntervalOfNotLPN * 2;//link open 超时为1.28*2秒。
     return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
@@ -3130,7 +3130,7 @@
     command.resultCallback = resultCallback;
     command.responseMaxCount = responseMaxCount;
     command.retryCount = retryCount;
-    command.timeout = 2.0;//link close 超时为2秒。
+    command.timeout = SigMeshLib.share.dataSource.defaultReliableIntervalOfNotLPN * 2;//link close 超时为1.28*2秒。
     return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
 }
 
@@ -3444,11 +3444,9 @@ function 1:special if you need do provision , you should call this method, and i
 + (void)startProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     if (provisionType == ProvisionTpye_NoOOB) {
         TeLogVerbose(@"start noOob provision.");
-        SigProvisioningManager.share.provisionAuthLeak = SigDataSource.share.provisionAuthLeak;
         [SigProvisioningManager.share provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex provisionSuccess:provisionSuccess fail:fail];
     } else if (provisionType == ProvisionTpye_StaticOOB) {
         TeLogVerbose(@"start staticOob provision.");
-        SigProvisioningManager.share.provisionAuthLeak = SigDataSource.share.provisionAuthLeak;
         [SigProvisioningManager.share provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex staticOobData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
     } else {
         TeLogError(@"unsupport provision type.");

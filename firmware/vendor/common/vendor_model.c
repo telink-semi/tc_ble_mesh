@@ -818,12 +818,12 @@ int cb_vd_trans_time_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 #if DU_ENABLE
 int cb_vd_du_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 int cb_vd_du_time_req(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 int cb_vd_du_time_req_ack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -846,7 +846,7 @@ int cb_vd_du_time_req_ack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		}
 	}
 
-	return 1;
+	return 0;
 }
 
 
@@ -869,13 +869,13 @@ int cb_vd_du_time_cmd(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	// reserve 3s for the sending part 
 	update_du_busy_s(2); 
 	#endif
-	return 1;
+	return 0;
 }
 
 
 int cb_vd_du_time_cmd_rsp(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 #endif
@@ -955,14 +955,20 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
 };
 
 #if VENDOR_ID_2ND_ENABLE
+#if !WIN32
+const 
+#endif
 mesh_cmd_sig_func_t mesh_cmd_vd_func2[] = {
 	#if (DEBUG_VENDOR_CMD_EN)	
-	CMD_NO_STR(VD_GROUP_G_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_group_g_set, VD_GROUP_G_STATUS),
-	CMD_NO_STR(VD_GROUP_G_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_group_g_status, STATUS_NONE),
+	CMD_NO_STR(VD_GROUP_G_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S2, cb_vd_group_g_set, VD_GROUP_G_STATUS),
+	CMD_NO_STR(VD_GROUP_G_STATUS, 1, VENDOR_MD_LIGHT_S2, VENDOR_MD_LIGHT_C, cb_vd_group_g_status, STATUS_NONE),
 	#endif
 };
 #endif
 
+#if !WIN32
+const 
+#endif
 mesh_vd_func_t mesh_vd_id_func[] = {
 	{VENDOR_ID, (mesh_cmd_sig_func_t *)&mesh_cmd_vd_func, ARRAY_SIZE(mesh_cmd_vd_func)},
 	#if VENDOR_ID_2ND_ENABLE
@@ -985,7 +991,7 @@ void APP_set_vd_id_mesh_cmd_vd_func(u16 vd_id)
 // don't modify mesh_search_model_id_by_op_vendor()
 int mesh_search_model_id_by_op_vendor(mesh_op_resource_t *op_res, u16 op, u8 tx_flag)
 {
-	mesh_vd_func_t *p_vd_func = 0;
+	const mesh_vd_func_t *p_vd_func = 0;
 	foreach_arr(i,mesh_vd_id_func){
 		if(g_msg_vd_id == mesh_vd_id_func[i].vd_id){
 			p_vd_func = &mesh_vd_id_func[i];
