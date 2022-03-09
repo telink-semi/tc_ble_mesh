@@ -347,7 +347,9 @@
                 [ShowTipsHandle.share delayHidden:1.0];
             });
         }];
-    } else if (indexPath.section == 8) {
+    }
+#ifdef kExist
+    else if (indexPath.section == 8) {
         [ShowTipsHandle.share show:@"Get Mesh Private Beacon..."];
         //Get Mesh Private Beacon
         [SDKLibCommand privateBeaconGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateBeaconStatus * _Nonnull responseMessage) {
@@ -405,6 +407,7 @@
             });
         }];
     }
+#endif
 }
 
 - (void)clickSetWithIndexPath:(NSIndexPath *)indexPath {
@@ -748,7 +751,9 @@
             }
         }];
         [customAlertView showCustomAlertView];
-    } else if (indexPath.section == 8) {
+    }
+#ifdef kExist
+    else if (indexPath.section == 8) {
         //Set Mesh Private Beacon
         AlertItemModel *item1 = [[AlertItemModel alloc] init];
         item1.itemType = ItemType_Choose;
@@ -877,6 +882,7 @@
         }];
         [customAlertView showCustomAlertView];
     }
+#endif
 }
 
 - (void)showTips:(NSString *)message{

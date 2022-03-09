@@ -209,6 +209,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 }
 
 - (NSData *)calculate_HMAC_SHA256_ConfirmationWithRandom:(NSData *)data authValue:(NSData *)authValue {
+#if SUPPORTCARTIFICATEBASED
     // Calculate the Confirmation Salt = s2(confirmationInputs).
 //    TeLogDebug(@"confirmationInputs=%@",[LibTools convertDataToHexStr:self.confirmationInputs]);
     NSData *confirmationSalt = [[OpenSSLHelper share] calculateSalt2:self.getConfirmationInputs];
@@ -222,6 +223,9 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     NSData *resultData = [[OpenSSLHelper share] calculateHMAC_SHA256:data andKey:confirmationKey];
 
     return resultData;
+#else
+    return nil;
+#endif
 }
 
 /// This method calculates the Session Key, Session Nonce and the Device Key based on the Confirmation Inputs, 16-byte Provisioner Random and 16-byte device Random.
@@ -232,7 +236,9 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     if (self.algorithm == Algorithm_fipsP256EllipticCurve) {
         confirmationSalt = [[OpenSSLHelper share] calculateSalt:self.getConfirmationInputs];
     } else if (self.algorithm == Algorithm_fipsP256EllipticCurve_HMAC_SHA256) {
+#if SUPPORTCARTIFICATEBASED
         confirmationSalt = [[OpenSSLHelper share] calculateSalt2:self.getConfirmationInputs];
+#endif
     }
     
     // Calculate the Provisioning Salt = s1(confirmationSalt + provisionerRandom + deviceRandom)

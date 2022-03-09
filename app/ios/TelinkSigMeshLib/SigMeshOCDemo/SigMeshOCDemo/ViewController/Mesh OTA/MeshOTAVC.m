@@ -323,6 +323,7 @@
 }
 
 - (IBAction)clickGetFwInfo:(UIButton *)sender {
+#ifdef kExist
     [self.allItemVIDDict removeAllObjects];
     __weak typeof(self) weakSelf = self;
     
@@ -400,6 +401,7 @@
             }
         }
     }];
+#endif
 }
 
 - (IBAction)clickStartMeshOTA:(UIButton *)sender {
@@ -869,6 +871,7 @@
 
 typedef void(^getFirmwareImageCompleteHandle)(NSError *error, SigFirmwareInformationEntryModel *model, NSData *firmwareData);
 - (void)getFirmwareImageWithNodeAddress:(UInt16)nodeAddress firstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit completeHandle:(getFirmwareImageCompleteHandle)completeHandle {
+#ifdef kExist
     [SDKLibCommand firmwareUpdateInformationGetWithDestination:nodeAddress firstIndex:firstIndex entriesLimit:entriesLimit retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
         TeLogDebug(@"firmwareUpdateInformationGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (responseMessage.firmwareInformationList && responseMessage.firmwareInformationList.count > 0) {
@@ -925,6 +928,7 @@ typedef void(^getFirmwareImageCompleteHandle)(NSError *error, SigFirmwareInforma
             }
         }
     }];
+#endif
 }
 
 - (void)startMeshOTADistribution {

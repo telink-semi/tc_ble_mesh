@@ -22,6 +22,9 @@
  *******************************************************************************************************/
 
 #import "SigKeyBindManager.h"
+#if SUPPORTOPCODESAGGREGATOR
+#import "SDKLibCommand+opcodesAggregatorSequence.h"
+#endif
 
 @interface SigKeyBindManager ()
 @property (nonatomic,strong) SigMessageHandle *messageHandle;
@@ -328,6 +331,7 @@
 }
 
 - (void)sendAppkeyAddAndBindModelByUsingOpcodesAggregatorSequence {
+#if SUPPORTOPCODESAGGREGATOR
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sendAppkeyAddAndBindModelByUsingOpcodesAggregatorSequenceTimeout) object:nil];
         [self performSelector:@selector(sendAppkeyAddAndBindModelByUsingOpcodesAggregatorSequenceTimeout) withObject:nil afterDelay:self.appkeyAddTimeOut+self.bindModelTimeOut];
@@ -383,6 +387,7 @@
             [weakSelf keyBindFailActionWithErrorString:error.domain];
         }
     }];
+#endif
 }
 
 - (void)sendAppkeyAddAndBindModelByUsingOpcodesAggregatorSequenceTimeout {
