@@ -1,37 +1,25 @@
 /********************************************************************************************************
-* @file     DeviceAppKeyListVC.m
-*
-* @brief    Show all AppKey of node.
-*
-* @author       Telink, 梁家誌
-* @date         2020
-*
-* @par      Copyright (c) 2020, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*           The information contained herein is confidential property of Telink
-*           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*           of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*           Co., Ltd. and the licensee or the terms described here-in. This heading
-*           MUST NOT be removed from this file.
-*
-*           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or
-*           alter) any information contained herein in whole or in part except as expressly authorized
-*           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible
-*           for any claim to the extent arising out of or relating to such deletion(s), modification(s)
-*           or alteration(s).
-*
-*           Licensees are granted free, non-transferable use of the information in this
-*           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  DeviceAppKeyListVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2020/9/17.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+ * @file     DeviceAppKeyListVC.m
+ *
+ * @brief    Show all AppKey of node.
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/9/17
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "DeviceAppKeyListVC.h"
 #import "KeyCell.h"
@@ -77,9 +65,9 @@
 - (void)clickRefresh:(UIButton *)button {
     [ShowTipsHandle.share show:@"get node AppKey list..."];
 
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     __weak typeof(self) weakSelf = self;
-    [oprationQueue addOperationWithBlock:^{
+    [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
         NSArray *temList = [NSArray arrayWithArray:self.model.netKeys];
         NSMutableArray *backList = [NSMutableArray array];
@@ -237,9 +225,9 @@
         UInt16 productID = [LibTools uint16From16String:self.model.pid];
         DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
         NSData *cpsData = deviceType.defaultCompositionData.parameters;
-        if (keyBindType == KeyBindTpye_Fast) {
+        if (keyBindType == KeyBindType_Fast) {
             if (cpsData == nil || cpsData.length == 0) {
-                keyBindType = KeyBindTpye_Normal;
+                keyBindType = KeyBindType_Normal;
             }
         }
         if (cpsData && cpsData.length > 0) {

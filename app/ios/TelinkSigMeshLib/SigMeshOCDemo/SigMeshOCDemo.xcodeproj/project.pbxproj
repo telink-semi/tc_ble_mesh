@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		251667C3273A0417006A302A /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25589C5F272140CF00F4F880 /* TelinkSigMeshLib.framework */; };
 		25589A14272115D700F4F880 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A13272115D700F4F880 /* AppDelegate.m */; };
 		25589A1D272115D700F4F880 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589A1B272115D700F4F880 /* Main.storyboard */; };
 		25589A1F272115DA00F4F880 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 25589A1E272115DA00F4F880 /* Assets.xcassets */; };
@@ -189,6 +188,7 @@
 		259AA1FF27293FDE0046CEB1 /* NSBundle+BRPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1EF27293FDE0046CEB1 /* NSBundle+BRPickerView.m */; };
 		259AA20027293FDE0046CEB1 /* BRAddressModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1F327293FDE0046CEB1 /* BRAddressModel.m */; };
 		259AA20127293FDE0046CEB1 /* BRAddressPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1F627293FDE0046CEB1 /* BRAddressPickerView.m */; };
+		25C6C5072745F24100B5FF2A /* TelinkSigMeshLibExtensions.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25589C61272140CF00F4F880 /* TelinkSigMeshLibExtensions.framework */; };
 		25DD7D0B2728E58D0029037A /* CertificateListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25DD7D092728E58D0029037A /* CertificateListVC.m */; };
 		25DD7D0C2728E58D0029037A /* CertificateListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25DD7D0A2728E58D0029037A /* CertificateListVC.xib */; };
 /* End PBXBuildFile section */
@@ -563,7 +563,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				251667C3273A0417006A302A /* TelinkSigMeshLib.framework in Frameworks */,
+				25C6C5072745F24100B5FF2A /* TelinkSigMeshLibExtensions.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -704,8 +704,8 @@
 			isa = PBXGroup;
 			children = (
 				25589A712721403E00F4F880 /* InfoButtonCell.h */,
-				25589A812721403E00F4F880 /* InfoButtonCell.xib */,
 				25589AA52721403E00F4F880 /* InfoButtonCell.m */,
+				25589A812721403E00F4F880 /* InfoButtonCell.xib */,
 				25589A802721403E00F4F880 /* HomeItemCell.h */,
 				25589AA22721403E00F4F880 /* HomeItemCell.m */,
 				25589A8A2721403E00F4F880 /* OnOffItemCell.h */,
@@ -744,9 +744,9 @@
 				25589A942721403E00F4F880 /* ChooseBinCell.h */,
 				25589AB72721403E00F4F880 /* ChooseBinCell.m */,
 				25589A992721403E00F4F880 /* ChooseBinCell.xib */,
-				25589A8E2721403E00F4F880 /* OnOffModelCell.xib */,
 				25589A962721403E00F4F880 /* OnOffModelCell.h */,
 				25589AB62721403E00F4F880 /* OnOffModelCell.m */,
+				25589A8E2721403E00F4F880 /* OnOffModelCell.xib */,
 				25589A972721403E00F4F880 /* ColorModelCell.h */,
 				25589AB42721403E00F4F880 /* ColorModelCell.m */,
 				25589AA62721403E00F4F880 /* ColorModelCell.xib */,
@@ -1175,8 +1175,8 @@
 		259AA1DB27293FDE0046CEB1 /* BRPickerView */ = {
 			isa = PBXGroup;
 			children = (
-				259AA1DC27293FDE0046CEB1 /* StringPickerView */,
 				259AA1E127293FDE0046CEB1 /* BRPickerView.h */,
+				259AA1DC27293FDE0046CEB1 /* StringPickerView */,
 				259AA1E227293FDE0046CEB1 /* DatePickerView */,
 				259AA1E927293FDE0046CEB1 /* Base */,
 				259AA1F227293FDE0046CEB1 /* AddressPickerView */,
@@ -1770,9 +1770,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/SigMeshOCDemo/PrefixHeader.pch";
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1812,9 +1813,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/SigMeshOCDemo/PrefixHeader.pch";
 				GENERATE_INFOPLIST_FILE = YES;

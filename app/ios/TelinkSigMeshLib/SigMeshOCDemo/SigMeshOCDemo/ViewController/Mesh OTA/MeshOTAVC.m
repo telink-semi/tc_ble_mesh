@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/4/17
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  MeshOTAVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/4/17.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "MeshOTAVC.h"
 #import "MeshOTAItemCell.h"
@@ -131,8 +125,8 @@
 //            //1、从直连节点获取firmwareDistributionReceiversGet，将ReceiversList作为选中的升级的节点地址
 //            NSMutableArray <NSNumber *>*mutableList = [NSMutableArray array];
 //            [SDKLibCommand firmwareDistributionReceiversGetWithDestination:addressNumber.intValue firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionReceiversList * _Nonnull responseMessage) {
-//                NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-//                [oprationQueue addOperationWithBlock:^{
+//                NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+//                [operationQueue addOperationWithBlock:^{
 //                    if (responseMessage && responseMessage.receiversList && responseMessage.receiversList.count) {
 //                        for (SigUpdatingNodeEntryModel *model in responseMessage.receiversList) {
 //                            if (![mutableList containsObject:@(model.address)]) {
@@ -353,8 +347,8 @@
         }
     }
     
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         [SDKLibCommand firmwareUpdateInformationGetWithDestination:kMeshAddress_allNodes firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMax successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {

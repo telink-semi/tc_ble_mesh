@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     TelinkSigMeshLib.h
-*
-* @brief    for TLSR chips
-*
-* @author       Telink, 梁家誌
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  TelinkSigMeshLib.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/10/21.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     TelinkSigMeshLib.h
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/10/21
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import <Foundation/Foundation.h>
 
@@ -44,7 +38,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
  2.不注释‘#define kExist’则生成包含MeshOTA、remote provision代码的库TelinkSigMeshLibExtensions.framework，demo需要导入头文件‘#import "TelinkSigMeshLib.h"’
  3.default release TelinkSigMeshLib.framework.
  */
-//#define kExist
+#define kExist
 #ifndef kExist
 
 // 1.该部分为不包含MeshOTA、remote provision代码的公开头文件
@@ -122,5 +116,10 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLibExtensions/SDKLibCommand+subnetBridge.h>
 #import <TelinkSigMeshLibExtensions/SDKLibCommand+certificate.h>
 #import <TelinkSigMeshLibExtensions/ConnectTools.h>
+#import <TelinkSigMeshLibExtensions/OTSCommand.h>
+#import <TelinkSigMeshLibExtensions/OTSBaseModel.h>
+#import <TelinkSigMeshLibExtensions/OTSHandle.h>
+#import <TelinkSigMeshLibExtensions/SDKLibCommand+CDTP.h>
+#import <TelinkSigMeshLibExtensions/NSData+Compression.h>
 
 #endif

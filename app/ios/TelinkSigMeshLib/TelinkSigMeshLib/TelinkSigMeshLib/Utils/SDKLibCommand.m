@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/9/4
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SDKLibCommand.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/4.
-//  Copyright © 2019 Telink. All rights reserved.
-//
 
 #import "SDKLibCommand.h"
 #import "SigECCEncryptHelper.h"
@@ -2591,48 +2585,19 @@
     [addresses addObject:@(kMeshAddress_allNodes)];
     // Submit.
     __weak typeof(self) weakSelf = self;
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
-        [weakSelf sendSecureNetworkBeacon];
+        if (SigMeshLib.share.meshPrivateBeacon && (SigMeshLib.share.sendBeaconType == AppSendBeaconType_auto || SigMeshLib.share.sendBeaconType == AppSendBeaconType_meshPrivateBeacon)) {
+            [weakSelf sendMeshPrivateBeacon];
+        } else {
+            [weakSelf sendSecureNetworkBeacon];
+        }
         [NSThread sleepForTimeInterval:0.1];
         TeLogVerbose(@"filter addresses:%@",addresses);
         [self setType:SigProxyFilerType_whitelist successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
 //            TeLogVerbose(@"filter type:%@",responseMessage);
-    //        //逻辑1.for循环每次只添加一个地址
-    //        NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    //        [oprationQueue addOperationWithBlock:^{
-    //            //这个block语句块在子线程中执行
-    //            NSLog(@"oprationQueue");
-    //            __block BOOL hasFail = NO;
-    //            __block NSError *err = nil;
-    //            for (NSNumber *num in addresses) {
-    //                dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    //                [weakSelf addAddressesToFilterWithAddresses:@[num] successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-    //                    TeLogInfo(@"responseMessage:.filterType=%d, .listSize=%d",responseMessage.filterType,responseMessage.listSize);
-    //                    dispatch_semaphore_signal(semaphore);
-    //                } failCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-    //                    hasFail = YES;
-    //                    err = error;
-    //                    dispatch_semaphore_signal(semaphore);
-    //                }];
-    //                dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-    //                if (hasFail) {
-    //                    break;
-    //                }
-    //            }
-    //            if (hasFail) {
-    //                if (failCallback) {
-    //                    failCallback(NO,err);
-    //                }
-    //            } else {
-    //                [weakSelf sendSecureNetworkBeacon];
-    //                if (successCallback) {
-    //                    successCallback(source,destination,responseMessage);
-    //                }
-    //            }
-    //        }];
-            
+            //逻辑1.for循环每次只添加一个地址            
             //逻辑2.一次添加多个地址
             dispatch_async(dispatch_get_main_queue(), ^{
                 [weakSelf addAddressesToFilterWithAddresses:addresses successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
@@ -3146,6 +3111,109 @@
 }
 
 
+#pragma mark - Opcodes Aggregator Sequence Message
+
++ (SigMessageHandle *)sendSigOpcodesAggregatorSequenceMessage:(SigOpcodesAggregatorSequence *)message retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseOpcodesAggregatorStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    command.curMeshMessage = message;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responseOpcodesAggregatorStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    command.curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
+    command.curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
+    command.curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
+    command.hadRetryCount = 0;
+    command.tidPosition = 0;
+    command.tid = 0;
+    command.source = SigMeshLib.share.dataSource.curLocationNodeModel.elements.firstObject;
+    command.destination = [[SigMeshAddress alloc] initWithAddress:message.elementAddress];
+    if (message.isEncryptByDeviceKey) {
+        //mesh数据使用DeviceKey进行加密
+        return [SigMeshLib.share sendConfigMessage:(SigConfigMessage *)message toDestination:message.elementAddress command:command];
+    } else {
+        //mesh数据使用AppKey进行加密
+        return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:command.destination usingApplicationKey:command.curAppkey command:command];
+    }
+}
+
+
+#pragma mark - 4.3.12 Mesh Private Beacon messages
+
++ (SigMessageHandle *)privateBeaconGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responsePrivateBeaconStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigPrivateBeaconGet *message = [[SigPrivateBeaconGet alloc] init];
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    command.curMeshMessage = message;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responsePrivateBeaconStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)privateBeaconSetWithPrivateBeacon:(SigPrivateBeaconState)privateBeacon randomUpdateIntervalSteps:(UInt8)randomUpdateIntervalSteps destination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responsePrivateBeaconStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigPrivateBeaconSet *message = [[SigPrivateBeaconSet alloc] initWithPrivateBeacon:privateBeacon randomUpdateIntervalSteps:randomUpdateIntervalSteps];
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    command.curMeshMessage = message;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responsePrivateBeaconStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)privateGattProxyGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responsePrivateGattProxyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigPrivateGattProxyGet *message = [[SigPrivateGattProxyGet alloc] init];
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    command.curMeshMessage = message;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responsePrivateGattProxyStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)privateGattProxySetWithPrivateGattProxy:(SigPrivateGattProxyState)privateGattProxy destination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responsePrivateGattProxyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigPrivateGattProxySet *message = [[SigPrivateGattProxySet alloc] initWithPrivateGattProxy:privateGattProxy];
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    command.curMeshMessage = message;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responsePrivateGattProxyStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)privateNodeIdentityGetWithDestination:(UInt16)destination netKeyIndex:(UInt16)netKeyIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responsePrivateNodeIdentityStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigPrivateNodeIdentityGet *message = [[SigPrivateNodeIdentityGet alloc] initWithNetKeyIndex:netKeyIndex];
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    command.curMeshMessage = message;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responsePrivateNodeIdentityStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
+}
+
++ (SigMessageHandle *)privateNodeIdentitySetWithNetKeyIndex:(UInt16)netKeyIndex privateIdentity:(SigPrivateNodeIdentityState)privateIdentity destination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responsePrivateNodeIdentityStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
+    SigPrivateNodeIdentitySet *message = [[SigPrivateNodeIdentitySet alloc] initWithNetKeyIndex:netKeyIndex privateIdentity:privateIdentity];
+    SDKLibCommand *command = [[SDKLibCommand alloc] init];
+    command.curMeshMessage = message;
+    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
+    command.responsePrivateNodeIdentityStatusCallBack = successCallback;
+    command.resultCallback = resultCallback;
+    command.responseMaxCount = responseMaxCount;
+    command.retryCount = retryCount;
+    return [SigMeshLib.share sendConfigMessage:message toDestination:destination command:command];
+}
+
+
 #pragma mark - API by Telink
 
 + (nullable NSError *)telinkApiGetOnlineStatueFromUUIDWithResponseMaxCount:(int)responseMaxCount successCallback:(responseGenericOnOffStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
@@ -3272,7 +3340,7 @@
 }
 
 + (BOOL)isReliableCommandWithOpcode:(UInt16)opcode vendorOpcodeResponse:(UInt32)vendorOpcodeResponse {
-    if (IS_VENDOR_OP(opcode)) {
+    if ([SigHelper.share getOpCodeTypeWithOpcode:opcode] == SigOpCodeType_vendor3) {
         return ((vendorOpcodeResponse & 0xff) != 0);
     } else {
         int responseOpCode = [SigHelper.share getResponseOpcodeWithSendOpcode:opcode];
@@ -3324,12 +3392,31 @@
     [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
 }
 
++ (void)sendMeshPrivateBeacon {
+    if (SigMeshLib.share.meshPrivateBeacon) {
+        //APP端已经接收到设备端上报的meshPrivateBeacon,无需处理。
+
+    } else {
+        //APP端未接收到设备端上报的meshPrivateBeacon,需要根据APP端的SequenceNumber生成meshPrivateBeacon。
+        if (SigMeshLib.share.dataSource.getCurrentProvisionerIntSequenceNumber >= 0xc00000) {
+            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index+1 randomData:[LibTools createRandomDataWithLength:13] usingNetworkKey:SigMeshLib.share.dataSource.curNetkeyModel];
+            SigMeshLib.share.meshPrivateBeacon = beacon;
+        } else {
+            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:NO ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index randomData:[LibTools createRandomDataWithLength:13] usingNetworkKey:SigMeshLib.share.dataSource.curNetkeyModel];
+            SigMeshLib.share.meshPrivateBeacon = beacon;
+        }
+    }
+    SigMeshPrivateBeacon *beacon = SigMeshLib.share.meshPrivateBeacon;
+    TeLogInfo(@"send meshPrivateBeacon=%@",beacon);
+    [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
+}
+
 + (void)updateIvIndexWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive networkId:(NSData *)networkId ivIndex:(UInt32)ivIndex usingNetworkKey:(SigNetkeyModel *)networkKey {
     SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:keyRefreshFlag ivUpdateActive:ivUpdateActive networkId:networkId ivIndex:ivIndex usingNetworkKey:networkKey];
     TeLogInfo(@"send updateIvIndex SecureNetworkBeacon=%@",[LibTools convertDataToHexStr:beacon.pduData]);
 //    if (NSThread.currentThread.isMainThread) {
-//        NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-//        [oprationQueue addOperationWithBlock:^{
+//        NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+//        [operationQueue addOperationWithBlock:^{
             //这个block语句块在子线程中执行
             [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
 //        }];
@@ -3388,7 +3475,7 @@
  @param appkeyModel appkey model
  @param unicastAddress address of remote device
  @param uuid uuid of remote device
- @param type KeyBindTpye_Normal是普通添加模式，KeyBindTpye_Quick是快速添加模式
+ @param type KeyBindType_Normal是普通添加模式，KeyBindType_Quick是快速添加模式
  @param isAuto 添加完成一个设备后，是否自动扫描添加下一个设备
  @param provisionSuccess call back when a device provision successful
  @param provisionFail call back when a device provision fail
@@ -3396,7 +3483,7 @@
  @param keyBindFail call back when a device keybind fail
  @param finish finish add the available devices list to the mesh
  */
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
++ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
     [SigAddDeviceManager.share startAddDeviceWithNextAddress:address networkKey:networkKey netkeyIndex:netkeyIndex appkeyModel:appkeyModel unicastAddress:unicastAddress uuid:uuid keyBindType:type productID:productID cpsData:cpsData isAutoAddNextDevice:isAuto provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail finish:finish];
 }
 
@@ -3408,15 +3495,15 @@ function 1:special if you need do provision , you should call this method, and i
 @param networkKey network key, which provsion need, you can see it as password of the mesh
 @param netkeyIndex netkey index
 @param peripheral device need add to mesh
-@param provisionType ProvisionTpye_NoOOB or ProvisionTpye_StaticOOB.
-@param staticOOBData oob for ProvisionTpye_StaticOOB.
-@param type KeyBindTpye_Normal是普通添加模式，KeyBindTpye_Quick是快速添加模式
+@param provisionType ProvisionType_NoOOB or ProvisionType_StaticOOB.
+@param staticOOBData oob for ProvisionType_StaticOOB.
+@param type KeyBindType_Normal是普通添加模式，KeyBindType_Quick是快速添加模式
 @param provisionSuccess call back when a device provision successful
 @param provisionFail call back when a device provision fail
 @param keyBindSuccess call back when a device keybind successful
 @param keyBindFail call back when a device keybind fail
 */
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail{
++ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail{
     [SigAddDeviceManager.share startAddDeviceWithNextAddress:(UInt16)address networkKey:networkKey netkeyIndex:netkeyIndex appkeyModel:appkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:type productID:productID cpsData:cpsData provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail];
 }
 
@@ -3437,15 +3524,15 @@ function 1:special if you need do provision , you should call this method, and i
 /// @param unicastAddress address of new device.
 /// @param networkKey networkKey
 /// @param netkeyIndex netkeyIndex
-/// @param provisionType ProvisionTpye_NoOOB means oob data is 16 bytes zero data, ProvisionTpye_StaticOOB means oob data is get from HTTP API.
-/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionTpye_StaticOOB.
+/// @param provisionType ProvisionType_NoOOB means oob data is 16 bytes zero data, ProvisionType_StaticOOB means oob data is get from HTTP API.
+/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-+ (void)startProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
-    if (provisionType == ProvisionTpye_NoOOB) {
++ (void)startProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+    if (provisionType == ProvisionType_NoOOB) {
         TeLogVerbose(@"start noOob provision.");
         [SigProvisioningManager.share provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex provisionSuccess:provisionSuccess fail:fail];
-    } else if (provisionType == ProvisionTpye_StaticOOB) {
+    } else if (provisionType == ProvisionType_StaticOOB) {
         TeLogVerbose(@"start staticOob provision.");
         [SigProvisioningManager.share provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex staticOobData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
     } else {
@@ -3460,12 +3547,12 @@ function 1:special if you need do provision , you should call this method, and i
 /// @param appkey appkey
 /// @param appkeyIndex appkeyIndex
 /// @param netkeyIndex netkeyIndex
-/// @param keyBindType KeyBindTpye_Normal means add appkey and model bind, KeyBindTpye_Fast means just add appkey.
-/// @param productID the productID info need to save in node when keyBindType is KeyBindTpye_Fast.
-/// @param cpsData the elements info need to save in node when keyBindType is KeyBindTpye_Fast.
+/// @param keyBindType KeyBindType_Normal means add appkey and model bind, KeyBindType_Fast means just add appkey.
+/// @param productID the productID info need to save in node when keyBindType is KeyBindType_Fast.
+/// @param cpsData the elements info need to save in node when keyBindType is KeyBindType_Fast.
 /// @param keyBindSuccess callback when keybind success.
 /// @param fail callback when provision fail.
-+ (void)startKeyBindWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress appKey:(NSData *)appkey appkeyIndex:(UInt16)appkeyIndex netkeyIndex:(UInt16)netkeyIndex keyBindType:(KeyBindTpye)keyBindType productID:(UInt16)productID cpsData:(NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail {
++ (void)startKeyBindWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress appKey:(NSData *)appkey appkeyIndex:(UInt16)appkeyIndex netkeyIndex:(UInt16)netkeyIndex keyBindType:(KeyBindType)keyBindType productID:(UInt16)productID cpsData:(NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail {
     [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
         if (successful) {
             SigAppkeyModel *appkeyModel = [SigMeshLib.share.dataSource getAppkeyModelWithAppkeyIndex:appkeyIndex];
@@ -3488,7 +3575,7 @@ function 1:special if you need do provision , you should call this method, and i
 }
 
 /// Do key bound(纯keyBind接口)
-+ (void)keyBind:(UInt16)address appkeyModel:(SigAppkeyModel *)appkeyModel keyBindType:(KeyBindTpye)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail {
++ (void)keyBind:(UInt16)address appkeyModel:(SigAppkeyModel *)appkeyModel keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess fail:(ErrorBlock)fail {
     [SigKeyBindManager.share keyBind:address appkeyModel:appkeyModel keyBindType:type productID:productID cpsData:cpsData keyBindSuccess:keyBindSuccess fail:fail];
 }
 

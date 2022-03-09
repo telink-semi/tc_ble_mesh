@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/15
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigConfigMessage.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/15.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "SigMeshMessage.h"
 
@@ -1628,6 +1622,172 @@ Value          Description
 @property (nonatomic,assign) UInt8 outboundPDUNumber;
 /// Provisioning PDU.
 @property (nonatomic,strong) NSData *provisioningPDU;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB809
+
+/// 4.3.9.2 OPCODES_AGGREGATOR_SEQUENCE
+/// - seeAlso: MshPRFd1.1r13_clean.pdf  (page.389)
+@interface SigOpcodesAggregatorSequence : SigConfigMessage
+/// The Element_Address field is the unicast address of the element. All other address types are prohibited.
+@property (nonatomic,assign) UInt16 elementAddress;
+/// List of items with each item represented as an Aggregator Item.
+@property (nonatomic,strong) NSArray <SigOpcodesAggregatorItemModel *>*items;
+/// 使用SDK的方法`initWithParameters:`和`initWithElementAddress:items:`初始化的SigOpcodesAggregatorSequence，会自动根据输入的items的第一个message使用的key来赋值isEncryptByDeviceKey。
+@property (nonatomic,assign) BOOL isEncryptByDeviceKey;// default is NO.
+
+- (NSData *)parameters;
+- (NSData *)opCodeAndParameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithElementAddress:(UInt16)elementAddress items:(NSArray <SigOpcodesAggregatorItemModel *>*)items;
+@end
+
+
+#pragma mark opcode:0xB810
+
+/// 4.3.9.3 OPCODES_AGGREGATOR_STATUS
+/// - seeAlso: MshPRFd1.1r13_clean.pdf  (page.389)
+@interface SigOpcodesAggregatorStatus : SigConfigMessage
+/// The Status field indicates the status of the most recent operation.
+@property (nonatomic,assign) SigOpcodesAggregatorMessagesStatus status;
+/// The Element_Address field is the unicast address of the element. All other address types are prohibited.
+@property (nonatomic,assign) UInt16 elementAddress;
+/// List of status items with each status item containing an unacknowledged access layer message or empty item (Optional).
+@property (nonatomic,strong) NSArray <SigOpcodesAggregatorItemModel *>*statusItems;
+- (NSData *)parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithStatus:(SigOpcodesAggregatorMessagesStatus)status elementAddress:(UInt16)elementAddress items:(NSArray <SigOpcodesAggregatorItemModel *>*)items;
+@end
+
+
+#pragma mark - 4.3.12 Mesh Private Beacon messages
+
+#pragma mark opcode:0xB711
+
+@interface SigPrivateBeaconGet : SigConfigMessage
+- (NSData *)parameters;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0xB712
+
+@interface SigPrivateBeaconSet : SigConfigMessage
+/// New Private Beacon state.
+@property (nonatomic,assign) SigPrivateBeaconState privateBeacon;
+/// New Random Update Interval Steps state (optional).
+/// 0x00, Random field is updated for every Mesh Private beacon.
+/// 0x01–0xFF, Random field is updated at an interval (in seconds) of (10 * Random Update Interval Steps).
+@property (nonatomic,assign) UInt8 randomUpdateIntervalSteps;
+
+- (instancetype)initWithPrivateBeacon:(SigPrivateBeaconState)privateBeacon randomUpdateIntervalSteps:(UInt8)randomUpdateIntervalSteps;
+- (NSData *)parameters;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0xB713
+
+@interface SigPrivateBeaconStatus : SigConfigMessage
+/// Current value of the Private Beacon state.
+@property (nonatomic,assign) SigPrivateBeaconState privateBeacon;
+/// Current value of the Random Update Interval Steps state.
+@property (nonatomic,assign) UInt8 randomUpdateIntervalSteps;
+
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithPrivateBeacon:(SigPrivateBeaconState)privateBeacon randomUpdateIntervalSteps:(UInt8)randomUpdateIntervalSteps;
+- (NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB714
+
+@interface SigPrivateGattProxyGet : SigConfigMessage
+- (NSData *)parameters;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0xB715
+
+@interface SigPrivateGattProxySet : SigConfigMessage
+/// New Private GATT Proxy state.
+@property (nonatomic,assign) SigPrivateGattProxyState privateGattProxy;
+
+- (instancetype)initWithPrivateGattProxy:(SigPrivateGattProxyState)privateGattProxy;
+- (NSData *)parameters;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0xB716
+
+@interface SigPrivateGattProxyStatus : SigConfigMessage
+/// Private GATT Proxy state.
+@property (nonatomic,assign) SigPrivateGattProxyState privateGattProxy;
+
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithPrivateGattProxy:(SigPrivateGattProxyState)privateGattProxy;
+- (NSData *)parameters;
+@end
+
+
+#pragma mark opcode:0xB718
+
+@interface SigPrivateNodeIdentityGet : SigConfigMessage
+/// Index of the NetKey.
+@property (nonatomic,assign) UInt16 netKeyIndex;
+- (NSData *)parameters;
+- (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex;
+- (instancetype)initWithParameters:(NSData *)parameters;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0xB719
+
+@interface SigPrivateNodeIdentitySet : SigConfigMessage
+/// Index of the NetKey.
+@property (nonatomic,assign) UInt16 netKeyIndex;
+/// New Private Node Identity state.
+@property (nonatomic,assign) SigPrivateNodeIdentityState privateIdentity;
+- (NSData *)parameters;
+- (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex privateIdentity:(SigPrivateNodeIdentityState)privateIdentity;
+- (instancetype)initWithParameters:(NSData *)parameters;
+/// The Type of the response message.
+- (Class)responseType;
+/// The Op Code of the response message.
+- (UInt32)responseOpCode;
+@end
+
+
+#pragma mark opcode:0xB71A
+
+@interface SigPrivateNodeIdentityStatus : SigConfigMessage
+/// Status Code for the requesting message.
+@property (nonatomic,assign) SigOpcodesAggregatorMessagesStatus status;
+/// Index of the NetKey.
+@property (nonatomic,assign) UInt16 netKeyIndex;
+/// Private Node Identity state.
+@property (nonatomic,assign) SigPrivateNodeIdentityState privateIdentity;
 - (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end

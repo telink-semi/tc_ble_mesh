@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     SigConst.m
-*
-* @brief    for TLSR chips
-*
-* @author       Telink, 梁家誌
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigConst.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/11/27.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     SigConst.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/11/27
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "SigConst.h"
 
@@ -61,8 +55,6 @@ NSString * const kFirmwareRevisionCharacteristicsID = @"2A26";
 //存储数据的key
 //mesh
 NSString * const kScanList_key = @"scanList_key";
-NSString * const kMatchsList_key = @"matchsList_key";
-NSString * const kNoMatchsList_key = @"noMatchsList_key";
 NSString * const kJsonMeshUUID_key = @"MeshUUID";
 NSString * const kCurrenProvisionerUUID_key = @"currenProvisionerUUID_key";
 NSString * const kCurrenProvisionerSno_key = @"currenProvisionerSno_key";
@@ -73,8 +65,9 @@ NSString * const kCurrentMeshProvisionAddress_key = @"currentMeshProvisionAddres
 NSString * const kSigScanRspModel_uuid_key = @"sigScanRspModel_uuid_key";
 NSString * const kSigScanRspModel_address_key = @"sigScanRspModel_address_key";
 NSString * const kSigScanRspModel_mac_key = @"sigScanRspModel_mac_key";
-NSString * const kSigScanRspModel_nodeIdentityData_key = @"sigScanRspModel_nodeIdentityData_key";
-NSString * const kSigScanRspModel_networkIDData_key = @"sigScanRspModel_networkIDData_key";
+//NSString * const kSigScanRspModel_nodeIdentityData_key = @"sigScanRspModel_nodeIdentityData_key";
+//NSString * const kSigScanRspModel_networkIDData_key = @"sigScanRspModel_networkIDData_key";
+NSString * const kSigScanRspModel_advertisementDataServiceData_key = @"sigScanRspModel_advertisementDataServiceData_key";
 //meshOTA
 NSString * const kSaveMeshOTADictKey = @"kSaveMeshOTADictKey";
 /*存储在本地的数据的key，不再存储在cache中，以为苹果设备的存储快满的时候，系统会删除cache文件夹的数据*/
@@ -105,7 +98,14 @@ NSString * const kSigModelGroup_RemoteProvision_Describe = @"Remote Provision";
 NSString * const kSigModelGroup_FirmwareUpdate_Describe = @"Firmware Update";
 NSString * const kSigModelGroup_FirmwareDistribution_Describe = @"Firmware Distribution";
 NSString * const kSigModelGroup_ObjectTransfer_Describe = @"Object Transfer";
+NSString * const kSigModelGroup_DF_CFG_Describe = @"DF_CFG";
 NSString * const kSigModelGroup_SubnetBridge_Describe = @"Subnet Bridge";
+NSString * const kSigModelGroup_PrivateBeacon_Describe = @"Private Beacon";
+NSString * const kSigModelGroup_ON_DEMAND_PROXY_Describe = @"On-demand Proxy";
+NSString * const kSigModelGroup_SAR_CFG_Describe = @"SAR Configuration";
+NSString * const kSigModelGroup_OP_AGG_Describe = @"Opcodes Aggregator";
+NSString * const kSigModelGroup_LARGE_CPS_Describe = @"Large Composition Data";
+NSString * const kSigModelGroup_SOLI_PDU_RPL_CFG_Describe = @"Solicitation PDU RPL Configuration";
 
 NSString * const kSigModel_ConfigurationServer_Describe = @"Configuration Server";
 NSString * const kSigModel_ConfigurationClient_Describe             = @"Configuration Client";
@@ -176,7 +176,24 @@ NSString * const kSigModel_FirmwareDistributionServer_Describe         = @"Firmw
 NSString * const kSigModel_FirmwareDistributionClient_Describe         = @"Firmware Distribution Client";
 NSString * const kSigModel_ObjectTransferServer_Describe         = @"Object Transfer Server";
 NSString * const kSigModel_ObjectTransferClient_Describe         = @"Object Transfer Client";
-NSString * const kSigModel_SubnetBridgeServer_Describe                = @"Subnet Bridge Server";
+
+NSString * const kSigModel_DF_CFG_S_Describe = @"DF_CFG Server";
+NSString * const kSigModel_DF_CFG_C_Describe = @"DF_CFG Client";
+NSString * const kSigModel_SubnetBridgeServer_Describe = @"Subnet Bridge Server";
+NSString * const kSigModel_SubnetBridgeClient_Describe = @"Subnet Bridge Client";
+NSString * const kSigModel_PrivateBeaconServer_Describe = @"Private Beacon Server";
+NSString * const kSigModel_PrivateBeaconClient_Describe = @"Private Beacon Client";
+NSString * const kSigModel_ON_DEMAND_PROXY_S_Describe = @"On-demand Proxy Server";
+NSString * const kSigModel_ON_DEMAND_PROXY_C_Describe = @"On-demand Proxy Client";
+NSString * const kSigModel_SAR_CFG_S_Describe = @"SAR Configuration Server";
+NSString * const kSigModel_SAR_CFG_C_Describe = @"SAR Configuration Client";
+NSString * const kSigModel_OP_AGG_S_Describe = @"Opcodes Aggregator Server";
+NSString * const kSigModel_OP_AGG_C_Describe = @"Opcodes Aggregator Client";
+NSString * const kSigModel_LARGE_CPS_S_Describe = @"Large Composition Data Server";
+NSString * const kSigModel_LARGE_CPS_C_Describe = @"Large Composition Data Client";
+NSString * const kSigModel_SOLI_PDU_RPL_CFG_S_Describe = @"Solicitation PDU RPL Configuration Server";
+NSString * const kSigModel_SOLI_PDU_RPL_CFG_C_Describe = @"Solicitation PDU RPL Configuration Client";
+
 
 #pragma mark - Const bool
 
@@ -322,8 +339,6 @@ UInt8 const kTimePublishInterval = 30;
 //离线检测的时长
 UInt8 const kOfflineInterval = (kPublishInterval * 3 + 1);
 
-//SIGParameters
-UInt8 const kSigmodel_SIGParameters = 1;
 //kCmdReliable_SIGParameters: 1 means send reliable cmd ,and the node will send rsp ,0 means unreliable ,will not send
 UInt8 const kCmdReliable_SIGParameters = 1;
 UInt8 const kCmdUnReliable_SIGParameters = 0;
@@ -351,8 +366,8 @@ UInt32 const kSigMeshLibIsBusyErrorCode = 0x02110100;
 NSString * const kSigMeshLibIsBusyErrorMessage = @"SDK is busy, because SigMeshLib.share.commands.count isn't empty.";
 
 /*当前连接的设备不存在私有特征OnlineStatusCharacteristic*/
-UInt32 const kSigMeshLibNofoundOnlineStatusCharacteristicErrorCode = 0x02110101;
-NSString * const kSigMeshLibNofoundOnlineStatusCharacteristicErrorMessage = @"No found, because current device no found onlineStatusCharacteristic.";
+UInt32 const kSigMeshLibNoFoundOnlineStatusCharacteristicErrorCode = 0x02110101;
+NSString * const kSigMeshLibNoFoundOnlineStatusCharacteristicErrorMessage = @"No found, because current device no found onlineStatusCharacteristic.";
 
 /*当前的mesh数据源未创建*/
 UInt32 const kSigMeshLibNoCreateMeshNetworkErrorCode = 0x02110102;
@@ -378,13 +393,6 @@ NSString * const kSigMeshLibCommandInvalidNetKeyIndexErrorMessage = @"Invalid Ne
 UInt32 const kSigMeshLibCommandInvalidAppKeyIndexErrorCode = 0x02110107;
 NSString * const kSigMeshLibCommandInvalidAppKeyIndexErrorMessage = @"Invalid AppKey Index.";
 
-/*模拟外设的固定服务和特征(分享中使用)*/
-NSString * const kServiceUUID = @"33333333-0000-1000-8000-111111111111";
-NSString * const kWriteNotiyCharacteristicUUID = @"22222222-0000-1000-8000-111111111111";
-/*一个蓝牙json数据包的有效数据长度，测试结果长度为100时，使用时间较短*/
-UInt16 const kPacketJsonLength = 100;
-UInt16 const kPacketAllLength = kPacketJsonLength+4;
-
 /*telink当前定义的两个设备类型*/
 UInt16 const SigNodePID_CT = 1;
 UInt16 const SigNodePID_HSL = 2;
@@ -395,8 +403,8 @@ UInt16 const SigNodePID_Switch = 0x0301;
 float const kCMDInterval = 0.32;
 float const kSDKLibCommandTimeout = 1.28;
 
-/*读取json里面的mesh数据后，默认新增一个增量128; snox增加这个增量后存储一次本地json(当前只存储手机本地，无需存储在json)*/
-UInt32 const kSnoIncrement = 128;
+/*读取json里面的mesh数据后，默认新增一个增量128; SequenceNumber增加这个增量后存储一次本地json(当前只存储手机本地，无需存储在json)*/
+UInt32 const kSequenceNumberIncrement = 128;
 
 /*初始化json数据时的ivIndex的值*/
 UInt32 const kDefaultIvIndex = 0x0;//0x0
