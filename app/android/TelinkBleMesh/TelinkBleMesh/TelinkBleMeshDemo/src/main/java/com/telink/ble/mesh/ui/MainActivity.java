@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -26,6 +27,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.telink.ble.mesh.SharedPreferenceHelper;
@@ -63,12 +69,8 @@ import com.telink.ble.mesh.ui.fragment.SettingFragment;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-
 import java.io.ByteArrayInputStream;
+import java.nio.ByteBuffer;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
@@ -98,12 +100,12 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
         CertCacheService.getInstance().load(this); // load cert cache
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                testMeshPrivateBeacon();
-            }
-        }, 1000);
+//        mHandler.postDelayed(this::testMeshPrivateBeacon, 1000);
+
+        mHandler.postDelayed(this::testNetworkId, 1500);
+//
+//        mHandler.postDelayed(this::testNodeIdentity, 1800);
+
     }
 
     private void initBottomNav() {
@@ -134,14 +136,69 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     }
 
     public void testMeshPrivateBeacon() {
-
+        MeshLogger.d("start generate beacon");
         byte[] netKey = Arrays.hexToBytes("f7a2a44f8e8a8029064f173ddc1e2b00");
         byte[] pvtBeaconKey = Encipher.generatePrivateBeaconKey(netKey);
         MeshLogger.d("private beacon key: " + Arrays.bytesToHexString(pvtBeaconKey));
         int ivIndex = 0x1010abcc;
-
+        // 435f18f85cf78a3121f58478a561e488e7cbf3174f022a514741
+        // 435F18F85CF78A3121F58478A5229FDBD6BFF3174F022A514741
         MeshPrivateBeacon beacon = MeshPrivateBeacon.createIvUpdatingBeacon(ivIndex, pvtBeaconKey, true);
-        MeshLogger.d("beacon: " + Arrays.bytesToHexString(beacon.toBytes()));
+        byte[] beaconData = beacon.toBytes();
+        MeshLogger.d("beacon: " + Arrays.bytesToHexString(beaconData));
+
+        /*
+//        byte[] netKey = Arrays.hexToBytes("f7a2a44f8e8a8029064f173ddc1e2b00");
+        byte[] netKey = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultNetKey().key;
+        byte[] pvtBeaconKey = Encipher.generatePrivateBeaconKey(netKey);
+        MeshLogger.d("private beacon key: " + Arrays.bytesToHexString(pvtBeaconKey));
+        int ivIndex = 0x00;
+
+        MeshPrivateBeacon beacon = MeshPrivateBeacon.createIvUpdatingBeacon(ivIndex, pvtBeaconKey, false);
+        byte[] beaconData = beacon.toBytes();*/
+        MeshLogger.d("beacon: " + Arrays.bytesToHexString(beaconData));
+        testParsePrivateBeacon(beaconData, pvtBeaconKey);
+    }
+
+    public void testParsePrivateBeacon(byte[] beaconData, byte[] pvtBeaconKey) {
+        // 02A790C3BED192C44A048E0772C3F21F904B2566A8A8539464E13C
+        // privateBeaconKey - F36BFD60435998616D37A67398E5D47E
+//        beaconData = Arrays.hexToBytes("02A790C3BED192C44A048E0772C3F21F904B2566A8A8539464E13C");
+//        pvtBeaconKey = Arrays.hexToBytes("F36BFD60435998616D37A67398E5D47E");
+        MeshLogger.d("start parse beacon");
+        MeshPrivateBeacon privateBeacon = MeshPrivateBeacon.from(beaconData, pvtBeaconKey);
+        if (privateBeacon != null) {
+            MeshLogger.d(String.format("private beacon parse success: %08X", privateBeacon.getIvIndex()));
+        }
+    }
+
+
+    public void testNetworkId() {
+        MeshLogger.d("start testNetworkId");
+        byte[] netKey = Arrays.hexToBytes("7dd7364cd842ad18c17c2b820c84c3d6");
+        byte[] random = Arrays.hexToBytes("34ae608fbbc1f2c6");
+//        byte[] networkId  = Arrays.hexToBytes("3ecaff672f673370");
+        byte[] networkId = Encipher.k3(netKey);
+        MeshLogger.d("networkId: " + Arrays.bytesToHexString(networkId));
+        byte[] identityKey = Encipher.generateIdentityKey(netKey);
+        MeshLogger.d("identityKey: " + Arrays.bytesToHexString(identityKey));
+        byte[] hash = Encipher.aes(ByteBuffer.allocate(16).put(networkId).put(random).array(), identityKey);
+        // A19967973D8094ECD30F7229EF045435
+        MeshLogger.d("hash: " + Arrays.bytesToHexString(hash));
+    }
+
+    public void testNodeIdentity() {
+        MeshLogger.d("start testNodeIdentity");
+        byte[] netKey = Arrays.hexToBytes("7dd7364cd842ad18c17c2b820c84c3d6");
+        byte[] random = Arrays.hexToBytes("34ae608fbbc1f2c6");
+        int address = 0x1201;
+        byte[] identityKey = Encipher.generateIdentityKey(netKey);
+        byte[] padding = Arrays.hexToBytes("0000000000");
+        byte[] data = ByteBuffer.allocate(16).put(padding).put((byte) 0x03).put(random).putShort((short) address)
+                .array();
+        byte[] hash = Encipher.aes(data, identityKey);
+        // 2EBA33B59D60593E2C64A8CBCA65BFE1
+        MeshLogger.d("hash: " + Arrays.bytesToHexString(hash));
     }
 
     /**

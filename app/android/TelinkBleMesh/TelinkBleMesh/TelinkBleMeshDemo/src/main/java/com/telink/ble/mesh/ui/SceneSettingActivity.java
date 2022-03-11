@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     SceneSettingActivity.java 
+ * @file SceneSettingActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -28,33 +29,32 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
-import com.telink.ble.mesh.core.message.config.ConfigStatus;
-import com.telink.ble.mesh.demo.R;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.MeshSigModel;
+import com.telink.ble.mesh.core.message.NotificationMessage;
+import com.telink.ble.mesh.core.message.config.ConfigStatus;
+import com.telink.ble.mesh.core.message.scene.SceneDeleteMessage;
+import com.telink.ble.mesh.core.message.scene.SceneRegisterStatusMessage;
+import com.telink.ble.mesh.core.message.scene.SceneStoreMessage;
+import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.foundation.Event;
+import com.telink.ble.mesh.foundation.EventListener;
+import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.Scene;
 import com.telink.ble.mesh.ui.adapter.BaseSelectableListAdapter;
 import com.telink.ble.mesh.ui.adapter.DeviceSelectAdapter;
-import com.telink.ble.mesh.core.message.MeshMessage;
-import com.telink.ble.mesh.core.message.MeshSigModel;
-import com.telink.ble.mesh.core.message.NotificationMessage;
-import com.telink.ble.mesh.core.message.scene.SceneDeleteMessage;
-import com.telink.ble.mesh.core.message.scene.SceneRegisterStatusMessage;
-import com.telink.ble.mesh.core.message.scene.SceneStoreMessage;
-import com.telink.ble.mesh.foundation.Event;
-import com.telink.ble.mesh.foundation.EventListener;
-import com.telink.ble.mesh.foundation.MeshService;
-import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.util.MeshLogger;
-
 
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Scene Setting
@@ -217,12 +217,14 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
                     MeshLogger.log("scene save: device check fail");
                     continue;
                 }
-
+                boolean sceneExits = scene.contains(deviceInfo);
                 if (!deviceInfo.selected) {
-                    if (scene.contains(deviceInfo))
+                    if (sceneExits)
                         selectedAdrList.add(new SettingModel(adr, false));
                 } else {
-                    selectedAdrList.add(new SettingModel(adr, true));
+                    if (!sceneExits) {
+                        selectedAdrList.add(new SettingModel(adr, true));
+                    }
                 }
             }
         }

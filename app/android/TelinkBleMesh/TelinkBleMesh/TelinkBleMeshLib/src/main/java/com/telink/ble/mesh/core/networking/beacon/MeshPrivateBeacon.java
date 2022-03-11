@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file SecureNetworkBeacon.java
+ * @file MeshPrivateBeacon.java
  *
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.networking.beacon;
 
@@ -29,7 +30,6 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-// todo
 public class MeshPrivateBeacon extends MeshBeaconPDU {
 
     private static final int LENGTH_PAYLOAD = 27;
@@ -38,7 +38,7 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
 
     private static final int MASK_IV_UPDATE = 0b10;
 
-    private final byte beaconType = BEACON_TYPE_SECURE_NETWORK;
+    private final byte beaconType = BEACON_TYPE_MESH_PRIVATE;
 
     private byte flags;
 
@@ -77,7 +77,6 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
         index += rdnLen;
 
         beacon.random = random;
-
         final int obfLen = 5;
         beacon.obfuscatedData = new byte[obfLen];
         System.arraycopy(payload, index, beacon.obfuscatedData, 0, obfLen);
@@ -87,7 +86,7 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
         beacon.authenticationTag = new byte[authLen];
         System.arraycopy(payload, index, beacon.authenticationTag, 0, authLen);
 
-        byte[] c1 = ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN).put((byte) 0x01)
+        byte[] c1 = ByteBuffer.allocate(16).order(ByteOrder.BIG_ENDIAN).put((byte) 0x01)
                 .put(random).putShort((short) 0x0001).array();
 
         byte[] s = Encipher.aes(c1, privateBeaconKey);
@@ -100,6 +99,7 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
         beacon.ivIndex = MeshUtils.bytes2Integer(privateBeaconData, 1, 4, ByteOrder.BIG_ENDIAN);
 
         byte[] authTag = calcAuthTag(privateBeaconData, random, privateBeaconKey);
+
         if (Arrays.equals(beacon.authenticationTag, authTag)) {
             return beacon;
         } else {
@@ -119,11 +119,11 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
                 .put(flags).putInt(ivIndex).array();
         MeshLogger.d("beacon data: " + Arrays.bytesToHexString(privateBcnData));
 //        byte[] random = MeshUtils.generateRandom(13);
-        byte[] random = Arrays.hexToBytes("435f18f85cf78a3121f58478a5"); //  mesh sig
+        byte[] random = Arrays.hexToBytes("435f18f85cf78a3121f58478a5"); //  mesh sig sample
 
         byte[] authTag = calcAuthTag(privateBcnData, random, privateBeaconKey);
         MeshLogger.d("authTag: " + Arrays.bytesToHexString(authTag));
-        byte[] c1 = ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN).put((byte) 0x01)
+        byte[] c1 = ByteBuffer.allocate(16).order(ByteOrder.BIG_ENDIAN).put((byte) 0x01)
                 .put(random).putShort((short) 0x0001).array();
 
         /*
@@ -138,7 +138,6 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
         for (int i = 0; i < obfData.length; i++) {
             obfData[i] = (byte) (s[i] ^ privateBcnData[i]);
         }
-
 
         meshPrivateBeacon.random = random;
         meshPrivateBeacon.obfuscatedData = obfData;
@@ -194,5 +193,30 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
         buffer1.put(beaconType).put(random).put(obfuscatedData)
                 .put(authenticationTag);
         return buffer1.array();
+    }
+
+    public byte getFlags() {
+        return flags;
+    }
+
+    public int getIvIndex() {
+        return ivIndex;
+    }
+
+    public byte[] getRandom() {
+        return random;
+    }
+
+    public boolean isIvUpdating() {
+        return (flags & MASK_IV_UPDATE) != 0;
+    }
+
+    @Override
+    public String toString() {
+        return "MeshPrivateBeacon{" +
+                "beaconType=" + beaconType +
+                ", flags=" + flags +
+                ", ivIndex=" + ivIndex +
+                '}';
     }
 }

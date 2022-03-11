@@ -1,3 +1,22 @@
+
+
+direct forwarding 功能
+1. 实现 DIRECTED_CONTROL_GET，DIRECTED_CONTROL_SET， DIRECTED_CONTROL_STATUS
+    FORWARDING_TABLE_ADD， FORWARDING_TABLE_DELETE， FORWARDING_TABLE_STATUS
+
+2. App需要保存信息， 不需要保存在Json文件中
+
+
+DF, private beacon, enhanced opcode aggregator 都要放在 DraftFeature 里面
+
+control
+
+
+2022 0120 todo 如果收到的是 private beacon， 回复的也要是 private beacon
+
+
+
+
 // todo
 1. 添加标志位： 判断分享过来的json文件中是否包含 ivIndex；
     如果不包含， 则在获取到最新的ivIndex时， 不允许组网
@@ -94,3 +113,5 @@ V3.2.0
 
 
 // draft feature
+
+
