@@ -32,6 +32,8 @@
 @interface CMDViewController()<UITextViewDelegate>
 @property (strong, nonatomic) IBOutlet UITextView *inTextView;
 @property (strong, nonatomic) IBOutlet UITextView *showTextView;
+@property (weak, nonatomic) IBOutlet UIButton *devKeyAggregator;
+@property (weak, nonatomic) IBOutlet UIButton *appKeyAggregator;
 @property (nonatomic,strong) NSString *sendString;
 @property (nonatomic,strong) NSData *sendData;
 @property (nonatomic,strong) NSString *logString;
@@ -173,6 +175,11 @@
 - (void)normalSetting{
     [super normalSetting];
     [self configUI];
+#ifdef kExist
+    self.devKeyAggregator.hidden = NO;
+    self.appKeyAggregator.hidden = NO;
+#endif
+
     self.logString = @"";
 }
 
