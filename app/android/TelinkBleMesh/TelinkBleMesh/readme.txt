@@ -1,8 +1,10 @@
 
 
-direct forwarding 功能
+direct forwarding 功能 --- 这个版本不 release
 1. 实现 DIRECTED_CONTROL_GET，DIRECTED_CONTROL_SET， DIRECTED_CONTROL_STATUS
     FORWARDING_TABLE_ADD， FORWARDING_TABLE_DELETE， FORWARDING_TABLE_STATUS
+
+
 
 2. App需要保存信息， 不需要保存在Json文件中
 
@@ -13,6 +15,8 @@ control
 
 
 2022 0120 todo 如果收到的是 private beacon， 回复的也要是 private beacon
+
+如果收到的是
 
 
 
@@ -45,10 +49,6 @@ OPCODES_AGGREGATOR_SEQUENCE
     2. 判断是否包含 aggregator server
 
     3. app key add 和 key bind
-
-
-// pin 码
-
 
 
 version record:

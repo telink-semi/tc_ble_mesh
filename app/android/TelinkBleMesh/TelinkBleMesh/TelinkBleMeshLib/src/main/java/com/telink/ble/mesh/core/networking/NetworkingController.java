@@ -73,7 +73,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class NetworkingController {
 
-    private final String LOG_TAG = "Networking";
+    private static final String LOG_TAG = "Networking";
+
     // include mic(4)
     public static final int UNSEGMENTED_TRANSPORT_PAYLOAD_MAX_LENGTH = 15;
 
@@ -85,7 +86,6 @@ public class NetworkingController {
 
 //    private static final int SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH + 1;
 
-    //    private boolean dleEnabled = false;
     private ExtendBearerMode extendBearerMode;
 
     // segmentedAccessLength = unsegmentedAccessLength + 1
@@ -116,6 +116,8 @@ public class NetworkingController {
     private final static int TRANSPORT_OUT = 0x01;
 
     private AtomicInteger mSequenceNumber = new AtomicInteger(0x0001);
+
+    private boolean privateBeaconReceived = false;
 
     private boolean isIvUpdating = false;
 
@@ -273,6 +275,8 @@ public class NetworkingController {
 
     private boolean networkingBusy = false;
 
+    private byte[] privateBeaconKey = null;
+
 
     public NetworkingController(HandlerThread handlerThread) {
         this.mDelayHandler = new Handler(handlerThread.getLooper());
@@ -296,7 +300,7 @@ public class NetworkingController {
         this.nid = (byte) (k2Output[0][15] & 0x7F);
         this.encryptionKey = k2Output[1];
         this.privacyKey = k2Output[2];
-
+        this.privateBeaconKey = Encipher.generatePrivateBeaconKey(configuration.networkKey);
         this.appKeyMap = configuration.appKeyMap;
         this.deviceKeyMap = configuration.deviceKeyMap;
 
@@ -322,6 +326,7 @@ public class NetworkingController {
         this.mResponseMessageBuffer.clear();
         this.isIvUpdating = false;
         this.lastSegComplete = true;
+        this.privateBeaconReceived = false;
     }
 
     public void resetDirectAddress() {
@@ -398,9 +403,17 @@ public class NetworkingController {
                 this.ivIndex = initIvIndex + 1;
             }
         }
-        SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.createIvUpdatingBeacon((int) this.initIvIndex, networkId, beaconKey, isIvUpdating);
-        log("send beacon: " + networkBeacon.toString());
-        sendMeshBeaconPdu(networkBeacon);
+
+        if (privateBeaconReceived) {
+            MeshPrivateBeacon beacon = MeshPrivateBeacon.createIvUpdatingBeacon(this.initIvIndex, privateBeaconKey, isIvUpdating);
+            sendMeshBeaconPdu(beacon);
+        } else {
+            SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.createIvUpdatingBeacon(this.initIvIndex, networkId, beaconKey, isIvUpdating);
+            log("send beacon: " + networkBeacon.toString());
+            sendMeshBeaconPdu(networkBeacon);
+        }
+
+
     }
 
     private void onIvUpdated(long newIvIndex) {
@@ -888,6 +901,7 @@ public class NetworkingController {
     public void parsePrivateBeacon(byte[] payload, byte[] privateBeaconKey) {
         MeshPrivateBeacon privateBeacon = MeshPrivateBeacon.from(payload, privateBeaconKey);
         if (privateBeacon != null) {
+            this.privateBeaconReceived = true;
             log("MeshPrivateBeacon received: " + privateBeacon.toString());
             int ivIndex = privateBeacon.getIvIndex();
             boolean isIvUpdating = privateBeacon.isIvUpdating();
