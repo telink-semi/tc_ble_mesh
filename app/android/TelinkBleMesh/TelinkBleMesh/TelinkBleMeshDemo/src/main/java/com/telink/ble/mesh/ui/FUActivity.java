@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file MeshOTAActivity.java
+ * @file FUActivity.java
  *
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -79,26 +80,6 @@ import java.io.InputStream;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
-
-
-/**
- * 通过直连节点升级:
- * 开始升级时, 保存policy 和 distributorAddress
- * <p>
- * 如果是 自动 apply:
- * 如果直连节点不升级
- * 如果直连节点升级, 连接断开后
- * 如果不自动apply:
- * 在查询到 进度信息为 100 后, 发送apply 指令, 根据回复
- * 不管是什么情况下重连成功, 只要 升级动作未完成 (判断 distributorAddress 是否为0: 0为已完成),提示跳转到meshOTA页面,
- * 进度页面时, 发送receiversGet指令
- * <p>
- * 获取到的进度信息中,如果进度信息为 100, idle或applying(6)状态, 则过几秒再查询firmwareID, 根据firmwareID来确定设备是否升级成功.
- * 则发送 distribute stop给distribute, 再把 distributorAddress 设置为0
- * 如果正在 transfer, 且进度信息不为 100, 则提示跳转到 MeshOta 页面.
- * <p>
- * 在进入到meshOTA页面后, 发送
- */
 
 /**
  * firmware update by mesh

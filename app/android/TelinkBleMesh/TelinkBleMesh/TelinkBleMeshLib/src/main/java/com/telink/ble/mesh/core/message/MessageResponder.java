@@ -1,3 +1,25 @@
+/********************************************************************************************************
+ * @file MessageResponder.java
+ *
+ * @brief for TLSR chips
+ *
+ * @author telink
+ * @date Sep. 30, 2017
+ *
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 package com.telink.ble.mesh.core.message;
 
 import com.telink.ble.mesh.core.MeshUtils;
@@ -60,7 +82,7 @@ public class MessageResponder {
             blockStatusMessage.setStatus(TransferStatus.SUCCESS.code);
             blockStatusMessage.setFormat(BlobBlockStatusMessage.FORMAT_NO_CHUNKS_MISSING);
             statusMessage = blockStatusMessage;
-        }else if (rspOpcode == Opcode.FD_STATUS.value){
+        } else if (rspOpcode == Opcode.FD_STATUS.value) {
             FDStatusMessage fdStatusMessage = new FDStatusMessage();
             fdStatusMessage.status = DistributionStatus.SUCCESS.code;
             statusMessage = fdStatusMessage;
