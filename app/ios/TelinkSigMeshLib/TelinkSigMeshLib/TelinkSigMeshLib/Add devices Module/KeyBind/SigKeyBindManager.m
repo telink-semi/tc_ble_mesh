@@ -337,7 +337,7 @@
         [self performSelector:@selector(sendAppkeyAddAndBindModelByUsingOpcodesAggregatorSequenceTimeout) withObject:nil afterDelay:self.appkeyAddTimeOut+self.bindModelTimeOut];
     });
     NSMutableArray *mArray = [NSMutableArray array];
-    SigOpcodesAggregatorItemModel *model1 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigConfigAppKeyAdd alloc] initWithApplicationKey:SigDataSource.share.curAppkeyModel]];
+    SigOpcodesAggregatorItemModel *model1 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigConfigAppKeyAdd alloc] initWithApplicationKey:self.appkeyModel]];
     [mArray addObject:model1];
     BOOL hasTimeServerModel = NO;
     UInt16 timeServerModelElementAddress = 0;
@@ -347,7 +347,7 @@
         element.parentNodeAddress = self.node.address;
         NSArray *models = [NSArray arrayWithArray:element.models];
         for (SigModelIDModel *modelID in models) {
-            SigConfigModelAppBind *bindModel = [[SigConfigModelAppBind alloc] initWithApplicationKey:SigDataSource.share.curAppkeyModel toModel:modelID elementAddress:element.unicastAddress];
+            SigConfigModelAppBind *bindModel = [[SigConfigModelAppBind alloc] initWithApplicationKey:self.appkeyModel toModel:modelID elementAddress:element.unicastAddress];
             SigOpcodesAggregatorItemModel *model = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:bindModel];
             [mArray addObject:model];
             if (modelID.getIntModelID == kSigModel_TimeServer_ID) {

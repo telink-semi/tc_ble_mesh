@@ -363,6 +363,7 @@
                     Byte *pu = (Byte *)[currentFirmwareID bytes];
                     if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                     if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
+                    vid = CFSwapInt16HostToBig(vid);
                     TeLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                     [weakSelf updateNodeModelVidWithAddress:source vid:vid];
                 }
@@ -388,6 +389,7 @@
                             Byte *pu = (Byte *)[currentFirmwareID bytes];
                             if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                             if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
+                            vid = CFSwapInt16HostToBig(vid);
                             TeLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                             [weakSelf updateNodeModelVidWithAddress:source vid:vid];
                         }
@@ -479,7 +481,7 @@
             UInt16 modelIdentifier = kSigModel_ObjectTransferServer_ID;
             NSArray *addressArray = [model getAddressesWithModelID:@(modelIdentifier)];
             if (addressArray && addressArray.count > 0) {
-                NSString *str = [NSString stringWithFormat:@"%@adr:0x%X pid:0x%X vid:%c%c",model.features.lowPowerFeature != SigNodeFeaturesState_notSupported ? @"LPN-" : @"",model.address,[LibTools uint16From16String:model.pid],vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+                NSString *str = [NSString stringWithFormat:@"%@adr:0x%X pid:0x%X vid:0x%X",model.features.lowPowerFeature != SigNodeFeaturesState_notSupported ? @"LPN-" : @"",model.address,[LibTools uint16From16String:model.pid], vid];
                 #ifdef kExist
                 if (kExistMeshOTA) {
                     if (MeshOTAManager.share.phoneIsDistributor) {
@@ -512,7 +514,7 @@
                 itemCell.titleLabel.text = str;
             } else {
                 vid = [LibTools uint16From16String:model.vid];
-                itemCell.titleLabel.text = [NSString stringWithFormat:@"%@adr:0x%X pid:0x%X vid:%c%c Not support",model.features.lowPowerFeature != SigNodeFeaturesState_notSupported ? @"LPN-" : @"",model.address,[LibTools uint16From16String:model.pid],vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+                itemCell.titleLabel.text = [NSString stringWithFormat:@"%@adr:0x%X pid:0x%X vid:0x%X Not support",model.features.lowPowerFeature != SigNodeFeaturesState_notSupported ? @"LPN-" : @"",model.address,[LibTools uint16From16String:model.pid], vid];//显示两个字节的ASCII
             }
             
             if (self.selectItemAddressArray.count > 0) {
@@ -541,7 +543,8 @@
         NSData *data = [OTAFileSource.share getDataWithBinName:binString];
         if (data && data.length) {
             UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
-            itemCell.titleLabel.text = [NSString stringWithFormat:@"%@ pid:0x%X vid:%c%c",binString,[OTAFileSource.share getPidWithOTAData:data],vid&0xff,(vid>>8)&0xff];//vid显示两个字节的ASCII
+            vid = CFSwapInt16HostToBig(vid);
+            itemCell.titleLabel.text = [NSString stringWithFormat:@"%@ pid:0x%X vid:0x%X",binString,[OTAFileSource.share getPidWithOTAData:data], vid];//vid显示两个字节的ASCII
         } else {
             itemCell.titleLabel.text = [NSString stringWithFormat:@"%@,read bin fail!",binString];//bin文件读取失败。
         }

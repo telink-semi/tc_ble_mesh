@@ -1826,7 +1826,7 @@
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.4;
+				MARKETING_VERSION = 3.3.3.5;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1876,7 +1876,7 @@
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.4;
+				MARKETING_VERSION = 3.3.3.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -2072,7 +2072,7 @@
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.4;
+				MARKETING_VERSION = 3.3.3.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -2115,7 +2115,7 @@
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.4;
+				MARKETING_VERSION = 3.3.3.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;

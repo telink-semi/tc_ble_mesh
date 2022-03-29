@@ -25,6 +25,7 @@
 #import "FileChooseVC.h"
 #import "UIViewController+Message.h"
 #import "ScanCodeVC.h"
+#import "Reachability.h"
 
 @interface ShareInVC ()
 @property (weak, nonatomic) IBOutlet UIButton *selectJsonButton;
@@ -76,6 +77,13 @@
 }
 
 - (void)importMeshByQRCode {
+    NSString *remoteHostName = @"www.apple.com";
+    Reachability *hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
+    if (hostReachability.currentReachabilityStatus == NotReachable) {
+        [self showTips:@"The Internet connection appears to be offline."];
+        return;
+    }
+
     [self.navigationController pushViewController:self.scanCodeVC animated:YES];
 }
 

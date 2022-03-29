@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		254EC8C227D87859006A0BD0 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25589C5F272140CF00F4F880 /* TelinkSigMeshLib.framework */; };
 		25589A14272115D700F4F880 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A13272115D700F4F880 /* AppDelegate.m */; };
 		25589A1D272115D700F4F880 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589A1B272115D700F4F880 /* Main.storyboard */; };
 		25589A1F272115DA00F4F880 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 25589A1E272115DA00F4F880 /* Assets.xcassets */; };
@@ -178,6 +177,7 @@
 		25589C502721403F00F4F880 /* IQKeyboardReturnKeyHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589BA42721403E00F4F880 /* IQKeyboardReturnKeyHandler.m */; };
 		25589C552721408B00F4F880 /* DeviceSetting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C512721408B00F4F880 /* DeviceSetting.storyboard */; };
 		25589C562721408B00F4F880 /* Setting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C532721408B00F4F880 /* Setting.storyboard */; };
+		256CFAA027F304B6004227E6 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25589C5F272140CF00F4F880 /* TelinkSigMeshLib.framework */; };
 		259AA1F727293FDE0046CEB1 /* BRResultModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1DD27293FDE0046CEB1 /* BRResultModel.m */; };
 		259AA1F827293FDE0046CEB1 /* BRStringPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1E027293FDE0046CEB1 /* BRStringPickerView.m */; };
 		259AA1F927293FDE0046CEB1 /* BRDatePickerView+BR.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1E327293FDE0046CEB1 /* BRDatePickerView+BR.m */; };
@@ -191,6 +191,7 @@
 		259AA20127293FDE0046CEB1 /* BRAddressPickerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 259AA1F627293FDE0046CEB1 /* BRAddressPickerView.m */; };
 		25DD7D0B2728E58D0029037A /* CertificateListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25DD7D092728E58D0029037A /* CertificateListVC.m */; };
 		25DD7D0C2728E58D0029037A /* CertificateListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25DD7D0A2728E58D0029037A /* CertificateListVC.xib */; };
+		25E05CD027EB0D5700E10E1B /* Reachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 25E05CCA27EB0D5700E10E1B /* Reachability.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -556,6 +557,8 @@
 		25DD7D082728E58D0029037A /* CertificateListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CertificateListVC.h; sourceTree = "<group>"; };
 		25DD7D092728E58D0029037A /* CertificateListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CertificateListVC.m; sourceTree = "<group>"; };
 		25DD7D0A2728E58D0029037A /* CertificateListVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = CertificateListVC.xib; sourceTree = "<group>"; };
+		25E05CCA27EB0D5700E10E1B /* Reachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Reachability.m; sourceTree = "<group>"; };
+		25E05CCB27EB0D5700E10E1B /* Reachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Reachability.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -563,7 +566,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				254EC8C227D87859006A0BD0 /* TelinkSigMeshLib.framework in Frameworks */,
+				256CFAA027F304B6004227E6 /* TelinkSigMeshLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1045,6 +1048,7 @@
 		25589B582721403E00F4F880 /* SDK */ = {
 			isa = PBXGroup;
 			children = (
+				25E05CC927EB0D5700E10E1B /* Reachability */,
 				259AA1DB27293FDE0046CEB1 /* BRPickerView */,
 				25589C57272140CF00F4F880 /* TelinkSigMeshLib.xcodeproj */,
 				25589B752721403E00F4F880 /* YZDisplayViewController */,
@@ -1242,6 +1246,15 @@
 				25DD7D0A2728E58D0029037A /* CertificateListVC.xib */,
 			);
 			path = "Root Certificate";
+			sourceTree = "<group>";
+		};
+		25E05CC927EB0D5700E10E1B /* Reachability */ = {
+			isa = PBXGroup;
+			children = (
+				25E05CCA27EB0D5700E10E1B /* Reachability.m */,
+				25E05CCB27EB0D5700E10E1B /* Reachability.h */,
+			);
+			path = Reachability;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1464,6 +1477,7 @@
 				25589BB72721403F00F4F880 /* ChooseItemCell.m in Sources */,
 				25589BAD2721403F00F4F880 /* OTAFileSource.m in Sources */,
 				25589BD32721403F00F4F880 /* ColorPickerView.m in Sources */,
+				25E05CD027EB0D5700E10E1B /* Reachability.m in Sources */,
 				25589BBA2721403F00F4F880 /* GroupCell.m in Sources */,
 				25589BDA2721403F00F4F880 /* OnOffModelCell.m in Sources */,
 				25589BEC2721403F00F4F880 /* DeviceNetKeyListVC.m in Sources */,
@@ -1797,7 +1811,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.5;
+				MARKETING_VERSION = 3.3.3.5;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1840,7 +1854,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.3.5;
+				MARKETING_VERSION = 3.3.3.5;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";

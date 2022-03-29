@@ -51,6 +51,10 @@
 }
 
 - (void)clickAdd:(UIButton *)button {
+    if (self.model.netKeys.count >= 2) {
+        [self showTips:@"more than 2 net keys is not supported"];
+        return;
+    }
     DeviceChooseKeyVC *vc = [[DeviceChooseKeyVC alloc] init];
     __weak typeof(self) weakSelf = self;
     [vc setModel:self.model];
@@ -58,6 +62,15 @@
         [weakSelf addNetKeyToDevice:netKeyModel];
     }];
     [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)showTips:(NSString *)message{
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
+            
+        }];
+    });
 }
 
 - (void)clickRefresh:(UIButton *)button {
@@ -173,6 +186,11 @@
             }
 
             SigNetkeyModel *model = self.sourceArray[indexPath.row];
+            if (model.index == SigDataSource.share.curNetkeyModel.index) {
+                [self showAlertSureWithTitle:@"Hits" message:@"You cannot delete a net key in use!" sure:nil];
+                return;
+            }
+
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete netKey, index:0x%04lX key:%@",(long)model.index,model.key];
             __weak typeof(self) weakSelf = self;
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {

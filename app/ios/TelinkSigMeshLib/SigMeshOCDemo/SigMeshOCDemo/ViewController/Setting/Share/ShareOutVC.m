@@ -26,6 +26,7 @@
 #import "UIViewController+Message.h"
 #import "KeyCell.h"
 #import "ShowQRCodeViewController.h"
+#import "Reachability.h"
 
 @interface ShareOutVC ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -132,6 +133,13 @@
 }
 
 - (void)exporyMeshByQRCodeWithDictionary:(NSDictionary *)dictionary {
+    NSString *remoteHostName = @"www.apple.com";
+    Reachability *hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
+    if (hostReachability.currentReachabilityStatus == NotReachable) {
+        [self showTips:@"The Internet connection appears to be offline."];
+        return;
+    }
+    
     __weak typeof(self) weakSelf = self;
     //设置有效时间5分钟
     [TelinkHttpManager.share uploadJsonDictionary:dictionary timeout:60 * 5 didLoadData:^(id  _Nullable result, NSError * _Nullable err) {

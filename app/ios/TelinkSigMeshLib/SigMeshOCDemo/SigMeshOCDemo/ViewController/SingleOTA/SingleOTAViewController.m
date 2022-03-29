@@ -101,7 +101,7 @@
     self.OTAing = NO;
     self.normalColor = kDefultColor;
     self.unableColor = [UIColor colorWithRed:185.0/255.0 green:185.0/255.0 blue:185.0/255.0 alpha:1.0];
-    self.title = [NSString stringWithFormat:@"OTA Pid:0x%X Vid:0x%X",[LibTools uint16From16String:self.model.pid],[LibTools uint16From16String:self.model.vid]];
+    self.title = [NSString stringWithFormat:@"OTA Pid:0x%X Vid:0x%X",[LibTools uint16From16String:self.model.pid], CFSwapInt16HostToBig([LibTools uint16From16String:self.model.vid])];
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_ChooseBinCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_ChooseBinCellID];
     self.source = [[NSMutableArray alloc] initWithArray:OTAFileSource.share.getAllBinFile];
@@ -159,7 +159,8 @@
     NSData *data = [OTAFileSource.share getDataWithBinName:binString];
     if (data && data.length) {
         UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
-        cell.nameLabel.text = [NSString stringWithFormat:@"%@   PID:0x%X VID:%c%c",binString,[OTAFileSource.share getPidWithOTAData:data],vid&0xff,(vid>>8)&0xff];//vid显示两个字节的ASCII
+        vid = CFSwapInt16HostToBig(vid);
+        cell.nameLabel.text = [NSString stringWithFormat:@"%@   PID:0x%X VID:0x%X",binString,[OTAFileSource.share getPidWithOTAData:data], vid];
     } else {
         cell.nameLabel.text = [NSString stringWithFormat:@"%@,read bin fail!",binString];//bin文件读取失败。
     }

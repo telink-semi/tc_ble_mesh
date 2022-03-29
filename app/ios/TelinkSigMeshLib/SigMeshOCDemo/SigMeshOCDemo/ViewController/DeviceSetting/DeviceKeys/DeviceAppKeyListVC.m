@@ -52,6 +52,11 @@
 }
 
 - (void)clickAdd:(UIButton *)button {
+    if (self.model.appKeys.count >= 2) {
+        [self showTips:@"more than 2 app keys is not supported"];
+        return;
+    }
+
     DeviceChooseKeyVC *vc = [[DeviceChooseKeyVC alloc] init];
     __weak typeof(self) weakSelf = self;
     [vc setModel:self.model];
@@ -60,6 +65,15 @@
         [weakSelf keyBindWithAppKey:appKeyModel];
     }];
     [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)showTips:(NSString *)message{
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
+            
+        }];
+    });
 }
 
 - (void)clickRefresh:(UIButton *)button {
@@ -202,6 +216,11 @@
             }
 
             SigAppkeyModel *model = self.sourceArray[indexPath.row];
+            if (model.index == SigDataSource.share.curAppkeyModel.index) {
+                [self showAlertSureWithTitle:@"Hits" message:@"You cannot delete a app key in use!" sure:nil];
+                return;
+            }
+
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete appKey, index:0x%04lX key:%@",(long)model.index,model.key];
             __weak typeof(self) weakSelf = self;
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {

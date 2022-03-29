@@ -27,6 +27,7 @@
 #import "ShowQRCodeViewController.h"
 #import "ScanCodeVC.h"
 #import "ShareTipsVC.h"
+#import "Reachability.h"
 
 @interface ShareVC ()
 @property (strong, nonatomic) ScanCodeVC *scanCodeVC;
@@ -37,7 +38,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+    [self startCheckNetwork];
     [self configUI];
 }
 
@@ -291,7 +292,17 @@
     });
 }
 
--(void)dealloc{
+- (void)startCheckNetwork {
+    NSString *remoteHostName = @"www.apple.com";
+    Reachability *hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
+    if (hostReachability.currentReachabilityStatus == NotReachable) {
+        TeLogDebug(@"有网络");
+    } else {
+        TeLogDebug(@"无网络");
+    }
+}
+
+-(void)dealloc {
     TeLogDebug(@"");
 }
 
