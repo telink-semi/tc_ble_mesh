@@ -82,14 +82,7 @@ public class DeviceSettingActivity extends BaseActivity implements EventListener
 
         ll_offline = findViewById(R.id.ll_offline);
 
-        // todo mesh interface
         TelinkMeshApplication.getInstance().addEventListener(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, this);
-//        TelinkMeshApplication.getInstance().addEventListener(NotificationEvent.EVENT_TYPE_GROUP_INFO, this);
-//        TelinkMeshApplication.getInstance().addEventListener(NotificationEvent.EVENT_TYPE_CTL_STATUS_NOTIFY, this);
-//        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
-//        TelinkMeshApplication.getInstance().addEventListener(NotificationEvent.EVENT_TYPE_SUB_OP_CONFIRM, this);
-//        TelinkMeshApplication.getInstance().addEventListener(NotificationEvent.EVENT_TYPE_KICK_OUT_CONFIRM, this);
-
         initTab();
         refreshUI();
     }

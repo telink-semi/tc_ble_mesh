@@ -119,7 +119,7 @@ import java.util.UUID;
  */
 
 public final class MeshController implements ProvisioningBridge, NetworkingBridge, AccessBridge {
-    private final String LOG_TAG = "MeshController";
+    private static final String LOG_TAG = "MeshController";
 
     /**
      * proxy node advertising networkId
@@ -958,7 +958,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                         byte beaconType = payloadData[0];
                         if (beaconType == SecureNetworkBeacon.BEACON_TYPE_SECURE_NETWORK) {
                             mNetworkingController.parseSecureBeacon(payloadData, this.networkBeaconKey);
-                        } else if (beaconType == SecureNetworkBeacon.BEACON_TYPE_MESH_PRIVATE) {
+                        }
+                        // draft feature complete
+                        else if (beaconType == SecureNetworkBeacon.BEACON_TYPE_MESH_PRIVATE) {
                             mNetworkingController.parsePrivateBeacon(payloadData, this.privateBeaconKey);
                         }
                     }
@@ -1506,8 +1508,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     private boolean validateTargetNodeIdentity(byte[] serviceData, int nodeAddress) {
-//        MeshScanRecord sr = MeshScanRecord.parseFromBytes(scanRecord);
-//        byte[] serviceData = sr.getServiceData(ParcelUuid.fromString(UUIDInfo.SERVICE_PROXY.toString()));
         boolean pass = false;
         if (serviceData != null && serviceData.length >= 9) {
             int type = serviceData[0];

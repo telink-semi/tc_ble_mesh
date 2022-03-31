@@ -37,6 +37,7 @@ import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.AppSettings;
+import com.telink.ble.mesh.model.NodeInfo;
 
 import java.util.List;
 
@@ -49,11 +50,13 @@ public class SwitchListAdapter extends BaseRecyclerViewAdapter<SwitchListAdapter
 
     List<Integer> mAdrList;
     Context mContext;
+    NodeInfo mNode;
     int address;
 
-    public SwitchListAdapter(Context context, List<Integer> adrList) {
+    public SwitchListAdapter(Context context, List<Integer> adrList, NodeInfo nodeInfo) {
         mContext = context;
         mAdrList = adrList;
+        this.mNode = nodeInfo;
     }
 
     @Override
@@ -79,21 +82,17 @@ public class SwitchListAdapter extends BaseRecyclerViewAdapter<SwitchListAdapter
         holder.switch_ele.setOnCheckedChangeListener(switchChangeListener);
     }
 
-    private CompoundButton.OnCheckedChangeListener switchChangeListener = new CompoundButton.OnCheckedChangeListener() {
-        @Override
-        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            int adr = (int) buttonView.getTag();
-            boolean ack = !AppSettings.ONLINE_STATUS_ENABLE;
-            int rspMax = ack ? 1 : 0;
-            int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
-            OnOffSetMessage message = OnOffSetMessage.getSimple(adr, appKeyIndex, (byte) (isChecked ? 1 : 0), ack, rspMax);
-            MeshService.getInstance().sendMeshMessage(message);
-        }
+    private CompoundButton.OnCheckedChangeListener switchChangeListener = (buttonView, isChecked) -> {
+        int adr = (int) buttonView.getTag();
+        boolean ack = !AppSettings.ONLINE_STATUS_ENABLE;
+        int rspMax = ack ? 1 : 0;
+        int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+        OnOffSetMessage message = OnOffSetMessage.getSimple(adr, appKeyIndex, (byte) (isChecked ? 1 : 0), ack, rspMax);
+        MeshService.getInstance().sendMeshMessage(message);
     };
 
 
     class ViewHolder extends RecyclerView.ViewHolder {
-
 
         private TextView tv_ele;
         private Switch switch_ele;

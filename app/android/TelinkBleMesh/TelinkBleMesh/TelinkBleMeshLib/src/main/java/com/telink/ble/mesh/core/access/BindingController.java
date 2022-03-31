@@ -253,7 +253,8 @@ public class BindingController {
         } else {
             log("models prepared: " + this.bindingModels.size());
             bindingDevice.setCompositionData(compositionData);
-//            isAggSupported = false; //  for test
+            //  draft feature
+//            isAggSupported = false;
             if (isAggSupported) {
                 log("bind app key by opcode-aggregator");
                 sendOpAggMessage();

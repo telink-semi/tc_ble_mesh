@@ -84,13 +84,10 @@ public class SubnetBridgeActivity extends BaseActivity implements EventListener<
 
         initView();
         adapter = new BridgingTableAdapter(this, nodeInfo.bridgingTableList);
-        adapter.setOnItemLongClickListener(new BaseRecyclerViewAdapter.OnItemLongClickListener() {
-            @Override
-            public boolean onLongClick(int position) {
-                removeIndex = position;
-                showRemoveDialog();
-                return false;
-            }
+        adapter.setOnItemLongClickListener(position -> {
+            removeIndex = position;
+            showRemoveDialog();
+            return false;
         });
         RecyclerView recyclerView = findViewById(R.id.rv_bridging_table);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));

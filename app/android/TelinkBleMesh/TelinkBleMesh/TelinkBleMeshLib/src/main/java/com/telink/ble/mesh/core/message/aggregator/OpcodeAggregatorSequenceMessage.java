@@ -37,11 +37,6 @@ import com.telink.ble.mesh.core.networking.AccessType;
  */
 public class OpcodeAggregatorSequenceMessage extends MeshMessage {
 
-
-//    public int elementAddress;
-//    private List<MeshMessage> messageList;
-//    public List<AggregatorItem> items;
-
     /**
      * @param accessType  message type, defines the encryption key
      * @param appKeyIndex used when access type is AccessType.APPLICATION

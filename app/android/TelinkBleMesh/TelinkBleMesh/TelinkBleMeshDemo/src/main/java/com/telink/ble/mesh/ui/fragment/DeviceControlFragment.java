@@ -27,7 +27,9 @@ import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -37,6 +39,7 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.generic.DeltaSetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
+import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlGetMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlTemperatureSetMessage;
 import com.telink.ble.mesh.core.message.lighting.HslGetMessage;
@@ -48,6 +51,7 @@ import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
+import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
@@ -76,7 +80,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
     private SparseBooleanArray tempEleInfo;
     private int hslEleAdr;
     private List<Integer> onOffEleAdrList;
-    SwitchListAdapter switchListAdapter;
+
     int delta = 0;
 
     @Override
@@ -108,17 +112,38 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
     }
 
     private void initView(View view) {
+
         RecyclerView rv_switch = view.findViewById(R.id.rv_switch);
-        rv_switch.setLayoutManager(new GridLayoutManager(getActivity(), 4));
-        switchListAdapter = new SwitchListAdapter(getActivity(), onOffEleAdrList);
-        rv_switch.setAdapter(switchListAdapter);
-        cps_color = view.findViewById(R.id.cps_color);
-        cps_color.setMessageDelegate(new CompositionColorView.ColorMessageDelegate() {
-            @Override
-            public void onHSLMessage(float[] hsl) {
-                sendHslSetMessage(hsl);
+        View view_single_switch = view.findViewById(R.id.view_single_switch);
+        if (onOffEleAdrList.size() == 1) {
+            final int adr = onOffEleAdrList.get(0);
+            view_single_switch.setVisibility(View.VISIBLE);
+            rv_switch.setVisibility(View.GONE);
+            Switch switch_ele = view.findViewById(R.id.switch_ele);
+            if (deviceInfo.isOff()) {
+                switch_ele.setChecked(false);
+            } else {
+                switch_ele.setChecked(true);
             }
-        });
+            switch_ele.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                boolean ack = !AppSettings.ONLINE_STATUS_ENABLE;
+                int rspMax = ack ? 1 : 0;
+                int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+                OnOffSetMessage message = OnOffSetMessage.getSimple(adr, appKeyIndex, (byte) (isChecked ? 1 : 0), ack, rspMax);
+                MeshService.getInstance().sendMeshMessage(message);
+            });
+            TextView tv_ele = view.findViewById(R.id.tv_ele);
+            tv_ele.setText("ele adr: " + adr);
+        } else {
+            view_single_switch.setVisibility(View.GONE);
+            rv_switch.setVisibility(View.VISIBLE);
+            rv_switch.setLayoutManager(new GridLayoutManager(getActivity(), 4));
+            SwitchListAdapter switchListAdapter = new SwitchListAdapter(getActivity(), onOffEleAdrList, deviceInfo);
+            rv_switch.setAdapter(switchListAdapter);
+        }
+
+        cps_color = view.findViewById(R.id.cps_color);
+        cps_color.setMessageDelegate(this::sendHslSetMessage);
         ll_lum = view.findViewById(R.id.ll_lum);
         ll_lum_level = view.findViewById(R.id.ll_lum_level);
         ll_temp = view.findViewById(R.id.ll_temp);
