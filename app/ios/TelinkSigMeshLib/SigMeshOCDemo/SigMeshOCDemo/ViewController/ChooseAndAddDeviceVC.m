@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/7/4
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  ChooseAndAddDeviceVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2019/7/4.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "ChooseAndAddDeviceVC.h"
 #import "MeshOTAItemCell.h"
@@ -149,8 +143,8 @@ typedef enum : NSUInteger {
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
-            NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-            [oprationQueue addOperationWithBlock:^{
+            NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+            [operationQueue addOperationWithBlock:^{
                 for (AddDeviceStateModel *model in selectDevices) {
                     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                     CBPeripheral *peripheral = model.peripheral;
@@ -167,10 +161,10 @@ typedef enum : NSUInteger {
                     //选择添加新增逻辑：判断本地是否存在该UUID的OOB数据，存在则使用static OOB添加，不存在则使用no OOB添加。
                     SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
                     SigOOBModel *oobModel = [SigDataSource.share getSigOOBModelWithUUID:rspModel.advUuid];
-                    ProvisionTpye provisionType = ProvisionTpye_NoOOB;
+                    ProvisionType provisionType = ProvisionType_NoOOB;
                     NSData *staticOOBData = nil;
-                    if (oobModel && oobModel.OOBString && oobModel.OOBString.length == 32) {
-                        provisionType = ProvisionTpye_StaticOOB;
+                    if (oobModel && oobModel.OOBString && (oobModel.OOBString.length == 32 || oobModel.OOBString.length == 64)) {
+                        provisionType = ProvisionType_StaticOOB;
                         staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
                     }
                     if (rspModel.advOobInformation.supportForCertificateBasedProvisioning) {
@@ -214,7 +208,7 @@ typedef enum : NSUInteger {
 //                        UInt16 productID = 0;
 //                        NSData *cpsData = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
 //                        //fastbind接口调用如下：
-//                        [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:KeyBindTpye_Fast productID:productID cpsData:cpsData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+//                        [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:KeyBindType_Fast productID:productID cpsData:cpsData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
 //                            model.state = AddStateKeybinding;
 //                            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
 //                        } provisionFail:^(NSError * _Nonnull error) {

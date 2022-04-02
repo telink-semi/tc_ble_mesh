@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/9/9
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigPdu.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/9.
-//  Copyright © 2019 Telink. All rights reserved.
-//
 
 #import <Foundation/Foundation.h>
 
@@ -394,6 +388,39 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter meshNetwork: The mesh network for which the PDU should be decoded.
 /// - returns: The beacon object.
 + (SigUnprovisionedDeviceBeacon *)decodeWithPdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork;
+
+@end
+
+
+/// 3.10.4 Mesh Private beacon
+/// - seeAlso: MshPRFd1.1r15_clean.pdf  (page.209)
+@interface SigMeshPrivateBeacon : SigBeaconPdu
+/// The Network Key related to this Mesh Private beacon.
+@property (nonatomic,strong) SigNetkeyModel *networkKey;
+@property (nonatomic,strong) NSData *netKeyData;
+/// Key Refresh flag value.
+///
+/// When this flag is active, the Node shall set the Key Refresh Phase for this Network Key to `.finalizing`. When in this phase, the Node shall only transmit messages and Secure Network beacons using the new keys, shall receive messages using the old keys and the new keys, and shall only receive Secure Network beacons secured using the new Network Key.
+@property (nonatomic,assign) BOOL keyRefreshFlag;
+/// This flag is set to `true` if IV Update procedure is active.
+@property (nonatomic,assign) BOOL ivUpdateActive;
+/// Contains the current IV Index.
+@property (nonatomic,assign) UInt32 ivIndex;
+/// Random number used as an entropy for obfuscation and authentication of the Mesh Private beacon. The size is 13 bytes.
+@property (nonatomic,strong) NSData *randomData;
+/// Obfuscated Private Beacon Data. The size is 5 bytes.
+@property (nonatomic,strong) NSData *obfuscatedPrivateBeaconData;
+/// Authentication tag for the beacon. The size is 8 bytes.
+@property (nonatomic,strong) NSData *authenticationTag;
+
+/// Creates Mesh Private beacon PDU object from received PDU.
+///
+/// - parameter pdu: The data received from mesh network.
+/// - parameter networkKey: The Network Key to validate the beacon.
+/// - returns: The beacon object, or `nil` if the data are invalid.
+- (instancetype)initWithDecodePdu:(NSData *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey;
++ (SigMeshPrivateBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork;
+- (instancetype)initWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive ivIndex:(UInt32)ivIndex randomData:(NSData *)randomData usingNetworkKey:(SigNetkeyModel *)networkKey;
 
 @end
 

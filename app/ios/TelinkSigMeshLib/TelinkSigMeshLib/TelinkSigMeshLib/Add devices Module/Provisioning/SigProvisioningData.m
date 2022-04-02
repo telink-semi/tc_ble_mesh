@@ -3,35 +3,32 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/22
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigProvisioningData.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/22.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "SigProvisioningData.h"
 #import "SigModel.h"
 #import "OpenSSLHelper.h"
 #import "ec.h"
 #import "SigECCEncryptHelper.h"
+#if SUPPORTCARTIFICATEBASED
+#import "OpenSSLHelper+EPA.h"
+#endif
 
 NSString *const sessionKeyOfCalculateKeys = @"sessionKeyOfCalculateKeys";
 NSString *const sessionNonceOfCalculateKeys = @"sessionNonceOfCalculateKeys";
@@ -54,6 +51,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 
 - (instancetype)initWithAlgorithm:(Algorithm)algorithm {
     if (self = [super init]) {
+        _algorithm = algorithm;
         [self generateProvisionerRandomAndProvisionerPublicKey];
     }
     return self;
@@ -112,7 +110,12 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
         TeLogDebug(@"provision info is lack.");
         return NO;
     }
-    NSData *confirmation = [self calculateConfirmationWithRandom:self.deviceRandom authValue:self.authValue];
+    NSData *confirmation = nil;
+    if (self.algorithm == Algorithm_fipsP256EllipticCurve) {
+        confirmation = [self calculateConfirmationWithRandom:self.deviceRandom authValue:self.authValue];
+    } else if (self.algorithm == Algorithm_fipsP256EllipticCurve_HMAC_SHA256) {
+        confirmation = [self calculate_HMAC_SHA256_ConfirmationWithRandom:self.deviceRandom authValue:self.authValue];
+    }
     if (![self.deviceConfirmation isEqualToData:confirmation]) {
         TeLogDebug(@"calculate Confirmation fail.");
         return NO;
@@ -122,7 +125,12 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 
 /// Returns the Provisioner Confirmation value. The Auth Value must be set prior to calling this method.
 - (NSData *)provisionerConfirmation {
-    NSData *confirmation = [self calculateConfirmationWithRandom:self.provisionerRandom authValue:self.authValue];
+    NSData *confirmation = nil;
+    if (self.algorithm == Algorithm_fipsP256EllipticCurve) {
+        confirmation = [self calculateConfirmationWithRandom:self.provisionerRandom authValue:self.authValue];
+    } else if (self.algorithm == Algorithm_fipsP256EllipticCurve_HMAC_SHA256) {
+        confirmation = [self calculate_HMAC_SHA256_ConfirmationWithRandom:self.provisionerRandom authValue:self.authValue];
+    }
     return confirmation;
 }
 
@@ -171,7 +179,11 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 #pragma mark - Helper methods
 
 - (void)generateProvisionerRandomAndProvisionerPublicKey {
-    _provisionerRandom = [LibTools createRandomDataWithLength:16];
+    if (self.algorithm == Algorithm_fipsP256EllipticCurve) {
+        _provisionerRandom = [LibTools createRandomDataWithLength:16];
+    } else if (self.algorithm == Algorithm_fipsP256EllipticCurve_HMAC_SHA256) {
+        _provisionerRandom = [LibTools createRandomDataWithLength:32];
+    }
     _provisionerPublicKey = [SigECCEncryptHelper.share getPublicKeyData];
 //    TeLogInfo(@"app端的random=%@,publickey=%@",[LibTools convertDataToHexStr:_provisionerRandom],[LibTools convertDataToHexStr:_provisionerPublicKey]);
 }
@@ -196,11 +208,38 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     return resultData;
 }
 
+- (NSData *)calculate_HMAC_SHA256_ConfirmationWithRandom:(NSData *)data authValue:(NSData *)authValue {
+#if SUPPORTCARTIFICATEBASED
+    // Calculate the Confirmation Salt = s2(confirmationInputs).
+//    TeLogDebug(@"confirmationInputs=%@",[LibTools convertDataToHexStr:self.confirmationInputs]);
+    NSData *confirmationSalt = [[OpenSSLHelper share] calculateSalt2:self.getConfirmationInputs];
+    
+    // Calculate the Confirmation Key = k5(ECDH Secret||Authvalue, confirmationSalt, 'prck256')
+    NSMutableData *n = [NSMutableData dataWithData:self.sharedSecret];
+    [n appendData:authValue];
+    NSData *confirmationKey = [[OpenSSLHelper share] calculateK5WithN:n salt:confirmationSalt andP:[@"prck256" dataUsingEncoding:NSASCIIStringEncoding]];
+
+    // Calculate the Confirmation Provisioner using HMAC_SHA256(random)
+    NSData *resultData = [[OpenSSLHelper share] calculateHMAC_SHA256:data andKey:confirmationKey];
+
+    return resultData;
+#else
+    return nil;
+#endif
+}
+
 /// This method calculates the Session Key, Session Nonce and the Device Key based on the Confirmation Inputs, 16-byte Provisioner Random and 16-byte device Random.
 /// @returns The Session Key, Session Nonce and the Device Key.
 - (NSDictionary *)calculateKeys {
     // Calculate the Confirmation Salt = s1(confirmationInputs).
-    NSData *confirmationSalt = [[OpenSSLHelper share] calculateSalt:self.getConfirmationInputs];
+    NSData *confirmationSalt = nil;
+    if (self.algorithm == Algorithm_fipsP256EllipticCurve) {
+        confirmationSalt = [[OpenSSLHelper share] calculateSalt:self.getConfirmationInputs];
+    } else if (self.algorithm == Algorithm_fipsP256EllipticCurve_HMAC_SHA256) {
+#if SUPPORTCARTIFICATEBASED
+        confirmationSalt = [[OpenSSLHelper share] calculateSalt2:self.getConfirmationInputs];
+#endif
+    }
     
     // Calculate the Provisioning Salt = s1(confirmationSalt + provisionerRandom + deviceRandom)
     NSMutableData *mData = [NSMutableData dataWithData:confirmationSalt];
@@ -217,6 +256,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     NSData *sessionNoncek1 = [[OpenSSLHelper share] calculateK1WithN:self.sharedSecret salt:provisioningSalt andP:prsnData];
     NSData *sessionNonce = [sessionNoncek1 subdataWithRange:NSMakeRange(3, sessionNoncek1.length - 3)];
 
+    // 3.8.6.1 Device key
     // The Device Key is derived as k1(ECDH Shared Secret, provisioningSalt, "prdk")
     NSData *deviceKey = [[OpenSSLHelper share] calculateK1WithN:self.sharedSecret salt:provisioningSalt andP:[@"prdk" dataUsingEncoding:NSASCIIStringEncoding]];
 

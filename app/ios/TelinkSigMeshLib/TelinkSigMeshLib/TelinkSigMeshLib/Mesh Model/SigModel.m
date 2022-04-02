@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/15
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigModel.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/15.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "SigModel.h"
 #import "CBUUID+Hex.h"
@@ -123,9 +117,25 @@
         ModelIDModel *model62 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_FirmwareDistribution_Describe modelName:kSigModel_FirmwareDistributionClient_Describe sigModelID:kSigModel_FirmwareDistributionClient_ID];
         ModelIDModel *model63 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_ObjectTransfer_Describe modelName:kSigModel_ObjectTransferServer_Describe sigModelID:kSigModel_ObjectTransferServer_ID];
         ModelIDModel *model64 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_ObjectTransfer_Describe modelName:kSigModel_ObjectTransferClient_Describe sigModelID:kSigModel_ObjectTransferClient_ID];
-        ModelIDModel *model65 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SubnetBridge_Describe modelName:kSigModel_SubnetBridgeServer_Describe sigModelID:kSigModel_SubnetBridgeServer_ID];
+        
+        ModelIDModel *model65 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_DF_CFG_Describe modelName:kSigModel_DF_CFG_S_Describe sigModelID:kSigModel_DF_CFG_S_ID];
+        ModelIDModel *model66 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_DF_CFG_Describe modelName:kSigModel_DF_CFG_C_Describe sigModelID:kSigModel_DF_CFG_C_ID];
+        ModelIDModel *model67 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SubnetBridge_Describe modelName:kSigModel_SubnetBridgeServer_Describe sigModelID:kSigModel_SubnetBridgeServer_ID];
+        ModelIDModel *model68 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SubnetBridge_Describe modelName:kSigModel_SubnetBridgeClient_Describe sigModelID:kSigModel_SubnetBridgeClient_ID];
+        ModelIDModel *model69 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_PrivateBeacon_Describe modelName:kSigModel_PrivateBeaconServer_Describe sigModelID:kSigModel_PrivateBeaconServer_ID];
+        ModelIDModel *model70 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_PrivateBeacon_Describe modelName:kSigModel_PrivateBeaconClient_Describe sigModelID:kSigModel_PrivateBeaconClient_ID];
+        ModelIDModel *model71 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_ON_DEMAND_PROXY_Describe modelName:kSigModel_ON_DEMAND_PROXY_S_Describe sigModelID:kSigModel_ON_DEMAND_PROXY_S_ID];
+        ModelIDModel *model72 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_ON_DEMAND_PROXY_Describe modelName:kSigModel_ON_DEMAND_PROXY_C_Describe sigModelID:kSigModel_ON_DEMAND_PROXY_C_ID];
+        ModelIDModel *model73 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SAR_CFG_Describe modelName:kSigModel_SAR_CFG_S_Describe sigModelID:kSigModel_SAR_CFG_S_ID];
+        ModelIDModel *model74 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SAR_CFG_Describe modelName:kSigModel_SAR_CFG_C_Describe sigModelID:kSigModel_SAR_CFG_C_ID];
+        ModelIDModel *model75 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_OP_AGG_Describe modelName:kSigModel_OP_AGG_S_Describe sigModelID:kSigModel_OP_AGG_S_ID];
+        ModelIDModel *model76 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_OP_AGG_Describe modelName:kSigModel_OP_AGG_C_Describe sigModelID:kSigModel_OP_AGG_C_ID];
+        ModelIDModel *model77 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_LARGE_CPS_Describe modelName:kSigModel_LARGE_CPS_S_Describe sigModelID:kSigModel_LARGE_CPS_S_ID];
+        ModelIDModel *model78 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_LARGE_CPS_Describe modelName:kSigModel_LARGE_CPS_C_Describe sigModelID:kSigModel_LARGE_CPS_S_ID];
+        ModelIDModel *model79 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SOLI_PDU_RPL_CFG_Describe modelName:kSigModel_SOLI_PDU_RPL_CFG_S_Describe sigModelID:kSigModel_SOLI_PDU_RPL_CFG_S_ID];
+        ModelIDModel *model80 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SOLI_PDU_RPL_CFG_Describe modelName:kSigModel_SOLI_PDU_RPL_CFG_C_Describe sigModelID:kSigModel_SOLI_PDU_RPL_CFG_C_ID];
 
-        _modelIDs = @[model1,model2,model3,model4,model5,model6,model7,model8,model9,model10,model11,model12,model13,model14,model15,model16,model17,model18,model19,model20,model21,model22,model23,model24,model25,model26,model27,model28,model29,model30,model31,model32,model33,model34,model35,model36,model37,model38,model39,model40,model41,model42,model43,model44,model45,model46,model47,model48,model49,model50,model51,model52,model53,model54,model55,model56,model57,model58,model59,model60,model61,model62,model63,model64,model65];
+        _modelIDs = @[model1,model2,model3,model4,model5,model6,model7,model8,model9,model10,model11,model12,model13,model14,model15,model16,model17,model18,model19,model20,model21,model22,model23,model24,model25,model26,model27,model28,model29,model30,model31,model32,model33,model34,model35,model36,model37,model38,model39,model40,model41,model42,model43,model44,model45,model46,model47,model48,model49,model50,model51,model52,model53,model54,model55,model56,model57,model58,model59,model60,model61,model62,model63,model64,model65,model66,model67,model68,model69,model70,model71,model72,model73,model74,model75,model76,model77,model78,model79,model80];
         //        _defaultModelIDs = @[model1,model3,model4,model35,model36,model38,model39,model41,model50,model51];//默认选中10个
         _defaultModelIDs = _modelIDs;//默认选中所有
         
@@ -315,8 +325,9 @@
 - (instancetype)initWithCoder:(NSCoder *)coder
 {
     if (self = [super init]) {
-        _nodeIdentityData = [coder decodeObjectForKey:kSigScanRspModel_nodeIdentityData_key];
-        _networkIDData = [coder decodeObjectForKey:kSigScanRspModel_networkIDData_key];
+//        _nodeIdentityData = [coder decodeObjectForKey:kSigScanRspModel_nodeIdentityData_key];
+//        _networkIDData = [coder decodeObjectForKey:kSigScanRspModel_networkIDData_key];
+        _advertisementDataServiceData = [coder decodeObjectForKey:kSigScanRspModel_advertisementDataServiceData_key];
         _uuid = [coder decodeObjectForKey:kSigScanRspModel_uuid_key];
         _address = [coder decodeIntegerForKey:kSigScanRspModel_address_key];
         _macAddress = [coder decodeObjectForKey:kSigScanRspModel_mac_key];
@@ -326,8 +337,9 @@
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
-    [coder encodeObject:_nodeIdentityData forKey:kSigScanRspModel_nodeIdentityData_key];
-    [coder encodeObject:_networkIDData forKey:kSigScanRspModel_networkIDData_key];
+//    [coder encodeObject:_nodeIdentityData forKey:kSigScanRspModel_nodeIdentityData_key];
+//    [coder encodeObject:_networkIDData forKey:kSigScanRspModel_networkIDData_key];
+    [coder encodeObject:_advertisementDataServiceData forKey:kSigScanRspModel_advertisementDataServiceData_key];
     [coder encodeObject:_uuid forKey:kSigScanRspModel_uuid_key];
     [coder encodeInteger:_address forKey:kSigScanRspModel_address_key];
     [coder encodeObject:_macAddress forKey:kSigScanRspModel_mac_key];
@@ -454,24 +466,34 @@
                             oob.value = [LibTools uint16FromBytes:[advDataServiceData subdataWithRange:NSMakeRange(16, 2)]];
                             _advOobInformation = oob;
                         }
+                        _advertisementDataServiceData = [NSData dataWithData:advDataServiceData];
                     } else {
                         // 已入网
-                        UInt8 advType = [LibTools uint8From16String:[LibTools convertDataToHexStr:[LibTools turnOverData:[advDataServiceData subdataWithRange:NSMakeRange(0, 1)]]]];
-                        if (advType == 0) {
-                            if (advDataServiceData.length >= 9) {
-                                _networkIDData = [advDataServiceData subdataWithRange:NSMakeRange(1, 8)];
-                            }
-                        }else if (advType == 1) {
-                            if (advDataServiceData.length >= 17) {
-                                _nodeIdentityData = [advDataServiceData subdataWithRange:NSMakeRange(1, 16)];
-                            }
-                        }
+                        _advertisementDataServiceData = [NSData dataWithData:advDataServiceData];
+//                        UInt8 advType = [LibTools uint8From16String:[LibTools convertDataToHexStr:[LibTools turnOverData:[advDataServiceData subdataWithRange:NSMakeRange(0, 1)]]]];
+//                        if (advType == SigIdentificationType_networkID) {
+//                            if (advDataServiceData.length >= 9) {
+//                                _networkIDData = [advDataServiceData subdataWithRange:NSMakeRange(1, 8)];
+//                            }
+//                        }else if (advType == SigIdentificationType_nodeIdentity) {
+//                            if (advDataServiceData.length >= 17) {
+//                                _nodeIdentityData = [advDataServiceData subdataWithRange:NSMakeRange(1, 16)];
+//                            }
+//                        }
                     }
                 }
             }
         }
     }
     return self;
+}
+
+- (SigIdentificationType)getIdentificationType {
+    SigIdentificationType advType = 0xFF;
+    if (_advertisementDataServiceData && _advertisementDataServiceData.length) {
+        advType = [LibTools uint8From16String:[LibTools convertDataToHexStr:[LibTools turnOverData:[_advertisementDataServiceData subdataWithRange:NSMakeRange(0, 1)]]]];
+    }
+    return advType;
 }
 
 - (BOOL)isEqual:(id)object{
@@ -542,7 +564,7 @@
 
 - (instancetype)initWithRemoteScanRspModel:(SigRemoteScanRspModel *)scanRemoteModel {
     if (self = [super init]) {
-        _state = AddDeviceModelStateScaned;
+        _state = AddDeviceModelStateScanned;
         SigScanRspModel *model = [[SigScanRspModel alloc] init];
         model.address = scanRemoteModel.reportNodeAddress;
         model.uuid = [LibTools convertDataToHexStr:scanRemoteModel.reportNodeUUID];
@@ -876,6 +898,18 @@
             if (iniCommandData.length > 10+size_op) {
                 _commandData = [iniCommandData subdataWithRange:NSMakeRange(10+size_op, iniCommandData.length-(10+size_op))];
             }
+            if (size_op == 1) {
+                _isEncryptByDeviceKey = [SigHelper.share isDeviceKeyOpCode:_opcode];
+            } else if (size_op == 2) {
+                if (CFSwapInt16BigToHost(_opcode) == SigOpCode_OpcodesAggregatorSequence) {
+                    SigOpcodesAggregatorSequence *sequence = [[SigOpcodesAggregatorSequence alloc] initWithParameters:_commandData];
+                    if (sequence.items && sequence.items.count > 0) {
+                        _isEncryptByDeviceKey = [SigHelper.share isDeviceKeyOpCode:sequence.items.firstObject.getSigMeshMessage.opCode];
+                    }
+                } else {
+                    _isEncryptByDeviceKey = [SigHelper.share isDeviceKeyOpCode:CFSwapInt16BigToHost(_opcode)];
+                }
+            }
         }
         _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
         _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
@@ -888,7 +922,7 @@
     Byte *pu = (Byte *)[iniCommandData bytes];
     UInt8 temp = 0;
     memcpy(&temp, pu+opcodeIndex, 1);
-    UInt8 op_type = GET_OP_TYPE(temp);
+    UInt8 op_type = [SigHelper.share getOpCodeTypeWithOpcode:temp];
     return op_type;
 }
 
@@ -1384,7 +1418,7 @@
 @implementation SigEncryptedModel
 - (BOOL)isEqual:(id)object{
     if ([object isKindOfClass:[SigEncryptedModel class]]) {
-        return [_identityData isEqualToData:((SigEncryptedModel *)object).identityData];
+        return [_advertisementDataServiceData isEqualToData:((SigEncryptedModel *)object).advertisementDataServiceData];
     } else {
         return NO;
     }
@@ -3894,7 +3928,26 @@
 - (BOOL)isDeviceKeyModelID {
     BOOL tem = NO;
     int modelID = [self getIntModelID];
-    if (modelID == kSigModel_ConfigurationServer_ID || modelID == kSigModel_ConfigurationClient_ID || modelID == kSigModel_RemoteProvisionServer_ID || modelID == kSigModel_RemoteProvisionClient_ID || modelID == kSigModel_DF_CFG_S_ID || modelID == kSigModel_DF_CFG_C_ID || modelID == kSigModel_SubnetBridgeServer_ID || modelID == kSigModel_SubnetBridgeClient_ID || modelID == kSigModel_PrivateBeaconServer_ID || modelID == kSigModel_PrivateBeaconClient_ID || modelID == kSigModel_SAR_CFG_S_ID || modelID == kSigModel_SAR_CFG_C_ID || modelID == kSigModel_ON_DEMAND_PROXY_S_ID || modelID == kSigModel_ON_DEMAND_PROXY_C_ID || modelID == kSigModel_LARGE_CPS_S_ID || modelID == kSigModel_LARGE_CPS_C_ID) {
+    if (modelID == kSigModel_ConfigurationServer_ID ||
+        modelID == kSigModel_ConfigurationClient_ID ||
+        modelID == kSigModel_RemoteProvisionServer_ID ||
+        modelID == kSigModel_RemoteProvisionClient_ID ||
+        modelID == kSigModel_DF_CFG_S_ID ||
+        modelID == kSigModel_DF_CFG_C_ID ||
+        modelID == kSigModel_SubnetBridgeServer_ID ||
+        modelID == kSigModel_SubnetBridgeClient_ID ||
+        modelID == kSigModel_PrivateBeaconServer_ID ||
+        modelID == kSigModel_PrivateBeaconClient_ID ||
+        modelID == kSigModel_ON_DEMAND_PROXY_S_ID ||
+        modelID == kSigModel_ON_DEMAND_PROXY_C_ID ||
+        modelID == kSigModel_SAR_CFG_S_ID ||
+        modelID == kSigModel_SAR_CFG_C_ID ||
+        modelID == kSigModel_OP_AGG_S_ID ||
+        modelID == kSigModel_OP_AGG_C_ID ||
+        modelID == kSigModel_LARGE_CPS_S_ID ||
+        modelID == kSigModel_LARGE_CPS_C_ID ||
+        modelID == kSigModel_SOLI_PDU_RPL_CFG_S_ID ||
+        modelID == kSigModel_SOLI_PDU_RPL_CFG_C_ID) {
         tem = YES;
     }
     return tem;
@@ -4286,7 +4339,7 @@
 
 @implementation SigOOBModel
 
-- (instancetype)initWithSourceType:(OOBSourceTpye)sourceType UUIDString:(NSString *)UUIDString OOBString:(NSString *)OOBString {
+- (instancetype)initWithSourceType:(OOBSourceType)sourceType UUIDString:(NSString *)UUIDString OOBString:(NSString *)OOBString {
     if (self = [super init]) {
         _sourceType = sourceType;
         _UUIDString = UUIDString;
@@ -4505,6 +4558,325 @@
     [mData appendData:data];
     tem8 = _directions;
     data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+@end
+
+
+@implementation SigOpcodesAggregatorItemModel
+
+- (instancetype)initWithLengthFormat:(BOOL)lengthFormat lengthShort:(UInt8)lengthShort lengthLong:(UInt8)lengthLong opcodeAndParameters:(NSData *)opcodeAndParameters {
+    if (self = [super init]) {
+        _lengthFormat = lengthFormat;
+        _lengthShort = lengthShort;
+        _lengthLong = lengthLong;
+        _opcodeAndParameters = [NSData dataWithData:opcodeAndParameters];
+    }
+    return self;
+}
+
+- (instancetype)initWithSigMeshMessage:(SigMeshMessage *)meshMessage {
+    if (self = [super init]) {
+        NSInteger parametersLength = meshMessage.parameters.length;
+        NSInteger opcodeAndParametersLength = parametersLength;
+        if (meshMessage.opCode <= 0xFF) {
+            opcodeAndParametersLength += 1;
+        } else if (meshMessage.opCode <= 0xFFFF) {
+            opcodeAndParametersLength += 2;
+        } else {
+            TeLogError(@"meshMessage.opCode is invalid!");
+            return nil;
+        }
+        _lengthFormat = opcodeAndParametersLength > 0x7F;
+        if (_lengthFormat) {
+            _lengthLong = opcodeAndParametersLength;
+        } else {
+            _lengthShort = opcodeAndParametersLength;
+        }
+        
+        NSMutableData *mData = [NSMutableData data];
+        NSData *opcodeData = [SigHelper.share getOpCodeDataWithUInt32Opcode:meshMessage.opCode];
+        [mData appendData:opcodeData];
+        [mData appendData:meshMessage.parameters];
+        _opcodeAndParameters = mData;
+    }
+    return self;
+}
+
+- (instancetype)initWithOpcodeAndParameters:(NSData *)opcodeAndParameters {
+    if (self = [super init]) {
+        if (opcodeAndParameters && opcodeAndParameters.length > 0) {
+            UInt8 tem8 = 0;
+            Byte *dataByte = (Byte *)opcodeAndParameters.bytes;
+            memcpy(&tem8, dataByte, 1);
+            _lengthFormat = tem8 & 1;
+            if (_lengthFormat == NO) {
+                _lengthShort = (tem8 & 0b11111110) >> 1;
+            } else {
+                UInt16 tem16 = 0;
+                memcpy(&tem16, dataByte, 2);
+                _lengthLong = (tem16 & 0x7FFF) >> 1;
+            }
+            NSInteger length = _lengthFormat == NO ? (_lengthShort+1) : (_lengthLong+2);
+            if (opcodeAndParameters.length < length) {
+                TeLogError(@"opcodeAndParameters is invalid!");
+                return nil;
+            } else {
+                _opcodeAndParameters = [NSData dataWithData:[opcodeAndParameters subdataWithRange:NSMakeRange(_lengthFormat == NO ? 1 : 2, _lengthFormat == NO ? _lengthShort : _lengthLong)]];
+            }
+        }
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = 0;
+    UInt16 tem16 = 0;
+    NSData *data = nil;
+    if (_lengthFormat == NO) {
+        tem8 = _lengthShort << 1;
+        data = [NSData dataWithBytes:&tem8 length:1];
+    } else {
+        tem16 = (_lengthLong << 1) | 1;
+        data = [NSData dataWithBytes:&tem16 length:2];
+    }
+    [mData appendData:data];
+    [mData appendData:_opcodeAndParameters];
+    return mData;
+}
+
+- (SigMeshMessage *)getSigMeshMessage {
+    SigOpCodeAndParametersModel *model = [[SigOpCodeAndParametersModel alloc] initWithOpCodeAndParameters:_opcodeAndParameters];
+    return model.getSigMeshMessage;
+}
+
+@end
+
+
+@implementation SigOpCodeAndParametersModel
+
+- (instancetype)initWithOpCodeAndParameters:(NSData *)opCodeAndParameters {
+    if (self = [super init]) {
+        // At least 1 octet is required.
+        if (opCodeAndParameters == nil || opCodeAndParameters.length == 0) {
+            TeLogError(@"opCodeAndParameters has not data.");
+            return nil;
+        }
+        UInt8 octet0 = 0;
+        Byte *dataByte = (Byte *)opCodeAndParameters.bytes;
+        memcpy(&octet0, dataByte, 1);
+
+        if (octet0 == 0b01111111) {
+            TeLogError(@"Opcode 0b01111111 is reseved for future use.");
+            return nil;
+        }
+
+        _opCodeAndParameters = [NSData dataWithData:opCodeAndParameters];
+        // 1-octet Opcodes.
+        if ((octet0 & 0x80) == 0) {
+            _opCodeSize = 1;
+            _opCode = (UInt32)octet0;
+            _parameters = [opCodeAndParameters subdataWithRange:NSMakeRange(1, opCodeAndParameters.length - 1)];
+            return self;
+        }
+        // 2-octet Opcodes.
+        if ((octet0 & 0x40) == 0) {
+            // At least 2 octets are required.
+            if (opCodeAndParameters.length < 2) {
+                TeLogError(@"opCodeAndParameters is error.");
+                return nil;
+            }
+            _opCodeSize = 2;
+            UInt8 octet1 = 0;
+            memcpy(&octet1, dataByte+1, 1);
+            _opCode = (UInt32)octet0 << 8 | (UInt32)octet1;
+            _parameters = [opCodeAndParameters subdataWithRange:NSMakeRange(2, opCodeAndParameters.length - 2)];
+            return self;
+        }
+        // 3-octet Opcodes.
+        // At least 3 octets are required.
+        if (opCodeAndParameters.length < 3) {
+            TeLogError(@"opCodeAndParameters is error.");
+            return nil;
+        }
+        _opCodeSize = 3;
+        UInt8 octet1 = 0;
+        UInt8 octet2 = 0;
+        memcpy(&octet1, dataByte+1, 1);
+        memcpy(&octet2, dataByte+2, 1);
+        _opCode = (UInt32)octet0 << 16 | (UInt32)octet1 << 8 | (UInt32)octet2;
+        _parameters = [opCodeAndParameters subdataWithRange:NSMakeRange(3, opCodeAndParameters.length - 3)];
+    }
+    return self;
+}
+
+- (SigMeshMessage *)getSigMeshMessage {
+    Class MessageType = [SigHelper.share getMeshMessageWithOpCode:_opCode];
+    if (MessageType != nil) {
+        SigMeshMessage *msg = [[MessageType alloc] initWithParameters:_parameters];
+        return msg;
+    }
+    return nil;
+}
+
+@end
+
+
+@implementation GattDateTimeModel
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length > 0) {
+            UInt8 tem8 = 0;
+            UInt16 tem16 = 0;
+            Byte *dataByte = (Byte *)parameters.bytes;
+            if (parameters.length >= 2) {
+                memcpy(&tem16, dataByte, 2);
+                _year = tem16;
+            }
+            if (parameters.length >= 3) {
+                memcpy(&tem8, dataByte+2, 1);
+                _month = tem8;
+            }
+            if (parameters.length >= 4) {
+                memcpy(&tem8, dataByte+3, 1);
+                _day = tem8;
+            }
+            if (parameters.length >= 5) {
+                memcpy(&tem8, dataByte+4, 1);
+                _hours = tem8;
+            }
+            if (parameters.length >= 6) {
+                memcpy(&tem8, dataByte+5, 1);
+                _minutes = tem8;
+            }
+            if (parameters.length >= 7) {
+                memcpy(&tem8, dataByte+6, 1);
+                _seconds = tem8;
+            }
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithDate:(NSDate *)date {
+    if (self = [super init]) {
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateFormat:@"yyyy"];
+        NSInteger currentYear = [[formatter stringFromDate:date] integerValue];
+        [formatter setDateFormat:@"MM"];
+        NSInteger currentMonth = [[formatter stringFromDate:date] integerValue];
+        [formatter setDateFormat:@"dd"];
+        NSInteger currentDay = [[formatter stringFromDate:date] integerValue];
+        [formatter setDateFormat:@"HH"];
+        NSInteger currentHours = [[formatter stringFromDate:date] integerValue];
+        [formatter setDateFormat:@"mm"];
+        NSInteger currentMinutes = [[formatter stringFromDate:date] integerValue];
+        [formatter setDateFormat:@"ss"];
+        NSInteger currentSeconds = [[formatter stringFromDate:date] integerValue];
+        NSLog(@"currentDate = %@ ,year = %ld, month=%ld, day=%ld, hours=%ld, minutes=%ld, seconds=%ld", date, currentYear, currentMonth, currentDay, currentHours, currentMinutes, currentSeconds);
+        _year = currentYear;
+        _month = currentMonth;
+        _day = currentDay;
+        _hours = currentHours;
+        _minutes = currentMinutes;
+        _seconds = currentSeconds;
+    }
+    return self;
+}
+
+- (instancetype)initWithYear:(UInt16)year month:(UInt8)month day:(UInt8)day hours:(UInt8)hours minutes:(UInt8)minutes seconds:(UInt8)seconds {
+    if (self = [super init]) {
+        _year = year;
+        _month = month;
+        _day = day;
+        _hours = hours;
+        _minutes = minutes;
+        _seconds = seconds;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = 0;
+    UInt16 tem16 = _year;
+    NSData *data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    tem8 = _month;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _day;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _hours;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _minutes;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    tem8 = _seconds;
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    return mData;
+}
+
+@end
+
+
+@implementation GattDayDateTimeModel
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    if (self = [super init]) {
+        if (parameters && parameters.length > 0) {
+            _dateTime = [[GattDateTimeModel alloc] initWithParameters:parameters];
+            if (parameters.length >= 8) {
+                UInt8 tem8 = 0;
+                Byte *dataByte = (Byte *)parameters.bytes;
+                memcpy(&tem8, dataByte+7, 1);
+                _dayOfWeek = tem8;
+            }
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithDate:(NSDate *)date {
+    if (self = [super init]) {
+        _dateTime = [[GattDateTimeModel alloc] initWithDate:date];
+        NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+        NSDateComponents *comps = [[NSDateComponents alloc] init];
+        NSInteger unitFlags =  NSCalendarUnitWeekday ;
+        comps = [calendar components:unitFlags fromDate:date];
+        NSInteger week = [comps weekday];
+        NSLog(@"week = %zd",week);
+        if (week == 1) {
+            _dayOfWeek = GattDayOfWeek_Sunday;
+        } else {
+            _dayOfWeek = week - 1;
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithYear:(UInt16)year month:(UInt8)month day:(UInt8)day hours:(UInt8)hours minutes:(UInt8)minutes seconds:(UInt8)seconds dayOfWeek:(GattDayOfWeek)dayOfWeek {
+    if (self = [super init]) {
+        _dateTime = [[GattDateTimeModel alloc] initWithYear:year month:month day:day hours:hours minutes:minutes seconds:seconds];
+        _dayOfWeek = dayOfWeek;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    if (_dateTime && _dateTime.parameters) {
+        [mData appendData:_dateTime.parameters];
+    }
+    UInt8 tem8 = _dayOfWeek;
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
     [mData appendData:data];
     return mData;
 }

@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/9/9
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigPdu.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/9.
-//  Copyright © 2019 Telink. All rights reserved.
-//
 
 #import "SigPdu.h"
 #import "OpenSSLHelper.h"
@@ -296,8 +290,25 @@
     return self;
 }
 
+- (NSString *)getAlgorithmsString {
+    NSString *tem = @"";
+    if (_algorithms.fipsP256EllipticCurve == 1) {
+        tem = [tem stringByAppendingString:@"FIPS P-256 Elliptic Curve"];
+    }
+    if (_algorithms.fipsP256EllipticCurve_HMAC_SHA256 == 1) {
+        if (tem.length > 0) {
+            tem = [tem stringByAppendingString:@"\n"];
+        }
+        tem = [tem stringByAppendingString:@"FIPS P-256 Elliptic Curve - HMAC - SHA256"];
+    }
+    if (tem.length == 0) {
+        tem = @"None";
+    }
+    return tem;
+}
+
 - (NSString *)getCapabilitiesString {
-    NSString *string = [NSString stringWithFormat:@"\n------ Capabilities ------\nNumber of elements: %d\nAlgorithms: %@\nPublic Key Type: %@\nStatic OOB Type: %@\nOutput OOB Size: %d\nOutput OOB Actions: %d\nInput OOB Size: %d\nInput OOB Actions: %d\n--------------------------",_numberOfElements,_algorithms.fipsP256EllipticCurve == 1 ?@"FIPS P-256 Elliptic Curve":@"None",_publicKeyType == PublicKeyType_noOobPublicKey ?@"No OOB Public Key":@"OOB Public Key",_staticOobType.staticOobInformationAvailable == 1 ?@"YES":@"None",_outputOobSize,_outputOobActions.value,_inputOobSize,_inputOobActions.value];
+    NSString *string = [NSString stringWithFormat:@"\n------ Capabilities ------\nNumber of elements: %d\nAlgorithms: %@\nPublic Key Type: %@\nStatic OOB Type: %@\nOutput OOB Size: %d\nOutput OOB Actions: %d\nInput OOB Size: %d\nInput OOB Actions: %d\n--------------------------",_numberOfElements,[self getAlgorithmsString],_publicKeyType == PublicKeyType_noOobPublicKey ?@"No OOB Public Key":@"OOB Public Key",_staticOobType.staticOobInformationAvailable == 1 ?@"YES":@"None",_outputOobSize,_outputOobActions.value,_inputOobSize,_inputOobActions.value];
     return string;
 }
 
@@ -454,7 +465,7 @@
 - (instancetype)initWithConfirmation:(NSData *)confirmation {
     if (self = [super init]) {
         self.provisionType = SigProvisioningPduType_confirmation;
-        if (confirmation && confirmation.length == 16) {
+        if (confirmation && (confirmation.length == 16 || confirmation.length == 32)) {
             NSMutableData *mData = [NSMutableData data];
             UInt8 tem8 = self.provisionType;
             NSData *data = [NSData dataWithBytes:&tem8 length:1];
@@ -470,7 +481,7 @@
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        if (parameters && parameters.length == 17) {
+        if (parameters && (parameters.length == 17 || parameters.length == 33)) {
             self.pduData = [NSData dataWithData:parameters];
             UInt8 tem8 = 0;
             Byte *dataByte = (Byte *)parameters.bytes;
@@ -497,7 +508,7 @@
 - (instancetype)initWithRandom:(NSData *)random {
     if (self = [super init]) {
         self.provisionType = SigProvisioningPduType_random;
-        if (random && random.length == 16) {
+        if (random && (random.length == 16 || random.length == 32)) {
             NSMutableData *mData = [NSMutableData data];
             UInt8 tem8 = self.provisionType;
             NSData *data = [NSData dataWithBytes:&tem8 length:1];
@@ -513,7 +524,7 @@
 
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
-        if (parameters && parameters.length == 17) {
+        if (parameters && (parameters.length == 17 || parameters.length == 33)) {
             self.pduData = [NSData dataWithData:parameters];
             UInt8 tem8 = 0;
             Byte *dataByte = (Byte *)parameters.bytes;
@@ -1415,6 +1426,152 @@
 
 - (NSString *)description {
     return[NSString stringWithFormat:@"<%p> - Unprovisioned Device Beacon, uuid:(%@), OOB Info: (%x) URI hash: (%@)", self, _deviceUuid,_oob.value, _uriHash];
+}
+
+@end
+
+
+/// 3.10.4 Mesh Private beacon
+/// - seeAlso: MshPRFd1.1r15_clean.pdf  (page.209)
+@implementation SigMeshPrivateBeacon
+
+- (instancetype)init {
+    if (self = [super init]) {
+        [super setBeaconType:SigBeaconType_meshPrivateBeacon];
+    }
+    return self;
+}
+
+/// Creates Mesh Private beacon PDU object from received PDU.
+///
+/// - parameter pdu: The data received from mesh network.
+/// - parameter networkKey: The Network Key to validate the beacon.
+/// - returns: The beacon object, or `nil` if the data are invalid.
+- (instancetype)initWithDecodePdu:(NSData *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey {
+    if (self = [super init]) {
+        [super setBeaconType:SigBeaconType_meshPrivateBeacon];
+        self.pduData = pdu;
+        UInt8 tem = 0;
+        Byte *pduByte = (Byte *)pdu.bytes;
+        memcpy(&tem, pduByte, 1);
+        if (pdu.length != 27 || tem != SigBeaconType_meshPrivateBeacon) {
+            TeLogError(@"pdu data error, can not init decode.");
+            return nil;
+        }
+        _randomData = [pdu subdataWithRange:NSMakeRange(1, 13)];
+        _obfuscatedPrivateBeaconData = [pdu subdataWithRange:NSMakeRange(14, 5)];
+        _authenticationTag = [pdu subdataWithRange:NSMakeRange(19, 8)];
+        
+        BOOL authentication = NO;
+        NSMutableArray *mArray = [NSMutableArray array];
+        if (networkKey.key && networkKey.key.length == 32) {
+            [mArray addObject:[LibTools nsstringToHex:networkKey.key]];
+        }
+        if (networkKey.oldKey && networkKey.oldKey.length == 32) {
+            [mArray addObject:[LibTools nsstringToHex:networkKey.oldKey]];
+        }
+        for (NSData *key in mArray) {
+            NSData *obfuscatedPrivateBeaconDataC = [OpenSSLHelper.share calculateObfuscatedPrivateBeaconDataWithKeyRefreshFlag:networkKey.phase == distributingKeys ivUpdateActive:networkKey.ivIndex.updateActive ivIndex:networkKey.ivIndex.index randomData:_randomData usingNetworkKey:key];
+            if ([obfuscatedPrivateBeaconDataC isEqualToData:_obfuscatedPrivateBeaconData]) {
+                NSData *authenticationTagC = [OpenSSLHelper.share calculateAuthenticationTagWithKeyRefreshFlag:networkKey.phase == distributingKeys ivUpdateActive:networkKey.ivIndex.updateActive ivIndex:networkKey.ivIndex.index randomData:_randomData usingNetworkKey:key];
+                if ([authenticationTagC isEqualToData:_authenticationTag]) {
+                    authentication = YES;
+                    _netKeyData = key;
+                    _networkKey = networkKey;
+                    NSData *privateBeaconData = [OpenSSLHelper.share calculatePrivateBeaconDataWithObfuscatedPrivateBeaconData:obfuscatedPrivateBeaconDataC randomData:_randomData usingNetworkKey:key];
+                    Byte *privateBeaconByte = (Byte *)privateBeaconData.bytes;
+                    memcpy(&tem, privateBeaconByte, 1);
+                    _keyRefreshFlag = (tem & 0x01) != 0;
+                    _ivUpdateActive = (tem & 0x02) != 0;
+                    UInt32 tem32 = 0;
+                    memcpy(&tem32, privateBeaconByte + 1, 4);
+                    _ivIndex = CFSwapInt32HostToBig(tem32);
+                    break;
+                }
+            }
+        }
+        if (authentication == NO) {
+            TeLogError(@"Mesh Private beacon authentication fail.");
+            return nil;
+        }
+    }
+    return self;
+}
+
+- (instancetype)initWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive ivIndex:(UInt32)ivIndex randomData:(NSData *)randomData usingNetworkKey:(SigNetkeyModel *)networkKey {
+    if (self = [super init]) {
+        [super setBeaconType:SigBeaconType_meshPrivateBeacon];
+        _keyRefreshFlag = keyRefreshFlag;
+        _ivUpdateActive = ivUpdateActive;
+        _randomData = [NSData dataWithData:randomData];
+        _ivIndex = ivIndex;
+        _networkKey = networkKey;
+        _netKeyData = [LibTools nsstringToHex:networkKey.key];
+    }
+    return self;
+}
+
+/// Creates Mesh Private beacon PDU object from received PDU.
+///
+/// - parameter pdu: The data received from mesh network.
+/// - parameter networkKey: The Network Key to validate the beacon.
+/// - returns: The beacon object, or `nil` if the data are invalid.
++ (SigMeshPrivateBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork {
+    if (pdu == nil || pdu.length <= 1) {
+        TeLogError(@"decodePdu length is less than 1.");
+        return nil;
+    }
+    UInt8 tem = 0;
+    Byte *pduByte = (Byte *)pdu.bytes;
+    memcpy(&tem, pduByte, 1);
+    SigBeaconType beaconType = tem;
+    if (beaconType == SigBeaconType_meshPrivateBeacon) {
+        NSArray *netKeys = [NSArray arrayWithArray:meshNetwork.netKeys];
+        for (SigNetkeyModel *networkKey in netKeys) {
+            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithDecodePdu:pdu usingNetworkKey:networkKey];
+            if (beacon) {
+                return beacon;
+            }
+        }
+    } else {
+        return nil;
+    }
+    return nil;
+}
+
+- (NSData *)pduData {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 bType = self.beaconType;
+    [mData appendData:[NSData dataWithBytes:&bType length:1]];
+    if (_randomData == nil || _randomData.length == 0) {
+        return nil;
+    }
+    [mData appendData:_randomData];
+    NSData *obfuscatedPrivateBeaconDataC = self.obfuscatedPrivateBeaconData;
+    if (obfuscatedPrivateBeaconDataC == nil || obfuscatedPrivateBeaconDataC.length == 0) {
+        return nil;
+    }
+    [mData appendData:obfuscatedPrivateBeaconDataC];
+    NSData *authenticationTagC = self.authenticationTag;
+    if (authenticationTagC == nil || authenticationTagC.length == 0) {
+        return nil;
+    }
+    [mData appendData:authenticationTagC];
+    return mData;
+}
+
+- (NSData *)obfuscatedPrivateBeaconData {
+    _obfuscatedPrivateBeaconData = [OpenSSLHelper.share calculateObfuscatedPrivateBeaconDataWithKeyRefreshFlag:_keyRefreshFlag ivUpdateActive:_ivUpdateActive ivIndex:_ivIndex randomData:_randomData usingNetworkKey:self.netKeyData];
+    return _obfuscatedPrivateBeaconData;
+}
+
+- (NSData *)authenticationTag {
+    _authenticationTag = [OpenSSLHelper.share calculateAuthenticationTagWithKeyRefreshFlag:_keyRefreshFlag ivUpdateActive:_ivUpdateActive ivIndex:_ivIndex randomData:_randomData usingNetworkKey:self.netKeyData];
+    return _authenticationTag;
+}
+
+- (NSString *)description {
+    return[NSString stringWithFormat:@"<%p> - Mesh Private Beacon, random:(%@), netKeyData:(%@), ivIndex: (%x) Key refresh Flag: (%d), IV Update active: (%d)", self, [LibTools convertDataToHexStr:_randomData],[LibTools convertDataToHexStr:_netKeyData],(unsigned int)_ivIndex, _keyRefreshFlag,_ivUpdateActive];
 }
 
 @end

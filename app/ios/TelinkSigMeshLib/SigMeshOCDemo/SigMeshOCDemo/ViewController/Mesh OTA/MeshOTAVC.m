@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/4/17
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  MeshOTAVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/4/17.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "MeshOTAVC.h"
 #import "MeshOTAItemCell.h"
@@ -131,8 +125,8 @@
 //            //1、从直连节点获取firmwareDistributionReceiversGet，将ReceiversList作为选中的升级的节点地址
 //            NSMutableArray <NSNumber *>*mutableList = [NSMutableArray array];
 //            [SDKLibCommand firmwareDistributionReceiversGetWithDestination:addressNumber.intValue firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionReceiversList * _Nonnull responseMessage) {
-//                NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-//                [oprationQueue addOperationWithBlock:^{
+//                NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+//                [operationQueue addOperationWithBlock:^{
 //                    if (responseMessage && responseMessage.receiversList && responseMessage.receiversList.count) {
 //                        for (SigUpdatingNodeEntryModel *model in responseMessage.receiversList) {
 //                            if (![mutableList containsObject:@(model.address)]) {
@@ -329,6 +323,7 @@
 }
 
 - (IBAction)clickGetFwInfo:(UIButton *)sender {
+#ifdef kExist
     [self.allItemVIDDict removeAllObjects];
     __weak typeof(self) weakSelf = self;
     
@@ -353,8 +348,8 @@
         }
     }
     
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         [SDKLibCommand firmwareUpdateInformationGetWithDestination:kMeshAddress_allNodes firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMax successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
@@ -368,6 +363,7 @@
                     Byte *pu = (Byte *)[currentFirmwareID bytes];
                     if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                     if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
+                    vid = CFSwapInt16HostToBig(vid);
                     TeLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                     [weakSelf updateNodeModelVidWithAddress:source vid:vid];
                 }
@@ -393,6 +389,7 @@
                             Byte *pu = (Byte *)[currentFirmwareID bytes];
                             if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                             if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
+                            vid = CFSwapInt16HostToBig(vid);
                             TeLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                             [weakSelf updateNodeModelVidWithAddress:source vid:vid];
                         }
@@ -406,6 +403,7 @@
             }
         }
     }];
+#endif
 }
 
 - (IBAction)clickStartMeshOTA:(UIButton *)sender {
@@ -483,7 +481,7 @@
             UInt16 modelIdentifier = kSigModel_ObjectTransferServer_ID;
             NSArray *addressArray = [model getAddressesWithModelID:@(modelIdentifier)];
             if (addressArray && addressArray.count > 0) {
-                NSString *str = [NSString stringWithFormat:@"%@adr:0x%X pid:0x%X vid:%c%c",model.features.lowPowerFeature != SigNodeFeaturesState_notSupported ? @"LPN-" : @"",model.address,[LibTools uint16From16String:model.pid],vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+                NSString *str = [NSString stringWithFormat:@"%@adr:0x%X pid:0x%X vid:0x%X",model.features.lowPowerFeature != SigNodeFeaturesState_notSupported ? @"LPN-" : @"",model.address,[LibTools uint16From16String:model.pid], vid];
                 #ifdef kExist
                 if (kExistMeshOTA) {
                     if (MeshOTAManager.share.phoneIsDistributor) {
@@ -516,7 +514,7 @@
                 itemCell.titleLabel.text = str;
             } else {
                 vid = [LibTools uint16From16String:model.vid];
-                itemCell.titleLabel.text = [NSString stringWithFormat:@"%@adr:0x%X pid:0x%X vid:%c%c Not support",model.features.lowPowerFeature != SigNodeFeaturesState_notSupported ? @"LPN-" : @"",model.address,[LibTools uint16From16String:model.pid],vid&0xff,(vid>>8)&0xff];//显示两个字节的ASCII
+                itemCell.titleLabel.text = [NSString stringWithFormat:@"%@adr:0x%X pid:0x%X vid:0x%X Not support",model.features.lowPowerFeature != SigNodeFeaturesState_notSupported ? @"LPN-" : @"",model.address,[LibTools uint16From16String:model.pid], vid];//显示两个字节的ASCII
             }
             
             if (self.selectItemAddressArray.count > 0) {
@@ -545,7 +543,8 @@
         NSData *data = [OTAFileSource.share getDataWithBinName:binString];
         if (data && data.length) {
             UInt16 vid = [OTAFileSource.share getVidWithOTAData:data];
-            itemCell.titleLabel.text = [NSString stringWithFormat:@"%@ pid:0x%X vid:%c%c",binString,[OTAFileSource.share getPidWithOTAData:data],vid&0xff,(vid>>8)&0xff];//vid显示两个字节的ASCII
+            vid = CFSwapInt16HostToBig(vid);
+            itemCell.titleLabel.text = [NSString stringWithFormat:@"%@ pid:0x%X vid:0x%X",binString,[OTAFileSource.share getPidWithOTAData:data], vid];//vid显示两个字节的ASCII
         } else {
             itemCell.titleLabel.text = [NSString stringWithFormat:@"%@,read bin fail!",binString];//bin文件读取失败。
         }
@@ -875,6 +874,7 @@
 
 typedef void(^getFirmwareImageCompleteHandle)(NSError *error, SigFirmwareInformationEntryModel *model, NSData *firmwareData);
 - (void)getFirmwareImageWithNodeAddress:(UInt16)nodeAddress firstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit completeHandle:(getFirmwareImageCompleteHandle)completeHandle {
+#ifdef kExist
     [SDKLibCommand firmwareUpdateInformationGetWithDestination:nodeAddress firstIndex:firstIndex entriesLimit:entriesLimit retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
         TeLogDebug(@"firmwareUpdateInformationGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (responseMessage.firmwareInformationList && responseMessage.firmwareInformationList.count > 0) {
@@ -931,6 +931,7 @@ typedef void(^getFirmwareImageCompleteHandle)(NSError *error, SigFirmwareInforma
             }
         }
     }];
+#endif
 }
 
 - (void)startMeshOTADistribution {

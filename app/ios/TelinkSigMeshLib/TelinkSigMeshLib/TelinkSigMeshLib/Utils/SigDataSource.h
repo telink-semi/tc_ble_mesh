@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/15
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigDataSource.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/15.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import <Foundation/Foundation.h>
 
@@ -115,8 +109,8 @@
 @property (nonatomic, assign) UInt8 defaultRetryCount;
 /// 默认一个provisioner分配的设备地址区间，默认值为kAllocatedUnicastRangeHighAddress（0x400）.
 @property (nonatomic, assign) UInt16 defaultAllocatedUnicastRangeHighAddress;
-/// 默认sequenceNumber的步长，默认值为kSnoIncrement（128）.
-@property (nonatomic, assign) UInt8 defaultSnoIncrement;
+/// 默认sequenceNumber的步长，默认值为kSequenceNumberIncrement（128）.
+@property (nonatomic, assign) UInt8 defaultSequenceNumberIncrement;
 /// 默认一个unsegmented Access PDU的最大长度，大于该长度则需要进行segment分包，默认值为kUnsegmentedMessageLowerTransportPDUMaxLength（15，如onoff：2bytes opcode + 9bytes data(1byte onoff+1byte TID+7bytes other data) + 4bytes MIC）。默认一个segmented Access PDU的最大长度为kUnsegmentedMessageLowerTransportPDUMaxLength-3。
 @property (nonatomic, assign) UInt16 defaultUnsegmentedMessageLowerTransportPDUMaxLength;
 /// telink私有定义的Extend Bearer Mode，SDK默认是使用0，特殊用户需要用到2。
@@ -133,6 +127,9 @@
 /// is shorter than 11 bytes, make sure you return `true` from
 /// `isSegmented`, otherwise this field will be ignored.
 @property (nonatomic,assign) SigMeshMessageSecurity security;
+
+/// sig mesh协议v1.1之后，SDK进行provision操作使用算法的配置项，默认为SigFipsP256EllipticCurve_auto，自动适配provision算法。
+@property (nonatomic, assign) SigFipsP256EllipticCurve fipsP256EllipticCurve;
 
 /// 非LPN节点的默认可靠发包间隔，默认值为1.28。
 @property (nonatomic, assign) float defaultReliableIntervalOfNotLPN;
@@ -203,6 +200,9 @@
 - (BOOL)existScanRspModelOfCurrentMeshNetwork:(SigScanRspModel *)model;
 ///Special handling: determine peripheralUUIDString whether exist current meshNetwork
 - (BOOL)existPeripheralUUIDString:(NSString *)peripheralUUIDString;
+- (BOOL)matchNodeIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString nodes:(NSArray <SigNodeModel *>*)nodes networkKey:(SigNetkeyModel *)networkKey;
+- (BOOL)matchPrivateNetworkIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString networkKey:(SigNetkeyModel *)networkKey;
+- (BOOL)matchPrivateNodeIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString nodes:(NSArray <SigNodeModel *>*)nodes networkKey:(SigNetkeyModel *)networkKey;
 
 ///Special handling: update the uuid and MAC mapping relationship.
 - (void)updateScanRspModelToDataSource:(SigScanRspModel *)model;

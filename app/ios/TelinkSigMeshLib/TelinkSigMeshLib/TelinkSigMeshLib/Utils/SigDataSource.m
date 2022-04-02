@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/15
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigDataSource.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/15.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "SigDataSource.h"
 #import "OpenSSLHelper.h"
@@ -107,7 +101,7 @@
     _addStaticOOBDevcieByNoOOBEnable = YES;
     _defaultRetryCount = 2;
     _defaultAllocatedUnicastRangeHighAddress = kAllocatedUnicastRangeHighAddress;
-    _defaultSnoIncrement = kSnoIncrement;
+    _defaultSequenceNumberIncrement = kSequenceNumberIncrement;
     SigPeriodModel *periodModel = [[SigPeriodModel alloc] init];
     periodModel.numberOfSteps = kPublishInterval;
     periodModel.resolution = [LibTools getSigStepResolutionInMillisecondsOfJson:SigStepResolution_seconds];
@@ -763,10 +757,13 @@
 
 /// check SigDataSource.provisioners, this api will auto create a provisioner when SigDataSource.provisioners hasn't provisioner corresponding to app's UUID.
 - (void)checkExistLocationProvisioner{
+    if (_encryptedArray) {
+        [_encryptedArray removeAllObjects];
+    }
     if (self.curProvisionerModel) {
         TeLogInfo(@"exist location provisioner, needn't create");
         //sno添加增量
-        [self setLocationSno:self.getLocationSno + self.defaultSnoIncrement];
+        [self setLocationSno:self.getLocationSno + self.defaultSequenceNumberIncrement];
     }else{
         //don't exist location provisioner, create and add to SIGDataSource.provisioners, then save location.
         //Attention: the max location address is 0x7fff, so max provisioner's allocatedUnicastRange highAddress cann't bigger than 0x7fff.
@@ -1054,7 +1051,7 @@
 }
 
 - (void)setLocationSno:(UInt32)sno {
-    if ((sno - _sequenceNumberOnDelegate >= self.defaultSnoIncrement) || (sno < _sequenceNumberOnDelegate)) {
+    if ((sno - _sequenceNumberOnDelegate >= self.defaultSequenceNumberIncrement) || (sno < _sequenceNumberOnDelegate)) {
         self.sequenceNumberOnDelegate = sno;
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -1113,18 +1110,56 @@
 
 ///Special handling: determine model whether exist current meshNetwork
 - (BOOL)existScanRspModelOfCurrentMeshNetwork:(SigScanRspModel *)model{
-    if (model.networkIDData && model.networkIDData.length > 0) {
-        if (self.curNetkeyModel.phase == distributingKeys) {
-            if (self.curNetkeyModel.oldNetworkId && self.curNetkeyModel.oldNetworkId.length > 0) {
-                return [self.curNetkeyModel.oldNetworkId isEqualToData:model.networkIDData];
+    if (model && model.advertisementDataServiceData && model.advertisementDataServiceData.length) {
+        SigIdentificationType advType = [model getIdentificationType];
+        switch (advType) {
+            case SigIdentificationType_networkID:
+            {
+                if (model.advertisementDataServiceData.length >= 9) {
+                    NSData *networkID = [model.advertisementDataServiceData subdataWithRange:NSMakeRange(1, 8)];
+                    return [self matchWithNetworkID:networkID];
+                }
             }
-        } else {
-            if (self.curNetkeyModel.networkId && self.curNetkeyModel.networkId.length > 0) {
-                return [self.curNetkeyModel.networkId isEqualToData:model.networkIDData];
+                break;
+            case SigIdentificationType_nodeIdentity:
+            {
+                if (model.advertisementDataServiceData.length >= 17) {
+                    if ([self existEncryptedWithAdvertisementDataServiceData:model.advertisementDataServiceData]) {
+                        return YES;
+                    } else {
+                        return [self matchNodeIdentityWithAdvertisementDataServiceData:model.advertisementDataServiceData peripheralUUIDString:model.uuid nodes:self.curNodes networkKey:self.curNetkeyModel];
+                    }
+                }
             }
+                break;
+            case SigIdentificationType_privateNetworkIdentity:
+            {
+                TeLogDebug(@"receive SigIdentificationType_privateNetworkIdentity");
+                if (model.advertisementDataServiceData.length >= 17) {
+                    if ([self existEncryptedWithAdvertisementDataServiceData:model.advertisementDataServiceData]) {
+                        return YES;
+                    } else {
+                        return [self matchPrivateNetworkIdentityWithAdvertisementDataServiceData:model.advertisementDataServiceData peripheralUUIDString:model.uuid networkKey:self.curNetkeyModel];
+                    }
+                }
+            }
+                break;
+            case SigIdentificationType_privateNodeIdentity:
+            {
+                TeLogDebug(@"receive SigIdentificationType_privateNodeIdentity");
+                if (model.advertisementDataServiceData.length >= 17) {
+                    if ([self existEncryptedWithAdvertisementDataServiceData:model.advertisementDataServiceData]) {
+                        return YES;
+                    } else {
+                        return [self matchPrivateNodeIdentityWithAdvertisementDataServiceData:model.advertisementDataServiceData peripheralUUIDString:model.uuid nodes:self.curNodes networkKey:self.curNetkeyModel];
+                    }
+                }
+            }
+                break;
+
+            default:
+                break;
         }
-    }else if (model.nodeIdentityData && model.nodeIdentityData.length == 16) {
-        return [self matchsWithNodeIdentityData:model.nodeIdentityData peripheralUUIDString:model.uuid];
     }
     return NO;
 }
@@ -1135,24 +1170,29 @@
     return node != nil;
 }
 
-- (BOOL)existEncryptedWithNodeIdentityData:(NSData *)nodeIdentityData {
+- (BOOL)existEncryptedWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData {
     SigEncryptedModel *tem = [[SigEncryptedModel alloc] init];
-    tem.identityData = nodeIdentityData;
+    tem.advertisementDataServiceData = advertisementDataServiceData;
     return [_encryptedArray containsObject:tem];
 }
 
-- (BOOL)matchsWithNodeIdentityData:(NSData *)nodeIdentityData peripheralUUIDString:(NSString *)peripheralUUIDString {
-    if ([self existEncryptedWithNodeIdentityData:nodeIdentityData]) {
-        return YES;
+- (BOOL)matchWithNetworkID:(NSData *)networkID {
+    if (self.curNetkeyModel.phase == distributingKeys) {
+        if (self.curNetkeyModel.oldNetworkId && self.curNetkeyModel.oldNetworkId.length > 0) {
+            return [self.curNetkeyModel.oldNetworkId isEqualToData:networkID];
+        }
     } else {
-        NSData *hashData = [nodeIdentityData subdataWithRange:NSMakeRange(0, 8)];
-        NSData *randomData = [nodeIdentityData subdataWithRange:NSMakeRange(8, 8)];
-        return [self matchsWithHashData:hashData randomData:randomData peripheralUUIDString:peripheralUUIDString];
+        if (self.curNetkeyModel.networkId && self.curNetkeyModel.networkId.length > 0) {
+            return [self.curNetkeyModel.networkId isEqualToData:networkID];
+        }
     }
+    return NO;
 }
 
-- (BOOL)matchsWithHashData:(NSData *)hash randomData:(NSData *)random peripheralUUIDString:(NSString *)peripheralUUIDString {
-    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
+- (BOOL)matchNodeIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString nodes:(NSArray <SigNodeModel *>*)nodes networkKey:(SigNetkeyModel *)networkKey {
+    NSData *hash = [advertisementDataServiceData subdataWithRange:NSMakeRange(1, 8)];
+    NSData *random = [advertisementDataServiceData subdataWithRange:NSMakeRange(9, 8)];
+    NSArray *curNodes = [NSArray arrayWithArray:nodes];
     for (SigNodeModel *node in curNodes) {
         // Data are: 48 bits of Padding (0s), 64 bit Random and Unicast Address.
         Byte byte[6];
@@ -1165,14 +1205,14 @@
         data = [NSData dataWithBytes:&address length:2];
         [mData appendData:data];
 //        NSLog(@"mdata=%@",mData);
-        NSData *encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:self.curNetkeyModel.keys.identityKey];
+        NSData *encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:networkKey.keys.identityKey];
         BOOL isExist = NO;
         if ([[encryptedData subdataWithRange:NSMakeRange(8, encryptedData.length-8)] isEqualToData:hash]) {
             isExist = YES;
         }
         // If the Key refresh procedure is in place, the identity might have been generated with the old key.
-        if (!isExist && self.curNetkeyModel.oldKey && self.curNetkeyModel.oldKey.length > 0 && ![self.curNetkeyModel.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
-            encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:self.curNetkeyModel.oldKeys.identityKey];
+        if (!isExist && networkKey.oldKey && networkKey.oldKey.length > 0 && ![networkKey.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
+            encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:networkKey.oldKeys.identityKey];
             if ([[encryptedData subdataWithRange:NSMakeRange(8, encryptedData.length-8)] isEqualToData:hash]) {
                 isExist = YES;
             }
@@ -1181,7 +1221,111 @@
             NSMutableData *mData = [NSMutableData dataWithData:hash];
             [mData appendData:random];
             SigEncryptedModel *tem = [[SigEncryptedModel alloc] init];
-            tem.identityData = mData;
+            tem.advertisementDataServiceData = advertisementDataServiceData;
+            tem.hashData = hash;
+            tem.randomData = random;
+            tem.peripheralUUID = peripheralUUIDString;
+            tem.encryptedData = encryptedData;
+            tem.address = node.address;
+            [self deleteSigEncryptedModelWithAddress:node.address];
+            [self.encryptedArray addObject:tem];
+            return YES;
+        }
+    }
+    return NO;
+}
+
+- (BOOL)matchPrivateNetworkIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString networkKey:(SigNetkeyModel *)networkKey {
+    NSData *networkID = networkKey.networkId;
+    NSData *netKey = [LibTools nsstringToHex:networkKey.key];
+    NSData *identityKey = networkKey.keys.identityKey;
+    if (networkKey.phase == distributingKeys) {
+        if (networkKey.oldNetworkId && networkKey.oldNetworkId.length > 0) {
+            networkID = networkKey.oldNetworkId;
+            netKey = [LibTools nsstringToHex:networkKey.oldKey];
+            identityKey = networkKey.oldKeys.identityKey;
+        }
+    } else {
+        if (networkKey.networkId && networkKey.networkId.length > 0) {
+            networkID = networkKey.networkId;
+            netKey = [LibTools nsstringToHex:networkKey.key];
+            identityKey = networkKey.keys.identityKey;
+        }
+    }
+    if (networkID == nil || netKey == nil || identityKey == nil) {
+        return NO;
+    }
+    NSData *hash = [advertisementDataServiceData subdataWithRange:NSMakeRange(1, 8)];
+    NSData *random = [advertisementDataServiceData subdataWithRange:NSMakeRange(9, 8)];
+    NSMutableData *mData = [NSMutableData dataWithData:networkID];
+    [mData appendData:random];
+    NSData *encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:identityKey];
+    BOOL isExist = NO;
+    if ([[encryptedData subdataWithRange:NSMakeRange(8, encryptedData.length-8)] isEqualToData:hash]) {
+        isExist = YES;
+    }
+    // If the Key refresh procedure is in place, the identity might have been generated with the old key.
+    if (!isExist && networkKey.oldKey && networkKey.oldKey.length > 0 && ![networkKey.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
+        networkID = networkKey.oldNetworkId;
+        netKey = [LibTools nsstringToHex:networkKey.oldKey];
+        identityKey = networkKey.oldKeys.identityKey;
+        if (networkID == nil || netKey == nil || identityKey == nil) {
+            return NO;
+        }
+        mData = [NSMutableData dataWithData:networkID];
+        [mData appendData:random];
+        encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:identityKey];
+        if ([[encryptedData subdataWithRange:NSMakeRange(8, encryptedData.length-8)] isEqualToData:hash]) {
+            isExist = YES;
+        }
+    }
+    if (isExist) {
+        SigEncryptedModel *tem = [[SigEncryptedModel alloc] init];
+        tem.advertisementDataServiceData = advertisementDataServiceData;
+        tem.hashData = hash;
+        tem.randomData = random;
+        tem.peripheralUUID = peripheralUUIDString;
+        tem.encryptedData = encryptedData;
+        [self.encryptedArray addObject:tem];
+        return YES;
+    }
+    return NO;
+}
+
+- (BOOL)matchPrivateNodeIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString nodes:(NSArray <SigNodeModel *>*)nodes networkKey:(SigNetkeyModel *)networkKey {
+    NSData *hash = [advertisementDataServiceData subdataWithRange:NSMakeRange(1, 8)];
+    NSData *random = [advertisementDataServiceData subdataWithRange:NSMakeRange(9, 8)];
+    NSArray *curNodes = [NSArray arrayWithArray:nodes];
+    for (SigNodeModel *node in curNodes) {
+        // Data are: 40 bits of Padding (0s), 8bits is 0x03, 64 bits Random and 16 bits Unicast Address.
+        Byte byte[6];
+        memset(byte, 0, 6);
+        byte[5] = SigIdentificationType_privateNodeIdentity;
+        NSData *data = [NSData dataWithBytes:byte length:6];
+        NSMutableData *mData = [NSMutableData dataWithData:data];
+        [mData appendData:random];
+        // 把大端模式的数字Number转为本机数据存放模式
+        UInt16 address = CFSwapInt16BigToHost(node.address);;
+        data = [NSData dataWithBytes:&address length:2];
+        [mData appendData:data];
+//        NSLog(@"mdata=%@",mData);
+        NSData *encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:networkKey.keys.identityKey];
+        BOOL isExist = NO;
+        if ([[encryptedData subdataWithRange:NSMakeRange(8, encryptedData.length-8)] isEqualToData:hash]) {
+            isExist = YES;
+        }
+        // If the Key refresh procedure is in place, the identity might have been generated with the old key.
+        if (!isExist && networkKey.oldKey && networkKey.oldKey.length > 0 && ![networkKey.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
+            encryptedData = [OpenSSLHelper.share calculateEvalueWithData:mData andKey:networkKey.oldKeys.identityKey];
+            if ([[encryptedData subdataWithRange:NSMakeRange(8, encryptedData.length-8)] isEqualToData:hash]) {
+                isExist = YES;
+            }
+        }
+        if (isExist) {
+            NSMutableData *mData = [NSMutableData dataWithData:hash];
+            [mData appendData:random];
+            SigEncryptedModel *tem = [[SigEncryptedModel alloc] init];
+            tem.advertisementDataServiceData = advertisementDataServiceData;
             tem.hashData = hash;
             tem.randomData = random;
             tem.peripheralUUID = peripheralUUIDString;
@@ -1209,15 +1353,16 @@
                 if (oldModel.address != model.address && model.address == 0) {
                     model.address = oldModel.address;
                 }
-                if (model.provisioned) {
-                    if (oldModel.networkIDData && oldModel.networkIDData.length == 8 && (model.networkIDData == nil || model.networkIDData.length != 8)) {
-                        model.networkIDData = oldModel.networkIDData;
-                    }
-                    if (oldModel.nodeIdentityData && oldModel.nodeIdentityData.length == 16 && (model.nodeIdentityData == nil || model.nodeIdentityData.length != 16)) {
-                        model.nodeIdentityData = oldModel.nodeIdentityData;
-                    }
-                }
-                if (![oldModel.macAddress isEqualToString:model.macAddress] || oldModel.address != model.address || ![oldModel.networkIDData isEqualToData:model.networkIDData] || ![oldModel.nodeIdentityData isEqualToData:model.nodeIdentityData]) {
+//                if (model.provisioned) {
+//                    if (oldModel.networkIDData && oldModel.networkIDData.length == 8 && (model.networkIDData == nil || model.networkIDData.length != 8)) {
+//                        model.networkIDData = oldModel.networkIDData;
+//                    }
+//                    if (oldModel.nodeIdentityData && oldModel.nodeIdentityData.length == 16 && (model.nodeIdentityData == nil || model.nodeIdentityData.length != 16)) {
+//                        model.nodeIdentityData = oldModel.nodeIdentityData;
+//                    }
+//                }
+//                if (![oldModel.macAddress isEqualToString:model.macAddress] || oldModel.address != model.address || ![oldModel.networkIDData isEqualToData:model.networkIDData] || ![oldModel.nodeIdentityData isEqualToData:model.nodeIdentityData]) {
+                if (![oldModel.macAddress isEqualToString:model.macAddress] || oldModel.address != model.address || ![oldModel.advertisementDataServiceData isEqualToData:model.advertisementDataServiceData]) {
                     [self.scanList replaceObjectAtIndex:index withObject:model];
                     [self saveScanList];
                 }

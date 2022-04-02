@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/15
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigMeshLib.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/15.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "SigMeshLib.h"
 #import "SDKLibCommand.h"
@@ -47,6 +41,7 @@ static SigMeshLib *shareLib = nil;
         shareLib.sourceOfReceiveSegmentPDU = 0;
         shareLib.commands = [NSMutableArray array];
         shareLib.dataSource = SigDataSource.share;
+        shareLib.sendBeaconType = AppSendBeaconType_auto;
         [shareLib config];
         [shareLib initDelegate];
     });
@@ -72,7 +67,7 @@ static SigMeshLib *shareLib = nil;
     _defaultTtl = 10;
     _incompleteMessageTimeout = 15.0;
     _acknowledgmentTimerInterval = 0.150;
-    _transmissionTimerInteral = 0.200;
+    _transmissionTimerInterval = 0.200;
     _retransmissionLimit = 20;
     _networkTransmitIntervalSteps = 0b11111;
     _networkTransmitInterval = (_networkTransmitIntervalSteps + 1) * 10 / 1000.0;//单位ms
@@ -127,7 +122,7 @@ static SigMeshLib *shareLib = nil;
     //all response message callback in this code.
     if (shouldCallback && command && command.responseAllMessageCallBack) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            command.responseAllMessageCallBack(address,weakSelf.dataSource.curLocationNodeModel.address,message);
+            command.responseAllMessageCallBack(address, weakSelf.dataSource.curLocationNodeModel.address, message);
         });
     }
     if (SigPublishManager.share.discoverOutlineNodeCallback) {
@@ -310,7 +305,7 @@ static SigMeshLib *shareLib = nil;
         }
         return nil;
     }else{
-        return [NSError errorWithDomain:kSigMeshLibNofoundOnlineStatusCharacteristicErrorMessage code:kSigMeshLibNofoundOnlineStatusCharacteristicErrorCode userInfo:nil];
+        return [NSError errorWithDomain:kSigMeshLibNoFoundOnlineStatusCharacteristicErrorMessage code:kSigMeshLibNoFoundOnlineStatusCharacteristicErrorCode userInfo:nil];
     }
 }
 
@@ -329,7 +324,7 @@ static SigMeshLib *shareLib = nil;
     command.timeout = MAX(oldTimeout, newTimeout);
     //command存储下来，超时或者失败，或者返回response时，从该地方拿到command，获取里面的callback，执行，再删除。
     [self.commands addObject:command];
-    TeLogInfo(@"add command:%@,source=0x%X,destination=0x%X,retryCount=%d,responseMax=%d,_commands.count = %d",command.curMeshMessage,command.source.unicastAddress,command.destination.address,command.retryCount,command.responseMaxCount,self.commands.count);
+    TeLogInfo(@"add command:%@,source=0x%X,destination=0x%X,retryCount=%d,responseMax=%d,_commands.count = %d", command.curMeshMessage, command.source.unicastAddress, command.destination.address, command.retryCount, command.responseMaxCount, self.commands.count);
 //    //存在response的指令需存储
 //    if (command.responseAllMessageCallBack || command.resultCallback || (command.retryCount > 0 && command.responseMaxCount > 0)) {
 //        float oldTimeout = command.timeout;
@@ -473,7 +468,7 @@ static SigMeshLib *shareLib = nil;
 #pragma mark - SigMessageDelegate
 
 - (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
-    TeLogInfo(@"didReceiveMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x",message,message.parameters,source,destination);
+    TeLogInfo(@"didReceiveMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x", message, message.parameters, source,destination);
     SigNodeModel *node = [self.dataSource getNodeWithAddress:source];
 
     //根据设备是否打开了publish功能来判断是否给该设备添加监测离线的定时器。
@@ -506,7 +501,7 @@ static SigMeshLib *shareLib = nil;
     //all response message callback in this code.
     if (shouldCallback && command && command.responseAllMessageCallBack) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            command.responseAllMessageCallBack(source,destination,message);
+            command.responseAllMessageCallBack(source, destination, message);
         });
     }
     if (command.responseMaxCount != 0) {
@@ -533,7 +528,7 @@ static SigMeshLib *shareLib = nil;
 }
 
 - (void)didSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination {
-    TeLogInfo(@"didSendMessage=%@,class=%@,source=0x%x,destination=0x%x",message,message.class,localElement.unicastAddress,destination);
+    TeLogInfo(@"didSendMessage=%@,class=%@,source=0x%x,destination=0x%x", message, message.class, localElement.unicastAddress, destination);
     SDKLibCommand *command = [self getCommandWithSendMessage:message];
     if (command.retryCount > 0 || (command.retryCount == 0 && command.responseMaxCount > 0)) {
         // 需要重试或者等待timeout
@@ -561,7 +556,7 @@ static SigMeshLib *shareLib = nil;
 }
 
 - (void)failedToSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination error:(NSError *)error {
-    TeLogInfo(@"failedToSendMessage=%@,class=%@,source=0x%x,destination=0x%x",message,message.class,localElement.unicastAddress,destination);
+    TeLogInfo(@"failedToSendMessage=%@,class=%@,source=0x%x,destination=0x%x", message, message.class, localElement.unicastAddress, destination);
     SDKLibCommand *command = [self getCommandWithSendMessage:message];
     if (command.retryCount > 0) {
         // 需要重试
@@ -574,7 +569,7 @@ static SigMeshLib *shareLib = nil;
 }
 
 - (void)didReceiveSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
-    TeLogInfo(@"didReceiveSigProxyConfigurationMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x",message,message.parameters,source,destination);
+    TeLogInfo(@"didReceiveSigProxyConfigurationMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x", message, message.parameters, source,destination);
     SDKLibCommand *command = [self getCommandWithReceiveMessage:(SigMeshMessage *)message fromSource:source];
     [self commandResponseFinishWithCommand:command];
 

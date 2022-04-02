@@ -1,10 +1,25 @@
-//
-//  TelinkSigMeshLibTests.m
-//  TelinkSigMeshLibTests
-//
-//  Created by 梁家誌 on 2020/10/29.
-//  Copyright © 2020 梁家誌. All rights reserved.
-//
+/********************************************************************************************************
+ * @file     TelinkSigMeshLibTests.m
+ *
+ * @brief    A concise description.
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/10/29
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import <XCTest/XCTest.h>
 #import "TelinkSigMeshLibExtensions/TelinkSigMeshLib.h"
@@ -37,75 +52,75 @@
     }];
 }
 
-- (void)testCreateMeshNetWork {
-    [SDKLibCommand startMeshSDK];
-    //1.netKey
-    XCTAssertEqual(SigDataSource.share.netKeys.count, 1);
-    XCTAssertEqualObjects(SigDataSource.share.netKeys.firstObject, SigDataSource.share.curNetkeyModel);
-    XCTAssertEqualObjects(SigDataSource.share.netKeys.firstObject.key, SigDataSource.share.curNetkeyModel.key);
-    XCTAssertEqual(SigDataSource.share.curNetkeyModel.key.length, 2*16);
-    XCTAssertEqual(SigDataSource.share.curNetkeyModel.index, 0);
-    XCTAssertEqual(SigDataSource.share.curNetkeyModel.phase, 0);
-    XCTAssertNotNil(SigDataSource.share.curNetkeyModel.timestamp);
-    XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.oldKey, @"00000000000000000000000000000000");
-    XCTAssertNotNil(SigDataSource.share.curNetkeyModel.name);
-    XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.minSecurity, @"secure");
-    XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.key, SigDataSource.share.meshUUID);
-
-    //2.appKey
-    XCTAssertEqual(SigDataSource.share.appKeys.count, 1);
-    XCTAssertEqualObjects(SigDataSource.share.appKeys.firstObject, SigDataSource.share.curAppkeyModel);
-    XCTAssertEqual(SigDataSource.share.curAppkeyModel.key.length, 2*16);
-    XCTAssertEqualObjects(SigDataSource.share.curAppkeyModel.oldKey, @"00000000000000000000000000000000");
-    XCTAssertNotNil(SigDataSource.share.curAppkeyModel.name);
-    XCTAssertEqual(SigDataSource.share.curAppkeyModel.boundNetKey, 0);
-    XCTAssertEqual(SigDataSource.share.curAppkeyModel.index, 0);
-    
-    //3.provisioner
-    XCTAssertEqual(SigDataSource.share.provisioners.count, 1);
-    XCTAssertEqualObjects(SigDataSource.share.provisioners.firstObject, SigDataSource.share.curProvisionerModel);
-    XCTAssertEqual(SigDataSource.share.curProvisionerModel.UUID.length, 2*16);
-    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.count, 1);
-    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.firstObject.lowIntAddress, 0xc000);
-    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.firstObject.hightIntAddress, 0xc0ff);
-    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.count, 1);
-    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress, 0x0001);
-    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.hightIntAddress, 0x03ff);
-    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedSceneRange.count, 1);
-    XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.allocatedSceneRange.firstObject.firstScene, @"0001");
-    XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.allocatedSceneRange.firstObject.lastScene, @"000F");
-    XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.provisionerName, @"Telink iOS provisioner");
-    XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.UUID, SigDataSource.share.getCurrentProvisionerUUID);
-    
-    //4.node
-    XCTAssertEqual(SigDataSource.share.nodes.count, 1);
-    XCTAssertEqualObjects(SigDataSource.share.nodes.firstObject, SigDataSource.share.curLocationNodeModel);
-    XCTAssertEqualObjects(SigDataSource.share.curLocationNodeModel.UUID, SigDataSource.share.curProvisionerModel.UUID, @"provisioner的UUID与locationNode的UUID不相等！");
-    XCTAssertTrue(SigDataSource.share.curLocationNodeModel.secureNetworkBeacon);
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.defaultTTL, TTL_DEFAULT);
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.features.proxyFeature, SigNodeFeaturesState_notSupported);
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.features.friendFeature, SigNodeFeaturesState_notEnabled);
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.features.relayFeature, SigNodeFeaturesState_notSupported);
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.relayRetransmit.count, 3);
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.relayRetransmit.interval, 10);
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.address, 1);
-    XCTAssertEqualObjects(SigDataSource.share.curLocationNodeModel.name, @"Telink iOS provisioner node");
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.elements.count, 1);
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.elements.firstObject.parentNodeAddress, 1);
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.deviceKey.length, 2*16);
-
-    //5.group
-    XCTAssertEqual(SigDataSource.share.groups.count, 8);
-
-    //6.other
-    XCTAssertEqualObjects(SigDataSource.share.schema, @"http://json-schema.org/draft-04/schema#");
-    XCTAssertEqualObjects(SigDataSource.share.meshName, @"Telink-Sig-Mesh");
-    XCTAssertEqualObjects(SigDataSource.share.version, @"1.0.0");
-    XCTAssertNotNil(SigDataSource.share.timestamp);
-    XCTAssertEqualObjects(SigDataSource.share.ivIndex, @"00000000");
-
-    NSLog(@"==========finish!");
-}
+//- (void)testCreateMeshNetWork {
+//    [SDKLibCommand startMeshSDK];
+//    //1.netKey
+//    XCTAssertEqual(SigDataSource.share.netKeys.count, 1);
+//    XCTAssertEqualObjects(SigDataSource.share.netKeys.firstObject, SigDataSource.share.curNetkeyModel);
+//    XCTAssertEqualObjects(SigDataSource.share.netKeys.firstObject.key, SigDataSource.share.curNetkeyModel.key);
+//    XCTAssertEqual(SigDataSource.share.curNetkeyModel.key.length, 2*16);
+//    XCTAssertEqual(SigDataSource.share.curNetkeyModel.index, 0);
+//    XCTAssertEqual(SigDataSource.share.curNetkeyModel.phase, 0);
+//    XCTAssertNotNil(SigDataSource.share.curNetkeyModel.timestamp);
+//    XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.oldKey, @"00000000000000000000000000000000");
+//    XCTAssertNotNil(SigDataSource.share.curNetkeyModel.name);
+//    XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.minSecurity, @"secure");
+//    XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.key, [LibTools meshUUIDToUUID:SigDataSource.share.meshUUID]);
+//
+//    //2.appKey
+//    XCTAssertEqual(SigDataSource.share.appKeys.count, 1);
+//    XCTAssertEqualObjects(SigDataSource.share.appKeys.firstObject, SigDataSource.share.curAppkeyModel);
+//    XCTAssertEqual(SigDataSource.share.curAppkeyModel.key.length, 2*16);
+//    XCTAssertEqualObjects(SigDataSource.share.curAppkeyModel.oldKey, @"00000000000000000000000000000000");
+//    XCTAssertNotNil(SigDataSource.share.curAppkeyModel.name);
+//    XCTAssertEqual(SigDataSource.share.curAppkeyModel.boundNetKey, 0);
+//    XCTAssertEqual(SigDataSource.share.curAppkeyModel.index, 0);
+//
+//    //3.provisioner
+//    XCTAssertEqual(SigDataSource.share.provisioners.count, 1);
+//    XCTAssertEqualObjects(SigDataSource.share.provisioners.firstObject, SigDataSource.share.curProvisionerModel);
+//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.UUID.length, 2*16);
+//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.count, 1);
+//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.firstObject.lowIntAddress, 0xc000);
+//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedGroupRange.firstObject.hightIntAddress, 0xc0ff);
+//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.count, 1);
+//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress, 0x0001);
+//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.hightIntAddress, 0x03ff);
+//    XCTAssertEqual(SigDataSource.share.curProvisionerModel.allocatedSceneRange.count, 1);
+//    XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.allocatedSceneRange.firstObject.firstScene, @"0001");
+//    XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.allocatedSceneRange.firstObject.lastScene, @"000F");
+//    XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.provisionerName, @"Telink iOS provisioner");
+//    XCTAssertEqualObjects(SigDataSource.share.curProvisionerModel.UUID, SigDataSource.share.getCurrentProvisionerUUID);
+//
+//    //4.node
+//    XCTAssertEqual(SigDataSource.share.nodes.count, 1);
+//    XCTAssertEqualObjects(SigDataSource.share.nodes.firstObject, SigDataSource.share.curLocationNodeModel);
+//    XCTAssertEqualObjects(SigDataSource.share.curLocationNodeModel.UUID, SigDataSource.share.curProvisionerModel.UUID, @"provisioner的UUID与locationNode的UUID不相等！");
+//    XCTAssertTrue(SigDataSource.share.curLocationNodeModel.secureNetworkBeacon);
+//    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.defaultTTL, TTL_DEFAULT);
+//    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.features.proxyFeature, SigNodeFeaturesState_notSupported);
+//    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.features.friendFeature, SigNodeFeaturesState_notEnabled);
+//    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.features.relayFeature, SigNodeFeaturesState_notSupported);
+//    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.relayRetransmit.relayRetransmitCount, 3);
+//    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.relayRetransmit.relayRetransmitIntervalSteps, 10);
+//    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.address, 1);
+//    XCTAssertEqualObjects(SigDataSource.share.curLocationNodeModel.name, @"Telink iOS provisioner node");
+//    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.elements.count, 1);
+//    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.elements.firstObject.parentNodeAddress, 1);
+//    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.deviceKey.length, 2*16);
+//
+//    //5.group
+//    XCTAssertEqual(SigDataSource.share.groups.count, 8);
+//
+//    //6.other
+//    XCTAssertEqualObjects(SigDataSource.share.schema, @"http://json-schema.org/draft-04/schema#");
+//    XCTAssertEqualObjects(SigDataSource.share.meshName, @"Telink-Sig-Mesh");
+//    XCTAssertEqualObjects(SigDataSource.share.version, @"1.0.0");
+//    XCTAssertNotNil(SigDataSource.share.timestamp);
+//    XCTAssertEqualObjects(SigDataSource.share.ivIndex, @"00000000");
+//
+//    NSLog(@"==========finish!");
+//}
 
 - (void)testDeviceCertificate {
     //协议
@@ -117,7 +132,7 @@
     //cert_self
 //    NSString *str = @"308202e7308201cfa003020102020101300d06092a864886f70d01010b050030213112301006035504030c09636572745f73656c66310b300906035504061302434e301e170d3231303330313130313335365a170d3232303330313130313335365a30213112301006035504030c09636572745f73656c66310b300906035504061302434e30820122300d06092a864886f70d01010105000382010f003082010a0282010100b939503ceb2be1a1d2f936eba0ee96790b2c779f19847f9e97c14a3f076a48ae0499ce85e50bc8c2c4de9fcc7b10dfc9935f1116e401aa8f0f81f0b1c7a58cb9a347625ea1fd8200113fb0fb2d17741230bd1d81bc5c5e63d6fd0770c48bd40b1163c6a28fc9d56e4f631fd0aa746d197d933de647b304a713bf29cd9b602f64fd545ca88a480ccf897d787c649efcaf96de1de884109c6548c94642b3d9223f92f3640cc0f2e8cc3ea57fb184643f22247983e57b4869a3f1064eb9be057a525de7394959057ac230180f65a64a0041aa103d49aa089fab610f75b0f87e93535c59f8fa729d5cd6b094d8c606998e411ebbf114a08cd9684eb2cf029a717a2d0203010001a32a3028300e0603551d0f0101ff0404030205a030160603551d250101ff040c300a06082b06010505070304300d06092a864886f70d01010b0500038201010061718ff2107ccb1f7c265f35201ee7f220e9aaa9ae280efe21b75acf8522657aed007ade7e108ccc19a82b369b91b8ebdb23793706996af499f92a1ed770f9ee56efc7fff4c41b4511509b2da54226496f9093c57e8a9b928f29c1870c2ec3b36a0bfc21ef745dd13145d96b897d593a9df7672442aba02062ee44ad0110f44fe2a700f6eb4861869e68a6101e45e0904decabc9e7a64faa4ad27a070faade31ffaac4f88127bd6631fc7144d5b0ecf69fe68b92f5121bacd6ed31b2ec7c94dbfeae031c25e8c7acd8ba67cf02495e8b58ef9d7e29cae048c25ce3e2896435ffd60ce2ee4dfc5c6fba7fab946187d0c89ff61c661e5d5a237af742ca41cd2c96".uppercaseString;
   NSData *data = [LibTools nsstringToHex:str];
-    NSData *publicKey = [OpenSSLHelper.share checkCertificate:data];
+    NSData *publicKey = [OpenSSLHelper.share getStaticOOBDataFromCertificate:data];
     TeLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@",[LibTools convertDataToHexStr:data],[LibTools convertDataToHexStr:publicKey])
 }
 
@@ -176,8 +191,8 @@
     XCTAssertEqual(defaultMesh.curLocationNodeModel.features.proxyFeature, SigNodeFeaturesState_notSupported);
     XCTAssertEqual(defaultMesh.curLocationNodeModel.features.friendFeature, SigNodeFeaturesState_notEnabled);
     XCTAssertEqual(defaultMesh.curLocationNodeModel.features.relayFeature, SigNodeFeaturesState_notSupported);
-    XCTAssertEqual(defaultMesh.curLocationNodeModel.relayRetransmit.count, 3);
-    XCTAssertEqual(defaultMesh.curLocationNodeModel.relayRetransmit.interval, 10);
+    XCTAssertEqual(defaultMesh.curLocationNodeModel.relayRetransmit.relayRetransmitCount, 5);
+    XCTAssertEqual(defaultMesh.curLocationNodeModel.relayRetransmit.relayRetransmitIntervalSteps, 2);
     XCTAssertEqual(defaultMesh.curLocationNodeModel.address, 1);
     XCTAssertEqualObjects(defaultMesh.curLocationNodeModel.name, @"Telink iOS provisioner node");
     XCTAssertEqual(defaultMesh.curLocationNodeModel.elements.count, 1);
@@ -267,8 +282,8 @@
     XCTAssertEqual(SigDataSource.share.curLocationNodeModel.features.proxyFeature, SigNodeFeaturesState_notSupported);
     XCTAssertEqual(SigDataSource.share.curLocationNodeModel.features.friendFeature, SigNodeFeaturesState_notEnabled);
     XCTAssertEqual(SigDataSource.share.curLocationNodeModel.features.relayFeature, SigNodeFeaturesState_notSupported);
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.relayRetransmit.count, 3);
-    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.relayRetransmit.interval, 10);
+    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.relayRetransmit.relayRetransmitCount, 5);
+    XCTAssertEqual(SigDataSource.share.curLocationNodeModel.relayRetransmit.relayRetransmitIntervalSteps, 2);
     XCTAssertEqual(SigDataSource.share.curLocationNodeModel.address, 1);
     XCTAssertEqualObjects(SigDataSource.share.curLocationNodeModel.name, @"Telink iOS provisioner node");
     XCTAssertEqual(SigDataSource.share.curLocationNodeModel.elements.count, 1);

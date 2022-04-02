@@ -1,37 +1,25 @@
 /********************************************************************************************************
-* @file     DeviceNetKeyListVC.m
-*
-* @brief    Show all NetKey of node.
-*
-* @author       Telink, 梁家誌
-* @date         2020
-*
-* @par      Copyright (c) 2020, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*           The information contained herein is confidential property of Telink
-*           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*           of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*           Co., Ltd. and the licensee or the terms described here-in. This heading
-*           MUST NOT be removed from this file.
-*
-*           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or
-*           alter) any information contained herein in whole or in part except as expressly authorized
-*           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible
-*           for any claim to the extent arising out of or relating to such deletion(s), modification(s)
-*           or alteration(s).
-*
-*           Licensees are granted free, non-transferable use of the information in this
-*           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  DeviceNetKeyListVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2020/9/17.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+ * @file     DeviceNetKeyListVC.m
+ *
+ * @brief    Show all NetKey of node.
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/9/17
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "DeviceNetKeyListVC.h"
 #import "DeviceKeyCell.h"
@@ -63,6 +51,10 @@
 }
 
 - (void)clickAdd:(UIButton *)button {
+    if (self.model.netKeys.count >= 2) {
+        [self showTips:@"more than 2 net keys is not supported"];
+        return;
+    }
     DeviceChooseKeyVC *vc = [[DeviceChooseKeyVC alloc] init];
     __weak typeof(self) weakSelf = self;
     [vc setModel:self.model];
@@ -70,6 +62,15 @@
         [weakSelf addNetKeyToDevice:netKeyModel];
     }];
     [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)showTips:(NSString *)message{
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [weakSelf showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
+            
+        }];
+    });
 }
 
 - (void)clickRefresh:(UIButton *)button {
@@ -185,6 +186,11 @@
             }
 
             SigNetkeyModel *model = self.sourceArray[indexPath.row];
+            if (model.index == SigDataSource.share.curNetkeyModel.index) {
+                [self showAlertSureWithTitle:@"Hits" message:@"You cannot delete a net key in use!" sure:nil];
+                return;
+            }
+
             NSString *msg = [NSString stringWithFormat:@"Are you sure delete netKey, index:0x%04lX key:%@",(long)model.index,model.key];
             __weak typeof(self) weakSelf = self;
             [self showAlertSureAndCancelWithTitle:@"Hits" message:msg sure:^(UIAlertAction *action) {

@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/7/31
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  CMDViewController.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/7/31.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "CMDViewController.h"
 #import "NSString+extension.h"
@@ -38,6 +32,8 @@
 @interface CMDViewController()<UITextViewDelegate>
 @property (strong, nonatomic) IBOutlet UITextView *inTextView;
 @property (strong, nonatomic) IBOutlet UITextView *showTextView;
+@property (weak, nonatomic) IBOutlet UIButton *devKeyAggregator;
+@property (weak, nonatomic) IBOutlet UIButton *appKeyAggregator;
 @property (nonatomic,strong) NSString *sendString;
 @property (nonatomic,strong) NSData *sendData;
 @property (nonatomic,strong) NSString *logString;
@@ -65,7 +61,33 @@
         case 6:
             self.inTextView.text = @"a3 ff 00 00 00 00 02 00 ff ff 82 02 01 00";
             break;
-            
+        case 7:
+        {
+            SigOpcodesAggregatorItemModel *model1 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigConfigDefaultTtlGet alloc] init]];
+            SigOpcodesAggregatorItemModel *model2 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigConfigFriendGet alloc] init]];
+            SigOpcodesAggregatorItemModel *model3 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigConfigRelayGet alloc] init]];
+            NSArray *items = @[model1,model2,model3];
+            SigOpcodesAggregatorSequence *message = [[SigOpcodesAggregatorSequence alloc] initWithElementAddress:0x02 items:items];
+            NSString *parameters = [LibTools convertDataToHexStr:message.opCodeAndParameters];
+            self.inTextView.text = [@"a3 ff 00 00 00 00 02 00 02 00" stringByAppendingString:parameters];
+        }
+            break;
+        case 8:
+        {
+            SigOpcodesAggregatorItemModel *model1 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigLightLightnessDefaultGet alloc] init]];
+            SigOpcodesAggregatorItemModel *model2 = [[SigOpcodesAggregatorItemModel alloc] initWithSigMeshMessage:[[SigLightLightnessRangeGet alloc] init]];
+            NSArray *items = @[model1,model2];
+            SigOpcodesAggregatorSequence *message = [[SigOpcodesAggregatorSequence alloc] initWithElementAddress:0x02 items:items];
+            NSString *parameters = [LibTools convertDataToHexStr:message.opCodeAndParameters];
+            self.inTextView.text = [@"a3 ff 00 00 00 00 02 00 02 00" stringByAppendingString:parameters];
+            //==========test==========//
+//            NSData *randomData = [LibTools createRandomDataWithLength:13];
+//            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:SigDataSource.share.curNetkeyModel.ivIndex.updateActive ivUpdateActive:SigDataSource.share.curNetkeyModel.ivIndex.updateActive ivIndex:[LibTools uint32From16String:SigDataSource.share.ivIndex] randomData:randomData usingNetworkKey:SigDataSource.share.curNetkeyModel];
+//            [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
+            //==========test==========//
+        }
+            break;
+
         default:
             break;
     }
@@ -153,6 +175,11 @@
 - (void)normalSetting{
     [super normalSetting];
     [self configUI];
+#ifdef kExist
+    self.devKeyAggregator.hidden = NO;
+    self.appKeyAggregator.hidden = NO;
+#endif
+
     self.logString = @"";
 }
 

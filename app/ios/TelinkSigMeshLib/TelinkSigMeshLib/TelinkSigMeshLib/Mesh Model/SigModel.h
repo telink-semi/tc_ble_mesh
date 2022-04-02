@@ -3,42 +3,26 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/15
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigModel.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/15.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import <Foundation/Foundation.h>
 NS_ASSUME_NONNULL_BEGIN
-
-
-#define OP_TYPE_SIG1         1
-#define OP_TYPE_SIG2         2
-#define OP_TYPE_VENDOR         3
-#define BIT(n)                          ( 1<<(n) )
-#define SIZE_OF_OP(op)    ((op & BIT(7)) ? ((op & BIT(6)) ? OP_TYPE_VENDOR : OP_TYPE_SIG2) : OP_TYPE_SIG1)
-#define GET_OP_TYPE(op)    (SIZE_OF_OP(op))
-#define IS_VENDOR_OP(op)    (GET_OP_TYPE(op) == OP_TYPE_VENDOR)
-
 
 @class SigNetkeyDerivaties,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel,SigMeshAddress;
 typedef void(^BeaconBackCallBack)(BOOL available);
@@ -52,7 +36,9 @@ typedef void(^bleScanPeripheralCallback)(CBPeripheral *peripheral, NSDictionary<
 typedef void(^bleScanSpecialPeripheralCallback)(CBPeripheral *peripheral, NSDictionary<NSString *, id> *advertisementData, NSNumber *RSSI, BOOL successful);
 typedef void(^bleConnectPeripheralCallback)(CBPeripheral *peripheral,BOOL successful);
 typedef void(^bleDiscoverServicesCallback)(CBPeripheral *peripheral,BOOL successful);
-typedef void(^bleChangeNotifyCallback)(CBPeripheral *peripheral,BOOL isNotifying);
+//typedef void(^bleChangeNotifyCallback)(CBPeripheral *peripheral,BOOL isNotifying);
+typedef void(^bleCharacteristicResultCallback)(CBPeripheral *peripheral,CBCharacteristic *characteristic,NSError * _Nullable error);
+
 typedef void(^bleReadOTACharachteristicCallback)(CBCharacteristic *characteristic,BOOL successful);
 typedef void(^bleCancelConnectCallback)(CBPeripheral *peripheral,BOOL successful);
 typedef void(^bleCancelAllConnectCallback)(void);
@@ -60,6 +46,11 @@ typedef void(^bleDisconnectCallback)(CBPeripheral *peripheral,NSError *error);
 typedef void(^bleIsReadyToSendWriteWithoutResponseCallback)(CBPeripheral *peripheral);
 typedef void(^bleDidUpdateValueForCharacteristicCallback)(CBPeripheral *peripheral,CBCharacteristic *characteristic, NSError * _Nullable error);
 typedef void(^bleDidWriteValueForCharacteristicCallback)(CBPeripheral *peripheral,CBCharacteristic *characteristic, NSError * _Nullable error);
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
+typedef void(^openChannelResultCallback)(CBPeripheral *peripheral,CBL2CAPChannel * _Nullable channel,NSError * _Nullable error);
+#pragma clang diagnostic pop
 
 @interface SigModel : NSObject
 @end
@@ -117,8 +108,9 @@ typedef void(^bleDidWriteValueForCharacteristicCallback)(CBPeripheral *periphera
 
 /// 缓存蓝牙扫描回调的模型，uuid(peripheral.identifier.UUIDString)为唯一标识符。
 @interface SigScanRspModel : NSObject
-@property (nonatomic, strong) NSData *nodeIdentityData;//byte[0]:type=0x01,byte[1~17]:data
-@property (nonatomic, strong) NSData *networkIDData;//byte[0]:type=0x00,byte[1~9]:data
+@property (nonatomic, strong) NSData *advertisementDataServiceData;
+//@property (nonatomic, strong) NSData *nodeIdentityData;//byte[0]:type=0x01,byte[1~17]:data
+//@property (nonatomic, strong) NSData *networkIDData;//byte[0]:type=0x00,byte[1~9]:data
 @property (nonatomic, strong) NSString *macAddress;
 @property (nonatomic, assign) UInt16 CID;//企业ID，默认为0x0211，十进制为529.
 @property (nonatomic, assign) UInt16 PID;//产品ID，CT灯为1，面板panel为7.
@@ -131,6 +123,8 @@ typedef void(^bleDidWriteValueForCharacteristicCallback)(CBPeripheral *periphera
 @property (nonatomic, assign) BOOL provisioned;//YES表示已经入网。
 
 - (instancetype)initWithPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData;
+- (SigIdentificationType)getIdentificationType;
+
 @end
 
 
@@ -206,13 +200,13 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic, assign) UInt16 netkeyIndex;
 @property (nonatomic, strong) NSData *appKey;
 @property (nonatomic, assign) UInt16 appkeyIndex;
-@property (nonatomic, assign) ProvisionTpye provisionType;
+@property (nonatomic, assign) ProvisionType provisionType;
 @property (nonatomic, strong) NSData *staticOOBData;
-@property (nonatomic, assign) KeyBindTpye keyBindType;
+@property (nonatomic, assign) KeyBindType keyBindType;
 @property (nonatomic, assign) UInt16 productID;
 @property (nonatomic, strong) NSData *cpsData;
 
-- (instancetype)initWithCBPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appKey:(NSData *)appkey appkeyIndex:(UInt16)appkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(NSData *)staticOOBData keyBindType:(KeyBindTpye)keyBindType productID:(UInt16)productID cpsData:(NSData *)cpsData;
+- (instancetype)initWithCBPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appKey:(NSData *)appkey appkeyIndex:(UInt16)appkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(NSData *)staticOOBData keyBindType:(KeyBindType)keyBindType productID:(UInt16)productID cpsData:(NSData *)cpsData;
 
 @end
 
@@ -480,7 +474,8 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 /// mesh设备广播包解密模型。唯一标识符为identityData，且只存储本地json存在的identityData不为空的SigEncryptedModel。设备断电后会改变identityData，出现相同的address的SigEncryptedModel时，需要replace旧的。
 @interface SigEncryptedModel : NSObject
-@property (nonatomic, strong) NSData *identityData;
+@property (nonatomic, strong) NSData *advertisementDataServiceData;
+//@property (nonatomic, strong) NSData *identityData;
 @property (nonatomic, strong) NSData *hashData;
 @property (nonatomic, strong) NSData *randomData;
 @property (nonatomic, strong) NSString *peripheralUUID;
@@ -1171,11 +1166,11 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 
 @interface SigOOBModel : SigModel
-@property (nonatomic, assign) OOBSourceTpye sourceType;
+@property (nonatomic, assign) OOBSourceType sourceType;
 @property (nonatomic, strong) NSString *UUIDString;
 @property (nonatomic, strong) NSString *OOBString;
 @property (nonatomic, strong) NSString *lastEditTimeString;
-- (instancetype)initWithSourceType:(OOBSourceTpye)sourceType UUIDString:(NSString *)UUIDString OOBString:(NSString *)OOBString;
+- (instancetype)initWithSourceType:(OOBSourceType)sourceType UUIDString:(NSString *)UUIDString OOBString:(NSString *)OOBString;
 - (void)updateWithUUIDString:(NSString *)UUIDString OOBString:(NSString *)OOBString;
 @end
 
@@ -1227,6 +1222,79 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic,strong) NSData *parameters;
 - (instancetype)initWithAddress1:(UInt16)address1 address2:(UInt16)address2 directions:(SigDirectionsFieldValues)directions;
 - (instancetype)initWithParameters:(NSData *)parameters;
+@end
+
+
+/// Table 4.259: Format of the Aggregator Item
+/// - seeAlso: MshPRFd1.1r13_clean.pdf  (page.388)
+/// An empty item shall be represented by setting the value of the Length_Format field to 0 and the value of the Length_Short field to 0.
+@interface SigOpcodesAggregatorItemModel : SigModel
+/// The size is 1 bit. 0: Length_Short field is present, 1: Length_Long field is present.
+@property (nonatomic, assign) BOOL lengthFormat;
+/// The size is 7 bits. Size of Opcode_And_Parameters field (C.1) (C.1: Included if Length_Format is 0, otherwise excluded.)
+@property (nonatomic, assign) UInt8 lengthShort;
+/// The size is 15 bits. Size of Opcode_And_Parameters field (C.2) (C.2: Included if Length_Format is 1, otherwise excluded.)
+@property (nonatomic, assign) UInt16 lengthLong;
+/// The Opcode_And_Parameters field shall contain a valid opcode and parameters (contained in an unencrypted access layer message) for the given model.
+@property (nonatomic, strong) NSData *opcodeAndParameters;
+@property (nonatomic, strong) NSData *parameters;
+
+- (instancetype)initWithLengthFormat:(BOOL)lengthFormat lengthShort:(UInt8)lengthShort lengthLong:(UInt8)lengthLong opcodeAndParameters:(NSData *)opcodeAndParameters;
+- (instancetype)initWithSigMeshMessage:(SigMeshMessage *)meshMessage;
+- (instancetype)initWithOpcodeAndParameters:(NSData *)opcodeAndParameters;
+- (SigMeshMessage *)getSigMeshMessage;
+@end
+
+
+@interface SigOpCodeAndParametersModel : SigModel
+@property (nonatomic, assign) UInt8 opCodeSize;
+@property (nonatomic, assign) UInt32 opCode;
+@property (nonatomic, strong) NSData *parameters;
+@property (nonatomic, strong) NSData *opCodeAndParameters;
+
+- (instancetype)initWithOpCodeAndParameters:(NSData *)opCodeAndParameters;
+- (SigMeshMessage *)getSigMeshMessage;
+
+@end
+
+
+/// Table 3.106: Structure of the Date Time characteristic, eg: 2017-11-12 01:00:30 -> @"E1070B0C01001E"
+/// - seeAlso: GATT_Specification_Supplement_v5.pdf  (page.103)
+@interface GattDateTimeModel : SigModel
+/// Year as defined by the Gregorian calendar. Valid range 1582 to 9999. A value of 0 means that the year is not known. All other values are reserved for future use (RFU).
+@property (nonatomic, assign) UInt16 year;
+/// Month of the year as defined by the Gregorian calendar. Valid range 1 (January) to 12 (December). A value of 0 means that the month is not known. All other values are reserved for future use (RFU).
+@property (nonatomic, assign) UInt8 month;
+/// Day of the month as defined by the Gregorian calendar. Valid range 1 to 31. A value of 0 means that the day of month is not known. All other values are reserved for future use (RFU).
+@property (nonatomic, assign) UInt8 day;
+/// Number of hours past midnight. Valid range 0 to 23. All other values are reserved for future use (RFU).
+@property (nonatomic, assign) UInt8 hours;
+/// Number of minutes since the start of the hour. Valid range 0 to 59. All other values are reserved for future use (RFU).
+@property (nonatomic, assign) UInt8 minutes;
+/// Number of seconds since the start of the minute. Valid range 0 to 59. All other values are reserved for future use (RFU).
+@property (nonatomic, assign) UInt8 seconds;
+
+@property (nonatomic, strong) NSData *parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithDate:(NSDate *)date;
+- (instancetype)initWithYear:(UInt16)year month:(UInt8)month day:(UInt8)day hours:(UInt8)hours minutes:(UInt8)minutes seconds:(UInt8)seconds;
+
+@end
+
+
+/// Table 3.107: Structure of the Day Date Time characteristic
+/// - seeAlso: GATT_Specification_Supplement_v5.pdf  (page.104)
+@interface GattDayDateTimeModel : SigModel
+/// It contains year, month, day, hours, minutes, seconds. The size is 7 bytes.
+@property (nonatomic, strong) GattDateTimeModel *dateTime;
+/// Refer to the Day of Week characteristic in Section 3.66.
+@property (nonatomic, assign) GattDayOfWeek dayOfWeek;
+
+@property (nonatomic, strong) NSData *parameters;
+- (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithDate:(NSDate *)date;
+- (instancetype)initWithYear:(UInt16)year month:(UInt8)month day:(UInt8)day hours:(UInt8)hours minutes:(UInt8)minutes seconds:(UInt8)seconds dayOfWeek:(GattDayOfWeek)dayOfWeek;
+
 @end
 
 NS_ASSUME_NONNULL_END
