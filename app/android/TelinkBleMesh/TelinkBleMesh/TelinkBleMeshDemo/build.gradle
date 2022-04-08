@@ -3,8 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 29
     defaultConfig {
-        applicationId "com.telink.ble.mesh.demo.rels" // for meshOTA dle
-//        applicationId "com.telink.ble.mesh.demo.rmt" // for remote
+        applicationId "com.telink.ble.mesh.demo.rels"
         minSdkVersion 21
         targetSdkVersion 26
         versionCode 3
@@ -22,7 +21,6 @@ android {
         targetCompatibility = 1.8
     }
     buildToolsVersion = '28.0.3'
-//    buildToolsVersion = '31.0.0'
 }
 
 dependencies {

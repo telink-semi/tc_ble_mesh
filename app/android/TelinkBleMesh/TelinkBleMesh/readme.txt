@@ -1,58 +1,12 @@
 
 
-direct forwarding 功能 --- 这个版本不 release
-1. 实现 DIRECTED_CONTROL_GET，DIRECTED_CONTROL_SET， DIRECTED_CONTROL_STATUS
-    FORWARDING_TABLE_ADD， FORWARDING_TABLE_DELETE， FORWARDING_TABLE_STATUS
-
-
-
-2. App需要保存信息， 不需要保存在Json文件中
-
-
-DF, private beacon, enhanced opcode aggregator 都要放在 DraftFeature 里面
-
-control
-
-
-2022 0120 todo 如果收到的是 private beacon， 回复的也要是 private beacon
-
-如果收到的是
-
-
-
-
-// todo
-1. 添加标志位： 判断分享过来的json文件中是否包含 ivIndex；
-    如果不包含， 则在获取到最新的ivIndex时， 不允许组网
-2. 空网络不允许分享
-
-商工：
-@梁家誌 @柯昌维 @少年已不再年少 关于 去掉 IVI 的规则，有什么需要补充的 不 ？
-json 文件 按没有 ivi 的方案实现：
-VC 工具 的 IVI 初始值由 原来的 0x11223344 改为 0x00000001 (取非对称值)
-导出的 JSON 文件需要按spec 去掉 IVI,
-分享导出前，除本身外，如果没有其他节点(即空网络)，则不允许导出，并弹框提示“not allow to share empty network”。
-分享得到的key后，(APP / VC) 在没有从 beacon 包获取到 IV 之前，不能组网，如果客户点击组网，则弹框提示“connect to the current network before add nodes”。
-
-
-//
-OPCODES_AGGREGATOR_SEQUENCE
-
-    device key : ttl get /  friend get / relay get
-
-    app key: 开灯 / 亮度调节到50
-
-
-    key bind 启用 aggregator， 放在draft feature中
-    1. get cps
-
-    2. 判断是否包含 aggregator server
-
-    3. app key add 和 key bind
-
-
 version record:
 
+V3.3.3.5
+
+1. add support for private beacon and enhanced opcode aggregator in draft feature
+
+----------------
 
 V3.3.4 (skip V3.3.3 that only update firmware)
 
