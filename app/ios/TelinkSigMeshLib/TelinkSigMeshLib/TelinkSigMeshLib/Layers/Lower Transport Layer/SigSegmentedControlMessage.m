@@ -48,7 +48,7 @@
             TeLogError(@"initFromUnsegmentedPdu fail.");
             return nil;
         }
-        UInt8 tem1 = 0,tem2=0,tem3=0;
+        UInt16 tem1 = 0,tem2=0,tem3=0;
         memcpy(&tem1, dataByte+1, 1);
         memcpy(&tem2, dataByte+2, 1);
         memcpy(&tem3, dataByte+3, 1);

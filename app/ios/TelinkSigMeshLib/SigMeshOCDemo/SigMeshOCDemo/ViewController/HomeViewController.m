@@ -121,10 +121,12 @@
     }
     self.shouldSetAllOffline = YES;
 
-    [self getOnlineState];
+    [self getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        TeLogDebug(@"getOnlineStatus finish.");
+    }];
 }
 
-- (void)getOnlineState{
+- (void)getOnlineStateWithResultCallback:(resultBlock)resultCallback {
 //    TeLogDebug(@"");
     
     int tem = 0;
@@ -136,9 +138,7 @@
     }
     BOOL result = [DemoCommand getOnlineStatusWithResponseMaxCount:tem successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         //界面刷新统一在SDK回调函数didReceiveMessage:中进行
-    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        TeLogDebug(@"getOnlineStatus finish.");
-    }];
+    } resultCallback:resultCallback];
     if (result && self.shouldSetAllOffline) {
         self.shouldSetAllOffline = NO;
         [SigDataSource.share setAllDevicesOutline];
@@ -257,8 +257,12 @@
                         //无限扫描连接distributor，直到连接成功。（可能会修改）
                         [ConnectTools.share startConnectToolsWithNodeList:@[node] timeout:0xFFFFFFFF Complete:^(BOOL successful) {
                             if (successful) {
-                                //meshOTA逻辑里面的查询进度，无需在此添加查询进度代码。
-                                [weakSelf continueMeshOTA];
+                                //查询完状态再弹框，防止MeshOTA界面firmwareUpdateInformationGet按钮计算responseMax异常。
+                                [weakSelf getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                                    TeLogDebug(@"getOnlineStatus finish.");
+                                    //meshOTA逻辑里面的查询进度，无需在此添加查询进度代码。
+                                    [weakSelf continueMeshOTA];
+                                }];
                             } else {
                                 //连接失败
                                 NSString *t = [NSString stringWithFormat:@"mesh ota... connect distributor fail!"];
@@ -350,7 +354,9 @@
             } else {
                 [self delayReloadCollectionView];
                 [self blockState];
-                [self getOnlineState];
+                [self getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                    TeLogDebug(@"getOnlineStatus finish.");
+                }];
             }
         } else {
             [SigDataSource.share setAllDevicesOutline];
@@ -458,9 +464,10 @@
         }
         #endif
     } else {
+        //非主页，重连mesh成功，是否需要获取设备的状态（v3.3.3.5版本发现meshOTA界面是需要获取状态的）
         dispatch_async(dispatch_get_main_queue(), ^{
             UIViewController *vc = self.currentViewController;
-            if ([vc isMemberOfClass:[self class]]) {
+            if ([vc isMemberOfClass:[self class]] || [vc isMemberOfClass:[MeshOTAVC class]]) {
                 [self freshOnline:nil];
             } else {
                 TeLogInfo(@"needn`t get status.%@",vc);

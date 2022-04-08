@@ -51,7 +51,7 @@
         } else {
             _aid = 0;
         }
-        UInt8 tem1 = 0,tem2=0,tem3=0;
+        UInt16 tem1 = 0,tem2=0,tem3=0;
         memcpy(&tem1, dataByte+1, 1);
         memcpy(&tem2, dataByte+2, 1);
         memcpy(&tem3, dataByte+3, 1);
@@ -66,6 +66,7 @@
         }
         self.upperTransportPdu = [data subdataWithRange:NSMakeRange(4, data.length-4)];
         _sequence = (networkPdu.sequence & 0xFFE000) | (UInt32)self.sequenceZero;
+//        _sequence = networkPdu.sequence;
         self.source = networkPdu.source;
         self.destination = networkPdu.destination;
         self.networkKey = networkPdu.networkKey;

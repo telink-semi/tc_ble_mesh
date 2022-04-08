@@ -89,7 +89,7 @@
                     return;
                 }
                 [_networkManager.lowerTransportLayer handleNetworkPdu:networkPdu];
-                [SigMeshLib.share receiveNetworkPdu:networkPdu];
+//                [SigMeshLib.share receiveNetworkPdu:networkPdu];
             }
             break;
         case SigPduType_meshBeacon:
@@ -148,7 +148,7 @@
     // As the sequence number was just used, it has to be incremented.
     [SigMeshLib.share.dataSource updateCurrentProvisionerIntSequenceNumber:sequence+1];
 
-//    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
+//    TeLogDebug(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
     SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl ivIndex:ivIndex];
     pdu.networkPdu = networkPdu;
     

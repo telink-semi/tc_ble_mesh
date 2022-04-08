@@ -153,6 +153,10 @@
         }
         [SigRemoteAddManager.share startRemoteProvisionScanWithReportCallback:^(SigRemoteScanRspModel * _Nonnull scanRemoteModel) {
             TeLogInfo(@"RP-Remote:reportNodeAddress=0x%x,uuid=%@,rssi=%d,oob=%d,mac=%@",scanRemoteModel.reportNodeAddress,scanRemoteModel.reportNodeUUID,scanRemoteModel.RSSI,scanRemoteModel.oob.value,scanRemoteModel.macAddress);
+//            if (scanRemoteModel.reportNodeAddress != 2) {
+//                TeLogInfo(@"=========return");
+//                return;
+//            }
             [weakSelf addAndShowSigRemoteScanRspModelToUI:scanRemoteModel];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -175,6 +179,7 @@
                         }
                         weakSelf.remoteSource = [NSMutableArray arrayWithArray:newSource];
                     }
+                    TeLogInfo(@"Reomte add list:%@", weakSelf.remoteSource);
                     [weakSelf addNodeByRemoteProvision];
                 } else {
                     //remote未扫描到设备
@@ -335,7 +340,7 @@
 
 - (void)addAndShowSigRemoteScanRspModelToUI:(SigRemoteScanRspModel *)scanRemoteModel {
     //=================test==================//
-//    if (![scanRemoteModel.macAddress isEqualToString:@"A4C1388595AC"]) {
+//    if (![scanRemoteModel.macAddress hasPrefix:@"66666666"]) {
 //        return;
 //    }
     //=================test==================//

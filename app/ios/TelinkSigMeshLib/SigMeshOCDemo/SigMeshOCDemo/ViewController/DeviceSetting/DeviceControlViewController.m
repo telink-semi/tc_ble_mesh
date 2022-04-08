@@ -366,7 +366,7 @@ typedef enum : NSUInteger {
         //如果UI是HSL的UI，需要联动修改HSL的滑竿。
         [self changeUIBylightnessOfHSLModel:value/100.0];
     } else if (type.uiType == ModelUITypeTemp) {
-        cell.showValueLabel.text = [NSString stringWithFormat:@"Temp(%d)(at ele adr:0x%X):",(int)value,self.model.address];
+        cell.showValueLabel.text = [NSString stringWithFormat:@"Temp(%d)(at ele adr:0x%X):",(int)value,self.model.temperatureAddresses.firstObject.intValue];
         if (!self.hadChangeTempareture) {
             self.nextTempareture = value;
             [self changeTemparetureWithModelType:type];

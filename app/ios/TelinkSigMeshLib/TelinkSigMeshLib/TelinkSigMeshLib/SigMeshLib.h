@@ -25,7 +25,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigMessageHandle, SigMeshAddress, SigProxyConfigurationMessage, SDKLibCommand, SigSecureNetworkBeacon, SigNetworkPdu, SigMeshPrivateBeacon;
+@class SigMessageHandle, SigMeshAddress, SigProxyConfigurationMessage, SDKLibCommand, SigSecureNetworkBeacon, SigNetworkPdu, SigMeshPrivateBeacon, BackgroundTimer;
 
 @protocol SigMessageDelegate <NSObject>
 @optional
@@ -85,6 +85,7 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// The incomplete timeout should be set to at least 10 seconds.
 @property (nonatomic,assign) NSTimeInterval incompleteMessageTimeout;//15.0
+@property (nonatomic,assign) NSTimeInterval receiveSegmentMessageTimeout;//15.0
 
 /// The amount of time after which the lower transport layer sends a Segment Acknowledgment message after receiving a segment of a multi-segment message where the destination is a Unicast Address of the Provisioner's Node.
 ///
@@ -108,6 +109,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt8 networkTransmitIntervalSteps;//default is 0b1111=31.
 @property (nonatomic,assign,readonly) double networkTransmitInterval;//default is (0b1111+1)*10=320ms.
 
+@property (nonatomic,strong) BackgroundTimer *receiveSegmentTimer;
 @property (nonatomic,assign) BOOL isReceiveSegmentPDUing;
 @property (nonatomic,assign) UInt16 sourceOfReceiveSegmentPDU;
 @property (nonatomic,strong,nullable) SigSecureNetworkBeacon *secureNetworkBeacon;
@@ -130,6 +132,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// This method should be called whenever a PDU has been decoded from the mesh network using SigNetworkLayer.
 /// @param networkPdu The network pdu in (Mesh_v1.0.pdf 3.4.4 Network PDU).
 - (void)receiveNetworkPdu:(SigNetworkPdu *)networkPdu;
+- (void)cleanReceiveSegmentBusyStatus;
 
 /// This method should be called whenever a PDU has been received from the kOnlineStatusCharacteristicsID.
 /// @param address address of node

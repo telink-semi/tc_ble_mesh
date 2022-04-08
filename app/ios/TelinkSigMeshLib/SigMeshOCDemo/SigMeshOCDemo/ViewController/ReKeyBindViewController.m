@@ -149,7 +149,7 @@
 - (void)kickoutAction{
     TeLogDebug(@"send kickout.");
     __weak typeof(self) weakSelf = self;
-    _messageHandle = [SDKLibCommand resetNodeWithDestination:self.model.address retryCount:0 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
+    _messageHandle = [SDKLibCommand resetNodeWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
         
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         if (isResponseAll) {
@@ -158,8 +158,10 @@
             TeLogDebug(@"kickout fail.");
         }
         [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:weakSelf.model.address];
-        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
-        [weakSelf pop];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
+            [weakSelf pop];
+        });
     }];
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(resetNodeTimeout) object:nil];
