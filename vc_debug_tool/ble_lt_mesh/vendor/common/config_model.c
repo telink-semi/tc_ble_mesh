@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     config_model.c 
+ * @file	config_model.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "proj/tl_common.h"
 #include "config_model.h"
 #ifndef WIN32
@@ -187,13 +189,15 @@ int mesh_cmd_sig_cfg_friend_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 			if(model_sig_cfg_s.frid != frid){
 				model_sig_cfg_s.frid = frid;
 				if(FRIEND_SUPPORT_DISABLE == frid){
-				    #if FEATURE_FRIEND_EN
-				    mesh_friend_ship_init_all();
-				    #endif
 					#if MD_DF_EN
 					mesh_directed_forwarding_bind_state_update();					
 					mesh_common_store(FLASH_ADR_MD_DF_SBR);
 					#endif
+					
+				    #if FEATURE_FRIEND_EN
+				    mesh_friend_ship_init_all();
+				    #endif
+					
 				}
 				
 				if(model_sig_cfg_s.hb_pub.feature & BIT(MESH_HB_FRI_BIT)){
@@ -250,7 +254,7 @@ int mesh_cmd_sig_cfg_gatt_proxy_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 		}else{
 			par[0] = model_sig_cfg_s.gatt_proxy;
 		}
-		#if MD_PRIVACY_BEA&&!WIN32
+		#if MD_PRIVACY_BEA&&!WIN32&&MD_SERVER_EN
 		u8 *p_private_sts = &(model_private_beacon.srv[0].proxy_sts);
 		mesh_private_proxy_change_by_gatt_proxy(*p_private_sts,p_private_sts);
 		#endif
@@ -409,7 +413,11 @@ u8 mesh_cmd_sig_cfg_model_sub_set2(u16 op, u16 sub_adr, u8 *uuid, model_common_t
 				if(uuid){
 					add_ok = 0;
 				}
-				#endif				
+				#endif		
+
+				#if (MD_DF_EN && !FEATURE_LOWPOWER_EN && !WIN32)
+				directed_forwarding_solication_start(mesh_key.netkey_sel_dec, (mesh_ctl_path_request_solication_t *)&sub_adr, 1);
+				#endif
 			}
         }
         st = add_ok ? ST_SUCCESS : ST_INSUFFICIENT_RES;

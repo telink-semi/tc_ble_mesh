@@ -1,26 +1,25 @@
 /********************************************************************************************************
- * @file     clock.c 
+ * @file	clock.c
  *
- * @brief    This is the source file for TLSR8258
+ * @brief	This is the source file for TLSR8258
  *
- * @author	 Driver Group
- * @date     May 8, 2018
+ * @author	Driver Group
+ * @date	May 8, 2018
  *
- * @par      Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- *           The information contained herein is confidential property of Telink
- *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *           Co., Ltd. and the licensee or the terms described here-in. This heading
- *           MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *           Licensees are granted free, non-transferable use of the information in this
- *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
- * @par      History:
- * 			 1.initial release(DEC. 26 2018)
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
- * @version  A001
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *
  *******************************************************************************************************/
 #include "tl_common.h"
@@ -48,7 +47,7 @@ _attribute_ram_code_ void clock_init(SYS_CLK_TypeDef SYS_CLK)
 
 	if(SYS_CLK == SYS_CLK_48M_Crystal)
 	{
-		/*default c4: dcdc 1.8V  -> GD flash£º 48M clock may error £¬ need higher DCDC voltage
+		/*default c4: dcdc 1.8V  -> GD flash: 48M clock may error,  need higher DCDC voltage
 		          c6: dcdc 1.9V
 		*/
 		analog_write(0x0c, 0xc6);

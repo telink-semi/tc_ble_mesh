@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     factory_reset.c 
+ * @file	factory_reset.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "proj/tl_common.h"
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/ble/service/ble_ll_ota.h"
@@ -41,6 +43,28 @@ extern u8 manual_factory_reset;
 
 #if !WIN32
 static int adr_reset_cnt_idx = 0;
+
+typedef void (*mesh_start_reboot_t) (void);
+
+/*_attribute_no_inline_ */void mesh_start_reboot()
+{
+#if 1
+	start_reboot();
+#else
+	#if (MCU_CORE_TYPE < MCU_CORE_8258)
+	// no retention for 826x
+	#elif ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
+    write_reg16 (0x40004, 0);	// one of functions is retention flag of cstartup, so need to clear and will be set again in cpu wakeup init.
+	#else
+#error please confirm ram address of retention flag in cstartup.
+	#endif
+	
+	mesh_start_reboot_t  fun_0 = 0x00;
+	fun_0(); // approximate to reboot. user can remove some initial function in main_() to keep some setting, such as PWM.
+	while(1);
+#endif
+}
+
 
 #if 0   // org mode
 static int reset_cnt = 0;
@@ -277,7 +301,7 @@ int factory_reset_handle ()
         LOG_USER_MSG_INFO(0,0,"factory reset success\r\n",0);
             #endif
         show_ota_result(OTA_SUCCESS);
-	    start_reboot();
+	    mesh_start_reboot();
 	}else{
         increase_reset_cnt();
 	}
@@ -445,7 +469,7 @@ void kick_out(int led_en){
     if(led_en){
         show_factory_reset();
     }
-    start_reboot();
+    mesh_start_reboot();
     #endif
 #endif
 }

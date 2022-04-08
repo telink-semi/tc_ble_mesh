@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     battery.c 
+ * @file	battery.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "../tl_common.h"
 #include "battery.h"
 #include "adc.h"
@@ -27,8 +29,8 @@
 #if(MODULE_BATT_ENABLE)
 
 STATIC_ASSERT(ADC_CHN0_REF_SRC == ADC_REF_SRC_INTERNAL);	// if fail, pls change the core voltage 1300, //  we have  only  max 14 bits resolution
-#define batt_conv_adc_mv(adc) ((adc - 188) >> 2)		//  通过回归分析得到
-#define batt_conv_mv_adc(mv)  ((mv << 2)  + 188)		//  通过回归分析得到
+#define batt_conv_adc_mv(adc) ((adc - 188) >> 2)		//  閫氳繃鍥炲綊鍒嗘瀽寰楀埌
+#define batt_conv_mv_adc(mv)  ((mv << 2)  + 188)		//  閫氳繃鍥炲綊鍒嗘瀽寰楀埌
 
 static u8 avdd_val[]={0x81, 0x8f, 0x9c, 0xaa, 0xb7, 0xc4};
 void batt_trim_rdiv_3v(u8 vol_value){		//  to adjust  core voltage

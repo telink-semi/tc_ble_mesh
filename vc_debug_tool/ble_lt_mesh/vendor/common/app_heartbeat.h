@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     app_mesh.h 
+ * @file	app_heartbeat.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef APP_HEARTBEAT_H_
 #define APP_HEARTBEAT_H_
 #include "proj/tl_common.h"
@@ -43,7 +45,7 @@ typedef enum{
 	MESH_HB_PROXY_BIT ,	
 	MESH_HB_FRI_BIT ,	
 	MESH_HB_LOWPOWER_BIT,
-}mesh_heartbeat_feature_e;
+}mesh_heartbeat_feature_t;
 
 typedef struct{
 	u16 dst;
@@ -52,7 +54,7 @@ typedef struct{
 	u8 ttl;
 	u16 features;
 	u16 netkeyindex;
-}mesh_cfg_model_heartbeat_pub_get_t;
+}mesh_cfg_model_heartbeat_pub_set_t;
 
 typedef struct{
 	u16 src ;

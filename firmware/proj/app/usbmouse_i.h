@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     usbmouse_i.h 
+ * @file	usbmouse_i.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #include "usbmouse.h"
@@ -37,96 +39,96 @@
 /*
  0x85, 0x01, //Report ID (1) keyboard
  0x85, 0x02, //report ID 02 mouse
- �Ƿ���Ҫ������� , 1,2�����Ƿ���ȷ
+ 是否需要配置这个 , 1,2定义是否正确
  */
 static const USB_Descriptor_HIDReport_Datatype_t mouse_report_desc[] = {
 #if 0
-	//ÿ�п�ʼ�ĵ�һ�ֽ�Ϊ����Ŀ��ǰ׺��ǰ׺�ĸ�ʽΪ��
-	//D7~D4��bTag��D3~D2��bType��D1~D0��bSize�����·ֱ��ÿ����Ŀע�͡�
+	//每行开始的第一字节为该条目的前缀，前缀的格式为：
+	//D7~D4：bTag。D3~D2：bType；D1~D0：bSize。以下分别对每个条目注释。
 
-	//����һ��ȫ�֣�bTypeΪ1����Ŀ��ѡ����;ҳΪ��ͨ����Generic Desktop Page(0x01)
-	//�����һ�ֽ����ݣ�bSizeΪ1����������ֽ����Ͳ�ע���ˣ�
-	//�Լ�����bSize���жϡ�
+	//这是一个全局（bType为1）条目，选择用途页为普通桌面Generic Desktop Page(0x01)
+	//后面跟一字节数据（bSize为1），后面的字节数就不注释了，
+	//自己根据bSize来判断。
 	HID_RI_USAGE_PAGE(8, 0x01), /* Generic Desktop */
 
-	//����һ���ֲ���bTypeΪ2����Ŀ��˵����������Ӧ�ü�����;�������
+	//这是一个局部（bType为2）条目，说明接下来的应用集合用途用于鼠标
     HID_RI_USAGE(8, 0x02)		, /* Mouse */
 
-	//����һ������Ŀ��bTypeΪ0����Ŀ�������ϣ������������0x01��ʾ
-	//�ü�����һ��Ӧ�ü��ϡ�����������ǰ������;ҳ����;����Ϊ
-	//��ͨ�����õ���ꡣ
+	//这是一个主条目（bType为0）条目，开集合，后面跟的数据0x01表示
+	//该集合是一个应用集合。它的性质在前面由用途页和用途定义为
+	//普通桌面用的鼠标。
     HID_RI_COLLECTION(8, 0x01)		, /* Application */
 
     HID_RI_REPORT_ID(8, USB_HID_MOUSE)		, /*Report ID*/
 
     HID_RI_USAGE_PAGE(8, 0x09)		, /* Button */
 
-	//����һ���ֲ���Ŀ��˵����;����СֵΪ1��ʵ��������������
+	//这是一个局部条目，说明用途的最小值为1。实际上是鼠标左键。
 	// 1 is mouse left button,2 is mouse right button,3 is central buuton
     HID_RI_USAGE_MINIMUM(8, 0x01)		,
-	//����һ���ֲ���Ŀ��˵����;�����ֵ
+	//这是一个局部条目，说明用途的最大值
     HID_RI_USAGE_MAXIMUM(8, 0x05),
 
-	//����һ��ȫ����Ŀ��˵�����ص����ݵ��߼�ֵ���������Ƿ��ص��������ֵ����
-	//��СΪ0����Ϊ����������Bit����ʾһ�������������СΪ0�����Ϊ1��
+	//这是一个全局条目，说明返回的数据的逻辑值（就是我们返回的数据域的值啦）
+	//最小为0。因为我们这里用Bit来表示一个数据域，因此最小为0，最大为1。
     HID_RI_LOGICAL_MINIMUM(8, 0x00)		,
-	//����һ��ȫ����Ŀ��˵���߼�ֵ���Ϊ1��
+	//这是一个全局条目，说明逻辑值最大为1。
     HID_RI_LOGICAL_MAXIMUM(8, 0x01),
 
-	//����һ��ȫ����Ŀ��˵��ÿ��������ĳ���Ϊ1��bit��
+	//这是一个全局条目，说明每个数据域的长度为1个bit。
 	HID_RI_REPORT_SIZE(8, 0x01),
-	//����һ��ȫ����Ŀ��˵��total button ����Ϊ5����
+	//这是一个全局条目，说明total button 数量为5个。
     HID_RI_REPORT_COUNT(8, 0x05), /* debug note: 3->5*/
 
-	//����һ������Ŀ��˵����3������Ϊ1bit�������������ͳ���
-	//��ǰ�������ȫ����Ŀ�����壩������Ϊ���룬
-	//����Ϊ��Data,Var,Abs��Data��ʾ��Щ���ݿ��Ա䶯��Var��ʾ
-	//��Щ�������Ƕ����ģ�ÿ�����ʾһ����˼��Abs��ʾ����ֵ��
-	//��������Ľ�����ǣ���һ��������bit0��ʾ����1��������Ƿ��£�
-	//�ڶ���������bit1��ʾ����2���Ҽ����Ƿ��£�������������bit2��ʾ
-	//����3���м����Ƿ��¡�
+	//这是一个主条目，说明有3个长度为1bit的数据域（数量和长度
+	//由前面的两个全局条目所定义）用来做为输入，
+	//属性为：Data,Var,Abs。Data表示这些数据可以变动，Var表示
+	//这些数据域是独立的，每个域表示一个意思。Abs表示绝对值。
+	//这样定义的结果就是，第一个数据域bit0表示按键1（左键）是否按下，
+	//第二个数据域bit1表示按键2（右键）是否按下，第三个数据域bit2表示
+	//按键3（中键）是否按下。
     HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_ABSOLUTE),
-	//����һ��ȫ����Ŀ��˵��ÿ��������ĳ���Ϊ
+	//这是一个全局条目，说明每个数据域的长度为
 	HID_RI_REPORT_SIZE(8, 0x03), /* debug note: 5->3*/
-	//����һ��ȫ����Ŀ��˵������������Ϊ1��
+	//这是一个全局条目，说明数据域数量为1个
     HID_RI_REPORT_COUNT(8, 0x01),
 
-	//����һ������Ŀ�������ã���ǰ������ȫ����Ŀ��֪������Ϊ3bit��
-	//����Ϊ1������������Ϊ�����������ص�����һֱ��0����
-	//���ֻ��Ϊ�˴���һ���ֽڣ�ǰ������3��bit��������һЩ����
-	//���ѣ���������û��ʵ����;�ġ�
+	//这是一个主条目，输入用，由前面两个全局条目可知，长度为3bit，
+	//数量为1个。它的属性为常量（即返回的数据一直是0）。
+	//这个只是为了凑齐一个字节（前面用了3个bit）而填充的一些数据
+	//而已，所以它是没有实际用途的。
     HID_RI_INPUT(8, HID_IOF_CONSTANT),
 
-	//����һ���ֲ���Ŀ��˵����;Ϊָ�뼯��
+	//这是一个局部条目。说明用途为指针集合
     HID_RI_USAGE(8, 0x01), /* Pointer */
 
-	//����һ������Ŀ�������ϣ������������0x00��ʾ�ü�����һ��
-	//�������ϣ���;��ǰ��ľֲ���Ŀ����Ϊָ�뼯�ϡ�
+	//这是一个主条目，开集合，后面跟的数据0x00表示该集合是一个
+	//物理集合，用途由前面的局部条目定义为指针集合。
     HID_RI_COLLECTION(8, 0x00), /* Physical */
 
-	//����һ��ȫ����Ŀ��ѡ����;ҳΪ��ͨ����Generic Desktop Page(0x01)
+	//这是一个全局条目，选择用途页为普通桌面Generic Desktop Page(0x01)
     HID_RI_USAGE_PAGE(8, 0x01),  /* Generic Desktop */
 
-	//����һ���ֲ���Ŀ��˵����;ΪX��
+	//这是一个局部条目，说明用途为X轴
     HID_RI_USAGE(8, 0x30), /* Usage X */
 
-	//����һ���ֲ���Ŀ��˵����;ΪY��
+	//这是一个局部条目，说明用途为Y轴
     HID_RI_USAGE(8, 0x31), /* Usage Y */
 
-	//��������Ϊȫ����Ŀ��˵�����ص��߼���С�����ֵ��
-	//��Ϊ���ָ���ƶ�ʱ��ͨ���������ֵ����ʾ�ģ�
-	//���ֵ����˼���ǣ���ָ���ƶ�ʱ��ֻ�����ƶ�����
-	//�����ƶ�ʱ��XֵΪ���������ƶ�ʱ��YֵΪ����
-	//���ڹ��֣����������Ϲ�ʱ��ֵΪ����
+	//下面两个为全局条目，说明返回的逻辑最小和最大值。
+	//因为鼠标指针移动时，通常是用相对值来表示的，
+	//相对值的意思就是，当指针移动时，只发送移动量。
+	//往右移动时，X值为正；往下移动时，Y值为正。
+	//对于滚轮，当滚轮往上滚时，值为正。
     HID_RI_LOGICAL_MINIMUM(8, 0x81), //     LOGICAL_MINIMUM (-127)
     HID_RI_LOGICAL_MAXIMUM(8, 0x7f), //     LOGICAL_MAXIMUM (127)
-	//����һ��ȫ����Ŀ��˵��������ĳ��ȡ����ʹ�� 16���Ϳ��Ա�ʾ��������
+	//这是一个全局条目，说明数据域的长度。如果使用 16，就可以表示绝对坐标
     HID_RI_REPORT_SIZE(8, 0x08),
     HID_RI_REPORT_COUNT(8, 0x02),
-	//����һ������Ŀ����˵��������8bit���������������õģ�
-	//����Ϊ��Data,Var,Rel��Data˵�������ǿ��Ա�ģ�Var˵��
-	//��Щ�������Ƕ����ģ�����һ��8bit��ʾX�ᣬ�ڶ���8bit��ʾ
-	//Y�ᣬ������8bit��ʾ���֡�Rel��ʾ��Щֵ�����ֵ��
+	//这是一个主条目。它说明这三个8bit的数据域是输入用的，
+	//属性为：Data,Var,Rel。Data说明数据是可以变的，Var说明
+	//这些数据域是独立的，即第一个8bit表示X轴，第二个8bit表示
+	//Y轴，第三个8bit表示滚轮。Rel表示这些值是相对值。
     HID_RI_INPUT(8, HID_IOF_DATA | HID_IOF_VARIABLE | HID_IOF_RELATIVE),
 
     HID_RI_USAGE(8, 0x38),  /* Usage Wheel */
@@ -171,102 +173,102 @@ static const USB_Descriptor_HIDReport_Datatype_t mouse_report_desc[] = {
 
 #else
 
-	//����һ��ȫ�֣�bTypeΪ1����Ŀ��ѡ����;ҳΪ��ͨ����Generic Desktop Page(0x01)
-	//�����һ�ֽ����ݣ�bSizeΪ1����������ֽ����Ͳ�ע���ˣ�
-	//�Լ�����bSize���жϡ�
+	//这是一个全局（bType为1）条目，选择用途页为普通桌面Generic Desktop Page(0x01)
+	//后面跟一字节数据（bSize为1），后面的字节数就不注释了，
+	//自己根据bSize来判断。
 	0x05, 0x01, // USAGE_PAGE (Generic Desktop)
 
-	//����һ���ֲ���bTypeΪ2����Ŀ��˵����������Ӧ�ü�����;�������
+	//这是一个局部（bType为2）条目，说明接下来的应用集合用途用于鼠标
 	0x09, 0x02, // USAGE (Mouse)
 
-	//����һ������Ŀ��bTypeΪ0����Ŀ�������ϣ������������0x01��ʾ
-	//�ü�����һ��Ӧ�ü��ϡ�����������ǰ������;ҳ����;����Ϊ
-	//��ͨ�����õ���ꡣ
+	//这是一个主条目（bType为0）条目，开集合，后面跟的数据0x01表示
+	//该集合是一个应用集合。它的性质在前面由用途页和用途定义为
+	//普通桌面用的鼠标。
 	0xa1, 0x01, // COLLECTION (Application)
 
 	0x85, USB_HID_MOUSE, //report ID 01
 
-	//����һ���ֲ���Ŀ��˵����;Ϊָ�뼯��
+	//这是一个局部条目。说明用途为指针集合
 	0x09, 0x01, //   USAGE (Pointer)
 
-	//����һ������Ŀ�������ϣ������������0x00��ʾ�ü�����һ��
-	//�������ϣ���;��ǰ��ľֲ���Ŀ����Ϊָ�뼯�ϡ�
+	//这是一个主条目，开集合，后面跟的数据0x00表示该集合是一个
+	//物理集合，用途由前面的局部条目定义为指针集合。
 	0xa1, 0x00, //   COLLECTION (Physical)
 
 
-	//����һ��ȫ����Ŀ��ѡ����;ҳΪ������Button Page(0x09)��
+	//这是一个全局条目，选择用途页为按键（Button Page(0x09)）
 	0x05, 0x09, //     USAGE_PAGE (Button)
 
-	//����һ���ֲ���Ŀ��˵����;����СֵΪ1��ʵ��������������
+	//这是一个局部条目，说明用途的最小值为1。实际上是鼠标左键。
 	// 1 is mouse left button,2 is mouse right button,3 is central buuton
 	0x19, 0x01, //     USAGE_MINIMUM (Button 1)
 
-	//����һ���ֲ���Ŀ��˵����;�����ֵΪ3��ʵ����������м���
+	//这是一个局部条目，说明用途的最大值为3。实际上是鼠标中键。
 	0x29, 0x05, //     USAGE_MAXIMUM (Button 5)
 
-	//����һ��ȫ����Ŀ��˵�����ص����ݵ��߼�ֵ���������Ƿ��ص��������ֵ����
-	//��СΪ0����Ϊ����������Bit����ʾһ�������������СΪ0�����Ϊ1��
+	//这是一个全局条目，说明返回的数据的逻辑值（就是我们返回的数据域的值啦）
+	//最小为0。因为我们这里用Bit来表示一个数据域，因此最小为0，最大为1。
 	0x15, 0x00, //     LOGICAL_MINIMUM (0)
 
-	//����һ��ȫ����Ŀ��˵���߼�ֵ���Ϊ1��
+	//这是一个全局条目，说明逻辑值最大为1。
 	0x25, 0x01, //     LOGICAL_MAXIMUM (1)
 
-	//����һ��ȫ����Ŀ��˵��total button ����Ϊ5����
+	//这是一个全局条目，说明total button 数量为5个。
 	0x95, 0x05, //     REPORT_COUNT (3)
-	//����һ��ȫ����Ŀ��˵��ÿ��������ĳ���Ϊ1��bit��
+	//这是一个全局条目，说明每个数据域的长度为1个bit。
 	0x75, 0x01, //     REPORT_SIZE (1)
 
-	//����һ������Ŀ��˵����5������Ϊ1bit�������������ͳ���
-	//��ǰ�������ȫ����Ŀ�����壩������Ϊ���룬
-	//����Ϊ��Data,Var,Abs��Data��ʾ��Щ���ݿ��Ա䶯��Var��ʾ
-	//��Щ�������Ƕ����ģ�ÿ�����ʾһ����˼��Abs��ʾ����ֵ��
-	//��������Ľ�����ǣ���һ��������bit0��ʾ����1��������Ƿ��£�
-	//�ڶ���������bit1��ʾ����2���Ҽ����Ƿ��£�������������bit2��ʾ
-	//����3���м����Ƿ��¡�
+	//这是一个主条目，说明有5个长度为1bit的数据域（数量和长度
+	//由前面的两个全局条目所定义）用来做为输入，
+	//属性为：Data,Var,Abs。Data表示这些数据可以变动，Var表示
+	//这些数据域是独立的，每个域表示一个意思。Abs表示绝对值。
+	//这样定义的结果就是，第一个数据域bit0表示按键1（左键）是否按下，
+	//第二个数据域bit1表示按键2（右键）是否按下，第三个数据域bit2表示
+	//按键3（中键）是否按下。
 	0x81, 0x02, //     INPUT (Data,Var,Abs)
 
-	//����һ��ȫ����Ŀ��˵������������Ϊ1��
+	//这是一个全局条目，说明数据域数量为1个
 	0x95, 0x01, //     REPORT_COUNT (1)
-	//����һ��ȫ����Ŀ��˵��ÿ��������ĳ���Ϊ3bit��
+	//这是一个全局条目，说明每个数据域的长度为3bit。
 	0x75, 0x03, //     REPORT_SIZE (3)
 
 
-	//����һ������Ŀ�������ã���ǰ������ȫ����Ŀ��֪������Ϊ3bit��
-	//����Ϊ1������������Ϊ�����������ص�����һֱ��0����
-	//���ֻ��Ϊ�˴���һ���ֽڣ�ǰ������3��bit��������һЩ����
-	//���ѣ���������û��ʵ����;�ġ�
+	//这是一个主条目，输入用，由前面两个全局条目可知，长度为3bit，
+	//数量为1个。它的属性为常量（即返回的数据一直是0）。
+	//这个只是为了凑齐一个字节（前面用了3个bit）而填充的一些数据
+	//而已，所以它是没有实际用途的。
 	0x81, 0x01, //     INPUT (Cnst,Var,Abs)
 
 
-	//����һ��ȫ����Ŀ��ѡ����;ҳΪ��ͨ����Generic Desktop Page(0x01)
+	//这是一个全局条目，选择用途页为普通桌面Generic Desktop Page(0x01)
 	0x05, 0x01, //     USAGE_PAGE (Generic Desktop)
 
-	//����һ���ֲ���Ŀ��˵����;ΪX��
+	//这是一个局部条目，说明用途为X轴
 	0x09, 0x30, //     USAGE (X)
 
-	//����һ���ֲ���Ŀ��˵����;ΪY��
+	//这是一个局部条目，说明用途为Y轴
 	0x09, 0x31, //     USAGE (Y)
-	//��������Ϊȫ����Ŀ��˵�����ص��߼���С�����ֵ��
-	//��Ϊ���ָ���ƶ�ʱ��ͨ���������ֵ����ʾ�ģ�
-	//���ֵ����˼���ǣ���ָ���ƶ�ʱ��ֻ�����ƶ�����
-	//�����ƶ�ʱ��XֵΪ���������ƶ�ʱ��YֵΪ����
-	//���ڹ��֣����������Ϲ�ʱ��ֵΪ����
+	//下面两个为全局条目，说明返回的逻辑最小和最大值。
+	//因为鼠标指针移动时，通常是用相对值来表示的，
+	//相对值的意思就是，当指针移动时，只发送移动量。
+	//往右移动时，X值为正；往下移动时，Y值为正。
+	//对于滚轮，当滚轮往上滚时，值为正。
 	0x15, 0x81, //     LOGICAL_MINIMUM (-127)
 	0x25, 0x7f, //     LOGICAL_MAXIMUM (127)
 
-	//����һ��ȫ����Ŀ��˵��������ĳ���Ϊ8bit��
+	//这是一个全局条目，说明数据域的长度为8bit。
 	0x75, 0x08, //     REPORT_SIZE (16)
 
-	//����һ��ȫ����Ŀ��˵��������ĸ���Ϊ2����
+	//这是一个全局条目，说明数据域的个数为2个。
 	0x95, 0x02, //     REPORT_COUNT (2)
 
-	//����һ������Ŀ����˵��������8bit���������������õģ�
-	//����Ϊ��Data,Var,Rel��Data˵�������ǿ��Ա�ģ�Var˵��
-	//��Щ�������Ƕ����ģ�����һ��8bit��ʾX�ᣬ�ڶ���8bit��ʾ
-	//Y�ᣬ������8bit��ʾ���֡�Rel��ʾ��Щֵ�����ֵ��
+	//这是一个主条目。它说明这三个8bit的数据域是输入用的，
+	//属性为：Data,Var,Rel。Data说明数据是可以变的，Var说明
+	//这些数据域是独立的，即第一个8bit表示X轴，第二个8bit表示
+	//Y轴，第三个8bit表示滚轮。Rel表示这些值是相对值。
 	0x81, 0x06, //     INPUT (Data,Var,Rel)
 
-	//����һ���ֲ���Ŀ��˵����;Ϊ����
+	//这是一个局部条目，说明用途为滚轮
 	0x09, 0x38, //     USAGE (Wheel)
 	0x15, 0x81, //LOGICAL_MINIMUM (-127)
 	0x25, 0x7f, //LOGICAL_MAXIMUM (127)
@@ -275,8 +277,8 @@ static const USB_Descriptor_HIDReport_Datatype_t mouse_report_desc[] = {
 	0x81, 0x06, //INPUT (Data,Var,Rel)
 
 
-	//��������������Ŀ�����ر�ǰ��ļ����á�
-	//���ǿ����������ϣ�����Ҫ�����Ρ�bSizeΪ0�����Ժ���û���ݡ�
+	//下面这两个主条目用来关闭前面的集合用。
+	//我们开了两个集合，所以要关两次。bSize为0，所以后面没数据。
 	0xc0, //   END_COLLECTION
 	0xc0, // END_COLLECTION
 

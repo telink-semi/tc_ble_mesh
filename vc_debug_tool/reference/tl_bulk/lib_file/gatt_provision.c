@@ -1,26 +1,27 @@
 /********************************************************************************************************
- * @file     gatt_provision.c 
+ * @file	gatt_provision.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	Mesh Group
+ * @date	2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
-
 #include "gatt_provision.h"
 #include "../../../ble_lt_mesh/proj_lib/mesh_crypto/le_crypto.h"
 #include "../../../ble_lt_mesh/proj_lib/mesh_crypto/mesh_crypto.h"
@@ -349,11 +350,11 @@ void start_provision_invite()
 {
 	gatt_pro_para_mag_init();
 	gatt_prov_send_invite();
-	gatt_provision_mag.provison_send_state = STATE_PRO_INVITE_ACK;
 	prov_timer_start();
 	if(get_mesh_rp_proc_en()){
         mesh_cmd_sig_cp_cli_send_invite(gatt_para_pro,gatt_para_len);
 	}else{
+		gatt_provision_mag.provison_send_state = STATE_PRO_INVITE_ACK;
         prov_write_data_trans(gatt_para_pro,gatt_para_len,MSG_PROVISION_PDU);
 	}
 	return ;
@@ -476,7 +477,7 @@ void gatt_prov_rcv_pubkey(mesh_pro_data_structer *p_rcv)
 	memcpy(gatt_pro_input+0x11,gatt_pro_ppk,sizeof(gatt_pro_ppk));
 	memcpy(gatt_pro_input+0x11+64,p_rcv->pubkey.pubKeyX,64);
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,p_rcv->pubkey.pubKeyX,64,"RCV:the pubkey of the device is \r\n",0);
-	tn_p256_dhkey (gatt_pro_edch, gatt_pro_psk,gatt_pro_input+0x11+0x40 ,gatt_pro_input+0x11+0x60);    
+	tn_p256_dhkey_fast(gatt_pro_edch, gatt_pro_psk,gatt_pro_input+0x11+0x40 ,gatt_pro_input+0x11+0x60);    
 }
 
 void gatt_prov_send_comfirm(mesh_pro_data_structer *p_send)
@@ -621,7 +622,7 @@ int gatt_prov_rcv_record_rsp(pro_trans_record_rsp *p_rec_rsp,u8 rec_data_len)
 u8 win32_prov_working()
 {
     u8 state = gatt_provision_mag.provison_send_state;
-    if(state>=STATE_PRO_INVITE && state <= STATE_PRO_SUC){
+    if(state>LINK_UNPROVISION_STATE && state < STATE_PRO_SUC){
         return 1;
     }else{
         return 0;

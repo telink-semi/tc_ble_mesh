@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app.c 
+ * @file	app.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "proj/tl_common.h"
 #include "proj_lib/rf_drv.h"
@@ -174,7 +177,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		debug_mesh_report_BLE_st2usb(0);
 		#endif
 
-		mesh_ble_disconnect_cb();
+		mesh_ble_disconnect_cb(pd->reason);
 	}
 
 	if (send_to_hci)
@@ -276,7 +279,7 @@ u8 mesh_get_hci_tx_fifo_cnt()
 {
 #if (HCI_ACCESS == HCI_USE_USB)
 	return hci_tx_fifo.size;
-#elif (HCI_ACCESS == HCI_USE_UART)
+#elif (HCI_ACCESS == HCI_USE_UART)
 	return hci_tx_fifo.size-0x10;
 #else
 	return 0;
@@ -566,6 +569,10 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 		
 	}else if (op_code == HCI_GATEWAY_CMD_SET_NODE_PARA){
 		// set the provisionee's netinfo para 
+		if(is_provision_working()){
+			LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"gw provision is in process");
+			return 0;
+		}
 		provison_net_info_str *p_net = (provison_net_info_str *)(p+1);
 		// set the pro_data infomation 
 		set_provisionee_para(p_net->net_work_key,p_net->key_index,
@@ -689,6 +696,10 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 	}else if (op_code == HCI_GATEWAY_CMD_RP_START){
 		#if GATEWAY_ENABLE&&MD_REMOTE_PROV
 		// set the provisionee's netinfo para 
+		if(is_rp_working()){
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"remote-prov is in process");
+			return 0;
+		}
 		provison_net_info_str *p_net = (provison_net_info_str *)(p+1);
 		// set the pro_data infomation 
 		set_provisionee_para(p_net->net_work_key,p_net->key_index,

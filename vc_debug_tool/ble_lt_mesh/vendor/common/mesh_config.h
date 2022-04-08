@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     mesh_config.h 
+ * @file	mesh_config.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #pragma once
 
@@ -142,6 +145,7 @@ extern "C" {
 //------------ mesh config-------------
 #define MD_CFG_CLIENT_EN            (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__ || TESTCASE_FLAG_ENABLE)   // don't modify
 #define RELIABLE_CMD_EN             (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)   // don't modify
+#define RX_SEGMENT_REJECT_CACHE_EN	(__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)   // 
 
 //------------ mesh config (user can config)-------------
 #define MESH_NORMAL_MODE		0
@@ -175,6 +179,7 @@ extern "C" {
 #else
 #define PROV_EPA_EN				0
 #define TLV_ENABLE				0
+#define GATT_RP_EN				0		// just for internal test, only can be enable in 8258 mesh project.
 #endif
 #if (TESTCASE_FLAG_ENABLE)
 #define PROV_AUTH_LEAK_REFLECT_EN		0
@@ -312,16 +317,32 @@ extern "C" {
 #if (MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 #define DU_ENABLE 	1
 #define DU_LPN_EN	0
+#define DU_ULTRA_PROV_EN	1	
+	#if DU_ULTRA_PROV_EN
+#define	USER_ADV_FILTER_EN	1
+	#endif
 
-#if DU_LPN_EN
+	#if DU_LPN_EN
+#define LPN_CONTROL_EN	1
+#define LPN_FAST_OTA_EN	1
+	#endif
+	#if DU_LPN_EN
+		#if LPN_CONTROL_EN
+	#define RTC_USE_32K_RC_ENABLE		0
+	#define DU_ADV_INTER_MS				600
+	#define DU_ADV_INTER_VAL			(DU_ADV_INTER_MS*1000/625)
+	#define BLT_SOFTWARE_TIMER_ENABLE	1
+	#define DU_PID                  	0x006b448d
+		#else
 	#define RTC_USE_32K_RC_ENABLE		1
 	#define DU_ADV_INTER_MS				1700
 	#define DU_ADV_INTER_VAL			(DU_ADV_INTER_MS*1000/625)
 	#define BLT_SOFTWARE_TIMER_ENABLE	1
 	#define DU_PID                  	0x006b2d1d
-#else
+		#endif
+	#else
 	#define DU_PID						7003001
-#endif
+	#endif
 #if(DU_PID == 0x006b2d1d)
 	#define DU_BIND_CHECK_EN            1
 #else
@@ -548,8 +569,8 @@ extern "C" {
 	#endif
 #endif
 
-#if WIN32
-#define OTA_ADOPT_RULE_CHECK_PID_EN		0
+#if (WIN32 || DU_ENABLE)
+#define OTA_ADOPT_RULE_CHECK_PID_EN		0	// in the du mode ,it will not allow to check the pid.because it will change format
 #else
 #ifndef OTA_ADOPT_RULE_CHECK_PID_EN			// for both GATT and ADV
 #define OTA_ADOPT_RULE_CHECK_PID_EN		1
@@ -595,11 +616,11 @@ extern "C" {
 #define MD_LARGE_CPS_EN				1
 #define MD_SOLI_PDU_RPL_EN			1
 #if DEBUG_SHOW_VC_SELF_EN
-#define MD_SERVER_EN                1   // SIG and vendor MD
+#define MD_SERVER_EN                1   // SIG and vendor models
 #else
-#define MD_SERVER_EN                0   // SIG and vendor MD
+#define MD_SERVER_EN                0   // SIG and vendor models
 #endif
-#define MD_CLIENT_EN                1   // just SIG MD
+#define MD_CLIENT_EN                1   // just SIG models
 #define MD_CLIENT_VENDOR_EN         1
 #define MD_VENDOR_2ND_EN            (DEBUG_VENDOR_CMD_EN && MI_API_ENABLE)
 #define MD_SENSOR_SERVER_EN			MD_SERVER_EN	
@@ -621,8 +642,8 @@ extern "C" {
 #define MD_LARGE_CPS_EN				0
 #define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
 
-#define MD_SERVER_EN                1   // SIG and vendor MD
-#define MD_CLIENT_EN                1   // just SIG MD
+#define MD_SERVER_EN                1   // SIG and vendor models
+#define MD_CLIENT_EN                1   // just SIG models
 #define MD_CLIENT_VENDOR_EN         1
     #if __PROJECT_MESH_PRO__
 #define MD_SENSOR_SERVER_EN			0	
@@ -645,8 +666,8 @@ extern "C" {
 #define MD_SERVER_EN                1  
 #define MD_CLIENT_EN                1 
 		#else
-#define MD_SERVER_EN                0   // SIG and vendor MD
-#define MD_CLIENT_EN                (!MD_SERVER_EN) // just SIG MD
+#define MD_SERVER_EN                0   // SIG and vendor models
+#define MD_CLIENT_EN                (!MD_SERVER_EN) // just SIG models
 		#endif
 #define MD_CLIENT_VENDOR_EN         0
 #define MD_VENDOR_2ND_EN            (DEBUG_VENDOR_CMD_EN && MI_API_ENABLE)
@@ -673,8 +694,8 @@ extern "C" {
 #define MD_SERVER_EN                1  
 #define MD_CLIENT_EN                1 
 		#else
-#define MD_SERVER_EN                0   // SIG and vendor MD
-#define MD_CLIENT_EN                (!MD_SERVER_EN) // just SIG MD
+#define MD_SERVER_EN                0   // SIG and vendor models
+#define MD_CLIENT_EN                (!MD_SERVER_EN) // just SIG models
 		#endif
 #define MD_CLIENT_VENDOR_EN         1
 #define MD_VENDOR_2ND_EN            (DEBUG_VENDOR_CMD_EN && MI_API_ENABLE)
@@ -707,18 +728,18 @@ extern "C" {
 #define MD_LARGE_CPS_EN				0
 #define MD_SOLI_PDU_RPL_EN			MD_ON_DEMAND_PROXY_EN
 	#if __PROJECT_MESH_SWITCH__
-#define MD_SERVER_EN                0   // SIG and vendor MD
-#define MD_CLIENT_EN                1   // just SIG MD
+#define MD_SERVER_EN                0   // SIG and vendor models
+#define MD_CLIENT_EN                1   // just SIG models
 	#else
-#define MD_SERVER_EN                1   // SIG and vendor MD
-#define MD_CLIENT_EN                0   // just SIG MD
+#define MD_SERVER_EN                1   // SIG and vendor models
+#define MD_CLIENT_EN                0   // just SIG models
 	#endif
     #if(DUAL_VENDOR_EN)
 #define MD_CLIENT_VENDOR_EN         0
     #elif ((LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL) || SPIRIT_VENDOR_EN)
 #define MD_CLIENT_VENDOR_EN         1
     #else
-#define MD_CLIENT_VENDOR_EN         0
+#define MD_CLIENT_VENDOR_EN         (0 || MD_CLIENT_EN)
     #endif
 #define MD_VENDOR_2ND_EN            (DEBUG_VENDOR_CMD_EN && MI_API_ENABLE)
 #define MD_SENSOR_SERVER_EN			0	// MD_SERVER_EN
@@ -747,13 +768,17 @@ extern "C" {
 
 #if	MD_REMOTE_PROV
 #define REMOTE_PROV_SCAN_GATT_EN	0
-#define URI_DATA_ADV_ENABLE		1
-#define ACTIVE_SCAN_ENABLE  0
-
+#define URI_DATA_ADV_ENABLE			0
+#define ACTIVE_SCAN_ENABLE  		0
+	#if TESTCASE_FLAG_ENABLE
+#define REMOTE_SET_RETRY_EN			0	
+	#else
+#define REMOTE_SET_RETRY_EN			1
+	#endif
 #else
 #define REMOTE_PROV_SCAN_GATT_EN	0
-#define URI_DATA_ADV_ENABLE		0
-#define ACTIVE_SCAN_ENABLE  0
+#define URI_DATA_ADV_ENABLE			0
+#define ACTIVE_SCAN_ENABLE  		0
 #endif
 
 #define MD_SENSOR_EN	    (MD_SENSOR_SERVER_EN || MD_SENSOR_CLIENT_EN)
@@ -956,6 +981,11 @@ extern "C" {
 // as default, only some OTA op code use extend adv defined in is_not_use_extend_adv() for compatibility.
 // if needed, user can change the rule defined in is_not_use_extend_adv.
 #define EXTENDED_ADV_ENABLE				0   // BLE mesh extend ADV
+	#if EXTENDED_ADV_ENABLE
+#define EXTENDED_ADV_PROV_ENABLE		0
+	#else
+#define EXTENDED_ADV_PROV_ENABLE		0	// must 0
+	#endif
 #endif
 
 #if EXTENDED_ADV_ENABLE

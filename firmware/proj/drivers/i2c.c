@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     i2c.c 
+ * @file	i2c.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "../tl_common.h"
 #include "../mcu/clock.h"
 #include "i2c.h"
@@ -168,7 +170,7 @@ void i2c_init(void){
 	i2c_init();
 	i2c_sim_init();
 #else
-	// ¡Á¡é¨°areg_rst_clk0 ¦Ì?I2C  clk ¡ä¨°?a¨¢??e?
+	// Ã—ï¿ Ã²areg_rst_clk0 Î¼?I2C  clk â€²Ã²?aÃ¡??e?
 	reg_gpio_pe_gpio &= ~ BIT(7);
 	reg_gpio_pf_gpio &= ~ BIT(1);
 
@@ -236,7 +238,7 @@ u8 i2c_read(u8 id, u16 adr){
 // 5, i2c_slave_init() is called instead of i2c_init()
 u8 *i2c_slave_write_buff, *i2c_slave_read_buff;
 void i2c_slave_init(u32 mem_addr){
-	// ¡Á¡é¨°areg_rst_clk0 ¦Ì?I2C  clk ¡ä¨°?a¨¢??e?
+	// Ã—ï¿ Ã²areg_rst_clk0 Î¼?I2C  clk â€²Ã²?aÃ¡??e?
 	reg_gpio_pe_gpio &= ~ BIT(7);
 	reg_gpio_pf_gpio &= ~ BIT(1);
 

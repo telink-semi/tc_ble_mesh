@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     CTL_privision.cpp 
+ * @file	CTL_privision.cpp
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	Mesh Group
+ * @date	2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 // CTL_privision.cpp : implementation file
 //
@@ -354,6 +357,18 @@ void CTL_privision::OnProvisionStart()
 		return ;
 	}
 	LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"start provision for the device");
+	if(!ble_moudle_id_is_gateway()&&!m_fast_prov_mode){
+
+	//json_del_mesh_vc_node_info(sigmesh_node_uuid);
+		if(is_provision_working()){
+			LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"vc provision is in process");
+			return ;
+		}
+	    if(is_rp_working()){
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"vc remote-prov is in process");
+			return ;
+		}
+	}
 	set_provision_key_data();
 	gatt_pro_para_mag_init();
 	net_info.unicast_address = provision_mag.pro_net_info.unicast_address = prov_unicast_address[0]|(prov_unicast_address[1]<<8);
@@ -854,6 +869,10 @@ int App_key_bind_end_callback(u8 event)
 		mesh_misc_store();
 	}else{
 		
+	}
+
+	if (p_ctl_pro->m_fast_prov_mode) {
+		m_pMeshDlg->InitStatus();
 	}
 	return 1;
 }

@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     Test_case.h 
+ * @file	Test_case.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	Mesh Group
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #pragma once
 #include "../../proj/tl_common.h"
@@ -27,6 +30,7 @@
 #define LT_ADDRESS      0x08d2
 #define PT_ADDR			0x0300
 #define PT2_ADDR		0x0310
+#define PT_GROUP_ADDR	0xc110
 #define MASK_HIGH16(val)		(val & 0xFFFF0000)
 #define MASK_LOW16(val)			(val & 0x0000FFFF)
 
@@ -217,17 +221,29 @@ typedef enum{
 	NODE_DF_EST_BV_07		= 0x04110407,
 
 	NODE_DF_UPDATE_BV_01	= 0x04110601,
+	
+	NODE_DF_ECHO_BV_06		= 0x04110706,
+
+	NODE_DF_SOL_BV_04		= 0x04110804,
+	
+	NODE_DF_FIX_BV_04		= 0x04110904,
+	NODE_DF_FIX_BV_07		= 0x04110907,
 //directed proxy
 	MESH_SR_DPROX_BV_07		= 0x04110A07,
 	MESH_SR_DPROX_BI_01		= 0x04110A08,
 //directed forwarding model
 	SR_DFM_DFS_BV_01		= 0x04120101,
 	SR_DFM_DFS_BV_04		= 0x04120104,
+	SR_DFM_DFS_BV_11		= 0x0412010B,
 	
 	CL_DFM_PMS_BV_01		= 0x04120203,
 	CL_DFM_PMS_BI_01		= 0x04120204,
 	CL_DFM_PMS_BI_02		= 0x04120205,
 
+// minor enhancement
+	MESH_NODE_TNPT_BV_XX_0 	= 0x04130000,	
+	MESH_NODE_TNPT_BV_XX_2 	= 0x04130002,
+	MESH_CL_MPXS_BV_YY_C 	= 0x04130007,
 //subnet bridge 
 	NODE_SBR_NET_BV_01		= 0x04140101,
 	CL_BCM_SBS_BV_01		= 0x04140202,
@@ -235,29 +251,32 @@ typedef enum{
 	CL_BCM_BCS_BV_01		= 0x04140402,
 	
 //private beacon 
-	MESH_PRIVATE_NODE_RESET = 0X04150000,
-	MESH_PRIVATE_NODE_REBOOT = 0X04150001,
-	MESH_PRIVATE_ENTER_UPDATE = 0X04150002,
-	MESH_PRIVATE_NEXT_STEP 	  = 0X04150003,
-	MESH_PRIVATE_CHANGE_STEP2 = 0X04150004,
-	MESH_SR_PRB_PNID_BV_02C = 0x04150202,
-	MESH_SR_PRB_PROXY_BVXY02C = 0X04150802,
-	MESH_SR_PRB_PROXY_BVXY03C = 0X04150803,
-	MESH_SR_PRB_PROXY_BVXY07C = 0X04150807,
-	MESH_SR_PRB_PROXY_BVXY08C = 0X04150808,
+	MESH_PRIVATE_NODE_RESET 	= 0x04150000,
+	MESH_PRIVATE_NODE_REBOOT 	= 0x04150001,
+	MESH_PRIVATE_ENTER_UPDATE 	= 0x04150002,
+	MESH_PRIVATE_NEXT_STEP 	  	= 0x04150003,
+	MESH_PRIVATE_CHANGE_STEP2 	= 0x04150004,
+	MESH_PRIVATE_CL_PBS_BV_01C	= 0x04150005,
+	MESH_PRIVATE_CL_PGPXY_BV_01C= 0x04150104,
+	MESH_PRIVATE_CL_PNID_BV_01C	= 0x04150206,
+	MESH_SR_PRB_PNID_BV_02C 	= 0x04150202,
+	MESH_SR_PRB_PROXY_BVXY02C 	= 0x04150802,
+	MESH_SR_PRB_PROXY_BVXY03C 	= 0x04150803,
+	MESH_SR_PRB_PROXY_BVXY07C 	= 0x04150807,
+	MESH_SR_PRB_PROXY_BVXY08C 	= 0x04150808,
 // enhance provision proc 
-	MESH_EPA_NODE_RESET = 0X04160000,
-	MESH_EPA_BV_01 = 0X04160001,
-	MESH_EPA_BV_02 = 0X04160002,
-	MESH_EPA_BV_03 = 0X04160003,
-	MESH_EPA_BV_04 = 0X04160004,
-	MESH_EPA_BV_05 = 0X04160005,
-	MESH_EPA_BV_06 = 0X04160006,
-	MESH_EPA_BV_07 = 0X04160007,
-	MESH_EPA_BV_08 = 0X04160008,
+	MESH_EPA_NODE_RESET = 0x04160000,
+	MESH_EPA_BV_01 		= 0x04160001,
+	MESH_EPA_BV_02 		= 0x04160002,
+	MESH_EPA_BV_03 		= 0x04160003,
+	MESH_EPA_BV_04 		= 0x04160004,
+	MESH_EPA_BV_05 		= 0x04160005,
+	MESH_EPA_BV_06 		= 0x04160006,
+	MESH_EPA_BV_07 		= 0x04160007,
+	MESH_EPA_BV_08 		= 0x04160008,
 
 // on-demand private GATT proxy	
-	MESH_CL_ODP_BV_01 = 0x04170100,
+	MESH_CL_ODP_BV_01 	= 0x04170100,
 
 // SAR config models
 	MESH_CL_SAR_BV_01_0C = 0x04180100,
@@ -274,7 +293,10 @@ typedef enum{
 
 // opcodes aggregator models
 	MESH_CL_AGG_BV_01_0C = 0x041c0103,
-	
+
+// MDF sybnet bridge
+	MESH_DF_SOL_BV_TBD_C = 0x041d0006,
+
 //generic client models
 	//generic onoff client
 	CL_GOO_BV_01	= 0x84080101,
