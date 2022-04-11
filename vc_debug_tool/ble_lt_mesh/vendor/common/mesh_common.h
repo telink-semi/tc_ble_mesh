@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     mesh_common.h 
+ * @file	mesh_common.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #include "proj/tl_common.h"
@@ -119,7 +121,7 @@ typedef struct ais_pri_data{
 	union{
 		u8 fmsk;
 		struct{
-			u8 ble_version:2;//00£ºBLE4.0 01£ºBLE4.2 10£ºBLE5.0 11£ºBLE5.0 above
+			u8 ble_version:2;//00: BLE4.0 01: BLE4.2 10: BLE5.0 11: BLE5.0 above
 			u8 ota_support:1;
 			u8 authen_en:1;
 			u8 secret_type:1;// 0:one device type on key, 1:one device one key
@@ -136,7 +138,7 @@ extern u8 g_reliable_retry_cnt_def;
 extern u16 g_reliable_retry_interval_min;
 extern u16 g_reliable_retry_interval_max;
 extern u8 pair_login_ok;
-extern u8 mesh_need_random_delay;
+extern u16 mesh_tx_with_random_delay_ms;
 extern const u16 UART_TX_LEN_MAX;
 extern u16 gateway_seg_buf_len;
 extern u8 gateway_seg_buf[];
@@ -152,7 +154,7 @@ static inline int mesh_get_proxy_hci_type()
 }
 //---------
 void mesh_ble_connect_cb(u8 e, u8 *p, int n);
-void mesh_ble_disconnect_cb();
+void mesh_ble_disconnect_cb(u8 reason);
 void mesh_conn_param_update_req();
 void vendor_id_check_and_update();
 void mesh_global_var_init();
@@ -177,6 +179,14 @@ int	app_device_mac_match (u8 *mac, u8 *mask);
 int app_l2cap_packet_receive (u16 handle, u8 * raw_pkt);
 int chn_conn_update_dispatch(u8 *p);
 void sim_tx_cmd_node2node();
+/**************************mesh_send_adv2scan_mode**************************
+function : send adv immediately
+para:
+	tx_adv: true:send adv and switch to scan mode(if enable). 0: switch to scan mode((if enable)) without send adv 
+ret: 1  means OK 
+	 0 means err 
+****************************************************************************/
+int mesh_send_adv2scan_mode(int tx_adv);
 int app_advertise_prepare_handler (rf_packet_adv_t * p);
 void my_att_init(u8 mode);
 void ble_mac_init();
@@ -225,6 +235,7 @@ void set_provision_adv_data(u8 *p_uuid,u8 *oob_info);
 void bls_set_adv_delay(u8 delay);	// unit : 625us
 void bls_set_adv_retry_cnt(u8 cnt); // default :0
 void set_random_adv_delay_normal_adv(u32 random_ms);
+void rp_active_scan_req_proc();
 
 void set_sec_req_send_flag(u8 flag);// set the sec req send or not 
 ble_sts_t  blc_att_setServerDataPendingTime_upon_ClientCmd(u8 num_10ms);
@@ -343,6 +354,7 @@ void set_random_adv_delay(int en);
 void bls_l2cap_requestConnParamUpdate_Normal();
 int telink_rand_num_generator(u8* p_buf, u8 len);
 int is_need_send_sec_nw_beacon();
+void tn_p256_dhkey_fast(u8 *r, u8 *s, u8 *x, u8 *y);
 
 // ----------- mesh_log.c -------
 const char * get_op_string(u16 op, const char *str_in);

@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app.c 
+ * @file	app.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "proj/tl_common.h"
 #include "proj_lib/rf_drv.h"
@@ -176,7 +179,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		debug_mesh_report_BLE_st2usb(0);
 		#endif
 
-		mesh_ble_disconnect_cb();
+		mesh_ble_disconnect_cb(pd->reason);
 	}
 
 	if (send_to_hci)
@@ -264,34 +267,23 @@ void test_sig_mesh_cmd_fun()
 }
 #endif
 
-extern void blt_adv_expect_time_refresh(u8 en);
 int soft_timer_send_mesh_adv()
 {	
-	
-	blt_adv_expect_time_refresh(0);
-	mesh_sleep_time.soft_timer_send_flag = 1;
-	blt_send_adv2scan_mode(1);
-	mesh_sleep_time.soft_timer_send_flag = 0;
-	blt_adv_expect_time_refresh(1);
-
+	mesh_send_adv2scan_mode(1);
 	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
 		return get_mesh_adv_interval();
 	}
-	mesh_sleep_time.soft_timer_pending = 0;
+	
 	return -1;
 }
 
 void soft_timer_mesh_adv_proc()
 {
-	if(mesh_sleep_time.soft_timer_pending){
-		return;
+	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
+		if(!is_soft_timer_exist(&soft_timer_send_mesh_adv)){
+			blt_soft_timer_add(&soft_timer_send_mesh_adv, get_mesh_adv_interval());	
+		}
 	}
-	
-	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){	
-		mesh_sleep_time.soft_timer_pending = 1;
-		blt_soft_timer_add(&soft_timer_send_mesh_adv, get_mesh_adv_interval());
-	}
-	return;
 }
 
 void proc_suspend_low_power()
@@ -309,8 +301,6 @@ void proc_suspend_low_power()
 	}
 	
 	if(blt_state == BLS_LINK_STATE_CONN){ 
-		bls_pm_setSuspendMask (SUSPEND_DISABLE);
-		blt_soft_timer_delete(&soft_timer_send_mesh_adv);
 	}else if (blt_state == BLS_LINK_STATE_ADV){
 		if((!mesh_sleep_time.appWakeup_flg) && clock_time_exceed(mesh_sleep_time.last_tick, mesh_sleep_time.run_time_us)){
 			mesh_sleep_time.appWakeup_flg = 0;

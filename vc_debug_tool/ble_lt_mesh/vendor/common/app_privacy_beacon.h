@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app_beacon.h 
+ * @file	app_privacy_beacon.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #ifndef APP_PRIVACY_BEACON_H
 #define APP_PRIVACY_BEACON_H
@@ -109,7 +112,7 @@ typedef struct{
 }model_private_beacon_t;
 extern _align_4_ model_private_beacon_t model_private_beacon;
 extern u32 mesh_md_pri_beacon_addr;
-void mesh_node_identity_refresh();
+void mesh_node_identity_refresh_private();
 void mesh_private_proxy_change_by_gatt_proxy(u8 private_sts,u8 *p_private_proxy);
 int mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t);
 void mesh_key_add_trigger_beacon_send(u8 idx);

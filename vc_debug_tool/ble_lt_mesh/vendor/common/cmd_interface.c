@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     cmd_interface.c 
+ * @file	cmd_interface.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #if WIN32
 #include "../../../reference/tl_bulk/lib_file/host_fifo.h"
 #include "../../../reference/tl_bulk/lib_file/gatt_provision.h"
@@ -38,7 +40,8 @@
 
 #include "subnet_bridge.h"
 #include "cmd_interface.h"
- 
+#include "solicitation_rpl_cfg_model.h"
+#include "app_heartbeat.h"
 //-----------access command--------
 int access_cmd_get_level(u16 adr,u32 rsp_max)
 {
@@ -524,6 +527,17 @@ int cfg_cmd_op_agg_sequence(u16 dst_addr, u8 *para, int len)
 	return SendOpParaDebug(dst_addr, 0, CFG_OP_AGG_SEQ, para, len);
 }
 
+int cfg_cmd_heartbeat_pub_set(u16 dst_addr, u16 pub_addr, u8 count_log, u8 period_log, u8 ttl, u16 features, u16 netkey_index)
+{
+	mesh_cfg_model_heartbeat_pub_set_t heartbeat_pub;
+	heartbeat_pub.dst = pub_addr;
+	heartbeat_pub.count_log = count_log;
+	heartbeat_pub.period_log = period_log;
+	heartbeat_pub.ttl = ttl;
+	heartbeat_pub.features = features;
+	heartbeat_pub.netkeyindex = netkey_index;
+	return SendOpParaDebug(dst_addr, 1, HEARTBEAT_PUB_SET, (u8 *)&heartbeat_pub, sizeof(heartbeat_pub));
+}
 //------------------
 int mesh_proxy_set_filter_cmd(u8 opcode,u8 filter_type, u8* dat,u8 len )
 {
@@ -595,6 +609,32 @@ int mesh_proxy_set_filter_init(u16 self_adr)
 	return mesh_proxy_filter_add_adr(0xffff);
 	#endif
 }
+
+#if (MD_SOLI_PDU_RPL_EN&&MD_CLIENT_EN)
+int mesh_send_proxy_solicitation_pdu(u16 adr_dst)
+{
+	mesh_cmd_bear_t cmd_bear;
+	mesh_cmd_nw_t *p_nw = &cmd_bear.nw;
+	p_nw->ivi = 0;
+	p_nw->ctl = 1;
+	p_nw->ttl = 0;
+	p_nw->src = ele_adr_primary;
+	p_nw->dst = adr_dst;
+	memcpy(p_nw->sno, &soli_sno_tx, sizeof(p_nw->sno));
+	soli_sno_tx++;
+	mesh_sec_msg_enc_nw((u8 *)p_nw, 0, SWAP_TYPE_LT_UNSEG, MASTER, 0, 0, MESH_ADV_TYPE_MESSAGE, NONCE_TYPE_SOLICITATION, 0, 0);
+	soli_service_data.id_type = SOLI_WITH_RPL_TYPE;
+	memcpy(soli_service_data.id_para, p_nw, sizeof(soli_service_data.id_para));
+	soli_pdu_adv_cnt = SOLICI_PDU_CNT;
+	return 1;
+}
+#endif
+
+int cfg_cmd_send_path_solicitation(u16 netkey_offset, u16 *addr_list, int num)
+{
+	return mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REQUEST_SOLICITATION, (u8 *)addr_list, num<<1, ADR_ALL_DIRECTED_FORWARD, netkey_offset);
+}
+
 #if WIN32
 // json data file ,to get data interface part  
 // provision end callback ,can call this interface to get data 

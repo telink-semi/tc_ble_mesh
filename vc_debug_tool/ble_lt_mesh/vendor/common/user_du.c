@@ -1,3 +1,27 @@
+/********************************************************************************************************
+ * @file	user_du.c
+ *
+ * @brief	This is the source file for BLE SDK
+ *
+ * @author	Mesh Group
+ * @date	2021
+ *
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
+ *******************************************************************************************************/
 
 #include "user_ali.h"
 #include "user_du.h"
@@ -20,6 +44,24 @@ const u8 du_local_name[6]=SHORT_LOACL_NAME;
 #define MAX_DU_OTA_BUF	(MAX_DU_BUF_SIZE*MAX_DU_BUF_CNT)
 _attribute_no_retention_bss_  u8  du_ota_buf[MAX_DU_OTA_BUF];
 #if DU_ENABLE
+#if DU_ULTRA_PROV_EN
+u32 RandomC = 0;
+u32 ultra_prov_tick;
+#if DU_APP_ADV_CONTROL_EN
+int mesh_rsp2_app_msg_id;
+mesh_bear_rsp2_app_t bear_rsp2_app; // tx
+#endif
+genie_nw_cache_t genie_nw_cache; // rx
+#endif
+
+int convert_num2_char(u8 *p_in, u32 idx, u32 len, char *p_out)
+{
+	for(int i=0;i<len;i++){
+		p_out[idx++] = num2char [(p_in[i]>>4) & 15];
+		p_out[idx++] = num2char [p_in[i] & 15];
+	}
+	return idx;
+}
 
 void du_create_input_string(char *p_input,u16 rand,u32 pid,u8 *p_mac,u8 *p_secret)
 {
@@ -113,7 +155,7 @@ void du_adv_ota_end_init(rf_packet_adv_t * p)
 	p_ota_end->len = 12;
 	p_ota_end->ad_type = 0xff;
 	p_ota_end->cid = VENDOR_ID;
-	p_ota_end->dev_type = 3;// mesh type
+	p_ota_end->dev_type = 3;// mesh type
 	p_ota_end->ver = DU_FW_VER;
 	memcpy(p_ota_end->ios_mac,tbl_mac,6);
 }
@@ -131,7 +173,15 @@ u8 du_adv_proc(rf_packet_adv_t * p)
 	if(du_ota_reboot_flag){
 		du_adv_ota_end_init(p);	
 	}else{
+		#if (LPN_CONTROL_EN || DU_ULTRA_PROV_EN)
+		if(provision_mag.gatt_mode == GATT_PROVISION_MODE){
+			set_adv_provision(p);
+		}else{
+			set_adv_proxy(p);
+		}
+		#else
 		du_adv_conn_init(p);
+		#endif
 	}
 	if(du_adv_send_en){
 		return 1;
@@ -249,6 +299,13 @@ void start_ota_proc(u8*pbuf)
 		check_and_set_1p95v_to_zbit_flash();
 	#endif
 	du_ota_set_flag(1);
+	#if LPN_CONTROL_EN
+		#if LPN_FAST_OTA_EN  // it will not sleep
+			bls_l2cap_requestConnParamUpdate (24, 30, 0, 500);
+		#else // it will enter suspend mode 
+			bls_l2cap_requestConnParamUpdate (48, 56, 0, 500);
+		#endif
+	#endif
 	LOG_MSG_INFO(TL_LOG_NODE_SDK,(u8*)&ota_sts,sizeof(ota_sts),"start_ota_proc",0);
 	bls_du_cmd_rsp(DU_START_OTA_RSP,(u8*)&ota_sts,sizeof(ota_sts));
 }
@@ -343,7 +400,7 @@ void buffer_chk_cmd_proc(u8*pbuf)
 				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"telink ota chk err %x",err);
 				start_reboot();
 			}
-			du_chk.fw_len = get_fw_len();
+			du_chk.fw_len = get_fw_len();
 			if(du_chk.fw_len > 0x30000){
 				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"overflow err,ota file len is %x, larger than 0x30000!",du_chk.fw_len);
 				start_reboot();
@@ -467,18 +524,70 @@ void du_ota_suc_reboot(void)
 static u32 du_loop_tick =0;
 
 static u32 du_bind_success_flag =0;
+
+
+
+du_store_str du_store;
+#define DU_PROV_EN_FLAG	0xa55a
+void du_set_gateway_adr(u16 adr)
+{
+	du_store.gw_adr = adr;
+}
+
+u16 du_get_gateway_adr(void)
+{
+	return du_store.gw_adr;
+}
+
+u16 du_set_gateway_roll_flag()
+{
+	du_store.flag = DU_PROV_EN_FLAG;	
+	return du_store.flag;
+}
+void du_store_proc_init()
+{
+	flash_read_page(DU_STORE_ADR,sizeof(du_store),(u8 *)(&du_store));
+	if(du_store.gw_adr == 0xffff && du_store.flag == 0xffff  ){
+		if(is_unicast_adr(du_store.adr)){
+			// transfer to new store mode .
+			du_set_gateway_adr(du_store.adr);
+			#if DU_BIND_CHECK_EN
+			du_set_gateway_roll_flag();
+			#endif
+			flash_write_page(DU_STORE_ADR, sizeof(du_store),(u8 *)(&du_store));
+			return ;
+		}
+	}	
+}
+
+void du_enable_gateway_adr(u8 check_bind)
+{
+	flash_erase_sector(DU_STORE_ADR);
+	if(check_bind){
+		du_set_gateway_roll_flag();
+	}
+	flash_write_page(DU_STORE_ADR,sizeof(du_store),(u8 *)(&du_store));		
+}
+
+u8  du_get_bind_flag(void)
+{
+	if(is_unicast_adr(du_store.gw_adr)&&du_store.flag == DU_PROV_EN_FLAG){
+		return 1;
+	}
+	return 0;
+}
+
 /*
 it is used to contrl the mcu to be low power mode when du provision have complete.
 the last cmd is different by every pid ,it should be check by yourself.
 for example : the pid is 0x006b2d1d,the last cmd is HEARTBEAT_PUB_SET.
 */
-
-static u16 du_bind_gateway_adr = 0;
-void du_bind_end_proc(u16 gatewaye_adr)
+void du_bind_end_proc(u16 gw_adr,u32 time_s)
 {
-	update_du_busy_s(4);	
+	update_du_busy_s(time_s);	
 	du_bind_success_flag = 1;
-	du_bind_gateway_adr = gatewaye_adr;
+	du_set_gateway_adr(gw_adr);
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du bind end callback ",0);
 }
 
 
@@ -495,7 +604,7 @@ void du_busy_proc()
 {
 	if(
 		#if DU_LPN_EN
-		mi_mesh_get_state()&&
+		(mi_mesh_get_state()||blt_state == BLS_LINK_STATE_CONN)&&
 		#endif
 		du_busy_tick&& clock_time_exceed(du_busy_tick,du_busy_s*1000*1000)
 	){
@@ -503,13 +612,14 @@ void du_busy_proc()
 
 		#if DU_LPN_EN
 		mi_mesh_state_set(0);
+			#if !LPN_CONTROL_EN
 		beacon_str_disable();
-		
 		if(is_provision_success()){
 			du_adv_set_send_flag(1);
 		}else{
 			du_adv_set_send_flag(0);
 		}
+			#endif
 		#endif
 
 		if(du_ota_reboot_flag){
@@ -519,8 +629,9 @@ void du_busy_proc()
 
 		if(du_bind_success_flag){
 			du_bind_success_flag = 0;
-			if(du_bind_gateway_adr != 0){
-				du_write_gateway_adr(du_bind_gateway_adr);				
+			if(is_unicast_adr(du_get_gateway_adr())){
+				du_enable_gateway_adr(DU_BIND_CHECK_EN);
+				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"store gateway adr",0);
 			}
 			du_loop_tick = clock_time()-60*CLOCK_SYS_CLOCK_1S;
 		}
@@ -539,6 +650,8 @@ void du_busy_proc()
 // to control the adv send part .
 void du_bls_ll_setAdvEnable(int adv_enable)
 {
+	// not allow to changes the adv state in the lpn control mode .
+	#if !LPN_CONTROL_EN
 	bls_ll_setAdvEnable(adv_enable); 
 
 	if(blt_state == BLS_LINK_STATE_IDLE || blt_state == BLS_LINK_STATE_ADV )
@@ -556,6 +669,7 @@ void du_bls_ll_setAdvEnable(int adv_enable)
 			}
 		}
 	}
+	#endif
 }
 
 typedef struct{
@@ -592,12 +706,13 @@ void du_key_board_long_press_detect()
 		mi_mesh_state_set(1);
 		update_du_busy_s(60);
 		beacon_str_init();
-		
+		#if !LPN_CONTROL_EN
 		if(is_provision_success()){
 			du_adv_set_send_flag(1);
 		}else{
 			du_adv_set_send_flag(0);
 		}
+		#endif
 	}
 	if(sw_but.press_down && clock_time_exceed(sw_but.down_tick,1*1000*1000)){
 		
@@ -608,7 +723,7 @@ void du_key_board_long_press_detect()
 		}else if (sw_but.press_on == 2){
 			// twice press
 			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"twice_press",0);
-			kick_out(0);
+			kick_out(1);
 		}
 		// clear all the sts ,press end 
 		memset(&sw_but,0,sizeof(sw_but));
@@ -655,7 +770,9 @@ void du_loop_proc()
 {
 	du_busy_proc();
 	du_ota_monitor_process();
-	
+	#if DU_ULTRA_PROV_EN
+	mesh_du_ultra_prov_loop();
+	#else
 	#if DU_LPN_EN
 	du_key_board_proc();
 	// demo send cmd.
@@ -663,7 +780,9 @@ void du_loop_proc()
 		!mi_mesh_get_state()&&
 		clock_time_exceed(du_loop_tick,60*1000*1000)){
 		du_loop_tick = clock_time();
+		#if !LPN_CONTROL_EN
 		du_vd_send_loop_proc();
+		#endif
 	}
 		
 	#else
@@ -674,6 +793,7 @@ void du_loop_proc()
 		du_normal_send_demo_event();
 	}
 	#endif
+	#endif
 }
 
 void du_lpn_suspend_enter()
@@ -682,7 +802,7 @@ void du_lpn_suspend_enter()
 }
 void du_ui_proc_init()
 {
-	du_set_gateway_adr(du_read_gateway_adr());
+	du_store_proc_init();// transfer the mode 
 #if DU_BIND_CHECK_EN
 	du_prov_bind_check();
 #endif
@@ -792,40 +912,7 @@ _attribute_ram_code_ int du_fw_proc(void *p)
 	return 1;
 }
 
-static u16 du_gateway_adr =0;
-void du_set_gateway_adr(u16 adr)
-{
-	du_gateway_adr = adr;
-}
 
-u16 du_get_gateway_adr(void)
-{
-	return du_gateway_adr;
-}
-
-void du_write_gateway_adr(u16 adr)
-{
-	flash_erase_sector(DU_STORE_ADR);
-	flash_write_page(DU_STORE_ADR,sizeof(adr),(u8 *)(&adr));		
-}
-
-u16  du_read_gateway_adr(void)
-{
-	u16 temp_adr = 0;
-	flash_read_page(DU_STORE_ADR,sizeof(temp_adr),(u8 *)(&temp_adr));	
-	if(temp_adr == 0xffff){
-		temp_adr =0;
-	}
-	return temp_adr;
-}
-
-u8  du_get_bind_flag(void)
-{
-	if(du_read_gateway_adr()){
-		return 1;
-	}
-	return 0;
-}
 
 
 /*
@@ -918,7 +1005,7 @@ int du_vd_temp_event_send(vd_du_event_t* event)
 
 void du_vd_send_loop_proc()
 {
-	if(blt_state != BLS_LINK_STATE_CONN && (!mi_mesh_get_state())&&du_get_bind_flag()){
+	if(blt_state != BLS_LINK_STATE_CONN && (!mi_mesh_get_state())&&is_unicast_adr(du_get_gateway_adr())){
 
 		vd_du_event_t du_event;
 
@@ -943,5 +1030,439 @@ void du_vd_send_loop_proc()
 	}
 }
 
+#if DU_ULTRA_PROV_EN
+#define dev_key_pad		pro_random
+#define randomc_pad		pro_comfirm
+void mesh_du_ultra_prov_loop()
+{
+	if(genie_nw_cache.tick && clock_time_exceed(genie_nw_cache.tick, 2*1000*1000)){//genie APP rx timeout 
+		genie_nw_cache.tick = 0;
+	}
+
+	if(ultra_prov_tick && clock_time_exceed(ultra_prov_tick, 10*1000*1000)){ // provision timeout
+		ultra_prov_tick = 0;
+		prov_para.provison_rcv_state = LINK_UNPROVISION_STATE;
+	}
+}
+
+void create_sha256_input_string_wihout_comma(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret)
+{
+	u8 idx =0;
+	u8 con_product_id_rev[4];
+	swap32(con_product_id_rev,pid);
+	for(int i=0;i<4;i++){
+		p_input[idx++] = num2char [(con_product_id_rev[i]>>4) & 15];
+		p_input[idx++] = num2char [con_product_id_rev[i] & 15];
+	}
+
+	for(int i=0;i<6;i++){
+		p_input[idx++] = num2char [(p_mac[i]>>4) & 15];
+		p_input[idx++] = num2char [p_mac[i] & 15];
+	}
+
+	for(int i=0;i<16;i++){// need to change to string .
+		p_input[idx++] = num2char [(p_secret[i]>>4) & 15];
+		p_input[idx++] = num2char [p_secret[i] & 15];
+	}
+}
+
+void mesh_du_ble_adv(u8 type, u8 *par, int par_len)
+{
+	mesh_cmd_bear_t cmd_bear_tmp;
+	cmd_bear_tmp.tx_head.par_type =  BEAR_TX_PAR_TYPE_REMAINING_TIMES;
+	cmd_bear_tmp.tx_head.val[0] = 200;
+	cmd_bear_tmp.trans_par_val = TRANSMIT_DEF_PAR;
+	genie_manu_factor_data_t *p_manu_factor = (genie_manu_factor_data_t *) &cmd_bear_tmp.len;
+	p_manu_factor->len_flag = (par_len+7);
+	p_manu_factor->flag_type = GAP_ADTYPE_FLAGS;
+	p_manu_factor->flags = 0x06;
+	
+	du_manu_data_t *p_manu = (du_manu_data_t *) &p_manu_factor->manu_len;
+	p_manu->len = par_len + 4;
+	p_manu->ad_type = GAP_ADTYPE_MANUFACTURER_SPECIFIC;
+	p_manu->cid = VENDOR_ID;
+	p_manu->data_type = type;
+	memcpy(p_manu->data, par, par_len);
+
+	my_fifo_reset(&mesh_adv_cmd_fifo);
+	mesh_tx_cmd_add_packet((u8 *)(&cmd_bear_tmp));
+}
+
+int mesh_du_rcv_random(u8 *p_payload)
+{
+	u8 S1[16];
+	char shar256_in[96];
+	u8 shar256_out[32];
+	du_manu_data_t *p_manu_data = (du_manu_data_t *)p_payload;
+	du_random_t *p_du_random = (du_random_t *)p_manu_data->data;
+
+	if(p_manu_data->len >= 22){
+		if(memcmp(p_manu_data->data, tbl_mac, 2)){
+			return -1;
+		}
+		p_du_random = (du_random_t *)(p_manu_data->data+2);
+	}
+	#if RANDOM_OLD_SAVE_EN
+	memcpy(du_random_a, p_du_random->random_a+6, 2);
+	memcpy(du_random_b, p_du_random->random_b+6, 2);
+	foreach(i, RANDOM_CACHE_NUM){
+		if(!memcmp(du_random_a, random_old.random_a[i], sizeof(random_old.random_a[i])) && !memcmp(du_random_b, random_old.random_b[i], sizeof(random_old.random_b[i]))){
+			return -1;
+		}
+	}
+	#endif
+
+	#if DU_SAMPLE_DATA_TEST_EN
+	RandomC = 0x5a36C781;
+	#else
+	RandomC = myrand();
+	#endif
+// RandomC	
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, randomc_pad, 23, "randomc_pad pre:", 0);
+	memcpy(randomc_pad+19, &RandomC, sizeof(RandomC));
+	endianness_swap_u32(randomc_pad+19);
+
+	#if 1//DU_SAMPLE_DATA_TEST_EN
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, p_du_random->random_a, 8, "RandomA:", 0);
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, p_du_random->random_b, 8, "RandomB:", 0);
+	#endif
+// S1	
+	convert_num2_char(p_du_random->random_a, 0, 8, shar256_in);
+	convert_num2_char(p_du_random->random_b, 0, 8, shar256_in+16);
+	u8 mac[6];
+	swap48(mac, tbl_mac);
+	create_sha256_input_string_wihout_comma(shar256_in+32, (u8 *)&con_product_id, mac, con_sec_data);
+	mbedtls_sha256((u8 *)shar256_in, 84, shar256_out, 0);
+	memcpy(S1, shar256_out, 16);
+	#if DU_SAMPLE_DATA_TEST_EN
+	LOG_USER_MSG_INFO( S1, 16, "S1:", 0);
+	#endif
+// K1	
+	convert_num2_char(p_du_random->random_b, 0, 8, shar256_in);
+	create_sha256_input_string_wihout_comma(shar256_in+16, (u8 *)&con_product_id, mac, con_sec_data);
+	mbedtls_sha256((u8 *)shar256_in, 68, shar256_out, 0);
+	#if DU_SAMPLE_DATA_TEST_EN
+	LOG_USER_MSG_INFO( shar256_out, 16, "K1:", 0);
+	#endif
+// D1
+	tn_aes_cmac(shar256_out, S1, 16, dev_comfirm);
+	#if DU_SAMPLE_DATA_TEST_EN
+	LOG_USER_MSG_INFO( dev_comfirm, 16, "D1:", 0);
+	#endif
+// device key
+	convert_num2_char(p_du_random->random_a, 0, 8, shar256_in);
+	#if 1
+	// have copyed in K1, no need to copy again to save code size.
+	#else
+	create_sha256_input_string(shar256_in+16, (u8 *)&p_three_par->pid, p_three_par->mac, p_three_par->sec_data);
+	#endif
+	mbedtls_sha256((u8 *)shar256_in, 68, shar256_out, 0);
+	memcpy(mesh_key.dev_key, shar256_out, 16);
+	memcpy(dev_key_pad+7, shar256_out, 16);
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, mesh_key.dev_key, 16, "rcv_random,device key:", 0);
+	du_rancomc_t *p_rancomc = (du_rancomc_t *) p_manu_data;
+	p_rancomc->mac[0] = tbl_mac[0];
+	p_rancomc->mac[1] = tbl_mac[1];
+	memcpy(p_rancomc->device_confirm, dev_comfirm, 16);
+	p_rancomc->randomC = RandomC;
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, randomc_pad, 23, "randomc_pad:", 0);
+	mesh_du_ble_adv(p_manu_data->data_type+1, p_rancomc->mac, sizeof(du_rancomc_t)-OFFSETOF(du_rancomc_t, mac));
+	return 0;
+}
+
+int mesh_du_rcv_prov_data(u8 *p_payload)
+{
+	char shar256_in[64];
+	u8 shar256_out[32];
+	du_manu_data_t *p_manu_data = (du_manu_data_t *)p_payload;
+	du_prov_data_t *p_prov_data = (du_prov_data_t *)(p_manu_data->data);
+	#if DU_SAMPLE_DATA_TEST_EN
+	LOG_USER_MSG_INFO(randomc_pad, 23, "RandomC':", 0);
+	LOG_USER_MSG_INFO(dev_key_pad, 23, "DeviceKey':", 0);
+	LOG_USER_MSG_INFO(p_manu_data->data, 23, "%s raw_data:", __func__);
+	#endif
+// d3
+	foreach(i, 23)
+	{
+		p_manu_data->data[i] = randomc_pad[i]^dev_key_pad[i] ^ p_manu_data->data[i];
+	}
+	#if DU_SAMPLE_DATA_TEST_EN
+	LOG_USER_MSG_INFO(randomc_pad, 23, "RandomC':", 0);
+	LOG_USER_MSG_INFO(dev_key_pad, 23, "DeviceKey':", 0);
+	LOG_USER_MSG_INFO(p_manu_data->data, 23, "D3:", 0);
+	#endif
+// s4 
+	u8 salt[] = "XiaoduIoTTinyMesh";
+	memcpy(shar256_in, salt, sizeof(salt)-1);
+	convert_num2_char(dev_comfirm, 0, 16, shar256_in+sizeof(salt)-1);
+	mbedtls_sha256((u8 *)shar256_in, sizeof(salt)-1+32, shar256_out, 0);
+	#if DU_SAMPLE_DATA_TEST_EN
+	LOG_USER_MSG_INFO(shar256_out, 23, "S4:", 0);
+	#endif
+// s2, prov data
+	foreach(i, 23){
+		p_manu_data->data[i] = shar256_out[i] ^ p_manu_data->data[i];
+	}
+	
+	if((p_prov_data->mac[0] != tbl_mac[1]) || (p_prov_data->mac[1] != tbl_mac[0])){
+		return -1;
+	}
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, (u8 *)p_prov_data, 23, "S2:", 0);	
+
+	endianness_swap_u16((u8 *)&p_prov_data->unicast_addr);	
+	#if !DU_SAMPLE_DATA_TEST_EN
+	provison_net_info_str net_info;
+	memset(&net_info, 0, sizeof(net_info));
+	memcpy(net_info.net_work_key, p_prov_data->net_key, 16);
+	net_info.flags = p_prov_data->flag;
+	memcpy(net_info.iv_index+2, p_prov_data->iv_index, 2);
+	net_info.unicast_address = p_prov_data->unicast_addr;
+	mesh_provision_par_set((u8 *)&net_info);
+	#endif
+
+	mesh_du_ble_adv(p_manu_data->data_type+1, prov_para.device_uuid, 16);
+	return 0;
+}
+
+void mesh_du_rcv_appkey(u8 *p_payload)
+{
+	du_manu_data_t *p_manu_data = (du_manu_data_t *)p_payload;
+	du_appkey_t *p_appkey = (du_appkey_t *)p_manu_data->data;
+
+	if(p_manu_data->len >= 25){
+		if(memcmp(p_manu_data->data, tbl_mac, 2)){
+			return;
+		}
+		memcpy(p_manu_data->data, p_manu_data->data+2, 19); // drop mac
+	}
+	#if DU_SAMPLE_DATA_TEST_EN
+	LOG_USER_MSG_INFO(p_manu_data->data, 23, "%s raw_data:", __func__);
+	#endif
+	u8 dev_key_tmp[19]={0};
+	memcpy(dev_key_tmp, mesh_key.dev_key, 16);
+	foreach(i, 19)
+	{
+		p_manu_data->data[i] = dev_key_tmp[i] ^ p_manu_data->data[i];
+	}
+	
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, p_appkey->net_app_idx, 19, "Add AppKey:", 0);
+	#if !DU_SAMPLE_DATA_TEST_EN
+	mesh_app_key_set(APPKEY_ADD, p_appkey->appkey, GET_APPKEY_INDEX(p_appkey->net_app_idx),
+								GET_NETKEY_INDEX(p_appkey->net_app_idx), 1);
+	#endif
+	memcpy(p_manu_data->data, tbl_mac, 2);
+	p_manu_data->data[2] = ST_SUCCESS;
+	mesh_du_ble_adv(p_manu_data->data_type+1, p_manu_data->data, 3);
+}
+
+void mesh_du_adv_proc(u8 *p_payload)
+{	
+	du_manu_data_t *p_manu_data = (du_manu_data_t *)p_payload;	
+	if(is_provision_success()){
+		if(DU_ANDROID_APPKEY == p_manu_data->data_type){
+			mesh_du_rcv_appkey(p_payload);
+		}
+		return;
+	}
+//	LOG_USER_MSG_INFO(0, 0, "data type:0x%x", p_manu_data->data_type);
+	if(LINK_UNPROVISION_STATE == prov_para.provison_rcv_state){		
+		if((DU_TYPE_RANDOM == p_manu_data->data_type) || (DU_ANDROID_RANDOM == p_manu_data->data_type)){
+			ultra_prov_tick = clock_time()|1;
+			if(0 == mesh_du_rcv_random(p_payload)){
+				prov_para.provison_rcv_state = STATE_PRO_DATA;
+			}
+		}
+	}
+	else if(STATE_PRO_DATA == prov_para.provison_rcv_state){
+		if((DU_TYPE_PROV_DATA == p_manu_data->data_type) || (DU_ANDROID_PROV_DATA == p_manu_data->data_type)){
+			if(0 == mesh_du_rcv_prov_data(p_payload)){	
+				ultra_prov_tick = 0;
+			}
+		}
+	}	
+}
+
+int genie_manu_nw_package(genie_nw_cache_t *p)
+{	
+	
+	if(genie_nw_cache.tick){
+		if((genie_nw_cache.msg_id == p->msg_id)){
+			genie_nw_cache.tick = clock_time()|1;
+			if((genie_nw_cache.seg_o == p->seg_o) && ((genie_nw_cache.len_payload+p->len_payload) <= sizeof(genie_nw_cache.payload))){
+				memcpy(genie_nw_cache.payload+genie_nw_cache.len_payload, p->payload, p->len_payload);
+				genie_nw_cache.len_payload += p->len_payload;
+
+				LOG_USER_MSG_INFO((u8 *)p, p->len_payload+OFFSETOF(genie_nw_cache_t, payload), "rcv_seg%d:", genie_nw_cache.seg_o);
+				if(genie_nw_cache.seg_o == p->seg_N){
+					genie_nw_cache.tick = 0;
+					return 1;
+				}
+				genie_nw_cache.seg_o++;
+			}
+		}
+	}
+	else{
+		if((0 == genie_nw_cache.tick)&&(genie_nw_cache.msg_id != p->msg_id)){// new msg
+			if((1 == p->seg_o) && (p->len_payload <= sizeof(genie_nw_cache.payload))){// first packet				
+				genie_nw_cache.tick = clock_time()|1;
+				memcpy(&genie_nw_cache, p, p->len_payload+OFFSETOF(genie_nw_cache_t, payload));
+				genie_nw_cache.seg_o = 2; // first packet is 1, next should be 2
+				LOG_USER_MSG_INFO((u8 *)p, p->len_payload+OFFSETOF(genie_nw_cache_t, payload),"rcv seg1:",0);
+				if(1 == p->seg_N){
+					genie_nw_cache.tick = 0;
+					return 1;
+				}
+
+			}
+		}
+	}
+	return 0;
+}
+
+int app_event_handler_ultra_prov(u8 *p_payload)
+{
+	genie_manu_factor_data_t *p_manu_data = (genie_manu_factor_data_t *)p_payload;
+	#if DU_APP_ADV_CONTROL_EN
+	u8 is_control = 0;
+	#endif
+	ios_app_data_t *p_ios_data = (ios_app_data_t *)p_payload;
+	if((GAP_ADTYPE_MANUFACTURER_SPECIFIC==p_manu_data->manu_type) && (VENDOR_ID == p_manu_data->cid)){//Manufacturer Specific Data
+		du_manu_data_t *p_du = (du_manu_data_t *) &p_manu_data->manu_len;
+		if(p_du->data_type < DU_ANDROID_CONTROL){
+			mesh_du_adv_proc(&p_manu_data->manu_len);
+		}
+		#if DU_APP_ADV_CONTROL_EN
+		else if((DU_ANDROID_CONTROL == p_du->data_type) && (p_du->nw.nid == mesh_key.net_key[0][0].nid_m)){
+			if(genie_manu_nw_package((genie_nw_cache_t *)&p_du->nw.msg_id)){
+				is_control = 1;
+			}
+		}
+		#endif
+	}
+	else if((p_ios_data->uuid_type == GAP_ADTYPE_128BIT_COMPLETE) && (VENDOR_ID == p_ios_data->cid) ){// 128-bit service UUIDs		
+		if(p_ios_data->msg_type < DU_ANDROID_CONTROL){
+			if(0 == memcmp(p_ios_data->ios_prov.mac, tbl_mac, 2)){ 
+				if(genie_manu_nw_package((genie_nw_cache_t *)&p_ios_data->ios_prov.msg_id)){
+					p_ios_data->uuid_len = genie_nw_cache.len_payload + 4;
+					memcpy(&p_ios_data->data, genie_nw_cache.payload, genie_nw_cache.len_payload);  
+					mesh_du_adv_proc(&p_ios_data->uuid_len);
+				}
+			}
+		}
+		#if DU_APP_ADV_CONTROL_EN
+		else if((DU_ANDROID_CONTROL == p_ios_data->msg_type) && (p_ios_data->ios_nw.nid == mesh_key.net_key[0][0].nid_m)){
+			if(genie_manu_nw_package((genie_nw_cache_t *)&p_ios_data->ios_nw.msg_id)){
+				is_control = 1;
+			}
+		}
+		#endif
+	}
+	#if DU_APP_ADV_CONTROL_EN
+	if(is_control){
+		genie_nw_cache.pkt_num = genie_nw_cache.len_payload+1;
+		genie_nw_cache.len_payload = MESH_ADV_TYPE_MESSAGE;						
+		mesh_rc_data_layer_network(&genie_nw_cache.pkt_num, MESH_BEAR_GATT, TRANSMIT_DEF_PAR);
+	}
+	#endif
+
+	return 1;
+}
+
+void du_sample_data_run()
+{
+	u8 RandomA[8] = {0x79,0x48,0x10,0xe7,0x72,0x8a,0x08,0x39};
+	u8 RandomB[8] = {0xa1,0x45,0x0b,0xc1,0xbc,0xda,0xf1,0xf3};
+#if 1 // dec
+	LOG_USER_MSG_INFO(randomc_pad, sizeof(randomc_pad), "mesh_cmd_ut_rx_seg_union:", 0) ;
+	du_manu_data_t manu_random = {
+		.len = 20,
+		.ad_type = GAP_ADTYPE_MANUFACTURER_SPECIFIC,
+		.cid = HTON16(VENDOR_ID),
+		.data_type = DU_TYPE_RANDOM,
+	};
+	memcpy(manu_random.data, RandomA, 8);
+	memcpy(manu_random.data+8, RandomB, 8);
+	mesh_du_rcv_random((u8 *)&manu_random);
+
+	du_manu_data_t manu_prov_data = {
+		.len = 27,
+		.ad_type = GAP_ADTYPE_MANUFACTURER_SPECIFIC,
+		.cid = VENDOR_ID,
+		.data_type = DU_TYPE_PROV_DATA,
+	};
+	u8 d3_pad[23] = {0x6c,0x65,0x29,0x8d,0xc6,0xeb,0xb3,0x1c,0x79,0x9a,0x0a,0x88,0xc7,0xb3,0xf2,0x5c,0x17,0x69,0x36,0x92,0xb0,0x20,0x58};
+	memcpy(manu_prov_data.data, d3_pad, 23);
+	mesh_du_rcv_prov_data((u8 *)&manu_prov_data);
+
+	manu_prov_data.len = 23;
+	manu_prov_data.data_type = DU_ANDROID_APPKEY;
+	du_appkey_t *p_appkey = (du_appkey_t *)&manu_prov_data.data;
+	u8 appkey[19] = {0x28,0xd3,0x7f,0xce,0x11,0xdd,0x08,0xf7,0xe5,0xa9,0x81,0x7b,0x41,0x71,0x64,0x29,0x91,0xf0,0x08};
+	memcpy(p_appkey->net_app_idx, appkey, 19);
+	mesh_du_rcv_appkey((u8 *)&manu_prov_data);
+#else // enc
+	u8 K1[16];
+	u8 S4[23];
+	u8 S1[16];
+	u8 D1[16];
+	u8 D3[23];
+	u8 device_key[16];
+	char salt[] = "XiaoduIoTTinyMesh";
+ 	static u8 shar256_in[96];
+	u8 shar256_out[32];
+	genie_three_par_t *p_three_par = (genie_three_par_t *)genie_three_par;
+
+// K1
+	convert_num2_char(RandomB, 0, 8, shar256_in);
+	create_sha256_input_string(shar256_in+16, (u8 *)&p_three_par->pid, p_three_par->mac, p_three_par->sec_data);
+	mbedtls_sha256(shar256_in, 68, shar256_out);
+	memcpy(K1, shar256_out, 16);
+	mini_printf(K1, 16, "K1:", 0);
+	
+// S1
+	convert_num2_char(RandomA, 0, 8, shar256_in);
+	convert_num2_char(RandomB, 0, 8, shar256_in+16);
+	create_sha256_input_string(shar256_in+32, (u8 *)&p_three_par->pid, p_three_par->mac, p_three_par->sec_data);
+	mbedtls_sha256(shar256_in, 84, shar256_out);
+	memcpy(S1, shar256_out, 16);
+	mini_printf(S1, 16, "S1:", 0);
+
+// D1
+	tn_aes_cmac(K1, S1, 16, D1);
+	mini_printf(D1, 16, "D1:", 0);
+
+// S4
+	memcpy(shar256_in, salt, strlen(salt));
+	convert_num2_char(D1, 0, 16, shar256_in+strlen(salt));
+	mbedtls_sha256(shar256_in, strlen(salt)+32, shar256_out);
+	memcpy(S4, shar256_out, 23);
+	mini_printf(S4, 23, "S4:", 0);
+
+// D3
+	du_prov_data_t du_prov_data = {
+		.mac = {0x2b, 0x00},
+		.net_key = {0xa4,0x75,0x7c,0xf9,0x7b,0x0f,0xaf,0xac,0x3d,0x1d,0x49,0x45,0xb1,0xe9,0x5e,0xd5},
+		.unicast_addr = 0x0001,
+		.iv_index = {0x03, 0x96},
+		.flag = 0,
+	};
+	endianness_swap_u16((u8 *)&du_prov_data.unicast_addr);
+
+	foreach_arr(i,S4){
+		D3[i] = S4[i] ^ *(u8 *)((u8 *)&du_prov_data + i); 
+	}
+	mini_printf((u8 *)&du_prov_data, 23, "S2:", 0);
+	mini_printf(D3, 23, "D3:", 0);
+
+// device key
+	convert_num2_char(RandomA, 0, 8, shar256_in);
+	create_sha256_input_string(shar256_in+16, (u8 *)&p_three_par->pid, p_three_par->mac, p_three_par->sec_data);
+	mbedtls_sha256(shar256_in, 68, shar256_out);
+	memcpy(device_key, shar256_out, 16);
+	mini_printf(device_key, 16, "device_key:", 0);
+#endif
+}
+
+#endif
 #endif
 

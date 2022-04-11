@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app_provison.c 
+ * @file	app_provison.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
@@ -37,6 +40,7 @@
 #endif
 #include "vendor/common/remote_prov.h"
 #include "vendor/common/certify_base/certify_base_crypto.h"
+#include "solicitation_rpl_cfg_model.h"
 
 #define DEBUG_PROXY_SAR_ENABLE 	0
 prov_para_proc_t prov_para;
@@ -336,6 +340,37 @@ void set_adv_provisioner(rf_packet_adv_t * p)
 	return ;
 }
 #endif
+
+#if(MD_CLIENT_EN && MD_SOLI_PDU_RPL_EN)
+int set_adv_solicitation(rf_packet_adv_t * p) 
+{
+	static u32 solici_pdu_tick = 0;
+	if(soli_pdu_adv_cnt && clock_time_exceed(solici_pdu_tick, SOLICI_PDU_INTERVAL_MS*1000)){
+		soli_pdu_adv_cnt--;
+		solici_pdu_tick = clock_time();
+		static soli_pdu_pkt_t soli_pkt;
+		soli_pkt.flag_len = 0x02;
+		soli_pkt.flag_type = GAP_ADTYPE_FLAGS;
+		soli_pkt.flag_content = 0x05;
+		soli_pkt.len = 3;
+		soli_pkt.type = GAP_ADTYPE_16BIT_COMPLETE;
+		soli_pkt.uuid = SIG_MESH_PROXY_SOLI_VAL;
+		soli_pkt.service_len = sizeof(soli_ser_dat_t) + 3;
+		soli_pkt.service_type = GAP_ADTYPE_SERVICE_DATA_UUID_16BIT;
+		soli_pkt.service_uuid = SIG_MESH_PROXY_SOLI_VAL;
+		memcpy(&soli_pkt.service_data, &soli_service_data, sizeof(soli_pkt.service_data));
+		
+		p->header.type = LL_TYPE_ADV_NONCONN_IND;
+		memcpy(p->advA,tbl_mac,6);	
+		memcpy(p->data, &soli_pkt, sizeof(soli_pkt));
+		p->rf_len = 6 + sizeof(soli_pkt);
+		p->dma_len = p->rf_len + 2;	
+		return 1;
+	}
+	return 0;
+}
+#endif
+
 
 void set_adv_provision(rf_packet_adv_t * p) 
 {
@@ -798,14 +833,10 @@ u8 mesh_send_provison_data(u8 pdu_type,u8 bearCode,u8 *para,u8 para_len )
 	return 1;
 }
 
-u8 mesh_send_multi_data(u8 *para , u8 para_len)
+void mesh_send_no_extend_data(u8 *para , u8 para_len)
 {
-    // #define PARA_LEN_MAX       (ADV_PDU_LEN_MAX-(31-23))	// confirm later
 	u8 p_idx=0;
 	u8 start_pkt_flag =1;
-	prov_para.trans_seg_total_len = para_len;
-	prov_para.last_segmentIdx=0;
-	prov_para.trans_start_fcs = crc8_rohc(para,(u16)para_len);
 	if(para_len<=20){
 		prov_para.last_segmentIdx=0;
 		mesh_send_provison_data(TRANS_START,0,para,para_len);
@@ -826,6 +857,24 @@ u8 mesh_send_multi_data(u8 *para , u8 para_len)
 			p_idx += data_len;
 		}
 	}
+}
+
+u8 mesh_send_multi_data(u8 *para , u8 para_len)
+{
+    // #define PARA_LEN_MAX       (ADV_PDU_LEN_MAX-(31-23))	// confirm later
+	prov_para.trans_seg_total_len = para_len;
+	prov_para.last_segmentIdx=0;
+	prov_para.trans_start_fcs = crc8_rohc(para,(u16)para_len);
+#if EXTENDED_ADV_PROV_ENABLE
+	if(is_not_use_extend_adv(EXTEND_PROVISION_FLAG_OP)){
+		mesh_send_no_extend_data(para,para_len);
+	}else{
+		prov_para.last_segmentIdx=0;
+		mesh_send_provison_data(TRANS_START,0,para,para_len);// in the extend mode ,can send directly 
+	}
+#else
+	mesh_send_no_extend_data(para,para_len);
+#endif
 	return 1;
 }
 
@@ -1254,7 +1303,7 @@ void send_comfirm_no_pubkey_cmd()
 	mesh_pro_data_structer *p_send_str = (mesh_pro_data_structer *)(para_pro);
 	u8 prov_private_key[32];
 	get_private_key(prov_private_key);
-	tn_p256_dhkey (ecdh_secret, prov_private_key,confirm_input+0x11+0x40 ,confirm_input+0x11+0x60);
+	tn_p256_dhkey_fast(ecdh_secret, prov_private_key,confirm_input+0x11+0x40 ,confirm_input+0x11+0x60);
 	mesh_sec_prov_confirmation_sec (pro_comfirm, confirm_input, 
 								145, ecdh_secret, pro_random, pro_auth);												
 	set_pro_comfirm(p_send_str,pro_comfirm,get_prov_comfirm_value_len());
@@ -1269,7 +1318,7 @@ void send_comfirm_no_pubkey_cmd_with_ack()
 	mesh_pro_data_structer *p_send_str = (mesh_pro_data_structer *)(para_pro);
 	u8 prov_private_key[32];
 	get_private_key(prov_private_key);
-	tn_p256_dhkey (ecdh_secret, prov_private_key,confirm_input+0x11+0x40 ,confirm_input+0x11+0x60);
+	tn_p256_dhkey_fast(ecdh_secret, prov_private_key,confirm_input+0x11+0x40 ,confirm_input+0x11+0x60);
 	mesh_sec_prov_confirmation_sec (pro_comfirm, confirm_input, 
 								145, ecdh_secret, pro_random, pro_auth);
 	mesh_adv_prov_comfirm_cmd(p_send_str,pro_comfirm);
@@ -1652,6 +1701,13 @@ void dispatch_pb_gatt(u8 *p ,u8 len )
 				}
 				u8 dev_public_key[64];
 				get_public_key(dev_public_key);
+				#if PROV_AUTH_LEAK_REFLECT_EN
+				if(!memcmp(p_rcv_str->pubkey.pubKeyX,dev_public_key,sizeof(dev_public_key))){
+					// the pubkey is the same with the master .it will need to recreate.
+					init_ecc_key_pair(1);
+					get_public_key(dev_public_key);
+				}
+				#endif
 				memcpy(confirm_input+0x11,p_rcv_str->pubkey.pubKeyX,0x40);
 				memcpy(confirm_input+0x11+0x40,dev_public_key,0x40);
 				prov_para.provison_rcv_state =STATE_DEV_PUB_KEY;
@@ -1697,8 +1753,7 @@ void dispatch_pb_gatt(u8 *p ,u8 len )
 				p_comfirm = &(p_rcv_str->comfirm);
 				memcpy(pro_comfirm,p_comfirm->comfirm,get_prov_comfirm_value_len());
 				get_private_key(dev_private_key);
-				tn_p256_dhkey (ecdh_secret, dev_private_key, confirm_input+0x11, confirm_input+0x11+0x20);
-				
+				tn_p256_dhkey_fast(ecdh_secret, dev_private_key, confirm_input+0x11, confirm_input+0x11+0x20);
 				#if(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
 				u8 node_auth[16];
 				caculate_sha256_node_auth_value(node_auth);
@@ -1813,14 +1868,14 @@ void dispatch_pb_gatt(u8 *p ,u8 len )
 void mesh_adv_provision_retry()
 {
 	// if the retry time excced about 20s ,it will reset the states 
-	if(prov_para.cmd_retry_flag &&clock_time_exceed(prov_para.cmd_send_start_tick,PROV_ADV_TIMEOUT_MS)){
+	if(prov_para.cmd_retry_flag &&clock_time_exceed(prov_para.cmd_send_start_tick,PROV_ADV_TIMEOUT_MS*1000)){
 		mesh_provision_para_reset();
 		LOG_MSG_ERR(TL_LOG_NODE_SDK, 0, 0,"provision time_out",0);
 		mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_TIMEOUT);
 		prov_para.cmd_send_start_tick = clock_time();
 	}
 	if(	prov_para.cmd_retry_flag &&
-		clock_time_exceed(prov_para.cmd_send_tick ,EXTENDED_ADV_ENABLE ? (300*1000) : (150*1000))){
+		clock_time_exceed(prov_para.cmd_send_tick ,PROVISION_ADV_RETRY_MS*1000)){
 		
 		if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)>2){//make sure enough buf
 			return;
@@ -1833,6 +1888,9 @@ void mesh_adv_provision_retry()
 		    if(prov_para.pro_bearerCode == LINK_OPEN){
                 mesh_send_provison_data(BEARS_CTL,prov_para.pro_bearerCode,prov_link_uuid,sizeof(prov_link_uuid));
 		    }else{
+		    	if(prov_para.ack_retry_flag){ //whether need to send link close in the provision end .
+					mesh_send_provison_data(TRANS_ACK,0,0,0);
+				}
                 mesh_send_provison_data(BEARS_CTL,prov_para.pro_bearerCode,0,0);
 		    }
 		}
@@ -1852,8 +1910,8 @@ void mesh_adv_provision_retry()
 		}
 		prov_para.cmd_send_tick =clock_time();
 		if(prov_para.link_close_flag && prov_para.link_close_cnt){
-			prov_para.link_close_cnt -- ;
-			if(prov_para.link_close_cnt --){
+			prov_para.link_close_cnt-- ;
+			if(prov_para.link_close_cnt--){
 				mesh_send_provison_data(BEARS_CTL,LINK_CLOSE,0,0);
 			}else{
 				prov_para.link_close_flag =0;
@@ -2104,13 +2162,16 @@ void mesh_prov_link_close_terminate()
 		mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_CLOSE);
 	}
 }
-void mesh_terminate_provision_link_reset(u8 code)
+void mesh_terminate_provision_link_reset(u8 code,u8 ack)
 {	
 	send_rcv_retry_clr();
 	gateway_adv_filter_init();
+	if(ack){
+		mesh_send_provison_data(TRANS_ACK,0,0,0); 
+	}
 	prov_set_link_close_code(code);
 	mesh_send_provison_data(BEARS_CTL,LINK_CLOSE,0,0);
-	send_rcv_retry_set(PRO_BEARS_CTL,LINK_CLOSE, 0); 
+	send_rcv_retry_set(PRO_BEARS_CTL,LINK_CLOSE, ack); 
 	LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"send link close",0);
 	link_close_end_tick = clock_time()|1;
 }
@@ -2190,6 +2251,9 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 	if((prov_para.cert_ack_hold == 0)&& p_adv->transAck.GPCF == TRANS_ACK&&p_adv->trans_num >= prov_para.trans_num_last){
 		LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 
 						0,"rcv transation ack(transation:0x%02x)",p_adv->trans_num);
+		if(prov_para.provison_rcv_state >= STATE_PRO_START_ACK){
+			send_rcv_retry_clr();//stop send cmd when receive ack
+		}
 		send_rcv_retry_clr();//stop send cmd when receive ack
 		prov_para.trans_num_last = p_adv->trans_num + 2; // receive trans ack once
 		if(prov_para.provison_rcv_state == STATE_PRO_COMPLETE){			
@@ -2197,7 +2261,7 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 			mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_SUC);
 		}
 		else if(prov_para.provison_rcv_state == STATE_PRO_FAILED_ACK){
-			mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL);
+			mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL,0);
 		}
 		return;
 	}
@@ -2361,7 +2425,7 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 			if(p_adv->transBear.bearAck.header.GPCF == TRANS_START &&
 				p_adv->transStart.data[0]== PRO_PUB_KEY){
 				if(!mesh_check_pubkey_valid(p_rcv_str->pubkey.pubKeyX)){
-				    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"adv the pubkey value is unvalid",0);
+				    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"adv the pubkey value is invalid",0);
 					set_rsp_ack_transnum(p_adv);
 					send_rcv_retry_clr();
 					mesh_send_provison_data(TRANS_ACK,0,0,0);
@@ -2378,6 +2442,13 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 								sizeof(pro_trans_pubkey),"rcv pubkey cmd ",0);
 				u8 dev_public_key[64];
 				get_public_key(dev_public_key);
+				#if PROV_AUTH_LEAK_REFLECT_EN
+				if(!memcmp(p_rcv_str->pubkey.pubKeyX,dev_public_key,sizeof(dev_public_key))){
+					// the pubkey is the same with the master .it will need to recreate.
+					init_ecc_key_pair(1);
+					get_public_key(dev_public_key);
+				}
+				#endif
 				set_rsp_ack_transnum(p_adv);
 				send_rcv_retry_clr();
 				memcpy(confirm_input+0x11,p_rcv_str->pubkey.pubKeyX,0x40);
@@ -2447,8 +2518,7 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 					u8 dev_private_key[32];
 					memcpy(pro_comfirm,p_comfirm->comfirm,get_prov_comfirm_value_len());
 					get_private_key(dev_private_key);
-					tn_p256_dhkey (ecdh_secret, dev_private_key, confirm_input+0x11, confirm_input+0x11+0x20);
-					
+					tn_p256_dhkey_fast(ecdh_secret, dev_private_key, confirm_input+0x11, confirm_input+0x11+0x20);
 					#if(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
 					u8 node_auth[16];
 					caculate_sha256_node_auth_value(node_auth);
@@ -2783,7 +2853,7 @@ void mesh_loop_check_link_close_flag()
 {
 	if(link_close_start_tick&& clock_time_exceed(link_close_start_tick,6*1000*1000)){
 		{
-			mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL);
+			mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL,0);
 			link_close_start_tick = 0;
 		}
 	}
@@ -2974,8 +3044,12 @@ void mesh_adv_prov_complete_rsp(pro_PB_ADV *p_adv)
     SET_TC_FIFO(TSCRIPT_MESH_RX,(u8 *)p_adv,p_adv->length+1);               
     set_rsp_ack_transnum(p_adv);
     send_rcv_retry_clr();
+	#if 0 //only send tranack 
     mesh_send_provison_data(TRANS_ACK,0,0,0); 
     send_rcv_retry_set(PRO_COMMAND_ACK,0,0);
+    #else
+    mesh_terminate_provision_link_reset(LINK_CLOSE_SUCC,1);
+	#endif
     SET_RESULT_TESTCASE(0,0);
 }
 void mesh_adv_prov_link_close()
@@ -3027,7 +3101,7 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 		#if GATEWAY_ENABLE
 		gateway_upload_prov_cmd((u8 *)p_rcv_str,PRO_FAIL);
 		#endif
-		mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL);
+		mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL,0);
 		return;
 	}
 	
@@ -3223,7 +3297,7 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 			 break;
 		case STATE_PRO_FAILED_ACK:
 			// send the link close cmd 
-			mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL);
+			mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL,0);
 			break;
 		case STATE_DEV_PUB_KEY_OUTPUT_OOB:
 				// switch to mainloop process part
@@ -3303,7 +3377,7 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 					#if PROV_AUTH_LEAK_REFLECT_EN
 					if(prov_comfirm_check_same_or_not((u8*)&(p_rcv_str->comfirm),pro_comfirm)){
 						// send the link close cmd 
-						mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL);
+						mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL,0);
 					}
 					#endif
 					
@@ -3351,7 +3425,7 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 						static u32 A_debug_dev_comfirm_err =0;
 						A_debug_dev_comfirm_err++;
 						// send the link close cmd 
-						mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL);
+						mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL,0);
 					}
 					u8 pro_session_nonce[16]; // byte 3~15 is session nonce
 					u8 pro_session_key[16];
@@ -3409,7 +3483,7 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 					LOG_MSG_INFO(TL_LOG_PROVISION, 0, 0,"rcv prov complete",0);
 				    mesh_adv_prov_complete_rsp(p_adv);
 					mesh_prov_end_set_tick();
-					mesh_node_prov_event_callback(EVENT_MESH_PRO_RC_LINK_SUC);
+					//mesh_node_prov_event_callback(EVENT_MESH_PRO_RC_LINK_SUC);
 				}
 			break;
 		default:
@@ -3999,6 +4073,7 @@ u8 VC_search_and_bind_model()
             memcpy(&model_id, p_model_id->id+p->model_bind_index*2, 2);
             if(is_use_device_key(model_id, 1)){
                 p->model_bind_index++;
+				mesh_kr_cfgcl_retry_init();
             }else{
                 LOG_MSG_INFO(TL_LOG_KEY_BIND,0,0,"SEND: appkey bind addr: 0x%04x,sig model id: 0x%04x ",ele_adr,model_id);
 
@@ -4015,6 +4090,7 @@ u8 VC_search_and_bind_model()
             memcpy(&model_id, p_model_id->id+p_model_id->nums*2+(p->model_bind_index-p_model_id->nums)*4, 4);
             if(is_use_device_key(model_id, 0)){ // some vendor model also may use device key.
                 p->model_bind_index++;
+				mesh_kr_cfgcl_retry_init();
             }else{
                 LOG_MSG_INFO(TL_LOG_KEY_BIND,0,0,"SEND: appkey bind addr: 0x%04x,vendor model id: 0x%08x ",ele_adr,model_id);
     			if((!p->is_new_model) && (p->model_id != model_id)){

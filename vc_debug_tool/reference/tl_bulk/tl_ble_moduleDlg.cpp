@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     tl_ble_moduleDlg.cpp 
+ * @file	tl_ble_moduleDlg.cpp
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	Mesh Group
+ * @date	2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 // tl_ble_moduleDlg.cpp : implementation file
 //
@@ -82,6 +85,7 @@ unsigned char adv_enable =1;
 int disable_log_cmd = 0;
 CTl_ble_moduleDlg*  g_module_dlg=NULL;
 provision_mac_str_t mac_str;
+u8 mesh_lpn_rx_master_key = 0;
 
 #if (DRAFT_FEATURE_VENDOR_TYPE_SEL != DRAFT_FEATURE_VENDOR_TYPE_NONE)
 STATIC_ASSERT(0x0171 == VENDOR_ID);
@@ -240,7 +244,10 @@ UINT ThreadBulkIn ( void* pParams )
 			if (bok) {	// send to log window
 				//::SendMessage(AfxGetMainWnd()->GetSafeHwnd(), WM_APPENDLOG, nB, (LPARAM)buff);
 				//WaitForSingleObject (NULLEVENT2, REPORT_INTERVAL_ADV_MS - 1);
-				dlg->OnAppendLog(nB, (LPARAM)buff);
+				if(nB > 0) {
+					// after pull out master dongle, and the insert, the first packet is insert event, not a packet, and the length is 0.
+					dlg->OnAppendLog(nB, (LPARAM)buff);
+				}
 			}
 			else {
 				m_hDev = NULL;
@@ -871,7 +878,7 @@ void CTl_ble_moduleDlg::append_log()
 			return;
 		}
 
-		// 将多个log，拼接一次显示。
+		// joint logs together.
 		char *log_tmp = print_buffer;
 		int log_len_max = LOG_TMP_LEN_DEFAULT;
 		int log_count = 0;
@@ -1625,6 +1632,9 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 			static u16 gateway_rsp_len =0;
 			static u8 gateway_rsp_buf[512];
 			u8 type = pu[1];
+			if(n < 2){
+				return 0;
+			}
 			u16 rsp_len = n-2;
 			if(type == HCI_GATEWAY_RSP_OP_CODE){
                 // proc the json file and the rsp part 
@@ -1935,7 +1945,7 @@ LRESULT  CTl_ble_moduleDlg::OnAppendLogHandle (WPARAM wParam, LPARAM lParam )
 				u8  fwRevision_value [FW_REVISION_VALUE_LEN]={0};
 				memcpy(fwRevision_value,pu+2,pu[1]);
 				LOG_MSG_INFO (TL_LOG_COMMON, fwRevision_value, 
-					sizeof(fwRevision_value), "the fw version is ", 0);
+					sizeof(fwRevision_value), "slave fw version is ", 0);
 				u8 auth_en;
 				auth_en = fwRevision_value[FW_REVISION_VALUE_LEN-2];
 			}
@@ -2012,13 +2022,14 @@ void CTl_ble_moduleDlg::OnLogclear()
 void CTl_ble_moduleDlg::set_window_text(CString text)
 {
 	CString version;
-	u8 v1 = (FW_VERSION_TELINK_RELEASE_3&0xFF)-0x30;
-	u8 v2 = ((FW_VERSION_TELINK_RELEASE_3>>8)&0xFF)-0x30;
-	u8 v3 = ((FW_VERSION_TELINK_RELEASE_3>>16)&0xFF)-0x30;
+	u8 v1 = SW_VERSION_SPEC;
+	u8 v2 = SW_VERSION_MAJOR;
+	u8 v3 = SW_VERSION_MINOR;
+	u8 v4 = SW_VERSION_2ND_MINOR;
 	#if (DRAFT_FEATURE_VENDOR_TYPE_SEL != DRAFT_FEATURE_VENDOR_TYPE_NONE)
-	version.Format("    V%X.%X.%X   vendor OTA mode", v1, v2, v3);
+	version.Format("    V%X.%X.%X.%X   vendor OTA mode", v1, v2, v3, v4);
 	#else
-	version.Format("    V%X.%X.%X", v1, v2, v3);
+	version.Format("    V%X.%X.%X.%X", v1, v2, v3, v4);
 	#endif
 	SetWindowText(text + version);
 }
@@ -2968,7 +2979,7 @@ void CTl_ble_moduleDlg::OnBnClickedUartMode()
 		;
 	}
 	else{
-		MessageBox(_T("串口对象创建失败"));
+		MessageBox(_T("fail to create Serial port object"));
 		OnCancel();
 	}
 	connect_serial_port = false;

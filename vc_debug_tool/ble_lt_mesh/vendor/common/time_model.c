@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     time_model.c 
+ * @file	time_model.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "proj/tl_common.h"
 #ifndef WIN32
@@ -371,7 +374,7 @@ int mesh_cmd_sig_time_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	int err = 0;
     mesh_time_set((time_status_t *)par);
     
-	mesh_time_st_rsp(cb_par);
+	err = mesh_time_st_rsp(cb_par);
 	
     return err;
 }
@@ -406,7 +409,7 @@ int mesh_cmd_sig_time_zone_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	mesh_time.zone_offset_new = p_set->zone_offset_new;
 	memcpy(mesh_time.TAI_zone_change, p_set->TAI_zone_change, 5);
     
-	mesh_time_zone_st_rsp(cb_par);
+	err = mesh_time_zone_st_rsp(cb_par);
 	mesh_time.time.zone_offset = p_set->zone_offset_new;	// set later
 	
     return err;
@@ -436,13 +439,13 @@ int mesh_cmd_sig_time_TAI_UTC_delta_get(u8 *par, int par_len, mesh_cb_fun_par_t 
 
 int mesh_cmd_sig_time_TAI_UTC_delta_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	int err = 0;
+	int err = -1;
     mesh_time_TAI_UTC_delta_set_t *p_set = (mesh_time_TAI_UTC_delta_set_t *)par;
 
 	mesh_time.delta_new = p_set->delta_new;
 	memcpy(mesh_time.TAI_delta_change, p_set->TAI_delta_change, 5);
     
-	mesh_time_TAI_UTC_delta_st_rsp(cb_par);
+	err = mesh_time_TAI_UTC_delta_st_rsp(cb_par);
 	mesh_time.time.TAI_UTC_delta = p_set->delta_new;	// set later
 	
     return err;
@@ -483,7 +486,7 @@ int mesh_cmd_sig_time_role_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	u8 role = par[0];
 	if(role < TIME_ROLE_MAX){
 		mesh_time.role = role;    
-		mesh_time_role_st_rsp(cb_par);
+		err = mesh_time_role_st_rsp(cb_par);
 	}
 	
     return err;

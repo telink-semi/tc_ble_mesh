@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app_att.c 
+ * @file	app_att.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "proj/tl_common.h"
 #include "proj_lib/ble/ll/ll.h"
@@ -379,7 +382,7 @@ int mi_empty_writeback(void * p)
 #define BLE_UUID_DU_OTA_DATA   {0xfb,0x34,0x9b,0x5f,0x80,0x00,0x00,0x80,0x00,0x10,0x00,0x00,0x01,0xff,0x00,0x00}
 
 const u8  du_pri_service_uuid[16] = BLE_UUID_DU_OTA_SRV;
-//const u16 du_pri_service_uuid = 0xffb0;
+const u16 du_pri_service_uuid_16 = 0xffb0;
 const u8  du_ctl_uuid[16] = BLE_UUID_DU_OTA_CTR;
 //const u16 du_ctl_uuid = 0xff00;
 const u8  du_ctl_prop = CHAR_PROP_WRITE|CHAR_PROP_NOTIFY;
@@ -693,7 +696,7 @@ const attribute_t my_Attributes[] = {
 #if DU_ENABLE
 int bls_du_notify_rsp(u8*p_buf,int len)
 {
-	return  bls_att_pushIndicateData(ATT_NUM_START_DU+2,p_buf,len);
+	return  bls_att_pushNotifyData(ATT_NUM_START_DU+2,p_buf,len);
 }
 #endif
 

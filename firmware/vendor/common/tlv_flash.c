@@ -1,5 +1,30 @@
+/********************************************************************************************************
+ * @file	tlv_flash.c
+ *
+ * @brief	This is the source file for BLE SDK
+ *
+ * @author	Mesh Group
+ * @date	2021
+ *
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
+ *******************************************************************************************************/
 #include "tlv_flash.h"
 #include "app_provison.h"
+#include "mesh_common.h"
 #if TLV_ENABLE
 extern unsigned short crc16(unsigned char *pD, int len);
 STATIC_ASSERT((sizeof(tlv_str_t)+TLV_REC_WHOLE_PACKET_BUF) == (sizeof(tlv_str_max_t)+TLV_REC_MAX_BUF_CNT)); // make sure the two heads are same.
@@ -150,7 +175,13 @@ u8 get_tlv_record_adr(u32 record_id,u32 *rec_adr,u32 *rec_last,u32 *p_rec_len)
 	u32 end = tlv_rec.end;
 	u8 valid =0;
 	u32 adr_cnt =0;
+	u32 total_cnt =0;
 	u8 skip_flag =0;
+	if(start < end){
+		total_cnt = end -start;
+	}else{
+		total_cnt = end+TLV_FLASH_MAX_INTER-start;
+	}
 	while(start != end){
 		// need to find the last rec id ?
 		tlv_str_t tlv_data;
@@ -170,9 +201,10 @@ u8 get_tlv_record_adr(u32 record_id,u32 *rec_adr,u32 *rec_last,u32 *p_rec_len)
 			wd_clear(); //clear watch dog
 			#endif
 		}else if (tlv_data.id == TLV_EMPTY_ID){
+			// get the adr cnt first 
+			adr_cnt +=(TLV_SEC_SIZE-start%TLV_SEC_SIZE);	
 			// jump to next sector
 			start = tlv_get_round_adr(TLV_SECTOR_START(start)+TLV_SEC_SIZE);
-			adr_cnt +=(TLV_SECTOR_START(start)+TLV_SEC_SIZE-start);
 			continue;
 		}
 		else{
@@ -180,16 +212,17 @@ u8 get_tlv_record_adr(u32 record_id,u32 *rec_adr,u32 *rec_last,u32 *p_rec_len)
 			skip_flag =1;
 		}
 		if((start+TLV_CONTENT_LEN)>=(TLV_SECTOR_START(start)+TLV_FLASH_SECTOR_END_ADR)){
+			// get the adr cnt first 
+			adr_cnt +=(TLV_SEC_SIZE-start%TLV_SEC_SIZE);
 			// jump to next sector
 			start = tlv_get_round_adr(TLV_SECTOR_START(start)+TLV_SEC_SIZE);
-			adr_cnt +=(TLV_SECTOR_START(start)+TLV_SEC_SIZE-start);
 		}else if (skip_flag){
 			skip_flag =0;
-			start++;
+			start =tlv_get_round_adr(start+1);
 			adr_cnt++;
 		}
-		if(adr_cnt>=TLV_FLASH_MAX_INTER){
-			// to avoid the loop can not jump out
+		if(adr_cnt>=total_cnt){
+			// already accomplish all the record.
 			break;
 		}
 	}
@@ -288,10 +321,24 @@ u32 get_tlv_end_by_inter(u32 start,u32 end)
 
 }
 
+
+void save_map_len_check()
+{
+	static u32 A_debug_save_map_check=0;
+	for(int i=0;i<mesh_save_map_array;i++){
+		if(mesh_save_map[i].size_save_par > TLV_REC_WHOLE_PACKET_BUF){
+			A_debug_save_map_check++;
+			LOG_MSG_ERR(TL_LOG_NODE_SDK,0,0,"tlv buffer error ,save map is %x,len is %x",i,mesh_save_map[i].size_save_par);
+		}
+	}
+}
+
+
 void tlv_init()
 {
 	// find the empty cnt in the record flash part 
 	u32 first_empty;
+	save_map_len_check();
 	tlv_rec_para_init();
 	u8 cnt =tlv_empty_cnt_get(&first_empty);
 	if(cnt == TLV_FLASH_MAX_INTER/TLV_SEC_SIZE){
@@ -346,6 +393,7 @@ void tlv_rec_clear(u32 id)
 	if(get_tlv_record_adr(id,&rec_adr,&rec_adr_last,&rec_len)){
 //		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"rec clear id is %x,last adr is %x",id,rec_adr_last);
 		if(rec_adr_last!=0){
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"rec clear id is %x,last adr is %x",id,rec_adr_last);
 			tlv_disable_record(rec_adr_last);
 		}
 	}

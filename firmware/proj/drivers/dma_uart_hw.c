@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     dma_uart_hw.c 
+ * @file	dma_uart_hw.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "../tl_common.h"
 #include "dma_uart_hw.h"
 
@@ -36,7 +38,7 @@ u8 *uartRxBufPtr = &uartRxBuf[0];
 u32 uartBaudrate;
 void uartOpen(u32 baudrate){
 	uartBaudrate = baudrate;
-	// refine this,  ¿´ÈçºÎ×öµ½Îó²î×îĞ¡,  acceptable now
+	// refine this,  çœ‹å¦‚ä½•åšåˆ°è¯¯å·®æœ€å°,  acceptable now
 	if(115200 == baudrate){
 		const u8 bpwc = 5;
 		reg_uart_clk_div = FLD_UART_CLK_DIV_EN | (((CLOCK_SYS_CLOCK_HZ / bpwc) + baudrate / 2) / baudrate - 1 );
@@ -46,16 +48,16 @@ void uartOpen(u32 baudrate){
 		reg_uart_clk_div = FLD_UART_CLK_DIV_EN | (((CLOCK_SYS_CLOCK_HZ / bpwc) + baudrate / 2) / baudrate - 1 );
 		reg_uart_ctrl0 = (bpwc - 1) | FLD_UART_RX_DMA_EN | FLD_UART_TX_DMA_EN;
 	}
-	// ´ÓÊ¾²¨Æ÷¿´£¬Õâ¸öÊ±¼ä¼ÆËã¸úÎÄµµ²»Ò»Ñù
-	reg_uart_rx_timeout = (4 * (1 + 8 + 1)) | BIT(8);	//  10 bits timeout,  Ì«³¤µÄÊ±¼ä»áÓ°Ïì¹¦ºÄ,  ÒòÎª rx Íê³ÉÖĞ¶ÏÀ´µÃÌ«Âı
+	// ä»ç¤ºæ³¢å™¨çœ‹ï¼Œè¿™ä¸ªæ—¶é—´è®¡ç®—è·Ÿæ–‡æ¡£ä¸ä¸€æ ·
+	reg_uart_rx_timeout = (4 * (1 + 8 + 1)) | BIT(8);	//  10 bits timeout,  å¤ªé•¿çš„æ—¶é—´ä¼šå½±å“åŠŸè€—,  å› ä¸º rx å®Œæˆä¸­æ–­æ¥å¾—å¤ªæ…¢
 	reg_dma_uart_rx_addr = (u16)(u32)(uartRxBufPtr);
 #if(__GPIO_DEBUG__)	
 	reg_gpio_pc_oen = ~(GPIO_PC2 | GPIO_PC3 | GPIO_PC4 | GPIO_PC5);
 #endif
 }
 
-// RX Ğ´³ÉÕâÑùÊÇÏ£ÍûÄÜ¹»´Óuart DMA Ö±½Ó×ªµ½RF DMA,  ¶ø²»ĞèÒª¿½±´ÄÚ´æ¡£
-// ×öµ½×î¿ìµÄÍ¸´«ËÙ¶È,  µ«ÊÇÓÉÓÚ att write ÃüÁîÊı¾İ²»ÊÇ4 ×Ô¼º¶ÔÆë£¬ËùÒÔÎŞ·¨×öµ½¡£
+// RX å†™æˆè¿™æ ·æ˜¯å¸Œæœ›èƒ½å¤Ÿä»uart DMA ç›´æ¥è½¬åˆ°RF DMA,  è€Œä¸éœ€è¦æ‹·è´å†…å­˜ã€‚
+// åšåˆ°æœ€å¿«çš„é€ä¼ é€Ÿåº¦,  ä½†æ˜¯ç”±äº att write å‘½ä»¤æ•°æ®ä¸æ˜¯4 è‡ªå·±å¯¹é½ï¼Œæ‰€ä»¥æ— æ³•åšåˆ°ã€‚
 static inline void uartSetNextRxBuff(){
 	if(uartRxBufPtr == &uartRxBuf[0]){
 		uartRxBufPtr += UART_RX_BUF_SIZE;

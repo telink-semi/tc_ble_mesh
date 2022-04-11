@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     remote_prov.h 
+ * @file	remote_prov.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef _REMOTE_PROV_H
 #define _REMOTE_PROV_H
 
@@ -305,7 +307,8 @@ typedef struct{
 #define REMOTE_PROV_SERVER_CMD_FLAG         0x80
 #define REMOTE_PROV_SERVER_OUTBOUND_FLAG    0x40
 
-#define REMOTE_PROV_SERVER_RETRY_INTER  100*1000
+#define REMOTE_PROV_SERVER_RETRY_INTER  3000*1000
+
 typedef struct{
     u8 retry_flag;
     u32 tick;
@@ -402,6 +405,8 @@ int mesh_cmd_sig_send_rp_pdu_send(u8 *par,int par_len);
 void mesh_prov_pdu_send_retry_clear();
 void mesh_rp_netkey_del_cb(u8 idx,u16 op);
 void mesh_prov_pdu_send_retry_set(pro_PB_ADV *p_adv,u8 flag);
+int mesh_prov_server_to_client_cmd(u8 *prov_dat,u8 len);
+void mesh_rp_server_set_link_rp_sts(u8 sts);
 
 // remote prov client part 
 typedef struct{
@@ -477,18 +482,20 @@ void mesh_rp_pdu_retry_send();
 void mesh_rp_client_para_reset();
 void mesh_rp_dkri_end_cb();
 int mesh_cmd_extend_loop_cb(event_adv_report_t *report);
-u8 conn_adv_type_is_valid_in_extend(u8* p_rf_pkt);
 u8 mesh_extend_scan_proc_is_valid();
 int send_rp_scan_start(u16 adr,u8 limit,u8 timeout);
 int send_rp_extend_scan_start(u16 adr,u8* p_adtype,u8 cnt);
 void mesh_rp_server_set_link_sts(u8 sts);
 int mesh_cmd_conn_prov_adv_cb(event_adv_report_t *report);
+void mesh_layer_link_close_rsp(u8 reason);
+int mesh_tx_send_extend_scan_limit_report(u8 sts,u8 *p_uuid,u16 dst);
 
 #if WIN32
 void mesh_prov_set_cli_dkri(u8 dkri);
 void mesh_prov_set_adr_dev_candi(u16 adr,u8 *p_dev);
 u8 mesh_prov_dkri_is_valid();
 void mesh_prov_dev_candi_store_proc(u16 cmd_src);
+u8  is_rp_working();
 #endif
 
 void gw_get_rp_mode(u8 en);
