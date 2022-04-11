@@ -38,9 +38,12 @@
         self.type = SigLowerTransportPduType_controlMessage;
         _opCode = 0x00;
         _isOnBehalfOfLowPowerNode = false;// Friendship is not supported.
-        /// Last 13 bits of the sequence number are known as seqZero.
-        UInt16 sequenceZero = (UInt16)(networkPdu.sequence & 0x1FFF);
-        _sequenceZero = sequenceZero;
+        NSData *data = networkPdu.transportPdu;
+        Byte *dataByte = (Byte *)data.bytes;
+        UInt8 tem1 = 0,tem2=0;
+        memcpy(&tem1, dataByte+1, 1);
+        memcpy(&tem2, dataByte+2, 1);
+        _sequenceZero = (UInt16)(((tem1 & 0x7F) << 6) | (UInt16)tem2 >> 2);
         _blockAck = 0;
         UInt32 bigAck = 0;
         self.upperTransportPdu = [NSData dataWithBytes:&bigAck length:4];

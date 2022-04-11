@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     generic_model.c 
+ * @file	generic_model.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "proj/tl_common.h"
 #ifndef WIN32
@@ -242,6 +245,9 @@ int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	else{
 		mesh_rcv_cmd.ack_pkt_num = 1;
 	}
+#endif
+#if LPN_CONTROL_EN // just for test 
+	p_set->transit_t = 0;
 #endif
 
     st_pub_list_t pub_list = {{0}};
@@ -1200,6 +1206,7 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
     #if (DISTRIBUTOR_UPDATE_CLIENT_EN || DISTRIBUTOR_UPDATE_SERVER_EN)
     CMD_NO_STR(FW_DISTRIBUT_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_get, FW_DISTRIBUT_STATUS),
     CMD_NO_STR(FW_DISTRIBUT_START, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_start, FW_DISTRIBUT_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_SUSPEND, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_suspend, FW_DISTRIBUT_STATUS),
     CMD_NO_STR(FW_DISTRIBUT_CANCEL, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_cancel, FW_DISTRIBUT_STATUS),
     CMD_NO_STR(FW_DISTRIBUT_APPLY, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_apply, FW_DISTRIBUT_STATUS),
     CMD_NO_STR(FW_DISTRIBUT_STATUS, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_status, STATUS_NONE),

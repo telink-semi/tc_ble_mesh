@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     user_ali.c 
+ * @file	user_ali.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "user_ali.h"
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
@@ -73,16 +75,29 @@ u8 con_sec_data[16];
 	u8 con_sec_data[16];
 	#else
 		#if DU_LPN_EN
+			#if LPN_CONTROL_EN
+	u32 con_product_id=DU_PID;// little endiness 
+	//48f3f3bf28b0
+	u8  con_mac_address[6]={0xb0,0x28,0xbf,0xf3,0xf3,0x48};
+	//e2458e28034096672f7a4cc5dcae47a5
+	u8 con_sec_data[16]={0xe2,0x45,0x8e,0x28,	0x03,0x40,0x96,0x67,
+						 0x2f,0x7a,0x4c,0xc5,	0xdc,0xae,0x47,0xa5};			
+			#else
 	//006ae731
 	u32 con_product_id=DU_PID;// little endiness 
 	//882d53f66826
-	u8  con_mac_address[6]={0xc1,0x2d,0x6f,0xda,0xe0,0xcc};//small endiness
+	u8  con_mac_address[6]={0xc1,0x2d,0x6f,0xda,0xe0,0xcc};//little endiness
 	//968829854b47b5dfb09d9edfcc8b9a0f
 	u8 con_sec_data[16]={0x54,0x26,0x27,0xd3,	0x60,0x58,0x94,0xcf,
 						 0x48,0xa9,0xc8,0x1c,	0x8b,0x8c,0x78,0xc0};
+		    #endif
+		#elif DU_ULTRA_PROV_EN
+		u32 con_product_id=0x6b1df1; 
+		u8  con_mac_address[6]={0xb6,0x8c,0x12,0x75,0x60,0xd4};
+		u8 con_sec_data[16]={0x7b,0x45,0xe1,0x86,0xe0,0x84,0xc2,0xca,0xdb,0xe3,0x73,0x7c,0x8e,0x9a,0xd4,0x8f};
 		#else
 	u32 con_product_id=DU_PID;// little endiness 
-	u8  con_mac_address[6]={0x7D,0x79,0x12,0x75,0x60,0xd4};//small endiness
+	u8  con_mac_address[6]={0x7D,0x79,0x12,0x75,0x60,0xd4};//little endiness
 	u8 con_sec_data[16]={0x49,0x22,0xeb,0x7a,	0x0a,0x45,0x81,0x8d,
 						 0xa4,0x34,0x7c,0xd4,	0xed,0x1b,0x4c,0xf9};
 

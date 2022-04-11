@@ -23,6 +23,7 @@
 
 #import "SigMeshLib.h"
 #import "SDKLibCommand.h"
+#import "SigLowerTransportLayer.h"
 
 @interface SigMeshLib ()<SigMessageDelegate>
 /// The Network Layer handler.
@@ -66,6 +67,7 @@ static SigMeshLib *shareLib = nil;
 - (void)config{
     _defaultTtl = 10;
     _incompleteMessageTimeout = 15.0;
+    _receiveSegmentMessageTimeout = 15.0;
     _acknowledgmentTimerInterval = 0.150;
     _transmissionTimerInterval = 0.200;
     _retransmissionLimit = 20;
@@ -99,11 +101,35 @@ static SigMeshLib *shareLib = nil;
 
 - (void)receiveNetworkPdu:(SigNetworkPdu *)networkPdu {
     /* 用于接收到segment pdu时，如果存在应用层的重试，则在该地方修正一下重试定时器的时间。注意：当前直接callback解密后的networkPdu，方便后期新增一些优化的逻辑代码 */
-    self.isReceiveSegmentPDUing = networkPdu.isSegmented;
-    self.sourceOfReceiveSegmentPDU = networkPdu.source;
-    if (networkPdu.isSegmented && self.commands && self.commands.count) {
-        SDKLibCommand *command = self.commands.firstObject;
-        [self retrySendSDKLibCommand:command];
+    if (networkPdu.isSegmented) {
+        if (_receiveSegmentTimer == nil) {
+            TeLogDebug(@"==========RxBusy标志开始");
+            __weak typeof(self) weakSelf = self;
+            _receiveSegmentTimer = [BackgroundTimer scheduledTimerWithTimeInterval:_receiveSegmentMessageTimeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+                [weakSelf cleanReceiveSegmentBusyStatus];
+            }];
+        }
+        self.isReceiveSegmentPDUing = networkPdu.isSegmented;
+        self.sourceOfReceiveSegmentPDU = networkPdu.source;
+        if (self.commands && self.commands.count) {
+            SDKLibCommand *command = self.commands.firstObject;
+            [self retrySendSDKLibCommand:command];
+        }
+    }
+}
+
+- (void)cleanReceiveSegmentBusyStatus {
+    TeLogDebug(@"");
+    if (self.isReceiveSegmentPDUing) {
+        TeLogDebug(@"==========RxBusy标志清除");
+        self.isReceiveSegmentPDUing = NO;
+        self.sourceOfReceiveSegmentPDU = 0;
+        if (_receiveSegmentTimer) {
+            [_receiveSegmentTimer invalidate];
+            _receiveSegmentTimer = nil;
+        }
+        [self.networkManager.lowerTransportLayer.incompleteSegments removeAllObjects];
+        [self.networkManager.lowerTransportLayer.acknowledgmentTimers removeAllObjects];
     }
 }
 
@@ -324,7 +350,7 @@ static SigMeshLib *shareLib = nil;
     command.timeout = MAX(oldTimeout, newTimeout);
     //command存储下来，超时或者失败，或者返回response时，从该地方拿到command，获取里面的callback，执行，再删除。
     [self.commands addObject:command];
-    TeLogInfo(@"add command:%@,source=0x%X,destination=0x%X,retryCount=%d,responseMax=%d,_commands.count = %d", command.curMeshMessage, command.source.unicastAddress, command.destination.address, command.retryCount, command.responseMaxCount, self.commands.count);
+    TeLogInfo(@"add command:%@,source=0x%X,destination=0x%X,retryCount=%d,responseMax=%d,timeout=%f,_commands.count = %d", command.curMeshMessage, command.source.unicastAddress, command.destination.address, command.retryCount, command.responseMaxCount, command.timeout, self.commands.count);
 //    //存在response的指令需存储
 //    if (command.responseAllMessageCallBack || command.resultCallback || (command.retryCount > 0 && command.responseMaxCount > 0)) {
 //        float oldTimeout = command.timeout;
@@ -726,6 +752,10 @@ static SigMeshLib *shareLib = nil;
 
 - (void)retrySendSDKLibCommand:(SDKLibCommand *)command {
     __weak typeof(self) weakSelf = self;
+    if (command && command.retryTimer) {
+        [command.retryTimer invalidate];
+        command.retryTimer = nil;
+    }
     if (command.hadRetryCount >= command.retryCount) {
         // 重试完成，一个command.timeout没有足够response则报超时。
         BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {

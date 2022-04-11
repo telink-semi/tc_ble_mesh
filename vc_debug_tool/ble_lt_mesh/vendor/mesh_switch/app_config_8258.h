@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app_config_8258.h 
+ * @file	app_config_8258.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #pragma once
 
@@ -28,11 +31,28 @@ extern "C" {
 
 #include "vendor/common/version.h"    // include mesh_config.h inside.
 //////////////////board sel/////////////////////////////////////
+#define PCBA_8258_SW_C1T140A5_V1_1      1	// switch key board
+#define PCBA_8258_DONGLE_48PIN          2
+#define PCBA_8258_C1T140A3_V1_1         3   // 32pin dongle
+
+#ifndef PCBA_8258_SEL // user can define in user_app_config.h
+#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
+#define PCBA_8258_SEL			PCBA_8258_C1T140A3_V1_1	//
+#else
+#define PCBA_8258_SEL			PCBA_8258_SW_C1T140A5_V1_1	// PCBA_8258_DONGLE_48PIN
+#endif
+#endif
 
 
 #define _USER_CONFIG_DEFINED_	1	// must define this macro to make others known
 #define	__LOG_RT_ENABLE__		0
 //#define	__DEBUG_PRINT__			0
+
+#if ((PCBA_8258_SEL == PCBA_8258_DONGLE_48PIN)||(PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1))
+#define UI_BUTTON_MODE_ENABLE   1
+#else
+#define UI_BUTTON_MODE_ENABLE   0	// 0 means keboard mode.
+#endif
 
 #if DUAL_MESH_ZB_BL_EN
 #define FLASH_1M_ENABLE         1
@@ -79,7 +99,13 @@ extern "C" {
 
 #define HCI_LOG_FW_EN   0
 #if HCI_LOG_FW_EN
+	#if (PCBA_8258_SEL == PCBA_8258_DONGLE_48PIN)
+#define DEBUG_INFO_TX_PIN           		GPIO_PB2
+	#elif (PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1)
+#define DEBUG_INFO_TX_PIN           		GPIO_PB6
+	#else // PCBA_8258_SW_C1T140A5_V1_1
 #define DEBUG_INFO_TX_PIN           		GPIO_PC3
+	#endif
 #define PRINT_DEBUG_INFO                    1
 #endif
 
@@ -153,10 +179,7 @@ extern "C" {
 
 //----------------------- GPIO for UI --------------------------------
 //---------------  Button //invalid code
-#if 1
-#define	SW1_GPIO				GPIO_PC4
-#define	SW2_GPIO				GPIO_PC4
-#endif
+
 
 //---------------  LED / PWM //invalid code
 #if 1
@@ -181,7 +204,13 @@ extern "C" {
 #define PWM_INV_W   (GET_PWM_INVERT_VAL(PWM_W, PWM_FUNC_W))
 #endif
 
+#if (PCBA_8258_SEL == PCBA_8258_DONGLE_48PIN)
+#define GPIO_LED	GPIO_PA3
+#elif (PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1)
 #define GPIO_LED	GPIO_PD4
+#else // PCBA_8258_SW_C1T140A5_V1_1
+#define GPIO_LED	GPIO_PD4
+#endif
 
 
 /////////////open SWS digital pullup to prevent MCU err, this is must ////////////
@@ -207,6 +236,23 @@ extern "C" {
 
 #define	REGA_TID			0x3A
 
+#if UI_BUTTON_MODE_ENABLE // (PCBA_8258_SEL == PCBA_8258_DONGLE_48PIN)
+	#if(PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1)
+#define PULL_WAKEUP_SRC_PD7     PM_PIN_PULLUP_1M	//btn
+#define PULL_WAKEUP_SRC_PA1     PM_PIN_PULLUP_1M	//btn
+#define PD7_INPUT_ENABLE		1
+#define PA1_INPUT_ENABLE		1
+#define	SW1_GPIO				GPIO_PD7
+#define	SW2_GPIO				GPIO_PA1
+	#elif (PCBA_8258_SEL == PCBA_8258_DONGLE_48PIN)
+#define PULL_WAKEUP_SRC_PD6     PM_PIN_PULLUP_1M	//btn
+#define PULL_WAKEUP_SRC_PD5     PM_PIN_PULLUP_1M	//btn
+#define PD6_INPUT_ENABLE		1
+#define PD5_INPUT_ENABLE		1
+#define	SW1_GPIO				GPIO_PD6
+#define	SW2_GPIO				GPIO_PD5
+	#endif
+#else
 #define	KB_MAP_NORMAL	{\
 			{RC_KEY_UP,			RC_KEY_R,			RC_KEY_4_ON}, \
 			{RC_KEY_L,			RC_KEY_DN,			RC_KEY_4_OFF}, \
@@ -258,7 +304,7 @@ extern "C" {
 #define PB6_INPUT_ENABLE		1
 #define PC1_INPUT_ENABLE		1
 #define PD3_INPUT_ENABLE		1
-
+#endif
 
 /////////////////// set default   ////////////////
 

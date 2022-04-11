@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     ip_adapt_i.h 
+ * @file	ip_adapt_i.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 //  IP protocol adaption for different ip stack,  uip-stack only for now
 
 #pragma once
@@ -94,8 +96,8 @@ static inline void ipa_handle_ip_pkt(u8 *pkt, u32 len){
 	tcpip_input(); 
 }
 
-// ÓÃÓÚÖ÷¶¯·¢ËÍÊı¾İ°üµÄÇé¿ö£¬²»ÄÜ¸úÓ²¼ş¶ÁĞ´ buffer ³åÍ»
-// ÓÃÓÚÒ»¿ªÊ¼¿ÉÄÜÒª·¢ËÍµÄÊı¾İ°ü, arp request, dhcp, etc. ±ØĞë¾¡Ôç³õÊ¼»¯
+// ç”¨äºä¸»åŠ¨å‘é€æ•°æ®åŒ…çš„æƒ…å†µï¼Œä¸èƒ½è·Ÿç¡¬ä»¶è¯»å†™ buffer å†²çª
+// ç”¨äºä¸€å¼€å§‹å¯èƒ½è¦å‘é€çš„æ•°æ®åŒ…, arp request, dhcp, etc. å¿…é¡»å°½æ—©åˆå§‹åŒ–
 static inline void ipa_set_uip_buf_to_default_tx(void){
 	uip_aligned_buf = (uip_buf_t *)(eth_hw_get_tx_buff() + 4);
 }

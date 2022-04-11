@@ -49,7 +49,7 @@
 }
 
 - (void)initLogFile {
-    NSFileManager *manager = [[NSFileManager alloc] init];
+    NSFileManager *manager = [NSFileManager defaultManager];
     if (![manager fileExistsAtPath:self.logFilePath]) {
         BOOL ret = [manager createFileAtPath:self.logFilePath contents:nil attributes:nil];
         if (ret) {
@@ -88,7 +88,7 @@
         [self enableLogger];
     } else {
         //OFF状态则删除TelinkSDKDebugLogData和加密的TelinkSDKMeshJsonData。
-        NSFileManager *manager = [[NSFileManager alloc] init];
+        NSFileManager *manager = [NSFileManager defaultManager];
         if ([manager fileExistsAtPath:self.logFilePath]) {
             [manager removeItemAtPath:self.logFilePath error:nil];
         }
@@ -135,7 +135,7 @@ static NSFileHandle *TelinkLogFileHandle()
     static NSFileHandle *fileHandle = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        NSFileManager *manager = [[NSFileManager alloc] init];
+        NSFileManager *manager = [NSFileManager defaultManager];
         if (![manager fileExistsAtPath:SigLogger.share.logFilePath]) {
             BOOL ret = [manager createFileAtPath:SigLogger.share.logFilePath contents:nil attributes:nil];
             if (ret) {
@@ -184,9 +184,11 @@ extern void TelinkLogWithFile(BOOL show,NSString *format, ...) {
 }
 
 - (void)clearAllLog {
-    NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:SigLogger.share.logFilePath];
-    [handle truncateFileAtOffset:0];
-    [handle closeFile];
+    NSFileManager *fileManage = [NSFileManager defaultManager];
+    if ([fileManage fileExistsAtPath:self.logFilePath]) {
+        [fileManage removeItemAtPath:self.logFilePath error:nil];
+    }
+    [self initLogFile];
 }
 
 - (NSString *)getLogStringWithLength:(NSInteger)length {

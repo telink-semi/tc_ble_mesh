@@ -324,22 +324,21 @@
 
 - (IBAction)clickGetFwInfo:(UIButton *)sender {
 #ifdef kExist
-    [self.allItemVIDDict removeAllObjects];
-    __weak typeof(self) weakSelf = self;
-    
     if (SigMeshLib.share.isBusyNow) {
         TeLogInfo(@"send request for GetFwInfo, but busy now.");
         [self showTips:@"busy now."];
         return;
     }
-    
+    __weak typeof(self) weakSelf = self;
+    [self.allItemVIDDict removeAllObjects];
+
     //2.firmwareUpdateInformationGet，该消息在modelID：kSigModel_FirmwareUpdateServer_ID里面。
     UInt16 modelIdentifier = kSigModel_FirmwareUpdateServer_ID;
     NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
     NSInteger responseMax = 0;
     NSMutableArray *LPNArray = [NSMutableArray array];
     for (SigNodeModel *model in curNodes) {
-            NSArray *addressArray = [model getAddressesWithModelID:@(modelIdentifier)];
+        NSArray *addressArray = [model getAddressesWithModelID:@(modelIdentifier)];
         if (model.state != DeviceStateOutOfLine && addressArray && addressArray.count > 0 && model.features.lowPowerFeature == SigNodeFeaturesState_notSupported) {
             responseMax ++;
         }
@@ -682,6 +681,12 @@
             [self showTips:@"This Bin file is invalid."];
             return;
         }
+        if (SigMeshLib.share.isBusyNow) {
+            TeLogInfo(@"click start MeshOTA, but busy now.");
+            [self showTips:@"busy now."];
+            return;
+        }
+
         [self updateInitiatorProgress:0];
         [self updateDistributorProgress:0];
         [self userAbled:NO];

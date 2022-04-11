@@ -51,7 +51,7 @@
         shareManager = [[SigKeyBindManager alloc] init];
         shareManager.getCompositionTimeOut = 10;
         shareManager.appkeyAddTimeOut = 10;
-        shareManager.bindModelTimeOut = 60;
+        shareManager.bindModelTimeOut = 60*2;
     });
     return shareManager;
 }
@@ -277,7 +277,7 @@
 //                }];
                 
                 // 写法2：判断modelID
-                self.messageHandle = [SDKLibCommand configModelAppBindWithDestination:weakSelf.address applicationKeyIndex:weakSelf.appkeyModel.index elementAddress:element.unicastAddress modelIdentifier:modelID.getIntModelIdentifier companyIdentifier:modelID.getIntCompanyIdentifier retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelAppStatus * _Nonnull responseMessage) {
+                self.messageHandle = [SDKLibCommand configModelAppBindWithDestination:weakSelf.address applicationKeyIndex:weakSelf.appkeyModel.index elementAddress:element.unicastAddress modelIdentifier:modelID.getIntModelIdentifier companyIdentifier:modelID.getIntCompanyIdentifier retryCount:SigMeshLib.share.dataSource.defaultRetryCount*3 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelAppStatus * _Nonnull responseMessage) {
                     TeLogInfo(@"SigConfigModelAppStatus.parameters=%@",responseMessage.parameters);
                     if (responseMessage.modelIdentifier == modelID.getIntModelIdentifier && responseMessage.companyIdentifier == modelID.getIntCompanyIdentifier && responseMessage.elementAddress == element.unicastAddress) {
                         if (responseMessage.status == SigConfigMessageStatus_success || modelID.getIntCompanyIdentifier != 0) {//sig model判断状态，vendor model不判断状态
@@ -299,7 +299,7 @@
                 if (self.messageHandle == nil) {
                     isFail = YES;
                 } else {
-                    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 3.0));
+                    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 20.0));
                 }
                 if (isFail) {
                     break;
@@ -441,19 +441,19 @@
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     TeLogInfo(@"publish time finish.");
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(publicationSetTimeout) object:nil];
-                    });
+//                    dispatch_async(dispatch_get_main_queue(), ^{
+//                        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(publicationSetTimeout) object:nil];
+//                    });
                     if (error) {
                         if (weakSelf.failBlock) {
                             weakSelf.failBlock(error);
                         }
                     }
                 }];
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(publicationSetTimeout) object:nil];
-                    [weakSelf performSelector:@selector(publicationSetTimeout) withObject:nil afterDelay:2.0];
-                });
+//                dispatch_async(dispatch_get_main_queue(), ^{
+//                    [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(publicationSetTimeout) object:nil];
+//                    [weakSelf performSelector:@selector(publicationSetTimeout) withObject:nil afterDelay:2.0];
+//                });
             });
         }else{
             TeLogInfo(@"SDK needn't publish time");
@@ -471,18 +471,19 @@
     }
 }
 
-- (void)publicationSetTimeout {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(publicationSetTimeout) object:nil];
-    });
-    TeLogInfo(@"publish time timeout.");
-    NSError *error = [NSError errorWithDomain:@"KeyBind Fail:publicationSet time model TimeOut." code:-1 userInfo:nil];
-    if (error) {
-        if (self.failBlock) {
-            self.failBlock(error);
-        }
-    }
-}
+//先注释publicationSetTimeout相关代码，因为configModelPublicationSetWithDestination会超时并通过resultCallback返回，不需要这里的这个额外的超时机制。
+//- (void)publicationSetTimeout {
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(publicationSetTimeout) object:nil];
+//    });
+//    TeLogInfo(@"publish time timeout.");
+//    NSError *error = [NSError errorWithDomain:@"KeyBind Fail:publicationSet time model TimeOut." code:-1 userInfo:nil];
+//    if (error) {
+//        if (self.failBlock) {
+//            self.failBlock(error);
+//        }
+//    }
+//}
 
 - (void)saveKeyBindSuccessToLocationData {
     //appkeys

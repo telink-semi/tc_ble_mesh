@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigKeyBindManager : NSObject
 @property (nonatomic, assign) NSInteger getCompositionTimeOut;//default 10s
 @property (nonatomic, assign) NSInteger appkeyAddTimeOut;//default 10s
-@property (nonatomic, assign) NSInteger bindModelTimeOut;//default 60s
+@property (nonatomic, assign) NSInteger bindModelTimeOut;//default 60s*2
 
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));

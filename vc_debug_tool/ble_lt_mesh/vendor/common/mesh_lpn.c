@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     mesh_lpn.c 
+ * @file	mesh_lpn.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "proj/tl_common.h"
 #if !WIN32
@@ -41,6 +44,12 @@
 #include "proj/drivers/uart.h"
 #endif
 
+#if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
+u8 lpn_provision_ok = 0;
+#endif
+
+
+#if FEATURE_LOWPOWER_EN
 #if (IS_VC_PROJECT || TESTCASE_FLAG_ENABLE)
 #define			DEBUG_SUSPEND				1
 #else
@@ -52,7 +61,12 @@
 //u8 fri_request_retry_max = FRI_REQ_RETRY_MAX;
 lpn_sub_list_event_t mesh_lpn_subsc_pending;
 u8 mesh_lpn_poll_md_pending = 0;
+#if PTS_TEST_EN
+u8 mesh_lpn_rx_master_key = 1;
+#else
 u8 mesh_lpn_rx_master_key = 0;
+#endif
+
 const u32 mesh_lpn_key_map[] = {SW1_GPIO, SW2_GPIO};
 #define	MESH_LPN_CMD_KEY		        (SW2_GPIO)
 #define	MESH_LPN_FACTORY_RESET_KEY		(SW1_GPIO)
@@ -60,11 +74,6 @@ u32 mesh_lpn_wakeup_key = 0;
 u8 key_not_release = 0;
 u32 active_time;
 
-#if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
-u8 lpn_provision_ok = 0;
-#endif
-
-#if FEATURE_LOWPOWER_EN
 u8 lpn_mode = LPN_MODE_NORMAL;
 u32 lpn_mode_tick = 0;
 u32 lpn_wakeup_tick = 0;
@@ -90,6 +99,16 @@ STATIC_ASSERT((FRI_REC_DELAY_MS > FRI_ESTABLISH_REC_DELAY_MS));
 int is_friend_ship_link_ok_lpn()
 {
 	return mesh_lpn_par.link_ok;
+}
+
+u8 mesh_lpn_tx_network_cb(mesh_match_type_t *p_match_type, u8 sec_type)
+{
+#if PTS_TEST_EN
+	if(is_friend_ship_link_ok_lpn()){
+		sec_type = FRIENDSHIP;
+	}
+#endif
+	return sec_type;
 }
 
 int is_unicast_friend_msg_to_fn(mesh_cmd_nw_t *p_nw)
@@ -252,9 +271,7 @@ int mesh_lpn_poll_receive_timeout(void)
 int mesh_lpn_rcv_delay_wakeup(void)
 {
 	app_enable_scan_all_device ();	
-	blt_adv_expect_time_refresh(0);
-	blt_send_adv2scan_mode(0);
-	blt_adv_expect_time_refresh(1);
+	mesh_send_adv2scan_mode(0);
 	bls_pm_setSuspendMask (SUSPEND_DISABLE); // not enter sleep to receive packets	
 	if(is_friend_ship_link_ok_lpn()){
 		
@@ -279,7 +296,7 @@ int mesh_lpn_poll_md_wakeup(void)
 			ret = get_mesh_adv_interval()+(rand()%10)*1000;// add 0~10ms random
 		}
 		u8 *p_buf = my_fifo_get(&mesh_adv_cmd_fifo);
-		if(is_busy_tx_seg(0) && is_tx_seg_one_round_ok()){
+		if(is_in_mesh_friend_st_lpn() && is_busy_tx_seg(0) && is_tx_seg_one_round_ok()){
 			if(0 == p_buf){
 				ret = FRI_LPN_WAIT_SEG_ACK_MS * 1000; 
 				fri_ship_proc_lpn.poll_retry = 0;
@@ -712,6 +729,9 @@ void mesh_lpn_sleep_prepare(u16 op)
 
 		}
 	}
+	else if(CMD_ST_NORMAL_TX == op){
+		blt_soft_timer_update(&mesh_lpn_poll_md_wakeup, get_mesh_adv_interval());
+	}
 }
 
 void suspend_enter(u32 sleep_ms, int deep_retention_flag)
@@ -975,18 +995,17 @@ void mesh_main_loop_LPN()
 {
 }
 
-extern void blt_adv_expect_time_refresh(u8 en);
 u8 mesh_lpn_quick_tx_flag = 0;
-void lpn_quick_tx(u8 is_quick_tx)
+int lpn_quick_tx(u8 is_quick_tx)
 {
     u8 r = irq_disable();
-	blt_adv_expect_time_refresh(0);
 	mesh_lpn_quick_tx_flag = is_quick_tx;
-	blt_send_adv2scan_mode(1);	
+	int ret = mesh_send_adv2scan_mode(1);	
 	mesh_lpn_quick_tx_flag = 0;
-	blt_adv_expect_time_refresh(1);
     lpn_debug_alter_debug_pin(0);
     irq_restore(r);
+	return ret;
+
 }
 
 u32 get_lpn_poll_interval_ms()
@@ -1032,7 +1051,7 @@ void lpn_mode_set(int mode)
 	mesh_lpn_adv_interval_update(1);
 }
 #else
-void lpn_quick_tx(u8 is_quick_tx){}
+int lpn_quick_tx(u8 is_quick_tx){return 0;}
 #endif 
 
 
