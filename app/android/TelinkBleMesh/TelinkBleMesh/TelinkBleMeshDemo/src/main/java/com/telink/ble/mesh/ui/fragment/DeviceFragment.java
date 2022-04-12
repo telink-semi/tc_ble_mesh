@@ -116,7 +116,7 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
             if (item.getItemId() == R.id.item_add) {
 //                    startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
 
-                if (SharedPreferenceHelper.isRemoteProvisionEnable(getActivity())) {
+                if (SharedPreferenceHelper.isRemoteProvisionEnable(getActivity()) && AppSettings.DRAFT_FEATURES_ENABLE) {
                     startActivity(new Intent(getActivity(), RemoteProvisionActivity.class));
                 } else if (SharedPreferenceHelper.isFastProvisionEnable(getActivity())) {
                     startActivity(new Intent(getActivity(), FastProvisionActivity.class));

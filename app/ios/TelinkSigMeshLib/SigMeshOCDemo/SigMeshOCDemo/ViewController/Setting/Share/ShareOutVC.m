@@ -58,7 +58,7 @@
     
     //3.3.2新增逻辑：只分享选中的NetKey和该NetKey下的AppKey。
     SigDataSource *exportDS = [[SigDataSource alloc] init];
-    [exportDS setDictionaryToDataSource:SigDataSource.share.getDictionaryFromDataSource];
+    [exportDS setDictionaryToDataSource:SigDataSource.share.getFormatDictionaryFromDataSource];
     exportDS.netKeys = [NSMutableArray arrayWithArray:self.selectArray];
     NSMutableArray *netkeyIndexs = [NSMutableArray array];
     for (SigNetkeyModel *model in exportDS.netKeys) {
@@ -72,7 +72,7 @@
     }
     exportDS.appKeys = [NSMutableArray arrayWithArray:apps];
 
-    NSMutableDictionary *exportDict = [NSMutableDictionary dictionaryWithDictionary:[exportDS getDictionaryFromDataSource]];
+    NSMutableDictionary *exportDict = [NSMutableDictionary dictionaryWithDictionary:[exportDS getFormatDictionaryFromDataSource]];
     //3.3.2新增逻辑：未定义subnet bridge的key，暂时不分享subnet bridge相关内容。
     if ([exportDict.allKeys containsObject:@"nodes"]) {
         NSArray *nodeList = exportDict[@"nodes"];

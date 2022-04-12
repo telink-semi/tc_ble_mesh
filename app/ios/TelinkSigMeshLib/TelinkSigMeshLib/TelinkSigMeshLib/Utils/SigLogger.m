@@ -130,9 +130,9 @@
     }
 }
 
+static NSFileHandle *fileHandle = nil;
 static NSFileHandle *TelinkLogFileHandle()
 {
-    static NSFileHandle *fileHandle = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         NSFileManager *manager = [NSFileManager defaultManager];
@@ -189,6 +189,8 @@ extern void TelinkLogWithFile(BOOL show,NSString *format, ...) {
         [fileManage removeItemAtPath:self.logFilePath error:nil];
     }
     [self initLogFile];
+    fileHandle = [NSFileHandle fileHandleForUpdatingAtPath:SigLogger.share.logFilePath];
+    [fileHandle seekToEndOfFile];
 }
 
 - (NSString *)getLogStringWithLength:(NSInteger)length {

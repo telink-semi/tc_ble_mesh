@@ -125,12 +125,7 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
             builder.setCancelable(true);
             builder.setTitle("Warning");
             builder.setPositiveButton("Confirm", confirmClick);
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
             confirmDialogBuilder = builder.create();
         }
         confirmDialogBuilder.setMessage(msg);
