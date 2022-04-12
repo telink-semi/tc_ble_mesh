@@ -2388,7 +2388,7 @@ void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 		p_tx_head = &tx_head;
 	}
 	p_tx_head->par_type = BEAR_TX_PAR_TYPE_REMAINING_TIMES;
-	p_tx_head->val = 16;// 20 - (TRANSMIT_CNT + 1); // extend count, keep sending (16+7)*10ms
+	p_tx_head->val[0] = 16;// 20 - (TRANSMIT_CNT + 1); // extend count, keep sending (16+7)*10ms
 #elif (0) // keep sending 2.5s if need
 	if(0x0002 == adr_dst){
 		if(0 == p_tx_head)
@@ -2397,7 +2397,7 @@ void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 			p_tx_head = &tx_head;
 		}
 		p_tx_head->par_type = BEAR_TX_PAR_TYPE_REMAINING_TIMES;
-		p_tx_head->val = 255;// extend count, interval 10ms
+		p_tx_head->val[0] = 255;// extend count, interval 10ms
 	}
 #endif
 #if DU_ENABLE
@@ -2407,7 +2407,7 @@ void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 		p_tx_head = &tx_head;
 	}
 	p_tx_head->par_type = BEAR_TX_PAR_TYPE_REMAINING_TIMES;
-	p_tx_head->val = 16;
+	p_tx_head->val[0] = 16;
 #endif
 	#if GATEWAY_ENABLE
 	if(OP_TYPE_VENDOR == GET_OP_TYPE(op)){
