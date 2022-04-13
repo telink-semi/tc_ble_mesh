@@ -126,6 +126,7 @@ extern "C" {
  */
 void mbedtls_sha256( const unsigned char *input, size_t ilen,
            unsigned char output[32], int is224 );
+//void mbedtls_sha256_flash( unsigned long addr, size_t ilen, unsigned char output[32], int is224 );
 
 
 int mbedtls_internal_sha256_process( mbedtls_sha256_context *ctx,
