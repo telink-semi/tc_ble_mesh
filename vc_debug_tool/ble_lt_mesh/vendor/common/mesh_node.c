@@ -135,7 +135,7 @@ MYFIFO_INIT_NO_RET(mesh_adv_fifo_relay, sizeof(mesh_relay_buf_t)+DELTA_EXTEND_AN
     
     #if __PROJECT_SPIRIT_LPN__
 MYFIFO_INIT_NO_RET(blt_notify_fifo, BLT_NOTIFY_FIFO_SIZE, 64);//save retention
-    #elif (FEATURE_LOWPOWER_EN || GATT_LPN_EN || __PROJECT_MESH_SWITCH__)
+    #elif (FEATURE_LOWPOWER_EN || GATT_LPN_EN || __PROJECT_MESH_SWITCH__||DU_LPN_EN)
 MYFIFO_INIT(blt_notify_fifo, BLT_NOTIFY_FIFO_SIZE, 8);
     #else
 MYFIFO_INIT(blt_notify_fifo, BLT_NOTIFY_FIFO_SIZE, 64);
