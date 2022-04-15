@@ -7,6 +7,7 @@
 ### Features
 
 * (Firmware) add accepting OTA rules: upgrade is allowed only when the PID is the same, see OTA_ADOPT_RULE_CHECK_PID_EN, enabled by default; upgrade is allowed when the VID (Version ID) is increased, see OTA_ADOPT_RULE_CHECK_VID_EN, disabled by default. (This OTA rule has been added in V3.3.4)
+* (Firmware) replace Telink BSD license with Apache 2.0 License.
 * (Firmware) add customized low-power mesh products that can send and receive messages, see LPN_CONTROL_EN for details.
 * (Firmware) add customized protocol of Provision.
 * (Firmware) add support extend ADV mode for gateway.
@@ -38,6 +39,7 @@
 ### Features
 
 * (Firmware) 增加是否接受升级的OTA规则：PID相同时才允许升级，详见OTA_ADOPT_RULE_CHECK_PID_EN，默认使能；VID(Version ID)增加时才允许升级，详见OTA_ADOPT_RULE_CHECK_VID_EN，默认不使能。(该OTA规则在V3.3.4中已添加)
+* (Firmware) 替换 Telink BSD license为 Apache 2.0 license。
 * (Firmware) 增加客户定制的能收发命令的低功耗mesh产品，详见 LPN_CONTROL_EN。
 * (Firmware) 增加客户定制的配网协议。
 * (Firmware) 增加gateway支持收发extend ADV的模式。
