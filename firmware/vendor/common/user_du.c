@@ -1217,7 +1217,7 @@ int mesh_du_rcv_prov_data(u8 *p_payload)
 	net_info.flags = p_prov_data->flag;
 	memcpy(net_info.iv_index+2, p_prov_data->iv_index, 2);
 	net_info.unicast_address = p_prov_data->unicast_addr;
-	mesh_provision_par_set((u8 *)&net_info);
+	mesh_provision_par_handle((u8 *)&net_info);
 	#endif
 
 	mesh_du_ble_adv(p_manu_data->data_type+1, prov_para.device_uuid, 16);
