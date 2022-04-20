@@ -1705,7 +1705,9 @@ void send_and_wait_completed_reset_node_status();
 void mesh_node_identity_refresh();
 int is_rx_seg_reject_before(u16 src_addr, u32 seqAuth);
 void add2rx_seg_reject_cache(u16 src_addr, u32 seqAuth);
-
+#if (!WIN32 && (MCU_CORE_TYPE >= MCU_CORE_8258))
+void sys_clock_init(SYS_CLK_TypeDef SYS_CLK);
+#endif
 
 
 extern u16 ele_adr_primary;

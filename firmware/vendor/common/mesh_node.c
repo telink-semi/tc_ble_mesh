@@ -5621,7 +5621,7 @@ void clock_switch_to_highest()
 #if (!WIN32 && (MCU_CORE_TYPE >= MCU_CORE_8258))
 	#if (CLOCK_SYS_CLOCK_HZ < 48000000)
 	unsigned char r = irq_disable();
-	clock_init(SYS_CLK_48M_Crystal);
+	sys_clock_init(SYS_CLK_48M_Crystal);
 	irq_restore(r);
 	#endif
 #endif
@@ -5632,7 +5632,7 @@ void clock_switch_to_normal()
 #if (!WIN32 && (MCU_CORE_TYPE >= MCU_CORE_8258))
 	#if (CLOCK_SYS_CLOCK_HZ < 48000000)
 	unsigned char r = irq_disable();
-	clock_init(SYS_CLK_CRYSTAL);
+	sys_clock_init(SYS_CLK_CRYSTAL);
 	    #if ((MCU_CORE_TYPE == MCU_CORE_8258) && (CLOCK_SYS_CLOCK_HZ < 48000000))
 	analog_write(0x0c, 0xc4);   // restore DCDC
 	    #endif
