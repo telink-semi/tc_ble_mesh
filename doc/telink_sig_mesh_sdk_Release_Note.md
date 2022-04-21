@@ -2,7 +2,7 @@
 
 ### Bug Fixes
 
-* N/A
+* (Firmware) fix bug of V3.3.4: if TIMER 0-TIMER 2 was set to be enabled (disable by default), TIMER 0-TIMER 2 will be disabled by mistake after the node is provisioned.
 
 ### Features
 
@@ -34,7 +34,7 @@
 
 ### Bug Fixes
 
-* N/A
+* (Firmware) 修复V3.3.4版本问题：如果客户使能了TIMER0-TIMER2(默认不使能)，节点被组网后，TIMER0-TIMER2会被错误关闭的问题。
 
 ### Features
 
