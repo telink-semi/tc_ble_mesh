@@ -42,6 +42,8 @@ import com.telink.ble.mesh.core.message.config.NodeIdentityStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
 import com.telink.ble.mesh.core.message.config.RelayStatusMessage;
 import com.telink.ble.mesh.core.message.config.SubnetBridgeStatusMessage;
+import com.telink.ble.mesh.core.message.directforwarding.DirectedControlStatusMessage;
+import com.telink.ble.mesh.core.message.directforwarding.ForwardingTableStatusMessage;
 import com.telink.ble.mesh.core.message.fastpv.MeshAddressStatusMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDCapabilitiesStatusMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDFirmwareStatusMessage;
@@ -204,6 +206,10 @@ public class MeshStatus {
 
             // opcode aggregator
             register(Opcode.OP_AGGREGATOR_STATUS.value, OpcodeAggregatorStatusMessage.class);
+
+            // direct forwarding table
+            register(Opcode.FORWARDING_TABLE_STATUS.value, ForwardingTableStatusMessage.class);
+            register(Opcode.DIRECTED_CONTROL_STATUS.value, DirectedControlStatusMessage.class);
         }
 
         public static void register(MeshStatus status) {
