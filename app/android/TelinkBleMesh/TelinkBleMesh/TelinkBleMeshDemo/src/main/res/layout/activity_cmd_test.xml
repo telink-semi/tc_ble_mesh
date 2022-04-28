@@ -273,6 +273,51 @@
             android:src="@drawable/ic_arrow_up"
             android:tint="@color/grey" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="interval(ms) :" />
+
+            <EditText
+                android:id="@+id/et_interval"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="input interval"
+                android:text="100" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="cnt:" />
+
+            <EditText
+                android:id="@+id/et_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="100"
+                android:hint="input count" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_start_test"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="start test" />
+
         <ScrollView
             android:id="@+id/sv_log"
             android:layout_width="match_parent"

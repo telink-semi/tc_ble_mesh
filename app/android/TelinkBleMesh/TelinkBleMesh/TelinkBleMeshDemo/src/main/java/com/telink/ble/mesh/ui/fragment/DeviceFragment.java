@@ -52,6 +52,7 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.ui.CmdActivity;
+import com.telink.ble.mesh.ui.CmdTestActivity;
 import com.telink.ble.mesh.ui.DeviceAutoProvisionActivity;
 import com.telink.ble.mesh.ui.DeviceProvisionActivity;
 import com.telink.ble.mesh.ui.DeviceSettingActivity;
@@ -267,7 +268,8 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 break;
 
             case R.id.tv_cmd:
-                startActivity(new Intent(getActivity(), CmdActivity.class));
+//                startActivity(new Intent(getActivity(), CmdActivity.class));
+                startActivity(new Intent(getActivity(), CmdTestActivity.class));
                 break;
 
             case R.id.tv_log:
