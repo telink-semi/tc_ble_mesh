@@ -107,4 +107,7 @@ public class DemoTest {
         System.out.println(UnitConvert.lum2lightness(100)); // 65535
     }
 
+    public void testCode(){
+        System.out.println("▉"); // ▌
+    }
 }

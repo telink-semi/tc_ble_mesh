@@ -45,7 +45,6 @@ import com.telink.ble.mesh.core.message.firmwaredistribution.FDStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.DistributionStatus;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
 import com.telink.ble.mesh.core.message.time.TimeSetMessage;
-import com.telink.ble.mesh.core.networking.beacon.MeshPrivateBeacon;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
@@ -68,11 +67,6 @@ import com.telink.ble.mesh.ui.fragment.GroupFragment;
 import com.telink.ble.mesh.ui.fragment.SettingFragment;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
-
-import java.io.ByteArrayInputStream;
-import java.nio.ByteBuffer;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 
 /**
  * MainActivity include DeviceFragment & GroupFragment
@@ -100,6 +94,18 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
         CertCacheService.getInstance().load(this); // load cert cache
+        mHandler.postDelayed(this::testEcdh, 2 * 1000);
+    }
+
+
+    private void testEcdh() {
+        // E29689  █
+        MeshLogger.d("out - " + Arrays.bytesToHexString("▉".getBytes()));
+        /*byte[] pubKey = Arrays.hexToBytes("13EF44FCEA4D96F0EED383EC515705FC");
+        byte[] data = Arrays.hexToBytes("11223344556677889900aabbccef11223344556677889900aabbccef");
+        byte[] out = Encipher.aes(data, pubKey);
+
+        MeshLogger.d("out - " + Arrays.bytesToHexString(out));*/
     }
 
     private void initBottomNav() {
