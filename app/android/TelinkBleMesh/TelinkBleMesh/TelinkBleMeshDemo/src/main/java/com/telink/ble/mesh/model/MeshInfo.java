@@ -55,6 +55,13 @@ public class MeshInfo implements Serializable, Cloneable {
     public static final String FILE_NAME = "com.telink.ble.mesh.demo.STORAGE";
 
     /**
+     * if the {@link #ivIndex} is uninitialized, provision is not permitted
+     * once received the ivIndex in beacon , the ivIndex should be replaced
+     *
+     */
+    public static final int UNINITIALIZED_IVI = -1;
+
+    /**
      * local provisioner UUID
      */
     public String provisionerUUID;
@@ -90,7 +97,7 @@ public class MeshInfo implements Serializable, Cloneable {
      * <p>
      * should be updated and saved when {@link NetworkInfoUpdateEvent} received
      */
-    public int ivIndex;
+    public int ivIndex = UNINITIALIZED_IVI;
 
     /**
      * provisioner sequence number
