@@ -679,21 +679,21 @@ public class GattConnection extends BluetoothGattCallback {
     }
 
     private byte[] getCompletePacket(byte[] data) {
-        byte sar = (byte) (data[0] & ProxyPDU.BITS_SAR);
+        byte sar = (byte) (data[0] & ProxyPDU.MASK_SAR);
         switch (sar) {
             case ProxyPDU.SAR_COMPLETE:
                 return data;
 
             case ProxyPDU.SAR_SEG_FIRST:
-                data[0] = (byte) (data[0] & ProxyPDU.BITS_TYPE);
+                data[0] = (byte) (data[0] & ProxyPDU.MASK_TYPE);
                 proxyNotificationSegBuffer = data;
                 return null;
 
             case ProxyPDU.SAR_SEG_CONTINUE:
             case ProxyPDU.SAR_SEG_LAST:
                 if (proxyNotificationSegBuffer != null) {
-                    int segType = proxyNotificationSegBuffer[0] & ProxyPDU.BITS_TYPE;
-                    int dataType = data[0] & ProxyPDU.BITS_TYPE;
+                    int segType = proxyNotificationSegBuffer[0] & ProxyPDU.MASK_TYPE;
+                    int dataType = data[0] & ProxyPDU.MASK_TYPE;
 
                     // check if pkt typeValue equals
                     if (segType == dataType && data.length > 1) {

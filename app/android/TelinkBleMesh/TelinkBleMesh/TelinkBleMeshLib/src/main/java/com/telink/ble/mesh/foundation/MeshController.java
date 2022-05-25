@@ -925,7 +925,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private void onGattNotification(byte[] completePacket) {
         if (completePacket.length > 1) {
-            byte proxyPduType = (byte) (completePacket[0] & ProxyPDU.BITS_TYPE);
+            byte proxyPduType = (byte) (completePacket[0] & ProxyPDU.MASK_TYPE);
 
             byte[] payloadData = new byte[completePacket.length - 1];
             System.arraycopy(completePacket, 1, payloadData, 0, payloadData.length);

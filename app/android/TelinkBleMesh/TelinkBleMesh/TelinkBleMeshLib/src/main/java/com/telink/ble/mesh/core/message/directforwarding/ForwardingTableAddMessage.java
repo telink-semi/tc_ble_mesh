@@ -78,13 +78,13 @@ public class ForwardingTableAddMessage extends ConfigMessage {
      * Index of the bearer toward the Path Origin
      * 16 bits
      */
-    public int bearerTowardPathOrigin = 0;
+    public int bearerTowardPathOrigin = 0; // unsigned 0
 
     /**
      * Index of the bearer toward the Path Target
      * 16 bits
      */
-    public int bearerTowardPathTarget = 0;
+    public int bearerTowardPathTarget = 0; //
 
 
     public static ForwardingTableAddMessage getSimple(int destinationAddress, int netKeyIndex) {

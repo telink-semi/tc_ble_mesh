@@ -23,6 +23,7 @@
 package com.telink.ble.mesh.ui.adapter;
 
 import android.content.Context;
+import android.util.ArraySet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,11 +40,9 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.ui.IconGenerator;
 
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * todo direct forwarding list
- */
 public class DirectForwardingListAdapter extends BaseRecyclerViewAdapter<DirectForwardingListAdapter.ViewHolder> {
     List<DirectForwardingInfo> infoList;
     Context mContext;
@@ -77,8 +76,9 @@ public class DirectForwardingListAdapter extends BaseRecyclerViewAdapter<DirectF
         DirectForwardingInfo info = infoList.get(position);
 
         int localAdr = TelinkMeshApplication.getInstance().getMeshInfo().localAddress;
-        holder.tv_origin.setText(mContext.getString(R.string.df_origin_desc, String.format("%04X", info.originAdr)));
-        holder.tv_target.setText(String.format("0x%04X", info.target.meshAddress));
+//        holder.tv_origin.setText(mContext.getString(R.string.df_origin_desc, String.format("%04X", info.originAdr)));
+        holder.tv_origin.setText(String.format("0x%04X", info.originAdr));
+        holder.tv_target.setText(String.format("0x%04X", info.target));
 
         holder.rv_nodes.setLayoutManager(new LinearLayoutManager(mContext));
         holder.rv_nodes.setAdapter(new SimpleDeviceAdapter(info.nodesOnRoute));
@@ -106,9 +106,9 @@ public class DirectForwardingListAdapter extends BaseRecyclerViewAdapter<DirectF
 
     class SimpleDeviceAdapter extends BaseRecyclerViewAdapter<SimpleDeviceViewHolder> {
 
-        List<NodeInfo> innerDevices;
+        ArrayList<Integer> innerDevices;
 
-        SimpleDeviceAdapter(List<NodeInfo> devices) {
+        SimpleDeviceAdapter(ArrayList<Integer> devices) {
             this.innerDevices = devices;
         }
 
@@ -124,10 +124,12 @@ public class DirectForwardingListAdapter extends BaseRecyclerViewAdapter<DirectF
         @Override
         public void onBindViewHolder(SimpleDeviceViewHolder holder, int position) {
             super.onBindViewHolder(holder, position);
-            NodeInfo nodeInfo = innerDevices.get(position);
+
+            NodeInfo nodeInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(innerDevices.get(position));
             int pid = nodeInfo.compositionData != null ? nodeInfo.compositionData.pid : 0;
             holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON));
-            holder.tv_device_info.setText(String.format("Node-%04X", nodeInfo.meshAddress));
+//            holder.iv_device.setVisibility(View.GONE);
+            holder.tv_device_info.setText(String.format("Node-%04X", innerDevices.get(position)));
         }
 
         @Override

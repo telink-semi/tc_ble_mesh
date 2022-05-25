@@ -50,7 +50,7 @@ import java.util.List;
 public class MeshInfo implements Serializable, Cloneable {
 
     /**
-     * local storage file name , saved by serializi
+     * local storage file name , saved by serialize
      */
     public static final String FILE_NAME = "com.telink.ble.mesh.demo.STORAGE";
 

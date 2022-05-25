@@ -63,12 +63,12 @@ public class ForwardingTableDeleteMessage extends ConfigMessage {
 
     @Override
     public int getOpcode() {
-        return Opcode.FIRMWARE_UPDATE_GET.value;
+        return Opcode.FORWARDING_TABLE_DELETE.value;
     }
 
     @Override
     public int getResponseOpcode() {
-        return Opcode.FIRMWARE_UPDATE_STATUS.value;
+        return Opcode.FORWARDING_TABLE_STATUS.value;
     }
 
     @Override

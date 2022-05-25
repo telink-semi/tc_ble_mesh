@@ -23,6 +23,7 @@
 package com.telink.ble.mesh.ui;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -60,22 +61,29 @@ import java.util.List;
  */
 public class DirectForwardingActivity extends BaseActivity implements EventListener<String>, View.OnClickListener {
 
-    private static final int REQ_CODE_SELECT_TARGET = 0x01;
+    private static final int REQ_CODE_SELECT_ORIGIN = 0x01;
 
-    private static final int REQ_CODE_SELECT_ROUTE = 0x02;
+    private static final int REQ_CODE_SELECT_TARGET = 0x02;
+
+    private static final int REQ_CODE_SELECT_ROUTE = 0x03;
 
     private MeshInfo meshInfo;
     private Handler handler = new Handler();
 
-    private NodeInfo selectedTarget;
+//    private NodeInfo selectedOrigin;
+    private int selectedOrigin;
 
-    private List<NodeInfo> nodesOnRoute;
+//    private NodeInfo selectedTarget;
+    private int selectedTarget;
+
+    // origin + route + target
+    private ArrayList<Integer> routeNodes = new ArrayList<>();
 
     private int settingIndex = -1;
 
-    private ImageView iv_target;
+    private ImageView iv_target, iv_origin;
 
-    private TextView tv_target;
+    private TextView tv_target, tv_origin;
 
     private SelectedDeviceAdapter deviceAdapter;
 
@@ -90,6 +98,7 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
         enableBackNav(true);
 
         initView();
+        updateOriginInfo();
         updateTargetInfo();
         meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         TelinkMeshApplication.getInstance().addEventListener(DirectedControlStatusMessage.class.getName(), this);
@@ -98,6 +107,7 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
 
 
     private void initView() {
+        findViewById(R.id.tv_select_origin).setOnClickListener(this);
         findViewById(R.id.tv_select_target).setOnClickListener(this);
         findViewById(R.id.tv_select_route).setOnClickListener(this);
 
@@ -105,6 +115,9 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
 
         iv_target = findViewById(R.id.iv_target);
         tv_target = findViewById(R.id.tv_target);
+
+        iv_origin = findViewById(R.id.iv_origin);
+        tv_origin = findViewById(R.id.tv_origin);
 
         RecyclerView rv_route_nodes = findViewById(R.id.rv_route_nodes);
         rv_route_nodes.setLayoutManager(new LinearLayoutManager(this));
@@ -128,53 +141,87 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
 
 
     private void save() {
-        if (selectedTarget == null) {
+
+        if (selectedOrigin== 0) {
+            toastMsg("select origin");
+            return;
+        }
+
+        if (selectedTarget == 0) {
             toastMsg("select target");
             return;
         }
 
-        if (nodesOnRoute == null || nodesOnRoute.size() == 0) {
+        if (routeNodes == null || routeNodes.size() == 0) {
             toastMsg("select nodes on route");
             return;
         }
+
+        boolean exist = DirectForwardingInfoService.getInstance().exists(selectedOrigin, selectedTarget);
+        if(exist){
+            toastMsg("the same origin and target already exists");
+            return;
+        }
+//        allNodes.add(0, selectedOrigin);
+//        allNodes.add(selectedTarget);
         showWaitingDialog("setting direct forwarding...");
         handler.postDelayed(timeoutTask, 10 * 1000);
-        settingIndex = 0;
+        settingIndex = -2;
         setNextDevice();
     }
 
     private void setNextDevice() {
         MeshLogger.d("set next device: " + settingIndex);
-        if (settingIndex >= nodesOnRoute.size()) {
+        if (settingIndex >= routeNodes.size()) {
             toastMsg("set complete");
             dismissWaitingDialog();
             DirectForwardingInfo info = new DirectForwardingInfo();
-            info.originAdr = meshInfo.localAddress;
+//            info.originAdr = meshInfo.localAddress;
+            info.originAdr = selectedOrigin;
             info.target = this.selectedTarget;
-            info.nodesOnRoute = this.nodesOnRoute;
+            /*List<Integer> addresses = new ArrayList<>();
+            for (NodeInfo node:this.nodesOnRoute) {
+                addresses.add(node.meshAddress);
+            }*/
+            info.nodesOnRoute = this.routeNodes;
+
             DirectForwardingInfoService.getInstance().addItem(info);
             setResult(RESULT_OK);
             finish();
             return;
         }
-        NodeInfo node = nodesOnRoute.get(settingIndex);
+
+        int address;
+        if(settingIndex == -2){
+            address = selectedOrigin;
+        } else if (settingIndex == -1) {
+            address = selectedTarget;
+        }else{
+            address = routeNodes.get(settingIndex);
+        }
+        NodeInfo node = meshInfo.getDeviceByMeshAddress(address);
+
         ForwardingTableAddMessage tableAddMessage = new ForwardingTableAddMessage(node.meshAddress);
         tableAddMessage.netKeyIndex = meshInfo.getDefaultNetKey().index;
         tableAddMessage.unicastDestinationFlag = 1;
         tableAddMessage.backwardPathValidatedFlag = 1;
 
         // origin address : use local address
-        tableAddMessage.pathOriginUnicastAddrRange = MeshUtils.getUnicastRange(meshInfo.localAddress, 1);
+        tableAddMessage.pathOriginUnicastAddrRange = MeshUtils.getUnicastRange(selectedOrigin, 1);
 
         // target address range
-        tableAddMessage.pathTargetUnicastAddrRange = MeshUtils.getUnicastRange(selectedTarget.meshAddress, node.elementCnt);
+        tableAddMessage.pathTargetUnicastAddrRange = MeshUtils.getUnicastRange(selectedTarget, node.elementCnt);
 
-        if (node.meshAddress == selectedTarget.meshAddress) {
-            tableAddMessage.bearerTowardPathTarget = (byte) 0; // unsigned
-        } else {
-            tableAddMessage.bearerTowardPathTarget = (byte) 1; // adv
+        if (node.meshAddress == selectedOrigin){ // origin
+            tableAddMessage.bearerTowardPathOrigin = 0; // unsigned
+            tableAddMessage.bearerTowardPathTarget =  1; // adv
+        }else if (node.meshAddress == selectedTarget){ // target
+            tableAddMessage.bearerTowardPathOrigin = 1; // unsigned
+            tableAddMessage.bearerTowardPathTarget = 0; // adv
+        }else {
+            tableAddMessage.bearerTowardPathOrigin = 1; // adv
+            tableAddMessage.bearerTowardPathTarget = 1; // adv
         }
-        tableAddMessage.bearerTowardPathOrigin = (byte) 1; // adv
 
         MeshService.getInstance().sendMeshMessage(tableAddMessage);
     }
@@ -196,8 +243,24 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
         }
     }
 
+
+    private void updateOriginInfo() {
+        if (selectedOrigin == 0) {
+            iv_origin.setVisibility(View.INVISIBLE);
+            tv_origin.setVisibility(View.INVISIBLE);
+            return;
+        } else {
+            iv_origin.setVisibility(View.VISIBLE);
+            tv_origin.setVisibility(View.VISIBLE);
+        }
+        NodeInfo node = meshInfo.getDeviceByMeshAddress(selectedOrigin);
+        int pid = node.compositionData != null ? node.compositionData.pid : 0;
+        iv_origin.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON));
+        tv_origin.setText(String.format("Node-%04X", selectedOrigin));
+    }
+
     private void updateTargetInfo() {
-        if (selectedTarget == null) {
+        if (selectedTarget == 0) {
             iv_target.setVisibility(View.INVISIBLE);
             tv_target.setVisibility(View.INVISIBLE);
             return;
@@ -205,9 +268,10 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
             iv_target.setVisibility(View.VISIBLE);
             tv_target.setVisibility(View.VISIBLE);
         }
-        int pid = selectedTarget.compositionData != null ? selectedTarget.compositionData.pid : 0;
+        NodeInfo node = meshInfo.getDeviceByMeshAddress(selectedTarget);
+        int pid = node.compositionData != null ? node.compositionData.pid : 0;
         iv_target.setImageResource(IconGenerator.getIcon(pid, OnlineState.ON));
-        tv_target.setText(String.format("Node-%04X", selectedTarget.meshAddress));
+        tv_target.setText(String.format("Node-%04X", selectedTarget));
     }
 
     @Override
@@ -218,37 +282,59 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
         if (adrList == null) {
             return;
         }
-        if (requestCode == REQ_CODE_SELECT_TARGET) {
+        if (requestCode == REQ_CODE_SELECT_ORIGIN) {
             if (adrList.size() != 1) {
                 toastMsg("select only one node");
                 return;
             }
-            selectedTarget = meshInfo.getDeviceByMeshAddress(adrList.get(0));
+            selectedOrigin = adrList.get(0);
+//            allNodes.add(selectedOrigin);
+            updateOriginInfo();
+//            tv_target.setText(String.format("selected device: \n%04X", selectedTarget.meshAddress));
+        } else if (requestCode == REQ_CODE_SELECT_TARGET) {
+            if (adrList.size() != 1) {
+                toastMsg("select only one node");
+                return;
+            }
+            selectedTarget = adrList.get(0);
+//            allNodes.add(selectedTarget);
             updateTargetInfo();
 //            tv_target.setText(String.format("selected device: \n%04X", selectedTarget.meshAddress));
         } else if (requestCode == REQ_CODE_SELECT_ROUTE) {
-            nodesOnRoute = new ArrayList<>(adrList.size());
+            routeNodes = (adrList);
             StringBuilder routeText = new StringBuilder("selected route: \n");
+            List<NodeInfo> devices = new ArrayList<>();
             for (int i = 0; i < adrList.size(); i++) {
-                nodesOnRoute.add(meshInfo.getDeviceByMeshAddress(adrList.get(i)));
+                devices.add(meshInfo.getDeviceByMeshAddress(adrList.get(i)));
                 routeText.append(String.format("%04X", adrList.get(i)));
                 if (i != adrList.size() - 1) {
                     routeText.append("\n");
                 }
             }
-            deviceAdapter.resetDevices(nodesOnRoute);
+            deviceAdapter.resetDevices(devices);
         }
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+
+            case R.id.tv_select_origin:
+                startActivityForResult(
+                        new Intent(this, DeviceSelectActivity.class).putExtra(DeviceSelectActivity.KEY_TITLE, "Select Origin"),
+                                REQ_CODE_SELECT_ORIGIN);
+                break;
+
             case R.id.tv_select_target:
-                startActivityForResult(new Intent(this, DeviceSelectActivity.class), REQ_CODE_SELECT_TARGET);
+                startActivityForResult(
+                        new Intent(this, DeviceSelectActivity.class).putExtra(DeviceSelectActivity.KEY_TITLE, "Select Target"),
+                        REQ_CODE_SELECT_TARGET);
                 break;
 
             case R.id.tv_select_route:
-                startActivityForResult(new Intent(this, DeviceSelectActivity.class), REQ_CODE_SELECT_ROUTE);
+                startActivityForResult(
+                        new Intent(this, DeviceSelectActivity.class).putExtra(DeviceSelectActivity.KEY_TITLE, "Select Route"),
+                        REQ_CODE_SELECT_ROUTE);
                 break;
 
             case R.id.btn_save:

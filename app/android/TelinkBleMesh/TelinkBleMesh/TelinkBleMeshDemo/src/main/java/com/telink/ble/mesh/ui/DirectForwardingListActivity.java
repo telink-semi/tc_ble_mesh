@@ -22,7 +22,6 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -34,17 +33,19 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.directforwarding.DirectedControlSetMessage;
-import com.telink.ble.mesh.core.message.directforwarding.DirectedControlStatusMessage;
+import com.telink.ble.mesh.core.message.directforwarding.ForwardingTableDeleteMessage;
+import com.telink.ble.mesh.core.message.directforwarding.ForwardingTableStatusMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.DirectForwardingInfo;
 import com.telink.ble.mesh.model.DirectForwardingInfoService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.DirectForwardingListAdapter;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.List;
 
@@ -60,6 +61,8 @@ public class DirectForwardingListActivity extends BaseActivity implements EventL
     private Handler handler = new Handler();
     private DirectForwardingListAdapter listAdapter;
     private List<DirectForwardingInfo> infoList;
+    private DirectForwardingInfo selectInfo;
+    private int deleteIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,20 +77,18 @@ public class DirectForwardingListActivity extends BaseActivity implements EventL
         findViewById(R.id.btn_add).setOnClickListener(this);
         RecyclerView rv_df = findViewById(R.id.rv_df);
         rv_df.setLayoutManager(new LinearLayoutManager(this));
-
+        DirectForwardingInfoService.getInstance().load(this);
         infoList = DirectForwardingInfoService.getInstance().get();
         listAdapter = new DirectForwardingListAdapter(this, infoList);
-        listAdapter.setOnItemLongClickListener(new BaseRecyclerViewAdapter.OnItemLongClickListener() {
-            @Override
-            public boolean onLongClick(int position) {
-                showDeleteDialog(position);
-                return false;
-            }
+        listAdapter.setOnItemLongClickListener(position -> {
+            showDeleteDialog(position);
+            return false;
         });
         rv_df.setAdapter(listAdapter);
 
         meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-        TelinkMeshApplication.getInstance().addEventListener(DirectedControlStatusMessage.class.getName(), this);
+//        TelinkMeshApplication.getInstance().addEventListener(DirectedControlStatusMessage.class.getName(), this);
+        TelinkMeshApplication.getInstance().addEventListener(ForwardingTableStatusMessage.class.getName(), this);
     }
 
     @Override
@@ -111,13 +112,47 @@ public class DirectForwardingListActivity extends BaseActivity implements EventL
     }
 
     private void showDeleteDialog(int position) {
-        showConfirmDialog("Confirm to delete table ?", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-            }
+        showConfirmDialog("Confirm to delete table ?", (dialog, which) -> {
+            selectInfo = infoList.get(position);
+            deleteIndex = -2;
+            showWaitingDialog("deleting table...");
+            deleteNext();
         });
     }
+
+    private void deleteNext() {
+
+        if (deleteIndex >= selectInfo.nodesOnRoute.size()) {
+            dismissWaitingDialog();
+            DirectForwardingInfoService.getInstance().removeItem(selectInfo);
+            listAdapter.notifyDataSetChanged();
+            MeshLogger.d("delete complete");
+            handler.removeCallbacksAndMessages(null);
+            selectInfo = null;
+        } else {
+
+            int address;
+            if(deleteIndex == -2){
+                address = selectInfo.originAdr;
+            } else if (deleteIndex == -1) {
+                address = selectInfo.target;
+            }else{
+                address = selectInfo.nodesOnRoute.get(deleteIndex);
+            }
+
+            ForwardingTableDeleteMessage deleteMessage = new ForwardingTableDeleteMessage(address);
+            deleteMessage.netKeyIndex = meshInfo.getDefaultNetKey().index;
+            deleteMessage.pathOrigin = selectInfo.originAdr;
+            deleteMessage.destination = selectInfo.target;
+            MeshService.getInstance().sendMeshMessage(deleteMessage);
+            handler.postDelayed(DELETE_TIMEOUT_TASK, 3 * 1000);
+        }
+    }
+
+    private Runnable DELETE_TIMEOUT_TASK = () -> {
+        deleteIndex++;
+        deleteNext();
+    };
 
 
     @Override
@@ -135,7 +170,15 @@ public class DirectForwardingListActivity extends BaseActivity implements EventL
 
     @Override
     public void performed(Event<String> event) {
-
+        if (event.getType().equals(ForwardingTableStatusMessage.class.getName())) {
+            if (selectInfo == null) return;
+            ForwardingTableStatusMessage tableStatusMessage = (ForwardingTableStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
+            MeshLogger.d("tableStatusMessage - " + tableStatusMessage.toString());
+            if (tableStatusMessage.status == 0) {
+                deleteIndex++;
+                deleteNext();
+            }
+        }
     }
 
     @Override

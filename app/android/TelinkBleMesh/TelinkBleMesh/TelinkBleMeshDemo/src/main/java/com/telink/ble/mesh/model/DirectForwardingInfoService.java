@@ -66,6 +66,7 @@ public class DirectForwardingInfoService implements Serializable {
 
     public void removeItem(DirectForwardingInfo item) {
         this.directForwardingInfoList.remove(item);
+        save();
     }
 
     public void clear() {
@@ -75,4 +76,19 @@ public class DirectForwardingInfoService implements Serializable {
     public void save() {
         FileSystem.writeAsObject(TelinkMeshApplication.getInstance(), DF_CACHE, this.directForwardingInfoList);
     }
+
+    public boolean exists(int origin, int target) {
+        if (directForwardingInfoList == null) {
+            return false;
+        }
+        for (DirectForwardingInfo info : directForwardingInfoList) {
+            if (info.originAdr == origin && info.target == target){
+                return  true;
+            }
+        }
+        return false;
+    }
+
+
+
 }
