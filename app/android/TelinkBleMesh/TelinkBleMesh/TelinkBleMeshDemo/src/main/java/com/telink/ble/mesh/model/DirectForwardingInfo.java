@@ -22,7 +22,10 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.model;
 
+import android.util.ArraySet;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,10 +34,10 @@ import java.util.List;
 
 public class DirectForwardingInfo implements Serializable {
 
-    // use provisioner address
+    // use address
     public int originAdr;
 
-    public NodeInfo target;
+    public int  target;
 
-    public List<NodeInfo> nodesOnRoute;
+    public ArrayList<Integer> nodesOnRoute;
 }

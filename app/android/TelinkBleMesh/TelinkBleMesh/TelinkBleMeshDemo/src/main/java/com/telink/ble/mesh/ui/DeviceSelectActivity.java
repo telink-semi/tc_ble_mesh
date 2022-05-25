@@ -51,6 +51,8 @@ public class DeviceSelectActivity extends BaseActivity implements View.OnClickLi
         BaseSelectableListAdapter.SelectStatusChangedListener,
         EventListener<String> {
 
+    public static final String KEY_TITLE = "select-device-title";
+
     public static final String KEY_SELECTED_DEVICES = "selected-devices";
 
     public static final String KEY_SELECT_MULTI = "select-multi";
@@ -74,7 +76,14 @@ public class DeviceSelectActivity extends BaseActivity implements View.OnClickLi
         }
         setContentView(R.layout.activity_device_select);
         mesh = TelinkMeshApplication.getInstance().getMeshInfo();
-        setTitle("Device Select");
+        Intent intent = getIntent();
+        if(intent.hasExtra(KEY_TITLE)){
+            String title = intent.getStringExtra(KEY_TITLE);
+            setTitle(title);
+        }else{
+            setTitle("Device Select");
+        }
+
         enableBackNav(true);
         initView();
         addEventListeners();
