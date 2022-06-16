@@ -27,6 +27,7 @@ import android.os.HandlerThread;
 
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.access.MeshFirmwareParser;
+import com.telink.ble.mesh.core.ble.GattConnection;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.Opcode;
@@ -549,7 +550,9 @@ class BlobTransfer {
 
     private int getSegmentLen() {
         int segLen;
-        if (transferType == BlobTransferType.GATT_INIT || transferType == BlobTransferType.GATT_DIST) {
+        if (GattConnection.mtu < NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG){
+            segLen = NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
+        }else if (transferType == BlobTransferType.GATT_INIT || transferType == BlobTransferType.GATT_DIST) {
             segLen = NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
         } else {
             segLen = extendBearerMode == ExtendBearerMode.NONE ? NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT : NetworkingController.UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;

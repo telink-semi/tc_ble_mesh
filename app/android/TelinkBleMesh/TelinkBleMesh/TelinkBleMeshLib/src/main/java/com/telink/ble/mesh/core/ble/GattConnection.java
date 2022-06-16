@@ -111,7 +111,7 @@ public class GattConnection extends BluetoothGattCallback {
 
     private byte[] proxyNotificationSegBuffer;
 
-    private int mtu = 23;
+    public static int mtu = 23;
 
     private static final int MTU_SIZE_MAX = 517;
 
@@ -179,10 +179,10 @@ public class GattConnection extends BluetoothGattCallback {
      */
     public void sendMeshData(byte type, byte[] data) {
         // opcode: 1 byte, handle: 2 bytes
-        final int mtu = this.mtu - 3;
+        final int segMtu = GattConnection.mtu - 3;
         final boolean isProvisioningPdu = type == ProxyPDU.TYPE_PROVISIONING_PDU;
-        if (data.length > mtu - 1) {
-            double ceil = Math.ceil(((double) data.length) / (mtu - 1));
+        if (data.length > segMtu - 1) {
+            double ceil = Math.ceil(((double) data.length) / (segMtu - 1));
             int pktNum = (int) ceil;
             byte oct0;
             byte[] pkt;
@@ -193,15 +193,15 @@ public class GattConnection extends BluetoothGattCallback {
                     } else {
                         oct0 = (byte) (ProxyPDU.SAR_SEG_CONTINUE | type);
                     }
-                    pkt = new byte[mtu];
+                    pkt = new byte[segMtu];
                     pkt[0] = oct0;
-                    System.arraycopy(data, (mtu - 1) * i, pkt, 1, mtu - 1);
+                    System.arraycopy(data, (segMtu - 1) * i, pkt, 1, segMtu - 1);
                 } else {
                     oct0 = (byte) (ProxyPDU.SAR_SEG_LAST | type);
-                    int restSize = data.length - (mtu - 1) * i;
+                    int restSize = data.length - (segMtu - 1) * i;
                     pkt = new byte[restSize + 1];
                     pkt[0] = oct0;
-                    System.arraycopy(data, (mtu - 1) * i, pkt, 1, restSize);
+                    System.arraycopy(data, (segMtu - 1) * i, pkt, 1, restSize);
                 }
                 log("send segment pkt: " + Arrays.bytesToHexString(pkt, ":"));
                 if (isProvisioningPdu) {
@@ -561,7 +561,7 @@ public class GattConnection extends BluetoothGattCallback {
     }
 
     public int getMtu() {
-        return this.mtu;
+        return mtu;
     }
 
     /************************************************************************

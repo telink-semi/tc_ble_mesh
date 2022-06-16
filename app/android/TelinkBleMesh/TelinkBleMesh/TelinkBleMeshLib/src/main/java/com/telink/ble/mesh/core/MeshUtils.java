@@ -66,6 +66,7 @@ public final class MeshUtils {
      */
     public static final int LOCAL_MESSAGE_ADDRESS = 0;
 
+    public static final long IV_MISSING = 0xFFFFFFFFL;
 
     private static SecureRandom rng;
 

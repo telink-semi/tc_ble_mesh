@@ -94,18 +94,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
         CertCacheService.getInstance().load(this); // load cert cache
-        mHandler.postDelayed(this::testEcdh, 2 * 1000);
-    }
-
-
-    private void testEcdh() {
-        // E29689  █
-        MeshLogger.d("out - " + Arrays.bytesToHexString("▉".getBytes()));
-        /*byte[] pubKey = Arrays.hexToBytes("13EF44FCEA4D96F0EED383EC515705FC");
-        byte[] data = Arrays.hexToBytes("11223344556677889900aabbccef11223344556677889900aabbccef");
-        byte[] out = Encipher.aes(data, pubKey);
-
-        MeshLogger.d("out - " + Arrays.bytesToHexString(out));*/
     }
 
     private void initBottomNav() {
@@ -203,12 +191,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 MeshLogger.log("online status enabled");
             }
             sendTimeStatus();
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    checkMeshOtaState();
-                }
-            }, 3 * 1000);
+            mHandler.postDelayed(() -> checkMeshOtaState(), 3 * 1000);
         } else if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
             mHandler.removeCallbacksAndMessages(null);
         } else if (event.getType().equals(FDStatusMessage.class.getName())) {

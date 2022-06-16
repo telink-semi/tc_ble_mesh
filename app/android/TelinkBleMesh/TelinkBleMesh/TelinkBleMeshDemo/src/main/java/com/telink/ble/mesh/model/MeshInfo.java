@@ -62,6 +62,11 @@ public class MeshInfo implements Serializable, Cloneable {
     public static final int UNINITIALIZED_IVI = -1;
 
     /**
+     * save meshUUID in json
+     */
+    public String meshUUID;
+
+    /**
      * local provisioner UUID
      */
     public String provisionerUUID;
@@ -423,7 +428,7 @@ public class MeshInfo implements Serializable, Cloneable {
                     i, APP_KEY_VAL, i));
         }
 
-        meshInfo.ivIndex = 0;
+        meshInfo.ivIndex = 0x01;
         meshInfo.sequenceNumber = 0;
         meshInfo.nodes = new ArrayList<>();
         meshInfo.localAddress = DEFAULT_LOCAL_ADDRESS;
@@ -431,6 +436,9 @@ public class MeshInfo implements Serializable, Cloneable {
 
 //        meshInfo.provisionerUUID = SharedPreferenceHelper.getLocalUUID(context);
         meshInfo.provisionerUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
+
+        meshInfo.meshUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
+
 
         meshInfo.groups = new ArrayList<>();
         meshInfo.unicastRange = new ArrayList<>();

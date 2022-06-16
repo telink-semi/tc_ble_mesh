@@ -31,9 +31,6 @@ import com.telink.ble.mesh.core.message.config.ConfigMessage;
  */
 public class SolicitationItemsClearMessage extends ConfigMessage {
 
-    /**
-     * New On-Demand Private GATT Proxy state
-     */
     public byte[] addressRange;
 
     public boolean ack;

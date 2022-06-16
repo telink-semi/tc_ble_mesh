@@ -277,11 +277,7 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
         Toolbar toolbar = findViewById(R.id.title_bar);
         if (enable) {
             toolbar.setNavigationIcon(R.drawable.ic_arrow_left);
-            toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    finish();
-                }
-            });
+            toolbar.setNavigationOnClickListener(v -> onBackPressed());
         } else {
             toolbar.setNavigationIcon(null);
         }

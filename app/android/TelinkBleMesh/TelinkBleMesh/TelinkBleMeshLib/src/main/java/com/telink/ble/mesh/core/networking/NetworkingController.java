@@ -29,6 +29,7 @@ import android.util.SparseLongArray;
 
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
+import com.telink.ble.mesh.core.ble.GattConnection;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.networking.beacon.MeshBeaconPDU;
@@ -151,7 +152,8 @@ public class NetworkingController {
     /**
      * from mesh configuration
      */
-    private int initIvIndex = 0;
+    private long initIvIndex = 0;
+
 
     /**
      * unsigned 32-bit integer
@@ -291,8 +293,8 @@ public class NetworkingController {
     public void setup(MeshConfiguration configuration) {
         this.clear();
         this.resetDirectAddress();
-        this.initIvIndex = configuration.ivIndex;
-        this.ivIndex = initIvIndex & MeshUtils.UNSIGNED_INTEGER_MAX;
+        this.initIvIndex = configuration.ivIndex & MeshUtils.UNSIGNED_INTEGER_MAX;
+        this.ivIndex = initIvIndex;
         int seqNo = configuration.sequenceNumber;
         this.mSequenceNumber.set(initSequenceNumber(seqNo));
         this.netKeyIndex = configuration.netKeyIndex;
@@ -347,6 +349,9 @@ public class NetworkingController {
     }
 
     private int getSegmentAccessLength(int dstAddress, int opcode) {
+        if (GattConnection.mtu < UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG){
+            return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
+        }
         if (dstAddress == directAddress && opcode == Opcode.BLOB_CHUNK_TRANSFER.value) {
             return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG;
         }
@@ -405,10 +410,10 @@ public class NetworkingController {
         }
 
         if (privateBeaconReceived) {
-            MeshPrivateBeacon beacon = MeshPrivateBeacon.createIvUpdatingBeacon(this.initIvIndex, privateBeaconKey, isIvUpdating);
+            MeshPrivateBeacon beacon = MeshPrivateBeacon.createIvUpdatingBeacon((int) this.initIvIndex, privateBeaconKey, isIvUpdating);
             sendMeshBeaconPdu(beacon);
         } else {
-            SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.createIvUpdatingBeacon(this.initIvIndex, networkId, beaconKey, isIvUpdating);
+            SecureNetworkBeacon networkBeacon = SecureNetworkBeacon.createIvUpdatingBeacon((int) this.initIvIndex, networkId, beaconKey, isIvUpdating);
             log("send beacon: " + networkBeacon.toString());
             sendMeshBeaconPdu(networkBeacon);
         }
@@ -417,7 +422,7 @@ public class NetworkingController {
     }
 
     private void onIvUpdated(long newIvIndex) {
-        if (newIvIndex > initIvIndex) {
+        if (newIvIndex > initIvIndex || this.initIvIndex == MeshUtils.IV_MISSING) {
             log(String.format(" iv updated to %08X", newIvIndex));
             this.initIvIndex = (int) newIvIndex;
             this.deviceSequenceNumberMap.clear();
@@ -436,6 +441,12 @@ public class NetworkingController {
                 updating,
                 this.ivIndex,
                 this.isIvUpdating));
+        if (this.ivIndex == MeshUtils.IV_MISSING) {
+            this.isIvUpdating = updating;
+            this.ivIndex = remoteIvIndex;
+            this.onIvUpdated(remoteIvIndex);
+            return;
+        }
         // d-value
         long dVal = remoteIvIndex - this.ivIndex;
 
