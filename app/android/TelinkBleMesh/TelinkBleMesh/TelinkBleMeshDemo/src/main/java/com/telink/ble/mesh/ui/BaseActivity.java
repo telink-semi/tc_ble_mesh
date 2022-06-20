@@ -138,7 +138,7 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
         if (this.toast != null) {
             this.toast.cancel();
         }
-        this.toast = Toast.makeText(this, s, Toast.LENGTH_SHORT);
+        this.toast = Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT);
         this.toast.show();
     }
 

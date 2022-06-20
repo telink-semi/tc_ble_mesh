@@ -143,7 +143,6 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         initView();
         fillSchedulerInfo();
 
-
         TelinkMeshApplication.getInstance().addEventListener(SchedulerActionStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(TimeStatusMessage.class.getName(), this);
     }
@@ -178,7 +177,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         TimeSetMessage timeSetMessage = TimeSetMessage.getSimple(eleAdr, meshInfo.getDefaultAppKeyIndex(),
                 time, offset, 1);
-
+        timeSetMessage.setAck(true);
         boolean re = MeshService.getInstance().sendMeshMessage(timeSetMessage);
         if (re) {
             timeSetting = true;
@@ -405,8 +404,6 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
                 meshInfo.getDefaultAppKeyIndex(), scheduler, true, 1);
         MeshService.getInstance().sendMeshMessage(setMessage);
         toastMsg("scheduler setting sent");
-
-
     }
 
 
