@@ -87,7 +87,7 @@ public class NetworkingController {
 
 //    private static final int SEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH + 1;
 
-    private ExtendBearerMode extendBearerMode;
+    private ExtendBearerMode extendBearerMode = ExtendBearerMode.NONE;
 
     // segmentedAccessLength = unsegmentedAccessLength + 1
 //    public int unsegmentedAccessLength = UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
@@ -267,6 +267,8 @@ public class NetworkingController {
     public static final long NETWORK_INTERVAL_FOR_FU = 180; // 240 ms // 320
 
     public static final long NETWORK_INTERVAL_DEFAULT = 240; // 240 ms // 320
+
+//    public static final long NETWORK_INTERVAL_DEFAULT = 10; // for test
 
     /**
      * network packet sent to un-direct connected node should push to queue, and send periodically

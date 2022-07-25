@@ -163,7 +163,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         } else {
             int directAdr = MeshService.getInstance().getDirectConnectedNodeAddress();
             NodeInfo nodeInfo = meshInfo.getDeviceByMeshAddress(directAdr);
-            if (nodeInfo != null && nodeInfo.compositionData != null && nodeInfo.compositionData.pid == AppSettings.PID_REMOTE) {
+            if (nodeInfo != null && nodeInfo.compositionData != null && AppSettings.isRemote(nodeInfo.compositionData.pid)) {
                 // if direct connected device is remote-control, disconnect
                 MeshService.getInstance().idle(true);
             }

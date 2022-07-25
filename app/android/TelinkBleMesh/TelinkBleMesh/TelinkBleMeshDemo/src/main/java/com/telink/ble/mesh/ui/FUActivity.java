@@ -715,13 +715,8 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             String vidInfo = Arrays.bytesToHexString(vid, ":");
             String firmVersion = "pid-" + pidInfo + " vid-" + vidInfo;
 
-
             tv_version_info.setText(getString(R.string.version, firmVersion));
-
-
             tv_file_path.setText(fileName);
-
-
         } catch (IOException e) {
             e.printStackTrace();
             firmwareData = null;
