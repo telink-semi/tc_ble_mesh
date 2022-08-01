@@ -22,6 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
+#include "tl_common.h"
 #include "bsp.h"
 #include "proj/common/compatibility.h"
 #include "proj/common/static_assert.h"
@@ -125,7 +126,7 @@ static void gpio_analog_resistance_init(void)
  *                    0: not set analog register
  * @return     none.
  */
-#if (BLC_PM_DEEP_RETENTION_MODE_EN)
+#if (PM_DEEPSLEEP_RETENTION_ENABLE)
 _attribute_ram_code_
 #endif
 void gpio_init(int anaRes_init_en)

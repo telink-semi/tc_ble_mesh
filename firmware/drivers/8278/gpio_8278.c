@@ -22,6 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
+#include "tl_common.h"
 #include "bsp.h"
 #include "proj/common/compatibility.h" // add by weixiong in mesh
 #include "proj/common/static_assert.h" // add by weixiong in mesh
@@ -108,7 +109,7 @@ static void gpio_analog_resistance_init(void)
  * do not use pull-up or pull-down resistance on the board in the process of practical
  * application because it may have the risk of electric leakage .
  */
-#if (BLC_PM_DEEP_RETENTION_MODE_EN) // add by weixiong in mesh
+#if (PM_DEEPSLEEP_RETENTION_ENABLE) // add by weixiong in mesh
 _attribute_ram_code_
 #endif
 void gpio_init(int anaRes_init_en)

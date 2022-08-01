@@ -1,3 +1,63 @@
+## V3.3.3.5
+
+### Bug Fixes
+
+* (Firmware) fix bug of V3.3.4: if TIMER 0-TIMER 2 was set to be enabled (disable by default), TIMER 0-TIMER 2 will be disabled by mistake after the node is provisioned.
+
+### Features
+
+* (Firmware) add accepting OTA rules: upgrade is allowed only when the PID is the same, see OTA_ADOPT_RULE_CHECK_PID_EN, enabled by default; upgrade is allowed when the VID (Version ID) is increased, see OTA_ADOPT_RULE_CHECK_VID_EN, disabled by default. (This OTA rule has been added in V3.3.4)
+* (Firmware) replace Telink BSD license with Apache 2.0 License.
+* (Firmware) add customized low-power mesh products that can send and receive messages, see LPN_CONTROL_EN for details.
+* (Firmware) add customized protocol of Provision.
+* (Firmware) add support extend ADV mode for gateway.
+
+### Performance Improvements
+
+* (Firmware/Android/iOS) modify Version ID format, from two-digit ASCII code to four-digit BCD code, such as 3 3 3 5, which still be two bytes, see FW_VERSION_TELINK_RELEASE for details.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+* Flash and RAM (default target):
+
+  - 8258_mesh:_________Flash 118 KB, RAM (28 KB + 3K stack),
+  - 8258_mesh_LPN:____Flash 111 KB, RAM (23 KB + 3K stack),
+  - 8258_mesh_gw:_____Flash 128 KB, RAM (36 KB + 3K stack),
+  - 8258_mesh_switch:__Flash 106 KB, RAM (25 KB + 3K stack),
+
+
+### Bug Fixes
+
+* (Firmware) 修复V3.3.4版本问题：如果客户使能了TIMER0-TIMER2(默认不使能)，节点被组网后，TIMER0-TIMER2会被错误关闭的问题。
+
+### Features
+
+* (Firmware) 增加是否接受升级的OTA规则：PID相同时才允许升级，详见OTA_ADOPT_RULE_CHECK_PID_EN，默认使能；VID(Version ID)增加时才允许升级，详见OTA_ADOPT_RULE_CHECK_VID_EN，默认不使能。(该OTA规则在V3.3.4中已添加)
+* (Firmware) 替换 Telink BSD license为 Apache 2.0 license。
+* (Firmware) 增加客户定制的能收发命令的低功耗mesh产品，详见 LPN_CONTROL_EN。
+* (Firmware) 增加客户定制的配网协议。
+* (Firmware) 增加gateway支持收发extend ADV的模式。
+
+### Performance Improvements
+
+* (Firmware/Android/iOS) 修改两个byte的版本号格式，由原来的两个数字的ASCII码值改为4个数字的BCD码，如 3 3 3 5，仍然是占用两个byte，详见FW_VERSION_TELINK_RELEASE的定义。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
 ## V3.3.4
 
 ### Bug Fixes

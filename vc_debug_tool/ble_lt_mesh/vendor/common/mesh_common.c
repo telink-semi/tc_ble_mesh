@@ -2388,7 +2388,7 @@ void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 		p_tx_head = &tx_head;
 	}
 	p_tx_head->par_type = BEAR_TX_PAR_TYPE_REMAINING_TIMES;
-	p_tx_head->val = 16;// 20 - (TRANSMIT_CNT + 1); // extend count, keep sending (16+7)*10ms
+	p_tx_head->val[0] = 16;// 20 - (TRANSMIT_CNT + 1); // extend count, keep sending (16+7)*10ms
 #elif (0) // keep sending 2.5s if need
 	if(0x0002 == adr_dst){
 		if(0 == p_tx_head)
@@ -2397,7 +2397,7 @@ void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 			p_tx_head = &tx_head;
 		}
 		p_tx_head->par_type = BEAR_TX_PAR_TYPE_REMAINING_TIMES;
-		p_tx_head->val = 255;// extend count, interval 10ms
+		p_tx_head->val[0] = 255;// extend count, interval 10ms
 	}
 #endif
 #if DU_ENABLE
@@ -2407,7 +2407,7 @@ void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 		p_tx_head = &tx_head;
 	}
 	p_tx_head->par_type = BEAR_TX_PAR_TYPE_REMAINING_TIMES;
-	p_tx_head->val = 16;
+	p_tx_head->val[0] = 16;
 #endif
 	#if GATEWAY_ENABLE
 	if(OP_TYPE_VENDOR == GET_OP_TYPE(op)){
@@ -3609,6 +3609,98 @@ _PRINT_FUN_RAMCODE_ int LogMsgModuleDlg_and_buf(u8 *pbuf,int len,char *log_str,c
     #endif
 }
 #endif	
+
+#if !WIN32
+/**
+ * @brief  calculate sha256 for firmware in flash. SDK need to be equal or greater than V3.3.4.
+ */
+#if 1
+void mbedtls_sha256_flash( unsigned long addr, size_t ilen, unsigned char output[32], int is224 )
+{
+	int ret;
+	mbedtls_sha256_context ctx;
+
+	mbedtls_sha256_init( &ctx );
+
+	if( ( ret = mbedtls_sha256_starts_ret( &ctx, is224 ) ) != 0 )
+		goto exit;
+
+#if 0
+    if( ( ret = mbedtls_sha256_update_ret( &ctx, input, ilen ) ) != 0 )
+        goto exit;
+#else
+	while(ilen){
+		#if(MODULE_WATCHDOG_ENABLE)
+		wd_clear();
+		#endif
+		
+		u8 buf_in[64];// = {0};	// must 64, no need initial to save time.
+		u16 ilen_2;
+		if(ilen < 64){
+			 ilen_2 = ilen;
+			 ilen = 0;
+		}else{
+			ilen_2 = 64;
+			ilen -= 64;
+		}
+
+		flash_read_page(addr, ilen_2, buf_in);
+		addr += ilen_2;
+		
+		if( ( ret = mbedtls_sha256_update_ret( &ctx, buf_in, ilen_2 ) ) != 0 ){
+			goto exit;
+		}
+	}
+#endif
+
+	if( ( ret = mbedtls_sha256_finish_ret( &ctx, output ) ) != 0 )
+		goto exit;
+
+exit:
+	mbedtls_sha256_free( &ctx );
+}
+
+
+#else
+/**
+ * @brief  calculate sha256 for firmware in flash. for SDK equal or lower than V3.3.3.
+ */
+void mbedtls_sha256_flash( unsigned long addr, size_t ilen, unsigned char output[32], int is224 )
+{
+    mbedtls_sha256_context ctx;
+
+    mbedtls_sha256_init( &ctx );
+    mbedtls_sha256_starts( &ctx, is224 );
+#if 0
+	mbedtls_sha256_update( &ctx, input, ilen );
+#else
+	while(ilen){
+		#if(MODULE_WATCHDOG_ENABLE)
+		wd_clear();
+		#endif
+		
+		u8 buf_in[64];// = {0}; // must 64, no need initial to save time.
+		u16 ilen_2;
+		if(ilen < 64){
+			 ilen_2 = ilen;
+			 ilen = 0;
+		}else{
+			ilen_2 = 64;
+			ilen -= 64;
+		}
+
+		flash_read_page(addr, ilen_2, buf_in);
+		addr += ilen_2;
+		
+		mbedtls_sha256_update( &ctx, buf_in, ilen_2 );
+	}
+#endif
+    mbedtls_sha256_finish( &ctx, output );
+    mbedtls_sha256_free( &ctx );
+}
+#endif
+
+#endif
 
 
 /**

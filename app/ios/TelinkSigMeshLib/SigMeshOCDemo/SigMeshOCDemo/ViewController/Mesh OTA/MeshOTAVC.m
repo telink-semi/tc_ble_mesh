@@ -350,29 +350,32 @@
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
-        dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-        [SDKLibCommand firmwareUpdateInformationGetWithDestination:kMeshAddress_allNodes firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMax successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
-            if (responseMessage.firmwareInformationListCount > 0) {
-                /*
-                 responseMessage.firmwareInformationList.firstObject.currentFirmwareID.length = 4: 2 bytes pid(设备类型) + 2 bytes vid(版本id).
-                 */
-                if (responseMessage.firmwareInformationList.count > 0) {
-                    NSData *currentFirmwareID = responseMessage.firmwareInformationList.firstObject.currentFirmwareID;
-                    UInt16 pid = 0,vid = 0;
-                    Byte *pu = (Byte *)[currentFirmwareID bytes];
-                    if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
-                    if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
-                    vid = CFSwapInt16HostToBig(vid);
-                    TeLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
-                    [weakSelf updateNodeModelVidWithAddress:source vid:vid];
+        //如果responseMax = 0，则无需发送到0xFFFF获取版本号。
+        if (responseMax > 0 || (responseMax == 0 && LPNArray.count == 0)) {
+            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+            [SDKLibCommand firmwareUpdateInformationGetWithDestination:kMeshAddress_allNodes firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMax successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
+                if (responseMessage.firmwareInformationListCount > 0) {
+                    /*
+                     responseMessage.firmwareInformationList.firstObject.currentFirmwareID.length = 4: 2 bytes pid(设备类型) + 2 bytes vid(版本id).
+                     */
+                    if (responseMessage.firmwareInformationList.count > 0) {
+                        NSData *currentFirmwareID = responseMessage.firmwareInformationList.firstObject.currentFirmwareID;
+                        UInt16 pid = 0,vid = 0;
+                        Byte *pu = (Byte *)[currentFirmwareID bytes];
+                        if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
+                        if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
+                        vid = CFSwapInt16HostToBig(vid);
+                        TeLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
+                        [weakSelf updateNodeModelVidWithAddress:source vid:vid];
+                    }
                 }
-            }
-        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-            dispatch_semaphore_signal(semaphore);
-        }];
-        //Most provide 4 seconds
-        dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
+            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                dispatch_semaphore_signal(semaphore);
+            }];
+            //Most provide 4 seconds
+            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
+        }
         
         if (LPNArray && LPNArray.count) {
             for (SigNodeModel *model in LPNArray) {
