@@ -959,10 +959,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                         if (beaconType == SecureNetworkBeacon.BEACON_TYPE_SECURE_NETWORK) {
                             mNetworkingController.parseSecureBeacon(payloadData, this.networkBeaconKey);
                         }
-                        // draft feature complete
-                        else if (beaconType == SecureNetworkBeacon.BEACON_TYPE_MESH_PRIVATE) {
-                            mNetworkingController.parsePrivateBeacon(payloadData, this.privateBeaconKey);
-                        }
+                        // draft feature
+
                     }
                     break;
             }
