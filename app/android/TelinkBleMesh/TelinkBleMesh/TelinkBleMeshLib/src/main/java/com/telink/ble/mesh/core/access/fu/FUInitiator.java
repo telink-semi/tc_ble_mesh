@@ -228,7 +228,9 @@ class FUInitiator implements BlobTransferCallback {
      * if all devices executed, then next step
      */
     // draft feature
-    private void nextAction() {}
+    private void nextAction() {
+
+    }
 
 
     /**

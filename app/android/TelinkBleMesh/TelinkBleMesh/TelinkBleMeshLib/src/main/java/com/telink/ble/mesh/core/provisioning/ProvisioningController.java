@@ -293,7 +293,7 @@ public class ProvisioningController {
         delayHandler.postDelayed(provisioningTimeoutTask, TIMEOUT_PROVISIONING);
 
         // draft feature
-//        provisionInvite();
+        provisionInvite();
     }
 
     public void clear() {
