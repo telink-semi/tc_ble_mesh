@@ -64,7 +64,7 @@
 }
 
 - (void)clickEdit{
-    EditModelIDsViewController *vc = (EditModelIDsViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_EditModelIDsViewControllerID storybroad:@"Setting"];
+    EditModelIDsViewController *vc = (EditModelIDsViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_EditModelIDsViewControllerID storyboard:@"Setting"];
     [self.navigationController pushViewController:vc animated:YES];
 }
 

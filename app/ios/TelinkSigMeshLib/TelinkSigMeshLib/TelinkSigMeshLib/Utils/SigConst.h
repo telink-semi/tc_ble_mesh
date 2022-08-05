@@ -70,6 +70,7 @@ UIKIT_EXTERN NSString * const kScanList_key;
 UIKIT_EXTERN NSString * const kJsonMeshUUID_key;
 UIKIT_EXTERN NSString * const kCurrenProvisionerUUID_key;
 UIKIT_EXTERN NSString * const kCurrenProvisionerSno_key;
+UIKIT_EXTERN NSString * const kLocationIvIndexAndSequenceNumberDictionary_key;//缓存当前首页的所有mesh的provisioner与ivIndex+sequenceNumber的映射字典。
 //homes
 UIKIT_EXTERN NSString * const kCurrentMeshProvisionAddress_key;
 //SigScanRspModel
@@ -404,6 +405,10 @@ UIKIT_EXTERN NSString * const kSigMeshLibCommandInvalidNetKeyIndexErrorMessage;/
 /*AppKey Index 不存在*/
 UIKIT_EXTERN UInt32 const kSigMeshLibCommandInvalidAppKeyIndexErrorCode;// 0x02110107
 UIKIT_EXTERN NSString * const kSigMeshLibCommandInvalidAppKeyIndexErrorMessage;// Invalid AppKey Index
+
+/*Mesh未连接*/
+UIKIT_EXTERN UInt32 const kSigMeshLibCommandMeshDisconnectedErrorCode;// 0x02110108
+UIKIT_EXTERN NSString * const kSigMeshLibCommandMeshDisconnectedErrorMessage;// Mesh Disconnected
 
 /*telink当前定义的三个设备类型*/
 UIKIT_EXTERN UInt16 const SigNodePID_CT;// 1

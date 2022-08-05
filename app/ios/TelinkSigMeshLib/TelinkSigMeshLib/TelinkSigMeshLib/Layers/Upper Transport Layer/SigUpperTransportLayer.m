@@ -109,15 +109,30 @@
 }
 
 - (void)sendAccessPdu:(SigAccessPdu *)accessPdu withTtl:(UInt8)initialTtl usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
-    UInt32 sequence = [SigMeshLib.share.dataSource getCurrentProvisionerIntSequenceNumber];
+    UInt32 sequence = [SigMeshLib.share.dataSource getSequenceNumberUInt32];
     SigNetkeyModel *networkKey = command.curNetkey;
     SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromAccessPdu:accessPdu usingKeySet:keySet ivIndex:command.curIvIndex sequence:sequence];
     _networkManager.upperTransportLayer.upperTransportPdu = pdu;
 //    TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
-    BOOL isSegmented = pdu.transportPdu.length > SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength || accessPdu.isSegmented || SigMeshLib.share.dataSource.security;
+    
+    //1.修正当前进行分包的pdu.unsegmentedMessageLowerTransportPDUMaxLength的值。
+    //2.如果是SigMeshLib.share.dataSource.security==SigMeshMessageSecurityHigh，必得是发送segment。
+    //3.如果客户指定了command.sendBySegmentPDU = YES，也强制发送segment。默认是command.sendBySegmentPDU = NO，优先发送unsegment。
+    //4.如果command.sendBySegmentPDU = NO，根据pdu.unsegmentedMessageLowerTransportPDUMaxLength和类定义的消息类message.isSegmented判断是否进行segment分包。
     if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && accessPdu.destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-        isSegmented = pdu.transportPdu.length > kUnsegmentedMessageLowerTransportPDUMaxLength || accessPdu.isSegmented || SigMeshLib.share.dataSource.security;
+        pdu.unsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
+    } else {
+        pdu.unsegmentedMessageLowerTransportPDUMaxLength = command.unsegmentedMessageLowerTransportPDUMaxLength;
     }
+    BOOL isSegmented = SigMeshLib.share.dataSource.security == SigMeshMessageSecurityHigh;
+    if (!isSegmented) {
+        if (command.sendBySegmentPDU) {
+            isSegmented = YES;
+        } else {
+            isSegmented = pdu.transportPdu.length > pdu.unsegmentedMessageLowerTransportPDUMaxLength || accessPdu.message.isSegmented;
+        }
+    }
+    
     if (isSegmented) {
         TeLogInfo(@"sending segment pdu.");
         // Enqueue the PDU. If the queue was empty, the PDU will be sent

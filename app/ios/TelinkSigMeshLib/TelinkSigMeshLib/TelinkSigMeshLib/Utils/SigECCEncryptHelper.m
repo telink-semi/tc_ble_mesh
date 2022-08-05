@@ -67,7 +67,7 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 }
 
 ///返回手机端64字节的ECC公钥
-- (NSData *)getPublicKeyData {
+- (NSData * _Nullable)getPublicKeyData {
     if (@available(iOS 10.0, *)) {
         if (self.seckeyModel && self.seckeyModel.publicKey) {
             NSData *pub = [self getPublicKeyBitsFromKey:self.seckeyModel.publicKey];
@@ -191,43 +191,49 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 ///
 /// - parameter publicKey: The device's Public Key as bytes.
 /// - returns: The ECDH Shared Secret.
-- (NSData *)calculateSharedSecretEithPublicKey:(NSData *)publicKey {
-    // First byte has to be 0x04 to indicate uncompressed representation.
-    UInt8 tem = 0x04;
-    NSMutableData *devicePublicKeyData = [NSMutableData dataWithBytes:&tem length:1];
-    [devicePublicKeyData appendData:publicKey];
-    
-    NSMutableDictionary * pubKeyParameters = [[NSMutableDictionary alloc] init];
-    [pubKeyParameters setObject:(id)kSecAttrKeyTypeEC forKey:(id)kSecAttrKeyType];
-    [pubKeyParameters setObject:(__bridge id)kSecAttrKeyClassPublic forKey:(__bridge id)kSecAttrKeyClass];
-    
-    CFErrorRef *err = nil;
-    SecKeyRef devicePublicKey = NULL;
-    
+- (NSData * _Nullable)calculateSharedSecretEithPublicKey:(NSData *)publicKey {
     if (@available(iOS 10.0, *)) {
-        devicePublicKey = SecKeyCreateWithData((CFDataRef)devicePublicKeyData, (CFDictionaryRef)pubKeyParameters, err);
-    }
-    if (err) {
-        TeLogError(@"SecKeyCreateWithData fail.");
-        return nil;
-    }
-    
-    NSMutableDictionary * exchangeResultParams = [[NSMutableDictionary alloc] init];
-    if (@available(iOS 10.0, *)) {
+        // First byte has to be 0x04 to indicate uncompressed representation.
+        UInt8 tem = 0x04;
+        NSMutableData *devicePublicKeyData = [NSMutableData dataWithBytes:&tem length:1];
+        [devicePublicKeyData appendData:publicKey];
+        
+        NSMutableDictionary * pubKeyParameters = [[NSMutableDictionary alloc] init];
+        [pubKeyParameters setObject:(id)kSecAttrKeyTypeEC forKey:(id)kSecAttrKeyType];
+        [pubKeyParameters setObject:(__bridge id)kSecAttrKeyClassPublic forKey:(__bridge id)kSecAttrKeyClass];
+        
+        CFErrorRef error = NULL;
+        SecKeyRef devicePublicKey = SecKeyCreateWithData((CFDataRef)devicePublicKeyData, (CFDictionaryRef)pubKeyParameters, &error);
+        if (error) {
+            CFRelease(error);
+            if (devicePublicKey) {
+                CFRelease(devicePublicKey);
+            }
+            TeLogError(@"SecKeyCreateWithData fail.");
+            return nil;
+        }
+        
+        NSMutableDictionary * exchangeResultParams = [[NSMutableDictionary alloc] init];
         [exchangeResultParams setObject:@(32) forKey:(id)kSecKeyKeyExchangeParameterRequestedSize];
-    }
-    
-    NSData *ssk;
-    if (@available(iOS 10.0, *)) {
-        ssk = CFBridgingRelease(SecKeyCopyKeyExchangeResult(self.seckeyModel.privateKey, kSecKeyAlgorithmECDHKeyExchangeStandard, devicePublicKey, (CFDictionaryRef)exchangeResultParams, err));
-    }
-    
-    if (err) {
-        TeLogError(@"SecKeyCopyKeyExchangeResult fail.");
+
+        CFDataRef sharedSecret = SecKeyCopyKeyExchangeResult(self.seckeyModel.privateKey, kSecKeyAlgorithmECDHKeyExchangeStandard, devicePublicKey, (__bridge CFDictionaryRef)pubKeyParameters, &error);
+        if (devicePublicKey) {
+            CFRelease(devicePublicKey);
+        }
+        if (error) {
+            CFRelease(error);
+            if (sharedSecret) {
+                CFRelease(sharedSecret);
+            }
+            TeLogError(@"SecKeyCopyKeyExchangeResult fail.");
+            return nil;
+        }
+                
+        return (__bridge_transfer NSData*)sharedSecret;
+
+    } else {
         return nil;
     }
-    
-    return ssk;
 }
 
 @end
