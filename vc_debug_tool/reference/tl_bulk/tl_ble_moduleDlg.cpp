@@ -4161,6 +4161,11 @@ int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u32 size
     return err;
 }
 
+#if DEBUG_SHOW_VC_SELF_EN
+// TODO
+int directed_forwarding_dependents_update_start(u16 netkey_offset, u8 type, u16 path_enpoint, u16 dependent_addr, u8 dependent_ele_cnt){return 0;}
+#endif
+
 void CTl_ble_moduleDlg::OnBnClickedChnSet()
 {
 	// TODO: 在此添加控件通知处理程序代码

@@ -282,7 +282,10 @@ class FUDistributor implements BlobTransferCallback {
      * if all devices executed, then next step
      */
     // draft feature
-    private void nextAction(){}
+    private void nextAction() {
+
+
+    }
 
     /**
      * filter out initiator messages

@@ -292,7 +292,8 @@ public class RemoteProvisioningController implements ProvisioningBridge {
     };
 
     // draft feature
-    private void onMeshMessagePrepared(MeshMessage meshMessage) { }
+    private void onMeshMessagePrepared(MeshMessage meshMessage) {
+    }
 
 
     @Override

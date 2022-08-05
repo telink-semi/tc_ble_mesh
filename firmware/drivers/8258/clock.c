@@ -39,7 +39,10 @@ _attribute_data_retention_	unsigned char system_clk_type;
  * @param[in]   SYS_CLK - the clock source of the system clock.
  * @return      none
  */
-_attribute_ram_code_ void clock_init(SYS_CLK_TypeDef SYS_CLK)
+#if (PM_DEEPSLEEP_RETENTION_ENABLE)
+_attribute_ram_code_
+#endif
+void sys_clock_init(SYS_CLK_TypeDef SYS_CLK)
 {
 	reg_clk_sel = (unsigned char)SYS_CLK;
 	system_clk_type = (unsigned char)SYS_CLK;
@@ -52,12 +55,24 @@ _attribute_ram_code_ void clock_init(SYS_CLK_TypeDef SYS_CLK)
 		*/
 		analog_write(0x0c, 0xc6);
 	}
+}
 
+static inline void watchdog_init()
+{
 #if (MODULE_WATCHDOG_ENABLE)
 	reg_tmr_ctrl = MASK_VAL(
 		FLD_TMR_WD_CAPT, (MODULE_WATCHDOG_ENABLE ? (WATCHDOG_INIT_TIMEOUT * CLOCK_MCU_RUN_CODE_1MS >> WATCHDOG_TIMEOUT_COEFF):0)
 		, FLD_TMR_WD_EN, (MODULE_WATCHDOG_ENABLE?1:0));
 #endif
+}
+
+#if (PM_DEEPSLEEP_RETENTION_ENABLE)
+_attribute_ram_code_
+#endif
+void clock_init(SYS_CLK_TypeDef SYS_CLK)
+{
+	sys_clock_init(SYS_CLK);
+	watchdog_init();
 }
 
 /**

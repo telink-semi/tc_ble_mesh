@@ -50,9 +50,21 @@ import java.util.List;
 public class MeshInfo implements Serializable, Cloneable {
 
     /**
-     * local storage file name , saved by serializi
+     * local storage file name , saved by serialize
      */
     public static final String FILE_NAME = "com.telink.ble.mesh.demo.STORAGE";
+
+    /**
+     * if the {@link #ivIndex} is uninitialized, provision is not permitted
+     * once received the ivIndex in beacon , the ivIndex should be replaced
+     *
+     */
+    public static final int UNINITIALIZED_IVI = -1;
+
+    /**
+     * save meshUUID in json
+     */
+    public String meshUUID;
 
     /**
      * local provisioner UUID
@@ -90,7 +102,7 @@ public class MeshInfo implements Serializable, Cloneable {
      * <p>
      * should be updated and saved when {@link NetworkInfoUpdateEvent} received
      */
-    public int ivIndex;
+    public int ivIndex = UNINITIALIZED_IVI;
 
     /**
      * provisioner sequence number
@@ -416,7 +428,7 @@ public class MeshInfo implements Serializable, Cloneable {
                     i, APP_KEY_VAL, i));
         }
 
-        meshInfo.ivIndex = 0;
+        meshInfo.ivIndex = 0x01;
         meshInfo.sequenceNumber = 0;
         meshInfo.nodes = new ArrayList<>();
         meshInfo.localAddress = DEFAULT_LOCAL_ADDRESS;
@@ -424,6 +436,9 @@ public class MeshInfo implements Serializable, Cloneable {
 
 //        meshInfo.provisionerUUID = SharedPreferenceHelper.getLocalUUID(context);
         meshInfo.provisionerUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
+
+        meshInfo.meshUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
+
 
         meshInfo.groups = new ArrayList<>();
         meshInfo.unicastRange = new ArrayList<>();

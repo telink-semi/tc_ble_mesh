@@ -118,8 +118,8 @@ public class MeshPrivateBeacon extends MeshBeaconPDU {
         byte[] privateBcnData = ByteBuffer.allocate(5).order(ByteOrder.BIG_ENDIAN)
                 .put(flags).putInt(ivIndex).array();
         MeshLogger.d("beacon data: " + Arrays.bytesToHexString(privateBcnData));
-//        byte[] random = MeshUtils.generateRandom(13);
-        byte[] random = Arrays.hexToBytes("435f18f85cf78a3121f58478a5"); //  mesh sig sample
+        byte[] random = MeshUtils.generateRandom(13);
+//        byte[] random = Arrays.hexToBytes("435f18f85cf78a3121f58478a5"); //  mesh sig sample
 
         byte[] authTag = calcAuthTag(privateBcnData, random, privateBeaconKey);
         MeshLogger.d("authTag: " + Arrays.bytesToHexString(authTag));

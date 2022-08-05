@@ -64,10 +64,10 @@ void clock_rc_set(SYS_CLK_TypeDef SYS_CLK)
  * @param[in]   SYS_CLK - the clock source of the system clock.
  * @return      none
  */
-#if (BLC_PM_DEEP_RETENTION_MODE_EN)
+#if (PM_DEEPSLEEP_RETENTION_ENABLE)
 _attribute_ram_code_
 #endif
-void clock_init(SYS_CLK_TypeDef SYS_CLK)
+void sys_clock_init(SYS_CLK_TypeDef SYS_CLK)
 {
 	reg_clk_sel = (unsigned char)SYS_CLK;
 	system_clk_type = (unsigned char)SYS_CLK;
@@ -79,16 +79,27 @@ void clock_init(SYS_CLK_TypeDef SYS_CLK)
 	}
 #endif
 
+	if(!(pm_is_MCU_deepRetentionWakeup())){
+		rc_24m_cal();
+	}
+}
+
+static inline void watchdog_init()
+{
 #if (MODULE_WATCHDOG_ENABLE)
 	reg_tmr_ctrl = MASK_VAL( // modify by weixiong in mesh: CLOCK_SYS_CLOCK_1MS --> CLOCK_MCU_RUN_CODE_1MS
 		FLD_TMR_WD_CAPT, (MODULE_WATCHDOG_ENABLE ? (WATCHDOG_INIT_TIMEOUT * CLOCK_MCU_RUN_CODE_1MS >> WATCHDOG_TIMEOUT_COEFF):0)
 		, FLD_TMR_WD_EN, (MODULE_WATCHDOG_ENABLE?1:0));
 #endif
+}
 
-	if(!(pm_is_MCU_deepRetentionWakeup())){
-		rc_24m_cal();
-	}
-
+#if (PM_DEEPSLEEP_RETENTION_ENABLE)
+_attribute_ram_code_
+#endif
+void clock_init(SYS_CLK_TypeDef SYS_CLK)
+{
+	sys_clock_init(SYS_CLK);
+	watchdog_init();
 }
 
 /**
