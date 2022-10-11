@@ -64,6 +64,46 @@
 
 #pragma mark add node entrance
 - (IBAction)addNewDevice:(UIBarButtonItem *)sender {
+    //v3.3.3.6及之后版本，初次分享过来，没有ivIndex时，需要连接mesh成功或者用户手动输入ivIndex。
+    if (!SigDataSource.share.existLocationIvIndexAndLocationSequenceNumber) {
+        __weak typeof(self) weakSelf = self;
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"connect to the current network to get IV index before add nodes or input IV index in input box？" preferredStyle:UIAlertControllerStyleAlert];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Input IV index" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            TeLogDebug(@"点击输入ivIndex");
+            UIAlertController *inputAlertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"Please input IV index in input box" preferredStyle:UIAlertControllerStyleAlert];
+            [inputAlertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+                textField.placeholder = @"Please input IV index in input box";
+                textField.text = @"0";
+            }];
+            [inputAlertController addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                TeLogDebug(@"输入ivIndex完成");
+                UITextField *ivIndex = inputAlertController.textFields.firstObject;
+                UInt32 ivIndexUInt32 = [LibTools uint32From16String:ivIndex.text];
+                [SigDataSource.share setIvIndexUInt32:ivIndexUInt32];
+                [SigDataSource.share setSequenceNumberUInt32:0];
+                [SigDataSource.share saveCurrentIvIndex:ivIndexUInt32 sequenceNumber:0];
+                TeLogDebug(@"输入ivIndex=%d",ivIndexUInt32);
+                UIAlertController *pushAlertController = [UIAlertController alertControllerWithTitle:@"Hits" message:[NSString stringWithFormat:@"IV index = 0x%08X, start add devices.", ivIndexUInt32] preferredStyle:UIAlertControllerStyleAlert];
+                [pushAlertController addAction:[UIAlertAction actionWithTitle:@"Add Devices" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                    [weakSelf pushToAddDeviceVC];
+                }]];
+                [weakSelf presentViewController:pushAlertController animated:YES completion:nil];
+            }]];
+            [inputAlertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+                TeLogDebug(@"点击取消");
+            }]];
+            [weakSelf presentViewController:inputAlertController animated:YES completion:nil];
+        }]];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            TeLogDebug(@"点击取消");
+        }]];
+        [self presentViewController:alertController animated:YES completion:nil];
+    } else {
+        [self pushToAddDeviceVC];
+    }
+}
+
+- (void)pushToAddDeviceVC {
     BOOL isRemoteAdd = [[[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType] boolValue];
     [SDKLibCommand setBluetoothCentralUpdateStateCallback:nil];
     if (isRemoteAdd) {
@@ -204,7 +244,7 @@
     }];
 }
 
-- (void)scrollowToBottom {
+- (void)scrollToBottom {
     NSInteger item = [self.collectionView numberOfItemsInSection:0] - 1;
     NSIndexPath *lastItemIndex = [NSIndexPath indexPathForItem:item inSection:0];
     [self.collectionView scrollToItemAtIndexPath:lastItemIndex atScrollPosition:UICollectionViewScrollPositionTop animated:NO];
@@ -464,10 +504,10 @@
         }
         #endif
     } else {
-        //非主页，重连mesh成功，是否需要获取设备的状态（v3.3.3.5版本发现meshOTA界面是需要获取状态的）
+        //非主页，重连mesh成功，是否需要获取设备的状态（v3.3.3.5版本发现meshOTA界面是需要获取状态的）(v3.3.3.6版本发现弹UIAlertController框提示@"cancel Mesh ota finish!"没有点击确定的情况下不会获取设备状态，此次再次修改)
         dispatch_async(dispatch_get_main_queue(), ^{
             UIViewController *vc = self.currentViewController;
-            if ([vc isMemberOfClass:[self class]] || [vc isMemberOfClass:[MeshOTAVC class]]) {
+            if ([vc isMemberOfClass:[self class]] || [vc isMemberOfClass:[MeshOTAVC class]] || [vc isMemberOfClass:[UIAlertController class]]) {
                 [self freshOnline:nil];
             } else {
                 TeLogInfo(@"needn`t get status.%@",vc);
@@ -503,7 +543,7 @@
         if (indexPath != nil) {
             SigNodeModel *model = self.source[indexPath.item];
             if (model.isKeyBindSuccess) {
-                SingleDeviceViewController *vc = (SingleDeviceViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SingleDeviceViewControllerID storybroad:@"DeviceSetting"];
+                SingleDeviceViewController *vc = (SingleDeviceViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SingleDeviceViewControllerID storyboard:@"DeviceSetting"];
                 vc.model = model;
                 [self.navigationController pushViewController:vc animated:YES];
             } else {

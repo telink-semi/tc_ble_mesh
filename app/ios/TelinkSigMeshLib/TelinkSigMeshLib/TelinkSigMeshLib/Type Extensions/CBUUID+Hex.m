@@ -27,7 +27,7 @@
 
 /// Creates the UUID from a 32-character hexadecimal string.
 - (instancetype)initWithHex:(NSString *)hex {
-    if(self = [super init]){
+    if([super init]){
         if (hex.length != 32) {
             return nil;
         }

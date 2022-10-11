@@ -50,7 +50,7 @@
     }];
     //set edit scene block
     [cell setClickEditBlock:^{
-        SceneDetailViewController *vc = (SceneDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SceneDetailViewControllerID storybroad:@"Setting"];
+        SceneDetailViewController *vc = (SceneDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SceneDetailViewControllerID storyboard:@"Setting"];
         vc.model = model;
         [weakSelf.navigationController pushViewController:vc animated:YES];
     }];
@@ -104,7 +104,7 @@
     SigSceneModel *model = [[SigSceneModel alloc] init];
     model.number = [NSString stringWithFormat:@"%04X",[[SigDataSource share] getNewSceneAddress]];
     model.name = [NSString stringWithFormat:@"scene:0x%lX",(long)model.number];
-    SceneDetailViewController *vc = (SceneDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SceneDetailViewControllerID storybroad:@"Setting"];
+    SceneDetailViewController *vc = (SceneDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SceneDetailViewControllerID storyboard:@"Setting"];
     vc.model = model;
     [self.navigationController pushViewController:vc animated:YES];
 }
@@ -180,7 +180,7 @@
 
 - (void)showDeleteSceneSuccess:(SigSceneModel *)scene{
     TeLogDebug(@"delect success");
-    [[SigDataSource share] delectSceneModelWithModel:scene];
+    [[SigDataSource share] deleteSceneModelWithModel:scene];
     self.source = [[NSMutableArray alloc] initWithArray:SigDataSource.share.scenes];
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.tableView reloadData];

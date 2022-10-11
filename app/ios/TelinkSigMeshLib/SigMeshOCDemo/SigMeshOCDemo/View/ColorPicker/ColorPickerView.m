@@ -203,11 +203,19 @@
     }
     CFDataSetLength(bitmapData, dimension * dimension * 4);
     [self setColorWheelBitmap:CFDataGetMutableBytePtr(bitmapData) withSize:CGSizeMake(dimension, dimension)];
-    CGImageRef image = [self getImageWithRGBAData:bitmapData width:(int)dimension height:(int)dimension];
-    if (image) {
-        self.wheelImage = image;
-        self.layer.contents = (__bridge id _Nullable)(self.wheelImage);
+    CGDataProviderRef dataProvider = CGDataProviderCreateWithCFData(bitmapData);
+    if (dataProvider != nil) {
+        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+        CGImageRef imageRef = CGImageCreate(dimension, dimension, 8, 32, dimension * 4, colorSpace, (CGBitmapInfo)kCGImageAlphaLast, dataProvider, NULL, 0, kCGRenderingIntentDefault);
+        CGColorSpaceRelease(colorSpace);
+        if (imageRef) {
+            self.wheelImage = imageRef;
+            self.layer.contents = (__bridge id _Nullable)(self.wheelImage);
+            CGImageRelease(imageRef);
+        }
     }
+    CFRelease(bitmapData);
+    CGDataProviderRelease(dataProvider);
 }
 
 - (CGPoint)colorPickerViewSelectedPoint {
@@ -271,16 +279,6 @@
             *hue = 1.0 - *hue;
         }
     }
-}
-
-- (CGImageRef)getImageWithRGBAData:(CFDataRef)data width:(int)width height:(int)height {
-    CGDataProviderRef dataProvider = CGDataProviderCreateWithCFData(data);
-    if (dataProvider == nil) {
-        return nil;
-    }
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGImageRef imageRef = CGImageCreate(width, height, 8, 32, width * 4, colorSpace, (CGBitmapInfo)kCGImageAlphaLast, dataProvider, NULL, 0, kCGRenderingIntentDefault);
-    return imageRef;
 }
 
 @end
