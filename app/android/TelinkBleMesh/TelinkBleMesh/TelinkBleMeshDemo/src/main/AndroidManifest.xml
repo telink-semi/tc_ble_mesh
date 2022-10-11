@@ -164,6 +164,7 @@
         <activity
             android:name="com.telink.ble.mesh.ui.FastProvisionActivity"
             android:screenOrientation="portrait"
+            android:exported="true"
             android:windowSoftInputMode="stateAlwaysHidden"
             tools:ignore="LockedOrientationActivity" />
         <activity

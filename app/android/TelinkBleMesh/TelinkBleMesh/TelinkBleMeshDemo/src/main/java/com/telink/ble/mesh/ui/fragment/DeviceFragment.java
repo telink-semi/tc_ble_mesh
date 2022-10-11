@@ -306,8 +306,8 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
                 break;
 
             case R.id.tv_cmd:
-//                startActivity(new Intent(getActivity(), CmdActivity.class));
-                startActivity(new Intent(getActivity(), CmdTestActivity.class));
+                startActivity(new Intent(getActivity(), CmdActivity.class));
+//                startActivity(new Intent(getActivity(), CmdTestActivity.class));
                 break;
 
             case R.id.tv_log:

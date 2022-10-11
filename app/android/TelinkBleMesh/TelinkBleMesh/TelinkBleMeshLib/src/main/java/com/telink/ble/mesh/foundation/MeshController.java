@@ -107,6 +107,7 @@ import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.ContextUtil;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -960,7 +961,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                             mNetworkingController.parseSecureBeacon(payloadData, this.networkBeaconKey);
                         }
                         // draft feature
-
+                        else if (beaconType == SecureNetworkBeacon.BEACON_TYPE_MESH_PRIVATE) {
+                            mNetworkingController.parsePrivateBeacon(payloadData, this.privateBeaconKey);
+                        }
                     }
                     break;
             }

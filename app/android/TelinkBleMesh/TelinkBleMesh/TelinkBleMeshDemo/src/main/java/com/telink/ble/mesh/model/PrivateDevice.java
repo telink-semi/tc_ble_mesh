@@ -125,7 +125,7 @@ public enum PrivateDevice {
         PrivateDevice[] values = PrivateDevice.values();
         for (PrivateDevice device :
                 values) {
-            if (device.vid == vid && device.pid == pid) {
+            if (device.vid == vid && device.pid == (pid & 0x0FFF)) {
                 return device;
             }
         }

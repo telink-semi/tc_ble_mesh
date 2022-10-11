@@ -445,7 +445,20 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
             enableUI(true);
         } else {
             MeshLogger.log("remote devices scanned: " + remoteDevices.size());
-            provisionNextRemoteDevice(remoteDevices.get(0));
+            RemoteProvisioningDevice dev = remoteDevices.get(0);
+            if (dev.getRssi() < THRESHOLD_REMOTE_RSSI) {
+                StringBuilder sb = new StringBuilder("All devices are weak-signal : \n");
+                for (RemoteProvisioningDevice rpd : remoteDevices) {
+                    sb.append(" uuid-").append(Arrays.bytesToHexString(rpd.getUuid()))
+                            .append(" rssi-").append(rpd.getRssi())
+                            .append(" server-").append(Integer.toHexString(rpd.getServerAddress()))
+                            .append("\n");
+                }
+                showTipDialog(sb.toString());
+                enableUI(true);
+            } else {
+                provisionNextRemoteDevice(remoteDevices.get(0));
+            }
         }
     };
 

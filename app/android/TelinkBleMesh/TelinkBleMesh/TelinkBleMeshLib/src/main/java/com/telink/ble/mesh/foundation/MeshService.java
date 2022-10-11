@@ -123,7 +123,7 @@ public class MeshService implements MeshController.EventCallback {
 
     /**
      * @return direct connected node address,
-     * if 0 : invalid address
+     * or 0 : invalid address
      */
     public int getDirectConnectedNodeAddress() {
         return mController.getDirectNodeAddress();
