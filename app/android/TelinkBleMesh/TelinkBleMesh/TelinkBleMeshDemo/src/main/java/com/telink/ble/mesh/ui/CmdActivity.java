@@ -41,8 +41,16 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.NotificationMessage;
+import com.telink.ble.mesh.core.message.aggregator.AggregatorItem;
+import com.telink.ble.mesh.core.message.aggregator.OpcodeAggregatorSequenceMessage;
+import com.telink.ble.mesh.core.message.aggregator.OpcodeAggregatorStatusMessage;
+import com.telink.ble.mesh.core.message.config.DefaultTTLGetMessage;
+import com.telink.ble.mesh.core.message.config.FriendGetMessage;
+import com.telink.ble.mesh.core.message.config.RelayGetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
+import com.telink.ble.mesh.core.message.lighting.LightnessDefaultGetMessage;
+import com.telink.ble.mesh.core.message.lighting.LightnessRangeGetMessage;
 import com.telink.ble.mesh.core.networking.AccessType;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
@@ -110,6 +118,8 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             "Vendor Off NO-ACK",
             "Generic On",
             "Generic Off",
+            "Opcode Aggregator(Lightness Default Get， + Lightness Range Get)",
+            "Opcode Aggregator(TTL Get + Friend Get + Relay Get)",
             "[Custom]" // custom message
     };
 
@@ -187,6 +197,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         onAccessTypeSelect(0);
         TelinkMeshApplication.getInstance().addEventListener(OnOffStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(StatusNotificationEvent.EVENT_TYPE_NOTIFICATION_MESSAGE_UNKNOWN, this);
+        TelinkMeshApplication.getInstance().addEventListener(OpcodeAggregatorStatusMessage.class.getName(), this);
     }
 
 
@@ -412,7 +423,32 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
                 meshMessage = OnOffSetMessage.getSimple(MSG_DST_ADR, appKeyIndex, OnOffSetMessage.OFF, true, 0);
                 break;
 
-            case 7:
+
+            case 7: // OpcodeAggregatorSequenceMessage - app key
+            {
+
+                int elementAddress = 0x0002;
+                List<MeshMessage> aggMsgs = new ArrayList<>();
+                aggMsgs.add(new LightnessDefaultGetMessage());
+                aggMsgs.add(new LightnessRangeGetMessage());
+                byte[] params = MeshUtils.aggregateMessages(elementAddress, aggMsgs);
+                meshMessage = new OpcodeAggregatorSequenceMessage(0x0002, AccessType.APPLICATION, appKeyIndex, params);
+                break;
+            }
+
+            case 8: // OpcodeAggregatorSequenceMessage - device key
+            {
+                int elementAddress = 0x0002;
+                List<MeshMessage> aggMsgs = new ArrayList<>();
+                aggMsgs.add(new DefaultTTLGetMessage());
+                aggMsgs.add(new RelayGetMessage());
+                aggMsgs.add(new FriendGetMessage());
+                byte[] params = MeshUtils.aggregateMessages(elementAddress, aggMsgs);
+                meshMessage = new OpcodeAggregatorSequenceMessage(0x0002, AccessType.DEVICE, appKeyIndex, params);
+                break;
+            }
+
+            case 9:
                 createNewMessage();
                 return;
 
@@ -483,6 +519,19 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
             int opcode = notificationMessage.getOpcode();
             logHandler.obtainMessage(MSG_APPEND_LOG, String.format("Unknown status notify opcode:%04X", opcode) + " -- params:" + Arrays.bytesToHexString(notificationMessage.getParams())).sendToTarget();
+        } else if (event.getType().equals(OpcodeAggregatorStatusMessage.class.getName())) {
+            NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
+            OpcodeAggregatorStatusMessage aggStatusMsg = (OpcodeAggregatorStatusMessage) notificationMessage.getStatusMessage();
+            List<AggregatorItem> items = aggStatusMsg.statusItems;
+            StringBuilder desc = new StringBuilder("Opcode Aggregator Status: \n");
+            desc.append("raw:").append(Arrays.bytesToHexString(notificationMessage.getParams())).append("\n");
+            desc.append("parsed:\n");
+            desc.append("\tstatus=").append(aggStatusMsg.status).append("\n")
+                    .append(String.format("\telementAdr=%04X", aggStatusMsg.elementAddress)).append("\n");
+            for (AggregatorItem item : items) {
+                desc.append("\t").append(item.toString()).append("\n");
+            }
+            logHandler.obtainMessage(MSG_APPEND_LOG, desc.toString()).sendToTarget();
         }
     }
 

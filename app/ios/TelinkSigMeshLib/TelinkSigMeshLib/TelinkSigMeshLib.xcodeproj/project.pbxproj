@@ -173,6 +173,8 @@
 		254EC8B727D85582006A0BD0 /* SDKLibCommand+firmwareUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = 254EC8B527D85582006A0BD0 /* SDKLibCommand+firmwareUpdate.m */; };
 		254EC8BA27D85790006A0BD0 /* SDKLibCommand+remoteProvision.h in Headers */ = {isa = PBXBuildFile; fileRef = 254EC8B827D85790006A0BD0 /* SDKLibCommand+remoteProvision.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		254EC8BB27D85790006A0BD0 /* SDKLibCommand+remoteProvision.m in Sources */ = {isa = PBXBuildFile; fileRef = 254EC8B927D85790006A0BD0 /* SDKLibCommand+remoteProvision.m */; };
+		254EC8D327D886A9006A0BD0 /* SDKLibCommand+directForwarding.h in Headers */ = {isa = PBXBuildFile; fileRef = 254EC8D127D886A9006A0BD0 /* SDKLibCommand+directForwarding.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		254EC8D427D886A9006A0BD0 /* SDKLibCommand+directForwarding.m in Sources */ = {isa = PBXBuildFile; fileRef = 254EC8D227D886A9006A0BD0 /* SDKLibCommand+directForwarding.m */; };
 		255394F924907A9B0095B499 /* pem2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A324907A9B0095B499 /* pem2.h */; };
 		255394FA24907A9B0095B499 /* pem2.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A324907A9B0095B499 /* pem2.h */; };
 		255394FB24907A9B0095B499 /* pem.h in Headers */ = {isa = PBXBuildFile; fileRef = 255394A424907A9B0095B499 /* pem.h */; };
@@ -356,6 +358,8 @@
 		25957ECA237AC6C100816137 /* SigGenericMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 25957EC8237AC6C100816137 /* SigGenericMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		25957ECB237AC6C100816137 /* SigGenericMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 25957EC9237AC6C100816137 /* SigGenericMessage.m */; };
 		25A76E9A25FB5CEF00DEF34B /* CheckSampleData.m in Sources */ = {isa = PBXBuildFile; fileRef = 25A76E9925FB5CEF00DEF34B /* CheckSampleData.m */; };
+		25A7ADA428052C9400CB86B6 /* SDKLibCommand+minor_ENH.h in Headers */ = {isa = PBXBuildFile; fileRef = 25A7ADA228052C9400CB86B6 /* SDKLibCommand+minor_ENH.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		25A7ADA528052C9400CB86B6 /* SDKLibCommand+minor_ENH.m in Sources */ = {isa = PBXBuildFile; fileRef = 25A7ADA328052C9400CB86B6 /* SDKLibCommand+minor_ENH.m */; };
 		25B8764C24850474006C76CB /* SigBluetooth.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B8764A24850474006C76CB /* SigBluetooth.m */; };
 		25B8764D24850474006C76CB /* SigBluetooth.m in Sources */ = {isa = PBXBuildFile; fileRef = 25B8764A24850474006C76CB /* SigBluetooth.m */; };
 		25B8764E24850474006C76CB /* SigBluetooth.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B8764B24850474006C76CB /* SigBluetooth.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -498,6 +502,8 @@
 		254EC8B527D85582006A0BD0 /* SDKLibCommand+firmwareUpdate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+firmwareUpdate.m"; sourceTree = "<group>"; };
 		254EC8B827D85790006A0BD0 /* SDKLibCommand+remoteProvision.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+remoteProvision.h"; sourceTree = "<group>"; };
 		254EC8B927D85790006A0BD0 /* SDKLibCommand+remoteProvision.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+remoteProvision.m"; sourceTree = "<group>"; };
+		254EC8D127D886A9006A0BD0 /* SDKLibCommand+directForwarding.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+directForwarding.h"; sourceTree = "<group>"; };
+		254EC8D227D886A9006A0BD0 /* SDKLibCommand+directForwarding.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+directForwarding.m"; sourceTree = "<group>"; };
 		255394A324907A9B0095B499 /* pem2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem2.h; sourceTree = "<group>"; };
 		255394A424907A9B0095B499 /* pem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pem.h; sourceTree = "<group>"; };
 		255394A524907A9B0095B499 /* ssl3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssl3.h; sourceTree = "<group>"; };
@@ -595,6 +601,8 @@
 		25957EC8237AC6C100816137 /* SigGenericMessage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SigGenericMessage.h; sourceTree = "<group>"; };
 		25957EC9237AC6C100816137 /* SigGenericMessage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SigGenericMessage.m; sourceTree = "<group>"; };
 		25A76E9925FB5CEF00DEF34B /* CheckSampleData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CheckSampleData.m; sourceTree = "<group>"; };
+		25A7ADA228052C9400CB86B6 /* SDKLibCommand+minor_ENH.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+minor_ENH.h"; sourceTree = "<group>"; };
+		25A7ADA328052C9400CB86B6 /* SDKLibCommand+minor_ENH.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+minor_ENH.m"; sourceTree = "<group>"; };
 		25B8764A24850474006C76CB /* SigBluetooth.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SigBluetooth.m; sourceTree = "<group>"; };
 		25B8764B24850474006C76CB /* SigBluetooth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SigBluetooth.h; sourceTree = "<group>"; };
 		25B95FE8238E4DBD00244D14 /* BackgroundTimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BackgroundTimer.h; sourceTree = "<group>"; };
@@ -707,6 +715,8 @@
 		2528952B2468F6F200E590F9 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				25A7ADA128052C2800CB86B6 /* minor ENH */,
+				254EC8D027D88691006A0BD0 /* direct forwarding */,
 				254EC8AF27D85443006A0BD0 /* private beacon */,
 				254EC8A827D84DD8006A0BD0 /* Opcodes Aggregator Sequence */,
 				25F8C83E2754C3D2004342D8 /* CDTP */,
@@ -975,6 +985,15 @@
 			path = "private beacon";
 			sourceTree = "<group>";
 		};
+		254EC8D027D88691006A0BD0 /* direct forwarding */ = {
+			isa = PBXGroup;
+			children = (
+				254EC8D127D886A9006A0BD0 /* SDKLibCommand+directForwarding.h */,
+				254EC8D227D886A9006A0BD0 /* SDKLibCommand+directForwarding.m */,
+			);
+			path = "direct forwarding";
+			sourceTree = "<group>";
+		};
 		255394A024907A9B0095B499 /* OpenSSL */ = {
 			isa = PBXGroup;
 			children = (
@@ -1098,6 +1117,15 @@
 				254AEF9725EF3E990072F2C2 /* SDKLibCommand+certificate.m */,
 			);
 			path = "cert-base provision";
+			sourceTree = "<group>";
+		};
+		25A7ADA128052C2800CB86B6 /* minor ENH */ = {
+			isa = PBXGroup;
+			children = (
+				25A7ADA228052C9400CB86B6 /* SDKLibCommand+minor_ENH.h */,
+				25A7ADA328052C9400CB86B6 /* SDKLibCommand+minor_ENH.m */,
+			);
+			path = "minor ENH";
 			sourceTree = "<group>";
 		};
 		25C0AFCF235D597400846CFB = {
@@ -1260,6 +1288,7 @@
 				2553958E24907AA40095B499 /* srtp.h in Headers */,
 				252894AC2468F13400E590F9 /* SigSegmentedControlMessage.h in Headers */,
 				2553952024907A9D0095B499 /* bio.h in Headers */,
+				254EC8D327D886A9006A0BD0 /* SDKLibCommand+directForwarding.h in Headers */,
 				25C30DB52469264A00F06076 /* TelinkSigMeshLib.h in Headers */,
 				252894A92468F13400E590F9 /* SigSegmentedMessage.h in Headers */,
 				25E8C86A274E2C9F00435BD7 /* OpenSSLHelper+EPA.h in Headers */,
@@ -1341,6 +1370,7 @@
 				2553951824907A9D0095B499 /* sha.h in Headers */,
 				2553954224907AA00095B499 /* objects.h in Headers */,
 				252894CA2468F13400E590F9 /* SigConst.h in Headers */,
+				25A7ADA428052C9400CB86B6 /* SDKLibCommand+minor_ENH.h in Headers */,
 				2553950224907A9C0095B499 /* dtls1.h in Headers */,
 				252894CD2468F13400E590F9 /* SigPublishManager.h in Headers */,
 				252894DB2468F13400E590F9 /* SigFastProvisionAddManager.h in Headers */,
@@ -1668,7 +1698,9 @@
 				252894F82468F13400E590F9 /* SigDataSource.m in Sources */,
 				254EC8B727D85582006A0BD0 /* SDKLibCommand+firmwareUpdate.m in Sources */,
 				252894F92468F13400E590F9 /* SigConst.m in Sources */,
+				25A7ADA528052C9400CB86B6 /* SDKLibCommand+minor_ENH.m in Sources */,
 				252894FA2468F13400E590F9 /* SigAccessMessage.m in Sources */,
+				254EC8D427D886A9006A0BD0 /* SDKLibCommand+directForwarding.m in Sources */,
 				252894FD2468F13400E590F9 /* TelinkHttpManager.m in Sources */,
 				252894FE2468F13400E590F9 /* SigNetworkManager.m in Sources */,
 				25F8C8532754E09D004342D8 /* SDKLibCommand+CDTP.m in Sources */,
@@ -1809,6 +1841,7 @@
 					"SUPPORTCARTIFICATEBASED=1",
 					"SUPPORTEPA=1",
 					"SUPPORTOPCODESAGGREGATOR=1",
+					"SUPPORTEXTENDSIONS=1",
 				);
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"";
 				INFOPLIST_FILE = "TelinkSigMeshLib copy-Info.plist";
@@ -1826,7 +1859,7 @@
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.3.5;
+				MARKETING_VERSION = 3.3.3.6;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1859,6 +1892,7 @@
 					"SUPPORTCARTIFICATEBASED=1",
 					"SUPPORTEPA=1",
 					"SUPPORTOPCODESAGGREGATOR=1",
+					"SUPPORTEXTENDSIONS=1",
 				);
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/TelinkSigMeshLib/Third Library/OpenSSL/include\"";
 				INFOPLIST_FILE = "TelinkSigMeshLib copy-Info.plist";
@@ -1876,7 +1910,7 @@
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.3.5;
+				MARKETING_VERSION = 3.3.3.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -2067,12 +2101,10 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/ios/lib",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.3.5;
+				MARKETING_VERSION = 3.3.3.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -2110,12 +2142,10 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL-Universal/ios/lib",
 					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/OpenSSL/lib",
-					"$(PROJECT_DIR)/TelinkSigMeshLib/Third\\ Library/TelinkEncrypt/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 3.3.3.5;
+				MARKETING_VERSION = 3.3.3.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshLib;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;

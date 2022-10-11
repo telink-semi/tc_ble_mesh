@@ -39,6 +39,7 @@ import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.ui.DebugActivity;
+import com.telink.ble.mesh.ui.DirectForwardingListActivity;
 import com.telink.ble.mesh.ui.FUActivity;
 import com.telink.ble.mesh.ui.MeshInfoActivity;
 import com.telink.ble.mesh.ui.SceneListActivity;
@@ -78,7 +79,6 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
         view.findViewById(R.id.view_settings).setOnClickListener(this);
         view.findViewById(R.id.view_debug).setOnClickListener(this);
         view.findViewById(R.id.view_share).setOnClickListener(this);
-        view.findViewById(R.id.view_mesh_ota).setOnClickListener(this);
         view.findViewById(R.id.view_mesh_info).setOnClickListener(this);
         ll_location_setting = view.findViewById(R.id.ll_location_setting);
         view.findViewById(R.id.btn_location_setting).setOnClickListener(this);
@@ -87,8 +87,12 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
 
         if (AppSettings.DRAFT_FEATURES_ENABLE) {
             view.findViewById(R.id.view_mesh_ota).setVisibility(View.VISIBLE);
+            view.findViewById(R.id.view_df).setVisibility(View.VISIBLE);
+            view.findViewById(R.id.view_mesh_ota).setOnClickListener(this);
+            view.findViewById(R.id.view_df).setOnClickListener(this);
         } else {
             view.findViewById(R.id.view_mesh_ota).setVisibility(View.GONE);
+            view.findViewById(R.id.view_df).setVisibility(View.GONE);
         }
 
         view.findViewById(R.id.view_tests).setVisibility(View.GONE); // for release
@@ -142,6 +146,10 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
 
             case R.id.view_tests:
                 showActionDialog();
+                break;
+
+            case R.id.view_df:
+                startActivity(new Intent(getActivity(), DirectForwardingListActivity.class));
                 break;
         }
     }

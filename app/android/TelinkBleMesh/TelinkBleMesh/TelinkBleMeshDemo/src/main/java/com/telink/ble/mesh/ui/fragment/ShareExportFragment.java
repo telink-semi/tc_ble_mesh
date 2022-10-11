@@ -114,13 +114,18 @@ public class ShareExportFragment extends BaseFragment implements View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_export:
+                MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+                if(meshInfo.nodes.size() == 0){
+                    toastMsg("not allow to share empty network");
+                    return;
+                }
                 List<MeshNetKey> selectedKeys = getSelectedNetKeys();
                 if (selectedKeys.size() == 0) {
                     toastMsg("select at least one net key");
                     return;
                 }
                 if (rb_file.isChecked()) {
-                    MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+
                     File file = MeshStorageService.getInstance().exportMeshToJson(
                             exportDir,
                             MeshStorageService.JSON_FILE,

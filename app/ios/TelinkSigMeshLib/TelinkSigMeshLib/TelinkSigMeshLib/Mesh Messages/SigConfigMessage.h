@@ -108,7 +108,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param data The data from where the indexes should be read.
 /// @param offset The offset from where to read the indexes.
 /// @returns Decoded Key Indexes.
-+ (SigConfigNetAndAppKeyMessage *)decodeNetAndAppKeyIndexFromData:(NSData *)data atOffset:(int)offset;
++ (nullable SigConfigNetAndAppKeyMessage *)decodeNetAndAppKeyIndexFromData:(NSData *)data atOffset:(int)offset;
 
 @end
 
@@ -201,7 +201,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) NSMutableArray <SigElementModel *>*elements;
 
 - (BOOL)isSegmented;
-- (NSData *)parameters;
 
 /// This initializer constructs the Page 0 of Composition Data from the given Node.
 /// @param node  The Node to construct the Page 0 from.
@@ -219,7 +218,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigAppKeyAdd : SigConfigNetAndAppKeyMessage
 /// The 128-bit Application Key data.
 @property (nonatomic,strong) NSData *key;
-- (NSData *)parameters;
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -233,7 +231,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigAppKeyUpdate : SigConfigNetAndAppKeyMessage
 /// The 128-bit Application Key data.
 @property (nonatomic,strong) NSData *key;
-- (NSData *)parameters;
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -247,7 +244,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigCompositionDataStatus : SigConfigMessage
 /// The Composition Data page.
 @property (nonatomic,strong) SigCompositionDataPage *page;
-- (NSData *)parameters;
 - (instancetype)initWithReportPage:(SigCompositionDataPage *)page;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -256,7 +252,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x03
 @interface SigConfigModelPublicationSet : SigConfigAnyModelMessage
 @property (nonatomic,strong) SigPublish *publish;
-- (NSData *)parameters;
 - (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress model:(SigModelIDModel *)model;
 - (instancetype)initWithDisablePublicationForModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
@@ -270,7 +265,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark opcode:0x8000
 @interface SigConfigAppKeyDelete : SigConfigNetAndAppKeyMessage
-- (NSData *)parameters;
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -282,7 +276,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark opcode:0x8001
 @interface SigConfigAppKeyGet : SigConfigNetKeyMessage
-- (NSData *)parameters;
 - (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -303,7 +296,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Application Key Indexes bound to the Network Key known to the Node.
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*applicationKeyIndexes;//[KeyIndex]
-- (NSData *)parameters;
 - (instancetype)initWithNetWorkKey:(SigNetkeyModel *)networkKey applicationKeys:(NSArray <SigAppkeyModel *>*)applicationKeys status:(SigConfigMessageStatus)status;
 - (instancetype)initWithStatus:(SigConfigMessageStatus)status forMessage:(SigConfigAppKeyGet *)message;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -313,7 +305,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x8003
 @interface SigConfigAppKeyStatus : SigConfigNetAndAppKeyMessage
 @property (nonatomic,assign) SigConfigMessageStatus status;
-- (NSData *)parameters;
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey;
 - (instancetype)initWithStatus:(SigConfigMessageStatus)status forMessage:(SigConfigNetAndAppKeyMessage *)message;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -325,7 +316,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// Page number of the Composition Data to get.
 @property (nonatomic,assign) UInt8 page;
 - (instancetype)initWithPage:(UInt8)page;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -336,7 +326,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark opcode:0x8009
 @interface SigConfigBeaconGet : SigConfigMessage
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -375,7 +364,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark opcode:0x800C
 @interface SigConfigDefaultTtlGet : SigConfigMessage
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -388,7 +376,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigDefaultTtlSet : SigConfigMessage
 /// The Time To Live (TTL) value. Valid value is in range 0x00, 0x02...0x7F.
 @property (nonatomic,assign) UInt8 ttl;
-- (NSData *)parameters;
 - (instancetype)initWithTtl:(UInt8)ttl;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -402,7 +389,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigDefaultTtlStatus : SigConfigMessage
 /// The Time To Live (TTL) value. Valid value is in range 1...127.
 @property (nonatomic,assign) UInt8 ttl;
-- (NSData *)parameters;
 - (instancetype)initWithTtl:(UInt8)ttl;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -411,7 +397,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x800F
 @interface SigConfigFriendGet : SigConfigMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
-- (NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
 /// The Op Code of the response message.
@@ -423,7 +408,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigFriendSet : SigConfigMessage
 /// The new Friend state of the Node.
 @property (nonatomic,assign) SigNodeFeaturesState state;
-- (NSData *)parameters;
 - (instancetype)initWithEnable:(BOOL)enable;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -437,7 +421,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigFriendStatus : SigConfigMessage
 /// The Friend feature state of the Node.
 @property (nonatomic,assign) SigNodeFeaturesState state;
-- (NSData *)parameters;
 /// Creates the Config Friend Status message.
 ///
 /// - parameter state: The Friend state of the Node.
@@ -450,7 +433,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x8012
 @interface SigConfigGATTProxyGet : SigConfigMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
-- (NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
 /// The Op Code of the response message.
@@ -463,7 +445,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// The new GATT Proxy state of the Node.
 @property (nonatomic,assign) SigNodeFeaturesState state;
 /// The interval between retransmissions, in seconds.
-- (NSData *)parameters;
 /// Configures the GATT Proxy on the Node.
 ///
 /// When disabled, the Node will no longer be able to work as a GATT Proxy
@@ -483,7 +464,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigGATTProxyStatus : SigConfigMessage
 /// The GATT Proxy state of the Node.
 @property (nonatomic,assign) SigNodeFeaturesState state;
-- (NSData *)parameters;
 /// Creates the Config GATT Proxy Status message.
 ///
 /// - parameter state: The GATT Proxy state of the Node.
@@ -500,7 +480,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigKeyRefreshPhaseGet : SigConfigMessage
 /// Index of the NetKey.
 @property (nonatomic,assign) UInt16 netKeyIndex;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex;
 /// The Type of the response message.
@@ -519,7 +498,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 netKeyIndex;
 /// New Key Refresh Phase Transition.
 @property (nonatomic,assign) SigControllableKeyRefreshTransitionValues transition;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex transition:(SigControllableKeyRefreshTransitionValues)transition;
 /// The Type of the response message.
@@ -540,14 +518,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 netKeyIndex;
 /// Key Refresh Phase State.
 @property (nonatomic, assign) KeyRefreshPhase phase;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0x8018
 @interface SigConfigModelPublicationGet : SigConfigAnyModelMessage
-- (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -561,7 +537,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigModelPublicationStatus : SigConfigAnyModelMessage
 @property (nonatomic,strong) SigPublish *publish;
 @property (nonatomic,assign,readonly) SigConfigMessageStatus status;
-- (NSData *)parameters;
 - (instancetype)initResponseToSigConfigAnyModelMessage:(SigConfigAnyModelMessage *)request;
 - (instancetype)initResponseToSigConfigAnyModelMessage:(SigConfigAnyModelMessage *)request withPublish:(SigPublish *)publish;
 - (instancetype)initResponseToSigConfigAnyModelMessage:(SigConfigAnyModelMessage *)request withStatus:(SigConfigMessageStatus)status;
@@ -574,7 +549,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x801A
 @interface SigConfigModelPublicationVirtualAddressSet : SigConfigAnyModelMessage
 @property (nonatomic,strong) SigPublish *publish;
-- (NSData *)parameters;
 - (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithPublish:(SigPublish *)publish toElementAddress:(UInt16)elementAddress model:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -588,7 +562,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x801B
 @interface SigConfigModelSubscriptionAdd : SigConfigAnyModelMessage
 @property (nonatomic,assign) UInt16 address;
-- (NSData *)parameters;
 - (instancetype)initWithGroupAddress:(UInt16)groupAddress toElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithGroup:(SigGroupModel *)group toElementAddress:(UInt16)elementAddress model:(SigModelIDModel *)model;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -602,7 +575,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x801C
 @interface SigConfigModelSubscriptionDelete : SigConfigAnyModelMessage
 @property (nonatomic,assign) UInt16 address;
-- (NSData *)parameters;
 - (instancetype)initWithGroupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -615,7 +587,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark opcode:0x801D
 @interface SigConfigModelSubscriptionDeleteAll : SigConfigAnyModelMessage
-- (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initFromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -629,7 +600,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x801E
 @interface SigConfigModelSubscriptionOverwrite : SigConfigAnyModelMessage
 @property (nonatomic,assign) UInt16 address;
-- (NSData *)parameters;
 - (instancetype)initWithGroupAddress:(UInt16)groupAddress elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -649,7 +619,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// The status as String.
 @property (nonatomic,strong,readonly) NSString *message;
 @property (nonatomic,assign) UInt16 address;
-- (NSData *)parameters;
 - (instancetype)initResponseToSigConfigModelPublicationStatus:(SigConfigModelPublicationStatus *)request withStatus:(SigConfigMessageStatus *)status;
 - (instancetype)initResponseToSigConfigAnyModelMessage:(SigConfigAnyModelMessage *)request withStatus:(SigConfigMessageStatus)status;
 - (instancetype)initResponseToSigConfigModelSubscriptionDeleteAll:(SigConfigModelSubscriptionDeleteAll *)request withStatus:(SigConfigMessageStatus)status;
@@ -664,7 +633,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigModelSubscriptionVirtualAddressAdd : SigConfigAnyModelMessage
 /// Value of the 128-bt Virtual Label UUID.
 @property (nonatomic,strong) CBUUID *virtualLabel;
-- (NSData *)parameters;
 - (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithGroup:(SigGroupModel *)group toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -679,7 +647,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigModelSubscriptionVirtualAddressDelete : SigConfigAnyModelMessage
 /// Value of the 128-bt Virtual Label UUID.
 @property (nonatomic,strong,readonly) CBUUID *virtualLabel;
-- (NSData *)parameters;
 - (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -694,7 +661,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigModelSubscriptionVirtualAddressOverwrite : SigConfigAnyModelMessage
 /// Value of the 128-bt Virtual Label UUID.
 @property (nonatomic,strong,readonly) CBUUID *virtualLabel;
-- (NSData *)parameters;
 - (instancetype)initWithVirtualLabel:(CBUUID *)virtualLabel elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithGroup:(SigGroupModel *)group fromModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -708,7 +674,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x8023
 @interface SigConfigNetworkTransmitGet : SigConfigMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
-- (NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
 /// The Op Code of the response message.
@@ -728,7 +693,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt8 steps;
 /// The interval between retransmissions, in seconds.
 //- (NSTimeInterval)interval;
-- (NSData *)parameters;
 /// Sets the Network Transmit property of the Node.
 ///
 /// - parameter count: Number of message transmissions of Network PDU
@@ -758,7 +722,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt8 steps;
 /// The interval between retransmissions, in seconds.
 - (NSTimeInterval)interval;
-- (NSData *)parameters;
 /// Sets the Network Transmit property of the Node.
 ///
 /// - parameter count: Number of message transmissions of Network PDU
@@ -777,7 +740,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigRelayGet : SigConfigMessage
 @property (nonatomic,assign) UInt8 page;
 - (instancetype)initWithParameters:(NSData *)parameters;
-- (NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
 /// The Op Code of the response message.
@@ -799,7 +761,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt8 steps;
 /// The interval between retransmissions, in seconds.
 - (NSTimeInterval)interval;
-- (NSData *)parameters;
 - (instancetype)initWithCount:(UInt8)count steps:(UInt8)steps;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -823,7 +784,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt8 steps;
 /// The interval between retransmissions, in seconds.
 - (NSTimeInterval)interval;
-- (NSData *)parameters;
 //- (instancetype)initWithState:(SigNodeFeaturesState)state count:(UInt8)count steps:(UInt8)steps;
 //- (instancetype)initWithNode:(SigNodeModel *)node;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -832,7 +792,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark opcode:0x8029
 @interface SigConfigSIGModelSubscriptionGet : SigConfigModelMessage
-- (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initOfModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -846,7 +805,6 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark opcode:0x802A
 @interface SigConfigSIGModelSubscriptionList : SigConfigModelSubscriptionList
 @property (nonatomic,assign) UInt16 elementAddress;
-- (NSData *)parameters;
 - (instancetype)initForModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -854,7 +812,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark opcode:0x802B
 @interface SigConfigVendorModelSubscriptionGet : SigConfigVendorModelMessage
-- (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initOfModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -869,7 +826,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigVendorModelSubscriptionList : SigConfigVendorModelMessage
 @property (nonatomic,assign) SigConfigMessageStatus status;
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*addresses;//[Address]
-- (NSData *)parameters;
 - (instancetype)initForModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress addresses:(NSArray <NSNumber *>*)addresses withStatus:(SigConfigMessageStatus)status;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -882,7 +838,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigConfigLowPowerNodePollTimeoutGet : SigConfigMessage
 /// The unicast address of the Low Power node.
 @property (nonatomic,assign) UInt16 LPNAddress;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithLPNAddress:(UInt16)LPNAddress;
 /// The Type of the response message.
@@ -901,7 +856,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 LPNAddress;
 /// The current value of the PollTimeout timer of the Low Power node. Size is 3 bytes.
 @property (nonatomic,assign) UInt32 pollTimeout;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -911,7 +865,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// 4.3.2.61 Config Heartbeat Publication Get
 /// - seeAlso: Mesh_v1.0.pdf  (page.178)
 @interface SigConfigHeartbeatPublicationGet : SigConfigMessage
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -962,7 +915,6 @@ Value          Description
 /// Index of the NetKey.
 @property (nonatomic,assign) UInt16 netKeyIndex;
 
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithDestination:(UInt16)destination countLog:(UInt8)countLog periodLog:(UInt8)periodLog ttl:(UInt8)ttl features:(SigFeatures)features netKeyIndex:(UInt16)netKeyIndex;
 /// The Type of the response message.
@@ -1016,7 +968,6 @@ Value          Description
 /// Index of the NetKey.
 @property (nonatomic,assign) UInt16 netKeyIndex;
 
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1026,7 +977,6 @@ Value          Description
 /// 4.3.2.64 Config Heartbeat Subscription Get
 /// - seeAlso: Mesh_v1.0.pdf  (page.180)
 @interface SigConfigHeartbeatSubscriptionGet : SigConfigMessage
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1055,7 +1005,6 @@ Value          Description
 /// Period for sending Heartbeat messages.
 @property (nonatomic,assign) UInt8 periodLog;
 
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithSource:(UInt16)source destination:(UInt16)destination periodLog:(UInt8)periodLog;
 /// The Type of the response message.
@@ -1118,7 +1067,6 @@ Value          Description
 /// Maximum hops when receiving Heartbeat messages.
 @property (nonatomic,assign) UInt8 maxHops;
 
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1135,13 +1083,13 @@ Value          Description
 @property (nonatomic,assign,readonly) UInt16 companyIdentifier;
 /// The 16-bit Model identifier.
 @property (nonatomic,assign) UInt16 modelIdentifier;
-///// The 32-bit Model identifier.
-//@property (nonatomic,assign,readonly) UInt32 modelId;
+/// 标记是否为Vendor Model ID。
+@property (nonatomic,assign) BOOL isVendorModelID;
 /// The Unicast Address of the Model's parent Element.
 @property (nonatomic,assign,readonly) UInt16 elementAddress;
 
-- (NSData *)parameters;
 - (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
+- (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier isVendorModelID:(BOOL)isVendorModelID;
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1160,16 +1108,14 @@ Value          Description
 @property (nonatomic,assign,readonly) UInt16 companyIdentifier;
 /// The 16-bit Model identifier.
 @property (nonatomic,assign) UInt16 modelIdentifier;
-///// The 32-bit Model identifier.
-//@property (nonatomic,assign,readonly) UInt32 modelId;
+/// 标记是否为Vendor Model ID。
+@property (nonatomic,assign) BOOL isVendorModelID;
 /// The Unicast Address of the Model's parent Element.
 @property (nonatomic,assign,readonly) UInt16 elementAddress;
 @property (nonatomic,assign,readonly) SigConfigMessageStatus status;
 
-- (NSData *)parameters;
-- (instancetype)initWithConfirmBindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress status:(SigConfigMessageStatus)status;
-- (instancetype)initWithConfirmUnbindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress status:(SigConfigMessageStatus)status;
 - (instancetype)initWithParameters:(NSData *)parameters;
+- (instancetype)initWithStatus:(SigConfigMessageStatus)status applicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 @end
 
 
@@ -1182,12 +1128,12 @@ Value          Description
 @property (nonatomic,assign,readonly) UInt16 companyIdentifier;
 /// The 16-bit Model identifier.
 @property (nonatomic,assign) UInt16 modelIdentifier;
-/// The 32-bit Model identifier.
-@property (nonatomic,assign,readonly) UInt32 modelId;
+/// 标记是否为Vendor Model ID。
+@property (nonatomic,assign) BOOL isVendorModelID;
 /// The Unicast Address of the Model's parent Element.
 @property (nonatomic,assign,readonly) UInt16 elementAddress;
-- (NSData *)parameters;
 - (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
+- (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier isVendorModelID:(BOOL)isVendorModelID;
 - (instancetype)initWithApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1201,7 +1147,6 @@ Value          Description
 @interface SigConfigNetKeyAdd : SigConfigNetKeyMessage
 /// The 128-bit Application Key data.
 @property (nonatomic,strong) NSData *key;
-- (NSData *)parameters;
 - (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex networkKeyData:(NSData *)networkKeyData;
 - (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -1214,7 +1159,6 @@ Value          Description
 
 #pragma mark opcode:0x8041
 @interface SigConfigNetKeyDelete : SigConfigNetKeyMessage
-- (NSData *)parameters;
 - (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex;
 - (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -1228,7 +1172,6 @@ Value          Description
 #pragma mark opcode:0x8042
 @interface SigConfigNetKeyGet : SigConfigMessage
 - (instancetype)initWithParameters:(NSData *)parameters;
-- (NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
 /// The Op Code of the response message.
@@ -1240,7 +1183,6 @@ Value          Description
 @interface SigConfigNetKeyList : SigConfigMessage
 /// Network Key Indexes known to the Node.
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*networkKeyIndexs;//[KeyIndex]
-- (NSData *)parameters;
 - (instancetype)initWithNetworkKeys:(NSArray <SigNetkeyModel *>*)networkKeys;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1254,7 +1196,6 @@ Value          Description
 @property (nonatomic,strong,readonly) NSString *message;
 
 @property (nonatomic,assign) SigConfigMessageStatus status;
-- (NSData *)parameters;
 - (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey;
 - (instancetype)initWithStatus:(SigConfigMessageStatus)status forMessage:(SigConfigNetKeyMessage *)message;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -1265,7 +1206,6 @@ Value          Description
 @interface SigConfigNetKeyUpdate : SigConfigNetKeyMessage
 /// The 128-bit Application Key data.
 @property (nonatomic,strong) NSData *key;
-- (NSData *)parameters;
 - (instancetype)initWithNetworkKeyIndex:(UInt16)networkKeyIndex networkKeyData:(NSData *)networkKeyData;
 - (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -1283,7 +1223,6 @@ Value          Description
 @interface SigConfigNodeIdentityGet : SigConfigMessage
 /// Index of the NetKey.
 @property (nonatomic,assign) UInt16 netKeyIndex;
-- (NSData *)parameters;
 - (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1302,7 +1241,6 @@ Value          Description
 @property (nonatomic,assign) UInt16 netKeyIndex;
 /// New Node Identity state.
 @property (nonatomic,assign) SigNodeIdentityState identity;
-- (NSData *)parameters;
 - (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex identity:(SigNodeIdentityState)identity;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1323,14 +1261,12 @@ Value          Description
 @property (nonatomic,assign) UInt16 netKeyIndex;
 /// Node Identity state.
 @property (nonatomic,assign) SigNodeIdentityState identity;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0x8049
 @interface SigConfigNodeReset : SigConfigMessage
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1341,14 +1277,12 @@ Value          Description
 
 #pragma mark opcode:0x804A
 @interface SigConfigNodeResetStatus : SigConfigMessage
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0x804B
 @interface SigConfigSIGModelAppGet : SigConfigModelMessage
-- (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -1362,7 +1296,6 @@ Value          Description
 #pragma mark opcode:0x804C
 @interface SigConfigSIGModelAppList : SigConfigModelAppList
 @property (nonatomic,assign,readonly) UInt16 elementAddress;
-- (NSData *)parameters;
 - (instancetype)initResponseToSigConfigSIGModelAppGet:(SigConfigSIGModelAppGet *)request withApplicationKeys:(NSArray <SigAppkeyModel *>*)applicationKeys;
 - (instancetype)initResponseToSigConfigSIGModelAppGet:(SigConfigSIGModelAppGet *)request withStatus:(SigConfigMessageStatus)status;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -1371,7 +1304,6 @@ Value          Description
 
 #pragma mark opcode:0x804D
 @interface SigConfigVendorModelAppGet : SigConfigVendorModelMessage
-- (NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier;
 - (instancetype)initWithModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress;
 - (instancetype)initWithParameters:(NSData *)parameters;
@@ -1386,7 +1318,6 @@ Value          Description
 @interface SigConfigVendorModelAppList : SigConfigModelAppList
 @property (nonatomic,assign) UInt16 elementAddress;
 @property (nonatomic,assign) UInt16 companyIdentifier;
-- (NSData *)parameters;
 - (instancetype)initWithModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress applicationKeys:(NSArray <SigAppkeyModel *>*)applicationKeys status:(SigConfigMessageStatus)status;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1399,7 +1330,6 @@ Value          Description
 /// 4.3.4.1 Remote Provisioning Scan Capabilities Get
 /// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.18)
 @interface SigRemoteProvisioningScanCapabilitiesGet : SigConfigMessage
-- (NSData *)parameters;
 @end
 
 
@@ -1412,7 +1342,6 @@ Value          Description
 @property (nonatomic,assign) UInt8 maxScannedItems;
 /// Indication if active scan is supported.
 @property (nonatomic,assign) BOOL activeScan;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1422,7 +1351,6 @@ Value          Description
 /// 4.3.4.3 Remote Provisioning Scan Get
 /// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.18)
 @interface SigRemoteProvisioningScanGet : SigConfigMessage
-- (NSData *)parameters;
 @end
 
 
@@ -1437,7 +1365,6 @@ Value          Description
 @property (nonatomic,assign) UInt8 timeout;
 /// Device UUID (Optional)
 @property (nonatomic,strong) NSData *UUID;
-- (NSData *)parameters;
 - (instancetype)initWithScannedItemsLimit:(UInt8)scannedItemsLimit timeout:(UInt8)timeout UUID:(nullable NSData *)UUID;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1448,7 +1375,6 @@ Value          Description
 /// 4.3.4.5 Remote Provisioning Scan Stop
 /// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.19)
 @interface SigRemoteProvisioningScanStop : SigConfigMessage
-- (NSData *)parameters;
 @end
 
 
@@ -1465,7 +1391,6 @@ Value          Description
 @property (nonatomic,assign) UInt8 scannedItemsLimit;
 /// Time limit for a scan (in seconds).
 @property (nonatomic,assign) UInt8 timeout;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1481,7 +1406,6 @@ Value          Description
 @property (nonatomic,strong) NSData *UUID;
 /// OOB information.
 @property (nonatomic,assign) UInt16 OOB;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1499,7 +1423,6 @@ Value          Description
 @property (nonatomic,strong) NSData *UUID;
 /// Time limit for a scan (in seconds). Length of time (in seconds) to collect information about the unprovisioned device: 0x01~0x05
 @property (nonatomic,assign) UInt8 timeout;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithADTypeFilterCount:(UInt8)ADTypeFilterCount ADTypeFilter:(nullable NSData *)ADTypeFilter UUID:(nullable NSData *)UUID timeout:(UInt8)timeout;
 @end
@@ -1518,7 +1441,6 @@ Value          Description
 @property (nonatomic,assign) UInt16 OOBInformation;
 /// Concatenated list of AD Structures that match the AD Types requested by the client in the ADTypeFilter field of the Remote Provisioning Extended Scan Start message. size:variable
 @property (nonatomic,strong) NSData *AdvStructures;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1528,7 +1450,6 @@ Value          Description
 /// 4.3.4.10 Remote Provisioning Link Get
 /// - seeAlso: MshPRF_RPR_CR_r16_VZ2_ba3-dpc-ok2-PW_ok-PW2_RemoteProvisioner.docx  (page.22)
 @interface SigRemoteProvisioningLinkGet : SigConfigMessage
-- (NSData *)parameters;
 @end
 
 
@@ -1539,7 +1460,6 @@ Value          Description
 @interface SigRemoteProvisioningLinkOpen : SigConfigMessage
 /// Device UUID (Optional).
 @property (nonatomic,strong) NSData *UUID;
-- (NSData *)parameters;
 - (instancetype)initWithUUID:(nullable NSData *)UUID;
 @end
 
@@ -1551,7 +1471,6 @@ Value          Description
 @interface SigRemoteProvisioningLinkClose : SigConfigMessage
 /// Link close reason code.
 @property (nonatomic,assign) SigRemoteProvisioningLinkCloseStatus reason;
-- (NSData *)parameters;
 - (instancetype)initWithReason:(SigRemoteProvisioningLinkCloseStatus)reason;
 @end
 
@@ -1565,7 +1484,6 @@ Value          Description
 @property (nonatomic,assign) SigRemoteProvisioningStatus status;
 /// Remote Provisioning Link state
 @property (nonatomic,assign) BOOL RPState;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1581,7 +1499,6 @@ Value          Description
 @property (nonatomic,assign) BOOL RPState;
 /// Link close Reason code (Optional).
 @property (nonatomic,assign) SigRemoteProvisioningLinkCloseStatus reason;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1595,7 +1512,6 @@ Value          Description
 @property (nonatomic,assign) UInt8 outboundPDUNumber;
 /// Provisioning PDU.
 @property (nonatomic,strong) NSData *provisioningPDU;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithOutboundPDUNumber:(UInt8)outboundPDUNumber provisioningPDU:(NSData *)provisioningPDU;
 @end
@@ -1608,7 +1524,6 @@ Value          Description
 @interface SigRemoteProvisioningPDUOutboundReport : SigConfigMessage
 /// Provisioning PDU identification number.
 @property (nonatomic,assign) UInt8 outboundPDUNumber;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1622,7 +1537,6 @@ Value          Description
 @property (nonatomic,assign) UInt8 outboundPDUNumber;
 /// Provisioning PDU.
 @property (nonatomic,strong) NSData *provisioningPDU;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1639,7 +1553,6 @@ Value          Description
 /// 使用SDK的方法`initWithParameters:`和`initWithElementAddress:items:`初始化的SigOpcodesAggregatorSequence，会自动根据输入的items的第一个message使用的key来赋值isEncryptByDeviceKey。
 @property (nonatomic,assign) BOOL isEncryptByDeviceKey;// default is NO.
 
-- (NSData *)parameters;
 - (NSData *)opCodeAndParameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithElementAddress:(UInt16)elementAddress items:(NSArray <SigOpcodesAggregatorItemModel *>*)items;
@@ -1657,7 +1570,6 @@ Value          Description
 @property (nonatomic,assign) UInt16 elementAddress;
 /// List of status items with each status item containing an unacknowledged access layer message or empty item (Optional).
 @property (nonatomic,strong) NSArray <SigOpcodesAggregatorItemModel *>*statusItems;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithStatus:(SigOpcodesAggregatorMessagesStatus)status elementAddress:(UInt16)elementAddress items:(NSArray <SigOpcodesAggregatorItemModel *>*)items;
 @end
@@ -1668,7 +1580,6 @@ Value          Description
 #pragma mark opcode:0xB711
 
 @interface SigPrivateBeaconGet : SigConfigMessage
-- (NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
 /// The Op Code of the response message.
@@ -1687,7 +1598,6 @@ Value          Description
 @property (nonatomic,assign) UInt8 randomUpdateIntervalSteps;
 
 - (instancetype)initWithPrivateBeacon:(SigPrivateBeaconState)privateBeacon randomUpdateIntervalSteps:(UInt8)randomUpdateIntervalSteps;
-- (NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
 /// The Op Code of the response message.
@@ -1705,14 +1615,12 @@ Value          Description
 
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithPrivateBeacon:(SigPrivateBeaconState)privateBeacon randomUpdateIntervalSteps:(UInt8)randomUpdateIntervalSteps;
-- (NSData *)parameters;
 @end
 
 
 #pragma mark opcode:0xB714
 
 @interface SigPrivateGattProxyGet : SigConfigMessage
-- (NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
 /// The Op Code of the response message.
@@ -1727,7 +1635,6 @@ Value          Description
 @property (nonatomic,assign) SigPrivateGattProxyState privateGattProxy;
 
 - (instancetype)initWithPrivateGattProxy:(SigPrivateGattProxyState)privateGattProxy;
-- (NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
 /// The Op Code of the response message.
@@ -1743,7 +1650,6 @@ Value          Description
 
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithPrivateGattProxy:(SigPrivateGattProxyState)privateGattProxy;
-- (NSData *)parameters;
 @end
 
 
@@ -1752,7 +1658,6 @@ Value          Description
 @interface SigPrivateNodeIdentityGet : SigConfigMessage
 /// Index of the NetKey.
 @property (nonatomic,assign) UInt16 netKeyIndex;
-- (NSData *)parameters;
 - (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1769,7 +1674,6 @@ Value          Description
 @property (nonatomic,assign) UInt16 netKeyIndex;
 /// New Private Node Identity state.
 @property (nonatomic,assign) SigPrivateNodeIdentityState privateIdentity;
-- (NSData *)parameters;
 - (instancetype)initWithNetKeyIndex:(UInt16)netKeyIndex privateIdentity:(SigPrivateNodeIdentityState)privateIdentity;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1788,7 +1692,6 @@ Value          Description
 @property (nonatomic,assign) UInt16 netKeyIndex;
 /// Private Node Identity state.
 @property (nonatomic,assign) SigPrivateNodeIdentityState privateIdentity;
-- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 

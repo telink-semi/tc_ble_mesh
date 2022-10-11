@@ -30,6 +30,8 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.telink.ble.mesh.util.FileSystem;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -57,11 +59,29 @@ public final class QREncoder {
                 pixels[offset + x] = result.get(x, y) ? this.mBuilder.codeColor : this.mBuilder.background;
             }
         }
-
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
 
+//        outputBits(height, width, result);
+
         return bitmap;
+    }
+
+    private void outputBits(int height, int width,BitMatrix result ){
+
+        StringBuilder sb = new StringBuilder("\n");
+        String fill = new String(new char[]{
+                0xe2, 0x96, 0x88, 0xe2, 0x96, 0x88
+        });
+        // "■"  "▉"
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                sb.append(result.get(x, y) ? "1" : "0");
+            }
+            sb.append("\n");
+        }
+        MeshLogger.d("bits1 - " + sb.toString());
+        FileSystem.writeString(FileSystem.getSettingPath(), "qr_export.txt", sb.toString());
     }
 
     public static class Builder {

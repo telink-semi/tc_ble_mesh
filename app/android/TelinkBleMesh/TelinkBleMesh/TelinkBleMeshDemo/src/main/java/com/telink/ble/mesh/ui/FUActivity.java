@@ -264,24 +264,9 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             exitWarningAlert.setCancelable(true);
             exitWarningAlert.setTitle("Warning");
             exitWarningAlert.setMessage("Mesh OTA is still running, stop it ? \n click STOP to stop updating; \n click FORCE CLOSE to exit; click CANCEL to dismiss dialog");
-            exitWarningAlert.setNegativeButton("Stop", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    MeshService.getInstance().stopMeshOta();
-                }
-            });
-            exitWarningAlert.setNeutralButton("FORCE CLOSE", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                }
-            });
-            exitWarningAlert.setPositiveButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
+            exitWarningAlert.setNegativeButton("Stop", (dialog, which) -> MeshService.getInstance().stopMeshOta());
+            exitWarningAlert.setNeutralButton("FORCE CLOSE", (dialog, which) -> finish());
+            exitWarningAlert.setPositiveButton("Cancel", (dialog, which) -> dialog.dismiss());
         }
         exitWarningAlert.show();
     }
@@ -431,26 +416,17 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         rb_plc_ver_apl = findViewById(R.id.rb_plc_ver_apl);
         rb_plc_ver = findViewById(R.id.rb_plc_ver);
 //        rg_policy = findViewById(R.id.rg_policy);
-        rg_dist.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                ll_policy.setVisibility(checkedId == R.id.rb_device ? View.VISIBLE : View.INVISIBLE);
-                distributorType = checkedId == R.id.rb_device ? DistributorType.DEVICE : DistributorType.PHONE;
-            }
+        rg_dist.setOnCheckedChangeListener((group, checkedId) -> {
+            ll_policy.setVisibility(checkedId == R.id.rb_device ? View.VISIBLE : View.INVISIBLE);
+            distributorType = checkedId == R.id.rb_device ? DistributorType.DEVICE : DistributorType.PHONE;
         });
-        rb_plc_ver_apl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked)
-                    updatePolicy = UpdatePolicy.VerifyAndApply;
-            }
+        rb_plc_ver_apl.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked)
+                updatePolicy = UpdatePolicy.VerifyAndApply;
         });
-        rb_plc_ver.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked)
-                    updatePolicy = UpdatePolicy.VerifyOnly;
-            }
+        rb_plc_ver.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked)
+                updatePolicy = UpdatePolicy.VerifyOnly;
         });
 
 
@@ -602,18 +578,15 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     }
 
     private void enableUI(final boolean enable) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                btn_start.setEnabled(enable);
-                btn_get_version.setEnabled(enable);
-                rb_device.setEnabled(enable);
-                rb_phone.setEnabled(enable);
-                rb_plc_ver_apl.setEnabled(enable);
-                rb_plc_ver.setEnabled(enable);
-                tv_file_path.setEnabled(enable);
-                tv_select_device.setEnabled(enable);
-            }
+        runOnUiThread(() -> {
+            btn_start.setEnabled(enable);
+            btn_get_version.setEnabled(enable);
+            rb_device.setEnabled(enable);
+            rb_phone.setEnabled(enable);
+            rb_plc_ver_apl.setEnabled(enable);
+            rb_plc_ver.setEnabled(enable);
+            tv_file_path.setEnabled(enable);
+            tv_select_device.setEnabled(enable);
         });
     }
 
@@ -632,19 +605,11 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
     }
 
-    private final Runnable RECONNECT_TASK = new Runnable() {
-        @Override
-        public void run() {
-            showConfirmDialog("Device reconnect fail, quit mesh OTA ? ", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    MeshService.getInstance().idle(true);
-                    isComplete = true;
-                    infoHandler.obtainMessage(MSG_INFO, "Quit !!!").sendToTarget();
-                }
-            });
-        }
-    };
+    private final Runnable RECONNECT_TASK = () -> showConfirmDialog("Device reconnect fail, quit mesh OTA ? ", (dialog, which) -> {
+        MeshService.getInstance().idle(true);
+        isComplete = true;
+        infoHandler.obtainMessage(MSG_INFO, "Quit !!!").sendToTarget();
+    });
 
     /****************************************************************
      * events - start
@@ -750,13 +715,8 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             String vidInfo = Arrays.bytesToHexString(vid, ":");
             String firmVersion = "pid-" + pidInfo + " vid-" + vidInfo;
 
-
             tv_version_info.setText(getString(R.string.version, firmVersion));
-
-
             tv_file_path.setText(fileName);
-
-
         } catch (IOException e) {
             e.printStackTrace();
             firmwareData = null;

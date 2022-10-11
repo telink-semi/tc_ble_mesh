@@ -74,6 +74,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
     private NodeInfo mDevice;
     private Scheduler scheduler;
     private byte index;
+    private boolean timeSetting = false;
 
     // January/February/March/April/May/June/July/August/September/October/November/December
     private SelectableListAdapter.SelectableBean[] monthList = {
@@ -142,7 +143,6 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         initView();
         fillSchedulerInfo();
 
-
         TelinkMeshApplication.getInstance().addEventListener(SchedulerActionStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(TimeStatusMessage.class.getName(), this);
     }
@@ -177,9 +177,10 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         TimeSetMessage timeSetMessage = TimeSetMessage.getSimple(eleAdr, meshInfo.getDefaultAppKeyIndex(),
                 time, offset, 1);
-
+        timeSetMessage.setAck(true);
         boolean re = MeshService.getInstance().sendMeshMessage(timeSetMessage);
         if (re) {
+            timeSetting = true;
             MeshLogger.d("setTime time: " + time + " zone " + offset);
         } else {
             MeshLogger.d("setTime fail");
@@ -403,8 +404,6 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
                 meshInfo.getDefaultAppKeyIndex(), scheduler, true, 1);
         MeshService.getInstance().sendMeshMessage(setMessage);
         toastMsg("scheduler setting sent");
-
-
     }
 
 
@@ -577,15 +576,15 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         String eventType = event.getType();
         if (eventType.equals(TimeStatusMessage.class.getName())) {
             TimeStatusMessage timeStatusMessage = (TimeStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
-
             MeshLogger.d("time status: " + timeStatusMessage.getTaiSeconds());
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    MeshLogger.log("set time success");
+            int src = ((StatusNotificationEvent) event).getNotificationMessage().getSrc();
+            if (src == mDevice.meshAddress && timeSetting){
+                timeSetting = false;
+                MeshLogger.log("set time success");
+                runOnUiThread(() -> {
                     toastMsg("set time success");
-                }
-            });
+                });
+            }
         } else if (eventType.equals(SchedulerActionStatusMessage.class.getName())) {
             StatusNotificationEvent notificationEvent = (StatusNotificationEvent) event;
             SchedulerActionStatusMessage schedulerActionStatusMessage = (SchedulerActionStatusMessage) notificationEvent.getNotificationMessage().getStatusMessage();

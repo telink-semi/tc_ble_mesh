@@ -72,13 +72,13 @@
     }
 
     //demo v3.2.2新增staticOOB设备添加的兼容模式，demo默认使用兼容模式。（兼容模式为staticOOB设备在无OOB数据的情况下通过noOOB provision的方式进行添加;不兼容模式为staticOOB设备必须通过staticOOB provision的方式进行添加）。
-    NSNumber *addStaticOOBDevcieByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDevcieByNoOOBEnable];
-    if (addStaticOOBDevcieByNoOOBEnable == nil) {
-        addStaticOOBDevcieByNoOOBEnable = [NSNumber numberWithBool:YES];
-        [[NSUserDefaults standardUserDefaults] setValue:addStaticOOBDevcieByNoOOBEnable forKey:kAddStaticOOBDevcieByNoOOBEnable];
+    NSNumber *addStaticOOBDeviceByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDeviceByNoOOBEnable];
+    if (addStaticOOBDeviceByNoOOBEnable == nil) {
+        addStaticOOBDeviceByNoOOBEnable = [NSNumber numberWithBool:YES];
+        [[NSUserDefaults standardUserDefaults] setValue:addStaticOOBDeviceByNoOOBEnable forKey:kAddStaticOOBDeviceByNoOOBEnable];
         [[NSUserDefaults standardUserDefaults] synchronize];
     }
-    SigDataSource.share.addStaticOOBDevcieByNoOOBEnable = addStaticOOBDevcieByNoOOBEnable.boolValue;
+    SigDataSource.share.addStaticOOBDeviceByNoOOBEnable = addStaticOOBDeviceByNoOOBEnable.boolValue;
     
     //demo v3.3.3将原来的两种DLE模式修改3种Extend Bearer Mode。（客户定制功能）
     NSNumber *extendBearerMode = [[NSUserDefaults standardUserDefaults] valueForKey:kExtendBearerMode];
@@ -135,13 +135,28 @@
 
     
     SigMeshLib.share.transmissionTimerInterval = 0.600;
-    //    SigDataSource.share.needPublishTimeModel = NO;
+//    SigDataSource.share.needPublishTimeModel = NO;
     
     //(可选)v3.3.3新增配置项
 //    SigDataSource.share.defaultReliableIntervalOfLPN = kSDKLibCommandTimeout;
 //    SigDataSource.share.defaultReliableIntervalOfNotLPN = kSDKLibCommandTimeout * 2;
-
+    //(可选)v3.3.3.6及之后新增配置项，基础库TelinkSigMeshLib.framework不支持，扩展库TelinkSigMeshLibExtensions.framework支持。
+//    SigDataSource.share.aggregatorEnable = YES;
+    
+    //(可选)v3.3.3.6及之后新增配置项，APP端发送数据是否使用The directed security material进行加密，默认是NO，The managed flooding security material。
+    NSNumber *directedSecurityEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kDirectedSecurityEnable];
+    if (directedSecurityEnable == nil) {
+        directedSecurityEnable = [NSNumber numberWithBool:NO];
+        [[NSUserDefaults standardUserDefaults] setValue:directedSecurityEnable forKey:kDirectedSecurityEnable];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    }
+    SigDataSource.share.sendByDirectedSecurity = directedSecurityEnable.boolValue;
+    
     return YES;
+}
+
+- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(nullable UIWindow *)window {
+    return UIInterfaceOrientationMaskPortrait;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {

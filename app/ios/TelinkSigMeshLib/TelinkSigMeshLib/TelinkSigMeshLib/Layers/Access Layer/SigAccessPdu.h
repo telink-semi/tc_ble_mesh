@@ -45,17 +45,17 @@ NS_ASSUME_NONNULL_BEGIN
 /// 3                      | 32                          | 28
 /// n                      | (n×12)-4                 | (n×12)-8
 /// 32                    | 380                        | 376
-- (int)segmentsCount;
+//- (int)segmentsCount;
 
 
 
 
 /// The Mesh Message that is being sent, or `nil`, when the message
 /// was received.
-@property (nonatomic,strong) SigMeshMessage *message;
+@property (nonatomic,strong,nullable) SigMeshMessage *message;
 /// The local Element that is sending the message, or `nil` when the
 /// message was received.
-@property (nonatomic,strong) SigElementModel *localElement;
+@property (nonatomic,strong,nullable) SigElementModel *localElement;
 /// Whether sending this message has been initiated by the user.
 @property (nonatomic,assign) BOOL userInitiated;
 /// Source Address.
@@ -67,7 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic,assign) SigLowerTransportPduType isAccessMessage;
 /// Whether the outgoind message will be sent as segmented, or not.
-- (BOOL)isSegmented;
+//- (BOOL)isSegmented;
 
 - (instancetype)initFromUpperTransportPdu:(SigUpperTransportPdu *)pdu;
 
