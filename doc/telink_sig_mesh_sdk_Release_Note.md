@@ -24,7 +24,7 @@
 * Flash and RAM (default target):
 
   - 8258_mesh.bin:        Flash 118 KB, RAM (27.8 KB + 3K stack),
-  - 8258_mesh_llsync.bin: Flash 123 KB, RAM (28.6 KB + 3K stack),
+  - 8258_mesh_llsync.bin: Flash 124 KB, RAM (28.6 KB + 3K stack),
 
 
 ### Bug Fixes
