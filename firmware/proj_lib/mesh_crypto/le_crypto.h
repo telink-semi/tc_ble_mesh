@@ -25,7 +25,7 @@
 #ifndef TN_DTLS_H
 #define TN_DTLS_H
 
-#include "../../proj/tl_common.h"
+#include "tl_common.h"
 //#include <memory.h>
 
 #define		biL			32

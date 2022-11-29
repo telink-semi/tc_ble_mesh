@@ -24,11 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
-#include "vendor/mesh/app.h"
-#include "vendor/mesh_lpn/app.h"
-#include "vendor/mesh_provision/app.h"
-#include "vendor/mesh_switch/app.h"
+#include "tl_common.h"
 
 /** @addtogroup user_app
   * @{

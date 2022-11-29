@@ -41,29 +41,37 @@ extern const u16 ais_pri_service_uuid ;
 #include "user_du.h"
 #include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #define AIS_DEVICE_NAME	"Mesh__Du"
+	#elif NMW_ENABLE
+#define AIS_DEVICE_NAME	"Mesh_NMW"
 	#else
 #define AIS_DEVICE_NAME	"Mesh Ali"
 	#endif
+	
+#define AIS_UUID_LEN	(NMW_ENABLE?0:4)
+
 u8 ais_pri_data_set(u8 *p)
 {
 	u8 device_name[]={AIS_DEVICE_NAME};
 	u8 name_len = (sizeof(device_name) - 1)>9?9:sizeof(device_name) - 1;//max 31 -( 4 bytes uuid + 16 byte vendor data) - 2 bytes head
-	//service uuid
-	p[0] = 3;
-	p[1] = 2;//imcomplete  service uuid
-	#if DU_ENABLE
-	p[2] = du_pri_service_uuid_16&0xff;
-	p[3] = du_pri_service_uuid_16>>8;
-	#else
-	p[2] = ais_pri_service_uuid&0xff;
-	p[3] = ais_pri_service_uuid>>8;
-	#endif
+
+	if(AIS_UUID_LEN){
+		//service uuid
+		p[0] = 3;
+		p[1] = 2;//imcomplete  service uuid
+		#if DU_ENABLE
+		p[2] = du_pri_service_uuid_16&0xff;
+		p[3] = du_pri_service_uuid_16>>8;
+		#else
+		p[2] = ais_pri_service_uuid&0xff;
+		p[3] = ais_pri_service_uuid>>8;
+		#endif
+	}
 	//name
-	p[4] = name_len + 1;
-	p[5] = 0x09;
-	memcpy(p+6, device_name, name_len);
+	p[AIS_UUID_LEN] = name_len + 1;
+	p[AIS_UUID_LEN+1] = 0x09;
+	memcpy(p+AIS_UUID_LEN+2, device_name, name_len);
 	//ais data
-	ais_pri_t *pri_data = (ais_pri_t *)(p+name_len+4+2);
+	ais_pri_t *pri_data = (ais_pri_t *)(p+name_len+AIS_UUID_LEN+2);
 	pri_data->length = sizeof(ais_pri_t) - 1;
 	pri_data->type = 0xff;
 	pri_data->cid = g_vendor_id;
@@ -78,7 +86,7 @@ u8 ais_pri_data_set(u8 *p)
 	pri_data->pid = con_product_id;
 	memcpy(pri_data->mac, tbl_mac, 6);
 
-	u8 ais_rsp_len = 4+name_len+2+sizeof(ais_pri_t);
+	u8 ais_rsp_len = AIS_UUID_LEN+name_len+2+sizeof(ais_pri_t);
 	return ais_rsp_len;
 }
 #endif
@@ -103,6 +111,8 @@ void user_sha256_data_proc()
 {
     #if (AIS_ENABLE)
     set_sha256_init_para_mode(1);
+    #elif LLSYNC_PROVISION_AUTH_OOB
+	llsync_tlk_init_three_para_and_mac();
     #endif
 }
 
@@ -182,8 +192,12 @@ void user_mesh_cps_init()
 
 void user_set_def_sub_adr()
 {
-    #if (AIS_ENABLE)
+    #if (AIS_ENABLE || LLSYNC_PROVISION_AUTH_OOB)
+    	#if LLSYNC_ENABLE
+    const u16 group_def_set[] = {LLSYNC_GROUP_ADDR_COMMON};
+    	#else
     const u16 group_def_set[] = {0xc000, 0xcfff};
+    	#endif
     foreach_arr(i,group_def_set){
         foreach(light_idx, LIGHT_CNT){
             share_model_sub(CFG_MODEL_SUB_ADD, group_def_set[i], 0, light_idx);
@@ -243,7 +257,7 @@ void mesh_provision_para_init(u8 *p_random)
 	prov_para.rand_gen_s = clock_time_s();
 	#if !WIN32
 	user_prov_multi_device_uuid();// use the mac address part to create the device uuid part
-	#if (!AIS_ENABLE)
+	#if (!AIS_ENABLE && !LLSYNC_PROVISION_AUTH_OOB)
 	u8 oob_data[16];
 	flash_read_page(FLASH_ADR_STATIC_OOB,16,oob_data);
 	if(get_flash_data_is_valid(oob_data,sizeof(oob_data))){//oob was burned in flash
@@ -261,7 +275,9 @@ void user_prov_multi_oob()
 {
 #if !WIN32
     #if (AIS_ENABLE)
-        caculate_sha256_to_create_static_oob();
+		caculate_sha256_to_create_static_oob();
+    #elif LLSYNC_PROVISION_AUTH_OOB
+		llsync_set_dev_auth();
     #elif (MESH_USER_DEFINE_MODE == MESH_AES_ENABLE)
         caculate_aes_to_create_static_oob();
     #else 
@@ -292,7 +308,7 @@ void uuid_create_by_mac(u8 *mac,u8 *uuid)
     //special proc to set the mac address into the uuid part 
     #if MD_REMOTE_PROV
 	uuid_mesh_t * p_uuid = (uuid_mesh_t * )uuid;
-    memcpy(p_uuid->node,mac,6);
+    memcpy(p_uuid->node,mac,6);	// just for showing mac on UI of VC remote scanning.
     #endif
 }
 
@@ -309,6 +325,8 @@ void user_prov_multi_device_uuid()
         set_dev_uuid_for_simple_flow(prov_para.device_uuid);
     #elif (MESH_USER_DEFINE_MODE == MESH_MI_ENABLE)
         // NO NEED DEV UUID
+	#elif LLSYNC_PROVISION_AUTH_OOB
+		llsync_mesh_dev_uuid_get(LLSYNC_MESH_UNNET_ADV_BIT, prov_para.device_uuid, sizeof(prov_para.device_uuid));
     #else // (MESH_USER_DEFINE_MODE == MESH_NORMAL_MODE  and all other)
         if(PROVISION_FLOW_SIMPLE_EN){
 		    set_dev_uuid_for_simple_flow(prov_para.device_uuid);

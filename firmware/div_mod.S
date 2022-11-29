@@ -118,10 +118,10 @@ div:
 
 #if 1
 	.align	4
-	.global	mul32x32_64
+	.global	mul32x32_64_org	// should call irq disable before use.
 	.thumb_func
-	.type	mul32x32_64, %function
-mul32x32_64:
+	.type	mul32x32_64_org, %function
+mul32x32_64_org:
     tmul	r0, r1
     tloadr	r1, [pc, #4]
     tloadr	r1, [r1, #0]
@@ -129,12 +129,12 @@ mul32x32_64:
     .word(0x008006fc)
 #endif
 
-#if 1
+#if 0 // disable to decrease code size.
 	.align	4
-	.global	mz_mul1
+	.global	mz_mul1_org	// should call irq disable before use.
 	.thumb_func
-	.type	mz_mul1, %function
-mz_mul1:
+	.type	mz_mul1_org, %function
+mz_mul1_org:
 	tpush 	{r4, r5, r6, r7}
 	tmov	r4, r8
 	tpush	{r4}
@@ -168,10 +168,10 @@ MZ_MUL1_END:
 #endif
 
 	.align	4
-	.global	mz_mul2
+	.global	mz_mul2_org	// should call irq disable before use.
 	.thumb_func
-	.type	mz_mul2, %function
-mz_mul2:
+	.type	mz_mul2_org, %function
+mz_mul2_org:
 	tpush 	{r4, r5, r6, r7}
 	tmov	r4, r8
 	tmov	r5, r9

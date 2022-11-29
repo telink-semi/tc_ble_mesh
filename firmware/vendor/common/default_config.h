@@ -708,7 +708,7 @@ enum{
 #define ADC_CHN2_REF_SRC	ADC_REF_SRC_INTERNAL
 #endif
 
-//#include "../../proj/drivers/adc.h"
+//#include "proj/drivers/adc.h"
 #ifndef ADC_CLK_CFG
 #define ADC_CLK_CFG		ADC_PLL240M_6M
 #endif

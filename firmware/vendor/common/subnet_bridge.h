@@ -24,24 +24,25 @@
  *******************************************************************************************************/
 #ifndef SUBNET_DIRECTED_H
 #define SUBNET_DIRECTED_H
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "directed_forwarding.h"
+#include "solicitation_rpl_cfg_model.h"
 
 #define MAX_BRIDGE_ENTRIES			0x10
 
-#define SUBNET_BRIDGE_GET			0x70BF
-#define SUBNET_BRIDGE_SET 			0x71BF
-#define SUBNET_BRIDGE_STATUS		0x72BF
-#define BRIDGING_TABLE_ADD			0x73BF
-#define BRIDGING_TABLE_REMOVE		0x74BF
-#define BRIDGING_TABLE_STATUS		0x75BF
-#define BRIDGED_SUBNETS_GET 		0x76BF
-#define BRIDGED_SUBNETS_LIST		0x77BF
-#define BRIDGING_TABLE_GET			0x78BF
-#define BRIDGING_TABLE_LIST			0x79BF
-#define BRIDGE_CAPABILITY_GET	 	0x7aBF
-#define BRIDGE_CAPABILITY_STATUS	0x7bBF
+#define SUBNET_BRIDGE_GET			0xB180
+#define SUBNET_BRIDGE_SET 			0xB280
+#define SUBNET_BRIDGE_STATUS		0xB380
+#define BRIDGING_TABLE_ADD			0xB480
+#define BRIDGING_TABLE_REMOVE		0xB580
+#define BRIDGING_TABLE_STATUS		0xB680
+#define BRIDGED_SUBNETS_GET 		0xB780
+#define BRIDGED_SUBNETS_LIST		0xB880
+#define BRIDGING_TABLE_GET			0xB980
+#define BRIDGING_TABLE_LIST			0xBA80
+#define BRIDGE_CAPABILITY_GET	 	0xBB80
+#define BRIDGE_CAPABILITY_STATUS	0xBC80
 
 enum{
 	SUBNET_BRIDGE_DISABLE,
@@ -70,7 +71,6 @@ typedef struct{
 }mesh_bridge_entry_t;
 
 typedef struct{
-	model_common_t com;
 	u8 bridge_en;
 }model_bridge_cfg_common_t;
 
@@ -78,9 +78,6 @@ typedef struct{
 #if MD_SERVER_EN
 	model_bridge_cfg_common_t srv;
 	mesh_bridge_entry_t bridge_entry[MAX_BRIDGE_ENTRIES];
-#endif
-#if MD_CLIENT_EN
-	model_client_common_t clnt;
 #endif
 }model_bridge_cfg_t;
 
@@ -152,6 +149,9 @@ typedef struct{
 #if MD_SBR_EN
 	model_bridge_cfg_t bridge_cfg;  
 #endif
+#if MD_SOLI_PDU_RPL_EN
+	model_sig_soli_pdu_rpl_t soli_pdu;
+#endif
 }model_g_df_sbr_t;
 
 extern model_g_df_sbr_t model_sig_g_df_sbr_cfg; 
@@ -161,6 +161,7 @@ int is_subnet_bridge_en();
 int get_subnet_bridge_index(u16 netkey_index, u16 src, u16 dst);
 int is_subnet_bridge_addr(u16 addr1, u16 addr2);
 #if MD_SERVER_EN
+void mesh_remove_node_dependent_by_subnet_bridge();
 void mesh_subnet_bridge_bind_state_update();
 int mesh_cmd_sig_cfg_subnet_bridge_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_subnet_bridge_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);

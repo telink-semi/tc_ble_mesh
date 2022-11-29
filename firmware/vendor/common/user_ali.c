@@ -104,6 +104,15 @@ u8 con_sec_data[16];
 		#endif
 	#endif
 	#define SIZE_CON_SEC_DATA   (sizeof(con_sec_data))
+#elif((MESH_USER_DEFINE_MODE == MESH_NMW_ENABLE))
+	u32 con_product_id=0x324a584c;// little endiness
+	u8	con_mac_address[6]={0x20,0x00,0x00,0x38,0xc1,0xa4};//little endiness
+    #if 0 // need to open it to make the init three para enable 
+	u8 con_sec_data[16]={0x30,0x4b,0xbc,0x95,0xeb,0x2b,0xc9,0x82,0xce,0xba,0xc4,0x37,0xce,0x07,0xcf,0x23};
+    #else
+	u8 con_sec_data[16];
+    #endif
+	#define SIZE_CON_SEC_DATA   (sizeof(con_sec_data))
 #endif
 #endif
 

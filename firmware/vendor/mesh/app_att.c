@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/ble/service/ble_ll_ota.h"
@@ -32,6 +32,8 @@
 #include "../common/app_beacon.h"
 #if DU_ENABLE
 #include "vendor/common/user_du.h"
+#elif NMW_ENABLE
+#include "vendor/common/user_nmw.h"
 #endif
 #if(1)
 
@@ -392,9 +394,23 @@ const u8  du_ota_uuid[16] = BLE_UUID_DU_OTA_DATA;
 //const u16 du_ota_uuid = 0xff01;
 const u8  du_ota_prop = CHAR_PROP_WRITE_WITHOUT_RSP;
 u8 du_ota_data[8];
-#endif
 
-#if(AIS_ENABLE)
+#elif (NMW_ENABLE)
+#define BLE_UUID_NMW_OTA_SRV  	{0x00,0x91,0x8a,0xef,0x39,0xdd,0x84,0xa4,0xfc,0x43,0x77,0xa2,0x10,0xe6,0xf1,0x15}//{0x15,0xf1,0xe6,0x10,0xa2,0x77,0x43,0xfc,0xa4,0x84,0xdd,0x39,0xef,0x8a,0x91,0x00}
+#define BLE_UUID_NMW_OTA_CTR    {0x00,0x91,0x8a,0xef,0x39,0xdd,0x84,0xa4,0xfc,0x43,0x77,0xa2,0x11,0xe6,0xf1,0x15}//{0x15,0xf1,0xe6,0x11,0xa2,0x77,0x43,0xfc,0xa4,0x84,0xdd,0x39,0xef,0x8a,0x91,0x00}
+#define BLE_UUID_NMW_OTA_DATA   {0x00,0x91,0x8a,0xef,0x39,0xdd,0x84,0xa4,0xfc,0x43,0x77,0xa2,0x12,0xe6,0xf1,0x15}//{0x15,0xf1,0xe6,0x12,0xa2,0x77,0x43,0xfc,0xa4,0x84,0xdd,0x39,0xef,0x8a,0x91,0x00} 
+
+const u8  nmw_pri_service_uuid[16] = BLE_UUID_NMW_OTA_SRV;
+const u8  nmw_ctl_uuid[16] = BLE_UUID_NMW_OTA_CTR;
+const u8  nmw_ctl_prop = CHAR_PROP_INDICATE|CHAR_PROP_WRITE;
+u8 nmw_ctl_ccc[2];
+u8 nmw_ctl_data[8];
+
+const u8  nmw_ota_uuid[16] = BLE_UUID_NMW_OTA_DATA;
+const u8  nmw_ota_prop = CHAR_PROP_WRITE_WITHOUT_RSP;
+u8 nmw_ota_data[8];
+
+#elif(AIS_ENABLE)
 const u16 ais_pri_service_uuid = 0xfeb3;
 const u16 ais_read_uuid = 0xfed4;
 const u8 ais_read_prop = CHAR_PROP_READ;
@@ -466,13 +482,14 @@ int pairRead(void* p)
 #define MAX_MI_ATT_NUM                  (MI_API_ENABLE ? 41 : 0)
 #define MAX_SERVICE_CHANGE_ATT_NUM      (5)
 #define MAX_SERVICE_PRIVATE_MESH		(DUAL_MESH_SIG_PVT_EN ? 4 : 0)
-#if DU_ENABLE
+#if (DU_ENABLE || NMW_ENABLE)
 #define MAX_AIS_ATT_NUM 	            0
 #else
 #define MAX_AIS_ATT_NUM 	            (AIS_ENABLE ? 12 : 0)
 #endif
 #define MAX_ONLINE_ST_ATT_NUM 	        (ONLINE_STATUS_EN ? 4 : 0)
 #define MAX_DU_ATT_NUM					(DU_ENABLE?6:0)
+#define MAX_NMW_ATT_NUM					(NMW_ENABLE?6:0)
 //---
 #define ATT_NUM_START_GAP                   (1)     // line of ATT, start from 0.
 #define ATT_NUM_START_DEVICE_INFO           (ATT_NUM_START_GAP + MAX_SERVICE_GAP)
@@ -485,14 +502,15 @@ int pairRead(void* p)
 #define ATT_NUM_START_AIS                   (ATT_NUM_START_SERVICE_CHANGE + MAX_SERVICE_CHANGE_ATT_NUM)
 #define ATT_NUM_START_ONLINE_ST             (ATT_NUM_START_AIS + MAX_AIS_ATT_NUM)
 #define ATT_NUM_START_DU					(ATT_NUM_START_ONLINE_ST+MAX_ONLINE_ST_ATT_NUM)
-#define ATT_NUM_START_PRIVATE_MESH			(ATT_NUM_START_DU+MAX_DU_ATT_NUM)
+#define ATT_NUM_START_NMW					(ATT_NUM_START_DU+MAX_DU_ATT_NUM)
+#define ATT_NUM_START_PRIVATE_MESH			(ATT_NUM_START_NMW+MAX_NMW_ATT_NUM)
 #define ATTRIBUTE_TOTAL_NUM                 (ATT_NUM_START_PRIVATE_MESH + MAX_SERVICE_PRIVATE_MESH - 1)
 
 /*const */u8 PROVISION_ATT_HANDLE = (ATT_NUM_START_PROVISION + 2);  // slave
 /*const */u8 GATT_PROXY_HANDLE = (ATT_NUM_START_PROXY + 2);  // slave
 const u8 SERVICE_CHANGE_ATT_HANDLE_SLAVE = (ATT_NUM_START_SERVICE_CHANGE + 2);
 const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
-
+const u8 NMW_CONTROL_HANDLE = ATT_NUM_START_NMW + 2;
 
 #define MY_ATTRIBUTE_BASE0           \
     {ATTRIBUTE_TOTAL_NUM,0,0,0,0,0}, /* total num of attribute*/   \
@@ -650,6 +668,16 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 	{0,&att_perm_auth_rdwd, 16,sizeof(du_ota_data),(u8*)(du_ota_uuid),	(du_ota_data), &du_fw_proc, 0} /*value*/
 #endif
 
+#if (NMW_ENABLE)
+#define MY_ATTRIBUTE_NMW \
+	{MAX_NMW_ATT_NUM,&att_perm_auth_read, 2,16,(u8*)(&my_primaryServiceUUID),	(u8*)(nmw_pri_service_uuid), 0},\
+	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&nmw_ctl_prop), 0}, /*prop*/   \
+	{0,&att_perm_auth_rdwd, 16,sizeof(nmw_ctl_data),(u8*)(nmw_ctl_uuid),	(nmw_ctl_data), &nmw_ctl_write, 0}, /*value*/   \
+	{0,&att_perm_auth_rdwd, 2, sizeof(nmw_ctl_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(nmw_ctl_ccc), 0}, /*value*/\
+	{0,&att_perm_auth_read, 2, 1,(u8*)(&my_characterUUID),		(u8*)(&nmw_ota_prop), 0}, /*prop*/   \
+	{0,&att_perm_auth_rdwd, 16,sizeof(nmw_ota_data),(u8*)(nmw_ota_uuid),	(nmw_ota_data), &nmw_ota_write, 0} /*value*/
+#endif
+
 const attribute_t my_Attributes[] = {
 	MY_ATTRIBUTE_BASE0
 	
@@ -674,7 +702,7 @@ const attribute_t my_Attributes[] = {
     
 #if (AIS_ENABLE)
 	// 002c - 0037
-	#if DU_ENABLE
+	#if (DU_ENABLE || NMW_ENABLE)
 	#else
 	MY_ATTRIBUTE_AIS
 	#endif
@@ -686,6 +714,8 @@ const attribute_t my_Attributes[] = {
 
 #if (DU_ENABLE)
 	MY_ATTRIBUTE_DU
+#elif (NMW_ENABLE)
+	MY_ATTRIBUTE_NMW
 #endif
 
 #if DUAL_MESH_SIG_PVT_EN

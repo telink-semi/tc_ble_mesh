@@ -41,7 +41,7 @@
 #include <stack/ble/ll/ll_whitelist.h>
 
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "drivers.h"
 
 
