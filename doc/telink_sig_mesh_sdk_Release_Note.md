@@ -1,3 +1,55 @@
+## V3.3.3.6
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* N/A
+
+### Performance Improvements
+
+* delete some unused APIs which name has typo.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+* Flash and RAM (default target):
+
+  - 8258_mesh:_________Flash 118 KB, RAM (28 KB + 3K stack),
+  - 8258_mesh_LPN:____Flash 111 KB, RAM (23 KB + 3K stack),
+  - 8258_mesh_gw:_____Flash 128 KB, RAM (36 KB + 3K stack),
+  - 8258_mesh_switch:__Flash 106 KB, RAM (25 KB + 3K stack),
+
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* N/A
+
+### Performance Improvements
+
+* 删除一些未正确拼写名称且未使用的接口。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
 ## V3.3.3.5
 
 ### Bug Fixes
