@@ -35,7 +35,7 @@
 #define SW_VERSION_SPEC			(3)		// "3" means SIG MESH 1.0.x
 #define SW_VERSION_MAJOR		(3)		// 
 #define SW_VERSION_MINOR		(3)		// 
-#define SW_VERSION_2ND_MINOR	(5)		// second minor
+#define SW_VERSION_2ND_MINOR	(6)		// second minor
 
 // big endian
 #define FW_VERSION_TELINK_RELEASE   ((SW_VERSION_SPEC << 4) + (SW_VERSION_MAJOR << 0) + \
