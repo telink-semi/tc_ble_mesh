@@ -41,7 +41,7 @@
     __weak typeof(self) weakSelf = self;
     //set edit scheduler block
     [cell setClickEditBlock:^{
-        SchedulerDetailViewController *vc = (SchedulerDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SchedulerDetailViewControllerID storyboard:@"Setting"];
+        SchedulerDetailViewController *vc = (SchedulerDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SchedulerDetailViewControllerID storybroad:@"Setting"];
         vc.model = model;
         vc.device = weakSelf.model;
         [weakSelf.navigationController pushViewController:vc animated:YES];
@@ -103,7 +103,7 @@
     SchedulerModel *model = [[SchedulerModel alloc] init];
     model.schedulerID = [self.model getNewSchedulerID];
 //    model.valid_flag_or_idx = model.schedulerID;
-    SchedulerDetailViewController *vc = (SchedulerDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SchedulerDetailViewControllerID storyboard:@"Setting"];
+    SchedulerDetailViewController *vc = (SchedulerDetailViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SchedulerDetailViewControllerID storybroad:@"Setting"];
     vc.model = model;
     vc.device = self.model;
     [self.navigationController pushViewController:vc animated:YES];

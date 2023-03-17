@@ -90,7 +90,7 @@
     
     CGFloat max = MAX(r, MAX(g, b));
     CGFloat min = MIN(r, MIN(g, b));
-    CGFloat h,s,l;// h ∈ [0, 360）是角度的色相角，而 s, l ∈ [0,1] 是饱和度和亮度
+    CGFloat h,s,l = (max + min) / 2;// h ∈ [0, 360）是角度的色相角，而 s, l ∈ [0,1] 是饱和度和亮度
     
     if (max == min) {
         h = 0;

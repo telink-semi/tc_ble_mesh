@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"
+#include "proj/tl_common.h"
 #include "../light.h"
 #include "../user_config.h"
 #include "proj_lib/sig_mesh/app_mesh.h"

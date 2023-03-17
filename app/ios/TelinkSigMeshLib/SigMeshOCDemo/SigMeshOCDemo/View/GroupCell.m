@@ -24,6 +24,8 @@
 #import "GroupCell.h"
 
 @interface GroupCell()
+@property (weak, nonatomic) IBOutlet UILabel *groupID;
+@property (weak, nonatomic) IBOutlet UISwitch *sw;
 @property (assign, nonatomic) UInt16 groupAddress;
 @property (strong, nonatomic) SigGroupModel *model;
 @end

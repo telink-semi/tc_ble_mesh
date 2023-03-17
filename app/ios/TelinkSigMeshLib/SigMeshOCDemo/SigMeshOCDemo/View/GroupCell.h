@@ -24,8 +24,6 @@
 #import <UIKit/UIKit.h>
 
 @interface GroupCell : UITableViewCell
-@property (weak, nonatomic) IBOutlet UILabel *groupID;
-@property (weak, nonatomic) IBOutlet UISwitch *sw;
 
 - (void)updateContent:(SigGroupModel *)model;
 

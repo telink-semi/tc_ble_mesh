@@ -109,7 +109,7 @@
     if (self.model && self.groupAddress) {
         __weak typeof(self) weakSelf = self;
         //注意：多个element的情况，色温在第二个element。
-        UInt16 eleAddress;
+        UInt16 eleAddress = self.model.address;
         
         NSMutableArray *temAddress = [self.model getAddressesWithModelID:@(option)];
         if (temAddress.count > 0) {

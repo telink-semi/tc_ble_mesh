@@ -27,7 +27,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.ParcelUuid;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -40,8 +39,6 @@ import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.access.BindingBearer;
-import com.telink.ble.mesh.core.ble.MeshScanRecord;
-import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.config.ModelPublicationSetMessage;
@@ -208,16 +205,8 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     }
 
     private void onDeviceFound(AdvertisingDevice advertisingDevice) {
-/*
 
-// check manufacture data
-        MeshScanRecord meshScanRecord = MeshScanRecord.parseFromBytes(advertisingDevice.scanRecord);
-        byte[] mfData = meshScanRecord.getManufacturerSpecificData(0x0211);
-        if (mfData == null || mfData[0] != 0x12 || mfData[1] != 0x34){
-            MeshLogger.d("manufacturer data error ");
-            return;
-        }
-*/
+//        if (!advertisingDevice.device.getAddress().toUpperCase().contains("00:1B:DC:08:E2:DA"))return; /// for pts test
 
         // provision service data: 15:16:28:18:[16-uuid]:[2-oobInfo]
         byte[] serviceData = MeshUtils.getMeshServiceData(advertisingDevice.scanRecord, true);

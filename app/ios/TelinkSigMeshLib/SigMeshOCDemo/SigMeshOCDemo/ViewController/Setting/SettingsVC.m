@@ -66,7 +66,6 @@
     [array addObject:@"OOB Database"];
     [array addObject:@"Enable DLE Mode Extend Bearer"];
     [array addObject:@"Root Certificate"];
-    [array addObject:@"Directed Security"];
     _source = array;
     [self.tableView reloadData];
 }
@@ -107,23 +106,16 @@
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
-- (void)clickAddStaticOOBDeviceByNoOOBEnableSwitch:(UISwitch *)sender {
-    SigDataSource.share.addStaticOOBDeviceByNoOOBEnable = sender.on;
+- (void)clickAddStaticOOBDevcieByNoOOBEnableSwitch:(UISwitch *)sender {
+    SigDataSource.share.addStaticOOBDevcieByNoOOBEnable = sender.on;
     NSNumber *type = [NSNumber numberWithBool:sender.on];
-    [[NSUserDefaults standardUserDefaults] setValue:type forKey:kAddStaticOOBDeviceByNoOOBEnable];
+    [[NSUserDefaults standardUserDefaults] setValue:type forKey:kAddStaticOOBDevcieByNoOOBEnable];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 - (void)clickOOBButton {
     OOBListVC *vc = [[OOBListVC alloc] init];
     [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)clickDirectedSecuritySwitch:(UISwitch *)sender {
-    SigDataSource.share.sendByDirectedSecurity = sender.on;
-    NSNumber *type = [NSNumber numberWithBool:sender.on];
-    [[NSUserDefaults standardUserDefaults] setValue:type forKey:kDirectedSecurityEnable];
-    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 - (IBAction)clickResetMesh:(UIButton *)sender {
@@ -157,7 +149,7 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (indexPath.row <= 4 || indexPath.row == 8) {
+    if (indexPath.row <= 4) {
         InfoSwitchCell *cell = (InfoSwitchCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoSwitchCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryNone;
         cell.showLabel.text = _source[indexPath.row];
@@ -181,16 +173,9 @@
             cell.showSwitch.on = online.boolValue;
             [cell.showSwitch addTarget:self action:@selector(clickOnlineStatusSwitch:) forControlEvents:UIControlEventValueChanged];
         } else if (indexPath.row == 4) {
-            NSNumber *addStaticOOBDeviceByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDeviceByNoOOBEnable];
-            cell.showSwitch.on = addStaticOOBDeviceByNoOOBEnable.boolValue;
-            [cell.showSwitch addTarget:self action:@selector(clickAddStaticOOBDeviceByNoOOBEnableSwitch:) forControlEvents:UIControlEventValueChanged];
-        } else if (indexPath.row == 8) {
-            NSNumber *directedSecurityEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kDirectedSecurityEnable];
-            cell.showSwitch.on = directedSecurityEnable.boolValue;
-            [cell.showSwitch addTarget:self action:@selector(clickDirectedSecuritySwitch:) forControlEvents:UIControlEventValueChanged];
-#ifndef kExist
-            cell.contentView.hidden = YES;
-#endif
+            NSNumber *addStaticOOBDevcieByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDevcieByNoOOBEnable];
+            cell.showSwitch.on = addStaticOOBDevcieByNoOOBEnable.boolValue;
+            [cell.showSwitch addTarget:self action:@selector(clickAddStaticOOBDevcieByNoOOBEnableSwitch:) forControlEvents:UIControlEventValueChanged];
         }
         return cell;
     } else if (indexPath.row == 5) {
@@ -223,7 +208,7 @@
 #endif
         return cell;
     }
-    return [[UITableViewCell alloc] init];
+    return nil;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -243,7 +228,7 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
 #ifndef kExist
-    if (indexPath.row == 0 || indexPath.row == 7 || indexPath.row == 8) {
+    if (indexPath.row == 0 || indexPath.row == 7) {
         return 0.1;
     }
 #endif

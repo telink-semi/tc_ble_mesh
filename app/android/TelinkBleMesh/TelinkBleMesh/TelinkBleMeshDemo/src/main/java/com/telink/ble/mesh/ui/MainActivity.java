@@ -45,6 +45,7 @@ import com.telink.ble.mesh.core.message.firmwaredistribution.FDStatusMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.DistributionStatus;
 import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
 import com.telink.ble.mesh.core.message.time.TimeSetMessage;
+import com.telink.ble.mesh.core.networking.beacon.MeshPrivateBeacon;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
@@ -67,6 +68,11 @@ import com.telink.ble.mesh.ui.fragment.GroupFragment;
 import com.telink.ble.mesh.ui.fragment.SettingFragment;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
+
+import java.io.ByteArrayInputStream;
+import java.nio.ByteBuffer;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 
 /**
  * MainActivity include DeviceFragment & GroupFragment
@@ -163,7 +169,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         } else {
             int directAdr = MeshService.getInstance().getDirectConnectedNodeAddress();
             NodeInfo nodeInfo = meshInfo.getDeviceByMeshAddress(directAdr);
-            if (nodeInfo != null && nodeInfo.compositionData != null && AppSettings.isRemote(nodeInfo.compositionData.pid)) {
+            if (nodeInfo != null && nodeInfo.compositionData != null && nodeInfo.compositionData.pid == AppSettings.PID_REMOTE) {
                 // if direct connected device is remote-control, disconnect
                 MeshService.getInstance().idle(true);
             }
@@ -191,7 +197,12 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
                 MeshLogger.log("online status enabled");
             }
             sendTimeStatus();
-            mHandler.postDelayed(() -> checkMeshOtaState(), 3 * 1000);
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    checkMeshOtaState();
+                }
+            }, 3 * 1000);
         } else if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
             mHandler.removeCallbacksAndMessages(null);
         } else if (event.getType().equals(FDStatusMessage.class.getName())) {

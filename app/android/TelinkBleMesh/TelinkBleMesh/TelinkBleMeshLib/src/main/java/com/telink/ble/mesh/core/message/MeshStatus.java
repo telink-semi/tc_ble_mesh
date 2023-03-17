@@ -42,8 +42,6 @@ import com.telink.ble.mesh.core.message.config.NodeIdentityStatusMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
 import com.telink.ble.mesh.core.message.config.RelayStatusMessage;
 import com.telink.ble.mesh.core.message.config.SubnetBridgeStatusMessage;
-import com.telink.ble.mesh.core.message.directforwarding.DirectedControlStatusMessage;
-import com.telink.ble.mesh.core.message.directforwarding.ForwardingTableStatusMessage;
 import com.telink.ble.mesh.core.message.fastpv.MeshAddressStatusMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDCapabilitiesStatusMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.FDFirmwareStatusMessage;
@@ -60,25 +58,20 @@ import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobPartialB
 import com.telink.ble.mesh.core.message.firmwareupdate.blobtransfer.BlobTransferStatusMessage;
 import com.telink.ble.mesh.core.message.generic.LevelStatusMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
-import com.telink.ble.mesh.core.message.largecps.LargeCompositionDataStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlTemperatureStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.HslStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.HslTargetStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
-import com.telink.ble.mesh.core.message.ondmdpxy.OnDemandPrivateProxyStatusMessage;
 import com.telink.ble.mesh.core.message.rp.LinkStatusMessage;
 import com.telink.ble.mesh.core.message.rp.ProvisioningPDUOutboundReportMessage;
 import com.telink.ble.mesh.core.message.rp.ProvisioningPDUReportMessage;
 import com.telink.ble.mesh.core.message.rp.ScanReportStatusMessage;
 import com.telink.ble.mesh.core.message.rp.ScanStatusMessage;
-import com.telink.ble.mesh.core.message.sarconfig.SarReceiverStatusMessage;
-import com.telink.ble.mesh.core.message.sarconfig.SarTransmitStatusMessage;
 import com.telink.ble.mesh.core.message.scene.SceneRegisterStatusMessage;
 import com.telink.ble.mesh.core.message.scene.SceneStatusMessage;
 import com.telink.ble.mesh.core.message.scheduler.SchedulerActionStatusMessage;
 import com.telink.ble.mesh.core.message.scheduler.SchedulerStatusMessage;
-import com.telink.ble.mesh.core.message.solicitation.SolicitationItemsStatusMessage;
 import com.telink.ble.mesh.core.message.time.TimeStatusMessage;
 
 /**
@@ -211,19 +204,6 @@ public class MeshStatus {
 
             // opcode aggregator
             register(Opcode.OP_AGGREGATOR_STATUS.value, OpcodeAggregatorStatusMessage.class);
-
-            // direct forwarding table
-            register(Opcode.FORWARDING_TABLE_STATUS.value, ForwardingTableStatusMessage.class);
-            register(Opcode.DIRECTED_CONTROL_STATUS.value, DirectedControlStatusMessage.class);
-
-            // enhanced features
-            register(Opcode.CFG_SAR_TRANSMITTER_STATUS.value, SarTransmitStatusMessage.class);
-            register(Opcode.CFG_SAR_RECEIVER_STATUS.value, SarReceiverStatusMessage.class);
-            register(Opcode.CFG_ON_DEMAND_PROXY_STATUS.value, OnDemandPrivateProxyStatusMessage.class);
-            register(Opcode.LARGE_CPS_STATUS.value, LargeCompositionDataStatusMessage.class);
-//            register(Opcode.MODELS_METADATA_STATUS.value, ModeMeta.class);
-            register(Opcode.SOLI_PDU_RPL_ITEM_STATUS.value, SolicitationItemsStatusMessage.class);
-
         }
 
         public static void register(MeshStatus status) {

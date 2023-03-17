@@ -38,23 +38,24 @@ public class IconGenerator {
      * @return res
      */
     public static int getIcon(int pid, OnlineState onlineState) {
-        if (AppSettings.isLpn(pid)){
-            return R.drawable.ic_low_power;
-        }else if (AppSettings.isRemote(pid)){
-            return R.drawable.ic_rmt;
-        }else{
-            if (onlineState == OnlineState.OFFLINE) {
-                return R.drawable.ic_bulb_offline;
-            } else if (onlineState == OnlineState.OFF) {
-                return R.drawable.ic_bulb_off;
-            } else {
+        switch (pid) {
+            case AppSettings.PID_LPN:
+                return R.drawable.ic_low_power;
+            case AppSettings.PID_REMOTE:
+                return R.drawable.ic_rmt;
+            default:
+                if (onlineState == OnlineState.OFFLINE) {
+                    return R.drawable.ic_bulb_offline;
+                } else if (onlineState == OnlineState.OFF) {
+                    return R.drawable.ic_bulb_off;
+                } else {
             /*if (deviceInfo.lum == 100) {
                 return R.drawable.ic_bulb_on;
             } else {
                 return R.drawable.ic_bulb_on_half;
             }*/
-                return R.drawable.ic_bulb_on;
-            }
+                    return R.drawable.ic_bulb_on;
+                }
         }
     }
 

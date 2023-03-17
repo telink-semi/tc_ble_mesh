@@ -53,6 +53,7 @@
 @property (nonatomic,copy) bleReadOTACharachteristicCallback bluetoothReadCharachteristicCallback;
 @property (nonatomic,copy) bleCancelConnectCallback bluetoothCancelConnectCallback;
 @property (nonatomic,copy) bleCentralUpdateStateCallback bluetoothCentralUpdateStateCallback;
+@property (nonatomic,copy) bleDisconnectCallback bluetoothDisconnectCallback;
 @property (nonatomic,copy) bleIsReadyToSendWriteWithoutResponseCallback bluetoothIsReadyToSendWriteWithoutResponseCallback;
 @property (nonatomic,copy) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateValueForCharacteristicCallback;
 @property (nonatomic,copy) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateOnlineStatusValueCallback;
@@ -91,6 +92,10 @@
 
 - (void)setBluetoothCentralUpdateStateCallback:(_Nullable bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback {
     _bluetoothCentralUpdateStateCallback = bluetoothCentralUpdateStateCallback;
+}
+
+- (void)setBluetoothDisconnectCallback:(_Nullable bleDisconnectCallback)bluetoothDisconnectCallback {
+    _bluetoothDisconnectCallback = bluetoothDisconnectCallback;
 }
 
 - (void)setBluetoothIsReadyToSendWriteWithoutResponseCallback:(bleIsReadyToSendWriteWithoutResponseCallback)bluetoothIsReadyToSendWriteWithoutResponseCallback {
@@ -317,7 +322,7 @@
     self.bluetoothReadOTACharachteristicCallback = nil;
 }
 
-- (nullable CBPeripheral *)getPeripheralWithUUID:(NSString *)uuidString {
+- (CBPeripheral *)getPeripheralWithUUID:(NSString *)uuidString {
     NSMutableArray *identiferArray = [[NSMutableArray alloc] init];
     
     [identiferArray addObject:[CBUUID UUIDWithString:uuidString]];
@@ -329,7 +334,7 @@
     return nil;
 }
 
-- (nullable CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral {
+- (CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral {
     CBCharacteristic *tem = nil;
     for (CBService *s in peripheral.services) {
         for (CBCharacteristic *c in s.characteristics) {
@@ -516,10 +521,8 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(cancelConnectPeripheralTimeout) object:nil];
     });
     if (self.bluetoothCancelConnectCallback && self.currentPeripheral) {
-        TeLogInfo(@"cancelConnect peripheral timeout.")
-//        self.bluetoothCancelConnectCallback(self.currentPeripheral,NO);
-        //修复上一个设备断开异常后，导致之后一直走不到连接下一个设备的逻辑的bug。
-        self.bluetoothCancelConnectCallback(self.currentPeripheral,YES);
+        TeLogInfo(@"cancelConnect peripheral fail.")
+        self.bluetoothCancelConnectCallback(self.currentPeripheral,NO);
     }
     self.bluetoothCancelConnectCallback = nil;
 }

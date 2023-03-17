@@ -98,8 +98,7 @@ int check_pkt_is_unprovision_beacon(u8 *dat)
 	}
 }
 
-u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info)
-{
+u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info){
 	#if LPN_CONTROL_EN
 	if(mi_mesh_get_state()){
 		p_str->trans_par_val = TRANSMIT_DEF_PAR_BEACON;		
@@ -120,8 +119,7 @@ u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info)
 	return 1;
 }
 
-u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash)
-{
+u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash){
 	#if LPN_CONTROL_EN
 	if(mi_mesh_get_state()){
 		p_str->trans_par_val = TRANSMIT_DEF_PAR_BEACON;		
@@ -288,7 +286,7 @@ int mesh_tx_sec_private_beacon_proc(u8 blt_sts)
 	return err;
 }
 
-int iv_update_key_refresh_rx_handle_cb(mesh_ctl_fri_update_flag_t *p_ivi_flag, u32 iv_idx)
+int iv_update_key_refresh_rx_handle_cb(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *p_iv_idx)
 {
 	#if __PROJECT_MESH_SWITCH__
 	LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch receive security network beacon time_s:%d", clock_time_s());

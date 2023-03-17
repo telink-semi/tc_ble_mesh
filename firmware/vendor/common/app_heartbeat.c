@@ -214,19 +214,19 @@ void mesh_process_hb_sub(mesh_cmd_bear_t *p_bear)
 	p_sub->cnt_log = cal_heartbeat_count_log(p_sub->cnt_val);
 }
 
-void heartbeat_cmd_send_conf()
+void heartbeat_cmd_send_conf(u8 ttl,u16 feature,u16 dst)
 {
     mesh_hb_msg_t hb_msg;
 	hb_msg.rfu = 0;
-	hb_msg.iniTTL = model_sig_cfg_s.hb_pub.ttl;
-	mesh_page_feature_t *p_feature = (mesh_page_feature_t *)&hb_msg.fea;
+	hb_msg.iniTTL = ttl;
+	mesh_page_feature_t *p_feature = (mesh_page_feature_t *)&feature;
 	p_feature->relay = model_sig_cfg_s.relay;
 	p_feature->proxy = model_sig_cfg_s.gatt_proxy;
 	p_feature->frid = model_sig_cfg_s.frid;
 	p_feature->low_power = FEATURE_LOWPOWER_EN;
 	p_feature->rfu = 0;
 	
-	mesh_tx_cmd_layer_upper_ctl(CMD_CTL_HEARTBEAT, (u8 *)(&hb_msg), sizeof(hb_msg), ele_adr_primary, model_sig_cfg_s.hb_pub.dst_adr,0);
+	mesh_tx_cmd_layer_upper_ctl(CMD_CTL_HEARTBEAT, (u8 *)(&hb_msg), sizeof(hb_msg), ele_adr_primary, dst,0);
 	LOG_MSG_INFO(TL_LOG_MESH, 0, 0,"send heartbeat ",0);
 	return ;
 }

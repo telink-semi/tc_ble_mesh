@@ -2,13 +2,6 @@
 
 version record:
 
-V3.3.3.6
-
-1. remove inIndex in JSON storage
-2. update icon generation by check pid bitmask
-
-----------------
-
 V3.3.3.5
 
 1. add support for private beacon and enhanced opcode aggregator in draft feature

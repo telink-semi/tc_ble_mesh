@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "tl_common.h"
+#include "proj/tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
 // ------
@@ -46,61 +46,61 @@
 #define MESH_OTA_V_SEL                  (MESH_OTA_R06)
 
 #if(PTS_TEST_OTA_EN)
-#define SIG_MD_FW_UPDATE_S              0x1402
-#define SIG_MD_FW_UPDATE_C              0x1403
-#define SIG_MD_FW_DISTRIBUT_S           0x1404
-#define SIG_MD_FW_DISTRIBUT_C           0x1405
-#define SIG_MD_BLOB_TRANSFER_S        	0x1400
-#define SIG_MD_BLOB_TRANSFER_C         	0x1401
+#define SIG_MD_FW_UPDATE_S              0xBF44
+#define SIG_MD_FW_UPDATE_C              0xBF45
+#define SIG_MD_FW_DISTRIBUT_S           0xBF46
+#define SIG_MD_FW_DISTRIBUT_C           0xBF47
+#define SIG_MD_BLOB_TRANSFER_S        	0xBF42
+#define SIG_MD_BLOB_TRANSFER_C         	0xBF43
 
 //----------------------------------- op code
 // op cmd 0xxxxxxx (SIG)
 // op cmd 10xxxxxx xxxxxxxx (SIG)
 
-#define FW_UPDATE_INFO_GET		        0x0883
-#define FW_UPDATE_INFO_STATUS		    0x2483
-#define FW_UPDATE_METADATA_CHECK	    0x2583
-#define FW_UPDATE_METADATA_CHECK_STATUS 0x2683
-#define FW_UPDATE_GET		        	0x0983
-#define FW_UPDATE_START		        	0x0A83
-#define FW_UPDATE_CANCEL		        0x0B83
-#define FW_UPDATE_APPLY		        	0x0C83
-#define FW_UPDATE_STATUS		        0x1883
-#define FW_DISTRIBUT_GET		        0x1183
-#define FW_DISTRIBUT_START		        0x1C83
-#define FW_DISTRIBUT_SUSPEND		    0x2783
-#define FW_DISTRIBUT_CANCEL		        0x1283
-#define FW_DISTRIBUT_APPLY		        0x1383
-#define FW_DISTRIBUT_STATUS		        0x1D83
-#define FW_DISTRIBUT_RECEIVERS_GET		0x0F83
-#define FW_DISTRIBUT_RECEIVERS_LIST		0x1A83
-#define FW_DISTRIBUT_RECEIVERS_ADD		0x1983
-#define FW_DISTRIBUT_RECEIVERS_DELETE_ALL   0x0D83
-#define FW_DISTRIBUT_RECEIVERS_STATUS	0x0E83
-#define FW_DISTRIBUT_CAPABILITIES_GET	0x1083
-#define FW_DISTRIBUT_CAPABILITIES_STATUS	0x1B83
-#define FW_DISTRIBUT_UPLOAD_GET		    0x1483
-#define FW_DISTRIBUT_UPLOAD_START		0x1E83
-#define FW_DISTRIBUT_UPLOAD_OOB_START	0x1F83
-#define FW_DISTRIBUT_UPLOAD_CANCEL		0x1583
-#define FW_DISTRIBUT_UPLOAD_STATUS		0x2083
-#define FW_DISTRIBUT_FW_GET		        0x2183
-#define FW_DISTRIBUT_FW_STATUS		    0x2383
-#define FW_DISTRIBUT_FW_GET_BY_INDEX    0x1683
-#define FW_DISTRIBUT_FW_DELETE		    0x2283
-#define FW_DISTRIBUT_FW_DELETE_ALL		0x1783
+#define FW_UPDATE_INFO_GET		        0x1BB7
+#define FW_UPDATE_INFO_STATUS		    0x37B7
+#define FW_UPDATE_METADATA_CHECK	    0x38B7
+#define FW_UPDATE_METADATA_CHECK_STATUS 0x39B7
+#define FW_UPDATE_GET		        	0x1CB7
+#define FW_UPDATE_START		        	0x1DB7
+#define FW_UPDATE_CANCEL		        0x1EB7
+#define FW_UPDATE_APPLY		        	0x1FB7
+#define FW_UPDATE_STATUS		        0x2BB7
+#define FW_DISTRIBUT_GET		        0x24B7
+#define FW_DISTRIBUT_START		        0x2FB7
+#define FW_DISTRIBUT_SUSPEND		    0x3AB7
+#define FW_DISTRIBUT_CANCEL		        0x25B7
+#define FW_DISTRIBUT_APPLY		        0x26B7
+#define FW_DISTRIBUT_STATUS		        0x30B7
+#define FW_DISTRIBUT_RECEIVERS_GET		0x22B7
+#define FW_DISTRIBUT_RECEIVERS_LIST		0x2DB7
+#define FW_DISTRIBUT_RECEIVERS_ADD		0x2CB7
+#define FW_DISTRIBUT_RECEIVERS_DELETE_ALL   0x20B7
+#define FW_DISTRIBUT_RECEIVERS_STATUS	0x21B7
+#define FW_DISTRIBUT_CAPABILITIES_GET	0x23B7
+#define FW_DISTRIBUT_CAPABILITIES_STATUS	0x2EB7
+#define FW_DISTRIBUT_UPLOAD_GET		    0x27B7
+#define FW_DISTRIBUT_UPLOAD_START		0x31B7
+#define FW_DISTRIBUT_UPLOAD_OOB_START	0x32B7
+#define FW_DISTRIBUT_UPLOAD_CANCEL		0x28B7
+#define FW_DISTRIBUT_UPLOAD_STATUS		0x33B7
+#define FW_DISTRIBUT_FW_GET		        0x34B7
+#define FW_DISTRIBUT_FW_STATUS		    0x36B7
+#define FW_DISTRIBUT_FW_GET_BY_INDEX    0x29B7
+#define FW_DISTRIBUT_FW_DELETE		    0x35B7
+#define FW_DISTRIBUT_FW_DELETE_ALL		0x2AB7
 
-#define BLOB_TRANSFER_GET		        0x0083
-#define BLOB_TRANSFER_START		        0x0183
-#define BLOB_TRANSFER_CANCEL		    0x0283
-#define BLOB_TRANSFER_STATUS		    0x0383
-#define BLOB_BLOCK_GET		            0x0583
-#define BLOB_BLOCK_START		        0x0483
-#define BLOB_BLOCK_STATUS		        0x67
-#define BLOB_PARTIAL_BLOCK_REPORT	    0x65    // used for pull mode(LPN)
-#define BLOB_CHUNK_TRANSFER		        0x66
-#define BLOB_INFO_GET		            0x0683
-#define BLOB_INFO_STATUS		        0x0783
+#define BLOB_TRANSFER_GET		        0x01B7
+#define BLOB_TRANSFER_START		        0x02B7
+#define BLOB_TRANSFER_CANCEL		    0x03B7
+#define BLOB_TRANSFER_STATUS		    0x04B7
+#define BLOB_BLOCK_GET		            0x07B7
+#define BLOB_BLOCK_START		        0x05B7
+#define BLOB_BLOCK_STATUS		        0x7E
+#define BLOB_PARTIAL_BLOCK_REPORT	    0x7F    // used for pull mode(LPN)
+#define BLOB_CHUNK_TRANSFER		        0x7D
+#define BLOB_INFO_GET		            0x0AB7
+#define BLOB_INFO_STATUS		        0x0BB7
 #elif DRAFT_FEAT_VD_MD_EN
 #include "draft_feature_vendor.h"
 #else

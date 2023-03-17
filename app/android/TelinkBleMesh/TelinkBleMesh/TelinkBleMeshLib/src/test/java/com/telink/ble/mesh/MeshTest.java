@@ -303,6 +303,19 @@ public class MeshTest {
         System.out.println("k5 sample: " + Arrays.bytesToHexString(k5Result)); // 210c3c448152e8d59ef742aa7d22ee5ba59a38648bda6bf05c74f3e46fc2c0bb
     }
 
+
+    @Test
+    public void testMeshPrivateBeacon() {
+
+        byte[] netKey = Arrays.hexToBytes("f7a2a44f8e8a8029064f173ddc1e2b00");
+        byte[] pvtBeaconKey = Encipher.generatePrivateBeaconKey(netKey);
+
+        int ivIndex = 0x1010abcd;
+
+//        MeshPrivateBeacon beacon = MeshPrivateBeacon.createIvUpdatingBeacon()
+    }
+
+
     /**
      * test in UI
      */

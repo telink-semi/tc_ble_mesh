@@ -109,7 +109,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt8 networkTransmitIntervalSteps;//default is 0b1111=31.
 @property (nonatomic,assign,readonly) double networkTransmitInterval;//default is (0b1111+1)*10=320ms.
 
-@property (nonatomic,strong,nullable) BackgroundTimer *receiveSegmentTimer;
+@property (nonatomic,strong) BackgroundTimer *receiveSegmentTimer;
 @property (nonatomic,assign) BOOL isReceiveSegmentPDUing;
 @property (nonatomic,assign) UInt16 sourceOfReceiveSegmentPDU;
 @property (nonatomic,strong,nullable) SigSecureNetworkBeacon *secureNetworkBeacon;
@@ -152,8 +152,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param initialTtl The initial TTL (Time To Live) value of the message. initialTtl is Relayed TTL.
 /// @param command The command save message and callback.
 /// @returns Message handle that can be used to cancel sending.
-- (nullable SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt8)initialTtl command:(SDKLibCommand *)command;
-- (nullable SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination command:(SDKLibCommand *)command;
+- (SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt8)initialTtl command:(SDKLibCommand *)command;
+- (SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination command:(SDKLibCommand *)command;
 
 /// Encrypts the message with the Application Key and a Network Key bound to it, and sends to the given destination address.
 ///
@@ -166,19 +166,19 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param applicationKey The Application Key to sign the message.
 /// @param command The command save message and callback.
 /// @returns Message handle that can be used to cancel sending.
-- (nullable SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command;
-- (nullable SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command;
+- (SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command;
+- (SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command;
 
 /// Sends the Proxy Configuration Message to the connected Proxy Node.
 /// @param message The Proxy Configuration message to be sent.
 /// @param command The command save message and callback.
-- (nullable SigMessageHandle *)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command;
+- (SigMessageHandle *)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command;
 
 /// Sends the telink's onlineStatus command.
 /// @param message The onlineStatus message to be sent.
 /// @param command The command save message and callback.
 /// @returns return `nil` when send message successful.
-- (nullable NSError *)sendTelinkApiGetOnlineStatueFromUUIDWithMessage:(SigMeshMessage *)message command:(SDKLibCommand *)command;
+- (NSError *)sendTelinkApiGetOnlineStatueFromUUIDWithMessage:(SigMeshMessage *)message command:(SDKLibCommand *)command;
 
 /// Cancels sending the message with the given identifier.
 /// @param messageId The message identifier.

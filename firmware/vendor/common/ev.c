@@ -76,7 +76,7 @@ void ev_emit_event(ev_event_e e, void *data){
 	STATIC_ASSERT(EV_FIRED_EVENT_MAX == EV_FIRED_EVENT_MAX_MASK + 1);
 	assert(!irq_is_in_handler());
 
-	u32 r = irq_disable();
+	u8 r = irq_disable();
 	
 	int c = (loop->fired_index + loop->fired_count) & EV_FIRED_EVENT_MAX_MASK;
 	loop->fired_queue[c].e = (int)e;
@@ -94,7 +94,7 @@ static inline void ev_call_callbacks(int e, void *data){
 	}
 }
 void ev_emit_event_syn(ev_event_e e, void *data){
-	//u32 r = irq_disable();
+	//u8 r = irq_disable();
 #if(__LOG_RT_ENABLE__)
 	if(e < TR_T_EVENT_E - TR_T_EVENT_0){
 		LOG_TICK(TR_T_EVENT_0 + e, ev_call_callbacks((int)e, data));
@@ -124,7 +124,7 @@ void ev_process_event(){
 #endif
 		ev_call_callbacks(fe->e, fe->data);
 	}
-	u32 r = irq_disable();
+	u8 r = irq_disable();
 	loop->fired_count -= fired_count;		// loop->fired_count may bring up race condition, if ev_emit_event is called in irq_handler 
 	irq_restore(r);
 	loop->fired_index = (loop->fired_index + fired_count) & EV_FIRED_EVENT_MAX_MASK;
@@ -200,7 +200,7 @@ void ev_start_timer(ev_time_event_t * e){
 	// Reserve  4 second margin in case some event run too long
 	// that is even a task run nearly 4 second, 
 	// the timers will be fired correctly after then.
-	u32 r = irq_disable();
+	u8 r = irq_disable();
 	
 	u32 now = clock_time();
 

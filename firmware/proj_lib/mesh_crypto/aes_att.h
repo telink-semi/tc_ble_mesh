@@ -25,8 +25,8 @@
 #ifndef _AES_H_
 #define _AES_H_
 
-#include "tl_common.h"
-#include "proj/common/types.h"
+#include "../../proj/tl_common.h"
+#include "../../proj/common/types.h"
 
 
 static const word8 aes_sw_S[256] = {

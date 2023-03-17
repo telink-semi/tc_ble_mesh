@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"
+#include "proj/tl_common.h"
 #include "proj_lib/rf_drv.h"
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/ll/ll.h"
@@ -109,9 +109,9 @@ int soft_timer_rcv_beacon_timeout()
 	return -1;
 }
 
-void switch_triger_iv_search_mode(int force)
-{	
-	if(force || clock_time_exceed_s(switch_iv_updata_s, SWITCH_IV_SEARCHING_INVL_S)){
+void switch_triger_iv_search_mode()
+{
+	if(clock_time_exceed_s(switch_iv_updata_s, SWITCH_IV_SEARCHING_INVL_S)){	
 		LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch enter iv update search mode time_s:%d", clock_time_s());
 		switch_iv_update_time_refresh();		
 		app_enable_scan_all_device (); // support pb adv
@@ -889,7 +889,6 @@ void user_init()
 	{bls_ota_clearNewFwDataArea(0);	 //must
 	}
 	mesh_switch_init();
-	switch_triger_iv_search_mode(1);
 	//blc_ll_initScanning_module(tbl_mac);
 	#if((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 	blc_gap_peripheral_init();    //gap initialization

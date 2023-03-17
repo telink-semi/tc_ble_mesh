@@ -417,7 +417,7 @@ public class FastProvisioningController {
 
                     MeshAddressStatusMessage statusMessage = (MeshAddressStatusMessage) message.getStatusMessage();
                     int originAddress = message.getSrc();
-                    int pid = statusMessage.getPid() & 0x0FFF;
+                    int pid = statusMessage.getPid();
                     log("device address notify: " + Arrays.bytesToHexString(statusMessage.getMac()));
                     int newAddress = getProvisioningMeshAddress(pid);
                     if (newAddress != 0) {

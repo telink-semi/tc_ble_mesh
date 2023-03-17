@@ -72,13 +72,17 @@
 }
 
 - (NSData *)calculateECB:(NSData *)someData andKey:(NSData *)key {
-    int len;
+    EVP_CIPHER_CTX *ctx;
     unsigned char iv[16] = {0x00};
+    int len;
+    int ciphertext_len;
     unsigned char outbuf[16] = {0x00};
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    ctx = EVP_CIPHER_CTX_new();
     EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, [key bytes], iv);
     EVP_EncryptUpdate(ctx, outbuf, &len, [someData bytes], (int) [someData length] / sizeof(unsigned char));
+    ciphertext_len = len;
     EVP_EncryptFinal_ex(ctx, outbuf + len, &len);
+    ciphertext_len += len;
     EVP_CIPHER_CTX_free(ctx);
     return [[NSData alloc] initWithBytes: outbuf length: 16];
 }
@@ -313,6 +317,7 @@
     NSMutableData *mData = [NSMutableData data];
         
     //C1
+    mData = [NSMutableData data];
     UInt8 tem8 = 0x01;
     UInt16 tem16 = CFSwapInt16BigToHost(0x0001);
     NSData *data = [NSData dataWithBytes:&tem8 length:1];

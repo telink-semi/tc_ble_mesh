@@ -96,47 +96,6 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!--      direct forwarding      -->
-            <androidx.cardview.widget.CardView
-                android:id="@+id/view_df"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                app:cardCornerRadius="4dp"
-                app:cardPreventCornerOverlap="false"
-                app:cardUseCompatPadding="true">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="8dp">
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:padding="8dp"
-                        android:src="@drawable/ic_df"
-                        android:tint="@color/gray" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Direct Forwarding" />
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_arrow_right"
-                        android:tint="@color/gray" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!--      share      -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/view_share"
                 android:layout_width="match_parent"

@@ -25,18 +25,6 @@
 #pragma once
 #include "proj/tl_common.h"
 
-#if !WIN32
 #define SHOW_FUNC_IN(msg, arg...) printf("> %s(%d): " msg "\n", __FUNCTION__,__LINE__, ##arg)
 #define SHOW_FUNC_OUT(msg, arg...) printf("< %s(%d): " msg "\n\n", __FUNCTION__,__LINE__, ##arg)
 #define SHOW_DBG(msg, arg...) printf("%s:%s(%d): " msg "\n", __FILE__, __FUNCTION__,__LINE__, ##arg)
-
-	#if (LLSYNC_ENABLE && (0 == LLSYNC_LOG_EN))
-#define ble_qiot_log_d(fmt, args...)                                   
-#define ble_qiot_log_i(fmt, args...)                                  
-#define ble_qiot_log_w(fmt, args...)                                                             
-#define ble_qiot_log_e(fmt, args...)                                                            
-#define ble_qiot_log(level, fmt, args...)                                             
-#define ble_qiot_log_raw(fmt, args...) 
-	#endif
-#endif
-

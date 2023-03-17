@@ -72,7 +72,7 @@
     [self.rightBtn setTitle:_rightBtnTitle forState:UIControlStateNormal];
 }
 
-- (UITextField * _Nullable)getTextFieldOfRow:(NSInteger)row {
+- (UITextField *)getTextFieldOfRow:(NSInteger)row {
     NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:0];
     UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
     if ([cell isKindOfClass:[InputItemCell class]]) {

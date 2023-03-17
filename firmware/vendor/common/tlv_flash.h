@@ -24,7 +24,8 @@
  *******************************************************************************************************/
 #ifndef __TLV_FLASH_H_
 #define __TLV_FLASH_H_
-#include "tl_common.h"
+#include "proj/tl_common.h"
+#include "vendor/mesh/app.h"
 
 #define TLV_FLASH_VERSION 		1
 #define TLV_STORE_VALID_FLAG	0xa55a

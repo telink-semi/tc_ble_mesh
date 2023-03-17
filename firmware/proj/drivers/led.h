@@ -24,9 +24,9 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "tl_common.h"
-#include "proj/os/ev.h"
-#include "proj/os/et.h"
+#include "../../proj/tl_common.h"
+#include "../../proj/os/ev.h"
+#include "../../proj/os/et.h"
 
 // if pattern changed,  the led will change accordingly within LED_MIN_RESP_TIME in ms
 #define LED_MIN_RESP_TIME	50

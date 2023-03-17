@@ -57,7 +57,7 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     //为了跟安卓同步，暂时屏蔽情景详情界面的实时修改设备状态功能
-    //    ActionViewController *vc = (ActionViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ActionViewControllerID storyboard:@"Setting"];
+    //    ActionViewController *vc = (ActionViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ActionViewControllerID storybroad:@"Setting"];
     //    vc.model = self.allActions[indexPath.row];
     //    __weak typeof(self) weakSelf = self;
     //    [vc setBackAction:^(ActionModel *action) {

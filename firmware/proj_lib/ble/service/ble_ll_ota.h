@@ -182,7 +182,6 @@ unsigned short crc16(unsigned char *pD, int len);
 u8 ota_condition_enable();
 void set_ota_reboot_flag(u8 flag);
 u8 get_fw_ota_value();
-void ota_save_data(u32 adr, u8 * data, u16 len);
 
 
 #endif /* BLE_LL_OTA_H_ */

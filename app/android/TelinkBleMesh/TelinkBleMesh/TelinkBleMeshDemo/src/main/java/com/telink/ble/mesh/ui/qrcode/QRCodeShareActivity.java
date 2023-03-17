@@ -115,7 +115,6 @@ public class QRCodeShareActivity extends BaseActivity {
         tv_info = findViewById(R.id.tv_info);
         iv_qr = findViewById(R.id.iv_qr);
 
-//        onUploadSuccess("12:34:56:78:AB:CD"); // for test
         getNetKeyList();
         upload(meshNetKeyList);
     }
@@ -176,9 +175,13 @@ public class QRCodeShareActivity extends BaseActivity {
 
 
     private void onUploadSuccess(String uuid) {
-        runOnUiThread(this::dismissWaitingDialog);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                dismissWaitingDialog();
+            }
+        });
         int size = iv_qr.getMeasuredWidth();
-//        int size = 64; // for test
         mQrCodeGenerator = new QRCodeGenerator(mGeneratorHandler, size, uuid);
         mQrCodeGenerator.execute();
     }

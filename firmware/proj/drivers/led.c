@@ -23,7 +23,7 @@
  *
  *******************************************************************************************************/
 #include "led.h"
-#include "vendor/common/led_cfg.h"
+#include "../../vendor/common/led_cfg.h"
 
 led_count_init_function led_count_init_cb;
 static inline void led_on(int led){

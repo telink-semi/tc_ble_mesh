@@ -45,9 +45,9 @@ public abstract class ProxyPDU {
     /**
      * get proxy pdu typeValue and SAR by ' data[0] & BITS_* '
      */
-    public static final int MASK_TYPE = 0b00111111;
+    public static final int BITS_TYPE = 0b00111111;
 
-    public static final int MASK_SAR = 0b11000000;
+    public static final int BITS_SAR = 0b11000000;
 
 
     /**

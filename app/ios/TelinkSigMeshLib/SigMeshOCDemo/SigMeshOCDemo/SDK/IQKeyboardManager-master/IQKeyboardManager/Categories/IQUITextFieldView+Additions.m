@@ -38,7 +38,7 @@
 {
     NSNumber *keyboardDistanceFromTextField = objc_getAssociatedObject(self, @selector(keyboardDistanceFromTextField));
     
-    return (keyboardDistanceFromTextField.boolValue)?[keyboardDistanceFromTextField floatValue]:kIQUseDefaultKeyboardDistance;
+    return (keyboardDistanceFromTextField)?[keyboardDistanceFromTextField floatValue]:kIQUseDefaultKeyboardDistance;
 }
 
 -(void)setIgnoreSwitchingByNextPrevious:(BOOL)ignoreSwitchingByNextPrevious

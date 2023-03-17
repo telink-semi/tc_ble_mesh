@@ -179,6 +179,7 @@
     self.devKeyAggregator.hidden = NO;
     self.appKeyAggregator.hidden = NO;
 #endif
+
     self.logString = @"";
 }
 

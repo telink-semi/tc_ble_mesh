@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "tl_common.h"
+#include "proj/tl_common.h"
 //#include <stack/ble/att.h>
 #include "../ble_common.h"
 //#include <stack/ble/gap.h>

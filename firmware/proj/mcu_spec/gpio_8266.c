@@ -38,7 +38,7 @@
 #include "../mcu/analog.h"
 
 #include "../mcu/gpio.h"
-#include "proj_lib/pm.h"
+#include "../../proj_lib/pm.h"
 
 void gpio_set_wakeup(u32 pin, u32 level, int en)
 {

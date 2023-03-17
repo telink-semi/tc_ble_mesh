@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"
+#include "proj/tl_common.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -642,9 +642,9 @@ hx300t_sensor_t hx300t_sensor;
 
 #if ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 #if(MCU_CORE_TYPE == MCU_CORE_8258)
-#include "drivers/8258/i2c.h"
+#include "../../drivers/8258/i2c.h"
 #elif(MCU_CORE_TYPE == MCU_CORE_8278)
-#include "drivers/8278/i2c.h"
+#include "../../drivers/8278/i2c.h"
 #endif
 void i2c_io_init()
 {
@@ -652,7 +652,7 @@ void i2c_io_init()
     i2c_gpio_set(I2C_GPIO_GROUP_C0C1);
 }
 #elif (MCU_CORE_TYPE == MCU_CORE_8269)
-#include "proj/drivers/i2c.h"
+#include "../../proj/drivers/i2c.h"
 void i2c_io_init()
 {
       // i2c init
@@ -668,7 +668,7 @@ void i2c_io_init()
 
 void sensor_read_start()
 {
-    u32 r = irq_disable();
+    u8 r = irq_disable();
     #if (MCU_CORE_TYPE == MCU_CORE_8269)
     i2c_write_start(HX300_SENSOR_ID);
     #else
@@ -680,7 +680,7 @@ void sensor_read_start()
 void sensor_read_fun(u16 *p_humi,u16 *p_temp)
 {
     u8 val_buffer[4];
-    u32 r = irq_disable();
+    u8 r = irq_disable();
     #if (MCU_CORE_TYPE == MCU_CORE_8269)
     i2c_read_start_buf(HX300_SENSOR_ID,val_buffer,4);
     #else
@@ -920,13 +920,7 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
 	CMD_NO_STR(VD_TIME_CMD, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_du_time_cmd, 0),
 	CMD_NO_STR(VD_TIME_RSP, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_time_cmd_rsp, VD_TIME_RSP),
 	#endif
-#elif LLSYNC_ENABLE
-    CMD_NO_STR(LLSYNC_VND_OP_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, LLSYNC_VND_OP_STATUS),
-	CMD_NO_STR(LLSYNC_VND_OP_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, LLSYNC_VND_OP_STATUS),
-	CMD_NO_STR(LLSYNC_VND_OP_SET_UNACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
-    CMD_NO_STR(LLSYNC_VND_OP_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
-	CMD_NO_STR(LLSYNC_VND_OP_INDICATION, 0, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
-    CMD_NO_STR(LLSYNC_VND_OP_CONFIRM, 1, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
+    
 #elif(VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
     #if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)
 	CMD_NO_STR(VD_EXTEND_CMD0, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, 0, STATUS_NONE),

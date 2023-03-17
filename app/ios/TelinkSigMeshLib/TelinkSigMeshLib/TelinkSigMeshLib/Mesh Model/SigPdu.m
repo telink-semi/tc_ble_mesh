@@ -779,17 +779,9 @@
         NSMutableArray <SigNetkeyDerivaties *>*keySets = [NSMutableArray array];
         if (_nid == networkKey.nid) {
             [keySets addObject:networkKey.keys];
-        } else if (_nid == networkKey.directedSecurityNid) {
-            networkKey.keys.privacyKey = networkKey.keys.directedSecurityPrivacyKey;
-            networkKey.keys.encryptionKey = networkKey.keys.directedSecurityEncryptionKey;
-            [keySets addObject:networkKey.keys];
         }
         if (networkKey.oldKeys != nil && networkKey.oldNid == _nid) {
-            [keySets addObject:networkKey.oldKeys];
-        } else if (networkKey.oldKeys != nil && networkKey.directedSecurityOldNid == _nid) {
-            networkKey.oldKeys.privacyKey = networkKey.oldKeys.directedSecurityPrivacyKey;
-            networkKey.oldKeys.encryptionKey = networkKey.oldKeys.directedSecurityEncryptionKey;
-            [keySets addObject:networkKey.oldKeys];
+            [keySets addObject:networkKey.keys];
         }
         if (keySets.count == 0) {
             return nil;
@@ -896,16 +888,8 @@
         NSMutableArray <SigNetkeyDerivaties *>*keySets = [NSMutableArray array];
         if (_nid == networkKey.nid) {
             [keySets addObject:networkKey.keys];
-        } else if (_nid == networkKey.directedSecurityNid) {
-            networkKey.keys.privacyKey = networkKey.keys.directedSecurityPrivacyKey;
-            networkKey.keys.encryptionKey = networkKey.keys.directedSecurityEncryptionKey;
-            [keySets addObject:networkKey.keys];
         }
         if (networkKey.oldKeys != nil && networkKey.oldNid == _nid) {
-            [keySets addObject:networkKey.oldKeys];
-        } else if (networkKey.oldKeys != nil && networkKey.directedSecurityOldNid == _nid) {
-            networkKey.oldKeys.privacyKey = networkKey.oldKeys.directedSecurityPrivacyKey;
-            networkKey.oldKeys.encryptionKey = networkKey.oldKeys.directedSecurityEncryptionKey;
             [keySets addObject:networkKey.oldKeys];
         }
         if (keySets.count == 0) {
@@ -1002,16 +986,9 @@
 
         _networkKey = lowerTransportPdu.networkKey;
         _ivi = (UInt8)(index&0x01);
-        if (SigMeshLib.share.dataSource.sendByDirectedSecurity == NO) {
-            _nid = _networkKey.nid;
-            if (_networkKey.phase == distributingKeys) {
-                _nid = _networkKey.oldNid;
-            }
-        } else {
-            _nid = _networkKey.directedSecurityNid;
-            if (_networkKey.phase == distributingKeys) {
-                _nid = _networkKey.directedSecurityOldNid;
-            }
+        _nid = _networkKey.nid;
+        if (_networkKey.phase == distributingKeys) {
+            _nid = _networkKey.oldNid;
         }
         _type = lowerTransportPdu.type;
         _source = lowerTransportPdu.source;
@@ -1057,16 +1034,9 @@
             [networkNonce replaceBytesInRange:NSMakeRange(1, 1) withBytes:&tem length:1];
         }
 
-        NSData *encryptedData = nil;
-        NSData *obfuscatedData = nil;
-        if (SigMeshLib.share.dataSource.sendByDirectedSecurity == NO) {
-            encryptedData = [OpenSSLHelper.share calculateCCM:decryptedData withKey:keys.encryptionKey nonce:networkNonce andMICSize:[self getNetMicSizeOfLowerTransportPduType:_type] withAdditionalData:nil];
-            obfuscatedData = [OpenSSLHelper.share obfuscate:deobfuscatedData usingPrivacyRandom:encryptedData ivIndex:index andPrivacyKey:keys.privacyKey];
-        } else {
-            encryptedData = [OpenSSLHelper.share calculateCCM:decryptedData withKey:keys.directedSecurityEncryptionKey nonce:networkNonce andMICSize:[self getNetMicSizeOfLowerTransportPduType:_type] withAdditionalData:nil];
-            obfuscatedData = [OpenSSLHelper.share obfuscate:deobfuscatedData usingPrivacyRandom:encryptedData ivIndex:index andPrivacyKey:keys.directedSecurityPrivacyKey];
-        }
-        
+        NSData *encryptedData = [OpenSSLHelper.share calculateCCM:decryptedData withKey:keys.encryptionKey nonce:networkNonce andMICSize:[self getNetMicSizeOfLowerTransportPduType:_type] withAdditionalData:nil];
+        NSData *obfuscatedData = [OpenSSLHelper.share obfuscate:deobfuscatedData usingPrivacyRandom:encryptedData ivIndex:index andPrivacyKey:keys.privacyKey];
+
         NSMutableData *pduData = [NSMutableData dataWithBytes:&iviNid length:1];
         [pduData appendData:obfuscatedData];
         [pduData appendData:encryptedData];
@@ -1088,17 +1058,7 @@
 
         _networkKey = lowerTransportPdu.networkKey;
         _ivi = (UInt8)(index&0x01);
-        if (SigMeshLib.share.dataSource.sendByDirectedSecurity == NO) {
-            _nid = _networkKey.nid;
-            if (_networkKey.phase == distributingKeys) {
-                _nid = _networkKey.oldNid;
-            }
-        } else {
-            _nid = _networkKey.directedSecurityNid;
-            if (_networkKey.phase == distributingKeys) {
-                _nid = _networkKey.directedSecurityOldNid;
-            }
-        }
+        _nid = _networkKey.nid;
         _type = lowerTransportPdu.type;
         _source = lowerTransportPdu.source;
         _destination = lowerTransportPdu.destination;
@@ -1143,15 +1103,8 @@
             [networkNonce replaceBytesInRange:NSMakeRange(1, 1) withBytes:&tem length:1];
         }
 
-        NSData *encryptedData = nil;
-        NSData *obfuscatedData = nil;
-        if (SigMeshLib.share.dataSource.sendByDirectedSecurity == NO) {
-            encryptedData = [OpenSSLHelper.share calculateCCM:decryptedData withKey:keys.encryptionKey nonce:networkNonce andMICSize:[self getNetMicSizeOfLowerTransportPduType:_type] withAdditionalData:nil];
-            obfuscatedData = [OpenSSLHelper.share obfuscate:deobfuscatedData usingPrivacyRandom:encryptedData ivIndex:index andPrivacyKey:keys.privacyKey];
-        } else {
-            encryptedData = [OpenSSLHelper.share calculateCCM:decryptedData withKey:keys.directedSecurityEncryptionKey nonce:networkNonce andMICSize:[self getNetMicSizeOfLowerTransportPduType:_type] withAdditionalData:nil];
-            obfuscatedData = [OpenSSLHelper.share obfuscate:deobfuscatedData usingPrivacyRandom:encryptedData ivIndex:index andPrivacyKey:keys.directedSecurityPrivacyKey];
-        }
+        NSData *encryptedData = [OpenSSLHelper.share calculateCCM:decryptedData withKey:keys.encryptionKey nonce:networkNonce andMICSize:[self getNetMicSizeOfLowerTransportPduType:_type] withAdditionalData:nil];
+        NSData *obfuscatedData = [OpenSSLHelper.share obfuscate:deobfuscatedData usingPrivacyRandom:encryptedData ivIndex:index andPrivacyKey:keys.privacyKey];
 
         NSMutableData *pduData = [NSMutableData dataWithBytes:&iviNid length:1];
         [pduData appendData:obfuscatedData];
@@ -1171,7 +1124,7 @@
 /// - parameter type:        The type of the PDU: `.networkPdu` of `.proxyConfiguration`.
 /// - parameter meshNetwork: The mesh network for which the PDU should be decoded.
 /// - returns: The deobfuscated and decoded Network PDU, or `nil` if the PDU was not signed with any of the Network Keys, the IV Index was not valid, or the PDU was invalid.
-+ (nullable SigNetworkPdu *)decodePdu:(NSData *)pdu pduType:(SigPduType)pduType forMeshNetwork:(SigDataSource *)meshNetwork {
++ (SigNetworkPdu *)decodePdu:(NSData *)pdu pduType:(SigPduType)pduType forMeshNetwork:(SigDataSource *)meshNetwork {
     NSArray *netKeys = [NSArray arrayWithArray:meshNetwork.netKeys];
     for (SigNetkeyModel *networkKey in netKeys) {
         SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithDecodePduData:pdu pduType:pduType usingNetworkKey:networkKey];
@@ -1360,7 +1313,7 @@
 /// - parameter pdu: The data received from mesh network.
 /// - parameter networkKey: The Network Key to validate the beacon.
 /// - returns: The beacon object, or `nil` if the data are invalid.
-+ (nullable SigSecureNetworkBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork {
++ (SigSecureNetworkBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork {
     if (pdu == nil || pdu.length <= 1) {
         TeLogError(@"decodePdu length is less than 1.");
         return nil;
@@ -1454,7 +1407,7 @@
     return self;
 }
 
-+ (nullable SigUnprovisionedDeviceBeacon *)decodeWithPdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork {
++ (SigUnprovisionedDeviceBeacon *)decodeWithPdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork {
     if (pdu == nil || pdu.length == 0) {
         TeLogError(@"decodePdu length is 0.");
         return nil;
@@ -1563,7 +1516,7 @@
 /// - parameter pdu: The data received from mesh network.
 /// - parameter networkKey: The Network Key to validate the beacon.
 /// - returns: The beacon object, or `nil` if the data are invalid.
-+ (nullable SigMeshPrivateBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork {
++ (SigMeshPrivateBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork {
     if (pdu == nil || pdu.length <= 1) {
         TeLogError(@"decodePdu length is less than 1.");
         return nil;

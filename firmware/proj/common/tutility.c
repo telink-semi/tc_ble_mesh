@@ -163,17 +163,6 @@ void swap128(u8 dst[16], const u8 src[16])
     swapX(src, dst, 16);
 }
 
-u64 reverse_bit64(u64 src)
-{
-	u64 dst = 0;
-	foreach(i, 64){
-		dst <<= 1;
-		dst += src&0x01;
-		src >>= 1;
-	}
-	return dst;
-}
-
 void net_store_16(u8 *buffer, u16 pos, u16 value)
 {
     buffer[pos++] = (value >> 8) & 0xff;
@@ -234,7 +223,7 @@ int my_fifo_push (my_fifo_t *f, u8 *p, u16 n, u8 *head, u8 head_len)
 	{
 		return -1;
 	}
-	u32 r = irq_disable();
+	u8 r = irq_disable();
 	u8 *pd = f->p + (f->wptr & (f->num-1)) * f->size;
 	*pd++ = (n+head_len) & 0xff;
 	*pd++ = (n+head_len) >> 8;
@@ -249,7 +238,7 @@ int my_fifo_push (my_fifo_t *f, u8 *p, u16 n, u8 *head, u8 head_len)
 
 void my_fifo_pop (my_fifo_t *f)
 {
-	//u32 r = irq_disable();
+	//u8 r = irq_disable();
 	f->rptr++;
 	//irq_restore(r);
 }
@@ -258,7 +247,7 @@ u8 * my_fifo_get (my_fifo_t *f)
 {
     u8 *p = 0;
     
-	u32 r = irq_disable();
+	u8 r = irq_disable();
 	if (f->rptr != f->wptr)
 	{
 		p = f->p + (f->rptr & (f->num-1)) * f->size;

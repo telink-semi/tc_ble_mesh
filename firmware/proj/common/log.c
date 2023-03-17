@@ -52,7 +52,7 @@ _attribute_ram_code_
 #endif
 static void log_write(int id, int type, u32 dat){
 	if(-1 == id) return;
-	u32 r = irq_disable();
+	u8 r = irq_disable();
 	reg_usb_ep8_dat = (dat & 0xff);
 	reg_usb_ep8_dat = ((dat >> 8) & 0xff);
 	reg_usb_ep8_dat = ((dat >> 16)& 0xff);

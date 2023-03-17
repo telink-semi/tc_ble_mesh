@@ -204,17 +204,4 @@ struct SigSupportedTransferMode {
     };
 };
 
-
-/// v3.3.3.6新增Telink自定义PID结构体
-struct TelinkPID {
-    union{
-        UInt16 value;
-        struct{
-            UInt8 minorProductType      :8;//value的低8个bit
-            MajorProductType majorProductType :4;//val的中间位4个bit
-            CHIP_TYPE MCUChipType :4;//val的高位4个bit
-        };
-    };
-};
-
 #endif /* SigStruct_h */

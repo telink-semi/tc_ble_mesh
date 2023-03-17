@@ -25,7 +25,7 @@
 #ifndef VD_MD_TIME_ALI_H_
 #define VD_MD_TIME_ALI_H_
 
-#include "tl_common.h"
+#include "proj/tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
 #if ALI_MD_TIME_EN

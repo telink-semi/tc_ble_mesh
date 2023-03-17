@@ -55,8 +55,8 @@ public final class ModelPublication implements Serializable, Parcelable {
      */
     public static final int RETRANSMIT_COUNT_DEFAULT = 0x05;
 
-    // unit: 50ms, from 0x02 to 0x00
-    public static final int RETRANSMIT_INTERVAL_STEP_DEFAULT = 0x00;
+
+    public static final int RETRANSMIT_INTERVAL_STEP_DEFAULT = 0x02;
 
 
     /**

@@ -25,7 +25,7 @@
 #ifndef _TL_AUDIO_H_
 #define _TL_AUDIO_H_
 
-#include "tl_common.h"
+#include "../../proj/tl_common.h"
 
 #ifndef		TL_NOISE_SUPRESSION_ENABLE
 #define		TL_NOISE_SUPRESSION_ENABLE			0

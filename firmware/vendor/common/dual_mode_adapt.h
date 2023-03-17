@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "tl_common.h"
+#include "../../proj/tl_common.h"
 
 #define FW_RAMCODE_SIZE_MAX         (0x4000)    // no limit for bootloader.
 

@@ -134,7 +134,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithIsOn:(BOOL)isOn transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay {
+- (instancetype)initWithIsOn:(BOOL)isOn transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_genericOnOffSet;
         _isOn = isOn;
@@ -225,7 +225,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithIsOn:(BOOL)isOn transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay {
+- (instancetype)initWithIsOn:(BOOL)isOn transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_genericOnOffSetUnacknowledged;
         _isOn = isOn;
@@ -308,7 +308,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithIsOn:(BOOL)isOn targetState:(BOOL)targetState remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithIsOn:(BOOL)isOn targetState:(BOOL)targetState remainingTime:(SigTransitionTime * _Nullable )remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_genericOnOffStatus;
         _isOn = isOn;
@@ -410,13 +410,13 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         self.opCode = SigOpCode_genericLevelSet;
         _level = level;
         //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
-        _transitionTime = nil;
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
 }
 
-- (instancetype)initWithLevel:(UInt16)level transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay {
+- (instancetype)initWithLevel:(UInt16)level transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_genericLevelSet;
         _level = level;
@@ -502,13 +502,13 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         self.opCode = SigOpCode_genericLevelSetUnacknowledged;
         _level = level;
         //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
-        _transitionTime = nil;
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
 }
 
-- (instancetype)initWithLevel:(UInt16)level transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay {
+- (instancetype)initWithLevel:(UInt16)level transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_genericLevelSetUnacknowledged;
         _level = level;
@@ -592,7 +592,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithLevel:(UInt16)level targetLevel:(BOOL)targetLevel remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithLevel:(UInt16)level targetLevel:(BOOL)targetLevel remainingTime:(SigTransitionTime *)remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_genericLevelStatus;
         _level = level;
@@ -1380,7 +1380,8 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericPowerLevelSet;
         _power = power;
-        _transitionTime = nil;
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
@@ -1438,6 +1439,13 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -1464,13 +1472,14 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     if (self = [super init]) {
         self.opCode = SigOpCode_genericPowerLevelSetUnacknowledged;
         _power = power;
-        _transitionTime = nil;
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
         _delay = 0;
     }
     return self;
 }
 
-- (instancetype)initWithPower:(UInt16)power transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay {
+- (instancetype)initWithPower:(UInt16)power transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_genericPowerLevelSetUnacknowledged;
         _power = power;
@@ -1522,6 +1531,13 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         data = [NSData dataWithBytes:&tem8 length:1];
         [mData appendData:data];
     }
+    //v3.2.3后，_transitionTime为nil，则不补0000了。
+//    else{
+//        tem8 = 0;
+//        data = [NSData dataWithBytes:&tem8 length:1];
+//        [mData appendData:data];
+//        [mData appendData:data];
+//    }
     return mData;
 }
 
@@ -1542,12 +1558,13 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         self.opCode = SigOpCode_genericPowerLevelStatus;
         _power = power;
         _targetPower = 0;
-        _transitionTime = nil;
+        //v3.2.3后，_transitionTime为nil，默认不带渐变参数。
+//        _transitionTime = [[SigTransitionTime alloc] initWithSetps:0 stepResolution:0];
     }
     return self;
 }
 
-- (instancetype)initWithPower:(UInt16)power targetPower:(UInt16)targetPower transitionTime:(nullable SigTransitionTime *)transitionTime {
+- (instancetype)initWithPower:(UInt16)power targetPower:(UInt16)targetPower transitionTime:(SigTransitionTime *)transitionTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_genericPowerLevelStatus;
         _power = power;
@@ -3749,7 +3766,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithStatusCode:(SigSceneResponseStatus)statusCode currentScene:(UInt16)currentScene targetScene:(UInt16)targetScene remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithStatusCode:(SigSceneResponseStatus)statusCode currentScene:(UInt16)currentScene targetScene:(UInt16)targetScene remainingTime:(SigTransitionTime *)remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_sceneStatus;
         _currentScene = currentScene;
@@ -4593,7 +4610,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithPresentLightness:(UInt16)presentLightness targetLightness:(UInt16)targetLightness remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithPresentLightness:(UInt16)presentLightness targetLightness:(UInt16)targetLightness remainingTime:(SigTransitionTime *)remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightLightnessStatus;
         _presentLightness = presentLightness;
@@ -4841,7 +4858,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithPresentLightness:(UInt16)presentLightness targetLightness:(UInt16)targetLightness remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithPresentLightness:(UInt16)presentLightness targetLightness:(UInt16)targetLightness remainingTime:(SigTransitionTime *)remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightLightnessLinearStatus;
         _presentLightness = presentLightness;
@@ -5383,7 +5400,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithCTLLightness:(UInt16)CTLLightness CTLTemperature:(UInt16)CTLTemperature CTLDeltaUV:(UInt16)CTLDeltaUV transitionTime:(SigTransitionTime * _Nullable)transitionTime delay:(UInt8)delay {
+- (instancetype)initWithCTLLightness:(UInt16)CTLLightness CTLTemperature:(UInt16)CTLTemperature CTLDeltaUV:(UInt16)CTLDeltaUV transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightCTLSet;
         _CTLLightness = CTLLightness;
@@ -5475,7 +5492,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithCTLLightness:(UInt16)CTLLightness CTLTemperature:(UInt16)CTLTemperature CTLDeltaUV:(UInt16)CTLDeltaUV transitionTime:(SigTransitionTime * _Nullable)transitionTime delay:(UInt8)delay {
+- (instancetype)initWithCTLLightness:(UInt16)CTLLightness CTLTemperature:(UInt16)CTLTemperature CTLDeltaUV:(UInt16)CTLDeltaUV transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightCTLSetUnacknowledged;
         _CTLLightness = CTLLightness;
@@ -5922,7 +5939,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithPresentCTLTemperature:(UInt16)presentCTLTemperature presentCTLDeltaUV:(UInt16)presentCTLDeltaUV targetCTLTemperature:(UInt16)targetCTLTemperature targetCTLDeltaUV:(UInt16)targetCTLDeltaUV remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithPresentCTLTemperature:(UInt16)presentCTLTemperature presentCTLDeltaUV:(UInt16)presentCTLDeltaUV targetCTLTemperature:(UInt16)targetCTLTemperature targetCTLDeltaUV:(UInt16)targetCTLDeltaUV remainingTime:(SigTransitionTime *)remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightCTLTemperatureStatus;
         _presentCTLTemperature = presentCTLTemperature;
@@ -6379,7 +6396,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithHue:(UInt16)hue transitionTime:(SigTransitionTime * _Nullable)transitionTime delay:(UInt8)delay {
+- (instancetype)initWithHue:(UInt16)hue transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightHSLHueSet;
         _hue = hue;
@@ -6459,7 +6476,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithHue:(UInt16)hue transitionTime:(SigTransitionTime * _Nullable)transitionTime delay:(UInt8)delay {
+- (instancetype)initWithHue:(UInt16)hue transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightHSLHueSetUnacknowledged;
         _hue = hue;
@@ -6627,7 +6644,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithSaturation:(UInt16)saturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay {
+- (instancetype)initWithSaturation:(UInt16)saturation transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightHSLSaturationSet;
         _saturation = saturation;
@@ -6707,7 +6724,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithSaturation:(UInt16)saturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay {
+- (instancetype)initWithSaturation:(UInt16)saturation transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightHSLSaturationSetUnacknowledged;
         _saturation = saturation;
@@ -6779,7 +6796,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithPresentSaturation:(UInt16)presentSaturation targetSaturation:(UInt16)targetSaturation remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithPresentSaturation:(UInt16)presentSaturation targetSaturation:(UInt16)targetSaturation remainingTime:(SigTransitionTime *)remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightHSLSaturationStatus;
         _presentSaturation = presentSaturation;
@@ -6839,7 +6856,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithHSLLightness:(UInt16)HSLLightness HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay {
+- (instancetype)initWithHSLLightness:(UInt16)HSLLightness HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightHSLSet;
         _HSLLightness = HSLLightness;
@@ -6931,7 +6948,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithHSLLightness:(UInt16)HSLLightness HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay {
+- (instancetype)initWithHSLLightness:(UInt16)HSLLightness HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightHSLSetUnacknowledged;
         _HSLLightness = HSLLightness;
@@ -7117,7 +7134,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithHSLLightnessTarget:(UInt16)HSLLightnessTarget HSLHueTarget:(UInt16)HSLHueTarget HSLSaturationTarget:(UInt16)HSLSaturationTarget remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithHSLLightnessTarget:(UInt16)HSLLightnessTarget HSLHueTarget:(UInt16)HSLHueTarget HSLSaturationTarget:(UInt16)HSLSaturationTarget remainingTime:(SigTransitionTime *)remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightHSLTargetStatus;
         _HSLLightnessTarget = HSLLightnessTarget;
@@ -7219,7 +7236,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithLightness:(UInt16)lightness hue:(UInt16)hue saturation:(UInt16)saturation remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithLightness:(UInt16)lightness hue:(UInt16)hue saturation:(UInt16)saturation remainingTime:(SigTransitionTime *)remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightHSLDefaultStatus;
         _lightness = lightness;
@@ -7666,7 +7683,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay {
+- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightXyLSet;
         _xyLLightness = xyLLightness;
@@ -7758,7 +7775,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay {
+- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightXyLSetUnacknowledged;
         _xyLLightness = xyLLightness;
@@ -7842,7 +7859,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY remainingTime:(SigTransitionTime *)remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightXyLStatus;
         _xyLLightness = xyLLightness;
@@ -7944,7 +7961,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithTargetXyLLightness:(UInt16)targetXyLLightness targetXyLX:(UInt16)targetXyLX targetXyLY:(UInt16)targetXyLY remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithTargetXyLLightness:(UInt16)targetXyLLightness targetXyLX:(UInt16)targetXyLX targetXyLY:(UInt16)targetXyLY remainingTime:(SigTransitionTime *)remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_lightXyLTargetStatus;
         _targetXyLLightness = targetXyLLightness;
@@ -8834,7 +8851,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithLightOnOff:(BOOL)lightOnOff transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay {
+- (instancetype)initWithLightOnOff:(BOOL)lightOnOff transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_LightLCLightOnOffSet;
         _lightOnOff = lightOnOff;
@@ -8917,7 +8934,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithLightOnOff:(BOOL)lightOnOff transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay {
+- (instancetype)initWithLightOnOff:(BOOL)lightOnOff transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay {
     if (self = [super init]) {
         self.opCode = SigOpCode_LightLCLightOnOffSet;
         _lightOnOff = lightOnOff;
@@ -8990,7 +9007,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 
-- (instancetype)initWithPresentLightOnOff:(BOOL)presentLightOnOff targetLightOnOff:(BOOL)targetLightOnOff remainingTime:(nullable SigTransitionTime *)remainingTime {
+- (instancetype)initWithPresentLightOnOff:(BOOL)presentLightOnOff targetLightOnOff:(BOOL)targetLightOnOff remainingTime:(SigTransitionTime *)remainingTime {
     if (self = [super init]) {
         self.opCode = SigOpCode_LightLCLightOnOffStatus;
         _presentLightOnOff = presentLightOnOff;

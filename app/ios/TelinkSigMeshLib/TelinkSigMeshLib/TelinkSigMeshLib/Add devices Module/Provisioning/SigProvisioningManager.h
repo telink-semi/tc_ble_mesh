@@ -31,8 +31,8 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningPdu * _Nullable response)
 
 @interface SigProvisioningManager : NSObject
 @property (nonatomic,assign) AuthenticationMethod authenticationMethod;
-@property (nonatomic,strong,nullable) SigAuthenticationModel *authenticationModel;
-@property (nonatomic,strong,nullable) SigProvisioningData *provisioningData;
+@property (nonatomic,strong) SigAuthenticationModel *authenticationModel;
+@property (nonatomic,strong) SigProvisioningData *provisioningData;
 @property (nonatomic,copy,nullable) prvisionResponseCallBack provisionResponseBlock;
 
 /// - seeAlso: MshPRFv1.0.1.pdf  (page.240)
@@ -58,10 +58,10 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningPdu * _Nullable response)
 + (SigProvisioningManager *)share;
 
 /// founcation1: no oob provision (CBPeripheral's state mush be CBPeripheralStateConnected.)
-- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 /// founcation2: static oob provision (CBPeripheral's state mush be CBPeripheralStateConnected.)
-- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOobData:(NSData *)oobData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOobData:(NSData *)oobData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 /// founcation3: provision (If CBPeripheral's state isn't CBPeripheralStateConnected, SDK will connect CBPeripheral in this api. )
 /// @param peripheral CBPeripheral of CoreBluetooth will be provision.
@@ -72,7 +72,7 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningPdu * _Nullable response)
 /// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+- (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 /// founcation4: provision (If CBPeripheral's state isn't CBPeripheralStateConnected, SDK will connect CBPeripheral in this api. )
 /// @param peripheral CBPeripheral of CoreBluetooth will be provision.
@@ -83,7 +83,7 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningPdu * _Nullable response)
 /// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 @end
 

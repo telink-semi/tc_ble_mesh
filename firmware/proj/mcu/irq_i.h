@@ -46,13 +46,13 @@ static inline u8 irq_enable(){
 	reg_irq_en = 1;
 	return r;
 }
-static inline unsigned int irq_disable(){
-	unsigned int r = reg_irq_en;		// don't worry,  the compiler will optimize the return value if not used
+static inline u8 irq_disable(){
+	u8 r = reg_irq_en;		// don't worry,  the compiler will optimize the return value if not used
 	reg_irq_en = 0;
 	return r;
 }
-static inline void irq_restore(unsigned int en){
-	reg_irq_en = (u8)en;
+static inline void irq_restore(u8 en){
+	reg_irq_en = en;
 }
 
 // enable one interrupt
@@ -100,11 +100,11 @@ static inline u8 irq_enable(){
 	u8 r=0 ;
 	return r;
 }
-static inline unsigned long irq_disable(){	// use unsigned long but not unsigned int to report warning when using u8 to get return value.
-	unsigned long r =0;
+static inline u8 irq_disable(){
+	u8 r =0;
 	return r;
 }
-static inline void irq_restore(unsigned long en){
+static inline void irq_restore(u8 en){
 	irq_in_handler = en;
 }
 

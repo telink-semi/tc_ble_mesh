@@ -33,7 +33,6 @@
 #import "DeviceAppKeyListVC.h"
 #import "SubnetBridgeListVC.h"
 #import "DeviceConfigVC.h"
-#import "PTSViewController.h"
 
 @interface DeviceSettingViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UILabel *macLabel;
@@ -140,19 +139,11 @@
 
 #pragma mark - UITableView
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-#ifdef kExist
-    if (self.model.isSensor) {
-        return 11;
-    } else {
-        return 10;
-    }
-#else
     if (self.model.isSensor) {
         return 10;
     } else {
         return 9;
     }
-#endif
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -248,19 +239,8 @@
             break;
         case 9:
         {
-            if (self.model.isSensor) {
-                cell.nameLabel.text = @"LPN";
-                cell.iconImageView.image = [UIImage imageNamed:@"ic_battery-20-bluetooth"];
-            } else {
-                cell.nameLabel.text = @"PTS test";
-                cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
-            }
-        }
-            break;
-        case 10:
-        {
-            cell.nameLabel.text = @"PTS test";
-            cell.iconImageView.image = [UIImage imageNamed:@"ic_setting"];
+            cell.nameLabel.text = @"LPN";
+            cell.iconImageView.image = [UIImage imageNamed:@"ic_battery-20-bluetooth"];
         }
             break;
         default:
@@ -337,16 +317,7 @@
             break;
         case 9:
         {
-            if (self.model.isSensor) {
-                [self pushToSensorVC];
-            } else {
-                [self pushToPTSVC];
-            }
-        }
-            break;
-        case 10:
-        {
-            [self pushToPTSVC];
+            [self pushToSensorVC];
         }
             break;
         default:
@@ -363,25 +334,25 @@
 }
 
 - (void)pushToCompositionDataVC{
-    DeviceCompositionDataVC *vc = (DeviceCompositionDataVC *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceCompositionDataVCID storyboard:@"DeviceSetting"];
+    DeviceCompositionDataVC *vc = (DeviceCompositionDataVC *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceCompositionDataVCID storybroad:@"DeviceSetting"];
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (void)pushToSubnetBridgeSettingVC{
-    SubnetBridgeListVC *vc = (SubnetBridgeListVC *)[UIStoryboard initVC:ViewControllerIdentifiers_SubnetBridgeListVCID storyboard:@"DeviceSetting"];
+    SubnetBridgeListVC *vc = (SubnetBridgeListVC *)[UIStoryboard initVC:ViewControllerIdentifiers_SubnetBridgeListVCID storybroad:@"DeviceSetting"];
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (void)pushToSchedulerVC{
-    SchedulerListViewController *vc = (SchedulerListViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SchedulerListViewControllerID storyboard:@"Setting"];
+    SchedulerListViewController *vc = (SchedulerListViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SchedulerListViewControllerID storybroad:@"Setting"];
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }
 
 - (void)pushToSubscriptionVC{
-    DeviceSubscriptionListViewController *vc = (DeviceSubscriptionListViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSubscriptionListViewControllerID storyboard:@"DeviceSetting"];
+    DeviceSubscriptionListViewController *vc = (DeviceSubscriptionListViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSubscriptionListViewControllerID storybroad:@"DeviceSetting"];
     [self.navigationController pushViewController:vc animated:YES];
 }
 
@@ -404,13 +375,7 @@
 }
 
 - (void)pushToSensorVC {
-    SensorVC *vc = (SensorVC *)[UIStoryboard initVC:ViewControllerIdentifiers_SensorVCID storyboard:@"Main"];
-    vc.model = self.model;
-    [self.navigationController pushViewController:vc animated:YES];
-}
-
-- (void)pushToPTSVC {
-    PTSViewController *vc = [[PTSViewController alloc] init];
+    SensorVC *vc = (SensorVC *)[UIStoryboard initVC:ViewControllerIdentifiers_SensorVCID storybroad:@"Main"];
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }

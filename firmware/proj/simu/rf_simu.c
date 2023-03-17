@@ -23,7 +23,7 @@
  *
  *******************************************************************************************************/
 #include "../tl_common.h"
-#include "proj_lib/rf_drv.h"
+#include "../../proj_lib/rf_drv.h"
 #include "../drivers/rfhw_i.h"
 #include "../drivers/rf.h"
 #include "../telink_rf/frame.h"

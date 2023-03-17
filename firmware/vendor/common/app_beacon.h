@@ -119,7 +119,7 @@ int unprov_beacon_send(u8 mode ,u8 blt_sts);
 u8 beacon_test_case(u8*p_tc,u8 len );
 int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts);
 int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts);
-int iv_update_key_refresh_rx_handle_cb(mesh_ctl_fri_update_flag_t *p_ivi_flag, u32 iv_idx);
+int iv_update_key_refresh_rx_handle_cb(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *p_iv_idx);
 void switch_iv_update_time_refresh();
 
 int mesh_beacon_send_proc();

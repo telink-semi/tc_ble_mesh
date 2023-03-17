@@ -42,7 +42,7 @@
 #include "../mcu/analog.h"
 
 #include "../mcu/gpio.h"
-#include "proj_lib/pm.h"
+#include "../../proj_lib/pm.h"
 
 
 

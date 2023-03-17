@@ -296,7 +296,7 @@
     [_networkManager.lowerTransportLayer cancelTXSendingSegmentedWithDestination:handle.destination];
 }
 
-- (void)handleAccessPdu:(SigAccessPdu *)accessPdu sendWithSigKeySet:(SigKeySet *)keySet asResponseToRequest:(nullable SigAcknowledgedMeshMessage *)request {
+- (void)handleAccessPdu:(SigAccessPdu *)accessPdu sendWithSigKeySet:(SigKeySet *)keySet asResponseToRequest:(SigAcknowledgedMeshMessage *)request {
     SigNodeModel *localNode = SigMeshLib.share.dataSource.curLocationNodeModel;
     if (localNode == nil) {
         TeLogError(@"localNode error.");

@@ -51,10 +51,6 @@
 }
 
 - (IBAction)clickExportButton:(UIButton *)sender {
-    if (SigDataSource.share.curNodes.count == 0) {
-        [self showTips:@"not allow to share empty network!"];
-        return;
-    }
     if (self.selectArray.count == 0) {
         [self showTips:@"Please select at least one network key!"];
         return;
@@ -167,7 +163,7 @@
 }
 
 - (void)pushToShowQRCodeVCWithUUID:(NSString *)uuid {
-    ShowQRCodeViewController *vc = (ShowQRCodeViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ShowQRCodeViewControllerID storyboard:@"Setting"];
+    ShowQRCodeViewController *vc = (ShowQRCodeViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ShowQRCodeViewControllerID storybroad:@"Setting"];
     vc.uuidString = uuid;
     [self.navigationController pushViewController:vc animated:YES];
 }

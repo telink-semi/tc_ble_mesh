@@ -24,7 +24,11 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "tl_common.h"
+#include "proj/tl_common.h"
+#include "vendor/mesh/app.h"
+#include "vendor/mesh_lpn/app.h"
+#include "vendor/mesh_provision/app.h"
+#include "vendor/mesh_switch/app.h"
 #include "mesh_lpn.h"
 #include "mesh_fn.h"
 #include "time_model.h"
@@ -32,31 +36,9 @@
 #include "mesh_property.h"
 #include "vendor/common/battery_check.h"
 #if (!WIN32 && EXTENDED_ADV_ENABLE)
-#include "stack/ble/ll/ll_ext_adv.h"
+#include "../../stack/ble/ll/ll_ext_adv.h"
 #endif
-
-#if (__PROJECT_MESH__ || WIN32)
-#include "../mesh/app.h"
-#elif (__PROJECT_MESH_LPN__)
-#include "../mesh_lpn/app.h"
-#elif (__PROJECT_MESH_SWITCH__)
-#include "../mesh_switch/app.h"
-#elif (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
-#include "../mesh_provision/app.h"
-#elif (__PROJECT_SPIRIT_LPN__)
-#include "../spirit_lpn/app.h"
-#elif (__PROJECT_BOOTLOADER__)
-#include "../boot_loader/app.h"
-#else
-//#error please include app.h
-#endif
-
 #include "vendor/user_app/user_app.h"
-
-#if LLSYNC_ENABLE
-#include "ble_qiot_export.h"
-#include "vendor/common/llsync/samples/telink/main/ll_app_mesh.h"
-#endif
 
 /** @addtogroup Mesh_Common
   * @{
@@ -373,7 +355,6 @@ void bls_l2cap_requestConnParamUpdate_Normal();
 int telink_rand_num_generator(u8* p_buf, u8 len);
 int is_need_send_sec_nw_beacon();
 void tn_p256_dhkey_fast(u8 *r, u8 *s, u8 *x, u8 *y);
-void mesh_gatt_adv_beacon_enable(u8 enable);
 
 // ----------- mesh_log.c -------
 const char * get_op_string(u16 op, const char *str_in);

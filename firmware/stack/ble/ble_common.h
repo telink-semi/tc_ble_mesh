@@ -26,7 +26,7 @@
 #define BLE_COMMON_H
 
 #include "proj/mcu/config.h"
-#include "tl_common.h"
+#include "proj/tl_common.h"
 /*********************************************************************
  * CONSTANTS
  */

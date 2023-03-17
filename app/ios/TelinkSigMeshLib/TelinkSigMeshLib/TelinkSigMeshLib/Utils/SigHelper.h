@@ -78,7 +78,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param sendOpcode opcode of send command.
 - (int)getResponseOpcodeWithSendOpcode:(int)sendOpcode;
 
-- (_Nullable Class)getMeshMessageWithOpCode:(SigOpCode)opCode;
+- (Class)getMeshMessageWithOpCode:(SigOpCode)opCode;
 - (SigOpCodeType)getOpCodeTypeWithOpcode:(UInt8)opCode;
 /// get UInt8 OpCode Type
 /// @param opCode 1-octet Opcodes,eg:0x00; 2-octet Opcodes,eg:0x8201; 3-octet Opcodes,eg:0xC11102

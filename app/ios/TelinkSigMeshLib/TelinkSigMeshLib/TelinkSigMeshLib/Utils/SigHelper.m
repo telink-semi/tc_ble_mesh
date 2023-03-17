@@ -317,6 +317,11 @@
         case SigOpCode_remoteProvisioningLinkClose:
             responseOpcode = SigOpCode_remoteProvisioningLinkStatus;
             break;
+
+            // Opcodes Aggregator Sequence Message
+        case SigOpCode_OpcodesAggregatorSequence:
+            responseOpcode = SigOpCode_OpcodesAggregatorStatus;
+            break;
             
             // private beacon message
         case SigOpCode_PrivateBeaconGet:
@@ -570,43 +575,6 @@
         case SigOpCode_BLOBInformationGet:
             responseOpcode = SigOpCode_BLOBInformationStatus;
             break;
-            
-            // On-demand proxy
-        case SigOpCode_OnDemandPrivateProxyGet:
-        case SigOpCode_OnDemandPrivateProxySet:
-            responseOpcode = SigOpCode_OnDemandPrivateProxyStatus;
-            break;
-            
-            // SAR configuration
-        case SigOpCode_SARTransmitterGet:
-        case SigOpCode_SARTransmitterSet:
-            responseOpcode = SigOpCode_SARTransmitterStatus;
-            break;
-        case SigOpCode_SARReceiverGet:
-        case SigOpCode_SARReceiverSet:
-            responseOpcode = SigOpCode_SARReceiverStatus;
-            break;
-            
-            // Opcodes aggregator
-        case SigOpCode_OpcodesAggregatorSequence:
-            responseOpcode = SigOpCode_OpcodesAggregatorStatus;
-            break;
-
-            // Large Composition Data
-        case SigOpCode_LargeCompositionDataGet:
-            responseOpcode = SigOpCode_LargeCompositionDataStatus;
-            break;
-        case SigOpCode_ModelsMetadataGet:
-            responseOpcode = SigOpCode_ModelsMetadataStatus;
-            break;
-            
-            // 4.3.7 Solicitation PDU RPL Configuration messages
-            // 以下3个opcode未定，未找到文档。
-        case SigOpCode_SolicitationPduRplItemsClear:
-            responseOpcode = SigOpCode_SolicitationPduRplItemsStatus;
-            break;
-            
-            // subnet bridge Messages
         case SigOpCode_BridgeCapabilityGet:
             responseOpcode = SigOpCode_BridgeCapabilityStatus;
             break;
@@ -624,17 +592,6 @@
         case SigOpCode_SubnetBridgeSet:
             responseOpcode = SigOpCode_SubnetBridgeStatus;
             break;
-            
-            // Direct Forwarding
-        case SigOpCode_DirectControlGet:
-        case SigOpCode_DirectControlSet:
-            responseOpcode = SigOpCode_DirectControlStatus;
-            break;
-        case SigOpCode_ForwardingTableAdd:
-        case SigOpCode_ForwardingTableDelete:
-            responseOpcode = SigOpCode_ForwardingTableStatus;
-            break;
-            
         default:
             TeLogVerbose(@"Warning:undefault or noAck sendOpcode:0x%x",sendOpcode);
             break;
@@ -642,7 +599,7 @@
     return responseOpcode;
 }
 
-- (_Nullable Class)getMeshMessageWithOpCode:(SigOpCode)opCode {
+- (Class)getMeshMessageWithOpCode:(SigOpCode)opCode {
     Class messageType = nil;
 //    TeLogVerbose(@"解析opCode=0x%08x",(unsigned int)opCode);
     if ((opCode & 0xC00000) == 0xC00000) {
@@ -937,7 +894,15 @@
             case SigOpCode_remoteProvisioningPDUReport:
                 messageType = [SigRemoteProvisioningPDUReport class];
                 break;
-                                
+                
+                // Opcodes Aggregator Sequence Message
+            case SigOpCode_OpcodesAggregatorSequence:
+                messageType = [SigOpcodesAggregatorSequence class];
+                break;
+            case SigOpCode_OpcodesAggregatorStatus:
+                messageType = [SigOpcodesAggregatorStatus class];
+                break;
+                
                 // private beacon message
             case SigOpCode_PrivateBeaconGet:
                 messageType = [SigPrivateBeaconGet class];
@@ -1622,136 +1587,48 @@
             case SigOpCode_BLOBPartialBlockReport:
                 messageType = [SigBLOBPartialBlockReport class];
                 break;
-                
-#if SUPPORTEXTENDSIONS
-                // On-demand proxy
-            case SigOpCode_OnDemandPrivateProxyGet:
-                messageType = [NSClassFromString(@"SigOnDemandPrivateProxyGet") class];
-                break;
-            case SigOpCode_OnDemandPrivateProxySet:
-                messageType = [NSClassFromString(@"SigOnDemandPrivateProxySet") class];
-                break;
-            case SigOpCode_OnDemandPrivateProxyStatus:
-                messageType = [NSClassFromString(@"SigOnDemandPrivateProxyStatus") class];
-                break;
-                
-                // SAR configuration
-            case SigOpCode_SARTransmitterGet:
-                messageType = [NSClassFromString(@"SigSARTransmitterGet") class];
-                break;
-            case SigOpCode_SARTransmitterSet:
-                messageType = [NSClassFromString(@"SigSARTransmitterSet") class];
-                break;
-            case SigOpCode_SARTransmitterStatus:
-                messageType = [NSClassFromString(@"SigSARTransmitterStatus") class];
-                break;
-            case SigOpCode_SARReceiverGet:
-                messageType = [NSClassFromString(@"SigSARReceiverGet") class];
-                break;
-            case SigOpCode_SARReceiverSet:
-                messageType = [NSClassFromString(@"SigSARReceiverSet") class];
-                break;
-            case SigOpCode_SARReceiverStatus:
-                messageType = [NSClassFromString(@"SigSARReceiverStatus") class];
-                break;
-                
-                // Opcodes aggregator
-            case SigOpCode_OpcodesAggregatorSequence:
-                messageType = [NSClassFromString(@"SigOpcodesAggregatorSequence") class];
-                break;
-            case SigOpCode_OpcodesAggregatorStatus:
-                messageType = [NSClassFromString(@"SigOpcodesAggregatorStatus") class];
-                break;
-                
-                // Large Composition Data
-            case SigOpCode_LargeCompositionDataGet:
-                messageType = [NSClassFromString(@"SigLargeCompositionDataGet") class];
-                break;
-            case SigOpCode_LargeCompositionDataStatus:
-                messageType = [NSClassFromString(@"SigLargeCompositionDataStatus") class];
-                break;
-            case SigOpCode_ModelsMetadataGet:
-                messageType = [NSClassFromString(@"SigModelsMetadataGet") class];
-                break;
-            case SigOpCode_ModelsMetadataStatus:
-                messageType = [NSClassFromString(@"SigModelsMetadataStatus") class];
-                break;
-                
-                // 4.3.7 Solicitation PDU RPL Configuration messages
-                // 以下3个opcode未定，未找到文档。
-            case SigOpCode_SolicitationPduRplItemsClear:
-                messageType = [NSClassFromString(@"SigSolicitationPduRplItemsClear") class];
-                break;
-            case SigOpCode_SolicitationPduRplItemsClearUnacknowledged:
-                messageType = [NSClassFromString(@"SigSolicitationPduRplItemsClearUnacknowledged") class];
-                break;
-            case SigOpCode_SolicitationPduRplItemsStatus:
-                messageType = [NSClassFromString(@"SigSolicitationPduRplItemsStatus") class];
-                break;
-                
+
                 // subnet bridge Messages
             case SigOpCode_BridgeCapabilityGet:
-                messageType = [NSClassFromString(@"SigBridgeCapabilityGet") class];
+                messageType = [SigBridgeCapabilityGet class];
                 break;
             case SigOpCode_BridgeCapabilityStatus:
-                messageType = [NSClassFromString(@"SigBridgeCapabilityStatus") class];
+                messageType = [SigBridgeCapabilityStatus class];
                 break;
             case SigOpCode_BridgeTableAdd:
-                messageType = [NSClassFromString(@"SigBridgeTableAdd") class];
+                messageType = [SigBridgeTableAdd class];
                 break;
             case SigOpCode_BridgeTableGet:
-                messageType = [NSClassFromString(@"SigBridgeTableGet") class];
+                messageType = [SigBridgeTableGet class];
                 break;
             case SigOpCode_BridgeTableList:
-                messageType = [NSClassFromString(@"SigBridgeTableList") class];
+                messageType = [SigBridgeTableList class];
                 break;
             case SigOpCode_BridgeTableRemove:
-                messageType = [NSClassFromString(@"SigBridgeTableRemove") class];
+                messageType = [SigBridgeTableRemove class];
                 break;
             case SigOpCode_BridgeTableStatus:
-                messageType = [NSClassFromString(@"SigBridgeTableStatus") class];
+                messageType = [SigBridgeTableStatus class];
                 break;
             case SigOpCode_BridgeSubnetsGet:
-                messageType = [NSClassFromString(@"SigBridgeSubnetsGet") class];
+                messageType = [SigBridgeSubnetsGet class];
                 break;
             case SigOpCode_BridgeSubnetsList:
-                messageType = [NSClassFromString(@"SigBridgeSubnetsList") class];
+                messageType = [SigBridgeSubnetsList class];
                 break;
             case SigOpCode_SubnetBridgeGet:
-                messageType = [NSClassFromString(@"SigSubnetBridgeGet") class];
+                messageType = [SigSubnetBridgeGet class];
                 break;
             case SigOpCode_SubnetBridgeSet:
-                messageType = [NSClassFromString(@"SigSubnetBridgeSet") class];
+                messageType = [SigSubnetBridgeSet class];
                 break;
             case SigOpCode_SubnetBridgeStatus:
-                messageType = [NSClassFromString(@"SigSubnetBridgeStatus") class];
+                messageType = [SigSubnetBridgeStatus class];
                 break;
-                
-                // Direct Forwarding
-            case SigOpCode_DirectControlGet:
-                messageType = [NSClassFromString(@"SigDirectControlGet") class];
-                break;
-            case SigOpCode_DirectControlSet:
-                messageType = [NSClassFromString(@"SigDirectControlSet") class];
-                break;
-            case SigOpCode_DirectControlStatus:
-                messageType = [NSClassFromString(@"SigDirectControlStatus") class];
-                break;
-            case SigOpCode_ForwardingTableAdd:
-                messageType = [NSClassFromString(@"SigForwardingTableAdd") class];
-                break;
-            case SigOpCode_ForwardingTableDelete:
-                messageType = [NSClassFromString(@"SigForwardingTableDelete") class];
-                break;
-            case SigOpCode_ForwardingTableStatus:
-                messageType = [NSClassFromString(@"SigForwardingTableStatus") class];
-                break;
-#endif
             default:
                 break;
         }
     }
-    
     return messageType;
 }
 
@@ -1807,7 +1684,7 @@
         [data1 appendData:[NSData dataWithBytes:&tem length:1]];
         return data1;
     }
-    return [NSData data];
+    return nil;
 }
 
 /// opcode is encryption with deviceKey.

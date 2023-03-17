@@ -29,8 +29,8 @@
 //#include "../os/ev.h"
 //#include "../os/sys.h"
 
-//#include "vendor/common/keyboard_cfg.h"
-//#include "vendor/common/custom.h"
+//#include "../../vendor/common/keyboard_cfg.h"
+//#include "../../vendor/common/custom.h"
 
 #if (defined(KB_DRIVE_PINS) && defined(KB_SCAN_PINS))
 
@@ -319,7 +319,7 @@ u32 kb_scan_row(int drv_ind, u8 * gpio){
 	/*
 	 * set as gpio mode if using spi flash pin
 	 * */
-	u32 sr = irq_disable();
+	u8 sr = irq_disable();
 #if	(KB_KEY_FLASH_PIN_MULTI_USE)
 	MSPI_AS_GPIO;
 #endif

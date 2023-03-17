@@ -29,10 +29,10 @@ public abstract class AppSettings {
     public static boolean ONLINE_STATUS_ENABLE = false;
 
     // draft feature
-    public static final boolean DRAFT_FEATURES_ENABLE = true;
+    public static final boolean DRAFT_FEATURES_ENABLE = false;
 
 
-    public static final int PID_CT = 0x01; //
+    public static final int PID_CT = 0x01;
 
     public static final int PID_HSL = 0x02;
 
@@ -40,25 +40,6 @@ public abstract class AppSettings {
 
     public static final int PID_LPN = 0x0201;
 
-    public static final int PID_REMOTE = 0x0301; // switch
-
-
-    public static final int PID_MAJOR_LIGHT = 0x0000;
-
-    public static final int PID_MAJOR_LPN = 0x0200; // lpn
-
-    public static final int PID_MAJOR_REMOTE = 0x0300; // switch
-
-    public static final int PID_MAJOR_MASK = 0x0F00;
-
-
-    public static boolean isLpn(int pid) {
-        return (pid & PID_MAJOR_MASK) == PID_MAJOR_LPN;
-    }
-
-    public static boolean isRemote(int pid) {
-        return (pid & PID_MAJOR_MASK) == PID_MAJOR_REMOTE;
-    }
-
+    public static final int PID_REMOTE = 0x0301;
 
 }

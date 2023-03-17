@@ -497,7 +497,7 @@
  *  @param dictionary 待转换的字典数据
  *  @return JSON字符串
  */
-+ (nullable NSString *)getJSONStringWithDictionary:(NSDictionary *)dictionary {
++ (NSString *)getJSONStringWithDictionary:(NSDictionary *)dictionary {
     NSError *err;
     NSData *data = [NSJSONSerialization dataWithJSONObject:dictionary
                                                    options:NSJSONReadingMutableLeaves | NSJSONReadingAllowFragments
@@ -518,7 +518,7 @@
  *  @param dictionary 待转换的字典数据
  *  @return JSON字符串
  */
-+ (nullable NSString *)getReadableJSONStringWithDictionary:(NSDictionary *)dictionary {
++ (NSString *)getReadableJSONStringWithDictionary:(NSDictionary *)dictionary {
     NSError *err;
     NSData *data = [NSJSONSerialization dataWithJSONObject:dictionary
                                                    options:NSJSONWritingPrettyPrinted
@@ -539,7 +539,7 @@
  *  @param dictionary 待转换的字典数据
  *  @return JSON数据
  */
-+ (nullable NSData *)getJSONDataWithDictionary:(NSDictionary *)dictionary {
++ (NSData *)getJSONDataWithDictionary:(NSDictionary *)dictionary {
     NSError *err;
     NSData *data = [NSJSONSerialization dataWithJSONObject:dictionary
                                                    options:NSJSONWritingPrettyPrinted
@@ -547,7 +547,6 @@
                                                      error:&err];
     if (data == nil) {
         NSLog(@"字典转换json失败：%@",err);
-        return nil;
     }
     NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     string = [string stringByReplacingOccurrencesOfString:@"\\" withString:@""];
@@ -574,7 +573,7 @@
 *  @param jsonString 待转换的JSON字符串
 *  @return 字典数据
 */
-+ (nullable NSDictionary *)getDictionaryWithJsonString:(NSString *)jsonString {
++ (NSDictionary *)getDictionaryWithJsonString:(NSString *)jsonString {
     if (jsonString == nil) {
         NSLog(@"json转换字典失败：json为空");
         return nil;
@@ -584,7 +583,8 @@
     NSDictionary *dic = [NSJSONSerialization JSONObjectWithData:jsonData
                                                         options:NSJSONReadingMutableContainers
                                                           error:&err];
-    if(err) {
+    if(err)
+    {
         NSLog(@"json转换字典失败：%@",err);
         return nil;
     }
@@ -770,7 +770,7 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
 
 + (NSArray <NSString *>*)getAllFileNameWithFileType:(NSString *)fileType {
     if (fileType == nil || fileType.length == 0) {
-        return @[];
+        return nil;
     }
     NSMutableArray *fileSource = [NSMutableArray array];
     

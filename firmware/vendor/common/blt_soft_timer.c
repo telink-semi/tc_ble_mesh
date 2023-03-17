@@ -187,14 +187,7 @@ void  	blt_soft_timer_process(int type)
 				write_reg32(0x40000, 0x11111122); while(1); //debug ERR
 			}
 			else{
-				#if LLSYNC_ENABLE
-				if(blt_timer.timer[i].cb){
-					blt_timer.timer[i].cb(NULL);
-				}
-				result = 0;	// always continue.
-				#else
 				result = blt_timer.timer[i].cb();
-				#endif
 
 				if(result < 0){
 					blt_soft_timer_delete_by_index(i);

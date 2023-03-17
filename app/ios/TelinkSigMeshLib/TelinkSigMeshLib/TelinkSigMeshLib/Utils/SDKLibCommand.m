@@ -45,8 +45,6 @@
         _curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
         _curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
         _curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
-        _sendBySegmentPDU = NO;
-        _unsegmentedMessageLowerTransportPDUMaxLength = SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
     }
     return self;
 }
@@ -63,20 +61,6 @@
     command.resultCallback = resultCallback;
     command.retryCount = retryCount;
     command.responseMaxCount = responseMaxCount;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
-}
-
-+ (SigMessageHandle *)configAppKeyAddWithDestination:(UInt16)destination appkeyModel:(SigAppkeyModel *)appkeyModel sendBySegmentPdu:(BOOL)sendBySegmentPdu unsegmentedMessageLowerTransportPDUMaxLength:(UInt16)unsegmentedMessageLowerTransportPDUMaxLength retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigAppKeyAdd *config = [[SigConfigAppKeyAdd alloc] initWithApplicationKey:appkeyModel];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseAppKeyStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.retryCount = retryCount;
-    command.responseMaxCount = responseMaxCount;
-    command.sendBySegmentPDU = sendBySegmentPdu;
-    command.unsegmentedMessageLowerTransportPDUMaxLength = unsegmentedMessageLowerTransportPDUMaxLength;
     return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
 }
 
@@ -521,30 +505,6 @@
 + (SigMessageHandle *)configModelAppUnbindWithDestination:(UInt16)destination applicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SDKLibCommand *command = [[SDKLibCommand alloc] init];
     SigConfigModelAppUnbind *config = [[SigConfigModelAppUnbind alloc] initWithApplicationKeyIndex:applicationKeyIndex elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseModelAppStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.retryCount = retryCount;
-    command.responseMaxCount = responseMaxCount;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
-}
-
-+ (SigMessageHandle *)configModelAppBindWithDestination:(UInt16)destination applicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier isVendorModelID:(BOOL)isVendorModelID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelAppBind *config = [[SigConfigModelAppBind alloc] initWithApplicationKeyIndex:applicationKeyIndex elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier isVendorModelID:isVendorModelID];
-    command.curMeshMessage = config;
-    command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
-    command.responseModelAppStatusCallBack = successCallback;
-    command.resultCallback = resultCallback;
-    command.retryCount = retryCount;
-    command.responseMaxCount = responseMaxCount;
-    return [SigMeshLib.share sendConfigMessage:config toDestination:destination command:command];
-}
-
-+ (SigMessageHandle *)configModelAppUnbindWithDestination:(UInt16)destination applicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier isVendorModelID:(BOOL)isVendorModelID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
-    SDKLibCommand *command = [[SDKLibCommand alloc] init];
-    SigConfigModelAppUnbind *config = [[SigConfigModelAppUnbind alloc] initWithApplicationKeyIndex:applicationKeyIndex elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier isVendorModelID:isVendorModelID];
     command.curMeshMessage = config;
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseModelAppStatusCallBack = successCallback;
@@ -2830,7 +2790,7 @@
 
     } else {
         //APP端未接收到设备端上报的SecureNetworkBeacon,需要根据APP端的SequenceNumber生成SecureNetworkBeacon。
-        if (SigMeshLib.share.dataSource.getSequenceNumberUInt32 >= 0xc00000) {
+        if (SigMeshLib.share.dataSource.getCurrentProvisionerIntSequenceNumber >= 0xc00000) {
             SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES networkId:SigMeshLib.share.dataSource.curNetkeyModel.networkId ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index+1 usingNetworkKey:SigMeshLib.share.dataSource.curNetkeyModel];
             SigMeshLib.share.secureNetworkBeacon = beacon;
         } else {
@@ -2850,7 +2810,7 @@
 
     } else {
         //APP端未接收到设备端上报的meshPrivateBeacon,需要根据APP端的SequenceNumber生成meshPrivateBeacon。
-        if (SigMeshLib.share.dataSource.getSequenceNumberUInt32 >= 0xc00000) {
+        if (SigMeshLib.share.dataSource.getCurrentProvisionerIntSequenceNumber >= 0xc00000) {
             SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index+1 randomData:[LibTools createRandomDataWithLength:13] usingNetworkKey:SigMeshLib.share.dataSource.curNetkeyModel];
             SigMeshLib.share.meshPrivateBeacon = beacon;
         } else {
@@ -2935,35 +2895,13 @@
  @param keyBindFail call back when a device keybind fail
  @param finish finish add the available devices list to the mesh
  */
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
++ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
     [SigAddDeviceManager.share startAddDeviceWithNextAddress:address networkKey:networkKey netkeyIndex:netkeyIndex appkeyModel:appkeyModel unicastAddress:unicastAddress uuid:uuid keyBindType:type productID:productID cpsData:cpsData isAutoAddNextDevice:isAuto provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail finish:finish];
 }
 
-/**
- function 1.1:AUTO if you need do provision , you should call this method, and it'll call back what you need. add startConnectCallBack and startProvisionCallBack.
- 
- @param address address of new device
- @param networkKey network key, which provsion need, you can see it as password of the mesh
- @param netkeyIndex netkey index
- @param appkeyModel appkey model
- @param unicastAddress address of remote device
- @param uuid uuid of remote device
- @param type KeyBindType_Normal是普通添加模式，KeyBindType_Quick是快速添加模式
- @param isAuto 添加完成一个设备后，是否自动扫描添加下一个设备
- @param startConnect call back when start connect device
- @param startProvision call back when start provision device
- @param provisionSuccess call back when a device provision successful
- @param provisionFail call back when a device provision fail
- @param keyBindSuccess call back when a device keybind successful
- @param keyBindFail call back when a device keybind fail
- @param finish finish add the available devices list to the mesh
- */
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto startConnect:(addDevice_startConnectCallBack)startConnect startProvision:(addDevice_startProvisionCallBack)startProvision provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
-    [SigAddDeviceManager.share startAddDeviceWithNextAddress:address networkKey:networkKey netkeyIndex:netkeyIndex appkeyModel:appkeyModel unicastAddress:unicastAddress uuid:uuid keyBindType:type productID:productID cpsData:cpsData isAutoAddNextDevice:isAuto startConnect:startConnect startProvision:startProvision provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail finish:finish];
-}
 
 /**
-function 2:special if you need do provision , you should call this method, and it'll call back what you need
+function 1:special if you need do provision , you should call this method, and it'll call back what you need
 
 @param address address of new device
 @param networkKey network key, which provsion need, you can see it as password of the mesh
@@ -2977,7 +2915,7 @@ function 2:special if you need do provision , you should call this method, and i
 @param keyBindSuccess call back when a device keybind successful
 @param keyBindFail call back when a device keybind fail
 */
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail{
++ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail{
     [SigAddDeviceManager.share startAddDeviceWithNextAddress:(UInt16)address networkKey:networkKey netkeyIndex:netkeyIndex appkeyModel:appkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:type productID:productID cpsData:cpsData provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail];
 }
 
@@ -2988,7 +2926,7 @@ function 2:special if you need do provision , you should call this method, and i
 /// @param provisionFail callback when provision fail.
 /// @param keyBindSuccess callback when keybind success.
 /// @param keyBindFail callback when keybind fail.
-+ (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
++ (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
     [SigAddDeviceManager.share startAddDeviceWithSigAddConfigModel:configModel provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail];
 }
 
@@ -3002,7 +2940,7 @@ function 2:special if you need do provision , you should call this method, and i
 /// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-+ (void)startProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
++ (void)startProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     if (provisionType == ProvisionType_NoOOB) {
         TeLogVerbose(@"start noOob provision.");
         [SigProvisioningManager.share provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex provisionSuccess:provisionSuccess fail:fail];

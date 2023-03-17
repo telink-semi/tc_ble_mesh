@@ -45,41 +45,18 @@
 #define U8_HIGH2CHAR(v_u8)		(VER_NUM2CHAR(((v_u8) >> 4) & 0x0f))
 #define U8_LOW2CHAR(v_u8)		(VER_NUM2CHAR((v_u8) & 0x0f))
 #define U8_2CHAR(v_u8)			((U8_HIGH2CHAR((v_u8)) << 8) + U8_LOW2CHAR((v_u8)))
-#define VER_CHAR2NUM(c)		    ((((c) >= '0')&&((c) <= '9')) ? ((c) - '0') : ((((c) >= 'a')&&((c) <= 'f')) ? ((c)-'a' + 0x0a) : ((((c) >= 'A')&&((c) <= 'F')) ? ((c)-'A' + 0x0a) : (c))))
 
-#if(CHIP_TYPE == CHIP_TYPE_8258)
-#define PID_CHIP_TYPE			0 // set 0 for compatibility.
-#elif(CHIP_TYPE == CHIP_TYPE_8278)
-#define PID_CHIP_TYPE			1
-#elif(CHIP_TYPE == CHIP_TYPE_8269)
-#define PID_CHIP_TYPE			2
-#elif(CHIP_TYPE == CHIP_TYPE_9518)
-#define PID_CHIP_TYPE			3
-#else
-#error error mcu core type
-#endif
-
-/*
- * demo PID filed: 
- * {
- *     minor product type	: 8 // lowest 8 bit
- *     major product type	: 4
- *     MCU chip type	    : 4
- * }
-*/
 #define PID_UNKNOW              (0x0000)
 // ------ light ------
-#define PID_LIGHT				((PID_CHIP_TYPE << 12) | LIGHT_TYPE_SEL)
+// LIGHT_TYPE_SEL
 // ------ gateway ------
-#define PID_GATEWAY             ((PID_CHIP_TYPE << 12) | 0x0101)
+#define PID_GATEWAY             (0x0101)
 // ------ LPN ------
-#define PID_LPN                 ((PID_CHIP_TYPE << 12) | 0x0201)
+#define PID_LPN                 (0x0201)
 // ------ SWITCH ------
-#define PID_SWITCH              ((PID_CHIP_TYPE << 12) | 0x0301)
+#define PID_SWITCH              (0x0301)
 // ------ SPIRIT_LPN ------
-#define PID_SPIRIT_LPN          ((PID_CHIP_TYPE << 12) | 0x0401)
-// ------ gateway node with homekit ------
-#define PID_GW_NODE_HK          ((PID_CHIP_TYPE << 12) | 0x0501)
+#define PID_SPIRIT_LPN          (0x0401)
 
 // ------ HOME KIT ------
 // from 0xC000 -- 0xFFFF
@@ -91,18 +68,27 @@ MESH_VID: VID is software version ID,
 
 PID and VID are used in composition data: model_sig_cfg_s_cps.
 format: please refer to spec "4.2.1.1 Composition Data Page 0"
-user can be allowed to redefined PID and VID if needed.
 */
 
 #if (WIN32)
-#define MESH_PID_SEL		(PID_LIGHT)
+#define MESH_PID_SEL		(LIGHT_TYPE_SEL)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 #elif (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
+    #if ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 #define MESH_PID_SEL		(PID_GATEWAY)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
+    #else // if (CHIP_TYPE == CHIP_TYPE_8269)
+#define MESH_PID_SEL		(PID_GATEWAY)
+#define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
+    #endif
 #elif (__PROJECT_MESH_LPN__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
+    #if ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 #define MESH_PID_SEL		(PID_LPN)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
+    #else // if (CHIP_TYPE == CHIP_TYPE_8269)
+#define MESH_PID_SEL		(PID_LPN)
+#define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
+    #endif
 #elif (__PROJECT_MESH_SWITCH__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
 #define MESH_PID_SEL		(PID_SWITCH)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
@@ -113,17 +99,17 @@ user can be allowed to redefined PID and VID if needed.
 #define MESH_PID_SEL		(PID_UNKNOW)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 #elif (__PROJECT_MESH__)   // light
-#define MESH_PID_SEL		(PID_LIGHT)
+#define MESH_PID_SEL		(LIGHT_TYPE_SEL)
 	#if DU_ENABLE
 #define MESH_VID		    DU_FW_VER       // in the du mode ,we will use to set version .
 	#else
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 	#endif
 #elif (__PROJECT_MESH_GW_NODE_HK__)   // light
-#define MESH_PID_SEL		(PID_GW_NODE_HK)
+#define MESH_PID_SEL		(LIGHT_TYPE_SEL)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 #elif (__PROJECT_BOOTLOADER__)   // light
-#define MESH_PID_SEL		(PID_LIGHT)						// 
+#define MESH_PID_SEL		(LIGHT_TYPE_SEL)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 #else
 //#error: must define PID, VID, no default value.

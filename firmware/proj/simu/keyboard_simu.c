@@ -26,7 +26,7 @@
 #include "../os/ev.h"
 #include "../drivers/usbkeycode.h"
 #include "../drivers/keyboard.h"
-#include "vendor/common/keycode_custom.h"
+#include "../../vendor/common/keycode_custom.h"
 
 u8 kb_simu_is_func_key;
 u32 kb_simu_pressed_matrix[8];    // normally max 8 key rows

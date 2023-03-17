@@ -200,7 +200,7 @@ typedef enum : NSUInteger {
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     ModelType *type = self.dataSource[indexPath.row];
-    UITableViewCell *cell = nil;
+    UITableViewCell *cell = [[UITableViewCell alloc] init];
     UInt8 lum=0,temp=0;
     switch (type.uiType) {
         case ModelUITypeHSL:

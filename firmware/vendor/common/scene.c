@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"
+#include "proj/tl_common.h"
 #ifndef WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -285,14 +285,13 @@ int mesh_cmd_sig_scene_recall(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	    return -1;
 	}
 
-	
-    tansition_forced_by_recall_flag = 1;
-	foreach(i,SCENE_CNT_MAX){
-		scene_data_t *p = &model_sig_scene.data[cb_par->model_idx][i];
-		if(p_recall->id == p->id){
-			st = SCENE_ST_SUCCESS;
-			if(!cb_par->retransaction){
+	if(!cb_par->retransaction){
+        tansition_forced_by_recall_flag = 1;
+    	foreach(i,SCENE_CNT_MAX){
+    		scene_data_t *p = &model_sig_scene.data[cb_par->model_idx][i];
+    		if(p_recall->id == p->id){
 				CB_NL_PAR_NUM_2(p_nl_scene_server_state_recalled, p_recall->id, (u8 *)&model_sig_scene.data[cb_par->model_idx][i].nl_data);
+    			st = SCENE_ST_SUCCESS;
     			mesh_cmd_g_level_set_t level_set_tmp = {0};
 
     			#if LIGHT_TYPE_CT_EN
@@ -370,12 +369,11 @@ int mesh_cmd_sig_scene_recall(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
                 #endif
                 
                 mesh_publish_all_manual(&pub_list, SIG_MD_LIGHTNESS_S, 1);
-			}
-			break;	// exist
-		}
+    			break;	// exist
+    		}
+    	}
+        tansition_forced_by_recall_flag = 0;
 	}
-    tansition_forced_by_recall_flag = 0;
-
     
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_scene_st_rsp(cb_par, st);

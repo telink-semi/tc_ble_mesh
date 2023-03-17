@@ -64,14 +64,9 @@ static int inline blt_is_timer_expired(u32 t, u32 now) {
 
 
 
-#include "tl_common.h"
-#if LLSYNC_ENABLE
-#include "ble_qiot_utils_mesh.h"
 
-typedef void (*blt_timer_callback_t)(void *param);	//#define blt_timer_callback_t	ble_timer_cb
-#else
 typedef int (*blt_timer_callback_t)(void);
-#endif
+
 
 
 

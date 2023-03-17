@@ -101,12 +101,12 @@
 {
     // control
     if (self.model.isRemote) {
-        DeviceRemoteVC *wordVc1 = (DeviceRemoteVC *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceRemoteVCID storyboard:@"DeviceSetting"];
+        DeviceRemoteVC *wordVc1 = (DeviceRemoteVC *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceRemoteVCID storybroad:@"DeviceSetting"];
         wordVc1.title = @"CONTROL";
         wordVc1.model = self.model;
         [self addChildViewController:wordVc1];
     } else {
-        DeviceControlViewController *wordVc1 = (DeviceControlViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceControlViewControllerID storyboard:@"DeviceSetting"];
+        DeviceControlViewController *wordVc1 = (DeviceControlViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceControlViewControllerID storybroad:@"DeviceSetting"];
         wordVc1.title = @"CONTROL";
         wordVc1.model = self.model;
         [self addChildViewController:wordVc1];
@@ -115,14 +115,14 @@
     // group
     // 遥控器不需要分组界面
     if (self.model.isRemote == NO) {
-        DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storyboard:@"DeviceSetting"];
+        DeviceGroupViewController *wordVc2 = (DeviceGroupViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceGroupViewControllerID storybroad:@"DeviceSetting"];
         wordVc2.title = @"GROUP";
         wordVc2.model = self.model;
         [self addChildViewController:wordVc2];
     }
     
     // settings
-    DeviceSettingViewController *wordVc3 = (DeviceSettingViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSettingViewControllerID storyboard:@"DeviceSetting"];
+    DeviceSettingViewController *wordVc3 = (DeviceSettingViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_DeviceSettingViewControllerID storybroad:@"DeviceSetting"];
     wordVc3.title = @"SETTINGS";
     wordVc3.model = self.model;
     [self addChildViewController:wordVc3];

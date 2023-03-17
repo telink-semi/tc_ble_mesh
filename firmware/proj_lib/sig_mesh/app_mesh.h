@@ -24,11 +24,11 @@
  *******************************************************************************************************/
 #ifndef APP_MESH_H_
 #define APP_MESH_H_
-#include "proj_lib/ble/ble_common.h"
-#include "proj_lib/ble/blt_config.h"
+#include "../../proj_lib/ble/ble_common.h"
+#include "../../proj_lib/ble/blt_config.h"
 
-#include "vendor/common/light.h"
-#include "vendor/common/user_proc.h"
+#include "../../vendor/common/light.h"
+#include "../../vendor/common/user_proc.h"
 
 #include "Test_case.h"
 #include <stdarg.h>
@@ -140,7 +140,8 @@
 typedef struct{
 	u16 src;
 	u32 sno     :24;
-	u32 ivi     :8;
+	u32 ivi     :1;
+	u32         :7;
 }cache_buf_t;
 
 #if DONGLE_PROVISION_EN // gateway
@@ -350,28 +351,28 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define G_LOCATION_LOCAL_SET			0x2882
 #define G_LOCATION_LOCAL_SET_NOACK		0x2982
 
-#define CFG_ON_DEMAND_PROXY_GET			0x6980
-#define CFG_ON_DEMAND_PROXY_SET			0x6A80
-#define CFG_ON_DEMAND_PROXY_STATUS		0x6B80
+#define CFG_SAR_TRANSMITTER_GET			0x03b8
+#define CFG_SAR_TRANSMITTER_SET			0x04b8
+#define CFG_SAR_TRANSMITTER_STATUS		0x05b8
+#define CFG_SAR_RECEIVER_GET			0x06b8
+#define CFG_SAR_RECEIVER_SET			0x07b8
+#define CFG_SAR_RECEIVER_STATUS			0x08b8
 
-#define CFG_SAR_TRANSMITTER_GET			0x6C80
-#define CFG_SAR_TRANSMITTER_SET			0x6D80
-#define CFG_SAR_TRANSMITTER_STATUS		0x6E80
-#define CFG_SAR_RECEIVER_GET			0x6F80
-#define CFG_SAR_RECEIVER_SET			0x7080
-#define CFG_SAR_RECEIVER_STATUS			0x7180
+#define CFG_ON_DEMAND_PROXY_GET			0x00b8
+#define CFG_ON_DEMAND_PROXY_SET			0x01b8
+#define CFG_ON_DEMAND_PROXY_STATUS		0x02b8
 
-#define CFG_OP_AGG_SEQ					0x7280
-#define CFG_OP_AGG_STATUS				0x7380 
+#define CFG_OP_AGG_SEQ					0x09b8
+#define CFG_OP_AGG_STATUS				0x10b8 
 
-#define LARGE_CPS_GET					0x7480
-#define LARGE_CPS_STATUS				0x7580
-#define MODELS_METADATA_GET				0x7680
-#define MODELS_METADATA_STATUS			0x7780
+#define LARGE_CPS_GET					0x11b8
+#define LARGE_CPS_STATUS				0x12b8
+#define MODELS_METADATA_GET				0x13b8
+#define MODELS_METADATA_STATUS			0x14b8
 
-#define SOLI_PDU_RPL_ITEM_CLEAR			0x7880
-#define SOLI_PDU_RPL_ITEM_CLEAR_NACK	0x7980
-#define SOLI_PDU_RPL_ITEM_STATUS		0x7A80
+#define SOLI_PDU_RPL_ITEM_CLEAR			0x15b8
+#define SOLI_PDU_RPL_ITEM_CLEAR_NACK	0x16b8
+#define SOLI_PDU_RPL_ITEM_STATUS		0x17b8
 //----------------------------------- status code
 #define ST_SUCCESS		                (0)
 #define ST_INVALID_ADR		            (1)
@@ -501,12 +502,12 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define SAR_RCV_SEG_INVL_STEP_DEF				8// unit:10ms
 
 #if MD_SAR_EN	
-#define SAR_SEG_THRESHOLD						(g_mesh_model_misc_save.sar_receiver.sar_seg_thres)
-#define SAR_RCV_SEG_INVL_STEP_MS				((g_mesh_model_misc_save.sar_receiver.sar_rcv_seg_invl_step + 1) *10)
-#define SAR_ACK_RETRANS_CNT						(g_mesh_model_misc_save.sar_receiver.sar_ack_retrans_cnt + 1)	// sno will change
-#define SAR_ACK_DELAY_MS(seg_N)					(min2(seg_N*10+5, (g_mesh_model_misc_save.sar_receiver.sar_ack_delay_inc*10 + 15)) * SAR_RCV_SEG_INVL_STEP_MS/10)
-#define	SAR_DISCARD_TIMEOUT_MS					(is_seg_block_ack(mesh_rx_seg_par.dst) ? (g_mesh_model_misc_save.sar_receiver.sar_discard_timeout+1)*5000 : SEG_GROUP_RX_TIMEOUT_MS) // unit:ms
-#define SAR_ACK_DELAY_INC						((g_mesh_model_misc_save.sar_receiver.sar_ack_delay_inc*10+15)/10)
+#define SAR_SEG_THRESHOLD						(model_sig_cfg_s.sar_receiver.sar_seg_thres)
+#define SAR_RCV_SEG_INVL_STEP_MS				((model_sig_cfg_s.sar_receiver.sar_rcv_seg_invl_step + 1) *10)
+#define SAR_ACK_RETRANS_CNT						(model_sig_cfg_s.sar_receiver.sar_ack_retrans_cnt + 1)	// sno will change
+#define SAR_ACK_DELAY_MS(seg_N)					(min2(seg_N*10+5, (model_sig_cfg_s.sar_receiver.sar_ack_delay_inc*10 + 15)) * SAR_RCV_SEG_INVL_STEP_MS/10)
+#define	SAR_DISCARD_TIMEOUT_MS					(is_seg_block_ack(mesh_rx_seg_par.dst) ? (model_sig_cfg_s.sar_receiver.sar_discard_timeout+1)*5000 : SEG_GROUP_RX_TIMEOUT_MS) // unit:ms
+#define SAR_ACK_DELAY_INC						((model_sig_cfg_s.sar_receiver.sar_ack_delay_inc*10+15)/10)
 #else
 #define SAR_SEG_THRESHOLD						(SAR_SEG_THRESHOLD_DEF)
 #define SAR_RCV_SEG_INVL_STEP_MS				((SAR_RCV_SEG_INVL_STEP_DEF+1)*10)
@@ -531,13 +532,13 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define SAR_MULTICAST_RETRANS_INVL_DEF				3 // unit:25ms
 
 #if MD_SAR_EN
-#define SAR_SEG_INVL_STEP_MS					((g_mesh_model_misc_save.sar_transmitter.sar_seg_invl_step+1)*10)
-#define SAR_UNICAST_RETRANS_CNT					(g_mesh_model_misc_save.sar_transmitter.sar_uni_retrans_cnt)
-#define SAR_UNICAST_RETRANS_CNT_NO_ACK			(g_mesh_model_misc_save.sar_transmitter.sar_uni_retrans_cnt_no_ack)
-#define SAR_UNICAST_RETRANS_INVL_STEP_MS		((g_mesh_model_misc_save.sar_transmitter.sar_uni_retrans_invl_step + 1) * 25)
-#define SAR_UNICAST_RETRANS_TIME_MS				((g_mesh_model_misc_save.sar_transmitter.sar_uni_retrans_invl_step + 1) * 25 + (model_sig_cfg_s.ttl_def ? ((g_mesh_model_misc_save.sar_transmitter.sar_uni_retrans_invl_incre+1)*25*(model_sig_cfg_s.ttl_def-1)) : 0)	)
-#define SAR_MULTICAST_RETRANS_CNT				(g_mesh_model_misc_save.sar_transmitter.sar_multi_retrans_cnt)
-#define SAR_MULTICAST_RETRANS_INVL				((g_mesh_model_misc_save.sar_transmitter.sar_multi_retrans_invl + 1) * 25)
+#define SAR_SEG_INVL_STEP_MS					((model_sig_cfg_s.sar_transmitter.sar_seg_invl_step+1)*10)
+#define SAR_UNICAST_RETRANS_CNT					(model_sig_cfg_s.sar_transmitter.sar_uni_retrans_cnt)
+#define SAR_UNICAST_RETRANS_CNT_NO_ACK			(model_sig_cfg_s.sar_transmitter.sar_uni_retrans_cnt_no_ack)
+#define SAR_UNICAST_RETRANS_INVL_STEP_MS		((model_sig_cfg_s.sar_transmitter.sar_uni_retrans_invl_step + 1) * 25)
+#define SAR_UNICAST_RETRANS_TIME_MS				((model_sig_cfg_s.sar_transmitter.sar_uni_retrans_invl_step + 1) * 25 + (model_sig_cfg_s.ttl_def ? ((model_sig_cfg_s.sar_transmitter.sar_uni_retrans_invl_incre+1)*25*(model_sig_cfg_s.ttl_def-1)) : 0)	)
+#define SAR_MULTICAST_RETRANS_CNT				(model_sig_cfg_s.sar_transmitter.sar_multi_retrans_cnt)
+#define SAR_MULTICAST_RETRANS_INVL				((model_sig_cfg_s.sar_transmitter.sar_multi_retrans_invl + 1) * 25)
 #else
 #define SAR_SEG_INVL_STEP_MS					((SAR_SEG_INVL_STEP_DEF+1)*10)
 #define SAR_UNICAST_RETRANS_CNT					(SAR_UNICAST_RETRANS_CNT_DEF)
@@ -811,7 +812,7 @@ typedef struct{
 			};
 			u8 	range_length;
 		};
-		u16 multicast_addr;// or unicast without range
+		u16 multicast_addr;
 	};
 }addr_range_t;
 
@@ -901,7 +902,6 @@ typedef struct{
     u8 data[28];
 }online_st_adv_t;	// max size : 31 - 2 
 
-typedef int (*mesh_network_cache_cb_t) (mesh_cmd_nw_t *p_nw, int save, int *is_in_cache);
 //----------------------------------- bearer layer (fifo)
 typedef enum{
 	BEAR_TX_PAR_TYPE_NONE		= 0,	// must 0
@@ -1259,7 +1259,7 @@ typedef struct{
 
 typedef struct{
 	mesh_ctl_fri_update_flag_t flag;
-	u8 IVIndex[4];		// big endianness
+	u8 IVIndex[4];
 	u8 md;
 }mesh_ctl_fri_update_t;
 
@@ -1553,7 +1553,7 @@ void friend_ship_establish_ok_cb_lpn();
 void friend_ship_disconnect_cb_lpn();
 int is_friend_ship_link_ok_fn(u8 lpn_idx);
 int is_friend_ship_link_ok_lpn();
-void iv_update_set_with_update_flag_ture(u32 iv_idx, u32 search_mode);
+void iv_update_set_with_update_flag_ture(u8 *iv_idx, u32 search_mode);
 int iv_update_key_refresh_rx_handle(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *p_iv_idx);
 u32 get_poll_timeout_fn(u16 lpn_adr);
 u32 get_current_poll_timeout_timer_fn(u16 lpn_adr);
@@ -1695,17 +1695,6 @@ static inline int is_tx_cmd_err_number_fatal(int err)
 	return ((TX_ERRNO_DEV_OR_APP_KEY_NOT_FOUND == err) || (TX_ERRNO_ADDRESS_INVALID == err)
 		|| (TX_ERRNO_PAR_LEN_OVER_FLOW == err));
 }
-
-static inline void get_iv_big_endian(u8 *p_iv_out_big, u8 *p_iv_in_little)
-{
-	swap32(p_iv_out_big, p_iv_in_little);
-}
-
-static inline void get_iv_little_endian(u8 *p_iv_out_little, u8 *p_iv_in_big)
-{
-	swap32(p_iv_out_little, p_iv_in_big);
-}
-
 //--------------- declaration
 int mesh_rsp_err_st_pub_status(u8 st, u16 ele_adr, u32 model_id, bool4 sig_model, u16 adr_dst);
 
@@ -1813,7 +1802,6 @@ int is_busy_segment_or_reliable_flow();
 int is_tx_seg_one_round_ok();
 void cache_init(u16 ele_adr);
 int is_exist_in_cache(u8 *p, u8 friend_key_flag, int save);
-void mesh_register_network_cache (mesh_network_cache_cb_t p);
 u16 get_mesh_current_cache_num(); // Note, there may be several elements in a node, but there is often only one element that is in cache.
 
 void mesh_friend_ship_proc_LPN(u8 *bear);
@@ -1870,12 +1858,12 @@ int mesh_rc_data_beacon_sec (u8 *p_payload, u32 t);
 void mesh_iv_update_st_poll_s();
 void mesh_iv_update_start_check();
 void mesh_iv_update_set_start_flag(int keep_search_flag);
-void mesh_iv_idx_init(u32 iv_index, int rst_sno, int save_flag);
+void mesh_iv_idx_init(u8 *iv_index, int rst_sno);
 void mesh_iv_update_enter_search_mode();
 void mesh_iv_update_enter_update_progress();
 void mesh_iv_update_enter_update2normal();
 void mesh_iv_update_enter_normal();
-void mesh_check_and_set_iv_update_rx_flag(u32 iv_idx);
+void mesh_check_and_set_iv_update_rx_flag(u8 *p_ivi);
 void mesh_iv_update_start_poll();
 void mesh_tx_reliable_proc();
 void mesh_model_ele_adr_init();
@@ -1922,7 +1910,7 @@ int app_event_handler_adv_monitor(u8 *p_payload);
 void RefreshStatusNotifyByHw(unsigned char *p, int len);
 int app_event_report_provision2usb(u8 *prov_par);
 void mesh_kr_cfgcl_mode_set(u16 addr, u8 mode,u16 nk_idx);
-int mesh_adr_check(u16 adr_src, u16 adr_dst, int tx_flag);
+int mesh_adr_check(u16 adr_src, u16 adr_dst);
 int mesh_adr_check_src_own_rx(u16 adr_src);
 int mesh_proxy_adv2gatt(u8 *bear,u8 adv_type);
 
@@ -1998,7 +1986,7 @@ int OnAppendLog_vs(unsigned char *p, int len);
 #endif
 // level part 
 
-int tl_log_msg(u32 level_module,void *pbuf,int len,char  *format,...);
+int tl_log_msg(u32 level_module,u8 *pbuf,int len,char  *format,...);
 void tl_log_msg_err(u16 module,u8 *pbuf,int len,char *format,...);
 void tl_log_msg_warn(u16 module,u8 *pbuf,int len,char  *format,...);
 void tl_log_msg_info(u16 module,u8 *pbuf,int len,char  *format,...);
@@ -2211,10 +2199,13 @@ extern u8 pub_flag;
 #if WIN32
 #define is_proxy_support_and_en	 0
 #else
-
+#if TESTCASE_FLAG_ENABLE
+#define is_proxy_support_and_en	(FEATURE_PROXY_EN   \
+								 && mesh_is_proxy_ready())
+#else
 #define is_proxy_support_and_en	(FEATURE_PROXY_EN && (GATT_PROXY_SUPPORT_ENABLE == mesh_get_gatt_proxy()) \
 								 && mesh_is_proxy_ready())
-
+#endif
 #endif
 #define is_fn_support_and_en	(FEATURE_FRIEND_EN && (FRIEND_SUPPORT_ENABLE == mesh_get_friend()))
 #define is_lpn_support_and_en	(FEATURE_LOWPOWER_EN && lpn_provision_ok)
@@ -2401,24 +2392,24 @@ record_info_t * add_nw_notify_record(u8 *p_payload);
 void update_nw_notify_num(u8 * p_rf_pkt, u8 next_buffer);
 #endif
 //--------------- include
-#include "vendor/common/mesh_node.h"
-#include "proj_lib/mesh_crypto/mesh_crypto.h"
-#include "vendor/common/config_model.h"
-#include "vendor/common/system_time.h"
-#include "vendor/common/app_beacon.h"
-#include "vendor/common/app_provison.h"
-#include "vendor/common/app_proxy.h"
-#include "vendor/common/mesh_test_cmd.h"
-#include "vendor/common/mesh_common.h"
-#include "vendor/common/vendor_model.h"
-#include "vendor/common/fast_provision_model.h"
+#include "../../vendor/common/mesh_node.h"
+#include "../../proj_lib/mesh_crypto/mesh_crypto.h"
+#include "../../vendor/common/config_model.h"
+#include "../../vendor/common/system_time.h"
+#include "../../vendor/common/app_beacon.h"
+#include "../../vendor/common/app_provison.h"
+#include "../../vendor/common/app_proxy.h"
+#include "../../vendor/common/mesh_test_cmd.h"
+#include "../../vendor/common/mesh_common.h"
+#include "../../vendor/common/vendor_model.h"
+#include "../../vendor/common/fast_provision_model.h"
 #if MI_API_ENABLE
-#include "vendor/common/mi_api/mi_vendor/vendor_model_mi.h"
+#include "../../vendor/common/mi_api/mi_vendor/vendor_model_mi.h"
 #include "mi_config.h"
 #endif
-#include "vendor/common/cmd_interface.h"
-#include "vendor/common/sensors_model.h"
-#include "vendor/common/op_agg_model.h"
+#include "../../vendor/common/cmd_interface.h"
+#include "../../vendor/common/sensors_model.h"
+#include "../../vendor/common/op_agg_model.h"
 
 #endif /* APP_MESH_H_ */
 

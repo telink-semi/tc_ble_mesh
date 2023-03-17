@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// The Mesh Message that is being sent, or `nil`, when the message
 /// was received.
-@property (nonatomic,strong,nullable) SigMeshMessage *message;
+@property (nonatomic,strong) SigMeshMessage *message;
 /// The local Element that is sending the message, or `nil` when the
 /// message was received.
 @property (nonatomic,strong) SigElementModel *localElement;
@@ -55,16 +55,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// The raw data of Upper Transport Layer PDU.
 @property (nonatomic,strong) NSData *transportPdu;
 
-/// v3.3.3.6新增参数，用于计算需要分为几个segment包
-@property (nonatomic,assign) UInt16 unsegmentedMessageLowerTransportPDUMaxLength;
-/// 计算属性，值为unsegmentedMessageLowerTransportPDUMaxLength-3
-@property (nonatomic,assign) UInt16 segmentedMessageLowerTransportPDUMaxLength;
-
 - (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key;
-- (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key forVirtualGroup:(nullable SigGroupModel *)virtualGroup;
-- (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key ivIndex:(SigIvIndex *)ivIndex forVirtualGroup:(nullable SigGroupModel *)virtualGroup;
+- (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key forVirtualGroup:(SigGroupModel *)virtualGroup;
+- (instancetype)initFromLowerTransportAccessMessage:(SigAccessMessage *)accessMessage key:(NSData *)key ivIndex:(SigIvIndex *)ivIndex forVirtualGroup:(SigGroupModel *)virtualGroup;
 - (instancetype)initFromAccessPdu:(SigAccessPdu *)pdu usingKeySet:(SigKeySet *)keySet ivIndex:(SigIvIndex *)ivIndex sequence:(UInt32)sequence;
-+ (nullable NSDictionary *)decodeAccessMessage:(SigAccessMessage *)accessMessage forMeshNetwork:(SigDataSource *)meshNetwork;//{@"SigUpperTransportPdu":SigUpperTransportPdu,@"SigKeySet":SigKeySet}
+- (instancetype)initFromAccessPdu:(SigAccessPdu *)pdu usingKeySet:(SigKeySet *)keySet sequence:(UInt32)sequence;
++ (NSDictionary *)decodeAccessMessage:(SigAccessMessage *)accessMessage forMeshNetwork:(SigDataSource *)meshNetwork;//{@"SigUpperTransportPdu":SigUpperTransportPdu,@"SigKeySet":SigKeySet}
 
 @end
 

@@ -123,7 +123,7 @@
 ///
 /// - parameter data: The data received.
 /// - returns: The message and its type, or `nil`, if more data are expected.
-- (nullable SigPudModel *)reassembleData:(NSData *)data {
+- (SigPudModel *)reassembleData:(NSData *)data {
     if (!data || data.length == 0) {
         return nil;
     }

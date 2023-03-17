@@ -26,12 +26,12 @@
 @implementation UIStoryboard (extension)
 
 + (UIViewController *)initVC:(NSString *)name{
-    return [self initVC:name storyboard:@"Main"];
+    return [self initVC:name storybroad:@"Main"];
 }
 
-+ (UIViewController *)initVC:(NSString *)name storyboard:(NSString *)storyboardName{
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle:nil];
-    UIViewController *vc = [storyboard instantiateViewControllerWithIdentifier:name];
++ (UIViewController *)initVC:(NSString *)name storybroad:(NSString *)storybroadName{
+    UIStoryboard *storybroad = [UIStoryboard storyboardWithName:storybroadName bundle:nil];
+    UIViewController *vc = [storybroad instantiateViewControllerWithIdentifier:name];
     return vc;
 }
 

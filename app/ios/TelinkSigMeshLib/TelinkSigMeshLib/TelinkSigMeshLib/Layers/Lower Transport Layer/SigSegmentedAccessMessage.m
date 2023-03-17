@@ -66,6 +66,7 @@
         }
         self.upperTransportPdu = [data subdataWithRange:NSMakeRange(4, data.length-4)];
         _sequence = (networkPdu.sequence & 0xFFE000) | (UInt32)self.sequenceZero;
+//        _sequence = networkPdu.sequence;
         self.source = networkPdu.source;
         self.destination = networkPdu.destination;
         self.networkKey = networkPdu.networkKey;
@@ -92,10 +93,14 @@
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
         
-        int lowerBound = (int)(offset * pdu.segmentedMessageLowerTransportPDUMaxLength);
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * pdu.segmentedMessageLowerTransportPDUMaxLength);
+        UInt16 unsegmentedMessageLowerTransportPDUMaxLength = SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
+        if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && pdu.destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+            unsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
+        }
+        int lowerBound = (int)(offset * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + (pdu.segmentedMessageLowerTransportPDUMaxLength - 1)) / pdu.segmentedMessageLowerTransportPDUMaxLength) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((unsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (unsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
         self.upperTransportPdu = segment;
         self.userInitiated = pdu.userInitiated;
     }
@@ -122,10 +127,14 @@
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
         
-        int lowerBound = (int)(offset * pdu.segmentedMessageLowerTransportPDUMaxLength);
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * pdu.segmentedMessageLowerTransportPDUMaxLength);
+        UInt16 unsegmentedMessageLowerTransportPDUMaxLength = SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
+        if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && pdu.destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+            unsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
+        }
+        int lowerBound = (int)(offset * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + (pdu.segmentedMessageLowerTransportPDUMaxLength - 1)) / pdu.segmentedMessageLowerTransportPDUMaxLength) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((unsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (unsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
         self.upperTransportPdu = segment;
     }
     return self;
@@ -151,7 +160,7 @@
 }
 
 - (NSString *)description {
-    return[NSString stringWithFormat:@"<%p> - SigSegmentedAccessMessage, aid:(0x%X) szmic:(0x%X), seqZero:(0x%X), segO:(0x%X), segN:(0x%X), data:(0x%@)", self, _aid, _transportMicSize, self.sequenceZero, self.segmentOffset, self.lastSegmentNumber, [LibTools convertDataToHexStr:self.upperTransportPdu]];
+    return[NSString stringWithFormat:@"<%p> - SigSegmentedAccessMessage, aid:(0x%X) transportMicSize:(0x%X) sequence:(0x%X),sequenceZero:(0x%X), opCode:(0x%X)", self, _aid,_transportMicSize,(unsigned int)_sequence,self.sequenceZero,_opCode];
 }
 
 @end

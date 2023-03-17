@@ -56,7 +56,7 @@ UIKIT_EXTERN NSString *const deviceKeyOfCalculateKeys;
 - (void)provisionerDidObtainWithDevicePublicKey:(NSData *)data;
 
 /// Call this method when the Auth Value has been obtained.
-- (void)provisionerDidObtainAuthValue:(nullable NSData *)data;
+- (void)provisionerDidObtainAuthValue:(NSData *)data;
 
 /// Call this method when the device Provisioning Confirmation has been obtained.
 - (void)provisionerDidObtainWithDeviceConfirmation:(NSData *)data;
@@ -68,7 +68,7 @@ UIKIT_EXTERN NSString *const deviceKeyOfCalculateKeys;
 - (BOOL)validateConfirmation;
 
 /// Returns the Provisioner Confirmation value. The Auth Value must be set prior to calling this method.
-- (NSData * _Nullable)provisionerConfirmation;
+- (NSData *)provisionerConfirmation;
 
 - (NSData *)getProvisioningData;
 

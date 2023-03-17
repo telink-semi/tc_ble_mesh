@@ -145,7 +145,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @param dictionary 待转换的字典数据
  *  @return JSON字符串
  */
-+ (nullable NSString *)getJSONStringWithDictionary:(NSDictionary *)dictionary;
++ (NSString *)getJSONStringWithDictionary:(NSDictionary *)dictionary;
  
 /**
  *  字典数据转换成JSON字符串（有可读性）
@@ -153,7 +153,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @param dictionary 待转换的字典数据
  *  @return JSON字符串
  */
-+ (nullable NSString *)getReadableJSONStringWithDictionary:(NSDictionary *)dictionary;
++ (NSString *)getReadableJSONStringWithDictionary:(NSDictionary *)dictionary;
  
 /**
  *  字典数据转换成JSON数据
@@ -161,7 +161,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @param dictionary 待转换的字典数据
  *  @return JSON数据
  */
-+ (nullable NSData *)getJSONDataWithDictionary:(NSDictionary *)dictionary;
++ (NSData *)getJSONDataWithDictionary:(NSDictionary *)dictionary;
 
 /**
 *  NSData数据转换成字典数据
@@ -177,7 +177,7 @@ NS_ASSUME_NONNULL_BEGIN
 *  @param jsonString 待转换的JSON字符串
 *  @return 字典数据
 */
-+ (nullable NSDictionary *)getDictionaryWithJsonString:(NSString *)jsonString;
++ (NSDictionary *)getDictionaryWithJsonString:(NSString *)jsonString;
 
 #pragma mark - CRC相关
 

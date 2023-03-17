@@ -22,6 +22,8 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.model.json;
 
+import android.text.TextUtils;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.telink.ble.mesh.core.MeshUtils;
@@ -149,8 +151,7 @@ public class MeshStorageService {
     private MeshStorage meshToJson(MeshInfo mesh, List<MeshNetKey> selectedNetKeys) {
         MeshStorage meshStorage = new MeshStorage();
 
-//        meshStorage.meshUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
-        meshStorage.meshUUID = mesh.meshUUID;
+        meshStorage.meshUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
 //        long time = MeshUtils.getTaiTime();
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault());
@@ -276,7 +277,7 @@ public class MeshStorageService {
             }
         }
 
-//        meshStorage.ivIndex = String.format("%08X", mesh.ivIndex);
+        meshStorage.ivIndex = String.format("%08X", mesh.ivIndex);
 
         /*
          * convert [mesh.scenes] to [meshStorage.scenes]
@@ -311,11 +312,6 @@ public class MeshStorageService {
 //        Mesh mesh = new Mesh();
 
         // import all network keys
-        boolean isSameMesh = true;
-        if (!mesh.meshUUID.equalsIgnoreCase(meshStorage.meshUUID)) {
-            isSameMesh = false;
-            mesh.meshUUID = meshStorage.meshUUID;
-        }
         mesh.meshNetKeyList = new ArrayList<>();
         for (MeshStorage.NetworkKey networkKey : meshStorage.netKeys) {
             MeshLogger.d("import netkey : " + networkKey.key);
@@ -391,14 +387,19 @@ public class MeshStorageService {
 //            MeshStorage.Provisioner.AddressRange unicastRange = localProvisioner.allocatedUnicastRange.get(0);
 //
 //            mesh.unicastRange = new AddressRange(low, high);
-
-            mesh.ivIndex = MeshInfo.UNINITIALIZED_IVI;
         }
 
 
 //        mesh.groupRange = new AddressRange(0xC000, 0xC0FF);
 
 //        mesh.sceneRange = new AddressRange(0x01, 0x0F);
+
+
+        if (TextUtils.isEmpty(meshStorage.ivIndex)) {
+            mesh.ivIndex = MeshStorage.Defaults.IV_INDEX;
+        } else {
+            mesh.ivIndex = MeshUtils.hexString2Int(meshStorage.ivIndex, ByteOrder.BIG_ENDIAN);
+        }
 
         mesh.groups = new ArrayList<>();
 
@@ -412,13 +413,7 @@ public class MeshStorageService {
             }
         }
 
-        /*if(isSameMesh){
-            mesh.nodes = new ArrayList<>();
-        }else{
-
-        }*/
-        mesh.nodes.clear();
-
+        mesh.nodes = new ArrayList<>();
         if (meshStorage.nodes != null) {
             NodeInfo deviceInfo;
             for (MeshStorage.Node node : meshStorage.nodes) {

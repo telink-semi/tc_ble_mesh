@@ -25,7 +25,7 @@
 
 #pragma mark - Const string
 
-NSString * const kTelinkSigMeshLibVersion = @"v3.3.3.6";
+NSString * const kTelinkSigMeshLibVersion = @"v3.3.3.5";
 
 NSString * const kNotifyCommandIsBusyOrNot = @"CommandIsBusyOrNot";
 NSString * const kCommandIsBusyKey = @"IsBusy";
@@ -58,7 +58,6 @@ NSString * const kScanList_key = @"scanList_key";
 NSString * const kJsonMeshUUID_key = @"MeshUUID";
 NSString * const kCurrenProvisionerUUID_key = @"currenProvisionerUUID_key";
 NSString * const kCurrenProvisionerSno_key = @"currenProvisionerSno_key";
-NSString * const kLocationIvIndexAndSequenceNumberDictionary_key = @"locationIvIndexAndSequenceNumberDictionary_key";
 
 //homes
 NSString * const kCurrentMeshProvisionAddress_key = @"currentMeshProvisionAddress_key";
@@ -393,10 +392,6 @@ NSString * const kSigMeshLibCommandInvalidNetKeyIndexErrorMessage = @"Invalid Ne
 /*AppKey Index 不存在*/
 UInt32 const kSigMeshLibCommandInvalidAppKeyIndexErrorCode = 0x02110107;
 NSString * const kSigMeshLibCommandInvalidAppKeyIndexErrorMessage = @"Invalid AppKey Index.";
-
-/*Mesh未连接*/
-UInt32 const kSigMeshLibCommandMeshDisconnectedErrorCode = 0x02110108;
-NSString * const kSigMeshLibCommandMeshDisconnectedErrorMessage = @"Mesh Disconnected.";
 
 /*telink当前定义的两个设备类型*/
 UInt16 const SigNodePID_CT = 1;

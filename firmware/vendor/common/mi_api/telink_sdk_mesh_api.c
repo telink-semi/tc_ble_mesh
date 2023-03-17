@@ -117,7 +117,7 @@ void process_mesh_node_init_event(void)
     node_info.lpn_node = 0;
 	if(node_info.provisioned){
 		node_info.address = ele_adr_primary;
-		node_info.ivi = iv_idx_st.iv_cur;
+		node_info.ivi = mesh_get_ivi_cur_val_little();
 	}else{
 		node_info.address = 0;
 		node_info.ivi = 0;	
@@ -130,7 +130,7 @@ void process_mesh_ivi_update()
 {
 	mible_mesh_iv_t mesh_iv;
 	mesh_ctl_fri_update_flag_t *p_flag =(mesh_ctl_fri_update_flag_t *)&(mesh_iv.flags);
-	mesh_iv.iv_index = iv_idx_st.iv_cur;
+	mesh_iv.iv_index = mesh_get_ivi_cur_val_little();
 	p_flag->IVUpdate = (IV_UPDATE_STEP1 == iv_idx_st.update_proc_flag);
 	MI_LOG_WARNING("[DEVICE_IVI_UPDATE]\n");
 	mible_mesh_event_callback(MIBLE_MESH_EVENT_IV_UPDATE, &mesh_iv);
@@ -469,7 +469,7 @@ int mible_mesh_device_get_seq(uint16_t element, uint32_t* seq, uint32_t* iv, uin
 		}
         if(NULL != iv){
 			
-            *iv = iv_idx_st.iv_cur;
+            *iv = (uint32_t)mesh_get_ivi_cur_val_little();
         }
         if(NULL != flags){
             *flags = iv_idx_st.rx_update;

@@ -222,9 +222,9 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
                     if (sceneExits)
                         selectedAdrList.add(new SettingModel(adr, false));
                 } else {
-//                    if (!sceneExits) {
-                    selectedAdrList.add(new SettingModel(adr, true));
-//                    }
+                    if (!sceneExits) {
+                        selectedAdrList.add(new SettingModel(adr, true));
+                    }
                 }
             }
         }
@@ -250,16 +250,11 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
             StatusNotificationEvent statusNotificationEvent = (StatusNotificationEvent) event;
             NotificationMessage notificationMessage = statusNotificationEvent.getNotificationMessage();
             SceneRegisterStatusMessage sceneRegisterStatusMessage = (SceneRegisterStatusMessage) notificationMessage.getStatusMessage();
-            SettingModel settingModel;
-            if (settingIndex >= selectedAdrList.size()) {
-                return;
-            }
-            settingModel = selectedAdrList.get(settingIndex);
             if (sceneRegisterStatusMessage.getStatusCode() == ConfigStatus.SUCCESS.code
-                    && notificationMessage.getSrc() == settingModel.address) {
+                    && notificationMessage.getSrc() == selectedAdrList.get(settingIndex).address) {
                 delayHandler.removeCallbacks(cmdTimeoutCheckTask);
                 NodeInfo deviceInfo = mesh.getDeviceByMeshAddress(notificationMessage.getSrc());
-                if (settingModel.add) {
+                if (selectedAdrList.get(settingIndex).add) {
                     scene.saveFromDeviceInfo(deviceInfo);
                 } else {
                     scene.removeByAddress(deviceInfo.meshAddress);
@@ -272,7 +267,7 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
         }
     }
 
-    private static class SettingModel {
+    class SettingModel {
         int address;
         boolean add;
 

@@ -211,7 +211,7 @@
     
     //7.scanLsit and sno
     XCTAssertEqual(defaultMesh.scanList.count, 0);
-//    XCTAssertEqual(defaultMesh.getSequenceNumberUInt32, 0);
+//    XCTAssertEqual(defaultMesh.getCurrentProvisionerIntSequenceNumber, 0);
     
     //8.添加设备的地址
     XCTAssertEqual(defaultMesh.provisionAddress, 2);
@@ -302,91 +302,10 @@
     
     //7.scanLsit and sno
     XCTAssertEqual(SigDataSource.share.scanList.count, 0);
-    XCTAssertEqual(SigDataSource.share.getSequenceNumberUInt32, 0);
+    XCTAssertEqual(SigDataSource.share.getCurrentProvisionerIntSequenceNumber, 0);
     
     NSLog(@"==========finish!");
 }
 
-- (void)testOnDemandPrivateProxy {
-    SigOnDemandPrivateProxyGet *onDemandPrivateProxyGet = [[SigOnDemandPrivateProxyGet alloc] init];
-    XCTAssertEqualObjects(onDemandPrivateProxyGet.parameters, [LibTools nsstringToHex:@""]);
-    SigOnDemandPrivateProxySet *onDemandPrivateProxySet = [[SigOnDemandPrivateProxySet alloc] initWithOnDemandPrivateGATTProxy:0];
-    XCTAssertEqualObjects(onDemandPrivateProxySet.parameters, [LibTools nsstringToHex:@"00"]);
-    onDemandPrivateProxySet = [[SigOnDemandPrivateProxySet alloc] initWithOnDemandPrivateGATTProxy:0xFF];
-    XCTAssertEqualObjects(onDemandPrivateProxySet.parameters, [LibTools nsstringToHex:@"FF"]);
-    SigOnDemandPrivateProxyStatus *onDemandPrivateProxyStatus = [[SigOnDemandPrivateProxyStatus alloc] initWithParameters:[LibTools nsstringToHex:@"00"]];
-    XCTAssertEqualObjects(onDemandPrivateProxyStatus.parameters, [LibTools nsstringToHex:@"00"]);
-}
 
-- (void)testSARConfiguration {
-    SigSARTransmitterGet *SARTransmitterGet = [[SigSARTransmitterGet alloc] init];
-    XCTAssertEqualObjects(SARTransmitterGet.parameters, [LibTools nsstringToHex:@""]);
-    
-    struct SARTransmitterStructure SARTransmitter = {};
-    //1.
-//    NSData *data = [LibTools nsstringToHex:@"12345678"];
-//    UInt32 tem32 = 0;
-//    Byte *byte = (Byte *)data.bytes;
-//    memcpy(&tem32, byte, 4);
-//    SARTransmitter.value = CFSwapInt32HostToBig(tem32);
-    //2.
-    SARTransmitter.SARSegmentIntervalStep = 0x1;
-    SARTransmitter.SARUnicastRetransmissionsCount = 0x2;
-    SARTransmitter.SARUnicastRetransmissionsWithoutProgressCount = 0x3;
-    SARTransmitter.SARUnicastRetransmissionsIntervalStep = 0x4;
-    SARTransmitter.SARUnicastRetransmissionsIntervalIncrement = 0x5;
-    SARTransmitter.SARMulticastRetransmissionsCount = 0x6;
-    SARTransmitter.SARMulticastRetransmissionsInterval = 0x7;
-    SARTransmitter.RFU = 0x8;
-
-    SigSARTransmitterSet *SARTransmitterSet = [[SigSARTransmitterSet alloc] initWithSARTransmitter:SARTransmitter];
-    XCTAssertEqualObjects(SARTransmitterSet.parameters, [LibTools nsstringToHex:@"12345678"]);
-    
-    SigSARReceiverGet *SARReceiverGet = [[SigSARReceiverGet alloc] init];
-    XCTAssertEqualObjects(SARReceiverGet.parameters, [LibTools nsstringToHex:@""]);
-    
-    struct SARReceiverStructure SARReceiver = {};
-    //1.
-//    NSData *data = [LibTools nsstringToHex:@"123456"];
-//    UInt32 tem32 = 0;
-//    Byte *byte = (Byte *)data.bytes;
-//    memcpy(&tem32, byte, 3);
-//    SARReceiver.value = CFSwapInt32HostToBig(tem32);
-    //2.
-    SARReceiver.SARSegmentsThreshold = 0x2;
-    SARReceiver.SARAcknowledgmentDelayIncrement = 0x2;
-    SARReceiver.SARDiscardTimeout = 0x3;
-    SARReceiver.SARReceiverSegmentIntervalStep = 0x4;
-    SARReceiver.SARAcknowledgmentRetransmissionsCount = 0x1;
-    SARReceiver.RFU = 0x16;
-
-
-    SigSARReceiverSet *SARReceiverSet = [[SigSARReceiverSet alloc] initWithSARReceiver:SARReceiver];
-    XCTAssertEqualObjects(SARReceiverSet.parameters, [LibTools nsstringToHex:@"123456"]);
-}
-
-- (void)testLargeCompositionDataMessages {
-    SigLargeCompositionDataGet *largeCompositionDataGet = [[SigLargeCompositionDataGet alloc] initWithPage:0 offset:0];
-    XCTAssertEqualObjects(largeCompositionDataGet.parameters, [LibTools nsstringToHex:@"000000"]);
-    largeCompositionDataGet = [[SigLargeCompositionDataGet alloc] initWithPage:0x12 offset:0x6789];
-    XCTAssertEqualObjects(largeCompositionDataGet.parameters, [LibTools nsstringToHex:@"128967"]);
-    
-    SigLargeCompositionDataStatus *largeCompositionDataStatus = [[SigLargeCompositionDataStatus alloc] initWithParameters:[LibTools nsstringToHex:@"1234568888000102030405060708090A0B0C0D0E0F"]];
-    XCTAssertEqual(largeCompositionDataStatus.page, 0x12);
-    XCTAssertEqual(largeCompositionDataStatus.offset, 0x5634);
-    XCTAssertEqual(largeCompositionDataStatus.totalSize, 0x8888);
-    XCTAssertEqualObjects(largeCompositionDataStatus.data, [LibTools nsstringToHex:@"000102030405060708090A0B0C0D0E0F"]);
-    
-    SigModelsMetadataGet *modelsMetadataGet = [[SigModelsMetadataGet alloc] initWithMetadataPage:0 offset:0];
-    XCTAssertEqualObjects(modelsMetadataGet.parameters, [LibTools nsstringToHex:@"000000"]);
-    modelsMetadataGet = [[SigModelsMetadataGet alloc] initWithMetadataPage:0x12 offset:0x6789];
-    XCTAssertEqualObjects(modelsMetadataGet.parameters, [LibTools nsstringToHex:@"128967"]);
-
-    SigModelsMetadataStatus *modelsMetadataStatus = [[SigModelsMetadataStatus alloc] initWithParameters:[LibTools nsstringToHex:@"1234568888000102030405060708090A0B0C0D0E0F"]];
-    XCTAssertEqual(modelsMetadataStatus.metadataPage, 0x12);
-    XCTAssertEqual(modelsMetadataStatus.offset, 0x5634);
-    XCTAssertEqual(modelsMetadataStatus.totalSize, 0x8888);
-    XCTAssertEqualObjects(modelsMetadataStatus.data, [LibTools nsstringToHex:@"000102030405060708090A0B0C0D0E0F"]);
-
-}
 @end

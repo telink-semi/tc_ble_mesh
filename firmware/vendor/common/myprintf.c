@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"  
+#include "proj/tl_common.h"  
 #include "proj_lib/ble/service/ble_ll_ota.h"
 
 #if PRINT_DEBUG_INFO
@@ -118,7 +118,7 @@ _attribute_ram_code_ static void uart_put_char(u8 byte){
 
 	/*! Minimize the time for interrupts to close and ensure timely 
 	    response after interrupts occur. */
-	u32 r = 0;
+	u8 r = 0;
 	if(SIMU_UART_IRQ_EN){
 		r = irq_disable();
 	}

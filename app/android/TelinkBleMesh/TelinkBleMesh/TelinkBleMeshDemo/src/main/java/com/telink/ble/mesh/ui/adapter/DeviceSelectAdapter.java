@@ -100,8 +100,7 @@ public class DeviceSelectAdapter extends BaseSelectableListAdapter<DeviceSelectA
 
         holder.cb_device.setTag(position);
 
-        if (!deviceInfo.isOffline()) {
-            //  && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_SCENE_S.modelId) != -1
+        if (!deviceInfo.isOffline() && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_SCENE_S.modelId) != -1) {
             holder.cb_device.setChecked(deviceInfo.selected);
             holder.cb_device.setEnabled(true);
             holder.cb_device.setOnCheckedChangeListener(this.checkedChangeListener);

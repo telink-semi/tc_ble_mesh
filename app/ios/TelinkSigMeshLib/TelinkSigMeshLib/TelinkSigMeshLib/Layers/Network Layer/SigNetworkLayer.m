@@ -144,9 +144,9 @@
     _networkKey = pdu.networkKey;
     
     // Get the current sequence number for local Provisioner's source address.
-    UInt32 sequence = (UInt32)[SigMeshLib.share.dataSource getSequenceNumberUInt32];
+    UInt32 sequence = (UInt32)[SigMeshLib.share.dataSource getCurrentProvisionerIntSequenceNumber];
     // As the sequence number was just used, it has to be incremented.
-    [SigMeshLib.share.dataSource updateSequenceNumberUInt32WhenSendMessage:sequence+1];
+    [SigMeshLib.share.dataSource updateCurrentProvisionerIntSequenceNumber:sequence+1];
 
 //    TeLogDebug(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
     SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl ivIndex:ivIndex];
@@ -204,9 +204,9 @@
     }
     
     // Get the current sequence number for local Provisioner's source address.
-    UInt32 sequence = (UInt32)[SigMeshLib.share.dataSource getSequenceNumberUInt32];
+    UInt32 sequence = (UInt32)[SigMeshLib.share.dataSource getCurrentProvisionerIntSequenceNumber];
     // As the sequnce number was just used, it has to be incremented.
-    [SigMeshLib.share.dataSource updateSequenceNumberUInt32WhenSendMessage:sequence+1];
+    [SigMeshLib.share.dataSource updateCurrentProvisionerIntSequenceNumber:sequence+1];
 
 //    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
 //    SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl];
@@ -287,15 +287,10 @@
 }
 
 - (void)handleMeshPrivateBeacon:(SigMeshPrivateBeacon *)meshPrivateBeacon {
-    if (!SigMeshLib.share.dataSource.existLocationIvIndexAndLocationSequenceNumber) {
-        [SigMeshLib.share.dataSource setIvIndexUInt32:meshPrivateBeacon.ivIndex];
-        [SigMeshLib.share.dataSource setSequenceNumberUInt32:0];
-        [SigMeshLib.share.dataSource saveCurrentIvIndex:meshPrivateBeacon.ivIndex sequenceNumber:0];
-    }
     SigNetkeyModel *networkKey = meshPrivateBeacon.networkKey;
     if (meshPrivateBeacon.ivIndex < networkKey.ivIndex.index || ABS(meshPrivateBeacon.ivIndex-networkKey.ivIndex.index) > 42) {
         TeLogError(@"Discarding mesh private beacon (ivIndex: 0x%x, expected >= 0x%x)",(unsigned int)meshPrivateBeacon.ivIndex,(unsigned int)networkKey.ivIndex.index);
-        if (SigMeshLib.share.dataSource.getSequenceNumberUInt32 >= 0xc00000) {
+        if (SigMeshLib.share.dataSource.getCurrentProvisionerIntSequenceNumber >= 0xc00000) {
             SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES ivIndex:networkKey.ivIndex.index+1 randomData:[LibTools createRandomDataWithLength:13] usingNetworkKey:networkKey];
             SigMeshLib.share.meshPrivateBeacon = beacon;
         } else {
@@ -328,12 +323,12 @@
             if (SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index != meshPrivateBeacon.ivIndex - 1) {
                 SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.updateActive = NO;
                 SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index = meshPrivateBeacon.ivIndex - 1;
-                [SigMeshLib.share.dataSource updateIvIndexUInt32FromBeacon:meshPrivateBeacon.ivIndex - 1];
+                [SigMeshLib.share.dataSource updateIvIndexString:[NSString stringWithFormat:@"%08X",(unsigned int)meshPrivateBeacon.ivIndex - 1]];
             }
         } else {
             SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.updateActive = meshPrivateBeacon.ivUpdateActive;
             SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index = meshPrivateBeacon.ivIndex;
-            [SigMeshLib.share.dataSource updateIvIndexUInt32FromBeacon:meshPrivateBeacon.ivIndex];
+            [SigMeshLib.share.dataSource updateIvIndexString:[NSString stringWithFormat:@"%08X",(unsigned int)meshPrivateBeacon.ivIndex]];
         }
     }
 
@@ -351,15 +346,10 @@
 /// This method handles the Secure Network Beacon. It will set the proper IV Index and IV Update Active flag for the Network Key that matches Network ID and change the Key Refresh Phase based on the key refresh flag specified in the beacon.
 /// @param secureNetworkBeacon The Secure Network Beacon received.
 - (void)handleSecureNetworkBeacon:(SigSecureNetworkBeacon *)secureNetworkBeacon {
-    if (!SigMeshLib.share.dataSource.existLocationIvIndexAndLocationSequenceNumber) {
-        [SigMeshLib.share.dataSource setIvIndexUInt32:secureNetworkBeacon.ivIndex];
-        [SigMeshLib.share.dataSource setSequenceNumberUInt32:0];
-        [SigMeshLib.share.dataSource saveCurrentIvIndex:secureNetworkBeacon.ivIndex sequenceNumber:0];
-    }
     SigNetkeyModel *networkKey = secureNetworkBeacon.networkKey;
     if (secureNetworkBeacon.ivIndex < networkKey.ivIndex.index || ABS(secureNetworkBeacon.ivIndex-networkKey.ivIndex.index) > 42) {
         TeLogError(@"Discarding secure network beacon (ivIndex: 0x%x, expected >= 0x%x)",(unsigned int)secureNetworkBeacon.ivIndex,(unsigned int)networkKey.ivIndex.index);
-        if (SigMeshLib.share.dataSource.getSequenceNumberUInt32 >= 0xc00000) {
+        if (SigMeshLib.share.dataSource.getCurrentProvisionerIntSequenceNumber >= 0xc00000) {
             SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES networkId:networkKey.networkId ivIndex:networkKey.ivIndex.index+1 usingNetworkKey:networkKey];
             SigMeshLib.share.secureNetworkBeacon = beacon;
         } else {
@@ -392,12 +382,12 @@
             if (SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index != secureNetworkBeacon.ivIndex - 1) {
                 SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.updateActive = NO;
                 SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex - 1;
-                [SigMeshLib.share.dataSource updateIvIndexUInt32FromBeacon:secureNetworkBeacon.ivIndex - 1];
+                [SigMeshLib.share.dataSource updateIvIndexString:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex - 1]];
             }
         } else {
             SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.updateActive = secureNetworkBeacon.ivUpdateActive;
             SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex;
-            [SigMeshLib.share.dataSource updateIvIndexUInt32FromBeacon:secureNetworkBeacon.ivIndex];
+            [SigMeshLib.share.dataSource updateIvIndexString:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex]];
         }
     }
     if (secureNetworkBeacon.keyRefreshFlag) {

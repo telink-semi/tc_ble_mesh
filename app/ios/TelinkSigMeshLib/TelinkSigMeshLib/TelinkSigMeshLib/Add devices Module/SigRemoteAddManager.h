@@ -38,7 +38,7 @@ typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanR
 
 @interface SigRemoteAddManager : NSObject
 @property (nonatomic, assign) AuthenticationMethod authenticationMethod;
-@property (nonatomic, strong, nullable) SigAuthenticationModel *authenticationModel;
+@property (nonatomic, strong) SigAuthenticationModel *authenticationModel;
 @property (nonatomic, strong) SigProvisioningData *provisioningData;
 
 /// - seeAlso: MshPRFv1.0.1.pdf  (page.240)
@@ -75,7 +75,7 @@ typedef void(^remoteProvisioningScanReportCallBack)(SigRemoteScanRspModel *scanR
 /// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)remoteProvisionWithNextProvisionAddress:(UInt16)provisionAddress reportNodeAddress:(UInt16)reportNodeAddress reportNodeUUID:(NSData *)reportNodeUUID networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+- (void)remoteProvisionWithNextProvisionAddress:(UInt16)provisionAddress reportNodeAddress:(UInt16)reportNodeAddress reportNodeUUID:(NSData *)reportNodeUUID networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 @end
 

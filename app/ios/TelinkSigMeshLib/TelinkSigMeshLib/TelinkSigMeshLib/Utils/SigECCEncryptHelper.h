@@ -39,7 +39,7 @@ typedef void (^keyPair)(NSData *publicKey ,NSData *privateKey);
 - (void)eccInit;
 
 ///返回手机端64字节的ECC公钥
-- (NSData * _Nullable)getPublicKeyData;
+- (NSData *)getPublicKeyData;
 
 - (NSData *)getSharedSecretWithDevicePublicKey:(NSData *)devicePublicKey;
 

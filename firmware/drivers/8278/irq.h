@@ -42,8 +42,8 @@ static inline unsigned char irq_enable(void){
  * @param[in]  none
  * @return     if return 0 is disable.else enable.
  */
-static inline unsigned int irq_disable(void){	// use u32 to be compatible with eagle
-	unsigned int r = reg_irq_en;		// don't worry,  the compiler will optimize the return value if not used
+static inline unsigned char irq_disable(void){
+	unsigned char r = reg_irq_en;		// don't worry,  the compiler will optimize the return value if not used
 	reg_irq_en = 0;
 	return r;
 }
@@ -53,8 +53,8 @@ static inline unsigned int irq_disable(void){	// use u32 to be compatible with e
  * @param[in]  none
  * @return     if return 1 is irg restore.
  */
-static inline void irq_restore(unsigned int en){
-	reg_irq_en = (unsigned char)en;
+static inline void irq_restore(unsigned char en){
+	reg_irq_en = en;
 }
 
 /**

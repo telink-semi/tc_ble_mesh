@@ -41,7 +41,7 @@
 
  unsigned char i2c_write_series_for_msc(unsigned char Slave_addr,unsigned int W_Addr, unsigned int W_AddrLen, unsigned char * dataBuf, int dataLen,unsigned char iic_stop)
 {
-	unsigned int r = irq_disable();
+	unsigned char r = irq_disable();
     unsigned char status = IIC_EVT_XFER_DONE;
     
 	reg_i2c_id	 = (Slave_addr<<1)&(~FLD_I2C_WRITE_READ_BIT); //SlaveID & 0xfe,.i.e write data. R:High  W:Low
@@ -96,7 +96,7 @@
  */
 unsigned char i2c_read_series_msc(unsigned char Slave_addr,unsigned int R_Addr, unsigned int R_AddrLen, unsigned char * dataBuf, int dataLen)
 {
-	unsigned int r = irq_disable();
+	unsigned char r = irq_disable();
     unsigned char status = IIC_EVT_XFER_DONE;
 
 	//start + id(Read)

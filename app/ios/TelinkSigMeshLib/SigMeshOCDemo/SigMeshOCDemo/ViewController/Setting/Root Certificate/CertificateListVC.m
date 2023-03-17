@@ -53,10 +53,6 @@
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_MeshOTAItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_MeshOTAItemCellID];
-    //iOS 15中 UITableView 新增了一个属性：sectionHeaderTopPadding。此属性会给每一个 section header 增加一个默认高度，当我们使用 UITableViewStylePlain 初始化UITableView 的时候，系统默认给 section header 增高了22像素。
-    if(@available(iOS 15.0,*)) {
-        self.tableView.sectionHeaderTopPadding = 0;
-    }
 }
 
 - (IBAction)clickSaveButton:(UIButton *)sender {

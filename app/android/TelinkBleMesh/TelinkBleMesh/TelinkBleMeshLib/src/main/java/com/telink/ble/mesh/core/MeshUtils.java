@@ -24,7 +24,6 @@ package com.telink.ble.mesh.core;
 
 import android.os.ParcelUuid;
 
-import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 
 import com.telink.ble.mesh.core.ble.MeshScanRecord;
@@ -66,7 +65,6 @@ public final class MeshUtils {
      */
     public static final int LOCAL_MESSAGE_ADDRESS = 0;
 
-    public static final long IV_MISSING = 0xFFFFFFFFL;
 
     private static SecureRandom rng;
 
@@ -355,21 +353,5 @@ public final class MeshUtils {
             msgList.add(msg);
         }
         return msgList;
-    }
-
-    /**
-     * @param start
-     * @param len
-     * @return ByteOrder.LITTLE_ENDIAN
-     */
-    public static byte[] getUnicastRange(int start, @IntRange(from = 1, to = 0xFF) int len) {
-        if (len == 1) {
-            return integer2Bytes(start << 1, 2, ByteOrder.LITTLE_ENDIAN);
-        } else {
-            short sVal = (short) ((start << 1) | 0x01);
-            return ByteBuffer.allocate(3).order(ByteOrder.LITTLE_ENDIAN)
-                    .putShort(sVal)
-                    .put((byte) len).array();
-        }
     }
 }

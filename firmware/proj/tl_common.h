@@ -30,7 +30,7 @@
 #include "common/tutility.h"
 #include "common/static_assert.h"
 #include "common/assert.h"
-#include "vendor/common/user_config.h"
+#include "../vendor/common/user_config.h"
 #include "common/compatibility.h"
 #if(MCU_CORE_TYPE == MCU_CORE_8258)
 #include "drivers/8258/analog.h"

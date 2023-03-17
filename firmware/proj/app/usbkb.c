@@ -44,7 +44,7 @@ u32 debug_kbdata_report_media_ok;
 #include "../drivers/usbkeycode.h"
 //#include "../os/ev.h"
 #include "usbmouse.h"
-#include "vendor/8267_master_kma_dongle/rf_frame.h"
+#include "../../vendor/8267_master_kma_dongle/rf_frame.h"
 
 int usbkb_hid_report_normal(u8 ctrl_key, u8 *keycode);
 void usbkb_hid_report(kb_data_t *data);

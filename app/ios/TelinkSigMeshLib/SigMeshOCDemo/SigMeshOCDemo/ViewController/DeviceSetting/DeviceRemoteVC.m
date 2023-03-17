@@ -124,7 +124,7 @@
         }
         
         //2.判断model合法性
-        UInt16 newModelID;
+        UInt16 newModelID = model.getIntModelID;
         UInt16 newCompanyIdentifier = model.getIntCompanyIdentifier;
         if ([weakSelf validateString:cell.modelTF.text.removeAllSapceAndNewlines] && cell.modelTF.text.length <= 8) {
             UInt32 tem = [LibTools uint32From16String:cell.modelTF.text];
@@ -146,7 +146,7 @@
         }
         
         //3.判断pubAdr合法性
-        UInt16 newPubAdr;
+        UInt16 newPubAdr = pubAdr;
         if ([weakSelf validateString:cell.pubAdrTF.text.removeAllSapceAndNewlines] && cell.pubAdrTF.text.length <= 4) {
             newPubAdr = [LibTools uint16From16String:cell.pubAdrTF.text];
         } else {

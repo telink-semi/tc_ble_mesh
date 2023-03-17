@@ -95,7 +95,7 @@
         }];
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(showKeyBindFail) object:nil];
-            [self performSelector:@selector(showKeyBindFail) withObject:nil afterDelay:120.0];//非直连设备进行keybind，多跳的情况下速度会很慢，修改超时时间。
+            [self performSelector:@selector(showKeyBindFail) withObject:nil afterDelay:30.0];
         });
     }
     

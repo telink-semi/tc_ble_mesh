@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -152,16 +153,7 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
                 mesh.getDefaultAppKeyIndex());
 //        KeyBindParameters parameters = KeyBindParameters.getDefault(targetDevice,
 //                mesh.appKey, mesh.appKeyIndex, mesh.netKeyIndex, false);
-        int adr = MeshService.getInstance().getDirectConnectedNodeAddress();
-
         bindingDevice.setBearer(BindingBearer.Any);
-        if (adr != 0) {
-            NodeInfo dirNode = mesh.getDeviceByMeshAddress(adr);
-            if (dirNode != null && dirNode.isLpn()) {
-                bindingDevice.setBearer(BindingBearer.GattOnly);
-            }
-        }
-
         MeshService.getInstance().startBinding(new BindingParameters(bindingDevice));
         showWaitingDialog("binding...");
     }
@@ -241,9 +233,17 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
         dotState = 0;
         handler.removeCallbacks(dotTask);
         handler.post(dotTask);
-        runOnUiThread(() -> {
-            dismissWaitingDialog();
-            showConfirmDialog("Bind Fail, retry?", (dialog, which) -> startKeyBind());
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                dismissWaitingDialog();
+                showConfirmDialog("Bind Fail, retry?", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startKeyBind();
+                    }
+                });
+            }
         });
     }
 }

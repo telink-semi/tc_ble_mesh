@@ -103,7 +103,7 @@ static SigMeshLib *shareLib = nil;
     /* 用于接收到segment pdu时，如果存在应用层的重试，则在该地方修正一下重试定时器的时间。注意：当前直接callback解密后的networkPdu，方便后期新增一些优化的逻辑代码 */
     if (networkPdu.isSegmented) {
         if (_receiveSegmentTimer == nil) {
-//            TeLogDebug(@"==========RxBusy标志开始");
+            TeLogDebug(@"==========RxBusy标志开始");
             __weak typeof(self) weakSelf = self;
             _receiveSegmentTimer = [BackgroundTimer scheduledTimerWithTimeInterval:_receiveSegmentMessageTimeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
                 [weakSelf cleanReceiveSegmentBusyStatus];
@@ -119,9 +119,9 @@ static SigMeshLib *shareLib = nil;
 }
 
 - (void)cleanReceiveSegmentBusyStatus {
-//    TeLogDebug(@"");
+    TeLogDebug(@"");
     if (self.isReceiveSegmentPDUing) {
-//        TeLogDebug(@"==========RxBusy标志清除");
+        TeLogDebug(@"==========RxBusy标志清除");
         self.isReceiveSegmentPDUing = NO;
         self.sourceOfReceiveSegmentPDU = 0;
         if (_receiveSegmentTimer) {
@@ -163,7 +163,7 @@ static SigMeshLib *shareLib = nil;
 
 #pragma mark - Send Mesh Messages
 
-- (nullable SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
+- (SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
     UInt8 ttl = localElement.getParentNode.defaultTTL;
     if (![SigHelper.share isRelayedTTL:ttl]) {
         ttl = self.networkManager.defaultTtl;
@@ -171,7 +171,7 @@ static SigMeshLib *shareLib = nil;
     return [self sendMeshMessage:message fromLocalElement:localElement toDestination:destination withTtl:ttl usingApplicationKey:applicationKey command:command];
 }
 
-- (nullable SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
+- (SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command {
 #ifndef TESTMODE
     if (!SigBearer.share.isOpen) {
         TeLogError(@"Send fail! Mesh Network is disconnected!");
@@ -218,7 +218,7 @@ static SigMeshLib *shareLib = nil;
     return messageHandle;
 }
 
-- (nullable SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination command:(SDKLibCommand *)command {
+- (SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination command:(SDKLibCommand *)command {
     UInt8 ttl = self.dataSource.curLocationNodeModel.defaultTTL;
     if (![SigHelper.share isRelayedTTL:ttl]) {
         ttl = self.networkManager.defaultTtl;
@@ -226,7 +226,7 @@ static SigMeshLib *shareLib = nil;
     return [self sendConfigMessage:message toDestination:destination withTtl:ttl command:command];
 }
 
-- (nullable SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt8)initialTtl command:(SDKLibCommand *)command {
+- (SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt8)initialTtl command:(SDKLibCommand *)command {
 #ifndef TESTMODE
     if (!SigBearer.share.isOpen) {
         TeLogError(@"Send fail! Mesh Network is disconnected!");
@@ -269,7 +269,7 @@ static SigMeshLib *shareLib = nil;
     return messageHandle;
 }
 
-- (nullable SigMessageHandle *)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command {
+- (SigMessageHandle *)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command {
 #ifndef TESTMODE
     if (!SigBearer.share.isOpen) {
         TeLogError(@"Send fail! Mesh Network is disconnected!");
@@ -297,11 +297,11 @@ static SigMeshLib *shareLib = nil;
     return messageHandle;
 }
 
-- (nullable NSError *)sendTelinkApiGetOnlineStatueFromUUIDWithMessage:(SigMeshMessage *)message command:(SDKLibCommand *)command {
+- (NSError *)sendTelinkApiGetOnlineStatueFromUUIDWithMessage:(SigMeshMessage *)message command:(SDKLibCommand *)command {
 #ifndef TESTMODE
     if (!SigBearer.share.isOpen) {
         TeLogError(@"Send fail! Mesh Network is disconnected!");
-        return [NSError errorWithDomain:kSigMeshLibCommandMeshDisconnectedErrorMessage code:kSigMeshLibCommandMeshDisconnectedErrorCode userInfo:nil];
+        return nil;
     }
 #endif
     if (self.dataSource == nil) {
@@ -660,8 +660,7 @@ static SigMeshLib *shareLib = nil;
                 break;
             }
         }
-//    } else if ([message isKindOfClass:[SigFilterStatus class]]) {//只处理SigFilterStatus
-    } else if ([message isKindOfClass:[SigStaticProxyConfigurationMessage class]]) {//处理SigStaticProxyConfigurationMessage：包括SigFilterStatus和SigDirectedProxyCapabilitiesStatus
+    } else if ([message isKindOfClass:[SigFilterStatus class]]) {
         NSArray *commands = [NSArray arrayWithArray:_commands];
         for (SDKLibCommand *com in commands) {
             if ([com.curMeshMessage isKindOfClass:[SigStaticAcknowledgedProxyConfigurationMessage class]]) {

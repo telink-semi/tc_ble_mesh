@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"
+#include "proj/tl_common.h"
 #include "sensors_model.h"
 
 #if SENSOR_LIGHTING_CTRL_EN
@@ -30,12 +30,10 @@
 STATIC_ASSERT(MD_CLIENT_EN && MD_SENSOR_EN && SENSOR_GPIO_PIN && SENSOR_LIGHTING_CTRL_ON_MS);
 #endif
 
-#if(MD_SENSOR_EN || MD_BATTERY_EN || MD_LOCATION_EN) 
+#if(MD_SENSOR_EN)
 u32 mesh_md_sensor_addr = FLASH_ADR_MD_SENSOR;
 model_sensor_t			model_sig_sensor;
-#endif
 
-#if(MD_SENSOR_EN)
 #if MD_SENSOR_SERVER_EN
 #if !WIN32
 STATIC_ASSERT(MD_LOCATION_EN == 0);// because use same flash sector to save in mesh_save_map, and should be care of OTA new firmware which add MD_BATTERY_EN
@@ -177,7 +175,7 @@ int mesh_sensor_st_rsp(mesh_cb_fun_par_t *cb_par, u16 prop_id, int par_len)
 {
 	model_common_t *p_model = (model_common_t *)cb_par->model;
 
-	return mesh_tx_sensor_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, 0, cb_par->op_rsp, prop_id, par_len);
+	return mesh_tx_sensor_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, p_model, cb_par->op_rsp, prop_id, par_len);
 }
 
 int mesh_cmd_sig_sensor_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -224,7 +222,7 @@ int mesh_sensor_cadence_st_rsp(mesh_cb_fun_par_t *cb_par, u16 prop_id)
 {
 	model_common_t *p_model = (model_common_t *)cb_par->model;
 
-	return mesh_tx_cadence_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, 0, cb_par->op_rsp, prop_id);
+	return mesh_tx_cadence_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, p_model, cb_par->op_rsp, prop_id);
 }
 
 int mesh_cmd_sig_sensor_cadence_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -341,7 +339,7 @@ int mesh_sensor_settings_st_rsp(mesh_cb_fun_par_t *cb_par, u16 prop_id)
 {
 	model_common_t *p_model = (model_common_t *)cb_par->model;
 
-	return mesh_tx_settings_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, 0, cb_par->op_rsp, prop_id);
+	return mesh_tx_settings_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, p_model, cb_par->op_rsp, prop_id);
 }
 
 int mesh_cmd_sig_sensor_settings_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -385,7 +383,7 @@ int mesh_sensor_setting_st_rsp(mesh_cb_fun_par_t *cb_par, u16 prop_id, u16 setti
 {
 	model_common_t *p_model = (model_common_t *)cb_par->model;
 
-	return mesh_tx_setting_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, 0,cb_par->op_rsp, prop_id, setting_id);
+	return mesh_tx_setting_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, p_model,cb_par->op_rsp, prop_id, setting_id);
 }
 
 int mesh_cmd_sig_sensor_setting_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -465,7 +463,7 @@ int mesh_sensor_column_st_rsp(mesh_cb_fun_par_t *cb_par, u16 prop_id)
 {
 	model_common_t *p_model = (model_common_t *)cb_par->model;
 
-	return mesh_tx_column_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, 0, cb_par->op_rsp, prop_id);
+	return mesh_tx_column_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, p_model, cb_par->op_rsp, prop_id);
 }
 
 int mesh_cmd_sig_sensor_column_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -500,7 +498,7 @@ int mesh_sensor_series_st_rsp(mesh_cb_fun_par_t *cb_par, u16 prop_id)
 {
 	model_common_t *p_model = (model_common_t *)cb_par->model;
 
-	return mesh_tx_series_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, 0, cb_par->op_rsp, prop_id);
+	return mesh_tx_series_st_rsp(cb_par->model_idx, p_model->ele_adr, cb_par->adr_src, 0, p_model, cb_par->op_rsp, prop_id);
 }
 
 int mesh_cmd_sig_sensor_series_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)

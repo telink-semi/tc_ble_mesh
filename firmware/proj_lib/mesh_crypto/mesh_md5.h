@@ -27,7 +27,7 @@
 
 #include "le_crypto.h"
 #include "mesh_crypto.h"
-#include "proj_lib/sig_mesh/app_mesh.h"
+#include "../../proj_lib/sig_mesh/app_mesh.h"
 
 
 typedef int 			S32;

@@ -46,7 +46,6 @@
 #define CellIdentifiers_OnOffModelCellID  @"OnOffModelCell"
 #define CellIdentifiers_LevelAndSliderCellID  @"LevelAndSliderCell"
 #define CellIdentifiers_RemoteElementCellID  @"RemoteElementCell"
-#define CellIdentifiers_EntryCellID  @"EntryCell"
 
 
 //ViewControllerIdentifiers
@@ -71,8 +70,6 @@
 #define ViewControllerIdentifiers_DeviceCompositionDataVCID @"DeviceCompositionDataVC"
 #define ViewControllerIdentifiers_SubnetBridgeListVCID @"SubnetBridgeListVC"
 #define ViewControllerIdentifiers_AddBridgeTableVCID @"AddBridgeTableVC"
-#define ViewControllerIdentifiers_AddForwardingTableVCID @"AddForwardingTableVC"
-#define ViewControllerIdentifiers_ChooseEntryVCID @"ChooseEntryVC"
 #define ViewControllerIdentifiers_SchedulerListViewControllerID  @"SchedulerListViewController"
 #define ViewControllerIdentifiers_SchedulerDetailViewControllerID  @"SchedulerDetailViewController"
 #define ViewControllerIdentifiers_EditModelIDsViewControllerID  @"EditModelIDsViewController"
@@ -85,14 +82,12 @@
 #define ViewControllerIdentifiers_ChooseAndAddDeviceViewControllerID  @"ChooseAndAddDeviceVC"
 #define ViewControllerIdentifiers_ShowQRCodeViewControllerID  @"ShowQRCodeViewController"
 #define ViewControllerIdentifiers_TestVCID  @"TestVC"
-#define ViewControllerIdentifiers_DirectControlListVCID  @"DirectControlListVC"
 
 #define ViewControllerIdentifiers_SingleDeviceViewControllerID  @"SingleDeviceViewController"
 #define ViewControllerIdentifiers_DeviceControlViewControllerID  @"DeviceControlViewController"
 #define ViewControllerIdentifiers_DeviceRemoteVCID  @"DeviceRemoteVC"
 #define ViewControllerIdentifiers_DeviceGroupViewControllerID  @"DeviceGroupViewController"
 #define ViewControllerIdentifiers_DeviceSettingViewControllerID  @"DeviceSettingViewController"
-#define ViewControllerIdentifiers_ForwardingTableVCID  @"ForwardingTableVC"
 #define ViewControllerIdentifiers_DeviceSubscriptionListViewControllerID  @"DeviceSubscriptionListViewController"
 #define ViewControllerIdentifiers_SensorVCID  @"SensorVC"
 #define ViewControllerIdentifiers_ShareTipsVCID @"ShareTipsVC"
@@ -133,55 +128,9 @@
 #define Tip_GetCompositionFail   @"get composition fail ..."
 #define Tip_GetCompositionSuccess   @"get composition success ..."
 
-#define Tip_GetModelsMetadata   @"get models Metadata ..."
-#define Tip_GetModelsMetadataFail   @"get models Metadata fail ..."
-#define Tip_GetModelsMetadataSuccess   @"get models Metadata success ..."
-
-#define Tip_GetSARTransmitter   @"get SARTransmitter ..."
-#define Tip_GetSARTransmitterFail   @"get SARTransmitter fail ..."
-#define Tip_GetSARTransmitterSuccess   @"get SARTransmitter success ..."
-#define Tip_SetSARTransmitter   @"set SARTransmitter ..."
-#define Tip_SetSARTransmitterFail   @"set SARTransmitter fail ..."
-#define Tip_SetSARTransmitterSuccess   @"set SARTransmitter success ..."
-
-#define Tip_GetSARReceiver   @"get SARReceiver ..."
-#define Tip_GetSARReceiverFail   @"get SARReceiver fail ..."
-#define Tip_GetSARReceiverSuccess   @"get SARReceiver success ..."
-#define Tip_SetSARReceiver   @"set SARReceiver ..."
-#define Tip_SetSARReceiverFail   @"set SARReceiver fail ..."
-#define Tip_SetSARReceiverSuccess   @"set SARReceiver success ..."
-
-#define Tip_ClearSolicitationPduRplItems   @"clear solicitationPduRplItems ..."
-#define Tip_ClearSolicitationPduRplItemsFail   @"clear solicitationPduRplItems fail ..."
-#define Tip_ClearSolicitationPduRplItemsSuccess   @"clear solicitationPduRplItems success ..."
-#define Tip_ClearSolicitationPduRplItemsUnacknowledged   @"clear solicitationPduRplItems unacknowledged ..."
-#define Tip_ClearSolicitationPduRplItemsUnacknowledgedFail   @"clear solicitationPduRplItems unacknowledged fail ..."
-#define Tip_ClearSolicitationPduRplItemsUnacknowledgedSuccess   @"clear solicitationPduRplItems unacknowledged success ..."
-
-#define Tip_GetOnDemandPrivateProxy   @"get onDemandPrivateProxy ..."
-#define Tip_GetOnDemandPrivateProxyFail   @"get onDemandPrivateProxy fail ..."
-#define Tip_GetOnDemandPrivateProxySuccess   @"get onDemandPrivateProxy success ..."
-#define Tip_SetOnDemandPrivateProxy   @"set onDemandPrivateProxy ..."
-#define Tip_SetOnDemandPrivateProxyFail   @"set onDemandPrivateProxy fail ..."
-#define Tip_SetOnDemandPrivateProxySuccess   @"set onDemandPrivateProxy success ..."
-
 #define Tip_AddSubnetBridge   @"add subnet bridge ..."
 #define Tip_AddSubnetBridgeFail   @"add subnet bridge fail ..."
 #define Tip_AddSubnetBridgeSuccess   @"add subnet bridge success ..."
-
-#define Tip_SetDirectControl   @"set direct control ..."
-#define Tip_SetDirectControlFail   @"set direct control fail ..."
-#define Tip_SetDirectControlSuccess   @"set direct control success ..."
-
-#define Tip_AddFrowardingTable   @"add forwarding table ..."
-#define Tip_AddFrowardingTableSomeFail   @"some node add forwarding table fail ..."
-#define Tip_AddFrowardingTableAllFail   @"all node add forwarding table fail ..."
-#define Tip_AddFrowardingTableSuccess   @"add forwarding table success ..."
-#define Tip_EditFrowardingTable   @"edit forwarding table ..."
-#define Tip_EditFrowardingTableSomeFail   @"some node edit forwarding table fail ..."
-#define Tip_EditFrowardingTableAllFail   @"all node edit forwarding table fail ..."
-#define Tip_EditFrowardingTableSuccess   @"edit forwarding table success ..."
-
 
 //分享使用方式(是否使用蓝牙点对点传输，YES为二维码加蓝牙点对点，NO为存二维码)
 #define kShareWithBluetoothPointToPoint (YES)
@@ -199,12 +148,11 @@
 #define kFastAddType  @"kFastAddType"
 #define kDLEType  @"kDLEType"
 #define kGetOnlineStatusType  @"kGetOnlineStatusType"
-#define kAddStaticOOBDeviceByNoOOBEnable  @"kAddStaticOOBDeviceByNoOOBEnable"
+#define kAddStaticOOBDevcieByNoOOBEnable  @"kAddStaticOOBDevcieByNoOOBEnable"
 #define kDistributorAddress  @"kDistributorAddress"
 #define kDistributorPolicy  @"kDistributorPolicy"
 #define kUpdateNodeAddresses  @"kUpdateNodeAddresses"
 #define kRootCertificateName  @"kRootCertificateName"
-#define kDirectedSecurityEnable  @"kDirectedSecurityEnable"
 
 
 //app通用蓝色

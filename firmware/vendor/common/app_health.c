@@ -63,62 +63,26 @@ int mesh_health_cur_sts_publish(u8 idx)
 	return err;
 }
 
-int mesh_health_cur_fault_add(u8 fault)
-{
-	int err = -1;
-	if(NO_FAULT == fault){
-		return err ;
-	}
-
-	mesh_health_current_sts_t *p_cur_st = &model_sig_health.srv.health_mag.cur_sts;
-	foreach(i, p_cur_st->cur_fault_idx){
-		if(p_cur_st->fault_array[i]){
-			return 0;
-		}
-	}
-	
-	
-	if(p_cur_st->cur_fault_idx < HEALTH_TEST_LEN){
-		p_cur_st->fault_array[p_cur_st->cur_fault_idx++] = fault;
-		mesh_health_fault_sts_t *p_fault_st = &model_sig_health.srv.health_mag.fault_sts;
-		if(p_fault_st->cur_fault_idx < HEALTH_TEST_LEN){
-			p_fault_st->fault_array[p_fault_st->cur_fault_idx++] = fault;
-		}
-	}
-	return -1;	
-}
-
-int mesh_health_cur_fault_remove(u8 fault)
-{	
-	mesh_health_current_sts_t *p_fault_st = &model_sig_health.srv.health_mag.cur_sts;
-
-	if((NO_FAULT == fault) || !p_fault_st->cur_fault_idx){
-		return 0 ;
-	}
-	
-	foreach(i, p_fault_st->cur_fault_idx){
-		if(p_fault_st->fault_array[i] == fault){			
-			memcpy(p_fault_st->fault_array+i, p_fault_st->fault_array+i+1, p_fault_st->cur_fault_idx-1-i);
-			p_fault_st->cur_fault_idx--;
-			break;
-		}
-	}
-	return 0;
-}
-
 int mesh_cmd_sig_health_cur_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	int err = 0;
-	if(cb_par->model){
-    }
+	int err =-1;
+	model_health_common_t *p_model = (model_health_common_t *)cb_par->model;
+	mesh_health_current_sts_t *p_cur_sts_t;
+	p_cur_sts_t = &(model_sig_health.srv.health_mag.cur_sts);
+	model_sig_health.srv.health_mag.dst_adr = cb_par->adr_src;
+	err = mesh_tx_cmd_rsp(HEALTH_CURRENT_STATUS,(u8 *)(p_cur_sts_t),OFFSETOF(mesh_health_current_sts_t,fault_array)+model_sig_health.srv.health_mag.cur_sts.cur_fault_idx,p_model->com.ele_adr,cb_par->adr_src,0,0);
 	return err;
 
 }
 int mesh_cmd_sig_health_fault_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = 0;
-	if(cb_par->model){
-    }
+	/*
+	model_health_common_t *p_model = (model_health_common_t *)cb_par->model;
+	mesh_health_fault_sts_t *p_fault_sts_t;
+	p_fault_sts_t = &(health_mag_t.fault_sts);
+	err = mesh_tx_cmd_rsp(HEALTH_CURRENT_STATUS,(u8 *)(p_fault_sts_t),sizeof(mesh_health_current_sts_t),p_model->com.ele_adr,cb_par->adr_src,0,0);
+	*/
 	return err;
 }
 

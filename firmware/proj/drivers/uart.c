@@ -23,7 +23,7 @@
  *
  *******************************************************************************************************/
 #include "uart.h"
-#include "tl_common.h"
+#include "../../proj/tl_common.h"
 //#include "../mcu/watchdog_i.h"
 
 #define     STARTTX         (reg_dma_tx_rdy0 |= BIT(1))                     //trigger dma1 channel to transfer.dma1 is the uart tx channel

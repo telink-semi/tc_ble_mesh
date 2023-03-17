@@ -23,7 +23,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class SigNetkeyModel,SigProvisionerModel,SigAppkeyModel,SigSceneModel,SigGroupModel,SigNodeModel, SigIvIndex,SigExclusionModel,SigBaseMeshMessage, SigForwardingTableModel;
+@class SigNetkeyModel,SigProvisionerModel,SigAppkeyModel,SigSceneModel,SigGroupModel,SigNodeModel, SigIvIndex,SigExclusionModel,SigBaseMeshMessage;
 
 @protocol SigDataSourceDelegate <NSObject>
 @optional
@@ -79,6 +79,8 @@
 /// The partial property indicates if this Mesh Configuration Database is part of a larger database.
 @property (nonatomic, assign) bool partial;
 
+@property (nonatomic, copy) NSString *ivIndex;
+
 @property (nonatomic,strong) NSMutableArray <SigEncryptedModel *>*encryptedArray;
 
 /* default config value */
@@ -102,7 +104,7 @@
 @property (nonatomic, assign) BOOL needPublishTimeModel;
 @property (nonatomic, strong) NSMutableArray <SigOOBModel *>*OOBList;
 /// `YES` means SDK will add staticOOB devcie that never input staticOOB data by noOOB provision. `NO` means SDK will not add staticOOB devcie that never input staticOOB data.
-@property (nonatomic, assign) BOOL addStaticOOBDeviceByNoOOBEnable;
+@property (nonatomic, assign) BOOL addStaticOOBDevcieByNoOOBEnable;
 /// default retry count of every command. default is 2.
 @property (nonatomic, assign) UInt8 defaultRetryCount;
 /// 默认一个provisioner分配的设备地址区间，默认值为kAllocatedUnicastRangeHighAddress（0x400）.
@@ -137,20 +139,6 @@
 /// certificate-base provision 的根证书。 默认为APP端写死的root.der，开发者也可以自行修改该证书。
 @property (nonatomic, strong) NSData *defaultRootCertificateData;
 
-/// 缓存mesh里面的Direct Forwarding Table列表
-@property (nonatomic,strong) NSMutableArray <SigForwardingTableModel *>*forwardingTableModelList;
-/// v3.3.3.6及之后的版本添加，YES则对于支持Aggregator的节点，keybind会自动使用Aggregator进行发送。NO则默认都不使用Aggregator进行keybind。
-@property (nonatomic, assign) BOOL aggregatorEnable;
-
-/// cache属性，不导出分享的JSON，也不缓存于本地的JSON，只单独缓存于kLocationIvIndexAndSequenceNumberDictionary_key这个字典里面。
-@property (nonatomic, copy) NSString *ivIndex;
-/// v3.3.3.6及之后的版本添加，cache属性，不导出分享的JSON，也不缓存于本地的JSON，只单独缓存于kLocationIvIndexAndSequenceNumberDictionary_key这个字典里面。
-@property (nonatomic, copy) NSString *sequenceNumber;
-@property (nonatomic,assign) UInt32 ivIndexUInt32;
-@property (nonatomic,assign) UInt32 sequenceNumberUInt32;
-
-/// v3.3.3.6及之后的版本添加，
-@property (nonatomic, assign) BOOL sendByDirectedSecurity;
 
 //取消该限制：因为客户可以init该类型，用于创建一个中间的mesh数据，用于比较前后的mesh信息。
 //+ (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -175,21 +163,6 @@
 ///Special handling: get the uuid of current provisioner.
 - (NSString *)getCurrentProvisionerUUID;
 
-/// Special handling: store the ivIndex+sequenceNumber of current meshUUID+provisionerUUID+unicastAddress.
-- (void)saveCurrentIvIndex:(UInt32)ivIndex sequenceNumber:(UInt32)sequenceNumber;
-- (NSString *)getLocationIvIndexString;
-- (UInt32)getLocationIvIndexUInt32;
-- (NSString *)getLocationSequenceNumberString;
-- (UInt32)getLocationSequenceNumberUInt32;
-- (BOOL)existLocationIvIndexAndLocationSequenceNumber;
-- (UInt32)getIvIndexUInt32;
-- (void)setIvIndexUInt32:(UInt32)ivIndexUInt32;
-- (UInt32)getSequenceNumberUInt32;
-- (void)setSequenceNumberUInt32:(UInt32)sequenceNumberUInt32;
-- (NSData *)getIvIndexData;
-- (void)updateIvIndexUInt32FromBeacon:(UInt32)ivIndexUInt32;
-- (void)updateSequenceNumberUInt32WhenSendMessage:(UInt32)sequenceNumberUInt32;
-
 /// Init SDK location Data(include create mesh.json, check provisioner, provisionLocation)
 - (void)configData;
 
@@ -213,7 +186,14 @@
 
 - (UInt16)getNewSceneAddress;
 - (void)saveSceneModelWithModel:(SigSceneModel *)model;
-- (void)deleteSceneModelWithModel:(SigSceneModel *)model;
+- (void)delectSceneModelWithModel:(SigSceneModel *)model;
+
+- (NSData *)getIvIndexData;
+- (void)updateIvIndexString:(NSString *)ivIndexString;
+
+- (int)getCurrentProvisionerIntSequenceNumber;
+- (void)updateCurrentProvisionerIntSequenceNumber:(int)sequenceNumber;
+- (void)setLocationSno:(UInt32)sno;
 
 - (SigEncryptedModel *)getSigEncryptedModelWithAddress:(UInt16)address;
 ///Special handling: determine model whether exist current meshNetwork
@@ -240,8 +220,6 @@
 - (SigNodeModel *)getNodeWithAddress:(UInt16)address;
 - (SigNodeModel *)getDeviceWithMacAddress:(NSString *)macAddress;
 - (SigNodeModel *)getCurrentConnectedNode;
-
-- (SigProvisionerModel * _Nullable)getProvisionerModelWithAddress:(UInt16)address;
 
 - (ModelIDModel *)getModelIDModel:(NSNumber *)modelID;
 

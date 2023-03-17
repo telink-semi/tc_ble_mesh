@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"
+#include "proj/tl_common.h"
 #include "proj_lib/ble/ble_common.h"
 #include "proj_lib/ble/trace.h"
 #include "proj_lib/pm.h"
@@ -36,9 +36,6 @@
 #if AIS_ENABLE
 #include "proj_lib/mesh_crypto/aes_cbc.h"
 #include "user_ali.h"
-#endif
-#if NMW_ENABLE
-#include "user_nmw.h"
 #endif
 
 _attribute_data_retention_ int ota_adr_index = -1;
@@ -475,15 +472,6 @@ void bls_ota_procTimeout(void)
 	if(blt_ota_start_tick && clock_time_exceed(blt_ota_start_tick , blt_ota_timeout_us)){  //OTA timeout
 		rf_link_slave_ota_finish_led_and_reboot(OTA_TIMEOUT);
 	}
-#if NMW_ENABLE
-	if(blt_ota_start_tick && nmw_ota_state.seg_timeout_tick && clock_time_exceed(nmw_ota_state.seg_timeout_tick, NMW_OTA_SEG_WAIT_MS*1000)){
-		nmw_ota_seg_report();
-	}
-	
-	if(nmw_ota_state.errno_pending){
-		nmw_ota_err_report(nmw_ota_state.errno);
-	}
-#endif
 }
 
 void blt_ota_finished_flag_set(u8 reset_flag)

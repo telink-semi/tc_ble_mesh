@@ -101,34 +101,58 @@ TelinkLogWithFile(NO,(@"[Verbose][%s Line %d] " fmt), __func__, __LINE__, ##__VA
 }
 
 
-typedef enum : UInt8 {
-    // 00000001 SigLogFlagError
+typedef enum : NSUInteger {
+    /**
+         *  0...00001 SigLogFlagError
+         */
     SigLogFlagError = (1 << 0),
-    // 00000010 SigLogFlagWarning
+    /**
+         *  0...00010 SigLogFlagWarning
+         */
     SigLogFlagWarning = (1 << 1),
-    // 00000100 SigLogFlagInfo
+    /**
+         *  0...00100 SigLogFlagInfo
+         */
     SigLogFlagInfo = (1 << 2),
-    // 00001000 SigLogFlagDebug
+    /**
+         *  0...01000 SigLogFlagDebug
+         */
     SigLogFlagDebug = (1 << 3),
-    // 00010000 SigLogFlagVerbose
+    /**
+         *  0...10000 SigLogFlagVerbose
+         */
     SigLogFlagVerbose = (1 << 4),
 } SigLogFlag;
 
-typedef enum : UInt8 {
-    // No logs
+typedef enum : NSUInteger {
+    /**
+         *  No logs
+         */
     SigLogLevelOff = 0,
-    // Error logs only
+    /**
+         *  Error logs only
+         */
     SigLogLevelError = (SigLogFlagError),
-    // Error and warning logs
+    /**
+         *  Error and warning logs
+         */
     SigLogLevelWarning = (SigLogLevelError | SigLogFlagWarning),
-    // Error, warning and info logs
+    /**
+         *  Error, warning and info logs
+         */
     SigLogLevelInfo = (SigLogLevelWarning | SigLogFlagInfo),
-    // Error, warning, info and debug logs
+    /**
+         *  Error, warning, info and debug logs
+         */
     SigLogLevelDebug = (SigLogLevelInfo | SigLogFlagDebug),
-    // Error, warning, info, debug and verbose logs
+    /**
+         *  Error, warning, info, debug and verbose logs
+         */
     SigLogLevelVerbose = (SigLogLevelDebug | SigLogFlagVerbose),
-    // All logs (11111111)
-    SigLogLevelAll = 0xFF,
+    /**
+        *  All logs (1...11111)
+        */
+    SigLogLevelAll = NSUIntegerMax,
 } SigLogLevel;
 
 @interface SigLogger : NSObject

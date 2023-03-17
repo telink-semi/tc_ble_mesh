@@ -64,21 +64,11 @@ extern "C" {
 #define HCI_USE_USB		2
 
 #ifndef HCI_ACCESS
-
-#if SMART_PROVISION_ENABLE
-#define HCI_ACCESS		HCI_USE_UART  // for reuse hci_rx_fifo and hci_tx_fifo callback
-#else
 #define HCI_ACCESS		HCI_USE_USB
-#endif
 
 #if (HCI_ACCESS==HCI_USE_UART)
-#if (PCBA_8258_SEL == PCBA_8258_DONGLE_48PIN)
-#define UART_TX_PIN		UART_TX_PD7
-#define UART_RX_PIN		UART_RX_PA0
-#else
 #define UART_TX_PIN		UART_TX_PB1
 #define UART_RX_PIN		UART_RX_PB0
-#endif
 #endif
 #endif
 

@@ -22,14 +22,14 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"
+#include "../../proj/tl_common.h"
 
-#include "proj/mcu/watchdog_i.h"
-#include "vendor/common/user_config.h"
-#include "proj_lib/rf_drv.h"
-#include "proj_lib/pm.h"
-#include "proj_lib/ble/ll/ll.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "../../proj/mcu/watchdog_i.h"
+#include "../../vendor/common/user_config.h"
+#include "../../proj_lib/rf_drv.h"
+#include "../../proj_lib/pm.h"
+#include "../../proj_lib/ble/ll/ll.h"
+#include "../../proj_lib/ble/service/ble_ll_ota.h"
 
 
 

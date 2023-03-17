@@ -85,7 +85,7 @@
 #define U32_CPY(addr1,addr2)	U32_SET(addr1, U32_GET(addr2))
 
 #define MAKE_U16(h,l) 			((unsigned short)(((h) << 8) | (l)))
-#define MAKE_U32(a,b,c,d)		((unsigned short)(((a) << 24) | ((b) << 16) | ((c) << 8) | (d)))
+#define MAKE_U32(a,b,c,d)		((unsigned short)(((a) << 24) | ((b) << 16) ((c) << 8) | (d)))
 
 #define BOUND(x, l, m)			((x) < (l) ? (l) : ((x) > (m) ? (m) : (x)))
 #define SET_BOUND(x, l, m)		((x) = BOUND(x, l, m))
@@ -152,7 +152,6 @@ void swap56(u8 dst[7], const u8 src[7]);
 void swap64(u8 dst[8], const u8 src[8]);
 
 void swap128(u8 dst[16], const u8 src[16]);
-u64 reverse_bit64(u64 src);
 
 void net_store_16(u8 *buffer, u16 pos, u16 value);
 

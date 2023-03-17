@@ -151,9 +151,7 @@ typedef void(^responsePrivateGattProxyStatusMessageBlock)(UInt16 source,UInt16 d
 typedef void(^responsePrivateNodeIdentityStatusMessageBlock)(UInt16 source,UInt16 destination,SigPrivateNodeIdentityStatus *responseMessage);
 
 // callback about addDevice
-typedef void(^addDevice_startConnectCallBack)(NSString *identify,UInt16 address);
-typedef void(^addDevice_startProvisionCallBack)(NSString *identify,UInt16 address);
-typedef void(^addDevice_provisionSuccessCallBack)(NSString *identify,UInt16 address);
+typedef void(^addDevice_prvisionSuccessCallBack)(NSString *identify,UInt16 address);
 typedef void(^addDevice_keyBindSuccessCallBack)(NSString *identify,UInt16 address);
 typedef void(^AddDeviceFinishCallBack)(void);
 
@@ -188,11 +186,6 @@ typedef enum : UInt8 {
 @property (nonatomic,strong) SigNetkeyModel *curNetkey;
 @property (nonatomic,strong) SigAppkeyModel *curAppkey;
 @property (nonatomic,strong) SigIvIndex *curIvIndex;
-//v3.3.3.6之后才新增的两个参数
-/// NO标识优先使用unSegment数据包进行发送，YES标识优先使用segment数据包进行发送。SDK默认会优先使用unSegment发送数据，如果超出SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength的长度，则会使用segment发送数据。
-@property (nonatomic, assign) BOOL sendBySegmentPDU;
-/// 值不可为0，且非零值为当前指令不进行分包时单个unSegment包的最大LowerTransportPDU长度。(非零值-3)为当前指令进行分包时单个发包的最大LowerTransportPDU长度。默认为SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength。
-@property (nonatomic, assign) UInt16 unsegmentedMessageLowerTransportPDUMaxLength;
 
 #pragma mark - Save call back
 @property (nonatomic,copy) resultBlock resultCallback;
@@ -308,7 +301,6 @@ typedef enum : UInt8 {
 
 
 + (SigMessageHandle *)configAppKeyAddWithDestination:(UInt16)destination appkeyModel:(SigAppkeyModel *)appkeyModel retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
-+ (SigMessageHandle *)configAppKeyAddWithDestination:(UInt16)destination appkeyModel:(SigAppkeyModel *)appkeyModel sendBySegmentPdu:(BOOL)sendBySegmentPdu unsegmentedMessageLowerTransportPDUMaxLength:(UInt16)unsegmentedMessageLowerTransportPDUMaxLength retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (SigMessageHandle *)configAppKeyUpdateWithDestination:(UInt16)destination appkeyModel:(SigAppkeyModel *)appkeyModel retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (SigMessageHandle *)configAppKeyDeleteWithDestination:(UInt16)destination appkeyModel:(SigAppkeyModel *)appkeyModel retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigAppKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
@@ -362,8 +354,6 @@ typedef enum : UInt8 {
 
 + (SigMessageHandle *)configModelAppBindWithDestination:(UInt16)destination applicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (SigMessageHandle *)configModelAppUnbindWithDestination:(UInt16)destination applicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
-+ (SigMessageHandle *)configModelAppBindWithDestination:(UInt16)destination applicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier isVendorModelID:(BOOL)isVendorModelID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
-+ (SigMessageHandle *)configModelAppUnbindWithDestination:(UInt16)destination applicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier isVendorModelID:(BOOL)isVendorModelID retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigModelAppStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 + (SigMessageHandle *)configNetKeyAddWithDestination:(UInt16)destination NetworkKeyIndex:(UInt16)networkKeyIndex networkKeyData:(NSData *)networkKeyData retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 + (SigMessageHandle *)configNetKeyDeleteWithDestination:(UInt16)destination NetworkKeyIndex:(UInt16)networkKeyIndex retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseConfigNetKeyStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
@@ -626,29 +616,7 @@ function 1:AUTO if you need do provision , you should call this method, and it'l
 @param keyBindFail call back when a device keybind fail
 @param finish finish add the available devices list to the mesh
 */
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish;
-
-
-/**
- function 1.1:AUTO if you need do provision , you should call this method, and it'll call back what you need. add startConnectCallBack and startProvisionCallBack.
- 
- @param address address of new device
- @param networkKey network key, which provsion need, you can see it as password of the mesh
- @param netkeyIndex netkey index
- @param appkeyModel appkey model
- @param unicastAddress address of remote device
- @param uuid uuid of remote device
- @param type KeyBindType_Normal是普通添加模式，KeyBindType_Quick是快速添加模式
- @param isAuto 添加完成一个设备后，是否自动扫描添加下一个设备
- @param startConnect call back when start connect device
- @param startProvision call back when start provision device
- @param provisionSuccess call back when a device provision successful
- @param provisionFail call back when a device provision fail
- @param keyBindSuccess call back when a device keybind successful
- @param keyBindFail call back when a device keybind fail
- @param finish finish add the available devices list to the mesh
- */
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto startConnect:(addDevice_startConnectCallBack)startConnect startProvision:(addDevice_startProvisionCallBack)startProvision provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish;
++ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish;
 
 
 /**
@@ -666,7 +634,7 @@ function 1:special if you need do provision , you should call this method, and i
 @param keyBindSuccess call back when a device keybind successful
 @param keyBindFail call back when a device keybind fail
 */
-+ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
++ (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
 
 
 /*
@@ -687,7 +655,7 @@ peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+provisionTyp
 /// @param provisionFail callback when provision fail.
 /// @param keyBindSuccess callback when keybind success.
 /// @param keyBindFail callback when keybind fail.
-+ (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
++ (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail;
 
 
 /// provision
@@ -699,7 +667,7 @@ peripheral+unicastAddress+networkKey+netkeyIndex+appKey+appkeyIndex+provisionTyp
 /// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-+ (void)startProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
++ (void)startProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 
 /// keybind

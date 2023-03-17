@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"
+#include "../../proj/tl_common.h"
 
 
 #if (    __PROJECT_8261_MASTER_KMA_DONGLE__ || __PROJECT_8266_MASTER_KMA_DONGLE__ \
@@ -30,11 +30,11 @@
 
 
 
-#include "proj_lib/ble/ll/ll.h"
-#include "proj_lib/ble/ble_smp.h"
-#include "proj_lib/ble/trace.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
-#include "proj_lib/ble/blt_config.h"
+#include "../../proj_lib/ble/ll/ll.h"
+#include "../../proj_lib/ble/ble_smp.h"
+#include "../../proj_lib/ble/trace.h"
+#include "../../proj_lib/ble/service/ble_ll_ota.h"
+#include "../../proj_lib/ble/blt_config.h"
 
 
 extern u8 read_by_type_req_uuidLen;

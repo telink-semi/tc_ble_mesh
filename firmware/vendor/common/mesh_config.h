@@ -98,10 +98,6 @@ extern "C" {
 #define FAST_PROVISION_ENABLE		 0
 #endif
 
-#if __PROJECT_MESH_PRO__
-#define SMART_PROVISION_ENABLE		 0 // just for gateway, and node should open PROVISION_FLOW_SIMPLE_EN
-#endif
-
 #define BEACON_ENABLE			0
 //ms, should be multiple of 10
 #define BEACON_INTERVAL			100
@@ -164,8 +160,6 @@ extern "C" {
 #define MESH_PIPA_ENABLE        9   // 
 #define MESH_TAIBAI_ENABLE			10
 #define MESH_SIG_PVT_DUAL_ENABLE	11 // sig mesh && private mesh dual mode with bootloader
-#define MESH_NMW_ENABLE			12
-#define MESH_LLSYNC_ENABLE		13
 
 #ifndef MESH_USER_DEFINE_MODE
 #if __PROJECT_MESH_PRO__
@@ -194,12 +188,9 @@ extern "C" {
 #define PROV_AUTH_LEAK_REFLECT_EN		1
 #define PROV_AUTH_LEAK_RECREATE_KEY_EN	1
 #endif
-
 // vendor id list
 #define SHA256_BLE_MESH_PID		0x01A8
 #define VENDOR_ID_MI		    0x038F
-#define VENDOR_ID_NMW			0x027D
-#define VENDOR_ID_LLSYNC		0x013A
 
 // mi product type 
 #define MI_PRODUCT_TYPE_CT_LIGHT		0x01
@@ -313,24 +304,6 @@ extern "C" {
 #define MESH_NAME					"telink_mesh1"
 #define MESH_PWD					"123"
 #define MESH_LTK					{0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf}
-#elif (MESH_USER_DEFINE_MODE == MESH_NMW_ENABLE)
-#define SUBSCRIPTION_SHARE_EN		1
-#define VENDOR_ID 					VENDOR_ID_NMW
-#define NMW_ENABLE					1
-#define AIS_ENABLE					1
-#define PROVISION_FLOW_SIMPLE_EN    1
-#define ALI_MD_TIME_EN				0
-#define ALI_NEW_PROTO_EN			0
-#elif (MESH_USER_DEFINE_MODE == MESH_LLSYNC_ENABLE)
-#define LLSYNC_ENABLE				1
-#define LLSYNC_PROVISION_AUTH_OOB	LLSYNC_ENABLE
-#define LLSYNC_LOG_EN				(1 && LLSYNC_ENABLE && HCI_LOG_FW_EN)	// print log of llsync SDK
-#define BLT_SOFTWARE_TIMER_ENABLE	LLSYNC_ENABLE
-
-#define PROVISION_SUCCESS_QUICK_RECONNECT_ENABLE	1
-#define SUBSCRIPTION_SHARE_EN		1
-#define VENDOR_ID 					VENDOR_ID_LLSYNC
-#define PROVISION_FLOW_SIMPLE_EN    1
 #elif (DEBUG_CFG_CMD_GROUP_AK_EN)
 #define SUBSCRIPTION_SHARE_EN		1
 #define AIS_ENABLE					0
@@ -370,14 +343,15 @@ extern "C" {
 	#else
 	#define DU_PID						7003001
 	#endif
-	#if(DU_PID == 0x006b2d1d)
+#if(DU_PID == 0x006b2d1d)
 	#define DU_BIND_CHECK_EN            1
-	#else
+#else
 	#define DU_BIND_CHECK_EN            0
-	#endif
+#endif
+	
 #else
 #define DU_LPN_EN	0
-#define DU_ENABLE 	0
+#define DU_ENABLE 0
 #endif
 
 #ifndef MI_API_ENABLE
@@ -394,15 +368,6 @@ extern "C" {
 #endif
 #ifndef DUAL_MESH_SIG_PVT_EN
 #define DUAL_MESH_SIG_PVT_EN  0
-#endif
-#ifndef NMW_ENABLE
-#define NMW_ENABLE	  0
-#endif
-#ifndef AIS_ENABLE
-#define AIS_ENABLE					0
-#endif
-#ifndef LLSYNC_ENABLE
-#define LLSYNC_ENABLE				0
 #endif
 
 #if MI_API_ENABLE
@@ -680,10 +645,13 @@ extern "C" {
 #define MD_SERVER_EN                1   // SIG and vendor models
 #define MD_CLIENT_EN                1   // just SIG models
 #define MD_CLIENT_VENDOR_EN         1
-
+    #if __PROJECT_MESH_PRO__
 #define MD_SENSOR_SERVER_EN			0	
 #define MD_SENSOR_CLIENT_EN		    0	
-
+    #else
+#define MD_SENSOR_SERVER_EN			MD_SERVER_EN	
+#define MD_SENSOR_CLIENT_EN		    MD_CLIENT_EN	
+    #endif
 #elif(__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)     // GATEWAY
 	#if MCU_CORE_TYPE == MCU_CORE_8269 // ram is not enough ,it will have different settings for 69 and 5x .
 #define MD_DEF_TRANSIT_TIME_EN      1
@@ -752,12 +720,8 @@ extern "C" {
 #define MD_PROPERTY_EN				0
 #define	MD_LOCATION_EN				0	// location,sensor,battery use same flash addr, but one sector max store 6 models
 #define MD_BATTERY_EN				0
-	#if (__PROJECT_MESH_LPN__||__PROJECT_MESH_SWITCH__||__PROJECT_SPIRIT_LPN__)
-// not support MD_DF_EN and MD_SBR_EN
-	#else
 #define MD_DF_EN					0
 #define MD_SBR_EN					0
-	#endif
 #define MD_SAR_EN					0
 #define MD_ON_DEMAND_PROXY_EN		0
 #define	MD_OP_AGG_EN				0
@@ -851,7 +815,7 @@ extern "C" {
     #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
 #define ELE_CNT_EVERY_LIGHT         3
     #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL)
-        #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE || LLSYNC_ENABLE)
+        #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 #define ELE_CNT_EVERY_LIGHT         1   // 4, comfirm later
         #else
 #define ELE_CNT_EVERY_LIGHT         4

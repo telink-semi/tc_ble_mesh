@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "tl_common.h"
+#include "proj/tl_common.h"
 u8 gateway_cmd_from_host_ctl(u8 *p, u16 len );
 u8 gateway_upload_mac_address(u8 *p_mac,u8 *p_adv);
 void set_gateway_provision_sts(unsigned char en);
@@ -38,7 +38,7 @@ u8 gateway_upload_node_info(u16 unicast);
 u8 gateway_upload_mesh_ota_sts(u8 *p_dat,int len);
 u8 gateway_upload_mesh_sno_val();
 u8 gateway_upload_cmd_rsp(u8 *p_rsp,u8 len);
-u8 gateway_upload_ivi(u8 *p_ivi);
+
 u8 gateway_cmd_from_host_ota(u8 *p, u16 len );
 u8 gateway_cmd_from_host_mesh_ota(u8 *p, u16 len );
 u8 gateway_upload_ividx(u8 *p_ivi);

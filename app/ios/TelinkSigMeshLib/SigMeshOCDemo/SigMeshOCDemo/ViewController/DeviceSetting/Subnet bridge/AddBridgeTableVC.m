@@ -103,11 +103,6 @@
     self.tableView.allowsSelection = NO;
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(BridgeTableItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(BridgeTableItemCell.class)];
-    //iOS 15中 UITableView 新增了一个属性：sectionHeaderTopPadding。此属性会给每一个 section header 增加一个默认高度，当我们使用 UITableViewStylePlain 初始化UITableView 的时候，系统默认给 section header 增高了22像素。
-    if(@available(iOS 15.0,*)) {
-        self.tableView.sectionHeaderTopPadding = 0;
-    }
-    
     SigSubnetBridgeModel *m = [[SigSubnetBridgeModel alloc] initWithDirections:SigDirectionsFieldValues_bidirectional netKeyIndex1:SigDataSource.share.netKeys.lastObject.index netKeyIndex2:SigDataSource.share.netKeys.firstObject.index address1:0x0400 address2:0x0004];
     self.bridgeModel = m;
     self.titleArr = @[@"Direction",@"Net Key 1",@"Net Key 2",@"Address1 : 0x",@"Address2 : 0x"];

@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigBaseMeshMessage : NSObject
 
 /// Message parameters as Data.
-@property (nonatomic,strong,nullable) NSData *parameters;
+@property (nonatomic,strong) NSData *parameters;
 
 @end
 

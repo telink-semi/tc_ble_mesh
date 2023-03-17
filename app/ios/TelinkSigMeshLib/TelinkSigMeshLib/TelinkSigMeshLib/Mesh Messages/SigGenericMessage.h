@@ -58,6 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 3.2.1.1 Generic OnOff Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.42)
 @interface SigGenericOnOffGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -72,11 +73,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.43)
 @interface SigGenericOnOffSet : SigAcknowledgedGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
 /// The new state of Generic OnOff Server.
 @property (nonatomic,assign) BOOL isOn;
+- (NSData *)parameters;
 
 /// Creates the Generic OnOff Set message.
 ///
@@ -86,7 +88,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param isOn The target value of the Generic OnOff state.
 /// @param transitionTime The time that an element will take to transition to the target state from the present state.
 /// @param delay Message execution delay in 5 millisecond steps.
-- (instancetype)initWithIsOn:(BOOL)isOn transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay;
+- (instancetype)initWithIsOn:(BOOL)isOn transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 
 /// The Type of the response message.
@@ -102,11 +104,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.43)
 @interface SigGenericOnOffSetUnacknowledged : SigGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
 /// The new state of Generic OnOff Server.
 @property (nonatomic,assign) BOOL isOn;
+- (NSData *)parameters;
 /// Creates the Generic OnOff Set Unacknowledged message.
 /// @param isOn  The target value of the Generic OnOff state.
 - (instancetype)initWithIsOn:(BOOL)isOn;
@@ -114,7 +117,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param isOn  The target value of the Generic OnOff state.
 /// @param transitionTime  The time that an element will take to transition to the target state from the present state.
 /// @param delay  Message execution delay in 5 millisecond steps.
-- (instancetype)initWithIsOn:(BOOL)isOn transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay;
+- (instancetype)initWithIsOn:(BOOL)isOn transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -125,11 +128,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.44)
 @interface SigGenericOnOffStatus : SigGenericMessage
 /// The Remaining Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
 /// The present state of Generic OnOff Server.
 @property (nonatomic,assign) BOOL isOn;
 /// The target state of Generic OnOff Server.
 @property (nonatomic,assign) BOOL targetState;
+- (NSData *)parameters;
 /// Creates the Generic OnOff Status message.
 /// @param isOn  The current value of the Generic OnOff state.
 - (instancetype)initWithIsOn:(BOOL)isOn;
@@ -137,7 +141,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param isOn  The current value of the Generic OnOff state.
 /// @param targetState  The target value of the Generic OnOff state.
 /// @param remainingTime  The time that an element will take to transition to the target state from the present state.
-- (instancetype)initWithIsOn:(BOOL)isOn targetState:(BOOL)targetState remainingTime:(nullable SigTransitionTime *)remainingTime;
+- (instancetype)initWithIsOn:(BOOL)isOn targetState:(BOOL)targetState remainingTime:(SigTransitionTime * _Nullable )remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -147,6 +151,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 3.2.2.1 Generic Level Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.44)
 @interface SigGenericLevelGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -161,11 +166,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.44)
 @interface SigGenericLevelSet : SigAcknowledgedGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
 /// The target value of the Generic Level state.
 @property (nonatomic,assign) UInt16 level;
+- (NSData *)parameters;
 
 /// Creates the Generic Level Set message.
 ///
@@ -175,7 +181,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param level The target value of the Generic Level state.
 /// @param transitionTime The time that an element will take to transition to the target state from the present state.
 /// @param delay Message execution delay in 5 millisecond steps.
-- (instancetype)initWithLevel:(UInt16)level transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay;
+- (instancetype)initWithLevel:(UInt16)level transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 
 /// The Type of the response message.
@@ -191,11 +197,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.45)
 @interface SigGenericLevelSetUnacknowledged : SigGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
 /// The target value of the Generic Level state.
 @property (nonatomic,assign) UInt16 level;
+- (NSData *)parameters;
 /// Creates the Generic Level Set Unacknowledged message.
 /// @param level  The target value of the Generic Level state.
 - (instancetype)initWithLevel:(UInt16)level;
@@ -203,7 +210,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param level  The target value of the Generic Level state.
 /// @param transitionTime  The time that an element will take to transition to the target state from the present state.
 /// @param delay  Message execution delay in 5 millisecond steps.
-- (instancetype)initWithLevel:(UInt16)level transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay;
+- (instancetype)initWithLevel:(UInt16)level transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -214,11 +221,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.48)
 @interface SigGenericLevelStatus : SigGenericMessage
 /// The Remaining Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
 /// The target value of the Generic Level state.
 @property (nonatomic,assign) UInt16 level;
 /// The target value of the Generic Level state.
 @property (nonatomic,assign) UInt16 targetLevel;
+- (NSData *)parameters;
 /// Creates the Generic Level Status message.
 /// @param level  The current value of the Generic Level state.
 - (instancetype)initWithLevel:(UInt16)level;
@@ -226,7 +234,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param level  The current value of the Generic Level state.
 /// @param targetLevel  The target value of the Generic Level state.
 /// @param remainingTime  The time that an element will take to transition to the target state from the present state.
-- (instancetype)initWithLevel:(UInt16)level targetLevel:(BOOL)targetLevel remainingTime:(nullable SigTransitionTime *)remainingTime;
+- (instancetype)initWithLevel:(UInt16)level targetLevel:(BOOL)targetLevel remainingTime:(SigTransitionTime *)remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -237,11 +245,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.46)
 @interface SigGenericDeltaSet : SigAcknowledgedGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
 /// The Delta change of the Generic Level state.
 @property (nonatomic,assign) UInt32 delta;
+- (NSData *)parameters;
 
 /// Creates the Generic Level Set message.
 /// @param delta  The Delta change of the Generic Level state.
@@ -266,11 +275,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.46)
 @interface SigGenericDeltaSetUnacknowledged : SigGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
 /// The Delta change of the Generic Level state.
 @property (nonatomic,assign) UInt32 delta;
+- (NSData *)parameters;
 /// Creates the Generic Level Set Unacknowledged message.
 /// @param delta  The Delta change of the Generic Level state.
 - (instancetype)initWithDelta:(UInt32)delta;
@@ -289,11 +299,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.47)
 @interface SigGenericMoveSet : SigAcknowledgedGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
 /// The Delta Level step to calculate Move speed for the Generic Level state.
 @property (nonatomic,assign) UInt16 deltaLevel;
+- (NSData *)parameters;
 
 /// Creates the Generic Level Set message.
 /// @param deltaLevel  The Delta Level step to calculate Move speed for the Generic Level state.
@@ -319,11 +330,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.47)
 @interface SigGenericMoveSetUnacknowledged : SigGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
 /// The Delta Level step to calculate Move speed for the Generic Level state.
 @property (nonatomic,assign) UInt16 deltaLevel;
+- (NSData *)parameters;
 
 /// Creates the Generic Level Set message.
 /// @param deltaLevel  The Delta Level step to calculate Move speed for the Generic Level state.
@@ -344,6 +356,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 3.2.3.1 Generic Default Transition Time Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.48)
 @interface SigGenericDefaultTransitionTimeGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -359,6 +372,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigGenericDefaultTransitionTimeSet : SigAcknowledgedGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
+- (NSData *)parameters;
 
 /// Creates the Generic Default Transition Time Set message.
 /// @param transitionTime  The default time that an element will take to transition to the target state from the present state.
@@ -380,6 +394,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigGenericDefaultTransitionTimeSetUnacknowledged : SigGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
+- (NSData *)parameters;
 
 /// Creates the Generic Default Transition Time Set message.
 /// @param transitionTime  The default time that an element will take to transition to the target state from the present state.
@@ -397,6 +412,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigGenericDefaultTransitionTimeStatus : SigGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
+- (NSData *)parameters;
 
 /// Creates the Generic Default Transition Time Set message.
 /// @param transitionTime  The default time that an element will take to transition to the target state from the present state.
@@ -412,6 +428,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 3.2.4.1 Generic OnPowerUp Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.49)
 @interface SigGenericOnPowerUpGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -427,6 +444,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigGenericOnPowerUpStatus : SigGenericMessage
 /// The value of the Generic OnPowerUp state.
 @property (nonatomic,assign) SigOnPowerUp state;
+- (NSData *)parameters;
 /// Creates the Generic On Power Up Status message.
 /// @param state  The value of the Generic OnPowerUp state.
 - (instancetype)initWithState:(SigOnPowerUp)state;
@@ -441,6 +459,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigGenericOnPowerUpSet : SigAcknowledgedGenericMessage
 /// The value of the Generic OnPowerUp state.
 @property (nonatomic,assign) SigOnPowerUp state;
+- (NSData *)parameters;
 /// Creates the Generic On Power Up Status message.
 /// @param state  The value of the Generic OnPowerUp state.
 - (instancetype)initWithState:(SigOnPowerUp)state;
@@ -459,6 +478,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigGenericOnPowerUpSetUnacknowledged : SigGenericMessage
 /// The value of the Generic OnPowerUp state.
 @property (nonatomic,assign) SigOnPowerUp state;
+- (NSData *)parameters;
 /// Creates the Generic On Power Up Status message.
 /// @param state  The value of the Generic OnPowerUp state.
 - (instancetype)initWithState:(SigOnPowerUp)state;
@@ -471,6 +491,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 3.2.5.1 Generic Power Level Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.50)
 @interface SigGenericPowerLevelGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -485,12 +506,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.51)
 @interface SigGenericPowerLevelSet : SigAcknowledgedGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
 /// The target value of the Generic Power Actual state.
 @property (nonatomic,assign) UInt16 power;
 
+- (NSData *)parameters;
 
 /// Creates the Generic Power Level Set message.
 ///
@@ -526,12 +548,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.51)
 @interface SigGenericPowerLevelSetUnacknowledged : SigGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
 /// The target value of the Generic Power Actual state.
 @property (nonatomic,assign) UInt16 power;
 
+- (NSData *)parameters;
 
 /// Creates the Generic Power Level Set message.
 ///
@@ -551,7 +574,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param power  The target value of the Generic Power Actual state.
 /// @param transitionTime The time that an element will take to transition to the target state from the present state.
 /// @param delay Message execution delay in 5 millisecond steps.
-- (instancetype)initWithPower:(UInt16)power transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay;
+- (instancetype)initWithPower:(UInt16)power transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 
 @end
@@ -563,12 +586,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.52)
 @interface SigGenericPowerLevelStatus : SigGenericMessage
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// The present value of the Generic Power Actual state.
 @property (nonatomic,assign) UInt16 power;
 /// The target value of the Generic Power Actual state.
 @property (nonatomic,assign) UInt16 targetPower;
 
+- (NSData *)parameters;
 
 /// Creates the Generic Power Level Status message.
 ///
@@ -580,7 +604,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param power  The present value of the Generic Power Actual state.
 /// @param targetPower The target value of the Generic Power Actual state.
 /// @param transitionTime The time that an element will take to transition to the target state from the present state.
-- (instancetype)initWithPower:(UInt16)power targetPower:(UInt16)targetPower transitionTime:(nullable SigTransitionTime *)transitionTime;
+- (instancetype)initWithPower:(UInt16)power targetPower:(UInt16)targetPower transitionTime:(SigTransitionTime *)transitionTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 
 @end
@@ -591,6 +615,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 3.2.5.5 Generic Power Last Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.52)
 @interface SigGenericPowerLastGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -606,6 +631,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigGenericPowerLastStatus : SigGenericMessage
 /// The value of the Generic Power Last state.
 @property (nonatomic,assign) UInt16 power;
+- (NSData *)parameters;
 /// Creates the Generic Power Last Status message.
 /// @param power  The value of the Generic Power Last state.
 - (instancetype)initWithPower:(UInt16)power;
@@ -618,6 +644,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 3.2.5.7 Generic Power Default Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.53)
 @interface SigGenericPowerDefaultGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -633,6 +660,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigGenericPowerDefaultStatus : SigGenericMessage
 /// The value of the Generic Power Default state.
 @property (nonatomic,assign) UInt16 power;
+- (NSData *)parameters;
 /// Creates the Generic Power Default Status message.
 /// @param power  The value of the Generic Power Default state.
 - (instancetype)initWithPower:(UInt16)power;
@@ -645,6 +673,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 3.2.5.11 Generic Power Range Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.53)
 @interface SigGenericPowerRangeGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -664,6 +693,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 rangeMin;
 /// The value of the Generic Power Range Max field of the Generic Power Range state.
 @property (nonatomic,assign) UInt16 rangeMax;
+- (NSData *)parameters;
 /// Creates the Generic Power Range Status message.
 /// @param rangeMin  The value of the Generic Power Range Min field of the Generic Power Range state.
 /// @param rangeMax  The value of the Generic Power Range Max field of the Generic Power Range state.
@@ -687,6 +717,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigGenericPowerDefaultSet : SigAcknowledgedGenericMessage
 /// The value of the Generic Power Default state.
 @property (nonatomic,assign) UInt16 power;
+- (NSData *)parameters;
 /// Creates the Generic Power Default Set message.
 /// @param power  The value of the Generic Power Default state.
 - (instancetype)initWithPower:(UInt16)power;
@@ -705,6 +736,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigGenericPowerDefaultSetUnacknowledged : SigGenericMessage
 /// The value of the Generic Power Default state.
 @property (nonatomic,assign) UInt16 power;
+- (NSData *)parameters;
 /// Creates the Generic Power Default Set message.
 /// @param power  The value of the Generic Power Default state.
 - (instancetype)initWithPower:(UInt16)power;
@@ -721,6 +753,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 rangeMin;
 /// The value of the Generic Power Range Max field of the Generic Power Range state.
 @property (nonatomic,assign) UInt16 rangeMax;
+- (NSData *)parameters;
 /// Creates the Generic Power Range Set message.
 /// @param rangeMin  The value of the Generic Power Range Min field of the Generic Power Range state.
 /// @param rangeMax  The value of the Generic Power Range Max field of the Generic Power Range state.
@@ -742,6 +775,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 rangeMin;
 /// The value of the Generic Power Range Max field of the Generic Power Range state.
 @property (nonatomic,assign) UInt16 rangeMax;
+- (NSData *)parameters;
 /// Creates the Generic Power Range Set message.
 /// @param rangeMin  The value of the Generic Power Range Min field of the Generic Power Range state.
 /// @param rangeMax  The value of the Generic Power Range Max field of the Generic Power Range state.
@@ -755,6 +789,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 3.2.6.1 Generic Battery Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.55)
 @interface SigGenericBatteryGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -794,6 +829,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (SigBatteryServiceability)batteryServiceability;
 - (instancetype)initWithBatteryLevel:(UInt8)batteryLevel timeToDischarge:(UInt32)timeToDischarge andCharge:(UInt32)timeToCharge batteryPresence:(SigBatteryPresence)batteryPresence batteryIndicator:(SigBatteryIndicator)batteryIndicator batteryChargingState:(SigBatteryChargingState)batteryChargingState batteryServiceability:(SigBatteryServiceability)batteryServiceability;
 
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -806,6 +842,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSensorDescriptorGet : SigAcknowledgedGenericMessage
 /// If present, the Property ID field identifies a Sensor Property ID state of an element.(0x0001–0xFFFF)
 @property (nonatomic,assign) UInt16 propertyID;
+- (NSData *)parameters;
 - (instancetype)initWithPropertyID:(UInt16)propertyID;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -822,6 +859,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSensorDescriptorStatus : SigGenericMessage
 /// The Descriptor field shall contain a sequence of 0 or more Sensor Descriptor states.(8*N or 2 bytes)
 @property (nonatomic,strong) NSMutableArray <SigSensorDescriptorModel *>*descriptorModels;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -833,6 +871,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSensorGet : SigAcknowledgedGenericMessage
 /// If present, the Property ID field identifies a Sensor Property ID state of an element.(0x0001–0xFFFF)
 @property (nonatomic,assign) UInt16 propertyID;
+- (NSData *)parameters;
 - (instancetype)initWithPropertyID:(UInt16)propertyID;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -848,6 +887,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.120)
 @interface SigSensorStatus : SigGenericMessage
 @property (nonatomic,strong) NSData *marshalledSensorData;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -861,6 +901,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 propertyID;
 /// The Raw Value X field identifies a column of a sensor’s series.
 @property (nonatomic,strong) NSData *rawValueX;
+- (NSData *)parameters;
 - (instancetype)initWithPropertyID:(UInt16)propertyID rawValueX:(NSData *)rawValueX;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -876,6 +917,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.122)
 @interface SigSensorColumnStatus : SigGenericMessage
 @property (nonatomic,strong) NSData *columnData;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -892,6 +934,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) NSData *rawValueX1Data;
 /// Raw value identifying an ending column.
 @property (nonatomic,strong) NSData *rawValueX2Data;
+- (NSData *)parameters;
 - (instancetype)initWithPropertyID:(UInt16)propertyID rawValueX1Data:(NSData *)rawValueX1Data rawValueX2Data:(NSData *)rawValueX2Data;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -907,6 +950,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.123)
 @interface SigSensorSeriesStatus : SigGenericMessage
 @property (nonatomic,strong) NSData *seriesData;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -918,6 +962,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSensorCadenceGet : SigAcknowledgedGenericMessage
 /// If present, the Property ID field identifies a Sensor Property ID state of an element.(0x0001–0xFFFF)
 @property (nonatomic,assign) UInt16 propertyID;
+- (NSData *)parameters;
 - (instancetype)initWithPropertyID:(UInt16)propertyID;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -935,6 +980,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) NSData *cadenceData;
 /// If present, the Property ID field identifies a Sensor Property ID state of an element.(0x0001–0xFFFF)
 @property (nonatomic,assign) UInt16 propertyID;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -951,6 +997,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) NSData *cadenceData;
 /// If present, the Property ID field identifies a Sensor Property ID state of an element.(0x0001–0xFFFF)
 @property (nonatomic,assign) UInt16 propertyID;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -963,6 +1010,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) NSData *cadenceData;
 /// If present, the Property ID field identifies a Sensor Property ID state of an element.(0x0001–0xFFFF)
 @property (nonatomic,assign) UInt16 propertyID;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -974,6 +1022,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSensorSettingsGet : SigAcknowledgedGenericMessage
 /// If present, the Property ID field identifies a Sensor Property ID state of an element.(0x0001–0xFFFF)
 @property (nonatomic,assign) UInt16 propertyID;
+- (NSData *)parameters;
 - (instancetype)initWithPropertyID:(UInt16)propertyID;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -991,6 +1040,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) NSData *settingsData;
 /// If present, the Property ID field identifies a Sensor Property ID state of an element.(0x0001–0xFFFF)
 @property (nonatomic,assign) UInt16 propertyID;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1004,6 +1054,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 propertyID;
 /// Setting Property ID identifying a setting within a sensor..(0x0001–0xFFFF)
 @property (nonatomic,assign) UInt16 settingPropertyID;
+- (NSData *)parameters;
 - (instancetype)initWithPropertyID:(UInt16)propertyID settingPropertyID:(UInt16)settingPropertyID;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1024,6 +1075,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 settingPropertyID;
 /// Raw value for the setting.
 @property (nonatomic,strong) NSData *settingRaw;
+- (NSData *)parameters;
 - (instancetype)initWithPropertyID:(UInt16)propertyID settingPropertyID:(UInt16)settingPropertyID settingRaw:(NSData *)settingRaw;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1044,6 +1096,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 settingPropertyID;
 /// Raw value for the setting.
 @property (nonatomic,strong) NSData *settingRaw;
+- (NSData *)parameters;
 - (instancetype)initWithPropertyID:(UInt16)propertyID settingPropertyID:(UInt16)settingPropertyID settingRaw:(NSData *)settingRaw;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1062,6 +1115,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) SigSensorSettingAccessType settingAccess;
 /// Raw value for the setting.
 @property (nonatomic,strong) NSData *settingRaw;
+- (NSData *)parameters;
 - (instancetype)initWithPropertyID:(UInt16)propertyID settingPropertyID:(UInt16)settingPropertyID settingAccess:(SigSensorSettingAccessType)settingAccess settingRaw:(NSData *)settingRaw;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1073,6 +1127,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 5.2.1.1 Time Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.142)
 @interface SigTimeGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1087,6 +1142,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.143)
 @interface SigTimeSet : SigAcknowledgedGenericMessage
 @property (nonatomic,strong) SigTimeModel *timeModel;
+- (NSData *)parameters;
 - (instancetype)initWithTimeModel:(SigTimeModel *)timeModel;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1102,6 +1158,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.143)
 @interface SigTimeStatus : SigGenericMessage
 @property (nonatomic,strong) SigTimeModel *timeModel;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1111,6 +1168,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 5.2.1.10 Time Role Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.145)
 @interface SigTimeRoleGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1126,6 +1184,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigTimeRoleSet : SigAcknowledgedGenericMessage
 /// Time Role is an enumeration state that defines the role of a node in propagation of time information in a mesh network.
 @property (nonatomic,assign) SigTimeRole timeRole;
+- (NSData *)parameters;
 - (instancetype)initWithTimeRole:(SigTimeRole)timeRole;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1142,6 +1201,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigTimeRoleStatus : SigGenericMessage
 /// Time Role is an enumeration state that defines the role of a node in propagation of time information in a mesh network.
 @property (nonatomic,assign) SigTimeRole timeRole;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1151,6 +1211,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 5.2.1.4 Time Zone Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.144)
 @interface SigTimeZoneGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1168,6 +1229,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) UInt8 timeZoneOffsetNew;
 /// 40 bits, TAI seconds time of the upcoming Time Zone Offset change.
 @property (nonatomic, assign) UInt64 TAIOfZoneChange;
+- (NSData *)parameters;
 - (instancetype)initWithTimeZoneOffsetNew:(UInt8)timeZoneOffsetNew TAIOfZoneChange:(UInt64)TAIOfZoneChange;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1188,6 +1250,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) UInt8 timeZoneOffsetNew;
 /// 40 bits, TAI seconds time of the upcoming Time Zone Offset change.
 @property (nonatomic, assign) UInt64 TAIOfZoneChange;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1197,6 +1260,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 5.2.1.7 TAI-UTC Delta Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.145)
 @interface SigTAI_UTC_DeltaGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1216,6 +1280,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) UInt8 padding;
 /// 40 bits, TAI seconds time of the upcoming TAI-UTC Delta change.
 @property (nonatomic, assign) UInt64 TAIOfDeltaChange;
+- (NSData *)parameters;
 - (instancetype)initWithTAI_UTC_DeltaNew:(UInt16)TAI_UTC_DeltaNew padding:(UInt8)padding TAIOfDeltaChange:(UInt64)TAIOfDeltaChange;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1240,6 +1305,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) UInt8 paddingNew;
 /// 40 bits, TAI seconds time of the upcoming TAI-UTC Delta change.
 @property (nonatomic, assign) UInt64 TAIOfDeltaChange;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1250,6 +1316,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 5.2.2.5 Scene Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.148)
 @interface SigSceneGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1269,6 +1336,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic, assign) UInt8 delay;
+- (NSData *)parameters;
 - (instancetype)initWithSceneNumber:(UInt16)sceneNumber transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1289,6 +1357,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic, assign) UInt8 delay;
+- (NSData *)parameters;
 - (instancetype)initWithSceneNumber:(UInt16)sceneNumber transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1306,8 +1375,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// When an element is in the process of changing the Scene state, the Target Scene field identifies the target Scene Number of the target Scene state the element is to reach.
 @property (nonatomic, assign) UInt16 targetScene;
 /// the Remaining Time field indicates the time it will take the element to complete the transition to the target Scene state of the element.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
-- (instancetype)initWithStatusCode:(SigSceneResponseStatus)statusCode currentScene:(UInt16)currentScene targetScene:(UInt16)targetScene remainingTime:(nullable SigTransitionTime *)remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
+- (NSData *)parameters;
+- (instancetype)initWithStatusCode:(SigSceneResponseStatus)statusCode currentScene:(UInt16)currentScene targetScene:(UInt16)targetScene remainingTime:(SigTransitionTime *)remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1317,6 +1387,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 5.2.2.7 Scene Register Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.148)
 @interface SigSceneRegisterGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1336,6 +1407,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) UInt16 currentScene;
 /// A list of scenes stored within an element.
 @property (nonatomic, strong) NSMutableArray <NSNumber *>*scenes;//[(UInt16)sceneNumber]
+- (NSData *)parameters;
 - (instancetype)initWithStatusCode:(SigSceneResponseStatus)statusCode currentScene:(UInt16)currentScene targetScene:(UInt16)targetScene scenes:(NSMutableArray <NSNumber *>*)scenes;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1348,6 +1420,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSceneStore : SigAcknowledgedGenericMessage
 /// The number of the scene to be stored.
 @property (nonatomic, assign) UInt16 sceneNumber;
+- (NSData *)parameters;
 - (instancetype)initWithSceneNumber:(UInt16)sceneNumber;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1364,6 +1437,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSceneStoreUnacknowledged : SigGenericMessage
 /// The number of the scene to be stored.
 @property (nonatomic, assign) UInt16 sceneNumber;
+- (NSData *)parameters;
 - (instancetype)initWithSceneNumber:(UInt16)sceneNumber;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1376,6 +1450,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSceneDelete : SigAcknowledgedGenericMessage
 /// The number of the scene to be deleted.
 @property (nonatomic, assign) UInt16 sceneNumber;
+- (NSData *)parameters;
 - (instancetype)initWithSceneNumber:(UInt16)sceneNumber;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1392,6 +1467,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSceneDeleteUnacknowledged : SigGenericMessage
 /// The number of the scene to be deleted.
 @property (nonatomic, assign) UInt16 sceneNumber;
+- (NSData *)parameters;
 - (instancetype)initWithSceneNumber:(UInt16)sceneNumber;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1405,6 +1481,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSchedulerActionGet : SigAcknowledgedGenericMessage
 /// Index of the Schedule Register entry to get.The valid values for the Index field are 0x00–0x0F. Values 0x10–0xFF are Prohibited.
 @property (nonatomic, assign) UInt8 index;
+- (NSData *)parameters;
 - (instancetype)initWithIndex:(UInt8)index;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1421,6 +1498,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSchedulerActionStatus : SigGenericMessage
 /// 80 bits, The Schedule Register bit field shall be set to the value of the entry of the Schedule Register that is indicated by the Index field.
 @property (nonatomic, strong) SchedulerModel *schedulerModel;
+- (NSData *)parameters;
 - (instancetype)initWithSchedulerModel:(SchedulerModel *)schedulerModel;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1431,6 +1509,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 5.2.3.1 Scheduler Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.150)
 @interface SigSchedulerGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1446,6 +1525,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSchedulerStatus : SigGenericMessage
 /// 16 bits, Bit field indicating defined Actions in the Schedule Register.
 @property (nonatomic, strong) NSMutableArray <NSNumber *>*schedulers;//[schedulerID]
+- (NSData *)parameters;
 - (instancetype)initWithSchedulers:(NSMutableArray <NSNumber *>*)schedulers;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1458,6 +1538,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSchedulerActionSet : SigAcknowledgedGenericMessage
 /// 80 bits, The Schedule Register bit field shall be set to the value of the entry of the Schedule Register that is indicated by the Index field.
 @property (nonatomic, strong) SchedulerModel *schedulerModel;
+- (NSData *)parameters;
 - (instancetype)initWithSchedulerModel:(SchedulerModel *)schedulerModel;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1474,6 +1555,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigSchedulerActionSetUnacknowledged : SigGenericMessage
 /// 80 bits, The Schedule Register bit field shall be set to the value of the entry of the Schedule Register that is indicated by the Index field.
 @property (nonatomic, strong) SchedulerModel *schedulerModel;
+- (NSData *)parameters;
 - (instancetype)initWithSchedulerModel:(SchedulerModel *)schedulerModel;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1485,6 +1567,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.1.1 Light Lightness Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.199)
 @interface SigLightLightnessGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1504,6 +1587,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1524,6 +1608,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1535,12 +1620,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.201)
 @interface SigLightLightnessStatus : SigGenericMessage
 /// The Remaining Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
 /// The target value of the Light Lightness Actual state.
 @property (nonatomic, assign) UInt16 presentLightness;
 /// The target value of the Light Lightness Actual state.
 @property (nonatomic, assign) UInt16 targetLightness;
-- (instancetype)initWithPresentLightness:(UInt16)presentLightness targetLightness:(UInt16)targetLightness remainingTime:(nullable SigTransitionTime *)remainingTime;
+- (NSData *)parameters;
+- (instancetype)initWithPresentLightness:(UInt16)presentLightness targetLightness:(UInt16)targetLightness remainingTime:(SigTransitionTime *)remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1550,6 +1636,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.1.5 Light Lightness Linear Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.201)
 @interface SigLightLightnessLinearGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1569,6 +1656,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1589,6 +1677,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1604,8 +1693,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light Lightness Linear state.
 @property (nonatomic, assign) UInt16 targetLightness;
 /// The Remaining Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
-- (instancetype)initWithPresentLightness:(UInt16)presentLightness targetLightness:(UInt16)targetLightness remainingTime:(nullable SigTransitionTime *)remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
+- (NSData *)parameters;
+- (instancetype)initWithPresentLightness:(UInt16)presentLightness targetLightness:(UInt16)targetLightness remainingTime:(SigTransitionTime *)remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1615,6 +1705,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.1.9 Light Lightness Last Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.203)
 @interface SigLightLightnessLastGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1630,6 +1721,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLightLightnessLastStatus : SigGenericMessage
 /// The value of the Light Lightness Last.
 @property (nonatomic, assign) UInt16 lightness;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1640,6 +1732,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.1.11 Light Lightness Default Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.204)
 @interface SigLightLightnessDefaultGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1655,6 +1748,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLightLightnessDefaultStatus : SigGenericMessage
 /// The value of the Light Lightness Last.
 @property (nonatomic, assign) UInt16 lightness;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1665,6 +1759,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.1.15 Light Lightness Range Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.205)
 @interface SigLightLightnessRangeGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1684,6 +1779,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 rangeMin;
 /// The value of the Generic Power Range Max field of the Generic Power Range state.
 @property (nonatomic,assign) UInt16 rangeMax;
+- (NSData *)parameters;
 - (instancetype)initWithRangeMin:(UInt16)rangeMin rangeMax:(UInt16)rangeMax;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1696,6 +1792,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLightLightnessDefaultSet : SigAcknowledgedGenericMessage
 /// The value of the Light Lightness Default state.
 @property (nonatomic, assign) UInt16 lightness;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1712,6 +1809,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLightLightnessDefaultSetUnacknowledged : SigGenericMessage
 /// The value of the Light Lightness Default state.
 @property (nonatomic, assign) UInt16 lightness;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1726,6 +1824,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 rangeMin;
 /// The value of the Lightness Range Max field of the Light Lightness Range state.
 @property (nonatomic,assign) UInt16 rangeMax;
+- (NSData *)parameters;
 /// Creates the Light Lightness Range Set message.
 /// @param rangeMin  The value of the Lightness Range Min field of the Light Lightness Range state.
 /// @param rangeMax  The value of the Lightness Range Max field of the Light Lightness Range state.
@@ -1747,6 +1846,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 rangeMin;
 /// The value of the Lightness Range Max field of the Light Lightness Range state.
 @property (nonatomic,assign) UInt16 rangeMax;
+- (NSData *)parameters;
 /// Creates the Light Lightness Range Set message.
 /// @param rangeMin  The value of the Lightness Range Min field of the Light Lightness Range state.
 /// @param rangeMax  The value of the Lightness Range Max field of the Light Lightness Range state.
@@ -1761,6 +1861,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.2.1 Light CTL Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.206)
 @interface SigLightCTLGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1781,10 +1882,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light CTL Delta UV state.
 @property (nonatomic,assign) UInt16 CTLDeltaUV;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithCTLLightness:(UInt16)CTLLightness CTLTemperature:(UInt16)CTLTemperature CTLDeltaUV:(UInt16)CTLDeltaUV transitionTime:(SigTransitionTime * _Nullable)transitionTime delay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithCTLLightness:(UInt16)CTLLightness CTLTemperature:(UInt16)CTLTemperature CTLDeltaUV:(UInt16)CTLDeltaUV transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1805,10 +1907,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light CTL Delta UV state.
 @property (nonatomic,assign) UInt16 CTLDeltaUV;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithCTLLightness:(UInt16)CTLLightness CTLTemperature:(UInt16)CTLTemperature CTLDeltaUV:(UInt16)CTLDeltaUV transitionTime:(SigTransitionTime * _Nullable)transitionTime delay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithCTLLightness:(UInt16)CTLLightness CTLTemperature:(UInt16)CTLTemperature CTLDeltaUV:(UInt16)CTLDeltaUV transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1819,7 +1922,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.208)
 @interface SigLightCTLStatus : SigGenericMessage
 /// The Remaining Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
 /// The present value of the Light CTL Lightness state.
 @property (nonatomic,assign) UInt16 presentCTLLightness;
 /// The present value of the Light CTL Temperature state.
@@ -1828,6 +1931,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 targetCTLLightness;
 /// The target value of the Light CTL Temperature state.
 @property (nonatomic,assign) UInt16 targetCTLTemperature;
+- (NSData *)parameters;
 - (instancetype)initWithPresentCTLLightness:(UInt16)presentCTLLightness presentCTLTemperature:(UInt16)presentCTLTemperature targetCTLLightness:(UInt16)targetCTLLightness targetCTLTemperature:(UInt16)targetCTLTemperature remainingTime:(SigTransitionTime * _Nullable )remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1838,6 +1942,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.2.5 Light CTL Temperature Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.208)
 @interface SigLightCTLTemperatureGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1851,6 +1956,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.2.9 Light CTL Temperature Range Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.210)
 @interface SigLightCTLTemperatureRangeGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1870,6 +1976,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 rangeMin;
 /// The value of the Temperature Range Max field of the Light CTL Temperature Range state.
 @property (nonatomic,assign) UInt16 rangeMax;
+- (NSData *)parameters;
 - (instancetype)initWithStatusCode:(SigGenericMessageStatus)statusCode rangeMin:(UInt16)rangeMin rangeMax:(UInt16)rangeMax;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1888,6 +1995,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
+- (NSData *)parameters;
 - (instancetype)initWithCTLTemperature:(UInt16)CTLTemperature CTLDeltaUV:(UInt16)CTLDeltaUV transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1910,6 +2018,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
+- (NSData *)parameters;
 - (instancetype)initWithCTLTemperature:(UInt16)CTLTemperature CTLDeltaUV:(UInt16)CTLDeltaUV transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1921,7 +2030,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.210)
 @interface SigLightCTLTemperatureStatus : SigGenericMessage
 /// The Remaining Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
 /// The present value of the Light CTL Temperature state.
 @property (nonatomic,assign) UInt16 presentCTLTemperature;
 /// The present value of the Light CTL Delta UV state.
@@ -1930,7 +2039,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 targetCTLTemperature;
 /// The target value of the Light CTL Delta UV state.
 @property (nonatomic,assign) UInt16 targetCTLDeltaUV;
-- (instancetype)initWithPresentCTLTemperature:(UInt16)presentCTLTemperature presentCTLDeltaUV:(UInt16)presentCTLDeltaUV targetCTLTemperature:(UInt16)targetCTLTemperature targetCTLDeltaUV:(UInt16)targetCTLDeltaUV remainingTime:(nullable SigTransitionTime *)remainingTime;
+- (NSData *)parameters;
+- (instancetype)initWithPresentCTLTemperature:(UInt16)presentCTLTemperature presentCTLDeltaUV:(UInt16)presentCTLDeltaUV targetCTLTemperature:(UInt16)targetCTLTemperature targetCTLDeltaUV:(UInt16)targetCTLDeltaUV remainingTime:(SigTransitionTime *)remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -1940,6 +2050,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.2.13 Light CTL Default Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.212)
 @interface SigLightCTLDefaultGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -1959,6 +2070,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 temperature;
 /// The value of the Light CTL Delta UV Default state.
 @property (nonatomic,assign) UInt16 deltaUV;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness temperature:(UInt16)temperature deltaUV:(UInt16)deltaUV;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -1975,6 +2087,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 temperature;
 /// The value of the Light CTL Delta UV Default state.
 @property (nonatomic,assign) UInt16 deltaUV;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness temperature:(UInt16)temperature deltaUV:(UInt16)deltaUV;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -1995,6 +2108,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 temperature;
 /// The value of the Light CTL Delta UV Default state.
 @property (nonatomic,assign) UInt16 deltaUV;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness temperature:(UInt16)temperature deltaUV:(UInt16)deltaUV;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2009,6 +2123,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 rangeMin;
 /// The value of the Temperature Range Max field of the Light CTL Temperature Range state.
 @property (nonatomic,assign) UInt16 rangeMax;
+- (NSData *)parameters;
 - (instancetype)initWithRangeMin:(UInt16)rangeMin rangeMax:(UInt16)rangeMax;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -2027,6 +2142,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 rangeMin;
 /// The value of the Temperature Range Max field of the Light CTL Temperature Range state.
 @property (nonatomic,assign) UInt16 rangeMax;
+- (NSData *)parameters;
 - (instancetype)initWithRangeMin:(UInt16)rangeMin rangeMax:(UInt16)rangeMax;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2038,6 +2154,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.3.1 Light HSL Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.213)
 @interface SigLightHSLGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2051,6 +2168,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.3.7 Light HSL Hue Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.216)
 @interface SigLightHSLHueGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2067,10 +2185,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light HSL Hue state.
 @property (nonatomic,assign) UInt16 hue;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithHue:(UInt16)hue transitionTime:(SigTransitionTime * _Nullable)transitionTime delay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithHue:(UInt16)hue transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2087,10 +2206,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light HSL Hue state.
 @property (nonatomic,assign) UInt16 hue;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithHue:(UInt16)hue transitionTime:(SigTransitionTime * _Nullable)transitionTime delay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithHue:(UInt16)hue transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -2106,6 +2226,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 targetHue;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
 @property (nonatomic,strong) SigTransitionTime *transitionTime;
+- (NSData *)parameters;
 - (instancetype)initWithPresentHue:(UInt16)presentHue targetHue:(UInt16)targetHue transitionTime:(SigTransitionTime *)transitionTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2116,6 +2237,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.3.11 Light HSL Saturation Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.217)
 @interface SigLightHSLSaturationGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2132,10 +2254,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light HSL Saturation state.
 @property (nonatomic,assign) UInt16 saturation;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithSaturation:(UInt16)saturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithSaturation:(UInt16)saturation transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2152,10 +2275,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light HSL Saturation state.
 @property (nonatomic,assign) UInt16 saturation;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithSaturation:(UInt16)saturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithSaturation:(UInt16)saturation transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -2170,8 +2294,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light HSL Saturation state.
 @property (nonatomic,assign) UInt16 targetSaturation;
 /// The Remaining Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
-- (instancetype)initWithPresentSaturation:(UInt16)presentSaturation targetSaturation:(UInt16)targetSaturation remainingTime:(nullable SigTransitionTime *)remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
+- (NSData *)parameters;
+- (instancetype)initWithPresentSaturation:(UInt16)presentSaturation targetSaturation:(UInt16)targetSaturation remainingTime:(SigTransitionTime *)remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -2188,10 +2313,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light HSL Saturation state.
 @property (nonatomic,assign) UInt16 HSLSaturation;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithHSLLightness:(UInt16)HSLLightness HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithHSLLightness:(UInt16)HSLLightness HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2212,10 +2338,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light HSL Saturation state.
 @property (nonatomic,assign) UInt16 HSLSaturation;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithHSLLightness:(UInt16)HSLLightness HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithHSLLightness:(UInt16)HSLLightness HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -2226,13 +2353,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.215)
 @interface SigLightHSLStatus : SigGenericMessage
 /// The Remaining Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
 /// The present value of the Light HSL Lightness state.
 @property (nonatomic,assign) UInt16 HSLLightness;
 /// The present value of the Light HSL Hue state.
 @property (nonatomic,assign) UInt16 HSLHue;
 /// The present value of the Light HSL Saturation state.
 @property (nonatomic,assign) UInt16 HSLSaturation;
+- (NSData *)parameters;
 - (instancetype)initWithHSLLightness:(UInt16)HSLLightness HSLHue:(UInt16)HSLHue HSLSaturation:(UInt16)HSLSaturation remainingTime:(SigTransitionTime * _Nullable )remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2243,6 +2371,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.3.5 Light HSL Target Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.215)
 @interface SigLightHSLTargetGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2263,8 +2392,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target Light HSL Saturation state.
 @property (nonatomic,assign) UInt16 HSLSaturationTarget;
 /// The Remaining Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
-- (instancetype)initWithHSLLightnessTarget:(UInt16)HSLLightnessTarget HSLHueTarget:(UInt16)HSLHueTarget HSLSaturationTarget:(UInt16)HSLSaturationTarget remainingTime:(nullable SigTransitionTime *)remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
+- (NSData *)parameters;
+- (instancetype)initWithHSLLightnessTarget:(UInt16)HSLLightnessTarget HSLHueTarget:(UInt16)HSLHueTarget HSLSaturationTarget:(UInt16)HSLSaturationTarget remainingTime:(SigTransitionTime *)remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -2274,6 +2404,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.3.15 Light HSL Default Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.219)
 @interface SigLightHSLDefaultGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2294,8 +2425,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// The value of the Light HSL Saturation Default state.
 @property (nonatomic,assign) UInt16 saturation;
 /// The Remaining Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
-- (instancetype)initWithLightness:(UInt16)lightness hue:(UInt16)hue saturation:(UInt16)saturation remainingTime:(nullable SigTransitionTime *)remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
+- (NSData *)parameters;
+- (instancetype)initWithLightness:(UInt16)lightness hue:(UInt16)hue saturation:(UInt16)saturation remainingTime:(SigTransitionTime *)remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -2305,6 +2437,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.3.19 Light HSL Range Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.221)
 @interface SigLightHSLRangeGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2328,6 +2461,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 saturationRangeMin;
 /// The value of the Saturation Range Max field of the Light HSL Saturation Range state.
 @property (nonatomic,assign) UInt16 saturationRangeMax;
+- (NSData *)parameters;
 - (instancetype)initWithStatusCode:(SigGenericMessageStatus)statusCode hueRangeMin:(UInt16)hueRangeMin hueRangeMax:(UInt16)hueRangeMax saturationRangeMin:(UInt16)saturationRangeMin saturationRangeMax:(UInt16)saturationRangeMax;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2344,6 +2478,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 hue;
 /// The value of the Light HSL Saturation Default state.
 @property (nonatomic,assign) UInt16 saturation;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness hue:(UInt16)hue saturation:(UInt16)saturation;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -2364,6 +2499,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 hue;
 /// The value of the Light HSL Saturation Default state.
 @property (nonatomic,assign) UInt16 saturation;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness hue:(UInt16)hue saturation:(UInt16)saturation;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2382,6 +2518,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 saturationRangeMin;
 /// The value of the Saturation Range Max field of the Light HSL Saturation Range state.
 @property (nonatomic,assign) UInt16 saturationRangeMax;
+- (NSData *)parameters;
 - (instancetype)initWithHueRangeMin:(UInt16)hueRangeMin hueRangeMax:(UInt16)hueRangeMax saturationRangeMin:(UInt16)saturationRangeMin saturationRangeMax:(UInt16)saturationRangeMax;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -2404,6 +2541,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 saturationRangeMin;
 /// The value of the Saturation Range Max field of the Light HSL Saturation Range state.
 @property (nonatomic,assign) UInt16 saturationRangeMax;
+- (NSData *)parameters;
 - (instancetype)initWithHueRangeMin:(UInt16)hueRangeMin hueRangeMax:(UInt16)hueRangeMax saturationRangeMin:(UInt16)saturationRangeMin saturationRangeMax:(UInt16)saturationRangeMax;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2415,6 +2553,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.4.1 Light xyL Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.223)
 @interface SigLightXyLGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2435,10 +2574,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light xyL y state.
 @property (nonatomic,assign) UInt16 xyLY;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2459,10 +2599,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light xyL y state.
 @property (nonatomic,assign) UInt16 xyLY;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY transitionTime:(nullable SigTransitionTime *)transitionTime delay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY transitionTime:(SigTransitionTime *)transitionTime delay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -2479,8 +2620,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// The present value of the Light xyL y state.
 @property (nonatomic,assign) UInt16 xyLY;
 /// If present, the Remaining Time field identifies the time it will take the element to complete the transition to the target state of the element.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
-- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY remainingTime:(nullable SigTransitionTime *)remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
+- (NSData *)parameters;
+- (instancetype)initWithXyLLightness:(UInt16)xyLLightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY remainingTime:(SigTransitionTime *)remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -2490,6 +2632,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.4.5 Light xyL Target Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.225)
 @interface SigLightXyLTargetGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2510,8 +2653,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light xyL y state.
 @property (nonatomic,assign) UInt16 targetXyLY;
 /// If present, the Remaining Time field identifies the time it will take the element to complete the transition to the target state of the element.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
-- (instancetype)initWithTargetXyLLightness:(UInt16)targetXyLLightness targetXyLX:(UInt16)targetXyLX targetXyLY:(UInt16)targetXyLY remainingTime:(nullable SigTransitionTime *)remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
+- (NSData *)parameters;
+- (instancetype)initWithTargetXyLLightness:(UInt16)targetXyLLightness targetXyLX:(UInt16)targetXyLX targetXyLY:(UInt16)targetXyLY remainingTime:(SigTransitionTime *)remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -2521,6 +2665,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.4.7 Light xyL Default Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.225)
 @interface SigLightXyLDefaultGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2540,6 +2685,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 xyLX;
 /// The value of the Light xyL y state.
 @property (nonatomic,assign) UInt16 xyLY;
+- (NSData *)parameters;
 - (instancetype)initWithXyLLightness:(UInt16)lightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2550,6 +2696,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.4.11 Light xyL Range Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.227)
 @interface SigLightXyLRangeGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2573,6 +2720,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 xyLYRangeMin;
 /// The value of the xyL y Range Max field of the Light xyL y Range state.
 @property (nonatomic,assign) UInt16 xyLYRangeMax;
+- (NSData *)parameters;
 - (instancetype)initWithStatusCode:(SigGenericMessageStatus)statusCode xyLXRangeMin:(UInt16)xyLXRangeMin xyLXRangeMax:(UInt16)xyLXRangeMax xyLYRangeMin:(UInt16)xyLYRangeMin xyLYRangeMax:(UInt16)xyLYRangeMax;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2589,6 +2737,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 xyLX;
 /// The value of the Light xyL y Default state.
 @property (nonatomic,assign) UInt16 xyLY;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -2609,6 +2758,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 xyLX;
 /// The value of the Light xyL y Default state.
 @property (nonatomic,assign) UInt16 xyLY;
+- (NSData *)parameters;
 - (instancetype)initWithLightness:(UInt16)lightness xyLX:(UInt16)xyLX xyLY:(UInt16)xyLY;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2627,6 +2777,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 xyLYRangeMin;
 /// The value of the xyL y Range Max field of the Light xyL y Range state.
 @property (nonatomic,assign) UInt16 xyLYRangeMax;
+- (NSData *)parameters;
 - (instancetype)initWithXyLXRangeMin:(UInt16)xyLXRangeMin xyLXRangeMax:(UInt16)xyLXRangeMax xyLYRangeMin:(UInt16)xyLYRangeMin xyLYRangeMax:(UInt16)xyLYRangeMax;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -2649,6 +2800,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 xyLYRangeMin;
 /// The value of the xyL y Range Max field of the Light xyL y Range state.
 @property (nonatomic,assign) UInt16 xyLYRangeMax;
+- (NSData *)parameters;
 - (instancetype)initWithXyLXRangeMin:(UInt16)xyLXRangeMin xyLXRangeMax:(UInt16)xyLXRangeMax xyLYRangeMin:(UInt16)xyLYRangeMin xyLYRangeMax:(UInt16)xyLYRangeMax;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2660,6 +2812,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.5.1.1 Light LC Mode Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.229)
 @interface SigLightLCModeGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2675,6 +2828,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLightLCModeSet : SigAcknowledgedGenericMessage
 /// The target value of the Light LC Mode state.
 @property (nonatomic,assign) UInt8 mode;
+- (NSData *)parameters;
 - (instancetype)initWithMode:(UInt8)mode;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -2691,6 +2845,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLightLCModeSetUnacknowledged : SigGenericMessage
 /// The target value of the Light LC Mode state.
 @property (nonatomic,assign) UInt8 mode;
+- (NSData *)parameters;
 - (instancetype)initWithMode:(UInt8)mode;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2703,6 +2858,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLightLCModeStatus : SigGenericMessage
 /// The target value of the Light LC Mode state.
 @property (nonatomic,assign) UInt8 mode;
+- (NSData *)parameters;
 - (instancetype)initWithMode:(UInt8)mode;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2713,6 +2869,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.5.2.1 Light LC OM Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.230)
 @interface SigLightLCOMGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2728,6 +2885,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLightLCOMSet : SigAcknowledgedGenericMessage
 /// The target value of the Light LC Mode state.
 @property (nonatomic,assign) UInt8 mode;
+- (NSData *)parameters;
 - (instancetype)initWithMode:(UInt8)mode;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -2744,6 +2902,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLightLCOMSetUnacknowledged : SigGenericMessage
 /// The target value of the Light LC Mode state.
 @property (nonatomic,assign) UInt8 mode;
+- (NSData *)parameters;
 - (instancetype)initWithMode:(UInt8)mode;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2756,6 +2915,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLightLCOMStatus : SigGenericMessage
 /// The target value of the Light LC Mode state.
 @property (nonatomic,assign) UInt8 mode;
+- (NSData *)parameters;
 - (instancetype)initWithMode:(UInt8)mode;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2766,6 +2926,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 6.3.5.3.1 Light LC Light OnOff Get
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.231)
 @interface SigLightLCLightOnOffGet : SigAcknowledgedGenericMessage
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2782,10 +2943,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light LC Light OnOff state.
 @property (nonatomic,assign) BOOL lightOnOff;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithLightOnOff:(BOOL)lightOnOff transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithLightOnOff:(BOOL)lightOnOff transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
 - (Class)responseType;
@@ -2802,10 +2964,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light LC Light OnOff state.
 @property (nonatomic,assign) BOOL lightOnOff;
 /// The Transition Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *transitionTime;
+@property (nonatomic,strong) SigTransitionTime *transitionTime;
 /// Message execution delay in 5 millisecond steps.
 @property (nonatomic,assign) UInt8 delay;
-- (instancetype)initWithLightOnOff:(BOOL)lightOnOff transitionTime:(nullable SigTransitionTime *)transitionTime dalay:(UInt8)delay;
+- (NSData *)parameters;
+- (instancetype)initWithLightOnOff:(BOOL)lightOnOff transitionTime:(SigTransitionTime *)transitionTime dalay:(UInt8)delay;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -2820,8 +2983,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// The target value of the Light LC Light OnOff state.
 @property (nonatomic,assign) BOOL targetLightOnOff;
 /// The Remaining Time field identifies the time that an element will take to transition to the target state from the present state.
-@property (nonatomic,strong,nullable) SigTransitionTime *remainingTime;
-- (instancetype)initWithPresentLightOnOff:(BOOL)presentLightOnOff targetLightOnOff:(BOOL)targetLightOnOff remainingTime:(nullable SigTransitionTime *)remainingTime;
+@property (nonatomic,strong) SigTransitionTime *remainingTime;
+- (NSData *)parameters;
+- (instancetype)initWithPresentLightOnOff:(BOOL)presentLightOnOff targetLightOnOff:(BOOL)targetLightOnOff remainingTime:(SigTransitionTime *)remainingTime;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
 
@@ -2833,6 +2997,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SigLightLCPropertyGet : SigAcknowledgedGenericMessage
 /// Property ID identifying a Light LC Property.
 @property (nonatomic,assign) UInt16 lightLCPropertyID;
+- (NSData *)parameters;
 - (instancetype)initWithLightLCPropertyID:(UInt16)lightLCPropertyID;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -2851,6 +3016,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 lightLCPropertyID;
 /// Raw value for the Light LC Property.
 @property (nonatomic,strong) NSData *lightLCPropertyValue;
+- (NSData *)parameters;
 - (instancetype)initWithLightLCPropertyID:(UInt16)lightLCPropertyID lightLCPropertyValue:(NSData *)lightLCPropertyValue;
 - (instancetype)initWithParameters:(NSData *)parameters;
 /// The Type of the response message.
@@ -2869,6 +3035,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 lightLCPropertyID;
 /// Raw value for the Light LC Property.
 @property (nonatomic,strong) NSData *lightLCPropertyValue;
+- (NSData *)parameters;
 - (instancetype)initWithLightLCPropertyID:(UInt16)lightLCPropertyID lightLCPropertyValue:(NSData *)lightLCPropertyValue;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2883,6 +3050,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt16 lightLCPropertyID;
 /// Raw value for the Light LC Property.
 @property (nonatomic,strong) NSData *lightLCPropertyValue;
+- (NSData *)parameters;
 - (instancetype)initWithLightLCPropertyID:(UInt16)lightLCPropertyID lightLCPropertyValue:(NSData *)lightLCPropertyValue;
 - (instancetype)initWithParameters:(NSData *)parameters;
 @end
@@ -2897,6 +3065,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,assign) UInt8 firstIndex;
 /// Maximum number of entries that the server includes in a Firmware Update Information Status message.
 @property (nonatomic,assign) UInt8 entriesLimit;
+- (NSData *)parameters;
 - (instancetype)initWithParameters:(NSData *)parameters;
 - (instancetype)initWithFirstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit;
 /// The Type of the response message.

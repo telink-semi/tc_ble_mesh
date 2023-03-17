@@ -58,7 +58,7 @@ typedef enum : UInt16 {
 @property (nonatomic, assign) UInt16 unicastAddress;
 @property (nonatomic, strong) NSData *staticOobData;
 @property (nonatomic, strong) SigScanRspModel *unprovisionedDevice;
-@property (nonatomic,copy) addDevice_provisionSuccessCallBack provisionSuccessBlock;
+@property (nonatomic,copy) addDevice_prvisionSuccessCallBack provisionSuccessBlock;
 @property (nonatomic,copy) ErrorBlock failBlock;
 @property (nonatomic, assign) BOOL isProvisionning;
 @property (nonatomic, assign) UInt16 totalLength;
@@ -68,9 +68,6 @@ typedef enum : UInt16 {
 @property (nonatomic, assign) UInt16 currentRecordID;
 
 @property (nonatomic,strong) NSData *devicePublicKey;//certificate-base获取到的devicePublicKey
-
-//缓存旧的block，防止添加设备后不断开的情况下，SigBearer下的断开block不运行。
-@property (nonatomic,copy) bleDisconnectCallback oldBluetoothDisconnectCallback;
 
 @end
 
@@ -113,7 +110,6 @@ typedef enum : UInt16 {
 - (void)setState:(ProvisioningState)state{
     _state = state;
     if (state == ProvisioningState_fail) {
-        SigBluetooth.share.bluetoothDisconnectCallback = self.oldBluetoothDisconnectCallback;
         [self reset];
         __weak typeof(self) weakSelf = self;
         [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
@@ -170,7 +166,6 @@ typedef enum : UInt16 {
     model.compositionData = compositionData;
     
     [SigMeshLib.share.dataSource addAndSaveNodeToMeshNetworkWithDeviceModel:model];
-    SigBluetooth.share.bluetoothDisconnectCallback = self.oldBluetoothDisconnectCallback;
 }
 
 /// This method should be called when the OOB value has been received and Auth Value has been calculated. It computes and sends the Provisioner Confirmation to the device.
@@ -211,7 +206,7 @@ typedef enum : UInt16 {
     return shareManager;
 }
 
-- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
     [SigECCEncryptHelper.share eccInit];
     
@@ -238,7 +233,6 @@ typedef enum : UInt16 {
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
     TeLogInfo(@"start provision.");
-    self.oldBluetoothDisconnectCallback = SigBluetooth.share.bluetoothDisconnectCallback;
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
         [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
@@ -257,7 +251,7 @@ typedef enum : UInt16 {
     }];
 }
 
-- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOobData:(NSData *)oobData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOobData:(NSData *)oobData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
     [SigECCEncryptHelper.share eccInit];
 
@@ -284,7 +278,6 @@ typedef enum : UInt16 {
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
     TeLogInfo(@"start provision.");
-    self.oldBluetoothDisconnectCallback = SigBluetooth.share.bluetoothDisconnectCallback;
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
         [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
@@ -313,7 +306,7 @@ typedef enum : UInt16 {
 /// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(NSData * _Nullable)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+- (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(NSData * _Nullable)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
     [SigECCEncryptHelper.share eccInit];
 
@@ -355,7 +348,7 @@ typedef enum : UInt16 {
 /// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
     [SigECCEncryptHelper.share eccInit];
 
@@ -603,7 +596,7 @@ typedef enum : UInt16 {
                         [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
                     }];
                 } else {
-                    if (SigMeshLib.share.dataSource.addStaticOOBDeviceByNoOOBEnable) {
+                    if (SigMeshLib.share.dataSource.addStaticOOBDevcieByNoOOBEnable) {
                         //SDK当前设置了兼容模式（即staticOOB设备可以通过noOOB provision的方式进行添加）
                         TeLogVerbose(@"static OOB device,do no OOB provision");
                         [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {

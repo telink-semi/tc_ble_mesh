@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"
+#include "proj/tl_common.h"
 #include "proj_lib/rf_drv.h"
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/ll/ll.h"
@@ -44,7 +44,6 @@
 #include "../common/app_proxy.h"
 #include "../common/app_health.h"
 #include "../common/vendor_model.h"
-#include "../common/subnet_bridge.h"
 #include "proj/drivers/keyboard.h"
 #include "app.h"
 #include "stack/ble/gap/gap.h"
@@ -396,25 +395,6 @@ void proc_ui()
 	}
 	st_sw2_last = st_sw2;
 	#endif
-
-	#if (DF_TEST_MODE_EN)
-	static u8 st_sw2_last, onoff;	
-	u8 st_sw2 = !gpio_read(SW2_GPIO);
-	
-	if(!(st_sw2_last)&&st_sw2){ // dispatch just when you press the button 
-		foreach(i, MAX_FIXED_PATH){
-			path_entry_com_t *p_fwd_entry = &model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[0].path[i];
-			if(is_ele_in_node(ele_adr_primary, p_fwd_entry->path_origin, p_fwd_entry->path_origin_snd_ele_cnt+1)){
-				access_cmd_onoff(p_fwd_entry->destination, 0, onoff, CMD_NO_ACK, 0);
-				onoff = !onoff;
-				break;
-			}
-		}
-
-	    scan_io_interval_us = 100*1000; // fix dithering
-	}
-	st_sw2_last = st_sw2;
-	#endif
 	
 	#if IV_UPDATE_TEST_EN
 	mesh_iv_update_test_initiate();
@@ -460,36 +440,12 @@ void test_simu_io_user_define_proc()
 }
 #endif
 
-#if (GATT_LPN_EN)
-int soft_timer_send_mesh_adv()
-{
-	int ret = -1;	
-	mesh_send_adv2scan_mode(1);
-	if(my_fifo_get(&mesh_adv_cmd_fifo)){		
-		ret = get_mesh_adv_interval();
-	}
-	return ret;
-}
-
-void soft_timer_mesh_adv_proc()
-{
-	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
-		if(!is_soft_timer_exist(&soft_timer_send_mesh_adv)){
-			blt_soft_timer_update(&soft_timer_send_mesh_adv, get_mesh_adv_interval());
-		}
-	}
-}
-#endif
-
 void main_loop ()
 {
 	static u32 tick_loop;
 
 	tick_loop ++;
 #if (BLT_SOFTWARE_TIMER_ENABLE)
-	#if GATT_LPN_EN
-	soft_timer_mesh_adv_proc();
-	#endif
 	blt_soft_timer_process(MAINLOOP_ENTRY);
 #endif
 	mesh_loop_proc_prior(); // priority loop, especially for 8269
@@ -543,11 +499,10 @@ void main_loop ()
 	#if DU_LPN_EN
 		#if LPN_CONTROL_EN
 		extern u8 save_power_mode ;
-	if(is_provision_success()||save_power_mode == 0)
+	if(is_provision_success()||save_power_mode == 0){
 		#else
-	if(is_provision_success()||mi_mesh_get_state())
+	if(is_provision_success()||mi_mesh_get_state()){
 		#endif
-	{
 		mesh_loop_process();
 	}else{
 		#if RTC_USE_32K_RC_ENABLE

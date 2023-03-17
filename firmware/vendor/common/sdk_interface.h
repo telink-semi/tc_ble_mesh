@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "tl_common.h"
+#include "proj/tl_common.h"
 #ifndef WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
