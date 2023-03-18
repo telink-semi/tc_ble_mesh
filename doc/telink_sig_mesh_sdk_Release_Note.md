@@ -20,6 +20,8 @@
 
 * to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
 
+### CodeSize
+
 * Flash and RAM (default target):
 
   - 8258_mesh:_________Flash 118 KB, RAM (28 KB + 3K stack),
