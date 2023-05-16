@@ -40,4 +40,13 @@ public class GroupInfo implements Serializable {
     public int address;
 
     public boolean selected = false;
+
+    public int getExtendAddress(int offset) {
+        return (address - 0xC000) * 0x10 + 0xD000 + offset; // 0xC000 -> 0xD000
+    }
+
+
+    public static int getExtendAddress(int address, int offset) {
+        return (address - 0xC000) * 0x10 + 0xD000 + offset; // 0xC000 -> 0xD000
+    }
 }

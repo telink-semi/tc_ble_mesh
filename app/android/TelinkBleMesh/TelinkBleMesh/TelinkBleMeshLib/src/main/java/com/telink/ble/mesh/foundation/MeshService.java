@@ -58,6 +58,9 @@ public class MeshService implements MeshController.EventCallback {
      */
     private MeshController mController;
 
+    /**
+     * singleton for mesh-service
+     */
     private static MeshService mThis = new MeshService();
 
     public static MeshService getInstance() {

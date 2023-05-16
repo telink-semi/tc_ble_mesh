@@ -128,7 +128,7 @@ public class MeshStorage {
         public int phase;
         public String key;
         public String minSecurity;
-        public String oldKey = Defaults.KEY_INVALID;
+//        public String oldKey = Defaults.KEY_INVALID;
         public String timestamp;
     }
 

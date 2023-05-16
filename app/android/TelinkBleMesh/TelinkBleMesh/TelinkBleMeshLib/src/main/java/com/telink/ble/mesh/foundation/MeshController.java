@@ -107,6 +107,7 @@ import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.ContextUtil;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -119,6 +120,10 @@ import java.util.UUID;
  */
 
 public final class MeshController implements ProvisioningBridge, NetworkingBridge, AccessBridge {
+
+    /**
+     * log tag
+     */
     private static final String LOG_TAG = "MeshController";
 
     /**
@@ -188,10 +193,20 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private RemoteProvisioningController mRemoteProvisioningController;
 
+    /**
+     * fast-provision
+     * telink private protocol
+     */
     private FastProvisioningController mFastProvisioningController;
 
+    /**
+     * gatt OTA
+     */
     private GattOtaController mGattOtaController;
 
+    /**
+     * current active action
+     */
     private Mode actionMode = Mode.IDLE;
 
     /**
@@ -203,17 +218,30 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      * is disconnecting when reconnect
      */
     private boolean isDisconnectWaiting = false;
+
     /**
      * lock for scanning
      */
     private final Object SCAN_LOCK = new Object();
 
+    /**
+     * flag of bluetooth scanning
+     */
     private boolean isScanning = false;
 
+    /**
+     * cache of bluetooth scanning records
+     */
     private Set<AdvertisingDevice> advDevices = new LinkedHashSet<>();
 
+    /**
+     * current mesh configs
+     */
     private MeshConfiguration meshConfiguration;
 
+    /**
+     * networkId, networkIdentityKey, networkBeaconKey and privateBeaconKey are calculated by networkKey in {@link #meshConfiguration}
+     */
     private byte[] networkId = null;
 
     private byte[] networkIdentityKey = null;
@@ -229,14 +257,19 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private boolean isActionStarted = false;
 
-//    private boolean isProvisionProcessing = false;
-
-//    private boolean isKeyBindProcessing = false;
-
+    /**
+     * max connection retry count if gatt connect failed
+     */
     private static final int MAX_CONNECT_RETRY = 3;
 
+    /**
+     * current connection retry index
+     */
     private int connectRetry = 0;
 
+    /**
+     * event callback
+     */
     private EventCallback eventCallback;
 
     /**
@@ -256,6 +289,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private static final long TARGET_PROXY_CONNECT_TIMEOUT = 60 * 1000;
 
+    /**
+     * rest when receive NodeIdentityStatus message
+     */
     private long lastNodeSetTimestamp = 0;
 
     /**
@@ -925,7 +961,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private void onGattNotification(byte[] completePacket) {
         if (completePacket.length > 1) {
-            byte proxyPduType = (byte) (completePacket[0] & ProxyPDU.BITS_TYPE);
+            byte proxyPduType = (byte) (completePacket[0] & ProxyPDU.MASK_TYPE);
 
             byte[] payloadData = new byte[completePacket.length - 1];
             System.arraycopy(completePacket, 1, payloadData, 0, payloadData.length);
@@ -958,6 +994,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                         byte beaconType = payloadData[0];
                         if (beaconType == SecureNetworkBeacon.BEACON_TYPE_SECURE_NETWORK) {
                             mNetworkingController.parseSecureBeacon(payloadData, this.networkBeaconKey);
+                        }
+
+                        else if (beaconType == SecureNetworkBeacon.BEACON_TYPE_MESH_PRIVATE) {
+                            mNetworkingController.parsePrivateBeacon(payloadData, this.privateBeaconKey);
                         }
                     }
                     break;
@@ -2082,7 +2122,12 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         this.eventCallback = callback;
     }
 
+    /**
+     * Event callback
+     * @see Event
+     */
     interface EventCallback {
+
         void onEventPrepared(Event<String> event);
     }
 

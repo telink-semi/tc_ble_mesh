@@ -26,7 +26,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 
-import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.StatusMessage;
@@ -35,7 +34,6 @@ import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlTemperatureStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
-import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.OnlineStatusInfo;
 import com.telink.ble.mesh.foundation.MeshApplication;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
@@ -43,23 +41,17 @@ import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.foundation.event.OnlineStatusEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.AppSettings;
-import com.telink.ble.mesh.model.GroupInfo;
-import com.telink.ble.mesh.model.MeshAppKey;
 import com.telink.ble.mesh.model.MeshInfo;
-import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.UnitConvert;
-import com.telink.ble.mesh.model.json.AddressRange;
-import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.FileSystem;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -119,64 +111,24 @@ public class TelinkMeshApplication extends MeshApplication {
 
     private void initMesh() {
         Object configObj = FileSystem.readAsObject(this, MeshInfo.FILE_NAME);
+        MeshInfo meshInfo;
         if (configObj == null) {
             meshInfo = MeshInfo.createNewMesh(this);
             meshInfo.saveOrUpdate(this);
         } else {
             meshInfo = (MeshInfo) configObj;
         }
+        setupMesh(meshInfo);
 //        meshInfo = createTestMesh();
     }
 
-    private MeshInfo createTestMesh() {
-        MeshInfo meshInfo = new MeshInfo();
-
-        meshInfo.meshNetKeyList = new ArrayList<>();
-        final int KEY_COUNT = 1;
-        final String[] NET_KEY_NAMES = {"Default Net Key"};
-        final String[] APP_KEY_NAMES = {"Default App Key"};
-        for (int i = 0; i < KEY_COUNT; i++) {
-            meshInfo.meshNetKeyList.add(new MeshNetKey(NET_KEY_NAMES[i], i,
-                    Arrays.hexToBytes("12F08D8C4D071A15D2492BEEE628AF0E")));
-            meshInfo.appKeyList.add(new MeshAppKey(APP_KEY_NAMES[i],
-                    i,
-                    Arrays.hexToBytes("B22AEFE003E7FE09662020D6CBC5E76E"),
-                    i));
-        }
-
-        meshInfo.ivIndex = 0;
-        meshInfo.sequenceNumber = 0;
-        meshInfo.nodes = new ArrayList<>();
-        meshInfo.localAddress = 0x0001;
-        meshInfo.resetProvisionIndex(2);
-        meshInfo.provisionerUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
-
-        meshInfo.groups = new ArrayList<>();
-        meshInfo.unicastRange = new ArrayList<>();
-        meshInfo.unicastRange.add(new AddressRange(0x01, 0x400));
-        meshInfo.addressTopLimit = 0x0400;
-
-        GroupInfo group;
-        for (int i = 0; i < 8; i++) {
-            group = new GroupInfo();
-            group.address = i | 0xC000;
-            group.name = "group-" + i;
-            meshInfo.groups.add(group);
-        }
-
-
-        NodeInfo nodeInfo = new NodeInfo();
-        nodeInfo.meshAddress = 2;
-        nodeInfo.deviceKey = Arrays.hexToBytes("C0871EB77FE43190531D8B1F126B26DE");
-        nodeInfo.compositionData = new CompositionData();
-        nodeInfo.bound = true;
-        meshInfo.nodes.add(nodeInfo);
-        return meshInfo;
-
-    }
-
     public void setupMesh(MeshInfo mesh) {
-        MeshLogger.d("setup mesh info: " + meshInfo.toString());
+        MeshLogger.d("setup mesh info: " + mesh.toString());
+        if (mesh.extendGroups.size() == 0) {
+            if (SharedPreferenceHelper.isLevelServiceEnable(this)) {
+                mesh.addExtendGroups();
+            }
+        }
         this.meshInfo = mesh;
         dispatchEvent(new MeshEvent(this, MeshEvent.EVENT_TYPE_MESH_RESET, "mesh reset"));
     }
@@ -344,8 +296,6 @@ public class TelinkMeshApplication extends MeshApplication {
                     } else {
                         onOff = 1;
                     }
-
-
                 }
                 /*if (deviceInfo.getOnOff() != onOff){
 

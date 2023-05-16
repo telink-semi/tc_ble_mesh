@@ -33,8 +33,6 @@ import com.telink.ble.mesh.foundation.Event;
 public class AutoConnectEvent extends Event<String> {
     public static final String EVENT_TYPE_AUTO_CONNECT_LOGIN = "com.telink.ble.mesh.EVENT_TYPE_AUTO_CONNECT_LOGIN";
 
-//    public static final String EVENT_TYPE_AUTO_CONNECT_LOGOUT = "com.telink.ble.mesh.EVENT_TYPE_AUTO_CONNECT_LOGOUT";
-
     private int connectedAddress;
 
     public AutoConnectEvent(Object sender, String type, int connectedAddress) {

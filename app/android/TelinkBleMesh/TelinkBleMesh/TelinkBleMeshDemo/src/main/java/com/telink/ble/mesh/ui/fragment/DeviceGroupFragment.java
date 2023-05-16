@@ -31,6 +31,7 @@ import android.view.ViewGroup;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.MeshSigModel;
@@ -61,11 +62,15 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
     private List<GroupInfo> allGroups;
     private Handler delayHandler = new Handler();
     private NodeInfo deviceInfo;
-    int address;
+    private int nodeAddress;
     private MeshSigModel[] models = MeshSigModel.getDefaultSubList();
+
+    // all element address that contains level model
+    private MeshSigModel[] levelAssociatedModels = MeshSigModel.getLevelAssociatedList();
     private int modelIndex = 0;
     private int opGroupAdr;
     private int opType;
+    private boolean isLevelServiceEnable;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -76,9 +81,11 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        address = getArguments().getInt("address");
-        deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(address);
+        isLevelServiceEnable = SharedPreferenceHelper.isLevelServiceEnable(getActivity());
+        nodeAddress = getArguments().getInt("address");
+        deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(nodeAddress);
         getLocalDeviceGroupInfo();
+//        levelModelElements = deviceInfo.getEleListByModel(MeshSigModel.SIG_MD_G_LEVEL_S.modelId);
 
         RecyclerView rv_groups = view.findViewById(R.id.rv_group);
         mAdapter = new GroupInfoAdapter(getActivity(), allGroups);
@@ -87,9 +94,9 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
         rv_groups.setAdapter(mAdapter);
 
         mAdapter.setOnItemClickListener(position -> {
-            if (!deviceInfo.isOffline())
-                setDeviceGroupInfo(allGroups.get(position).address
-                        , allGroups.get(position).selected ? 1 : 0);
+//            if (!deviceInfo.isOffline())
+            setDeviceGroupInfo(allGroups.get(position).address
+                    , allGroups.get(position).selected ? 1 : 0);
         });
 
         refreshUI();
@@ -126,7 +133,7 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
     }
 
     private void setNextModel() {
-        if (modelIndex > models.length - 1) {
+        if (modelIndex > getTotalSize() - 1) {
             if (opType == 0) {
                 deviceInfo.subList.add(opGroupAdr);
             } else {
@@ -140,21 +147,43 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
             });
 
         } else {
-            final int eleAdr = deviceInfo.getTargetEleAdr(models[modelIndex].modelId);
-            if (eleAdr == -1) {
-                modelIndex++;
-                setNextModel();
-                return;
-            }
-            MeshMessage groupingMessage = ModelSubscriptionSetMessage.getSimple(address, opType, eleAdr, opGroupAdr, models[modelIndex].modelId, true);
+            final int eleAdr;
+            final int modelId;
+            final int groupAdr;
+            if (modelIndex < models.length) {
+                eleAdr = deviceInfo.getTargetEleAdr(models[modelIndex].modelId);
+                modelId = models[modelIndex].modelId;
+                if (eleAdr == -1) {
+                    modelIndex++;
+                    setNextModel();
+                    return;
+                }
+                groupAdr = opGroupAdr;
+            } else {
+                int levelIndex = modelIndex - models.length;
+                eleAdr = deviceInfo.getLevelAssociatedEleAdr(levelAssociatedModels[levelIndex].modelId);
+                if (eleAdr == -1) {
+                    modelIndex++;
+                    setNextModel();
+                    return;
+                }
 
+                modelId = MeshSigModel.SIG_MD_G_LEVEL_S.modelId;
+                groupAdr = GroupInfo.getExtendAddress(opGroupAdr, levelIndex);
+            }
+
+            MeshMessage groupingMessage = ModelSubscriptionSetMessage.getSimple(nodeAddress, opType, eleAdr, groupAdr, modelId, true);
             if (!MeshService.getInstance().sendMeshMessage(groupingMessage)) {
                 delayHandler.removeCallbacksAndMessages(null);
                 toastMsg("setting fail!");
                 dismissWaitingDialog();
             }
         }
+    }
 
+    // sub models and level model
+    private int getTotalSize() {
+        return isLevelServiceEnable ? (models.length + levelAssociatedModels.length) : models.length;
     }
 
     private void getLocalDeviceGroupInfo() {
@@ -205,4 +234,5 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
             refreshUI();
         }
     }
+
 }

@@ -26,6 +26,8 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.telink.ble.mesh.SharedPreferenceHelper;
+import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.entity.CompositionData;
@@ -218,6 +220,17 @@ public class MeshStorageService {
         }
 
 
+        if (SharedPreferenceHelper.isLevelServiceEnable(TelinkMeshApplication.getInstance())) {
+            // add extend groups
+            groups = mesh.extendGroups;
+            for (int i = 0; i < groups.size(); i++) {
+                MeshStorage.Group group = new MeshStorage.Group();
+                group.address = String.format("%04X", groups.get(i).address);
+                group.name = groups.get(i).name;
+                meshStorage.groups.add(group);
+            }
+        }
+
         // create default provisioner
         MeshStorage.Provisioner provisioner = new MeshStorage.Provisioner();
         provisioner.UUID = mesh.provisionerUUID;
@@ -402,6 +415,7 @@ public class MeshStorageService {
         }
 
         mesh.groups = new ArrayList<>();
+        mesh.extendGroups = new ArrayList<>();
 
         if (meshStorage.groups != null) {
             GroupInfo group;
@@ -409,7 +423,11 @@ public class MeshStorageService {
                 group = new GroupInfo();
                 group.name = gp.name;
                 group.address = MeshUtils.hexString2Int(gp.address, ByteOrder.BIG_ENDIAN);
-                mesh.groups.add(group);
+                if (group.name.contains("subgroup")) {
+                    mesh.extendGroups.add(group);
+                } else {
+                    mesh.groups.add(group);
+                }
             }
         }
 
@@ -555,6 +573,17 @@ public class MeshStorageService {
                     element.models = new ArrayList<>();
                     MeshStorage.Model model;
 
+                    // find the offset ? (C000 + 1000 + ?)
+                    MeshSigModel[] levelAssociatedModels = MeshSigModel.getLevelAssociatedList();
+                    int levelModelIndex = -1;
+                    for (int j = 0; j < levelAssociatedModels.length; j++) {
+                        if (ele.sigModels.contains(MeshSigModel.SIG_MD_G_LEVEL_S.modelId) && ele.sigModels.contains(levelAssociatedModels[j].modelId)) {
+                            levelModelIndex = j;
+                            break;
+                        }
+                    }
+
+
                     if (ele.sigNum != 0 && ele.sigModels != null) {
                         for (int modelId : ele.sigModels) {
                             model = new MeshStorage.Model();
@@ -563,11 +592,21 @@ public class MeshStorageService {
                             model.bind.add(appKeyIndex);
 
                             model.subscribe = new ArrayList<>();
+
+                            // for default sub models
                             if (inDefaultSubModel(modelId)) {
                                 for (int subAdr : deviceInfo.subList) {
                                     model.subscribe.add(String.format("%04X", subAdr));
                                 }
                             }
+
+                            // for level models:  use the offset
+                            if (modelId == MeshSigModel.SIG_MD_G_LEVEL_S.modelId && levelModelIndex != -1) {
+                                for (int subAdr : deviceInfo.subList) { //
+                                    model.subscribe.add(String.format("%04X", GroupInfo.getExtendAddress(subAdr, levelModelIndex)));
+                                }
+                            }
+
 
                             if (publishModel != null && publishModel.modelId == modelId) {
                                 final MeshStorage.Publish publish = new MeshStorage.Publish();

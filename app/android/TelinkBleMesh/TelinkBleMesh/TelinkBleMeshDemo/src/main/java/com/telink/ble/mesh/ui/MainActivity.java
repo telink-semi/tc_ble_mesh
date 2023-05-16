@@ -36,7 +36,6 @@ import androidx.fragment.app.FragmentManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.firmwaredistribution.DistributionPhase;
@@ -66,7 +65,6 @@ import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.ui.fragment.DeviceFragment;
 import com.telink.ble.mesh.ui.fragment.GroupFragment;
 import com.telink.ble.mesh.ui.fragment.SettingFragment;
-import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.ByteArrayInputStream;
@@ -91,15 +89,19 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initBottomNav();
-        TelinkMeshApplication.getInstance().addEventListener(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN, this);
-        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
-        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_EMPTY, this);
-        TelinkMeshApplication.getInstance().addEventListener(FDStatusMessage.class.getName(), this);
+        addEventListeners();
         startMeshService();
         resetNodeState();
 
         FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
         CertCacheService.getInstance().load(this); // load cert cache
+    }
+
+    private void addEventListeners() {
+        TelinkMeshApplication.getInstance().addEventListener(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN, this);
+        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
+        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_EMPTY, this);
+        TelinkMeshApplication.getInstance().addEventListener(FDStatusMessage.class.getName(), this);
     }
 
     private void initBottomNav() {
@@ -134,6 +136,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         MeshService.getInstance().resetExtendBearerMode(SharedPreferenceHelper.getExtendBearerMode(this));
     }
 
+    // set all devices to offline
     private void resetNodeState() {
         MeshInfo mesh = TelinkMeshApplication.getInstance().getMeshInfo();
         if (mesh.nodes != null) {
