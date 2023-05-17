@@ -304,18 +304,6 @@ public class MeshTest {
     }
 
 
-    @Test
-    public void testMeshPrivateBeacon() {
-
-        byte[] netKey = Arrays.hexToBytes("f7a2a44f8e8a8029064f173ddc1e2b00");
-        byte[] pvtBeaconKey = Encipher.generatePrivateBeaconKey(netKey);
-
-        int ivIndex = 0x1010abcd;
-
-//        MeshPrivateBeacon beacon = MeshPrivateBeacon.createIvUpdatingBeacon()
-    }
-
-
     /**
      * test in UI
      */
