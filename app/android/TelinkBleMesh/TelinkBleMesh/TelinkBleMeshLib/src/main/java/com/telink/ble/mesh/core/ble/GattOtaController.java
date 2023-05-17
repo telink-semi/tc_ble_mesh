@@ -157,7 +157,7 @@ public class GattOtaController {
         otaWriteData(new byte[]{OTA_START & 0xFF, (byte) (OTA_START >> 8 & 0xFF)}, TAG_OTA_START);
     }
 
-
+    // send ota read command between start-command and first packet
     private void sendOtaStartReadCmd() {
         GattRequest cmd = GattRequest.newInstance();
         cmd.serviceUUID = UUIDInfo.SERVICE_UUID_OTA;
