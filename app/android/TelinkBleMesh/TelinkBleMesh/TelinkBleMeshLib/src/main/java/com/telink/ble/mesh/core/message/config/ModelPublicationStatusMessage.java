@@ -87,7 +87,7 @@ public class ModelPublicationStatusMessage extends StatusMessage implements Parc
 
         modelPublication.modelId = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
         if ((index + 2) <= data.length) {
-            modelPublication.sig = true;
+            modelPublication.sig = false;
             modelPublication.modelId |= ((data[index++] & 0xFF) << 16) | ((data[index] & 0xFF) << 24);
         }
         this.publication = modelPublication;

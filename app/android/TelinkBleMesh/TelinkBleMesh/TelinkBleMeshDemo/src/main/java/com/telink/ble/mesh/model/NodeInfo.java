@@ -154,6 +154,18 @@ public class NodeInfo implements Serializable {
     // network retransmit
     public byte networkRetransmit = 0x15;
 
+
+    /**
+     * direct forwarding enabled
+     */
+    public boolean directForwardingEnabled = false;
+
+    public boolean directRelay = false;
+
+    public boolean directProxyEnabled = false;
+
+    public boolean directFriend = false;
+
     private OfflineCheckTask offlineCheckTask = (OfflineCheckTask) () -> {
         onlineState = OnlineState.OFFLINE;
         MeshLogger.log("offline check task running");
