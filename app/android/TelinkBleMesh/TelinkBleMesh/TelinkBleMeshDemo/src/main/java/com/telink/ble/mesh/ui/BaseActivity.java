@@ -50,25 +50,48 @@ import com.telink.ble.mesh.util.MeshLogger;
 
 
 /**
+ * base activity
  * Created by Administrator on 2017/2/21.
  */
+@SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity implements EventListener<String> {
 
-    private AlertDialog confirmDialogBuilder;
-    protected Toast toast;
     protected final String TAG = getClass().getSimpleName();
-    private AlertDialog mWaitingDialog;
+
+    protected Toast toast;
+
+    /**
+     * waiting dialog
+     */
+    private AlertDialog waitingDialog;
+
+    /**
+     * waiting text
+     */
     private TextView waitingTip;
 
+    /**
+     * shown when phone location is closed
+     */
     private AlertDialog locationWarningDialog;
 
+    /**
+     * shown when bluetooth is closed
+     */
     private AlertDialog bleStateDialog;
 
+    /**
+     * confirm dialog with 2 buttons, confirm and cancel
+     */
+    private AlertDialog confirmDialogBuilder;
+
+    /**
+     * dialog with only one confirm button
+     */
     private AlertDialog tipDialog;
 
 
     @Override
-    @SuppressLint("ShowToast")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         MeshLogger.w(TAG + " onCreate");
@@ -115,7 +138,7 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
         if (this.toast != null) {
             this.toast.cancel();
         }
-        this.toast = Toast.makeText(this, s, Toast.LENGTH_SHORT);
+        this.toast = Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT);
         this.toast.show();
     }
 
@@ -223,23 +246,23 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
 
 
     public void showWaitingDialog(String tip) {
-        if (mWaitingDialog == null) {
+        if (waitingDialog == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             View dialogView = LayoutInflater.from(this).inflate(R.layout.view_dialog_waiting, null);
             waitingTip = dialogView.findViewById(R.id.waiting_tips);
             builder.setView(dialogView);
             builder.setCancelable(false);
-            mWaitingDialog = builder.create();
+            waitingDialog = builder.create();
         }
         if (waitingTip != null) {
             waitingTip.setText(tip);
         }
-        mWaitingDialog.show();
+        waitingDialog.show();
     }
 
     public void dismissWaitingDialog() {
-        if (mWaitingDialog != null && mWaitingDialog.isShowing()) {
-            mWaitingDialog.dismiss();
+        if (waitingDialog != null && waitingDialog.isShowing()) {
+            waitingDialog.dismiss();
         }
     }
 
@@ -254,11 +277,7 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
         Toolbar toolbar = findViewById(R.id.title_bar);
         if (enable) {
             toolbar.setNavigationIcon(R.drawable.ic_arrow_left);
-            toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    finish();
-                }
-            });
+            toolbar.setNavigationOnClickListener(v -> onBackPressed());
         } else {
             toolbar.setNavigationIcon(null);
         }

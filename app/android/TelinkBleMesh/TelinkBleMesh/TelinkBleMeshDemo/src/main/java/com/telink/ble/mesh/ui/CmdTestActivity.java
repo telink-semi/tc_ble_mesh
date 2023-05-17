@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file CmdActivity.java
+ * @file CmdTestActivity.java
  *
  * @brief for TLSR chips
  *
@@ -29,6 +29,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ScrollView;
@@ -68,39 +69,10 @@ import java.util.Locale;
 
 
 /**
- * Created by kee on 2017/8/17.
- * INI cmd example:
- * 0xa3, 0xff,  0x00, 0x00,   0x00, 0x00,   0x02        0x00        0xff, 0xff  0xc2, 0x11, 0x02    0xc4, 0x01, 0x01, 0x00
- * flag         netKeyIndex   appKeyIndex   retryCnt    rsp_max     dst         opcode              rsp
+ * add cycle test
  */
 
-public class CmdActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
-
-    /**
-     * INI cmd example:
-     * #reference: app_mesh.h
-     * <p>
-     * typedef struct{
-     * u16 nk_idx;
-     * u16 ak_idx;
-     * u8 retry_cnt;   // only for reliable command
-     * u8 rsp_max;     // only for reliable command
-     * u16 adr_dst;
-     * u8 op;
-     * u8 par[MESH_CMD_ACCESS_LEN_MAX];
-     * }mesh_bulk_cmd_par_t;
-     * <p>
-     * typedef struct{
-     * u8 op;
-     * u16 vendor_id;
-     * u8 op_rsp;
-     * u8 tid_pos;
-     * u8 par[MESH_CMD_ACCESS_LEN_MAX];
-     * }mesh_vendor_par_ini_t;
-     */
-
-    // {(byte) 0xa3, (byte) 0xff, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, (byte) 0xff, (byte) 0xff, (byte) 0xc2, 0x11, 0x02, (byte) 0xc4, 0x01, 0x01, 0x00}
-    /// default 0xa3ff, network_key_index: 0x0000, app_key_index: 0x0000, retry_cnt: 0x02, rsp_max: 0x00 (00 equals 01 )
+public class CmdTestActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
 
     /**
      * message type, use application key for common message, use device key for config message
@@ -146,6 +118,20 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
 
     private AccessType selectedType = AccessType.APPLICATION;
 
+
+    private Handler handler = new Handler();
+    private EditText et_interval, et_count;
+
+    private Button btn_start_test;
+
+    private int interval;
+
+    private int count;
+
+    private int testIndex;
+
+    private boolean isTesting;
+
     private Handler logHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -165,7 +151,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         if (!validateNormalStart(savedInstanceState)) {
             return;
         }
-        setContentView(R.layout.activity_message_assemble);
+        setContentView(R.layout.activity_cmd_test);
         initTitle();
 
         tv_params_preview = findViewById(R.id.tv_params_preview);
@@ -198,6 +184,80 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         TelinkMeshApplication.getInstance().addEventListener(OnOffStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(StatusNotificationEvent.EVENT_TYPE_NOTIFICATION_MESSAGE_UNKNOWN, this);
         TelinkMeshApplication.getInstance().addEventListener(OpcodeAggregatorStatusMessage.class.getName(), this);
+
+
+        et_interval = findViewById(R.id.et_interval);
+        et_count = findViewById(R.id.et_count);
+        btn_start_test = findViewById(R.id.btn_start_test);
+        btn_start_test.setOnClickListener(v -> {
+
+            if (isTesting) {
+                onTestComplete("manual stop");
+                handler.removeCallbacksAndMessages(null);
+            } else {
+                startTest();
+            }
+        });
+    }
+
+    MeshMessage sendingMessage;
+
+    private void startTest() {
+        try {
+            MeshMessage meshMessage = assembleMessage();
+            if (meshMessage != null) {
+                this.sendingMessage = meshMessage;
+                interval = Integer.parseInt(et_interval.getText().toString());
+                count = Integer.parseInt(et_count.getText().toString());
+                if (interval < 1) {
+                    toastMsg("interval input err");
+                    return;
+                }
+                if (count < 1) {
+                    toastMsg("count input err");
+                    return;
+                }
+                testIndex = 0;
+                isTesting = true;
+                updateButtonState();
+                next();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void next() {
+        if (this.sendingMessage == null) {
+            onTestComplete("message err");
+            return;
+        }
+        logHandler.obtainMessage(MSG_APPEND_LOG, "test ->" + testIndex).sendToTarget();;
+        MeshService.getInstance().sendMeshMessage(this.sendingMessage);
+        testIndex++;
+        if (testIndex >= count) {
+            onTestComplete("test complete");
+        } else {
+            handler.postDelayed(SENDING_TASK, interval);
+        }
+    }
+
+    private Runnable SENDING_TASK = new Runnable() {
+        @Override
+        public void run() {
+            next();
+        }
+    };
+
+    private void onTestComplete(String info) {
+        logHandler.obtainMessage(MSG_APPEND_LOG, info).sendToTarget();
+        isTesting = false;
+        updateButtonState();
+    }
+
+    private void updateButtonState() {
+        runOnUiThread(() -> btn_start_test.setText(isTesting ? "stop test" : "start test"));
     }
 
 
@@ -206,26 +266,23 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         setTitle("CMD");
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.message_assemble);
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                if (item.getItemId() == R.id.item_send) {
-                    try {
-                        MeshMessage meshMessage = assembleMessage();
-                        if (meshMessage != null) {
-                            boolean msgSent = MeshService.getInstance().sendMeshMessage(meshMessage);
-                            String info = String.format("send message: opcode -- %04X params -- %s", meshMessage.getOpcode(), Arrays.bytesToHexString(meshMessage.getParams()));
-                            if (!msgSent) {
-                                info += " -> failed";
-                            }
-                            logHandler.obtainMessage(MSG_APPEND_LOG, info).sendToTarget();
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.item_send) {
+                try {
+                    MeshMessage meshMessage = assembleMessage();
+                    if (meshMessage != null) {
+                        boolean msgSent = MeshService.getInstance().sendMeshMessage(meshMessage);
+                        String info = String.format("send message: opcode -- %04X params -- %s", meshMessage.getOpcode(), Arrays.bytesToHexString(meshMessage.getParams()));
+                        if (!msgSent) {
+                            info += " -> failed";
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                        logHandler.obtainMessage(MSG_APPEND_LOG, info).sendToTarget();
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                return false;
             }
+            return false;
         });
     }
 

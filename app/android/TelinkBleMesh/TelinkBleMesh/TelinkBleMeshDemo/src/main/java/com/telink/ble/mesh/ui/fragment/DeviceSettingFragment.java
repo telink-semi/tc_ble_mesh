@@ -243,16 +243,13 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         } else if (event.getType().equals(ModelPublicationStatusMessage.class.getName())) {
             final ModelPublicationStatusMessage statusMessage = (ModelPublicationStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
             if (statusMessage.getStatus() == ConfigStatus.SUCCESS.code) {
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        delayHandler.removeCallbacks(cmdTimeoutTask);
-                        dismissWaitingDialog();
-                        boolean settle = statusMessage.getPublication().publishAddress != 0;
-                        cb_pub.setChecked(settle);
-                        deviceInfo.setPublishModel(settle ? pubModel : null);
-                        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity());
-                    }
+                getActivity().runOnUiThread(() -> {
+                    delayHandler.removeCallbacks(cmdTimeoutTask);
+                    dismissWaitingDialog();
+                    boolean settle = statusMessage.getPublication().publishAddress != 0;
+                    cb_pub.setChecked(settle);
+                    deviceInfo.setPublishModel(settle ? pubModel : null);
+                    TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity());
                 });
 
             } else {
