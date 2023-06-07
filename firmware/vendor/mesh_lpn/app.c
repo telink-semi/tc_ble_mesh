@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/rf_drv.h"
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/ll/ll.h"

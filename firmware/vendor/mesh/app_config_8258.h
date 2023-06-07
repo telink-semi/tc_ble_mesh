@@ -91,7 +91,7 @@ extern "C" {
 #define HCI_USE_USB		2
 
 #ifndef HCI_ACCESS
-#if (WIN32 || PTS_TEST_EN)
+#if (WIN32 || PTS_TEST_EN || TESTCASE_FLAG_ENABLE)
 #define HCI_ACCESS		HCI_USE_USB
 #elif MESH_MONITOR_EN
 #define HCI_ACCESS		HCI_USE_UART
@@ -181,6 +181,10 @@ extern "C" {
 #define MESH_DLE_MODE               MESH_DLE_MODE_EXTEND_BEAR
 #define DLE_LEN_MAX_RX              (MAX_OCTETS_DATA_LEN_EXTENSION) // must MAX_OCTETS_DATA_LEN_EXTENSION
 #define DLE_LEN_MAX_TX              (40)
+#elif NMW_ENABLE
+#define MESH_DLE_MODE               MESH_DLE_MODE_GATT
+#define DLE_LEN_MAX_RX              (88)
+#define DLE_LEN_MAX_TX              (40)
 #else
 #define MESH_DLE_MODE               MESH_DLE_MODE_GATT
 #define DLE_LEN_MAX_RX              (56)
@@ -201,6 +205,10 @@ extern "C" {
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
 #define BLE_SIG_MESH_CERTIFY_ENABLE 	0
+
+#if GATT_LPN_EN
+#define BLT_SOFTWARE_TIMER_ENABLE		1
+#endif
 
 #ifndef BLT_SOFTWARE_TIMER_ENABLE
 #define BLT_SOFTWARE_TIMER_ENABLE		0

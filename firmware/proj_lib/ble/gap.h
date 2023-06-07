@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "../../proj/tl_common.h"
+#include "tl_common.h"
 
 
 /** @addtogroup  TELINK_BLE_STACK TELINK BLE Stack

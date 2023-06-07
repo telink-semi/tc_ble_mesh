@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj/mcu/watchdog_i.h"
 #include "vendor/common/user_config.h"
 #include "proj_lib/rf_drv.h"

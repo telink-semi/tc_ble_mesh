@@ -117,9 +117,6 @@ extern u8 mesh_health_poll_100ms();
 
 extern int mesh_cmd_sig_health_cur_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 extern int mesh_cmd_sig_health_fault_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-
-extern int mesh_cmd_sig_health_cur_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_health_fault_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 extern int mesh_cmd_sig_fault_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 extern int mesh_cmd_sig_fault_clr(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 extern int mesh_cmd_sig_fault_clr_unrel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -133,5 +130,6 @@ extern int mesh_cmd_sig_attention_get(u8 *par, int par_len, mesh_cb_fun_par_t *c
 extern int mesh_cmd_sig_attention_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 extern int mesh_cmd_sig_attention_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 
+int mesh_health_cur_fault_add(u8 fault);
 
 #endif 

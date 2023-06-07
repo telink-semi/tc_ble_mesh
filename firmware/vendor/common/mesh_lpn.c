@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -998,7 +998,7 @@ void mesh_main_loop_LPN()
 u8 mesh_lpn_quick_tx_flag = 0;
 int lpn_quick_tx(u8 is_quick_tx)
 {
-    u8 r = irq_disable();
+    u32 r = irq_disable();
 	mesh_lpn_quick_tx_flag = is_quick_tx;
 	int ret = mesh_send_adv2scan_mode(1);	
 	mesh_lpn_quick_tx_flag = 0;

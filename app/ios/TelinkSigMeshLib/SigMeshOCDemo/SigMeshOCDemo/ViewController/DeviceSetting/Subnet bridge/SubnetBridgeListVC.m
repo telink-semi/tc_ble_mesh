@@ -79,7 +79,7 @@
 }
 
 - (void)pushToAddBridgingTableVC {
-    AddBridgeTableVC *vc = (AddBridgeTableVC *)[UIStoryboard initVC:ViewControllerIdentifiers_AddBridgeTableVCID storybroad:@"DeviceSetting"];
+    AddBridgeTableVC *vc = (AddBridgeTableVC *)[UIStoryboard initVC:ViewControllerIdentifiers_AddBridgeTableVCID storyboard:@"DeviceSetting"];
     vc.model = self.model;
     [self.navigationController pushViewController:vc animated:YES];
 }

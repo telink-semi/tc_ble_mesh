@@ -22,14 +22,14 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
-#include "../../app_health.h"
+#include "vendor/common/app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor_model_mi.h"
 #if (VENDOR_MD_MI_EN)

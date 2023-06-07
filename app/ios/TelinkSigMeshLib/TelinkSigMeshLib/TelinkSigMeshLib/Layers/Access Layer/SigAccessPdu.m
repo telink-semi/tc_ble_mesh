@@ -26,44 +26,44 @@
 
 @implementation SigAccessPdu
 
-- (BOOL)isSegmented {
-    if (_message == nil) {
-        return NO;
-    }
-//新增判断：SigTelinkExtendBearerMode_extendGATTOnly模式只对直连节点发送DLE长包，非直连节点发送短包。
-    if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-        return _accessPdu.length > kUnsegmentedMessageLowerTransportPDUMaxLength || _message.isSegmented;
-    } else {
-        return _accessPdu.length > SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength || _message.isSegmented;
-    }
-}
+//- (BOOL)isSegmented {
+//    if (_message == nil) {
+//        return NO;
+//    }
+////新增判断：SigTelinkExtendBearerMode_extendGATTOnly模式只对直连节点发送DLE长包，非直连节点发送短包。
+//    if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+//        return _accessPdu.length > kUnsegmentedMessageLowerTransportPDUMaxLength || _message.isSegmented;
+//    } else {
+//        return _accessPdu.length > SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength || _message.isSegmented;
+//    }
+//}
 
-- (int)segmentsCount {
-    if (_message == nil) {
-        return 0;
-    }
-    if (![self isSegmented]) {
-        return 1;
-    }
-    switch (_message.security) {
-        case SigMeshMessageSecurityLow:
-            if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-                return 1 + (int)((_accessPdu.length + 3) / (kUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-            } else {
-                return 1 + (int)((_accessPdu.length + 3) / (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-            }
-            break;
-        case SigMeshMessageSecurityHigh:
-            if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-                return 1 + (int)((_accessPdu.length + 7) / (kUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-            } else {
-                return 1 + (int)((_accessPdu.length + 7) / (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
-            }
-            break;
-        default:
-            break;
-    }
-}
+//- (int)segmentsCount {
+//    if (_message == nil) {
+//        return 0;
+//    }
+//    if (![self isSegmented]) {
+//        return 1;
+//    }
+//    switch (_message.security) {
+//        case SigMeshMessageSecurityLow:
+//            if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+//                return 1 + (int)((_accessPdu.length + 3) / (kUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+//            } else {
+//                return 1 + (int)((_accessPdu.length + 3) / (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+//            }
+//            break;
+//        case SigMeshMessageSecurityHigh:
+//            if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && _destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+//                return 1 + (int)((_accessPdu.length + 7) / (kUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+//            } else {
+//                return 1 + (int)((_accessPdu.length + 7) / (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 3));
+//            }
+//            break;
+//        default:
+//            break;
+//    }
+//}
 
 - (instancetype)init {
     if (self = [super init]) {
@@ -116,7 +116,7 @@
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"Access PDU, source:(0x%04X)->destination: (0x%04X) Op Code: (0x%X), accessPdu=%@", _source, _destination.address, (unsigned int)_opCode,[LibTools convertDataToHexStr:_accessPdu]];
+    return [NSString stringWithFormat:@"Access PDU, source:(0x%04X)->destination: (0x%04X) Op Code: (0x%X), accessPdu=%@ len=%lu", _source, _destination.address, (unsigned int)_opCode,[LibTools convertDataToHexStr:_accessPdu], (unsigned long)_accessPdu.length];
 }
 
 @end

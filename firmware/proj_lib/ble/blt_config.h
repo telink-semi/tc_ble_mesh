@@ -30,13 +30,13 @@
  */
 #if !WIN32
 #include "proj/mcu/config.h"
-#include "../../proj/mcu/analog.h"
+#include "proj/mcu/analog.h"
 #include "../rf_drv.h"
 
 #endif
 
-#include "../../proj/tl_common.h"
-#include "../../vendor/common/dual_mode_adapt.h"
+#include "tl_common.h"
+#include "vendor/common/dual_mode_adapt.h"
 #include "../pm.h"
 
 #define PA_ENABLE	0
@@ -224,11 +224,9 @@ typedef struct {
 #if WIN32
 #define			FLASH_ADR_MD_PROPERTY		0x40000
 #define			FLASH_ADR_MD_DF_SBR			0x41000 
-#define			FLASH_ADR_MD_SOLI_PDU_RPL	0x43000
 #else
 #define			FLASH_ADR_MD_PROPERTY		0x3f000 // just test
 #define			FLASH_ADR_MD_DF_SBR			0x3f000 // just test
-#define			FLASH_ADR_MD_SOLI_PDU_RPL	0x3f000 // just test
 #endif
 
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
@@ -252,8 +250,7 @@ typedef struct {
 
 #define			FLASH_ADR_MESH_TYPE_FLAG	0x73000	// don't change, must same with telink mesh SDK
 #define			FLASH_ADR_MD_MESH_OTA		0x74000
-#define         FLASH_ADR_MD_REMOTE_PROV    0x75000 // remote provision part 
-#define 		FLASH_ADR_MD_PRIVATE_BEACON	0x75000
+#define 		FLASH_ADR_MD_MISC_PAR		0x75000	// Note: before is remote provision. 
 #define			FLASH_ADR_AREA_2_END		0x76000
 
 
@@ -291,6 +288,8 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
     #endif
 #elif(DUAL_MODE_WITH_TLK_MESH_EN)
 #define			FLASH_ADR_DUAL_MODE_4K		0x78000 // backup dual mode 4K firmware
+#elif(LLSYNC_ENABLE)
+#define			FLASH_ADR_THREE_PARA_ADR	0x78000
 #endif
 
 #if MI_API_ENABLE
@@ -328,7 +327,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_MD_G_POWER_ONOFF	0x36000
 #define			FLASH_ADR_MD_SCENE			0x37000
 #define			FLASH_ADR_MD_MESH_OTA		0x38000
-#define         FLASH_ADR_MD_REMOTE_PROV    0x39000 // remote provision part 
+//#define                                   0x39000 // reserve, before is remote provision. 
 #define 		FLASH_ADR_VC_NODE_INFO		0x3A000		//
 #define			FLASH_ADR_AREA_1_END		0x3B000
 // FLASH_ADR_AREA_1_END to start of user is reserve for telink
@@ -370,7 +369,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_MD_SCENE			0xC7000
 // 				                                            0xC8000 // reserve now
 #define			FLASH_ADR_MD_MESH_OTA		0xC9000
-#define         FLASH_ADR_MD_REMOTE_PROV    0xCA000 // remote provision part 
+//#define                                   0xCA000 // reserve, before is remote provision. 
 #define 		FLASH_ADR_VC_NODE_INFO		0xCB000		//
 #define			FLASH_ADR_AREA_1_END		0xCC000
 // FLASH_ADR_AREA_1_END to start of user is reserve for telink
@@ -475,7 +474,7 @@ vendor use from 0x7ffff to 0x78000 should be better, because telink may use 0x78
 #define			FLASH_ADR_MD_SCENE			0x52000
 // 				                                            0x53000 // reserve now
 #define			FLASH_ADR_MD_MESH_OTA		0x54000
-#define         FLASH_ADR_MD_REMOTE_PROV    0x55000 // remote provision part 
+//#define                                   0x55000 // reserve, before is remote provision. 
 #define 		FLASH_ADR_VC_NODE_INFO		0x56000		//
 #define			FLASH_ADR_AREA_1_END		0x57000
 // FLASH_ADR_AREA_1_END to start of user is reserve for telink
@@ -558,6 +557,13 @@ enum{
 	HCI_GATEWAY_CMD_RP_SCAN_START_SET     = 0x19,
 	HCI_GATEWAY_CMD_RP_LINK_OPEN		  = 0x1a,
 	HCI_GATEWAY_CMD_RP_START			  = 0x1b,
+	HCI_GATEWAY_CMD_GET_USB_ID			  = 0x1c, // for B91
+
+	HCI_GATEWAY_CMD_PRIMARY_INFO_GET	  	  = 0x1c,
+	HCI_GATEWAY_CMD_PRIMARY_INFO_SET	  	  = 0x1d,
+	HCI_GATEWAY_CMD_PRIMARY_INFO_STATUS	  	  = 0x1e,
+	
+	HCI_GATEWAY_CMD_SEND_NET_KEY    = 0x20,
 	// rsp cmd part 
 	HCI_GATEWAY_RSP_UNICAST	=0x80,
 	HCI_GATEWAY_RSP_OP_CODE	=0X81,
@@ -571,12 +577,17 @@ enum{
 	HCI_GATEWAY_CMD_SEND_NODE_INFO = 0x8d,
 	//HCI_GATEWAY_CMD_SEND_CPS_INFO	= 0x8e,
 	HCI_GATEWAY_CMD_HEARTBEAT	= 0x8f,
+
+	HCI_GATEWAY_CMD_SECURE_IVI = 0x90,
+	HCI_GATEWAY_CMD_PRIVATE_BEACON = 0x91,
+	
 	HCI_GATEWAY_CMD_SEND_MESH_OTA_STS	= 0x98,
 	HCI_GATEWAY_CMD_SEND_UUID   = 0x99,
 	HCI_GATEWAY_CMD_SEND_IVI    = 0x9a,
 	HCI_GATEWAY_CMD_SEND_EXTEND_ADV_OPTION = 0x9b,
 	HCI_GATEWAY_CMD_SEND_SRC_CMD = 0x9c,
 	HCI_GATEWAY_CMD_ONLINE_ST	= 0x9d,
+	HCI_GATEWAY_CMD_RSP_USB_ID	= 0x9e,
 	
 	HCI_GATEWAY_CMD_SEND_SNO_RSP    = 0xa0,
 	HCI_GATEWAY_CMD_SEND       = 0xb1,

@@ -25,7 +25,7 @@
 #ifndef BLE_MESH_CRYPTO_H
 #define BLE_MESH_CRYPTO_H
 
-#include "../../proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/ll/ll.h"
 //#include <memory.h>
 
 int test_mesh_sec_func ();

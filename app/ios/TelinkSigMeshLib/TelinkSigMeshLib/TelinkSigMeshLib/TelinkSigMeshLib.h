@@ -48,6 +48,8 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #define kExistRemoteProvision   (NO)
 /*是否存在CertificateBasedProvision功能*/
 #define kExistCertificateBasedProvision   (NO)
+/*是否存在Forwarding Table Entry功能*/
+#define kExistForwardingTableEntry   (NO)
 #import <TelinkSigMeshLib/SigConst.h>
 #import <TelinkSigMeshLib/SigEnumeration.h>
 #import <TelinkSigMeshLib/SigStruct.h>
@@ -86,6 +88,8 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #define kExistRemoteProvision   (YES)
 /*是否存在CertificateBasedProvision功能*/
 #define kExistCertificateBasedProvision   (YES)
+/*是否存在Forwarding Table Entry功能*/
+#define kExistForwardingTableEntry   (YES)
 #import <TelinkSigMeshLibExtensions/SigConst.h>
 #import <TelinkSigMeshLibExtensions/SigEnumeration.h>
 #import <TelinkSigMeshLibExtensions/SigStruct.h>
@@ -119,11 +123,13 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLibExtensions/SDKLibCommand+privateBeacon.h>
 #import <TelinkSigMeshLibExtensions/SDKLibCommand+firmwareUpdate.h>
 #import <TelinkSigMeshLibExtensions/SDKLibCommand+remoteProvision.h>
+#import <TelinkSigMeshLibExtensions/SDKLibCommand+directForwarding.h>
 #import <TelinkSigMeshLibExtensions/ConnectTools.h>
 #import <TelinkSigMeshLibExtensions/OTSCommand.h>
 #import <TelinkSigMeshLibExtensions/OTSBaseModel.h>
 #import <TelinkSigMeshLibExtensions/OTSHandle.h>
 #import <TelinkSigMeshLibExtensions/SDKLibCommand+CDTP.h>
 #import <TelinkSigMeshLibExtensions/NSData+Compression.h>
+#import <TelinkSigMeshLibExtensions/SDKLibCommand+minor_ENH.h>
 
 #endif

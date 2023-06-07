@@ -86,7 +86,8 @@ public class MeshStorage {
     /**
      * custom
      */
-    public String ivIndex = String.format("%08X", Defaults.IV_INDEX);
+    // remove
+//    public String ivIndex = String.format("%08X", Defaults.IV_INDEX);
 
     public static class Provisioner {
         public String provisionerName;

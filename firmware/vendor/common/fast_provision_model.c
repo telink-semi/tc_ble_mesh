@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -52,16 +52,14 @@ int mesh_reset_network(u8 provision_enable)
 	if(!is_provision_success()){
 		return 1;
 	}
-	u8 r = irq_disable ();
+	u32 r = irq_disable ();
 	factory_test_mode_en = 1;
 	provision_mag.gatt_mode = GATT_PROVISION_MODE;
 	cache_init(ADR_ALL_NODES);
 	mesh_provision_para_reset();
 
 //init iv idx
-	u8 iv_idx_cur[4] = IV_IDX_CUR;
-	memcpy(iv_idx_st.cur, iv_idx_cur, 4);
-	mesh_iv_idx_init(iv_idx_st.cur, 0);
+	mesh_iv_idx_init(IV_IDX_CUR, 0, 0);
 //init model info
 	mesh_common_reset_all();
 	provision_mag.gatt_mode = GATT_PROVISION_MODE;// because retrive in mesh_common_reset_all	
@@ -143,6 +141,7 @@ void mesh_revert_network()
 u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid)
 {
 	u8 node_ele_cnt = 1;
+	pid &= 0x0fff;// should discard MCU chip type of MESH_PID_SEL
 	switch(pid){
 	case LIGHT_TYPE_CT:
 		node_ele_cnt = 2;
@@ -496,8 +495,11 @@ void mesh_fast_prov_proc()
 		case VD_MESH_RESET_NETWORK:
 			if(fast_prov.cur_sts == FAST_PROV_IDLE){
 				mesh_adv_txrx_to_self_en(1);
-				mesh_fast_prov_sts_set(FAST_PROV_RESET_NETWORK);
-				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_RESET_NETWORK",0);
+				mesh_fast_prov_val_init(); // the proxy node maybe just provision by pb_gatt
+				if(is_provision_success()){
+					mesh_fast_prov_sts_set(FAST_PROV_RESET_NETWORK);
+					LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_RESET_NETWORK",0);
+				}
 			}
 			break;
 		case VD_MESH_ADDR_GET:
@@ -541,9 +543,6 @@ void mesh_fast_prov_proc()
 
 int cb_vd_mesh_reset_network(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	if(!fast_prov.not_need_prov){
-		return -1;
-	}
 	mesh_fast_prov_rcv_op(cb_par->op);
 	fast_prov.delay = par[0] + (par[1]<<8);
 

@@ -26,8 +26,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface SigKeyBindManager : NSObject
-@property (nonatomic, assign) NSInteger getCompositionTimeOut;//default 10s
-@property (nonatomic, assign) NSInteger appkeyAddTimeOut;//default 10s
+@property (nonatomic, assign) NSInteger getCompositionTimeOut;//default 20s
+@property (nonatomic, assign) NSInteger appkeyAddTimeOut;//default 20s
 @property (nonatomic, assign) NSInteger bindModelTimeOut;//default 60s*2
 
 

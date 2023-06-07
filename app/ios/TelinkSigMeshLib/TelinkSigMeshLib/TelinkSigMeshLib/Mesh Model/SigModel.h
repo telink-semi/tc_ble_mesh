@@ -24,7 +24,7 @@
 #import <Foundation/Foundation.h>
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigNetkeyDerivaties,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel,SigMeshAddress;
+@class SigNetkeyDerivaties,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayretransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel,SigMeshAddress, SigDirectControlStatus, SigForwardingTableModel;
 typedef void(^BeaconBackCallBack)(BOOL available);
 typedef void(^responseAllMessageBlock)(UInt16 source,UInt16 destination,SigMeshMessage *responseMessage);
 
@@ -348,7 +348,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// 16-bit address.
 @property (nonatomic, assign) UInt16 address;
 /// Virtual label UUID.
-@property (nonatomic, strong) CBUUID *virtualLabel;
+@property (nonatomic, strong, nullable) CBUUID *virtualLabel;
 
 - (instancetype)initWithHex:(NSString *)hex;
 
@@ -507,6 +507,10 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic, assign) UInt8 nid;
 /// Network identifier derived from the old key.
 @property (nonatomic, assign) UInt8 oldNid;
+/// Network identifier.
+@property (nonatomic, assign) UInt8 directedSecurityNid;
+/// Network identifier derived from the old key.
+@property (nonatomic, assign) UInt8 directedSecurityOldNid;
 /// The IV Index for this subnetwork.
 @property (nonatomic, strong) SigIvIndex *ivIndex;
 /// The Network ID derived from this Network Key. This identifier is public information.
@@ -529,6 +533,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 @end
 
+/// 参考文档：MshPRFd1.1r14_clean.pdf，page200.
 @interface SigNetkeyDerivaties : NSObject
 
 @property (nonatomic, strong) NSData *identityKey;
@@ -538,6 +543,10 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic, strong) NSData *encryptionKey;
 
 @property (nonatomic, strong) NSData *privacyKey;
+/// directed forwarding派生key
+@property (nonatomic, strong) NSData *directedSecurityEncryptionKey;
+/// directed forwarding派生key
+@property (nonatomic, strong) NSData *directedSecurityPrivacyKey;
 
 - (SigNetkeyDerivaties *)initWithNetkeyData:(NSData *)key helper:(OpenSSLHelper *)helper;
 
@@ -582,7 +591,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 - (instancetype)initWithExistProvisionerMaxHighAddressUnicast:(UInt16)maxHighAddressUnicast andProvisionerUUID:(NSString *)provisionerUUID;
 
-- (SigNodeModel *)node;
+- (nullable SigNodeModel *)node;
 
 - (NSDictionary *)getDictionaryOfSigProvisionerModel;
 - (void)setDictionaryToSigProvisionerModel:(NSDictionary *)dictionary;
@@ -630,9 +639,9 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic, assign) UInt8 aid;
 @property (nonatomic, assign) UInt8 oldAid;
 
-- (SigNetkeyModel *)getCurrentBoundNetKey;
-- (NSData *)getDataKey;
-- (NSData *)getDataOldKey;
+- (nullable SigNetkeyModel *)getCurrentBoundNetKey;
+- (nullable NSData *)getDataKey;
+- (nullable NSData *)getDataOldKey;
 
 - (NSDictionary *)getDictionaryOfSigAppkeyModel;
 - (void)setDictionaryToSigAppkeyModel:(NSDictionary *)dictionary;
@@ -724,11 +733,11 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 @property (nonatomic, copy) NSString *deviceKey;
 
-@property (nonatomic, copy) NSString *macAddress;//new add the mac to json, get mac from scanResponse's Manufacturer Data.
+@property (nonatomic, copy, nullable) NSString *macAddress;//new add the mac to json, get mac from scanResponse's Manufacturer Data.
 //默认为nil，不需要存储json。配置过才存储到json里面
-@property (nonatomic, strong) SigHeartbeatPubModel *heartbeatPub;
+@property (nonatomic, strong, nullable) SigHeartbeatPubModel *heartbeatPub;
 //默认为nil，不需要存储json。配置过才存储到json里面
-@property (nonatomic, strong) SigHeartbeatSubModel *heartbeatSub;
+@property (nonatomic, strong, nullable) SigHeartbeatSubModel *heartbeatSub;
 
 @property (nonatomic, strong) NSMutableArray<SigElementModel *> *elements;
 @property (nonatomic, strong) NSMutableArray<SigNodeKeyModel *> *netKeys;
@@ -766,6 +775,9 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*publishAddress;//element addresses of publish
 @property (nonatomic,assign) UInt16 publishModelID;//modelID of set publish
 @property (nonatomic,strong,nullable) NSString *peripheralUUID;
+
+/// 缓存单灯的direct forwarding使能状态信息，存储本地，不存储JSON。
+@property (nonatomic,strong,nullable) SigDirectControlStatus *directControlStatus;
 
 ///return node true brightness, range is 0~100
 - (UInt8)trueBrightness;
@@ -807,7 +819,11 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 - (void)closePublish;
 
+///返回是否支持publish功能
 - (BOOL)hasPublishFunction;
+
+///返回是否支持Direct Forwarding功能
+- (BOOL)hasDirectForwardingFunction;
 
 - (BOOL)hasOpenPublish;
 
@@ -818,6 +834,9 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 /// 返回当前节点是否是遥控器。
 - (BOOL)isRemote;
+
+/// v3.3.3.6新增的telink定义的PID结构体。
+- (struct TelinkPID)getTelinkPID;
 
 /// Returns list of Network Keys known to this Node.
 - (NSArray <SigNetkeyModel *>*)getNetworkKeys;
@@ -836,8 +855,8 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 ///            the given address, `false` otherwise.
 - (BOOL)hasAllocatedAddr:(UInt16)addr;
 
-- (SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID;
-- (SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID andElementAddress:(UInt16)elementAddress;
+- (nullable SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID;
+- (nullable SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID andElementAddress:(UInt16)elementAddress;
 
 - (NSDictionary *)getDictionaryOfSigNodeModel;
 - (void)setDictionaryToSigNodeModel:(NSDictionary *)dictionary;
@@ -1001,6 +1020,8 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// Returns `true` for Models with identifiers assigned by Bluetooth SIG,
 /// `false` otherwise.
 - (BOOL)isBluetoothSIGAssigned;
+- (BOOL)isVendorModelID;
+
 /// Returns the list of known Groups that this Model is subscribed to.
 /// It may be that the Model is subscribed to some other Groups, which are
 /// not known to the local database, and those are not returned.
@@ -1253,7 +1274,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic, strong) NSData *opCodeAndParameters;
 
 - (instancetype)initWithOpCodeAndParameters:(NSData *)opCodeAndParameters;
-- (SigMeshMessage *)getSigMeshMessage;
+- (nullable SigMeshMessage *)getSigMeshMessage;
 
 @end
 

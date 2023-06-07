@@ -52,6 +52,58 @@
 
 
 
+## V3.3.3.5.1
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) update the "firmware" and "release_bin" folders only. The others remain the same as V3.3.3.5.
+* (Firmware) add support Tencent connectivity. set MESH_ USER_ DEFINE_ MODE to MESH_ LLSYNC_ ENABLE. for more details, refer to "doc/AN_2211xxxx_C1_Tencent Lianliant_elink Development Document_20221125. docx".
+
+### Performance Improvements
+
+* N/A
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+* Flash and RAM (default target):
+
+  - 8258_mesh.bin:        Flash 118 KB, RAM (27.8 KB + 3K stack),
+  - 8258_mesh_llsync.bin: Flash 124 KB, RAM (28.6 KB + 3K stack),
+
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) 仅更新 “firmware” 和 "release_bin" 文件夹，其它保持和 V3.3.3.5 一样。
+* (Firmware) 增加支持接入腾讯连连功能。MESH_USER_DEFINE_MODE 设置为 MESH_LLSYNC_ENABLE 即可。详情请参阅 “doc/AN_2211xxxx_C1_腾讯连连_telink开发文档_20221125.docx”。
+
+### Performance Improvements
+
+* N/A
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
 ## V3.3.3.5
 
 ### Bug Fixes

@@ -90,7 +90,7 @@
                 if (networkPdu.type == SigLowerTransportPduType_accessMessage) {
                     SigSegmentedAccessMessage *segment = [[SigSegmentedAccessMessage alloc] initFromSegmentedPdu:networkPdu];
                     if (segmented) {
-                        TeLogInfo(@"accessMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
+//                        TeLogInfo(@"accessMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
                         SigLowerTransportPdu *pdu = [weakSelf assembleSegmentedMessage:segment createdFrom:networkPdu];
                         if (pdu) {
                             [SigMeshLib.share cleanReceiveSegmentBusyStatus];
@@ -104,7 +104,7 @@
                 } else if (networkPdu.type == SigLowerTransportPduType_controlMessage) {
                     SigSegmentedControlMessage *segment = [[SigSegmentedControlMessage alloc] initFromSegmentedPdu:networkPdu];
                     if (segmented) {
-                        TeLogInfo(@"controlMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
+//                        TeLogInfo(@"controlMessage %@ receieved (decrypted using key: %@)",segment,segment.networkKey);
                         SigLowerTransportPdu *pdu = [weakSelf assembleSegmentedMessage:segment createdFrom:networkPdu];
                         if (pdu) {
                             [SigMeshLib.share cleanReceiveSegmentBusyStatus];
@@ -218,12 +218,8 @@
         [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
     }
     //==========telink need this==========//
-    UInt16 unsegmentedMessageLowerTransportPDUMaxLength = SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
-    if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && pdu.destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-        unsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
-    }
     /// Number of segments to be sent.
-    NSInteger count = (pdu.transportPdu.length + (unsegmentedMessageLowerTransportPDUMaxLength - 3) - 1) / (unsegmentedMessageLowerTransportPDUMaxLength - 3);
+    NSInteger count = (pdu.transportPdu.length + pdu.segmentedMessageLowerTransportPDUMaxLength - 1) / pdu.segmentedMessageLowerTransportPDUMaxLength;
     // Create all segments to be sent.
     NSMutableArray *outgoingSegments = [NSMutableArray array];
     for (int i=0; i<count; i++) {
@@ -255,12 +251,8 @@
         [self startTXTimeoutWithAddress:pdu.destination sequenceZero:sequenceZero];
     }
     //==========telink need this==========//
-    UInt16 unsegmentedMessageLowerTransportPDUMaxLength = SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
-    if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && pdu.destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-        unsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
-    }
     /// Number of segments to be sent.
-    NSInteger count = (pdu.transportPdu.length + ((unsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (unsegmentedMessageLowerTransportPDUMaxLength - 3);
+    NSInteger count = (pdu.transportPdu.length + (pdu.segmentedMessageLowerTransportPDUMaxLength - 1)) / pdu.segmentedMessageLowerTransportPDUMaxLength;
     // Create all segments to be sent.
     NSMutableArray *outgoingSegments = [NSMutableArray array];
     for (int i=0; i<count; i++) {
@@ -312,7 +304,7 @@
 #pragma mark - private
 
 - (BOOL)checkAgainstReplayAttackWithNetworkPdu:(SigNetworkPdu *)networkPdu {
-    //v3.3.3.5之后防重放攻击逻辑：isSegmented则比较seqZero，非isSegmented则比较sequenceNumber。
+    //v3.3.3.6及之后防重放攻击逻辑：isSegmented则比较seqZero，非isSegmented则比较sequenceNumber。
     //缓存结构：{@"SeqAuth":@(7Bytes), @"SeqZero":@{@"value":@(13Bits), @"SeqAuths":@[@(7Bytes),···,@(7Bytes)]}}
     //busy的segment为{@"SeqAuth":@(7Bytes), @"SeqZero":@{@"value":@(13Bits), @"SeqAuths":@[]}}，SeqAuths为空数组
     NSDictionary *oldDic = [[NSUserDefaults standardUserDefaults] objectForKey:SigMeshLib.share.dataSource.meshUUID];
@@ -525,9 +517,9 @@
             SigLowerTransportPdu *message = nil;
             SigSegmentedMessage *seg = [self firstNotAcknowledgedFrom:allSegments];
             if ([seg isKindOfClass:[SigSegmentedAccessMessage class]]) {
-                message = [[SigAccessMessage alloc] initFromSegments:allSegments];
+                message = [[SigAccessMessage alloc] initFromSegments:(NSArray<SigSegmentedAccessMessage *> *)allSegments];
             } else {
-                message = [[SigControlMessage alloc] initFromSegments:allSegments];
+                message = [[SigControlMessage alloc] initFromSegments:(NSArray<SigSegmentedAccessMessage *> *)allSegments];
             }
 //            TeLogInfo(@"%@ received",message);
             // If the access message was targetting directly the local Provisioner...
@@ -570,7 +562,7 @@
                 return nil;
             }
             if (networkPdu.destination != provisionerNode.address) {
-                TeLogDebug(@"networkPdu.destination != provisionerNode.address");
+//                TeLogDebug(@"networkPdu.destination != provisionerNode.address");
                 return nil;
             }
             __weak typeof(self) weakSelf = self;

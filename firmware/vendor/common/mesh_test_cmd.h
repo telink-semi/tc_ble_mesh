@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 
 #define SEC_MES_DEBUG_EN    0
 #define FRIEND_MSG_TEST_EN  0

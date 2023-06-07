@@ -82,18 +82,18 @@
 - (void)setUpAllViewController
 {
     // ShareOutVC
-    ShareOutVC *wordVc1 = (ShareOutVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareOutViewControllerID storybroad:@"Setting"];
+    ShareOutVC *wordVc1 = (ShareOutVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareOutViewControllerID storyboard:@"Setting"];
     wordVc1.title = @"EXPORT";
     [self addChildViewController:wordVc1];
     
     // ShareInVC
-    ShareInVC *wordVc2 = (ShareInVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareInViewControllerID storybroad:@"Setting"];
+    ShareInVC *wordVc2 = (ShareInVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareInViewControllerID storyboard:@"Setting"];
     wordVc2.title = @"IMPORT";
     [self addChildViewController:wordVc2];
 }
 
 - (void)clickTopRight:(UIButton *)button {
-    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storybroad:@"Setting"];
+    ShareTipsVC *vc = (ShareTipsVC *)[UIStoryboard initVC:ViewControllerIdentifiers_ShareTipsVCID storyboard:@"Setting"];
     [self.navigationController pushViewController:vc animated:YES];
 }
 

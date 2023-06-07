@@ -43,7 +43,7 @@
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_InfoButtonCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_InfoButtonCellID];
 
     self.title = @"Mesh Info";
-    _ivIndex = [LibTools uint32From16String:SigDataSource.share.ivIndex];
+    _ivIndex = SigDataSource.share.getIvIndexUInt32;
     [self refreshSourceAndUI];
 }
 
@@ -54,8 +54,9 @@
 
 - (void)refreshSourceAndUI {
     NSMutableArray *array = [NSMutableArray array];
+    [array addObject:[NSString stringWithFormat:@"MeshUUID: %@",SigDataSource.share.meshUUID.uppercaseString]];
     [array addObject:[NSString stringWithFormat:@"IV Index: 0x%08X",(unsigned int)_ivIndex]];
-    [array addObject:[NSString stringWithFormat:@"Sequence Number: 0x%06X",(unsigned int)SigDataSource.share.getCurrentProvisionerIntSequenceNumber]];
+    [array addObject:[NSString stringWithFormat:@"Sequence Number: 0x%06X",(unsigned int)SigDataSource.share.getSequenceNumberUInt32]];
     [array addObject:[NSString stringWithFormat:@"Local Address: 0x%04X",(unsigned int)SigDataSource.share.curLocationNodeModel.address]];
     [array addObject:@"NetKey List"];
     [array addObject:@"AppKey List"];
@@ -85,17 +86,12 @@
         NSString *t = @"sending ivUpdate...";
         [ShowTipsHandle.share show:t];
     });
-
-//    if (SigDataSource.share.getCurrentProvisionerIntSequenceNumber < 0xc00000) {
-//        [SigDataSource.share setLocationSno:0xc00000];
-//    }
     
     __weak typeof(self) weakSelf = self;
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     [operationQueue addOperationWithBlock:^{
+        //强行使用weakSelf.ivIndex + 1和sequenceNumber=0x01进行发包。
         [SDKLibCommand updateIvIndexWithKeyRefreshFlag:NO ivUpdateActive:YES networkId:SigDataSource.share.curNetkeyModel.networkId ivIndex:weakSelf.ivIndex + 1 usingNetworkKey:SigDataSource.share.curNetkeyModel];
-        [SigDataSource.share setLocationSno:0x01];
-        [SigDataSource.share updateIvIndexString:[NSString stringWithFormat:@"%08lX",(unsigned long)weakSelf.ivIndex+1]];
         dispatch_async(dispatch_get_main_queue(), ^{
             [ShowTipsHandle.share delayHidden:0.5];
         });
@@ -137,18 +133,19 @@
 
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (indexPath.row == 3 || indexPath.row == 4) {
+    if (indexPath.row == 0 || indexPath.row == 1 || indexPath.row == 2 || indexPath.row == 3) {
+        InfoButtonCell *cell = (InfoButtonCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoButtonCellID forIndexPath:indexPath];
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.showLabel.text = _source[indexPath.row];
+//        cell.showButton.hidden = YES;
+        [cell.showButton removeFromSuperview];
+        return cell;
+    } else if (indexPath.row == 4 || indexPath.row == 5) {
         InfoNextCell *cell = (InfoNextCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoNextCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
         cell.showLabel.text = _source[indexPath.row];
         return cell;
-    } else if (indexPath.row == 0 || indexPath.row == 1 || indexPath.row == 2) {
-        InfoButtonCell *cell = (InfoButtonCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoButtonCellID forIndexPath:indexPath];
-        cell.accessoryType = UITableViewCellAccessoryNone;
-        cell.showLabel.text = _source[indexPath.row];
-        cell.showButton.hidden = YES;
-        return cell;
-    } else if (indexPath.row == 5) {
+    } else  if (indexPath.row == 6) {
         InfoButtonCell *cell = (InfoButtonCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoButtonCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryNone;
         cell.showLabel.text = _source[indexPath.row];
@@ -157,13 +154,13 @@
         [cell.showButton addTarget:self action:@selector(clickIvUpdate:) forControlEvents:UIControlEventTouchUpInside];
         return cell;
     }
-    return nil;
+    return [[UITableViewCell alloc] init];
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (indexPath.row == 3) {
+    if (indexPath.row == 4) {
         [self clickNetKeyListButton];
-    } else if (indexPath.row == 4) {
+    } else if (indexPath.row == 5) {
         [self clickAppKeyListButton];
    }
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];

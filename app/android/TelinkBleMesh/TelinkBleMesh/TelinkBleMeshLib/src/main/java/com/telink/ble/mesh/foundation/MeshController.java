@@ -107,6 +107,7 @@ import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.ContextUtil;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -925,7 +926,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private void onGattNotification(byte[] completePacket) {
         if (completePacket.length > 1) {
-            byte proxyPduType = (byte) (completePacket[0] & ProxyPDU.BITS_TYPE);
+            byte proxyPduType = (byte) (completePacket[0] & ProxyPDU.MASK_TYPE);
 
             byte[] payloadData = new byte[completePacket.length - 1];
             System.arraycopy(completePacket, 1, payloadData, 0, payloadData.length);
@@ -958,6 +959,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                         byte beaconType = payloadData[0];
                         if (beaconType == SecureNetworkBeacon.BEACON_TYPE_SECURE_NETWORK) {
                             mNetworkingController.parseSecureBeacon(payloadData, this.networkBeaconKey);
+                        }
+                        // draft feature
+                        else if (beaconType == SecureNetworkBeacon.BEACON_TYPE_MESH_PRIVATE) {
+                            mNetworkingController.parsePrivateBeacon(payloadData, this.privateBeaconKey);
                         }
                     }
                     break;

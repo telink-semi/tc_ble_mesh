@@ -190,7 +190,7 @@
     }
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];
-        [self scrollowToBottom];
+        [self scrollToBottom];
     });
 }
 
@@ -201,7 +201,7 @@
     }
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];
-        [self scrollowToBottom];
+        [self scrollToBottom];
     });
 }
 
@@ -219,7 +219,7 @@
     }
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];
-        [self scrollowToBottom];
+        [self scrollToBottom];
     });
 }
 
@@ -235,12 +235,12 @@
     if (needRefresh) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.collectionView reloadData];
-            [self scrollowToBottom];
+            [self scrollToBottom];
         });
     }
 }
 
-- (void)scrollowToBottom{
+- (void)scrollToBottom{
     NSInteger item = [self.collectionView numberOfItemsInSection:0] - 1;
     NSIndexPath *lastItemIndex = [NSIndexPath indexPathForItem:item inSection:0];
     [self.collectionView scrollToItemAtIndexPath:lastItemIndex atScrollPosition:UICollectionViewScrollPositionTop animated:NO];

@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class SigNetkeyModel,SigDataSource,SigLowerTransportPdu,SigIvIndex;
 
 @interface SigPdu : NSObject
-@property (nonatomic, strong) NSData *pduData;
+@property (nonatomic, strong, nullable) NSData *pduData;
 @end
 
 
@@ -314,7 +314,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter type:        The type of the PDU: `.networkPdu` of `.proxyConfiguration`.
 /// - parameter meshNetwork: The mesh network for which the PDU should be decoded.
 /// - returns: The deobfuscated and decoded Network PDU, or `nil` if the PDU was not signed with any of the Network Keys, the IV Index was not valid, or the PDU was invalid.
-+ (SigNetworkPdu *)decodePdu:(NSData *)pdu pduType:(SigPduType)pduType forMeshNetwork:(SigDataSource *)meshNetwork;
++ (nullable SigNetworkPdu *)decodePdu:(NSData *)pdu pduType:(SigPduType)pduType forMeshNetwork:(SigDataSource *)meshNetwork;
 
 /// Whether the Network PDU contains a segmented Lower Transport PDU, or not.
 - (BOOL)isSegmented;
@@ -361,20 +361,21 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter networkKey: The Network Key to validate the beacon.
 /// - returns: The beacon object, or `nil` if the data are invalid.
 - (instancetype)initWithDecodePdu:(NSData *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey;
-+ (SigSecureNetworkBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork;
++ (nullable SigSecureNetworkBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork;
 - (instancetype)initWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive networkId:(NSData *)networkId ivIndex:(UInt32)ivIndex usingNetworkKey:(SigNetkeyModel *)networkKey;
 
 @end
 
 
+/// 3.9.2 Unprovisioned Device beacon
+/// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.118)
 @interface SigUnprovisionedDeviceBeacon : SigBeaconPdu
-
 /// Device UUID uniquely identifying this device.
 @property (nonatomic,strong) NSString *deviceUuid;
 /// The OOB Information field is used to help drive the provisioning process by indicating the availability of OOB data, such as a public key of the device.
 @property (nonatomic,assign) struct OobInformation oob;
 /// Hash of the associated URI advertised with the URI AD Type.
-@property (nonatomic,strong) NSData *uriHash;
+@property (nonatomic,strong,nullable) NSData *uriHash;
 
 /// Creates Unprovisioned Device beacon PDU object from received PDU.
 ///
@@ -387,7 +388,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter pdu:         The received PDU.
 /// - parameter meshNetwork: The mesh network for which the PDU should be decoded.
 /// - returns: The beacon object.
-+ (SigUnprovisionedDeviceBeacon *)decodeWithPdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork;
++ (nullable SigUnprovisionedDeviceBeacon *)decodeWithPdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork;
 
 @end
 
@@ -419,7 +420,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - parameter networkKey: The Network Key to validate the beacon.
 /// - returns: The beacon object, or `nil` if the data are invalid.
 - (instancetype)initWithDecodePdu:(NSData *)pdu usingNetworkKey:(SigNetkeyModel *)networkKey;
-+ (SigMeshPrivateBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork;
++ (nullable SigMeshPrivateBeacon *)decodePdu:(NSData *)pdu forMeshNetwork:(SigDataSource *)meshNetwork;
 - (instancetype)initWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive ivIndex:(UInt32)ivIndex randomData:(NSData *)randomData usingNetworkKey:(SigNetkeyModel *)networkKey;
 
 @end

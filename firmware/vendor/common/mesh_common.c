@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj/common/tstring.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
@@ -86,8 +86,10 @@
 #include "../mesh_gw_node_homekit/hk_CategoryDef.h"
 #include "homekit_src/homekit_inc.h"
 #include "homekit_src/hk_adv_packet.h"
-#include "../mesh_gw_node_homekit/app.h"
 #endif
+
+int set_adv_solicitation(rf_packet_adv_t * p) ;
+
 
 #ifndef WIN32
 #if PM_DEEPSLEEP_RETENTION_ENABLE
@@ -482,6 +484,11 @@ void pubkey_create_proc()
 	// for in the testcase mode ,the pubkey should be const ,or can not test with oob with pubkey
 	u8 rand_input[6];
 	memcpy(rand_input,tbl_mac,6);
+	#if PROV_AUTH_LEAK_RECREATE_KEY_EN
+	rand_input[0]=rand()&0xff;
+	rand_input[1]=rand()&0xff;
+	rand_input[2]=rand()&0xff;
+	#endif
 	tn_p256_keypair_mac(key_str.dsk,key_str.dpk,key_str.dpk+32,rand_input,6);// create the key part 
 	#else
 	ecc_create_key_fast(key_str.dsk,key_str.dpk);
@@ -513,7 +520,7 @@ void cal_private_and_public_key(u8 force_en)
 		u8 key_sts  = get_ecdh_key_sts(&key_str);//certify
 		if(key_sts == ECDH_KEY_STS_NONE_VALID){
 			// create the key flag crc and valid 
-			u8 irq_res = irq_disable();
+			u32 irq_res = irq_disable();
 			#if CERTIFY_BASE_ENABLE
 			if(prov_para.cert_base_en){
 				cert_base_set_key(key_str.dpk,key_str.dsk);	
@@ -1650,6 +1657,13 @@ static inline int send_adv_every_prepare_cb()
             );
 }
 
+#if PROVISION_SUCCESS_QUICK_RECONNECT_ENABLE
+#define PROVISION_SUCCESS_QUICK_RECONNECT_ADV_INTERVAL_US 	(30*1000)
+#define PROVISION_SUCCESS_QUICK_RECONNECT_TIMEOUT_US 		(6 *1000*1000)
+
+u32 g_provision_success_adv_quick_reconnect_tick = 0;
+#endif
+
 #if __PROJECT_MESH_SWITCH__
 u8 gatt_adv_send_flag = 0;
 #else
@@ -1657,6 +1671,13 @@ u8 gatt_adv_send_flag = 1;
 #endif
 int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
 {
+#if PROVISION_SUCCESS_QUICK_RECONNECT_ENABLE
+	if(g_provision_success_adv_quick_reconnect_tick
+	&& clock_time_exceed(g_provision_success_adv_quick_reconnect_tick, PROVISION_SUCCESS_QUICK_RECONNECT_TIMEOUT_US)){
+		g_provision_success_adv_quick_reconnect_tick = 0;
+	}
+#endif
+
 #if FEATURE_RELAY_EN
     int relay_ret = relay_adv_prepare_handler(p, rand_flag);
     if(relay_ret){
@@ -1678,7 +1699,13 @@ int gatt_adv_prepare_handler(rf_packet_adv_t * p, int rand_flag)
         static u32 gatt_adv_inv_us = 0;// send adv for the first time
         static u32 gatt_adv_cnt = 0;
         int send_now_flag = send_adv_every_prepare_cb();
-        if(send_now_flag || clock_time_exceed(gatt_adv_tick, gatt_adv_inv_us)){
+        u32 interval_check_us = gatt_adv_inv_us;
+        #if PROVISION_SUCCESS_QUICK_RECONNECT_ENABLE
+        if(g_provision_success_adv_quick_reconnect_tick){
+        	interval_check_us = PROVISION_SUCCESS_QUICK_RECONNECT_ADV_INTERVAL_US;
+        }
+        #endif
+        if(send_now_flag || clock_time_exceed(gatt_adv_tick, interval_check_us)){
             if(!send_now_flag && gatt_adv_inv_us){
                 if(rand_flag){
                     set_random_adv_delay(1);    // random 10~20ms
@@ -1956,7 +1983,10 @@ int app_advertise_prepare_handler (rf_packet_adv_t * p)
 					mesh_seg_tx_set_one_pkt_completed(SEG_TX_DST_TYPE_NORMAL);	// just set flag, don't do too much function in irq, because irq stack.
                 }
                 #endif
-            }            
+            }  
+			#if DF_TEST_MODE_EN
+			mesh_df_led_event(p_bear->nw.nid);
+			#endif
         }else{
 			p_trans_par->count--;
         }
@@ -2051,7 +2081,7 @@ void usb_id_init()
 
 void ble_mac_init()
 {
-	if(AIS_ENABLE || flash_sector_mac_address == 0){
+	if(AIS_ENABLE || LLSYNC_ENABLE || flash_sector_mac_address == 0){
 		return ;
 	}
 	u8 mac_read[8];
@@ -2084,7 +2114,10 @@ void ble_mac_init()
 
 _USER_CAN_REDEFINE_ void mesh_scan_rsp_init()
 {
-#if (0 == USER_REDEFINE_SCAN_RSP_EN)
+#if LLSYNC_PROVISION_AUTH_OOB
+	llsync_tlk_init_scan_rsp();
+	return ;
+#elif (0 == USER_REDEFINE_SCAN_RSP_EN)
 	mesh_scan_rsp_t tbl_scanRsp={0};
 	tbl_scanRsp.vendor_id = g_vendor_id;
 	tbl_scanRsp.adr_primary = ele_adr_primary;
@@ -2254,19 +2287,19 @@ void mesh_global_var_init()
 	model_sig_cfg_s.relay = FEATURE_RELAY_EN ? RELAY_SUPPORT_ENABLE : RELAY_NOT_SUPPORT;
 	#endif
 #if MD_SAR_EN
-	model_sig_cfg_s.sar_transmitter.sar_seg_invl_step = SAR_SEG_INVL_STEP_DEF;
-	model_sig_cfg_s.sar_transmitter.sar_uni_retrans_cnt = SAR_UNICAST_RETRANS_CNT_DEF;
-	model_sig_cfg_s.sar_transmitter.sar_uni_retrans_cnt_no_ack = SAR_UNICAST_RETRANS_CNT_NO_ACK_DEF;
-	model_sig_cfg_s.sar_transmitter.sar_uni_retrans_invl_step = SAR_UNICAST_RETRANS_INVL_STEP_DEF;
-	model_sig_cfg_s.sar_transmitter.sar_uni_retrans_invl_incre = SAR_UNICAST_RETRANS_INVL_INCRE;
-	model_sig_cfg_s.sar_transmitter.sar_multi_retrans_cnt = SAR_MULTICAST_RETRANS_CNT_DEF;
-	model_sig_cfg_s.sar_transmitter.sar_multi_retrans_invl = SAR_MULTICAST_RETRANS_INVL_DEF;  
+	g_mesh_model_misc_save.sar_transmitter.sar_seg_invl_step = SAR_SEG_INVL_STEP_DEF;
+	g_mesh_model_misc_save.sar_transmitter.sar_uni_retrans_cnt = SAR_UNICAST_RETRANS_CNT_DEF;
+	g_mesh_model_misc_save.sar_transmitter.sar_uni_retrans_cnt_no_ack = SAR_UNICAST_RETRANS_CNT_NO_ACK_DEF;
+	g_mesh_model_misc_save.sar_transmitter.sar_uni_retrans_invl_step = SAR_UNICAST_RETRANS_INVL_STEP_DEF;
+	g_mesh_model_misc_save.sar_transmitter.sar_uni_retrans_invl_incre = SAR_UNICAST_RETRANS_INVL_INCRE;
+	g_mesh_model_misc_save.sar_transmitter.sar_multi_retrans_cnt = SAR_MULTICAST_RETRANS_CNT_DEF;
+	g_mesh_model_misc_save.sar_transmitter.sar_multi_retrans_invl = SAR_MULTICAST_RETRANS_INVL_DEF;  
 		
-	model_sig_cfg_s.sar_receiver.sar_seg_thres = SAR_SEG_THRESHOLD_DEF;
-	model_sig_cfg_s.sar_receiver.sar_ack_delay_inc = SAR_ACK_DELAY_INC_DEF;
-	model_sig_cfg_s.sar_receiver.sar_discard_timeout = SAR_DISCARD_TIMEOUT_DEF;
-	model_sig_cfg_s.sar_receiver.sar_ack_retrans_cnt = SAR_ACK_RETRANS_CNT_DEF;
-	model_sig_cfg_s.sar_receiver.sar_rcv_seg_invl_step = SAR_RCV_SEG_INVL_STEP_DEF;	
+	g_mesh_model_misc_save.sar_receiver.sar_seg_thres = SAR_SEG_THRESHOLD_DEF;
+	g_mesh_model_misc_save.sar_receiver.sar_ack_delay_inc = SAR_ACK_DELAY_INC_DEF;
+	g_mesh_model_misc_save.sar_receiver.sar_discard_timeout = SAR_DISCARD_TIMEOUT_DEF;
+	g_mesh_model_misc_save.sar_receiver.sar_ack_retrans_cnt = SAR_ACK_RETRANS_CNT_DEF;
+	g_mesh_model_misc_save.sar_receiver.sar_rcv_seg_invl_step = SAR_RCV_SEG_INVL_STEP_DEF;	
 #endif
 #if (MD_DF_EN&&!WIN32)
 	mesh_directed_forwarding_default_val_init();
@@ -2453,7 +2486,7 @@ void set_material_tx_cmd(material_tx_cmd_t *p_mat, u16 op, u8 *par, u32 par_len,
 
 int mesh_tx_cmd(material_tx_cmd_t *p)
 {
-	if(mesh_adr_check(p->adr_src, p->adr_dst)){
+	if(mesh_adr_check(p->adr_src, p->adr_dst, 1)){
 	    LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"src or dst is invalid",0);
 		return TX_ERRNO_ADDRESS_INVALID;
 	}
@@ -2735,7 +2768,9 @@ int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_
 	#endif
     mesh_tx_with_random_delay_ms = 0; // must be clear here 
     #if DF_TEST_MODE_EN
-	cfg_led_event(LED_EVENT_FLASH_2HZ_2S);
+	if(DIRECTED == mesh_key.sec_type_sel){
+		mesh_df_led_event(mesh_key.net_key[mesh_key.netkey_sel_dec][0].nid_d);
+	}
 	#endif
 
 	#if (NO_TX_RSP2SELF_EN && DISTRIBUTOR_UPDATE_SERVER_EN)
@@ -3267,7 +3302,7 @@ void set_dev_uuid_for_simple_flow( u8 *p_uuid)
 u8 prov_uuid_fastbind_mode(u8 *p_uuid)
 {
     simple_flow_dev_uuid_t *p_dev_uuid = (simple_flow_dev_uuid_t *)p_uuid;
-    if(p_dev_uuid->cps_head.cid == 0x0211){
+    if(p_dev_uuid->cps_head.cid == VENDOR_ID){
         return 1;
     }else{
         return 0;
@@ -3402,7 +3437,7 @@ void tl_log_file(u32 level_module,u8 *pbuf,int len,char  *format,...)
 
 #endif
 
-_PRINT_FUN_RAMCODE_ int tl_log_msg(u32 level_module,u8 *pbuf,int len,char  *format,...)
+_PRINT_FUN_RAMCODE_ int tl_log_msg(u32 level_module,void *pbuf,int len,char  *format,...)
 {
 #if (WIN32 || HCI_LOG_FW_EN)
 	char tl_log_str[MAX_STRCAT_BUF] = {0};
@@ -3423,7 +3458,7 @@ _PRINT_FUN_RAMCODE_ int tl_log_msg(u32 level_module,u8 *pbuf,int len,char  *form
 	
 	va_list list;
 	va_start( list, format );
-	LogMsgModuleDlg_and_buf(pbuf,len,tl_log_str,format,list);	
+	LogMsgModuleDlg_and_buf((u8 *)pbuf,len,tl_log_str,format,list);	
 #endif
 
     return 0;

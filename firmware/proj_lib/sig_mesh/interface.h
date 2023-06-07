@@ -24,14 +24,14 @@
  *******************************************************************************************************/
 // gerneral defination 
 #include "../../../reference/tl_bulk/lib_file/Gatt_provision.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../vendor/common/user_config.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/blt_config.h"
+#include "vendor/common/user_config.h"
 #include "app_mesh.h"
-#include "../../proj_lib/mesh_crypto/mesh_crypto.h"
-#include "../../proj_lib/pm.h"
-#include "../../vendor/common/app_proxy.h"
-#include "../../vendor/common/app_health.h"
+#include "proj_lib/mesh_crypto/mesh_crypto.h"
+#include "proj_lib/pm.h"
+#include "vendor/common/app_proxy.h"
+#include "vendor/common/app_health.h"
 
 
 /************************************output function *************************************/
@@ -206,7 +206,7 @@ para:
 ret: 0  means OK 
 	-1 or other value means err
 ****************************************************************************/	
-int mesh_provision_par_set_dir(u8 *prov_par);
+int mesh_provision_par_set_dir(provison_net_info_str *prov_par);
 
 /************************** check_pkt_is_unprovision_beacon **************************
 function : check the pkt is unprovision beacon or not    

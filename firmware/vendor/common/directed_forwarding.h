@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #ifndef DIRECTED_FORWARDING_H
 #define DIRECTED_FORWARDING_H
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
 #define DIRECTED_PROXY_EN					FEATURE_PROXY_EN
@@ -41,59 +41,59 @@
 #define PATH_REQUEST_DELAY_MS				150 // unit:ms
 //STATIC_ASSERT(MAX_FORWARDING_TBL_ENTRIES_CNT>=20);
 
-#define DIRECTED_CONTROL_GET						0x30bf
-#define DIRECTED_CONTROL_SET						0x31bf
-#define DIRECTED_CONTROL_STATUS						0x32bf
-#define PATH_METRIC_GET								0x33bf
-#define PATH_METRIC_SET								0x34bf		
-#define PATH_METRIC_STATUS							0x35bf
-#define DISCOVERY_TABLE_CAPABILITIES_GET  			0x36bf
-#define DISCOVERY_TABLE_CAPABILITIES_SET  			0x37bf
-#define DISCOVERY_TABLE_CAPABILITIES_STATUS  		0x38bf
-#define FORWARDING_TABLE_ADD  						0x39bf
-#define FORWARDING_TABLE_DELETE  					0x3abf
-#define FORWARDING_TABLE_STATUS  					0x3bbf
-#define FORWARDING_TABLE_DEPENDENTS_ADD  			0x3cbf
-#define FORWARDING_TABLE_DEPENDENTS_DELETE  		0x3dbf
-#define FORWARDING_TABLE_DEPENDENTS_STATUS			0x3ebf
-#define FORWARDING_TABLE_DEPENDENTS_GET  			0x3fbf
-#define FORWARDING_TABLE_DEPENDENTS_GET_STATUS  	0x40bf
-#define FORWARDING_TABLE_ENTRIES_COUNT_GET  		0x41bf
-#define FORWARDING_TABLE_ENTRIES_COUNT_STATUS  		0x42bf
-#define FORWARDING_TABLE_ENTRIES_GET  				0x43bf
-#define FORWARDING_TABLE_ENTRIES_STATUS  			0x44bf
-#define WANTED_LANES_GET							0x45bf
-#define WANTED_LANES_SET							0x46bf
-#define WANTED_LANES_STATUS							0x47bf
-#define TWO_WAY_PATH_GET							0x48bf
-#define TWO_WAY_PATH_SET							0x49bf
-#define	TWO_WAY_PATH_STATUS							0x4abf
-#define PATH_ECHO_INTERVAL_GET						0x4bbf
-#define	PATH_ECHO_INTERVAL_SET						0x4cbf
-#define	PATH_ECHO_INTERVAL_STATUS					0x4dbf
-#define DIRECTED_NETWORK_TRANSMIT_GET				0x4ebf
-#define DIRECTED_NETWORK_TRANSMIT_SET				0x4fbf
-#define DIRECTED_NETWORK_TRANSMIT_STATUS			0x50bf
-#define DIRECTED_RELAY_RETRANSMIT_GET  				0x51bf
-#define DIRECTED_RELAY_RETRANSMIT_SET  				0x52bf
-#define DIRECTED_RELAY_RETRANSMIT_STATUS  			0x53bf
-#define RSSI_THRESHOLD_GET							0x54bf
-#define RSSI_THRESHOLD_SET							0x55bf
-#define RSSI_THRESHOLD_STATUS						0x56bf
-#define DIRECTED_PATHS_GET							0x57bf
-#define DIRECTED_PATHS_STATUS						0x58bf
-#define DIRECTED_PUBLISH_POLICY_GET   				0x59bf
-#define DIRECTED_PUBLISH_POLICY_SET  				0x5abf
-#define DIRECTED_PUBLISH_POLICY_STATUS  			0x5bbf
-#define PATH_DISCOVERY_TIMING_CONTROL_GET			0x5cbf
-#define PATH_DISCOVERY_TIMING_CONTROL_SET			0x5dbf
-#define PATH_DISCOVERY_TIMING_CONTROL_STATUS		0x5ebf
-#define DIRECTED_CONTROL_NETWORK_TRANSMIT_GET		0x5fbf
-#define DIRECTED_CONTROL_NETWORK_TRANSMIT_SET		0x60bf
-#define DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS	0x61bf
-#define DIRECTED_CONTROL_RELAY_RETRANSMIT_GET		0x62bf
-#define DIRECTED_CONTROL_RELAY_RETRANSMIT_SET		0x63bf
-#define DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS	0x64bf
+#define DIRECTED_CONTROL_GET						0x7B80
+#define DIRECTED_CONTROL_SET						0x7C80
+#define DIRECTED_CONTROL_STATUS						0x7D80
+#define PATH_METRIC_GET								0x7E80
+#define PATH_METRIC_SET								0x7F80		
+#define PATH_METRIC_STATUS							0x8080
+#define DISCOVERY_TABLE_CAPABILITIES_GET  			0x8180
+#define DISCOVERY_TABLE_CAPABILITIES_SET  			0x8280
+#define DISCOVERY_TABLE_CAPABILITIES_STATUS  		0x8380
+#define FORWARDING_TABLE_ADD  						0x8480
+#define FORWARDING_TABLE_DELETE  					0x8580
+#define FORWARDING_TABLE_STATUS  					0x8680
+#define FORWARDING_TABLE_DEPENDENTS_ADD  			0x8780
+#define FORWARDING_TABLE_DEPENDENTS_DELETE  		0x8880
+#define FORWARDING_TABLE_DEPENDENTS_STATUS			0x8980
+#define FORWARDING_TABLE_DEPENDENTS_GET  			0x8A80
+#define FORWARDING_TABLE_DEPENDENTS_GET_STATUS  	0x8B80
+#define FORWARDING_TABLE_ENTRIES_COUNT_GET  		0x8C80
+#define FORWARDING_TABLE_ENTRIES_COUNT_STATUS  		0x8D80
+#define FORWARDING_TABLE_ENTRIES_GET  				0x8E80
+#define FORWARDING_TABLE_ENTRIES_STATUS  			0x8F80
+#define WANTED_LANES_GET							0x9080
+#define WANTED_LANES_SET							0x9180
+#define WANTED_LANES_STATUS							0x9280
+#define TWO_WAY_PATH_GET							0x9380
+#define TWO_WAY_PATH_SET							0x9480
+#define	TWO_WAY_PATH_STATUS							0x9580
+#define PATH_ECHO_INTERVAL_GET						0x9680
+#define	PATH_ECHO_INTERVAL_SET						0x9780
+#define	PATH_ECHO_INTERVAL_STATUS					0x9880
+#define DIRECTED_NETWORK_TRANSMIT_GET				0x9980
+#define DIRECTED_NETWORK_TRANSMIT_SET				0x9A80
+#define DIRECTED_NETWORK_TRANSMIT_STATUS			0x9B80
+#define DIRECTED_RELAY_RETRANSMIT_GET  				0x9C80
+#define DIRECTED_RELAY_RETRANSMIT_SET  				0x9D80
+#define DIRECTED_RELAY_RETRANSMIT_STATUS  			0x9E80
+#define RSSI_THRESHOLD_GET							0x9F80
+#define RSSI_THRESHOLD_SET							0xA080
+#define RSSI_THRESHOLD_STATUS						0xA180
+#define DIRECTED_PATHS_GET							0xA280
+#define DIRECTED_PATHS_STATUS						0xA380
+#define DIRECTED_PUBLISH_POLICY_GET   				0xA480
+#define DIRECTED_PUBLISH_POLICY_SET  				0xA580
+#define DIRECTED_PUBLISH_POLICY_STATUS  			0xA680
+#define PATH_DISCOVERY_TIMING_CONTROL_GET			0xA780
+#define PATH_DISCOVERY_TIMING_CONTROL_SET			0xA880
+#define PATH_DISCOVERY_TIMING_CONTROL_STATUS		0xA980
+#define DIRECTED_CONTROL_NETWORK_TRANSMIT_GET		0xAB80
+#define DIRECTED_CONTROL_NETWORK_TRANSMIT_SET		0xAC80
+#define DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS	0xAD80
+#define DIRECTED_CONTROL_RELAY_RETRANSMIT_GET		0xAE80
+#define DIRECTED_CONTROL_RELAY_RETRANSMIT_SET		0xAF80
+#define DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS	0xB080
 
 enum{
 	NON_FIXED_PATH=0, 
@@ -149,10 +149,10 @@ enum{
 	ECHO_INVL_NOT_CHANGE=0xff,
 };
 
-#define GET_PATH_LIFETIME_MS(lifetime)     (((lifetime==PATH_LIFETIME_12MINS) ? 12*60 : (  \
+#define GET_PATH_LIFETIME_MS(lifetime)     ((DF_TEST_MODE_EN ? 2*60:((lifetime==PATH_LIFETIME_12MINS) ? 12*60 : (  \
 					                 (lifetime==PATH_LIFETIME_2HOURS) ? 2*60*60 : (  \
 					                 (lifetime==PATH_LIFETIME_24HOURS) ? 24*60*60 : 10*24*60*60 \
-					                 )))*1000)
+					                 ))))*1000)
 
 #define GET_PATH_DSC_INTERVAL_MS(dsc_interval)	 		(dsc_interval?PATH_DISCOVERY_INTERVAL_30S:PATH_DISCOVERY_INTERVAL_5S)
 
@@ -254,7 +254,7 @@ typedef struct{
 	u16 prohibited:2;
 	u16 unicast_destination_flag:1;
 	u16 backward_path_validated_flag:1;
-	u8  par[1];
+	u8  par[10]; 
 }forwarding_tbl_add_t;
 
 typedef struct{
@@ -276,7 +276,7 @@ typedef struct{
 	u16 destination;
 	u8  dependent_origin_list_size;
 	u8  dependent_target_list_size;
-	u8 	par[1];
+	u8 	par[MAX_DEPENDENT_NUM*2];
 }forwarding_tbl_dependengts_add_t;
 
 typedef struct{
@@ -342,7 +342,7 @@ typedef struct{
 	u16 netkey_index:12;
 	u16 filter_mask:4;
 	u16 start_index;
-	u8 par[1];
+	u8 par[6]; // origin + target + tbl update id
 }forwarding_tbl_entries_get_t;
 
 typedef struct{
@@ -606,17 +606,13 @@ typedef struct{
 
 typedef struct{
 #if MD_SERVER_EN
-	model_common_t srv;
 	mesh_directed_forward_t directed_forward;
 	fixed_fwd_tbl_t fixed_fwd_tbl[NET_KEY_MAX];
-#endif
-#if MD_CLIENT_EN
-	model_client_common_t clnt;
 #endif
 }model_df_cfg_t;
 
 extern int path_monitoring_test_mode;
-
+void mesh_df_led_event(u8 nid);
 int is_directed_forwarding_en(u16 netkey_offset);
 int is_directed_relay_en(u16 netkey_offset);
 int is_directed_proxy_en(u16 netkey_offset);
@@ -643,6 +639,37 @@ discovery_entry_par_t * get_discovery_entry_correspond2_path_request(u16 netkey_
 int cfg_cmd_send_path_request(mesh_ctl_path_req_t *p_path_req, u8 len, u16 netkey_offset);
 int cfg_cmd_path_metric_get(u16 node_adr, u16 nk_idx);
 int cfg_cmd_path_metric_set(u16 node_adr, u16 nk_idx, u8 metric_type, u8 lifetime);
+int cfg_cmd_send_directed_control_set(u16 adr_dst, directed_control_set_t *directed_control);
+int cfg_cmd_send_directed_control_get(u16 adr_dst, u16 netkey_index);
+int cfg_cmd_max_concur_init_get(u16 node_adr, u16 nk_idx);
+int cfg_cmd_max_concur_init_set(u16 node_adr, u16 nk_idx, u8 max_concur_init);
+int cfg_cmd_forwarding_tbl_add(u16 node_adr, u16 nk_idx, u16 adr_origin, u8 range_len_origin, u16 adr_dst, u8 range_len_dst, u16 bear2_origin, u16 bear2_dst);
+int cfg_cmd_forwarding_tbl_dependents_add(u16 node_adr, u16 nk_idx, u16 path_origin, u16 path_target, int dpt_origin_num, int dpt_target_num, u8 dpt_tbl[], int tbl_size);
+int cfg_cmd_forwarding_tbl_entries_count_get(u16 node_adr, u16 nk_idx);
+int cfg_cmd_forwarding_tbl_entries_get(u16 node_adr, u8 *par, int len);
+int cfg_cmd_forwarding_tbl_dependents_get(u16 node_adr, u8 *par, int len);
+int cfg_cmd_forwarding_tbl_delete(u16 node_adr, u16 nk_idx, u16 path_origin, u16 destination);
+int cfg_cmd_wanted_lanes_get(u16 node_adr, u16 nk_idx);
+int cfg_cmd_wanted_lanes_set(u16 node_adr, u16 nk_idx, u8 wanted_lanes);
+int cfg_cmd_two_way_path_get(u16 node_adr, u16 nk_idx);
+int cfg_cmd_two_way_path_set(u16 node_adr, u16 nk_idx, u8 two_way_path);
+int cfg_cmd_path_echo_interval_get(u16 node_adr, u16 nk_idx);
+int cfg_cmd_path_echo_interval_set(u16 node_adr, u16 nk_idx, u8 unicast_invl, u8 multi_invl);
+int cfg_cmd_directed_network_transmit_get(u16 node_adr);
+int cfg_cmd_directed_network_transmit_set(u16 node_adr, u8 directed_transmit);
+int cfg_cmd_directed_relay_retransmit_get(u16 node_adr);
+int cfg_cmd_directed_relay_retransmit_set(u16 node_adr, u8 retransmit);
+int cfg_cmd_rssi_threshold_get(u16 node_adr);
+int cfg_cmd_rssi_threshold_set(u16 node_adr, s8 rssi_margin);
+int cfg_cmd_directed_path_get(u16 node_adr);
+int cfg_cmd_directed_publish_policy_get(u16 node_adr, u16 ele_addr, u32 model_id);
+int cfg_cmd_directed_publish_policy_set(u16 node_adr, u8 policy, u16 ele_addr, u32 model_id);
+int cfg_cmd_path_dsc_timing_ctl_get(u16 node_adr);	
+int cfg_cmd_path_dsc_timing_ctl_set(u16 node_adr, u16 monitor_interval, u16 dsc_retry_interval, bool dsc_interval, bool dsc_guard_interval);
+int cfg_cmd_directed_ctl_network_transmit_get(u16 node_adr);
+int cfg_cmd_directed_ctl_network_transmit_set(u16 node_adr, u8 transmit);
+int cfg_cmd_directed_ctl_relay_retransmit_get(u16 node_adr);
+int cfg_cmd_directed_ctl_relay_retransmit_set(u16 node_adr, u8 transmit);
 
 #if !WIN32
 int mesh_cmd_sig_cfg_directed_control_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);

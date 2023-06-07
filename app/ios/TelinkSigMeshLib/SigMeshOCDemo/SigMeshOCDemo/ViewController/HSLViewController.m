@@ -69,11 +69,9 @@
 - (void)sendHSLData{
     if ([self canSend]) {
         UInt16 address;
-        int rsp_max=1;
         if (self.isGroup) {
             //组控
             address = self.groupModel.intAddress;
-            rsp_max = (int)self.groupModel.groupOnlineDevices.count;
         } else {
             //单灯
             address = self.model.address;
