@@ -1,6 +1,24 @@
 
 
 version record:
+versionName - version code - date
+
+
+V3.3.3.7 - 6 - 20221130  暂时只发布在TelinkApps云端
+
+1. update icon
+2. update app name to TelinkSigMesh
+
+----------------
+
+V3.3.3.6
+
+1. remove inIndex in JSON storage
+2. update icon generation by check pid bitmask
+3. update app icon
+4. support B91 SIG MESH SDK 和 B85 SIG MESH SDK
+
+----------------
 
 V3.3.3.6
 

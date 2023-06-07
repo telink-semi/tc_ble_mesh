@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -109,8 +110,27 @@ public class RemoteControlSettingActivity extends BaseActivity implements EventL
         TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
 
         initTab();
+
+//        connectRemoteDevice();
+        checkConnSt();
         refreshUI();
-        connectRemoteDevice();
+    }
+
+    /**
+     * check remote device connection
+     */
+    private void checkConnSt() {
+        if (MeshService.getInstance().getDirectConnectedNodeAddress() == deviceInfo.meshAddress) {
+            connSt = STATE_CONNECTED;
+            showTipDialog("Switch connected, pls keep connection");
+        } else {
+            showConfirmDialog("Switch not connected, pls set device to adv mode", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    connectRemoteDevice();
+                }
+            });
+        }
     }
 
     @Override
@@ -120,6 +140,9 @@ public class RemoteControlSettingActivity extends BaseActivity implements EventL
     }
 
     private void connectRemoteDevice() {
+//        if (MeshService.getInstance().getDirectConnectedNodeAddress() == deviceInfo.meshAddress) {
+//            return;
+//        }
         MeshService.getInstance().idle(true);
         connSt = STATE_CONNECTING;
         refreshUI();
@@ -195,13 +218,9 @@ public class RemoteControlSettingActivity extends BaseActivity implements EventL
     }
 
     private void refreshUI() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                tv_ol_st.setTextColor(getStateColor());
-                tv_ol_st.setText(getStateText());
-//                tv_ol_st.setVisibility(deviceInfo.isOffline() ? View.VISIBLE : View.GONE);
-            }
+        runOnUiThread(() -> {
+            tv_ol_st.setTextColor(getStateColor());
+            tv_ol_st.setText(getStateText());
         });
     }
 

@@ -24,6 +24,7 @@ package com.telink.ble.mesh.model;
 
 import android.os.Handler;
 import android.util.SparseBooleanArray;
+import android.util.SparseIntArray;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
@@ -307,6 +308,25 @@ public class NodeInfo implements Serializable {
                 }
             }
 
+            eleAdr++;
+        }
+        return -1;
+    }
+
+
+    /**
+     * @param associatedModelId target model id {@link MeshSigModel#getLevelAssociatedList()}
+     * @return element address: -1 err
+     */
+    public int getLevelAssociatedEleAdr(int associatedModelId) {
+        if (compositionData == null) return -1;
+        int eleAdr = this.meshAddress;
+        for (CompositionData.Element element : compositionData.elements) {
+            if (element.sigModels != null) {
+                if (element.sigModels.contains(associatedModelId) && element.sigModels.contains(MeshSigModel.SIG_MD_G_LEVEL_S.modelId)) {
+                    return eleAdr;
+                }
+            }
             eleAdr++;
         }
         return -1;

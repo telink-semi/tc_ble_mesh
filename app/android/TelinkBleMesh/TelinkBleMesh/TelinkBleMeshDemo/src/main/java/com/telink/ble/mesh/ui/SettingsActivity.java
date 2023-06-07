@@ -52,7 +52,7 @@ import com.telink.ble.mesh.util.MeshLogger;
  */
 public class SettingsActivity extends BaseActivity implements View.OnClickListener {
 
-    private Switch switch_log, switch_private, switch_remote_prov, switch_fast_prov, switch_no_oob, switch_auto_provision;
+    private Switch switch_log, switch_private, switch_remote_prov, switch_fast_prov, switch_no_oob, switch_auto_provision, switch_level;
     private EditText et_extend, et_net_key, et_app_key;
     private MeshInfo mesh;
     private TextView tv_online_status;
@@ -124,21 +124,25 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
         switch_no_oob = findViewById(R.id.switch_no_oob);
         switch_no_oob.setChecked(SharedPreferenceHelper.isNoOOBEnable(this));
-        switch_no_oob.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                SharedPreferenceHelper.setNoOOBEnable(SettingsActivity.this, isChecked);
-            }
-        });
+        switch_no_oob.setOnCheckedChangeListener((buttonView, isChecked) ->
+                SharedPreferenceHelper.setNoOOBEnable(SettingsActivity.this, isChecked));
 
         switch_auto_provision = findViewById(R.id.switch_auto_provision);
         switch_auto_provision.setChecked(SharedPreferenceHelper.isAutoPvEnable(this));
-        switch_auto_provision.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                SharedPreferenceHelper.setAutoPvEnable(SettingsActivity.this, isChecked);
-            }
-        });
+        switch_auto_provision.setOnCheckedChangeListener((buttonView, isChecked) ->
+                SharedPreferenceHelper.setAutoPvEnable(SettingsActivity.this, isChecked));
+
+        switch_level = findViewById(R.id.switch_level);
+        switch_level.setChecked(SharedPreferenceHelper.isLevelServiceEnable(this));
+        switch_level.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    SharedPreferenceHelper.setLevelServiceEnable(SettingsActivity.this, isChecked);
+                    if (isChecked) {
+                        if (TelinkMeshApplication.getInstance().getMeshInfo().extendGroups.size() == 0) {
+                            TelinkMeshApplication.getInstance().getMeshInfo().addExtendGroups();
+                        }
+                    }
+                }
+        );
 
         enableBackNav(true);
 
@@ -153,6 +157,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         findViewById(R.id.tv_select_database).setOnClickListener(this);
         findViewById(R.id.iv_tip_fast_prov).setOnClickListener(this);
         findViewById(R.id.tv_cert).setOnClickListener(this);
+        findViewById(R.id.iv_tip_level).setOnClickListener(this);
         et_extend = findViewById(R.id.et_extend_type);
         et_extend.setOnClickListener(this);
         et_net_key = findViewById(R.id.et_net_key);
@@ -249,6 +254,9 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
             case R.id.tv_cert:
                 startActivity(new Intent(this, CertListActivity.class));
+                break;
+            case R.id.iv_tip_level:
+//                toastMsg("");
                 break;
         }
     }
