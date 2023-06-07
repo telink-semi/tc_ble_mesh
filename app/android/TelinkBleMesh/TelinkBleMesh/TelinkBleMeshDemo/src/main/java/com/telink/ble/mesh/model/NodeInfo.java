@@ -24,7 +24,6 @@ package com.telink.ble.mesh.model;
 
 import android.os.Handler;
 import android.util.SparseBooleanArray;
-import android.util.SparseIntArray;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
@@ -244,6 +243,7 @@ public class NodeInfo implements Serializable {
             return 0;
         }
 
+        // find the value that not used
         outer:
         for (byte i = 0; i <= 0x0f; i++) {
             for (Scheduler scheduler : schedulers) {

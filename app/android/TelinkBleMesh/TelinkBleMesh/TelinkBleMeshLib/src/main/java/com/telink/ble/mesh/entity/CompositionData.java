@@ -25,9 +25,11 @@ package com.telink.ble.mesh.entity;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 
 import java.io.Serializable;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,6 +69,7 @@ public class CompositionData implements Serializable, Parcelable {
     public int pid;
 
     /**
+     * Big-endian
      * Contains a 16-bit vendor-assigned product version identifier
      */
     public int vid;
@@ -114,7 +117,10 @@ public class CompositionData implements Serializable, Parcelable {
         CompositionData cpsData = new CompositionData();
         cpsData.cid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
         cpsData.pid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
-        cpsData.vid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
+//        cpsData.vid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
+        cpsData.vid = MeshUtils.bytes2Integer(data, index, 2, ByteOrder.BIG_ENDIAN); // // 大端
+        index += 2;
+
         cpsData.crpl = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
         cpsData.features = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
 

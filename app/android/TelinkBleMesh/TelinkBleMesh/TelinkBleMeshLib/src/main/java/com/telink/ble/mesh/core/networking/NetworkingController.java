@@ -248,6 +248,8 @@ public class NetworkingController {
 
     private Set<Integer> mResponseMessageBuffer = new LinkedHashSet<>();
 
+    private int[] whiteList;
+
     private int proxyFilterInitStep = 0;
 
     private static final int PROXY_FILTER_INIT_STEP_SET_TYPE = 1;
@@ -309,6 +311,7 @@ public class NetworkingController {
         this.deviceKeyMap = configuration.deviceKeyMap;
 
         this.localAddress = configuration.localAddress;
+        this.whiteList = configuration.proxyFilterWhiteList;
     }
 
 
@@ -351,7 +354,7 @@ public class NetworkingController {
     }
 
     private int getSegmentAccessLength(int dstAddress, int opcode) {
-        if (GattConnection.mtu < UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG){
+        if (GattConnection.mtu < UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_LONG) {
             return UNSEGMENTED_ACCESS_PAYLOAD_MAX_LENGTH_DEFAULT;
         }
         if (dstAddress == directAddress && opcode == Opcode.BLOB_CHUNK_TRANSFER.value) {
@@ -1009,7 +1012,11 @@ public class NetworkingController {
                 this.directAddress = src;
                 proxyFilterInitStep++;
                 if (proxyFilterInitStep == PROXY_FILTER_INIT_STEP_SET_TYPE) {
-                    addFilterAddress(new int[]{localAddress, 0xFFFF});
+                    if (this.whiteList == null || this.whiteList.length == 0) {
+                        addFilterAddress(new int[]{localAddress, MeshUtils.ADDRESS_BROADCAST});
+                    } else {
+                        addFilterAddress(this.whiteList);
+                    }
                 } else if (proxyFilterInitStep == PROXY_FILTER_SET_STEP_ADD_ADR) {
                     onProxyInitComplete(true);
                 }
