@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.ble;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -42,6 +43,7 @@ import com.telink.ble.mesh.util.MeshLogger;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -1097,7 +1099,7 @@ public class GattConnection extends BluetoothGattCallback {
     @Override
     public void onPhyUpdate(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
         super.onPhyUpdate(gatt, txPhy, rxPhy, status);
-
+        log(String.format(Locale.getDefault(), "onPhyUpdate txPhy-%d rxPhy-%d status-%d", txPhy, rxPhy, status));
     }
 
     /**
@@ -1131,7 +1133,6 @@ public class GattConnection extends BluetoothGattCallback {
                 this.onDisconnected();
             }
         }
-
     }
 
     /**
@@ -1143,11 +1144,20 @@ public class GattConnection extends BluetoothGattCallback {
             List<BluetoothGattService> services = gatt.getServices();
             this.mServices = services;
             this.onServicesDiscoveredComplete(services);
+            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                this.mGatt.setPreferredPhy(BluetoothDevice.PHY_LE_1M, BluetoothDevice.PHY_LE_1M, BluetoothDevice.PHY_OPTION_NO_PREFERRED);
+            }*/
+            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (BluetoothAdapter.getDefaultAdapter().isLe2MPhySupported()) {
+                    this.mGatt.setPreferredPhy(BluetoothDevice.PHY_LE_2M, BluetoothDevice.PHY_LE_2M, BluetoothDevice.PHY_OPTION_NO_PREFERRED);
+                }
+            }*/
         } else {
             log("Service discovery failed");
             this.disconnect();
         }
     }
+
 
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {

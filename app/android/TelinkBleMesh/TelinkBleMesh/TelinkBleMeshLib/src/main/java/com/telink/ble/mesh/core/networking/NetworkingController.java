@@ -1254,10 +1254,15 @@ public class NetworkingController {
 
     private void updateReliableMessage(int src, AccessLayerPDU accessLayerPDU) {
         if (!reliableBusy) return;
-        if (mSendingReliableMessage != null && mSendingReliableMessage.getResponseOpcode() == accessLayerPDU.opcode) {
+        MeshMessage sendingMessage = mSendingReliableMessage;
+        if (sendingMessage != null && sendingMessage.getResponseOpcode() == accessLayerPDU.opcode) {
+            int sendingDst = sendingMessage.getDestinationAddress();
+            if (MeshUtils.validUnicastAddress(sendingDst) && sendingDst != src) {
+                log(String.format("not expected response : %04X - %04X", sendingDst, src));
+                return;
+            }
             mResponseMessageBuffer.add(src);
-            if (mResponseMessageBuffer.size() >= mSendingReliableMessage.getResponseMax()) {
-
+            if (mResponseMessageBuffer.size() >= sendingMessage.getResponseMax()) {
                 onReliableMessageComplete(true);
             }
         }
