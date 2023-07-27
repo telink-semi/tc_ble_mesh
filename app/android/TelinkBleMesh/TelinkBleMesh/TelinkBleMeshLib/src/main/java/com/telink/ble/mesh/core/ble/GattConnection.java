@@ -22,7 +22,6 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.ble;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -119,7 +118,12 @@ public class GattConnection extends BluetoothGattCallback {
 
     public GattConnection(Context context, HandlerThread thread) {
         mContext = context.getApplicationContext();
-        mHandler = new Handler(thread.getLooper());
+        if (thread == null) {
+            mHandler = new Handler();
+        } else {
+            mHandler = new Handler(thread.getLooper());
+        }
+
     }
 
     public void setConnectionCallback(ConnectionCallback connectionCallback) {
@@ -136,6 +140,22 @@ public class GattConnection extends BluetoothGattCallback {
         synchronized (CONNECTION_STATE_LOCK) {
             return mConnectionState == CONN_STATE_CONNECTED;
         }
+    }
+
+    public boolean isDisconnected() {
+        synchronized (CONNECTION_STATE_LOCK) {
+            return mConnectionState == CONN_STATE_IDLE;
+        }
+    }
+
+    public boolean isPsmUuidSupport() {
+        List<BluetoothGattService> services = mServices;
+        if (mGatt == null) {
+            return false;
+        }
+        BluetoothGattService service = mGatt.getService(UUIDInfo.SERVICE_OTS);
+        if (service == null) return false;
+        return service.getCharacteristic(UUIDInfo.CHARACTERISTIC_IOS_PSM) != null;
     }
 
     public boolean isProxyNodeConnected() {
@@ -495,14 +515,14 @@ public class GattConnection extends BluetoothGattCallback {
             Method localMethod = localBluetoothGatt.getClass().getMethod("refresh", new Class[0]);
             if (localMethod != null) {
                 boolean bool = (Boolean) localMethod.invoke(localBluetoothGatt, new Object[0]);
-                /*if (bool) {
-                    mDelayHandler.postDelayed(new Runnable() {
+                if (bool) {
+                    mHandler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            gatt.discoverServices();
+                            mGatt.discoverServices();
                         }
                     }, 0);
-                }*/
+                }
                 return bool;
             }
         } catch (Exception localException) {
@@ -1135,6 +1155,8 @@ public class GattConnection extends BluetoothGattCallback {
         }
     }
 
+    boolean refreshed = false;
+
     /**
      * gatt#discoverServices callback
      */
@@ -1143,6 +1165,12 @@ public class GattConnection extends BluetoothGattCallback {
         if (status == BluetoothGatt.GATT_SUCCESS) {
             List<BluetoothGattService> services = gatt.getServices();
             this.mServices = services;
+            printServices(services);
+            if (!refreshed) {
+                refreshCache();
+                refreshed = true;
+                return;
+            }
             this.onServicesDiscoveredComplete(services);
             /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 this.mGatt.setPreferredPhy(BluetoothDevice.PHY_LE_1M, BluetoothDevice.PHY_LE_1M, BluetoothDevice.PHY_OPTION_NO_PREFERRED);
@@ -1158,6 +1186,18 @@ public class GattConnection extends BluetoothGattCallback {
         }
     }
 
+    private void printServices(List<BluetoothGattService> services) {
+        StringBuilder serviceInfo = new StringBuilder("\n");
+
+        for (BluetoothGattService service : services) {
+            serviceInfo.append(service.getUuid().toString()).append("\n");
+            for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
+                serviceInfo.append("chara: \t");
+                serviceInfo.append(characteristic.getUuid().toString()).append("\n");
+            }
+        }
+        MeshLogger.d("services: " + serviceInfo.toString());
+    }
 
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {

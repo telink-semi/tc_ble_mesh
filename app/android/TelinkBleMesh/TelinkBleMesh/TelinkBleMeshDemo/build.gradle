@@ -5,7 +5,7 @@ android {
     defaultConfig {
         applicationId "com.telink.ble.mesh.demo.rels"
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 26
         versionCode 6
         versionName "3.3.3.7"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

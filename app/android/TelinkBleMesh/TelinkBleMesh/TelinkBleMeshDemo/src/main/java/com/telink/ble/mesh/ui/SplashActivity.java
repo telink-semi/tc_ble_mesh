@@ -87,6 +87,8 @@ public class SplashActivity extends BaseActivity {
                         &&
                         ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
                         &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE) == PackageManager.PERMISSION_GRANTED
+                        &&
                         ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
                 ) {
                     onPermissionChecked();
@@ -95,6 +97,8 @@ public class SplashActivity extends BaseActivity {
                             new String[]{
                                     Manifest.permission.BLUETOOTH_SCAN,
                                     Manifest.permission.BLUETOOTH_CONNECT,
+                                    Manifest.permission.BLUETOOTH_ADVERTISE,
+
                                     Manifest.permission.READ_EXTERNAL_STORAGE,
                                     Manifest.permission.WRITE_EXTERNAL_STORAGE},
                             PERMISSIONS_REQUEST_ALL);

@@ -26,6 +26,10 @@ import android.content.Context;
 import android.location.LocationManager;
 import android.os.Build;
 
+import java.lang.reflect.Method;
+
+import static android.os.Build.VERSION.SDK_INT;
+
 /**
  * Operations with Android context
  * Created by Administrator on 2017/4/11.
@@ -53,5 +57,24 @@ public class ContextUtil {
 
     public static boolean versionIsN() {
         return SDK_VERSION == Build.VERSION_CODES.N;
+    }
+
+
+    public static void skipReflectWarning() {
+        if (SDK_INT < Build.VERSION_CODES.P) {
+            return;
+        }
+        try {
+            Method forName = Class.class.getDeclaredMethod("forName", String.class);
+            Method getDeclaredMethod = Class.class.getDeclaredMethod("getDeclaredMethod", String.class, Class[].class);
+            Class<?> vmRuntimeClass = (Class<?>) forName.invoke(null, "dalvik.system.VMRuntime");
+            Method getRuntime = (Method) getDeclaredMethod.invoke(vmRuntimeClass, "getRuntime", null);
+            Method setHiddenApiExemptions = (Method) getDeclaredMethod.invoke(vmRuntimeClass, "setHiddenApiExemptions", new Class[]{String[].class});
+            Object sVmRuntime = getRuntime.invoke(null);
+            setHiddenApiExemptions.invoke(sVmRuntime, new Object[]{new String[]{"L"}});
+        } catch (Throwable e) {
+            e.printStackTrace();
+            MeshLogger.e("reflect bootstrap failed:");
+        }
     }
 }

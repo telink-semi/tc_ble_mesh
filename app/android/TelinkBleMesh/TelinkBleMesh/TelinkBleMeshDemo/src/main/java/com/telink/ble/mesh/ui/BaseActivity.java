@@ -28,6 +28,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
@@ -173,6 +174,16 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
         tipDialog.show();
     }
 
+
+    public void showTipDialog(String title, String msg, DialogInterface.OnClickListener confirmClick) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(true);
+        builder.setTitle("Tip");
+        builder.setMessage(msg);
+        builder.setPositiveButton("OK", confirmClick);
+        builder.show();
+    }
+
     public void showLocationDialog() {
         if (locationWarningDialog == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -271,6 +282,24 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
         if (tv_title != null) {
             tv_title.setText(title);
         }
+    }
+
+
+    protected void setSubTitle(String subTitle) {
+        TextView tv_sub_title = findViewById(R.id.tv_sub_title);
+        if (tv_sub_title != null) {
+            if (TextUtils.isEmpty(subTitle)) {
+                tv_sub_title.setVisibility(View.GONE);
+            } else {
+                tv_sub_title.setVisibility(View.VISIBLE);
+                tv_sub_title.setText(subTitle);
+            }
+        }
+    }
+
+    protected void setTitle(String title, String subTitle) {
+        setTitle(title);
+        setSubTitle(subTitle);
     }
 
     protected void enableBackNav(boolean enable) {

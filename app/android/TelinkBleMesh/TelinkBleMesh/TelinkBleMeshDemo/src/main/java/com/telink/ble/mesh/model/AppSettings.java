@@ -60,5 +60,5 @@ public abstract class AppSettings {
         return (pid & PID_MAJOR_MASK) == PID_MAJOR_REMOTE;
     }
 
-
+    public static int PSM = 0x25;
 }
