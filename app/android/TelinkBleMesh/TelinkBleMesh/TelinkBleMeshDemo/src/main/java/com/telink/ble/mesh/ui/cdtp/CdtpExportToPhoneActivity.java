@@ -49,26 +49,21 @@ import com.telink.ble.mesh.core.ble.BleAdvertiser;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
-import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.BaseActivity;
 import com.telink.ble.mesh.util.Arrays;
-import com.telink.ble.mesh.util.ContextUtil;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Transfer json files to other phones using CDTP protocol
@@ -85,6 +80,8 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
     private static final int MSG_APPEND_LOG = 1;
 
     private static final int MSG_COMPLETE = 2;
+
+    private int psm = 0x25;
 
     @SuppressLint("HandlerLeak")
     private Handler msgHandler = new Handler() {
@@ -189,10 +186,9 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
     private void initBluetooth() {
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
-
-        Method localMethod = null;
         try {
-            localMethod = bluetoothManager.getClass().getMethod("openGattServer", new Class[]{Context.class, BluetoothGattServerCallback.class, int.class});
+            Method localMethod = bluetoothManager.getClass().
+                    getMethod("openGattServer", new Class[]{Context.class, BluetoothGattServerCallback.class, int.class});
             bluetoothGattServer = (BluetoothGattServer) localMethod.invoke(bluetoothManager, this, gattServerCallback, BluetoothDevice.TRANSPORT_LE);
             appendLog("init gatt server complete");
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
@@ -217,18 +213,22 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
         BluetoothGattCharacteristic oacpChar = new BluetoothGattCharacteristic(UUIDInfo.CHARACTERISTIC_OACP,
                 BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE
                         | BluetoothGattCharacteristic.PROPERTY_NOTIFY,
-                BluetoothGattCharacteristic.PERMISSION_READ | BluetoothGattCharacteristic.PERMISSION_WRITE);
+                BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED | BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED);
 
         BluetoothGattDescriptor cccDesc = new BluetoothGattDescriptor(UUIDInfo.DESCRIPTOR_CFG_UUID,
-                BluetoothGattDescriptor.PERMISSION_WRITE | BluetoothGattDescriptor.PERMISSION_READ);
+                BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED | BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED);
         oacpChar.addDescriptor(cccDesc);
         service.addCharacteristic(oacpChar);
 
 
         BluetoothGattCharacteristic objectSizeChar = new BluetoothGattCharacteristic(UUIDInfo.CHARACTERISTIC_OBJECT_SIZE,
                 BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE,
-                BluetoothGattCharacteristic.PERMISSION_READ | BluetoothGattCharacteristic.PERMISSION_WRITE);
+                BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED | BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED);
         service.addCharacteristic(objectSizeChar);
+
+        BluetoothGattCharacteristic psmChar = new BluetoothGattCharacteristic(UUIDInfo.CHARACTERISTIC_IOS_PSM,
+                BluetoothGattCharacteristic.PROPERTY_READ, BluetoothGattCharacteristic.PERMISSION_READ);
+        service.addCharacteristic(psmChar);
 
 
         // 将 Service 添加到 GATT 服务器中
@@ -239,36 +239,46 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
     private void createDeviceSocket() {
         new Thread(() -> {
             try {
-                
-                ContextUtil.skipReflectWarning();
-                Constructor<BluetoothServerSocket> construct = BluetoothServerSocket.class.getDeclaredConstructor(
-                        int.class,
-                        boolean.class,
-                        boolean.class, int.class);
-                construct.setAccessible(true);
-                // 0x25
-                serverSocket = construct.newInstance(4, true, true, AppSettings.PSM); // BluetoothSocket.TYPE_L2CAP_LE=4
-
-                // int errno = socket.mSocket.bindListen();
-                Field targetField = BluetoothServerSocket.class.getDeclaredField("mSocket");
-                targetField.setAccessible(true);
-                BluetoothSocket bluetoothSocket = (BluetoothSocket) targetField.get(serverSocket);
-                MeshLogger.d("bluetoothSocket - " + bluetoothSocket);
-
-                @SuppressLint({"DiscouragedPrivateApi", "SoonBlockedPrivateApi"})
-                Method bindListenM = BluetoothSocket.class.getDeclaredMethod("bindListen");
-                bindListenM.setAccessible(true);
-                bindListenM.invoke(bluetoothSocket);
-                appendLog(String.format(Locale.getDefault(), "socket listening (psm: %d)... ", serverSocket.getPsm()));
+                serverSocket = bluetoothAdapter.listenUsingL2capChannel();
+                psm = serverSocket.getPsm();
+                appendLog("psm : " + psm);
                 this.bleSocket = serverSocket.accept();
                 appendLog("socket establish success");
-//                outputStream.close();
-                /*
-                socket.close();
-                socket = null;*/
-            } catch (IOException | NoSuchMethodError | InstantiationException | InvocationTargetException | IllegalAccessException | NoSuchFieldException | NoSuchMethodException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
+
+//            try {
+//
+//                ContextUtil.skipReflectWarning();
+//                Constructor<BluetoothServerSocket> construct = BluetoothServerSocket.class.getDeclaredConstructor(
+//                        int.class,
+//                        boolean.class,
+//                        boolean.class, int.class);
+//                construct.setAccessible(true);
+//                // 0x25
+//                serverSocket = construct.newInstance(4, true, true, AppSettings.PSM); // BluetoothSocket.TYPE_L2CAP_LE=4
+//
+//                // int errno = socket.mSocket.bindListen();
+//                Field targetField = BluetoothServerSocket.class.getDeclaredField("mSocket");
+//                targetField.setAccessible(true);
+//                BluetoothSocket bluetoothSocket = (BluetoothSocket) targetField.get(serverSocket);
+//                MeshLogger.d("bluetoothSocket - " + bluetoothSocket);
+//
+//                @SuppressLint({"DiscouragedPrivateApi", "SoonBlockedPrivateApi"})
+//                Method bindListenM = BluetoothSocket.class.getDeclaredMethod("bindListen");
+//                bindListenM.setAccessible(true);
+//                bindListenM.invoke(bluetoothSocket);
+//                appendLog(String.format(Locale.getDefault(), "socket listening (psm: %d)... ", serverSocket.getPsm()));
+//                this.bleSocket = serverSocket.accept();
+//                appendLog("socket establish success");
+////                outputStream.close();
+//                /*
+//                socket.close();
+//                socket = null;*/
+//            } catch (IOException | NoSuchMethodError | InstantiationException | InvocationTargetException | IllegalAccessException | NoSuchFieldException | NoSuchMethodException e) {
+//                e.printStackTrace();
+//            }
         }).start();
 
     }
@@ -305,9 +315,7 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
         @Override
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset,
                                                 BluetoothGattCharacteristic characteristic) {
-            // 处理读请求
             MeshLogger.d("gattServerCallback#onCharacteristicReadRequest - " + characteristic.getUuid().toString());
-            // 处理写请求
             if (characteristic.getUuid().equals(UUIDInfo.CHARACTERISTIC_OBJECT_SIZE)) {
                 appendLog("receive read request - Object Size - " + device.getAddress());
                 byte[] size = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putInt(jsonData.length).putInt(10 * 1024 * 1024).array();
@@ -318,6 +326,10 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
                 int olcpFeature = 0;
                 byte[] featuresData = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putInt(oacpFeature).putInt(olcpFeature).array();
                 bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, featuresData);
+            } else if (characteristic.getUuid().equals(UUIDInfo.CHARACTERISTIC_IOS_PSM)) {
+                bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, MeshUtils.integer2Bytes(psm, 2, ByteOrder.LITTLE_ENDIAN));
+            } else {
+                bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, new byte[]{0});
             }
         }
 
