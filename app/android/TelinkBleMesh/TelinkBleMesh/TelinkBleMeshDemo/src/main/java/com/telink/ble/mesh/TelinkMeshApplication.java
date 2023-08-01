@@ -46,7 +46,8 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.UnitConvert;
-import com.telink.ble.mesh.util.FileSystem;
+import com.telink.ble.mesh.model.db.MeshInfoService;
+import com.telink.ble.mesh.model.db.ObjectBox;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.lang.reflect.Constructor;
@@ -74,10 +75,9 @@ public class TelinkMeshApplication extends MeshApplication {
         HandlerThread offlineCheckThread = new HandlerThread("offline check thread");
         offlineCheckThread.start();
         mOfflineCheckHandler = new Handler(offlineCheckThread.getLooper());
-        initMesh();
         MeshLogger.enableRecord(SharedPreferenceHelper.isLogEnable(this));
-        MeshLogger.d(meshInfo.toString());
         AppCrashHandler.init(this);
+        ObjectBox.init(this);
         closePErrorDialog();
     }
 
@@ -109,20 +109,8 @@ public class TelinkMeshApplication extends MeshApplication {
         return mOfflineCheckHandler;
     }
 
-    private void initMesh() {
-        Object configObj = FileSystem.readAsObject(this, MeshInfo.FILE_NAME);
-        MeshInfo meshInfo;
-        if (configObj == null) {
-            meshInfo = MeshInfo.createNewMesh(this);
-            meshInfo.saveOrUpdate(this);
-        } else {
-            meshInfo = (MeshInfo) configObj;
-        }
-        setupMesh(meshInfo);
-//        meshInfo = createTestMesh();
-    }
-
     public void setupMesh(MeshInfo mesh) {
+        SharedPreferenceHelper.setSelectedMeshId(this, mesh.id);
         MeshLogger.d("setup mesh info: " + mesh.toString());
         if (mesh.extendGroups.size() == 0) {
             if (SharedPreferenceHelper.isLevelServiceEnable(this)) {
@@ -329,7 +317,8 @@ public class TelinkMeshApplication extends MeshApplication {
                 networkInfoUpdateEvent.getSequenceNumber(), networkInfoUpdateEvent.getIvIndex()));
         this.meshInfo.ivIndex = networkInfoUpdateEvent.getIvIndex();
         this.meshInfo.sequenceNumber = networkInfoUpdateEvent.getSequenceNumber();
-        this.meshInfo.saveOrUpdate(this);
+        MeshInfoService.getInstance().updateMeshInfo(this.meshInfo);
+//        this.meshInfo.saveOrUpdate(this);
     }
 
 

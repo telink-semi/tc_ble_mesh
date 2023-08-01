@@ -34,6 +34,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.config.NetKeyAddMessage;
@@ -47,6 +48,7 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.NodeMeshKeyAdapter;
 import com.telink.ble.mesh.util.Arrays;
@@ -129,8 +131,8 @@ public class NodeNetKeyActivity_with_delete extends BaseActivity implements Even
         for (MeshNetKey netKey :
                 meshInfo.meshNetKeyList) {
             boolean exist = false;
-            for (int index : nodeInfo.netKeyIndexes) {
-                if (netKey.index == index) {
+            for (String index : nodeInfo.netKeyIndexes) {
+                if (netKey.index == MeshUtils.hexToIntB(index)) {
                     exist = true;
                     this.netKeyList.add(netKey);
                 }
@@ -247,26 +249,26 @@ public class NodeNetKeyActivity_with_delete extends BaseActivity implements Even
         } else if (action == ACTION_DELETE) {
             onNetKeyDeleteSuccess(processingIndex);
         }
-        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+        nodeInfo.save();
     }
 
     public void onNetKeyAddSuccess(int keyIndex) {
-        for (int keyIdx : nodeInfo.netKeyIndexes) {
-            if (keyIndex == keyIdx) {
+        for (String keyIdx : nodeInfo.netKeyIndexes) {
+            if (keyIndex == MeshUtils.hexToIntB(keyIdx)) {
                 MeshLogger.d("net key already exists");
                 return;
             }
         }
         MeshLogger.d("net key add success");
-        nodeInfo.netKeyIndexes.add(keyIndex);
+        nodeInfo.netKeyIndexes.add(MeshUtils.intToHex2(keyIndex));
         updateKeyList();
     }
 
 
     public void onNetKeyDeleteSuccess(int keyIndex) {
-        Iterator<Integer> netKeyIt = nodeInfo.netKeyIndexes.iterator();
+        Iterator<String> netKeyIt = nodeInfo.netKeyIndexes.iterator();
         while (netKeyIt.hasNext()) {
-            if (netKeyIt.next() == keyIndex) {
+            if (MeshUtils.hexToIntB(netKeyIt.next()) == keyIndex) {
                 netKeyIt.remove();
             }
         }

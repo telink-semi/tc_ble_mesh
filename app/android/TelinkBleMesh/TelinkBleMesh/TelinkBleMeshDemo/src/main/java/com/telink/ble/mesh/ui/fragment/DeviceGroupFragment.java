@@ -33,6 +33,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
@@ -135,11 +136,11 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
     private void setNextModel() {
         if (modelIndex > getTotalSize() - 1) {
             if (opType == 0) {
-                deviceInfo.subList.add(opGroupAdr);
+                deviceInfo.subList.add(MeshUtils.intToHex(opGroupAdr));
             } else {
-                deviceInfo.subList.remove((Integer) opGroupAdr);
+                deviceInfo.subList.remove(MeshUtils.intToHex(opGroupAdr));
             }
-            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity());
+            deviceInfo.save();
             getActivity().runOnUiThread(() -> {
                 getLocalDeviceGroupInfo();
                 mAdapter.notifyDataSetChanged();
@@ -197,8 +198,8 @@ public class DeviceGroupFragment extends BaseFragment implements EventListener<S
         outer:
         for (GroupInfo group : allGroups) {
             group.selected = false;
-            for (int groupAdr : deviceInfo.subList) {
-                if (groupAdr == group.address) {
+            for (String groupAdr : deviceInfo.subList) {
+                if (MeshUtils.hexToIntB(groupAdr) == group.address) {
                     group.selected = true;
                     continue outer;
                 }

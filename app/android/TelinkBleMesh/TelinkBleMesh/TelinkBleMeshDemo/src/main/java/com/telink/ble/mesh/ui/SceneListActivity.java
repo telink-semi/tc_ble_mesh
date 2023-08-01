@@ -46,6 +46,7 @@ import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.Scene;
+import com.telink.ble.mesh.model.SceneState;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.SceneListAdapter;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -96,9 +97,11 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
 
                 tarScene = sceneList.get(position);
                 boolean hasOffline = false;
-                for (Scene.SceneState state : tarScene.states) {
+                for (SceneState state : tarScene.states) {
                     // offline
-                    NodeInfo localDevice = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(state.address);
+
+//                    NodeInfo localDevice = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(state.address);
+                    NodeInfo localDevice = state.nodeInfo.getTarget();
                     if (localDevice != null && localDevice.isOffline()) {
                         hasOffline = true;
                     }
@@ -136,7 +139,7 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
     private void deleteScene() {
         if (tarScene.states.size() == 0) {
             sceneList.remove(tarScene);
-            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getApplicationContext());
+            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate();
             mAdapter.notifyDataSetChanged();
         } else {
             showWaitingDialog("deleting...");
@@ -148,14 +151,15 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
     private void deleteNextDevice() {
         if (tarScene == null || deleteIndex > tarScene.states.size() - 1) {
             sceneList.remove(tarScene);
-            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getApplicationContext());
+            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate();
             tarScene = null;
             mAdapter.notifyDataSetChanged();
             dismissWaitingDialog();
             toastMsg("scene deleted");
         } else {
-            NodeInfo deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo()
-                    .getDeviceByMeshAddress(tarScene.states.get(deleteIndex).address);
+//            NodeInfo deviceInfo = TelinkMeshApplication.getInstance().getMeshInfo()
+//                    .getDeviceByMeshAddress(tarScene.states.get(deleteIndex).address);
+            NodeInfo deviceInfo = tarScene.states.get(deleteIndex).nodeInfo.getTarget();
             // remove offline device
             if (deviceInfo == null || deviceInfo.isOffline()) {
 //                tarScene.deleteDevice(deviceInfo);
@@ -169,7 +173,7 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
                 int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
                 SceneDeleteMessage deleteMessage = SceneDeleteMessage.getSimple(eleAdr,
                         appKeyIndex,
-                        tarScene.id,
+                        tarScene.sceneId,
                         true, 1);
                 MeshService.getInstance().sendMeshMessage(deleteMessage);
                 // mesh interface
@@ -206,7 +210,7 @@ public class SceneListActivity extends BaseActivity implements EventListener<Str
 
             SceneRegisterStatusMessage sceneMessage = (SceneRegisterStatusMessage) notificationMessage.getStatusMessage();
             if (sceneMessage.getStatusCode() == ConfigStatus.SUCCESS.code
-                    && notificationMessage.getSrc() == tarScene.states.get(deleteIndex).address) {
+                    && notificationMessage.getSrc() == tarScene.states.get(deleteIndex).nodeInfo.getTarget().meshAddress) {
                 handler.removeCallbacks(cmdTimeoutCheckTask);
                 deleteIndex++;
                 deleteNextDevice();

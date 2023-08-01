@@ -66,6 +66,7 @@ import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.DeviceProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -442,14 +443,10 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         pvDevice.state = NetworkingState.BINDING;
         pvDevice.addLog(NetworkingDevice.TAG_PROVISION, "success");
         NodeInfo nodeInfo = pvDevice.nodeInfo;
-        int elementCnt = remote.getDeviceCapability().eleNum;
-        nodeInfo.elementCnt = elementCnt;
+        nodeInfo.elementCnt = remote.getDeviceCapability().eleNum;
         nodeInfo.deviceKey = remote.getDeviceKey();
-        nodeInfo.netKeyIndexes.add(mesh.getDefaultNetKey().index);
-        mesh.insertDevice(nodeInfo);
-        mesh.increaseProvisionIndex(elementCnt);
-        mesh.saveOrUpdate(DeviceProvisionActivity.this);
-
+        nodeInfo.netKeyIndexes.add(MeshUtils.intToHex2(mesh.getDefaultNetKey().index));
+        mesh.insertDevice(nodeInfo, true);
 
         // check if private mode opened
         final boolean privateMode = SharedPreferenceHelper.isPrivateMode(this);
@@ -486,7 +483,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         deviceInList.state = NetworkingState.BIND_FAIL;
         deviceInList.addLog(NetworkingDevice.TAG_BIND, "failed - " + event.getDesc());
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceProvisionActivity.this);
+//        mesh.saveOrUpdate(DeviceProvisionActivity.this);
     }
 
     private void onKeyBindSuccess(BindingEvent event) {
@@ -503,6 +500,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         if (!remote.isDefaultBound()) {
             pvDevice.nodeInfo.compositionData = remote.getCompositionData();
         }
+        pvDevice.nodeInfo.save();
 
         if (setTimePublish(pvDevice)) {
             pvDevice.state = NetworkingState.TIME_PUB_SETTING;
@@ -515,7 +513,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
             provisionNext();
         }
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceProvisionActivity.this);
+//        mesh.saveOrUpdate(DeviceProvisionActivity.this);
     }
 
 
@@ -567,8 +565,10 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         pvDevice.addLog(NetworkingDevice.TAG_PUB_SET, success ? "success" : ("failed : " + desc));
         pvDevice.state = success ? NetworkingState.TIME_PUB_SET_SUCCESS : NetworkingState.TIME_PUB_SET_FAIL;
         pvDevice.addLog(NetworkingDevice.TAG_PUB_SET, desc);
+        pvDevice.nodeInfo.timePublishConfigured = true;
+        pvDevice.nodeInfo.save();
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceProvisionActivity.this);
+//        mesh.saveOrUpdate(DeviceProvisionActivity.this);
         provisionNext();
     }
 

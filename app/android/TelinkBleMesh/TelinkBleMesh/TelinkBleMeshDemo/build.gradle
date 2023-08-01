@@ -41,4 +41,7 @@ dependencies {
 
     // http
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+
 }
+
+apply plugin: 'io.objectbox'

@@ -42,6 +42,7 @@ import com.telink.ble.mesh.core.message.config.ModelAppStatusMessage;
 import com.telink.ble.mesh.core.networking.AccessType;
 import com.telink.ble.mesh.entity.BindingDevice;
 import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
@@ -304,7 +305,7 @@ public class BindingController {
         List<BindingModel> models = new ArrayList<>();
         isAggSupported = false;
         int offset = 0;
-        for (CompositionData.Element ele : compositionData.elements) {
+        for (Element ele : compositionData.elements) {
             if (ele.sigModels != null) {
                 for (int modelId : ele.sigModels) {
                     if (!MeshSigModel.useDeviceKeyForEnc(modelId)) {

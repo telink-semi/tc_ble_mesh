@@ -25,11 +25,18 @@ package com.telink.ble.mesh.model;
 
 import java.io.Serializable;
 
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
+
 /**
  * for model status publication
  * Created by kee on 2018/12/18.
  */
+@Entity
 public class PublishModel implements Serializable {
+
+    @Id
+    public long id;
 
     public static final int CREDENTIAL_FLAG_DEFAULT = 0b0;
 
@@ -68,6 +75,8 @@ public class PublishModel implements Serializable {
 
     public int transmit;
 
+    public PublishModel() {
+    }
 
     public PublishModel(int elementAddress, int modelId, int address, int period) {
         this(elementAddress, modelId, address, period, TTL_DEFAULT, CREDENTIAL_FLAG_DEFAULT,

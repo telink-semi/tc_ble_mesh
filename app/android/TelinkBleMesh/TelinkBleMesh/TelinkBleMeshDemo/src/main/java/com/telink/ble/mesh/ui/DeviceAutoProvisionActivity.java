@@ -303,14 +303,10 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         NetworkingDevice networkingDevice = getProcessingNode();
         NodeInfo nodeInfo = networkingDevice.nodeInfo;
         networkingDevice.state = NetworkingState.BINDING;
-        int elementCnt = remote.getDeviceCapability().eleNum;
-        nodeInfo.elementCnt = elementCnt;
+        nodeInfo.elementCnt = remote.getDeviceCapability().eleNum;
         nodeInfo.deviceKey = remote.getDeviceKey();
-        nodeInfo.netKeyIndexes.add(mesh.getDefaultNetKey().index);
-        mesh.insertDevice(nodeInfo);
-        mesh.increaseProvisionIndex(elementCnt);
-        mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);
-
+        nodeInfo.netKeyIndexes.add(MeshUtils.intToHex2(mesh.getDefaultNetKey().index));
+        mesh.insertDevice(nodeInfo, true);
 
         // check if private mode opened
         final boolean privateMode = SharedPreferenceHelper.isPrivateMode(this);
@@ -351,7 +347,8 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         }
         deviceInList.nodeInfo.bound = true;
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);
+        deviceInList.nodeInfo.save();
+//        mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);
 
         if (setTimePublish(deviceInList.nodeInfo)) {
             isPubSetting = true;
@@ -396,9 +393,10 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         if (deviceInList == null) return;
 
         deviceInList.state = success ? NetworkingState.TIME_PUB_SET_SUCCESS : NetworkingState.TIME_PUB_SET_FAIL;
+        deviceInList.nodeInfo.timePublishConfigured = true;
         deviceInList.addLog("Time Publish", "desc");
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);
+        deviceInList.nodeInfo.save();
         startScan();
     }
 
@@ -410,7 +408,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         deviceInList.state = NetworkingState.BIND_FAIL;
         deviceInList.addLog("Binding", event.getDesc());
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceAutoProvisionActivity.this);
+//        mesh.saveOrUpdate();
     }
 
     private NetworkingDevice getProcessingNode() {

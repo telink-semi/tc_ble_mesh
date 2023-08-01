@@ -36,6 +36,7 @@ import com.telink.ble.mesh.core.message.config.CompositionDataGetMessage;
 import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
@@ -118,7 +119,7 @@ public class CompositionDataActivity extends BaseActivity implements EventListen
         // elements
         sb.append("elements: (").append(cps.elements.size()).append(")").append("\n");
         int basicEleAdr = nodeInfo.meshAddress;
-        for (CompositionData.Element ele : cps.elements) {
+        for (Element ele : cps.elements) {
             sb.append("\t").append(String.format("element adr: 0x%04X", basicEleAdr)).append("\n");
             MeshSigModel meshSigModel;
             for (Integer sigModel : ele.sigModels) {
@@ -152,15 +153,10 @@ public class CompositionDataActivity extends BaseActivity implements EventListen
     public void performed(Event<String> event) {
         if (event.getType().equals(CompositionDataStatusMessage.class.getName())) {
             CompositionDataStatusMessage cpsStatusMsg = (CompositionDataStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
-            CompositionData compositionData = cpsStatusMsg.getCompositionData();
-            nodeInfo.compositionData = compositionData;
-            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(CompositionDataActivity.this, "Composition Data Refresh Success", Toast.LENGTH_SHORT).show();
-                }
-            });
+            nodeInfo.compositionData = cpsStatusMsg.getCompositionData();
+            nodeInfo.save();
+//            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+            runOnUiThread(() -> Toast.makeText(CompositionDataActivity.this, "Composition Data Refresh Success", Toast.LENGTH_SHORT).show());
             refreshCpsInfo();
         }
     }

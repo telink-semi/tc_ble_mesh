@@ -24,11 +24,17 @@ package com.telink.ble.mesh.model;
 
 import java.io.Serializable;
 
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
+
 /**
  * Created by kee on 2017/8/18.
  */
 
+@Entity
 public class GroupInfo implements Serializable {
+    @Id
+    public long id;
     /**
      * Group name
      */

@@ -178,6 +178,11 @@ public enum MeshSigModel implements Serializable {
         MeshSigModel model = getById(modelId);
         return model != null && model.deviceKeyEnc;
     }
+    public static boolean useDeviceKeyForEnc(String modelIdHex) {
+        int modelId = Integer.valueOf(modelIdHex, 16);
+        MeshSigModel model = getById(modelId);
+        return model != null && model.deviceKeyEnc;
+    }
 
     // default sub list
     public static MeshSigModel[] getDefaultSubList() {

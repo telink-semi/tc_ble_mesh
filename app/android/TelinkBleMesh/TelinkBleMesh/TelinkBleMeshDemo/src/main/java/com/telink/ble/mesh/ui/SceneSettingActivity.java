@@ -96,7 +96,7 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
                 return;
             }
             scene = new Scene();
-            scene.id = sceneId;
+            scene.sceneId = sceneId;
         } else {
             scene = mesh.getSceneById(sceneId);
         }
@@ -184,12 +184,12 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
         if (model.add) {
             meshMessage = SceneStoreMessage.getSimple(model.address,
                     appKeyIndex,
-                    scene.id,
+                    scene.sceneId,
                     true, 1);
         } else {
             meshMessage = SceneDeleteMessage.getSimple(model.address,
                     appKeyIndex,
-                    scene.id,
+                    scene.sceneId,
                     true, 1);
         }
         MeshService.getInstance().sendMeshMessage(meshMessage);
@@ -262,10 +262,9 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
                 if (settingModel.add) {
                     scene.saveFromDeviceInfo(deviceInfo);
                 } else {
-                    scene.removeByAddress(deviceInfo.meshAddress);
+                    scene.removeByAddress(deviceInfo.id);
                 }
                 mesh.saveScene(scene);
-                mesh.saveOrUpdate(this);
                 settingIndex++;
                 setNextAddress();
             }

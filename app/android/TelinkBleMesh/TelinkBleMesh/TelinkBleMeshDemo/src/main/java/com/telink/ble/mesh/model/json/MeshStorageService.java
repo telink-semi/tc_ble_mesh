@@ -29,7 +29,7 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.entity.CompositionData;
-import com.telink.ble.mesh.entity.Scheduler;
+import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.entity.TransitionTime;
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.MeshAppKey;
@@ -38,12 +38,13 @@ import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.model.Scene;
+import com.telink.ble.mesh.model.SceneState;
+import com.telink.ble.mesh.model.db.Scheduler;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.FileSystem;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.File;
-import java.nio.ByteOrder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -303,8 +304,8 @@ public class MeshStorageService {
                 scene.name = meshScene.name;
                 if (meshScene.states != null) {
                     scene.addresses = new ArrayList<>();
-                    for (Scene.SceneState state : meshScene.states) {
-                        scene.addresses.add(String.format("%04X", state.address));
+                    for (SceneState state : meshScene.states) {
+                        scene.addresses.add(String.format("%04X", state.nodeInfo.getTarget().meshAddress));
                     }
                 }
                 meshStorage.scenes.add(scene);
@@ -329,7 +330,7 @@ public class MeshStorageService {
             isSameMesh = false;
             mesh.meshUUID = meshStorage.meshUUID;
         }
-        mesh.meshNetKeyList = new ArrayList<>();
+        mesh.meshNetKeyList.clear();// = new ArrayList<>();
         for (MeshStorage.NetworkKey networkKey : meshStorage.netKeys) {
             MeshLogger.d("import netkey : " + networkKey.key);
             mesh.meshNetKeyList.add(
@@ -338,7 +339,7 @@ public class MeshStorageService {
 
         }
 
-        mesh.appKeyList = new ArrayList<>();
+        mesh.appKeyList.clear();// = new ArrayList<>();
         for (MeshStorage.ApplicationKey applicationKey : meshStorage.appKeys) {
             mesh.appKeyList.add(new MeshAppKey(applicationKey.name, applicationKey.index, Arrays.hexToBytes(applicationKey.key), applicationKey.boundNetKey));
         }
@@ -360,7 +361,7 @@ public class MeshStorageService {
             } else {
                 for (MeshStorage.Provisioner.AddressRange unRange :
                         provisioner.allocatedUnicastRange) {
-                    tmpHigh = MeshUtils.hexString2Int(unRange.highAddress, ByteOrder.BIG_ENDIAN);
+                    tmpHigh = MeshUtils.hexToIntB(unRange.highAddress);
                     if (maxRangeHigh == -1 || maxRangeHigh < tmpHigh) {
                         maxRangeHigh = tmpHigh;
                     }
@@ -395,7 +396,7 @@ public class MeshStorageService {
                 return false;
             }
             final int high = low + 0x03FF;
-            mesh.unicastRange = new ArrayList<AddressRange>();
+            mesh.unicastRange.clear();// = new ArrayList<AddressRange>();
             mesh.unicastRange.add(new AddressRange(low, high));
             mesh.localAddress = low;
             mesh.resetProvisionIndex(low + 1);
@@ -413,15 +414,15 @@ public class MeshStorageService {
 
 //        mesh.sceneRange = new AddressRange(0x01, 0x0F);
 
-        mesh.groups = new ArrayList<>();
-        mesh.extendGroups = new ArrayList<>();
+        mesh.groups.clear();// = new ArrayList<>();
+        mesh.extendGroups.clear();//  = new ArrayList<>();
 
         if (meshStorage.groups != null) {
             GroupInfo group;
             for (MeshStorage.Group gp : meshStorage.groups) {
                 group = new GroupInfo();
                 group.name = gp.name;
-                group.address = MeshUtils.hexString2Int(gp.address, ByteOrder.BIG_ENDIAN);
+                group.address = MeshUtils.hexToIntB(gp.address);
                 if (group.name.contains("subgroup")) {
                     mesh.extendGroups.add(group);
                 } else {
@@ -442,14 +443,14 @@ public class MeshStorageService {
             for (MeshStorage.Node node : meshStorage.nodes) {
                 if (!isProvisionerNode(meshStorage, node)) {
                     deviceInfo = new NodeInfo();
-                    deviceInfo.meshAddress = MeshUtils.hexString2Int(node.unicastAddress, ByteOrder.BIG_ENDIAN);
+                    deviceInfo.meshAddress = MeshUtils.hexToIntB(node.unicastAddress);
 //                    deviceInfo.deviceUUID =  Arrays.hexToBytes(node.UUID.replace(":", "").replace("-", ""));
                     deviceInfo.deviceUUID = MeshUtils.uuidToByteArray(node.UUID);
 
                     deviceInfo.elementCnt = node.elements == null ? 0 : node.elements.size();
                     deviceInfo.deviceKey = Arrays.hexToBytes(node.deviceKey);
 
-                    List<Integer> subList = new ArrayList<>();
+                    List<String> subList = new ArrayList<>();
                     PublishModel publishModel;
                     if (node.elements != null) {
                         for (MeshStorage.Element element : node.elements) {
@@ -459,26 +460,24 @@ public class MeshStorageService {
                             for (MeshStorage.Model model : element.models) {
 
                                 if (model.subscribe != null) {
-                                    int subAdr;
                                     for (String sub : model.subscribe) {
-                                        subAdr = MeshUtils.hexString2Int(sub, ByteOrder.BIG_ENDIAN);
-                                        if (!subList.contains(subAdr)) {
-                                            subList.add(subAdr);
+                                        if (!MeshUtils.hexListContains(subList, sub)) {
+                                            subList.add(sub);
                                         }
                                     }
                                 }
                                 if (model.publish != null) {
                                     MeshStorage.Publish publish = model.publish;
-                                    int pubAddress = MeshUtils.hexString2Int(publish.address, ByteOrder.BIG_ENDIAN);
+                                    int pubAddress = MeshUtils.hexToIntB(publish.address);
                                     // pub address from vc-tool， default is 0
                                     if (pubAddress != 0 && publish.period != null) {
-                                        int elementAddress = element.index + MeshUtils.hexString2Int(node.unicastAddress, ByteOrder.BIG_ENDIAN);
+                                        int elementAddress = element.index + MeshUtils.hexToIntB(node.unicastAddress);
                                         int interval = (publish.retransmit.interval / 50) - 1;
                                         int transmit = publish.retransmit.count | (interval << 3);
                                         int periodTime = publish.period.numberOfSteps * publish.period.resolution;
                                         publishModel = new PublishModel(elementAddress,
-                                                MeshUtils.hexString2Int(model.modelId, ByteOrder.BIG_ENDIAN),
-                                                MeshUtils.hexString2Int(publish.address, ByteOrder.BIG_ENDIAN),
+                                                MeshUtils.hexToIntB(model.modelId),
+                                                MeshUtils.hexToIntB(publish.address),
                                                 periodTime,
                                                 publish.ttl,
                                                 publish.credentials,
@@ -499,7 +498,7 @@ public class MeshStorageService {
                     deviceInfo.compositionData = convertNodeToNodeInfo(node);
 
                     if (node.schedulers != null) {
-                        deviceInfo.schedulers = new ArrayList<>();
+//                        deviceInfo.schedulers = new ArrayList<>();
                         for (MeshStorage.NodeScheduler nodeScheduler : node.schedulers) {
                             deviceInfo.schedulers.add(parseNodeScheduler(nodeScheduler));
                         }
@@ -513,18 +512,21 @@ public class MeshStorageService {
             }
         }
 
-        mesh.scenes = new ArrayList<>();
+        mesh.scenes.clear();// = new ArrayList<>();
         if (meshStorage.scenes != null && meshStorage.scenes.size() != 0) {
             Scene scene;
             for (MeshStorage.Scene outerScene : meshStorage.scenes) {
                 scene = new Scene();
-                scene.id = MeshUtils.hexString2Int(outerScene.number, ByteOrder.BIG_ENDIAN);
+                scene.id = MeshUtils.hexToIntB(outerScene.number);
                 scene.name = outerScene.name;
                 if (outerScene.addresses != null) {
-                    scene.states = new ArrayList<>(outerScene.addresses.size());
+//                    scene.states = new ArrayList<>(outerScene.addresses.size());
                     for (String adrInScene : outerScene.addresses) {
                         // import scene state
-                        scene.states.add(new Scene.SceneState(MeshUtils.hexString2Int(adrInScene, ByteOrder.BIG_ENDIAN)));
+                        NodeInfo nodeInfo = mesh.getDeviceByMeshAddress(MeshUtils.hexToIntB(adrInScene));
+                        if (nodeInfo != null){
+                            scene.states.add(new SceneState(nodeInfo));
+                        }
                     }
                 }
                 mesh.scenes.add(scene);
@@ -532,6 +534,8 @@ public class MeshStorageService {
         }
         return true;
     }
+
+
 
 
     // convert nodeInfo(mesh.java) to node(json)
@@ -564,13 +568,13 @@ public class MeshStorageService {
                     features & 0b1000);*/
 
 
-            PublishModel publishModel = deviceInfo.getPublishModel();
+            PublishModel publishModel = deviceInfo.getPublishModelTarget();
 
             if (deviceInfo.compositionData.elements != null) {
-                List<CompositionData.Element> elements = deviceInfo.compositionData.elements;
+                List<Element> elements = deviceInfo.compositionData.elements;
                 MeshStorage.Element element;
                 for (int i = 0; i < elements.size(); i++) {
-                    CompositionData.Element ele = elements.get(i);
+                    Element ele = elements.get(i);
                     element = new MeshStorage.Element();
                     element.index = i;
                     element.location = String.format("%04X", ele.location);
@@ -600,15 +604,13 @@ public class MeshStorageService {
 
                             // for default sub models
                             if (inDefaultSubModel(modelId)) {
-                                for (int subAdr : deviceInfo.subList) {
-                                    model.subscribe.add(String.format("%04X", subAdr));
-                                }
+                                model.subscribe.addAll(deviceInfo.subList);
                             }
 
                             // for level models:  use the offset
                             if (modelId == MeshSigModel.SIG_MD_G_LEVEL_S.modelId && levelModelIndex != -1) {
-                                for (int subAdr : deviceInfo.subList) { //
-                                    model.subscribe.add(String.format("%04X", GroupInfo.getExtendAddress(subAdr, levelModelIndex)));
+                                for (String subAdr : deviceInfo.subList) { //
+                                    model.subscribe.add(String.format("%04X", GroupInfo.getExtendAddress(MeshUtils.hexToIntB(subAdr), levelModelIndex)));
                                 }
                             }
 
@@ -685,10 +687,10 @@ public class MeshStorageService {
         node.elements = new ArrayList<>();
         CompositionData compositionData = CompositionData.from(VC_TOOL_CPS);
 
-        List<CompositionData.Element> elements = compositionData.elements;
+        List<Element> elements = compositionData.elements;
         MeshStorage.Element element;
         for (int i = 0; i < elements.size(); i++) {
-            CompositionData.Element ele = elements.get(i);
+            Element ele = elements.get(i);
             element = new MeshStorage.Element();
             element.index = i;
             element.location = String.format("%04X", ele.location);
@@ -742,10 +744,10 @@ public class MeshStorageService {
 
         CompositionData compositionData = new CompositionData();
 
-        compositionData.cid = node.cid == null || node.cid.equals("") ? 0 : MeshUtils.hexString2Int(node.cid, ByteOrder.BIG_ENDIAN);
-        compositionData.pid = node.pid == null || node.pid.equals("") ? 0 : MeshUtils.hexString2Int(node.pid, ByteOrder.BIG_ENDIAN);
-        compositionData.vid = node.vid == null || node.vid.equals("") ? 0 : MeshUtils.hexString2Int(node.vid, ByteOrder.BIG_ENDIAN);
-        compositionData.crpl = node.crpl == null || node.crpl.equals("") ? 0 : MeshUtils.hexString2Int(node.crpl, ByteOrder.BIG_ENDIAN);
+        compositionData.cid = node.cid == null || node.cid.equals("") ? 0 : MeshUtils.hexToIntB(node.cid);
+        compositionData.pid = node.pid == null || node.pid.equals("") ? 0 : MeshUtils.hexToIntB(node.pid);
+        compositionData.vid = node.vid == null || node.vid.equals("") ? 0 : MeshUtils.hexToIntB(node.vid);
+        compositionData.crpl = node.crpl == null || node.crpl.equals("") ? 0 : MeshUtils.hexToIntB(node.crpl);
 
         //value 2 : unsupported
         int relaySpt = 0, proxySpt = 0, friendSpt = 0, lowPowerSpt = 0;
@@ -762,9 +764,9 @@ public class MeshStorageService {
 
 
         if (node.elements != null) {
-            CompositionData.Element infoEle;
+            Element infoEle;
             for (MeshStorage.Element element : node.elements) {
-                infoEle = new CompositionData.Element();
+                infoEle = new Element();
 
                 infoEle.sigModels = new ArrayList<>();
                 infoEle.vendorModels = new ArrayList<>();
@@ -774,7 +776,7 @@ public class MeshStorageService {
 
                         // check if is vendor model
                         if (model.modelId != null && !model.modelId.equals("")) {
-                            modelId = MeshUtils.hexString2Int(model.modelId, ByteOrder.BIG_ENDIAN);
+                            modelId = MeshUtils.hexToIntB(model.modelId);
                             // Integer.valueOf(model.modelId, 16);
                             if ((model.modelId.length()) > 4) {
                                 infoEle.vendorModels.add(modelId);
@@ -790,7 +792,7 @@ public class MeshStorageService {
                     infoEle.sigNum = 0;
                     infoEle.vendorNum = 0;
                 }
-                infoEle.location = element.location == null || element.location.equals("") ? 0 : MeshUtils.hexString2Int(element.location, ByteOrder.BIG_ENDIAN);
+                infoEle.location = element.location == null || element.location.equals("") ? 0 : MeshUtils.hexToIntB(element.location);
                 compositionData.elements.add(infoEle);
             }
         }

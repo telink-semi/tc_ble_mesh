@@ -44,6 +44,7 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.BridgingTable;
 import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 
 import java.util.List;
 
@@ -242,7 +243,7 @@ public class BridgingTableAddActivity extends BaseActivity implements EventListe
             BridgingTableStatusMessage statusMessage = (BridgingTableStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
             if (table != null) {
                 nodeInfo.bridgingTableList.add(table);
-                TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+                nodeInfo.save();
             }
             handler.removeCallbacksAndMessages(null);
             if (statusMessage.getStatus() == 0) {

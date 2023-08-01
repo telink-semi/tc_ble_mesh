@@ -41,6 +41,7 @@ import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.parameter.BindingParameters;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.util.Arrays;
 
 /**
@@ -191,20 +192,15 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
         kickDirect = targetDevice.meshAddress == (MeshService.getInstance().getDirectConnectedNodeAddress());
         showWaitingDialog("kick out processing");
         if (!cmdSent || !kickDirect) {
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    onKickOutFinish();
-                }
-            }, 3 * 1000);
+            handler.postDelayed(this::onKickOutFinish, 3 * 1000);
         }
     }
 
     private void onKickOutFinish() {
         handler.removeCallbacksAndMessages(null);
         MeshService.getInstance().removeDevice(targetDevice.meshAddress);
-        TelinkMeshApplication.getInstance().getMeshInfo().removeDeviceByMeshAddress(targetDevice.meshAddress);
-        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getApplicationContext());
+        TelinkMeshApplication.getInstance().getMeshInfo().removeNode(targetDevice);
+//        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getApplicationContext());
         dismissWaitingDialog();
         finish();
     }
@@ -219,7 +215,7 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
         local.bound = true;
 //        local. = remote.boundModels;
         local.compositionData = remote.getCompositionData();
-        mesh.saveOrUpdate(this);
+        local.save();
 
         infoTxt = "bind success";
         dotState = 0;

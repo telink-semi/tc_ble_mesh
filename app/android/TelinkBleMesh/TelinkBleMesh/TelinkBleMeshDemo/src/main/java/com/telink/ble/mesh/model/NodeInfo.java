@@ -29,7 +29,9 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.entity.CompositionData;
-import com.telink.ble.mesh.entity.Scheduler;
+import com.telink.ble.mesh.entity.Element;
+import com.telink.ble.mesh.model.db.MeshInfoService;
+import com.telink.ble.mesh.model.db.Scheduler;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -38,12 +40,22 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.objectbox.annotation.Convert;
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
+import io.objectbox.annotation.Transient;
+import io.objectbox.relation.ToMany;
+import io.objectbox.relation.ToOne;
+
 /**
  * Created by kee on 2019/8/22.
  */
 
+@Entity
 public class NodeInfo implements Serializable {
 
+    @Id
+    public long id;
 
     /**
      * primary element unicast address
@@ -54,6 +66,7 @@ public class NodeInfo implements Serializable {
      * mac address
      */
     public String macAddress;
+
     /**
      * device-uuid from scan-record when normal provision
      * or
@@ -64,8 +77,9 @@ public class NodeInfo implements Serializable {
     /**
      * network key indexes, contains at least one primary network key.
      * can be add by {@link com.telink.ble.mesh.core.message.config.NetKeyAddMessage}
+     * big endian hex string
      */
-    public List<Integer> netKeyIndexes = new ArrayList<>();
+    public List<String> netKeyIndexes = new ArrayList<>();
 
     /**
      * element count
@@ -77,9 +91,15 @@ public class NodeInfo implements Serializable {
     public byte[] deviceKey;
 
     /**
-     * device subscription/group info
+     * Whether periodic broadcast is configured
      */
-    public List<Integer> subList = new ArrayList<>();
+    public boolean timePublishConfigured;
+
+    /**
+     * device subscription/group info
+     * hex string list, bigEndian
+     */
+    public List<String> subList = new ArrayList<>();
 
     // device lightness
     public int lum = 100;
@@ -91,24 +111,29 @@ public class NodeInfo implements Serializable {
      * device on off state
      * 0:off 1:on -1:offline
      */
+    @Convert(converter = OnlineStateConverter.class, dbType = Integer.class)
     private OnlineState onlineState = OnlineState.OFFLINE;
 
     /**
-     * composition data
+     * composition dataNodeInfo
      * {@link com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage}
      */
+//    @Transient
+    @Convert(converter = CompositionDataConverter.class, dbType = byte[].class)
     public CompositionData compositionData = null;
+
+//    private byte[] cpsDataRaw;
 
 
     /**
      * scheduler
      */
-    public List<Scheduler> schedulers = new ArrayList<>();
+    public ToMany<Scheduler> schedulers;
 
     /**
      * publication
      */
-    private PublishModel publishModel;
+    private ToOne<PublishModel> publishModel;
 
     /**
      * default bind support
@@ -120,7 +145,8 @@ public class NodeInfo implements Serializable {
      */
     public boolean subnetBridgeEnabled = false;
 
-    public List<BridgingTable> bridgingTableList = new ArrayList<>();
+
+    public ToMany<BridgingTable> bridgingTableList;
 
     /**
      * selected for UI select
@@ -165,6 +191,7 @@ public class NodeInfo implements Serializable {
 
     public boolean directFriend = false;
 
+    @Transient
     private OfflineCheckTask offlineCheckTask = (OfflineCheckTask) () -> {
         onlineState = OnlineState.OFFLINE;
         MeshLogger.log("offline check task running");
@@ -177,32 +204,39 @@ public class NodeInfo implements Serializable {
 
     public void setOnlineState(OnlineState onlineState) {
         this.onlineState = onlineState;
-        if (publishModel != null) {
+        PublishModel pm = publishModel.getTarget();
+        if (pm != null) {
             Handler handler = TelinkMeshApplication.getInstance().getOfflineCheckHandler();
             handler.removeCallbacks(offlineCheckTask);
-            int timeout = publishModel.period * 3 + 2000;
+            int timeout = pm.period * 3 + 2000;
             if (this.onlineState != OnlineState.OFFLINE && timeout > 0) {
                 handler.postDelayed(offlineCheckTask, timeout);
             }
         }
     }
 
-
     public boolean isPubSet() {
         return publishModel != null;
     }
 
-    public PublishModel getPublishModel() {
+    /**
+     * used in db
+     */
+    public ToOne<PublishModel> getPublishModel() {
         return publishModel;
     }
 
+    public PublishModel getPublishModelTarget() {
+        return publishModel.getTarget();
+    }
+
     public void setPublishModel(PublishModel model) {
-        this.publishModel = model;
+        this.publishModel.setTarget(model);
 
         Handler handler = TelinkMeshApplication.getInstance().getOfflineCheckHandler();
         handler.removeCallbacks(offlineCheckTask);
         if (this.publishModel != null && this.onlineState != OnlineState.OFFLINE) {
-            int timeout = publishModel.period * 3 + 2000;
+            int timeout = publishModel.getTarget().period * 3 + 2000;
             if (timeout > 0) {
                 handler.postDelayed(offlineCheckTask, timeout);
             }
@@ -222,19 +256,13 @@ public class NodeInfo implements Serializable {
     }
 
     public void saveScheduler(Scheduler scheduler) {
-        if (schedulers == null) {
-            schedulers = new ArrayList<>();
-            schedulers.add(scheduler);
-        } else {
-            for (int i = 0; i < schedulers.size(); i++) {
-                if (schedulers.get(i).getIndex() == scheduler.getIndex()) {
-                    schedulers.set(i, scheduler);
-                    return;
-                }
+        for (int i = 0; i < schedulers.size(); i++) {
+            if (schedulers.get(i).getIndex() == scheduler.getIndex()) {
+                schedulers.set(i, scheduler);
+                return;
             }
-            schedulers.add(scheduler);
         }
-
+        schedulers.add(scheduler);
     }
 
     // 0 - 15/0x0f
@@ -269,7 +297,7 @@ public class NodeInfo implements Serializable {
         // element address is based on primary address and increase in loop
         int eleAdr = this.meshAddress;
         outer:
-        for (CompositionData.Element element : compositionData.elements) {
+        for (Element element : compositionData.elements) {
             if (element.sigModels != null) {
                 for (int modelId : element.sigModels) {
                     if (modelId == targetModelId) {
@@ -291,7 +319,7 @@ public class NodeInfo implements Serializable {
     public int getTargetEleAdr(int tarModelId) {
         if (compositionData == null) return -1;
         int eleAdr = this.meshAddress;
-        for (CompositionData.Element element : compositionData.elements) {
+        for (Element element : compositionData.elements) {
             if (element.sigModels != null) {
                 for (int modelId : element.sigModels) {
                     if (modelId == tarModelId) {
@@ -321,7 +349,7 @@ public class NodeInfo implements Serializable {
     public int getLevelAssociatedEleAdr(int associatedModelId) {
         if (compositionData == null) return -1;
         int eleAdr = this.meshAddress;
-        for (CompositionData.Element element : compositionData.elements) {
+        for (Element element : compositionData.elements) {
             if (element.sigModels != null) {
                 if (element.sigModels.contains(associatedModelId) && element.sigModels.contains(MeshSigModel.SIG_MD_G_LEVEL_S.modelId)) {
                     return eleAdr;
@@ -343,7 +371,7 @@ public class NodeInfo implements Serializable {
 
         SparseBooleanArray result = new SparseBooleanArray();
 
-        for (CompositionData.Element element : compositionData.elements) {
+        for (Element element : compositionData.elements) {
             if (element.sigModels != null) {
                 boolean levelSupport = false;
                 boolean lumSupport = false;
@@ -378,7 +406,7 @@ public class NodeInfo implements Serializable {
 
         SparseBooleanArray result = new SparseBooleanArray();
 
-        for (CompositionData.Element element : compositionData.elements) {
+        for (Element element : compositionData.elements) {
             if (element.sigModels != null) {
                 boolean levelSupport = false;
                 boolean tempSupport = false;
@@ -452,5 +480,9 @@ public class NodeInfo implements Serializable {
      */
     public boolean isOff() {
         return this.onlineState == OnlineState.OFF;
+    }
+
+    public void save() {
+        MeshInfoService.getInstance().updateNodeInfo(this);
     }
 }

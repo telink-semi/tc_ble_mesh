@@ -87,6 +87,8 @@ public class CompositionData implements Serializable, Parcelable {
 
     public List<Element> elements;
 
+    public byte[] raw;
+
     public CompositionData() {
 
     }
@@ -113,8 +115,10 @@ public class CompositionData implements Serializable, Parcelable {
     };
 
     public static CompositionData from(byte[] data) {
+
         int index = 0;
         CompositionData cpsData = new CompositionData();
+        cpsData.raw = data;
         cpsData.cid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
         cpsData.pid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
 //        cpsData.vid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
@@ -220,79 +224,6 @@ public class CompositionData implements Serializable, Parcelable {
         dest.writeInt(crpl);
         dest.writeInt(features);
         dest.writeTypedList(elements);
-    }
-
-
-    public static class Element implements Serializable, Parcelable {
-
-        /**
-         * 2 bytes
-         * Contains a location descriptor
-         */
-        public int location;
-
-        /**
-         * 1 byte
-         * Contains a count of SIG Model IDs in this element
-         */
-        public int sigNum;
-
-        /**
-         * 1 byte
-         * Contains a count of Vendor Model IDs in this element
-         */
-        public int vendorNum;
-
-        /**
-         * Contains a sequence of NumS SIG Model IDs
-         */
-        public List<Integer> sigModels;
-
-        /**
-         * Contains a sequence of NumV Vendor Model IDs
-         */
-        public List<Integer> vendorModels;
-
-        public Element() {
-        }
-
-        protected Element(Parcel in) {
-            location = in.readInt();
-            sigNum = in.readInt();
-            vendorNum = in.readInt();
-        }
-
-        public static final Creator<Element> CREATOR = new Creator<Element>() {
-            @Override
-            public Element createFromParcel(Parcel in) {
-                return new Element(in);
-            }
-
-            @Override
-            public Element[] newArray(int size) {
-                return new Element[size];
-            }
-        };
-
-        public boolean containModel(int sigModelId) {
-            if (sigModels == null || sigModels.size() == 0) return false;
-            for (int modelId : sigModels) {
-                if (sigModelId == modelId) return true;
-            }
-            return false;
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeInt(location);
-            dest.writeInt(sigNum);
-            dest.writeInt(vendorNum);
-        }
     }
 
     @Override

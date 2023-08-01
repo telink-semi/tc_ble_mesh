@@ -31,7 +31,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -778,18 +777,13 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
                 break;
             }
         }
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                deviceAdapter.notifyDataSetChanged();
-            }
-        });
+        runOnUiThread(() -> deviceAdapter.notifyDataSetChanged());
         if (device.state == MeshUpdatingDevice.STATE_SUCCESS) {
             final AdditionalInformation addInfo = device.additionalInformation;
             if (addInfo == AdditionalInformation.NODE_UNPROVISIONED) {
                 appendLog("device will be removed : " + device.meshAddress);
-                mesh.removeDeviceByMeshAddress(device.meshAddress);
-                mesh.saveOrUpdate(this);
+                mesh.removeNode(mesh.getDeviceByMeshAddress(device.meshAddress));
+                mesh.saveOrUpdate();
             } else if (addInfo == AdditionalInformation.CPS_CHANGED_1 || addInfo == AdditionalInformation.CPS_CHANGED_2) {
                 //
 

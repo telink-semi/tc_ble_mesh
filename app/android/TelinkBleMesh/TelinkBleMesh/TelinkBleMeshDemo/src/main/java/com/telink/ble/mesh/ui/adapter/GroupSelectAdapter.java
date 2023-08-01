@@ -34,6 +34,7 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.NodeInfo;
@@ -119,8 +120,8 @@ public class GroupSelectAdapter extends BaseSelectableListAdapter<GroupSelectAda
         List<NodeInfo> inner = new ArrayList<>();
         for (NodeInfo device : mAllDevices) {
             if (device.subList != null && device.subList.size() != 0) {
-                for (int subAdr : device.subList) {
-                    if (subAdr == group.address) {
+                for (String subAdr : device.subList) {
+                    if (MeshUtils.hexToIntB(subAdr) == group.address) {
                         inner.add(device);
                     }
                 }

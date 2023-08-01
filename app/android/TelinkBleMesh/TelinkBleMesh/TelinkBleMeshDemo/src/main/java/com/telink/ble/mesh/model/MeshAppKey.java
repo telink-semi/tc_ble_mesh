@@ -24,14 +24,23 @@ package com.telink.ble.mesh.model;
 
 import java.io.Serializable;
 
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
+
 /**
  * application key used for access layer encryption
  */
+@Entity
 public class MeshAppKey implements MeshKey, Serializable {
+    @Id
+    public long id;
     public String name;
     public int index;
     public byte[] key;
     public int boundNetKeyIndex;
+
+    public MeshAppKey() {
+    }
 
     public MeshAppKey(String name, int index, byte[] key, int boundNetKeyIndex) {
         this.name = name;

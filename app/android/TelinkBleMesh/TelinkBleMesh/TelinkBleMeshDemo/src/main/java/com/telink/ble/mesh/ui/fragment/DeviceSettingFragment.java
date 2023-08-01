@@ -51,6 +51,7 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.CompositionDataActivity;
 import com.telink.ble.mesh.ui.DeviceConfigActivity;
 import com.telink.ble.mesh.ui.DeviceOtaActivity;
@@ -226,8 +227,8 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
     private void onKickOutFinish() {
         delayHandler.removeCallbacksAndMessages(null);
         MeshService.getInstance().removeDevice(deviceInfo.meshAddress);
-        TelinkMeshApplication.getInstance().getMeshInfo().removeDeviceByMeshAddress(deviceInfo.meshAddress);
-        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity().getApplicationContext());
+        TelinkMeshApplication.getInstance().getMeshInfo().removeNode(deviceInfo);
+//        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity().getApplicationContext());
         dismissWaitingDialog();
         getActivity().finish();
     }
@@ -249,7 +250,8 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
                     boolean settle = statusMessage.getPublication().publishAddress != 0;
                     cb_pub.setChecked(settle);
                     deviceInfo.setPublishModel(settle ? pubModel : null);
-                    TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity());
+                    deviceInfo.save();
+//                    TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity());
                 });
 
             } else {

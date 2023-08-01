@@ -89,7 +89,7 @@ public class OOBInfoActivity extends BaseActivity {
                     List<OOBPair> oobFromFile = (List<OOBPair>) msg.obj;
                     TelinkMeshApplication.getInstance().getMeshInfo().oobPairs.addAll(oobFromFile);
                     mAdapter.notifyDataSetChanged();
-                    TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(OOBInfoActivity.this);
+                    TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate();
                     Toast.makeText(OOBInfoActivity.this, "Success : " + oobFromFile.size() + " oob imported", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(OOBInfoActivity.this, "Import Fail: check the file format", Toast.LENGTH_SHORT).show();
@@ -145,7 +145,7 @@ public class OOBInfoActivity extends BaseActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 TelinkMeshApplication.getInstance().getMeshInfo().oobPairs.remove(position);
-                TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(OOBInfoActivity.this);
+                TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate();
                 mAdapter.notifyDataSetChanged();
 //                mAdapter.notifyItemRemoved(position);
                 dialog.dismiss();
@@ -182,7 +182,7 @@ public class OOBInfoActivity extends BaseActivity {
             public void onClick(DialogInterface dialog, int which) {
                 MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
                 meshInfo.oobPairs.clear();
-                meshInfo.saveOrUpdate(OOBInfoActivity.this);
+                meshInfo.saveOrUpdate();
                 toastMsg("Wipe oob info success");
                 mAdapter.notifyDataSetChanged();
             }
@@ -211,7 +211,7 @@ public class OOBInfoActivity extends BaseActivity {
             OOBPair pair = (OOBPair) data.getSerializableExtra(OOBEditActivity.EXTRA_OOB);
             List<OOBPair> pairs = TelinkMeshApplication.getInstance().getMeshInfo().oobPairs;
             pairs.add(pair);
-            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate();
             mAdapter.notifyDataSetChanged();
         } else if (requestCode == REQUEST_CODE_EDIT_OOB) {
             // edit success

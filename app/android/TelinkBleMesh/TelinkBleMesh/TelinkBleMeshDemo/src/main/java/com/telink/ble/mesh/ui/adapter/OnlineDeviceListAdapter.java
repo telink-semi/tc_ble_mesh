@@ -106,8 +106,6 @@ public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDevic
 
 
         if (device.bound) {
-
-
             info += (device.compositionData.cid == 0x0211 ? "(Pid-" + String.format("%02X", device.compositionData.pid) + ")"
                     : "(cid-" + String.format("%02X", device.compositionData.cid) + ")");
 

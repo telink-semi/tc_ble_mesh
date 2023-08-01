@@ -207,11 +207,52 @@ public final class MeshUtils {
     /**
      * @param hex input
      * @return int value
+     * little endian
      */
-    public static int hexString2Int(String hex, ByteOrder order) {
+    public static int hexToIntL(String hex) {
         byte[] buf = Arrays.hexToBytes(hex);
-        return bytes2Integer(buf, order);
+        return bytes2Integer(buf, ByteOrder.LITTLE_ENDIAN);
     }
+
+    /**
+     * @param hex input
+     * @return int value
+     * big endian
+     */
+    public static int hexToIntB(String hex) {
+        return Integer.valueOf(hex, 16);
+    }
+
+    /**
+     * big endian
+     */
+    public static String intToHex1(int hex) {
+        return String.format("%02X", hex);
+    }
+
+    /**
+     * big endian
+     */
+    public static String intToHex2(int hex) {
+        return String.format(FORMAT_2_BYTES, hex);
+    }
+
+
+    /**
+     * big endian
+     */
+    public static String intToHex3(int hex) {
+        return String.format(FORMAT_3_BYTES, hex);
+    }
+
+
+    /**
+     * big endian
+     */
+    public static String intToHex4(int hex) {
+        return String.format(FORMAT_4_BYTES, hex);
+    }
+
 
     public static byte[] sequenceNumber2Buffer(int sequenceNumber) {
         return integer2Bytes(sequenceNumber, 3, ByteOrder.BIG_ENDIAN);
@@ -246,7 +287,7 @@ public final class MeshUtils {
     private static final String FORMAT_3_BYTES = "%06X";
     private static final String FORMAT_4_BYTES = "%08X";
 
-    public static String formatIntegerByHex(int value) {
+    public static String intToHex(int value) {
         if (value <= -1) {
             return String.format(FORMAT_4_BYTES, value);
         } else if (value <= 0xFF) {
@@ -256,6 +297,39 @@ public final class MeshUtils {
         } else {
             return String.format(FORMAT_3_BYTES, value);
         }
+    }
+
+    public static String intToHex(int value, int length) {
+        if (length == 1) {
+            return String.format(FORMAT_1_BYTES, value);
+        } else if (length == 2) {
+            return String.format(FORMAT_2_BYTES, value);
+        } else if (length == 3) {
+            return String.format(FORMAT_3_BYTES, value);
+        } else {
+            return String.format(FORMAT_4_BYTES, value);
+        }
+    }
+
+
+    public static boolean hexListContains(List<String> list, String target) {
+        for (String s : list) {
+            if (s.equalsIgnoreCase(target)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean hexListContains(List<String> list, int target) {
+        int i;
+        for (String s : list) {
+            i = hexToIntB(s);
+            if (i == target) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -396,13 +470,13 @@ public final class MeshUtils {
         }
     }
 
-    public static int crc32(byte[] data){
+    public static int crc32(byte[] data) {
         CRC32 crc32 = new CRC32();
         crc32.update(data);
         return (int) crc32.getValue();
     }
 
-    public static int crc32(byte[] data, int offset, int len){
+    public static int crc32(byte[] data, int offset, int len) {
         CRC32 crc32 = new CRC32();
         crc32.update(data, offset, len);
         return (int) crc32.getValue();

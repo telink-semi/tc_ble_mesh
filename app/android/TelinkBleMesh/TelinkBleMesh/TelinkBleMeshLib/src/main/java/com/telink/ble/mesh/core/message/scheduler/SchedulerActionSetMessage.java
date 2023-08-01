@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ package com.telink.ble.mesh.core.message.scheduler;
 
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.generic.GenericMessage;
-import com.telink.ble.mesh.entity.Scheduler;
 
 /**
  * include Scheduler Action set and Scheduler Action set no ack
@@ -33,13 +32,13 @@ import com.telink.ble.mesh.entity.Scheduler;
  */
 public class SchedulerActionSetMessage extends GenericMessage {
 
-    private Scheduler scheduler;
+    private byte[] schedulerParams;
 
     private boolean ack = false;
 
-    public static SchedulerActionSetMessage getSimple(int address, int appKeyIndex, Scheduler scheduler, boolean ack, int rspMax) {
+    public static SchedulerActionSetMessage getSimple(int address, int appKeyIndex, byte[] schedulerParams, boolean ack, int rspMax) {
         SchedulerActionSetMessage message = new SchedulerActionSetMessage(address, appKeyIndex);
-        message.scheduler = scheduler;
+        message.schedulerParams = schedulerParams;
         message.ack = ack;
         message.setResponseMax(rspMax);
         return message;
@@ -61,11 +60,11 @@ public class SchedulerActionSetMessage extends GenericMessage {
 
     @Override
     public byte[] getParams() {
-        return scheduler.toBytes();
+        return schedulerParams;
     }
 
-    public void setScheduler(Scheduler scheduler) {
-        this.scheduler = scheduler;
+    public void setSchedulerParams(byte[] schedulerParams) {
+        this.schedulerParams = schedulerParams;
     }
 
     public void setAck(boolean ack) {

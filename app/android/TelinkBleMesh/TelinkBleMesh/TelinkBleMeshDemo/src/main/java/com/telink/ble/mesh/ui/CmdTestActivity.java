@@ -27,7 +27,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -413,12 +412,12 @@ public class CmdTestActivity extends BaseActivity implements View.OnClickListene
         selectedType = accessType;
         et_dst_adr.setText(String.format("%04X", dstAdr));
 
-        et_opcode.setText(MeshUtils.formatIntegerByHex(opcode));
+        et_opcode.setText(MeshUtils.intToHex(opcode));
         et_params.setText(Arrays.bytesToHexString(params));
         et_rsp_opcode.setText(
                 rspOpcode == MeshMessage.OPCODE_INVALID
                         ?
-                        "" : MeshUtils.formatIntegerByHex(rspOpcode));
+                        "" : MeshUtils.intToHex(rspOpcode));
 
         et_rsp_max.setText(String.valueOf(rspMax));
         et_retry_cnt.setText(String.valueOf(retryCnt));

@@ -36,6 +36,7 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.config.ModelPublicationSetMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.entity.ModelPublication;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.NodeInfo;
@@ -109,7 +110,7 @@ public class RemoteControlFragment extends BaseFragment {
     }
 
     private boolean checkModelId(int modelId, int position) {
-        CompositionData.Element element = deviceInfo.compositionData.elements.get(position);
+        Element element = deviceInfo.compositionData.elements.get(position);
         for (int mid : element.sigModels) {
             if (mid == modelId) return true;
         }

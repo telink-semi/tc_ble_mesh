@@ -24,11 +24,19 @@ package com.telink.ble.mesh.model.json;
 
 import java.io.Serializable;
 
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
+
 /**
  * Created by kee on 2019/2/27.
  */
 
+@Entity
 public class AddressRange implements Serializable {
+
+    @Id
+    public long id;
+
     public int low;
     public int high;
 

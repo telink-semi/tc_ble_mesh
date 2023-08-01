@@ -184,8 +184,8 @@ public class LpnSettingActivity extends BaseActivity implements EventListener<St
     private void onKickOutFinish() {
         delayHandler.removeCallbacksAndMessages(null);
         MeshService.getInstance().removeDevice(deviceInfo.meshAddress);
-        TelinkMeshApplication.getInstance().getMeshInfo().removeDeviceByMeshAddress(deviceInfo.meshAddress);
-        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getApplicationContext());
+        TelinkMeshApplication.getInstance().getMeshInfo().removeNode(deviceInfo);
+//        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getApplicationContext());
         dismissWaitingDialog();
         finish();
     }

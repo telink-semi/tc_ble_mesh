@@ -33,26 +33,27 @@ import com.telink.ble.mesh.core.networking.NetworkLayerPDU;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshConfiguration;
 import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.json.AddressRange;
 import com.telink.ble.mesh.util.Arrays;
-import com.telink.ble.mesh.util.FileSystem;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
+import io.objectbox.relation.ToMany;
 
 /**
  * Created by kee on 2019/8/22.
  */
 
+@Entity
 public class MeshInfo implements Serializable, Cloneable {
 
-    /**
-     * local storage file name , saved by serialize
-     */
-    public static final String FILE_NAME = "com.telink.ble.mesh.demo.STORAGE";
+    @Id
+    public long id;
 
     /**
      * if the {@link #ivIndex} is uninitialized, provision is not permitted
@@ -73,26 +74,23 @@ public class MeshInfo implements Serializable, Cloneable {
     /**
      * unicast address range
      */
-    public List<AddressRange> unicastRange = new ArrayList<>();
+
+    public ToMany<AddressRange> unicastRange;
 
     /**
      * nodes saved in mesh network
      */
-    public List<NodeInfo> nodes = new ArrayList<>();
+    public ToMany<NodeInfo> nodes;
 
     /**
      * network key and network key index
      */
-    public List<MeshNetKey> meshNetKeyList = new ArrayList<>();
-
-//    public byte[] networkKey;
-
-//    public int netKeyIndex;
+    public ToMany<MeshNetKey> meshNetKeyList;
 
     /**
      * application key list
      */
-    public List<MeshAppKey> appKeyList = new ArrayList<>();
+    public ToMany<MeshAppKey> appKeyList;
 
     /**
      * ivIndex and sequence number are used in NetworkPDU
@@ -126,22 +124,22 @@ public class MeshInfo implements Serializable, Cloneable {
     /**
      * scenes saved in mesh
      */
-    public List<Scene> scenes = new ArrayList<>();
+    public ToMany<Scene> scenes;
 
     /**
      * groups (group address 0xC000~0xC0FF)
      */
-    public List<GroupInfo> groups = new ArrayList<>();
+    public ToMany<GroupInfo> groups;
 
     /**
      * extend groups
      */
-    public List<GroupInfo> extendGroups = new ArrayList<>();
+    public ToMany<GroupInfo> extendGroups;
 
     /**
      * static-oob info
      */
-    public List<OOBPair> oobPairs = new ArrayList<>();
+    public ToMany<OOBPair> oobPairs;
 
     public MeshNetKey getDefaultNetKey() {
         return meshNetKeyList.get(0);
@@ -176,34 +174,26 @@ public class MeshInfo implements Serializable, Cloneable {
         return null;
     }
 
-    public void insertDevice(NodeInfo deviceInfo) {
+    public void insertDevice(NodeInfo deviceInfo, boolean updatePvIndex) {
         NodeInfo local = getDeviceByUUID(deviceInfo.deviceUUID);
         if (local != null) {
             this.removeDeviceByUUID(deviceInfo.deviceUUID);
         }
         nodes.add(deviceInfo);
+        if (updatePvIndex) {
+            increaseProvisionIndex(deviceInfo.elementCnt);
+        } else {
+            saveOrUpdate();
+        }
     }
 
 
-    public boolean removeDeviceByMeshAddress(int address) {
-
-        if (this.nodes == null || this.nodes.size() == 0) return false;
-
+    public void removeNode(NodeInfo node) {
+        if (this.nodes.size() == 0) return;
         for (Scene scene : scenes) {
-            scene.removeByAddress(address);
+            scene.removeByAddress(node.id);
         }
-
-        Iterator<NodeInfo> iterator = nodes.iterator();
-        while (iterator.hasNext()) {
-            NodeInfo deviceInfo = iterator.next();
-
-            if (deviceInfo.meshAddress == address) {
-                iterator.remove();
-                return true;
-            }
-        }
-
-        return false;
+        this.nodes.remove(node);
     }
 
     public boolean removeDeviceByUUID(byte[] deviceUUID) {
@@ -252,8 +242,8 @@ public class MeshInfo implements Serializable, Cloneable {
         int result = 0;
         for (NodeInfo device : nodes) {
             if (!device.isOffline()) {
-                for (int addr : device.subList) {
-                    if (addr == groupAddress) {
+                for (String addr : device.subList) {
+                    if (MeshUtils.hexToIntB(addr) == groupAddress) {
                         result++;
                         break;
                     }
@@ -267,17 +257,18 @@ public class MeshInfo implements Serializable, Cloneable {
 
     public void saveScene(Scene scene) {
         for (Scene local : scenes) {
-            if (local.id == scene.id) {
+            if (local.sceneId == scene.sceneId) {
                 local.states = scene.states;
                 return;
             }
         }
         scenes.add(scene);
+        saveOrUpdate();
     }
 
     public Scene getSceneById(int id) {
         for (Scene scene : scenes) {
-            if (id == scene.id) {
+            if (id == scene.sceneId) {
                 return scene;
             }
         }
@@ -293,7 +284,7 @@ public class MeshInfo implements Serializable, Cloneable {
         if (scenes.size() == 0) {
             return 1;
         }
-        int id = scenes.get(scenes.size() - 1).id;
+        int id = scenes.get(scenes.size() - 1).sceneId;
         if (id == 0xFFFF) {
             return -1;
         }
@@ -312,15 +303,16 @@ public class MeshInfo implements Serializable, Cloneable {
         return null;
     }
 
-
-    public void saveOrUpdate(Context context) {
-        FileSystem.writeAsObject(context, FILE_NAME, this);
+    // only update metadata in mesh info, not includes inner entities (ToOne and ToMany)
+    public void saveOrUpdate() {
+        MeshInfoService.getInstance().updateMeshInfo(this);
     }
 
 
     @Override
     public String toString() {
         return "MeshInfo{" +
+                "id=" + id +
                 "nodes=" + nodes.size() +
                 ", netKey=" + getNetKeyStr() +
                 ", appKey=" + getAppKeyStr() +
@@ -365,6 +357,7 @@ public class MeshInfo implements Serializable, Cloneable {
             this.unicastRange.add(new AddressRange(low, high));
             this.addressTopLimit = high;
         }
+        saveOrUpdate();
     }
 
     public void resetProvisionIndex(int index) {
@@ -422,7 +415,7 @@ public class MeshInfo implements Serializable, Cloneable {
 //        final int IV_INDEX = 0x20345678;
 
 //        meshInfo.networkKey = NET_KEY;
-        meshInfo.meshNetKeyList = new ArrayList<>();
+//        meshInfo.meshNetKeyList = new ArrayList<>();
         final int KEY_COUNT = 3;
         final String[] NET_KEY_NAMES = {"Default Net Key", "Sub Net Key 1", "Sub Net Key 2"};
         final String[] APP_KEY_NAMES = {"Default App Key", "Sub App Key 1", "Sub App Key 2"};
@@ -435,7 +428,6 @@ public class MeshInfo implements Serializable, Cloneable {
 
         meshInfo.ivIndex = 0x01;
         meshInfo.sequenceNumber = 0;
-        meshInfo.nodes = new ArrayList<>();
         meshInfo.localAddress = DEFAULT_LOCAL_ADDRESS;
         meshInfo.provisionIndex = DEFAULT_LOCAL_ADDRESS + 1; // 0x0002
 
@@ -445,8 +437,8 @@ public class MeshInfo implements Serializable, Cloneable {
         meshInfo.meshUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
 
 
-        meshInfo.groups = new ArrayList<>();
-        meshInfo.unicastRange = new ArrayList<>();
+//        meshInfo.groups = new ArrayList<>();
+//        meshInfo.unicastRange = new ArrayList<>();
         meshInfo.unicastRange.add(new AddressRange(0x01, 0x400));
         meshInfo.addressTopLimit = 0x0400;
         String[] groupNames = context.getResources().getStringArray(R.array.group_name);
@@ -457,7 +449,6 @@ public class MeshInfo implements Serializable, Cloneable {
             group.name = groupNames[i];
             meshInfo.groups.add(group);
         }
-
         return meshInfo;
     }
 

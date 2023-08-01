@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
  *******************************************************************************************************/
-package com.telink.ble.mesh.entity;
+package com.telink.ble.mesh.model.db;
 
 
 import android.os.Parcel;
@@ -30,12 +30,21 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
+import io.objectbox.relation.ToOne;
+
+
 /**
  * scheduler
  * Created by kee on 2018/9/17.
  * Mesh_Model_Specification v1.0.pdf#5.2.3.4
  */
+@Entity
 public final class Scheduler implements Serializable, Parcelable {
+
+    @Id
+    public long id;
 
     /**
      * #ref builder desc
@@ -71,11 +80,14 @@ public final class Scheduler implements Serializable, Parcelable {
     /**
      * 76 bits
      */
-    private Register register;
+    public ToOne<SchedulerRegister> register;
 
-    private Scheduler(byte index, Register register) {
+    public Scheduler() {
+    }
+
+    private Scheduler(byte index, SchedulerRegister register) {
         this.index = index;
-        this.register = register;
+        this.register.setTarget(register);
     }
 
     /*public long getRegisterParam0() {
@@ -97,7 +109,7 @@ public final class Scheduler implements Serializable, Parcelable {
 
     protected Scheduler(Parcel in) {
         index = in.readByte();
-        register = in.readParcelable(Register.class.getClassLoader());
+        register = in.readParcelable(SchedulerRegister.class.getClassLoader());
     }
 
     public static final Creator<Scheduler> CREATOR = new Creator<Scheduler>() {
@@ -116,14 +128,11 @@ public final class Scheduler implements Serializable, Parcelable {
         return index;
     }
 
-    public Register getRegister() {
-        return register;
-    }
 
     public static Scheduler fromBytes(byte[] data) {
         if (data == null || data.length != 10) return null;
         byte index = (byte) (data[0] & 0x0F);
-        Register reg = new Register();
+        SchedulerRegister reg = new SchedulerRegister();
         reg.year = (data[0] >> 4 & 0b1111) | ((data[1] & 0b111) << 4);
         reg.month = (data[1] >> 3 & 0b11111) | ((data[2] & 0b1111111) << 5);
         reg.day = (data[2] >> 7 & 0b1) | ((data[3] & 0b1111) << 1); // d3 4
@@ -139,6 +148,7 @@ public final class Scheduler implements Serializable, Parcelable {
 
     public byte[] toBytes() {
         ByteBuffer byteBuffer = ByteBuffer.allocate(10).order(ByteOrder.LITTLE_ENDIAN);
+        SchedulerRegister register = this.register.getTarget();
         byteBuffer.putLong(index |
                 register.year << 4 |
                 register.month << 11 |
@@ -161,7 +171,7 @@ public final class Scheduler implements Serializable, Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(index);
-        dest.writeParcelable(register, flags);
+        dest.writeParcelable(register.getTarget(), flags);
     }
 
     public static final class Builder {
@@ -314,7 +324,7 @@ public final class Scheduler implements Serializable, Parcelable {
         }
 
         public Scheduler build() {
-            Register register = new Register(
+            SchedulerRegister register = new SchedulerRegister(
                     this.year,
                     this.month,
                     this.day,
@@ -327,131 +337,6 @@ public final class Scheduler implements Serializable, Parcelable {
                     this.sceneId
             );
             return new Scheduler(this.index, register);
-        }
-    }
-
-
-    public static class Register implements Serializable, Parcelable {
-        private long year;
-        private long month;
-        private long day;
-        private long hour;
-        private long minute;
-        private long second;
-        private long week;
-        private long action;
-        private long transTime;
-        private int sceneId;
-
-        private Register() {
-
-        }
-
-        private Register(byte year,
-                         short month,
-                         byte day,
-                         byte hour,
-                         byte minute,
-                         byte second,
-                         byte week,
-                         byte action,
-                         byte transTime,
-                         int sceneId) {
-            this.year = year & 0xFF;
-            this.month = month & 0xFFFF;
-            this.day = day & 0xFF;
-            this.hour = hour & 0xFF;
-            this.minute = minute & 0xFF;
-            this.second = second & 0xFF;
-            this.week = week & 0xFF;
-            this.action = action & 0xFF;
-            this.transTime = transTime & 0xFF;
-            this.sceneId = sceneId & 0xFFFF;
-        }
-
-
-        protected Register(Parcel in) {
-            year = in.readLong();
-            month = in.readLong();
-            day = in.readLong();
-            hour = in.readLong();
-            minute = in.readLong();
-            second = in.readLong();
-            week = in.readLong();
-            action = in.readLong();
-            transTime = in.readLong();
-            sceneId = in.readInt();
-        }
-
-        public static final Creator<Register> CREATOR = new Creator<Register>() {
-            @Override
-            public Register createFromParcel(Parcel in) {
-                return new Register(in);
-            }
-
-            @Override
-            public Register[] newArray(int size) {
-                return new Register[size];
-            }
-        };
-
-        public long getYear() {
-            return year;
-        }
-
-        public long getMonth() {
-            return month;
-        }
-
-        public long getDay() {
-            return day;
-        }
-
-        public long getHour() {
-            return hour;
-        }
-
-        public long getMinute() {
-            return minute;
-        }
-
-        public long getSecond() {
-            return second;
-        }
-
-        public long getWeek() {
-            return week;
-        }
-
-        public long getAction() {
-            return action;
-        }
-
-        public long getTransTime() {
-            return transTime;
-        }
-
-        public int getSceneId() {
-            return sceneId;
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeLong(year);
-            dest.writeLong(month);
-            dest.writeLong(day);
-            dest.writeLong(hour);
-            dest.writeLong(minute);
-            dest.writeLong(second);
-            dest.writeLong(week);
-            dest.writeLong(action);
-            dest.writeLong(transTime);
-            dest.writeInt(sceneId);
         }
     }
 

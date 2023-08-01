@@ -141,15 +141,13 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         nodeInfo.macAddress = Arrays.bytesToHexString(fastProvisioningDevice.getMac(), ":");
         nodeInfo.deviceKey = fastProvisioningDevice.getDeviceKey();
         nodeInfo.elementCnt = fastProvisioningDevice.getElementCount();
-        nodeInfo.compositionData = getCompositionData(fastProvisioningDevice.getPid());
+        nodeInfo.compositionData = CompositionData.from(getCompositionData(fastProvisioningDevice.getPid()));
 
         NetworkingDevice device = new NetworkingDevice(nodeInfo);
         device.state = NetworkingState.PROVISIONING;
         devices.add(device);
         mListAdapter.notifyDataSetChanged();
-
         meshInfo.increaseProvisionIndex(fastProvisioningDevice.getElementCount());
-        meshInfo.saveOrUpdate(this);
     }
 
 
@@ -179,23 +177,20 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
             if (success) {
                 networkingDevice.state = NetworkingState.BIND_SUCCESS;
                 networkingDevice.nodeInfo.bound = true;
-                meshInfo.insertDevice(networkingDevice.nodeInfo);
+                meshInfo.insertDevice(networkingDevice.nodeInfo, false);
             } else {
                 networkingDevice.state = NetworkingState.PROVISION_FAIL;
             }
-        }
-        if (success) {
-            meshInfo.saveOrUpdate(this);
         }
         mListAdapter.notifyDataSetChanged();
         enableUI(true);
     }
 
-    private CompositionData getCompositionData(int pid) {
+    private byte[] getCompositionData(int pid) {
         for (PrivateDevice privateDevice : targetDevices) {
-            if (pid == privateDevice.getPid())
-                return CompositionData.from(privateDevice.getCpsData());
-
+            if (pid == privateDevice.getPid()) {
+                return privateDevice.getCpsData();
+            }
         }
         return null;
     }

@@ -251,7 +251,7 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
             try {
                 int idx = Integer.valueOf(ivInput, 16);
                 TelinkMeshApplication.getInstance().getMeshInfo().ivIndex = idx;
-                TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity());
+                TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate();
             } catch (Exception e) {
                 e.printStackTrace();
             }

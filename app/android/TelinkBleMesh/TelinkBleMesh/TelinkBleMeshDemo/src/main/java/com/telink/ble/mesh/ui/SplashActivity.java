@@ -37,7 +37,12 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.telink.ble.mesh.SharedPreferenceHelper;
+import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.db.MeshInfoService;
+import com.telink.ble.mesh.model.db.ObjectBox;
 import com.telink.ble.mesh.util.MeshLogger;
 
 
@@ -128,15 +133,42 @@ public class SplashActivity extends BaseActivity {
     private void onPermissionChecked() {
         MeshLogger.log("permission check pass");
         delayHandler.removeCallbacksAndMessages(null);
-        delayHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-//                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
+        delayHandler.postDelayed(this::checkMeshInfo, 500);
+    }
+
+    private void checkMeshInfo() {
+        MeshInfoService.getInstance().init(ObjectBox.get());
+        long id = SharedPreferenceHelper.getSelectedMeshId(this);
+        if (id != -1) {
+            // exists
+            MeshInfo meshInfo = MeshInfoService.getInstance().getById(id);
+            if (meshInfo != null) {
+                goToNext(meshInfo);
+                return;
             }
-        }, 500);
+        }
+        MeshInfo meshInfo = MeshInfo.createNewMesh(this);
+        MeshInfoService.getInstance().addMeshInfo(meshInfo);
+        goToNext(meshInfo);
+
+        /*Object configObj = FileSystem.readAsObject(this, MeshInfo.FILE_NAME);
+        MeshInfo meshInfo;
+        if (configObj == null) {
+            meshInfo = MeshInfo.createNewMesh(this);
+            meshInfo.saveOrUpdate(this);
+        } else {
+            meshInfo = (MeshInfo) configObj;
+        }*/
+
+//        meshInfo = createTestMesh();
+    }
+
+    private void goToNext(MeshInfo meshInfo) {
+        TelinkMeshApplication.getInstance().setupMesh(meshInfo);
+        Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+//                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void onPermissionDenied() {

@@ -231,7 +231,8 @@ public class DirectForwardingActivity extends BaseActivity implements EventListe
         if (event.getType().equals(DirectedControlStatusMessage.class.getName())) {
             SubnetBridgeStatusMessage bridgeStatusMessage = (SubnetBridgeStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
             int state = bridgeStatusMessage.getSubnetBridgeState();
-            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+
+//            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
             handler.removeCallbacksAndMessages(null);
         } else if (event.getType().equals(ForwardingTableStatusMessage.class.getName())) {
             ForwardingTableStatusMessage tableStatusMessage = (ForwardingTableStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();

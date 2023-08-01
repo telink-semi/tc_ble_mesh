@@ -24,10 +24,17 @@ package com.telink.ble.mesh.model;
 
 import java.io.Serializable;
 
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
+
 /**
  * bridging table format
  */
+@Entity
 public class BridgingTable implements Serializable {
+    @Id
+    public long id;
+
     /**
      * Allowed directions for the bridged traffic
      * 8 bits

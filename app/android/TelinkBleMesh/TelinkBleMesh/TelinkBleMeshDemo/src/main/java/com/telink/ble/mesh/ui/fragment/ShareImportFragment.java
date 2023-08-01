@@ -146,7 +146,7 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
             toastMsg("import failed");
             return;
         }
-        newMesh.saveOrUpdate(getActivity());
+        newMesh.saveOrUpdate();
         MeshService.getInstance().idle(true);
         TelinkMeshApplication.getInstance().setupMesh(newMesh);
         MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());

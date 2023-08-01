@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.telink.ble.mesh.core.message.StatusMessage;
-import com.telink.ble.mesh.entity.Scheduler;
 
 /**
  * Created by kee on 2019/8/20.
@@ -34,13 +33,14 @@ import com.telink.ble.mesh.entity.Scheduler;
 
 public class SchedulerActionStatusMessage extends StatusMessage implements Parcelable {
 
-    private Scheduler scheduler;
+    private byte[] schedulerParams;
 
     public SchedulerActionStatusMessage() {
     }
 
+
     protected SchedulerActionStatusMessage(Parcel in) {
-        scheduler = in.readParcelable(Scheduler.class.getClassLoader());
+        schedulerParams = in.createByteArray();
     }
 
     public static final Creator<SchedulerActionStatusMessage> CREATOR = new Creator<SchedulerActionStatusMessage>() {
@@ -57,11 +57,11 @@ public class SchedulerActionStatusMessage extends StatusMessage implements Parce
 
     @Override
     public void parse(byte[] params) {
-        this.scheduler = Scheduler.fromBytes(params);
+        this.schedulerParams = params;
     }
 
-    public Scheduler getScheduler() {
-        return scheduler;
+    public byte[] getSchedulerParams() {
+        return schedulerParams;
     }
 
     @Override
@@ -71,6 +71,6 @@ public class SchedulerActionStatusMessage extends StatusMessage implements Parce
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeParcelable(scheduler, flags);
+        dest.writeByteArray(schedulerParams);
     }
 }

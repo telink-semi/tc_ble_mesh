@@ -33,7 +33,8 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.entity.Scheduler;
+import com.telink.ble.mesh.model.db.Scheduler;
+import com.telink.ble.mesh.model.db.SchedulerRegister;
 import com.telink.ble.mesh.ui.SchedulerSettingActivity;
 
 import java.io.Serializable;
@@ -87,7 +88,7 @@ public class SchedulerListAdapter extends BaseRecyclerViewAdapter<SchedulerListA
         super.onBindViewHolder(holder, position);
 
         Scheduler scheduler = mSchedulerList.get(position);
-        Scheduler.Register register = scheduler.getRegister();
+        SchedulerRegister register = scheduler.register.getTarget();
         holder.tv_scheduler_id.setText("scheduler index: 0x" + Long.toHexString(scheduler.getIndex()));
         holder.iv_edit.setTag(position);
         holder.iv_edit.setOnClickListener(editClick);

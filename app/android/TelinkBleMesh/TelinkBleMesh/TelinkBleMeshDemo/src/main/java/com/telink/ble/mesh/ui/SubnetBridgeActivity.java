@@ -163,7 +163,7 @@ public class SubnetBridgeActivity extends BaseActivity implements EventListener<
             SubnetBridgeStatusMessage bridgeStatusMessage = (SubnetBridgeStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
             int state = bridgeStatusMessage.getSubnetBridgeState();
             nodeInfo.subnetBridgeEnabled = state == 1;
-            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+            nodeInfo.save();
             handler.removeCallbacksAndMessages(null);
             updateState();
 
@@ -173,7 +173,7 @@ public class SubnetBridgeActivity extends BaseActivity implements EventListener<
                 handler.removeCallbacksAndMessages(null);
                 if (removeIndex != -1) {
                     nodeInfo.bridgingTableList.remove(removeIndex);
-                    TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+                    nodeInfo.save();
                     removeIndex = -1;
                 }
                 updateTable();

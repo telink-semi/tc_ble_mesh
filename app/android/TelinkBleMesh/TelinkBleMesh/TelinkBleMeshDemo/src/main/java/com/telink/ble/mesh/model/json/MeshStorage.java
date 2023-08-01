@@ -24,7 +24,8 @@ package com.telink.ble.mesh.model.json;
 
 
 import com.telink.ble.mesh.core.message.MeshMessage;
-import com.telink.ble.mesh.entity.Scheduler;
+import com.telink.ble.mesh.model.db.Scheduler;
+import com.telink.ble.mesh.model.db.SchedulerRegister;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -129,7 +130,7 @@ public class MeshStorage {
         public int phase;
         public String key;
         public String minSecurity;
-//        public String oldKey = Defaults.KEY_INVALID;
+        //        public String oldKey = Defaults.KEY_INVALID;
         public String timestamp;
     }
 
@@ -208,7 +209,7 @@ public class MeshStorage {
             NodeScheduler nodeScheduler = new NodeScheduler();
             nodeScheduler.index = scheduler.getIndex();
 
-            Scheduler.Register register = scheduler.getRegister();
+            SchedulerRegister register = scheduler.register.getTarget();
             nodeScheduler.year = register.getYear();
             nodeScheduler.month = register.getMonth();
             nodeScheduler.day = register.getDay();

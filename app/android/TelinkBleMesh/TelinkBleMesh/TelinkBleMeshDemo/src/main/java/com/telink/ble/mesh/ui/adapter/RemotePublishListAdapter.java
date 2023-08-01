@@ -35,6 +35,7 @@ import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.fragment.RemoteControlFragment;
@@ -93,7 +94,7 @@ public class RemotePublishListAdapter extends BaseRecyclerViewAdapter<RemotePubl
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
-        CompositionData.Element element = nodeInfo.compositionData.elements.get(position);
+        Element element = nodeInfo.compositionData.elements.get(position);
         int eleAdr = nodeInfo.meshAddress + position;
         holder.et_ele_adr.setText(String.format("%04X", eleAdr));
 

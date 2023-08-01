@@ -32,6 +32,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.generic.DeltaSetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
@@ -218,8 +219,8 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
         outer:
         for (NodeInfo device : localDevices) {
             if (device.subList != null) {
-                for (int groupAdr : device.subList) {
-                    if (groupAdr == group.address) {
+                for (String groupAdr : device.subList) {
+                    if (MeshUtils.hexToIntB(groupAdr) == group.address) {
                         innerDevices.add(device);
                         continue outer;
                     }

@@ -24,6 +24,10 @@ package com.telink.ble.mesh.model;
 
 import java.io.Serializable;
 
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
+
+@Entity
 public class OOBPair implements Serializable {
     /**
      * manual input in OOBEditActivity
@@ -34,6 +38,9 @@ public class OOBPair implements Serializable {
      * batch import from valid formatted file
      */
     public static final int IMPORT_MODE_FILE = 1;
+
+    @Id
+    public long id;
 
     /**
      * device UUID

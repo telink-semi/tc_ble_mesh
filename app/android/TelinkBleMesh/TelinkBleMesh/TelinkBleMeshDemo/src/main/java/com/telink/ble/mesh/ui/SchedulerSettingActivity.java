@@ -46,7 +46,6 @@ import com.telink.ble.mesh.core.message.scheduler.SchedulerActionStatusMessage;
 import com.telink.ble.mesh.core.message.time.TimeSetMessage;
 import com.telink.ble.mesh.core.message.time.TimeStatusMessage;
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.entity.Scheduler;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
@@ -54,6 +53,8 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.UnitConvert;
+import com.telink.ble.mesh.model.db.Scheduler;
+import com.telink.ble.mesh.model.db.SchedulerRegister;
 import com.telink.ble.mesh.ui.adapter.BaseSelectableListAdapter;
 import com.telink.ble.mesh.ui.adapter.SelectableListAdapter;
 import com.telink.ble.mesh.util.Arrays;
@@ -401,7 +402,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
 
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         SchedulerActionSetMessage setMessage = SchedulerActionSetMessage.getSimple(eleAdr,
-                meshInfo.getDefaultAppKeyIndex(), scheduler, true, 1);
+                meshInfo.getDefaultAppKeyIndex(), scheduler.toBytes(), true, 1);
         MeshService.getInstance().sendMeshMessage(setMessage);
         toastMsg("scheduler setting sent");
     }
@@ -463,7 +464,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
             return;
         }
         byte index = scheduler.getIndex();
-        Scheduler.Register register = scheduler.getRegister();
+        SchedulerRegister register = scheduler.register.getTarget();
 
         long year = register.getYear();
         if (year == Scheduler.YEAR_ANY) {
@@ -578,7 +579,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
             TimeStatusMessage timeStatusMessage = (TimeStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
             MeshLogger.d("time status: " + timeStatusMessage.getTaiSeconds());
             int src = ((StatusNotificationEvent) event).getNotificationMessage().getSrc();
-            if (src == mDevice.meshAddress && timeSetting){
+            if (src == mDevice.meshAddress && timeSetting) {
                 timeSetting = false;
                 MeshLogger.log("set time success");
                 runOnUiThread(() -> {
@@ -588,11 +589,12 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         } else if (eventType.equals(SchedulerActionStatusMessage.class.getName())) {
             StatusNotificationEvent notificationEvent = (StatusNotificationEvent) event;
             SchedulerActionStatusMessage schedulerActionStatusMessage = (SchedulerActionStatusMessage) notificationEvent.getNotificationMessage().getStatusMessage();
-            Scheduler remoteScheduler = schedulerActionStatusMessage.getScheduler();
-            if (this.scheduler.getIndex() == remoteScheduler.getIndex()) {
+            byte[] schedulerParams = schedulerActionStatusMessage.getSchedulerParams();
+            Scheduler remoteScheduler = Scheduler.fromBytes(schedulerParams);
+            if (remoteScheduler != null && this.scheduler.getIndex() == remoteScheduler.getIndex()) {
                 toastMsg("scheduler saved");
                 mDevice.saveScheduler(scheduler);
-                TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+                mDevice.save();
                 finish();
             }
 

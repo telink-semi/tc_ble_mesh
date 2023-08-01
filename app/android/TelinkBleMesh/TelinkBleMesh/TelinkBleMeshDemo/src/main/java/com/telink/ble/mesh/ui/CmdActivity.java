@@ -356,12 +356,12 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         selectedType = accessType;
         et_dst_adr.setText(String.format("%04X", dstAdr));
 
-        et_opcode.setText(MeshUtils.formatIntegerByHex(opcode));
+        et_opcode.setText(MeshUtils.intToHex(opcode));
         et_params.setText(Arrays.bytesToHexString(params));
         et_rsp_opcode.setText(
                 rspOpcode == MeshMessage.OPCODE_INVALID
                         ?
-                        "" : MeshUtils.formatIntegerByHex(rspOpcode));
+                        "" : MeshUtils.intToHex(rspOpcode));
 
         et_rsp_max.setText(String.valueOf(rspMax));
         et_retry_cnt.setText(String.valueOf(retryCnt));

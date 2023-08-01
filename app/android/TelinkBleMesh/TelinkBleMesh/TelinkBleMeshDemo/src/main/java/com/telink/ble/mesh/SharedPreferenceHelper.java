@@ -39,6 +39,11 @@ public class SharedPreferenceHelper {
     private static final String DEFAULT_NAME = "telink_shared";
     private static final String KEY_FIRST_LOAD = "com.telink.bluetooth.light.KEY_FIRST_LOAD";
 
+    /**
+     * selected {@link com.telink.ble.mesh.model.MeshInfo#id}
+     */
+    private static final String KEY_SELECTED_MESH_ID = "com.telink.bluetooth.light.KEY_SELECTED_MESH_ID";
+
     private static final String KEY_LOCATION_IGNORE = "com.telink.bluetooth.light.KEY_LOCATION_IGNORE";
 
     private static final String KEY_LOG_ENABLE = "com.telink.bluetooth.light.KEY_LOG_ENABLE";
@@ -180,6 +185,20 @@ public class SharedPreferenceHelper {
     public static void setLevelServiceEnable(Context context, boolean enable) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_LEVEL_SERVICE, enable).apply();
+    }
+
+
+    public static long getSelectedMeshId(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getLong(KEY_SELECTED_MESH_ID, -1);
+    }
+
+    /**
+     * @param meshId {@link com.telink.ble.mesh.model.MeshInfo#id}
+     */
+    public static void setSelectedMeshId(Context context, long meshId) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putLong(KEY_SELECTED_MESH_ID, meshId).apply();
     }
 
 

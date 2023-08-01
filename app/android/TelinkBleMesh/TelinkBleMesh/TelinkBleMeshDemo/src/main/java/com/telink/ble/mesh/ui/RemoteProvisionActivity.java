@@ -61,6 +61,7 @@ import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.DeviceAutoProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -235,13 +236,10 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         NetworkingDevice networkingDevice = getProcessingNode();
 
         networkingDevice.state = NetworkingState.BINDING;
-        int elementCnt = remote.getDeviceCapability().eleNum;
-        networkingDevice.nodeInfo.elementCnt = elementCnt;
+        networkingDevice.nodeInfo.elementCnt = remote.getDeviceCapability().eleNum;
         networkingDevice.nodeInfo.deviceKey = remote.getDeviceKey();
-        networkingDevice.nodeInfo.netKeyIndexes.add(meshInfo.getDefaultNetKey().index);
-        meshInfo.insertDevice(networkingDevice.nodeInfo);
-        meshInfo.increaseProvisionIndex(elementCnt);
-        meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
+        networkingDevice.nodeInfo.netKeyIndexes.add(MeshUtils.intToHex2(meshInfo.getDefaultNetKey().index));
+        meshInfo.insertDevice(networkingDevice.nodeInfo, true);
 
         // check if private mode opened
         final boolean privateMode = SharedPreferenceHelper.isPrivateMode(this);
@@ -287,7 +285,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         }
 
         mListAdapter.notifyDataSetChanged();
-        meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
+        deviceInList.nodeInfo.save();
     }
 
     private void onKeyBindFail(BindingEvent event) {
@@ -296,7 +294,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         deviceInList.state = NetworkingState.BIND_FAIL;
         deviceInList.addLog("Binding", event.getDesc());
         mListAdapter.notifyDataSetChanged();
-        meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
+        meshInfo.saveOrUpdate();
     }
 
 
@@ -521,12 +519,9 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         MeshLogger.log("remote act success: " + Arrays.bytesToHexString(remote.getUuid()));
         NetworkingDevice networkingDevice = getProcessingNode();
         networkingDevice.state = NetworkingState.BINDING;
-        int elementCnt = remote.getDeviceCapability().eleNum;
-        networkingDevice.nodeInfo.elementCnt = elementCnt;
+        networkingDevice.nodeInfo.elementCnt = remote.getDeviceCapability().eleNum;
         networkingDevice.nodeInfo.deviceKey = remote.getDeviceKey();
-        meshInfo.insertDevice(networkingDevice.nodeInfo);
-        meshInfo.increaseProvisionIndex(elementCnt);
-        meshInfo.saveOrUpdate(RemoteProvisionActivity.this);
+        meshInfo.insertDevice(networkingDevice.nodeInfo, true);
         networkingDevice.nodeInfo.setDefaultBind(false);
         mListAdapter.notifyDataSetChanged();
         int appKeyIndex = meshInfo.getDefaultAppKeyIndex();

@@ -102,7 +102,7 @@ public class OOBListAdapter extends BaseRecyclerViewAdapter<OOBListAdapter.ViewH
                 meshInfo.oobPairs.remove(position);
 //                notifyDataSetChanged();
                 notifyItemRemoved(position);
-                meshInfo.saveOrUpdate(mContext);
+                meshInfo.saveOrUpdate();
             } else if (v.getId() == R.id.iv_edit) {
                 position = (int) v.getTag();
                 ((Activity) mContext).startActivityForResult(
