@@ -77,7 +77,7 @@ public class LightnessStatusMessage extends StatusMessage implements Parcelable 
     @Override
     public void parse(byte[] params) {
         this.presentLightness = MeshUtils.bytes2Integer(params, 0, 2, ByteOrder.LITTLE_ENDIAN);
-        if (params.length == DATA_LEN_COMPLETE) {
+        if (params.length >= DATA_LEN_COMPLETE) {
             this.isComplete = true;
             this.targetLightness = MeshUtils.bytes2Integer(params, 2, 2, ByteOrder.LITTLE_ENDIAN);
             this.remainingTime = params[4];

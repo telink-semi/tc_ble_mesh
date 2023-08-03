@@ -86,7 +86,7 @@ public class CtlTemperatureStatusMessage extends StatusMessage implements Parcel
         index += 2;
         this.presentDeltaUV = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
         index += 2;
-        if (params.length == DATA_LEN_COMPLETE) {
+        if (params.length >= DATA_LEN_COMPLETE) {
             this.isComplete = true;
             this.targetTemperature = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
             index += 2;

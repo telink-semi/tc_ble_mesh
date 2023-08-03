@@ -89,7 +89,7 @@ public class CtlStatusMessage extends StatusMessage implements Parcelable {
         index += 2;
         this.presentTemperature = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
         index += 2;
-        if (params.length == DATA_LEN_COMPLETE) {
+        if (params.length >= DATA_LEN_COMPLETE) {
             this.isComplete = true;
             this.targetLightness = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
             index += 2;

@@ -72,7 +72,7 @@ public class OnOffStatusMessage extends StatusMessage implements Parcelable {
     @Override
     public void parse(byte[] params) {
         this.presentOnOff = params[0];
-        if (params.length == DATA_LEN_COMPLETE) {
+        if (params.length >= DATA_LEN_COMPLETE) {
             this.isComplete = true;
             this.targetOnOff = params[1];
             this.remainingTime = params[2];

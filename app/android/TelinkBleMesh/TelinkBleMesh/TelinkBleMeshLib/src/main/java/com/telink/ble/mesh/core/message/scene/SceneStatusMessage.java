@@ -80,7 +80,7 @@ public class SceneStatusMessage extends StatusMessage implements Parcelable {
         this.statusCode = params[index++];
         this.currentScene = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
         index += 2;
-        if (params.length == DATA_LEN_COMPLETE) {
+        if (params.length >= DATA_LEN_COMPLETE) {
             this.isComplete = true;
             this.targetScene = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
             index += 2;

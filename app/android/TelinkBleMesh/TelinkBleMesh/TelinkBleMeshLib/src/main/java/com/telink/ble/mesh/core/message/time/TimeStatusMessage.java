@@ -117,7 +117,7 @@ public class TimeStatusMessage extends StatusMessage implements Parcelable {
         this.taiSeconds = MeshUtils.bytes2Long(params, index, 5, ByteOrder.LITTLE_ENDIAN);
         index += 5;
         // tai
-        if (params.length == DATA_LEN_COMPLETE) {
+        if (params.length >= DATA_LEN_COMPLETE) {
             this.isComplete = true;
             this.subSecond = params[index++];
             this.uncertainty = params[index++];

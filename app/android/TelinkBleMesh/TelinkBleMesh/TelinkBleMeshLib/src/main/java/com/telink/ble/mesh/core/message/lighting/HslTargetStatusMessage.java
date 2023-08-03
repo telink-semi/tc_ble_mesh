@@ -83,7 +83,7 @@ public class HslTargetStatusMessage extends StatusMessage implements Parcelable 
         index += 2;
         this.targetSaturation = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
         index += 2;
-        if (params.length == DATA_LEN_COMPLETE) {
+        if (params.length >= DATA_LEN_COMPLETE) {
             this.isComplete = true;
             this.remainingTime = params[index];
         }

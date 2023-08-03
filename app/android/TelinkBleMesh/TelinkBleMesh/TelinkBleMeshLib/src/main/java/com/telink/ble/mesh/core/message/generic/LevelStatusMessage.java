@@ -79,7 +79,7 @@ public class LevelStatusMessage extends StatusMessage {
         int index = 0;
         this.presentLevel = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
         index += 2;
-        if (params.length == DATA_LEN_COMPLETE) {
+        if (params.length >= DATA_LEN_COMPLETE) {
             this.isComplete = true;
             this.targetLevel = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
             index += 2;
