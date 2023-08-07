@@ -28,14 +28,14 @@ import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
 
 @Entity
-public class OOBPair implements Serializable {
+public class OobInfo implements Serializable {
     /**
      * manual input in OOBEditActivity
      */
     public static final int IMPORT_MODE_MANUAL = 0;
 
     /**
-     * batch import from valid formatted file
+     * batch import from formatted file
      */
     public static final int IMPORT_MODE_FILE = 1;
 

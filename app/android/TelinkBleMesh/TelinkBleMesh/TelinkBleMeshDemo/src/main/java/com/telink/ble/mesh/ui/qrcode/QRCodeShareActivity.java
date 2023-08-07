@@ -37,6 +37,7 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.BaseActivity;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -63,6 +64,7 @@ public class QRCodeShareActivity extends BaseActivity {
     private QRCodeGenerator mQrCodeGenerator;
     private Handler countDownHandler = new Handler();
     List<MeshNetKey> meshNetKeyList;
+    private MeshInfo meshInfo;
 
     @SuppressLint("HandlerLeak")
     private Handler mGeneratorHandler = new Handler() {
@@ -100,7 +102,8 @@ public class QRCodeShareActivity extends BaseActivity {
         setContentView(R.layout.activity_share_qrcode);
         setTitle("Share-QRCode");
         enableBackNav(true);
-
+        long meshId = getIntent().getLongExtra("MeshInfoId", 0);
+        meshInfo = MeshInfoService.getInstance().getById(meshId);
 
         /*Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.share_scan);
@@ -123,8 +126,6 @@ public class QRCodeShareActivity extends BaseActivity {
     private void getNetKeyList() {
         int[] selectedIndexes = getIntent().getIntArrayExtra("selectedIndexes");
         if (selectedIndexes == null) return;
-        MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-
         meshNetKeyList = new ArrayList<>();
         outer:
         for (MeshNetKey netKey : meshInfo.meshNetKeyList) {
@@ -168,7 +169,6 @@ public class QRCodeShareActivity extends BaseActivity {
 
     private void upload(List<MeshNetKey> meshNetKeyList) {
         showWaitingDialog("uploading...");
-        MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         String jsonStr = MeshStorageService.getInstance().meshToJsonString(meshInfo, meshNetKeyList);
         MeshLogger.d("upload json string: " + jsonStr);
         TelinkHttpClient.getInstance().upload(jsonStr, QRCODE_TIMEOUT, uploadCallback);

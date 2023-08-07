@@ -272,7 +272,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         mListAdapter.notifyDataSetChanged();
 
         // check if oob exists
-        byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
+        byte[] oob = MeshInfoService.getInstance().getOobByDeviceUUID(deviceUUID);
 //        oob = new byte[]{(byte) 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         if (oob != null) {
             provisioningDevice.setAuthValue(oob);

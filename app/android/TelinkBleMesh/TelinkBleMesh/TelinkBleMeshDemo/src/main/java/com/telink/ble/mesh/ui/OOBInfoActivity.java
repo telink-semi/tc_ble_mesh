@@ -29,7 +29,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -39,11 +38,9 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.model.MeshInfo;
-import com.telink.ble.mesh.model.OOBPair;
-import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
+import com.telink.ble.mesh.model.OobInfo;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.OOBListAdapter;
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
 import com.telink.ble.mesh.util.Arrays;
@@ -59,7 +56,6 @@ import java.util.List;
 /**
  * show static OOB list
  */
-
 public class OOBInfoActivity extends BaseActivity {
 
     private final String[] ACTIONS = new String[]{"Manual Input",
@@ -75,8 +71,8 @@ public class OOBInfoActivity extends BaseActivity {
 
 
     private OOBListAdapter mAdapter;
+
     private AlertDialog.Builder actionSelectDialog;
-    private AlertDialog.Builder deleteDialog;
 
     @SuppressLint("HandlerLeak")
     private Handler mHandler = new Handler() {
@@ -86,10 +82,9 @@ public class OOBInfoActivity extends BaseActivity {
             if (msg.what == MSG_IMPORT_COMPLETE) {
                 dismissWaitingDialog();
                 if (msg.obj != null) {
-                    List<OOBPair> oobFromFile = (List<OOBPair>) msg.obj;
-                    TelinkMeshApplication.getInstance().getMeshInfo().oobPairs.addAll(oobFromFile);
+                    List<OobInfo> oobFromFile = (List<OobInfo>) msg.obj;
+                    MeshInfoService.getInstance().addOobInfo(oobFromFile);
                     mAdapter.notifyDataSetChanged();
-                    TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate();
                     Toast.makeText(OOBInfoActivity.this, "Success : " + oobFromFile.size() + " oob imported", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(OOBInfoActivity.this, "Import Fail: check the file format", Toast.LENGTH_SHORT).show();
@@ -112,62 +107,36 @@ public class OOBInfoActivity extends BaseActivity {
         enableBackNav(true);
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.oob_info);
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                if (item.getItemId() == R.id.item_oob_add) {
-                    showModeSelectDialog();
-                } else if (item.getItemId() == R.id.item_oob_clear) {
-                    showClearDialog();
-                }
-                return false;
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.item_oob_add) {
+                showModeSelectDialog();
+            } else if (item.getItemId() == R.id.item_oob_clear) {
+                showClearDialog();
             }
+            return false;
         });
 
         mAdapter = new OOBListAdapter(this);
-        mAdapter.setOnItemLongClickListener(new BaseRecyclerViewAdapter.OnItemLongClickListener() {
-            @Override
-            public boolean onLongClick(int position) {
-                showDeleteConfirmDialog(position);
-                return false;
-            }
+        mAdapter.setOnItemLongClickListener(position -> {
+            showConfirmDialog("delete", (dialog, which) -> mAdapter.remove(position));
+            return false;
         });
         RecyclerView rv_oob = findViewById(R.id.rv_oob);
         rv_oob.setLayoutManager(new LinearLayoutManager(this));
         rv_oob.setAdapter(mAdapter);
     }
 
-    private void showDeleteConfirmDialog(final int position) {
-        deleteDialog = new AlertDialog.Builder(this);
-        OOBPair pair = TelinkMeshApplication.getInstance().getMeshInfo().oobPairs.get(position);
-        String[] title = new String[]{String.format("delete")};
-        deleteDialog.setItems(title, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                TelinkMeshApplication.getInstance().getMeshInfo().oobPairs.remove(position);
-                TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate();
-                mAdapter.notifyDataSetChanged();
-//                mAdapter.notifyItemRemoved(position);
-                dialog.dismiss();
-            }
-        });
-        deleteDialog.show();
-    }
-
 
     private void showModeSelectDialog() {
         if (actionSelectDialog == null) {
             actionSelectDialog = new AlertDialog.Builder(this);
-            actionSelectDialog.setItems(ACTIONS, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (which == 0) {
-                        startActivityForResult(new Intent(OOBInfoActivity.this, OOBEditActivity.class), REQUEST_CODE_ADD_OOB);
-                    } else if (which == 1) {
-                        startActivityForResult(new Intent(OOBInfoActivity.this, FileSelectActivity.class)
-                                        .putExtra(FileSelectActivity.KEY_SUFFIX, ".txt")
-                                , REQUEST_CODE_SELECT_DATABASE);
-                    }
+            actionSelectDialog.setItems(ACTIONS, (dialog, which) -> {
+                if (which == 0) {
+                    startActivityForResult(new Intent(OOBInfoActivity.this, OOBEditActivity.class), REQUEST_CODE_ADD_OOB);
+                } else if (which == 1) {
+                    startActivityForResult(new Intent(OOBInfoActivity.this, FileSelectActivity.class)
+                                    .putExtra(FileSelectActivity.KEY_SUFFIX, ".txt")
+                            , REQUEST_CODE_SELECT_DATABASE);
                 }
             });
             actionSelectDialog.setTitle("Select mode");
@@ -180,9 +149,7 @@ public class OOBInfoActivity extends BaseActivity {
         showConfirmDialog("Wipe all oob info? ", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-                meshInfo.oobPairs.clear();
-                meshInfo.saveOrUpdate();
+                MeshInfoService.getInstance().clearAllOobInfo();
                 toastMsg("Wipe oob info success");
                 mAdapter.notifyDataSetChanged();
             }
@@ -199,26 +166,14 @@ public class OOBInfoActivity extends BaseActivity {
             final String path = data.getStringExtra(FileSelectActivity.KEY_RESULT);
             MeshLogger.log("select: " + path);
             showWaitingDialog("parsing OOB database...");
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    List<OOBPair> parseResult = parseOOBDatabase(path);
-                    mHandler.obtainMessage(MSG_IMPORT_COMPLETE, parseResult).sendToTarget();
-                }
+            new Thread(() -> {
+                List<OobInfo> parseResult = parseOOBDatabase(path);
+                mHandler.obtainMessage(MSG_IMPORT_COMPLETE, parseResult).sendToTarget();
             }).start();
         } else if (requestCode == REQUEST_CODE_ADD_OOB) {
-            // add success
-            OOBPair pair = (OOBPair) data.getSerializableExtra(OOBEditActivity.EXTRA_OOB);
-            List<OOBPair> pairs = TelinkMeshApplication.getInstance().getMeshInfo().oobPairs;
-            pairs.add(pair);
-            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate();
-            mAdapter.notifyDataSetChanged();
+            mAdapter.resetData();
         } else if (requestCode == REQUEST_CODE_EDIT_OOB) {
-            // edit success
-            OOBPair pair = (OOBPair) data.getSerializableExtra(OOBEditActivity.EXTRA_OOB);
-            final int position = data.getIntExtra(OOBEditActivity.EXTRA_POSITION, 0);
-            TelinkMeshApplication.getInstance().getMeshInfo().oobPairs.set(position, pair);
-            mAdapter.notifyDataSetChanged();
+            mAdapter.resetData();
         }
     }
 
@@ -226,7 +181,7 @@ public class OOBInfoActivity extends BaseActivity {
     /**
      * parse oob database
      */
-    public List<OOBPair> parseOOBDatabase(String filePath) {
+    public List<OobInfo> parseOOBDatabase(String filePath) {
         if (filePath == null) return null;
         File file = new File(filePath);
         if (!file.exists())
@@ -238,8 +193,8 @@ public class OOBInfoActivity extends BaseActivity {
             br = new BufferedReader(fr);
             String line;
             long curTimestamp = System.currentTimeMillis();
-            List<OOBPair> result = null;
-            OOBPair oobPair;
+            List<OobInfo> result = null;
+            OobInfo oobInfo;
             while ((line = br.readLine()) != null) {
                 if (line.length() != 65) {
                     continue;
@@ -251,15 +206,15 @@ public class OOBInfoActivity extends BaseActivity {
                 byte[] uuid = Arrays.hexToBytes(rawPair[0]);
                 byte[] oob = Arrays.hexToBytes(rawPair[1]);
 
-                oobPair = new OOBPair();
-                oobPair.deviceUUID = uuid;
-                oobPair.oob = oob;
-                oobPair.timestamp = curTimestamp;
-                oobPair.importMode = OOBPair.IMPORT_MODE_FILE;
+                oobInfo = new OobInfo();
+                oobInfo.deviceUUID = uuid;
+                oobInfo.oob = oob;
+                oobInfo.timestamp = curTimestamp;
+                oobInfo.importMode = OobInfo.IMPORT_MODE_FILE;
                 if (result == null) {
                     result = new ArrayList<>();
                 }
-                result.add(oobPair);
+                result.add(oobInfo);
             }
             return result;
         } catch (IOException | RuntimeException e) {

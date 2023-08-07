@@ -3,6 +3,8 @@ package com.telink.ble.mesh.model.db;
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.OobInfo;
+import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.List;
@@ -16,7 +18,10 @@ public class MeshInfoService {
     private Box<MeshInfo> meshInfoBox;
     private Box<NodeInfo> nodeInfoBox;
     private Box<GroupInfo> groupInfoBox;
+
+    private Box<OobInfo> oobInfoBox;
     private Query<MeshInfo> meshInfoQuery;
+    private Query<OobInfo> oobInfoQuery;
 
     private MeshInfoService() {
     }
@@ -29,6 +34,8 @@ public class MeshInfoService {
         meshInfoBox = store.boxFor(MeshInfo.class);
         meshInfoQuery = meshInfoBox.query().build();
         nodeInfoBox = store.boxFor(NodeInfo.class);
+        oobInfoBox = store.boxFor(OobInfo.class);
+        oobInfoQuery = oobInfoBox.query().build();
     }
 
     public MeshInfo getById(long id) {
@@ -62,6 +69,13 @@ public class MeshInfoService {
         meshInfoBox.put(meshInfo);
     }
 
+    /**
+     * remove mesh info
+     */
+    public void removeMeshInfo(MeshInfo meshInfo) {
+        meshInfoBox.remove(meshInfo);
+    }
+
     public void updateNodeInfo(NodeInfo node) {
         MeshLogger.d("updateNodeInfo - " + node.id);
         nodeInfoBox.put(node);
@@ -71,4 +85,41 @@ public class MeshInfoService {
         groupInfoBox.put(groupInfo);
     }
 
+    public List<OobInfo> getOobList() {
+        return oobInfoQuery.find();
+    }
+
+
+    public void addOobInfo(List<OobInfo> oobInfoList) {
+        oobInfoBox.put(oobInfoList);
+    }
+
+    public void addOobInfo(OobInfo... oobInfo) {
+        oobInfoBox.put(oobInfo);
+    }
+
+    public void updateOobInfo(OobInfo oobInfo) {
+        oobInfoBox.put(oobInfo);
+    }
+
+    public void removeOobInfo(OobInfo oobInfo) {
+        oobInfoBox.remove(oobInfo);
+    }
+
+    public void clearAllOobInfo() {
+        oobInfoBox.removeAll();
+    }
+
+    public byte[] getOobByDeviceUUID(byte[] deviceUUID) {
+        for (OobInfo pair : getOobList()) {
+            if (Arrays.equals(pair.deviceUUID, deviceUUID)) {
+                return pair.oob;
+            }
+        }
+        return null;
+    }
+
+    public OobInfo getOobById(long id) {
+        return oobInfoBox.get(id);
+    }
 }

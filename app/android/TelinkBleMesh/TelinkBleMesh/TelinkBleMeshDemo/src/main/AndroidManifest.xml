@@ -337,6 +337,9 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden"
             tools:ignore="LockedOrientationActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.NetworkListActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.ShareImportActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.ShareExportActivity" />
     </application>
 
 

@@ -205,7 +205,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice.device, deviceUUID, address);
 
         // check if oob exists
-        byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
+        byte[] oob = MeshInfoService.getInstance().getOobByDeviceUUID(deviceUUID);
         if (oob != null) {
             provisioningDevice.setAuthValue(oob);
         } else {
@@ -426,7 +426,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         mListAdapter.notifyDataSetChanged();
 
         // check if oob exists -- remote support
-        byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(device.getUuid());
+        byte[] oob = MeshInfoService.getInstance().getOobByDeviceUUID(device.getUuid());
         if (oob != null) {
             device.setAuthValue(oob);
         } else {

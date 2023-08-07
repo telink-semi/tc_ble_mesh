@@ -18,7 +18,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.ble.GattConnection;
 import com.telink.ble.mesh.core.ble.GattRequest;
@@ -26,6 +25,7 @@ import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.BaseActivity;
 import com.telink.ble.mesh.util.Arrays;
@@ -66,7 +66,7 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
     private Button btn_start, btn_select_device, btn_connect_gatt;
     private Handler socketHandler;
     private HandlerThread socketThread;
-
+    private MeshInfo meshInfo;
     private boolean transferComplete = false;
 
     @SuppressLint("HandlerLeak")
@@ -142,8 +142,8 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
     private void initData() {
         int[] selectedIndexes = getIntent().getIntArrayExtra("selectedIndexes");
         if (selectedIndexes == null) return;
-        MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-
+        long meshId = getIntent().getLongExtra("MeshInfoId", 0);
+        meshInfo = MeshInfoService.getInstance().getById(meshId);
         List<MeshNetKey> meshNetKeyList = new ArrayList<>();
         outer:
         for (MeshNetKey netKey : meshInfo.meshNetKeyList) {

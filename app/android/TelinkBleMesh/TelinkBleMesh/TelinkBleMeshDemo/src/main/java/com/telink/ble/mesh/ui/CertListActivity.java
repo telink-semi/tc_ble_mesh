@@ -36,7 +36,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.CertCacheService;
-import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.CertListAdapter;
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -55,6 +54,10 @@ import java.util.List;
  */
 
 public class CertListActivity extends BaseActivity {
+
+    /**
+     * select cert file
+     */
     private static final int REQUEST_CODE_SELECT_CERT = 1;
 
     private CertListAdapter mAdapter;
@@ -90,17 +93,16 @@ public class CertListActivity extends BaseActivity {
         parseCacheCerts();
         int rootIndex = CertCacheService.getInstance().getRootIndex();
         mAdapter = new CertListAdapter(this, certificateList, rootIndex);
-        mAdapter.setOnItemClickListener(new BaseRecyclerViewAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                startActivityForResult(
-                        new Intent(CertListActivity.this, CertDetailActivity.class)
-                                .putExtra(CertDetailActivity.KEY_EXTRA_CERT_INFO, certificateList.get(position))
-                                .putExtra(CertDetailActivity.KEY_EXTRA_CERT_DATA, certDataList.get(position))
-                        , OOBInfoActivity.REQUEST_CODE_EDIT_OOB
-                );
-            }
-        });
+
+        /**
+         * edit cert
+         */
+        mAdapter.setOnItemClickListener(position -> startActivityForResult(
+                new Intent(CertListActivity.this, CertDetailActivity.class)
+                        .putExtra(CertDetailActivity.KEY_EXTRA_CERT_INFO, certificateList.get(position))
+                        .putExtra(CertDetailActivity.KEY_EXTRA_CERT_DATA, certDataList.get(position))
+                , OOBInfoActivity.REQUEST_CODE_EDIT_OOB
+        ));
         mAdapter.setOnItemLongClickListener(position -> {
             showActionsDialog(position);
             return false;

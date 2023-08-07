@@ -20,14 +20,12 @@
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
  *******************************************************************************************************/
-package com.telink.ble.mesh.ui.fragment;
+package com.telink.ble.mesh.ui;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -38,7 +36,6 @@ import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.json.MeshStorageService;
-import com.telink.ble.mesh.ui.JsonPreviewActivity;
 import com.telink.ble.mesh.ui.cdtp.CdtpImportActivity;
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
 import com.telink.ble.mesh.ui.qrcode.QRCodeScanActivity;
@@ -51,7 +48,7 @@ import java.io.File;
  * share import fragment
  */
 
-public class ShareImportFragment extends BaseFragment implements View.OnClickListener {
+public class ShareImportActivity extends BaseActivity implements View.OnClickListener {
     private TextView tv_file_select;
     private RadioButton rb_file, rb_cdtp, rb_qrcode;
     private TextView tv_log;
@@ -61,24 +58,32 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
     private static final int REQUEST_IMPORT = 2;
     private String mPath;
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_share_import, null);
-    }
 
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        tv_file_select = view.findViewById(R.id.tv_file_select);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (!validateNormalStart(savedInstanceState)) {
+            return;
+        }
+        setContentView(R.layout.activity_share_import);
+        findViewById(R.id.btn_import).setOnClickListener(this);
+        initView();
+    }
+
+
+    public void initView() {
+        setTitle("Share Import");
+        enableBackNav(true);
+        tv_file_select = findViewById(R.id.tv_file_select);
         tv_file_select.setOnClickListener(this);
-        btn_open = view.findViewById(R.id.btn_open);
+        btn_open = findViewById(R.id.btn_open);
         btn_open.setOnClickListener(this);
-        tv_log = view.findViewById(R.id.tv_log);
-        view.findViewById(R.id.btn_import).setOnClickListener(this);
-        rg_import_type = view.findViewById(R.id.rg_import_type);
-        rb_file = view.findViewById(R.id.rb_file);
-        rb_cdtp = view.findViewById(R.id.rb_cdtp);
-        rb_qrcode = view.findViewById(R.id.rb_qrcode);
+        tv_log = findViewById(R.id.tv_log);
+        findViewById(R.id.btn_import).setOnClickListener(this);
+        rg_import_type = findViewById(R.id.rg_import_type);
+        rb_file = findViewById(R.id.rb_file);
+        rb_cdtp = findViewById(R.id.rb_cdtp);
+        rb_qrcode = findViewById(R.id.rb_qrcode);
         rb_file.setOnCheckedChangeListener((buttonView, isChecked) -> tv_file_select.setVisibility(isChecked ? View.VISIBLE : View.GONE));
     }
 
@@ -86,14 +91,14 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.tv_file_select:
-                startActivityForResult(new Intent(getActivity(), FileSelectActivity.class).putExtra(FileSelectActivity.KEY_SUFFIX, ".json"), REQUEST_CODE_GET_FILE);
+                startActivityForResult(new Intent(this, FileSelectActivity.class).putExtra(FileSelectActivity.KEY_SUFFIX, ".json"), REQUEST_CODE_GET_FILE);
                 break;
 
             case R.id.btn_open:
                 if (mPath == null) {
                     return;
                 }
-                startActivity(new Intent(this.getActivity(), JsonPreviewActivity.class).putExtra(JsonPreviewActivity.FILE_PATH, mPath));
+                startActivity(new Intent(this, JsonPreviewActivity.class).putExtra(JsonPreviewActivity.FILE_PATH, mPath));
                 break;
 
             case R.id.btn_import:
@@ -103,11 +108,11 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
                         break;
 
                     case R.id.rb_cdtp:
-                        startActivityForResult(new Intent(getActivity(), CdtpImportActivity.class), REQUEST_IMPORT);
+                        startActivityForResult(new Intent(this, CdtpImportActivity.class), REQUEST_IMPORT);
                         break;
 
                     case R.id.rb_qrcode:
-                        startActivityForResult(new Intent(getActivity(), QRCodeScanActivity.class), REQUEST_IMPORT);
+                        startActivityForResult(new Intent(this, QRCodeScanActivity.class), REQUEST_IMPORT);
                         break;
                 }
 
@@ -164,7 +169,7 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
             tv_log.append("File selected: " + mPath + "\n");
             MeshLogger.log("select: " + mPath);
         } else if (requestCode == REQUEST_IMPORT) {
-            getActivity().finish();
+            this.finish();
         }
 
     }

@@ -131,7 +131,7 @@
     },
     {
       "id": "6:2069274728427692519",
-      "lastPropertyId": "8:4521951590562376610",
+      "lastPropertyId": "10:2479901812599270086",
       "name": "MeshInfo",
       "properties": [
         {
@@ -174,6 +174,16 @@
           "id": "8:4521951590562376610",
           "name": "addressTopLimit",
           "type": 5
+        },
+        {
+          "id": "9:8138377349172761395",
+          "name": "meshName",
+          "type": 9
+        },
+        {
+          "id": "10:2479901812599270086",
+          "name": "timestamp",
+          "type": 9
         }
       ],
       "relations": [
@@ -250,7 +260,7 @@
     },
     {
       "id": "8:6579166990100229747",
-      "lastPropertyId": "29:8769029968393784580",
+      "lastPropertyId": "30:1946681122139823938",
       "name": "NodeInfo",
       "properties": [
         {
@@ -313,11 +323,6 @@
           "id": "12:3863148715437878742",
           "name": "onlineState",
           "type": 5
-        },
-        {
-          "id": "13:2500718768392416442",
-          "name": "cpsDataRaw",
-          "type": 23
         },
         {
           "id": "14:8185126411718485460",
@@ -401,6 +406,11 @@
           "id": "29:8769029968393784580",
           "name": "timePublishConfigured",
           "type": 1
+        },
+        {
+          "id": "30:1946681122139823938",
+          "name": "compositionData",
+          "type": 23
         }
       ],
       "relations": [
@@ -670,7 +680,8 @@
   "retiredIndexUids": [],
   "retiredPropertyUids": [
     1383819400209798051,
-    2129298725270926374
+    2129298725270926374,
+    2500718768392416442
   ],
   "retiredRelationUids": [],
   "version": 1

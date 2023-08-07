@@ -33,10 +33,9 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.model.MeshInfo;
-import com.telink.ble.mesh.model.OOBPair;
+import com.telink.ble.mesh.model.OobInfo;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.OOBEditActivity;
 import com.telink.ble.mesh.ui.OOBInfoActivity;
 import com.telink.ble.mesh.util.Arrays;
@@ -53,12 +52,40 @@ import java.util.Locale;
 public class OOBListAdapter extends BaseRecyclerViewAdapter<OOBListAdapter.ViewHolder> {
 
     private Context mContext;
-    private List<OOBPair> mOOBPairs;
+    private List<OobInfo> mOobInfos;
     private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
 
     public OOBListAdapter(Context context) {
         this.mContext = context;
-        this.mOOBPairs = TelinkMeshApplication.getInstance().getMeshInfo().oobPairs;
+        this.mOobInfos = MeshInfoService.getInstance().getOobList();
+    }
+
+    public void clear() {
+        if (this.mOobInfos != null) {
+            this.mOobInfos.clear();
+            notifyDataSetChanged();
+        }
+    }
+
+    public OobInfo get(int position) {
+        return this.mOobInfos.get(position);
+    }
+
+    public void add(OobInfo oobInfo) {
+        MeshInfoService.getInstance().addOobInfo(oobInfo);
+        this.mOobInfos.add(oobInfo);
+        this.notifyDataSetChanged();
+    }
+
+    public void remove(int position) {
+        MeshInfoService.getInstance().removeOobInfo(mOobInfos.get(position));
+        this.mOobInfos.remove(position);
+        this.notifyDataSetChanged();
+    }
+
+    public void resetData() {
+        this.mOobInfos = MeshInfoService.getInstance().getOobList();
+        this.notifyDataSetChanged();
     }
 
     @Override
@@ -73,21 +100,21 @@ public class OOBListAdapter extends BaseRecyclerViewAdapter<OOBListAdapter.ViewH
 
     @Override
     public int getItemCount() {
-        return mOOBPairs == null ? 0 : mOOBPairs.size();
+        return mOobInfos == null ? 0 : mOobInfos.size();
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
-        OOBPair oobPair = mOOBPairs.get(position);
-        String extraInfo = dateFormat.format(new Date(oobPair.timestamp)) + " - " +
-                (oobPair.importMode == OOBPair.IMPORT_MODE_FILE ? "from file" : "manual input");
+        OobInfo oobInfo = mOobInfos.get(position);
+        String extraInfo = dateFormat.format(new Date(oobInfo.timestamp)) + " - " +
+                (oobInfo.importMode == OobInfo.IMPORT_MODE_FILE ? "from file" : "manual input");
         holder.tv_oob_info.setText(mContext.getString(R.string.oob_info
-                , Arrays.bytesToHexString(oobPair.deviceUUID)
-                , Arrays.bytesToHexString(oobPair.oob)
+                , Arrays.bytesToHexString(oobInfo.deviceUUID)
+                , Arrays.bytesToHexString(oobInfo.oob)
                 , extraInfo));
         holder.iv_delete.setTag(position);
-        holder.iv_delete.setOnClickListener(iconClickListener);
+        holder.iv_delete.setOnClickListener((View v) -> remove(position));
         holder.iv_edit.setTag(position);
         holder.iv_edit.setOnClickListener(iconClickListener);
     }
@@ -96,19 +123,11 @@ public class OOBListAdapter extends BaseRecyclerViewAdapter<OOBListAdapter.ViewH
         @Override
         public void onClick(View v) {
             int position;
-            if (v.getId() == R.id.iv_delete) {
-                position = (int) v.getTag();
-                MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-                meshInfo.oobPairs.remove(position);
-//                notifyDataSetChanged();
-                notifyItemRemoved(position);
-                meshInfo.saveOrUpdate();
-            } else if (v.getId() == R.id.iv_edit) {
+            if (v.getId() == R.id.iv_edit) {
                 position = (int) v.getTag();
                 ((Activity) mContext).startActivityForResult(
                         new Intent(mContext, OOBEditActivity.class)
-                                .putExtra(OOBEditActivity.EXTRA_POSITION, position)
-                                .putExtra(OOBEditActivity.EXTRA_OOB, mOOBPairs.get(position))
+                                .putExtra(OOBEditActivity.EXTRA_OOB, mOobInfos.get(position).id)
                         , OOBInfoActivity.REQUEST_CODE_EDIT_OOB
                 );
             }

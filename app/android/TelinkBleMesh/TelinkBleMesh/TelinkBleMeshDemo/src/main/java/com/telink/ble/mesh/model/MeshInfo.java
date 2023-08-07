@@ -39,7 +39,10 @@ import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.Locale;
 
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
@@ -52,8 +55,20 @@ import io.objectbox.relation.ToMany;
 @Entity
 public class MeshInfo implements Serializable, Cloneable {
 
+    public static final String MESH_NAME_DEFAULT = "Telink-SIG-mesh";
+
     @Id
     public long id;
+
+    /**
+     * the same with {@link com.telink.ble.mesh.model.json.MeshStorage#meshName}
+     */
+    public String meshName;
+
+    /**
+     * the same with {@link com.telink.ble.mesh.model.json.MeshStorage#timestamp}
+     */
+    public String timestamp;
 
     /**
      * if the {@link #ivIndex} is uninitialized, provision is not permitted
@@ -139,7 +154,7 @@ public class MeshInfo implements Serializable, Cloneable {
     /**
      * static-oob info
      */
-    public ToMany<OOBPair> oobPairs;
+//    public ToMany<OobInfo> oobInfos;
 
     public MeshNetKey getDefaultNetKey() {
         return meshNetKeyList.get(0);
@@ -291,18 +306,6 @@ public class MeshInfo implements Serializable, Cloneable {
         return id + 1;
     }
 
-    /**
-     * get oob
-     */
-    public byte[] getOOBByDeviceUUID(byte[] deviceUUID) {
-        for (OOBPair pair : oobPairs) {
-            if (Arrays.equals(pair.deviceUUID, deviceUUID)) {
-                return pair.oob;
-            }
-        }
-        return null;
-    }
-
     // only update metadata in mesh info, not includes inner entities (ToOne and ToMany)
     public void saveOrUpdate() {
         MeshInfoService.getInstance().updateMeshInfo(this);
@@ -401,10 +404,18 @@ public class MeshInfo implements Serializable, Cloneable {
     }
 
 
-    public static MeshInfo createNewMesh(Context context) {
+    public static MeshInfo createNewMesh(Context context, String meshName) {
         // 0x7FFF
         final int DEFAULT_LOCAL_ADDRESS = 0x0001;
         MeshInfo meshInfo = new MeshInfo();
+        if (meshName == null) {
+            meshName = MESH_NAME_DEFAULT;
+        }
+        meshInfo.meshName = meshName;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault());
+        String formattedDate = sdf.format(new Date());
+        MeshLogger.d("time : " + formattedDate);
+        meshInfo.timestamp = formattedDate;
 
         // for test
 //        final byte[] NET_KEY = Arrays.hexToBytes("26E8D2DBD4363AF398FEDE049BAD0086");

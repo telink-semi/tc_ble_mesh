@@ -51,6 +51,7 @@ import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.BaseActivity;
 import com.telink.ble.mesh.util.Arrays;
@@ -82,6 +83,7 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
     private static final int MSG_COMPLETE = 2;
 
     private int psm = 0x25;
+    private MeshInfo meshInfo;
 
     @SuppressLint("HandlerLeak")
     private Handler msgHandler = new Handler() {
@@ -110,6 +112,10 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
         setTitle("CDTP Export", "To Phone");
         enableBackNav(true);
         tv_log = findViewById(R.id.tv_log);
+
+        long meshId = getIntent().getLongExtra("MeshInfoId", 0);
+        meshInfo = MeshInfoService.getInstance().getById(meshId);
+
         initService();
         appendLog("init complete");
         MeshService.getInstance().idle(false);
@@ -148,7 +154,6 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
     private void initData() {
         int[] selectedIndexes = getIntent().getIntArrayExtra("selectedIndexes");
         if (selectedIndexes == null) return;
-        MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
 
         List<MeshNetKey> meshNetKeyList = new ArrayList<>();
         outer:
@@ -233,6 +238,7 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
 
         // 将 Service 添加到 GATT 服务器中
         bluetoothGattServer.addService(service);
+
     }
 
 

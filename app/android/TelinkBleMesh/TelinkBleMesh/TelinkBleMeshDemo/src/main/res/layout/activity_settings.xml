@@ -293,7 +293,7 @@
 
 
             <!-- static oob database -->
-            <View
+            <!--<View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"
                 android:layout_margin="4dp"
@@ -315,12 +315,12 @@
                     android:text="@string/oob_database"
                     android:textSize="12sp" />
 
-            </LinearLayout>
+            </LinearLayout>-->
 
 
             <!-- root cert -->
 
-            <LinearLayout
+            <!--<LinearLayout
                 android:id="@+id/ll_cert"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -350,7 +350,7 @@
 
                 </LinearLayout>
 
-            </LinearLayout>
+            </LinearLayout>-->
 
             <View
                 android:layout_width="match_parent"

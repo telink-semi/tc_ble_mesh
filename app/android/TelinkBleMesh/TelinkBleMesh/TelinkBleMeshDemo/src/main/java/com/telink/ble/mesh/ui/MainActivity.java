@@ -22,7 +22,6 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -64,6 +63,7 @@ import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.ui.fragment.DeviceFragment;
 import com.telink.ble.mesh.ui.fragment.GroupFragment;
+import com.telink.ble.mesh.ui.fragment.NetworkFragment;
 import com.telink.ble.mesh.ui.fragment.SettingFragment;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -76,6 +76,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     private FragmentManager fm;
     private DeviceFragment deviceFragment;
     private Fragment groupFragment;
+    private NetworkFragment networkFragment;
     private SettingFragment settingFragment;
     private Handler mHandler = new Handler();
 
@@ -105,11 +106,16 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         fm = getSupportFragmentManager();
         deviceFragment = new DeviceFragment();
         groupFragment = new GroupFragment();
+        networkFragment = new NetworkFragment();
         settingFragment = new SettingFragment();
         fm.beginTransaction()
-                .add(R.id.fl_container, deviceFragment).add(R.id.fl_container, groupFragment).add(R.id.fl_container, settingFragment)
-                .show(deviceFragment).hide(groupFragment).hide(settingFragment)
+                .add(R.id.fl_container, deviceFragment)
+                .add(R.id.fl_container, groupFragment)
+                .add(R.id.fl_container, networkFragment)
+                .add(R.id.fl_container, settingFragment)
+                .show(deviceFragment).hide(groupFragment).hide(networkFragment).hide(settingFragment)
                 .commit();
+        curFragment = deviceFragment;
     }
 
 
@@ -279,17 +285,31 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.item_device:
-                fm.beginTransaction().hide(groupFragment).hide(settingFragment).show(deviceFragment).commit();
+                showFragment(deviceFragment);
                 break;
             case R.id.item_group:
-                fm.beginTransaction().hide(deviceFragment).hide(settingFragment).show(groupFragment).commit();
+                showFragment(groupFragment);
+                break;
+            case R.id.item_network:
+                showFragment(networkFragment);
                 break;
             case R.id.item_setting:
-                fm.beginTransaction().hide(deviceFragment).hide(groupFragment).show(settingFragment).commit();
+                showFragment(settingFragment);
                 break;
-
         }
         return true;
     }
+
+
+    Fragment curFragment;
+
+    private void showFragment(Fragment fragment) {
+        if (curFragment == fragment) {
+            return;
+        }
+        fm.beginTransaction().hide(curFragment).show(fragment).commit();
+        curFragment = fragment;
+    }
+
 
 }

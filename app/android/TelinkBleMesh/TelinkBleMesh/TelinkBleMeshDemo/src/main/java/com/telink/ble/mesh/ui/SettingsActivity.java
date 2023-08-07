@@ -93,10 +93,8 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
         if (AppSettings.DRAFT_FEATURES_ENABLE) {
             findViewById(R.id.ll_rp).setVisibility(View.VISIBLE);
-            findViewById(R.id.ll_cert).setVisibility(View.VISIBLE);
         } else {
             findViewById(R.id.ll_rp).setVisibility(View.GONE);
-            findViewById(R.id.ll_cert).setVisibility(View.GONE);
         }
 
         switch_remote_prov.setChecked(SharedPreferenceHelper.isRemoteProvisionEnable(this));
@@ -154,9 +152,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         findViewById(R.id.iv_tip_remote_prov).setOnClickListener(this);
         findViewById(R.id.iv_tip_default_bound).setOnClickListener(this);
         findViewById(R.id.iv_tip_no_oob).setOnClickListener(this);
-        findViewById(R.id.tv_select_database).setOnClickListener(this);
         findViewById(R.id.iv_tip_fast_prov).setOnClickListener(this);
-        findViewById(R.id.tv_cert).setOnClickListener(this);
         findViewById(R.id.iv_tip_level).setOnClickListener(this);
         et_extend = findViewById(R.id.et_extend_type);
         et_extend.setOnClickListener(this);
@@ -222,17 +218,13 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                 );
                 break;
 
-            case R.id.tv_select_database:
-                startActivity(new Intent(this, OOBInfoActivity.class));
-                break;
-
             case R.id.btn_reset_mesh:
                 showConfirmDialog("Wipe all mesh info? ", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         MeshService.getInstance().idle(true);
                         FUCacheService.getInstance().clear(SettingsActivity.this);
-                        MeshInfo meshInfo = MeshInfo.createNewMesh(SettingsActivity.this);
+                        MeshInfo meshInfo = MeshInfo.createNewMesh(SettingsActivity.this, null);
                         TelinkMeshApplication.getInstance().setupMesh(meshInfo);
                         MeshService.getInstance().setupMeshNetwork(meshInfo.convertToConfiguration());
                         toastMsg("Wipe mesh info success");
@@ -252,9 +244,6 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                 showExtendDialog();
                 break;
 
-            case R.id.tv_cert:
-                startActivity(new Intent(this, CertListActivity.class));
-                break;
             case R.id.iv_tip_level:
 //                toastMsg("");
                 break;

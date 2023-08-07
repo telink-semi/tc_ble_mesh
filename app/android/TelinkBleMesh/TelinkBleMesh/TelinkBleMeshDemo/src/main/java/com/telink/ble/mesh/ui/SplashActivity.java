@@ -147,20 +147,9 @@ public class SplashActivity extends BaseActivity {
                 return;
             }
         }
-        MeshInfo meshInfo = MeshInfo.createNewMesh(this);
+        MeshInfo meshInfo = MeshInfo.createNewMesh(this, "Default Mesh");
         MeshInfoService.getInstance().addMeshInfo(meshInfo);
         goToNext(meshInfo);
-
-        /*Object configObj = FileSystem.readAsObject(this, MeshInfo.FILE_NAME);
-        MeshInfo meshInfo;
-        if (configObj == null) {
-            meshInfo = MeshInfo.createNewMesh(this);
-            meshInfo.saveOrUpdate(this);
-        } else {
-            meshInfo = (MeshInfo) configObj;
-        }*/
-
-//        meshInfo = createTestMesh();
     }
 
     private void goToNext(MeshInfo meshInfo) {

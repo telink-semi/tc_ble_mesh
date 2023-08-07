@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -31,6 +32,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.AppKeyInfoAdapter;
 import com.telink.ble.mesh.ui.adapter.NetKeyInfoAdapter;
 
@@ -52,12 +54,26 @@ public class MeshInfoActivity extends BaseActivity {
     }
 
     private void updateUI() {
-        MeshInfo mesh = TelinkMeshApplication.getInstance().getMeshInfo();
-
+        Intent intent = getIntent();
+        long id = intent.getLongExtra("MeshInfoId", 0);
+        MeshInfo mesh;
+        if (id != 0) {
+            mesh = MeshInfoService.getInstance().getById(id);
+        } else {
+            mesh = TelinkMeshApplication.getInstance().getMeshInfo();
+        }
         TextView
+                tv_mesh_name,
+                tv_mesh_uuid,
                 tv_iv_index,
                 tv_sno,
                 tv_local_adr;
+        tv_mesh_name = findViewById(R.id.tv_mesh_name);
+        tv_mesh_name.setText(mesh.meshName);
+
+        tv_mesh_uuid = findViewById(R.id.tv_mesh_uuid);
+        tv_mesh_uuid.setText(mesh.meshUUID);
+
         tv_iv_index = findViewById(R.id.tv_iv_index);
         tv_iv_index.setText(String.format("0x%08X", mesh.ivIndex));
         tv_sno = findViewById(R.id.tv_sno);

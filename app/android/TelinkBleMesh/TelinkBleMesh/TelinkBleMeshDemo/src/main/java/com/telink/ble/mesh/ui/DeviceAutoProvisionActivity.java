@@ -63,6 +63,7 @@ import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.DeviceAutoProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -182,7 +183,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         }
 
         // check if oob exists
-        byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
+        byte[] oob = MeshInfoService.getInstance().getOobByDeviceUUID(deviceUUID);
         if (oob != null) {
             provisioningDevice.setAuthValue(oob);
         } else {

@@ -66,12 +66,9 @@ public class CertCacheService {
     public void load(Context context) {
         File dir = getCertDir(context);
         if (!dir.exists()) return;
-        String[] targets = dir.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                MeshLogger.d("file in cert cache dir: " + name);
-                return name.startsWith(CERT_CACHE_PREFIX);
-            }
+        String[] targets = dir.list((dir1, name) -> {
+            MeshLogger.d("file in cert cache dir: " + name);
+            return name.startsWith(CERT_CACHE_PREFIX);
         });
         if (targets == null || targets.length == 0) {
             return;

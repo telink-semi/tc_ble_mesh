@@ -217,6 +217,8 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
     @Override
     public void onResume() {
         super.onResume();
+        MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+        setSubTitle(getView(), meshInfo.meshName);
 //        mDevices = TelinkMeshApplication.getInstance().getMeshInfo().devices;
 //        mAdapter.notifyDataSetChanged();
         mAdapter.resetDevices(mDevices);

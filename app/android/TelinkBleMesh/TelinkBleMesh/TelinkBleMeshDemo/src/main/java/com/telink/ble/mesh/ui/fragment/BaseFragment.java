@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.fragment;
 
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
@@ -53,4 +54,24 @@ public class BaseFragment extends Fragment {
             tv_title.setText(title);
         }
     }
+
+
+    protected void setSubTitle(View parent, String subTitle) {
+        TextView tv_sub_title = parent.findViewById(R.id.tv_sub_title);
+        if (tv_sub_title != null) {
+            if (TextUtils.isEmpty(subTitle)) {
+                tv_sub_title.setVisibility(View.GONE);
+            } else {
+                tv_sub_title.setVisibility(View.VISIBLE);
+                tv_sub_title.setText(subTitle);
+            }
+        }
+    }
+
+
+    protected void setTitle(View parent, String title, String subTitle) {
+        setTitle(parent, title);
+        setSubTitle(parent, subTitle);
+    }
+
 }
