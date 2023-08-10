@@ -48,9 +48,10 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.io.File;
 
 /**
+ * @see com.telink.ble.mesh.ui.ShareImportActivity
  * share import fragment
+ * @deprecated
  */
-
 public class ShareImportFragment extends BaseFragment implements View.OnClickListener {
     private TextView tv_file_select;
     private RadioButton rb_file, rb_cdtp, rb_qrcode;

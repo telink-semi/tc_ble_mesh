@@ -58,7 +58,6 @@ public class ShareImportActivity extends BaseActivity implements View.OnClickLis
     private static final int REQUEST_IMPORT = 2;
     private String mPath;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

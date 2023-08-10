@@ -22,12 +22,15 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.model;
 
+import com.telink.ble.mesh.core.MeshUtils;
+import com.telink.ble.mesh.model.db.MeshInfoService;
+
 import java.io.Serializable;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
-import io.objectbox.relation.ToMany;
 
 /**
  * scene
@@ -50,43 +53,42 @@ public class Scene implements Serializable {
      */
     public int sceneId;
 
-    public ToMany<SceneState> states;
+    /**
+     * element address(unicast address) list, hex big endian
+     */
+    public List<String> addressList = new ArrayList<>();
 
-
-    public void saveFromDeviceInfo(NodeInfo deviceInfo) {
-        for (SceneState state : states) {
-            if (state.nodeInfo.getTargetId() == deviceInfo.id) {
-                state.onOff = deviceInfo.getOnlineState().st;
-                state.lum = deviceInfo.lum;
-                state.temp = deviceInfo.temp;
-                return;
-            }
+    public void save(int address) {
+        if (addressList == null) {
+            addressList = new ArrayList<>();
         }
-        SceneState state = new SceneState();
-        state.nodeInfo.setTarget(deviceInfo);
-        state.onOff = deviceInfo.getOnlineState().st;
-        state.lum = deviceInfo.lum;
-        state.temp = deviceInfo.temp;
-        states.add(state);
+        addressList.add(MeshUtils.intToHex2(address));
+        MeshInfoService.getInstance().updateScene(this);
     }
 
-    public void removeByAddress(long id) {
-
-        Iterator<SceneState> iterator = states.iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next().nodeInfo.getTargetId() == id) {
-                iterator.remove();
-                return;
-            }
-        }
+    public void remove(int address) {
+        String formatAdr = MeshUtils.intToHex2(address);
+        addressList.remove(formatAdr);
     }
 
-    public boolean contains(NodeInfo device) {
-        for (SceneState inner : states) {
-            if (inner.nodeInfo.getTargetId() == device.id) {
-                return true;
+    public boolean remove(NodeInfo nodeInfo) {
+        boolean anyRemoved = false;
+        if (nodeInfo.compositionData != null) {
+            int adr;
+            for (int i = 0; i < nodeInfo.compositionData.elements.size(); i++) {
+                adr = i + nodeInfo.meshAddress;
+                if (this.contains(adr)) {
+                    remove(adr);
+                    anyRemoved = true;
+                }
             }
         }
-        return false;
+        return anyRemoved;
+    }
+
+    public boolean contains(int address) {
+        if (addressList == null || addressList.size() == 0) return false;
+        String formatAdr = MeshUtils.intToHex2(address);
+        return addressList.contains(formatAdr);
     }
 }

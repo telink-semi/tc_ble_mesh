@@ -34,14 +34,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.scene.SceneRecallMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
-import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.Scene;
-import com.telink.ble.mesh.model.SceneState;
-import com.telink.ble.mesh.ui.IconGenerator;
+import com.telink.ble.mesh.model.db.MeshInfoService;
+import com.telink.ble.mesh.ui.SceneListActivity;
 import com.telink.ble.mesh.ui.SceneSettingActivity;
 
 import java.util.List;
@@ -50,12 +49,29 @@ import java.util.List;
  * Scene List
  */
 public class SceneListAdapter extends BaseRecyclerViewAdapter<SceneListAdapter.ViewHolder> {
-    List<Scene> sceneList;
-    Context mContext;
+    private List<Scene> sceneList;
+    private Context mContext;
 
-    public SceneListAdapter(Context context, List<Scene> scenes) {
+    public SceneListAdapter(Context context) {
         mContext = context;
-        sceneList = scenes;
+    }
+
+    public Scene get(int position) {
+        return sceneList.get(position);
+    }
+
+    public boolean isEmpty() {
+        return this.sceneList == null || this.sceneList.size() == 0;
+    }
+
+    public void remove(Scene scene) {
+        TelinkMeshApplication.getInstance().getMeshInfo().removeScene(scene);
+        MeshInfoService.getInstance().removeScene(scene);
+    }
+
+    public void resetData() {
+        this.sceneList = TelinkMeshApplication.getInstance().getMeshInfo().scenes;
+        this.notifyDataSetChanged();
     }
 
     @Override
@@ -76,7 +92,7 @@ public class SceneListAdapter extends BaseRecyclerViewAdapter<SceneListAdapter.V
         public void onClick(View v) {
             int position = (int) v.getTag();
             if (v.getId() == R.id.iv_edit) {
-                mContext.startActivity(new Intent(mContext, SceneSettingActivity.class).putExtra("sceneId", sceneList.get(position).sceneId));
+                ;
             } else if (v.getId() == R.id.iv_recall) {
 //                MeshService.getInstance().cmdSceneRecall(0xFFFF, 0, sceneList.get(position).id, 0, null);
 
@@ -101,16 +117,20 @@ public class SceneListAdapter extends BaseRecyclerViewAdapter<SceneListAdapter.V
         super.onBindViewHolder(holder, position);
 
         Scene scene = sceneList.get(position);
-        holder.tv_scene_info.setText("Scene id: 0x" + Long.toHexString(scene.sceneId));
+        holder.tv_scene_info.setText(String.format("name: %s \nID: %02X", scene.name, scene.id));
 
-        holder.iv_recall.setOnClickListener(this.imageClick);
+        holder.iv_recall.setOnClickListener(
+                v -> ((SceneListActivity) (mContext)).recall(MeshUtils.ADDRESS_BROADCAST, scene.sceneId)
+        );
         holder.iv_recall.setTag(position);
 
-        holder.iv_edit.setOnClickListener(this.imageClick);
+        holder.iv_edit.setOnClickListener(v ->
+                mContext.startActivity(new Intent(mContext, SceneSettingActivity.class).putExtra("sceneId", sceneList.get(position).sceneId))
+        );
         holder.iv_edit.setTag(position);
 
         holder.rv_inner_device.setLayoutManager(new LinearLayoutManager(mContext));
-        holder.rv_inner_device.setAdapter(new SimpleDeviceAdapter(scene.states));
+        holder.rv_inner_device.setAdapter(new SimpleDeviceAdapter(scene));
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -128,8 +148,8 @@ public class SceneListAdapter extends BaseRecyclerViewAdapter<SceneListAdapter.V
 
     class SimpleDeviceViewHolder extends RecyclerView.ViewHolder {
 
-        ImageView iv_device;
-        TextView tv_device_info;
+        ImageView iv_address, iv_recall_ele;
+        TextView tv_address;
 
         public SimpleDeviceViewHolder(View itemView) {
             super(itemView);
@@ -138,38 +158,36 @@ public class SceneListAdapter extends BaseRecyclerViewAdapter<SceneListAdapter.V
 
     class SimpleDeviceAdapter extends BaseRecyclerViewAdapter<SimpleDeviceViewHolder> {
 
-        List<SceneState> innerDevices;
+        Scene scene;
 
-        SimpleDeviceAdapter(List<SceneState> devices) {
-            this.innerDevices = devices;
+        SimpleDeviceAdapter(Scene scene) {
+            this.scene = scene;
         }
 
         @Override
         public SimpleDeviceViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_simple_device, parent, false);
+            View itemView = LayoutInflater.from(mContext).inflate(R.layout.item_scene_element, parent, false);
             SimpleDeviceViewHolder holder = new SimpleDeviceViewHolder(itemView);
-            holder.iv_device = itemView.findViewById(R.id.iv_device);
-            holder.tv_device_info = itemView.findViewById(R.id.tv_device_info);
+            holder.iv_address = itemView.findViewById(R.id.iv_address);
+            holder.iv_recall_ele = itemView.findViewById(R.id.iv_recall_ele);
+            holder.tv_address = itemView.findViewById(R.id.tv_address);
             return holder;
         }
 
         @Override
         public void onBindViewHolder(SimpleDeviceViewHolder holder, int position) {
             super.onBindViewHolder(holder, position);
-
-            SceneState state = innerDevices.get(position);
-//            NodeInfo nodeInfo = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(state.address);
-            NodeInfo nodeInfo = state.nodeInfo.getTarget();
-            int pid = (nodeInfo != null && nodeInfo.compositionData != null) ? nodeInfo.compositionData.pid : 0;
-            holder.iv_device.setImageResource(IconGenerator.getIcon(pid, OnlineState.getBySt(state.onOff)));
-            holder.tv_device_info.setText(mContext.getString(R.string.scene_state_desc,
-                    nodeInfo.meshAddress,
-                    getOnOffDesc(state.onOff)));
+            String address = scene.addressList.get(position);
+            holder.iv_address.setImageResource(R.drawable.ic_element);
+            holder.tv_address.setText("address: 0x" + address);
+            holder.iv_recall_ele.setOnClickListener(
+                    v -> ((SceneListActivity) (mContext)).recall(MeshUtils.hexToIntB(address), scene.sceneId)
+            );
         }
 
         @Override
         public int getItemCount() {
-            return this.innerDevices == null ? 0 : this.innerDevices.size();
+            return this.scene.addressList == null ? 0 : this.scene.addressList.size();
         }
     }
 

@@ -24,18 +24,19 @@ package com.telink.ble.mesh.ui;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.MenuItem;
+import android.text.TextUtils;
 import android.view.View;
-import android.widget.CheckBox;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshMessage;
-import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.scene.SceneDeleteMessage;
@@ -49,34 +50,31 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.Scene;
-import com.telink.ble.mesh.ui.adapter.BaseSelectableListAdapter;
-import com.telink.ble.mesh.ui.adapter.DeviceSelectAdapter;
+import com.telink.ble.mesh.model.db.MeshInfoService;
+import com.telink.ble.mesh.ui.adapter.NodeElementSelectAdapter;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Scene Setting
  * Created by kee on 2018/9/18.
  */
-public class SceneSettingActivity extends BaseActivity implements View.OnClickListener, BaseSelectableListAdapter.SelectStatusChangedListener, EventListener<String> {
+public class SceneSettingActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
 
-    //    private GroupSelectAdapter mGroupAdapter;
-    private DeviceSelectAdapter mDeviceAdapter;
+    private NodeElementSelectAdapter mDeviceAdapter;
     //    private int sceneId;
     private Scene scene;
     private MeshInfo mesh;
     private List<NodeInfo> devices;
-    //    private List<Group> groups;
-    private CheckBox cb_device, cb_group;
+    private TextView tv_scene_name;
 
     private Handler delayHandler = new Handler();
+
     /**
      * add or remove from list
      */
-    private List<SettingModel> selectedAdrList;
-    private int settingIndex;
+    private SettingModel settingModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,54 +87,73 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
 
         int sceneId = getIntent().getIntExtra("sceneId", -1);
         if (sceneId == -1) {
-            sceneId = mesh.allocSceneId();
-            if (sceneId == -1) {
-                finish();
-                Toast.makeText(getApplicationContext(), "no available scene id", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            scene = new Scene();
-            scene.sceneId = sceneId;
-        } else {
-            scene = mesh.getSceneById(sceneId);
+            finish();
+            Toast.makeText(getApplicationContext(), "no available scene id", Toast.LENGTH_SHORT).show();
+            return;
         }
 
+        scene = mesh.getSceneById(sceneId);
 
-        Toolbar toolbar = findViewById(R.id.title_bar);
-        toolbar.inflateMenu(R.menu.check);
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                if (item.getItemId() == R.id.item_check) {
-                    saveStart();
-                }
-                return false;
-            }
-        });
-        setTitle("Scene Setting");
-        enableBackNav(true);
-        cb_device = findViewById(R.id.cb_device);
-        cb_group = findViewById(R.id.cb_group);
-        RecyclerView rv_device = findViewById(R.id.rv_device);
-
-        rv_device.setLayoutManager(new LinearLayoutManager(this));
-        if (mesh.nodes != null) {
-            for (NodeInfo deviceInfo : mesh.nodes) {
-                deviceInfo.selected = scene.contains(deviceInfo);
-            }
-        }
-        devices = mesh.nodes;
-        mDeviceAdapter = new DeviceSelectAdapter(this, devices);
-        mDeviceAdapter.setStatusChangedListener(this);
-        rv_device.setAdapter(mDeviceAdapter);
-        cb_device.setChecked(mDeviceAdapter.allSelected());
-        findViewById(R.id.btn_save_scene).setOnClickListener(this);
-        findViewById(R.id.cb_device).setOnClickListener(this);
-        findViewById(R.id.cb_group).setOnClickListener(this);
+        initView();
 
         // mesh interface
         TelinkMeshApplication.getInstance().addEventListener(SceneRegisterStatusMessage.class.getName(), this);
-//        TelinkMeshApplication.getInstance().addEventListener(NotificationEvent.EVENT_TYPE_SCENE_REGISTER_STATUS, this);
+    }
+
+    private void initView() {
+        setTitle("Scene Setting", scene.name);
+        enableBackNav(true);
+        Toolbar toolbar = findViewById(R.id.title_bar);
+        toolbar.inflateMenu(R.menu.menu_single);
+        toolbar.getMenu().findItem(R.id.item_add).setIcon(R.drawable.ic_edit);
+        toolbar.setOnMenuItemClickListener(item -> {
+            showEditNameDialog();
+            return false;
+        });
+
+
+        RecyclerView rv_device = findViewById(R.id.rv_device);
+
+        rv_device.setLayoutManager(new LinearLayoutManager(this));
+        initData();
+        mDeviceAdapter = new NodeElementSelectAdapter(this, devices);
+        rv_device.setAdapter(mDeviceAdapter);
+    }
+
+    TextInputEditText et_single_input;
+
+    private void showEditNameDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Update Scene Name")
+                .setView(R.layout.dialog_single_input)
+                .setPositiveButton("Confirm", (dialog, which) -> updateSceneName(et_single_input.getText().toString()))
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        AlertDialog dialog = builder.show();
+        et_single_input = dialog.findViewById(R.id.et_single_input);
+        et_single_input.setText(scene.name);
+        et_single_input.setHint("please input new scene name");
+    }
+
+    private void updateSceneName(String sceneName) {
+        if (TextUtils.isEmpty(sceneName)) {
+            toastMsg("scene name can not be null");
+            return;
+        }
+        scene.name = sceneName;
+        MeshInfoService.getInstance().updateScene(scene);
+        this.setSubTitle(sceneName);
+    }
+
+    private void initData() {
+        devices = mesh.nodes;
+
+        // init element selection state
+        for (NodeInfo node : devices) {
+            if (node.compositionData == null) continue;
+            for (int i = 0; i < node.compositionData.elements.size(); i++) {
+                node.compositionData.elements.get(i).selected = scene.contains(node.meshAddress + i);
+            }
+        }
     }
 
     @Override
@@ -149,100 +166,32 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.btn_save_scene:
-                saveStart();
-                break;
 
-            case R.id.cb_device:
-                mDeviceAdapter.setAll(!mDeviceAdapter.allSelected());
-                break;
-
-            case R.id.cb_group:
-//                mGroupAdapter.setAll(!mGroupAdapter.allSelected());
-                break;
         }
     }
 
-    private void setNextAddress() {
-
-        if (settingIndex > selectedAdrList.size() - 1) {
-            dismissWaitingDialog();
-            toastMsg("store scene complete");
-            finish();
-            return;
-        }
-        SettingModel model = selectedAdrList.get(settingIndex);
-
-        MeshLogger.log("set next address: " + model.address);
-
-        // F0:0D:02:00:01:00:82:45:00:01:00:01:00:37:00
-        delayHandler.removeCallbacks(cmdTimeoutCheckTask);
-        delayHandler.postDelayed(cmdTimeoutCheckTask, 2000);
-
-        int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+    public void setScene(int elementAddress, boolean selected, NodeInfo nodeInfo) {
+        this.settingModel = new SettingModel(elementAddress, selected, nodeInfo);
         MeshMessage meshMessage;
-        if (model.add) {
-            meshMessage = SceneStoreMessage.getSimple(model.address,
+        int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+        if (selected) {
+            meshMessage = SceneStoreMessage.getSimple(elementAddress,
                     appKeyIndex,
                     scene.sceneId,
                     true, 1);
         } else {
-            meshMessage = SceneDeleteMessage.getSimple(model.address,
+            meshMessage = SceneDeleteMessage.getSimple(elementAddress,
                     appKeyIndex,
                     scene.sceneId,
                     true, 1);
         }
+        showWaitingDialog("setting...");
+        delayHandler.postDelayed(cmdTimeoutCheckTask, 5 * 1000);
         MeshService.getInstance().sendMeshMessage(meshMessage);
     }
 
-    private Runnable cmdTimeoutCheckTask = new Runnable() {
-        @Override
-        public void run() {
-            settingIndex++;
-            setNextAddress();
-        }
-    };
+    private Runnable cmdTimeoutCheckTask = this::dismissWaitingDialog;
 
-    private void saveStart() {
-        selectedAdrList = new ArrayList<>();
-        if (devices != null) {
-            int adr;
-            for (NodeInfo deviceInfo : devices) {
-                if (deviceInfo.isOffline()) {
-                    continue;
-                }
-
-                adr = deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_SCENE_S.modelId);
-                if (adr == -1) {
-                    MeshLogger.log("scene save: device check fail");
-                    continue;
-                }
-                boolean sceneExits = scene.contains(deviceInfo);
-                if (!deviceInfo.selected) {
-                    if (sceneExits)
-                        selectedAdrList.add(new SettingModel(adr, false));
-                } else {
-//                    if (!sceneExits) {
-                    selectedAdrList.add(new SettingModel(adr, true));
-//                    }
-                }
-            }
-        }
-        if (selectedAdrList.size() == 0) {
-            toastMsg("select at least one item !");
-        } else {
-            showWaitingDialog("setting...");
-            settingIndex = 0;
-            setNextAddress();
-        }
-    }
-
-    @Override
-    public void onSelectStatusChanged(BaseSelectableListAdapter adapter) {
-        if (adapter == mDeviceAdapter) {
-            cb_device.setChecked(mDeviceAdapter.allSelected());
-        }
-    }
 
     @Override
     public void performed(Event<String> event) {
@@ -250,34 +199,43 @@ public class SceneSettingActivity extends BaseActivity implements View.OnClickLi
             StatusNotificationEvent statusNotificationEvent = (StatusNotificationEvent) event;
             NotificationMessage notificationMessage = statusNotificationEvent.getNotificationMessage();
             SceneRegisterStatusMessage sceneRegisterStatusMessage = (SceneRegisterStatusMessage) notificationMessage.getStatusMessage();
-            SettingModel settingModel;
-            if (settingIndex >= selectedAdrList.size()) {
+            SettingModel model = this.settingModel;
+            if (model == null) {
+                MeshLogger.d("scene setting null");
                 return;
             }
-            settingModel = selectedAdrList.get(settingIndex);
             if (sceneRegisterStatusMessage.getStatusCode() == ConfigStatus.SUCCESS.code
-                    && notificationMessage.getSrc() == settingModel.address) {
-                delayHandler.removeCallbacks(cmdTimeoutCheckTask);
-                NodeInfo deviceInfo = mesh.getDeviceByMeshAddress(notificationMessage.getSrc());
-                if (settingModel.add) {
-                    scene.saveFromDeviceInfo(deviceInfo);
-                } else {
-                    scene.removeByAddress(deviceInfo.id);
-                }
-                mesh.saveScene(scene);
-                settingIndex++;
-                setNextAddress();
+                    && notificationMessage.getSrc() == model.address) {
+                onSettingComplete(model);
             }
         }
+    }
+
+    private void onSettingComplete(SettingModel settingModel) {
+        delayHandler.removeCallbacks(cmdTimeoutCheckTask);
+        if (settingModel.add) {
+            scene.save(settingModel.address);
+        } else {
+            scene.remove(settingModel.address);
+        }
+        settingModel.nodeInfo.compositionData.elements.get(settingModel.address - settingModel.nodeInfo.meshAddress).selected
+                = settingModel.add;
+        runOnUiThread(() -> {
+            dismissWaitingDialog();
+            mDeviceAdapter.notifyDataSetChanged();
+        });
+
     }
 
     private static class SettingModel {
         int address;
         boolean add;
+        NodeInfo nodeInfo;
 
-        SettingModel(int address, boolean add) {
+        public SettingModel(int address, boolean add, NodeInfo nodeInfo) {
             this.address = address;
             this.add = add;
+            this.nodeInfo = nodeInfo;
         }
     }
 }

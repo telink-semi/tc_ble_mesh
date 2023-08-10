@@ -149,7 +149,7 @@ public class NodeInfo implements Serializable {
     public ToMany<BridgingTable> bridgingTableList;
 
     /**
-     * selected for UI select
+     * for UI selection
      */
     public boolean selected = false;
 
@@ -216,7 +216,7 @@ public class NodeInfo implements Serializable {
     }
 
     public boolean isPubSet() {
-        return publishModel != null;
+        return publishModel.getTarget() != null;
     }
 
     /**
@@ -235,7 +235,7 @@ public class NodeInfo implements Serializable {
 
         Handler handler = TelinkMeshApplication.getInstance().getOfflineCheckHandler();
         handler.removeCallbacks(offlineCheckTask);
-        if (this.publishModel != null && this.onlineState != OnlineState.OFFLINE) {
+        if (this.publishModel.getTarget() != null && this.onlineState != OnlineState.OFFLINE) {
             int timeout = publishModel.getTarget().period * 3 + 2000;
             if (timeout > 0) {
                 handler.postDelayed(offlineCheckTask, timeout);

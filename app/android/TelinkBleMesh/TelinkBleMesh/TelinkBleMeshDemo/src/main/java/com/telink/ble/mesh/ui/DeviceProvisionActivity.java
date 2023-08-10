@@ -192,7 +192,11 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.item_refresh) {
-                startScan();
+                if (isScanning) {
+                    stopScan();
+                } else {
+                    startScan();
+                }
             }
             return false;
         });
@@ -203,10 +207,22 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
      * scan for unprovisioned devices
      */
     private void startScan() {
+        isScanning = true;
+        updateRefreshItem();
         enableUI(false);
         ScanParameters parameters = ScanParameters.getDefault(false, false);
         parameters.setScanTimeout(10 * 1000);
         MeshService.getInstance().startScan(parameters);
+    }
+
+    private void stopScan() {
+        isScanning = false;
+        updateRefreshItem();
+        enableUI(true);
+    }
+
+    private void updateRefreshItem() {
+        refreshItem.setIcon(isScanning ? R.drawable.ic_stop : R.drawable.ic_refresh);
     }
 
     /**
@@ -350,14 +366,11 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
     private void enableUI(final boolean enable) {
         MeshService.getInstance().idle(false);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                enableBackNav(enable);
-                btn_add_all.setEnabled(enable);
-                refreshItem.setVisible(enable);
-                mListAdapter.setProcessing(!enable);
-            }
+        runOnUiThread(() -> {
+            enableBackNav(enable);
+            btn_add_all.setEnabled(enable);
+            refreshItem.setVisible(isScanning || enable);
+            mListAdapter.setProcessing(!enable);
         });
 
     }

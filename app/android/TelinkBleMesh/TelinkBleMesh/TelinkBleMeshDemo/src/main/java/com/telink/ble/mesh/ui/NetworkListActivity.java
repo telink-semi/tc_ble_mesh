@@ -63,7 +63,7 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
      *
      * @see #showCreateNetworkDialog()
      */
-    private TextInputEditText et_network_name = null;
+    private TextInputEditText et_single_input = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,9 +75,9 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
         initView();
     }
 
+
     private void initView() {
         initTitle();
-
         RecyclerView rv_df = findViewById(R.id.rv_network);
         rv_df.setLayoutManager(new LinearLayoutManager(this));
         findViewById(R.id.fab_import).setOnClickListener(this);
@@ -86,6 +86,7 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
         rv_df.setAdapter(listAdapter);
         updateListData();
         initBottomDialog();
+        findViewById(R.id.btn_remove_all).setOnClickListener(this);
     }
 
     private void updateListData() {
@@ -129,12 +130,12 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
     private void showCreateNetworkDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Create New Mesh Network")
-                .setView(R.layout.dialog_create_mesh_network)
+                .setView(R.layout.dialog_single_input)
 //                .setMessage("Input Network Name")
-                .setPositiveButton("Confirm", (dialog, which) -> createNetwork(et_network_name.getText().toString()))
+                .setPositiveButton("Confirm", (dialog, which) -> createNetwork(et_single_input.getText().toString()))
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         AlertDialog dialog = builder.show();
-        et_network_name = dialog.findViewById(R.id.et_network_name);
+        et_single_input = dialog.findViewById(R.id.et_single_input);
     }
 
     private void createNetwork(String name) {
@@ -184,7 +185,20 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
                 showDeleteDialog();
                 networkActionDialog.dismiss();
                 break;
+            case R.id.btn_remove_all:
+                showConfirmDialog("remove all and create a new mesh? ", (dialog, which) -> removeAllMesh());
+                break;
         }
+    }
+
+    private void removeAllMesh() {
+        MeshInfoService.getInstance().removeAllMesh();
+        MeshInfo meshInfo = MeshInfo.createNewMesh(this, "Default Mesh");
+        MeshInfoService.getInstance().addMeshInfo(meshInfo);
+        TelinkMeshApplication.getInstance().setupMesh(meshInfo);
+        listAdapter.resetData(MeshInfoService.getInstance().getAll());
+        listAdapter.resetCurMeshId();
+
     }
 
     private void showNetworkDetail() {

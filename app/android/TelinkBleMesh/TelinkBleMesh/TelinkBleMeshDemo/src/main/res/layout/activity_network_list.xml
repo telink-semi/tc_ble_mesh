@@ -11,7 +11,8 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_network"
@@ -38,4 +39,11 @@
             android:visibility="gone" />
     </RelativeLayout>
 
+    <Button
+        android:id="@+id/btn_remove_all"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="remove all"
+        android:theme="@style/WarnButton" />
 </LinearLayout>

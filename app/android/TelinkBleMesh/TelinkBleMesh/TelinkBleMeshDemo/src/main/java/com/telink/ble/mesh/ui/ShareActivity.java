@@ -42,7 +42,10 @@ import com.telink.ble.mesh.ui.qrcode.QRCodeScanActivity;
 import com.telink.ble.mesh.ui.qrcode.QRCodeShareActivity;
 
 /**
+ * @see ShareExportActivity
+ * @see ShareImportActivity
  * share
+ * @deprecated
  */
 public class ShareActivity extends BaseActivity {
     private final Fragment[] fragments = new Fragment[]{new ShareExportFragment(), new ShareImportFragment()};

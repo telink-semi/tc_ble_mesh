@@ -37,6 +37,12 @@ public class Element implements Serializable, Parcelable {
      */
     public List<Integer> vendorModels;
 
+    /**
+     * not in composition data, only for UI selection
+     */
+
+    public boolean selected;
+
     public Element() {
     }
 

@@ -48,10 +48,10 @@ public class CertCacheService {
 
     private static final CertCacheService service = new CertCacheService();
 
-    List<byte[]> certs = new ArrayList<>();
+    private List<byte[]> certs = new ArrayList<>();
 
     // selected root cert index
-    int rootIndex = -1;
+    private int rootIndex = -1;
 
     private CertCacheService() {
     }

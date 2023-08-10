@@ -4,6 +4,7 @@ import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.OobInfo;
+import com.telink.ble.mesh.model.Scene;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -18,7 +19,7 @@ public class MeshInfoService {
     private Box<MeshInfo> meshInfoBox;
     private Box<NodeInfo> nodeInfoBox;
     private Box<GroupInfo> groupInfoBox;
-
+    private Box<Scene> sceneBox;
     private Box<OobInfo> oobInfoBox;
     private Query<MeshInfo> meshInfoQuery;
     private Query<OobInfo> oobInfoQuery;
@@ -35,6 +36,7 @@ public class MeshInfoService {
         meshInfoQuery = meshInfoBox.query().build();
         nodeInfoBox = store.boxFor(NodeInfo.class);
         oobInfoBox = store.boxFor(OobInfo.class);
+        sceneBox = store.boxFor(Scene.class);
         oobInfoQuery = oobInfoBox.query().build();
     }
 
@@ -76,6 +78,10 @@ public class MeshInfoService {
         meshInfoBox.remove(meshInfo);
     }
 
+    public void removeAllMesh() {
+        meshInfoBox.removeAll();
+    }
+
     public void updateNodeInfo(NodeInfo node) {
         MeshLogger.d("updateNodeInfo - " + node.id);
         nodeInfoBox.put(node);
@@ -89,6 +95,9 @@ public class MeshInfoService {
         return oobInfoQuery.find();
     }
 
+    public void updateScene(Scene scene) {
+        sceneBox.put(scene);
+    }
 
     public void addOobInfo(List<OobInfo> oobInfoList) {
         oobInfoBox.put(oobInfoList);
@@ -121,5 +130,17 @@ public class MeshInfoService {
 
     public OobInfo getOobById(long id) {
         return oobInfoBox.get(id);
+    }
+
+    public void removeScene(Scene scene) {
+        sceneBox.remove(scene);
+    }
+
+    public void removeNodeInfo(NodeInfo nodeInfo) {
+        nodeInfoBox.remove(nodeInfo);
+    }
+
+    public void removeNodes(List<NodeInfo> nodes) {
+        nodeInfoBox.remove(nodes);
     }
 }

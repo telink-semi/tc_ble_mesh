@@ -58,9 +58,10 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * @see com.telink.ble.mesh.ui.ShareExportActivity
  * share export
+ * @deprecated
  */
-
 public class ShareExportFragment extends BaseFragment implements View.OnClickListener {
 
     private TextView tv_log;

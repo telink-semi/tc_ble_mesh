@@ -38,7 +38,6 @@ import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.model.Scene;
-import com.telink.ble.mesh.model.SceneState;
 import com.telink.ble.mesh.model.db.Scheduler;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.FileSystem;
@@ -302,11 +301,9 @@ public class MeshStorageService {
                 scene = new MeshStorage.Scene();
                 scene.number = String.format("%04X", meshScene.id);
                 scene.name = meshScene.name;
-                if (meshScene.states != null) {
+                if (meshScene.addressList != null) {
                     scene.addresses = new ArrayList<>();
-                    for (SceneState state : meshScene.states) {
-                        scene.addresses.add(String.format("%04X", state.nodeInfo.getTarget().meshAddress));
-                    }
+                    scene.addresses.addAll(meshScene.addressList);
                 }
                 meshStorage.scenes.add(scene);
             }
@@ -520,13 +517,8 @@ public class MeshStorageService {
                 scene.id = MeshUtils.hexToIntB(outerScene.number);
                 scene.name = outerScene.name;
                 if (outerScene.addresses != null) {
-//                    scene.states = new ArrayList<>(outerScene.addresses.size());
                     for (String adrInScene : outerScene.addresses) {
-                        // import scene state
-                        NodeInfo nodeInfo = mesh.getDeviceByMeshAddress(MeshUtils.hexToIntB(adrInScene));
-                        if (nodeInfo != null){
-                            scene.states.add(new SceneState(nodeInfo));
-                        }
+                        scene.save(MeshUtils.hexToIntB(adrInScene));
                     }
                 }
                 mesh.scenes.add(scene);
@@ -534,8 +526,6 @@ public class MeshStorageService {
         }
         return true;
     }
-
-
 
 
     // convert nodeInfo(mesh.java) to node(json)

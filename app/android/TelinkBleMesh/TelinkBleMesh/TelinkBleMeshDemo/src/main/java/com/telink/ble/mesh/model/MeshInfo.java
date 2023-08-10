@@ -155,7 +155,6 @@ public class MeshInfo implements Serializable, Cloneable {
      * static-oob info
      */
 //    public ToMany<OobInfo> oobInfos;
-
     public MeshNetKey getDefaultNetKey() {
         return meshNetKeyList.get(0);
     }
@@ -206,9 +205,12 @@ public class MeshInfo implements Serializable, Cloneable {
     public void removeNode(NodeInfo node) {
         if (this.nodes.size() == 0) return;
         for (Scene scene : scenes) {
-            scene.removeByAddress(node.id);
+            if (scene.remove(node)) {
+                MeshInfoService.getInstance().updateScene(scene);
+            }
         }
         this.nodes.remove(node);
+        saveOrUpdate();
     }
 
     public boolean removeDeviceByUUID(byte[] deviceUUID) {
@@ -269,18 +271,6 @@ public class MeshInfo implements Serializable, Cloneable {
         return result;
     }
 
-
-    public void saveScene(Scene scene) {
-        for (Scene local : scenes) {
-            if (local.sceneId == scene.sceneId) {
-                local.states = scene.states;
-                return;
-            }
-        }
-        scenes.add(scene);
-        saveOrUpdate();
-    }
-
     public Scene getSceneById(int id) {
         for (Scene scene : scenes) {
             if (id == scene.sceneId) {
@@ -304,6 +294,16 @@ public class MeshInfo implements Serializable, Cloneable {
             return -1;
         }
         return id + 1;
+    }
+
+    public void addScene(Scene scene) {
+        this.scenes.add(scene);
+        this.saveOrUpdate();
+    }
+
+    public void removeScene(Scene scene) {
+        this.scenes.remove(scene);
+        this.saveOrUpdate();
     }
 
     // only update metadata in mesh info, not includes inner entities (ToOne and ToMany)
