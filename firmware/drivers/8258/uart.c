@@ -25,7 +25,7 @@
 #include "uart.h"
 #include "gpio.h"
 #include "compiler.h"
-#include "proj/tl_common.h"
+#include "tl_common.h"
 
 /**
  * @brief     This function is used to look for the prime.if the prime is finded,it will

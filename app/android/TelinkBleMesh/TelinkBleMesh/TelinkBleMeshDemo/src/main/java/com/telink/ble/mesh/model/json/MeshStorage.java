@@ -86,7 +86,8 @@ public class MeshStorage {
     /**
      * custom
      */
-    public String ivIndex = String.format("%08X", Defaults.IV_INDEX);
+    // remove
+//    public String ivIndex = String.format("%08X", Defaults.IV_INDEX);
 
     public static class Provisioner {
         public String provisionerName;
@@ -128,7 +129,7 @@ public class MeshStorage {
         public int phase;
         public String key;
         public String minSecurity;
-        public String oldKey = Defaults.KEY_INVALID;
+//        public String oldKey = Defaults.KEY_INVALID;
         public String timestamp;
     }
 

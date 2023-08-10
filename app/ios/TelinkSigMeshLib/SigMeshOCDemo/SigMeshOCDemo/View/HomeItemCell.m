@@ -38,12 +38,7 @@
             iconName = @"dengn";
             break;
         case DeviceStateOn:
-            //亮度不为100则图标显示开淡色，已经废弃。
-//            if (btModel.trueBrightness == 100) {
-                iconName = @"dengs";
-//            }else{
-//                iconName = @"dengs_half";
-//            }
+            iconName = @"dengs";
             break;
         default:
             break;
@@ -84,10 +79,6 @@
         self.address.text = [NSString stringWithFormat:@"%@(unbound)",tempAddress];
     }
     self.address.textColor = [UIColor grayColor];
-    //原做法：直连设备显示蓝色
-//    if ([model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString] && SigBearer.share.getCurrentPeripheral.state == CBPeripheralStateConnected) {
-//        self.address.textColor = kDefultColor;
-//    }
     //新做法：直连设备显示蓝色
     if (model.address == SigDataSource.share.unicastAddressOfConnected && SigBearer.share.isOpen) {
         self.address.textColor = kDefultColor;

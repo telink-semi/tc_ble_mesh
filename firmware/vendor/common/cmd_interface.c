@@ -154,7 +154,9 @@ int cfg_cmd_sub_get(u16 node_adr, u16 ele_adr, u16 md_id)
 	return SendOpParaDebug (node_adr, 1, CFG_SIG_MODEL_SUB_GET,(u8 *)&par, sizeof(mesh_cfg_model_sub_get_sig_t));
 }
 
-int group_status[2][32];
+#if WIN32
+int group_status[2][VC_UI_GROUP_CNT_MAX];
+#endif
 mesh_cfg_cmd_sub_set_par_t mesh_cfg_cmd_sub_set_par;
 
 int cfg_cmd_sub_set(u16 op, u16 node_adr, u16 ele_adr, u16 sub_adr, u32 md_id, bool4 sig_model)
@@ -369,7 +371,11 @@ int cfg_cmd_nk_del(u16 node_adr, u16 nk_idx)
 
 int cfg_cmd_ak_set(u16 op, u16 node_adr, u16 nk_idx, u16 ak_idx, u8 *key)
 {
-	mesh_appkey_set_t set;
+#if __TLSR_RISCV_EN__
+	mesh_appkey_set_t set = {{0}}; // if no init, will warning uninitialized.
+#else
+	mesh_appkey_set_t set;	// no need initial to decrease 10 bytes code size.
+#endif
 	SET_KEY_INDEX(set.net_app_idx, nk_idx, ak_idx);
 	memcpy(set.appkey, key, sizeof(set.appkey));
 	return SendOpParaDebug(node_adr, 0, op, (u8 *)&set, sizeof(set));
@@ -387,7 +393,11 @@ int cfg_cmd_ak_update(u16 node_adr, u16 nk_idx, u16 ak_idx, u8 *key)
 
 int cfg_cmd_ak_del(u16 node_adr, u16 nk_idx, u16 ak_idx)
 {
-	mesh_appkey_set_t set;
+#if __TLSR_RISCV_EN__
+	mesh_appkey_set_t set = {{0}}; // if no init, will warning uninitialized.
+#else
+	mesh_appkey_set_t set;	// no need initial to decrease code size.
+#endif
 	SET_KEY_INDEX(set.net_app_idx, nk_idx, ak_idx);
 	return SendOpParaDebug(node_adr, 0, APPKEY_DEL, (u8 *)&set, sizeof(set.appkey));
 }
@@ -572,23 +582,6 @@ int mesh_proxy_filter_remove_adr(u16 adr)
 	return mesh_proxy_set_filter_cmd(PROXY_FILTER_RM_ADR,0,(u8 *)&adr,sizeof(adr));
 }
 
-int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_len)
-{
-	directed_proxy_ctl_t proxy_ctl;
-	memset(&proxy_ctl, 0x00, sizeof(proxy_ctl));
-	proxy_ctl.use_directed = use_directed;
-	proxy_ctl.addr_range.range_start_b = range_start;
-	if(range_len > 1){
-		proxy_ctl.addr_range.length_present_b = 1;
-		proxy_ctl.addr_range.range_length = range_len;
-	}
-	u8 par_len = OFFSETOF(directed_proxy_ctl_t, addr_range) + (proxy_ctl.addr_range.length_present_b?3:2);
-	#if WIN32
-	LOG_MSG_INFO(TL_LOG_NODE_BASIC,(u8 *)&proxy_ctl,par_len ,"mesh_directed_proxy_control_set",0);
-	#endif
-	return mesh_tx_cmd_layer_cfg_primary(DIRECTED_PROXY_CONTROL,(u8 *)&proxy_ctl, par_len,PROXY_CONFIG_FILTER_DST_ADR);;
-}
-
 int mesh_proxy_set_filter_init(u16 self_adr)
 {
 	// add the own white list to the list part 
@@ -610,30 +603,6 @@ int mesh_proxy_set_filter_init(u16 self_adr)
 	#endif
 }
 
-#if (MD_SOLI_PDU_RPL_EN&&MD_CLIENT_EN)
-int mesh_send_proxy_solicitation_pdu(u16 adr_dst)
-{
-	mesh_cmd_bear_t cmd_bear;
-	mesh_cmd_nw_t *p_nw = &cmd_bear.nw;
-	p_nw->ivi = 0;
-	p_nw->ctl = 1;
-	p_nw->ttl = 0;
-	p_nw->src = ele_adr_primary;
-	p_nw->dst = adr_dst;
-	memcpy(p_nw->sno, &soli_sno_tx, sizeof(p_nw->sno));
-	soli_sno_tx++;
-	mesh_sec_msg_enc_nw((u8 *)p_nw, 0, SWAP_TYPE_LT_UNSEG, MASTER, 0, 0, MESH_ADV_TYPE_MESSAGE, NONCE_TYPE_SOLICITATION, 0, 0);
-	soli_service_data.id_type = SOLI_WITH_RPL_TYPE;
-	memcpy(soli_service_data.id_para, p_nw, sizeof(soli_service_data.id_para));
-	soli_pdu_adv_cnt = SOLICI_PDU_CNT;
-	return 1;
-}
-#endif
-
-int cfg_cmd_send_path_solicitation(u16 netkey_offset, u16 *addr_list, int num)
-{
-	return mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REQUEST_SOLICITATION, (u8 *)addr_list, num<<1, ADR_ALL_DIRECTED_FORWARD, netkey_offset);
-}
 
 #if WIN32
 // json data file ,to get data interface part  

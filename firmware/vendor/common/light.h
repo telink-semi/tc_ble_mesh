@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "vendor/common/mesh_node.h"
 
 /** @addtogroup Mesh_Common

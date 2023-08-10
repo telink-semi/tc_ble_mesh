@@ -184,40 +184,32 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
             result = MeshStorageService.getInstance().importExternal(meshJson, meshInfo);
         } catch (Exception e) {
             e.printStackTrace();
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    toastMsg("import failed");
-                }
-            });
+            runOnUiThread(() -> toastMsg("import failed"));
             return;
         }
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                dismissWaitingDialog();
-                if (result == null) {
-                    showErrorDialog("mesh data error");
-                } else {
-                    if (syncDialogBuilder == null) {
-                        syncDialogBuilder = new AlertDialog.Builder(QRCodeScanActivity.this);
-                        syncDialogBuilder.setTitle("Tip").setCancelable(false);
-                        syncDialogBuilder.setMessage("Get mesh data success, click CONFIRM to cover local data")
-                                .setPositiveButton("confirm", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        syncData(result);
-                                    }
-                                })
-                                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        finish();
-                                    }
-                                });
-                    }
-                    syncDialogBuilder.show();
+        runOnUiThread(() -> {
+            dismissWaitingDialog();
+            if (result == null) {
+                showErrorDialog("mesh data error");
+            } else {
+                if (syncDialogBuilder == null) {
+                    syncDialogBuilder = new AlertDialog.Builder(QRCodeScanActivity.this);
+                    syncDialogBuilder.setTitle("Tip").setCancelable(false);
+                    syncDialogBuilder.setMessage("Get mesh data success, click CONFIRM to cover local data")
+                            .setPositiveButton("confirm", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    syncData(result);
+                                }
+                            })
+                            .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+                                }
+                            });
                 }
+                syncDialogBuilder.show();
             }
         });
 

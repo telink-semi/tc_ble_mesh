@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
 // to increase efficiency

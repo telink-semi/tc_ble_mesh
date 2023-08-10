@@ -90,6 +90,7 @@ typedef enum hci_type_e {
     DONGLE_REPORT_ONLINE_ST_UUID= 0x59,
     DONGLE_REPORT_ONLINE_ST_DATA= 0x5a,
     DONGLE_REPROT_READ_RSP		= 0x5b,
+    DONGLE_REPROT_FW_VERSION	= 0x5c,
     MESH_CMD_RSP 				= 0x70,
     MESH_ADV_PAYLOAD 			= 0x71,
     MESH_PROV 					= 0x72,	// provision parmeters

@@ -64,6 +64,8 @@ public class SharedPreferenceHelper {
 
     private static final String KEY_APPLY_POLICY = "com.telink.bluetooth.light.KEY_APPLY_POLICY";
 
+    private static final String KEY_LEVEL_SERVICE = "com.telink.bluetooth.light.KEY_LEVEL_SERVICE";
+
     public static boolean isFirstLoad(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(KEY_FIRST_LOAD, true);
@@ -169,6 +171,17 @@ public class SharedPreferenceHelper {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_AUTO_PV, enable).apply();
     }
+
+    public static boolean isLevelServiceEnable(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KEY_LEVEL_SERVICE, false);
+    }
+
+    public static void setLevelServiceEnable(Context context, boolean enable) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putBoolean(KEY_LEVEL_SERVICE, enable).apply();
+    }
+
 
 
     /*public static void setMeshOTAState(Context context, int distAddress, UpdatePolicy policy) {

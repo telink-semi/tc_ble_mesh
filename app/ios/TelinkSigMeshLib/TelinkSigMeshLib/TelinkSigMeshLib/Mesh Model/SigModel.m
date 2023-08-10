@@ -24,6 +24,9 @@
 #import "SigModel.h"
 #import "CBUUID+Hex.h"
 #import "OpenSSLHelper.h"
+#if SUPPORTEXTENDSIONS
+#import "SDKLibCommand+directForwarding.h"
+#endif
 
 @implementation SigModel
 
@@ -131,7 +134,7 @@
         ModelIDModel *model75 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_OP_AGG_Describe modelName:kSigModel_OP_AGG_S_Describe sigModelID:kSigModel_OP_AGG_S_ID];
         ModelIDModel *model76 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_OP_AGG_Describe modelName:kSigModel_OP_AGG_C_Describe sigModelID:kSigModel_OP_AGG_C_ID];
         ModelIDModel *model77 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_LARGE_CPS_Describe modelName:kSigModel_LARGE_CPS_S_Describe sigModelID:kSigModel_LARGE_CPS_S_ID];
-        ModelIDModel *model78 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_LARGE_CPS_Describe modelName:kSigModel_LARGE_CPS_C_Describe sigModelID:kSigModel_LARGE_CPS_S_ID];
+        ModelIDModel *model78 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_LARGE_CPS_Describe modelName:kSigModel_LARGE_CPS_C_Describe sigModelID:kSigModel_LARGE_CPS_C_ID];
         ModelIDModel *model79 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SOLI_PDU_RPL_CFG_Describe modelName:kSigModel_SOLI_PDU_RPL_CFG_S_Describe sigModelID:kSigModel_SOLI_PDU_RPL_CFG_S_ID];
         ModelIDModel *model80 = [[ModelIDModel alloc] initWithModelGroup:kSigModelGroup_SOLI_PDU_RPL_CFG_Describe modelName:kSigModel_SOLI_PDU_RPL_CFG_C_Describe sigModelID:kSigModel_SOLI_PDU_RPL_CFG_C_ID];
 
@@ -537,8 +540,8 @@
     return self;
 }
 
-- (NSString *)macAddress{
-    NSString *tem = nil;
+- (NSString *)macAddress {
+    NSString *tem = @"";
     if (_reportNodeUUID && _reportNodeUUID.length >= 6) {
         tem = [LibTools convertDataToHexStr:[LibTools turnOverData:[_reportNodeUUID subdataWithRange:NSMakeRange(_reportNodeUUID.length - 6, 6)]]];
     }
@@ -1444,7 +1447,12 @@
         // NID was already generated in Network Key below and is ignored here.
         _encryptionKey = [hash subdataWithRange:NSMakeRange(1, 16)];
         _privacyKey = [hash subdataWithRange:NSMakeRange(17, 16)];
-
+        // Calculate The directed security material Encryption Key and Privacy Key.
+        byte[0] = 0x02;
+        P = [NSData dataWithBytes:&byte length:1];
+        hash = [helper calculateK2WithN:key andP:P];
+        _directedSecurityEncryptionKey = [hash subdataWithRange:NSMakeRange(1, 16)];
+        _directedSecurityPrivacyKey = [hash subdataWithRange:NSMakeRange(17, 16)];
     }
     return self;
 }
@@ -1534,6 +1542,19 @@
     return _nid;
 }
 
+- (UInt8)directedSecurityNid {
+    if (!_directedSecurityNid && self.key && self.key.length > 0 && ![self.key isEqualToString:@"00000000000000000000000000000000"]) {
+        // Calculate NID.
+        UInt8 tem = 2;
+        NSData *temData = [NSData dataWithBytes:&tem length:1];
+        NSData *hash = [OpenSSLHelper.share calculateK2WithN:[LibTools nsstringToHex:_key] andP:temData];
+        Byte *byte = (Byte *)hash.bytes;
+        memcpy(&tem, byte, 1);
+        _directedSecurityNid = tem & 0x7F;
+    }
+    return _directedSecurityNid;
+}
+
 - (UInt8)oldNid {
     if (!_oldNid && self.oldKey && self.oldKey.length > 0 && ![self.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
         // Calculate NID.
@@ -1545,6 +1566,19 @@
         _oldNid = tem & 0x7F;
     }
     return _oldNid;
+}
+
+- (UInt8)directedSecurityOldNid {
+    if (!_directedSecurityOldNid && self.oldKey && self.oldKey.length > 0 && ![self.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
+        // Calculate NID.
+        UInt8 tem = 2;
+        NSData *temData = [NSData dataWithBytes:&tem length:1];
+        NSData *hash = [OpenSSLHelper.share calculateK2WithN:[LibTools nsstringToHex:_oldKey] andP:temData];
+        Byte *byte = (Byte *)hash.bytes;
+        memcpy(&tem, byte, 1);
+        _directedSecurityOldNid = tem & 0x7F;
+    }
+    return _directedSecurityOldNid;
 }
 
 - (SigNetkeyDerivaties *)keys {
@@ -1783,7 +1817,7 @@
     return self;
 }
 
-- (SigNodeModel *)node {
+- (nullable SigNodeModel *)node {
     SigNodeModel *tem = nil;
     NSArray *nodes = [NSArray arrayWithArray:SigMeshLib.share.dataSource.nodes];
     for (SigNodeModel *model in nodes) {
@@ -1939,7 +1973,7 @@
     return _oldAid;
 }
 
-- (SigNetkeyModel *)getCurrentBoundNetKey {
+- (nullable SigNetkeyModel *)getCurrentBoundNetKey {
     SigNetkeyModel *tem = nil;
     NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *model in netKeys) {
@@ -1951,14 +1985,14 @@
     return tem;
 }
 
-- (NSData *)getDataKey {
+- (nullable NSData *)getDataKey {
     if (_key != nil && _key.length > 0 && ![_key isEqualToString:@"00000000000000000000000000000000"]) {
         return [LibTools nsstringToHex:_key];
     }
     return nil;
 }
 
-- (NSData *)getDataOldKey {
+- (nullable NSData *)getDataOldKey {
     if (_oldKey != nil && _oldKey.length > 0 && ![_oldKey isEqualToString:@"00000000000000000000000000000000"]) {
         return [LibTools nsstringToHex:_oldKey];
     }
@@ -2243,6 +2277,7 @@
 //        _sno = @"00000000";
         _subnetBridgeList = [[NSMutableArray alloc] init];
         _subnetBridgeEnable = NO;
+        _directControlStatus = nil;
         _excluded = false;
     }
     return self;
@@ -2285,6 +2320,7 @@
         _subnetBridgeList = [[NSMutableArray alloc] initWithArray:node.subnetBridgeList];
         _subnetBridgeEnable = node.subnetBridgeEnable;
         _excluded = node.excluded;
+        _directControlStatus = node.directControlStatus;
     }
     return self;
 }
@@ -2323,6 +2359,7 @@
     device.subnetBridgeList = [[NSMutableArray alloc] initWithArray:self.subnetBridgeList];
     device.subnetBridgeEnable = self.subnetBridgeEnable;
     device.excluded = self.excluded;
+    device.directControlStatus = self.directControlStatus;
     return device;
 }
 
@@ -2348,7 +2385,14 @@
 }
 
 - (BOOL)isRemote {
-    return [LibTools uint16From16String:self.pid] == 0x301;
+    return self.getTelinkPID.majorProductType == MajorProductType_switch;
+//    return [LibTools uint16From16String:self.pid] == 0x301;
+}
+
+- (struct TelinkPID)getTelinkPID {
+    struct TelinkPID telinkPid = {};
+    telinkPid.value = [LibTools uint16From16String:self.pid];
+    return telinkPid;
 }
 
 - (UInt8)HSL_Hue100{
@@ -2568,7 +2612,7 @@
     return addr >= self.address && addr <= self.lastUnicastAddress;
 }
 
-- (SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID {
+- (nullable SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID {
     SigModelIDModel *model = nil;
     NSArray *elements = [NSArray arrayWithArray:self.elements];
     for (SigElementModel *element in elements) {
@@ -2587,7 +2631,7 @@
     return model;
 }
 
-- (SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID andElementAddress:(UInt16)elementAddress {
+- (nullable SigModelIDModel *)getModelIDModelWithModelID:(UInt32)modelID andElementAddress:(UInt16)elementAddress {
     SigModelIDModel *model = nil;
     NSArray *elements = [NSArray arrayWithArray:self.elements];
     for (SigElementModel *element in elements) {
@@ -2712,6 +2756,11 @@
         dict[@"subnetBridgeList"] = array;
     }
     dict[@"subnetBridgeEnable"] = [NSNumber numberWithBool:_subnetBridgeEnable];
+#if SUPPORTEXTENDSIONS
+    if (_directControlStatus) {
+        dict[@"directControlStatus"] = [_directControlStatus getDictionaryOfSigDirectControlStatus];
+    }
+#endif
     return dict;
 }
 
@@ -2838,19 +2887,26 @@
         }
         _schedulerList = schedulerList;
     }
-    NSMutableArray *subnetBridgeList = [NSMutableArray array];
     if ([allKeys containsObject:@"subnetBridgeList"]) {
+        NSMutableArray *subnetBridgeList = [NSMutableArray array];
         NSArray *array = dictionary[@"subnetBridgeList"];
         for (NSDictionary *subnetBridgeDict in array) {
             SigSubnetBridgeModel *model = [[SigSubnetBridgeModel alloc] init];
             [model setDictionaryToSubnetBridgeModel:subnetBridgeDict];
             [subnetBridgeList addObject:model];
         }
+        _subnetBridgeList = subnetBridgeList;
     }
-    _subnetBridgeList = subnetBridgeList;
     if ([allKeys containsObject:@"subnetBridgeEnable"]) {
         _subnetBridgeEnable = [dictionary[@"subnetBridgeEnable"] boolValue];
     }
+#if SUPPORTEXTENDSIONS
+    if ([allKeys containsObject:@"directControlStatus"]) {
+        SigDirectControlStatus *tem = [[SigDirectControlStatus alloc] init];
+        [tem setDictionaryToSigDirectControlStatus:dictionary[@"directControlStatus"]];
+        _directControlStatus = tem;
+    }
+#endif
 }
 
 - (NSDictionary *)getFormatDictionaryOfSigNodeModel {
@@ -3197,6 +3253,11 @@
 ///返回是否支持publish功能
 - (BOOL)hasPublishFunction{
     return self.publishModelID != 0;
+}
+
+///返回是否支持Direct Forwarding功能
+- (BOOL)hasDirectForwardingFunction {
+    return [self getAddressesWithModelID:@(kSigModel_DF_CFG_S_ID)].count >= 0;
 }
 
 ///返回是否打开了publish功能
@@ -3706,10 +3767,9 @@
         *offset += sigModelsByteCount;
         for (int i=0; i<numV; i++) {
             memcpy(&tem16, dataByte+*offset+i*4, 2);
-            UInt16 companyId = tem16;
+            UInt32 companyId = tem16;
             memcpy(&tem16, dataByte+*offset+i*4+2, 2);
-            UInt16 modelId = tem16;
-//            UInt32 vendorModelId = (UInt32)companyId << 16 | (UInt32)modelId;
+            UInt32 modelId = tem16;
             UInt32 vendorModelId = (UInt32)modelId << 16 | (UInt32)companyId;
             SigModelIDModel *modelID = [[SigModelIDModel alloc] initWithVendorModelId:vendorModelId];
             [self addModel:modelID];
@@ -3831,7 +3891,7 @@
 ///返回整形的modelID
 - (int)getIntModelID{
     int modelID = 0;
-    if (self.modelId.length == 4) {
+    if (self.isBluetoothSIGAssigned) {
         modelID = [LibTools uint16From16String:self.modelId];
     } else {
         modelID = [LibTools uint32From16String:self.modelId];
@@ -3841,21 +3901,21 @@
 
 - (UInt16)getIntModelIdentifier {
     //sig model:1306 vendor mdoel:00010211
+    //ModelID+CID = vendorModelID
     UInt16 tem = 0;
-    if (self.modelId.length == 4) {
+    if (self.isBluetoothSIGAssigned) {
         tem = [LibTools uint16From16String:self.modelId];
-    } else if (self.modelId.length == 8) {
-//        tem = [LibTools uint16From16String:[self.modelId substringFromIndex:4]];
+    } else if (self.isVendorModelID) {
         tem = [LibTools uint16From16String:[self.modelId substringToIndex:4]];
     }
     return tem;
 }
 
 - (UInt16)getIntCompanyIdentifier {
+    //ModelID+CID = vendorModelID
     //sig model:1306 vendor mdoel:00010211
     UInt16 tem = 0;
-    if (self.modelId.length == 8) {
-//        tem = [LibTools uint16From16String:[self.modelId substringToIndex:4]];
+    if (self.isVendorModelID) {
         tem = [LibTools uint16From16String:[self.modelId substringFromIndex:4]];
     }
     return tem;
@@ -3881,27 +3941,12 @@
     return self;
 }
 
-//- (UInt16)modelIdentifier {
-//    //sig model:1306 vendor mdoel:00010211
-//    if ([self getIntModelID] > 0xFFFF) {
-//        return (UInt16)(([self getIntModelID] >> 4) & 0x0000FFFF);
-//    } else {
-//        return (UInt16)([self getIntModelID] & 0x0000FFFF);
-//    }
-////    return (UInt16)([self getIntModelID] & 0x0000FFFF);
-//}
-//
-//- (UInt16)companyIdentifier {
-//    //sig model:1306 vendor mdoel:00010211
-//    if ([self getIntModelID] > 0xFFFF) {
-//        return (UInt16)([self getIntModelID] & 0x0000FFFF);
-////        return (UInt16)([self getIntModelID] >> 16);
-//    }
-//    return 0;
-//}
-
 - (BOOL)isBluetoothSIGAssigned {
     return _modelId.length == 4;
+}
+
+- (BOOL)isVendorModelID {
+    return _modelId.length == 8;
 }
 
 - (NSArray <SigGroupModel *>*)subscriptions {
@@ -3945,9 +3990,7 @@
         modelID == kSigModel_OP_AGG_S_ID ||
         modelID == kSigModel_OP_AGG_C_ID ||
         modelID == kSigModel_LARGE_CPS_S_ID ||
-        modelID == kSigModel_LARGE_CPS_C_ID ||
-        modelID == kSigModel_SOLI_PDU_RPL_CFG_S_ID ||
-        modelID == kSigModel_SOLI_PDU_RPL_CFG_C_ID) {
+        modelID == kSigModel_LARGE_CPS_C_ID) {
         tem = YES;
     }
     return tem;
@@ -4713,7 +4756,7 @@
     return self;
 }
 
-- (SigMeshMessage *)getSigMeshMessage {
+- (nullable SigMeshMessage *)getSigMeshMessage {
     Class MessageType = [SigHelper.share getMeshMessageWithOpCode:_opCode];
     if (MessageType != nil) {
         SigMeshMessage *msg = [[MessageType alloc] initWithParameters:_parameters];
@@ -4848,9 +4891,8 @@
     if (self = [super init]) {
         _dateTime = [[GattDateTimeModel alloc] initWithDate:date];
         NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
-        NSDateComponents *comps = [[NSDateComponents alloc] init];
-        NSInteger unitFlags =  NSCalendarUnitWeekday ;
-        comps = [calendar components:unitFlags fromDate:date];
+        NSInteger unitFlags = NSCalendarUnitWeekday ;
+        NSDateComponents *comps = [calendar components:unitFlags fromDate:date];
         NSInteger week = [comps weekday];
         NSLog(@"week = %zd",week);
         if (week == 1) {

@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "tl_common.h"
 #include "audio.h"
 #include "pga.h"
 //set period for Misc

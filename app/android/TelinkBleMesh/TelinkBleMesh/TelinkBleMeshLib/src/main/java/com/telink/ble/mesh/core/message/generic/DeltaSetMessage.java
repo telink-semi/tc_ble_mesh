@@ -4,9 +4,9 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date     Sep. 30, 2017
+ * @date Sep. 30, 2017
  *
- * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 package com.telink.ble.mesh.core.message.generic;
 
 import com.telink.ble.mesh.core.message.Opcode;
+import com.telink.ble.mesh.util.MeshLogger;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -51,9 +52,7 @@ public class DeltaSetMessage extends GenericMessage {
         deltaSetMessage.deltaLevel = deltaLevel;
         deltaSetMessage.transitionTime = 0;
         deltaSetMessage.delay = 0;
-
         deltaSetMessage.ack = ack;
-        deltaSetMessage.responseOpcode = Opcode.G_LEVEL_STATUS.value;
         deltaSetMessage.responseMax = rspMax;
         return deltaSetMessage;
     }
@@ -64,6 +63,10 @@ public class DeltaSetMessage extends GenericMessage {
         setTidPosition(4);
     }
 
+    @Override
+    public int getResponseOpcode() {
+        return ack ? Opcode.G_LEVEL_STATUS.value : OPCODE_INVALID;
+    }
 
     @Override
     public int getOpcode() {

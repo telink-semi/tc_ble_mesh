@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -65,10 +65,7 @@ void friend_cmd_send_fn(u8 lpn_idx, u8 op)  // always need.
 	friend_cmd_send_sample_message(op);
 #else
     if(CMD_CTL_HEARTBEAT == op){
-		u16 feature =0;
-		memcpy((u8 *)(&feature),(u8 *)&(gp_page0->head.feature),2);
-		heartbeat_cmd_send_conf(model_sig_cfg_s.hb_pub.ttl,
-			feature,model_sig_cfg_s.hb_pub.dst_adr);
+		heartbeat_cmd_send_conf();
 	}else if(CMD_CTL_CLEAR == op){
 	#if (FEATURE_FRIEND_EN || FEATURE_LOWPOWER_EN)
 		mesh_ctl_fri_clear_t fri_clear;
@@ -183,7 +180,7 @@ void friend_add_special_grp_addr()
 void fn_quick_send_adv()
 {
 #ifndef WIN32
-	u8 r = irq_disable(); // should be disable, otherwise cause too much delay.(bltParam.adv_scanReq_connReq will be true and return from irq_blt_sdk_handler directedly if interrupt trigger)
+	u32 r = irq_disable(); // should be disable, otherwise cause too much delay.(bltParam.adv_scanReq_connReq will be true and return from irq_blt_sdk_handler directedly if interrupt trigger)
     mesh_send_adv2scan_mode(1);
     irq_restore(r);
 #endif
@@ -281,7 +278,7 @@ int is_cmd2lpn(u16 adr_dst)
 int friend_cache_check_replace(u8 lpn_idx, mesh_cmd_bear_t *bear_big)
 {
     int replace = FN_CACHE_REPLACE_NONE; //0;
-	u8 r = irq_disable();
+	u32 r = irq_disable();
     mesh_cmd_bear_t *p_buf_bear;
     my_fifo_t *p_cache_fifo = fn_other_par[lpn_idx].p_cache;
     u8 cnt = my_fifo_data_cnt_get(p_cache_fifo);
@@ -951,7 +948,7 @@ void mesh_feature_set_fn(){
 	    fn_other_par[i].FriAdr = ele_adr_primary;
 
 	    mesh_ctl_fri_update_t *p_update = fn_update+i;
-	    memcpy(p_update->IVIndex, iv_idx_st.tx, sizeof(p_update->IVIndex));
+	    get_iv_big_endian(p_update->IVIndex, (u8 *)&iv_idx_st.iv_tx);
 
 	    mesh_ctl_fri_offer_t *p_offer = (fn_offer+i);
 	    #if 0

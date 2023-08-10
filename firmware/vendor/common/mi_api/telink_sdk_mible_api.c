@@ -1278,7 +1278,7 @@ void mpn_mul (unsigned int * r, unsigned int * a, int na, unsigned int * b, int 
 	for(int k = 0; k < na + nb; k++){
 		r[k] = 0;
 	}
-	unsigned char val = irq_disable();
+	u32 val = irq_disable();
 	while(nb --){
 		#if MODULE_WATCHDOG_ENABLE
 		wd_clear();

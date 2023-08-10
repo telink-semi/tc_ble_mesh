@@ -22,8 +22,10 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core;
 
+import android.bluetooth.BluetoothGatt;
 import android.os.ParcelUuid;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 
 import com.telink.ble.mesh.core.ble.MeshScanRecord;
@@ -42,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
+import java.util.zip.CRC32;
 
 public final class MeshUtils {
 
@@ -65,6 +68,9 @@ public final class MeshUtils {
      */
     public static final int LOCAL_MESSAGE_ADDRESS = 0;
 
+    public static final long IV_MISSING = 0xFFFFFFFFL;
+
+    public static final ParcelUuid OTS_UUID = new ParcelUuid(UUIDInfo.SERVICE_OTS);
 
     private static SecureRandom rng;
 
@@ -353,5 +359,52 @@ public final class MeshUtils {
             msgList.add(msg);
         }
         return msgList;
+    }
+
+    /**
+     * @param start
+     * @param len
+     * @return ByteOrder.LITTLE_ENDIAN
+     */
+    public static byte[] getUnicastRange(int start, @IntRange(from = 1, to = 0xFF) int len) {
+        if (len == 1) {
+            return integer2Bytes(start << 1, 2, ByteOrder.LITTLE_ENDIAN);
+        } else {
+            short sVal = (short) ((start << 1) | 0x01);
+            return ByteBuffer.allocate(3).order(ByteOrder.LITTLE_ENDIAN)
+                    .putShort(sVal)
+                    .put((byte) len).array();
+        }
+    }
+
+    public static String getGattConnectionDesc(int connectionState) {
+        switch (connectionState) {
+            case BluetoothGatt.STATE_DISCONNECTED:
+                return "disconnected";
+
+            case BluetoothGatt.STATE_CONNECTING:
+                return "connecting...";
+
+            case BluetoothGatt.STATE_CONNECTED:
+                return "connected";
+
+            case BluetoothGatt.STATE_DISCONNECTING:
+                return "disconnecting...";
+
+            default:
+                return "unknown";
+        }
+    }
+
+    public static int crc32(byte[] data){
+        CRC32 crc32 = new CRC32();
+        crc32.update(data);
+        return (int) crc32.getValue();
+    }
+
+    public static int crc32(byte[] data, int offset, int len){
+        CRC32 crc32 = new CRC32();
+        crc32.update(data, offset, len);
+        return (int) crc32.getValue();
     }
 }

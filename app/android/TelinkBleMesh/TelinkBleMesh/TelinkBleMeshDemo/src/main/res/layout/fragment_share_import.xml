@@ -31,16 +31,27 @@
         android:textStyle="bold" />
 
     <RadioGroup
+        android:id="@+id/rg_import_type"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/rb_cdtp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:checked="true"
+            android:drawableRight="@drawable/ic_tip"
+            android:drawablePadding="12dp"
+            android:drawableTint="@color/colorPrimary"
+            android:text="Import from other phone(CDTP)" />
 
         <RadioButton
             android:id="@+id/rb_file"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:checked="true"
             android:text="JSON File" />
 
         <RadioButton

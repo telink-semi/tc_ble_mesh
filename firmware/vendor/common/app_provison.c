@@ -34,13 +34,16 @@
 #if WIN32 
 #include "../../../reference/tl_bulk/lib_file/app_config.h"
 #include "../../../reference/tl_bulk/lib_file/hw_fun.h"
-#include"../../../reference/tl_bulk/lib_file/gatt_provision.h"
+#include "../../../reference/tl_bulk/lib_file/gatt_provision.h"
 #else 
 #include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #endif
 #include "vendor/common/remote_prov.h"
 #include "vendor/common/certify_base/certify_base_crypto.h"
 #include "solicitation_rpl_cfg_model.h"
+#if SMART_PROVISION_ENABLE
+#include "vendor/common/smart_provision.h"
+#endif
 
 #define DEBUG_PROXY_SAR_ENABLE 	0
 prov_para_proc_t prov_para;
@@ -59,7 +62,14 @@ u8 proxy_para_len=0;
 
 #define OFFSET_START	0x1F
 #define OFFSET_CON		0x17
-
+#if CERTIFY_BASE_ENABLE&&GATEWAY_ENABLE // change the pubkey in the newest version.PVNR/CBP/BV-01C.PVNR/CBP/BV-03C
+const u8 pub_key_with_oob[64]={
+	0x31,0x7A,0x6F,0x16,0x58,0x44,0x72,0x74,0x15,0x10,0x33,0x62,0x5A,0xFB,0xC4,0xF1,
+	0xB6,0x0B,0x31,0xA4,0x5D,0x6F,0x45,0x9B,0x50,0x76,0xE1,0x11,0x86,0x44,0xBD,0xBD,
+	0x26,0x5E,0x7F,0x37,0xBF,0xFD,0xF9,0xC4,0x34,0x90,0x60,0x23,0x7F,0x57,0x66,0x0E,
+	0xAE,0x86,0xD4,0xD0,0x58,0x7C,0xEF,0x36,0xD9,0x3B,0xA7,0xD0,0x2B,0x54,0x5D,0xE2
+};
+#else
 const u8 pub_key_with_oob[64]={
 					0xF4,0x65,0xE4,0x3F,0xF2,0x3D,0x3F,0x1B,
 					0x9D,0xC7,0xDF,0xC0,0x4D,0xA8,0x75,0x81,
@@ -69,6 +79,9 @@ const u8 pub_key_with_oob[64]={
 					0xEE,0xEF,0xC4,0x24,0x16,0x4E,0x33,0xC2,
 					0x01,0xC2,0xB0,0x10,0xCA,0x6B,0x4D,0x43,
 					0xA8,0xA1,0x55,0xCA,0xD8,0xEC,0xB2,0x79};
+#endif
+
+
 
 // add the provision data part dispatch 
 
@@ -756,7 +769,12 @@ u8 mesh_send_provison_data(u8 pdu_type,u8 bearCode,u8 *para,u8 para_len )
 				if(!prov_para.cmd_retry_flag &&prov_para.cert_base_en&&(!prov_para.direct_invite)){
 					prov_para.trans_num++;
 				}else if(!prov_para.cmd_retry_flag && prov_cmd!= PRO_CAPABLI ){
-					prov_para.trans_num++;
+					if(prov_para.err_op_code){
+						prov_para.err_op_code = 0;//for the provision err code proc .
+					}else{
+						prov_para.trans_num++;
+					}
+					
 					// after the sending ,it will change the transnum part 
 			    }
 		    }
@@ -990,10 +1008,10 @@ void set_provisionee_para(u8 *p_net_key,u16 key_index,u8 flags,u8 *p_ivi,u16 uni
 }
 void set_provisioner_para(u8 *p_net_key,u16 key_index,u8 flags,u8 *p_ivi,u16 unicast)
 {
-	u8 pro_dat_tmp[25];
+	provison_net_info_str pro_dat_tmp;
 	set_provisionee_para(p_net_key,key_index,flags,p_ivi,unicast);
-	memcpy(pro_dat_tmp,pro_dat,sizeof(pro_dat_tmp));
-	mesh_provision_par_set_dir(pro_dat_tmp);
+	memcpy((u8 *)&pro_dat_tmp,pro_dat,sizeof(pro_dat_tmp));
+	mesh_provision_par_set_dir(&pro_dat_tmp);
 }
 u8 set_pro_dat_part(u16 ele_adr)
 {
@@ -1455,7 +1473,7 @@ u8 get_pubkey_oob_info_by_capa(mesh_prov_oob_str *p_prov_oob)
 	if(oob_type & BIT(STATIC_OOB_TYPE_VAL)){
 		p_prov_oob->prov_key = MESH_STATIC_OOB;
 		return 1;
-	}else if(oob_type & BIT(ONLY_OOB_TYPE_VAL)){
+	}else if(p_capa->inOOBSize ||p_capa->outPutOOBSize ){
 		if(p_capa->outPutOOBSize>=1 && p_capa->outPutOOBSize <=8){
 			p_prov_oob->oob_outsize = p_capa->outPutOOBSize;
 			p_prov_oob->prov_key = MESH_OUTPUT_OOB;
@@ -1467,7 +1485,7 @@ u8 get_pubkey_oob_info_by_capa(mesh_prov_oob_str *p_prov_oob)
 		}else if (p_capa->inOOBSize==0 && p_capa->outPutOOBSize==0){
 			p_prov_oob->prov_key = MESH_NO_OOB;
 		}
-	}else if(oob_type == 0){
+	}else{
 		p_prov_oob->prov_key = MESH_NO_OOB;
 	}
 	return 1;
@@ -1597,6 +1615,38 @@ int mesh_sec_prov_confirmation_sec (unsigned char *cfm, unsigned char *input, in
 	return 0;
 }
 
+
+int mesh_sec_prov_confirmation_send_confirm_state()
+{
+	u8 *p_auth = dev_auth;
+#if(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE || LLSYNC_PROVISION_AUTH_OOB)
+	u8 node_auth[16];
+	#if LLSYNC_PROVISION_AUTH_OOB
+	llsync_mesh_auth_clac(dev_random, node_auth);
+	#else
+	caculate_sha256_node_auth_value(node_auth);
+	#endif
+	p_auth = node_auth;
+#endif
+
+	return mesh_sec_prov_confirmation_sec (dev_comfirm, confirm_input, 145, ecdh_secret, dev_random, p_auth);
+}
+
+int mesh_sec_prov_confirmation_check_confirm_state(u8 *pro_comfirm_tmp)
+{
+	u8 *p_auth = dev_auth;
+#if(LLSYNC_PROVISION_AUTH_OOB)
+	u8 node_auth[16];
+	llsync_mesh_auth_clac(pro_random, node_auth);
+	p_auth = node_auth;
+#elif ALI_NEW_PROTO_EN
+	u8 ali_tmp_auth[32];
+	caculate_sha256_to_create_pro_oob(ali_tmp_auth,pro_random);
+	p_auth = ali_tmp_auth;
+#endif
+
+	return mesh_sec_prov_confirmation_sec (pro_comfirm_tmp, confirm_input, 145, ecdh_secret, pro_random, p_auth);
+}
 
 // PB-GATT data dispatch 
 void dispatch_pb_gatt(u8 *p ,u8 len )
@@ -1754,14 +1804,7 @@ void dispatch_pb_gatt(u8 *p ,u8 len )
 				memcpy(pro_comfirm,p_comfirm->comfirm,get_prov_comfirm_value_len());
 				get_private_key(dev_private_key);
 				tn_p256_dhkey_fast(ecdh_secret, dev_private_key, confirm_input+0x11, confirm_input+0x11+0x20);
-				#if(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
-				u8 node_auth[16];
-				caculate_sha256_node_auth_value(node_auth);
-				mesh_sec_prov_confirmation_sec (dev_comfirm, confirm_input, 145, ecdh_secret, dev_random, node_auth);
-				#else
-				mesh_sec_prov_confirmation_sec (dev_comfirm, confirm_input, 145, ecdh_secret, dev_random, dev_auth);
-				#endif
-				
+				mesh_sec_prov_confirmation_send_confirm_state();				
 				set_pro_comfirm(p_notify,dev_comfirm,get_prov_comfirm_value_len());
 				notify_len = get_prov_comfirm_len();
 				prov_para.provison_rcv_state =STATE_DEV_CONFIRM;
@@ -1782,7 +1825,7 @@ void dispatch_pb_gatt(u8 *p ,u8 len )
 				memcpy(pro_random,p_rcv_str->random.random,get_prov_random_value_len());
 				// use the provision random to caculate the provision comfirm 
 				u8 pro_comfirm_tmp[32];
-				mesh_sec_prov_confirmation_sec (pro_comfirm_tmp, confirm_input, 145, ecdh_secret, pro_random, dev_auth);
+				mesh_sec_prov_confirmation_check_confirm_state(pro_comfirm_tmp);
 				if(prov_comfirm_check_right_or_not(pro_comfirm,pro_comfirm_tmp)){
 				    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"gatt the comfirm compare fail",0);
 					notify_len = prov_fail_cmd_proc(p_notify,UNEXPECTED_PDU);
@@ -1829,7 +1872,7 @@ void dispatch_pb_gatt(u8 *p ,u8 len )
     							25,"provision net info is ",0);
     				memcpy(&provision_mag.pro_net_info,p_prov_net,sizeof(provison_net_info_str));
     				// add the info about the gatt mode provision ,should set the cfg data part into the node identity
-    				mesh_provision_par_handle((u8 *)&provision_mag.pro_net_info);
+    				mesh_provision_par_handle(&provision_mag.pro_net_info);
     				#if !WIN32 
     				mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_SUC);
     				#endif 
@@ -1843,6 +1886,10 @@ void dispatch_pb_gatt(u8 *p ,u8 len )
     				SET_TC_FIFO(TSCRIPT_PROVISION_SERVICE|TSCRIPT_MESH_RX,(u8 *)p,sizeof(pro_trans_data));
     				SET_TC_FIFO(TSCRIPT_PROVISION_SERVICE,(u8 *)p_notify,notify_len);
     				LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"provision suc! ",0);
+					#if PROVISION_SUCCESS_QUICK_RECONNECT_ENABLE
+					extern u32 g_provision_success_adv_quick_reconnect_tick;
+    				g_provision_success_adv_quick_reconnect_tick = clock_time() | 1;
+					#endif
     				#if PROV_APP_KEY_SETUP_TIMEOUT_CHECK_EN
     				prov_app_key_setup_tick = clock_time() | 1;
     				#endif
@@ -1872,7 +1919,9 @@ void mesh_adv_provision_retry()
 		mesh_provision_para_reset();
 		LOG_MSG_ERR(TL_LOG_NODE_SDK, 0, 0,"provision time_out",0);
 		mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_TIMEOUT);
-		prov_para.cmd_send_start_tick = clock_time();
+		#if GATEWAY_ENABLE
+		mesh_terminate_provision_link_reset(LINK_CLOSE_TIMEOUT,0);
+		#endif
 	}
 	if(	prov_para.cmd_retry_flag &&
 		clock_time_exceed(prov_para.cmd_send_tick ,PROVISION_ADV_RETRY_MS*1000)){
@@ -1932,16 +1981,16 @@ void set_rsp_ack_transnum(pro_PB_ADV *p_adv){
 	}
 }
 
-void provision_set_ivi_para(u8 *para)
+void provision_set_ivi_para(provison_net_info_str *p_prov_net_info)
 {
-	provison_net_info_str *p_prov_net_info = (provison_net_info_str *)para;
-	u8 iv_0[4] = {0};
+	u32 iv_idx = 0;
+	get_iv_little_endian((u8 *)&iv_idx, p_prov_net_info->iv_index);
 	if(p_prov_net_info->prov_flags.IVUpdate
-	&& memcmp(p_prov_net_info->iv_index, iv_0, sizeof(iv_0))){
-		iv_update_set_with_update_flag_ture(p_prov_net_info->iv_index, 0);
+	&& iv_idx){ // (iv_idx != 0)
+		iv_update_set_with_update_flag_ture(iv_idx, 0);
 	}else{
-        int rst_sno = memcmp(p_prov_net_info->iv_index, iv_idx_st.cur, 4);
-        mesh_iv_idx_init(p_prov_net_info->iv_index, rst_sno);
+        int rst_sno = (iv_idx != iv_idx_st.iv_cur);
+        mesh_iv_idx_init(iv_idx, rst_sno, 1);
         iv_idx_st.searching_flag = 1; // enter search mode should be better, because an old iv may be used to provision.
 	}
 }
@@ -1985,7 +2034,11 @@ u8 compare_capa_with_start(mesh_prov_oob_str *p_oob)
 #else
     pro_trans_capa *p_capa = &(p_oob->capa);
     pro_trans_start *p_start = &(p_oob->start);
-    //compare the pubkey oob part 
+    //compare the pubkey oob part
+	if((BIT(p_start->alogrithms)&p_capa->alogrithms)== 0){
+		LOG_MSG_ERR(TL_LOG_NODE_SDK, 0, 0,"alogrithms is start%d,capa is %d",p_start->alogrithms,p_capa->alogrithms);	
+		return 0;
+	}
     if(p_capa->pubKeyType != p_start->pubKey){
         return 0;
     }
@@ -2165,15 +2218,24 @@ void mesh_prov_link_close_terminate()
 void mesh_terminate_provision_link_reset(u8 code,u8 ack)
 {	
 	send_rcv_retry_clr();
-	gateway_adv_filter_init();
+	if(LINK_CLOSE_SUCC != code){
+		gateway_adv_filter_init();
+		link_close_end_tick = clock_time()|1;
+	}
 	if(ack){
 		mesh_send_provison_data(TRANS_ACK,0,0,0); 
 	}
 	prov_set_link_close_code(code);
 	mesh_send_provison_data(BEARS_CTL,LINK_CLOSE,0,0);
 	send_rcv_retry_set(PRO_BEARS_CTL,LINK_CLOSE, ack); 
-	LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"send link close",0);
-	link_close_end_tick = clock_time()|1;
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"send link close",0);	
+   	#if GATEWAY_ENABLE
+	bear_close_link link_close;
+	link_close.header.GPCF = BEARS_CTL;
+	link_close.header.BearCtl = LINK_CLOSE;
+	link_close.reason = code;
+    gateway_upload_prov_link_cls((u8 *)&link_close,sizeof(bear_close_link));
+    #endif
 }
 
 
@@ -2209,17 +2271,18 @@ void check_inputoob_proc()
 #endif
 }
 
+
 void mesh_prov_node_fail_proc(pro_PB_ADV *p_adv,mesh_pro_data_structer *p_send_str,u8 code)
 {
-	LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"adv the start cmd is unreliable",0);
+	prov_para.prov_err = 1;
+	LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"prov fail proc ",0);
 	set_rsp_ack_transnum(p_adv);
 	send_rcv_retry_clr();
 	mesh_send_provison_data(TRANS_ACK,0,0,0);
 	set_pro_fail(p_send_str,code);
 	send_multi_type_data(PRO_FAIL,para_pro);
 	send_rcv_retry_set(PRO_FAIL,0,1);
-	prov_para.trans_num_last += 2;
-	prov_para.provison_rcv_state = STATE_PRO_FAILED_ACK;
+	prov_para.trans_num_last = prov_para.trans_num;
 }
 
 void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
@@ -2238,6 +2301,7 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 		p_adv->transBear.bearAck.header.BearCtl == LINK_OPEN))){
 		return;
 	}
+
 	if(p_adv->transBear.bearOpen.header.GPCF == BEARS_CTL &&
 			   p_adv->transBear.bearAck.header.BearCtl == LINK_CLOSE){
 		//when receive a link close cmd ,it will reset the state 
@@ -2247,21 +2311,26 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 		mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_CLOSE);
 		mesh_provision_para_reset();
 	}
+#if TESTCASE_FLAG_ENABLE
 
-	if((prov_para.cert_ack_hold == 0)&& p_adv->transAck.GPCF == TRANS_ACK&&p_adv->trans_num >= prov_para.trans_num_last){
+	else if((prov_para.provison_rcv_state!=STATE_PRO_FAILED_ACK)&& 
+			(p_adv->transBear.bearAck.header.GPCF == TRANS_START) && 
+			(p_adv->transStart.data[0]> PRO_REC_LIST)){
+		prov_para.err_op_code = 1;	
+		mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_INVALID_PDU);
+		LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"retry err code is  %d",p_adv->transStart.data[0]);
+	}
+#endif
+	if((prov_para.cert_ack_hold == 0)&& p_adv->transAck.GPCF == TRANS_ACK&&p_adv->trans_num >=prov_para.trans_num_last){
 		LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 
 						0,"rcv transation ack(transation:0x%02x)",p_adv->trans_num);
 		if(prov_para.provison_rcv_state >= STATE_PRO_START_ACK){
 			send_rcv_retry_clr();//stop send cmd when receive ack
 		}
-		send_rcv_retry_clr();//stop send cmd when receive ack
-		prov_para.trans_num_last = p_adv->trans_num + 2; // receive trans ack once
+		prov_para.trans_num_last = p_adv->trans_num+1 ; // receive trans ack once
 		if(prov_para.provison_rcv_state == STATE_PRO_COMPLETE){			
 			adv_provision_state_dispatch(p_adv);
 			mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_SUC);
-		}
-		else if(prov_para.provison_rcv_state == STATE_PRO_FAILED_ACK){
-			mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL,0);
 		}
 		return;
 	}
@@ -2296,6 +2365,7 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 						prov_para.provison_rcv_state = LINK_ESTABLISHED;
 					}
 					prov_para.link_id_filter =1;
+					prov_para.prov_err = 0;
 					mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_START);
 			    }
 			}
@@ -2394,6 +2464,10 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 			if(p_adv->transBear.bearAck.header.GPCF == TRANS_START &&
 				p_adv->transStart.data[0]== PRO_START){
 					if(dispatch_start_cmd_reliable(p_rcv_str)){
+						if(prov_para.prov_err){
+							mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_UNEXPT_PDU);
+							return ;
+						}
 						prov_para.cert_ack_hold =0;
 						#if PROV_AUTH_LEAK_RECREATE_KEY_EN
 						init_ecc_key_pair(1);
@@ -2413,11 +2487,27 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 						prov_para.provison_rcv_state = STATE_PRO_START_ACK;
 						
 					}else{
+						LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 
+								0,"invalid start cmd",0);
+						#if TESTCASE_FLAG_ENABLE
+						if(prov_para.prov_err == 0){
+							prov_para.prov_err = 1;
+							mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_INVALID_FORMAT);
+						}else{
+							mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_UNEXPT_PDU);
+							}
+						#else
 						mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_INVALID_FORMAT);
+						#endif
+						
 						return ;
 					}
 				}else if (p_adv->transBear.bearAck.header.GPCF == TRANS_START &&
-				(p_adv->transStart.data[0]== PRO_REC_REQ||p_adv->transStart.data[0]== PRO_REC_GET)){
+				(p_adv->transStart.data[0]== PRO_REC_REQ&&p_adv->transStart.data[0]== PRO_REC_GET)){
+					LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"invalid op in start state",0);
+					mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_UNEXPT_PDU);
+				}else if (p_adv->transBear.bearAck.header.GPCF == TRANS_START &&(p_adv->transStart.data[0]== PRO_INVITE)){
+					LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"invalid invite",0);	
 					mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_UNEXPT_PDU);
 				}
 			break;			
@@ -2426,16 +2516,12 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 				p_adv->transStart.data[0]== PRO_PUB_KEY){
 				if(!mesh_check_pubkey_valid(p_rcv_str->pubkey.pubKeyX)){
 				    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"adv the pubkey value is invalid",0);
-					set_rsp_ack_transnum(p_adv);
-					send_rcv_retry_clr();
-					mesh_send_provison_data(TRANS_ACK,0,0,0);
-					set_pro_fail(p_send_str,PROVISION_FAIL_UNEXPT_PDU);
-					send_multi_type_data(PRO_FAIL,para_pro);
-					send_rcv_retry_set(PRO_FAIL,0,1);
-					prov_para.trans_num_last = prov_para.trans_num;
-					prov_para.provison_rcv_state = STATE_PRO_FAILED_ACK;
-					mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_FAIL_CODE);
+					mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_UNEXPT_PDU);
 					return;
+				}
+				if(prov_para.prov_err ){
+					mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_UNEXPT_PDU);
+					return ;
 				}
 				SET_TC_FIFO(TSCRIPT_MESH_RX,(u8 *)(&rcv_pb),rcv_pb.transStart.total_len+11);
 				LOG_MSG_LIB(TL_LOG_NODE_SDK,(u8 *)&(p_rcv_str->pubkey), 
@@ -2491,13 +2577,16 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 					}									
 				}
 			}
-			else if(p_adv->transAck.GPCF == TRANS_ACK || p_adv->transStart.data[0]== PRO_START){
-			}else{
+			else if(p_adv->transAck.GPCF == TRANS_START && p_adv->transStart.data[0]== PRO_INVITE){
+				LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"cmd err proc 1",0);
+				mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_UNEXPT_PDU);
 			}
 			break;
 		case STATE_DEV_PUB_KEY_ACK:
 			if(p_adv->transBear.bearAck.header.GPCF == TRANS_START &&
 				p_adv->transStart.data[0]== PRO_CONFIRM){
+					pro_trans_comfirm *p_comfirm = &(p_rcv_str->comfirm);
+					u8 dev_private_key[32];
 					LOG_MSG_LIB(TL_LOG_NODE_SDK,(u8 *)&(p_rcv_str->comfirm), 
 								get_prov_comfirm_len(),"rcv comfirm cmd ",0);
 					SET_TC_FIFO(TSCRIPT_MESH_RX,(u8 *)(p_adv),p_adv->length+1);
@@ -2508,25 +2597,15 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 					    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"the prov_oob is invalid",0);
 						return ;
 					}
-					#if PROV_AUTH_LEAK_REFLECT_EN
-					if(prov_comfirm_check_same_or_not((u8 *)&(p_rcv_str->comfirm),dev_comfirm)){
+					if(prov_comfirm_check_same_or_not(p_comfirm->comfirm,dev_comfirm)){
 						LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"prov_comfirm_check fail",0);
+						mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_COMFIRM_FAIL);
 						return ;
 					}
-					#endif
-					pro_trans_comfirm *p_comfirm = &(p_rcv_str->comfirm);
-					u8 dev_private_key[32];
 					memcpy(pro_comfirm,p_comfirm->comfirm,get_prov_comfirm_value_len());
 					get_private_key(dev_private_key);
 					tn_p256_dhkey_fast(ecdh_secret, dev_private_key, confirm_input+0x11, confirm_input+0x11+0x20);
-					#if(MESH_USER_DEFINE_MODE == MESH_CLOUD_ENABLE)
-					u8 node_auth[16];
-					caculate_sha256_node_auth_value(node_auth);
-					mesh_sec_prov_confirmation_sec (dev_comfirm, confirm_input, 145, ecdh_secret, dev_random, node_auth);
-					#else
-					mesh_sec_prov_confirmation_sec (dev_comfirm, confirm_input, 145, ecdh_secret, dev_random, dev_auth);
-					#endif
-					
+					mesh_sec_prov_confirmation_send_confirm_state();
 					set_pro_comfirm(p_send_str,dev_comfirm,get_prov_comfirm_value_len());
 					mesh_send_provison_data(TRANS_ACK,0,0,0);
 					SET_TC_FIFO(TSCRIPT_MESH_TX,(u8 *)(&(pro_adv_pkt.len)),pro_adv_pkt.len+1);
@@ -2538,11 +2617,20 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 					prov_para.provison_rcv_state = STATE_DEV_CONFIRM;
 					prov_para.trans_num_last = prov_para.trans_num;
 					
-			}	
+			}else if (p_adv->transBear.bearAck.header.GPCF == TRANS_START &&
+						(p_adv->transStart.data[0]== PRO_INVITE ||p_adv->transStart.data[0]== PRO_PUB_KEY)){
+					LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 
+								0,"invalid invite",0);	
+					mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_UNEXPT_PDU);
+				}	
 			break;
 		case STATE_DEV_CONFIRM:
 			if(p_adv->transBear.bearAck.header.GPCF == TRANS_START &&
 				p_adv->transStart.data[0]== PRO_RANDOM){
+				if(prov_para.prov_err ){
+					mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_UNEXPT_PDU);
+					return ;
+				}
 				SET_TC_FIFO(TSCRIPT_MESH_RX,(u8 *)(p_adv),p_adv->length+1);
 				LOG_MSG_LIB(TL_LOG_NODE_SDK,(u8 *)&(p_rcv_str->random), 
 								get_prov_random_len(),"rcv random cmd ",0);
@@ -2552,23 +2640,10 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 				
 				// use the provision random to caculate the provision comfirm 
 				u8 pro_comfirm_tmp[32];
-				#if ALI_NEW_PROTO_EN
-				u8 ali_tmp_auth[32];
-				caculate_sha256_to_create_pro_oob(ali_tmp_auth,pro_random);
-				mesh_sec_prov_confirmation_sec (pro_comfirm_tmp, confirm_input, 145, ecdh_secret, pro_random, ali_tmp_auth);
-				#else
-				mesh_sec_prov_confirmation_sec (pro_comfirm_tmp, confirm_input, 145, ecdh_secret, pro_random, dev_auth);
-				#endif
+				mesh_sec_prov_confirmation_check_confirm_state(pro_comfirm_tmp);
 				if(prov_comfirm_check_right_or_not(pro_comfirm,pro_comfirm_tmp)){
 				    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"provision confirm fail",0);
-					set_rsp_ack_transnum(p_adv);
-					send_rcv_retry_clr();
-					mesh_send_provison_data(TRANS_ACK,0,0,0);
-					set_pro_fail(p_send_str,PROVISION_FAIL_COMFIRM_FAIL);
-					send_multi_type_data(PRO_FAIL,para_pro);
-					send_rcv_retry_set(PRO_FAIL,0,1);
-					prov_para.trans_num_last = prov_para.trans_num;
-					prov_para.provison_rcv_state = STATE_PRO_FAILED_ACK;
+					mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_COMFIRM_FAIL);
 					LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0 ,"comfirm fail",0);
 					return;
 				}
@@ -2583,7 +2658,11 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 								get_prov_random_len(),"send random cmd ",0);
 				prov_para.provison_rcv_state = STATE_DEV_RANDOM;
 				prov_para.trans_num_last = prov_para.trans_num;
-			}
+			}else if (p_adv->transBear.bearAck.header.GPCF == TRANS_START &&
+						(p_adv->transStart.data[0]== PRO_INVITE ||p_adv->transStart.data[0]== PRO_PUB_KEY)){
+					LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"invalid invite",0);	
+					mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_UNEXPT_PDU);
+				}	
 			break;
 		case STATE_DEV_RANDOM:
 			if(p_adv->transBear.bearAck.header.GPCF == TRANS_START &&
@@ -2595,6 +2674,10 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 				u8 prov_salt[16];
 				u8 dev_session_key[16];
 				u8 dev_session_nonce[16];
+				if(prov_para.prov_err ){
+					mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_UNEXPT_PDU);
+					return ;
+				}
 				mesh_sec_prov_salt_fun(prov_salt,confirm_input,pro_random,dev_random,is_prov_oob_hmac_sha256());
 				mesh_sec_prov_session_key_fun (dev_session_key, dev_session_nonce, confirm_input, 145, ecdh_secret, pro_random, dev_random,is_prov_oob_hmac_sha256());
 				//calculate the dev_key part 
@@ -2608,15 +2691,20 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 				int err = mesh_prov_sec_msg_dec (dev_session_key, dev_session_nonce+3, p_prov_net, 33, 8);
 				SET_TC_FIFO(TSCRIPT_MESH_RX,(u8 *)(&rcv_pb),rcv_pb.transStart.total_len+11);
 				// need to be checked 
-				
+				if(err){
+					LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 
+								0,"decrypt fail",0);	
+					mesh_prov_node_fail_proc(p_adv,p_send_str,PROVISION_FAIL_DECRYT_FAIL);
+					return ;
+				}
 				LOG_MSG_LIB(TL_LOG_NODE_SDK,p_prov_net, 
 								25,"the provision net info is  ",0);
 				memcpy(&provision_mag.pro_net_info,p_prov_net,sizeof(provison_net_info_str));
 				mesh_send_provison_data(TRANS_ACK,0,0,0);
-				u8 type = err ? PRO_FAIL : PRO_COMPLETE;
-				send_multi_type_data(type,para_pro);
+				
+				send_multi_type_data(PRO_COMPLETE,para_pro);
 				SET_TC_FIFO(TSCRIPT_MESH_TX,(u8 *)(&(pro_adv_pkt.len)),pro_adv_pkt.len+1);
-				send_rcv_retry_set(type,0,1);
+				send_rcv_retry_set(PRO_COMPLETE,0,1);
 				prov_para.trans_num_last = prov_para.trans_num;
 				prov_para.provison_rcv_state = STATE_PRO_COMPLETE;
 				if(0 == err){
@@ -2626,7 +2714,7 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 				mesh_key_node_identity_set_prov_set();
 				#endif
 				cache_init(ADR_ALL_NODES);
-			}
+			 }	
 			break;
 		default:             
 			break;
@@ -2637,7 +2725,7 @@ void mesh_node_rc_data_dispatch(pro_PB_ADV *p_adv){
 
 u8 adv_provision_state_dispatch(pro_PB_ADV * p_adv)
 {
-	mesh_provision_par_handle((u8 *)&provision_mag.pro_net_info);
+	mesh_provision_par_handle(&provision_mag.pro_net_info);
 	prov_para.provison_rcv_state = STATE_PRO_SUC;
 	SET_TC_FIFO(TSCRIPT_MESH_RX,(u8 *)(p_adv),p_adv->length+1);
 	send_rcv_retry_clr();
@@ -2652,7 +2740,7 @@ u8 wait_and_check_complete_state()
 	}
 	if(tick_check_complete && clock_time_exceed(tick_check_complete,4000*1000)){
 		tick_check_complete =0;
-		mesh_provision_par_handle((u8 *)&provision_mag.pro_net_info);
+		mesh_provision_par_handle(&provision_mag.pro_net_info);
 		prov_para.provison_rcv_state = STATE_PRO_SUC;
 		send_rcv_retry_clr();
 		LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 
@@ -2669,20 +2757,18 @@ u8 get_provision_state()
 		return 1;	// comfirm later
 	}
 	#endif
-	
+	if(prov_para.provison_send_state || prov_para.provison_rcv_state){
+    	if( prov_para.provison_send_state == STATE_PRO_SUC  || 
+    		prov_para.provison_rcv_state == STATE_PRO_SUC){
+    		return STATE_DEV_PROVED;
+    	}else{
+    		return STATE_DEV_PROVING;
+    	}
+	 }
 	if(provision_mag.gatt_mode == GATT_PROXY_MODE){
 		return STATE_DEV_PROVED;
 	}else{
-	    if(prov_para.provison_send_state || prov_para.provison_rcv_state){
-    		if( prov_para.provison_send_state == STATE_PRO_SUC  || 
-    		    prov_para.provison_rcv_state == STATE_PRO_SUC){
-    			return STATE_DEV_PROVED;
-    		}else{
-    			return STATE_DEV_PROVING;
-    		}
-	    }else{
-            return STATE_DEV_UNPROV;
-	    }
+		return STATE_DEV_UNPROV;
 	}
 }
 
@@ -2690,6 +2776,8 @@ u8 is_provision_success()   // rename is_proved_state(), proved means "prov + ed
 {
     #if WIN32
     return win32_proved_state();
+	#elif __PROJECT_MESH_PRO__ 
+	return (provision_mag.gatt_mode == GATT_PROXY_MODE);
     #else
     return (get_provision_state() == STATE_DEV_PROVED);
     #endif
@@ -2748,6 +2836,14 @@ void mesh_pro_rc_beacon_dispatch(pro_PB_ADV *p_adv,u8 *p_mac){
 	// upload the adv part and the device uuid part 
 	gateway_upload_mac_address(p_mac,(u8 *)p_adv);
 	// dispatch the filter part ,if the filter is the same ,the gateway can send the link open cmd 
+#if SMART_PROVISION_ENABLE
+	if(is_smart_provision_running()){
+		if(!is_existed_in_smart_scan_list(p_beacon->device_uuid, 1) || (SMART_CONFIG_PROVING != mesh_smart_provision_st_get() || is_provision_working())){
+			return ;
+		}
+	}
+	else
+#endif
 	if(memcmp(gateway_connect_filter,p_mac,sizeof(gateway_connect_filter))){
 		return ;
 	}
@@ -2830,8 +2926,10 @@ u8  mesh_loop_provision_end_process()
 		if(!mesh_pr_sts_work_or_not())
 		#endif
 		{
+			#if GATEWAY_ENABLE
 			u16 adr_store ;
 			adr_store = provision_mag.unicast_adr_last;
+			#endif
 			provision_mag.unicast_adr_last += prov_para.ele_cnt;
 			prov_para.link_id_filter =0;
 			provision_mag_cfg_s_store();
@@ -3074,6 +3172,21 @@ u8 get_rec_idx_by_id(u16 id)
 }
 #endif
 
+#if (__PROJECT_MESH_PRO__ || GATEWAY_ENABLE)
+void mesh_proc_prov_fail(pro_PB_ADV *p_adv ,u8 err_code)
+{
+	mesh_pro_data_structer *p_send_str = (mesh_pro_data_structer *)(para_pro);
+	set_rsp_ack_transnum(p_adv);
+	send_rcv_retry_clr();
+	mesh_send_provison_data(TRANS_ACK,0,0,0);
+	set_pro_fail(p_send_str,err_code);
+	send_multi_type_data(PRO_FAIL,para_pro);
+	send_rcv_retry_set(PRO_FAIL,0,1);
+	prov_para.trans_num_last = prov_para.trans_num;
+	prov_para.provison_send_state = STATE_PRO_FAILED_ACK;
+	mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_FAIL_CODE);
+}
+#endif
 void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 	//provision function 
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
@@ -3090,7 +3203,11 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 		mesh_adv_prov_link_close();
 		LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"prov rcv link close",0);	
 	}
-
+	else if((prov_para.cert_ack_hold == 0) &&(p_adv->transBear.bearAck.header.GPCF == TRANS_START) && (p_adv->transStart.data[0]> PRO_REC_LIST)){
+	#if TESTCASE_FLAG_ENABLE
+		mesh_proc_prov_fail(p_adv,PROVISION_FAIL_UNEXPT_PDU);
+	#endif
+	}
 	else if((prov_para.cert_ack_hold == 0) &&(p_adv->transBear.bearAck.header.GPCF == TRANS_START) && (p_adv->transStart.data[0]== PRO_CAPABLI)){
 		u8 rsp_ack_transnum = prov_para.rsp_ack_transnum;
 		set_rsp_ack_transnum(p_adv);
@@ -3348,17 +3465,9 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 					    gateway_upload_prov_cmd((u8 *)p_send_str,PRO_CONFIRM);
 					    #endif
 					}				
-				}else if(p_adv->transStart.data[0]!= PRO_PUB_KEY && p_adv->transAck.GPCF != TRANS_ACK){
-                    #if 0
-					set_rsp_ack_transnum(p_adv);
-					send_rcv_retry_clr();
-					mesh_send_provison_data(TRANS_ACK,0,0,0);
-					set_pro_fail(p_send_str,PROVISION_FAIL_UNEXPT_PDU);
-					send_multi_type_data(PRO_FAIL,para_pro);
-					send_rcv_retry_set(PRO_FAIL,0,1);
-					prov_para.trans_num_last = provision_mag.trans_num;
-					provision_mag.provison_rcv_state = STATE_PRO_FAILED_ACK;
-					mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_FAIL_CODE);
+				}else if((p_adv->transStart.data[0]>PRO_PUB_KEY)&&(p_adv->transStart.data[0]<=PRO_REC_LIST) && p_adv->transAck.GPCF == TRANS_ACK){
+                    #if TESTCASE_FLAG_ENABLE					
+					mesh_proc_prov_fail(p_adv,PROVISION_FAIL_UNEXPT_PDU);
 					#endif
 				}
 			break;
@@ -3374,20 +3483,19 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 			if(p_adv->transBear.bearAck.header.GPCF == TRANS_START &&
 				p_adv->transStart.data[0]== PRO_CONFIRM){
 					// get device comfirm part 
-					#if PROV_AUTH_LEAK_REFLECT_EN
-					if(prov_comfirm_check_same_or_not((u8*)&(p_rcv_str->comfirm),pro_comfirm)){
+					LOG_MSG_INFO(TL_LOG_PROVISION, 0, 0,"rcv prov confirm:",0);
+					pro_trans_comfirm *p_comfirm = &(p_rcv_str->comfirm);
+					if(prov_comfirm_check_same_or_not(p_comfirm->comfirm,pro_comfirm)){
 						// send the link close cmd 
-						mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL,0);
+						LOG_MSG_INFO(TL_LOG_PROVISION, 0, 0,"comfirm is the same",0);
+						mesh_proc_prov_fail(p_adv,PROVISION_FAIL_COMFIRM_FAIL);
+						return ;
 					}
-					#endif
-					
 					#if GATEWAY_ENABLE
 					gateway_upload_prov_rsp_cmd((u8 *)p_rcv_str,PRO_CONFIRM);
 					#endif
-					pro_trans_comfirm *p_comfirm = &(p_rcv_str->comfirm);
 					// store the dev comfrim part 
 					memcpy(dev_comfirm,p_comfirm->comfirm,get_prov_comfirm_value_len());
-					LOG_MSG_INFO(TL_LOG_PROVISION, 0, 0,"rcv prov confirm:",0);
 					mesh_adv_prov_comfirm_rsp(p_adv);
 					mesh_adv_prov_random_cmd(p_send_str,pro_random);
 					#if GATEWAY_ENABLE
@@ -3418,14 +3526,12 @@ void mesh_pro_rc_adv_dispatch(pro_PB_ADV *p_adv){
 					LOG_MSG_INFO(TL_LOG_PROVISION, 0, 0,"rcv dev random:",0);
 					u8 dev_comfirm_tmp[32];
 					mesh_sec_prov_confirmation_sec (dev_comfirm_tmp, confirm_input, 
-												145, ecdh_secret, dev_random, pro_auth);
+												145, ecdh_secret, dev_random, pro_auth);						
 					if(prov_comfirm_check_right_or_not(dev_comfirm,dev_comfirm_tmp))
 					{
-					    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"prov comfirm fail",0);
-						static u32 A_debug_dev_comfirm_err =0;
-						A_debug_dev_comfirm_err++;
-						// send the link close cmd 
-						mesh_terminate_provision_link_reset(LINK_CLOSE_FAIL,0);
+					    LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"comfirm with ramdom fail",0);
+						mesh_proc_prov_fail(p_adv,PROVISION_FAIL_COMFIRM_FAIL);
+						return ;
 					}
 					u8 pro_session_nonce[16]; // byte 3~15 is session nonce
 					u8 pro_session_key[16];
@@ -3546,6 +3652,8 @@ int mesh_provision_seg_check(u8 seg_idx, pro_PB_ADV * p_adv, u8 * rcv_pb_buf)
 	}
 	
 	if(mesh_prov_seg.seg_cnt == (mesh_prov_seg.seg_n+1)){
+		mesh_prov_seg.seg_map = 0;
+		mesh_prov_seg.seg_cnt = 0;
 		if(mesh_prov_seg.fcs_tmp == crc8_rohc(rcv_pb.transStart.data,rcv_pb.transStart.total_len)){
 			ret = 0;
 		}
@@ -3715,7 +3823,7 @@ VC_node_info_t * get_VC_node_info(u16 obj_adr, int is_must_primary)
 	}
 	
 #if WIN32
-    LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"obj_adr 0x%04x, not found VC node info", obj_adr);
+    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"obj_adr 0x%04x, not found in VC node info", obj_adr);
 #endif
 
     return 0;
@@ -3954,8 +4062,8 @@ u8 VC_node_cps_save(mesh_page0_t * p_page0,u16 unicast, u32 len_cps)
 			if(p_info->element_cnt == 0){
 				p_info->element_cnt = cps_ele_cnt;
 			}else if (cps_ele_cnt != p_info->element_cnt){
+                LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"element count error!cps cnt:%d, capability cnt:%d",cps_ele_cnt, p_info->element_cnt);
     			p_info->element_cnt =0;
-                LOG_MSG_ERR(TL_LOG_PROVISION,0, 0 ,"element count error!",0);
     		}
 		}
         #endif

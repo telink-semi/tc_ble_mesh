@@ -36,10 +36,10 @@
 #include <stdarg.h>
 
 #include "types.h"
-#include "../../proj_lib/ble/hci/hci.h"
+#include "proj_lib/ble/hci/hci.h"
 #include "../mcu/putchar.h"
-#include "../../vendor/common/myprintf.h"
-#include "../../vendor/common/user_config.h"
+#include "vendor/common/myprintf.h"
+#include "vendor/common/user_config.h"
 
 
 #define MAX_PRINT_STRING_CNT 60
@@ -50,8 +50,13 @@ _PRINT_FUN_RAMCODE_ static void printchar(char **str, int c) {
 			**str = c;
 			++(*str);
 		}
-	} else
-		(void) putchar(c);
+	} else {
+		#if (LLSYNC_ENABLE && LLSYNC_LOG_EN && HCI_LOG_FW_EN) // for printing log of llsync SDK
+		uart_simu_send_bytes((u8 *)&c, 1);
+		#else
+		//(void) putchar(c);	// NULL // modify by qifa to decrease code.
+		#endif
+	}
 }
 
 #define PAD_RIGHT 1

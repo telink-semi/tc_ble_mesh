@@ -1,0 +1,11 @@
+**************************************************************************
+                                                                        
+                       Telink Sig Mesg SDK Patch List                              
+                                                                            
+                                                                        
+**************************************************************************
+
+1. 0001_20220927_Improve_Extend_ADV_Scan_And_Save_Ram
+	-Improve Extend ADV Scan And Save 1.3K Ram.
+    git:2022/9/27 19:21:19
+	SHA-1: 90461a615d12380fb18a301a4fdbc7dae460565d    	

@@ -27,6 +27,6 @@
 
 + (UIViewController *)initVC:(NSString *)name;
 
-+ (UIViewController *)initVC:(NSString *)name storybroad:(NSString *)storybroadName;
++ (UIViewController *)initVC:(NSString *)name storyboard:(NSString *)storyboardName;
 
 @end

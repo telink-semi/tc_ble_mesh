@@ -24,6 +24,6 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 void user_init_deepRetn(void);
 

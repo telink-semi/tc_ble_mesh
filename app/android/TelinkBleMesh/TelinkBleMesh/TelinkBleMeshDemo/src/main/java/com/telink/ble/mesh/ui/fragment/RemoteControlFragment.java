@@ -48,8 +48,8 @@ import com.telink.ble.mesh.util.MeshLogger;
 
 public class RemoteControlFragment extends BaseFragment {
 
-    NodeInfo deviceInfo;
-    RecyclerView rv_rmt_ele;
+    private NodeInfo deviceInfo;
+    private RecyclerView rv_rmt_ele;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

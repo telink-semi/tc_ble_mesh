@@ -183,6 +183,11 @@ public enum MeshSigModel implements Serializable {
     public static MeshSigModel[] getDefaultSubList() {
         return new MeshSigModel[]{SIG_MD_G_ONOFF_S, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHT_CTL_S,
                 SIG_MD_LIGHT_CTL_TEMP_S, SIG_MD_LIGHT_HSL_S};
+    }
+
+    public static MeshSigModel[] getLevelAssociatedList() {
+        return new MeshSigModel[]{SIG_MD_LIGHTNESS_S, SIG_MD_LIGHT_CTL_TEMP_S, SIG_MD_LIGHT_HSL_HUE_S,
+                SIG_MD_LIGHT_HSL_SAT_S};
 
     }
 

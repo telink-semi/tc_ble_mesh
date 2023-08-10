@@ -153,6 +153,18 @@ public class NodeInfo implements Serializable {
     // network retransmit
     public byte networkRetransmit = 0x15;
 
+
+    /**
+     * direct forwarding enabled
+     */
+    public boolean directForwardingEnabled = false;
+
+    public boolean directRelay = false;
+
+    public boolean directProxyEnabled = false;
+
+    public boolean directFriend = false;
+
     private OfflineCheckTask offlineCheckTask = (OfflineCheckTask) () -> {
         onlineState = OnlineState.OFFLINE;
         MeshLogger.log("offline check task running");
@@ -231,6 +243,7 @@ public class NodeInfo implements Serializable {
             return 0;
         }
 
+        // find the value that not used
         outer:
         for (byte i = 0; i <= 0x0f; i++) {
             for (Scheduler scheduler : schedulers) {
@@ -295,6 +308,25 @@ public class NodeInfo implements Serializable {
                 }
             }
 
+            eleAdr++;
+        }
+        return -1;
+    }
+
+
+    /**
+     * @param associatedModelId target model id {@link MeshSigModel#getLevelAssociatedList()}
+     * @return element address: -1 err
+     */
+    public int getLevelAssociatedEleAdr(int associatedModelId) {
+        if (compositionData == null) return -1;
+        int eleAdr = this.meshAddress;
+        for (CompositionData.Element element : compositionData.elements) {
+            if (element.sigModels != null) {
+                if (element.sigModels.contains(associatedModelId) && element.sigModels.contains(MeshSigModel.SIG_MD_G_LEVEL_S.modelId)) {
+                    return eleAdr;
+                }
+            }
             eleAdr++;
         }
         return -1;

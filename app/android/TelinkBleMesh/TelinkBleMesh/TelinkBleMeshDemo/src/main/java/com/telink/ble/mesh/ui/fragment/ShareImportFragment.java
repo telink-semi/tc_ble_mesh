@@ -31,6 +31,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
@@ -39,6 +40,7 @@ import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.JsonPreviewActivity;
+import com.telink.ble.mesh.ui.cdtp.CdtpImportActivity;
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
 import com.telink.ble.mesh.ui.qrcode.QRCodeScanActivity;
 import com.telink.ble.mesh.util.FileSystem;
@@ -52,10 +54,12 @@ import java.io.File;
 
 public class ShareImportFragment extends BaseFragment implements View.OnClickListener {
     private TextView tv_file_select;
-    private RadioButton rb_file;
+    private RadioButton rb_file, rb_cdtp, rb_qrcode;
     private TextView tv_log;
     private Button btn_open;
+    private RadioGroup rg_import_type;
     private static final int REQUEST_CODE_GET_FILE = 1;
+    private static final int REQUEST_IMPORT = 2;
     private String mPath;
 
     @Override
@@ -72,8 +76,10 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
         btn_open.setOnClickListener(this);
         tv_log = view.findViewById(R.id.tv_log);
         view.findViewById(R.id.btn_import).setOnClickListener(this);
-
+        rg_import_type = view.findViewById(R.id.rg_import_type);
         rb_file = view.findViewById(R.id.rb_file);
+        rb_cdtp = view.findViewById(R.id.rb_cdtp);
+        rb_qrcode = view.findViewById(R.id.rb_qrcode);
         rb_file.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -97,57 +103,76 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
                 break;
 
             case R.id.btn_import:
-                if (!rb_file.isChecked()) {
-                    startActivity(new Intent(getActivity(), QRCodeScanActivity.class));
-//                    getActivity().finish();
-                    return;
+                switch (rg_import_type.getCheckedRadioButtonId()) {
+                    case R.id.rb_file:
+                        importFromFile();
+                        break;
+
+                    case R.id.rb_cdtp:
+                        startActivityForResult(new Intent(getActivity(), CdtpImportActivity.class), REQUEST_IMPORT);
+                        break;
+
+                    case R.id.rb_qrcode:
+                        startActivityForResult(new Intent(getActivity(), QRCodeScanActivity.class), REQUEST_IMPORT);
+                        break;
                 }
 
-
-                if (mPath == null) {
-                    toastMsg("Pls select target file");
-                    return;
-                }
-                File file = new File(mPath);
-                if (!file.exists()) {
-                    toastMsg("file not exist");
-                    return;
-                }
-                String jsonData = FileSystem.readString(file);
-                MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
-                MeshInfo newMesh = null;
-                try {
-                    newMesh = MeshStorageService.getInstance().importExternal(jsonData, localMesh);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                if (newMesh == null) {
-                    toastMsg("import failed");
-                    return;
-                }
-                newMesh.saveOrUpdate(getActivity());
-                MeshService.getInstance().idle(true);
-                TelinkMeshApplication.getInstance().setupMesh(newMesh);
-                MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());
-                tv_log.append("Mesh storage import success, back to home page to reconnect\n");
-                toastMsg("import success");
                 break;
         }
+    }
+
+
+    private void importFromFile() {
+
+        if (mPath == null) {
+            toastMsg("Pls select target file");
+            return;
+        }
+
+        File file = new File(mPath);
+        if (!file.exists()) {
+            toastMsg("file not exist");
+            return;
+        }
+        String jsonData = FileSystem.readString(file);
+        MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
+        MeshInfo newMesh = null;
+        try {
+            newMesh = MeshStorageService.getInstance().importExternal(jsonData, localMesh);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (newMesh == null) {
+            toastMsg("import failed");
+            return;
+        }
+        newMesh.saveOrUpdate(getActivity());
+        MeshService.getInstance().idle(true);
+        TelinkMeshApplication.getInstance().setupMesh(newMesh);
+        MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());
+        tv_log.append("Mesh storage import success, back to home page to reconnect\n");
+        toastMsg("import success");
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode != Activity.RESULT_OK || requestCode != REQUEST_CODE_GET_FILE)
+        if (resultCode != Activity.RESULT_OK)
             return;
+        if (requestCode == REQUEST_CODE_GET_FILE) {
 
-        mPath = data.getStringExtra(FileSelectActivity.KEY_RESULT);
-        btn_open.setVisibility(View.VISIBLE);
-        tv_file_select.setText(mPath);
 
-        tv_log.append("File selected: " + mPath + "\n");
-        MeshLogger.log("select: " + mPath);
+            mPath = data.getStringExtra(FileSelectActivity.KEY_RESULT);
+            btn_open.setVisibility(View.VISIBLE);
+            tv_file_select.setText(mPath);
+
+            tv_log.append("File selected: " + mPath + "\n");
+            MeshLogger.log("select: " + mPath);
+        } else if (requestCode == REQUEST_IMPORT) {
+            getActivity().finish();
+        }
+
     }
 
 }

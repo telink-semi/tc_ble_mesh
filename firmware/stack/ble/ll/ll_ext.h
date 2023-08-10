@@ -25,7 +25,7 @@
 #ifndef LL_EXT_H_
 #define LL_EXT_H_
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 
 #include <stack/ble/ble_common.h>
 #include "proj_lib/ble/blt_config.h"

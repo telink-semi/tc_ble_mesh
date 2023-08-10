@@ -25,7 +25,7 @@
 #pragma once
 #if !WIN32
 #include "proj/mcu/config.h"
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #endif
 #if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258))
 #include "stack/ble/ble_common.h"

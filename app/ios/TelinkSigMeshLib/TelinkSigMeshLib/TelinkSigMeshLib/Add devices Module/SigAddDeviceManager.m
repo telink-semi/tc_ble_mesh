@@ -45,7 +45,9 @@ typedef enum : NSUInteger {
 @property (nonatomic,assign) UInt16 netkeyIndex;
 @property (nonatomic,strong) SigAppkeyModel *appkeyModel;
 @property (nonatomic,assign) KeyBindType keyBindType;
-@property (nonatomic,copy) addDevice_prvisionSuccessCallBack provisionSuccessBlock;
+@property (nonatomic,copy) addDevice_startConnectCallBack startConnectBlock;
+@property (nonatomic,copy) addDevice_startProvisionCallBack startProvisionBlock;
+@property (nonatomic,copy) addDevice_provisionSuccessCallBack provisionSuccessBlock;
 @property (nonatomic,copy) addDevice_keyBindSuccessCallBack keyBindSuccessBlock;
 @property (nonatomic,copy) ErrorBlock provisionFailBlock;
 @property (nonatomic,copy) ErrorBlock keyBindFailBlock;
@@ -83,7 +85,7 @@ typedef enum : NSUInteger {
 }
 
 /// function1 :add bluetooth devices (auto add)
-- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
+- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
     self.unicastAddress = address;
     TeLogInfo(@"更新自动添加节点的地址，API传入为0x%X",self.unicastAddress);
     self.networkKey = networkKey;
@@ -107,8 +109,15 @@ typedef enum : NSUInteger {
     [self startScan];
 }
 
+/// function1.1 :add bluetooth devices (auto add), add new callback of startProvision.
+- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel unicastAddress:(UInt16)unicastAddress uuid:(nullable NSData *)uuid keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData isAutoAddNextDevice:(BOOL)isAuto startConnect:(addDevice_startConnectCallBack)startConnect startProvision:(addDevice_startProvisionCallBack)startProvision provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail finish:(AddDeviceFinishCallBack)finish {
+    self.startConnectBlock = startConnect;
+    self.startProvisionBlock = startProvision;
+    [self startAddDeviceWithNextAddress:address networkKey:networkKey netkeyIndex:netkeyIndex appkeyModel:appkeyModel unicastAddress:unicastAddress uuid:uuid keyBindType:type productID:productID cpsData:cpsData isAutoAddNextDevice:isAuto provisionSuccess:provisionSuccess provisionFail:provisionFail keyBindSuccess:keyBindSuccess keyBindFail:keyBindFail finish:finish];
+}
+
 /// function2 :add bluetooth device (single add)
-- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
+- (void)startAddDeviceWithNextAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
     self.unicastAddress = address;
     TeLogInfo(@"更新自动添加节点的地址，API传入为0x%X",self.unicastAddress);
     self.networkKey = networkKey;
@@ -134,7 +143,7 @@ typedef enum : NSUInteger {
     [self startAddPeripheral:peripheral];
 }
 
-- (void)startCertificateBasedWithAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
+- (void)startCertificateBasedWithAddress:(UInt16)address networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex appkeyModel:(SigAppkeyModel *)appkeyModel peripheral:(CBPeripheral *)peripheral provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData keyBindType:(KeyBindType)type productID:(UInt16)productID cpsData:(nullable NSData *)cpsData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
     self.isCertificateBasedProvision = YES;
     self.unicastAddress = address;
     TeLogInfo(@"更新自动添加节点的地址，API传入为0x%X",self.unicastAddress);
@@ -174,7 +183,7 @@ typedef enum : NSUInteger {
 /// @param provisionFail callback when provision fail.
 /// @param keyBindSuccess callback when keybind success.
 /// @param keyBindFail callback when keybind fail.
-- (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
+- (void)startAddDeviceWithSigAddConfigModel:(SigAddConfigModel *)configModel provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess provisionFail:(ErrorBlock)provisionFail keyBindSuccess:(addDevice_keyBindSuccessCallBack)keyBindSuccess keyBindFail:(ErrorBlock)keyBindFail {
     SigAppkeyModel *appkeyModel = [SigMeshLib.share.dataSource getAppkeyModelWithAppkeyIndex:configModel.appkeyIndex];
     if (!appkeyModel || ![appkeyModel.getDataKey isEqualToData:configModel.appKey]) {
         TeLogVerbose(@"appKey is error.");
@@ -289,6 +298,9 @@ typedef enum : NSUInteger {
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(keybind) object:nil];
     });
     self.curPeripheral = peripheral;
+    if (self.startConnectBlock) {
+        self.startConnectBlock(peripheral.identifier.UUIDString, self.unicastAddress);
+    }
     __weak typeof(self) weakSelf = self;
     [[SigBearer share] connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
         if (weakSelf.addStatus != SigAddStatusKeyFree) {
@@ -296,6 +308,9 @@ typedef enum : NSUInteger {
                 if (weakSelf.addStatus == SigAddStatusConnectFirst || weakSelf.addStatus == SigAddStatusProvisioning) {
                     //it need delay 500ms before sent provision invite.
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        if (self.startProvisionBlock) {
+                            self.startProvisionBlock(peripheral.identifier.UUIDString, self.unicastAddress);
+                        }
                         weakSelf.addStatus = SigAddStatusProvisioning;
                         if (weakSelf.isCertificateBasedProvision == NO) {
                             if (weakSelf.staticOOBData) {
@@ -411,7 +426,7 @@ typedef enum : NSUInteger {
         [self performSelector:@selector(keyBindByProxy) withObject:nil afterDelay:kScanNodeIdentityBeforeKeyBindTimeout];
     });
     __weak typeof(self) weakSelf = self;
-    [SigBluetooth.share setBluetoothDisconnectCallback:nil];
+//    [SigBluetooth.share setBluetoothDisconnectCallback:nil];
     [SigBearer.share closeWithResult:^(BOOL successful) {
         if (weakSelf.addStatus == SigAddStatusConnectSecond || weakSelf.addStatus == SigAddStatusKeyBinding) {
             __block int maxRssi = 0;
@@ -486,6 +501,13 @@ typedef enum : NSUInteger {
     if (self.finishBlock) {
         self.finishBlock();
     }
+    self.startConnectBlock = nil;
+    self.startProvisionBlock = nil;
+    self.provisionSuccessBlock = nil;
+    self.provisionFailBlock = nil;
+    self.keyBindSuccessBlock = nil;
+    self.keyBindFailBlock = nil;
+    self.finishBlock = nil;
 }
 
 - (void)refreshNextUnicastAddress {

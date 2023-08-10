@@ -22,23 +22,23 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "tl_common.h"
 
-#include "../../proj_lib/rf_drv.h"
-#include "../../proj_lib/pm.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/hci/hci.h"
-#include "../../proj_lib/ble/ble_smp.h"
-#include "../../proj/drivers/keyboard.h"
+#include "proj_lib/rf_drv.h"
+#include "proj_lib/pm.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/hci/hci.h"
+#include "proj_lib/ble/ble_smp.h"
+#include "proj/drivers/keyboard.h"
 #include "tl_audio.h"
 #include "rf_frame.h"
-#include "../../proj_lib/ble/trace.h"
-#include "../../proj/mcu/pwm.h"
-#include "../../proj_lib/ble/service/ble_ll_ota.h"
-#include "../../proj/drivers/audio.h"
-#include "../../proj/drivers/adc.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj/drivers/uart.h"
+#include "proj_lib/ble/trace.h"
+#include "proj/mcu/pwm.h"
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#include "proj/drivers/audio.h"
+#include "proj/drivers/adc.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj/drivers/uart.h"
 
 
 #if (UI_BUTTON_ENABLE)

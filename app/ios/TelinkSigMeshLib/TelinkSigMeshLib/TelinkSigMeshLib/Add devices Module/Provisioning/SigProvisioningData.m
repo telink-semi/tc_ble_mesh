@@ -38,7 +38,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 
 @property (nonatomic, strong) SigDataSource *network;
 
-@property (nonatomic, strong) NSData *authValue;
+@property (nonatomic, strong, nullable) NSData *authValue;
 @property (nonatomic, strong) NSData *deviceConfirmation;
 @property (nonatomic, strong) NSData *deviceRandom;
 
@@ -90,7 +90,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 }
 
 /// Call this method when the Auth Value has been obtained.
-- (void)provisionerDidObtainAuthValue:(NSData *)data {
+- (void)provisionerDidObtainAuthValue:(nullable NSData *)data {
     self.authValue = data;
 }
 
@@ -116,7 +116,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     } else if (self.algorithm == Algorithm_fipsP256EllipticCurve_HMAC_SHA256) {
         confirmation = [self calculate_HMAC_SHA256_ConfirmationWithRandom:self.deviceRandom authValue:self.authValue];
     }
-    if (![self.deviceConfirmation isEqualToData:confirmation]) {
+    if (confirmation != nil && ![self.deviceConfirmation isEqualToData:confirmation]) {
         TeLogDebug(@"calculate Confirmation fail.");
         return NO;
     }
@@ -124,7 +124,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 }
 
 /// Returns the Provisioner Confirmation value. The Auth Value must be set prior to calling this method.
-- (NSData *)provisionerConfirmation {
+- (NSData * _Nullable)provisionerConfirmation {
     NSData *confirmation = nil;
     if (self.algorithm == Algorithm_fipsP256EllipticCurve) {
         confirmation = [self calculateConfirmationWithRandom:self.provisionerRandom authValue:self.authValue];
@@ -232,7 +232,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 /// @returns The Session Key, Session Nonce and the Device Key.
 - (NSDictionary *)calculateKeys {
     // Calculate the Confirmation Salt = s1(confirmationInputs).
-    NSData *confirmationSalt = nil;
+    NSData *confirmationSalt = [NSData data];
     if (self.algorithm == Algorithm_fipsP256EllipticCurve) {
         confirmationSalt = [[OpenSSLHelper share] calculateSalt:self.getConfirmationInputs];
     } else if (self.algorithm == Algorithm_fipsP256EllipticCurve_HMAC_SHA256) {

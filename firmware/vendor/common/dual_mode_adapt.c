@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -786,7 +786,7 @@ u8 dual_mode_proc()
 	}else{
 		if(clock_time_exceed(dual_mode_tick, DUAL_MODE_SWITCH_INV_US)){
 			dual_mode_tick = clock_time();
-			u8 r = irq_disable();
+			u32 r = irq_disable();
 			static u8 val_settle;
 			if(rf_mode == RF_MODE_BLE){
 				rf_mode = RF_MODE_ZIGBEE;
@@ -892,7 +892,7 @@ u8 dual_mode_proc()
 	}
 	else if(clock_time_exceed(dual_mode_tick, DUAL_MODE_SWITCH_INV_US)){
 		dual_mode_tick = clock_time();
-		u8 r = irq_disable();
+		u32 r = irq_disable();
 		if(rf_mode == RF_MODE_PVT_MESH){
 			rf_mode = RF_MODE_BLE;
 			bls_register_phy_scan_mode(0);

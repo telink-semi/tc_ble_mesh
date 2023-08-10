@@ -59,6 +59,9 @@
         case AddDeviceModelStateScanned:
             _stateLabel.text = @"SCANED";
             break;
+        case AddDeviceModelStateConnecting:
+            _stateLabel.text = @"CONNECTING";
+            break;
         case AddDeviceModelStateProvisioning:
             _stateLabel.text = @"PROVISIONING";
             break;

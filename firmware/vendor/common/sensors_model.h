@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 /****************************************************
 Sensor Property ID: "Mesh Device Properties v1.0.pdf" or later

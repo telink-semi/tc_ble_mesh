@@ -27,7 +27,7 @@
 @implementation SigConfigMessage
 
 - (Class)responseType {
-    return nil;
+    return [SigBaseMeshMessage class];
 }
 
 - (UInt32)responseOpCode {
@@ -212,7 +212,7 @@
     return [self encodeIndexes:@[@(_applicationKeyIndex),@(_networkKeyIndex)]];
 }
 
-+ (SigConfigNetAndAppKeyMessage *)decodeNetAndAppKeyIndexFromData:(NSData *)data atOffset:(int)offset {
++ (nullable SigConfigNetAndAppKeyMessage *)decodeNetAndAppKeyIndexFromData:(NSData *)data atOffset:(int)offset {
     NSArray *array = [self decodeIndexesFromData:data atOffset:offset];
     if (array && array.count >= 2) {
         UInt16 tem1 = (UInt16)[array[0] integerValue];
@@ -337,7 +337,6 @@
         memcpy(&tem, dataByte, 1);
         self.page = tem;
         if (parameters.length < 11) {
-//            if (parameters.length < 11 || tem != 0) {
             return nil;
         }
     }
@@ -3828,6 +3827,19 @@
         _elementAddress = elementAddress;
         _modelIdentifier = modelIdentifier;
         _companyIdentifier = companyIdentifier;
+        _isVendorModelID = companyIdentifier != 0;
+    }
+    return self;
+}
+
+- (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier isVendorModelID:(BOOL)isVendorModelID {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppBind;
+        self.applicationKeyIndex = applicationKeyIndex;
+        _elementAddress = elementAddress;
+        _modelIdentifier = modelIdentifier;
+        _companyIdentifier = companyIdentifier;
+        _isVendorModelID = isVendorModelID;
     }
     return self;
 }
@@ -3839,6 +3851,7 @@
         _elementAddress = elementAddress;
         _modelIdentifier = model.getIntModelIdentifier;
         _companyIdentifier = model.getIntCompanyIdentifier;
+        _isVendorModelID = model.isVendorModelID;
     }
     return self;
 }
@@ -3877,7 +3890,7 @@
     tem = self.applicationKeyIndex;
     data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
-    if (_companyIdentifier) {
+    if (_isVendorModelID) {
         tem = _companyIdentifier;
         data = [NSData dataWithBytes:&tem length:2];
         [mData appendData:data];
@@ -3916,21 +3929,6 @@
     return self;
 }
 
-- (instancetype)initWithConfirmBindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress status:(SigConfigMessageStatus)status {
-    if (self = [super init]) {
-        self.opCode = SigOpCode_configModelAppStatus;
-        self.applicationKeyIndex = applicationKey.index;
-        _elementAddress = elementAddress;
-        _modelIdentifier = model.getIntModelIdentifier;
-        _companyIdentifier = model.getIntCompanyIdentifier;
-    }
-    return self;
-}
-
-- (instancetype)initWithConfirmUnbindingApplicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress status:(SigConfigMessageStatus)status {
-    return [self initWithConfirmBindingApplicationKey:applicationKey toModel:model elementAddress:elementAddress status:status];
-}
-
 - (instancetype)initWithParameters:(NSData *)parameters {
     if (self = [super init]) {
         self.opCode = SigOpCode_configModelAppStatus;
@@ -3947,15 +3945,29 @@
         _elementAddress = tem1;
         self.applicationKeyIndex = tem2;
         if (parameters.length == 9) {
+            _isVendorModelID = YES;
             memcpy(&tem3, dataByte+5, 2);
             memcpy(&tem4, dataByte+7, 2);
             _companyIdentifier = tem3;
             _modelIdentifier = tem4;
         }else{
+            _isVendorModelID = NO;
             memcpy(&tem3, dataByte+5, 2);
             _companyIdentifier = 0;
             _modelIdentifier = tem3;
         }
+    }
+    return self;
+}
+
+- (instancetype)initWithStatus:(SigConfigMessageStatus)status applicationKey:(SigAppkeyModel *)applicationKey toModel:(SigModelIDModel *)model elementAddress:(UInt16)elementAddress {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppBind;
+        self.applicationKeyIndex = applicationKey.index;
+        _elementAddress = elementAddress;
+        _modelIdentifier = model.getIntModelIdentifier;
+        _companyIdentifier = model.getIntCompanyIdentifier;
+        _isVendorModelID = model.isVendorModelID;
     }
     return self;
 }
@@ -3971,7 +3983,7 @@
     tem = self.applicationKeyIndex;
     data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
-    if (_companyIdentifier) {
+    if (_isVendorModelID) {
         tem = _companyIdentifier;
         data = [NSData dataWithBytes:&tem length:2];
         [mData appendData:data];
@@ -4005,6 +4017,19 @@
         _elementAddress = elementAddress;
         _modelIdentifier = modelIdentifier;
         _companyIdentifier = companyIdentifier;
+        _isVendorModelID = companyIdentifier != 0;
+    }
+    return self;
+}
+
+- (instancetype)initWithApplicationKeyIndex:(UInt16)applicationKeyIndex elementAddress:(UInt16)elementAddress modelIdentifier:(UInt16)modelIdentifier companyIdentifier:(UInt16)companyIdentifier isVendorModelID:(BOOL)isVendorModelID {
+    if (self = [super init]) {
+        self.opCode = SigOpCode_configModelAppUnbind;
+        self.applicationKeyIndex = applicationKeyIndex;
+        _elementAddress = elementAddress;
+        _modelIdentifier = modelIdentifier;
+        _companyIdentifier = companyIdentifier;
+        _isVendorModelID = isVendorModelID;
     }
     return self;
 }
@@ -4016,6 +4041,7 @@
         _elementAddress = elementAddress;
         _modelIdentifier = model.getIntModelIdentifier;
         _companyIdentifier = model.getIntCompanyIdentifier;
+        _isVendorModelID = model.isVendorModelID;
     }
     return self;
 }
@@ -4033,11 +4059,13 @@
         _elementAddress = tem1;
         self.applicationKeyIndex = tem2;
         if (parameters.length == 8) {
+            _isVendorModelID = YES;
             memcpy(&tem3, dataByte+4, 2);
             memcpy(&tem4, dataByte+6, 2);
             _companyIdentifier = tem3;
             _modelIdentifier = tem4;
         }else{
+            _isVendorModelID = NO;
             memcpy(&tem3, dataByte+4, 2);
             _companyIdentifier = 0;
             _modelIdentifier = tem3;
@@ -4054,7 +4082,7 @@
     tem = self.applicationKeyIndex;
     data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
-    if (_companyIdentifier) {
+    if (_isVendorModelID) {
         tem = _companyIdentifier;
         data = [NSData dataWithBytes:&tem length:2];
         [mData appendData:data];

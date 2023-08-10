@@ -25,7 +25,7 @@
 #pragma once
 
 #if WIN32
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #endif
 
 
@@ -833,7 +833,7 @@ ret: 0  means OK
 ****************************************************************************/
 int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_len);
 
-/**************************mesh_directed_proxy_control_set**************************
+/**************************mesh_send_proxy_solicitation_pdu**************************
 function :set the solicitation pdu message, it will be send in function set_adv_solicitation() called by gatt_adv_prepare_handler()
 para:
 	adr_dst: destination address  
@@ -842,7 +842,7 @@ ret: 0  means OK
 ****************************************************************************/
 int mesh_send_proxy_solicitation_pdu(u16 adr_dst);
 
-/**************************mesh_directed_proxy_control_set**************************
+/**************************cfg_cmd_send_path_solicitation**************************
 function :solicit the discovery of paths from other directed forwarding nodes
 para:
 	addr_list:list of destination addresses

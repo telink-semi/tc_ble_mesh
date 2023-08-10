@@ -27,6 +27,8 @@ import android.os.Parcelable;
 
 import com.telink.ble.mesh.core.message.StatusMessage;
 import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.MeshLogger;
 
 /**
  * The Config Composition Data Status is an unacknowledged message used to report a single page of the Composition Data
@@ -68,6 +70,7 @@ public class CompositionDataStatusMessage extends StatusMessage implements Parce
         page = params[0];
         byte[] cpsData = new byte[params.length - 1];
         System.arraycopy(params, 1, cpsData, 0, cpsData.length);
+        MeshLogger.d("cps data - " + Arrays.bytesToHexString(cpsData));
         compositionData = CompositionData.from(cpsData);
     }
 

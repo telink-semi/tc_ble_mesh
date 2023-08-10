@@ -36,7 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSArray <NSData *>*)segmentWithData:(NSData *)data messageType:(SigPduType)messageType mtu:(NSInteger)mtu;
 
-- (SigPudModel *)reassembleData:(NSData *)data;
+- (nullable SigPudModel *)reassembleData:(NSData *)data;
 
 @end
 

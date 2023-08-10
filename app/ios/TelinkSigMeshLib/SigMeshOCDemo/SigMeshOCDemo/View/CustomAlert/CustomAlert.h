@@ -52,7 +52,7 @@ typedef enum : NSUInteger {
 @property(nonatomic,strong) NSString *leftBtnTitle;
 @property(nonatomic,strong) NSString *rightBtnTitle;
 
-- (UITextField *)getTextFieldOfRow:(NSInteger)row;
+- (UITextField * _Nullable)getTextFieldOfRow:(NSInteger)row;
 - (BOOL)getSelectLeftOfRow:(NSInteger)row;
 
 @end
