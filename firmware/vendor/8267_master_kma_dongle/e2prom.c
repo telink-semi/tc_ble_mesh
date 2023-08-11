@@ -22,9 +22,9 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "tl_common.h"
 #include "e2prom.h"
-#include "../../proj/drivers/i2c.h"
+#include "proj/drivers/i2c.h"
 
 #define						EEPROM_I2C_ID				0xa0
 #define						EEPROM_SIZE					256

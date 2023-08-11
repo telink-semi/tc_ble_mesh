@@ -25,7 +25,7 @@
 #ifndef _RF_FRAME_H_
 #define _RF_FRAME_H_
 #include "mouse_type.h"
-#include "../../proj/drivers/keyboard.h"
+#include "proj/drivers/keyboard.h"
 
 #define		RF_PROTO_BYTE		0x51
 #define		PIPE0_CODE			0x55556666

@@ -162,10 +162,6 @@ int proxy_gatt_Write(void *p)
 		p_bear->len=proxy_para_len+1;
 		p_bear->type=MESH_ADV_TYPE_MESSAGE;
 		mesh_nw_pdu_from_gatt_handle((u8 *)p_bear);
-		#if DF_TEST_MODE_EN
-		extern void cfg_led_event (u32 e);
-		cfg_led_event(LED_EVENT_FLASH_2HZ_2S);
-		#endif
 	}
 #if MESH_RX_TEST
 	else if((p_gatt->msgType == MSG_RX_TEST_PDU)&&(p_gatt->data[0] == 0xA3) && (p_gatt->data[1] == 0xFF)){
@@ -178,12 +174,8 @@ int proxy_gatt_Write(void *p)
 		u32 send_tick = clock_time();
 		memcpy(par+4, &send_tick, 4);
 		par[8] = p_gatt->data[6];// cur count
-		u8 pkt_nums_send = p_gatt->data[7];
-		par[3] = p_gatt->data[8];// pkt_nums_ack	
-		u32 par_len = 9;
-		if(p_gatt->data[7] > 1){// unseg:11  seg:8
-			par_len = 12*pkt_nums_send-6;
-		}
+		par[3] = p_gatt->data[8];//access_len_ack	
+		u32 par_len = p_gatt->data[7];
 		extern u16 mesh_rsp_rec_addr;
 		mesh_rsp_rec_addr = p_gatt->data[9] + (p_gatt->data[10]<<8);
 		SendOpParaDebug(adr_dst, rsp_max, ack ? G_ONOFF_SET : G_ONOFF_SET_NOACK, 
@@ -584,7 +576,7 @@ u8 mesh_get_identity_type(mesh_net_key_t *p_netkey)
 {
 #if MD_SERVER_EN
 	u8 gatt_proxy_sts = model_sig_cfg_s.gatt_proxy;
-	u8 priv_proxy_sts = model_private_beacon.srv[0].proxy_sts;
+	u8 priv_proxy_sts = g_mesh_model_misc_save.privacy_bc.proxy_sts;
 	u8 node_identi =NODE_IDENTITY_PROHIBIT;
 	if(gatt_proxy_sts == GATT_PROXY_SUPPORT_DISABLE && priv_proxy_sts == PRIVATE_PROXY_ENABLE){
 		node_identi = PRIVATE_NETWORK_ID_TYPE;
@@ -619,7 +611,7 @@ u8 set_proxy_adv_pkt(u8 *p ,u8 *pRandom,mesh_net_key_t *p_netkey,u8 *p_len)
 	node_identity_type = mesh_get_identity_type(p_netkey);
 	#if MD_ON_DEMAND_PROXY_EN
 	if(mesh_on_demand_proxy_time){			
-		if(clock_time_exceed(mesh_on_demand_proxy_time, model_sig_cfg_s.on_demand_proxy*1000*1000)){
+		if(clock_time_exceed(mesh_on_demand_proxy_time, g_mesh_model_misc_save.on_demand_proxy*1000*1000)){
 			mesh_on_demand_proxy_time = 0;
 		}
 		else{

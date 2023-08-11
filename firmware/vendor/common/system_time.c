@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #ifndef WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -82,7 +82,7 @@ u32 tick_32k_to_16m = 0;
 u8 rtc_adjust_flag = 0;
 _attribute_ram_code_  void read_tick_32k_16m(u8 *tick_32k, u32 * tick_16m)
 {
-	u8 r=irq_disable();
+	u32 r=irq_disable();
 	u8 pre = analog_read(0x40);
 	while( pre == analog_read(0x40) );
 	(*tick_16m) = clock_time();			
@@ -192,10 +192,14 @@ void system_time_run(){
 			system_time_s += interval_cnt;
 			iv_idx_st.keep_time_s += (interval_cnt-1);
 			mesh_iv_update_st_poll_s();
-			switch_triger_iv_search_mode();
+			switch_triger_iv_search_mode(0);
 			LOG_RTC_DEBUG(0, 0, "%02d:%02d:%02d", system_time_s/60/60, (system_time_s/60)%60, system_time_s%60);					
 			#else
             u32 inc_100ms = (system_time_ms % 100 + interval_cnt) / 100;
+
+            	#if LLSYNC_ENABLE
+			llsync_mesh_timer_period_proc(system_time_ms, interval_cnt); // must before "system_time_ms +="
+            	#endif
 			system_time_ms += interval_cnt;
 						
 			if(!(RTC_USE_32K_RC_ENABLE || FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN || GATT_LPN_EN ||DU_LPN_EN)){ // (!is_lpn_support_and_en){ // it will cost several tens ms from wake up

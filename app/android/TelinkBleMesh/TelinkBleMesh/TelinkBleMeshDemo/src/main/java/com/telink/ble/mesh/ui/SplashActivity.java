@@ -79,19 +79,46 @@ public class SplashActivity extends BaseActivity {
             settingDialog.dismiss();
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                    &&
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-                    &&
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                onPermissionChecked();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED
+                        &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
+                        &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                        &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE) == PackageManager.PERMISSION_GRANTED
+                        &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    onPermissionChecked();
+                } else {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{
+                                    Manifest.permission.BLUETOOTH_SCAN,
+                                    Manifest.permission.BLUETOOTH_CONNECT,
+                                    Manifest.permission.BLUETOOTH_ADVERTISE,
+
+                                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            PERMISSIONS_REQUEST_ALL);
+                }
             } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.READ_EXTERNAL_STORAGE,
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        PERMISSIONS_REQUEST_ALL);
+
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                        &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                        &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                    onPermissionChecked();
+                } else {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            PERMISSIONS_REQUEST_ALL);
+                }
             }
         } else {
             onPermissionChecked();
@@ -126,12 +153,9 @@ public class SplashActivity extends BaseActivity {
                 }
             });
 
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                    finish();
-                }
+            builder.setNegativeButton("Cancel", (dialog, which) -> {
+                dialog.dismiss();
+                finish();
             });
             settingDialog = builder.create();
         }

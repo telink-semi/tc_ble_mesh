@@ -24,5 +24,12 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
+
+/**
+ * @brief		user initialization when MCU wake_up from deepSleep_retention mode
+ * @param[in]	none
+ * @return      none
+ */
+void user_init_deepRetn();
 

@@ -222,7 +222,7 @@
     [SDKLibCommand startMeshSDK];
     SigDataSource *defaultMesh = [[SigDataSource alloc] initDefaultMesh];
     defaultMesh.ivIndex = @"12345678";
-    [defaultMesh setLocationSno:0x3129ab];
+    [defaultMesh setSequenceNumberUInt32:0x3129ab];
     SigNetkeyModel *netkeyModel = defaultMesh.netKeys.firstObject;
     netkeyModel.key = @"7dd7364cd842ad18c17c2b820c84c3d6".uppercaseString;
     netkeyModel.index = 0x456;
@@ -324,7 +324,7 @@
     [SDKLibCommand startMeshSDK];
     SigDataSource *defaultMesh = [[SigDataSource alloc] initDefaultMesh];
     defaultMesh.ivIndex = @"12345677";
-    [defaultMesh setLocationSno:0x7080d];
+    [defaultMesh setSequenceNumberUInt32:0x7080d];
     defaultMesh.security = SigMeshMessageSecurityHigh;
     SigNetkeyModel *netkeyModel = defaultMesh.netKeys.firstObject;
     netkeyModel.key = @"7dd7364cd842ad18c17c2b820c84c3d6".uppercaseString;
@@ -442,7 +442,7 @@
     [SDKLibCommand startMeshSDK];
     SigDataSource *defaultMesh = [[SigDataSource alloc] initDefaultMesh];
     defaultMesh.ivIndex = @"12345678";
-    [defaultMesh setLocationSno:0x000006];
+    [defaultMesh setSequenceNumberUInt32:0x000006];
     SigNetkeyModel *netkeyModel = defaultMesh.netKeys.firstObject;
     netkeyModel.key = @"7dd7364cd842ad18c17c2b820c84c3d6".uppercaseString;
     netkeyModel.index = 0x123;

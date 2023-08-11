@@ -54,12 +54,17 @@ public class GattOtaController {
     private static final int TAG_OTA_START = 7; // start
     private static final int TAG_OTA_END = 8; // end
 
+    /**
+     * send after send ota start or extend start
+     */
+    private static final int TAG_OTA_START_READ = 13;
     private GattConnection mConnection;
 
     private GattOtaCallback mCallback;
 
     private final OtaPacketParser mOtaParser = new OtaPacketParser();
 
+    // only for local calculate
     private int readCnt = 0;
 
 
@@ -152,6 +157,18 @@ public class GattOtaController {
         otaWriteData(new byte[]{OTA_START & 0xFF, (byte) (OTA_START >> 8 & 0xFF)}, TAG_OTA_START);
     }
 
+    // send ota read command between start-command and first packet
+    private void sendOtaStartReadCmd() {
+        GattRequest cmd = GattRequest.newInstance();
+        cmd.serviceUUID = UUIDInfo.SERVICE_UUID_OTA;
+        cmd.characteristicUUID = UUIDInfo.CHARACTERISTIC_UUID_OTA;
+        cmd.type = GattRequest.RequestType.READ;
+        cmd.tag = TAG_OTA_START_READ;
+        cmd.callback = this.mOtaRequestCallback;
+        this.sendRequest(cmd);
+    }
+
+
     private void sendOtaEndCommand() {
         int index = mOtaParser.getIndex();
         byte[] data = new byte[6];
@@ -208,7 +225,8 @@ public class GattOtaController {
         if (command.tag.equals(TAG_OTA_PREPARE)) {
             sendOtaStartCommand();
         } else if (command.tag.equals(TAG_OTA_START)) {
-            sendNextOtaPacketCommand();
+//            sendNextOtaPacketCommand();
+            sendOtaStartReadCmd();
         } else if (command.tag.equals(TAG_OTA_END)) {
             setOtaProgressChanged();
             clear();
@@ -222,9 +240,9 @@ public class GattOtaController {
             setOtaProgressChanged();
         } else if (command.tag.equals(TAG_OTA_READ)) {
             sendNextOtaPacketCommand();
+        } else if (command.tag.equals(TAG_OTA_START_READ)) {
+            sendNextOtaPacketCommand();
         }
-
-
     }
 
     private void onOtaCmdError(GattRequest request) {

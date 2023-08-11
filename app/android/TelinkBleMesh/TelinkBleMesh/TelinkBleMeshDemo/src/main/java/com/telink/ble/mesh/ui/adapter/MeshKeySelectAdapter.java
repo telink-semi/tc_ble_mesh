@@ -54,7 +54,7 @@ public class MeshKeySelectAdapter<T extends MeshKey> extends BaseRecyclerViewAda
         this.keyList = keyList;
         selectList = new ArrayList<>();
         for (int i = 0; i < keyList.size(); i++) {
-            selectList.add(false);
+            selectList.add(i == 0); // select first key
         }
     }
 

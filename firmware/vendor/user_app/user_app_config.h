@@ -35,6 +35,10 @@ extern "C" {
 
 // #define RAM_SIZE_MAX            		(48*1024)	// 8253/8273
 
+//#define ENCODE_BIN_USER_NAME	{"xxx_mesh_AES"}
+//#define NORMAL_BIN_USER_NAME	{"xxx_mesh_normal"}
+///#define ENCODE_BIN_USER_KEY		{0x51,0x03,0x1f,0x03,0x57,0x81,0x7b,0x5c,0x48,0x83,0x93,0xae,0xa8,0xc6,0x5d,0x9a,} // 
+
 
 // ------- function Macro ---------
 // #define CB_USER_FACTORY_RESET_ADDITIONAL()   cb_user_factory_reset_additional()

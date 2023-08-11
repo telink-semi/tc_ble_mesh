@@ -58,6 +58,9 @@ public class MeshService implements MeshController.EventCallback {
      */
     private MeshController mController;
 
+    /**
+     * singleton for mesh-service
+     */
     private static MeshService mThis = new MeshService();
 
     public static MeshService getInstance() {
@@ -123,7 +126,7 @@ public class MeshService implements MeshController.EventCallback {
 
     /**
      * @return direct connected node address,
-     * if 0 : invalid address
+     * or 0 : invalid address
      */
     public int getDirectConnectedNodeAddress() {
         return mController.getDirectNodeAddress();

@@ -122,6 +122,7 @@ typedef enum : UInt8 {
     AddDeviceModelStateBindSuccess,
     AddDeviceModelStateBindFail,
     AddDeviceModelStateScanned,
+    AddDeviceModelStateConnecting,
     AddDeviceModelStateProvisioning,
 } AddDeviceModelState;//添加的设备的状态
 
@@ -646,10 +647,37 @@ typedef enum      : UInt32 {
     SigOpCode_PrivateNodeIdentityStatus                      = 0xB71A,
 
     /// - seeAlso : message_opcode_sizes_R01.docx  (page.5)
+    
+    /// On-demand proxy
+    SigOpCode_OnDemandPrivateProxyGet                        = 0xB800,
+    SigOpCode_OnDemandPrivateProxySet                        = 0xB801,
+    SigOpCode_OnDemandPrivateProxyStatus                     = 0xB802,
+
+    /// SAR configuration
+    SigOpCode_SARTransmitterGet                              = 0xB803,
+    SigOpCode_SARTransmitterSet                              = 0xB804,
+    SigOpCode_SARTransmitterStatus                           = 0xB805,
+    SigOpCode_SARReceiverGet                                 = 0xB806,
+    SigOpCode_SARReceiverSet                                 = 0xB807,
+    SigOpCode_SARReceiverStatus                              = 0xB808,
+    
     /// Opcodes aggregator
     SigOpCode_OpcodesAggregatorSequence                      = 0xB809,
     SigOpCode_OpcodesAggregatorStatus                        = 0xB810,
 
+    /// Large Composition Data
+    SigOpCode_LargeCompositionDataGet                        = 0xB811,
+    SigOpCode_LargeCompositionDataStatus                     = 0xB812,
+    SigOpCode_ModelsMetadataGet                              = 0xB813,
+    SigOpCode_ModelsMetadataStatus                           = 0xB814,
+    
+    /// 4.3.7 Solicitation PDU RPL Configuration messages
+    /// 以下3个opcode未定，未找到文档。
+    SigOpCode_SolicitationPduRplItemsClear = 0xB815,
+    SigOpCode_SolicitationPduRplItemsClearUnacknowledged = 0xB816,
+    SigOpCode_SolicitationPduRplItemsStatus = 0xB817,
+    
+    
     /// - seeAlso : MshPRF_SBR_CR_r03.pdf  (page.16)
     /// Subnet Bridge
     /// 4.3.4.1 Alphabetical summary of opcodes
@@ -666,6 +694,15 @@ typedef enum      : UInt32 {
     SigOpCode_SubnetBridgeSet                                = 0xBF71,
     SigOpCode_SubnetBridgeStatus                             = 0xBF72,
 
+    /// Direct Forwarding
+    SigOpCode_DirectControlGet                               = 0xBF30,
+    SigOpCode_DirectControlSet                               = 0xBF31,
+    SigOpCode_DirectControlStatus                            = 0xBF32,
+    SigOpCode_ForwardingTableAdd                             = 0xBF39,
+    SigOpCode_ForwardingTableDelete                          = 0xBF3A,
+    SigOpCode_ForwardingTableStatus                          = 0xBF3B,
+
+    
     /// - seeAlso : fast provision流程简介.pdf  (page.1)
 
     /// fast provision
@@ -1247,6 +1284,10 @@ typedef enum : UInt8 {
     SigProxyFilerOpcode_removeAddressesFromFilter = 0x02,
     //Acknowledgment by a Proxy Server to a Proxy Client to report the status of the proxy filter list.
     SigProxyFilerOpcode_filterStatus              = 0x03,
+    //Acknowledgment by a Directed Proxy Server to report current Directed Proxy capabilities in a subnet.
+    SigProxyFilerOpcode_directedProxyCapabilitiesStatus              = 0x04,
+    //sent by a Directed Proxy Client to set whether or not the Directed Proxy Server uses directed forwarding for Directed Proxy Client messages for a specified range of unicast addresses.
+    SigProxyFilerOpcode_directedProxyControl              = 0x05,
 } SigProxyFilerOpcode;
 
 /// Table 6.7: FilterType Values
@@ -1747,5 +1788,22 @@ typedef enum : UInt8 {
     AppSendBeaconType_secureNetwork,//强制发送secureNetworkBeacon
     AppSendBeaconType_meshPrivateBeacon,//强制发送meshPrivateBeacon
 } AppSendBeaconType;
+
+/// v3.3.3.6新增Telink自定义PID结构体
+typedef enum : UInt8 {
+    CHIP_TYPE_8258 = 0,
+    CHIP_TYPE_8278 = 1,
+    CHIP_TYPE_8269 = 2,
+    CHIP_TYPE_9518 = 3,
+} CHIP_TYPE;
+typedef enum : UInt8 {
+    MajorProductType_light = 0,
+    MajorProductType_gateway = 1,
+    MajorProductType_LPN = 2,
+    MajorProductType_switch = 3,
+    MajorProductType_spiritLPN = 4,
+} MajorProductType;
+
+
 
 #endif /* SigEnumeration_h */

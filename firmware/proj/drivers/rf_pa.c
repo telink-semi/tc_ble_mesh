@@ -24,8 +24,8 @@
  *******************************************************************************************************/
 #include "../tl_common.h"
 #include "rf_pa.h"
-#include "../../proj_lib/rf_drv.h"
-#include "../../proj_lib/ble/blt_config.h"
+#include "proj_lib/rf_drv.h"
+#include "proj_lib/ble/blt_config.h"
 
 rf_pa_callback_t  blc_rf_pa_cb = NULL;
 

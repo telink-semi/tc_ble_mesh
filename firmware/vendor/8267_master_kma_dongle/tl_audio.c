@@ -23,7 +23,7 @@
  *
  *******************************************************************************************************/
 #include "tl_audio.h"
-#include "../../proj_lib/ble/trace.h"
+#include "proj_lib/ble/trace.h"
 
 #ifndef		TL_MIC_32K_FIR_16K
 #define		TL_MIC_32K_FIR_16K		0

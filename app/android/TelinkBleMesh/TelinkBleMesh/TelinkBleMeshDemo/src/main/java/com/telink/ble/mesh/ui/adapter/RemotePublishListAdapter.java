@@ -28,12 +28,18 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.telink.ble.mesh.SharedPreferenceHelper;
+import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.fragment.RemoteControlFragment;
+
+import java.util.List;
 
 /**
  * set remote publication
@@ -44,9 +50,27 @@ public class RemotePublishListAdapter extends BaseRecyclerViewAdapter<RemotePubl
 
     NodeInfo nodeInfo;
 
+    private String[] defaultGroups;
+
+    private String[] extendGroups;
+
+    private boolean isLevelServiceEnable;
+
     public RemotePublishListAdapter(RemoteControlFragment fragment, NodeInfo nodeInfo) {
         this.fragment = fragment;
         this.nodeInfo = nodeInfo;
+        List<GroupInfo> gs1 = TelinkMeshApplication.getInstance().getMeshInfo().groups;
+        defaultGroups = new String[gs1.size()];
+        for (int i = 0; i < gs1.size(); i++) {
+            defaultGroups[i] = String.format("%s(0x%04X)", gs1.get(i).name, gs1.get(i).address);
+        }
+        List<GroupInfo> gs2 = TelinkMeshApplication.getInstance().getMeshInfo().extendGroups;
+        extendGroups = new String[gs2.size()];
+        for (int i = 0; i < gs2.size(); i++) {
+            extendGroups[i] = String.format("%s(0x%04X)", gs2.get(i).name, gs2.get(i).address);
+        }
+
+        isLevelServiceEnable = SharedPreferenceHelper.isLevelServiceEnable(fragment.getActivity());
     }
 
     @Override
@@ -57,6 +81,7 @@ public class RemotePublishListAdapter extends BaseRecyclerViewAdapter<RemotePubl
         holder.et_pub_adr = itemView.findViewById(R.id.et_pub_adr);
         holder.et_mdl_id = itemView.findViewById(R.id.et_mdl_id);
         holder.et_ele_adr = itemView.findViewById(R.id.et_ele_adr);
+        holder.btn_address = itemView.findViewById(R.id.btn_address);
         return holder;
     }
 
@@ -84,6 +109,28 @@ public class RemotePublishListAdapter extends BaseRecyclerViewAdapter<RemotePubl
         holder.et_pub_adr.setText(String.format("%04X", 0xC000 + position));
         holder.btn_send.setTag(position);
         holder.btn_send.setOnClickListener(sendClick);
+        holder.btn_address.setOnClickListener(v -> showAddressSelectDialog(holder, position));
+    }
+
+    private void showAddressSelectDialog(ViewHolder holder, int position) {
+        String modelIdInput = holder.et_mdl_id.getText().toString();
+        String[] items;
+        boolean isLevelModel = modelIdInput.equals("1002");
+        if (isLevelModel && isLevelServiceEnable) {
+            items = extendGroups;
+        } else {
+            items = defaultGroups;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(fragment.getActivity());
+        builder.setItems(items, (dialog, which) -> {
+            if (isLevelModel) {
+                holder.et_pub_adr.setText(String.format("%04X", TelinkMeshApplication.getInstance().getMeshInfo().extendGroups.get(which).address));
+//                MeshLogger.d("showAddressSelectDialog 3# item select " + position + " -- " + which);
+            } else {
+                holder.et_pub_adr.setText(String.format("%04X", TelinkMeshApplication.getInstance().getMeshInfo().groups.get(which).address));
+            }
+        });
+        builder.show();
     }
 
 
@@ -98,7 +145,7 @@ public class RemotePublishListAdapter extends BaseRecyclerViewAdapter<RemotePubl
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
-        public Button btn_send;
+        public Button btn_send, btn_address;
         public EditText et_pub_adr, et_mdl_id, et_ele_adr;
 
         public ViewHolder(View itemView) {

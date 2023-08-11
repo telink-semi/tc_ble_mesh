@@ -29,8 +29,10 @@ import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -48,9 +50,11 @@ import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.AppSettings;
+import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.OnlineState;
+import com.telink.ble.mesh.ui.BaseActivity;
 import com.telink.ble.mesh.ui.CmdActivity;
 import com.telink.ble.mesh.ui.DeviceAutoProvisionActivity;
 import com.telink.ble.mesh.ui.DeviceProvisionActivity;
@@ -67,6 +71,7 @@ import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * devices fragment
@@ -113,6 +118,11 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
         });
 
         toolbar.setOnMenuItemClickListener(item -> {
+            if (TelinkMeshApplication.getInstance().getMeshInfo().ivIndex == MeshInfo.UNINITIALIZED_IVI) {
+                showIvWarningDialog();
+//                toastMsg("");
+                return false;
+            }
             if (item.getItemId() == R.id.item_add) {
 //                    startActivity(new Intent(getActivity(), DeviceProvisionActivity.class));
 
@@ -154,7 +164,21 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
             int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
             OnOffSetMessage onOffSetMessage = OnOffSetMessage.getSimple(address, appKeyIndex, onOff, !AppSettings.ONLINE_STATUS_ENABLE, !AppSettings.ONLINE_STATUS_ENABLE ? 1 : 0);
             MeshService.getInstance().sendMeshMessage(onOffSetMessage);
-//                MeshService.getInstance().setOnOff(mDevices.get(position).meshAddress, onOff, !AppSettings.ONLINE_STATUS_ENABLE, !AppSettings.ONLINE_STATUS_ENABLE ? 1 : 0, 0, (byte) 0, null);
+
+            /*int address = mDevices.get(position).meshAddress;
+            int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+            OnOffSetMessage onOffSetMessage = OnOffSetMessage.getSimple(address, appKeyIndex, onOff, false, 0);
+            MeshService.getInstance().sendMeshMessage(onOffSetMessage);
+
+            mCycleHandler.removeCallbacksAndMessages(null);
+            mCycleHandler.postDelayed(() -> {
+                int modelId = MeshSigModel.SIG_MD_LIGHT_HSL_S.modelId;
+                int modelEleAdr = mDevices.get(position).getTargetEleAdr(modelId);
+                if (modelEleAdr != -1) {
+                    MeshService.getInstance().sendMeshMessage(HslGetMessage.getSimple(modelEleAdr, appKeyIndex, 0));
+                }
+            }, 3000);*/
+
         });
 
         mAdapter.setOnItemLongClickListener(position -> {
@@ -170,7 +194,7 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
             Intent intent;
             if (deviceInfo.bound) {
                 // remote control device
-                if (deviceInfo.compositionData.pid == 0x0301) {
+                if (AppSettings.isRemote(deviceInfo.compositionData.pid)) {
                     intent = new Intent(getActivity(), RemoteControlSettingActivity.class);
                 } else {
                     intent = new Intent(getActivity(), DeviceSettingActivity.class);
@@ -207,6 +231,33 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
 
     private void toastMsg(String s) {
         ((MainActivity) getActivity()).toastMsg(s);
+    }
+
+    private void showIvWarningDialog() {
+        ((BaseActivity) Objects.requireNonNull(getActivity())).showConfirmDialog("connect to the current network to get IV index before add nodes", (dialog, which) -> showIvInputDialog());
+    }
+
+    private void showIvInputDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this.getActivity());
+        EditText et = new EditText(this.getActivity());
+        builder.setView(et);
+        builder.setTitle("input iv index for mesh network(HEX)");
+        builder.setNegativeButton("Confirm", (dialog, which) -> {
+            String ivInput = et.getText().toString();
+            if (ivInput.isEmpty()) {
+                toastMsg("iv index input error");
+                return;
+            }
+            try {
+                int idx = Integer.valueOf(ivInput, 16);
+                TelinkMeshApplication.getInstance().getMeshInfo().ivIndex = idx;
+                TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        builder.setPositiveButton("Cancel", null);
+        builder.show();
     }
 
     private void refreshUI() {
@@ -268,6 +319,7 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
 
             case R.id.tv_cmd:
                 startActivity(new Intent(getActivity(), CmdActivity.class));
+//                startActivity(new Intent(getActivity(), CmdTestActivity.class));
                 break;
 
             case R.id.tv_log:

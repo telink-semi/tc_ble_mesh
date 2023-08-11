@@ -25,11 +25,7 @@
 #ifndef _REMOTE_PROV_H
 #define _REMOTE_PROV_H
 
-#include "proj/tl_common.h"
-#include "vendor/mesh/app.h"
-#include "vendor/mesh_lpn/app.h"
-#include "vendor/mesh_provision/app.h"
-#include "vendor/mesh_switch/app.h"
+#include "tl_common.h"
 #include "mesh_lpn.h"
 #include "mesh_fn.h"
 #include "time_model.h"
@@ -241,7 +237,6 @@ typedef struct{
     model_rp_client_common_t client[1];
     #endif
 }model_remote_prov_t;
-extern _align_4_ model_remote_prov_t model_remote_prov;
 extern u8 node_devkey_candi[16];
 
 #define MAX_SCAN_ITEMS_UUID_CNT 4
@@ -464,7 +459,6 @@ void mesh_prov_server_send_cmd(u8 *par,u8 len);
 void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv);
 int mesh_cmd_sig_rp_pdu_outbound_send();
 void remote_prov_scan_report_cb(u8 *par,u8 len);
-extern _align_4_ model_remote_prov_t model_remote_prov;
 extern u32 mesh_md_rp_addr ;
 extern rp_mag_str rp_mag;
 void mesh_rp_start_settings(u16 adr,u8 *p_uuid,u8 dkri);
@@ -495,8 +489,8 @@ void mesh_prov_set_cli_dkri(u8 dkri);
 void mesh_prov_set_adr_dev_candi(u16 adr,u8 *p_dev);
 u8 mesh_prov_dkri_is_valid();
 void mesh_prov_dev_candi_store_proc(u16 cmd_src);
-u8  is_rp_working();
 #endif
+u8  is_rp_working();
 
 void gw_get_rp_mode(u8 en);
 extern u16 seg_filter_adr;
@@ -504,6 +498,9 @@ void gw_rp_send_invite();
 extern u8 rp_dev_mac[6];
 extern u8 rp_dev_uuid[16];
 void gw_rp_timeout_proc();
+
+void gw_rp_scan_start();
+
 
 #endif
 

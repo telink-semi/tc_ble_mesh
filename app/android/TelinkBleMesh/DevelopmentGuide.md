@@ -106,6 +106,7 @@ This is Telink private provisioning flow for faster and wider networking.
 + ivIndex : iv-index
 + sequenceNumber : sequence-number
 + localAddress : provisioner address, should be valid unicast address (0x0001 - 0x7FFF)
++ proxyFilterWhiteList : proxy node filter white list, should contains provisioner address(localAddress) and broadcast address(0xFFFF).
 + deviceKeyMap : provisioned device address and deviceKey map, updated when device provisioned or device removed
  
 <span id="detail_mesh_message"></span>

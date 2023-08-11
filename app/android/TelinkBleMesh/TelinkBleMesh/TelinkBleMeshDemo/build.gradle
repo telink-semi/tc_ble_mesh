@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 31
     defaultConfig {
         applicationId "com.telink.ble.mesh.demo.rels"
         minSdkVersion 21
         targetSdkVersion 26
-        versionCode 3
-        versionName "3.3.3.5"
+        versionCode 6
+        versionName "3.3.3.7"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

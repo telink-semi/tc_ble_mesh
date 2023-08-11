@@ -39,6 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,copy,nullable) bleDidUpdateValueForCharacteristicCallback bluetoothDidUpdateValueCallback;
 /// new delagate function block since v3.2.3: notify writeWithResponse by this block.
 @property (nonatomic,copy,nullable) bleDidWriteValueForCharacteristicCallback bluetoothDidWriteValueCallback;
+@property (nonatomic,copy,nullable) bleDisconnectCallback bluetoothDisconnectCallback;
 @property (nonatomic, weak) id <SigBluetoothDelegate>delegate;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -56,8 +57,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)isBLEInitFinish;
 
 - (void)setBluetoothCentralUpdateStateCallback:(_Nullable bleCentralUpdateStateCallback)bluetoothCentralUpdateStateCallback;
-
-- (void)setBluetoothDisconnectCallback:(_Nullable bleDisconnectCallback)bluetoothDisconnectCallback;
 
 - (void)scanUnprovisionedDevicesWithResult:(bleScanPeripheralCallback)result;
 
@@ -88,9 +87,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)readOTACharachteristicWithTimeout:(NSTimeInterval)timeout complete:(bleReadOTACharachteristicCallback)complete;
 - (void)cancelReadOTACharachteristic;
 
-- (CBPeripheral *)getPeripheralWithUUID:(NSString *)uuidString;
+- (nullable CBPeripheral *)getPeripheralWithUUID:(NSString *)uuidString;
 
-- (CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral;
+- (nullable CBCharacteristic *)getCharacteristicWithUUIDString:(NSString *)uuid OfPeripheral:(CBPeripheral *)peripheral;
 
 - (BOOL)isWorkNormal;
 

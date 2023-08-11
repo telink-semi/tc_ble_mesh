@@ -27,6 +27,7 @@
 #import "UIViewController+Message.h"
 #import "EditOOBVC.h"
 #import "ChooseOOBFileVC.h"
+#import "NSString+extension.h"
 
 #define CellIdentifiers_OOBItemCellID  @"OOBItemCell"
 
@@ -112,6 +113,8 @@
                 if (array && array.count == 2) {
                     NSString *uuidString = array.firstObject;
                     NSString *oobString = array.lastObject;
+                    uuidString = uuidString.removeHeadAndTailSpacePro;
+                    oobString = oobString.removeHeadAndTailSpacePro;
                     if (uuidString.length == 32 && oobString.length == 32) {
                         SigOOBModel *oobModel = [[SigOOBModel alloc] initWithSourceType:OOBSourceTypeImportFromFile UUIDString:uuidString OOBString:oobString];
                         [validArray addObject:oobModel];

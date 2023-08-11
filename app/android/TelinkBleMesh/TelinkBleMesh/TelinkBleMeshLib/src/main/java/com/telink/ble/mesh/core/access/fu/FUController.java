@@ -80,6 +80,11 @@ public class FUController implements FUActionHandler {
     private List<MeshUpdatingDevice> deviceList;
 
     /**
+     * {@link FDReceiversGetMessage}
+     */
+    private int firstIndexInList = 0;
+
+    /**
      * is update running
      * valued by true when update started
      * if distribute by Device, running stopped when distribute start success;
@@ -178,7 +183,7 @@ public class FUController implements FUActionHandler {
     }
 
     private void fetchProgressState() {
-        FDReceiversGetMessage getMessage = FDReceiversGetMessage.getSimple(distributorAddress, appKeyIndex, 0, 1);
+        FDReceiversGetMessage getMessage = FDReceiversGetMessage.getSimple(distributorAddress, appKeyIndex, firstIndexInList, 1);
         onMessagePrepared(getMessage);
     }
 
@@ -215,7 +220,13 @@ public class FUController implements FUActionHandler {
                     onFUStateUpdate(FUState.UPDATE_RECHECKING, "device may reboot complete");
                     distributorAssist.recheckFirmware(true);
                 } else if (phase == UpdatePhase.TRANSFER_ERROR.code) {
-                    onComplete(false, "phase error");
+                    onDeviceUpdate(deviceList.get(firstIndexInList), "device ReceiversList phase error");
+                    firstIndexInList++;
+                    if (firstIndexInList >= deviceList.size()) {
+                        onComplete(false, "all devices phase error");
+                    } else {
+                        startProgressCheckTask();
+                    }
                 } else {
                     MeshLogger.d("onProgressState : " + currentState);
 

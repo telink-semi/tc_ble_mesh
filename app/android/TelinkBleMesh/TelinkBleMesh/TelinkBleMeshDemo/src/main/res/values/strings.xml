@@ -1,6 +1,6 @@
 <resources>
 <!--    <string name="app_name">TelinkBleMesh</string>-->
-    <string name="app_name">TelinkBleMesh</string>
+    <string name="app_name">TelinkSigMesh</string>
 
     <string name="app_copyright">©2020 Telink Semiconductor</string>
 
@@ -193,5 +193,8 @@
 
     <string name="dist_progress">Distribute progress(%d):</string>
 
+    <string name="df_origin_desc">0x%s</string>
+
+    <string name="df_route_node">Node-%s</string>
 
 </resources>

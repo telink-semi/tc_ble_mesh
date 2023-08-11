@@ -50,9 +50,20 @@ import java.util.List;
 public class MeshInfo implements Serializable, Cloneable {
 
     /**
-     * local storage file name , saved by serializi
+     * local storage file name , saved by serialize
      */
     public static final String FILE_NAME = "com.telink.ble.mesh.demo.STORAGE";
+
+    /**
+     * if the {@link #ivIndex} is uninitialized, provision is not permitted
+     * once received the ivIndex in beacon , the ivIndex should be replaced
+     */
+    public static final int UNINITIALIZED_IVI = -1;
+
+    /**
+     * save meshUUID in json
+     */
+    public String meshUUID;
 
     /**
      * local provisioner UUID
@@ -90,7 +101,7 @@ public class MeshInfo implements Serializable, Cloneable {
      * <p>
      * should be updated and saved when {@link NetworkInfoUpdateEvent} received
      */
-    public int ivIndex;
+    public int ivIndex = UNINITIALIZED_IVI;
 
     /**
      * provisioner sequence number
@@ -118,9 +129,14 @@ public class MeshInfo implements Serializable, Cloneable {
     public List<Scene> scenes = new ArrayList<>();
 
     /**
-     * groups
+     * groups (group address 0xC000~0xC0FF)
      */
     public List<GroupInfo> groups = new ArrayList<>();
+
+    /**
+     * extend groups
+     */
+    public List<GroupInfo> extendGroups = new ArrayList<>();
 
     /**
      * static-oob info
@@ -387,6 +403,7 @@ public class MeshInfo implements Serializable, Cloneable {
 
         meshConfiguration.localAddress = localAddress;
 
+        meshConfiguration.proxyFilterWhiteList = new int[]{localAddress, MeshUtils.ADDRESS_BROADCAST};
         return meshConfiguration;
     }
 
@@ -416,7 +433,7 @@ public class MeshInfo implements Serializable, Cloneable {
                     i, APP_KEY_VAL, i));
         }
 
-        meshInfo.ivIndex = 0;
+        meshInfo.ivIndex = 0x01;
         meshInfo.sequenceNumber = 0;
         meshInfo.nodes = new ArrayList<>();
         meshInfo.localAddress = DEFAULT_LOCAL_ADDRESS;
@@ -424,6 +441,9 @@ public class MeshInfo implements Serializable, Cloneable {
 
 //        meshInfo.provisionerUUID = SharedPreferenceHelper.getLocalUUID(context);
         meshInfo.provisionerUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
+
+        meshInfo.meshUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
+
 
         meshInfo.groups = new ArrayList<>();
         meshInfo.unicastRange = new ArrayList<>();
@@ -439,6 +459,34 @@ public class MeshInfo implements Serializable, Cloneable {
         }
 
         return meshInfo;
+    }
+
+    /**
+     * check whether extend groups exist
+     */
+    public void addExtendGroups() {
+        String[] extGroups = {
+                " subgroup level lightness",
+                " subgroup level temperature",
+                " subgroup level Hue",
+                " subgroup level Saturation"
+        };
+
+        int step = 0x10;
+
+        int extGroupIdx = 0xD000;
+        GroupInfo extGroup;
+        if (extendGroups.size() == 0) {
+            for (GroupInfo groupInfo : groups) {
+                for (int i = 0; i < extGroups.length; i++) {
+                    extGroup = new GroupInfo();
+                    extGroup.name = groupInfo.name + extGroups[i];
+                    extGroup.address = extGroupIdx + i;
+                    extendGroups.add(extGroup);
+                }
+                extGroupIdx += step;
+            }
+        }
     }
 
 }

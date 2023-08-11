@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/ble/blt_config.h"
 #include "proj_lib/ble/service/ble_ll_ota.h"
 #include "proj_lib/ble/ll//ll.h"
@@ -347,7 +347,7 @@ int factory_reset_cnt_check ()
 #if FLASH_1M_ENABLE
 int factory_reset() // 1M flash
 {
-	u8 r = irq_disable ();
+	u32 r = irq_disable ();
 	for(int i = 0; i < (FLASH_ADR_AREA_1_END - FLASH_ADR_AREA_1_START) / 4096; ++i){
 	    u32 adr = FLASH_ADR_AREA_1_START + i*0x1000;
 	    if(adr != FLASH_ADR_RESET_CNT){
@@ -395,7 +395,7 @@ int factory_reset() // 1M flash
 }
 #else
 int factory_reset(){
-	u8 r = irq_disable ();
+	u32 r = irq_disable ();
 	for(int i = 0; i < (FLASH_ADR_AREA_1_END - FLASH_ADR_AREA_1_START) / 4096; ++i){
 	    u32 adr = FLASH_ADR_AREA_1_START + i*0x1000;
 	    if(adr != FLASH_ADR_RESET_CNT){

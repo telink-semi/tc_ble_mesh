@@ -99,8 +99,15 @@ public class MeshMessage {
      */
     protected int szmic = DEFAULT_ASZMIC;
 
+    /**
+     * source address
+     * Will be assigned by local address
+     */
     protected int sourceAddress;
 
+    /**
+     * dest address
+     */
     protected int destinationAddress;
 
     protected int ctl = CTL_ACCESS;

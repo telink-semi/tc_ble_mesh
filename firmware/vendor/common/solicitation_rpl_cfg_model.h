@@ -24,7 +24,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
 #define SOLI_WITH_RPL_TYPE		0
@@ -61,15 +61,13 @@ typedef struct{
 
 typedef struct{
 	#if MD_SERVER_EN
-	model_g_light_s_t srv;			// server
+	model_g_light_s_t srv;			// server	// use app key, so need to be bind and subscription.
     #endif
 	#if MD_CLIENT_EN
 	model_client_common_t clnt;		        // client
 	#endif
 }model_sig_soli_pdu_rpl_t;
 
-extern model_sig_soli_pdu_rpl_t model_sig_soli_pdu_rpl;
-extern u32 mesh_md_soli_pdu_rpl_addr;
 extern u32 soli_sno_tx;
 
 extern soli_ser_dat_t soli_service_data;

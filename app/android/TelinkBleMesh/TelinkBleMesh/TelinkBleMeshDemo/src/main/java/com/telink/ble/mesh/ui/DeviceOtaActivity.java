@@ -119,7 +119,7 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
         tv_version_info.setText(getString(R.string.version, "null"));
         if (mNodeInfo.compositionData != null) {
             int vid = mNodeInfo.compositionData.vid;
-            byte[] vb = MeshUtils.integer2Bytes(vid, 2, ByteOrder.LITTLE_ENDIAN);
+            byte[] vb = MeshUtils.integer2Bytes(vid, 2, ByteOrder.BIG_ENDIAN);
 
             int pid = mNodeInfo.compositionData.pid;
             byte[] pb = MeshUtils.integer2Bytes(pid, 2, ByteOrder.LITTLE_ENDIAN);
