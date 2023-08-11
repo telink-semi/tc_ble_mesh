@@ -43,28 +43,32 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.ble.BleAdvertiser;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.BaseActivity;
 import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.ContextUtil;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Transfer json files to other phones using CDTP protocol
@@ -245,14 +249,57 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
     private void createDeviceSocket() {
         new Thread(() -> {
             try {
-                serverSocket = bluetoothAdapter.listenUsingL2capChannel();
-                psm = serverSocket.getPsm();
-                appendLog("psm : " + psm);
-                this.bleSocket = serverSocket.accept();
-                appendLog("socket establish success");
+                try {
+                    serverSocket = bluetoothAdapter.listenUsingL2capChannel();
+                } catch (NoSuchMethodError e) {
+                    try {
+                        // oneplus3 - NoSuchMethodError
+                        ContextUtil.skipReflectWarning();
+                        Constructor<BluetoothServerSocket> construct = BluetoothServerSocket.class.getDeclaredConstructor(
+                                int.class,
+                                boolean.class,
+                                boolean.class, int.class);
+                        construct.setAccessible(true);
+                        // 0x25
+                        serverSocket = construct.newInstance(4, true, true, AppSettings.PSM); // BluetoothSocket.TYPE_L2CAP_LE=4
+
+                        // int errno = socket.mSocket.bindListen();
+                        Field targetField = BluetoothServerSocket.class.getDeclaredField("mSocket");
+                        targetField.setAccessible(true);
+                        BluetoothSocket bluetoothSocket = (BluetoothSocket) targetField.get(serverSocket);
+                        MeshLogger.d("bluetoothSocket - " + bluetoothSocket);
+
+                        @SuppressLint({"DiscouragedPrivateApi", "SoonBlockedPrivateApi"})
+                        Method bindListenM = BluetoothSocket.class.getDeclaredMethod("bindListen");
+                        bindListenM.setAccessible(true);
+                        bindListenM.invoke(bluetoothSocket);
+                        appendLog(String.format(Locale.getDefault(), "socket listening (psm: %d)... ", serverSocket.getPsm()));
+                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | NoSuchFieldException e1) {
+                        e.printStackTrace();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (serverSocket != null) {
+                    psm = serverSocket.getPsm();
+                    appendLog("psm : " + psm);
+                    this.bleSocket = serverSocket.accept();
+                    appendLog("socket establish success");
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
+
+        /*try {
+            serverSocket = bluetoothAdapter.listenUsingL2capChannel();
+            psm = serverSocket.getPsm();
+            appendLog("psm : " + psm);
+            this.bleSocket = serverSocket.accept();
+            appendLog("socket establish success");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } */
 
 //            try {
 //
@@ -285,7 +332,9 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
 //            } catch (IOException | NoSuchMethodError | InstantiationException | InvocationTargetException | IllegalAccessException | NoSuchFieldException | NoSuchMethodException e) {
 //                e.printStackTrace();
 //            }
-        }).start();
+        }).
+
+                start();
 
     }
 

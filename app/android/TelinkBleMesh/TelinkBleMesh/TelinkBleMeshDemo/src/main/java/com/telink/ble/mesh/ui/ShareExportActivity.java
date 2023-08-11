@@ -119,15 +119,19 @@ public class ShareExportActivity extends BaseActivity implements View.OnClickLis
             Drawable drawableRight = ((TextView) v).getCompoundDrawables()[2];
             if (event.getAction() == MotionEvent.ACTION_UP && event.getRawX() >= (v.getRight() - drawableRight.getBounds().width())) {
                 toastMsg("phone");
+                int resId = 0;
                 if (v == rb_file) {
-
+                    resId = R.string.tip_share_export_file;
                 } else if (v == rb_qrcode) {
-
+                    resId = R.string.tip_share_export_qrcode;
                 } else if (v == rb_cdtp_to_phone) {
-
+                    resId = R.string.tip_share_export_cdtp_phone;
                 } else if (v == rb_cdtp_to_gw) {
-
+                    resId = R.string.tip_share_export_cdtp_gateway;
                 }
+                startActivity(new Intent(ShareExportActivity.this, TipsActivity.class)
+                        .putExtra(TipsActivity.INTENT_KEY_TIP_RES_ID, resId)
+                );
                 return true;
             }
             return false;

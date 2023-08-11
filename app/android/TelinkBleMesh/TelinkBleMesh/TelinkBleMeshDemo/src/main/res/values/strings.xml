@@ -1,5 +1,5 @@
 <resources>
-<!--    <string name="app_name">TelinkBleMesh</string>-->
+    <!--    <string name="app_name">TelinkBleMesh</string>-->
     <string name="app_name">TelinkSigMesh</string>
 
     <string name="app_copyright">©2020 Telink Semiconductor</string>
@@ -182,9 +182,9 @@
 
     <string name="online_status_disabled">Online Status: DISABLED</string>
 
-    <string name="export_tip">1.Select at least one network key \n2.Select destination(JSON file or QRCode)\n3.Click EXPORT</string>
+    <string name="export_tip">1.Select at least one network key \n2.Select destination\n3.Click EXPORT</string>
 
-    <string name="import_tip">1.Select source(JSON file or QRCode) \n2.If the selected source is JSON file, select the target file \n3.Click IMPORT</string>
+    <string name="import_tip">1.Select source \n2.If the selected source is JSON file, select the target file \n3.Click IMPORT</string>
 
 
     <string name="enable_subnet_bridge">Enable Subnet Bridge</string>
@@ -197,4 +197,17 @@
 
     <string name="df_route_node">Node-%s</string>
 
+    <string name="tip_share_import_cdtp">11</string>
+
+    <string name="tip_share_import_file">11</string>
+
+    <string name="tip_share_import_qrcode">11</string>
+
+    <string name="tip_share_export_cdtp_phone">11</string>
+
+    <string name="tip_share_export_cdtp_gateway">11</string>
+
+    <string name="tip_share_export_file">11</string>
+
+    <string name="tip_share_export_qrcode">11</string>
 </resources>

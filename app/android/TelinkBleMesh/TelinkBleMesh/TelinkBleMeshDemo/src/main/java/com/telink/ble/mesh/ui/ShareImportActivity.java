@@ -22,9 +22,12 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
@@ -83,6 +86,11 @@ public class ShareImportActivity extends BaseActivity implements View.OnClickLis
         rb_file = findViewById(R.id.rb_file);
         rb_cdtp = findViewById(R.id.rb_cdtp);
         rb_qrcode = findViewById(R.id.rb_qrcode);
+
+        rb_file.setOnTouchListener(TOUCH_LISTENER);
+        rb_cdtp.setOnTouchListener(TOUCH_LISTENER);
+        rb_qrcode.setOnTouchListener(TOUCH_LISTENER);
+
         rb_file.setOnCheckedChangeListener((buttonView, isChecked) -> tv_file_select.setVisibility(isChecked ? View.VISIBLE : View.GONE));
     }
 
@@ -118,6 +126,30 @@ public class ShareImportActivity extends BaseActivity implements View.OnClickLis
                 break;
         }
     }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private final View.OnTouchListener TOUCH_LISTENER = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            Drawable drawableRight = ((TextView) v).getCompoundDrawables()[2];
+            if (event.getAction() == MotionEvent.ACTION_UP && event.getRawX() >= (v.getRight() - drawableRight.getBounds().width())) {
+                toastMsg("phone");
+                int resId = 0;
+                if (v == rb_file) {
+                    resId = R.string.tip_share_import_file;
+                } else if (v == rb_qrcode) {
+                    resId = R.string.tip_share_import_qrcode;
+                } else if (v == rb_cdtp) {
+                    resId = R.string.tip_share_import_cdtp;
+                }
+                startActivity(new Intent(ShareImportActivity.this, TipsActivity.class)
+                        .putExtra(TipsActivity.INTENT_KEY_TIP_RES_ID, resId)
+                );
+                return true;
+            }
+            return false;
+        }
+    };
 
 
     private void importFromFile() {

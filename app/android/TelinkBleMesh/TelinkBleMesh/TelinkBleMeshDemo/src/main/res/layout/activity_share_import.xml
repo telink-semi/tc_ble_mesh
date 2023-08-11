@@ -49,19 +49,24 @@
             android:text="Import from other phone(CDTP)" />
 
         <RadioButton
-            android:id="@+id/rb_file"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="JSON File" />
-
-        <RadioButton
             android:id="@+id/rb_qrcode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:drawableRight="@drawable/ic_tip"
+            android:drawablePadding="12dp"
+            android:drawableTint="@color/colorPrimary"
             android:text="QRCode" />
 
+        <RadioButton
+            android:id="@+id/rb_file"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:drawableRight="@drawable/ic_tip"
+            android:drawablePadding="12dp"
+            android:drawableTint="@color/colorPrimary"
+            android:text="JSON File" />
     </RadioGroup>
 
 
@@ -73,7 +78,8 @@
         android:padding="10dp"
         android:text="Select File"
         android:textSize="13sp"
-        android:textStyle="italic" />
+        android:textStyle="italic"
+        android:visibility="gone" />
 
     <View
         android:layout_width="0dp"
@@ -87,14 +93,14 @@
 
     <Button
         android:id="@+id/btn_import"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Import" />
 
     <Button
         android:id="@+id/btn_open"
         style="?android:attr/borderlessButtonStyle"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="preview"
         android:textColor="@color/colorPrimary"
