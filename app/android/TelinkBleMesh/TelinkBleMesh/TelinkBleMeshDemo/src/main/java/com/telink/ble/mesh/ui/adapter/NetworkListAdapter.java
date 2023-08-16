@@ -75,6 +75,9 @@ public class NetworkListAdapter extends BaseRecyclerViewAdapter<NetworkListAdapt
         this.notifyDataSetChanged();
     }
 
+    public long getCurMeshId() {
+        return curMeshId;
+    }
 
     public void remove(int position) {
         if (this.networkList == null) {

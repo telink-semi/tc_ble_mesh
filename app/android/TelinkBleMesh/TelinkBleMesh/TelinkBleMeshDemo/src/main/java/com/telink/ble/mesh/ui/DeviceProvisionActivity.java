@@ -208,7 +208,6 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
      */
     private void startScan() {
         isScanning = true;
-        updateRefreshItem();
         enableUI(false);
         ScanParameters parameters = ScanParameters.getDefault(false, false);
         parameters.setScanTimeout(10 * 1000);
@@ -217,12 +216,12 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
     private void stopScan() {
         isScanning = false;
-        updateRefreshItem();
         enableUI(true);
     }
 
-    private void updateRefreshItem() {
+    private void updateRefreshItem(boolean enable) {
         refreshItem.setIcon(isScanning ? R.drawable.ic_stop : R.drawable.ic_refresh);
+        refreshItem.setVisible(isScanning || enable);
     }
 
     /**
@@ -365,11 +364,12 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     }
 
     private void enableUI(final boolean enable) {
+        MeshLogger.d(String.format("enableUI scanning-%B enable-%B", isScanning, enable));
         MeshService.getInstance().idle(false);
         runOnUiThread(() -> {
             enableBackNav(enable);
             btn_add_all.setEnabled(enable);
-            refreshItem.setVisible(isScanning || enable);
+            updateRefreshItem(enable);
             mListAdapter.setProcessing(!enable);
         });
 
@@ -386,6 +386,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
                 } else if (event.getType().equals(ProvisioningEvent.EVENT_TYPE_PROVISION_SUCCESS)) {
                     onProvisionSuccess((ProvisioningEvent) event);
                 } else if (event.getType().equals(ScanEvent.EVENT_TYPE_SCAN_TIMEOUT)) {
+                    isScanning = false;
                     enableUI(true);
                 } else if (event.getType().equals(ProvisioningEvent.EVENT_TYPE_PROVISION_FAIL)) {
                     onProvisionFail((ProvisioningEvent) event);

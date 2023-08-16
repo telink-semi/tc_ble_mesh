@@ -29,6 +29,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.appcompat.widget.Toolbar;
+
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
@@ -39,6 +41,7 @@ import com.telink.ble.mesh.ui.DirectForwardingListActivity;
 import com.telink.ble.mesh.ui.FUActivity;
 import com.telink.ble.mesh.ui.MeshInfoActivity;
 import com.telink.ble.mesh.ui.SceneListActivity;
+import com.telink.ble.mesh.util.MeshLogger;
 
 /**
  * setting
@@ -55,6 +58,8 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         setTitle(view, "Network");
+        Toolbar toolbar = view.findViewById(R.id.title_bar);
+        toolbar.setNavigationIcon(null);
         tv_mesh_name = view.findViewById(R.id.tv_mesh_name);
         view.findViewById(R.id.view_scene_setting).setOnClickListener(this);
         view.findViewById(R.id.view_mesh_info).setOnClickListener(this);
@@ -67,9 +72,15 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
             view.findViewById(R.id.view_mesh_ota).setVisibility(View.GONE);
             view.findViewById(R.id.view_df).setVisibility(View.GONE);
         }
-        showMeshName();
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_RESET, this);
 
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        MeshLogger.d("network fragment - onResume");
+        showMeshName();
     }
 
     private void showMeshName() {

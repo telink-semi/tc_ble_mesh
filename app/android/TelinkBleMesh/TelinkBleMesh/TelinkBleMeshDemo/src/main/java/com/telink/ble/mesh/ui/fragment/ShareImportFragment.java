@@ -133,7 +133,7 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
         MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
         MeshInfo newMesh = null;
         try {
-            newMesh = MeshStorageService.getInstance().importExternal(jsonData, localMesh);
+//            newMesh = MeshStorageService.getInstance().importExternal(jsonData, localMesh);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -144,7 +144,6 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
         newMesh.saveOrUpdate();
         MeshService.getInstance().idle(true);
         TelinkMeshApplication.getInstance().setupMesh(newMesh);
-        MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());
         tv_log.append("Mesh storage import success, back to home page to reconnect\n");
         toastMsg("import success");
     }

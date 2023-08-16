@@ -28,13 +28,19 @@ import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 
+import com.telink.ble.mesh.SharedPreferenceHelper;
+import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.networking.NetworkLayerPDU;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.foundation.MeshConfiguration;
 import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.json.AddressRange;
+import com.telink.ble.mesh.model.json.MeshStorageService;
+import com.telink.ble.mesh.model.json.Provisioner;
+import com.telink.ble.mesh.model.json.SceneRange;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -56,6 +62,8 @@ import io.objectbox.relation.ToMany;
 public class MeshInfo implements Serializable, Cloneable {
 
     public static final String MESH_NAME_DEFAULT = "Telink-SIG-mesh";
+
+    public static final String PROVISIONER_NAME_DEFAULT = "Default-Provisioner";
 
     @Id
     public long id;
@@ -150,6 +158,20 @@ public class MeshInfo implements Serializable, Cloneable {
      * extend groups
      */
     public ToMany<GroupInfo> extendGroups;
+
+    /**
+     * all provisioners , include local provisioner and others parsed from json
+     */
+    public ToMany<Provisioner> allProvisioners;
+
+    /**
+     * excluded nodes, not show on UI
+     */
+    public ToMany<NodeInfo> excludedNodes;
+
+
+    public ToMany<NodeInfo> provisionerNodes;
+
 
     /**
      * static-oob info
@@ -325,6 +347,8 @@ public class MeshInfo implements Serializable, Cloneable {
                 ", provisionIndex=" + provisionIndex +
                 ", scenes=" + scenes.size() +
                 ", groups=" + groups.size() +
+                ", provisioners=" + allProvisioners.size() +
+                ", provisionerNodes=" + provisionerNodes.size() +
                 '}';
     }
 
@@ -406,27 +430,20 @@ public class MeshInfo implements Serializable, Cloneable {
 
     public static MeshInfo createNewMesh(Context context, String meshName) {
         // 0x7FFF
-        final int DEFAULT_LOCAL_ADDRESS = 0x0001;
+
         MeshInfo meshInfo = new MeshInfo();
         if (meshName == null) {
             meshName = MESH_NAME_DEFAULT;
         }
         meshInfo.meshName = meshName;
+        meshInfo.meshUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault());
         String formattedDate = sdf.format(new Date());
         MeshLogger.d("time : " + formattedDate);
         meshInfo.timestamp = formattedDate;
 
-        // for test
-//        final byte[] NET_KEY = Arrays.hexToBytes("26E8D2DBD4363AF398FEDE049BAD0086");
-
-        // for test
-//        final byte[] APP_KEY = Arrays.hexToBytes("7759F48730A4F1B2259B1B0681BE7C01");
-
 //        final int IV_INDEX = 0x20345678;
 
-//        meshInfo.networkKey = NET_KEY;
-//        meshInfo.meshNetKeyList = new ArrayList<>();
         final int KEY_COUNT = 3;
         final String[] NET_KEY_NAMES = {"Default Net Key", "Sub Net Key 1", "Sub Net Key 2"};
         final String[] APP_KEY_NAMES = {"Default App Key", "Sub App Key 1", "Sub App Key 2"};
@@ -437,21 +454,8 @@ public class MeshInfo implements Serializable, Cloneable {
                     i, APP_KEY_VAL, i));
         }
 
+        meshInfo.createProvisionerInfo();
         meshInfo.ivIndex = 0x01;
-        meshInfo.sequenceNumber = 0;
-        meshInfo.localAddress = DEFAULT_LOCAL_ADDRESS;
-        meshInfo.provisionIndex = DEFAULT_LOCAL_ADDRESS + 1; // 0x0002
-
-//        meshInfo.provisionerUUID = SharedPreferenceHelper.getLocalUUID(context);
-        meshInfo.provisionerUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
-
-        meshInfo.meshUUID = MeshUtils.byteArrayToUuid((MeshUtils.generateRandom(16)));
-
-
-//        meshInfo.groups = new ArrayList<>();
-//        meshInfo.unicastRange = new ArrayList<>();
-        meshInfo.unicastRange.add(new AddressRange(0x01, 0x400));
-        meshInfo.addressTopLimit = 0x0400;
         String[] groupNames = context.getResources().getStringArray(R.array.group_name);
         GroupInfo group;
         for (int i = 0; i < 8; i++) {
@@ -460,6 +464,7 @@ public class MeshInfo implements Serializable, Cloneable {
             group.name = groupNames[i];
             meshInfo.groups.add(group);
         }
+
         return meshInfo;
     }
 
@@ -489,6 +494,57 @@ public class MeshInfo implements Serializable, Cloneable {
                 extGroupIdx += step;
             }
         }
+    }
+
+    public boolean createProvisionerInfo() {
+        int maxRangeHigh = 0;
+        int tmpHigh;
+        for (Provisioner provisioner : allProvisioners) {
+            for (AddressRange unRange : provisioner.allocatedUnicastRange) {
+                tmpHigh = unRange.high;
+                if (maxRangeHigh == 0 || maxRangeHigh < tmpHigh) {
+                    maxRangeHigh = tmpHigh;
+                }
+            }
+        }
+
+        int low = maxRangeHigh + 1;
+
+        if (low + 0xFF > MeshUtils.UNICAST_ADDRESS_MAX) {
+            MeshLogger.d("no available unicast range");
+            return false;
+        }
+
+
+        final int high = low + 0x03FF;
+
+        this.unicastRange.clear();
+        this.unicastRange.add(new AddressRange(low, high));
+        this.localAddress = low;
+        this.resetProvisionIndex(low + 1);
+        this.addressTopLimit = high;
+        this.sequenceNumber = 0;
+        this.ivIndex = MeshInfo.UNINITIALIZED_IVI;
+
+        String pvUUID = SharedPreferenceHelper.getLocalUUID(TelinkMeshApplication.getInstance());
+        Provisioner provisioner = new Provisioner();
+        provisioner.provisionerName = PROVISIONER_NAME_DEFAULT;
+        provisioner.UUID = pvUUID;
+        provisioner.allocatedSceneRange.add(new SceneRange(0x01, 0x0F));
+        provisioner.allocatedUnicastRange.add(new AddressRange(low, high));
+        provisioner.allocatedGroupRange.add(new AddressRange(0xC000, 0xC0FF));
+        this.allProvisioners.add(provisioner);
+
+        NodeInfo nodeInfo = new NodeInfo();
+        nodeInfo.meshAddress = this.localAddress;
+        nodeInfo.name = String.format("Provisioner Node: %04X", this.localAddress);
+        nodeInfo.compositionData = CompositionData.from(MeshStorageService.VC_TOOL_CPS);
+        nodeInfo.elementCnt = 1;
+        nodeInfo.deviceUUID = MeshUtils.uuidToByteArray(pvUUID);
+        nodeInfo.bound = true;
+        nodeInfo.deviceKey = Arrays.hexToBytes(NodeInfo.LOCAL_DEVICE_KEY);
+        this.provisionerNodes.add(nodeInfo);
+        return true;
     }
 
 }

@@ -58,6 +58,16 @@ public class Scene implements Serializable {
      */
     public List<String> addressList = new ArrayList<>();
 
+
+    public Scene() {
+    }
+
+    public Scene(String name, int sceneId, List<String> addressList) {
+        this.name = name;
+        this.sceneId = sceneId;
+        this.addressList = addressList;
+    }
+
     public void save(int address) {
         if (addressList == null) {
             addressList = new ArrayList<>();

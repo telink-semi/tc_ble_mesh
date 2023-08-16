@@ -2,6 +2,7 @@ package com.telink.ble.mesh.model.db;
 
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.MeshInfo_;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.OobInfo;
 import com.telink.ble.mesh.model.Scene;
@@ -13,6 +14,7 @@ import java.util.List;
 import io.objectbox.Box;
 import io.objectbox.BoxStore;
 import io.objectbox.query.Query;
+import io.objectbox.query.QueryBuilder;
 
 public class MeshInfoService {
     private static MeshInfoService instance = new MeshInfoService();
@@ -37,6 +39,7 @@ public class MeshInfoService {
         nodeInfoBox = store.boxFor(NodeInfo.class);
         oobInfoBox = store.boxFor(OobInfo.class);
         sceneBox = store.boxFor(Scene.class);
+
         oobInfoQuery = oobInfoBox.query().build();
     }
 
@@ -46,16 +49,15 @@ public class MeshInfoService {
 
 
     public MeshInfo getByUuid(String meshUUID) {
-//        meshInfoBox.query()
-//        meshUUID.
-        return null;
+        Query<MeshInfo> query = meshInfoBox.query().equal(MeshInfo_.meshUUID, meshUUID, QueryBuilder.StringOrder.CASE_INSENSITIVE).build();
+        return query.findFirst();
     }
 
     /**
      * @return all mesh info in db
      */
     public List<MeshInfo> getAll() {
-        return meshInfoQuery.find();
+        return meshInfoBox.getAll();
     }
 
 

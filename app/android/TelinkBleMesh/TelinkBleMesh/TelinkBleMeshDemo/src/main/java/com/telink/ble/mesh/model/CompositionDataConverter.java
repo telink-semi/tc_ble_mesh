@@ -15,6 +15,6 @@ public class CompositionDataConverter implements PropertyConverter<CompositionDa
 
     @Override
     public byte[] convertToDatabaseValue(CompositionData entityProperty) {
-        return entityProperty.raw;
+        return entityProperty.toBytes();
     }
 }

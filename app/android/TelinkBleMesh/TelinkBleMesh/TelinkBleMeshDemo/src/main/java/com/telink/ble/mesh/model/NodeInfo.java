@@ -53,9 +53,11 @@ import io.objectbox.relation.ToOne;
 
 @Entity
 public class NodeInfo implements Serializable {
-
+    public static final String LOCAL_DEVICE_KEY = "00112233445566778899AABBCCDDEEFF";
     @Id
     public long id;
+
+    public String name;
 
     /**
      * primary element unicast address

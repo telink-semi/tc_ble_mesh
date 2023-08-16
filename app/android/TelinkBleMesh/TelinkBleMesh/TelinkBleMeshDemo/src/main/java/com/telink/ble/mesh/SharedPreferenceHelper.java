@@ -25,9 +25,9 @@ package com.telink.ble.mesh;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.networking.ExtendBearerMode;
-import com.telink.ble.mesh.util.Arrays;
+
+import java.util.UUID;
 
 
 /**
@@ -53,7 +53,7 @@ public class SharedPreferenceHelper {
      */
     private static final String KEY_PRIVATE_MODE = "com.telink.bluetooth.light.KEY_PRIVATE_MODE";
 
-    private static final String KEY_LOCAL_UUID = "com.telink.bluetooth.light.KEY_LOCAL_UUID";
+    private static final String KEY_LOCAL_UUID = "com.telink.bluetooth.light.KEY_PROVISIONER_UUID";
 
     private static final String KEY_REMOTE_PROVISION = "com.telink.bluetooth.light.KEY_REMOTE_PROVISION";
 
@@ -116,7 +116,7 @@ public class SharedPreferenceHelper {
         SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
         String uuid = sharedPreferences.getString(KEY_LOCAL_UUID, null);
         if (uuid == null) {
-            uuid = Arrays.bytesToHexString(MeshUtils.generateRandom(16), "").toUpperCase();
+            uuid = UUID.randomUUID().toString().toUpperCase();
             sharedPreferences.edit().putString(KEY_LOCAL_UUID, uuid).apply();
         }
         return uuid;

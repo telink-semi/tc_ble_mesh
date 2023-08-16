@@ -38,6 +38,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.textfield.TextInputEditText;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.NetworkListAdapter;
@@ -65,12 +66,15 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
      */
     private TextInputEditText et_single_input = null;
 
+    private long lastMeshId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (!validateNormalStart(savedInstanceState)) {
             return;
         }
+        lastMeshId = TelinkMeshApplication.getInstance().getMeshInfo().id;
         setContentView(R.layout.activity_network_list);
         initView();
     }
@@ -156,6 +160,13 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        listAdapter.resetCurMeshId();
+        updateListData();
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab_import:
@@ -233,4 +244,9 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
         finish();*/
     }
 
+    @Override
+    public void finish() {
+        super.finish();
+        MeshService.getInstance().idle(lastMeshId != listAdapter.getCurMeshId());
+    }
 }

@@ -22,6 +22,8 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.model.json;
 
+import android.app.Activity;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.telink.ble.mesh.SharedPreferenceHelper;
@@ -31,6 +33,7 @@ import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.entity.TransitionTime;
+import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.MeshAppKey;
 import com.telink.ble.mesh.model.MeshInfo;
@@ -38,7 +41,9 @@ import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.model.Scene;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.db.Scheduler;
+import com.telink.ble.mesh.ui.BaseActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.FileSystem;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -56,7 +61,7 @@ public class MeshStorageService {
 
     public static final String JSON_FILE = "mesh.json";
 
-    private static final byte[] VC_TOOL_CPS = new byte[]{
+    public static final byte[] VC_TOOL_CPS = new byte[]{
             (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x01, (byte) 0x33, (byte) 0x31, (byte) 0xE8, (byte) 0x03,
             (byte) 0x04, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x17, (byte) 0x01, (byte) 0x00, (byte) 0x00,
             (byte) 0x01, (byte) 0x00, (byte) 0x02, (byte) 0x00, (byte) 0x03, (byte) 0x00, (byte) 0x05, (byte) 0x00,
@@ -79,45 +84,105 @@ public class MeshStorageService {
 
 
     /**
+     * target mesh - mesh info parsed from jsonStr
+     * current mesh means current used mesh info
+     * <br/>
+     * three possibilities:
+     * <p>
+     * 1. target mesh is current mesh: replace the nodes in current mesh by nodes in target mesh , then refresh UI
+     * <br/>
+     * 2. target mesh is not current mesh, but in the Mesh-List {@link MeshInfoService#getAll()}: replace the nodes in current mesh by nodes in target mesh
+     * <br/>
+     * 3. target mesh is not current mesh, and not in the Mesh-List {@link MeshInfoService#getAll()}: create new mesh and save in Mesh List
+     * <p>
      * import external data
      *
-     * @param mesh check if outer mesh#uuid equals inner mesh#uuid
-     * @return import success
+     * @return new mesh info
      */
-    public MeshInfo importExternal(String jsonStr, MeshInfo mesh) throws Exception {
+    public boolean importExternal(String jsonStr, BaseActivity activity) {
+
+        MeshInfo newMesh;
+        try {
+            newMesh = importFromJson(jsonStr);
+        } catch (Exception e) {
+            e.printStackTrace();
+            activity.toastMsg("import failed : " + e.toString());
+            return false;
+        }
+        if (newMesh == null) {
+            activity.toastMsg("import failed");
+            return false;
+        }
+
+        MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
+
+        if (localMesh.meshUUID.equalsIgnoreCase(newMesh.meshUUID)) {
+            MeshService.getInstance().idle(true);
+            TelinkMeshApplication.getInstance().setupMesh(newMesh);
+            activity.showTipDialog("Tip",
+                    "import mesh success, mesh UUID is the same, back to home page to reconnect",
+                    (dialog, which) -> {
+                        activity.setResult(Activity.RESULT_OK);
+                        activity.finish();
+                    });
+        } else {
+            activity.showConfirmDialog("import mesh success, mesh UUID is different, switch to the new mesh?", (dialog, which) -> {
+                MeshService.getInstance().idle(true);
+                TelinkMeshApplication.getInstance().setupMesh(newMesh);
+                activity.setResult(Activity.RESULT_OK);
+                activity.finish();
+            });
+        }
+        return true;
+    }
+
+
+    /**
+     * @param jsonStr json
+     * @return
+     * @throws Exception
+     */
+    public MeshInfo importFromJson(String jsonStr) {
 
         MeshStorage tempStorage = mGson.fromJson(jsonStr, MeshStorage.class);
+
         if (!validStorageData(tempStorage)) {
             return null;
         }
-        MeshInfo tmpMesh = (MeshInfo) mesh.clone();
-        if (updateLocalMesh(tempStorage, tmpMesh)) {
-            return tmpMesh;
+
+        MeshInfo targetMesh = tempStorage.convertToMeshInfo();
+        String targetMeshUUID = targetMesh.meshUUID;
+
+        // mesh in db
+        MeshInfo localMesh = MeshInfoService.getInstance().getByUuid(targetMeshUUID);
+
+        if (localMesh != null) {
+            MeshLogger.d("update local mesh");
+            localMesh.nodes = targetMesh.nodes;
+            localMesh.groups = targetMesh.groups;
+            localMesh.allProvisioners = targetMesh.allProvisioners;
+            localMesh.provisionerNodes = targetMesh.provisionerNodes;
+            localMesh.excludedNodes = targetMesh.excludedNodes;
+            localMesh.extendGroups = targetMesh.extendGroups;
+            localMesh.scenes = targetMesh.scenes;
+            return localMesh;
         }
 
+        MeshLogger.d("create new provisioner");
 
-        // sync devices
-        /*mesh.devices = tempMesh.devices;
-        mesh.scenes = tempMesh.scenes;
-        if (!tempMesh.provisionerUUID.equals(mesh.provisionerUUID)) {
-            mesh.networkKey = tempMesh.networkKey;
-            mesh.netKeyIndex = tempMesh.netKeyIndex;
+        // mesh not found in db
+        // create new provisioner and provisioner node
+        if (!targetMesh.createProvisionerInfo()) {
+            MeshLogger.d("create new provisioner error");
+            return null;
+        }
 
-            mesh.appKey = tempMesh.appKey;
-            mesh.appKeyIndex = tempMesh.appKeyIndex;
-            AddressRange unicastRange = tempMesh.unicastRange;
-            int unicastStart = unicastRange.high + 1;
-            mesh.unicastRange = new AddressRange(unicastStart, unicastStart + 0xFF);
-            mesh.localAddress = unicastStart;
-            mesh.pvIndex = unicastStart + 1;
-            mesh.ivIndex = tempMesh.ivIndex;
-        } else {
-            // if is the same provisioner, sync pvIndex
-            mesh.pvIndex = tempMesh.pvIndex;
-            mesh.sno = tempMesh.sno;
-        }*/
-        return null;
+        targetMesh.ivIndex = 0;
+        targetMesh.sequenceNumber = 0;
+        MeshInfoService.getInstance().addMeshInfo(targetMesh);
+        return targetMesh;
     }
+
 
     private boolean validStorageData(MeshStorage meshStorage) {
         return meshStorage != null && meshStorage.provisioners != null && meshStorage.provisioners.size() != 0;
@@ -130,7 +195,7 @@ public class MeshStorageService {
      * @return file
      */
     public File exportMeshToJson(File dir, String filename, MeshInfo mesh, List<MeshNetKey> selectedNetKeys) {
-        MeshStorage meshStorage = meshToJson(mesh, selectedNetKeys);
+        MeshStorage meshStorage = convertMeshToJson(mesh, selectedNetKeys);
         String jsonData = mGson.toJson(meshStorage);
         return FileSystem.writeString(dir, filename, jsonData);
     }
@@ -139,14 +204,118 @@ public class MeshStorageService {
      * @return json string
      */
     public String meshToJsonString(MeshInfo meshInfo, List<MeshNetKey> selectedNetKeys) {
-        MeshStorage meshStorage = meshToJson(meshInfo, selectedNetKeys);
+        MeshStorage meshStorage = convertMeshToJson(meshInfo, selectedNetKeys);
         return mGson.toJson(meshStorage);
     }
 
     /**
-     * convert mesh instance to MeshStorage instance, for JSON export
+     * convert mesh to MeshStorage
      *
+     * @param mesh            target meshInfo
+     * @param selectedNetKeys selected network key
+     */
+    private MeshStorage convertMeshToJson(MeshInfo mesh, List<MeshNetKey> selectedNetKeys) {
+        MeshStorage meshStorage = new MeshStorage();
+        meshStorage.meshUUID = mesh.meshUUID;
+        meshStorage.meshName = mesh.meshName;
+        // get current time
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault());
+        String formattedDate = sdf.format(new Date());
+        MeshLogger.d("time : " + formattedDate);
+        meshStorage.timestamp = formattedDate;
+
+        // add all netKey
+        meshStorage.netKeys = new ArrayList<>();
+        MeshStorage.ApplicationKey appKey;
+        meshStorage.appKeys = new ArrayList<>();
+        for (MeshNetKey meshNetKey : selectedNetKeys) {
+            MeshStorage.NetworkKey netKey = new MeshStorage.NetworkKey();
+            netKey.name = meshNetKey.name;
+            netKey.index = meshNetKey.index;
+            netKey.phase = 0;
+            // secure | insecure
+            netKey.minSecurity = "secure";
+            netKey.timestamp = meshStorage.timestamp;
+            netKey.key = Arrays.bytesToHexString(meshNetKey.key, "").toUpperCase();
+            meshStorage.netKeys.add(netKey);
+
+            // find bound app keys
+            for (MeshAppKey ak : mesh.appKeyList) {
+                if (ak.boundNetKeyIndex == meshNetKey.index) {
+                    appKey = new MeshStorage.ApplicationKey();
+                    appKey.name = ak.name;
+                    appKey.index = ak.index;
+                    appKey.key = Arrays.bytesToHexString(ak.key, "").toUpperCase();
+                    appKey.boundNetKey = ak.boundNetKeyIndex;
+                    meshStorage.appKeys.add(appKey);
+                    break;
+                }
+            }
+        }
+
+        meshStorage.groups = new ArrayList<>();
+        List<GroupInfo> groups = mesh.groups;
+        for (int i = 0; i < groups.size(); i++) {
+            MeshStorage.Group group = new MeshStorage.Group();
+            group.address = String.format("%04X", groups.get(i).address);
+            group.name = groups.get(i).name;
+            meshStorage.groups.add(group);
+        }
+
+
+        if (SharedPreferenceHelper.isLevelServiceEnable(TelinkMeshApplication.getInstance())) {
+            // add extend groups
+            groups = mesh.extendGroups;
+            for (int i = 0; i < groups.size(); i++) {
+                MeshStorage.Group group = new MeshStorage.Group();
+                group.address = String.format("%04X", groups.get(i).address);
+                group.name = groups.get(i).name;
+                meshStorage.groups.add(group);
+            }
+        }
+
+        meshStorage.provisioners = new ArrayList<>();
+
+        for (Provisioner provisioner : mesh.allProvisioners) {
+            meshStorage.provisioners.add(provisioner.convert());
+        }
+
+        meshStorage.nodes = new ArrayList<>();
+        for (NodeInfo node : mesh.nodes) {
+            meshStorage.nodes.add(convertDeviceInfoToNode(node, mesh.getDefaultAppKeyIndex()));
+        }
+
+        for (NodeInfo node : mesh.excludedNodes) {
+            meshStorage.nodes.add(convertDeviceInfoToNode(node, mesh.getDefaultAppKeyIndex()));
+        }
+
+        for (NodeInfo node : mesh.provisionerNodes) {
+            meshStorage.nodes.add(convertDeviceInfoToNode(node, mesh.getDefaultAppKeyIndex()));
+        }
+
+        /*
+         * convert [mesh.scenes] to [meshStorage.scenes]
+         */
+        meshStorage.scenes = new ArrayList<>();
+        MeshStorage.Scene scene;
+        for (Scene meshScene : mesh.scenes) {
+            scene = new MeshStorage.Scene();
+            scene.number = String.format("%04X", meshScene.id);
+            scene.name = meshScene.name;
+            if (meshScene.addressList != null) {
+                scene.addresses = new ArrayList<>();
+                scene.addresses.addAll(meshScene.addressList);
+            }
+            meshStorage.scenes.add(scene);
+        }
+
+        return meshStorage;
+    }
+
+
+    /**
      * @param mesh instance
+     * @deprecated convert mesh instance to MeshStorage instance, for JSON export
      */
     private MeshStorage meshToJson(MeshInfo mesh, List<MeshNetKey> selectedNetKeys) {
         MeshStorage meshStorage = new MeshStorage();
@@ -308,9 +477,17 @@ public class MeshStorageService {
                 meshStorage.scenes.add(scene);
             }
         }
-
         return meshStorage;
     }
+
+
+    /**
+     * convert meshStorage to mesh instance
+     *
+     * @param meshStorage imported from json object or web cloud
+     * @return mesh
+     */
+
 
     /**
      * convert meshStorage to mesh instance
@@ -319,7 +496,6 @@ public class MeshStorageService {
      * @return mesh
      */
     public boolean updateLocalMesh(MeshStorage meshStorage, MeshInfo mesh) {
-//        Mesh mesh = new Mesh();
 
         // import all network keys
         boolean isSameMesh = true;
@@ -333,7 +509,6 @@ public class MeshStorageService {
             mesh.meshNetKeyList.add(
                     new MeshNetKey(networkKey.name, networkKey.index, Arrays.hexToBytes(networkKey.key))
             );
-
         }
 
         mesh.appKeyList.clear();// = new ArrayList<>();
@@ -656,11 +831,10 @@ public class MeshStorageService {
         // check if appKey list exists to confirm device bound state
         if (deviceInfo.bound) {
             node.appKeys = new ArrayList<>();
-            node.appKeys.add(new MeshStorage.NodeKey(0, false));
+            node.appKeys.add(new MeshStorage.NodeKey(appKeyIndex, false));
         }
 
         node.security = MeshSecurity.Secure.getDesc();
-
 
         if (deviceInfo.schedulers != null) {
             node.schedulers = new ArrayList<>();
@@ -817,6 +991,5 @@ public class MeshStorageService {
                 .setTransTime((byte) nodeScheduler.transTime)
                 .setSceneId((short) nodeScheduler.sceneId).build();
     }
-
 
 }

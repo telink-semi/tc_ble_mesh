@@ -34,10 +34,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.foundation.MeshService;
-import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.cdtp.CdtpImportActivity;
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
@@ -165,23 +162,11 @@ public class ShareImportActivity extends BaseActivity implements View.OnClickLis
             return;
         }
         String jsonData = FileSystem.readString(file);
-        MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
-        MeshInfo newMesh = null;
-        try {
-            newMesh = MeshStorageService.getInstance().importExternal(jsonData, localMesh);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (MeshStorageService.getInstance().importExternal(jsonData, this)) {
+            tv_log.append("Mesh storage import success\n");
+        } else {
+            tv_log.append("Mesh storage import fail\n");
         }
-        if (newMesh == null) {
-            toastMsg("import failed");
-            return;
-        }
-        newMesh.saveOrUpdate();
-        MeshService.getInstance().idle(true);
-        TelinkMeshApplication.getInstance().setupMesh(newMesh);
-        MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());
-        tv_log.append("Mesh storage import success, back to home page to reconnect\n");
-        toastMsg("import success");
     }
 
     @Override

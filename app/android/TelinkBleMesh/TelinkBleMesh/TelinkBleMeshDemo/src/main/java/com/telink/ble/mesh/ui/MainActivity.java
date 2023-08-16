@@ -47,7 +47,6 @@ import com.telink.ble.mesh.core.message.time.TimeSetMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
-import com.telink.ble.mesh.foundation.MeshConfiguration;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
@@ -61,6 +60,7 @@ import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.UnitConvert;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.fragment.DeviceFragment;
 import com.telink.ble.mesh.ui.fragment.GroupFragment;
 import com.telink.ble.mesh.ui.fragment.NetworkFragment;
@@ -127,8 +127,11 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         MeshService.getInstance().init(this, TelinkMeshApplication.getInstance());
 
         // convert meshInfo to mesh configuration
-        MeshConfiguration meshConfiguration = TelinkMeshApplication.getInstance().getMeshInfo().convertToConfiguration();
-        MeshService.getInstance().setupMeshNetwork(meshConfiguration);
+        MeshInfo meshInfo = MeshInfoService.getInstance().getById(SharedPreferenceHelper.getSelectedMeshId(this));
+        TelinkMeshApplication.getInstance().setupMesh(meshInfo);
+
+//        MeshConfiguration meshConfiguration = TelinkMeshApplication.getInstance().getMeshInfo().convertToConfiguration();
+//        MeshService.getInstance().setupMeshNetwork(meshConfiguration);
 
         // check if system bluetooth enabled
         MeshService.getInstance().checkBluetoothState();

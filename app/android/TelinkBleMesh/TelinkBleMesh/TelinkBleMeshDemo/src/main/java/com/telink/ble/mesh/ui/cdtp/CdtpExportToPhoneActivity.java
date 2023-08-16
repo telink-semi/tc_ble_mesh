@@ -253,7 +253,7 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
                     serverSocket = bluetoothAdapter.listenUsingL2capChannel();
                 } catch (NoSuchMethodError e) {
                     try {
-                        // oneplus3 - NoSuchMethodError
+                        // oneplus-3t - NoSuchMethodError
                         ContextUtil.skipReflectWarning();
                         Constructor<BluetoothServerSocket> construct = BluetoothServerSocket.class.getDeclaredConstructor(
                                 int.class,

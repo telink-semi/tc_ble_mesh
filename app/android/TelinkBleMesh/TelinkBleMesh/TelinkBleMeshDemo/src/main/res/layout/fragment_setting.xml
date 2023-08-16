@@ -58,7 +58,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Create/Delete, Import/Export..."
+                            android:text="Switch, Create/Delete, Import/Export..."
                             android:textSize="11sp"
                             android:textStyle="italic" />
 

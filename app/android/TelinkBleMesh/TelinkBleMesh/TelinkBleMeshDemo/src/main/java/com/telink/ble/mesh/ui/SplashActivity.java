@@ -38,11 +38,14 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
-import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.db.ObjectBox;
+import com.telink.ble.mesh.model.json.MeshStorageService;
+import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 
@@ -148,12 +151,26 @@ public class SplashActivity extends BaseActivity {
             }
         }
         MeshInfo meshInfo = MeshInfo.createNewMesh(this, "Default Mesh");
+//        testAddDevice(meshInfo);
         MeshInfoService.getInstance().addMeshInfo(meshInfo);
         goToNext(meshInfo);
     }
 
+
+    private void testAddDevice(MeshInfo meshInfo) {
+        NodeInfo nodeInfo = new NodeInfo();
+        nodeInfo.meshAddress = 0x0002;
+        nodeInfo.name = String.format("Provisioner Node: %04X", 0x0002);
+        nodeInfo.compositionData = CompositionData.from(MeshStorageService.VC_TOOL_CPS);
+        nodeInfo.elementCnt = 1;
+        nodeInfo.deviceUUID = Arrays.hexToBytes(NodeInfo.LOCAL_DEVICE_KEY);
+        nodeInfo.bound = true;
+        nodeInfo.deviceKey = Arrays.hexToBytes(NodeInfo.LOCAL_DEVICE_KEY);
+        meshInfo.nodes.add(nodeInfo);
+    }
+
     private void goToNext(MeshInfo meshInfo) {
-        TelinkMeshApplication.getInstance().setupMesh(meshInfo);
+        SharedPreferenceHelper.setSelectedMeshId(this, meshInfo.id);
         Intent intent = new Intent(SplashActivity.this, MainActivity.class);
 //                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);

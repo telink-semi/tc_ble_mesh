@@ -24,11 +24,15 @@ package com.telink.ble.mesh.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.MeshInfo;
@@ -40,6 +44,8 @@ import com.telink.ble.mesh.ui.adapter.NetKeyInfoAdapter;
  * Created by kee on 2021/01/13.
  */
 public class MeshInfoActivity extends BaseActivity {
+    private MeshInfo mesh;
+    private TextView tv_mesh_name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,22 +54,67 @@ public class MeshInfoActivity extends BaseActivity {
             return;
         }
         setContentView(R.layout.activity_mesh_info);
-        setTitle("Mesh Info");
+        initData();
+        initView();
         updateUI();
         enableBackNav(true);
     }
 
-    private void updateUI() {
+    private void initView() {
+        setTitle("Mesh Info", mesh.meshName);
+        Toolbar toolbar = findViewById(R.id.title_bar);
+        toolbar.inflateMenu(R.menu.menu_single);
+        toolbar.getMenu().findItem(R.id.item_add).setIcon(R.drawable.ic_edit);
+        toolbar.setOnMenuItemClickListener(item -> {
+            showEditNameDialog();
+            return false;
+        });
+    }
+
+    private void initData() {
         Intent intent = getIntent();
         long id = intent.getLongExtra("MeshInfoId", 0);
-        MeshInfo mesh;
+        MeshInfo curMesh = TelinkMeshApplication.getInstance().getMeshInfo();
         if (id != 0) {
             mesh = MeshInfoService.getInstance().getById(id);
+            if (mesh.id == curMesh.id) {
+                mesh = curMesh;
+            }
         } else {
-            mesh = TelinkMeshApplication.getInstance().getMeshInfo();
+            mesh = curMesh;
         }
+    }
+
+
+    TextInputEditText et_single_input;
+
+    private void showEditNameDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Update Mesh Name")
+                .setView(R.layout.dialog_single_input)
+                .setPositiveButton("Confirm", (dialog, which) -> updateMeshName(et_single_input.getText().toString()))
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        AlertDialog dialog = builder.show();
+        et_single_input = dialog.findViewById(R.id.et_single_input);
+        et_single_input.setText(mesh.meshName);
+        et_single_input.setHint("please input new mesh name");
+    }
+
+    private void updateMeshName(String name) {
+        if (TextUtils.isEmpty(name)) {
+            toastMsg("mesh name can not by null!");
+            return;
+        }
+        mesh.meshName = name;
+        mesh.saveOrUpdate();
+        setSubTitle(name);
+        tv_mesh_name.setText(name);
+        toastMsg("update name success");
+    }
+
+    private void updateUI() {
+
         TextView
-                tv_mesh_name,
                 tv_mesh_uuid,
                 tv_iv_index,
                 tv_sno,

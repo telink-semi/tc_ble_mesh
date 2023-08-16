@@ -179,9 +179,14 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
     private void onDownloadSuccess(final String meshJson) {
         MeshLogger.d("device import json string: " + meshJson);
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
-        final MeshInfo result;
+        if (MeshStorageService.getInstance().importExternal(meshJson, this)) {
+            MeshLogger.d("Mesh storage import success");
+        } else {
+            MeshLogger.d("Mesh storage import fail");
+        }
+        /*final MeshInfo result;
         try {
-            result = MeshStorageService.getInstance().importExternal(meshJson, meshInfo);
+            result = MeshStorageService.getInstance().importExternal(meshJson);
         } catch (Exception e) {
             e.printStackTrace();
             runOnUiThread(() -> toastMsg("import failed"));
@@ -211,7 +216,7 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
                 }
                 syncDialogBuilder.show();
             }
-        });
+        });*/
 
     }
 
@@ -220,7 +225,6 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
         newMesh.saveOrUpdate();
         MeshService.getInstance().idle(true);
         TelinkMeshApplication.getInstance().setupMesh(newMesh);
-        MeshService.getInstance().setupMeshNetwork(newMesh.convertToConfiguration());
         Toast.makeText(this, "import success", Toast.LENGTH_SHORT).show();
         finish();
     }

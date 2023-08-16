@@ -226,7 +226,6 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                         FUCacheService.getInstance().clear(SettingsActivity.this);
                         MeshInfo meshInfo = MeshInfo.createNewMesh(SettingsActivity.this, null);
                         TelinkMeshApplication.getInstance().setupMesh(meshInfo);
-                        MeshService.getInstance().setupMeshNetwork(meshInfo.convertToConfiguration());
                         toastMsg("Wipe mesh info success");
                         showMeshInfo();
                     }

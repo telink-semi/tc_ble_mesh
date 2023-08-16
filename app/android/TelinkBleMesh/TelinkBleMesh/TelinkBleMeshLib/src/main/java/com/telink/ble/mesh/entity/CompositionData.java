@@ -29,6 +29,7 @@ import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
@@ -122,7 +123,7 @@ public class CompositionData implements Serializable, Parcelable {
         cpsData.cid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
         cpsData.pid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
 //        cpsData.vid = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
-        cpsData.vid = MeshUtils.bytes2Integer(data, index, 2, ByteOrder.BIG_ENDIAN); // // 大端
+        cpsData.vid = MeshUtils.bytes2Integer(data, index, 2, ByteOrder.BIG_ENDIAN); // // big endian
         index += 2;
 
         cpsData.crpl = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
@@ -151,6 +152,35 @@ public class CompositionData implements Serializable, Parcelable {
         }
 
         return cpsData;
+    }
+
+
+    public byte[] toBytes() {
+        if (raw != null) return raw;
+        byte[] re = ByteBuffer.allocate(10).order(ByteOrder.LITTLE_ENDIAN)
+                .putShort((short) cid)
+                .putShort((short) pid)
+                .put(MeshUtils.integer2Bytes(vid, 2, ByteOrder.BIG_ENDIAN))
+                .putShort((short) crpl)
+                .putShort((short) features).array();
+        int eleLen;
+        ByteBuffer bf;
+        for (Element ele : elements) {
+            eleLen = 4 + ele.sigNum * 2 + ele.vendorNum * 4;
+            bf = ByteBuffer.allocate(re.length + eleLen).order(ByteOrder.LITTLE_ENDIAN)
+                    .put(re)
+                    .putShort((short) ele.location)
+                    .put((byte) ele.sigNum)
+                    .put((byte) ele.vendorNum);
+            for (int modelId : ele.sigModels) {
+                bf.putShort((short) modelId);
+            }
+            for (int modelId : ele.vendorModels) {
+                bf.putInt(modelId);
+            }
+            re = bf.array();
+        }
+        return re;
     }
 
     /**

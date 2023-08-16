@@ -36,6 +36,7 @@ import com.telink.ble.mesh.core.message.lighting.CtlTemperatureStatusMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessStatusMessage;
 import com.telink.ble.mesh.entity.OnlineStatusInfo;
 import com.telink.ble.mesh.foundation.MeshApplication;
+import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.foundation.event.OnlineStatusEvent;
@@ -111,6 +112,7 @@ public class TelinkMeshApplication extends MeshApplication {
 
     public void setupMesh(MeshInfo mesh) {
         SharedPreferenceHelper.setSelectedMeshId(this, mesh.id);
+
         MeshLogger.d("setup mesh info: " + mesh.toString());
         if (mesh.extendGroups.size() == 0) {
             if (SharedPreferenceHelper.isLevelServiceEnable(this)) {
@@ -118,6 +120,7 @@ public class TelinkMeshApplication extends MeshApplication {
             }
         }
         this.meshInfo = mesh;
+        MeshService.getInstance().setupMeshNetwork(mesh.convertToConfiguration());
         dispatchEvent(new MeshEvent(this, MeshEvent.EVENT_TYPE_MESH_RESET, "mesh reset"));
     }
 

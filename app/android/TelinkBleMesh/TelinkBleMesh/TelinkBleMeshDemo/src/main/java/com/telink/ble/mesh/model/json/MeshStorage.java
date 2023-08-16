@@ -23,14 +23,25 @@
 package com.telink.ble.mesh.model.json;
 
 
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.model.GroupInfo;
+import com.telink.ble.mesh.model.MeshAppKey;
+import com.telink.ble.mesh.model.MeshInfo;
+import com.telink.ble.mesh.model.MeshNetKey;
+import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.model.db.Scheduler;
 import com.telink.ble.mesh.model.db.SchedulerRegister;
+import com.telink.ble.mesh.util.Arrays;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
+ * json format
  * Created by kee on 2018/9/10.
  * <p>
  * change type of period in publish from integer to object
@@ -91,6 +102,8 @@ public class MeshStorage {
 //    public String ivIndex = String.format("%08X", Defaults.IV_INDEX);
 
     public static class Provisioner {
+        public long id;
+
         public String provisionerName;
 
         public String UUID;
@@ -325,5 +338,254 @@ public class MeshStorage {
         public List<String> addresses;
         public String number;
     }
+
+    /**
+     * convert json to MeshInfo {@link MeshInfo}
+     * all provisioners will be saved in provisioner list {@link MeshInfo#allProvisioners},
+     * nodes will be save in three list:
+     * 1. {@link MeshInfo#provisionerNodes} for all provisioner nodes
+     * 2. {@link MeshInfo#excludedNodes} for all excluded nodes, that are kickout
+     * 3. others nodes {@link MeshInfo#nodes}
+     */
+    public MeshInfo convertToMeshInfo() {
+        MeshInfo meshInfo = new MeshInfo();
+        meshInfo.meshUUID = meshUUID;
+        meshInfo.meshName = meshName;
+        meshInfo.timestamp = timestamp;
+        /*
+         * convert all provisioners
+         */
+        for (Provisioner pv : provisioners) {
+            meshInfo.allProvisioners.add(com.telink.ble.mesh.model.json.Provisioner.from(pv));
+        }
+
+        /*
+         * convert all network keys
+         */
+        for (NetworkKey networkKey : netKeys) {
+            meshInfo.meshNetKeyList.add(new MeshNetKey(networkKey.name, networkKey.index, Arrays.hexToBytes(networkKey.key)));
+        }
+
+        /*
+         * convert all application keys
+         */
+        for (ApplicationKey applicationKey : appKeys) {
+            meshInfo.appKeyList.add(new MeshAppKey(applicationKey.name, applicationKey.index, Arrays.hexToBytes(applicationKey.key), applicationKey.boundNetKey));
+        }
+
+
+        /*
+         * convert all groups
+         */
+        GroupInfo group;
+        for (MeshStorage.Group gp : groups) {
+            group = new GroupInfo();
+            group.name = gp.name;
+            group.address = MeshUtils.hexToIntB(gp.address);
+            if (group.name.contains("subgroup")) {
+                meshInfo.extendGroups.add(group);
+            } else {
+                meshInfo.groups.add(group);
+            }
+        }
+
+
+        /*
+         * convert all groups
+         */
+        com.telink.ble.mesh.model.Scene scene;
+        for (MeshStorage.Scene outerScene : scenes) {
+            scene = new com.telink.ble.mesh.model.Scene();
+            scene.sceneId = MeshUtils.hexToIntB(outerScene.number);
+            scene.name = outerScene.name;
+            scene.addressList.addAll(outerScene.addresses);
+            meshInfo.scenes.add(scene);
+        }
+
+        /**
+         * convert all nodes,
+         * the exclude nodes will be saved in meshInfo.excludedNodes,
+         * other will be saved in
+         * ignore provisioner nodes
+         */
+        for (Node node : nodes) {
+            NodeInfo nodeInfo = nodeToNodeInfo(node);
+//            nodeInfo.save();
+            if (isProvisionerNode(node)) {
+                meshInfo.provisionerNodes.add(nodeInfo);
+            } else if (node.excluded) {
+                meshInfo.excludedNodes.add(nodeInfo);
+            } else {
+                meshInfo.nodes.add(nodeInfo);
+            }
+        }
+
+        return meshInfo;
+
+    }
+
+    /**
+     * convert node to {@link NodeInfo}
+     */
+    private NodeInfo nodeToNodeInfo(Node node) {
+        NodeInfo nodeInfo = new NodeInfo();
+        nodeInfo.meshAddress = MeshUtils.hexToIntB(node.unicastAddress);
+//                    deviceInfo.deviceUUID =  Arrays.hexToBytes(node.UUID.replace(":", "").replace("-", ""));
+        nodeInfo.deviceUUID = MeshUtils.uuidToByteArray(node.UUID);
+
+        nodeInfo.elementCnt = node.elements == null ? 0 : node.elements.size();
+        nodeInfo.deviceKey = Arrays.hexToBytes(node.deviceKey);
+
+        List<String> subList = new ArrayList<>();
+        PublishModel publishModel;
+        if (node.elements != null) {
+            for (MeshStorage.Element element : node.elements) {
+                if (element.models == null) {
+                    continue;
+                }
+                for (MeshStorage.Model model : element.models) {
+
+                    if (model.subscribe != null) {
+                        for (String sub : model.subscribe) {
+                            if (!MeshUtils.hexListContains(subList, sub)) {
+                                subList.add(sub);
+                            }
+                        }
+                    }
+                    if (model.publish != null) {
+                        MeshStorage.Publish publish = model.publish;
+                        int pubAddress = MeshUtils.hexToIntB(publish.address);
+                        // pub address from vc-tool， default is 0
+                        if (pubAddress != 0 && publish.period != null) {
+                            int elementAddress = element.index + MeshUtils.hexToIntB(node.unicastAddress);
+                            int interval = (publish.retransmit.interval / 50) - 1;
+                            int transmit = publish.retransmit.count | (interval << 3);
+                            int periodTime = publish.period.numberOfSteps * publish.period.resolution;
+                            publishModel = new PublishModel(elementAddress,
+                                    MeshUtils.hexToIntB(model.modelId),
+                                    MeshUtils.hexToIntB(publish.address),
+                                    periodTime,
+                                    publish.ttl,
+                                    publish.credentials,
+                                    transmit);
+                            nodeInfo.setPublishModel(publishModel);
+                        }
+
+                    }
+                }
+            }
+        }
+
+        nodeInfo.subList = subList;
+        nodeInfo.bound = (node.appKeys != null && node.appKeys.size() != 0);
+
+        nodeInfo.compositionData = nodeToCompositionData(node);
+
+        if (node.schedulers != null) {
+            for (MeshStorage.NodeScheduler nodeScheduler : node.schedulers) {
+                nodeInfo.schedulers.add(convertScheduler(nodeScheduler));
+            }
+        }
+        return nodeInfo;
+    }
+
+    /**
+     * convert node
+     *
+     * @param node
+     * @return
+     */
+    public CompositionData nodeToCompositionData(Node node) {
+
+        CompositionData compositionData = new CompositionData();
+
+        compositionData.cid = node.cid == null || node.cid.equals("") ? 0 : MeshUtils.hexToIntB(node.cid);
+        compositionData.pid = node.pid == null || node.pid.equals("") ? 0 : MeshUtils.hexToIntB(node.pid);
+        compositionData.vid = node.vid == null || node.vid.equals("") ? 0 : MeshUtils.hexToIntB(node.vid);
+        compositionData.crpl = node.crpl == null || node.crpl.equals("") ? 0 : MeshUtils.hexToIntB(node.crpl);
+
+        //value 2 : unsupported
+        int relaySpt = 0, proxySpt = 0, friendSpt = 0, lowPowerSpt = 0;
+        if (node.features != null) {
+            relaySpt = node.features.relay == 1 ? 0b0001 : 0;
+            proxySpt = node.features.proxy == 1 ? 0b0010 : 0;
+            friendSpt = node.features.friend == 1 ? 0b0100 : 0;
+            lowPowerSpt = node.features.lowPower == 1 ? 0b1000 : 0;
+        }
+        compositionData.features = relaySpt | proxySpt | friendSpt | lowPowerSpt;
+
+        compositionData.elements = new ArrayList<>();
+
+        if (node.elements != null) {
+            com.telink.ble.mesh.entity.Element infoEle;
+            for (MeshStorage.Element element : node.elements) {
+                infoEle = new com.telink.ble.mesh.entity.Element();
+
+                infoEle.sigModels = new ArrayList<>();
+                infoEle.vendorModels = new ArrayList<>();
+                if (element.models != null && element.models.size() != 0) {
+                    int modelId;
+                    for (MeshStorage.Model model : element.models) {
+
+                        // check if is vendor model
+                        if (model.modelId != null && !model.modelId.equals("")) {
+                            modelId = MeshUtils.hexToIntB(model.modelId);
+                            // Integer.valueOf(model.modelId, 16);
+                            if ((model.modelId.length()) > 4) {
+                                infoEle.vendorModels.add(modelId);
+                            } else {
+                                infoEle.sigModels.add(modelId);
+                            }
+                        }
+
+                    }
+                    infoEle.sigNum = infoEle.sigModels.size();
+                    infoEle.vendorNum = infoEle.vendorModels.size();
+                } else {
+                    infoEle.sigNum = 0;
+                    infoEle.vendorNum = 0;
+                }
+                infoEle.location = element.location == null || element.location.equals("") ? 0 : MeshUtils.hexToIntB(element.location);
+                compositionData.elements.add(infoEle);
+            }
+        }
+        return compositionData;
+    }
+
+
+    /**
+     * check
+     *
+     * @param node
+     * @return
+     */
+    private boolean isProvisionerNode(MeshStorage.Node node) {
+        for (MeshStorage.Provisioner provisioner : provisioners) {
+            if (UUID.fromString(provisioner.UUID).equals(UUID.fromString(node.UUID))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /**
+     * parse node scheduler to device scheduler
+     */
+    private Scheduler convertScheduler(NodeScheduler nodeScheduler) {
+        return new Scheduler.Builder()
+                .setIndex(nodeScheduler.index)
+                .setYear((byte) nodeScheduler.year)
+                .setMonth((short) nodeScheduler.month)
+                .setDay((byte) nodeScheduler.day)
+                .setHour((byte) nodeScheduler.hour)
+                .setMinute((byte) nodeScheduler.minute)
+                .setSecond((byte) nodeScheduler.second)
+                .setWeek((byte) nodeScheduler.week)
+                .setAction((byte) nodeScheduler.action)
+                .setTransTime((byte) nodeScheduler.transTime)
+                .setSceneId((short) nodeScheduler.sceneId).build();
+    }
+
 
 }

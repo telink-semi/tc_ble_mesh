@@ -19,14 +19,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
-import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.ble.GattConnection;
 import com.telink.ble.mesh.core.ble.GattRequest;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.foundation.MeshService;
-import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.BaseActivity;
 import com.telink.ble.mesh.util.Arrays;
@@ -172,7 +169,14 @@ public class CdtpImportActivity extends BaseActivity {
         builder.setTitle("Warning");
         builder.setMessage("Mesh JSON receive complete, import data?");
         builder.setPositiveButton("Confirm", (dialog, which) -> {
-            MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
+
+            if (MeshStorageService.getInstance().importExternal(jsonData, this)) {
+                dialog.dismiss();
+                setResult(RESULT_OK);
+                finish();
+            }
+
+            /*MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
             MeshInfo newMesh = null;
             try {
                 newMesh = MeshStorageService.getInstance().importExternal(jsonData, localMesh);
@@ -192,8 +196,7 @@ public class CdtpImportActivity extends BaseActivity {
             toastMsg("import success");
             dialog.dismiss();
             setResult(RESULT_OK);
-            finish();
-//            showTipDialog("import success");
+            finish();*/
         });
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.show();
