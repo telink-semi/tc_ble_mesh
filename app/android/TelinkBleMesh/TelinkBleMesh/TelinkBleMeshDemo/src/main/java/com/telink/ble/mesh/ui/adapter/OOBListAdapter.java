@@ -37,7 +37,7 @@ import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.OobInfo;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.OOBEditActivity;
-import com.telink.ble.mesh.ui.OOBInfoActivity;
+import com.telink.ble.mesh.ui.OobListActivity;
 import com.telink.ble.mesh.util.Arrays;
 
 import java.text.DateFormat;
@@ -128,7 +128,7 @@ public class OOBListAdapter extends BaseRecyclerViewAdapter<OOBListAdapter.ViewH
                 ((Activity) mContext).startActivityForResult(
                         new Intent(mContext, OOBEditActivity.class)
                                 .putExtra(OOBEditActivity.EXTRA_OOB, mOobInfos.get(position).id)
-                        , OOBInfoActivity.REQUEST_CODE_EDIT_OOB
+                        , OobListActivity.REQUEST_CODE_EDIT_OOB
                 );
             }
         }

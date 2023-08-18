@@ -56,7 +56,7 @@ import java.util.List;
 /**
  * show static OOB list
  */
-public class OOBInfoActivity extends BaseActivity {
+public class OobListActivity extends BaseActivity {
 
     private final String[] ACTIONS = new String[]{"Manual Input",
             "Import from file"};
@@ -85,9 +85,9 @@ public class OOBInfoActivity extends BaseActivity {
                     List<OobInfo> oobFromFile = (List<OobInfo>) msg.obj;
                     MeshInfoService.getInstance().addOobInfo(oobFromFile);
                     mAdapter.notifyDataSetChanged();
-                    Toast.makeText(OOBInfoActivity.this, "Success : " + oobFromFile.size() + " oob imported", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(OobListActivity.this, "Success : " + oobFromFile.size() + " oob imported", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(OOBInfoActivity.this, "Import Fail: check the file format", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(OobListActivity.this, "Import Fail: check the file format", Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -132,9 +132,9 @@ public class OOBInfoActivity extends BaseActivity {
             actionSelectDialog = new AlertDialog.Builder(this);
             actionSelectDialog.setItems(ACTIONS, (dialog, which) -> {
                 if (which == 0) {
-                    startActivityForResult(new Intent(OOBInfoActivity.this, OOBEditActivity.class), REQUEST_CODE_ADD_OOB);
+                    startActivityForResult(new Intent(OobListActivity.this, OOBEditActivity.class), REQUEST_CODE_ADD_OOB);
                 } else if (which == 1) {
-                    startActivityForResult(new Intent(OOBInfoActivity.this, FileSelectActivity.class)
+                    startActivityForResult(new Intent(OobListActivity.this, FileSelectActivity.class)
                                     .putExtra(FileSelectActivity.KEY_SUFFIX, ".txt")
                             , REQUEST_CODE_SELECT_DATABASE);
                 }

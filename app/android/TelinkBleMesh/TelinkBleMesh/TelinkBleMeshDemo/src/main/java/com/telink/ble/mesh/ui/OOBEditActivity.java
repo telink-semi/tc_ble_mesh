@@ -122,6 +122,7 @@ public class OOBEditActivity extends BaseActivity {
         oobInfo.timestamp = System.currentTimeMillis();
         oobInfo.oob = oob;
         oobInfo.deviceUUID = uuid;
+        MeshInfoService.getInstance().updateOobInfo(oobInfo);
         return true;
     }
 
