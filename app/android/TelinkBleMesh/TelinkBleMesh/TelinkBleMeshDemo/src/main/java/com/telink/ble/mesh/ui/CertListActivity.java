@@ -101,7 +101,7 @@ public class CertListActivity extends BaseActivity {
                 new Intent(CertListActivity.this, CertDetailActivity.class)
                         .putExtra(CertDetailActivity.KEY_EXTRA_CERT_INFO, certificateList.get(position))
                         .putExtra(CertDetailActivity.KEY_EXTRA_CERT_DATA, certDataList.get(position))
-                , OOBInfoActivity.REQUEST_CODE_EDIT_OOB
+                , OobListActivity.REQUEST_CODE_EDIT_OOB
         ));
         mAdapter.setOnItemLongClickListener(position -> {
             showActionsDialog(position);

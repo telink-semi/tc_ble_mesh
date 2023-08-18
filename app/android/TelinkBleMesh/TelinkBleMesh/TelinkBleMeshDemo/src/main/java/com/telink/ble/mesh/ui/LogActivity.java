@@ -42,6 +42,8 @@ import com.telink.ble.mesh.util.LogInfo;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
@@ -84,7 +86,7 @@ public class LogActivity extends BaseActivity {
         if (dialog == null) {
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             final EditText editText = new EditText(this);
-            dialogBuilder.setTitle("Pls input filename(sdcard/" + LOG_FILE_PATH + "/[filename].text)");
+            dialogBuilder.setTitle("Pls input filename(sdcard/" + LOG_FILE_PATH + "/[filename].txt)");
             dialogBuilder.setView(editText);
             dialogBuilder.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
                 @Override
@@ -111,35 +113,39 @@ public class LogActivity extends BaseActivity {
     private void saveLog(final String fileName) {
         new Thread(() -> {
             SimpleDateFormat mDateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.getDefault());
-            final StringBuilder sb = new StringBuilder("TelinkLog\n");
+
             final LogInfo[] logs = MeshLogger.logInfoList.toArray(new LogInfo[]{});
-            System.out.println("logs: " + logs.length);
-            for (LogInfo logInfo : logs) {
-                if (logInfo != null) {
-                    sb.append(mDateFormat.format(logInfo.millis)).append("/").append(logInfo.tag).append(":")
-                            .append(logInfo.logMessage).append("\n");
-                }
+            File root = Environment.getExternalStorageDirectory();
+            File dir = new File(root.getAbsolutePath() + File.separator + LOG_FILE_PATH);
+
+            if (!dir.exists()) {
+                dir.mkdirs();
             }
-            saveLogInFile(fileName, sb.toString());
+
+            try {
+                File file = new File(dir, fileName + ".txt");
+                if (!file.exists())
+                    file.createNewFile();
+                FileWriter writer = new FileWriter(file, true);
+                writer.append("TelinkLog\n");
+                for (LogInfo logInfo : logs) {
+                    if (logInfo != null) {
+                        writer.append(mDateFormat.format(logInfo.millis)).append("/").append(logInfo.tag).append(":")
+                                .append(logInfo.logMessage).append("\n");
+                    }
+                }
+                writer.flush();
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             mHandler.post(() -> {
                 dismissWaitingDialog();
                 Toast.makeText(LogActivity.this, fileName + " saved", Toast.LENGTH_SHORT).show();
             });
         }).start();
     }
-
-    /*public void checkConnectDevices(View view) {
-        BluetoothManager manager = (BluetoothManager) this.getSystemService(Context.BLUETOOTH_SERVICE);
-        List<BluetoothDevice> devices = manager.getConnectedDevices(BluetoothProfile.GATT);
-//        Toast.makeText(this, "current connect" + devices.size(), Toast.LENGTH_SHORT).showToast();
-        TelinkMeshApplication.getInstance().saveLog("The connected device count: " + devices.size());
-        for (BluetoothDevice device : devices) {
-            TelinkMeshApplication.getInstance().saveLog("\tThe connected device: " + device.getName() + "--" + device.getAddress());
-        }
-
-//        String info = TelinkMeshApplication.getInstance().getLogInfo();
-//        tv_info.setText(info);
-    }*/
 
     public void saveLogInFile(String fileName, String logInfo) {
         File root = Environment.getExternalStorageDirectory();
@@ -148,5 +154,4 @@ public class LogActivity extends BaseActivity {
             MeshLogger.d("logMessage saved in: " + fileName);
         }
     }
-
 }

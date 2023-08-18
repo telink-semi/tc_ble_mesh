@@ -41,7 +41,7 @@ import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.ui.CertListActivity;
 import com.telink.ble.mesh.ui.DebugActivity;
 import com.telink.ble.mesh.ui.NetworkListActivity;
-import com.telink.ble.mesh.ui.OOBInfoActivity;
+import com.telink.ble.mesh.ui.OobListActivity;
 import com.telink.ble.mesh.ui.SettingsActivity;
 import com.telink.ble.mesh.ui.test.IntervalTestActivity;
 import com.telink.ble.mesh.ui.test.ResponseTestActivity;
@@ -131,7 +131,7 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
                 break;
 
             case R.id.view_oob:
-                startActivity(new Intent(getActivity(), OOBInfoActivity.class));
+                startActivity(new Intent(getActivity(), OobListActivity.class));
                 break;
             case R.id.view_cert:
                 startActivity(new Intent(getActivity(), CertListActivity.class));

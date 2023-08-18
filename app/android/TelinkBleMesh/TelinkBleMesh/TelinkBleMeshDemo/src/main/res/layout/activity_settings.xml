@@ -115,9 +115,9 @@
             </LinearLayout>
             <!--     remote provision       -->
             <LinearLayout
+                android:id="@+id/ll_rp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/ll_rp"
                 android:orientation="vertical">
 
                 <View
@@ -164,9 +164,9 @@
 
             <!--     enable subscription level service model id       -->
             <LinearLayout
+                android:id="@+id/ll_sub"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/ll_sub"
                 android:orientation="vertical">
 
                 <View
@@ -195,9 +195,9 @@
                         android:layout_height="wrap_content"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp"
-                        android:visibility="gone"
                         android:src="@drawable/ic_tip"
-                        android:tint="@color/grey" />
+                        android:tint="@color/grey"
+                        android:visibility="gone" />
 
                     <View
                         android:layout_width="0dp"
@@ -513,7 +513,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="Reset Mesh"
-                android:theme="@style/WarnButton" />
+                android:theme="@style/WarnButton"
+                android:visibility="gone" />
 
         </LinearLayout>
 

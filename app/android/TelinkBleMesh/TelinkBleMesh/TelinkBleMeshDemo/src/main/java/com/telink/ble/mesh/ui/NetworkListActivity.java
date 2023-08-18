@@ -140,11 +140,12 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         AlertDialog dialog = builder.show();
         et_single_input = dialog.findViewById(R.id.et_single_input);
+        et_single_input.setHint("please input new name");
     }
 
     private void createNetwork(String name) {
         if (TextUtils.isEmpty(name)) {
-            toastMsg("pls input ");
+            toastMsg("pls input network name");
             return;
         }
         MeshInfo meshInfo = MeshInfo.createNewMesh(this, name);
