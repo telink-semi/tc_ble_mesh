@@ -1,5 +1,11 @@
 ## V3.3.3.6
 
+### Dependency Updates
+
+* telink_b85m_ble_single_connection_sdk_v3.4.1
+* mesh library commit log: 5d1b6666d7a518b3c93681cf1b896c63e2d931e6
+* ble  library commit log: the same as mesh library.
+
 ### Bug Fixes
 
 * N/A
@@ -29,6 +35,12 @@
   - 8258_mesh_gw:_____Flash 128 KB, RAM (36 KB + 3K stack),
   - 8258_mesh_switch:__Flash 106 KB, RAM (25 KB + 3K stack),
 
+
+### Dependency Updates
+
+* telink_b85m_ble_single_connection_sdk_v3.4.1
+* mesh library commit log: 5d1b6666d7a518b3c93681cf1b896c63e2d931e6
+* ble  library commit log: the same as mesh library.
 
 ### Bug Fixes
 
