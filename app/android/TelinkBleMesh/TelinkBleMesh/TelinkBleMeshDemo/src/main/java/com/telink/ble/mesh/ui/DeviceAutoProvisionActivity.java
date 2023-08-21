@@ -123,7 +123,7 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
     private void initTitle() {
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.device_scan);
-        setTitle("Device Scan(Auto)");
+        setTitle("Device Scan", "Auto");
 //        toolbar.setSubtitle("provision -> bind");
         refreshItem = toolbar.getMenu().findItem(R.id.item_refresh);
         refreshItem.setVisible(false);

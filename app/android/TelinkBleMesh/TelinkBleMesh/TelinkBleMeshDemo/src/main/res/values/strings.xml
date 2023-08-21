@@ -53,7 +53,7 @@
 
     <string name="auto_provision">Auto Provision</string>
 
-    <string name="private_mode">Private Mode(Default Bound)</string>
+    <string name="private_mode">Enable Private Mode(Default Bound)</string>
 
 
     <string name="enable_remote_provision">Remote Provision</string>
@@ -127,9 +127,24 @@
         <item>4. Back to home page, and waiting for mesh reconnect </item>
     </string-array>
 
+    <string name="provision_mode_tip">
+        Enabled for scanning , provisioning and key-binding one by one;
+        Disabled for selectable networking.
+    </string>
+
+    <string name="sub_level_service_tip">
+        Enabled for scanning , provisioning and key-binding one by one;
+        Disabled for selectable networking.
+    </string>
+
     <string name="auto_provision_tip">
         Enabled for scanning , provisioning and key-binding one by one;
         Disabled for selectable networking.
+    </string>
+
+    <string name="log_tip">
+        TIP:
+        Enabled for default bound when key-binding;
     </string>
 
     <string name="private_mode_tip">
@@ -154,6 +169,11 @@
     </string>
 
     <string name="use_no_oob_tip">
+        Use No-OOB if device UUID not found when device is static-OOB supported
+    </string>
+
+
+    <string name="online_status_tip">
         Use No-OOB if device UUID not found when device is static-OOB supported
     </string>
 

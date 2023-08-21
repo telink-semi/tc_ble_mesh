@@ -102,7 +102,7 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
     private void initTitle() {
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.device_scan);
-        setTitle("Device Scan(Fast)");
+        setTitle("Device Scan", "Fast");
 
         MenuItem refreshItem = toolbar.getMenu().findItem(R.id.item_refresh);
         refreshItem.setVisible(false);

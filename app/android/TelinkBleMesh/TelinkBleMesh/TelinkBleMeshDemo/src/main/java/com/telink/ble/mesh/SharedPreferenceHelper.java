@@ -36,7 +36,8 @@ import java.util.UUID;
 
 public class SharedPreferenceHelper {
 
-    private static final String DEFAULT_NAME = "telink_shared";
+    private static final String SHARE_PREFERENCE_NAME = "telink_shared";
+
     private static final String KEY_FIRST_LOAD = "com.telink.bluetooth.light.KEY_FIRST_LOAD";
 
     /**
@@ -55,15 +56,11 @@ public class SharedPreferenceHelper {
 
     private static final String KEY_LOCAL_UUID = "com.telink.bluetooth.light.KEY_PROVISIONER_UUID";
 
-    private static final String KEY_REMOTE_PROVISION = "com.telink.bluetooth.light.KEY_REMOTE_PROVISION";
-
-    private static final String KEY_FAST_PROVISION = "com.telink.bluetooth.light.KEY_FAST_PROVISION";
+    private static final String KEY_PROVISION_MODE = "com.telink.bluetooth.light.KEY_PROVISION_MODE";
 
     private static final String KEY_NO_OOB = "com.telink.bluetooth.light.KEY_NO_OOB";
 
     private static final String KEY_EXTEND_BEARER_MODE = "com.telink.bluetooth.light.KEY_EXTEND_BEARER_MODE";
-
-    private static final String KEY_AUTO_PV = "com.telink.bluetooth.light.KEY_AUTO_PV";
 
     private static final String KEY_DIST_ADR = "com.telink.bluetooth.light.KEY_DIST_ADR";
 
@@ -71,125 +68,139 @@ public class SharedPreferenceHelper {
 
     private static final String KEY_LEVEL_SERVICE = "com.telink.bluetooth.light.KEY_LEVEL_SERVICE";
 
-    public static boolean isFirstLoad(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(KEY_FIRST_LOAD, true);
-    }
 
-    public static void setFirst(Context context, boolean isFirst) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        sharedPreferences.edit().putBoolean(KEY_FIRST_LOAD, isFirst).apply();
-    }
+    public static final boolean DEFAULT_LOG_ENABLE = true;
+
+
+    public static final boolean DEFAULT_PRIVATE_MODE_ENABLE = false;
+
+    public static final boolean DEFAULT_LEVEL_SERVICE_ENABLE = false;
+
+    public static final boolean DEFAULT_AUTO_USE_NO_OOB_ENABLE = true;
+
+
+    public static final int PROVISION_MODE_NORMAL_SELECTABLE = 0;
+
+    public static final int PROVISION_MODE_NORMAL_AUTO = 1;
+
+    public static final int PROVISION_MODE_REMOTE = 2;
+
+    public static final int PROVISION_MODE_FAST = 3;
+
+    public static final int DEFAULT_PROVISION_MODE = PROVISION_MODE_NORMAL_SELECTABLE;
 
 
     public static boolean isLocationIgnore(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(KEY_LOCATION_IGNORE, false);
     }
 
     public static void setLocationIgnore(Context context, boolean ignore) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_LOCATION_IGNORE, ignore).apply();
     }
 
+    public static void resetAll(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit()
+                .putBoolean(KEY_LOG_ENABLE, DEFAULT_LOG_ENABLE)
+                .putBoolean(KEY_PRIVATE_MODE, DEFAULT_PRIVATE_MODE_ENABLE)
+                .putInt(KEY_PROVISION_MODE, DEFAULT_PROVISION_MODE)
+                .putBoolean(KEY_LEVEL_SERVICE, DEFAULT_LEVEL_SERVICE_ENABLE)
+                .putString(KEY_EXTEND_BEARER_MODE, ExtendBearerMode.NONE.name())
+                .putBoolean(KEY_NO_OOB, DEFAULT_AUTO_USE_NO_OOB_ENABLE)
+                .apply();
+    }
+
     public static boolean isLogEnable(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(KEY_LOG_ENABLE, true);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KEY_LOG_ENABLE, DEFAULT_LOG_ENABLE);
     }
 
     public static void setLogEnable(Context context, boolean enable) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_LOG_ENABLE, enable).apply();
     }
 
     public static boolean isPrivateMode(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(KEY_PRIVATE_MODE, false);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KEY_PRIVATE_MODE, DEFAULT_PRIVATE_MODE_ENABLE);
     }
 
     public static void setPrivateMode(Context context, boolean enable) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_PRIVATE_MODE, enable).apply();
     }
 
     public static String getLocalUUID(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         String uuid = sharedPreferences.getString(KEY_LOCAL_UUID, null);
         if (uuid == null) {
             uuid = UUID.randomUUID().toString().toUpperCase();
             sharedPreferences.edit().putString(KEY_LOCAL_UUID, uuid).apply();
         }
         return uuid;
-
     }
 
+
+    public static int getProvisionMode(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getInt(KEY_PROVISION_MODE, DEFAULT_PROVISION_MODE);
+    }
 
     public static boolean isRemoteProvisionEnable(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(KEY_REMOTE_PROVISION, false);
-    }
-
-    public static void setRemoteProvisionEnable(Context context, boolean enable) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        sharedPreferences.edit().putBoolean(KEY_REMOTE_PROVISION, enable).apply();
+        return getProvisionMode(context) == PROVISION_MODE_REMOTE;
     }
 
 
     public static boolean isFastProvisionEnable(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(KEY_FAST_PROVISION, false);
+        return getProvisionMode(context) == PROVISION_MODE_FAST;
     }
 
-    public static void setFastProvisionEnable(Context context, boolean enable) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        sharedPreferences.edit().putBoolean(KEY_FAST_PROVISION, enable).apply();
+    public static void setProvisionMode(Context context, int mode) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putInt(KEY_PROVISION_MODE, mode).apply();
     }
 
 
     public static boolean isNoOOBEnable(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(KEY_NO_OOB, true);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KEY_NO_OOB, DEFAULT_AUTO_USE_NO_OOB_ENABLE);
     }
 
     public static void setNoOOBEnable(Context context, boolean enable) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_NO_OOB, enable).apply();
     }
 
-
     public static ExtendBearerMode getExtendBearerMode(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         return ExtendBearerMode.valueOf(sharedPreferences.getString(KEY_EXTEND_BEARER_MODE, ExtendBearerMode.NONE.name()));
     }
 
     public static void setExtendBearerMode(Context context, ExtendBearerMode extendBearerMode) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putString(KEY_EXTEND_BEARER_MODE, extendBearerMode.name()).apply();
     }
 
     public static boolean isAutoPvEnable(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(KEY_AUTO_PV, false);
-    }
-
-    public static void setAutoPvEnable(Context context, boolean enable) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        sharedPreferences.edit().putBoolean(KEY_AUTO_PV, enable).apply();
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getInt(KEY_PROVISION_MODE, DEFAULT_PROVISION_MODE) == PROVISION_MODE_NORMAL_AUTO;
     }
 
     public static boolean isLevelServiceEnable(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getBoolean(KEY_LEVEL_SERVICE, false);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getBoolean(KEY_LEVEL_SERVICE, DEFAULT_LEVEL_SERVICE_ENABLE);
     }
 
     public static void setLevelServiceEnable(Context context, boolean enable) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putBoolean(KEY_LEVEL_SERVICE, enable).apply();
     }
 
 
     public static long getSelectedMeshId(Context context) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         return sharedPreferences.getLong(KEY_SELECTED_MESH_ID, -1);
     }
 
@@ -197,27 +208,7 @@ public class SharedPreferenceHelper {
      * @param meshId {@link com.telink.ble.mesh.model.MeshInfo#id}
      */
     public static void setSelectedMeshId(Context context, long meshId) {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putLong(KEY_SELECTED_MESH_ID, meshId).apply();
     }
-
-
-
-    /*public static void setMeshOTAState(Context context, int distAddress, UpdatePolicy policy) {
-        MeshLogger.d("save meshOTA state: distAdr - " + distAddress + " -- " + policy);
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        sharedPreferences.edit().putInt(KEY_DIST_ADR, distAddress)
-                .putString(KEY_APPLY_POLICY, policy.name())
-                .apply();
-    }
-
-    public static void clearMeshOTAState(Context context) {
-        MeshLogger.d("clear meshOTA state -- ");
-        SharedPreferences sharedPreferences = context.getSharedPreferences(DEFAULT_NAME, Context.MODE_PRIVATE);
-        sharedPreferences.edit().putInt(KEY_DIST_ADR, 0)
-                .putString(KEY_APPLY_POLICY, "")
-                .apply();
-    }*/
-
-
 }

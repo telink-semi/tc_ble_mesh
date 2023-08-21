@@ -139,7 +139,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
     private void initTitle() {
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.device_scan);
-        setTitle("Device Scan(Remote)");
+        setTitle("Device Scan", "Remote");
 
         MenuItem refreshItem = toolbar.getMenu().findItem(R.id.item_refresh);
         refreshItem.setVisible(false);

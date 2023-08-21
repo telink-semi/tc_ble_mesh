@@ -186,7 +186,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     private void initTitle() {
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.device_scan);
-        setTitle("Device Scan");
+        setTitle("Device Scan", "Selectable");
         refreshItem = toolbar.getMenu().findItem(R.id.item_refresh);
         refreshItem.setVisible(false);
 
