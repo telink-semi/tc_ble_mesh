@@ -33,6 +33,7 @@ import com.telink.ble.mesh.demo.R;
  */
 public class TipsActivity extends BaseActivity {
     public static final String INTENT_KEY_TIP_RES_ID = "TipsActivity.TIP_RES_ID";
+    public static final String INTENT_KEY_TIP_SUB_TITLE = "TipsActivity.INTENT_KEY_TIP_SUB_TITLE";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,8 +42,10 @@ public class TipsActivity extends BaseActivity {
             return;
         }
         setContentView(R.layout.activity_share_tip);
-        setTitle("Tip");
+
         int tipResId = getIntent().getIntExtra(INTENT_KEY_TIP_RES_ID, R.string.share_tip);
+        String subTitle = getIntent().getStringExtra(INTENT_KEY_TIP_SUB_TITLE);
+        setTitle("Tip", subTitle);
         TextView tv_tip = findViewById(R.id.tv_tip);
         tv_tip.setText(tipResId);
         enableBackNav(true);
