@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/15
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigNetworkManager.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/15.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "SigNetworkManager.h"
 #import "SigDataSource.h"
@@ -72,8 +66,8 @@
     return MAX(_manager.acknowledgmentTimerInterval, 0.150) + (double)(ttl) * 0.050;
 }
 
-- (NSTimeInterval)transmissionTimerInteral:(UInt8)ttl {
-    return MAX(_manager.transmissionTimerInteral, 0.200) + (double)(ttl) * 0.050;
+- (NSTimeInterval)transmissionTimerInterval:(UInt8)ttl {
+    return MAX(_manager.transmissionTimerInterval, 0.200) + (double)(ttl) * 0.050;
 }
 
 - (int)retransmissionLimit {
@@ -92,23 +86,19 @@
     [_accessLayer sendMessage:message fromElement:element toDestination:destination withTtl:initialTtl usingApplicationKey:applicationKey command:command];
 }
 
-- (void)sendMeshMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey {
-    [_accessLayer sendMessage:message fromElement:element toDestination:destination withTtl:initialTtl usingApplicationKey:applicationKey];
+- (void)sendConfigMessage:(SigConfigMessage *)configMessage toDestination:(UInt16)destination withTtl:(UInt8)initialTtl command:(SDKLibCommand *)command {
+    [_accessLayer sendSigConfigMessage:configMessage toDestination:destination withTtl:initialTtl command:command];
 }
 
-- (void)sendConfigMessage:(SigConfigMessage *)configMessage toDestination:(UInt16)destination withTtl:(UInt8)initialTtl {
-    [_accessLayer sendSigConfigMessage:configMessage toDestination:destination withTtl:initialTtl];
-}
-
-- (void)replyToMessageSentToOrigin:(UInt16)origin withMessage:(SigMeshMessage *)message toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet {
+- (void)replyToMessageSentToOrigin:(UInt16)origin withMessage:(SigMeshMessage *)message toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
     SigElementModel *primaryElement = _manager.dataSource.curLocationNodeModel.elements.firstObject;
     if (primaryElement) {
-        [_accessLayer replyToMessageSentToOrigin:origin withMeshMessage:message fromElement:primaryElement toDestination:destination usingKeySet:keySet];
+        [_accessLayer replyToMessageSentToOrigin:origin withMeshMessage:message fromElement:primaryElement toDestination:destination usingKeySet:keySet command:command];
     }
 }
 
-- (void)replyToMessageSentToOrigin:(UInt16)origin withMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet {
-    [_accessLayer replyToMessageSentToOrigin:origin withMeshMessage:message fromElement:element toDestination:destination usingKeySet:keySet];
+- (void)replyToMessageSentToOrigin:(UInt16)origin withMessage:(SigMeshMessage *)message fromElement:(SigElementModel *)element toDestination:(UInt16)destination usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
+    [_accessLayer replyToMessageSentToOrigin:origin withMeshMessage:message fromElement:element toDestination:destination usingKeySet:keySet command:command];
 }
 
 - (void)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message {
@@ -156,12 +146,5 @@
         }
     });
 }
-
-#pragma mark - new api
-
-//- (void)setFilter:(SigNetkeyModel *)netkeyModel {
-//    TeLogDebug(@"netkeyModel=%@",netkeyModel);
-//    [self.networkLayer updateProxyFilterUsingNetworkKey:netkeyModel];
-//}
 
 @end

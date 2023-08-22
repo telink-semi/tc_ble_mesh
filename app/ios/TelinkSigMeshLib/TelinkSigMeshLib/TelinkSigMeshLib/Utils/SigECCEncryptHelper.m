@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/22
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigECCEncryptHelper.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/22.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "SigECCEncryptHelper.h"
 #import <Security/Security.h>
@@ -62,18 +56,18 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 }
 
 - (void)eccInit {
-    __weak typeof(self) weakSelf = self;
+//    __weak typeof(self) weakSelf = self;
     [self getECCKeyPair:^(NSData * _Nonnull publicKey, NSData * _Nonnull privateKey) {
         if (@available(iOS 10.0, *)) {
-            TeLogInfo(@"init ECC bigger than ios10, publicKey=%@,privateKey=%@",weakSelf.seckeyModel.publicKey,weakSelf.seckeyModel.privateKey);
+//            TeLogVerbose(@"init ECC bigger than ios10, publicKey=%@,privateKey=%@",weakSelf.seckeyModel.publicKey,weakSelf.seckeyModel.privateKey);
         } else {
-            TeLogInfo(@"init ECC lower than ios10, publicKey=%@,privateKey=%@",weakSelf.publicKeyLowIos10,weakSelf.privateKeyLowIos10);
+//            TeLogVerbose(@"init ECC lower than ios10, publicKey=%@,privateKey=%@",weakSelf.publicKeyLowIos10,weakSelf.privateKeyLowIos10);
         }
     }];
 }
 
 ///返回手机端64字节的ECC公钥
-- (NSData *)getPublicKeyData {
+- (NSData * _Nullable)getPublicKeyData {
     if (@available(iOS 10.0, *)) {
         if (self.seckeyModel && self.seckeyModel.publicKey) {
             NSData *pub = [self getPublicKeyBitsFromKey:self.seckeyModel.publicKey];
@@ -197,43 +191,49 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 ///
 /// - parameter publicKey: The device's Public Key as bytes.
 /// - returns: The ECDH Shared Secret.
-- (NSData *)calculateSharedSecretEithPublicKey:(NSData *)publicKey {
-    // First byte has to be 0x04 to indicate uncompressed representation.
-    UInt8 tem = 0x04;
-    NSMutableData *devicePublicKeyData = [NSMutableData dataWithBytes:&tem length:1];
-    [devicePublicKeyData appendData:publicKey];
-    
-    NSMutableDictionary * pubKeyParameters = [[NSMutableDictionary alloc] init];
-    [pubKeyParameters setObject:(id)kSecAttrKeyTypeEC forKey:(id)kSecAttrKeyType];
-    [pubKeyParameters setObject:(__bridge id)kSecAttrKeyClassPublic forKey:(__bridge id)kSecAttrKeyClass];
-    
-    CFErrorRef *err = nil;
-    SecKeyRef devicePublicKey = NULL;
-    
+- (NSData * _Nullable)calculateSharedSecretEithPublicKey:(NSData *)publicKey {
     if (@available(iOS 10.0, *)) {
-        devicePublicKey = SecKeyCreateWithData((CFDataRef)devicePublicKeyData, (CFDictionaryRef)pubKeyParameters, err);
-    }
-    if (err) {
-        TeLogError(@"SecKeyCreateWithData fail.");
-        return nil;
-    }
-    
-    NSMutableDictionary * exchangeResultParams = [[NSMutableDictionary alloc] init];
-    if (@available(iOS 10.0, *)) {
+        // First byte has to be 0x04 to indicate uncompressed representation.
+        UInt8 tem = 0x04;
+        NSMutableData *devicePublicKeyData = [NSMutableData dataWithBytes:&tem length:1];
+        [devicePublicKeyData appendData:publicKey];
+        
+        NSMutableDictionary * pubKeyParameters = [[NSMutableDictionary alloc] init];
+        [pubKeyParameters setObject:(id)kSecAttrKeyTypeEC forKey:(id)kSecAttrKeyType];
+        [pubKeyParameters setObject:(__bridge id)kSecAttrKeyClassPublic forKey:(__bridge id)kSecAttrKeyClass];
+        
+        CFErrorRef error = NULL;
+        SecKeyRef devicePublicKey = SecKeyCreateWithData((CFDataRef)devicePublicKeyData, (CFDictionaryRef)pubKeyParameters, &error);
+        if (error) {
+            CFRelease(error);
+            if (devicePublicKey) {
+                CFRelease(devicePublicKey);
+            }
+            TeLogError(@"SecKeyCreateWithData fail.");
+            return nil;
+        }
+        
+        NSMutableDictionary * exchangeResultParams = [[NSMutableDictionary alloc] init];
         [exchangeResultParams setObject:@(32) forKey:(id)kSecKeyKeyExchangeParameterRequestedSize];
-    }
-    
-    NSData *ssk;
-    if (@available(iOS 10.0, *)) {
-        ssk = CFBridgingRelease(SecKeyCopyKeyExchangeResult(self.seckeyModel.privateKey, kSecKeyAlgorithmECDHKeyExchangeStandard, devicePublicKey, (CFDictionaryRef)exchangeResultParams, err));
-    }
-    
-    if (err) {
-        TeLogError(@"SecKeyCopyKeyExchangeResult fail.");
+
+        CFDataRef sharedSecret = SecKeyCopyKeyExchangeResult(self.seckeyModel.privateKey, kSecKeyAlgorithmECDHKeyExchangeStandard, devicePublicKey, (__bridge CFDictionaryRef)pubKeyParameters, &error);
+        if (devicePublicKey) {
+            CFRelease(devicePublicKey);
+        }
+        if (error) {
+            CFRelease(error);
+            if (sharedSecret) {
+                CFRelease(sharedSecret);
+            }
+            TeLogError(@"SecKeyCopyKeyExchangeResult fail.");
+            return nil;
+        }
+                
+        return (__bridge_transfer NSData*)sharedSecret;
+
+    } else {
         return nil;
     }
-    
-    return ssk;
 }
 
 @end

@@ -1,59 +1,72 @@
 /********************************************************************************************************
-* @file     SigStruct.h
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigEnumeration.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/6.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     SigStruct.h
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/9/6
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #ifndef SigEnumeration_h
 #define SigEnumeration_h
 
+/// Table 3.43: Opcode formats
+/// - seeAlso: Mesh_v1.0.pdf  (page.93)
+typedef enum : UInt8 {
+    SigOpCodeType_sig1 = 1,//1-octet Opcodes,Opcode Format:0xxxxxxx (excluding 01111111)
+    SigOpCodeType_sig2 = 2,//2-octet Opcodes,Opcode Format:10xxxxxx xxxxxxxx
+    SigOpCodeType_vendor3 = 3,//3-octet Opcodes,Opcode Format:11xxxxxx zzzzzzzz
+    SigOpCodeType_RFU = 0b01111111,
+} SigOpCodeType;
+
 /// Table 5.14: Provisioning PDU types.
 /// - seeAlso: Mesh_v1.0.pdf  (page.238)
+/// Table 5.18: Provisioning PDU types.
+/// - seeAlso: MshPRFd1.1r11_clean.pdf  (page.488)
 typedef enum : UInt8 {
     /// Invites a device to join a mesh network
-    SigProvisioningPduType_invite        = 0,
+    SigProvisioningPduType_invite         = 0x00,
     /// Indicates the capabilities of the device
-    SigProvisioningPduType_capabilities  = 1,
+    SigProvisioningPduType_capabilities   = 0x01,
     /// Indicates the provisioning method selected by the Provisioner based on the capabilities of the device
-    SigProvisioningPduType_start         = 2,
+    SigProvisioningPduType_start          = 0x02,
     /// Contains the Public Key of the device or the Provisioner
-    SigProvisioningPduType_publicKey     = 3,
+    SigProvisioningPduType_publicKey      = 0x03,
     /// Indicates that the user has completed inputting a value
-    SigProvisioningPduType_inputComplete = 4,
+    SigProvisioningPduType_inputComplete  = 0x04,
     /// Contains the provisioning confirmation value of the device or the Provisioner
-    SigProvisioningPduType_confirmation  = 5,
+    SigProvisioningPduType_confirmation   = 0x05,
     /// Contains the provisioning random value of the device or the Provisioner
-    SigProvisioningPduType_random        = 6,
+    SigProvisioningPduType_random         = 0x06,
     /// Includes the assigned unicast address of the primary element, a network key, NetKey Index, Flags and the IV Index
-    SigProvisioningPduType_data          = 7,
+    SigProvisioningPduType_data           = 0x07,
     /// Indicates that provisioning is complete
-    SigProvisioningPduType_complete      = 8,
+    SigProvisioningPduType_complete       = 0x08,
     /// Indicates that provisioning was unsuccessful
-    SigProvisioningPduType_failed        = 9,
-    /// RFU, Reserved for Future Use, 0x0A–0xFF.
+    SigProvisioningPduType_failed         = 0x09,
+    /// Indicates a request to retrieve a provisioning record fragment from the device
+    SigProvisioningPduType_recordRequest  = 0x0A,
+    /// Contains a provisioning record fragment or an error status, sent in response to a Provisioning Record Request
+    SigProvisioningPduType_recordResponse = 0x0B,
+    /// Indicates a request to retrieve the list of IDs of the provisioning records that the unprovisioned device supports.
+    SigProvisioningPduType_recordsGet     = 0x0C,
+    /// Contains the list of IDs of the provisioning records that the unprovisioned device supports.
+    SigProvisioningPduType_recordsList    = 0x0D,
+    /// RFU, Reserved for Future Use, 0x0E–0xFF.
 } SigProvisioningPduType;
 
 typedef enum : UInt16 {
@@ -77,9 +90,9 @@ typedef enum : UInt8 {
 } DeviceState;//设备状态
 
 typedef enum : NSUInteger {
-    OOBSourceTpyeManualInput,
-    OOBSourceTpyeImportFromFile,
-} OOBSourceTpye;
+    OOBSourceTypeManualInput,
+    OOBSourceTypeImportFromFile,
+} OOBSourceType;
 
 /// Table 6.2: SAR field values.
 /// - seeAlso: Mesh_v1.0.pdf  (page.261)
@@ -108,7 +121,8 @@ typedef enum : UInt8 {
     AddDeviceModelStateBinding,
     AddDeviceModelStateBindSuccess,
     AddDeviceModelStateBindFail,
-    AddDeviceModelStateScaned,
+    AddDeviceModelStateScanned,
+    AddDeviceModelStateConnecting,
     AddDeviceModelStateProvisioning,
 } AddDeviceModelState;//添加的设备的状态
 
@@ -117,7 +131,9 @@ typedef enum : UInt8 {
 typedef enum : UInt8 {
     /// FIPS P-256 Elliptic Curve algorithm will be used to calculate the shared secret.
     Algorithm_fipsP256EllipticCurve = 0,
-    /// Reserved for Future Use: 1~15
+    /// BTM_ECDH_P256_HMAC_SHA256_AES_CCM
+    Algorithm_fipsP256EllipticCurve_HMAC_SHA256 = 1,
+    /// Reserved for Future Use: 2~15
 } Algorithm;
 
 /// Table 5.19: Public Key Type field values
@@ -127,6 +143,7 @@ typedef enum : UInt8 {
     PublicKeyType_noOobPublicKey = 0,
     /// OOB Public Key is used. The key must contain the full value of the Public Key, depending on the chosen algorithm.
     PublicKeyType_oobPublicKey   = 1,
+    /// 0x02–0xFF, Prohibited.
 } PublicKeyType;
 
 /// The authentication method chosen for provisioning.
@@ -144,7 +161,7 @@ typedef enum : UInt8 {
     /// Prohibited, 0x04–0xFF.
 } AuthenticationMethod;
 
-/// The output action will be displayed on the device. For example, the device may use its LED to blink number of times. The mumber of blinks will then have to be entered to the Provisioner Manager.
+/// The output action will be displayed on the device. For example, the device may use its LED to blink number of times. The number of blinks will then have to be entered to the Provisioner Manager.
 /// Table 5.22: Output OOB Action field values
 /// - seeAlso: Mesh_v1.0.pdf  (page.240)
 typedef enum : UInt8 {
@@ -172,7 +189,9 @@ typedef enum : UInt8 {
 typedef enum : UInt8 {
     SigBeaconType_unprovisionedDevice = 0,
     SigBeaconType_secureNetwork       = 1,
-    /// Reserved for Future Use, 0x02–0xFF.
+    /// - seeAlso: MshPRFd1.1r15_clean.pdf  (page.209)
+    SigBeaconType_meshPrivateBeacon   = 2,
+    /// Reserved for Future Use, 0x03–0xFF.
 } SigBeaconType;
 
 typedef enum      : UInt8 {
@@ -189,16 +208,16 @@ typedef enum      : UInt8 {
 /// Table 5.20: Static OOB Type field values
 /// - seeAlso: Mesh_v1.0.pdf  (page.239)
 typedef enum : UInt8 {
-    ProvisionTpye_NoOOB,//普通添加模式
-    ProvisionTpye_StaticOOB,//云端校验添加模式（阿里的天猫精灵设备、小米的小爱同学设备）
-    ProvisionTpye_Reserved,//预留
-} ProvisionTpye;
+    ProvisionType_NoOOB,//普通添加模式
+    ProvisionType_StaticOOB,//云端校验添加模式（阿里的天猫精灵设备、小米的小爱同学设备）
+    ProvisionType_Reserved,//预留
+} ProvisionType;
 
 typedef enum : UInt8 {
-    KeyBindTpye_Normal,//普通添加模式
-    KeyBindTpye_Fast,//快速添加模式
-    KeyBindTpye_Reserved,//预留
-} KeyBindTpye;
+    KeyBindType_Normal,//普通添加模式
+    KeyBindType_Fast,//快速添加模式
+    KeyBindType_Reserved,//预留
+} KeyBindType;
 
 /// The Step Resolution field enumerates the resolution of the Number of Steps field and the values are defined in Table 4.6.
 /// - seeAlso: Mesh_v1.0.pdf  (page.137)
@@ -606,28 +625,58 @@ typedef enum      : UInt32 {
     SigOpCode_BLOBTransferStart                              = 0xB702,
     SigOpCode_BLOBTransferCancel                             = 0xB703,
     SigOpCode_BLOBTransferStatus                             = 0xB704,
-    SigOpCode_BLOBBlockGet                                   = 0xB707,
     SigOpCode_BLOBBlockStart                                 = 0xB705,
-    SigOpCode_BLOBBlockStatus                                = 0x7E,
-    SigOpCode_BLOBChunkTransfer                              = 0x7D,
+    SigOpCode_ObjectBlockTransferStatus                      = 0xB706,
+    SigOpCode_BLOBBlockGet                                   = 0xB707,
     SigOpCode_BLOBInformationGet                             = 0xB70A,
     SigOpCode_BLOBInformationStatus                          = 0xB70B,
     SigOpCode_BLOBPartialBlockReport                         = 0x7C,
+    SigOpCode_BLOBChunkTransfer                              = 0x7D,
+    SigOpCode_BLOBBlockStatus                                = 0x7E,
 
-    SigOpCode_ObjectBlockTransferStatus                      = 0xB706,
+    /// Private Beacons
+    /// - seeAlso : message_opcode_sizes_R01.docx  (page.5)
+    SigOpCode_PrivateBeaconGet                               = 0xB711,
+    SigOpCode_PrivateBeaconSet                               = 0xB712,
+    SigOpCode_PrivateBeaconStatus                            = 0xB713,
+    SigOpCode_PrivateGattProxyGet                            = 0xB714,
+    SigOpCode_PrivateGattProxySet                            = 0xB715,
+    SigOpCode_PrivateGattProxyStatus                         = 0xB716,
+    SigOpCode_PrivateNodeIdentityGet                         = 0xB718,
+    SigOpCode_PrivateNodeIdentitySet                         = 0xB719,
+    SigOpCode_PrivateNodeIdentityStatus                      = 0xB71A,
+
+    /// - seeAlso : message_opcode_sizes_R01.docx  (page.5)
     
-    /// - seeAlso : fast provision流程简介.pdf  (page.1)
+    /// On-demand proxy
+    SigOpCode_OnDemandPrivateProxyGet                        = 0xB800,
+    SigOpCode_OnDemandPrivateProxySet                        = 0xB801,
+    SigOpCode_OnDemandPrivateProxyStatus                     = 0xB802,
 
-    // fast provision
-    SigOpCode_VendorID_MeshResetNetwork                      = 0xC5,
-    SigOpCode_VendorID_MeshAddressGet                        = 0xC6,
-    SigOpCode_VendorID_MeshAddressGetStatus                  = 0xC7,
-    SigOpCode_VendorID_MeshAddressSet                        = 0xC8,
-    SigOpCode_VendorID_MeshAddressSetStatus                  = 0xC9,
-    SigOpCode_VendorID_MeshProvisionDataSet                  = 0xCA,
-    SigOpCode_VendorID_MeshProvisionConfirm                  = 0xCB,
-    SigOpCode_VendorID_MeshProvisionConfirmStatus            = 0xCC,
-    SigOpCode_VendorID_MeshProvisionComplete                 = 0xCD,
+    /// SAR configuration
+    SigOpCode_SARTransmitterGet                              = 0xB803,
+    SigOpCode_SARTransmitterSet                              = 0xB804,
+    SigOpCode_SARTransmitterStatus                           = 0xB805,
+    SigOpCode_SARReceiverGet                                 = 0xB806,
+    SigOpCode_SARReceiverSet                                 = 0xB807,
+    SigOpCode_SARReceiverStatus                              = 0xB808,
+    
+    /// Opcodes aggregator
+    SigOpCode_OpcodesAggregatorSequence                      = 0xB809,
+    SigOpCode_OpcodesAggregatorStatus                        = 0xB810,
+
+    /// Large Composition Data
+    SigOpCode_LargeCompositionDataGet                        = 0xB811,
+    SigOpCode_LargeCompositionDataStatus                     = 0xB812,
+    SigOpCode_ModelsMetadataGet                              = 0xB813,
+    SigOpCode_ModelsMetadataStatus                           = 0xB814,
+    
+    /// 4.3.7 Solicitation PDU RPL Configuration messages
+    /// 以下3个opcode未定，未找到文档。
+    SigOpCode_SolicitationPduRplItemsClear = 0xB815,
+    SigOpCode_SolicitationPduRplItemsClearUnacknowledged = 0xB816,
+    SigOpCode_SolicitationPduRplItemsStatus = 0xB817,
+    
     
     /// - seeAlso : MshPRF_SBR_CR_r03.pdf  (page.16)
     /// Subnet Bridge
@@ -645,6 +694,28 @@ typedef enum      : UInt32 {
     SigOpCode_SubnetBridgeSet                                = 0xBF71,
     SigOpCode_SubnetBridgeStatus                             = 0xBF72,
 
+    /// Direct Forwarding
+    SigOpCode_DirectControlGet                               = 0xBF30,
+    SigOpCode_DirectControlSet                               = 0xBF31,
+    SigOpCode_DirectControlStatus                            = 0xBF32,
+    SigOpCode_ForwardingTableAdd                             = 0xBF39,
+    SigOpCode_ForwardingTableDelete                          = 0xBF3A,
+    SigOpCode_ForwardingTableStatus                          = 0xBF3B,
+
+    
+    /// - seeAlso : fast provision流程简介.pdf  (page.1)
+
+    /// fast provision
+    SigOpCode_VendorID_MeshResetNetwork                      = 0xC5,
+    SigOpCode_VendorID_MeshAddressGet                        = 0xC6,
+    SigOpCode_VendorID_MeshAddressGetStatus                  = 0xC7,
+    SigOpCode_VendorID_MeshAddressSet                        = 0xC8,
+    SigOpCode_VendorID_MeshAddressSetStatus                  = 0xC9,
+    SigOpCode_VendorID_MeshProvisionDataSet                  = 0xCA,
+    SigOpCode_VendorID_MeshProvisionConfirm                  = 0xCB,
+    SigOpCode_VendorID_MeshProvisionConfirmStatus            = 0xCC,
+    SigOpCode_VendorID_MeshProvisionComplete                 = 0xCD,
+
 } SigOpCode;
 
 typedef enum : UInt8 {
@@ -661,18 +732,26 @@ typedef enum : UInt8 {
 
 typedef enum : UInt8 {
     /// Provisioning Manager is ready to start.
-    ProvisionigState_ready,
+    ProvisioningState_ready,
     /// The manager is requesting Provisioioning Capabilities from the device.
-    ProvisionigState_requestingCapabilities,
+    ProvisioningState_requestingCapabilities,
     /// Provisioning Capabilities were received.
-    ProvisionigState_capabilitiesReceived,
+    ProvisioningState_capabilitiesReceived,
     /// Provisioning has been started.
-    ProvisionigState_provisioning,
+    ProvisioningState_provisioning,
     /// The provisioning process is complete.
-    ProvisionigState_complete,
+    ProvisioningState_complete,
     /// The provisioning has failed because of a local error.
-    ProvisionigState_fail,
-} ProvisionigState;
+    ProvisioningState_fail,
+    /// The manager is requesting Provisioning Records Get.
+    ProvisioningState_recordsGet,
+    /// Provisioning Records List were received.
+    ProvisioningState_recordsList,
+    /// The manager is requesting Provisioning Record.
+    ProvisioningState_recordRequest,
+    /// Provisioning Record Response were received.
+    ProvisioningState_recordResponse,
+} ProvisioningState;
 
 /// Table 5.38: Provisioning error codes.
 /// - seeAlso: Mesh_v1.0.pdf  (page.244)
@@ -716,7 +795,7 @@ typedef enum : NSUInteger {
     /// An unexpected error occurred that may not be recoverable.
     RemoteProvisioningError_unexpectedError        = 7,
     /// The device cannot assign consecutive unicast addresses to all elements.
-    RemoteProvisioningError_cannotAcssignAddresses = 8,
+    RemoteProvisioningError_cannotAssignAddresses = 8,
 } RemoteProvisioningError;
 
 typedef enum : NSUInteger {
@@ -1045,7 +1124,7 @@ typedef enum : UInt8 {
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.35)
 typedef enum : UInt8 {
     /// The battery charge is Critically Low Level.
-    SigBatteryIndicatorCritiallyLow = 0b00,
+    SigBatteryIndicatorCriticallyLow = 0b00,
     /// The battery charge is Low Level.
     SigBatteryIndicatorLow          = 0b01,
     /// The battery charge is Good Level.
@@ -1058,7 +1137,7 @@ typedef enum : UInt8 {
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.35)
 typedef enum : UInt8 {
     /// The battery is not chargeable.
-    SigBatteryChargingStateNotChargable = 0b00,
+    SigBatteryChargingStateNotChargeable = 0b00,
     /// The battery is chargeable and is not charging.
     SigBatteryChargingStateNotCharging  = 0b01,
     /// The battery is chargeable and is charging.
@@ -1141,10 +1220,10 @@ typedef enum : UInt8 {
 /// 4.2.10 SecureNetworkBeacon
 /// - seeAlso: Mesh_Model_Specification v1.0.pdf  (page.141)
 typedef enum : UInt8 {
-    //The node is not broadcasting a Secure Network beacon.
-    SigSecureNetworkBeaconState_open,
     //The node is broadcasting a Secure Network beacon.
-    SigSecureNetworkBeaconState_close,
+    SigSecureNetworkBeaconState_close = 0,
+    //The node is not broadcasting a Secure Network beacon.
+    SigSecureNetworkBeaconState_open = 1,
 } SigSecureNetworkBeaconState;
 
 /// 4.2.11 GATTProxy
@@ -1205,6 +1284,10 @@ typedef enum : UInt8 {
     SigProxyFilerOpcode_removeAddressesFromFilter = 0x02,
     //Acknowledgment by a Proxy Server to a Proxy Client to report the status of the proxy filter list.
     SigProxyFilerOpcode_filterStatus              = 0x03,
+    //Acknowledgment by a Directed Proxy Server to report current Directed Proxy capabilities in a subnet.
+    SigProxyFilerOpcode_directedProxyCapabilitiesStatus              = 0x04,
+    //sent by a Directed Proxy Client to set whether or not the Directed Proxy Server uses directed forwarding for Directed Proxy Client messages for a specified range of unicast addresses.
+    SigProxyFilerOpcode_directedProxyControl              = 0x05,
 } SigProxyFilerOpcode;
 
 /// Table 6.7: FilterType Values
@@ -1242,15 +1325,13 @@ typedef enum : UInt8 {
     SigUpdateStatusType_cancel     = 0x02,
 } SigUpdateStatusType;
 
-/// Update Policy field values:
-/// - seeAlso: Mesh_Firmware_update_20180228_d05r05.pdf  (page.26)
+/// Table 8.17: Update Policy state values
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.87)
 typedef enum : UInt8 {
-    /// Do not apply new firmware when Object transfer is completed.
-    SigUpdatePolicyType_none       = 0x00,
-    /// Apply new firmware when Object transfer is completed.
-    SigUpdatePolicyType_autoUpdate = 0x01,
-    /// Reserved for Future Use, 0x02~0xFF
-    SigUpdatePolicyType_RFU,
+    /// The Firmware Distribution Server verifies that firmware image distribution completed successfully but does not apply the update. The Initiator (the Firmware Distribution Client) initiates firmware image application.
+    SigUpdatePolicyType_verifyOnly       = 0x00,
+    /// The Firmware Distribution Server verifies that firmware image distribution completed successfully and then applies the firmware update.
+    SigUpdatePolicyType_verifyAndApply = 0x01,
 } SigUpdatePolicyType;
 
 /// Firmware Update Status Values
@@ -1353,12 +1434,12 @@ typedef enum       : UInt8 {
     SigFirmwareUploadPhaseStateType_idle              = 0x00,
     /// The Store Firmware procedure is being executed.
     SigFirmwareUploadPhaseStateType_transferActive    = 0x01,
-    /// The Store Firmware OOB procedure is being executed.
-    SigFirmwareUploadPhaseStateType_OOBTransferActive = 0x02,
+//    /// The Store Firmware OOB procedure is being executed.
+//    SigFirmwareUploadPhaseStateType_OOBTransferActive = 0x02,
     /// The Store Firmware procedure or Store Firmware OOB procedure failed.
-    SigFirmwareUploadPhaseStateType_transferError     = 0x03,
+    SigFirmwareUploadPhaseStateType_transferError     = 0x02,
     /// The Store Firmware procedure or the Store Firmware OOB procedure completed successfully.
-    SigFirmwareUploadPhaseStateType_transferSuccess   = 0x04,
+    SigFirmwareUploadPhaseStateType_transferSuccess   = 0x03,
     /// Prohibited : 0x05–0xFF
 } SigFirmwareUploadPhaseStateType;
 
@@ -1496,7 +1577,7 @@ typedef enum       : UInt8 {
 } SigTransferPhaseState;
 
 /// Table 8.16: Distribution Phase state values
-/// - seeAlso: MshMDL_DFU_MBT_CR_R04_LbL35_JR_PW.pdf  (page.76)
+/// - seeAlso: MshMDL_DFU_MBT_CR_R06.pdf  (page.87)
 typedef enum       : UInt8 {
     /// No firmware distribution is in progress.
     SigDistributionPhaseState_idle            = 0x00,
@@ -1603,5 +1684,126 @@ typedef enum : UInt8 {
     /// Report pairs of NetKey Indexes extracted from the Bridging Table state entries with one of the NetKey Indexes that matches the NetKeyIndex field.
     SigFilterFieldValues_oneOfTheNetKeyIndexes = 0b11,
 } SigFilterFieldValues;
+
+/// Table 5.45: Status codes for the Provisioning Record Response PDU
+/// - seeAlso: MshPRFd1.1r11_clean.pdf.pdf  (page.496)
+typedef enum : UInt8 {
+    /// Success.
+    SigProvisioningRecordResponseStatus_success                   = 0x00,
+    /// Requested Record Is Not Present.
+    SigProvisioningRecordResponseStatus_requestedRecordIsNotPresent                 = 0x01,
+    /// Requested Offset Is Out Of Bounds.
+    SigProvisioningRecordResponseStatus_requestedOffsetIsOutOfBounds                = 0x02,
+    /// 0x03–0xFF Reserved for Future Use.
+} SigProvisioningRecordResponseStatus;
+
+typedef enum : UInt8 {
+    SigFipsP256EllipticCurve_CMAC_AES128 = 0x01,//BTM_ECDH_P256_CMAC_AES128_AES_CCM，如果设备端不支持该算法就会出现provision失败。
+    SigFipsP256EllipticCurve_HMAC_SHA256 = 0x02,//BTM_ECDH_P256_HMAC_SHA256_AES_CCM，如果设备端不支持该算法就会出现provision失败。
+    SigFipsP256EllipticCurve_auto = 0xFF,//APP端根据从设备端实时读取数据来判定使用哪一种算法进行provision流程，如果设备端同时支持多种算法，默认使用value最大的算法进行provision。
+} SigFipsP256EllipticCurve;
+
+/// telink私有定义的Extend Bearer Mode，SDK默认是使用0，特殊用户需要用到2。
+typedef enum : UInt8 {
+    SigTelinkExtendBearerMode_noExtend = 0x00,//segment发包中的单个分包的UpperTransportPDU最大长度都是标准sig定义的12字节。
+    SigTelinkExtendBearerMode_extendGATTOnly = 0x01,//非直连节点使用的是上述标准sig定义的12字节。直连节点使用SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength最为单个分包的UpperTransportPDU最大长度。
+    SigTelinkExtendBearerMode_extendGATTAndAdv = 0x02,//segment发包中的单个分包的UpperTransportPDU最大长度都是telink自定义的SigDataSource.share.defaultUnsegmentedMessageLowerTransportPDUMaxLength。
+} SigTelinkExtendBearerMode;
+
+/// Table 4.295: Summary of status codes for Opcodes Aggregator messages
+/// - seeAlso: MshPRFd1.1r13_clean.pdf  (page.418)
+typedef enum : UInt8 {
+    /// Success
+    SigOpcodesAggregatorMessagesStatus_success = 0,
+    /// The unicast address provided in the Element_Address field is not known to the node.
+    SigOpcodesAggregatorMessagesStatus_invalidAddress = 1,
+    /// The model identified by the Element_Address field and Item #0 opcode is not found in the identified element.
+    SigOpcodesAggregatorMessagesStatus_invalidModel = 2,
+    /// 1.The message is encrypted with an application key, and the identified model is not bound to the message’s application key, or the identified model’s access layer security is not using application keys.
+    /// 2.The message is encrypted with a device key, and the identified model’s access layer security is not using a device key.
+    SigOpcodesAggregatorMessagesStatus_wrongAccessKey = 3,
+    /// At least one of the items from the message request list contains an opcode that is not supported by the identified model.
+    SigOpcodesAggregatorMessagesStatus_wrongOpCode = 4,
+    /// An access message has a valid opcode but is not understood by the identified model (see Section 3.7.4.4)
+    SigOpcodesAggregatorMessagesStatus_messageNotUnderstood = 5,
+    /// Reserved for Future Use, 0x06–0xFF.
+} SigOpcodesAggregatorMessagesStatus;
+
+/// Table 3.109: Day of Week field
+/// - seeAlso: GATT_Specification_Supplement_v5.pdf  (page.105)
+typedef enum : UInt8 {
+    GattDayOfWeek_Unknown = 0,
+    GattDayOfWeek_Monday = 1,
+    GattDayOfWeek_Tuesday = 2,
+    GattDayOfWeek_Wednesday = 3,
+    GattDayOfWeek_Thursday = 4,
+    GattDayOfWeek_Friday = 5,
+    GattDayOfWeek_Saturday = 6,
+    GattDayOfWeek_Sunday = 7,
+    //Reserved for Future Use 8–255
+} GattDayOfWeek;
+
+/// Table 7.8: Identification Type values
+/// - seeAlso: MshPRFd1.1r14_clean.pdf  (page.634)
+typedef enum : UInt8 {
+    SigIdentificationType_networkID = 0,
+    SigIdentificationType_nodeIdentity = 1,
+    SigIdentificationType_privateNetworkIdentity = 2,
+    SigIdentificationType_privateNodeIdentity = 3,
+    //Reserved for Future Use 0x04–0xFF
+} SigIdentificationType;
+
+/// Table 4.65: Private Beacon state
+/// - seeAlso: MshPRFd1.1r14_clean.pdf  (page.276)
+typedef enum : UInt8 {
+    SigPrivateBeaconState_disable = 0,
+    SigPrivateBeaconState_enable = 1,
+    //Prohibited 0x02–0xFF
+} SigPrivateBeaconState;
+
+/// Table 4.67: Private GATT Proxy state values
+/// - seeAlso: MshPRFd1.1r14_clean.pdf  (page.280)
+typedef enum : UInt8 {
+    SigPrivateGattProxyState_disable = 0,
+    SigPrivateGattProxyState_enable = 1,
+    SigPrivateGattProxyState_notSupported = 2,
+    //Prohibited 0x03–0xFF
+} SigPrivateGattProxyState;
+
+/// Table 4.68: Private Node Identity values
+/// - seeAlso: MshPRFd1.1r14_clean.pdf  (page.280)
+typedef enum : UInt8 {
+    //Node Identity for a subnet is stopped.
+    SigPrivateNodeIdentityState_notEnabled   = 0,
+    //Node Identity for a subnet is running.
+    SigPrivateNodeIdentityState_enabled      = 1,
+    //Node Identity is not supported.
+    SigPrivateNodeIdentityState_notSupported = 2,
+    //0x03–0xFF Prohibited
+} SigPrivateNodeIdentityState;
+
+/// app端发送的beacon类型
+typedef enum : UInt8 {
+    AppSendBeaconType_auto,//根据设备返回的beacon类型来返回
+    AppSendBeaconType_secureNetwork,//强制发送secureNetworkBeacon
+    AppSendBeaconType_meshPrivateBeacon,//强制发送meshPrivateBeacon
+} AppSendBeaconType;
+
+/// v3.3.3.6新增Telink自定义PID结构体
+typedef enum : UInt8 {
+    CHIP_TYPE_8258 = 0,
+    CHIP_TYPE_8278 = 1,
+    CHIP_TYPE_8269 = 2,
+    CHIP_TYPE_9518 = 3,
+} CHIP_TYPE;
+typedef enum : UInt8 {
+    MajorProductType_light = 0,
+    MajorProductType_gateway = 1,
+    MajorProductType_LPN = 2,
+    MajorProductType_switch = 3,
+    MajorProductType_spiritLPN = 4,
+} MajorProductType;
+
+
 
 #endif /* SigEnumeration_h */

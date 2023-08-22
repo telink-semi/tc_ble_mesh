@@ -3,35 +3,30 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/1/24
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  ShareOutVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2019/1/24.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "ShareOutVC.h"
 #import "UIButton+extension.h"
 #import "UIViewController+Message.h"
 #import "KeyCell.h"
 #import "ShowQRCodeViewController.h"
+#import "Reachability.h"
 
 @interface ShareOutVC ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -56,6 +51,10 @@
 }
 
 - (IBAction)clickExportButton:(UIButton *)sender {
+    if (SigDataSource.share.curNodes.count == 0) {
+        [self showTips:@"not allow to share empty network!"];
+        return;
+    }
     if (self.selectArray.count == 0) {
         [self showTips:@"Please select at least one network key!"];
         return;
@@ -63,7 +62,7 @@
     
     //3.3.2新增逻辑：只分享选中的NetKey和该NetKey下的AppKey。
     SigDataSource *exportDS = [[SigDataSource alloc] init];
-    [exportDS setDictionaryToDataSource:SigDataSource.share.getDictionaryFromDataSource];
+    [exportDS setDictionaryToDataSource:SigDataSource.share.getFormatDictionaryFromDataSource];
     exportDS.netKeys = [NSMutableArray arrayWithArray:self.selectArray];
     NSMutableArray *netkeyIndexs = [NSMutableArray array];
     for (SigNetkeyModel *model in exportDS.netKeys) {
@@ -77,7 +76,7 @@
     }
     exportDS.appKeys = [NSMutableArray arrayWithArray:apps];
 
-    NSMutableDictionary *exportDict = [NSMutableDictionary dictionaryWithDictionary:[exportDS getDictionaryFromDataSource]];
+    NSMutableDictionary *exportDict = [NSMutableDictionary dictionaryWithDictionary:[exportDS getFormatDictionaryFromDataSource]];
     //3.3.2新增逻辑：未定义subnet bridge的key，暂时不分享subnet bridge相关内容。
     if ([exportDict.allKeys containsObject:@"nodes"]) {
         NSArray *nodeList = exportDict[@"nodes"];
@@ -138,6 +137,13 @@
 }
 
 - (void)exporyMeshByQRCodeWithDictionary:(NSDictionary *)dictionary {
+    NSString *remoteHostName = @"www.apple.com";
+    Reachability *hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
+    if (hostReachability.currentReachabilityStatus == NotReachable) {
+        [self showTips:@"The Internet connection appears to be offline."];
+        return;
+    }
+    
     __weak typeof(self) weakSelf = self;
     //设置有效时间5分钟
     [TelinkHttpManager.share uploadJsonDictionary:dictionary timeout:60 * 5 didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
@@ -161,7 +167,7 @@
 }
 
 - (void)pushToShowQRCodeVCWithUUID:(NSString *)uuid {
-    ShowQRCodeViewController *vc = (ShowQRCodeViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ShowQRCodeViewControllerID storybroad:@"Setting"];
+    ShowQRCodeViewController *vc = (ShowQRCodeViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_ShowQRCodeViewControllerID storyboard:@"Setting"];
     vc.uuidString = uuid;
     [self.navigationController pushViewController:vc animated:YES];
 }

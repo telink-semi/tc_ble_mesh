@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     ll.h 
+ * @file	ll.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 public@telink-semi.com;
- * @date     Sep. 18, 2015
+ * @author	public@telink-semi.com;
+ * @date	Sep. 18, 2015
  *
- * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #ifndef LL__H_
 #define LL__H_
@@ -38,7 +41,7 @@
 #include "ll_whitelist.h"
 
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "drivers.h"
 
 
@@ -422,7 +425,7 @@ RF RX packet format:
 *---------------*---------*-----------*------------*------------*---------------*-------------------*----------*--------------------------------------------------*
 |  DMA_len(4B)  | type(1B)| Rf_len(1B)| payload(wB)|   CRC(3B)  | time_stamp(4B)|  Fre_offset(2B)   | Rssi(1B) |           pkt status indicator(1B)               |
 | (b0,b1 valid) |        Header       |   Payload  |            |               |                   | rssi-110 |[0]:crc err;[1]:sfd err;[2]:ll err;[4]:pwr err;   |
-|               |<--           PDU              -->|            |               |                   |          |[4]:long range 125k;[6:5]:N/A;[7]:nordic NACK ind |
+|               |<--           PDU              -->|            |               |                   |          |[4]:long range 125k;[6:5]:N/A;[7]:NACK ind        |
 *---------------*----------------------------------*------------*---------------*-------------------*----------*--------------------------------------------------*
 |<--- 4byte --->|<------ 2 byte ----->|<- Rf_len ->|<- 3 byte ->|<----------------------------------- 8 byte ---------------------------------------------------->|
 note:       b4       ->  type(1B): llid(2bit) nesn(1bit) sn(1bit) md(1bit).
@@ -462,7 +465,7 @@ Link Layer pak format(BLE4.0\4.1 spec):
 1.ADV Channel, payload:0~37bytes = 6bytes AdvAdd + [maximum 31bytes adv packet payload]
 2.Data Channel, payload:0~31bytes = 0~27bytes + 4bytes MIC(may include MIC feild)[The payload in ble4.0/4.1 is 27 bytes].
   Protocol overhead: 10bytes(preamble\Access Address\Header\CRC) + L2CAP header 4bytes = 14bytes,all LL data contains 14 bytes of overhead,
-  For att, opCode is also needed, 1bytes + handle 2bytes = 3bytes, 27-4-3=[final 23-3bytes available to users]£¬This is why the default mtu size is 23 in the ble4.0 protocol.
+  For att, opCode is also needed, 1bytes + handle 2bytes = 3bytes, 27-4-3=[final 23-3bytes available to users]. This is why the default mtu size is 23 in the ble4.0 protocol.
 **********************************************************************************************************************/
 
 

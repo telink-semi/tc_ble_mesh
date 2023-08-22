@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     tutility.h 
+ * @file	tutility.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 #include "types.h"
 #ifndef WIN32 
@@ -83,7 +85,7 @@
 #define U32_CPY(addr1,addr2)	U32_SET(addr1, U32_GET(addr2))
 
 #define MAKE_U16(h,l) 			((unsigned short)(((h) << 8) | (l)))
-#define MAKE_U32(a,b,c,d)		((unsigned short)(((a) << 24) | ((b) << 16) ((c) << 8) | (d)))
+#define MAKE_U32(a,b,c,d)		((unsigned short)(((a) << 24) | ((b) << 16) | ((c) << 8) | (d)))
 
 #define BOUND(x, l, m)			((x) < (l) ? (l) : ((x) > (m) ? (m) : (x)))
 #define SET_BOUND(x, l, m)		((x) = BOUND(x, l, m))
@@ -109,7 +111,7 @@
 #define foreach(i, n) 			for(unsigned int i = 0; i < (n); ++i)
 #define foreach_range(i, s, e) 	for(unsigned int i = (s); i < (e); ++i)
 #define foreach_arr(i, arr) 	for(unsigned int i = 0; i < ARRAY_SIZE(arr); ++i)
-//  round robbin foreach,   从上一个指定的点开始，遍历,  h 是一个静态变量或全局变量，要记住上一次的位置。h 初始值是n !!!
+//  round robbin foreach,   浠庝笂涓�涓寚瀹氱殑鐐瑰紑濮嬶紝閬嶅巻,  h 鏄竴涓潤鎬佸彉閲忔垨鍏ㄥ眬鍙橀噺锛岃璁颁綇涓婁竴娆＄殑浣嶇疆銆俬 鍒濆鍊兼槸n !!!
 #define foreach_hint(i, n, h) 	for(int i = 0, ++h, h=h<n?h:0; i < n; ++h, h=h<n?h:0)
 
 #define ARRAY_SIZE(a) 			(sizeof(a) / sizeof(*a))
@@ -124,7 +126,8 @@
 #define U32_BYTE2(a) (((a) >> 16) & 0xFF)
 #define U32_BYTE3(a) (((a) >> 24) & 0xFF)
 
-
+#define HTON16(a)	((a >> 8) | ((a & 0xff) << 8))
+#define HTON32(a)	((a >> 24) | (((a >> 16) & 0xff) << 8) | (((a >> 8) & 0xff) << 16) | ((a & 0xff) << 24))
 
 /*********************************************************************
  * @fn          generateRandomNum
@@ -149,6 +152,7 @@ void swap56(u8 dst[7], const u8 src[7]);
 void swap64(u8 dst[8], const u8 src[8]);
 
 void swap128(u8 dst[16], const u8 src[16]);
+u64 reverse_bit64(u64 src);
 
 void net_store_16(u8 *buffer, u16 pos, u16 value);
 

@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     dual_mode_adapt.c 
+ * @file	dual_mode_adapt.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -152,6 +155,12 @@ int UI_resotre_TLK_4K_with_check()
 }
 #endif
 
+#if DUAL_MESH_SIG_PVT_EN
+u8 pair_nn[17] = MESH_NAME;
+u8 pair_pass[17] = MESH_PWD;
+u8 pair_ltk[17] = MESH_LTK;
+#endif
+
 #define START_UP_FLAG		(0x544c4e4b)
 
 void dual_mode_en_init()		// call in mesh_init_all();
@@ -216,6 +225,9 @@ void dual_mode_en_init()		// call in mesh_init_all();
 #endif
 
 	if(DUAL_MODE_SUPPORT_ENABLE == dual_mode_state){
+		#if DUAL_MESH_SIG_PVT_EN
+		tlk_mesh_key_init(pair_nn, pair_pass);
+		#endif
 		rf_link_light_event_callback(LGT_CMD_DUAL_MODE_MESH);
 	}
 }
@@ -263,9 +275,13 @@ void dual_mode_en_init(){}
 void dual_mode_disable(){};
 #endif
 
-#if DUAL_MODE_ADAPT_EN
+#if DUAL_MESH_ZB_BL_EN
 #define DUAL_MODE_SWITCH_INV_US		(3000*1000)
+#elif DUAL_MESH_SIG_PVT_EN
+#define DUAL_MODE_SWITCH_INV_US		(160*1000)
+#endif
 
+#if DUAL_MESH_ZB_BL_EN
 // ---------------------ZigBee driver
 
 #define			RF_MANUAL_AGC_MAX_GAIN	1
@@ -770,7 +786,7 @@ u8 dual_mode_proc()
 	}else{
 		if(clock_time_exceed(dual_mode_tick, DUAL_MODE_SWITCH_INV_US)){
 			dual_mode_tick = clock_time();
-			u8 r = irq_disable();
+			u32 r = irq_disable();
 			static u8 val_settle;
 			if(rf_mode == RF_MODE_BLE){
 				rf_mode = RF_MODE_ZIGBEE;
@@ -824,6 +840,73 @@ u8 dual_mode_proc()
 
 	return RF_MODE_BLE;
 }
+#endif
+
+#if DUAL_MESH_SIG_PVT_EN
+
+		
+#define SYS_CHN_LISTEN_MESH     {2, 12, 23, 32}
+u8 sys_chn_listen[4] = SYS_CHN_LISTEN_MESH;
+
+u32 dual_mode_tlk_ac[2]; // [0]:access code, [1]:access code byte invert
+u8 dual_mode_mesh_found = DUAL_MODE_NETWORK_DEFAULT;
+
+void tlk_mesh_access_code_backup(u32 ac)
+{
+    dual_mode_tlk_ac[0] = ac;
+	endianness_swap_u32((u8 *)&ac);
+	dual_mode_tlk_ac[1] = ac;
+}
+
+void phy_set_telink_mesh_scan(int set_chn)
+{
+	u8 chn = sys_chn_listen[set_chn % 4];
+	rf_set_tx_rx_off ();
+	rf_set_ble_channel (chn);
+	rf_set_ble_access_code ((u8 *)dual_mode_tlk_ac);
+	rf_set_ble_crc_adv ();
+	rf_set_rxmode ();
+}
+
+u8 dual_mode_proc()
+{
+	if(DUAL_MODE_SUPPORT_ENABLE != dual_mode_state){
+		return RF_MODE_BLE;
+	}
+
+	static u32 dual_mode_tick;
+	if(dual_mode_mesh_found){
+		if(DUAL_MODE_NETWORK_SIG_MESH == dual_mode_mesh_found){
+			rf_mode = RF_MODE_BLE;
+			dual_mode_select();
+		}
+		else if(DUAL_MODE_NETWORK_PVT_MESH == dual_mode_mesh_found){
+			rf_mode = RF_MODE_PVT_MESH;
+			set_firmware_type_zb_with_factory_reset();
+			if(BLS_LINK_STATE_CONN == blt_state){
+				bls_ll_terminateConnection (0x13);
+				sleep_us(500000);
+			}		
+			start_reboot();
+		}
+	}
+	else if(clock_time_exceed(dual_mode_tick, DUAL_MODE_SWITCH_INV_US)){
+		dual_mode_tick = clock_time();
+		u32 r = irq_disable();
+		if(rf_mode == RF_MODE_PVT_MESH){
+			rf_mode = RF_MODE_BLE;
+			bls_register_phy_scan_mode(0);
+		}
+		else
+		{
+			rf_mode = RF_MODE_PVT_MESH;
+			bls_register_phy_scan_mode(phy_set_telink_mesh_scan);// enable telink mesh scan
+		}
+		irq_restore(r);
+	}
+	return rf_mode;
+}
+
 #endif
 
 

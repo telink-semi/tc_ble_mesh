@@ -1,28 +1,30 @@
 /********************************************************************************************************
- * @file     ll.h 
+ * @file	ll.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 
 
-extern u8 adv_filter ;
 extern u8 adv_mesh_en_flag ;
 extern u8 mesh_kr_filter_flag ;
 extern u8 mesh_provisioner_buf_enable ;
@@ -387,7 +389,7 @@ int blm_send_acl_to_btusb (u16 conn, u8 *p);
 #ifndef WIN32
 static inline u8  blc_ll_getTxFifoNumber (void)
 {
-	u8 r = irq_disable();
+	u32 r = irq_disable();
 	u8 ret = ((reg_dma_tx_wptr - reg_dma_tx_rptr) & 15 )  +  ( (blt_txfifo.wptr - blt_txfifo.rptr) & 31 ) ;
 	irq_restore(r);
 	return ret;
@@ -441,7 +443,7 @@ byte0    byte3   byte4       byte5      byte6  byte(6+w-1)
 |             |         Header        |     Payload      |
 |             |<--               PDU                  -->|
 *-------------*------------------------------------------*
-note: type(1B):llid(2bit) nesn(1bit) sn(1bit) md(1bit),实际向RF 硬件FIFO中压数据，type只表示llid,其他bit位为0！
+note: type(1B):llid(2bit) nesn(1bit) sn(1bit) md(1bit),In fact, the data is pushed into the RF hardware FIFO. The type only represents llid, and the other bits are 0!
 *******************************************************************************************************************************************************************************/
 
 

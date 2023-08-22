@@ -3,35 +3,29 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/15
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigMeshLib.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/15.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigMessageHandle,SigMeshAddress,SigProxyConfigurationMessage,SDKLibCommand,SigSecureNetworkBeacon,SigNetworkPdu;
+@class SigMessageHandle, SigMeshAddress, SigProxyConfigurationMessage, SDKLibCommand, SigSecureNetworkBeacon, SigNetworkPdu, SigMeshPrivateBeacon, BackgroundTimer;
 
 @protocol SigMessageDelegate <NSObject>
 @optional
@@ -48,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param destination The address to which the message was sent.
 - (void)didSendMessage:(SigMeshMessage *)message fromLocalElement:(SigElementModel *)localElement toDestination:(UInt16)destination;
 
-/// A callback called when a message failed to be sent to the target Node, or the respnse for an acknowledged message hasn't been received before the time run out.
+/// A callback called when a message failed to be sent to the target Node, or the response for an acknowledged message hasn't been received before the time run out.
 /// For unsegmented unacknowledged messages this callback will be invoked when the SigBearer was closed.
 /// For segmented unacknowledged messages targetting a Unicast Address, besides that, it may also be called when sending timed out before all of the segments were acknowledged by the target Node, or when the target Node is busy and not able to proceed the message at the moment.
 /// For acknowledged messages the callback will be called when the response has not been received before the time set by `incompleteMessageTimeout` run out. The message might have been retransmitted multiple times and might have been received by the target Node. For acknowledged messages sent to a Group or Virtual Address this will be called when the response has not been received from any Node.
@@ -60,6 +54,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)didReceiveSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination;
 - (void)didReceiveSigSecureNetworkBeaconMessage:(SigSecureNetworkBeacon *)message;
+- (void)didReceiveSigMeshPrivateBeaconMessage:(SigMeshPrivateBeacon *)message;
 
 @end
 
@@ -90,6 +85,7 @@ NS_ASSUME_NONNULL_BEGIN
 ///
 /// The incomplete timeout should be set to at least 10 seconds.
 @property (nonatomic,assign) NSTimeInterval incompleteMessageTimeout;//15.0
+@property (nonatomic,assign) NSTimeInterval receiveSegmentMessageTimeout;//15.0
 
 /// The amount of time after which the lower transport layer sends a Segment Acknowledgment message after receiving a segment of a multi-segment message where the destination is a Unicast Address of the Provisioner's Node.
 ///
@@ -98,10 +94,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// The time within which a Segment Acknowledgment message is expected to be received after a segment of a segmented message has been sent. When the timer is fired, the non-acknowledged segments are repeated, at most `retransmissionLimit` times.（segment包发送完一轮后等待一个The transmission timer长度的时间，未收到segment发送完成则开始下一轮segment发送。）
 ///
-/// The transmission timer shall be set to a minimum of 200 + 50 * TTL milliseconds. The TTL dependent part is added automatically, and this value shall specify only the constant part.（The transmission timer = transmissionTimerInteral + 50 * TTL milliseconds，transmissionTimerInteral默认值为200毫秒。）
+/// The transmission timer shall be set to a minimum of 200 + 50 * TTL milliseconds. The TTL dependent part is added automatically, and this value shall specify only the constant part.（The transmission timer = transmissionTimerInterval + 50 * TTL milliseconds，transmissionTimerInterval默认值为200毫秒。）
 ///
 /// If the SigBearer.share.isProvisioned is NO, it is recommended to set the transmission interval longer than the connection interval, so that the acknowledgment had a chance to be received.
-@property (nonatomic,assign) NSTimeInterval transmissionTimerInteral;//0.200
+@property (nonatomic,assign) NSTimeInterval transmissionTimerInterval;//0.200
 
 /// Number of times a non-acknowledged segment will be re-send before the message will be cancelled.（segment包默认重复次数）
 ///
@@ -110,11 +106,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// 4.2.19.2 Network Transmit Interval Steps
 /// - seeAlso: Mesh_v1.0.pdf  (page.151)
-@property (nonatomic,assign) UInt8 networkTransmitIntervalSteps;//defount is 0b1111=31.
-@property (nonatomic,assign,readonly) double networkTransmitInterval;//defount is (0b1111+1)*10=320ms.
+@property (nonatomic,assign) UInt8 networkTransmitIntervalSteps;//default is 0b1111=31.
+@property (nonatomic,assign,readonly) double networkTransmitInterval;//default is (0b1111+1)*10=320ms.
 
+@property (nonatomic,strong,nullable) BackgroundTimer *receiveSegmentTimer;
 @property (nonatomic,assign) BOOL isReceiveSegmentPDUing;
+@property (nonatomic,assign) UInt16 sourceOfReceiveSegmentPDU;
 @property (nonatomic,strong,nullable) SigSecureNetworkBeacon *secureNetworkBeacon;
+@property (nonatomic,strong,nullable) SigMeshPrivateBeacon *meshPrivateBeacon;
+@property (nonatomic,assign) AppSendBeaconType sendBeaconType;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -132,6 +132,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// This method should be called whenever a PDU has been decoded from the mesh network using SigNetworkLayer.
 /// @param networkPdu The network pdu in (Mesh_v1.0.pdf 3.4.4 Network PDU).
 - (void)receiveNetworkPdu:(SigNetworkPdu *)networkPdu;
+- (void)cleanReceiveSegmentBusyStatus;
 
 /// This method should be called whenever a PDU has been received from the kOnlineStatusCharacteristicsID.
 /// @param address address of node
@@ -151,8 +152,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param initialTtl The initial TTL (Time To Live) value of the message. initialTtl is Relayed TTL.
 /// @param command The command save message and callback.
 /// @returns Message handle that can be used to cancel sending.
-- (SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt8)initialTtl command:(SDKLibCommand *)command;
-- (SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination command:(SDKLibCommand *)command;
+- (nullable SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination withTtl:(UInt8)initialTtl command:(SDKLibCommand *)command;
+- (nullable SigMessageHandle *)sendConfigMessage:(SigConfigMessage *)message toDestination:(UInt16)destination command:(SDKLibCommand *)command;
 
 /// Encrypts the message with the Application Key and a Network Key bound to it, and sends to the given destination address.
 ///
@@ -165,19 +166,19 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param applicationKey The Application Key to sign the message.
 /// @param command The command save message and callback.
 /// @returns Message handle that can be used to cancel sending.
-- (SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command;
-- (SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command;
+- (nullable SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination withTtl:(UInt8)initialTtl usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command;
+- (nullable SigMessageHandle *)sendMeshMessage:(SigMeshMessage *)message fromLocalElement:(nullable SigElementModel *)localElement toDestination:(SigMeshAddress *)destination usingApplicationKey:(SigAppkeyModel *)applicationKey command:(SDKLibCommand *)command;
 
 /// Sends the Proxy Configuration Message to the connected Proxy Node.
 /// @param message The Proxy Configuration message to be sent.
 /// @param command The command save message and callback.
-- (void)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command;
+- (nullable SigMessageHandle *)sendSigProxyConfigurationMessage:(SigProxyConfigurationMessage *)message command:(SDKLibCommand *)command;
 
 /// Sends the telink's onlineStatus command.
 /// @param message The onlineStatus message to be sent.
 /// @param command The command save message and callback.
 /// @returns return `nil` when send message successful.
-- (NSError *)sendTelinkApiGetOnlineStatueFromUUIDWithMessage:(SigMeshMessage *)message command:(SDKLibCommand *)command;
+- (nullable NSError *)sendTelinkApiGetOnlineStatueFromUUIDWithMessage:(SigMeshMessage *)message command:(SDKLibCommand *)command;
 
 /// Cancels sending the message with the given identifier.
 /// @param messageId The message identifier.
@@ -185,6 +186,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// cancel all commands and retry of commands and retry of segment PDU.
 - (void)cleanAllCommandsAndRetry;
+- (void)cleanAllCommandsAndRetryWhenMeshDisconnected;
 
 /// Returns whether SigMeshLib is busy. YES means busy.
 - (BOOL)isBusyNow;

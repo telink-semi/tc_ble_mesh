@@ -113,6 +113,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
+                        android:digits="@string/number_input"
                         android:drawableEnd="@drawable/ic_arrow_down"
                         android:drawableTint="@color/gray"
                         android:focusable="false"
@@ -161,6 +162,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
+                        android:digits="@string/number_input"
                         android:drawableEnd="@drawable/ic_arrow_down"
                         android:drawableTint="@color/gray"
                         android:focusable="false"
@@ -221,6 +223,7 @@
                             android:id="@+id/et_adr_1"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:digits="@string/hex_input"
                             android:text="0100"
                             android:textColor="@color/gray"
                             android:textSize="11sp" />
@@ -277,6 +280,7 @@
                             android:id="@+id/et_adr_2"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:digits="@string/hex_input"
                             android:text="0004"
                             android:textColor="@color/gray"
                             android:textSize="11sp" />

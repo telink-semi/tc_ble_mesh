@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file CompositionDataActivity.java
+ * @file NodeNetKeyActivity_with_delete.java
  *
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -27,7 +28,13 @@ import android.os.Handler;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.config.NetKeyAddMessage;
@@ -41,6 +48,7 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.NodeMeshKeyAdapter;
 import com.telink.ble.mesh.util.Arrays;
@@ -49,11 +57,6 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * network key in target device
@@ -128,8 +131,8 @@ public class NodeNetKeyActivity_with_delete extends BaseActivity implements Even
         for (MeshNetKey netKey :
                 meshInfo.meshNetKeyList) {
             boolean exist = false;
-            for (int index : nodeInfo.netKeyIndexes) {
-                if (netKey.index == index) {
+            for (String index : nodeInfo.netKeyIndexes) {
+                if (netKey.index == MeshUtils.hexToIntB(index)) {
                     exist = true;
                     this.netKeyList.add(netKey);
                 }
@@ -212,8 +215,6 @@ public class NodeNetKeyActivity_with_delete extends BaseActivity implements Even
     }
 
 
-
-
     @Override
     public void performed(Event<String> event) {
         if (event.getType().equals(NetKeyStatusMessage.class.getName())) {
@@ -248,26 +249,26 @@ public class NodeNetKeyActivity_with_delete extends BaseActivity implements Even
         } else if (action == ACTION_DELETE) {
             onNetKeyDeleteSuccess(processingIndex);
         }
-        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+        nodeInfo.save();
     }
 
     public void onNetKeyAddSuccess(int keyIndex) {
-        for (int keyIdx : nodeInfo.netKeyIndexes) {
-            if (keyIndex == keyIdx) {
+        for (String keyIdx : nodeInfo.netKeyIndexes) {
+            if (keyIndex == MeshUtils.hexToIntB(keyIdx)) {
                 MeshLogger.d("net key already exists");
                 return;
             }
         }
         MeshLogger.d("net key add success");
-        nodeInfo.netKeyIndexes.add(keyIndex);
+        nodeInfo.netKeyIndexes.add(MeshUtils.intToHex2(keyIndex));
         updateKeyList();
     }
 
 
     public void onNetKeyDeleteSuccess(int keyIndex) {
-        Iterator<Integer> netKeyIt = nodeInfo.netKeyIndexes.iterator();
+        Iterator<String> netKeyIt = nodeInfo.netKeyIndexes.iterator();
         while (netKeyIt.hasNext()) {
-            if (netKeyIt.next() == keyIndex) {
+            if (MeshUtils.hexToIntB(netKeyIt.next()) == keyIndex) {
                 netKeyIt.remove();
             }
         }

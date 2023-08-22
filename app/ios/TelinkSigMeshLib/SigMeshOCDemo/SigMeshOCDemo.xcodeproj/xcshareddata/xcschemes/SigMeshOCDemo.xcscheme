@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1200"
+   LastUpgradeVersion = "1300"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,8 +14,8 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A2AB8E982110046A00D73EB4"
-               BuildableName = "TelinkSigMesh.app"
+               BlueprintIdentifier = "25589A0E272115D700F4F880"
+               BuildableName = "SigMeshOCDemo.app"
                BlueprintName = "SigMeshOCDemo"
                ReferencedContainer = "container:SigMeshOCDemo.xcodeproj">
             </BuildableReference>
@@ -27,21 +27,12 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "A2AB8E982110046A00D73EB4"
-            BuildableName = "TelinkSigMesh.app"
-            BlueprintName = "SigMeshOCDemo"
-            ReferencedContainer = "container:SigMeshOCDemo.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A2AB8EB02110046C00D73EB4"
+               BlueprintIdentifier = "25589A29272115DB00F4F880"
                BuildableName = "SigMeshOCDemoTests.xctest"
                BlueprintName = "SigMeshOCDemoTests"
                ReferencedContainer = "container:SigMeshOCDemo.xcodeproj">
@@ -51,7 +42,7 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A2AB8EBB2110046D00D73EB4"
+               BlueprintIdentifier = "25589A33272115DB00F4F880"
                BuildableName = "SigMeshOCDemoUITests.xctest"
                BlueprintName = "SigMeshOCDemoUITests"
                ReferencedContainer = "container:SigMeshOCDemo.xcodeproj">
@@ -73,8 +64,8 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "A2AB8E982110046A00D73EB4"
-            BuildableName = "TelinkSigMesh.app"
+            BlueprintIdentifier = "25589A0E272115D700F4F880"
+            BuildableName = "SigMeshOCDemo.app"
             BlueprintName = "SigMeshOCDemo"
             ReferencedContainer = "container:SigMeshOCDemo.xcodeproj">
          </BuildableReference>
@@ -90,8 +81,8 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "A2AB8E982110046A00D73EB4"
-            BuildableName = "TelinkSigMesh.app"
+            BlueprintIdentifier = "25589A0E272115D700F4F880"
+            BuildableName = "SigMeshOCDemo.app"
             BlueprintName = "SigMeshOCDemo"
             ReferencedContainer = "container:SigMeshOCDemo.xcodeproj">
          </BuildableReference>

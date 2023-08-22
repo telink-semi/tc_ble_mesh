@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     GattOtaController.java 
+ * @file GattOtaController.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.ble;
 
@@ -27,12 +28,16 @@ import android.os.Handler;
 import com.telink.ble.mesh.util.MeshLogger;
 import com.telink.ble.mesh.util.OtaPacketParser;
 
+/**
+ * Update direct connected device for update,
+ * based on gatt connection {@link GattConnection}
+ */
 public class GattOtaController {
 
     private final String LOG_TAG = "GATT-OTA";
 
-    public static final int OTA_STATE_SUCCESS = 1;
     public static final int OTA_STATE_FAILURE = 0;
+    public static final int OTA_STATE_SUCCESS = 1;
     public static final int OTA_STATE_PROGRESS = 2;
 
     protected Handler mTimeoutHandler;
@@ -49,12 +54,17 @@ public class GattOtaController {
     private static final int TAG_OTA_START = 7; // start
     private static final int TAG_OTA_END = 8; // end
 
+    /**
+     * send after send ota start or extend start
+     */
+    private static final int TAG_OTA_START_READ = 13;
     private GattConnection mConnection;
 
     private GattOtaCallback mCallback;
 
     private final OtaPacketParser mOtaParser = new OtaPacketParser();
 
+    // only for local calculate
     private int readCnt = 0;
 
 
@@ -147,6 +157,18 @@ public class GattOtaController {
         otaWriteData(new byte[]{OTA_START & 0xFF, (byte) (OTA_START >> 8 & 0xFF)}, TAG_OTA_START);
     }
 
+    // send ota read command between start-command and first packet
+    private void sendOtaStartReadCmd() {
+        GattRequest cmd = GattRequest.newInstance();
+        cmd.serviceUUID = UUIDInfo.SERVICE_UUID_OTA;
+        cmd.characteristicUUID = UUIDInfo.CHARACTERISTIC_UUID_OTA;
+        cmd.type = GattRequest.RequestType.READ;
+        cmd.tag = TAG_OTA_START_READ;
+        cmd.callback = this.mOtaRequestCallback;
+        this.sendRequest(cmd);
+    }
+
+
     private void sendOtaEndCommand() {
         int index = mOtaParser.getIndex();
         byte[] data = new byte[6];
@@ -203,7 +225,8 @@ public class GattOtaController {
         if (command.tag.equals(TAG_OTA_PREPARE)) {
             sendOtaStartCommand();
         } else if (command.tag.equals(TAG_OTA_START)) {
-            sendNextOtaPacketCommand();
+//            sendNextOtaPacketCommand();
+            sendOtaStartReadCmd();
         } else if (command.tag.equals(TAG_OTA_END)) {
             setOtaProgressChanged();
             clear();
@@ -217,9 +240,9 @@ public class GattOtaController {
             setOtaProgressChanged();
         } else if (command.tag.equals(TAG_OTA_READ)) {
             sendNextOtaPacketCommand();
+        } else if (command.tag.equals(TAG_OTA_START_READ)) {
+            sendNextOtaPacketCommand();
         }
-
-
     }
 
     private void onOtaCmdError(GattRequest request) {

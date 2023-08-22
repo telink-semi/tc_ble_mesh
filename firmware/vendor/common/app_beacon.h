@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app_beacon.h 
+ * @file	app_beacon.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #ifndef APP_BEACON_H
 #define APP_BEACON_H
@@ -27,6 +30,8 @@
 #if WIN32
 #pragma pack(1)
 #endif
+
+#define URI_DATA    {0x17,0x2f,0x2f,0x50,0x54,0x53,0x2e,0x43,0x4f,0x4d}
 
 typedef struct {
 	u8 len;
@@ -60,6 +65,7 @@ typedef struct {
 	u8 authValue[8];
 }secure_net_pk;
 typedef struct {
+	bear_head_t tx_head;
 	u8 trans_par_val;
 	union{
 		beacon_dat_without_uri_pk bea_out_uri;
@@ -105,7 +111,6 @@ typedef enum{
 	OOB_IN_MANUL,
 	OOB_ON_DEVICE,
 }OOB_INFO_FIELD;
-extern beacon_str  beaconData;
 
 u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info);
 u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash);
@@ -114,12 +119,16 @@ int unprov_beacon_send(u8 mode ,u8 blt_sts);
 u8 beacon_test_case(u8*p_tc,u8 len );
 int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts);
 int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts);
+int iv_update_key_refresh_rx_handle_cb(mesh_ctl_fri_update_flag_t *p_ivi_flag, u32 iv_idx);
+void switch_iv_update_time_refresh();
 
 int mesh_beacon_send_proc();
 void beacon_str_init();
 int check_pkt_is_unprovision_beacon(u8 *dat);
-extern beacon_send_str beacon_send;
+extern _align_4_ beacon_send_str beacon_send;
 int mesh_tx_sec_private_beacon_proc(u8 blt_sts);
+u8  is_unprovision_beacon_with_uri(event_adv_report_t *report);
+int mesh_bear_tx_beacon_adv_channel_only(u8 *bear, u8 trans_par_val);
 
 
 #endif 

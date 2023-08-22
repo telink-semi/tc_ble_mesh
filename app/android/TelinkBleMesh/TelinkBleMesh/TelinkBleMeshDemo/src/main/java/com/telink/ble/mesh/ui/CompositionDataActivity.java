@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     CompositionDataActivity.java 
+ * @file CompositionDataActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -27,19 +28,20 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.widget.Toolbar;
+
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.config.CompositionDataGetMessage;
 import com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.NodeInfo;
-
-import androidx.appcompat.widget.Toolbar;
 
 /**
  * show device composition data
@@ -117,7 +119,7 @@ public class CompositionDataActivity extends BaseActivity implements EventListen
         // elements
         sb.append("elements: (").append(cps.elements.size()).append(")").append("\n");
         int basicEleAdr = nodeInfo.meshAddress;
-        for (CompositionData.Element ele : cps.elements) {
+        for (Element ele : cps.elements) {
             sb.append("\t").append(String.format("element adr: 0x%04X", basicEleAdr)).append("\n");
             MeshSigModel meshSigModel;
             for (Integer sigModel : ele.sigModels) {
@@ -151,15 +153,10 @@ public class CompositionDataActivity extends BaseActivity implements EventListen
     public void performed(Event<String> event) {
         if (event.getType().equals(CompositionDataStatusMessage.class.getName())) {
             CompositionDataStatusMessage cpsStatusMsg = (CompositionDataStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
-            CompositionData compositionData = cpsStatusMsg.getCompositionData();
-            nodeInfo.compositionData = compositionData;
-            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(CompositionDataActivity.this, "Composition Data Refresh Success", Toast.LENGTH_SHORT).show();
-                }
-            });
+            nodeInfo.compositionData = cpsStatusMsg.getCompositionData();
+            nodeInfo.save();
+//            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+            runOnUiThread(() -> Toast.makeText(CompositionDataActivity.this, "Composition Data Refresh Success", Toast.LENGTH_SHORT).show());
             refreshCpsInfo();
         }
     }

@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     user_proc.c 
+ * @file	user_proc.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "user_proc.h"
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
@@ -33,28 +35,43 @@
 
 
 #if(AIS_ENABLE)
+extern const u16 du_pri_service_uuid_16 ;
+extern const u16 ais_pri_service_uuid ;
 	#if DU_ENABLE
 #include "user_du.h"
 #include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #define AIS_DEVICE_NAME	"Mesh__Du"
+	#elif NMW_ENABLE
+#define AIS_DEVICE_NAME	"Mesh_NMW"
 	#else
 #define AIS_DEVICE_NAME	"Mesh Ali"
 	#endif
+	
+#define AIS_UUID_LEN	(NMW_ENABLE?0:4)
+
 u8 ais_pri_data_set(u8 *p)
 {
 	u8 device_name[]={AIS_DEVICE_NAME};
 	u8 name_len = (sizeof(device_name) - 1)>9?9:sizeof(device_name) - 1;//max 31 -( 4 bytes uuid + 16 byte vendor data) - 2 bytes head
-	//service uuid
-	p[0] = 3;
-	p[1] = 2;//imcomplete  service uuid
-	p[2] = 0xb3;
-	p[3] = 0xfe;
+
+	if(AIS_UUID_LEN){
+		//service uuid
+		p[0] = 3;
+		p[1] = 2;//imcomplete  service uuid
+		#if DU_ENABLE
+		p[2] = du_pri_service_uuid_16&0xff;
+		p[3] = du_pri_service_uuid_16>>8;
+		#else
+		p[2] = ais_pri_service_uuid&0xff;
+		p[3] = ais_pri_service_uuid>>8;
+		#endif
+	}
 	//name
-	p[4] = name_len + 1;
-	p[5] = 0x09;
-	memcpy(p+6, device_name, name_len);
+	p[AIS_UUID_LEN] = name_len + 1;
+	p[AIS_UUID_LEN+1] = 0x09;
+	memcpy(p+AIS_UUID_LEN+2, device_name, name_len);
 	//ais data
-	ais_pri_t *pri_data = (ais_pri_t *)(p+name_len+4+2);
+	ais_pri_t *pri_data = (ais_pri_t *)(p+name_len+AIS_UUID_LEN+2);
 	pri_data->length = sizeof(ais_pri_t) - 1;
 	pri_data->type = 0xff;
 	pri_data->cid = g_vendor_id;
@@ -69,7 +86,7 @@ u8 ais_pri_data_set(u8 *p)
 	pri_data->pid = con_product_id;
 	memcpy(pri_data->mac, tbl_mac, 6);
 
-	u8 ais_rsp_len = 4+name_len+2+sizeof(ais_pri_t);
+	u8 ais_rsp_len = AIS_UUID_LEN+name_len+2+sizeof(ais_pri_t);
 	return ais_rsp_len;
 }
 #endif
@@ -94,6 +111,8 @@ void user_sha256_data_proc()
 {
     #if (AIS_ENABLE)
     set_sha256_init_para_mode(1);
+    #elif LLSYNC_PROVISION_AUTH_OOB
+	llsync_tlk_init_three_para_and_mac();
     #endif
 }
 
@@ -102,7 +121,7 @@ void user_node_oob_set()
 {
 	#if CERTIFY_BASE_ENABLE
 	if(cert_base_func_init()){
-		set_node_prov_para_pubkey_no_oob();
+		cert_base_oob_set();
 		prov_para.cert_base_en =1;
 		// need to set the flag of the certify base flag in the oob part 
 		u16 oob_info_data = BIT(OOB_PROV_RECORD)|BIT(OOB_CERT_BASE);
@@ -112,6 +131,7 @@ void user_node_oob_set()
 	}else{
 		prov_para.cert_base_en =0;
 	}	
+	return ;
 	#endif
 
     if(AIS_ENABLE || (MESH_USER_DEFINE_MODE == MESH_AES_ENABLE)){
@@ -125,7 +145,7 @@ void user_node_oob_set()
             u8 oob[16] = {0xff};
 			mesh_set_dev_auth(oob,sizeof(oob));
         }else{
-			u8 oob[16] = {0};
+			u8 oob[32] = {0};
 			if(memcmp(dev_auth, oob, 16)){
 				set_node_prov_para_no_pubkey_static_oob();// static oob
 			}
@@ -137,14 +157,6 @@ void user_node_oob_set()
     }
 }
 
-u8 user_mac_proc()
-{
-	if(AIS_ENABLE && !MI_API_ENABLE){// not need to set the tbl mac address
-		return 1;
-	}else{
-        return 0;
-	}
-}
 
 #if MD_SERVER_EN
 void user_power_on_proc()
@@ -168,9 +180,11 @@ void user_mesh_cps_init()
 {
 	if(AIS_ENABLE){
 		//gp_page0->head.cid = g_vendor_id;     // have been set default value
+		#if !DU_ENABLE
 		gp_page0->head.pid = 0;
 		gp_page0->head.vid = 0x0001;
 		gp_page0->head.crpl = 100;
+		#endif
 	}else{
 	    // use pre-define value
 	}
@@ -178,8 +192,12 @@ void user_mesh_cps_init()
 
 void user_set_def_sub_adr()
 {
-    #if (AIS_ENABLE)
+    #if (AIS_ENABLE || LLSYNC_PROVISION_AUTH_OOB)
+    	#if LLSYNC_ENABLE
+    const u16 group_def_set[] = {LLSYNC_GROUP_ADDR_COMMON};
+    	#else
     const u16 group_def_set[] = {0xc000, 0xcfff};
+    	#endif
     foreach_arr(i,group_def_set){
         foreach(light_idx, LIGHT_CNT){
             share_model_sub(CFG_MODEL_SUB_ADD, group_def_set[i], 0, light_idx);
@@ -191,11 +209,14 @@ void user_set_def_sub_adr()
 void user_system_time_proc()
 {
 #if(AIS_ENABLE && !SPIRIT_PRIVATE_LPN_EN)
+	#if !DU_ENABLE
+	// in the du mode ,it will not stop send unprovision beacon 
 	sha256_dev_uuid_str *p_uuid = (sha256_dev_uuid_str *)prov_para.device_uuid;
 	if((p_uuid->adv_flag == 0)&&(clock_time_exceed_s(beacon_send.start_time_s, 10*60))){
 		beacon_send.inter = 60*1000*1000;
 		p_uuid->adv_flag = 1;
 	}
+	#endif
 #endif
 }
 
@@ -203,9 +224,11 @@ void user_system_time_proc()
 int user_node_rc_link_open_callback()
 {
 	#if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE ||MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
-		#if DU_LPN_EN
-	mi_mesh_state_set(1);
-	du_busy_tick = clock_time();
+		#if DU_ENABLE
+			#if DU_LPN_EN
+			mi_mesh_state_set(1);
+			#endif
+			update_du_busy_s(60);
 		#endif
 	sha256_dev_uuid_str *p_uuid = (sha256_dev_uuid_str *)prov_para.device_uuid;
 	if(p_uuid->adv_flag){
@@ -220,8 +243,13 @@ int user_node_rc_link_open_callback()
 void mesh_provision_para_init(u8 *p_random)
 {
 	mesh_provision_para_reset();
+	#if URI_DATA_ADV_ENABLE
+	prov_para.oob_info[0]=BIT(OOB_URI);
+	prov_para.oob_info[1]=0x00;
+	#else
 	prov_para.oob_info[0]=0x00;
 	prov_para.oob_info[1]=0x00;
+	#endif
 	provision_mag.pro_stop_flag = 1;// make the provisioner to initial state to stop
 	//provision_mag.unicast_adr_last =1;
 	prov_para.ele_cnt =1;
@@ -229,7 +257,7 @@ void mesh_provision_para_init(u8 *p_random)
 	prov_para.rand_gen_s = clock_time_s();
 	#if !WIN32
 	user_prov_multi_device_uuid();// use the mac address part to create the device uuid part
-	#if (!AIS_ENABLE)
+	#if (!AIS_ENABLE && !LLSYNC_PROVISION_AUTH_OOB)
 	u8 oob_data[16];
 	flash_read_page(FLASH_ADR_STATIC_OOB,16,oob_data);
 	if(get_flash_data_is_valid(oob_data,sizeof(oob_data))){//oob was burned in flash
@@ -247,7 +275,9 @@ void user_prov_multi_oob()
 {
 #if !WIN32
     #if (AIS_ENABLE)
-        caculate_sha256_to_create_static_oob();
+		caculate_sha256_to_create_static_oob();
+    #elif LLSYNC_PROVISION_AUTH_OOB
+		llsync_set_dev_auth();
     #elif (MESH_USER_DEFINE_MODE == MESH_AES_ENABLE)
         caculate_aes_to_create_static_oob();
     #else 
@@ -278,7 +308,7 @@ void uuid_create_by_mac(u8 *mac,u8 *uuid)
     //special proc to set the mac address into the uuid part 
     #if MD_REMOTE_PROV
 	uuid_mesh_t * p_uuid = (uuid_mesh_t * )uuid;
-    memcpy(p_uuid->node,mac,6);
+    memcpy(p_uuid->node,mac,6);	// just for showing mac on UI of VC remote scanning.
     #endif
 }
 
@@ -295,6 +325,8 @@ void user_prov_multi_device_uuid()
         set_dev_uuid_for_simple_flow(prov_para.device_uuid);
     #elif (MESH_USER_DEFINE_MODE == MESH_MI_ENABLE)
         // NO NEED DEV UUID
+	#elif LLSYNC_PROVISION_AUTH_OOB
+		llsync_mesh_dev_uuid_get(LLSYNC_MESH_UNNET_ADV_BIT, prov_para.device_uuid, sizeof(prov_para.device_uuid));
     #else // (MESH_USER_DEFINE_MODE == MESH_NORMAL_MODE  and all other)
         if(PROVISION_FLOW_SIMPLE_EN){
 		    set_dev_uuid_for_simple_flow(prov_para.device_uuid);

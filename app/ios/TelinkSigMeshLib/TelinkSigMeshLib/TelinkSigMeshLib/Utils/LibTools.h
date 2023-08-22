@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/10/12
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  LibTools.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2018/10/12.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import <Foundation/Foundation.h>
 
@@ -111,11 +105,16 @@ NS_ASSUME_NONNULL_BEGIN
 /// 16进制NSString转Uint64
 + (UInt64)uint64From16String:(NSString *)string;
 
++ (UInt16)getVirtualAddressOfLabelUUID:(NSString *)string;
+
 /// D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8 -> D7C5BD184282F31A0CE00468BC0B8DE8
 + (NSString *)meshUUIDToUUID:(NSString *)uuid;
 
 /// D7C5BD184282F31A0CE00468BC0B8DE8 -> D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8
 + (NSString *)UUIDToMeshUUID:(NSString *)meshUUID;
+
+/// xxxx -> 0000xxxx-0000-1000-8000-008505f9b34fb or xxxxxxxx -> xxxxxxxx-0000-1000-8000-008505f9b34fb
++ (NSString *)change16BitsUUIDTO128Bits:(NSString *)uuid;
 
 /// SDK的版本号
 + (NSString *)getSDKVersion;
@@ -136,9 +135,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (float)roundFloat:(float)price;
 
 /// 通过周期对象SigPeriodModel获取周期时间，单位为秒。
-+ (double)getIntervalWithSigPeriodModel:(SigPeriodModel *)periodModel;
-
-/// 通过周期对象SigPeriodModel获取周期时间，单位为秒。
 + (SigStepResolution)getSigStepResolutionWithSigPeriodModel:(SigPeriodModel *)periodModel;
 
 #pragma mark - JSON相关
@@ -149,7 +145,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @param dictionary 待转换的字典数据
  *  @return JSON字符串
  */
-+ (NSString *)getJSONStringWithDictionary:(NSDictionary *)dictionary;
++ (nullable NSString *)getJSONStringWithDictionary:(NSDictionary *)dictionary;
  
 /**
  *  字典数据转换成JSON字符串（有可读性）
@@ -157,7 +153,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @param dictionary 待转换的字典数据
  *  @return JSON字符串
  */
-+ (NSString *)getReadableJSONStringWithDictionary:(NSDictionary *)dictionary;
++ (nullable NSString *)getReadableJSONStringWithDictionary:(NSDictionary *)dictionary;
  
 /**
  *  字典数据转换成JSON数据
@@ -165,7 +161,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  @param dictionary 待转换的字典数据
  *  @return JSON数据
  */
-+ (NSData *)getJSONDataWithDictionary:(NSDictionary *)dictionary;
++ (nullable NSData *)getJSONDataWithDictionary:(NSDictionary *)dictionary;
 
 /**
 *  NSData数据转换成字典数据
@@ -181,7 +177,7 @@ NS_ASSUME_NONNULL_BEGIN
 *  @param jsonString 待转换的JSON字符串
 *  @return 字典数据
 */
-+ (NSDictionary *)getDictionaryWithJsonString:(NSString *)jsonString;
++ (nullable NSDictionary *)getDictionaryWithJsonString:(NSString *)jsonString;
 
 #pragma mark - CRC相关
 
@@ -197,38 +193,22 @@ int aes128_ecb_encrypt(const unsigned char *inData, int in_len, const unsigned c
 //解密
 int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData);
 
-#pragma mark - base64加解密
-
-#define __BASE64( text )        [LibTools base64StringFromText:text]
-#define __TEXT( base64 )        [LibTools textFromBase64String:base64]
-
-/******************************************************************************
- 函数名称 : + (NSString *)base64StringFromText:(NSString *)text
- 函数描述 : 将文本转换为base64格式字符串
- 输入参数 : (NSString *)text    文本
- 输出参数 : N/A
- 返回参数 : (NSString *)    base64格式字符串
- 备注信息 :
- ******************************************************************************/
-+ (NSString *)base64StringFromText:(NSString *)text;
-
-/******************************************************************************
- 函数名称 : + (NSString *)textFromBase64String:(NSString *)base64
- 函数描述 : 将base64格式字符串转换为文本
- 输入参数 : (NSString *)base64  base64格式字符串
- 输出参数 : N/A
- 返回参数 : (NSString *)    文本
- 备注信息 :
- ******************************************************************************/
-+ (NSString *)textFromBase64String:(NSString *)base64;
-
-+ (NSString *)textFromBase64String:(NSString *)base64 password:(NSString *)password;
-
 #pragma mark - 正则表达式相关
 
 + (BOOL)validateUUID:(NSString *)uuidString;
 
 + (BOOL)validateHex:(NSString *)uuidString;
+
+#pragma mark - UTF-8相关
+
++ (NSArray <NSNumber *>*)getNumberListFromUTF8EncodeData:(NSData *)UTF8EncodeData;
+
++ (NSData *)getUTF8EncodeDataFromNumberList:(NSArray <NSNumber *>*)numberList;
+
+#pragma mark - 文件相关
+
++ (NSArray <NSString *>*)getAllFileNameWithFileType:(NSString *)fileType;
++ (NSData *)getDataWithFileName:(NSString *)fileName fileType:(NSString * _Nullable )fileType;
 
 @end
 

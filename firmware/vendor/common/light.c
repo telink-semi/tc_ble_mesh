@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     light.c 
+ * @file	light.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
@@ -181,11 +184,25 @@ s16 get_on_power_up_last(sw_level_save_t *p_save)
 	return (p_save->onoff ? p_save->last : LEVEL_OFF);
 }
 
-#if KEEP_ONOFF_STATE_AFTER_OTA
+#if (!WIN32)
+#if 1 // KEEP_ONOFF_STATE_AFTER_OTA // alway on, because lpn need to set in gatt adv mode after ota reboot.
+#define OTA_REBOOT_CHECK_FLAG			(KEEP_ONOFF_STATE_AFTER_OTA ? FLD_OTA_REBOOT_FLAG : 0)
+
 void set_keep_onoff_state_after_ota()
 {
 	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) | FLD_OTA_REBOOT_FLAG);
 }
+
+void clr_keep_onoff_state_after_ota()
+{
+	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) & (~ FLD_OTA_REBOOT_FLAG));
+}
+
+int is_state_after_ota()
+{
+	return (analog_read(DEEP_ANA_REG0) & FLD_OTA_REBOOT_FLAG);
+}
+#endif
 #endif
 
 void mesh_global_var_init_light_sw()
@@ -259,7 +276,7 @@ void light_res_sw_load()
 			#if(WIN32)
 			if(ONPOWER_UP_STORE == ONPOWER_UP_VAL(i)){
 			#else
-			if((ONPOWER_UP_STORE == ONPOWER_UP_VAL(i)) || ((ST_TRANS_LIGHTNESS == k) && (analog_read(DEEP_ANA_REG0)&(FLD_OTA_REBOOT_FLAG|FLD_LOW_BATT_FLG)))){
+			if((ONPOWER_UP_STORE == ONPOWER_UP_VAL(i)) || ((ST_TRANS_LIGHTNESS == k) && (analog_read(DEEP_ANA_REG0)&(OTA_REBOOT_CHECK_FLAG|FLD_LOW_BATT_FLG)))){
 			#endif
 				level_poweron = get_on_power_up_last(p_save);
 			}
@@ -309,10 +326,13 @@ void light_transition_onoff_manual(u8 onoff, u8 transit_t, u8 light_idx)
 
 u8 edch_is_exist()
 {
+#if PROV_AUTH_LEAK_RECREATE_KEY_EN
+#else
 	u32 *p_edch = (u32 *) FLASH_ADR_EDCH_PARA;
 	if(*p_edch == 0xffffffff){
 		return 0;
 	}	
+#endif
 	return 1;
 }
 
@@ -355,15 +375,18 @@ void light_pwm_init()
             light_transition_onoff_manual(G_OFF, 0, i);
             if(onoff_present && CB_USER_LIGHT_INIT_ON_CONDITION()){
 				#if !MI_SWITCH_LPN_EN
-				light_transition_onoff_manual(G_ON, (analog_read(DEEP_ANA_REG0)&(FLD_OTA_REBOOT_FLAG|FLD_LOW_BATT_LOOP_FLG))?0:edch_is_exist()?g_def_trans_time_val(i):0, i);
+				light_transition_onoff_manual(G_ON, (analog_read(DEEP_ANA_REG0)&(OTA_REBOOT_CHECK_FLAG|FLD_LOW_BATT_LOOP_FLG))?0:edch_is_exist()?g_def_trans_time_val(i):0, i);
 				#endif
 			}
         }
     }
+
+    clr_keep_onoff_state_after_ota();
 #endif
 }
 #else
 void light_pwm_init(){}
+void set_keep_onoff_state_after_ota(){}
 #endif
 
 static u32 tick_light_save;
@@ -420,6 +443,34 @@ u32 get_pwm_cmp(u8 val, u8 lum){
     return ((u32)val * val_lumen_map) / 255;
 }
 
+#define LIGHTNESS_AVERAGE_STEP	(65535 / (ARRAY_SIZE(rgb_lumen_map) - 1))
+#define RGB_AVERAGE_STEP		(255 / (ARRAY_SIZE(rgb_lumen_map) - 1))
+STATIC_ASSERT((LIGHTNESS_AVERAGE_STEP > 0) || (RGB_AVERAGE_STEP > 0));
+
+u16 get_pwm_smooth(u16 lightness, u32 step)
+{
+	u8 lum = lightness / step;
+	u16 lightness_remain = lightness % step;
+	u16 pwm_remain = 0;
+	u16 pwm_max = rgb_lumen_map[ARRAY_SIZE(rgb_lumen_map) - 1];
+
+	if (lum >= ARRAY_SIZE(rgb_lumen_map) - 1) {
+		lum = ARRAY_SIZE(rgb_lumen_map) - 1;
+	}else {
+		if ((lightness_remain > 1) || (step <= 3)) { // 1 is too small for lightness, but not for RGB. 
+			pwm_remain = (lightness_remain * (rgb_lumen_map[lum + 1] - rgb_lumen_map[lum])) / (step);
+		}
+	}
+
+	u32 pwm_val = rgb_lumen_map[lum] + pwm_remain;
+	if (pwm_val > pwm_max) {
+		pwm_val = pwm_max;
+	}else if((pwm_val > 0) && (pwm_val < rgb_lumen_map[1])){ // 
+		pwm_val = rgb_lumen_map[1]; // if less than minimum PWM, some bulb may not work good.
+	}
+
+	return pwm_val;
+}
 
 /**
  * @brief  Control lights on hardware.
@@ -537,49 +588,19 @@ void light_res_sw_g_level_target_set(int idx, s16 level, int st_trans_type)	// o
 	p_trans->delay_ms = 0;
 }
 
-// --------------------------------
-/**
- * @brief  Refresh the light status through the global variables 
- *   that have been set.
- * @param  idx: Light Count index.
- * @retval None
- */
-_USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
+void light_dim_refresh_mi_ct(int idx)
 {
-	st_transition_t *p_trans = P_ST_TRANS(idx, ST_TRANS_LIGHTNESS);
-	// u16 lightness = get_lightness_from_level(p_trans->present);
-#if (LIGHT_TYPE_SEL != LIGHT_TYPE_HSL)
-	u8 lum_100 = level2lum(p_trans->present);
-#endif
-    //LOG_MSG_INFO(DEBUG_SHOW_VC_SELF_EN ? TL_LOG_COMMON : TL_LOG_MESH,0,0,"present_lum %d", lum_100);
-	CB_NL_PAR_NUM_3(p_nl_level_state_changed,idx * ELE_CNT_EVERY_LIGHT + ST_TRANS_LIGHTNESS, p_trans->present, p_trans->target);
-#if (FEATURE_LOWPOWER_EN || GATT_LPN_EN)
-    foreach_arr(i,light_res_hw[LIGHT_CNT]){
-        const light_res_hw_t *p_hw = &light_res_hw[idx][i];
-        led_onoff_gpio(p_hw->gpio, 0 != lum_100);
-    }
-	return ;
-#else
-    #if(!(LIGHT_TYPE_CT_EN || LIGHT_TYPE_HSL_EN))
-    light_dim_set_hw(idx, 0, get_pwm_cmp(0xff, lum_100));
-    #else
-	    #if (LIGHT_TYPE_CT_EN)
-    u8 ct_100 = 0;
-    if(ct_flag && (lum_100 != 0)){
-	    u16 temp = light_ctl_temp_prensent_get(idx);
-	    ct_100 = temp_to_temp100_hw(temp);
-		static u8 debug_ct_100; debug_ct_100 = ct_100;
-    }
-            #if (XIAOMI_MODULE_ENABLE&&!AIS_ENABLE)
+	st_transition_t *p_trans_l = P_ST_TRANS(idx, ST_TRANS_LIGHTNESS);
     //calc the temp100 transfer for mi 
+	u8 lum_100 = level2lum(p_trans_l->present);
     u16 mi_temp = light_ctl_temp_prensent_get(idx);
     u8 mi_ct = 0;
 	#if LS_TEST_ENABLE
-	#define CT_MI_MIN		3000
-	#define CT_MI_MAX		6400
+#define CT_MI_MIN		3000
+#define CT_MI_MAX		6400
 	#else
-	#define CT_MI_MIN		2700
-	#define CT_MI_MAX		6500
+#define CT_MI_MIN		2700
+#define CT_MI_MAX		6500
 	#endif
     if(mi_temp<CT_MI_MIN){
         mi_ct =0;
@@ -591,17 +612,67 @@ _USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
     light_dim_set_hw(idx, 0, 0xffff);// turn on the filter part 
     light_dim_set_hw(idx, 1, get_pwm_cmp(0xff, mi_ct*lum_100/100));
     light_dim_set_hw(idx, 2, get_pwm_cmp(0xff, (100-mi_ct)*lum_100/100));
+}
+
+// --------------------------------
+/**
+ * @brief  Refresh the light status through the global variables 
+ *   that have been set.
+ * @param  idx: Light Count index.
+ * @retval None
+ */
+_USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
+{
+	st_transition_t *p_trans_l = P_ST_TRANS(idx, ST_TRANS_LIGHTNESS);
+	// u16 lightness = get_lightness_from_level(p_trans->present);
+#if (LIGHT_TYPE_SEL != LIGHT_TYPE_HSL)
+	u32 lightness_65535 = s16_to_u16(p_trans_l->present);
+#endif
+
+    //LOG_MSG_INFO(DEBUG_SHOW_VC_SELF_EN ? TL_LOG_COMMON : TL_LOG_MESH,0,0,"present_lum %d", lum_100);
+	CB_NL_PAR_NUM_3(p_nl_level_state_changed,idx * ELE_CNT_EVERY_LIGHT + ST_TRANS_LIGHTNESS, p_trans_l->present, p_trans_l->target);
+#if (FEATURE_LOWPOWER_EN || GATT_LPN_EN|| LPN_CONTROL_EN)
+    foreach_arr(i,light_res_hw[LIGHT_CNT]){
+        const light_res_hw_t *p_hw = &light_res_hw[idx][i];
+        led_onoff_gpio(p_hw->gpio, 0 != lightness_65535);
+    }
+	return ;
+#else
+    #if(!(LIGHT_TYPE_CT_EN || LIGHT_TYPE_HSL_EN))
+    light_dim_set_hw(idx, 0, get_pwm_smooth(lightness_65535, LIGHTNESS_AVERAGE_STEP));
+    #else
+	    #if (LIGHT_TYPE_CT_EN)
+            #if (XIAOMI_MODULE_ENABLE&&!AIS_ENABLE)
+    p_trans_l = p_trans_l; // will be optimized
+    lightness_65535 = lightness_65535; // will be optimized
+	light_dim_refresh_mi_ct(idx);
             #else
+	st_transition_t *p_trans_ct = P_ST_TRANS(idx, ST_TRANS_CTL_TEMP);
+	u32 ct_65535 = s16_to_u16(p_trans_ct->present);
+    if(ct_flag && (lightness_65535 != 0)){
+		#if 0 // to get color temperature value from level which store in flash.
+	    u16 color_temperature = light_ctl_temp_prensent_get(idx); // range from CTL_TEMP_MIN(800) to CTL_TEMP_MAX(20000) by default.
+	    u8 ct_100 = temp_to_temp100_hw(color_temperature);		  // transform to range from 0 to 100;
+		static u8 debug_ct_100; debug_ct_100 = ct_100;
+		#endif
+    }
+
     if(ct_flag){
-        light_dim_set_hw(idx, 0, get_pwm_cmp(0xff,(100-ct_100)*lum_100/100));
-        light_dim_set_hw(idx, 1, get_pwm_cmp(0xff, ct_100*lum_100/100)); 
+		u32 warn_led_lightness = ((65535 - ct_65535) * lightness_65535) / 65535;
+		u32 cold_led_lightness = (ct_65535 * lightness_65535) / 65535;
+		u32 warn_led_pwm = get_pwm_smooth(warn_led_lightness, LIGHTNESS_AVERAGE_STEP);
+		u32 cold_led_pwm = get_pwm_smooth(cold_led_lightness, LIGHTNESS_AVERAGE_STEP);
+		light_dim_set_hw(idx, 0, warn_led_pwm);
+		light_dim_set_hw(idx, 1, cold_led_pwm); 
+		
+		//LOG_MSG_LIB(TL_LOG_NODE_SDK,0,0,"pwm:0x%04x,0x%04x", warn_led_pwm, cold_led_pwm);
     }
             #endif   
         #endif
         
         #if (LIGHT_TYPE_HSL_EN)
     if(!ct_flag){
-        //u8 r = irq_disable();
+        //u32 r = irq_disable();
         //u32 tick_1 = clock_time();
         st_transition_t *p_hue = P_ST_TRANS(idx, ST_TRANS_HSL_HUE);
         st_transition_t *p_sat = P_ST_TRANS(idx, ST_TRANS_HSL_SAT);
@@ -609,11 +680,11 @@ _USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
         RGB_set RGB;
         HSL.h = ((float)(s16_to_u16(p_hue->present))/65535.0f);
         HSL.s = ((float)(s16_to_u16(p_sat->present))/65535.0f);
-        HSL.l = ((float)(s16_to_u16(p_trans->present))/65535.0f);
+        HSL.l = ((float)(s16_to_u16(p_trans_l->present))/65535.0f);
         HslToRgb(HSL,&RGB);
-        light_dim_set_hw(idx, 0, get_pwm_cmp(0xff, RGB.r*100/255));
-        light_dim_set_hw(idx, 1, get_pwm_cmp(0xff, RGB.g*100/255));
-        light_dim_set_hw(idx, 2, get_pwm_cmp(0xff, RGB.b*100/255));
+        light_dim_set_hw(idx, 0, get_pwm_smooth(RGB.r, RGB_AVERAGE_STEP));
+        light_dim_set_hw(idx, 1, get_pwm_smooth(RGB.g, RGB_AVERAGE_STEP));
+        light_dim_set_hw(idx, 2, get_pwm_smooth(RGB.b, RGB_AVERAGE_STEP));
         //static u32 A_1[100];
         // static u32 A_1_cnt;
         //if(A_1_cnt < 100){
@@ -1314,7 +1385,7 @@ void led_onoff_gpio(u32 gpio, u8 on){
 #endif
 }
 
-#if (__PROJECT_MESH_SWITCH__ || PM_DEEPSLEEP_RETENTION_ENABLE)
+#if (__PROJECT_MESH_SWITCH__ || PM_DEEPSLEEP_RETENTION_ENABLE || (SMART_PROVISION_ENABLE && !MD_SERVER_EN))
 void proc_led()
 {
 	if(p_vendor_proc_led){
@@ -1488,6 +1559,9 @@ _USER_CAN_REDEFINE_ void rf_link_light_event_callback (u8 status)
 	    #else
         cfg_led_event(LED_EVENT_FLASH_1HZ_4S);
         #endif
+        #if LLSYNC_ENABLE
+		llsync_stop_silence_adv_timeout_check();
+		#endif
     }else if(status == LGT_CMD_SET_SUBSCRIPTION){
 	    #ifdef CFG_LED_EVENT_SET_SUBSCRIPTION
 	    CFG_LED_EVENT_SET_SUBSCRIPTION;
@@ -1546,10 +1620,11 @@ void light_ev_with_sleep(u32 count, u32 half_cycle_us)
 
 _USER_CAN_REDEFINE_ void show_ota_result(int result)
 {
-	if(result == OTA_SUCCESS){
+	if(result == OTA_REBOOT_NO_LED){
+		// nothing
+	}else if(result == OTA_SUCCESS){
 		light_ev_with_sleep(3, 1000*1000);	//0.5Hz shine for  6 second
-	}
-	else{
+	}else{
 		light_ev_with_sleep(30, 100*1000);	//5Hz shine for  6 second
 		//write_reg8(0x8000,result); ;while(1);  //debug which err lead to OTA fail
 	}

@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     FileSelectActivity.java 
+ * @file FileSelectActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.file;
 
@@ -36,6 +37,9 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
 import com.telink.ble.mesh.demo.R;
 
 import java.io.File;
@@ -45,9 +49,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
 
 /**
  * Created by ke on 2019/12/30.
@@ -55,6 +56,8 @@ import androidx.appcompat.widget.Toolbar;
 public class FileSelectActivity extends AppCompatActivity {
 
     public static final String KEY_SUFFIX = "com.telink.file.selector.suffix";
+
+    public static final String KEY_TITLE = "com.telink.file.selector.title";
 
     public static final String KEY_RESULT = "Result";
 
@@ -70,6 +73,8 @@ public class FileSelectActivity extends AppCompatActivity {
     private static final String DEFAULT_FILE_SUFFIX = ".bin";
 
     private String fileSuffix = DEFAULT_FILE_SUFFIX;
+
+    private static final String DEFAULT_TITLE = "File Selector";
 
     private static final int SORT_BY_NAME = 0x00;
 
@@ -101,11 +106,12 @@ public class FileSelectActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_select);
-        initTitle();
+
         Intent intent = getIntent();
         if (intent.hasExtra(KEY_SUFFIX)) {
             fileSuffix = intent.getStringExtra(KEY_SUFFIX);
         }
+        initTitle(intent.getStringExtra(KEY_TITLE));
         initView();
         getCacheDirPath();
         update();
@@ -141,10 +147,10 @@ public class FileSelectActivity extends AppCompatActivity {
     }
 
 
-    private void initTitle() {
+    private void initTitle(String title) {
         Toolbar toolbar = findViewById(R.id.title_bar);
         TextView tv_title = toolbar.findViewById(R.id.tv_title);
-        tv_title.setText("File Selector");
+        tv_title.setText(title == null ? DEFAULT_TITLE : title);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

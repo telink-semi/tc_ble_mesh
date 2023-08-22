@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     DeviceCompositionDataVC.m
-*
-* @brief    for TLSR chips
-*
-* @author     telink
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  DeviceCompositionDataVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2020/6/24.
-//  Copyright © 2020 Telink. All rights reserved.
-//
+ * @file     DeviceCompositionDataVC.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2020/6/24
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "DeviceCompositionDataVC.h"
 #import "UIViewController+Message.h"
@@ -97,7 +91,7 @@
 }
 
 - (void)showCompositionDataUI {
-    NSString *str = [NSString stringWithFormat:@"Composition Data:\ncid: 0x%04X\npid: 0x%04X\nvid: 0x%04X\ncrpl: 0x%04X\nfeatures: 0x%04X\n\trelay support: %@\n\tproxy support: %@\n\tfriend support: %@\n\tlow power support: %@\nelement count:%d\n%@",self.model.compositionData.companyIdentifier,self.model.compositionData.productIdentifier,self.model.compositionData.versionIdentifier,self.model.compositionData.minimumNumberOfReplayProtectionList,self.model.compositionData.features.rawValue,self.model.compositionData.features.relayFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",self.model.compositionData.features.proxyFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",self.model.compositionData.features.friendFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",self.model.compositionData.features.lowPowerFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",(int)self.model.compositionData.elements.count,[self getElementsString]];
+    NSString *str = [NSString stringWithFormat:@"Composition Data:\ncid: 0x%04X\npid: 0x%04X\nvid: 0x%04X\ncrpl: 0x%04X\nfeatures: 0x%04X\n\trelay support: %@\n\tproxy support: %@\n\tfriend support: %@\n\tlow power support: %@\nelement count:%d\n%@",self.model.compositionData.companyIdentifier,self.model.compositionData.productIdentifier,CFSwapInt16HostToBig(self.model.compositionData.versionIdentifier),self.model.compositionData.minimumNumberOfReplayProtectionList,self.model.compositionData.features.rawValue,self.model.compositionData.features.relayFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",self.model.compositionData.features.proxyFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",self.model.compositionData.features.friendFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",self.model.compositionData.features.lowPowerFeature == SigNodeFeaturesState_notSupported ? @"false" : @"ture",(int)self.model.compositionData.elements.count,[self getElementsString]];
     self.compositionDataTV.text = str;
 }
 

@@ -1,0 +1,97 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: tl_ble_module - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\Users\JQ74C1~1.ZEN\AppData\Local\Temp\RSP306.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"Debug/" /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"E:\static_mesh_sdk_data\ble_lt_mesh\ble_lt_mesh\reference\tl_bulk\lib_file\app_provision.cpp"
+]
+Creating command line "cl.exe @C:\Users\JQ74C1~1.ZEN\AppData\Local\Temp\RSP306.tmp" 
+Creating temporary file "C:\Users\JQ74C1~1.ZEN\AppData\Local\Temp\RSP307.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"Debug/" /Fp"Debug/tl_ble_module.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"E:\static_mesh_sdk_data\ble_lt_mesh\ble_lt_mesh\reference\tl_bulk\CTL_privision.cpp"
+"E:\static_mesh_sdk_data\ble_lt_mesh\ble_lt_mesh\reference\tl_bulk\tl_ble_moduleDlg.cpp"
+]
+Creating command line "cl.exe @C:\Users\JQ74C1~1.ZEN\AppData\Local\Temp\RSP307.tmp" 
+Creating temporary file "C:\Users\JQ74C1~1.ZEN\AppData\Local\Temp\RSP308.tmp" with contents
+[
+setupapi.lib /nologo /subsystem:windows /incremental:yes /pdb:"Debug/tl_bulk.pdb" /debug /machine:I386 /out:"Debug/tl_bulk.exe" /pdbtype:sept 
+.\Debug\GridCell.obj
+.\Debug\GridCellBase.obj
+.\Debug\GridCtrl.obj
+.\Debug\GridDropTarget.obj
+.\Debug\InPlaceEdit.obj
+.\Debug\TitleTip.obj
+.\Debug\GridCellCheck.obj
+.\Debug\GridCellCombo.obj
+.\Debug\GridCellDateTime.obj
+.\Debug\GridCellNumeric.obj
+.\Debug\GridURLCell.obj
+.\Debug\aes_att.obj
+.\Debug\app_provision.obj
+.\Debug\CTL_privision.obj
+.\Debug\le_crypto.obj
+.\Debug\Mesh_crypto.obj
+.\Debug\ScanDlg.obj
+.\Debug\StdAfx.obj
+.\Debug\tl_ble_module.obj
+.\Debug\tl_ble_moduleDlg.obj
+.\Debug\TLMeshDlg.obj
+.\Debug\usbprt.obj
+.\Debug\tl_ble_module.res
+]
+Creating command line "link.exe @C:\Users\JQ74C1~1.ZEN\AppData\Local\Temp\RSP308.tmp"
+<h3>Output Window</h3>
+Compiling...
+app_provision.cpp
+e:\static_mesh_sdk_data\ble_lt_mesh\ble_lt_mesh\reference\tl_bulk\lib_file\app_provision.cpp(354) : warning C4101: 'p_rcv_str' : unreferenced local variable
+e:\static_mesh_sdk_data\ble_lt_mesh\ble_lt_mesh\reference\tl_bulk\lib_file\app_provision.cpp(451) : warning C4101: 'p_str' : unreferenced local variable
+Compiling...
+CTL_privision.cpp
+e:\static_mesh_sdk_data\ble_lt_mesh\ble_lt_mesh\reference\tl_bulk\ctl_privision.cpp(3) : warning C4652: compiler option 'PM representation(/vmb)' inconsistent with precompiled header; current command-line option will override that defined in the precompiled header
+tl_ble_moduleDlg.cpp
+e:\static_mesh_sdk_data\ble_lt_mesh\ble_lt_mesh\reference\tl_bulk\tl_ble_moduledlg.cpp(4) : warning C4652: compiler option 'PM representation(/vmb)' inconsistent with precompiled header; current command-line option will override that defined in the precompiled header
+Generating Code...
+Linking...
+Creating temporary file "C:\Users\JQ74C1~1.ZEN\AppData\Local\Temp\RSP1AFC.tmp" with contents
+[
+/nologo /o"Debug/tl_ble_module.bsc" 
+.\Debug\StdAfx.sbr
+.\Debug\GridCell.sbr
+.\Debug\GridCellBase.sbr
+.\Debug\GridCtrl.sbr
+.\Debug\GridDropTarget.sbr
+.\Debug\InPlaceEdit.sbr
+.\Debug\TitleTip.sbr
+.\Debug\GridCellCheck.sbr
+.\Debug\GridCellCombo.sbr
+.\Debug\GridCellDateTime.sbr
+.\Debug\GridCellNumeric.sbr
+.\Debug\GridURLCell.sbr
+.\Debug\aes_att.sbr
+.\Debug\app_provision.sbr
+.\Debug\CTL_privision.sbr
+.\Debug\le_crypto.sbr
+.\Debug\Mesh_crypto.sbr
+.\Debug\ScanDlg.sbr
+.\Debug\tl_ble_module.sbr
+.\Debug\tl_ble_moduleDlg.sbr
+.\Debug\TLMeshDlg.sbr
+.\Debug\usbprt.sbr]
+Creating command line "bscmake.exe @C:\Users\JQ74C1~1.ZEN\AppData\Local\Temp\RSP1AFC.tmp"
+Creating browse info file...
+<h3>Output Window</h3>
+
+
+
+<h3>Results</h3>
+tl_bulk.exe - 0 error(s), 4 warning(s)
+</pre>
+</body>
+</html>

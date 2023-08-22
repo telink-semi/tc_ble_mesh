@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file CompositionDataActivity.java
+ * @file SubnetBridgeActivity.java
  *
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -28,6 +29,10 @@ import android.os.Handler;
 import android.view.View;
 import android.widget.Switch;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.config.BridgingTableRemoveMessage;
@@ -44,10 +49,6 @@ import com.telink.ble.mesh.model.BridgingTable;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.BridgingTableAdapter;
-
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * network key in target device
@@ -83,13 +84,10 @@ public class SubnetBridgeActivity extends BaseActivity implements EventListener<
 
         initView();
         adapter = new BridgingTableAdapter(this, nodeInfo.bridgingTableList);
-        adapter.setOnItemLongClickListener(new BaseRecyclerViewAdapter.OnItemLongClickListener() {
-            @Override
-            public boolean onLongClick(int position) {
-                removeIndex = position;
-                showRemoveDialog();
-                return false;
-            }
+        adapter.setOnItemLongClickListener(position -> {
+            removeIndex = position;
+            showRemoveDialog();
+            return false;
         });
         RecyclerView recyclerView = findViewById(R.id.rv_bridging_table);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -165,7 +163,7 @@ public class SubnetBridgeActivity extends BaseActivity implements EventListener<
             SubnetBridgeStatusMessage bridgeStatusMessage = (SubnetBridgeStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
             int state = bridgeStatusMessage.getSubnetBridgeState();
             nodeInfo.subnetBridgeEnabled = state == 1;
-            TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+            nodeInfo.save();
             handler.removeCallbacksAndMessages(null);
             updateState();
 
@@ -175,7 +173,7 @@ public class SubnetBridgeActivity extends BaseActivity implements EventListener<
                 handler.removeCallbacksAndMessages(null);
                 if (removeIndex != -1) {
                     nodeInfo.bridgingTableList.remove(removeIndex);
-                    TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+                    nodeInfo.save();
                     removeIndex = -1;
                 }
                 updateTable();

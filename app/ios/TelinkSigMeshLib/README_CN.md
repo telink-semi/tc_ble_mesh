@@ -1,6 +1,6 @@
 # TelinkSigMeshLib
 
-version: v3.3.2
+version: v3.3.4
 
 ## 关于
 

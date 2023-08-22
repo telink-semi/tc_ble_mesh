@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     FileSystem.java 
+ * @file FileSystem.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.util;
 
@@ -79,7 +80,7 @@ public abstract class FileSystem {
 
         if (!file.exists())
             return null;
-
+        MeshLogger.d("obj file size: " + file.length());
         FileInputStream fis = null;
         ObjectInputStream ois = null;
 
@@ -103,6 +104,21 @@ public abstract class FileSystem {
         return result;
     }
 
+    /**
+     * delete file
+     *
+     * @param fileName file in app file dir
+     */
+    public static void deleteFile(Context context, String fileName) {
+        File dir = context.getFilesDir();
+        File file = new File(dir, fileName);
+        if (file.delete()) {
+            MeshLogger.d("file delete success");
+        } else {
+            MeshLogger.d("file delete fail");
+        }
+    }
+
     public static File getSettingPath() {
         File root = Environment.getExternalStorageDirectory();
         return new File(root.getAbsolutePath() + File.separator + "TelinkBleMesh");
@@ -116,16 +132,26 @@ public abstract class FileSystem {
         }
         File file = new File(dir, filename);
 
-        FileOutputStream fos;
+        FileOutputStream fos = null;
         try {
             if (!file.exists())
                 file.createNewFile();
             fos = new FileOutputStream(file);
             fos.write(content.getBytes());
             fos.flush();
-            fos.close();
+            fos.getFD().sync();
             return file;
         } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
         }
 
         return null;
@@ -155,5 +181,65 @@ public abstract class FileSystem {
         }
 
         return "";
+    }
+
+
+    public static File writeByteArray(File dir, String filename, byte[] array) {
+
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        File file = new File(dir, filename);
+
+        FileOutputStream fos = null;
+        try {
+            if (!file.exists())
+                file.createNewFile();
+            fos = new FileOutputStream(file);
+            fos.write(array);
+            fos.flush();
+            fos.getFD().sync();
+            return file;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+
+        return null;
+    }
+
+    public static byte[] readByteArray(File file) {
+        if (!file.exists())
+            return null;
+        FileInputStream fis = null;
+        byte[] certData;
+        try {
+            fis = new FileInputStream(file);
+            certData = new byte[fis.available()];
+            fis.read(certData);
+            return certData;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                    fis = null;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+        return null;
     }
 }

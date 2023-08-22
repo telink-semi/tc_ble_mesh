@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author     telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/7/4
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  ChooseAndAddDeviceVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2019/7/4.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "ChooseAndAddDeviceVC.h"
 #import "MeshOTAItemCell.h"
@@ -73,11 +67,12 @@ typedef enum : NSUInteger {
     [self userAbled:NO];
 
     __weak typeof(self) weakSelf = self;
-    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
             TeLogDebug(@"close success.");
             //示范代码：只扫描1827的设备
             [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
+                TeLogInfo(@"==========peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d",peripheral,advertisementData,RSSI,unprovisioned);
                 if (unprovisioned) {
                     AddDeviceStateModel *model = [[AddDeviceStateModel alloc] init];
                     model.peripheral = peripheral;
@@ -139,12 +134,17 @@ typedef enum : NSUInteger {
     
     [self userAbled:NO];
     NSData *key = [SigDataSource.share curNetKey];
-    
+    if (SigDataSource.share.curNetkeyModel.phase == distributingKeys) {
+        if (SigDataSource.share.curNetkeyModel.oldKey) {
+            key = [LibTools nsstringToHex:SigDataSource.share.curNetkeyModel.oldKey];
+        }
+    }
+
     __weak typeof(self) weakSelf = self;
-    [SigBearer.share stopMeshConnectWithComplete:^(BOOL successful) {
+    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
-            NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-            [oprationQueue addOperationWithBlock:^{
+            NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+            [operationQueue addOperationWithBlock:^{
                 for (AddDeviceStateModel *model in selectDevices) {
                     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                     CBPeripheral *peripheral = model.peripheral;
@@ -161,57 +161,95 @@ typedef enum : NSUInteger {
                     //选择添加新增逻辑：判断本地是否存在该UUID的OOB数据，存在则使用static OOB添加，不存在则使用no OOB添加。
                     SigScanRspModel *rspModel = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
                     SigOOBModel *oobModel = [SigDataSource.share getSigOOBModelWithUUID:rspModel.advUuid];
-                    ProvisionTpye provisionType = ProvisionTpye_NoOOB;
+                    ProvisionType provisionType = ProvisionType_NoOOB;
                     NSData *staticOOBData = nil;
-                    if (oobModel && oobModel.OOBString && oobModel.OOBString.length == 32) {
-                        provisionType = ProvisionTpye_StaticOOB;
+                    if (oobModel && oobModel.OOBString && (oobModel.OOBString.length == 32 || oobModel.OOBString.length == 64)) {
+                        provisionType = ProvisionType_StaticOOB;
                         staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
                     }
-                    
-//                    //fastbind 获取cpsData1：PID为1或者7，SDK内置了这两个PID的cpsData，当接口是fastBind且cpsData为空，则使用PID查找cpsData，查找不到则默认使用PID为1的cpsData。
-////                    UInt16 productID = 1;
-////                    DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
-////                    NSData *cpsData = deviceType.defaultCompositionData.parameters;
-//                    //fastbind 获取cpsData2：当接口是fastBind且传入cpsData，则无论PID为多少，直接使用cpsData里面的PID。
-//                    UInt16 productID = 0;
-//                    NSData *cpsData = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
-//                    //fastbind接口调用如下：
-//                    [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:KeyBindTpye_Fast productID:productID cpsData:cpsData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-//                        model.state = AddStateKeybinding;
-//                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-//                    } provisionFail:^(NSError * _Nonnull error) {
-//                        model.state = AddStateProvisionFail;
-//                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-//                        dispatch_semaphore_signal(semaphore);
-//                    } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-//                        model.state = AddStateKeybound;
-//                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-//                        dispatch_semaphore_signal(semaphore);
-//                    } keyBindFail:^(NSError * _Nonnull error) {
-//                        model.state = AddStateUnbound;
-//                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-//                        dispatch_semaphore_signal(semaphore);
-//                    }];
-                    
-                    [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:type.integerValue productID:0 cpsData:nil provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-                        model.state = AddStateKeybinding;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                    } provisionFail:^(NSError * _Nonnull error) {
-                        model.state = AddStateProvisionFail;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        dispatch_semaphore_signal(semaphore);
-                    } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-                        model.state = AddStateKeybound;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        dispatch_semaphore_signal(semaphore);
-                    } keyBindFail:^(NSError * _Nonnull error) {
-                        model.state = AddStateUnbound;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        dispatch_semaphore_signal(semaphore);
-                    }];
+                    if (rspModel.advOobInformation.supportForCertificateBasedProvisioning) {
+                        if (kExistCertificateBasedProvision) {
+#ifdef kExist
+                            [SDKLibCommand startCertificateBasedWithAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:type.integerValue productID:0 cpsData:nil provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+                                model.state = AddStateKeybinding;
+                                [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                            } provisionFail:^(NSError * _Nullable error) {
+                                model.state = AddStateProvisionFail;
+                                [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                                dispatch_semaphore_signal(semaphore);
+                            } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+                                model.state = AddStateKeybound;
+                                SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
+                                if (node && node.isRemote) {
+                                    [node addDefaultPublicAddressToRemote];
+                                    [SigDataSource.share saveLocationData];
+                                }
+                                [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                                dispatch_semaphore_signal(semaphore);
+                            } keyBindFail:^(NSError * _Nullable error) {
+                                model.state = AddStateUnbound;
+                                [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                                dispatch_semaphore_signal(semaphore);
+                            }];
+#endif
+
+                        } else {
+                            TeLogInfo(@"Device is certificate-based device, but this SDK is not support certificate-based provision.");
+                            model.state = AddStateProvisionFail;
+                            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                            dispatch_semaphore_signal(semaphore);
+                        }
+                    } else {
+//                        //fastbind 获取cpsData1：PID为1或者7，SDK内置了这两个PID的cpsData，当接口是fastBind且cpsData为空，则使用PID查找cpsData，查找不到则默认使用PID为1的cpsData。
+//    //                    UInt16 productID = 1;
+//    //                    DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
+//    //                    NSData *cpsData = deviceType.defaultCompositionData.parameters;
+//                        //fastbind 获取cpsData2：当接口是fastBind且传入cpsData，则无论PID为多少，直接使用cpsData里面的PID。
+//                        UInt16 productID = 0;
+//                        NSData *cpsData = [NSData dataWithBytes:CTByte length:sizeof(CTByte)];
+//                        //fastbind接口调用如下：
+//                        [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:KeyBindType_Fast productID:productID cpsData:cpsData provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+//                            model.state = AddStateKeybinding;
+//                            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+//                        } provisionFail:^(NSError * _Nonnull error) {
+//                            model.state = AddStateProvisionFail;
+//                            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+//                            dispatch_semaphore_signal(semaphore);
+//                        } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+//                            model.state = AddStateKeybound;
+//                            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+//                            dispatch_semaphore_signal(semaphore);
+//                        } keyBindFail:^(NSError * _Nonnull error) {
+//                            model.state = AddStateUnbound;
+//                            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+//                            dispatch_semaphore_signal(semaphore);
+//                        }];
+                        
+                        [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral provisionType:provisionType staticOOBData:staticOOBData keyBindType:type.integerValue productID:0 cpsData:nil provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+                            model.state = AddStateKeybinding;
+                            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                        } provisionFail:^(NSError * _Nonnull error) {
+                            model.state = AddStateProvisionFail;
+                            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                            dispatch_semaphore_signal(semaphore);
+                        } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+                            model.state = AddStateKeybound;
+                            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
+                            if (node && node.isRemote) {
+                                [node addDefaultPublicAddressToRemote];
+                                [SigDataSource.share saveLocationData];
+                            }
+                            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                            dispatch_semaphore_signal(semaphore);
+                        } keyBindFail:^(NSError * _Nonnull error) {
+                            model.state = AddStateUnbound;
+                            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                            dispatch_semaphore_signal(semaphore);
+                        }];
+                    }
                     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
                 }
-                [SigBearer.share startMeshConnectWithComplete:nil];
+                [SDKLibCommand startMeshConnectWithComplete:nil];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [weakSelf.selectDevices removeAllObjects];
                     [weakSelf.tableView reloadData];
@@ -325,6 +363,7 @@ typedef enum : NSUInteger {
             default:
                 break;
         }
+        itemCell.certIcon.hidden = rsp.advOobInformation.supportForCertificateBasedProvisioning != 1;
         if (rsp.macAddress) {
             itemCell.titleLabel.text = [NSString stringWithFormat:@"mac:%@ state:%@\ndeviceUuid:%@",rsp.macAddress,state,rsp.advUuid];
         } else {

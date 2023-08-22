@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.foundation;
 
@@ -40,8 +41,10 @@ import com.telink.ble.mesh.core.access.AccessBridge;
 import com.telink.ble.mesh.core.access.BindingBearer;
 import com.telink.ble.mesh.core.access.BindingController;
 import com.telink.ble.mesh.core.access.FastProvisioningController;
-import com.telink.ble.mesh.core.access.FirmwareUpdatingController;
 import com.telink.ble.mesh.core.access.RemoteProvisioningController;
+import com.telink.ble.mesh.core.access.fu.DistributorType;
+import com.telink.ble.mesh.core.access.fu.FUController;
+import com.telink.ble.mesh.core.access.fu.FUState;
 import com.telink.ble.mesh.core.ble.BleScanner;
 import com.telink.ble.mesh.core.ble.GattConnection;
 import com.telink.ble.mesh.core.ble.GattOtaController;
@@ -51,6 +54,7 @@ import com.telink.ble.mesh.core.ble.LeScanSetting;
 import com.telink.ble.mesh.core.ble.MeshScanRecord;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.MessageResponder;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.StatusMessage;
@@ -58,8 +62,10 @@ import com.telink.ble.mesh.core.message.config.ConfigStatus;
 import com.telink.ble.mesh.core.message.config.NodeIdentity;
 import com.telink.ble.mesh.core.message.config.NodeIdentitySetMessage;
 import com.telink.ble.mesh.core.message.config.NodeIdentityStatusMessage;
+import com.telink.ble.mesh.core.networking.ExtendBearerMode;
 import com.telink.ble.mesh.core.networking.NetworkingBridge;
 import com.telink.ble.mesh.core.networking.NetworkingController;
+import com.telink.ble.mesh.core.networking.beacon.SecureNetworkBeacon;
 import com.telink.ble.mesh.core.provisioning.ProvisioningBridge;
 import com.telink.ble.mesh.core.provisioning.ProvisioningController;
 import com.telink.ble.mesh.core.proxy.ProxyPDU;
@@ -69,6 +75,7 @@ import com.telink.ble.mesh.entity.ConnectionFilter;
 import com.telink.ble.mesh.entity.FastProvisioningConfiguration;
 import com.telink.ble.mesh.entity.FastProvisioningDevice;
 import com.telink.ble.mesh.entity.FirmwareUpdateConfiguration;
+import com.telink.ble.mesh.entity.MeshAdvFilter;
 import com.telink.ble.mesh.entity.MeshUpdatingDevice;
 import com.telink.ble.mesh.entity.ProvisioningDevice;
 import com.telink.ble.mesh.entity.RemoteProvisioningDevice;
@@ -76,7 +83,6 @@ import com.telink.ble.mesh.foundation.event.AutoConnectEvent;
 import com.telink.ble.mesh.foundation.event.BindingEvent;
 import com.telink.ble.mesh.foundation.event.BluetoothEvent;
 import com.telink.ble.mesh.foundation.event.FastProvisioningEvent;
-import com.telink.ble.mesh.foundation.event.FirmwareUpdatingEvent;
 import com.telink.ble.mesh.foundation.event.GattConnectionEvent;
 import com.telink.ble.mesh.foundation.event.GattNotificationEvent;
 import com.telink.ble.mesh.foundation.event.GattOtaEvent;
@@ -101,6 +107,8 @@ import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.ContextUtil;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.io.File;
+import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -112,7 +120,11 @@ import java.util.UUID;
  */
 
 public final class MeshController implements ProvisioningBridge, NetworkingBridge, AccessBridge {
-    private final String LOG_TAG = "MeshController";
+
+    /**
+     * log tag
+     */
+    private static final String LOG_TAG = "MeshController";
 
     /**
      * proxy node advertising networkId
@@ -120,10 +132,19 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     private static final int PROXY_ADV_TYPE_NETWORK_ID = 0x00;
 
     /**
-     * onCommandPrepared
      * proxy node advertising nodeIdentity
      */
     private static final int PROXY_ADV_TYPE_NODE_IDENTITY = 0x01;
+
+    /**
+     * proxy node advertising private network id
+     */
+    private static final int PROXY_ADV_TYPE_PRIVATE_NETWORK_ID = 0x02;
+
+    /**
+     * proxy node advertising private node identity
+     */
+    private static final int PROXY_ADV_TYPE_PRIVATE_NODE_IDENTITY = 0x03;
 
 
     /**
@@ -164,18 +185,29 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 //    private MeshUpdatingController mMeshUpdatingController;
 
     // firmware update
-    private FirmwareUpdatingController mFirmwareUpdatingController;
+//    private FirmwareUpdatingController mFirmwareUpdatingController;
+    private FUController fuController;
 
     /**
      * rely on ProvisioningController
      */
     private RemoteProvisioningController mRemoteProvisioningController;
 
+    /**
+     * fast-provision
+     * telink private protocol
+     */
     private FastProvisioningController mFastProvisioningController;
 
+    /**
+     * gatt OTA
+     */
     private GattOtaController mGattOtaController;
 
-    private Mode actionMode = Mode.MODE_IDLE;
+    /**
+     * current active action
+     */
+    private Mode actionMode = Mode.IDLE;
 
     /**
      * parameters for different action
@@ -186,22 +218,37 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      * is disconnecting when reconnect
      */
     private boolean isDisconnectWaiting = false;
+
     /**
      * lock for scanning
      */
     private final Object SCAN_LOCK = new Object();
 
+    /**
+     * flag of bluetooth scanning
+     */
     private boolean isScanning = false;
 
+    /**
+     * cache of bluetooth scanning records
+     */
     private Set<AdvertisingDevice> advDevices = new LinkedHashSet<>();
 
+    /**
+     * current mesh configs
+     */
     private MeshConfiguration meshConfiguration;
 
+    /**
+     * networkId, networkIdentityKey, networkBeaconKey and privateBeaconKey are calculated by networkKey in {@link #meshConfiguration}
+     */
     private byte[] networkId = null;
 
     private byte[] networkIdentityKey = null;
 
     private byte[] networkBeaconKey = null;
+
+    private byte[] privateBeaconKey = null;
 
     private boolean isLogin = false;
 
@@ -210,14 +257,19 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private boolean isActionStarted = false;
 
-//    private boolean isProvisionProcessing = false;
-
-//    private boolean isKeyBindProcessing = false;
-
+    /**
+     * max connection retry count if gatt connect failed
+     */
     private static final int MAX_CONNECT_RETRY = 3;
 
+    /**
+     * current connection retry index
+     */
     private int connectRetry = 0;
 
+    /**
+     * event callback
+     */
     private EventCallback eventCallback;
 
     /**
@@ -231,6 +283,16 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      * set to node identity when first connect mesh network, and reconnect by node identity
      */
     private boolean isProxyReconnect = false;
+
+    /**
+     * reconnect target proxy node by node identity
+     */
+    private static final long TARGET_PROXY_CONNECT_TIMEOUT = 60 * 1000;
+
+    /**
+     * rest when receive NodeIdentityStatus message
+     */
+    private long lastNodeSetTimestamp = 0;
 
     /**
      * binding target valued when device scanned
@@ -275,7 +337,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     };
 
     void stop() {
-        this.actionMode = Mode.MODE_IDLE;
+        this.actionMode = Mode.IDLE;
         this.directDeviceAddress = 0;
         this.isLogin = false;
         stopScan();
@@ -296,6 +358,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
         if (mNetworkingController != null) {
             mNetworkingController.clear();
+            mNetworkingController.resetDirectAddress();
             mNetworkingController = null;
         }
 
@@ -304,10 +367,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             mBindingController = null;
         }
 
-        if (mFirmwareUpdatingController != null) {
+        /*if (mFirmwareUpdatingController != null) {
             mFirmwareUpdatingController.clear();
             mFirmwareUpdatingController = null;
-        }
+        }*/
 
         if (mDelayHandler != null) {
             mDelayHandler.removeCallbacksAndMessages(null);
@@ -362,6 +425,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         this.networkId = Encipher.k3(configuration.networkKey);
         this.networkIdentityKey = Encipher.generateIdentityKey(configuration.networkKey);
         this.networkBeaconKey = Encipher.generateBeaconKey(configuration.networkKey);
+        this.privateBeaconKey = Encipher.generatePrivateBeaconKey(configuration.networkKey);
         mNetworkingController.setup(configuration);
 //        mNetworkingController.proxyFilterInit(); //  for test
     }
@@ -369,7 +433,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     void removeDevice(int meshAddress) {
         this.meshConfiguration.deviceKeyMap.remove(meshAddress);
         mNetworkingController.removeDeviceKey(meshAddress);
-        if (this.actionMode == Mode.MODE_AUTO_CONNECT) {
+        if (this.actionMode == Mode.AUTO_CONNECT) {
             validateAutoConnectTargets();
         }
     }
@@ -403,8 +467,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         mBindingController = new BindingController(handlerThread);
         mBindingController.register(this);
 
-        mFirmwareUpdatingController = new FirmwareUpdatingController(handlerThread);
-        mFirmwareUpdatingController.register(this);
+        fuController = new FUController(handlerThread);
+        fuController.register(this);
+//        mFirmwareUpdatingController = new FirmwareUpdatingController(handlerThread);
+//        mFirmwareUpdatingController.register(this);
 
         mRemoteProvisioningController = new RemoteProvisioningController(handlerThread);
         mRemoteProvisioningController.register(this);
@@ -425,7 +491,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     public void idle(boolean disconnect) {
         log("---idle--- " + disconnect);
         mDelayHandler.removeCallbacksAndMessages(null);
-        validateActionMode(Mode.MODE_IDLE);
+        validateActionMode(Mode.IDLE);
         if (disconnect) {
             mGattConnection.disconnect();
         }
@@ -433,11 +499,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     public boolean isBluetoothEnabled() {
-        return mBleScanner.isEnabled();
+        return BluetoothAdapter.getDefaultAdapter().isEnabled();
     }
 
     public void enableBluetooth() {
-        mBleScanner.enableBluetooth();
+        BluetoothAdapter.getDefaultAdapter().enable();
     }
 
     public String getCurDeviceMac() {
@@ -462,9 +528,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     public void startScan(ScanParameters scanParameters) {
-        if (!validateActionMode(Mode.MODE_SCAN)) return;
+        if (!validateActionMode(Mode.SCAN)) return;
         mDelayHandler.removeCallbacksAndMessages(null);
-        this.actionMode = Mode.MODE_SCAN;
+        this.actionMode = Mode.SCAN;
         advDevices.clear();
         this.mActionParams = scanParameters;
         resetAction();
@@ -487,9 +553,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     boolean startProvisioning(ProvisioningParameters parameters) {
         log("start provision");
-        if (!validateActionMode(Mode.MODE_PROVISION)) return false;
+        if (!validateActionMode(Mode.PROVISION)) return false;
         mDelayHandler.removeCallbacksAndMessages(null);
-        this.actionMode = Mode.MODE_PROVISION;
+        this.actionMode = Mode.PROVISION;
         this.mProvisioningController.setProvisioningBridge(this);
         this.mActionParams = parameters;
         resetAction();
@@ -547,7 +613,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     void startRemoteProvision(RemoteProvisioningDevice remoteProvisioningDevice) {
-        if (!validateActionMode(Mode.MODE_REMOTE_PROVISION)) {
+        if (!validateActionMode(Mode.REMOTE_PROVISION)) {
             log("remote provisioning currently");
             return;
         }
@@ -557,17 +623,17 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                     remoteProvisioningDevice, "proxy node not connected");
             return;
         }
-        this.actionMode = Mode.MODE_REMOTE_PROVISION;
+        this.actionMode = Mode.REMOTE_PROVISION;
         rebuildProvisioningDevice(remoteProvisioningDevice);
         mRemoteProvisioningController.begin(this.mProvisioningController, remoteProvisioningDevice);
     }
 
     void startFastProvision(FastProvisioningParameters parameters) {
-        if (!validateActionMode(Mode.MODE_FAST_PROVISION)) {
+        if (!validateActionMode(Mode.FAST_PROVISION)) {
             log("fast provisioning currently");
             return;
         }
-        this.actionMode = Mode.MODE_FAST_PROVISION;
+        this.actionMode = Mode.FAST_PROVISION;
         mDelayHandler.removeCallbacksAndMessages(null);
         this.mActionParams = parameters;
         FastProvisioningConfiguration fastProvisioningConfiguration = (FastProvisioningConfiguration) parameters.get(Parameters.ACTION_FAST_PROVISION_CONFIG);
@@ -581,14 +647,14 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
 
     void autoConnect(AutoConnectParameters parameters) {
-        if (!validateActionMode(Mode.MODE_AUTO_CONNECT)) {
+        if (!validateActionMode(Mode.AUTO_CONNECT)) {
             log("auto connect currently");
             return;
         }
         mDelayHandler.removeCallbacksAndMessages(null);
         this.mActionParams = parameters;
         log("auto connect");
-        this.actionMode = Mode.MODE_AUTO_CONNECT;
+        this.actionMode = Mode.AUTO_CONNECT;
         if (!validateAutoConnectTargets()) {
             return;
         }
@@ -610,14 +676,15 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
 
     void startGattOta(GattOtaParameters otaParameters) {
-        if (!validateActionMode(Mode.MODE_OTA)) {
+        if (!validateActionMode(Mode.GATT_OTA)) {
             log("ota running currently");
             return;
         }
         mDelayHandler.removeCallbacksAndMessages(null);
         this.mActionParams = otaParameters;
-        this.actionMode = Mode.MODE_OTA;
+        this.actionMode = Mode.GATT_OTA;
         this.isProxyReconnect = false;
+        this.lastNodeSetTimestamp = 0;
         this.reconnectTarget = null;
         resetAction();
         ConnectionFilter filter = (ConnectionFilter) otaParameters.get(Parameters.ACTION_CONNECTION_FILTER);
@@ -630,14 +697,15 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     void startGattConnection(GattConnectionParameters connectionParameters) {
-        if (!validateActionMode(Mode.MODE_GATT_CONNECTION)) {
+        if (!validateActionMode(Mode.GATT_CONNECTION)) {
             log("gatt connection running currently");
         }
 
         mDelayHandler.removeCallbacksAndMessages(null);
         this.mActionParams = connectionParameters;
-        this.actionMode = Mode.MODE_GATT_CONNECTION;
+        this.actionMode = Mode.GATT_CONNECTION;
         this.isProxyReconnect = false;
+        this.lastNodeSetTimestamp = 0;
         this.reconnectTarget = null;
         resetAction();
         ConnectionFilter filter = (ConnectionFilter) connectionParameters.get(Parameters.ACTION_CONNECTION_FILTER);
@@ -679,14 +747,19 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         return mGattConnection.getMtu();
     }
 
+    /**
+     * start or continue meshOTA (firmware update),
+     */
     void startMeshOTA(MeshOtaParameters meshOtaParameters) {
-        if (!validateActionMode(Mode.MODE_MESH_OTA)) {
+        if (!validateActionMode(Mode.MESH_OTA)) {
             log("mesh updating running currently");
             return;
         }
         mDelayHandler.removeCallbacksAndMessages(null);
         this.mActionParams = meshOtaParameters;
-        this.actionMode = Mode.MODE_MESH_OTA;
+        this.actionMode = Mode.MESH_OTA;
+        this.isProxyReconnect = false;
+        this.lastNodeSetTimestamp = 0;
         resetAction();
         if (mGattConnection.isProxyNodeConnected()) {
             onConnectSuccess();
@@ -695,12 +768,16 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         }
     }
 
+
     void stopMeshOta() {
-        if (actionMode != Mode.MODE_MESH_OTA) {
+        if (actionMode != Mode.MESH_OTA) {
             log("mesh updating stop: not running...");
             return;
         }
-        mFirmwareUpdatingController.stop();
+        log("stop mesh ota");
+        mNetworkingController.clear();
+        fuController.stop();
+//        mFirmwareUpdatingController.stop();
     }
 
     private void startSafetyScan() {
@@ -716,18 +793,16 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         if (actionMode == targetMode) {
             return false;
         } else {
-            /*if (actionMode == MODE_AUTO_CONNECT) {
-                onMeshEvent(MeshEvent.EVENT_TYPE_DISCONNECTED);
-            }*/
-            if (actionMode == Mode.MODE_REMOTE_PROVISION) {
+            if (actionMode == Mode.REMOTE_PROVISION) {
                 mRemoteProvisioningController.clear();
-            } else if (actionMode == Mode.MODE_PROVISION) {
+            } else if (actionMode == Mode.PROVISION) {
                 mProvisioningController.clear();
             } else if (actionMode == Mode.MODE_BIND) {
                 mBindingController.clear();
-            } else if (actionMode == Mode.MODE_MESH_OTA) {
-                mFirmwareUpdatingController.clear();
-            } else if (actionMode == Mode.MODE_FAST_PROVISION) {
+            } else if (actionMode == Mode.MESH_OTA) {
+                fuController.clear();
+//                mFirmwareUpdatingController.clear();
+            } else if (actionMode == Mode.FAST_PROVISION) {
                 mFastProvisioningController.clear();
                 isLogin = false;
             }
@@ -774,7 +849,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     private void onBluetoothEvent(int state, String desc) {
-        log("bluetooth event: " + state + " -- " + desc);
         BluetoothEvent event = new BluetoothEvent(this, BluetoothEvent.EVENT_TYPE_BLUETOOTH_STATE_CHANGE);
         event.setState(state);
         event.setDesc(desc);
@@ -823,9 +897,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         return isLogin && mGattConnection.enableOnlineStatus();
     }
 
-    public void resetDELState(boolean enable) {
+    public void resetExtendBearerMode(ExtendBearerMode extendBearerMode) {
         if (mNetworkingController != null) {
-            mNetworkingController.enableDLE(enable);
+            mNetworkingController.setExtendBearerMode(extendBearerMode);
         }
     }
 
@@ -856,12 +930,12 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                         "mesh message processing");
             } else {
                 // busy
-                onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_BUSY,
+                onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_ERROR,
                         false,
                         meshMessage.getOpcode(),
                         meshMessage.getResponseMax(),
                         0,
-                        "mesh message send fail: busy");
+                        "mesh message send fail");
             }
         }
         return sent;
@@ -887,7 +961,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private void onGattNotification(byte[] completePacket) {
         if (completePacket.length > 1) {
-            byte proxyPduType = (byte) (completePacket[0] & ProxyPDU.BITS_TYPE);
+            byte proxyPduType = (byte) (completePacket[0] & ProxyPDU.MASK_TYPE);
 
             byte[] payloadData = new byte[completePacket.length - 1];
             System.arraycopy(completePacket, 1, payloadData, 0, payloadData.length);
@@ -917,7 +991,14 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
                 case ProxyPDU.TYPE_MESH_BEACON:
                     if (mNetworkingController != null) {
-                        mNetworkingController.parseMeshBeacon(payloadData, this.networkId, this.networkBeaconKey);
+                        byte beaconType = payloadData[0];
+                        if (beaconType == SecureNetworkBeacon.BEACON_TYPE_SECURE_NETWORK) {
+                            mNetworkingController.parseSecureBeacon(payloadData, this.networkBeaconKey);
+                        }
+
+                        else if (beaconType == SecureNetworkBeacon.BEACON_TYPE_MESH_PRIVATE) {
+                            mNetworkingController.parsePrivateBeacon(payloadData, this.privateBeaconKey);
+                        }
                     }
                     break;
             }
@@ -930,15 +1011,22 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         onEventPrepared(event);
     }
 
+    private void beginProvision() {
+        ProvisioningDevice provisioningDevice = (ProvisioningDevice) mActionParams.get(Parameters.ACTION_PROVISIONING_TARGET);
+        onProvisionBegin(provisioningDevice, "provision begin");
+        mProvisioningController.begin(provisioningDevice);
+    }
 
+
+    /**
+     * gatt connect success
+     */
     private void onConnectSuccess() {
 
-        if (actionMode == Mode.MODE_PROVISION) {
-            ProvisioningDevice provisioningDevice = (ProvisioningDevice) mActionParams.get(Parameters.ACTION_PROVISIONING_TARGET);
-            onProvisionBegin(provisioningDevice, "provision begin");
+        if (actionMode == Mode.PROVISION) {
             onActionStart();
-            mProvisioningController.begin(provisioningDevice);
-        } else if (actionMode == Mode.MODE_FAST_PROVISION) {
+            beginProvision();
+        } else if (actionMode == Mode.FAST_PROVISION) {
             onProxyLoginSuccess();
         } else {
             boolean isFilterInitNeeded
@@ -954,7 +1042,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     private void setNodeIdentity(int targetAddress) {
-        log(String.format("set node for %04X", targetAddress));
+        log(String.format("set node identity on %04X", targetAddress));
+        isProxyReconnect = false;
         NodeIdentitySetMessage message = new NodeIdentitySetMessage(targetAddress);
         message.setNetKeyIndex(meshConfiguration.netKeyIndex);
         message.setIdentity(NodeIdentity.RUNNING.code);
@@ -964,7 +1053,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     private void onProxyLoginSuccess() {
         isLogin = true;
         switch (actionMode) {
-            case MODE_AUTO_CONNECT:
+            case AUTO_CONNECT:
                 this.onAutoConnectSuccess();
                 break;
 
@@ -984,8 +1073,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 }, 500);
                 break;
 
-            case MODE_OTA: {
-                int address = checkConnectionTarget();
+            case GATT_OTA: {
+                int address = getConnectionTarget();
                 if (address != -1) {
                     setNodeIdentity(address);
                 } else {
@@ -994,9 +1083,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 break;
             }
 
-
-            case MODE_GATT_CONNECTION: {
-                int address = checkConnectionTarget();
+            case GATT_CONNECTION: {
+                int address = getConnectionTarget();
                 if (address != -1) {
                     setNodeIdentity(address);
                 } else {
@@ -1005,15 +1093,22 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 break;
             }
 
+            case MESH_OTA: {
+                int address = getMeshOTATarget();
+                if (address != -1) {
+                    setNodeIdentity(address);
+                } else {
+                    onActionStart();
+                    FirmwareUpdateConfiguration configuration = (FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG);
+                    rebuildFirmwareUpdatingDevices(configuration);
+                    fuController.begin(configuration, directDeviceAddress);
+                }
 
-            case MODE_MESH_OTA:
-                onActionStart();
-                FirmwareUpdateConfiguration configuration = (FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG);
-                rebuildFirmwareUpdatingDevices(configuration);
-                mFirmwareUpdatingController.begin(configuration);
                 break;
+            }
 
-            case MODE_FAST_PROVISION:
+
+            case FAST_PROVISION:
                 onActionStart();
                 mFastProvisioningController.begin();
                 break;
@@ -1022,9 +1117,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     /**
-     * @return if setNode identity needed
+     * @return -1 if setNode identity needed
      */
-    private int checkConnectionTarget() {
+    private int getConnectionTarget() {
         final ConnectionFilter filter = (ConnectionFilter) mActionParams.get(Parameters.ACTION_CONNECTION_FILTER);
         if (filter.type != ConnectionFilter.TYPE_MESH_ADDRESS) {
             return -1;
@@ -1032,6 +1127,20 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         int targetAdr = (int) filter.target;
         if (directDeviceAddress != targetAdr) {
             return targetAdr;
+        }
+        return -1;
+    }
+
+
+    private int getMeshOTATarget() {
+        FirmwareUpdateConfiguration configuration = (FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG);
+        int lastAddress = configuration.getProxyAddress();
+        if (configuration.getDistributorType() == DistributorType.PHONE) {
+            // reconnect last connected address
+            log("reconnect proxy device when mesh ota - " + lastAddress);
+            if (directDeviceAddress != lastAddress) {
+                return lastAddress;
+            }
         }
         return -1;
     }
@@ -1046,30 +1155,22 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         MeshUpdatingDevice directDevice = null;
         while (iterator.hasNext()) {
             device = iterator.next();
-            if (device.getMeshAddress() == directDeviceAddress) {
+            if (device.meshAddress == directDeviceAddress) {
                 directDevice = device;
                 iterator.remove();
             }
         }
         if (directDevice != null) {
             devices.add(directDevice);
-            if (devices.size() == 1) {
-                // update gatt connection when OTA start
-//                mGattConnection.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
-                configuration.setSingleAndDirect(true);
-                configuration.setDleLength(mNetworkingController.getSegmentAccessLength());
-            } else {
-                configuration.setSingleAndDirect(false);
-            }
-
         }
+        configuration.setExtendBearerMode(mNetworkingController.getExtendBearerMode());
     }
 
 
     private void onConnectionInterrupt() {
         String desc = "connection interrupt";
         switch (actionMode) {
-            case MODE_PROVISION:
+            case PROVISION:
                 ProvisioningDevice device = mProvisioningController.getProvisioningDevice();
                 onProvisionFailed(device, desc);
                 break;
@@ -1077,18 +1178,21 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 onBindingFail(desc);
                 break;
 
-            case MODE_OTA:
+            case GATT_OTA:
                 onOtaComplete(false, desc);
                 break;
 
-            case MODE_MESH_OTA:
-                onMeshUpdatingComplete();
-                onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_FAIL,
-                        null,
-                        desc, -1);
+            case MESH_OTA:
+                if (fuController.isDistributingByDevice()) {
+                    // device may disconnected after update applying
+                    startScan();
+                } else {
+                    dispatchFUState(false, desc);
+                }
+
                 break;
 
-            case MODE_FAST_PROVISION:
+            case FAST_PROVISION:
                 onFastProvisioningComplete(false, "connection interrupt");
                 break;
         }
@@ -1097,7 +1201,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     private void onConnectionFail() {
         String desc = "connect fail";
         switch (actionMode) {
-            case MODE_PROVISION:
+            case PROVISION:
                 ProvisioningDevice provisioningDevice = (ProvisioningDevice) mActionParams.get(Parameters.ACTION_PROVISIONING_TARGET);
                 onProvisionFailed(provisioningDevice, "connect fail");
                 break;
@@ -1105,22 +1209,19 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 onBindingFail(desc);
                 break;
 
-            case MODE_OTA:
+            case GATT_OTA:
                 onOtaComplete(false, desc);
                 break;
 
-            case MODE_MESH_OTA:
-                onMeshUpdatingComplete();
-                onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_FAIL,
-                        null,
-                        desc, -1);
+            case MESH_OTA:
+                dispatchFUState(false, desc);
                 break;
 
-            case MODE_FAST_PROVISION:
+            case FAST_PROVISION:
                 onFastProvisioningComplete(false, "connect fail");
                 break;
 
-            case MODE_GATT_CONNECTION:
+            case GATT_CONNECTION:
                 onGattConnectionComplete(false, "connect fail");
                 break;
         }
@@ -1131,68 +1232,74 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         mDelayHandler.removeCallbacksAndMessages(null);
         onMeshEvent(MeshEvent.EVENT_TYPE_DISCONNECTED, "disconnected when: " + actionMode);
         mNetworkingController.clear();
+        mNetworkingController.resetDirectAddress();
         if (isDisconnectWaiting) {
             isDisconnectWaiting = false;
             connectRetry = -1;
         }
         isLogin = false;
         directDeviceAddress = 0;
-        if (actionMode != Mode.MODE_IDLE) {
-            mDelayHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    switch (actionMode) {
-                        case MODE_SCAN:
-                        case MODE_AUTO_CONNECT:
-                            startScan();
-                            break;
+        if (actionMode != Mode.IDLE) {
+            if (actionMode == Mode.MESH_OTA && fuController.needAutoConnect()) {
+                fuController.hold();
+            }
+            mDelayHandler.postDelayed(DISCONNECTION_TASK, 500);
+        }
+    }
 
-                        case MODE_PROVISION:
-                        case MODE_BIND:
-                        case MODE_OTA:
-                        case MODE_GATT_CONNECTION:
-                        case MODE_MESH_OTA:
-                        case MODE_FAST_PROVISION:
-                            if (isActionStarted) {
-                                onConnectionInterrupt();
-                            } else {
-                                connectRetry++;
-                                if (connectRetry >= MAX_CONNECT_RETRY) {
-                                    // connect retry max
-                                    onConnectionFail();
+    private final Runnable DISCONNECTION_TASK = new Runnable() {
+        @Override
+        public void run() {
+
+            boolean needScan = actionMode == Mode.SCAN
+                    || actionMode == Mode.AUTO_CONNECT
+                    || (actionMode == Mode.MESH_OTA && fuController.needAutoConnect());
+            if (needScan) {
+                startScan();
+            } else {
+                if (actionMode == Mode.REMOTE_PROVISION) {
+                    // remote provision
+                    RemoteProvisioningDevice device = mRemoteProvisioningController.getProvisioningDevice();
+                    mRemoteProvisioningController.clear();
+                    onRemoteProvisioningComplete(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_FAIL, device, "connection interrupt");
+                } else if (actionMode == Mode.MESH_OTA) {
+                    dispatchFUState(false, "device disconnected");
+                } else if (actionMode == Mode.PROVISION
+                        || actionMode == Mode.MODE_BIND || actionMode == Mode.GATT_OTA
+                        || actionMode == Mode.GATT_CONNECTION
+                        || actionMode == Mode.FAST_PROVISION) {
+                    if (isActionStarted) {
+                        onConnectionInterrupt();
+                    } else {
+                        connectRetry++;
+                        if (connectRetry >= MAX_CONNECT_RETRY) {
+                            // connect retry max
+                            onConnectionFail();
+                        } else {
+                            // reconnect when provision and re-scan when other mode
+                            if (actionMode == Mode.PROVISION) {
+                                ProvisioningDevice provisioningDevice = (ProvisioningDevice) mActionParams.get(Parameters.ACTION_PROVISIONING_TARGET);
+                                log("provisioning connect retry: " + connectRetry);
+                                connect(provisioningDevice.getBluetoothDevice());
+                            } else if (actionMode == Mode.MODE_BIND
+                                    || actionMode == Mode.GATT_CONNECTION
+                                    || actionMode == Mode.GATT_OTA) {
+                                final BluetoothDevice device = reconnectTarget;
+                                if (device != null) {
+                                    connect(device);
                                 } else {
-                                    // reconnect when provision and re-scan when other mode
-                                    if (actionMode == Mode.MODE_PROVISION) {
-                                        ProvisioningDevice provisioningDevice = (ProvisioningDevice) mActionParams.get(Parameters.ACTION_PROVISIONING_TARGET);
-                                        log("provisioning connect retry: " + connectRetry);
-                                        connect(provisioningDevice.getBluetoothDevice());
-                                    } else if (actionMode == Mode.MODE_BIND
-                                            || actionMode == Mode.MODE_GATT_CONNECTION
-                                            || actionMode == Mode.MODE_OTA) {
-                                        final BluetoothDevice device = reconnectTarget;
-                                        if (device != null) {
-                                            connect(device);
-                                        } else {
-                                            startScan();
-                                        }
-                                    } else {
-                                        startScan();
-                                    }
+                                    startScan();
                                 }
+                            } else {
+                                startScan();
                             }
-                            break;
-
-                        case MODE_REMOTE_PROVISION:
-                            RemoteProvisioningDevice device = mRemoteProvisioningController.getProvisioningDevice();
-                            mRemoteProvisioningController.clear();
-                            onRemoteProvisioningComplete(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_FAIL, device, "connection interrupt");
-                            break;
+                        }
                     }
                 }
-            }, 500);
-        }
+            }
 
-    }
+        }
+    };
 
     private void onOtaComplete(boolean success, String desc) {
         resetAction();
@@ -1229,7 +1336,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             mDelayHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (actionMode == Mode.MODE_PROVISION) {
+                    if (actionMode == Mode.PROVISION) {
                         mGattConnection.provisionInit();
                     } else {
                         mGattConnection.proxyInit();
@@ -1241,7 +1348,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                         public void run() {
                             onConnectSuccess();
                         }
-                    }, 100);
+                    }, 200);
                 }
             }, 500);
         }
@@ -1288,7 +1395,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         }
     };
 
-
     private void onDeviceFound(AdvertisingDevice device) {
         log("on device found: " + device.device.getAddress());
         if (advDevices.add(device)) {
@@ -1308,7 +1414,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     private void onScanTimeout(boolean anyDeviceFound) {
         log("scanning timeout: " + actionMode);
         switch (actionMode) {
-            case MODE_SCAN:
+            case SCAN:
                 onScanTimeoutEvent();
                 break;
 
@@ -1316,19 +1422,20 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 onBindingFail("device not found when scanning");
                 break;
 
-            case MODE_AUTO_CONNECT:
+            case AUTO_CONNECT:
+            case MESH_OTA:
                 mDelayHandler.postDelayed(restartScanTask, 3 * 1000);
                 break;
 
-            case MODE_OTA:
+            case GATT_OTA:
                 onOtaComplete(false, "ota fail: scan timeout");
                 break;
 
-            case MODE_GATT_CONNECTION:
+            case GATT_CONNECTION:
                 onGattConnectionComplete(false, "connection fail: scan timeout");
                 break;
 
-            case MODE_FAST_PROVISION:
+            case FAST_PROVISION:
                 this.onFastProvisioningComplete(false, "no unprovisioned device found");
                 break;
         }
@@ -1338,10 +1445,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     }
 
-    private Runnable restartScanTask = new Runnable() {
+    private final Runnable restartScanTask = new Runnable() {
         @Override
         public void run() {
-            if (actionMode == Mode.MODE_AUTO_CONNECT)
+            if (actionMode == Mode.AUTO_CONNECT || actionMode == Mode.MESH_OTA)
                 startScan();
         }
     };
@@ -1358,12 +1465,30 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     }
 
     /**
-     * validate advertising device when auto connect {@link Mode#MODE_AUTO_CONNECT}
+     * validate advertising device when auto connect {@link Mode#AUTO_CONNECT}
      *
      * @param scanRecord
      * @return
      */
     private boolean validateProxyAdv(byte[] scanRecord) {
+        MeshScanRecord sr = MeshScanRecord.parseFromBytes(scanRecord);
+        if (sr == null) return false;
+        byte[] serviceData = sr.getServiceData(ParcelUuid.fromString(UUIDInfo.SERVICE_PROXY.toString()));
+        if (serviceData != null && serviceData.length >= 9) {
+            int type = serviceData[0];
+            if (type == PROXY_ADV_TYPE_NETWORK_ID || type == PROXY_ADV_TYPE_PRIVATE_NETWORK_ID) {
+                // validate network id matches
+                return validateNetworkId(scanRecord);
+            } else if (type == PROXY_ADV_TYPE_NODE_IDENTITY || type == PROXY_ADV_TYPE_PRIVATE_NODE_IDENTITY) {
+                boolean nodeIdentityCheck = validateNodeIdentity(serviceData);
+                log("check node identity pass? " + nodeIdentityCheck);
+                return nodeIdentityCheck;
+            }
+        }
+        return false;
+    }
+
+    private boolean validateNetworkId(byte[] scanRecord) {
         MeshScanRecord sr = MeshScanRecord.parseFromBytes(scanRecord);
         if (sr == null) return false;
         byte[] serviceData = sr.getServiceData(ParcelUuid.fromString(UUIDInfo.SERVICE_PROXY.toString()));
@@ -1375,40 +1500,40 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 byte[] advertisingNetworkId = new byte[networkIdLen];
                 System.arraycopy(serviceData, 1, advertisingNetworkId, 0, networkIdLen);
                 boolean networkIdCheck = Arrays.equals(networkId, advertisingNetworkId);
-                log("check network id pass? " + networkIdCheck);
+                log("check network id pass - normal ? " + networkIdCheck);
                 return networkIdCheck;
-            } else if (type == PROXY_ADV_TYPE_NODE_IDENTITY) {
-                boolean nodeIdentityCheck = validateNodeIdentity(serviceData);
-                log("check node identity pass? " + nodeIdentityCheck);
-                return nodeIdentityCheck;
+            } else if (type == PROXY_ADV_TYPE_PRIVATE_NETWORK_ID) {
+                // validate network id matches
+                final int randomLen = 8;
+                byte[] hash = new byte[randomLen];
+                System.arraycopy(serviceData, 1, hash, 0, randomLen);
+
+                final int hashLen = 8;
+                byte[] random = new byte[hashLen];
+                System.arraycopy(serviceData, 9, random, 0, hashLen);
+
+                byte[] calcHash = Encipher.aes(ByteBuffer.allocate(16).put(networkId).put(random).array(), networkIdentityKey);
+                byte[] hashRe = new byte[hashLen];
+                System.arraycopy(calcHash, 8, hashRe, 0, hashLen);
+                boolean networkIdCheck = Arrays.equals(hash, hashRe);
+                log("check network id pass - private ? " + networkIdCheck);
+                return networkIdCheck;
+            } else {
+                log("check network id error: not broadcasting network id type");
             }
         }
         return false;
     }
 
-
     private boolean validateNodeIdentity(byte[] serviceData) {
         if (this.networkIdentityKey == null || meshConfiguration.deviceKeyMap.size() == 0 || serviceData.length < 17)
             return false;
 
-        // hash and random data length
-        final int dataLen = 8;
-        byte[] advHash;
-        byte[] random;
         SparseArray<byte[]> deviceKeyMap = meshConfiguration.deviceKeyMap;
         int nodeAddress;
         for (int i = 0; i < deviceKeyMap.size(); i++) {
             nodeAddress = deviceKeyMap.keyAt(i);
-
-            int index = 1;
-            advHash = new byte[dataLen];
-            System.arraycopy(serviceData, index, advHash, 0, dataLen);
-            index += dataLen;
-
-            random = new byte[dataLen];
-            System.arraycopy(serviceData, index, random, 0, dataLen);
-            byte[] hash = Encipher.generateNodeIdentityHash(networkIdentityKey, random, nodeAddress);
-            if (Arrays.equals(advHash, hash)) {
+            if (validateTargetNodeIdentity(serviceData, nodeAddress)) {
                 directDeviceAddress = nodeAddress;
                 log("reset direct device address");
                 return true;
@@ -1418,13 +1543,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         return false;
     }
 
-    private boolean validateTargetNodeIdentity(byte[] scanRecord, int nodeAddress) {
-        MeshScanRecord sr = MeshScanRecord.parseFromBytes(scanRecord);
-        byte[] serviceData = sr.getServiceData(ParcelUuid.fromString(UUIDInfo.SERVICE_PROXY.toString()));
-//        AutoConnectFilterType filterType = (AutoConnectFilterType) mActionParams.get(Parameters.ACTION_AUTO_CONNECT_FILTER_TYPE);
+    private boolean validateTargetNodeIdentity(byte[] serviceData, int nodeAddress) {
+        boolean pass = false;
         if (serviceData != null && serviceData.length >= 9) {
             int type = serviceData[0];
-            if (type == PROXY_ADV_TYPE_NODE_IDENTITY) {
+            if (type == PROXY_ADV_TYPE_NODE_IDENTITY || type == PROXY_ADV_TYPE_PRIVATE_NODE_IDENTITY) {
                 final int dataLen = 8;
                 int index = 1;
                 byte[] advHash = new byte[dataLen];
@@ -1433,11 +1556,20 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
                 byte[] random = new byte[dataLen];
                 System.arraycopy(serviceData, index, random, 0, dataLen);
-                byte[] hash = Encipher.generateNodeIdentityHash(networkIdentityKey, random, nodeAddress);
-                return Arrays.equals(advHash, hash);
+
+                byte[] hash;
+                if (type == PROXY_ADV_TYPE_NODE_IDENTITY) {
+                    log("get node identity hash");
+                    hash = Encipher.generateNodeIdentityHash(networkIdentityKey, random, nodeAddress);
+                } else {
+                    log("get private node identity hash");
+                    hash = Encipher.generatePrivateNodeIdentityHash(networkIdentityKey, random, nodeAddress);
+                }
+                pass = Arrays.equals(advHash, hash);
             }
         }
-        return false;
+        log("check target node identity pass? " + pass);
+        return pass;
     }
 
 
@@ -1445,9 +1577,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         synchronized (SCAN_LOCK) {
             if (!isScanning) return;
             boolean connectIntent = false;
-            if (actionMode == Mode.MODE_AUTO_CONNECT) {
+            MeshScanRecord sr = MeshScanRecord.parseFromBytes(scanRecord);
+            if (actionMode == Mode.AUTO_CONNECT) {
                 connectIntent = validateProxyAdv(scanRecord);
-            } else if (actionMode == Mode.MODE_OTA || actionMode == Mode.MODE_GATT_CONNECTION) {
+            } else if (actionMode == Mode.GATT_OTA || actionMode == Mode.GATT_CONNECTION) {
                 final ConnectionFilter filter = (ConnectionFilter) mActionParams.get(Parameters.ACTION_CONNECTION_FILTER);
                 if (filter == null) {
                     return;
@@ -1455,14 +1588,23 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 switch (filter.type) {
                     case ConnectionFilter.TYPE_MESH_ADDRESS:
                         int nodeAddress = (int) filter.target;
-                        if (isProxyReconnect) {
-                            connectIntent = validateTargetNodeIdentity(scanRecord, nodeAddress);
-                            log("connection check node identity pass? " + connectIntent);
+                        if (filter.advFilter == MeshAdvFilter.NODE_ID_ONLY) {
+                            connectIntent = validateTargetNodeIdentity(sr.getProxyServiceData(), nodeAddress);
+                            break;
+                        } else if (filter.advFilter == MeshAdvFilter.NETWORK_ID_ONLY) {
+                            connectIntent = validateNetworkId(scanRecord);
                         } else {
-                            connectIntent = validateProxyAdv(scanRecord);
-                        }
-                        if (connectIntent && directDeviceAddress == nodeAddress) {
-                            reconnectTarget = device;
+                            // any
+                            long during = System.currentTimeMillis() - lastNodeSetTimestamp;
+                            if (isProxyReconnect && during < TARGET_PROXY_CONNECT_TIMEOUT) {
+                                connectIntent = validateTargetNodeIdentity(sr.getProxyServiceData(), nodeAddress);
+                            } else {
+                                connectIntent = validateProxyAdv(scanRecord);
+                            }
+                            if (connectIntent && directDeviceAddress == nodeAddress) {
+                                reconnectTarget = device;
+                            }
+
                         }
                         break;
 
@@ -1490,13 +1632,13 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 BindingDevice bindingDevice = (BindingDevice) mActionParams.get(Parameters.ACTION_BINDING_TARGET);
 
                 if (bindingDevice.getBearer() == BindingBearer.GattOnly) {
-                    connectIntent = validateTargetNodeIdentity(scanRecord, bindingDevice.getMeshAddress());
+                    connectIntent = validateTargetNodeIdentity(sr.getProxyServiceData(), bindingDevice.getMeshAddress());
                     log("bind check node identity pass? " + connectIntent);
                 } else if (bindingDevice.getBearer() == BindingBearer.Flex) {
                     if (System.currentTimeMillis() - bindingStartTick > BINDING_NODE_IDENTITY_SCAN_PERIOD) {
                         connectIntent = validateProxyAdv(scanRecord);
                     } else {
-                        connectIntent = validateTargetNodeIdentity(scanRecord, bindingDevice.getMeshAddress());
+                        connectIntent = validateTargetNodeIdentity(sr.getProxyServiceData(), bindingDevice.getMeshAddress());
                     }
                 } else {
                     connectIntent = validateProxyAdv(scanRecord);
@@ -1511,14 +1653,30 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 } else {
                     connectIntent = validateProxyAdv(scanRecord);
                 }*/
-            } else if (actionMode == Mode.MODE_FAST_PROVISION) {
+            } else if (actionMode == Mode.FAST_PROVISION) {
                 connectIntent = true;
-            } else if (actionMode == Mode.MODE_SCAN) {
+            } else if (actionMode == Mode.SCAN) {
                 boolean single = mActionParams.getBool(Parameters.SCAN_SINGLE_MODE, false);
                 if (single) {
                     stopScan();
                 }
                 onDeviceFound(new AdvertisingDevice(device, rssi, scanRecord));
+            } else if (actionMode == Mode.MESH_OTA) {
+                FirmwareUpdateConfiguration configuration = (FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG);
+                int lastAddress = configuration.getProxyAddress();
+                if (configuration.getDistributorType() == DistributorType.PHONE && fuController.isDistributingByPhone()) {
+                    // reconnect last connected address
+                    log("reconnect proxy device when mesh ota - " + lastAddress);
+                    long during = System.currentTimeMillis() - lastNodeSetTimestamp;
+                    if (isProxyReconnect && during < TARGET_PROXY_CONNECT_TIMEOUT) {
+                        connectIntent = validateTargetNodeIdentity(sr.getProxyServiceData(), lastAddress);
+                    } else {
+                        connectIntent = validateProxyAdv(scanRecord);
+                    }
+
+                } else {
+                    connectIntent = validateProxyAdv(scanRecord);
+                }
             }
 
             if (connectIntent) {
@@ -1564,25 +1722,30 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         onEventPrepared(provisioningEvent);
     }
 
+    private void onGetRevisionStart(ProvisioningDevice device, String desc) {
+        postProvisioningEvent(ProvisioningEvent.EVENT_TYPE_PROVISION_GET_REVISION, device, desc);
+    }
+
     private void onProvisionBegin(ProvisioningDevice device, String desc) {
         postProvisioningEvent(ProvisioningEvent.EVENT_TYPE_PROVISION_BEGIN, device, desc);
     }
 
     private void onProvisionFailed(ProvisioningDevice provisioningDevice, String desc) {
         log("provisioning failed: " + desc + " -- " + provisioningDevice.getUnicastAddress());
-        onProvisionComplete();
+        onProvisionComplete(false);
         postProvisioningEvent(ProvisioningEvent.EVENT_TYPE_PROVISION_FAIL, provisioningDevice, desc);
     }
 
     private void onProvisionSuccess(ProvisioningDevice provisioningDevice, String desc) {
-        onProvisionComplete();
+        onProvisionComplete(true);
         this.directDeviceAddress = provisioningDevice.getUnicastAddress();
         postProvisioningEvent(ProvisioningEvent.EVENT_TYPE_PROVISION_SUCCESS, provisioningDevice, desc);
     }
 
-    private void onProvisionComplete() {
+    private void onProvisionComplete(boolean success) {
         isActionStarted = false;
-        idle(false);
+        // disconnect when provision fail
+        idle(!success);
     }
 
     @Override
@@ -1620,14 +1783,14 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     public void onNetworkInfoUpdate(int sequenceNumber, int ivIndex) {
 
         this.meshConfiguration.sequenceNumber = sequenceNumber;
-        if (actionMode != Mode.MODE_FAST_PROVISION) {
+        if (actionMode != Mode.FAST_PROVISION) {
             this.meshConfiguration.ivIndex = ivIndex;
         }
         handleNetworkInfoUpdate(sequenceNumber, this.meshConfiguration.ivIndex);
     }
 
     public void handleNetworkInfoUpdate(int sequenceNumber, int ivIndex) {
-        log("handleNetworkInfoUpdate : " + sequenceNumber + " -- " + ivIndex);
+        log(String.format("handleNetworkInfoUpdate : sequenceNumber -- %06X | ivIndex -- %08X", sequenceNumber, ivIndex));
 
         NetworkInfoUpdateEvent networkInfoUpdateEvent = new NetworkInfoUpdateEvent(this,
                 NetworkInfoUpdateEvent.EVENT_TYPE_NETWORKD_INFO_UPDATE,
@@ -1640,17 +1803,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         log(String.format("mesh model message received: src -- 0x%04X | dst -- 0x%04X | opcode -- 0x%04X | params -- ", src, dst, opcode)
                 + Arrays.bytesToHexString(params, "") + " | action mode -- " + actionMode);
         NotificationMessage notificationMessage = new NotificationMessage(src, dst, opcode, params);
-        onInnerMessageHandle(notificationMessage);
-        if (actionMode == Mode.MODE_BIND) {
-            mBindingController.onMessageNotification(notificationMessage);
-        } else if (actionMode == Mode.MODE_MESH_OTA) {
-
-            mFirmwareUpdatingController.onMessageNotification(notificationMessage);
-        } else if (actionMode == Mode.MODE_REMOTE_PROVISION) {
-            mRemoteProvisioningController.onMessageNotification(notificationMessage);
-        } else if (actionMode == Mode.MODE_FAST_PROVISION) {
-            mFastProvisioningController.onMessageNotification(notificationMessage);
-        }
         this.onMeshMessageNotification(notificationMessage);
     }
 
@@ -1676,11 +1828,12 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     public void onReliableMessageComplete(boolean success, int opcode, int rspMax, int rspCount) {
         if (actionMode == Mode.MODE_BIND) {
             mBindingController.onBindingCommandComplete(success, opcode, rspMax, rspCount);
-        } else if (actionMode == Mode.MODE_MESH_OTA) {
-            mFirmwareUpdatingController.onUpdatingCommandComplete(success, opcode, rspMax, rspCount);
-        } else if (actionMode == Mode.MODE_REMOTE_PROVISION) {
+        } else if (actionMode == Mode.MESH_OTA) {
+            fuController.onUpdatingCommandComplete(success, opcode, rspMax, rspCount);
+//            mFirmwareUpdatingController.onUpdatingCommandComplete(success, opcode, rspMax, rspCount);
+        } else if (actionMode == Mode.REMOTE_PROVISION) {
             mRemoteProvisioningController.onRemoteProvisioningCommandComplete(success, opcode, rspMax, rspCount);
-        } else if (actionMode == Mode.MODE_FAST_PROVISION) {
+        } else if (actionMode == Mode.FAST_PROVISION) {
             mFastProvisioningController.onFastProvisioningCommandComplete(success, opcode, rspMax, rspCount);
         }
         if (!success) {
@@ -1692,22 +1845,27 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     @Override
     public void onSegmentMessageComplete(boolean success) {
-        if (actionMode == Mode.MODE_MESH_OTA) {
-            mFirmwareUpdatingController.onSegmentComplete(success);
+        if (actionMode == Mode.MESH_OTA) {
+//            mFirmwareUpdatingController.onSegmentComplete(success);
+            fuController.onSegmentComplete(success);
         }
     }
 
     public void onInnerMessageFailed(int opcode) {
         if (opcode == Opcode.NODE_ID_SET.value) {
-            if (actionMode == Mode.MODE_OTA) {
+            if (actionMode == Mode.GATT_OTA) {
                 onOtaComplete(false, "node identity set failed");
-            } else if (actionMode == Mode.MODE_GATT_CONNECTION) {
+            } else if (actionMode == Mode.GATT_CONNECTION) {
                 onGattConnectionComplete(false, "node identity set failed");
             }
         }
     }
 
     // , int src, int dst, int opcode, byte[] params
+
+    /**
+     * deal mesh config related message
+     */
     private void onInnerMessageHandle(NotificationMessage notificationMessage) {
         int src = notificationMessage.getSrc();
         int opcode = notificationMessage.getOpcode();
@@ -1716,25 +1874,31 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
              * handle node reset message, update mesh configuration info
              */
             this.meshConfiguration.deviceKeyMap.delete(src);
-            if (this.actionMode == Mode.MODE_AUTO_CONNECT) {
+            if (this.actionMode == Mode.AUTO_CONNECT) {
                 validateAutoConnectTargets();
             }
-        } else if (opcode == Opcode.NODE_ID_STATUS.value
-                && (this.actionMode == Mode.MODE_OTA || this.actionMode == Mode.MODE_GATT_CONNECTION)) {
-            // response of NodeIdentitySet
-//            1 check if//
+        } else if (opcode == Opcode.NODE_ID_STATUS.value) {
             NodeIdentityStatusMessage identityStatusMessage = (NodeIdentityStatusMessage) notificationMessage.getStatusMessage();
-            ConnectionFilter filter = (ConnectionFilter) mActionParams.get(Parameters.ACTION_CONNECTION_FILTER);
-            if (filter.type == ConnectionFilter.TYPE_MESH_ADDRESS) {
-                int target = (int) filter.target;
-                onNodeIdentityStatusMessageReceived(src, identityStatusMessage, target);
+            if (this.actionMode == Mode.GATT_OTA || this.actionMode == Mode.GATT_CONNECTION) {
+                ConnectionFilter filter = (ConnectionFilter) mActionParams.get(Parameters.ACTION_CONNECTION_FILTER);
+                if (filter.type == ConnectionFilter.TYPE_MESH_ADDRESS) {
+                    int target = (int) filter.target;
+                    onNodeIdentityStatusMessageReceived(src, identityStatusMessage, target);
+                }
+            } else if (this.actionMode == Mode.MESH_OTA) {
+                FirmwareUpdateConfiguration configuration = (FirmwareUpdateConfiguration) mActionParams.get(Parameters.ACTION_MESH_OTA_CONFIG);
+                int lastAddress = configuration.getProxyAddress();
+                if (configuration.getDistributorType() == DistributorType.PHONE) {
+                    onNodeIdentityStatusMessageReceived(src, identityStatusMessage, lastAddress);
+                }
             }
+            // response of NodeIdentitySet
+
+
         }
     }
 
     private void onNodeIdentityStatusMessageReceived(int src, NodeIdentityStatusMessage identityStatusMessage, int connectionTarget) {
-
-//        int connectionTarget = mActionParams.getInt(Parameters.ACTION_CONNECTION_MESH_ADDRESS, -1);
         if (src == connectionTarget) {
             final int status = identityStatusMessage.getStatus();
             boolean success = false;
@@ -1756,18 +1920,33 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
             if (success) {
                 this.isProxyReconnect = true;
+                this.lastNodeSetTimestamp = System.currentTimeMillis();
                 startSafetyScan();
             } else {
-                if (actionMode == Mode.MODE_OTA) {
+                if (actionMode == Mode.GATT_OTA) {
                     onOtaComplete(false, desc);
-                } else if (actionMode == Mode.MODE_GATT_CONNECTION) {
+                } else if (actionMode == Mode.GATT_CONNECTION) {
                     onGattConnectionComplete(false, desc);
+                } else if (actionMode == Mode.MESH_OTA) {
+                    dispatchFUState(false, desc);
                 }
             }
         }
     }
 
     private void onMeshMessageNotification(NotificationMessage notificationMessage) {
+        onInnerMessageHandle(notificationMessage);
+        if (actionMode == Mode.MODE_BIND) {
+            mBindingController.onMessageNotification(notificationMessage);
+        } else if (actionMode == Mode.MESH_OTA) {
+            fuController.onMessageNotification(notificationMessage);
+//            mFirmwareUpdatingController.onMessageNotification(notificationMessage);
+        } else if (actionMode == Mode.REMOTE_PROVISION) {
+            mRemoteProvisioningController.onMessageNotification(notificationMessage);
+        } else if (actionMode == Mode.FAST_PROVISION) {
+            mFastProvisioningController.onMessageNotification(notificationMessage);
+        }
+
         String eventType;
         StatusMessage statusMessage = notificationMessage.getStatusMessage();
 
@@ -1788,6 +1967,15 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     @Override
     public boolean onAccessMessagePrepared(MeshMessage meshMessage, int mode) {
+        if (meshMessage.getDestinationAddress() == MeshUtils.LOCAL_MESSAGE_ADDRESS) {
+            if (meshMessage.isReliable()) {
+                NotificationMessage notificationMessage = MessageResponder.responseMessage(meshMessage);
+                onMeshMessageNotification(notificationMessage);
+            }
+            return true;
+
+            // skip unreliable local message
+        }
         return this.sendMeshMessage(meshMessage);
     }
 
@@ -1816,15 +2004,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         idle(false);
     }
 
-    private void onMeshUpdatingEvent(String eventType, MeshUpdatingDevice device, String desc, int progress) {
-        FirmwareUpdatingEvent updatingEvent = new FirmwareUpdatingEvent(this, eventType);
-        updatingEvent.setUpdatingDevice(device);
-        updatingEvent.setDesc(desc);
-        updatingEvent.setProgress(progress);
-        onEventPrepared(updatingEvent);
-    }
-
-    private void onMeshUpdatingComplete() {
+    private void dispatchFUState(boolean success, String msg) {
+        if (!success) {
+            fuController.dispatchError(msg);
+        }
         isActionStarted = false;
         idle(false);
     }
@@ -1854,41 +2037,12 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             } else if (state == BindingController.STATE_SUCCESS) {
                 onBindingSuccess(desc);
             }
-        } else if (actionMode == Mode.MODE_MESH_OTA && mode == AccessBridge.MODE_FIRMWARE_UPDATING) {
-            switch (state) {
-                case FirmwareUpdatingController.STATE_SUCCESS:
-                    // at least one device success
-                    onMeshUpdatingComplete();
-                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_SUCCESS, null, desc, -1);
-                    break;
-                case FirmwareUpdatingController.STATE_FAIL:
-                    onMeshUpdatingComplete();
-                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_FAIL, null, desc, -1);
-                    break;
-
-                case FirmwareUpdatingController.STATE_DEVICE_FAIL:
-                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_DEVICE_FAIL, (MeshUpdatingDevice) obj, desc, -1);
-                    break;
-
-                case FirmwareUpdatingController.STATE_DEVICE_SUCCESS:
-                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_DEVICE_SUCCESS, (MeshUpdatingDevice) obj, desc, -1);
-                    break;
-
-                case FirmwareUpdatingController.STATE_PROGRESS:
-                    int progress = (int) obj;
-                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_PROGRESS, null, desc, progress);
-                    break;
-
-                case FirmwareUpdatingController.STATE_STOPPED:
-                    onMeshUpdatingComplete();
-                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_STOPPED, null, desc, -1);
-                    break;
-
-                case FirmwareUpdatingController.STATE_PREPARED:
-                    onMeshUpdatingEvent(FirmwareUpdatingEvent.EVENT_TYPE_UPDATING_PREPARED, null, desc, -1);
-                    break;
+        } else if (actionMode == Mode.MESH_OTA && mode == AccessBridge.MODE_FIRMWARE_UPDATING) {
+            if (state == FUState.UPDATE_COMPLETE.value || state == FUState.UPDATE_FAIL.value) {
+                isActionStarted = false;
+                idle(false);
             }
-        } else if (actionMode == Mode.MODE_REMOTE_PROVISION && mode == AccessBridge.MODE_REMOTE_PROVISIONING) {
+        } else if (actionMode == Mode.REMOTE_PROVISION && mode == AccessBridge.MODE_REMOTE_PROVISIONING) {
             if (state == RemoteProvisioningController.STATE_PROVISION_FAIL) {
                 onRemoteProvisioningComplete(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_FAIL, (RemoteProvisioningDevice) obj, "remote provisioning fail");
             } else if (state == RemoteProvisioningController.STATE_PROVISION_SUCCESS) {
@@ -1896,7 +2050,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 updateDeviceKeyMap(device.getUnicastAddress(), device.getDeviceKey());
                 onRemoteProvisioningComplete(RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_SUCCESS, device, "remote provisioning success");
             }
-        } else if (actionMode == Mode.MODE_FAST_PROVISION && mode == AccessBridge.MODE_FAST_PROVISION) {
+        } else if (actionMode == Mode.FAST_PROVISION && mode == AccessBridge.MODE_FAST_PROVISION) {
             if (state == FastProvisioningController.STATE_RESET_NETWORK) {
                 switchNetworking(false);
             } else if (state == FastProvisioningController.STATE_SUCCESS
@@ -1968,39 +2122,45 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         this.eventCallback = callback;
     }
 
+    /**
+     * Event callback
+     * @see Event
+     */
     interface EventCallback {
+
         void onEventPrepared(Event<String> event);
     }
 
+    /**
+     * action modes
+     */
     public enum Mode {
+
         /*
-         * Action modes
-         *
-         *
-         * MODE_IDLE: no scan and connect actions
+         * no scan and connect actions
          */
-        MODE_IDLE,
+        IDLE,
 
 
         /**
          * scan
          */
-        MODE_SCAN,
+        SCAN,
 
         /**
          * MODE_PROVISION: auto scan, connect, provision
          */
-        MODE_PROVISION,
+        PROVISION,
 
         /**
          * MODE_AUTO_CONNECT: auto scan, connect, get device state
          */
-        MODE_AUTO_CONNECT,
+        AUTO_CONNECT,
 
         /**
          * MODE_OTA: auto scan, connect, start ota
          */
-        MODE_OTA,
+        GATT_OTA,
 
         /**
          * bind app key
@@ -2011,28 +2171,28 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         /**
          * remote provision
          */
-        MODE_REMOTE_PROVISION,
+        REMOTE_PROVISION,
 
         /**
          * remote bind
          */
-        MODE_REMOTE_BIND,
+        REMOTE_BIND,
 
         /**
-         * fast provision
+         * fast provision (telink private)
          */
-        MODE_FAST_PROVISION,
+        FAST_PROVISION,
 
         /**
          * mesh firmware updating
          * (mesh ota)
          */
-        MODE_MESH_OTA,
+        MESH_OTA,
 
         /**
-         * gatt connection
+         * gatt connection for target device
          */
-        MODE_GATT_CONNECTION;
+        GATT_CONNECTION;
     }
 
 

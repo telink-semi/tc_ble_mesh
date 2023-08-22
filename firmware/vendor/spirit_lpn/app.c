@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     app.c 
+ * @file	app.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/rf_drv.h"
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/ll/ll.h"
@@ -115,9 +118,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#endif
 			
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
-			send_to_hci = mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD);
+			send_to_hci = (0 == mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD));
 			#else
-			send_to_hci = app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1);
+			send_to_hci = (0 == app_event_handler_adv(pa->data, MESH_BEAR_ADV, 1));
 			#endif
 		}
 
@@ -176,7 +179,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		debug_mesh_report_BLE_st2usb(0);
 		#endif
 
-		mesh_ble_disconnect_cb();
+		mesh_ble_disconnect_cb(pd->reason);
 	}
 
 	if (send_to_hci)
@@ -264,50 +267,23 @@ void test_sig_mesh_cmd_fun()
 }
 #endif
 
-int get_mesh_adv_interval()
-{
-	u8 *p_buf = my_fifo_get(&mesh_adv_cmd_fifo);
-	mesh_cmd_bear_unseg_t *p_bear = (mesh_cmd_bear_unseg_t *)p_buf;
-    mesh_transmit_t *p_trans_par = (mesh_transmit_t *)&p_bear->trans_par_val;
-	u32 interval_step = 0;
-	if(p_bear->type & RSP_DELAY_FLAG){
-		extern u8 mesh_rsp_random_delay_step;
-		interval_step = mesh_rsp_random_delay_step;
-	}
-	else{
-		interval_step = p_trans_par->invl_steps+1;
-	}
-	return interval_step*10000;
-}
-
-extern void blt_adv_expect_time_refresh(u8 en);
 int soft_timer_send_mesh_adv()
 {	
-	
-	blt_adv_expect_time_refresh(0);
-	mesh_sleep_time.soft_timer_send_flag = 1;
-	blt_send_adv2scan_mode(1);
-	mesh_sleep_time.soft_timer_send_flag = 0;
-	blt_adv_expect_time_refresh(1);
-
+	mesh_send_adv2scan_mode(1);
 	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
 		return get_mesh_adv_interval();
 	}
-	mesh_sleep_time.soft_timer_pending = 0;
+	
 	return -1;
 }
 
 void soft_timer_mesh_adv_proc()
 {
-	if(mesh_sleep_time.soft_timer_pending){
-		return;
+	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
+		if(!is_soft_timer_exist(&soft_timer_send_mesh_adv)){
+			blt_soft_timer_add(&soft_timer_send_mesh_adv, get_mesh_adv_interval());	
+		}
 	}
-	
-	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){	
-		mesh_sleep_time.soft_timer_pending = 1;
-		blt_soft_timer_add(&soft_timer_send_mesh_adv, get_mesh_adv_interval());
-	}
-	return;
 }
 
 void proc_suspend_low_power()
@@ -325,8 +301,6 @@ void proc_suspend_low_power()
 	}
 	
 	if(blt_state == BLS_LINK_STATE_CONN){ 
-		bls_pm_setSuspendMask (SUSPEND_DISABLE);
-		blt_soft_timer_delete(&soft_timer_send_mesh_adv);
 	}else if (blt_state == BLS_LINK_STATE_ADV){
 		if((!mesh_sleep_time.appWakeup_flg) && clock_time_exceed(mesh_sleep_time.last_tick, mesh_sleep_time.run_time_us)){
 			mesh_sleep_time.appWakeup_flg = 0;
@@ -391,6 +365,10 @@ void main_loop ()
 	if(clock_time_exceed(adc_check_time, 1000*1000)){
 		adc_check_time = clock_time();
 		static u16 T_adc_val;
+		
+		#if (BATT_CHECK_ENABLE)
+		app_battery_check_and_re_init_user_adc();
+		#endif
 	#if(MCU_CORE_TYPE == MCU_CORE_8269)     
 		T_adc_val = adc_BatteryValueGet();
 	#else
@@ -521,7 +499,7 @@ void user_init()
 	#endif
 #endif
 	#if ADC_ENABLE
-	adc_drv_init();
+	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, beause battery check may not be called in user init.
 	#endif
 	rf_pa_init();
 	bls_app_registerEventCallback (BLT_EV_FLAG_CONNECT, (blt_event_callback_t)&mesh_ble_connect_cb);
@@ -539,7 +517,7 @@ void user_init()
 	// mesh_mode and layer init
 	mesh_init_all();
 	// OTA init
-	bls_ota_clearNewFwDataArea();	 //must
+	bls_ota_clearNewFwDataArea(0);	 //must
 	//blc_ll_initScanning_module(tbl_mac);
 	#if((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 	blc_gap_peripheral_init();    //gap initialization
@@ -554,16 +532,11 @@ void user_init()
 	//mi_mesh_otp_program_simulation();
 	blc_att_setServerDataPendingTime_upon_ClientCmd(1);
 	telink_record_part_init();
-	#if 0 // XIAOMI_MODULE_ENABLE
-	test_mi_api_part(); // just for test
-	#endif
 	blc_l2cap_register_pre_handler(telink_ble_mi_event_cb_att);// for telink event callback
-	advertise_init();
 	mi_sevice_init();
-	mi_scheduler_init(20, mi_schd_event_handler, NULL, NULL, NULL);
+	//mi_scheduler_init(20, mi_schd_event_handler, NULL, NULL, NULL);
 #endif 
-	extern u32 system_time_tick;
-	system_time_tick = clock_time();
+	system_time_init();
 #if TESTCASE_FLAG_ENABLE
 	memset(&model_sig_cfg_s.hb_sub, 0x00, sizeof(mesh_heartbeat_sub_str)); // init para for test
 #endif

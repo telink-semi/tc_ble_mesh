@@ -1,31 +1,36 @@
 /********************************************************************************************************
- * @file BlobTransferStatusMessage.java
+ * @file FDReceiversListMessage.java
  *
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.firmwaredistribution;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.StatusMessage;
+import com.telink.ble.mesh.core.message.firmwareupdate.UpdatePhase;
 
+import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -53,7 +58,7 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
      * List of entries
      * Optional
      */
-    private List<DistributionReceiver> List;
+    private List<DistributionReceiver> receiversList;
 
     public FDReceiversListMessage() {
     }
@@ -77,7 +82,30 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
 
     @Override
     public void parse(byte[] params) {
+        int index = 0;
+        this.receiversListCount = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
+        index += 2;
+        this.firstIndex = MeshUtils.bytes2Integer(params, index, 2, ByteOrder.LITTLE_ENDIAN);
+        index += 2;
 
+        receiversList = new ArrayList<>();
+        DistributionReceiver receiver;
+        while (params.length - index >= 5) {
+            receiver = new DistributionReceiver();
+            int misc = MeshUtils.bytes2Integer(params, index, 4, ByteOrder.LITTLE_ENDIAN);
+            receiver.address = misc & 0x7FFF;
+            receiver.retrievedUpdatePhase = (byte) ((misc >> 15) & 0x0F);
+            receiver.updateStatus = (byte) ((misc >> 19) & 0x07);
+            receiver.transferStatus = (byte) ((misc >> 22) & 0x0F);
+            receiver.transferProgress = (byte) ((misc >> 26) & 0x3F);
+//            MeshLogger.d(String.format(Locale.getDefault(), " list  -- %d - %d -%d -%d -%d", receiver.address,
+//                    receiver.retrievedUpdatePhase,
+//                    receiver.updateStatus, receiver.transferStatus, receiver.transferProgress));
+            index += 4;
+            receiver.imageIndex = params[index++];
+            receiversList.add(receiver);
+//            if (params.length - index < 5) break;
+        }
     }
 
     @Override
@@ -91,6 +119,18 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
         dest.writeInt(firstIndex);
     }
 
+    public int getReceiversListCount() {
+        return receiversListCount;
+    }
+
+    public int getFirstIndex() {
+        return firstIndex;
+    }
+
+    public List<DistributionReceiver> getReceiversList() {
+        return receiversList;
+    }
+
     static public class DistributionReceiver {
         /**
          * Address
@@ -102,6 +142,8 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
          * Retrieved Update Phase
          * Retrieved Update Phase state of the Updating node
          * 4 bits
+         *
+         * @see UpdatePhase
          */
         public byte retrievedUpdatePhase;
         /**
@@ -133,5 +175,16 @@ public class FDReceiversListMessage extends StatusMessage implements Parcelable 
          */
         public byte imageIndex;
 
+        @Override
+        public String toString() {
+            return "DistributionReceiver{" +
+                    "address=" + address +
+                    ", retrievedUpdatePhase=" + retrievedUpdatePhase +
+                    ", updateStatus=" + updateStatus +
+                    ", transferStatus=" + transferStatus +
+                    ", transferProgress=" + transferProgress +
+                    ", imageIndex=" + imageIndex +
+                    '}';
+        }
     }
 }

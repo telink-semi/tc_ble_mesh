@@ -1,7 +1,32 @@
+/********************************************************************************************************
+ * @file FDUploadStartMessage.java
+ *
+ * @brief for TLSR chips
+ *
+ * @author telink
+ * @date Sep. 30, 2017
+ *
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 package com.telink.ble.mesh.core.message.firmwaredistribution;
 
 import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.firmwareupdate.UpdatingMessage;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  * The Firmware Distribution Upload Start message is an acknowledged message sent by a Firmware Distribution Client to start a firmware image upload to a Firmware Distribution Server.
@@ -28,7 +53,7 @@ public class FDUploadStartMessage extends UpdatingMessage {
      * BLOB identifier for the firmware image
      * 8 bytes
      */
-    public int uploadBLOBID;
+    public long uploadBLOBID;
 
     /**
      * Upload Firmware Size
@@ -49,14 +74,14 @@ public class FDUploadStartMessage extends UpdatingMessage {
      * Vendor-specific firmware metadata
      * 1 to 255 bytes
      */
-    public int uploadFirmwareMetadata;
+    public byte[] uploadFirmwareMetadata;
 
     /**
      * Upload Firmware ID
      * The Firmware ID identifying the firmware image being uploaded
      * Variable
      */
-    public int uploadFirmwareID;
+    public byte[] uploadFirmwareID;
 
 
     public FDUploadStartMessage(int destinationAddress, int appKeyIndex) {
@@ -65,13 +90,14 @@ public class FDUploadStartMessage extends UpdatingMessage {
 
     public static FDUploadStartMessage getSimple(int destinationAddress, int appKeyIndex) {
         FDUploadStartMessage message = new FDUploadStartMessage(destinationAddress, appKeyIndex);
+
         message.setResponseMax(1);
         return message;
     }
 
     @Override
     public int getOpcode() {
-        return Opcode.FD_UPLOAD_GET.value;
+        return Opcode.FD_UPLOAD_START.value;
     }
 
     @Override
@@ -80,4 +106,16 @@ public class FDUploadStartMessage extends UpdatingMessage {
     }
 
 
+    @Override
+    public byte[] getParams() {
+        ByteBuffer buffer = ByteBuffer.allocate(16 + uploadFirmwareMetadata.length + uploadFirmwareID.length).order(ByteOrder.LITTLE_ENDIAN);
+        buffer.put((byte) uploadTTL)
+                .putShort((short) uploadTimeoutBase)
+                .putLong(uploadBLOBID)
+                .putInt(uploadFirmwareSize)
+                .put((byte) uploadFirmwareMetadataLength)
+                .put(uploadFirmwareMetadata)
+                .put(uploadFirmwareID);
+        return buffer.array();
+    }
 }

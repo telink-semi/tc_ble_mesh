@@ -1,6 +1,42 @@
 
 
-V3.3.2 (skip V3.3.1 which only update firmware)
+version record:
+versionName - version code - date
+
+
+V3.3.3.7 - 6 - 20221130  暂时只发布在TelinkApps云端
+
+1. update icon
+2. update app name to TelinkSigMesh
+
+----------------
+
+V3.3.3.6
+
+1. remove inIndex in JSON storage
+2. update icon generation by check pid bitmask
+3. update app icon
+4. support B91 SIG MESH SDK 和 B85 SIG MESH SDK
+
+----------------
+
+V3.3.3.5
+
+1. add support for private beacon and enhanced opcode aggregator in draft feature
+
+----------------
+
+V3.3.4 (skip V3.3.3 that only update firmware)
+
+1. add support for switch devices
+2. add support for subnet bridge
+3. update mesh OTA, supports app and directly connected nodes as distributor
+4. update JSON database to version R11
+5. add device config page in device setting, used for send and receive config messages
+
+----------------
+
+V3.3.2 (skip V3.3.1 that only update firmware)
 
 1. Add support for subnet bridge in draft feature;
 2. Add support for certificate based provisioning in draft feature;
@@ -49,3 +85,5 @@ V3.2.0
 
 
 // draft feature
+
+

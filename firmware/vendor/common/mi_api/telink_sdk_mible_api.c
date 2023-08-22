@@ -1,64 +1,50 @@
 /********************************************************************************************************
- * @file     telink_sdk_mible_api.c 
+ * @file	telink_sdk_mible_api.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "telink_sdk_mible_api.h"
 #include "proj_lib/ble/ll/ll_whitelist.h"
 #include "proj/common/mempool.h"
 #include "proj/mcu/watchdog_i.h"
 #include "vendor/common/blt_soft_timer.h"
+#if DU_ENABLE
+#include "../user_du.h"
+#endif
 #if MI_API_ENABLE
 #include "./libs/mijia_profiles/mi_service_server.h"
+#include "./libs/mijia_profiles/stdio_service_server.h"
 #include "./libs/common/mible_beacon.h"
 #include "./libs/mesh_auth/mible_mesh_auth.h"
 #include "common/mible_beacon_internal.h"
 #include "mible_log.h"
-#include "Mijia_pub_proc.h"
 #include "./libs/gatt_dfu/mible_dfu_main.h"
 #include "mi_config.h"
+#include "telink_sdk_mesh_api.h"
+#include "miio_user_api.h"
+#include "iid.h"
 void mi_schd_event_handler(schd_evt_t *evt_id);
 
 telink_record_t telink_record;
-
-u32 mi_terminate_eve_tick =0;
-
-void set_mi_terminate_tick()
-{
-	mi_terminate_eve_tick = clock_time()|1;
-}
-
-void clear_mi_termiante_tick()
-{
-	mi_terminate_eve_tick = 0;
-}
-
-void mi_termiante_task_loop()
-{
-	if( blt_state == BLS_LINK_STATE_CONN&&
-		mi_terminate_eve_tick && 
-		clock_time_exceed(mi_terminate_eve_tick,30*1000*1000)){
-		mi_terminate_eve_tick = 0;
-		bls_ll_terminateConnection (0x13);
-	}
-}
 
 // call back function ,will be call by the telink api 
 u8 telink_ble_mi_app_event(u8 sub_code , u8 *p, int n)
@@ -89,7 +75,6 @@ u8 telink_ble_mi_app_event(u8 sub_code , u8 *p, int n)
 		// lost rssi;
 	
 	}else if(sub_code == HCI_SUB_EVT_LE_CONNECTION_COMPLETE){
-		set_mi_terminate_tick();
 		gap_evt_t = MIBLE_GAP_EVT_CONNECTED;
 		mible_gap_connect_t *p_connect = &(gap_para_t.connect);
 		event_connection_complete_t *pc = (event_connection_complete_t *)p;
@@ -109,7 +94,6 @@ u8 telink_ble_mi_app_event(u8 sub_code , u8 *p, int n)
 		p_connect->conn_param.slave_latency = pc->latency;
 		p_connect->conn_param.conn_sup_timeout = pc->timeout;
 	}else if (sub_code == HCI_EVT_DISCONNECTION_COMPLETE){
-		clear_mi_termiante_tick();
 		gap_evt_t =  MIBLE_GAP_EVT_DISCONNECT;
 		mible_gap_disconnect_t *p_dis = &(gap_para_t.disconnect);
 		event_disconnection_t *pd = (event_disconnection_t *)p;
@@ -233,7 +217,6 @@ mible_status_t telink_ble_mi_adv_start(mible_gap_adv_param_t *p_param)
 	}else if (!gap_adv_param_valid(p_param)){
 		return MI_ERR_INVALID_PARAM;
 	}
-	u8 status =0;
 	u8 chn_mask=0;
 	if(p_param->ch_mask.ch_37_off){
 		chn_mask &=~(BIT(0));
@@ -388,6 +371,9 @@ mible_status_t telink_ble_mi_gatts_service_init(mible_gatts_db_t *p_server_db)
 	for(int i=0;i<(p_srv->char_num);i++){
 		p_uuid_char_str = &(p_char_db[i].char_uuid);
 		handle = find_handle_by_uuid_char(p_uuid_char_str->type,p_uuid_char_str->uuid128,gAttributes);
+		if(handle == 0){
+			continue;
+		}
 		p_char_db[i].char_value_handle = handle;
 		// set the permit part 
 		if(p_char_db[i].wr_author || p_char_db[i].rd_author){
@@ -613,15 +599,6 @@ unsigned char  mi_ota_is_busy()
 		return 0;
 	}
 }
-static u8 reboot_flag =0;
-void mi_reboot_proc()
-{
-	if(reboot_flag && blt_state == BLS_LINK_STATE_ADV){
-		reboot_flag =0;
-		MI_LOG_INFO("reset\n");
-		mible_upgrade_firmware_fail();
-	}
-}
 
 void mible_dfu_handler(mible_dfu_state_t state, mible_dfu_param_t *param)
 {   
@@ -655,13 +632,15 @@ void mible_dfu_handler(mible_dfu_state_t state, mible_dfu_param_t *param)
        }else if(MIBLE_DFU_STATUS_ERR_AUTH_FAIL == param->verify.value){
           	MI_LOG_INFO("value = MIBLE_DFU_VERIFY_FAIL\n");
 			// set flag and wait to reset ,when disconnect 
-			reboot_flag =1;
+			mible_reboot();
+			
        }
     }else if(MIBLE_DFU_STATE_SWITCH == state){
         MI_LOG_INFO("state = MIBLE_DFU_STATE_SWITCH\n");
 
     }else if(MIBLE_DFU_STATE_CANCEL == state){
         MI_LOG_INFO("state = MIBLE_DFU_STATE_CANCEL\n");
+		mible_reboot();
     }
     /*
     else if(MIBLE_DFU_STATE_WRITEERR == state){
@@ -720,22 +699,86 @@ void mi_config_init()
 	m_config.dfu_size = (ota_firmware_size_k<<10);
 }
 
+#if USE_GATT_SPEC
+
+static const uint8_t support_devinfo[] = {
+    //DEV_INFO_MCU_VERSION,
+    DEV_INFO_DEVICE_SN,
+    DEV_INFO_HARDWARE_VERSION,
+    DEV_INFO_LATITUDE,
+    DEV_INFO_LONGITUDE,
+    DEV_INFO_VENDOR1,
+    DEV_INFO_VENDOR2,
+};
+
+static void user_devinfo_callback(dev_info_type_t type, dev_info_t* buf)
+{
+    switch(type){
+    case DEV_INFO_SUPPORT:
+		MI_LOG_INFO("user_devinfo_callback DEV_INFO_SUPPORT",0);
+        buf->len = sizeof(support_devinfo);
+        memcpy(buf->buff, support_devinfo, buf->len);
+        break;
+    case DEV_INFO_DEVICE_SN:
+        buf->len = strlen("12345/A8Q600002");
+        memcpy(buf->buff, "12345/A8Q600002", buf->len);
+        break;
+    case DEV_INFO_HARDWARE_VERSION:
+        buf->len = strlen("TLSR825X.Dvt.2");
+        memcpy(buf->buff, "TLSR825X.Dvt.2", buf->len);
+        break;
+    case DEV_INFO_VENDOR1:
+        buf->len = strlen("VendorData.1");
+        memcpy(buf->buff, "VendorData.1", buf->len);
+        break;
+    case DEV_INFO_VENDOR2:
+        buf->len = strlen("VendorData.2");
+        memcpy(buf->buff, "VendorData.2", buf->len);
+        break;
+    case DEV_INFO_LATITUDE:
+        buf->len = strlen("116.397128");
+        memcpy(buf->buff, "116.397128", buf->len);
+        break;
+    case DEV_INFO_LONGITUDE:
+        buf->len = strlen("39.916527");
+        memcpy(buf->buff, "39.916527", buf->len);
+        break;
+    default:
+        buf->code = MI_ERR_NOT_FOUND;
+        return;
+    }
+    buf->code = MI_SUCCESS;
+    return;
+}
+
+#endif
+static int user_state_process(uint8_t event, void *data)
+{
+	switch(event){
+	    case MIBLE_USER_PROV_CB_TYPE_UNPROV:
+			 break;
+		case MIBLE_USER_PROV_CB_TYPE_PROVED:
+			 break;
+		default:
+			 break;
+	}
+	return 0;
+}
+
 void telink_mi_vendor_init()
 {
 	mi_config_init();
+	mible_mesh_device_init();
 	stdio_service_init(stdio_rx_handler);
-	init_mi_proper_data();
-	mible_dfu_callback_register(mible_dfu_handler);
-	#if HAVE_MSC
-	mi_scheduler_init(10, mi_schd_event_handler, &msc_config);
-	#else
-	mi_scheduler_init(10, mi_schd_event_handler, NULL);
+	miio_dfu_callback_register(mible_dfu_handler);
+	mible_mesh_event_callback(MIBLE_MESH_EVENT_STACK_INIT_DONE, NULL);
+    process_mesh_node_init_event();
+	#if USE_GATT_SPEC
+	miio_gatt_spec_init(on_property_set, on_property_get, on_action_invoke,32);
+	miio_mesh_user_callback_register(on_property_set, on_property_get, on_action_invoke, user_state_process);
+	miio_system_info_callback_register(user_devinfo_callback);
+	property_para_init();
 	#endif
-	if(is_provision_success()){
-		mi_scheduler_start(SYS_KEY_RESTORE); 
-	}else{
-		mi_scheduler_start(SYS_KEY_DELETE);
-	}
 }
 
 u8 telink_write_flash(u32 *p_adr,u8 *p_buf,u8 len )
@@ -799,53 +842,6 @@ u8 telink_record_clean_cpy()
 
 mible_status_t telink_record_create(uint16_t record_id, uint8_t len)
 {
-/*
-	uint8_t total_len = len;
-	uint8_t buf_idx =0;
-	uint8_t *p_buf = (u8 *)(&telink_record);
-	if(len > RECORD_MAX_LEN || len == 0){
-		return MI_ERR_INVALID_LENGTH;
-	}
-	mible_status_t err_sts = MI_SUCCESS;
-	// if find the record part ,clear the id part ,else return mi_suc;
-	u32 record_adr =0;
-	if(flash_idx_adr + (len+3)+RECORD_RESERVE_SPACE > FLASH_ADR_MI_RECORD_TMP){
-		// need to clean the flash first .
-		telink_record_clean_cpy();
-		err_sts = MI_ERR_NO_MEM;
-	}
-	if(find_record_adr(record_id,&record_adr) == TRUE){
-		return MI_SUCCESS;
-	}else{
-		telink_record_delete(record_id);
-	}
-	memset(p_buf,0,sizeof(telink_record_t));
-	telink_record.rec_id = record_id;
-	telink_record.len = total_len;
-	//write the header part 
-	if(total_len > sizeof(telink_record.dat)){
-		telink_write_flash(&flash_idx_adr,p_buf,sizeof(telink_record_t));
-		total_len -= sizeof(telink_record.dat);
-		buf_idx += sizeof(telink_record.dat);
-	}else{
-		telink_write_flash(&flash_idx_adr,p_buf,total_len+3);
-		total_len = 0;
-	}
-	//the continus packet 
-	while(total_len >0){
-		memset(p_buf,0,sizeof(telink_record_t));
-		if(total_len>sizeof(telink_record_t)){
-			telink_write_flash(&flash_idx_adr,p_buf,sizeof(telink_record_t));
-			total_len -= sizeof(telink_record_t);
-			buf_idx += sizeof(telink_record_t);
-		}else{
-			telink_write_flash(&flash_idx_adr,p_buf,total_len);
-			total_len =0;
-			buf_idx =0;
-		}
-	}
-	return err_sts;
-*/
 	return MI_SUCCESS;
 }
 
@@ -1036,7 +1032,7 @@ mible_status_t telink_mi_task_post(mible_handler_t handler, void *arg)
 	if(handler == NULL){
 		return MI_ERR_INVALID_PARAM;
 	}
-	if(my_fifo_push(&mi_task_api_func_t,(u8*)(&task_fun),sizeof(mi_task_fun_t),0,0)==0){
+	if(my_fifo_push(&mi_task_api_func_t,(u8*)(&task_fun),sizeof(mi_task_fun_t),0,0)!=0){
 		return MI_ERR_NO_MEM;
 	}else{
 		return MI_SUCCESS;
@@ -1075,81 +1071,6 @@ void telink_mible_upgrade_firmware(void)
 	start_reboot();
 }
 
-
-// xiaomi model set 
-void xiaomi_publish_set_model(u32 model_id,u8 ele_idx,u8 sig_model)
-{
-	mesh_cfg_model_pub_set_t pub_set;
-	pub_set.ele_adr = ele_adr_primary + ele_idx;
-	pub_set.pub_adr = MI_MESH_PUB_ADR;
-	pub_set.model_id = model_id;
-	mesh_app_key_t *p_appkey = &(mesh_key.net_key[0][0].app_key[0]);
-	pub_set.pub_par.appkey_idx = p_appkey->index;
-	pub_set.pub_par.credential_flag =0;
-	pub_set.pub_par.ttl = TTL_DEFAULT;
-	pub_set.pub_par.period.steps = MI_MESH_PUB_STEP;// 60s interval 
-	pub_set.pub_par.period.res = MI_MESH_PUB_VAL;//step is 10s 
-	pub_set.pub_par.transmit.val = PUBLISH_RETRANSMIT_CNT|(PUBLISH_RETRANSMIT_INVL_STEPS<<3);
-	u32 par_len =(sig_model)?sizeof(mesh_cfg_model_pub_set_t)-2:sizeof(mesh_cfg_model_pub_set_t);
-	mesh_tx_cmd2normal_primary(CFG_MODEL_PUB_SET, (u8 *)&pub_set, par_len, ele_adr_primary, 0);
-}
-
-void xiaomi_light_sub_set_model(u32 model_id,u8 ele_idx,u8 sig_model)
-{
-	mesh_cfg_model_sub_set_t sub_set;
-	sub_set.ele_adr = ele_adr_primary + ele_idx;
-	sub_set.model_id = model_id;
-	sub_set.sub_adr = MI_MESH_SUB_ADR;
-	u32 par_len =(sig_model)?sizeof(mesh_cfg_model_sub_set_t)-2:sizeof(mesh_cfg_model_sub_set_t);
-	mesh_tx_cmd2normal_primary(CFG_MODEL_SUB_ADD, (u8 *)&sub_set, par_len, ele_adr_primary, 0);
-}
-
-void xiaomi_publish_set_proc_onff(u8 ele_cnt)
-{
-	for(int i=0;i<ele_cnt;i++){
-		xiaomi_publish_set_model(SIG_MD_G_ONOFF_S,i,1);
-	}
-	return ;
-}
-
-void xiaomi_publish_set_proc_ct()
-{
-	xiaomi_publish_set_model(SIG_MD_G_ONOFF_S,0,1);
-	xiaomi_publish_set_model(SIG_MD_LIGHTNESS_S,0,1);
-	xiaomi_publish_set_model(SIG_MD_LIGHT_CTL_TEMP_S,1,1);
-}
-
-void xiaomi_publish_set_proc_lamp()
-{
-	xiaomi_publish_set_model(SIG_MD_G_ONOFF_S,0,1);
-	xiaomi_publish_set_model(SIG_MD_LIGHTNESS_S,0,1);
-}
-
-void xiaomi_publish_set_vendor_model()
-{
-	xiaomi_publish_set_model(MIOT_SEPC_VENDOR_MODEL_SER,0,0);
-}
-
-void xiaomi_publish_set_proc()
-{
-#if (MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_CT_LIGHT)
-	xiaomi_publish_set_proc_ct();
-#elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_LAMP)
-	xiaomi_publish_set_proc_lamp();
-#elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_ONE_ONOFF)
-	xiaomi_publish_set_proc_onff(1);
-#elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_TWO_ONOFF)
-	xiaomi_publish_set_proc_onff(2);
-#elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_THREE_ONOFF)
-	xiaomi_publish_set_proc_onff(3);
-#elif(MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_FANS)
-	xiaomi_publish_set_proc_onff(1);
-#endif	
-	// need to add the vendor model pub setting part 
-	xiaomi_publish_set_vendor_model();
-}
-
-
 // set the button part 
 void mi_testboard_init()
 {
@@ -1171,171 +1092,23 @@ void mi_dectect_reset_proc()
 	}else{
 	}	
 }
-void mi_dispatch_led_status()
-{
-	if(is_provision_success()){
-		gpio_write(GPIO_PC4,1);//turn off the yellow led
-	}else{
-		gpio_write(GPIO_PC4,0);// turn on the yellow led 
-	}
-}
-#define MI_TEST_MODE_EN	1
+
 u8 mi_api_loop_run()
 {
-	mi_termiante_task_loop();
-	mi_reboot_proc();
-	mi_dispatch_led_status();
+	mible_tasks_exec();// must
+	mible_mesh_device_main_thread();// must
 	return TRUE;
-}
-#if XIAOMI_TEST_CODE_ENABLE
-#define MI_RANDOM_DELAY_MASK 0x1FFFFF // it's about 2.097s
-u8 mi_test_random_delay()
-{
-	u32 rand_us =0;
-	rand_us = (rand() & 0xffff);
-	rand_us |=(rand()<<16);
-	rand_us &= MI_RANDOM_DELAY_MASK;
-	sleep_us_clear_dog(rand_us);  // be care to watch dog reboot
-	return 1;
-}
-#endif
-
-
-u8 test_mi_api_part()
-{
-#if XIAOMI_TEST_CODE_ENABLE
-	mi_test_random_delay();
-#endif
-	mi_testboard_init();
-	sleep_us(20);// wait for the io stable 
-	mi_dectect_reset_proc();
-	return 0;
-}
-
-static void advertising_start(void)
-{
-    mible_gap_adv_param_t adv_param = (mible_gap_adv_param_t ) {
-                .adv_type = MIBLE_ADV_TYPE_CONNECTABLE_UNDIRECTED,
-                .adv_interval_min = ADV_INTERVAL_MIN,
-        		.adv_interval_max = ADV_INTERVAL_MAX,
-    };
-	adv_param.ch_mask.ch_37_off =0;
-	adv_param.ch_mask.ch_38_off =0;
-	adv_param.ch_mask.ch_39_off =0;
-    if (MI_SUCCESS != mible_gap_adv_start(&adv_param)) {
-        MI_LOG_ERROR("adv failed. \r\n");
-    }
-}
-#define MI_REG_STS_RECORD_ID 	0x0180
-
-
-
-
-void advertise_init()
-{
-	uint8_t sts_rec[1];
-	if(mible_record_read(MI_REG_STS_RECORD_ID,sts_rec,sizeof(sts_rec))!= MI_SUCCESS){
-		sts_rec[0] = mi_mesh_unreg;
-		mible_record_create(MI_REG_STS_RECORD_ID,1);
-		mible_record_write(MI_REG_STS_RECORD_ID,sts_rec,sizeof(sts_rec));
-	}
-	if(is_provision_success()){
-		mibeacon_adv_data_set(0, MI_PROVED_STATE, 0, NULL);
-	}else{
-		mibeacon_adv_data_set(0, MI_UNPROV_STATE, 0, NULL);
-	}
-	advertising_start();
-}
-
-static u32 A_debug_schd_cnt =0;
-u8 mi_schd_event_fail(u8 code)
-{
-    if( code == SCHD_EVT_REG_FAILED ||
-        code == SCHD_EVT_ADMIN_LOGIN_FAILED ||
-        code == SCHD_EVT_SHARE_LOGIN_FAILED ||
-        code == SCHD_EVT_TIMEOUT||
-        code == SCHD_EVT_KEY_NOT_FOUND||
-        code == SCHD_EVT_KEY_DEL_FAIL){
-            return 1;
-
-    }else{
-        return 0;
-    }
-	return 0;
-}
-
-void mi_schd_event_handler(schd_evt_t* p_evt_id)
-{
-    MI_LOG_INFO("USER CUSTOM CALLBACK RECV EVT ID %d\n", p_evt_id->id);
-    if (p_evt_id->id == SCHD_EVT_MESH_REG_SUCCESS ) {
-		A_debug_schd_cnt++;
-		
-		uint8_t sts_rec[1];
-        sts_rec[0] = mi_mesh_avail;
-		mible_record_write(MI_REG_STS_RECORD_ID,sts_rec,sizeof(sts_rec));
-        //advertising_config((mi_mesh_stat_t)sts_rec[0]);
-		mibeacon_adv_data_set(0, MI_PROVED_STATE, 0, NULL);
-		u16 primary_adr =0;
-		
-        MI_LOG_INFO("starting unprovisioned beaconing...\r\n");
-		mesh_config_t *p_cfg = &(p_evt_id->data.mesh_config);
-		//dev key first 
-		set_dev_key((u8 *)p_cfg->p_devkey);
-		// provision self 
-		provison_net_info_str *p_net =(provison_net_info_str *)p_cfg->p_prov_data;
-		primary_adr = p_net->unicast_address;
-		prov_para.provison_rcv_state = STATE_PRO_SUC;
-		endianness_swap_u32(p_net->iv_index);
-#if DUAL_VENDOR_EN
-		provision_mag.dual_vendor_st = DUAL_VENDOR_ST_MI;
-#endif
-		mesh_provision_par_handle((u8 *)p_net);
-		mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_SUC);
-		//add appkey part ,only support two appkeys
-		appkey_item_t *p_app_item = p_cfg->p_appkey_list->head;
-		u8 app_sts =0;
-		app_sts = mesh_app_key_set(APPKEY_ADD, p_app_item->appkey,
-						p_app_item->app_idx,p_app_item->net_idx, 1);
-		// bind model part 
-		model_bind_list_t *p_bind_list = (p_cfg->p_bind_list); 
-		for(u32 i=0;i<p_bind_list->size;i++){
-			bind_item_t *p_bind_it = &(p_bind_list->head[i]);
-			int sig_model =0;
-			u32 model_id=0;
-			if(p_bind_it->vendor == 0){
-				sig_model = 1;
-				model_id = p_bind_it->model;
-			}else{
-				sig_model = 0;
-				model_id = (p_bind_it->vendor)|(p_bind_it->model <<16);
-			}
-			mesh_appkey_bind(MODE_APP_BIND, primary_adr+p_bind_it->elem_idx,model_id, 
-											sig_model, p_bind_it->appkey_idx);
-			// sub set all the models 
-			xiaomi_light_sub_set_model(model_id,p_bind_it->elem_idx,sig_model);	
-		}
-		// pub all the sts on time .
-		xiaomi_publish_set_proc();
-		mi_pub_vd_sig_para_init();
-		mi_pub_send_all_status();
-    }else if (p_evt_id->id == SCHD_EVT_ADMIN_LOGIN_SUCCESS||
-    p_evt_id->id == SCHD_EVT_SHARE_LOGIN_SUCCESS){
-		clear_mi_termiante_tick();
-	}
-	else if (mi_schd_event_fail(p_evt_id->id)){
-		mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_TIMEOUT);
-    }
 }
 
 // malloc free calloc proc part 
 #define DEFAULT_BUFFER_GROUP_NUM                 3
 
-#define BUFFER_GROUP_0                   64
-#define BUFFER_GROUP_1                   256
-#define BUFFER_GROUP_2                   1024
+#define BUFFER_GROUP_0                   64+4
+#define BUFFER_GROUP_1                   256+4
+#define BUFFER_GROUP_2                   512+4
 #define MAX_BUFFER_SIZE                  BUFFER_GROUP_2
 
-#define BUFFER_NUM_IN_GROUP0             8
+#define BUFFER_NUM_IN_GROUP0             32
 #define BUFFER_NUM_IN_GROUP1             4
 #define BUFFER_NUM_IN_GROUP2             2
 
@@ -1359,6 +1132,7 @@ void mem_pool_init(void)
 
 int get_mem_pool_idx_by_size(u32 size)
 {
+	size+=4;
 	if(size>BUFFER_GROUP_2){
 		return -1;
 	}else if (size>BUFFER_GROUP_1){
@@ -1417,17 +1191,7 @@ void free(void *FirstByte)
 }
 
 #endif 
-// user function ,and will call by the mi part 
-mible_status_t telink_ble_mi_rand_num_generator(uint8_t* p_buf, uint8_t len)
-{
-	if(len > RAND_NUM_MAX_LEN){
-		return MI_ERR_NO_MEM;
-	}
-	for(int i=0;i<len;i++){
-		p_buf[i]=rand()&0xff;
-	}
-	return MI_SUCCESS;
-}
+
 // ecc fun proc 
 #define CHAR_BIT	8
 typedef unsigned long mp_limb_t;
@@ -1514,7 +1278,7 @@ void mpn_mul (unsigned int * r, unsigned int * a, int na, unsigned int * b, int 
 	for(int k = 0; k < na + nb; k++){
 		r[k] = 0;
 	}
-	unsigned char val = irq_disable();
+	u32 val = irq_disable();
 	while(nb --){
 		#if MODULE_WATCHDOG_ENABLE
 		wd_clear();
@@ -1525,34 +1289,50 @@ void mpn_mul (unsigned int * r, unsigned int * a, int na, unsigned int * b, int 
 }
 
 #if (MI_SWITCH_LPN_EN||DU_LPN_EN)
-#if DU_LPN_EN
-#define MI_RUN_INTERVAL		 3
-#define MI_SLEEP_INTERVAL 	 (DU_ADV_INTER_MS-MI_RUN_INTERVAL)
-#define SOFT_TIMER_INTER_LPN 10
-#else
-#define MI_SLEEP_INTERVAL 	1140
-#define MI_RUN_INTERVAL		60
-#define SOFT_TIMER_INTER_LPN 50
-#endif
-#define MI_MESH_RUN_MODE 	0
-#define MI_MESH_SLEEP_MODE 	1
 typedef struct{
     u32 last_tick;
 	u32 run_ms;
 	u32 sleep_ms;
 	u32 mode;
 }mi_mesh_sleep_pre_t;
-extern void blt_adv_expect_time_refresh(u8 en);
+#define MI_MESH_RUN_MODE 	0
+#define MI_MESH_SLEEP_MODE 	1
+#if DU_LPN_EN
+	#if LPN_CONTROL_EN
+#define MI_RUN_INTERVAL		 3
+#define MI_RUN_LISTEN		 25
+#define MI_SLEEP_INTERVAL 	 (DU_ADV_INTER_MS-MI_RUN_INTERVAL)
+#define MI_SLEEP_LITSEN_INTERVAL (DU_ADV_INTER_MS-MI_RUN_LISTEN)	
+#define SOFT_TIMER_INTER_LPN 10
+mi_mesh_sleep_pre_t	mi_mesh_sleep_time={0, MI_RUN_LISTEN,MI_SLEEP_LITSEN_INTERVAL,MI_MESH_RUN_MODE};
+u8 save_power_mode =0;
+u32 listen_cnt =0;
+
+void set_du_lpn_mode(u8 en)
+{
+	save_power_mode = en;
+}
+
+	#else
+#define MI_RUN_INTERVAL		 3
+#define MI_SLEEP_INTERVAL 	 (DU_ADV_INTER_MS-MI_RUN_INTERVAL)
+#define SOFT_TIMER_INTER_LPN 10
+mi_mesh_sleep_pre_t	mi_mesh_sleep_time={0, MI_RUN_INTERVAL,MI_SLEEP_INTERVAL,MI_MESH_RUN_MODE};
+	#endif
+#else
+#define MI_SLEEP_INTERVAL 	1140
+#define MI_RUN_INTERVAL		60
+#define SOFT_TIMER_INTER_LPN 50
+mi_mesh_sleep_pre_t	mi_mesh_sleep_time={0, MI_RUN_INTERVAL,MI_SLEEP_INTERVAL,MI_MESH_RUN_MODE};
+#endif
+
+
 void mi_mesh_blt_send_adv2_scan_mode()
 {
 	#if MI_SWITCH_LPN_EN||DU_LPN_EN
-	blt_adv_expect_time_refresh(0);
-	blt_send_adv2scan_mode(1);
-	blt_adv_expect_time_refresh(1);
+	mesh_send_adv2scan_mode(1);
 	#endif
 }
-
-mi_mesh_sleep_pre_t	mi_mesh_sleep_time={0, MI_RUN_INTERVAL,MI_SLEEP_INTERVAL,MI_MESH_RUN_MODE};
 
 int soft_timer_proc_mi_beacon(void)
 {
@@ -1571,9 +1351,17 @@ int soft_timer_proc_mi_beacon(void)
 
 void mi_mesh_sleep_init()
 {
+	#if LPN_CONTROL_EN
+	// only in the adv mode will update the tick part .
+	if(blt_state != BLS_LINK_STATE_CONN){
+		mi_mesh_sleep_time.last_tick = clock_time()|1;
+		mi_mesh_sleep_time.mode = MI_MESH_RUN_MODE;
+	}
+	#else
 	mi_mesh_sleep_time.last_tick = clock_time()|1;
 	mi_mesh_sleep_time.mode = MI_MESH_RUN_MODE;
-	//blt_soft_timer_update(&soft_timer_proc_mi_beacon, SOFT_TIMER_INTER_LPN*1000);
+	#endif
+	
 }
 
 u8 mi_mesh_sleep_time_exceed_adv_iner()
@@ -1585,14 +1373,17 @@ u8 mi_mesh_sleep_time_exceed_adv_iner()
 	}
 }
 
+static u32 soft_timer_allow_mesh =1;
 int soft_timer_proc_mesh_cmd(void)
 {
 	//gpio 0 toggle to see the effect
 	DBG_CHN4_TOGGLE;
 	mi_mesh_blt_send_adv2_scan_mode();
 	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) == 0){
+		soft_timer_allow_mesh = 1;
 		return -1;
 	}else{
+		soft_timer_allow_mesh = 0;
 		return 0;
 	}
 }
@@ -1603,37 +1394,131 @@ void mi_mesh_state_set(u8 state)
 	if(state == 0){
 		// set back to normal state 
 		mi_mesh_sleep_init();
+		du_bls_ll_setAdvEnable(0);
 	}else{
-
+		du_bls_ll_setAdvEnable(1);
 	}
 }
+
 u8 mi_mesh_get_state()
 {
 	return mi_busy_state;
 }
 
+	#if LPN_CONTROL_EN
+void mesh_inter_cmd_proc(u8 en)
+{
+	if(en){
+	// go to the interval of provision proc part 
+		if(soft_timer_allow_mesh){
+			if(blt_soft_timer_add((blt_timer_callback_t)&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000)){
+				soft_timer_allow_mesh = 0;
+			}
+		}
+	}else{
+		blt_soft_timer_delete((blt_timer_callback_t)&soft_timer_proc_mesh_cmd);
+		soft_timer_allow_mesh = 1;
+	}
+}
+
 void mi_mesh_lowpower_loop()
 {
-	if(blt_state == BLS_LINK_STATE_CONN || mi_mesh_get_state()){ // in the ble connection mode ,it will not trigger the deep mode ,and stop the mesh adv sending part 
+	if(du_ota_get_flag()){
+		#if LPN_FAST_OTA_EN
 		bls_pm_setSuspendMask (SUSPEND_DISABLE);
-		if(mi_mesh_get_state()){
-			blt_soft_timer_add((blt_timer_callback_t)&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000);
+		#else
+		// only for the mode of the single bus switch project, to save power.
+		bls_pm_setSuspendMask (SUSPEND_ADV | SUSPEND_CONN);
+		#endif
+	}else if(mi_mesh_get_state()|| du_ota_reboot_flag){
+		bls_pm_setSuspendMask (SUSPEND_DISABLE);
+		mesh_inter_cmd_proc(mi_mesh_get_state()||du_ota_reboot_flag);
+	}else if (blt_state == BLS_LINK_STATE_CONN){// in the connect mode , not the ota mode .
+		// only receive the gatt-proxy mesh cmd .
+		// mesh_inter_cmd_proc(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0);
+		bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
+	}else if (blt_state != BLS_LINK_STATE_CONN){
+		if(save_power_mode){			
+			if( clock_time_exceed(mi_mesh_sleep_time.last_tick,MI_RUN_INTERVAL *1000) &&
+				mi_mesh_sleep_time.mode == MI_MESH_RUN_MODE){
+				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"go to adv mode %x",clock_time()/16000);
+				// send adv only for connect proc .
+				mi_mesh_sleep_time.mode = MI_MESH_SLEEP_MODE;
+				// in the power save ,still need to send packet.
+				if(is_provision_success() && my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0){
+					if(soft_timer_allow_mesh){
+						if(blt_soft_timer_update(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
+						{
+							soft_timer_allow_mesh = 0;
+						}
+					}
+				}
+				bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
+			}
+		}else{
+			// need to listen the adv packet from the gateway part 
+			u32 run_time =0;
+			if(listen_cnt%2==0){
+				run_time = MI_RUN_LISTEN *1000;
+			}else{
+				run_time = MI_RUN_INTERVAL *1000;
+			}
+			if( clock_time_exceed(mi_mesh_sleep_time.last_tick,run_time) &&
+				mi_mesh_sleep_time.mode == MI_MESH_RUN_MODE){
+				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"go to listen mode %x",clock_time()/16000);
+				mi_mesh_sleep_time.mode = MI_MESH_SLEEP_MODE;
+				if(is_provision_success() && my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0){
+					if(soft_timer_allow_mesh){
+						if(blt_soft_timer_update(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
+						{
+							soft_timer_allow_mesh = 0;
+						}
+					}
+				}
+				listen_cnt++;
+				bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
+			}
+		}
+	}
+}
+
+	#else
+void mi_mesh_lowpower_loop()
+{
+	if(blt_state == BLS_LINK_STATE_CONN || mi_mesh_get_state()||du_ota_reboot_flag){ // in the ble connection mode ,it will not trigger the deep mode ,and stop the mesh adv sending part
+		bls_pm_setSuspendMask (SUSPEND_DISABLE);
+		if(mi_mesh_get_state()||du_ota_reboot_flag){
+			//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"run mode proc1",0);
+			if(soft_timer_allow_mesh){
+				if(blt_soft_timer_add((blt_timer_callback_t)&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
+				{
+					soft_timer_allow_mesh = 0;
+				}
+			}
 		}else{
 			blt_soft_timer_delete((blt_timer_callback_t)&soft_timer_proc_mesh_cmd);
+			soft_timer_allow_mesh = 1;
 		}
 	}else if (blt_state == BLS_LINK_STATE_ADV){
+	
 		if( clock_time_exceed(mi_mesh_sleep_time.last_tick,mi_mesh_sleep_time.run_ms *1000) &&
 			mi_mesh_sleep_time.mode == MI_MESH_RUN_MODE){
+			
 			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"run mode proc0",0);
 			mi_mesh_sleep_time.mode = MI_MESH_SLEEP_MODE;
 			if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0){
-				//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"run mode proc1",0);
-				blt_soft_timer_update(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000);
+				if(soft_timer_allow_mesh){
+					if(blt_soft_timer_update(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
+					{
+						soft_timer_allow_mesh = 0;
+					}
+				}
 			}
 			bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
 		}
 	}
 }
+	#endif
 #endif
 
 

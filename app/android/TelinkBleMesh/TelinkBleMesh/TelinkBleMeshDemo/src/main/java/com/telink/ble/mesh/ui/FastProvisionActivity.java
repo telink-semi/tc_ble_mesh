@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -25,8 +26,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.SparseIntArray;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
+
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
@@ -45,15 +48,10 @@ import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
 import com.telink.ble.mesh.ui.adapter.DeviceAutoProvisionListAdapter;
-import com.telink.ble.mesh.ui.adapter.DeviceProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * fast provision
@@ -104,7 +102,7 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
     private void initTitle() {
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.device_scan);
-        setTitle("Device Scan(Fast)");
+        setTitle("Device Scan", "Fast");
 
         MenuItem refreshItem = toolbar.getMenu().findItem(R.id.item_refresh);
         refreshItem.setVisible(false);
@@ -143,15 +141,13 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         nodeInfo.macAddress = Arrays.bytesToHexString(fastProvisioningDevice.getMac(), ":");
         nodeInfo.deviceKey = fastProvisioningDevice.getDeviceKey();
         nodeInfo.elementCnt = fastProvisioningDevice.getElementCount();
-        nodeInfo.compositionData = getCompositionData(fastProvisioningDevice.getPid());
+        nodeInfo.compositionData = CompositionData.from(getCompositionData(fastProvisioningDevice.getPid()));
 
         NetworkingDevice device = new NetworkingDevice(nodeInfo);
         device.state = NetworkingState.PROVISIONING;
         devices.add(device);
         mListAdapter.notifyDataSetChanged();
-
         meshInfo.increaseProvisionIndex(fastProvisioningDevice.getElementCount());
-        meshInfo.saveOrUpdate(this);
     }
 
 
@@ -181,23 +177,20 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
             if (success) {
                 networkingDevice.state = NetworkingState.BIND_SUCCESS;
                 networkingDevice.nodeInfo.bound = true;
-                meshInfo.insertDevice(networkingDevice.nodeInfo);
+                meshInfo.insertDevice(networkingDevice.nodeInfo, false);
             } else {
                 networkingDevice.state = NetworkingState.PROVISION_FAIL;
             }
-        }
-        if (success) {
-            meshInfo.saveOrUpdate(this);
         }
         mListAdapter.notifyDataSetChanged();
         enableUI(true);
     }
 
-    private CompositionData getCompositionData(int pid) {
+    private byte[] getCompositionData(int pid) {
         for (PrivateDevice privateDevice : targetDevices) {
-            if (pid == privateDevice.getPid())
-                return CompositionData.from(privateDevice.getCpsData());
-
+            if (pid == privateDevice.getPid()) {
+                return privateDevice.getCpsData();
+            }
         }
         return null;
     }

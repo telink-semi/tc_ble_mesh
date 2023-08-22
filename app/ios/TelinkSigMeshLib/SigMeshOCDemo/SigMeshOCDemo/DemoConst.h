@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/7/31
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  DemoConst.h
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/7/31.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #ifndef DemoConst_h
 #define DemoConst_h
@@ -46,10 +40,13 @@
 #define CellIdentifiers_OnOffItemCellID  @"OnOffItemCell"
 #define CellIdentifiers_InfoSwitchCellID  @"InfoSwitchCell"
 #define CellIdentifiers_InfoNextCellID  @"InfoNextCell"
+#define CellIdentifiers_ExtendBearerModeCellID  @"ExtendBearerModeCell"
 #define CellIdentifiers_InfoButtonCellID  @"InfoButtonCell"
 #define CellIdentifiers_ColorModelCellID  @"ColorModelCell"
 #define CellIdentifiers_OnOffModelCellID  @"OnOffModelCell"
 #define CellIdentifiers_LevelAndSliderCellID  @"LevelAndSliderCell"
+#define CellIdentifiers_RemoteElementCellID  @"RemoteElementCell"
+#define CellIdentifiers_EntryCellID  @"EntryCell"
 
 
 //ViewControllerIdentifiers
@@ -74,6 +71,8 @@
 #define ViewControllerIdentifiers_DeviceCompositionDataVCID @"DeviceCompositionDataVC"
 #define ViewControllerIdentifiers_SubnetBridgeListVCID @"SubnetBridgeListVC"
 #define ViewControllerIdentifiers_AddBridgeTableVCID @"AddBridgeTableVC"
+#define ViewControllerIdentifiers_AddForwardingTableVCID @"AddForwardingTableVC"
+#define ViewControllerIdentifiers_ChooseEntryVCID @"ChooseEntryVC"
 #define ViewControllerIdentifiers_SchedulerListViewControllerID  @"SchedulerListViewController"
 #define ViewControllerIdentifiers_SchedulerDetailViewControllerID  @"SchedulerDetailViewController"
 #define ViewControllerIdentifiers_EditModelIDsViewControllerID  @"EditModelIDsViewController"
@@ -82,14 +81,18 @@
 #define ViewControllerIdentifiers_ShareInViewControllerID  @"ShareInVC"
 #define ViewControllerIdentifiers_FileChooseViewControllerID  @"FileChooseVC"
 #define ViewControllerIdentifiers_MeshInfoViewControllerID  @"MeshInfoVC"
+#define ViewControllerIdentifiers_SettingsVCID  @"SettingsVC"
 #define ViewControllerIdentifiers_ChooseAndAddDeviceViewControllerID  @"ChooseAndAddDeviceVC"
-#define ViewControllerIdentifiers_DebugViewControllerID  @"DebugViewController"
 #define ViewControllerIdentifiers_ShowQRCodeViewControllerID  @"ShowQRCodeViewController"
+#define ViewControllerIdentifiers_TestVCID  @"TestVC"
+#define ViewControllerIdentifiers_DirectControlListVCID  @"DirectControlListVC"
 
 #define ViewControllerIdentifiers_SingleDeviceViewControllerID  @"SingleDeviceViewController"
 #define ViewControllerIdentifiers_DeviceControlViewControllerID  @"DeviceControlViewController"
+#define ViewControllerIdentifiers_DeviceRemoteVCID  @"DeviceRemoteVC"
 #define ViewControllerIdentifiers_DeviceGroupViewControllerID  @"DeviceGroupViewController"
 #define ViewControllerIdentifiers_DeviceSettingViewControllerID  @"DeviceSettingViewController"
+#define ViewControllerIdentifiers_ForwardingTableVCID  @"ForwardingTableVC"
 #define ViewControllerIdentifiers_DeviceSubscriptionListViewControllerID  @"DeviceSubscriptionListViewController"
 #define ViewControllerIdentifiers_SensorVCID  @"SensorVC"
 #define ViewControllerIdentifiers_ShareTipsVCID @"ShareTipsVC"
@@ -130,26 +133,78 @@
 #define Tip_GetCompositionFail   @"get composition fail ..."
 #define Tip_GetCompositionSuccess   @"get composition success ..."
 
+#define Tip_GetModelsMetadata   @"get models Metadata ..."
+#define Tip_GetModelsMetadataFail   @"get models Metadata fail ..."
+#define Tip_GetModelsMetadataSuccess   @"get models Metadata success ..."
+
+#define Tip_GetSARTransmitter   @"get SARTransmitter ..."
+#define Tip_GetSARTransmitterFail   @"get SARTransmitter fail ..."
+#define Tip_GetSARTransmitterSuccess   @"get SARTransmitter success ..."
+#define Tip_SetSARTransmitter   @"set SARTransmitter ..."
+#define Tip_SetSARTransmitterFail   @"set SARTransmitter fail ..."
+#define Tip_SetSARTransmitterSuccess   @"set SARTransmitter success ..."
+
+#define Tip_GetSARReceiver   @"get SARReceiver ..."
+#define Tip_GetSARReceiverFail   @"get SARReceiver fail ..."
+#define Tip_GetSARReceiverSuccess   @"get SARReceiver success ..."
+#define Tip_SetSARReceiver   @"set SARReceiver ..."
+#define Tip_SetSARReceiverFail   @"set SARReceiver fail ..."
+#define Tip_SetSARReceiverSuccess   @"set SARReceiver success ..."
+
+#define Tip_ClearSolicitationPduRplItems   @"clear solicitationPduRplItems ..."
+#define Tip_ClearSolicitationPduRplItemsFail   @"clear solicitationPduRplItems fail ..."
+#define Tip_ClearSolicitationPduRplItemsSuccess   @"clear solicitationPduRplItems success ..."
+#define Tip_ClearSolicitationPduRplItemsUnacknowledged   @"clear solicitationPduRplItems unacknowledged ..."
+#define Tip_ClearSolicitationPduRplItemsUnacknowledgedFail   @"clear solicitationPduRplItems unacknowledged fail ..."
+#define Tip_ClearSolicitationPduRplItemsUnacknowledgedSuccess   @"clear solicitationPduRplItems unacknowledged success ..."
+
+#define Tip_GetOnDemandPrivateProxy   @"get onDemandPrivateProxy ..."
+#define Tip_GetOnDemandPrivateProxyFail   @"get onDemandPrivateProxy fail ..."
+#define Tip_GetOnDemandPrivateProxySuccess   @"get onDemandPrivateProxy success ..."
+#define Tip_SetOnDemandPrivateProxy   @"set onDemandPrivateProxy ..."
+#define Tip_SetOnDemandPrivateProxyFail   @"set onDemandPrivateProxy fail ..."
+#define Tip_SetOnDemandPrivateProxySuccess   @"set onDemandPrivateProxy success ..."
+
 #define Tip_AddSubnetBridge   @"add subnet bridge ..."
 #define Tip_AddSubnetBridgeFail   @"add subnet bridge fail ..."
 #define Tip_AddSubnetBridgeSuccess   @"add subnet bridge success ..."
+
+#define Tip_SetDirectControl   @"set direct control ..."
+#define Tip_SetDirectControlFail   @"set direct control fail ..."
+#define Tip_SetDirectControlSuccess   @"set direct control success ..."
+
+#define Tip_AddFrowardingTable   @"add forwarding table ..."
+#define Tip_AddFrowardingTableSomeFail   @"some node add forwarding table fail ..."
+#define Tip_AddFrowardingTableAllFail   @"all node add forwarding table fail ..."
+#define Tip_AddFrowardingTableSuccess   @"add forwarding table success ..."
+#define Tip_EditFrowardingTable   @"edit forwarding table ..."
+#define Tip_EditFrowardingTableSomeFail   @"some node edit forwarding table fail ..."
+#define Tip_EditFrowardingTableAllFail   @"all node edit forwarding table fail ..."
+#define Tip_EditFrowardingTableSuccess   @"edit forwarding table success ..."
+
 
 //分享使用方式(是否使用蓝牙点对点传输，YES为二维码加蓝牙点对点，NO为存二维码)
 #define kShareWithBluetoothPointToPoint (YES)
 //setting界面显示
 #define kShowScenes (YES)
-#define kShowDebug  (NO)
 #define kshowLog        (YES)
 #define kshowShare    (YES)
 #define kshowMeshInfo    (YES)
+#define kshowMeshSettings    (YES)
 #define kshowChooseAdd    (YES)
+#define kshowTest        (YES)
 
 #define kKeyBindType  @"kKeyBindType"
 #define kRemoteAddType  @"kRemoteAddType"
 #define kFastAddType  @"kFastAddType"
 #define kDLEType  @"kDLEType"
 #define kGetOnlineStatusType  @"kGetOnlineStatusType"
-#define kAddStaticOOBDevcieByNoOOBEnable  @"kAddStaticOOBDevcieByNoOOBEnable"
+#define kAddStaticOOBDeviceByNoOOBEnable  @"kAddStaticOOBDeviceByNoOOBEnable"
+#define kDistributorAddress  @"kDistributorAddress"
+#define kDistributorPolicy  @"kDistributorPolicy"
+#define kUpdateNodeAddresses  @"kUpdateNodeAddresses"
+#define kRootCertificateName  @"kRootCertificateName"
+#define kDirectedSecurityEnable  @"kDirectedSecurityEnable"
 
 
 //app通用蓝色
@@ -166,8 +221,6 @@
 
 //默认指令的重试次数
 #define kDefaultRetryCount  (2)
-
-#define kDLEUnsegmentLength (229)
 
 #define kPublishIntervalOfDemo  (20)
 

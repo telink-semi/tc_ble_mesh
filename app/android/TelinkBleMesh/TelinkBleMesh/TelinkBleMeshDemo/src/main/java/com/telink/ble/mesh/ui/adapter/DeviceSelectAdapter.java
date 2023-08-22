@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     DeviceSelectAdapter.java 
+ * @file DeviceSelectAdapter.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.adapter;
 
@@ -30,14 +31,14 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.ui.IconGenerator;
-import com.telink.ble.mesh.core.message.MeshSigModel;
 
 import java.util.List;
-
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * select device
@@ -90,15 +91,17 @@ public class DeviceSelectAdapter extends BaseSelectableListAdapter<DeviceSelectA
         super.onBindViewHolder(holder, position);
 
         NodeInfo deviceInfo = mDevices.get(position);
-        final int deviceType = deviceInfo.compositionData != null && deviceInfo.compositionData.lowPowerSupport() ? 1 : 0;
-        holder.iv_device.setImageResource(IconGenerator.getIcon(deviceType, deviceInfo.getOnOff()));
+
+        final int pid = deviceInfo.compositionData != null ? deviceInfo.compositionData.pid : 0;
+        holder.iv_device.setImageResource(IconGenerator.getIcon(pid, deviceInfo.getOnlineState()));
         holder.tv_device_info.setText(mContext.getString(R.string.device_state_desc,
                 String.format("%04X", deviceInfo.meshAddress),
-                deviceInfo.getOnOffDesc()));
+                deviceInfo.getOnlineState().toString()));
 
         holder.cb_device.setTag(position);
 
-        if (deviceInfo.getOnOff() != -1 && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_SCENE_S.modelId) != -1) {
+        if (!deviceInfo.isOffline()) {
+            //  && deviceInfo.getTargetEleAdr(MeshSigModel.SIG_MD_SCENE_S.modelId) != -1
             holder.cb_device.setChecked(deviceInfo.selected);
             holder.cb_device.setEnabled(true);
             holder.cb_device.setOnCheckedChangeListener(this.checkedChangeListener);
@@ -114,7 +117,7 @@ public class DeviceSelectAdapter extends BaseSelectableListAdapter<DeviceSelectA
             int position = (int) buttonView.getTag();
             mDevices.get(position).selected = isChecked;
             if (statusChangedListener != null) {
-                statusChangedListener.onStatusChanged(DeviceSelectAdapter.this);
+                statusChangedListener.onSelectStatusChanged(DeviceSelectAdapter.this);
             }
         }
     };

@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app_config_8258.h 
+ * @file	app_config_8258.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #pragma once
 
@@ -46,16 +49,20 @@ extern "C" {
 #define	__LOG_RT_ENABLE__		0
 //#define	__DEBUG_PRINT__			0
 
-#if DUAL_MESH_ZB_BL_EN
+#if (DUAL_MESH_ZB_BL_EN || DUAL_MESH_SIG_PVT_EN)
 #define FLASH_1M_ENABLE         1
 #elif DUAL_VENDOR_EN
 #define FLASH_1M_ENABLE         0
 #else
-#define FLASH_1M_ENABLE         0
+	#if MI_API_ENABLE
+#define FLASH_1M_ENABLE        	1
+	#else
+#define FLASH_1M_ENABLE        	0	
+	#endif
 #endif
 
 #if FLASH_1M_ENABLE
-#if DUAL_MESH_ZB_BL_EN
+#if (DUAL_MESH_ZB_BL_EN || DUAL_MESH_SIG_PVT_EN)
 #define PINGPONG_OTA_DISABLE    1 // it can disable only when 1M flash.
 #else
 #define PINGPONG_OTA_DISABLE    0 // it can disable only when 1M flash.
@@ -84,22 +91,26 @@ extern "C" {
 #define HCI_USE_USB		2
 
 #ifndef HCI_ACCESS
-#if (WIN32 || PTS_TEST_EN)
+#if (WIN32 || PTS_TEST_EN || TESTCASE_FLAG_ENABLE)
 #define HCI_ACCESS		HCI_USE_USB
 #elif MESH_MONITOR_EN
 #define HCI_ACCESS		HCI_USE_UART
 #else
+	#if GATT_RP_EN
+#define HCI_ACCESS		HCI_USE_UART
+	#else
 #define HCI_ACCESS		HCI_USE_NONE
+	#endif
 #endif 
 
 #if (HCI_ACCESS==HCI_USE_UART)
-#define UART_TX_PIN		UART_TX_PB1
-#define UART_RX_PIN		UART_RX_PB0
+#define UART_TX_PIN		UART_TX_PD7
+#define UART_RX_PIN		UART_RX_PA0
 #endif
 #endif
 
 #ifndef HCI_LOG_FW_EN
-#define HCI_LOG_FW_EN   0
+#define HCI_LOG_FW_EN   (0 || DEBUG_LOG_SETTING_DEVELOP_MODE_EN)
 #if HCI_LOG_FW_EN
 	#if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 #define DEBUG_INFO_TX_PIN           		(PCBA_8258_SEL == PCBA_8258_C1T140A3_V1_1 ? GPIO_PB6 : GPIO_PD7)
@@ -132,7 +143,7 @@ extern "C" {
 
 #define ONLINE_STATUS_EN        0
 
-#if DUAL_MESH_ZB_BL_EN
+#if (DUAL_MESH_ZB_BL_EN || DUAL_MESH_SIG_PVT_EN)
 #define DUAL_MODE_ADAPT_EN 			1   // dual mode as master with Zigbee
 #else
 #define DUAL_MODE_ADAPT_EN 			0   // dual mode as master with Zigbee
@@ -147,6 +158,8 @@ extern "C" {
 #define TRANSITION_TIME_DEFAULT_VAL (0)
 #else
 	#if MI_API_ENABLE
+#define TRANSITION_TIME_DEFAULT_VAL	0
+	#elif LPN_CONTROL_EN
 #define TRANSITION_TIME_DEFAULT_VAL	0
 	#else
 #define TRANSITION_TIME_DEFAULT_VAL (GET_TRANSITION_TIME_WITH_STEP(1, TRANSITION_STEP_RES_1S)) // (0x41)  // 0x41: 1 second // 0x00: means no default transition time
@@ -168,6 +181,10 @@ extern "C" {
 #define MESH_DLE_MODE               MESH_DLE_MODE_EXTEND_BEAR
 #define DLE_LEN_MAX_RX              (MAX_OCTETS_DATA_LEN_EXTENSION) // must MAX_OCTETS_DATA_LEN_EXTENSION
 #define DLE_LEN_MAX_TX              (40)
+#elif NMW_ENABLE
+#define MESH_DLE_MODE               MESH_DLE_MODE_GATT
+#define DLE_LEN_MAX_RX              (88)
+#define DLE_LEN_MAX_TX              (40)
 #else
 #define MESH_DLE_MODE               MESH_DLE_MODE_GATT
 #define DLE_LEN_MAX_RX              (56)
@@ -188,6 +205,10 @@ extern "C" {
 #define BLE_REMOTE_SECURITY_ENABLE      0
 #define BLE_IR_ENABLE					0
 #define BLE_SIG_MESH_CERTIFY_ENABLE 	0
+
+#if GATT_LPN_EN
+#define BLT_SOFTWARE_TIMER_ENABLE		1
+#endif
 
 #ifndef BLT_SOFTWARE_TIMER_ENABLE
 #define BLT_SOFTWARE_TIMER_ENABLE		0
