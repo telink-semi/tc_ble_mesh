@@ -44,7 +44,6 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.BridgingTable;
 import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.model.db.MeshInfoService;
 
 import java.util.List;
 
@@ -220,12 +219,9 @@ public class BridgingTableAddActivity extends BaseActivity implements EventListe
         MeshService.getInstance().sendMeshMessage(addMessage);
     }
 
-    private Runnable timeoutTask = new Runnable() {
-        @Override
-        public void run() {
-            toastMsg("add bridging table timeout");
-            dismissWaitingDialog();
-        }
+    private Runnable timeoutTask = () -> {
+        toastMsg("add bridging table timeout");
+        dismissWaitingDialog();
     };
 
 
@@ -247,20 +243,15 @@ public class BridgingTableAddActivity extends BaseActivity implements EventListe
             }
             handler.removeCallbacksAndMessages(null);
             if (statusMessage.getStatus() == 0) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        dismissWaitingDialog();
-                        setResult(RESULT_OK);
-                        finish();
-                    }
+                runOnUiThread(() -> {
+                    dismissWaitingDialog();
+                    setResult(RESULT_OK);
+                    finish();
                 });
             } else {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        toastMsg("add bridging table failed");
-                    }
+                runOnUiThread(() -> {
+                    dismissWaitingDialog();
+                    toastMsg("add bridging table failed");
                 });
             }
         }

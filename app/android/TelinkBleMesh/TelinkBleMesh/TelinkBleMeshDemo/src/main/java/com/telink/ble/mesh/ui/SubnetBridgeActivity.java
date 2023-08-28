@@ -98,20 +98,17 @@ public class SubnetBridgeActivity extends BaseActivity implements EventListener<
     }
 
     private void showRemoveDialog() {
-        showConfirmDialog("Remove Bridging Table ?", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                BridgingTableRemoveMessage removeMessage = new BridgingTableRemoveMessage(meshAddress);
-                final BridgingTable table = nodeInfo.bridgingTableList.get(removeIndex);
-                if (table == null) return;
-                removeMessage.netKeyIndex1 = table.netKeyIndex1;
-                removeMessage.netKeyIndex2 = table.netKeyIndex2;
-                removeMessage.address1 = table.address1;
-                removeMessage.address2 = table.address2;
-                showWaitingDialog("removing table...");
-                handler.postDelayed(timeoutTask, 3 * 1000);
-                MeshService.getInstance().sendMeshMessage(removeMessage);
-            }
+        showConfirmDialog("Remove Bridging Table ?", (dialog, which) -> {
+            BridgingTableRemoveMessage removeMessage = new BridgingTableRemoveMessage(meshAddress);
+            final BridgingTable table = nodeInfo.bridgingTableList.get(removeIndex);
+            if (table == null) return;
+            removeMessage.netKeyIndex1 = table.netKeyIndex1;
+            removeMessage.netKeyIndex2 = table.netKeyIndex2;
+            removeMessage.address1 = table.address1;
+            removeMessage.address2 = table.address2;
+            showWaitingDialog("removing table...");
+            handler.postDelayed(timeoutTask, 3 * 1000);
+            MeshService.getInstance().sendMeshMessage(removeMessage);
         });
     }
 
