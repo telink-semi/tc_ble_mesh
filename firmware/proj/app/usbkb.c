@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     usbkb.c 
+ * @file	usbkb.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "../tl_common.h"
 
 #if(1)
@@ -42,7 +44,7 @@ u32 debug_kbdata_report_media_ok;
 #include "../drivers/usbkeycode.h"
 //#include "../os/ev.h"
 #include "usbmouse.h"
-#include "../../vendor/8267_master_kma_dongle/rf_frame.h"
+#include "vendor/8267_master_kma_dongle/rf_frame.h"
 
 int usbkb_hid_report_normal(u8 ctrl_key, u8 *keycode);
 void usbkb_hid_report(kb_data_t *data);
@@ -92,7 +94,7 @@ static u32 usbkb_data_report_time;
 
 void usbkb_add_frame (rf_packet_keyboard_t *packet_kb)
 {
-	u8 new_data_num = packet_kb->pno;  //¸ù¾İpno »ñµÃ×îĞÂÊı¾İµÄ¸öÊı
+	u8 new_data_num = packet_kb->pno;  //æ ¹æ®pno è·å¾—æœ€æ–°æ•°æ®çš„ä¸ªæ•°
 	for(u8 i=0;i<new_data_num;i++)
 	{
 			memcpy4((int*)(&kb_dat_buff[usbkb_wptr]), (int*)(&packet_kb->data[i*sizeof(kb_data_t)]), sizeof(kb_data_t));
@@ -143,8 +145,8 @@ static void usbkb_release_media_key(void){
 }
 
 static void usbkb_release_keys(void){
-	// ²»Òªµ÷»»usbkb_release_sys_key ºÍusbkb_release_normal_key µÄË³Ğò£¬
-	// ÕâÊÇÎªÁËÈÃ usbkb_release_sys_key,  usbkb_release_media_key ÖĞ¼äÓĞÒ»¶¨ÑÓÊ±
+	// ä¸è¦è°ƒæ¢usbkb_release_sys_key å’Œusbkb_release_normal_key çš„é¡ºåºï¼Œ
+	// è¿™æ˜¯ä¸ºäº†è®© usbkb_release_sys_key,  usbkb_release_media_key ä¸­é—´æœ‰ä¸€å®šå»¶æ—¶
 	usbkb_release_sys_key();
 	usbkb_release_normal_key();
 	usbkb_release_media_key();
@@ -157,7 +159,7 @@ void usbkb_release_check(){
 
 }
 
-//  normal_keycode ÀïÃæ·µ»ØÆÕÍ¨°´¼ü
+//  normal_keycode é‡Œé¢è¿”å›æ™®é€šæŒ‰é”®
 int usbkb_separate_key_types(u8 *keycode, u8 cnt, u8 *normal_key, u8 *ext_key){
     STATIC_ASSERT(KB_RETURN_KEY_MAX <= KEYBOARD_REPORT_KEY_MAX);
     assert(cnt <= KB_RETURN_KEY_MAX);
@@ -311,7 +313,7 @@ void usbkb_hid_report(kb_data_t *data){
 
 
 	if(data->cnt > 0){
-		//  keycode·ÖÀà´¦Àí
+		//  keycodeåˆ†ç±»å¤„ç†
 	    normal_key_cnt = usbkb_separate_key_types(data->keycode, data->cnt, normal_keycode, &ext_key);
 	}
 	debug_kbdata_report++;

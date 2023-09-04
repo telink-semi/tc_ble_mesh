@@ -3,34 +3,29 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/1/24
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  ShareInVC.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2019/1/24.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "ShareInVC.h"
 #import "FileChooseVC.h"
 #import "UIViewController+Message.h"
 #import "ScanCodeVC.h"
+#import "Reachability.h"
 
 @interface ShareInVC ()
 @property (weak, nonatomic) IBOutlet UIButton *selectJsonButton;
@@ -70,7 +65,7 @@
 }
 
 - (void)importMeshByJsonFile {
-    FileChooseVC *vc = (FileChooseVC *)[UIStoryboard initVC:ViewControllerIdentifiers_FileChooseViewControllerID storybroad:@"Setting"];
+    FileChooseVC *vc = (FileChooseVC *)[UIStoryboard initVC:ViewControllerIdentifiers_FileChooseViewControllerID storyboard:@"Setting"];
     __weak typeof(self) weakSelf = self;
     [vc setBackJsonData:^(NSData * _Nonnull jsonData, NSString * _Nonnull jsonName) {
         [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
@@ -82,6 +77,13 @@
 }
 
 - (void)importMeshByQRCode {
+    NSString *remoteHostName = @"www.apple.com";
+    Reachability *hostReachability = [Reachability reachabilityWithHostName:remoteHostName];
+    if (hostReachability.currentReachabilityStatus == NotReachable) {
+        [self showTips:@"The Internet connection appears to be offline."];
+        return;
+    }
+
     [self.navigationController pushViewController:self.scanCodeVC animated:YES];
 }
 
@@ -198,44 +200,16 @@
 }
 
 - (void)importMeshWithDictionary:(NSDictionary *)dict {
-    NSString *oldMeshUUID = SigDataSource.share.meshUUID;
+    //v3.3.3.6及以后新逻辑：
+    //1.当前手机的provisioner只在当前手机使用，且本地地址不变。
+    //2.使用setDictionaryToDataSource接收分享后调用checkExistLocationProvisioner判断provisioner.
+    //3.判断手机本地是否存在ivIndex+sequenceNumber，存在则赋值到SigDataSource且sequenceNumber+128.且立刻缓存一次本地。
+    //4.不存在则需要连接获取到beacon的ivIndex。sequenceNumber从0开始。
+    //5.重新计算下一次添加设备使用的unicastAddress
+    [SigDataSource.share resetMesh];
     [SigDataSource.share setDictionaryToDataSource:dict];
-
-    BOOL needChangeProvisionerAddress = NO;//修改手机本地节点的地址
-    BOOL reStartSequenceNumber = NO;//修改手机本地节点使用的发包序列号sno
-    BOOL hasPhoneUUID = NO;
-    NSString *curPhoneUUID = [SigDataSource.share getCurrentProvisionerUUID];
-    NSArray *provisioners = [NSArray arrayWithArray:SigDataSource.share.provisioners];
-    for (SigProvisionerModel *provision in provisioners) {
-        if ([provision.UUID isEqualToString:curPhoneUUID]) {
-            hasPhoneUUID = YES;
-            break;
-        }
-    }
-    
     [SigDataSource.share checkExistLocationProvisioner];
-    if (hasPhoneUUID) {
-        // v3.1.0, 存在
-        BOOL isSameMesh = [SigDataSource.share.meshUUID isEqualToString:oldMeshUUID];
-        if (isSameMesh) {
-            // v3.1.0, 存在，且为相同mesh网络，覆盖JSON，且使用本地的sno和ProvisionerAddress
-            needChangeProvisionerAddress = NO;
-            reStartSequenceNumber = NO;
-        } else {
-            // v3.1.0, 存在，但为不同mesh网络，获取provision，修改为新的ProvisionerAddress，sno从0开始
-            needChangeProvisionerAddress = YES;
-            reStartSequenceNumber = YES;
-        }
-    } else {
-        // v3.1.0, 不存在，覆盖并新建provisioner
-        needChangeProvisionerAddress = NO;
-        reStartSequenceNumber = YES;
-    }
-    //重新计算sno
-    if (reStartSequenceNumber) {
-        [[NSUserDefaults standardUserDefaults] removeObjectForKey:kCurrentMeshProvisionAddress_key];
-        [SigDataSource.share setLocationSno:0];
-    }
+    [SigDataSource.share saveLocationData];
     UInt16 maxAddr = SigDataSource.share.curProvisionerModel.allocatedUnicastRange.firstObject.lowIntAddress;
     NSArray *nodes = [NSArray arrayWithArray:SigDataSource.share.nodes];
     for (SigNodeModel *node in nodes) {
@@ -244,23 +218,7 @@
             maxAddr = curMax;
         }
     }
-    if (needChangeProvisionerAddress) {
-        //修改手机的本地节点的地址
-        UInt16 newProvisionAddress = maxAddr + 1;
-        [SigDataSource.share changeLocationProvisionerNodeAddressToAddress:newProvisionAddress];
-        TeLogDebug(@"已经使用了address=0x%x作为本地地址",newProvisionAddress);
-        //修改已经使用的设备地址
-        [SigDataSource.share saveLocationProvisionAddress:newProvisionAddress];
-    } else {
-        //修改已经使用的设备地址
-        [SigDataSource.share saveLocationProvisionAddress:maxAddr];
-    }
-    TeLogDebug(@"下一次添加设备可以使用的地址address=0x%x",SigDataSource.share.provisionAddress);
-    
-//    SigDataSource.share.curNetkeyModel = nil;
-//    SigDataSource.share.curAppkeyModel = nil;
-    [SigDataSource.share saveLocationData];
-    [SigDataSource.share.scanList removeAllObjects];
+    [SigDataSource.share saveLocationProvisionAddress:maxAddr];
 }
 
 -(void)dealloc{

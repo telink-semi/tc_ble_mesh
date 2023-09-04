@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     blt_soft_timer.c 
+ * @file	blt_soft_timer.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 public@telink-semi.com;
- * @date     Sep. 18, 2015
+ * @author	public@telink-semi.com;
+ * @date	Sep. 18, 2015
  *
- * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 /*
  * blt_soft_timer.c
@@ -39,7 +42,7 @@
 _attribute_data_retention_	blt_soft_timer_t	blt_timer;
 
 
-//°´ÕÕ¶¨Ê±Ê±¼ä½«timerÅÅĞò£¬±ãÓÚprocessÊ± ÒÀ´Î´¥·¢timer
+//æŒ‰ç…§å®šæ—¶æ—¶é—´å°†timeræ’åºï¼Œä¾¿äºprocessæ—¶ ä¾æ¬¡è§¦å‘timer
 int  blt_soft_timer_sort(void)
 {
 	if(blt_timer.currentNum < 1 || blt_timer.currentNum > MAX_TIMER_NUM){
@@ -47,7 +50,7 @@ int  blt_soft_timer_sort(void)
 		return 0;
 	}
 	else{
-		// Ã°ÅİÅÅĞò  BubbleSort
+		// å†’æ³¡æ’åº  BubbleSort
 		int n = blt_timer.currentNum;
 		u8 temp[sizeof(blt_time_event_t)];
 
@@ -94,7 +97,7 @@ int blt_soft_timer_add(blt_timer_callback_t func, u32 interval_us)
 }
 
 
-//timer ±¾À´¾ÍÊÇÓĞĞòµÄ£¬É¾³ıµÄÊ±ºò£¬²ÉÓÃÍùÇ°¸²¸Ç£¬ËùÒÔ²»»áÆÆ»µË³Ğò£¬²»ĞèÒªÖØĞÂÅÅĞò
+//timer æœ¬æ¥å°±æ˜¯æœ‰åºçš„ï¼Œåˆ é™¤çš„æ—¶å€™ï¼Œé‡‡ç”¨å¾€å‰è¦†ç›–ï¼Œæ‰€ä»¥ä¸ä¼šç ´åé¡ºåºï¼Œä¸éœ€è¦é‡æ–°æ’åº
 int  blt_soft_timer_delete_by_index(u8 index)
 {
 	if(index >= blt_timer.currentNum){
@@ -121,7 +124,7 @@ int 	blt_soft_timer_delete(blt_timer_callback_t func)
 		if(blt_timer.timer[i].cb == func){
 			blt_soft_timer_delete_by_index(i);
 
-			if(i == 0){  //É¾³ıµÄÊÇ×î½üµÄtimer£¬ĞèÒª¸üĞÂÊ±¼ä
+			if(i == 0){  //åˆ é™¤çš„æ˜¯æœ€è¿‘çš„timerï¼Œéœ€è¦æ›´æ–°æ—¶é—´
 
 				if( (u32)(blt_timer.timer[0].t - clock_time()) < 3000 *  CLOCK_16M_SYS_TIMER_CLK_1MS){
 					bls_pm_setAppWakeupLowPower(blt_timer.timer[0].t,  1);

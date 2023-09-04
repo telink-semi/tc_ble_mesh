@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     host_fifo.c 
+ * @file	host_fifo.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	Mesh Group
+ * @date	2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "host_fifo.h"
 #include "gatt_provision.h"
@@ -179,12 +182,15 @@ void reset_host_fifo()
 	hci_tx_fifo.rptr = hci_tx_fifo.wptr;
 	mesh_adv_cmd_fifo.rptr = mesh_adv_cmd_fifo.wptr;
 }
-void hci_tx_fifo_poll()	// VC receive ADV or other pkt from mesh dongle
+_attribute_no_inline_ void hci_tx_fifo_poll()	// VC receive ADV or other pkt from mesh dongle
 {
 
 	my_fifo_buf_t *fifo = (my_fifo_buf_t *)my_fifo_get(&hci_tx_fifo);
 	if(fifo){
-		u8 hci_tx_cmd[1024];
+		if(fifo->len < 1){
+			return ;	// when GATT connected, after pull out master dongle, and the insert, the length of the first packet is 0 in release version.
+		}
+		u8 hci_tx_cmd[1024] = { 0 };
 		memcpy(hci_tx_cmd, fifo, fifo->len + sizeof(fifo->len));	// copy to other ram should be better
 		fifo = (my_fifo_buf_t *)hci_tx_cmd;
 		#if (PROJECT_SEL == PROJECT_VC_DONGLE)

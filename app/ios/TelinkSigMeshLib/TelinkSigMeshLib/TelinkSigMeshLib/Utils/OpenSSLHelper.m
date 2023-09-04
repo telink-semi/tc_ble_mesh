@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     OpenSSLHelper.m
-*
-* @brief    for TLSR chips
-*
-* @author       Telink, 梁家誌
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  OpenSSLHelper.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/10/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     OpenSSLHelper.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/10/16
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "OpenSSLHelper.h"
 #import "openssl/cmac.h"
@@ -78,17 +72,13 @@
 }
 
 - (NSData *)calculateECB:(NSData *)someData andKey:(NSData *)key {
-    EVP_CIPHER_CTX *ctx;
-    unsigned char iv[16] = {0x00};
     int len;
-    int ciphertext_len;
+    unsigned char iv[16] = {0x00};
     unsigned char outbuf[16] = {0x00};
-    ctx = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, [key bytes], iv);
     EVP_EncryptUpdate(ctx, outbuf, &len, [someData bytes], (int) [someData length] / sizeof(unsigned char));
-    ciphertext_len = len;
     EVP_EncryptFinal_ex(ctx, outbuf + len, &len);
-    ciphertext_len += len;
     EVP_CIPHER_CTX_free(ctx);
     return [[NSData alloc] initWithBytes: outbuf length: 16];
 }
@@ -235,6 +225,178 @@
     return deobfuscatedData;
 }
 
+/// 3.10.4.1.1 Private beacon security function
+/// - seeAlso: MshPRFd1.1r15_clean.pdf  (page.209)
+- (NSData *)calculateAuthenticationTagWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive ivIndex:(UInt32)ivIndex randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey {
+    /*
+     B0 = 0x19 || Random || 0x0005
+     C0 = 0x01 || Random || 0x0000
+     C1 = 0x01 || Random || 0x0001
+     Private Beacon Data (5 octets) = Flags || IV Index
+     P = Private Beacon Data || 0x0000000000000000000000 (11-octets of Zero padding)
+     */
+    
+    NSData *authenticationTag = nil;
+    NSMutableData *mData = [NSMutableData data];
+    
+    //B0
+    UInt8 tem8 = 0x19;
+    UInt16 tem16 = CFSwapInt16BigToHost(0x0005);
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    [mData appendData:randomData];
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    NSData *B0 = [NSData dataWithData:mData];
+    
+    //C0
+    mData = [NSMutableData data];
+    tem8 = 0x01;
+    tem16 = CFSwapInt16BigToHost(0x0000);
+    data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    [mData appendData:randomData];
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    NSData *C0 = [NSData dataWithData:mData];
+
+    //Private Beacon Data
+    mData = [NSMutableData data];
+    struct Flags flags = {};
+    flags.value = 0;
+    if (keyRefreshFlag) {
+        flags.value |= (1 << 0);
+    }
+    if (ivUpdateActive) {
+        flags.value |= (1 << 1);
+    }
+    [mData appendData:[NSData dataWithBytes:&flags length:1]];
+    UInt32 ivIndex32 = CFSwapInt32HostToBig(ivIndex);
+    [mData appendData:[NSData dataWithBytes:&ivIndex32 length:4]];
+    NSData *privateBeaconData = [NSData dataWithData:mData];
+
+    //P
+    UInt8 padding[11] = {};
+    memset(padding, 0, 11);
+    mData = [NSMutableData data];
+    [mData appendData:privateBeaconData];
+    [mData appendBytes:padding length:11];
+    NSData *P = [NSData dataWithData:mData];
+
+    /*
+     The Authentication_Tag is generated using the following computations:
+     T0 = e (PrivateBeaconKey, B0)
+     T1 = e (PrivateBeaconKey, T0 ⊕ P)
+     T2 = T1 ⊕ e (PrivateBeaconKey, C0)
+     Authentication_Tag = T2[0-7]
+     */
+    NSData *privateBeaconKey = [self calculatePrivateBeaconKeyWithNetKey:networkKey];
+    NSData *T0 = [self calculateECB:B0 andKey:privateBeaconKey];
+    NSData *T1 = [self calculateECB:[self xor:T0 withData:P] andKey:privateBeaconKey];
+    NSData *T2 = [self xor:T1 withData:[self calculateECB:C0 andKey:privateBeaconKey]];
+    authenticationTag = [T2 subdataWithRange:NSMakeRange(0, 8)];
+    return authenticationTag;
+}
+
+/// 3.10.4.1.1 Private beacon security function
+/// - seeAlso: MshPRFd1.1r15_clean.pdf  (page.209)
+- (NSData *)calculateObfuscatedPrivateBeaconDataWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive ivIndex:(UInt32)ivIndex randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey {
+    /*
+     B0 = 0x19 || Random || 0x0005
+     C0 = 0x01 || Random || 0x0000
+     C1 = 0x01 || Random || 0x0001
+     Private Beacon Data (5 octets) = Flags || IV Index
+     P = Private Beacon Data || 0x0000000000000000000000 (11-octets of Zero padding)
+     */
+    
+    NSData *obfuscatedPrivateBeaconData = nil;
+    NSMutableData *mData = [NSMutableData data];
+        
+    //C1
+    UInt8 tem8 = 0x01;
+    UInt16 tem16 = CFSwapInt16BigToHost(0x0001);
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    [mData appendData:randomData];
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    NSData *C1 = [NSData dataWithData:mData];
+
+    //Private Beacon Data
+    mData = [NSMutableData data];
+    struct Flags flags = {};
+    flags.value = 0;
+    if (keyRefreshFlag) {
+        flags.value |= (1 << 0);
+    }
+    if (ivUpdateActive) {
+        flags.value |= (1 << 1);
+    }
+    [mData appendData:[NSData dataWithBytes:&flags length:1]];
+    UInt32 ivIndex32 = CFSwapInt32HostToBig(ivIndex);
+    [mData appendData:[NSData dataWithBytes:&ivIndex32 length:4]];
+    NSData *privateBeaconData = [NSData dataWithData:mData];
+
+    /*
+     The Private Beacon Data is obfuscated as follows:
+     S = e (PrivateBeaconKey, C1)
+     Obfuscated_Private_Beacon_Data = (S [0-4]) ⊕ (Private Beacon Data))
+     */
+    NSData *privateBeaconKey = [self calculatePrivateBeaconKeyWithNetKey:networkKey];
+    NSData *S = [self calculateECB:C1 andKey:privateBeaconKey];
+    obfuscatedPrivateBeaconData = [self xor:[S subdataWithRange:NSMakeRange(0, 5)] withData:privateBeaconData];
+    return obfuscatedPrivateBeaconData;
+}
+
+- (NSData *)calculatePrivateBeaconDataWithObfuscatedPrivateBeaconData:(NSData *)obfuscatedPrivateBeaconData randomData:(NSData *)randomData usingNetworkKey:(NSData *)networkKey {
+    /*
+     B0 = 0x19 || Random || 0x0005
+     C0 = 0x01 || Random || 0x0000
+     C1 = 0x01 || Random || 0x0001
+     Private Beacon Data (5 octets) = Flags || IV Index
+     P = Private Beacon Data || 0x0000000000000000000000 (11-octets of Zero padding)
+     */
+    
+    //C1
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = 0x01;
+    UInt16 tem16 = CFSwapInt16BigToHost(0x0001);
+    NSData *data = [NSData dataWithBytes:&tem8 length:1];
+    [mData appendData:data];
+    [mData appendData:randomData];
+    data = [NSData dataWithBytes:&tem16 length:2];
+    [mData appendData:data];
+    NSData *C1 = [NSData dataWithData:mData];
+
+    /*
+     The Private Beacon Data is obfuscated as follows:
+     S = e (PrivateBeaconKey, C1)
+     Obfuscated_Private_Beacon_Data = (S [0-4]) ⊕ (Private Beacon Data))
+     */
+    NSData *privateBeaconKey = [self calculatePrivateBeaconKeyWithNetKey:networkKey];
+    NSData *S = [self calculateECB:C1 andKey:privateBeaconKey];
+    NSData *privateBeaconData = [self xor:[S subdataWithRange:NSMakeRange(0, 5)] withData:obfuscatedPrivateBeaconData];
+    return privateBeaconData;
+}
+
+/// 3.9.6.3.5 PrivateBeaconKey
+/// - seeAlso: MshPRFd1.1r15_clean.pdf  (page.200)
+- (NSData *)calculatePrivateBeaconKeyWithNetKey:(NSData *)netKey {
+    /*
+     salt = s1(“nkpk”)
+     P = “id128” || 0x01
+     PrivateBeaconKey = k1(NetKey, salt, P)
+     */
+    NSData *salt = [[OpenSSLHelper share] calculateSalt:[@"nkpk" dataUsingEncoding:NSASCIIStringEncoding]];
+
+    UInt8 tem8 = 0x01;
+    NSMutableData *P = [NSMutableData dataWithData:[@"id128" dataUsingEncoding:NSASCIIStringEncoding]];
+    [P appendData:[NSData dataWithBytes:&tem8 length:1]];
+    
+    NSData *privateBeaconKey = [[OpenSSLHelper share] calculateK1WithN:netKey salt:salt andP:P];
+    return privateBeaconKey;
+}
+
 // MARK:- Helpers
 - (NSData *)calculateK1WithN:(NSData *)N salt:(NSData *)salt andP:(NSData *)P {
     // Calculace K1 (outputs the confirmationKey).
@@ -351,16 +513,6 @@
    return result;
 }
 
-- (NSData *)calculateSHA256:(NSData *)someData {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, someData.bytes, someData.length);
-    SHA256_Final(hash, &sha256);
-    NSData *output = [NSData dataWithBytes:hash length:SHA256_DIGEST_LENGTH];
-    return output;
-}
-
 - (NSData *)calculateSHA1:(NSData *)someData {
     unsigned char hash[SHA_DIGEST_LENGTH];
     SHA_CTX sha;
@@ -373,6 +525,7 @@
 
 - (BOOL)checkUserCertificates:(NSArray <NSData *>*)userCerDatas withRootCertificate:(NSData *)rootCerData {
     OpenSSL_add_all_algorithms();
+    //x509证书验证示例,https://blog.csdn.net/chuicao4350/article/details/52875329
 
     int ret;
 
@@ -606,6 +759,7 @@ X509 *der_to_x509(const unsigned char *der_str, unsigned int der_str_len) {
     X509* x509 = NULL;
     X509* superX509 = NULL;
     
+//>>>>>>> release3.3.5
     @try {
 
         const unsigned char* certificateData = [cerData bytes];

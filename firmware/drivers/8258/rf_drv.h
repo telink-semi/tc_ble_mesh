@@ -1,26 +1,25 @@
 /********************************************************************************************************
- * @file     rf_drv.h 
+ * @file	rf_drv.h
  *
- * @brief    This is the header file for TLSR8258
+ * @brief	This is the header file for TLSR8258
  *
- * @author	 Driver Group
- * @date     May 8, 2018
+ * @author	Driver Group
+ * @date	May 8, 2018
  *
- * @par      Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- *           The information contained herein is confidential property of Telink
- *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *           Co., Ltd. and the licensee or the terms described here-in. This heading
- *           MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *           Licensees are granted free, non-transferable use of the information in this
- *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
- * @par      History:
- * 			 1.initial release(DEC. 26 2018)
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
- * @version  A001
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *
  *******************************************************************************************************/
 #ifndef _RF_DRV_H_
@@ -217,15 +216,6 @@ extern const RF_PowerTypeDef rf_power_Level_list[60];
 #define    RF_ZIGBEE_PACKET_RSSI_GET(p)     			(p[p[0]+2])
 #define    RF_ZIGBEE_PACKET_TIMESTAMP_GET(p)           	(p[p[0]-4] | (p[p[0]-3]<<8) | (p[p[0]-2]<<16) | (p[p[0]-1]<<24))
 #define    RF_ZIGBEE_PACKET_PAYLOAD_LENGTH_GET(p)      	(p[4])
-#define    RF_NRF_ESB_PACKET_LENGTH_OK(p)              	(p[0] == (p[4] & 0x3f) + 11)
-#define    RF_NRF_ESB_PACKET_CRC_OK(p)                 	((p[p[0]+3] & 0x01) == 0x00)
-#define    RF_NRF_ESB_PACKET_RSSI_GET(p)               	(p[p[0]+2])
-#define    RF_NRF_SB_PACKET_PAYLOAD_LENGTH_GET(p)      	(p[0] - 10)
-#define    RF_NRF_SB_PACKET_CRC_OK(p)                  	((p[p[0]+3] & 0x01) == 0x00)
-#define    RF_NRF_SB_PACKET_CRC_GET(p)                 	((p[p[0]-8]<<8) + p[p[0]-7]) //Note: here assume that the MSByte of CRC is received first
-#define    RF_NRF_SB_PACKET_RSSI_GET(p)                	(p[p[0]+2])
-#define    RF_NRF_ESB_PACKET_TIMESTAMP_GET(p)          (p[p[0]-4] | (p[p[0]-3]<<8) | (p[p[0]-2]<<16) | (p[p[0]-1]<<24))
-#define    RF_NRF_SB_PACKET_TIMESTAMP_GET(p)           (p[p[0]-4] | (p[p[0]-3]<<8) | (p[p[0]-2]<<16) | (p[p[0]-1]<<24))
 
 
 
@@ -805,16 +795,6 @@ extern void rf_set_channel (signed char chn, unsigned short set);//general
  * @return  none.
  */
 extern void rf_set_channel_500k(signed short chn, unsigned short set);
-/**
-*	@brief		this function is to set shock burst for RF.
-*	@param[in]	len - length of shockburst.
-*	@return	 	none.
-*/
-static inline void rf_nordic_shockburst(int len)
-{
-    write_reg8(0x404, read_reg8(0x404)|0x03); //select shockburst header mode
-    write_reg8(0x406, len);
-}
 
 
 /**
@@ -881,21 +861,21 @@ extern unsigned char rf_stop_ed_154(void);
 extern void rf_rffe_set_pin(RF_PATxPinDef tx_pin, RF_LNARxPinDef rx_pin);
 
 /**
- * @brief      This function process the received packet in 1mbps shockburst mode only for hanshow for the
+ * @brief      This function process the received packet in 1mbps private mode only for hanshow for the
  *             compatiblity with third-party chips. The process includes data-whitening
                transformation and crc check.
  * @param[in]  rx_buf - the rf rx buffer containing the received packet(dma length+payload+3 byte crc)
- * @param[in]  len - the expected rx length of shockburst mode, containing payload and 3byte crc
+ * @param[in]  len - the expected rx length of private mode, containing payload and 3byte crc
  * @return     the status of the processing procesure. 1: the received packet is correct, 0: the received packet is incorrect
  */
 
 unsigned char rx_packet_process_1mbps(unsigned char *rx_buf, unsigned int len);
 /**
- * @brief      This function process the tx packet in 1mbps shockburst mode only for hanshow for the
+ * @brief      This function process the tx packet in 1mbps private mode only for hanshow for the
  *             compatiblity with third-party chips. The process includes data-whitening
                transformation and crc padding.
  * @param[in]  tx_buf - the rf tx buffer containing the tx packet(dma length+payload+3 byte crc)
- * @param[in]  len - the expected tx length of shockburst mode, containing payload and 3byte crc
+ * @param[in]  len - the expected tx length of private mode, containing payload and 3byte crc
  * @return     none
  */
 void tx_packet_process_1mbps(unsigned char *tx_buf, unsigned char *payload, unsigned int len);

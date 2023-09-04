@@ -3,26 +3,22 @@
  *
  * @brief    A concise description.
  *
- * @author       梁家誌
- * @date         2021/10/27
+ * @author   Telink, 梁家誌
+ * @date     2021/10/27
  *
- * @par      
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *           The information contained herein is confidential property of Telink
- *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *           Co., Ltd. and the licensee or the terms described here-in. This heading
- *           MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or  
- *           alter) any information contained herein in whole or in part except as expressly authorized  
- *           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible  
- *           for any claim to the extent arising out of or relating to such deletion(s), modification(s)  
- *           or alteration(s).
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
- *           Licensees are granted free, non-transferable use of the information in this
- *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
- *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 
 #import "CertificateListVC.h"
@@ -57,6 +53,10 @@
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_MeshOTAItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_MeshOTAItemCellID];
+    //iOS 15中 UITableView 新增了一个属性：sectionHeaderTopPadding。此属性会给每一个 section header 增加一个默认高度，当我们使用 UITableViewStylePlain 初始化UITableView 的时候，系统默认给 section header 增高了22像素。
+    if(@available(iOS 15.0,*)) {
+        self.tableView.sectionHeaderTopPadding = 0;
+    }
 }
 
 - (IBAction)clickSaveButton:(UIButton *)sender {

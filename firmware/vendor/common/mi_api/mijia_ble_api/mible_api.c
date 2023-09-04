@@ -901,7 +901,7 @@ bool no_stop)
 {
 	#if HAVE_MSC
     u8 ret = IIC_EVT_XFER_DONE;
-    unsigned char r = irq_disable();
+    u32 r = irq_disable();
     
     msc_addr = addr;
 
@@ -936,7 +936,7 @@ __WEAK mible_status_t mible_iic_rx(uint8_t addr, uint8_t * p_in, uint16_t len)
 {
 	#if HAVE_MSC
     u8 ret = IIC_EVT_XFER_DONE;
-    unsigned char r = irq_disable();
+    u32 r = irq_disable();
 
     msc_addr = addr;
 

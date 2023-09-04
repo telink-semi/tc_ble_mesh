@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorBg"
@@ -18,130 +19,32 @@
             android:orientation="vertical">
 
 
-            <LinearLayout
+            <!--      enable log      -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="4dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/enable_log"
-                    android:textSize="12sp" />
-
-                <Switch
-                    android:id="@+id/switch_log"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
                 android:layout_margin="4dp"
-                android:background="@color/gray" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/auto_provision"
-                    android:textSize="12sp" />
-
-                <ImageView
-                    android:id="@+id/iv_tip_auto_provision"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_tip"
-                    android:tint="@color/grey" />
-
-
-                <Switch
-                    android:id="@+id/switch_auto_provision"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_margin="4dp"
-                android:background="@color/gray" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/private_mode"
-                    android:textSize="12sp" />
-
-
-                <ImageView
-                    android:id="@+id/iv_tip_default_bound"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_tip"
-                    android:tint="@color/grey" />
-
-                <Switch
-                    android:id="@+id/switch_private_mode"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-            <!--     remote provision       -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/ll_rp"
-                android:orientation="vertical">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="0.5dp"
-                    android:layout_margin="4dp"
-                    android:background="@color/gray" />
+                app:cardCornerRadius="4dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardUseCompatPadding="true">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:padding="4dp">
+                    android:padding="8dp">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/enable_remote_provision"
-                        android:textSize="12sp" />
-
+                        android:layout_weight="1"
+                        android:text="@string/enable_log"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <ImageView
-                        android:id="@+id/iv_tip_remote_prov"
+                        android:id="@+id/iv_tip_log"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="?attr/selectableItemBackgroundBorderless"
@@ -149,320 +52,332 @@
                         android:src="@drawable/ic_tip"
                         android:tint="@color/grey" />
 
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:layout_weight="1" />
+                    <Switch
+                        android:id="@+id/switch_log"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!--      default bond      -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                app:cardCornerRadius="4dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/private_mode"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/iv_tip_default_bound"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_tip"
+                        android:tint="@color/grey" />
 
                     <Switch
-                        android:id="@+id/switch_remote_prov"
+                        android:id="@+id/switch_private_mode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!--      provision mode log      -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/view_manage_network"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                app:cardCornerRadius="4dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical"
+                    android:padding="8dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Provision Mode: "
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/iv_tip_pv_mode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="4dp"
+                            android:src="@drawable/ic_tip"
+                            android:tint="@color/grey" />
+                    </LinearLayout>
+
+                    <RadioGroup
+                        android:id="@+id/rg_pv_mode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <RadioButton
+                            android:id="@+id/rb_pv_normal_sl"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="normal(selectable)" />
+
+                        <RadioButton
+                            android:id="@+id/rb_pv_normal_auto"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="normal(auto)" />
+
+                        <RadioButton
+                            android:id="@+id/rb_pv_remote"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="remote provision" />
+
+
+                        <RadioButton
+                            android:id="@+id/rb_pv_fast"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="fast provision" />
+
+                    </RadioGroup>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+
+            <!--     enable subscription level service model id       -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                app:cardCornerRadius="4dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Enable subscription level service model ID"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/iv_tip_level"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_tip"
+                        android:tint="@color/grey" />
+
+                    <Switch
+                        android:id="@+id/switch_level"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
 
                 </LinearLayout>
-            </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+
             <!--      extend bearer mode      -->
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_margin="4dp"
-                android:background="@color/gray" />
-
-
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="4dp">
+                android:layout_margin="4dp"
+                app:cardCornerRadius="4dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardUseCompatPadding="true">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/extend_bearer_title"
-                    android:textSize="@dimen/info_text_size" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical"
+                    android:padding="8dp">
 
-                <EditText
-                    android:id="@+id/et_extend_type"
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical">
+
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/extend_bearer_title"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/iv_tip_bearer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="4dp"
+                            android:src="@drawable/ic_tip"
+                            android:tint="@color/grey" />
+                    </LinearLayout>
+
+                    <RadioGroup
+                        android:id="@+id/rg_extend_bearer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <RadioButton
+                            android:id="@+id/rb_ex_br_none"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/extend_bearer_no" />
+
+                        <RadioButton
+                            android:id="@+id/rb_ex_br_gatt"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/extend_bearer_gatt" />
+
+                        <RadioButton
+                            android:id="@+id/rb_ex_br_gatt_adv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/extend_bearer_gatt_adv" />
+
+                    </RadioGroup>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                app:cardCornerRadius="4dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardUseCompatPadding="true">
+
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableEnd="@drawable/ic_arrow_down"
-                    android:drawableTint="@color/colorPrimary"
-                    android:focusable="false"
                     android:gravity="center"
-                    android:inputType="none"
-                    android:text="@string/extend_bearer_gatt_adv"
-                    android:textColor="@color/colorPrimary"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
+                    android:orientation="horizontal"
+                    android:padding="8dp">
 
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/enable_no_oob"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/iv_tip_no_oob"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_tip"
+                        android:tint="@color/grey" />
+
+                    <Switch
+                        android:id="@+id/switch_no_oob"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
 
 
-            <!--      fast provision      -->
-            <View
+            </androidx.cardview.widget.CardView>
+
+
+            <!-- online status -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="0.5dp"
+                android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                android:background="@color/gray" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/enable_fast_provision"
-                    android:textSize="12sp" />
-
-                <ImageView
-                    android:id="@+id/iv_tip_fast_prov"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_tip"
-                    android:tint="@color/grey" />
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-
-                <Switch
-                    android:id="@+id/switch_fast_prov"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-
-            <!-- static oob database -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_margin="4dp"
-                android:background="@color/gray" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="vertical"
-                android:padding="4dp">
-
-                <TextView
-                    android:id="@+id/tv_select_database"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawableRight="@drawable/ic_arrow_right"
-                    android:drawableTint="@color/grey"
-                    android:text="@string/oob_database"
-                    android:textSize="12sp" />
-
-            </LinearLayout>
-
-
-            <!-- root cert -->
-
-            <LinearLayout
-                android:id="@+id/ll_cert"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="0.5dp"
-                    android:layout_margin="4dp"
-                    android:background="@color/gray" />
+                app:cardCornerRadius="4dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardUseCompatPadding="true">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
-                    android:orientation="vertical"
-                    android:padding="4dp">
+                    android:padding="8dp">
 
                     <TextView
-                        android:id="@+id/tv_cert"
-                        android:layout_width="match_parent"
+                        android:id="@+id/tv_online_status"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:drawableRight="@drawable/ic_arrow_right"
-                        android:drawableTint="@color/grey"
-                        android:text="@string/root_cert"
-                        android:textSize="12sp" />
+                        android:layout_weight="1"
+                        android:padding="2dp"
+                        android:text="Online-Status: ENABLE"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
+                    <ImageView
+                        android:id="@+id/iv_tip_online_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_tip"
+                        android:tint="@color/grey" />
                 </LinearLayout>
 
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_margin="4dp"
-                android:background="@color/gray" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/enable_no_oob"
-                    android:textSize="12sp" />
-
-                <ImageView
-                    android:id="@+id/iv_tip_no_oob"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_tip"
-                    android:tint="@color/grey" />
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-
-                <Switch
-                    android:id="@+id/switch_no_oob"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_margin="4dp"
-                android:background="@color/gray" />
-
-            <!--     net key       -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:padding="2dp"
-                    android:text="Net Key: "
-                    android:textSize="12sp" />
-
-                <ImageView
-                    android:id="@+id/iv_copy_net_key"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="8dp"
-                    android:src="@drawable/ic_copy"
-                    android:tint="@color/grey" />
-
-            </LinearLayout>
-
-            <EditText
-                android:id="@+id/et_net_key"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:digits="@string/hex_input"
-                android:enabled="false"
-                android:padding="2dp"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_margin="4dp"
-                android:background="@color/gray"
-                android:visibility="gone" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:padding="2dp"
-                    android:text="App Key: "
-                    android:textSize="12sp" />
-
-                <ImageView
-                    android:id="@+id/iv_copy_app_key"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="8dp"
-                    android:src="@drawable/ic_copy"
-                    android:tint="@color/grey" />
-
-            </LinearLayout>
-
-
-            <EditText
-                android:id="@+id/et_app_key"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:digits="@string/hex_input"
-                android:enabled="false"
-                android:padding="2dp"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
-
-
-            <!-- online status -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_margin="4dp"
-                android:background="@color/gray" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/tv_online_status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:padding="2dp"
-                    android:text="Online-Status: "
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:layout_margin="4dp"
-                android:background="@color/gray" />
+            </androidx.cardview.widget.CardView>
 
             <Button
-                android:id="@+id/btn_reset_mesh"
+                android:id="@+id/btn_reset_settings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Reset Mesh"
+                android:text="Reset Settings"
                 android:theme="@style/WarnButton" />
 
         </LinearLayout>

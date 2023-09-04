@@ -1,26 +1,28 @@
 /********************************************************************************************************
- * @file     ble_ll_ota.c 
+ * @file	ble_ll_ota.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/ble/ble_common.h"
 #include "proj_lib/ble/trace.h"
 #include "proj_lib/pm.h"
@@ -34,6 +36,9 @@
 #if AIS_ENABLE
 #include "proj_lib/mesh_crypto/aes_cbc.h"
 #include "user_ali.h"
+#endif
+#if NMW_ENABLE
+#include "user_nmw.h"
 #endif
 
 _attribute_data_retention_ int ota_adr_index = -1;
@@ -470,6 +475,15 @@ void bls_ota_procTimeout(void)
 	if(blt_ota_start_tick && clock_time_exceed(blt_ota_start_tick , blt_ota_timeout_us)){  //OTA timeout
 		rf_link_slave_ota_finish_led_and_reboot(OTA_TIMEOUT);
 	}
+#if NMW_ENABLE
+	if(blt_ota_start_tick && nmw_ota_state.seg_timeout_tick && clock_time_exceed(nmw_ota_state.seg_timeout_tick, NMW_OTA_SEG_WAIT_MS*1000)){
+		nmw_ota_seg_report();
+	}
+	
+	if(nmw_ota_state.errno_pending){
+		nmw_ota_err_report(nmw_ota_state.errno);
+	}
+#endif
 }
 
 void blt_ota_finished_flag_set(u8 reset_flag)

@@ -1,3 +1,25 @@
+/********************************************************************************************************
+ * @file FUDistributor.java
+ *
+ * @brief for TLSR chips
+ *
+ * @author telink
+ * @date Sep. 30, 2017
+ *
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 package com.telink.ble.mesh.core.access.fu;
 
 import android.os.HandlerThread;
@@ -260,7 +282,60 @@ class FUDistributor implements BlobTransferCallback {
      * if all devices executed, then next step
      */
     // draft feature
-    private void nextAction() {}
+    private void nextAction() {
+
+        if (nodeIndex >= nodes.size()) {
+            // all nodes executed
+
+            log("current step complete: " + (step));
+            if (step == STEP_UPDATE_APPLY) {
+                onDistributeComplete(true, "update apply complete");
+                return;
+            }
+
+            if (step == STEP_UPDATE_STOP) {
+                onDistributeComplete(false, "update stopped");
+                return;
+            }
+
+            removeFailedDevices();
+
+            // check if has available nodes
+            if (nodes.size() != 0) {
+                nextStep();
+            } else {
+                onDistributeComplete(false, "all nodes failed when executing action");
+            }
+        } else {
+            int meshAddress = nodes.get(nodeIndex).meshAddress;
+            log(String.format("action executing: " + (step) + " -- %04X", meshAddress));
+            if (this.step == STEP_UPDATE_START) {
+                FirmwareUpdateStartMessage updateStartMessage = new FirmwareUpdateStartMessage(meshAddress, appKeyIndex);
+                updateStartMessage.metadata = metadata;
+                updateStartMessage.updateBLOBID = blobId;
+                updateStartMessage.updateTtl = UPDATE_TTL;
+                updateStartMessage.updateTimeoutBase = 0;
+                updateStartMessage.updateFirmwareImageIndex = 0;
+                onMeshMessagePrepared(updateStartMessage);
+            } else if (this.step == STEP_UPDATE_GET) {
+                FirmwareUpdateGetMessage getMessage = FirmwareUpdateGetMessage.getSimple(meshAddress, appKeyIndex);
+                onMeshMessagePrepared(getMessage);
+            } else if (this.step == STEP_UPDATE_APPLY) {
+                FirmwareUpdateApplyMessage applyMessage = FirmwareUpdateApplyMessage.getSimple(meshAddress, appKeyIndex);
+                onMeshMessagePrepared(applyMessage);
+            } else if (this.step == STEP_BLOB_TRANSFER) {
+                log("blob transfer start");
+                transfer.begin(isContinue);
+            } else if (this.step == STEP_UPDATE_CONTINUE) {
+                FirmwareUpdateGetMessage getMessage = FirmwareUpdateGetMessage.getSimple(connectedAddress, appKeyIndex);
+                onMeshMessagePrepared(getMessage);
+            } else if (this.step == STEP_UPDATE_STOP) {
+                FirmwareUpdateCancelMessage cancelMessage = FirmwareUpdateCancelMessage.getSimple(meshAddress, appKeyIndex);
+                onMeshMessagePrepared(cancelMessage);
+            }
+        }
+
+    }
 
     /**
      * filter out initiator messages

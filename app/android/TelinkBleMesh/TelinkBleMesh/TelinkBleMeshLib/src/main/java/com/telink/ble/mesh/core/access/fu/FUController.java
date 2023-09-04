@@ -1,3 +1,25 @@
+/********************************************************************************************************
+ * @file FUController.java
+ *
+ * @brief for TLSR chips
+ *
+ * @author telink
+ * @date Sep. 30, 2017
+ *
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 package com.telink.ble.mesh.core.access.fu;
 
 import android.os.Handler;
@@ -56,6 +78,11 @@ public class FUController implements FUActionHandler {
     private UpdatePolicy updatePolicy;
 
     private List<MeshUpdatingDevice> deviceList;
+
+    /**
+     * {@link FDReceiversGetMessage}
+     */
+    private int firstIndexInList = 0;
 
     /**
      * is update running
@@ -156,7 +183,7 @@ public class FUController implements FUActionHandler {
     }
 
     private void fetchProgressState() {
-        FDReceiversGetMessage getMessage = FDReceiversGetMessage.getSimple(distributorAddress, appKeyIndex, 0, 1);
+        FDReceiversGetMessage getMessage = FDReceiversGetMessage.getSimple(distributorAddress, appKeyIndex, firstIndexInList, 1);
         onMessagePrepared(getMessage);
     }
 
@@ -193,7 +220,13 @@ public class FUController implements FUActionHandler {
                     onFUStateUpdate(FUState.UPDATE_RECHECKING, "device may reboot complete");
                     distributorAssist.recheckFirmware(true);
                 } else if (phase == UpdatePhase.TRANSFER_ERROR.code) {
-                    onComplete(false, "phase error");
+                    onDeviceUpdate(deviceList.get(firstIndexInList), "device ReceiversList phase error");
+                    firstIndexInList++;
+                    if (firstIndexInList >= deviceList.size()) {
+                        onComplete(false, "all devices phase error");
+                    } else {
+                        startProgressCheckTask();
+                    }
                 } else {
                     MeshLogger.d("onProgressState : " + currentState);
 

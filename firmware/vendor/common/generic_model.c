@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     generic_model.c 
+ * @file	generic_model.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #ifndef WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -124,11 +127,7 @@ int mesh_tx_cmd_g_onoff_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_com
 	memcpy(par, &rsp, sizeof(mesh_cmd_g_onoff_st_t));
 	memcpy(par+3, &mesh_rcv_cmd.send_tick, 4);
 	par[7] = mesh_rcv_cmd.send_index;
-	len = 8;
-	if(mesh_rcv_cmd.ack_pkt_num>1){
-		len = 12*mesh_rcv_cmd.ack_pkt_num-6;
-	}
-	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&par, len, ele_adr, dst_adr, uuid, pub_md);
+	return mesh_tx_cmd_rsp(op_rsp, (u8 *)&par, mesh_rcv_cmd.ack_par_len, ele_adr, dst_adr, uuid, pub_md);
 #endif
     return mesh_tx_cmd_rsp(op_rsp, (u8 *)&rsp, len, ele_adr, dst_adr, uuid, pub_md);
 }
@@ -232,16 +231,17 @@ int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	int err = 0;
     mesh_cmd_g_onoff_set_t *p_set = (mesh_cmd_g_onoff_set_t *)par;
 #if MESH_RX_TEST
+	mesh_rcv_cmd.ack_par_len = 9;
 	if(par_len>sizeof(mesh_cmd_g_onoff_set_t)){
 		memcpy(&mesh_rcv_cmd.send_tick, par+4, 4);
 		mesh_rcv_cmd.send_index= par[8];
 		mesh_rcv_cmd.rcv_cnt++;
-		mesh_rcv_cmd.ack_pkt_num = par[3];
+		mesh_rcv_cmd.ack_par_len = par[3];
 		mesh_rcv_cmd.rcv_time[par[8]%TEST_CNT] = (clock_time() - mesh_rcv_cmd.send_tick)/32/1000;
 	}
-	else{
-		mesh_rcv_cmd.ack_pkt_num = 1;
-	}
+#endif
+#if LPN_CONTROL_EN // just for test 
+	p_set->transit_t = 0;
 #endif
 
     st_pub_list_t pub_list = {{0}};
@@ -1161,9 +1161,9 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 #if MD_SCHEDULE_EN
 	CMD_NO_STR(SCHD_GET, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_S, mesh_cmd_sig_scheduler_get, SCHD_STATUS),
 	CMD_NO_STR(SCHD_STATUS, 1, SIG_MD_SCHED_S, SIG_MD_SCHED_C, mesh_cmd_sig_scheduler_status, STATUS_NONE),
-	CMD_NO_STR(SCHD_ACTION_GET, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_SETUP_S, mesh_cmd_sig_schd_action_get, SCHD_ACTION_STATUS),
+	CMD_NO_STR(SCHD_ACTION_GET, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_S, mesh_cmd_sig_schd_action_get, SCHD_ACTION_STATUS),
 	CMD_NO_STR(SCHD_ACTION_SET, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_SETUP_S, mesh_cmd_sig_schd_action_set, SCHD_ACTION_STATUS),
-	CMD_NO_STR(SCHD_ACTION_SET_NOACK, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_S, mesh_cmd_sig_schd_action_set, STATUS_NONE),
+	CMD_NO_STR(SCHD_ACTION_SET_NOACK, 0, SIG_MD_SCHED_C, SIG_MD_SCHED_SETUP_S, mesh_cmd_sig_schd_action_set, STATUS_NONE),
 	CMD_NO_STR(SCHD_ACTION_STATUS, 1, SIG_MD_SCHED_S, SIG_MD_SCHED_C, mesh_cmd_sig_schd_action_status, STATUS_NONE),
 #endif
 #if MD_SENSOR_EN
@@ -1175,16 +1175,16 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 	CMD_NO_STR(SENSOR_COLUMN_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_column_status, STATUS_NONE),
 	CMD_NO_STR(SENSOR_SERIES_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_series_get, SENSOR_SERIES_STATUS),
 	CMD_NO_STR(SENSOR_SERIES_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_series_status, STATUS_NONE),
-	CMD_NO_STR(SENSOR_CANDECE_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_cadence_get, SENSOR_CANDECE_STATUS),
+	CMD_NO_STR(SENSOR_CANDECE_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_cadence_get, SENSOR_CANDECE_STATUS),
 	CMD_NO_STR(SENSOR_CANDECE_SET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_cadence_set, SENSOR_CANDECE_STATUS),
 	CMD_NO_STR(SENSOR_CANDECE_SET_NOACK, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_cadence_set, STATUS_NONE),
-	CMD_NO_STR(SENSOR_CANDECE_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_cadence_status, STATUS_NONE),
-	CMD_NO_STR(SENSOR_SETTINGS_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_settings_get, SENSOR_SETTINGS_STATUS),
-	CMD_NO_STR(SENSOR_SETTINGS_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_settings_status, STATUS_NONE),
-	CMD_NO_STR(SENSOR_SETTING_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_S, mesh_cmd_sig_sensor_setting_get, SENSOR_SETTING_STATUS),
+	CMD_NO_STR(SENSOR_CANDECE_STATUS, 1, SIG_MD_SENSOR_SETUP_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_cadence_status, STATUS_NONE),
+	CMD_NO_STR(SENSOR_SETTINGS_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_settings_get, SENSOR_SETTINGS_STATUS),
+	CMD_NO_STR(SENSOR_SETTINGS_STATUS, 1, SIG_MD_SENSOR_SETUP_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_settings_status, STATUS_NONE),
+	CMD_NO_STR(SENSOR_SETTING_GET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_setting_get, SENSOR_SETTING_STATUS),
 	CMD_NO_STR(SENSOR_SETTING_SET, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_setting_set, SENSOR_SETTING_STATUS),
 	CMD_NO_STR(SENSOR_SETTING_SET_NOACK, 0, SIG_MD_SENSOR_C, SIG_MD_SENSOR_SETUP_S, mesh_cmd_sig_sensor_setting_set, STATUS_NONE),
-	CMD_NO_STR(SENSOR_SETTING_STATUS, 1, SIG_MD_SENSOR_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_setting_status, STATUS_NONE),
+	CMD_NO_STR(SENSOR_SETTING_STATUS, 1, SIG_MD_SENSOR_SETUP_S, SIG_MD_SENSOR_C, mesh_cmd_sig_sensor_setting_status, STATUS_NONE),
 #endif
     // ----- mesh ota
 #if MD_MESH_OTA_EN
@@ -1200,6 +1200,7 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
     #if (DISTRIBUTOR_UPDATE_CLIENT_EN || DISTRIBUTOR_UPDATE_SERVER_EN)
     CMD_NO_STR(FW_DISTRIBUT_GET, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_get, FW_DISTRIBUT_STATUS),
     CMD_NO_STR(FW_DISTRIBUT_START, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_start, FW_DISTRIBUT_STATUS),
+    CMD_NO_STR(FW_DISTRIBUT_SUSPEND, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_suspend, FW_DISTRIBUT_STATUS),
     CMD_NO_STR(FW_DISTRIBUT_CANCEL, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_cancel, FW_DISTRIBUT_STATUS),
     CMD_NO_STR(FW_DISTRIBUT_APPLY, 0, SIG_MD_FW_DISTRIBUT_C, SIG_MD_FW_DISTRIBUT_S, mesh_cmd_sig_fw_distribut_apply, FW_DISTRIBUT_STATUS),
     CMD_NO_STR(FW_DISTRIBUT_STATUS, 1, SIG_MD_FW_DISTRIBUT_S, SIG_MD_FW_DISTRIBUT_C, mesh_cmd_sig_fw_distribut_status, STATUS_NONE),
@@ -1566,10 +1567,10 @@ const mesh_model_resource_t MeshSigModelResource[] = {
 
 #if MD_SOLI_PDU_RPL_EN
     #if MD_SERVER_EN
-	{SIG_MD_SOLI_PDU_RPL_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_soli_pdu_rpl.srv, 0)},
+	{SIG_MD_SOLI_PDU_RPL_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.soli_pdu.srv, 0)},
     #endif
 #if MD_CFG_CLIENT_EN
-	{SIG_MD_SOLI_PDU_RPL_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_soli_pdu_rpl.clnt, 0)},
+	{SIG_MD_SOLI_PDU_RPL_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.soli_pdu.clnt, 0)},
 #endif	
 #endif
 
@@ -1577,19 +1578,19 @@ const mesh_model_resource_t MeshSigModelResource[] = {
     {SIG_MD_HEALTH_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_health.clnt, 0)},  // change to multy element model later. 
 #if MD_DF_EN
     #if MD_SERVER_EN
-    {SIG_MD_DF_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.df_cfg.srv, 0)},
+    {SIG_MD_DF_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
     #endif
     #if MD_CLIENT_EN
-    {SIG_MD_DF_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.df_cfg.clnt, 0)},
+    {SIG_MD_DF_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
     #endif
 #endif
 
 #if MD_SBR_EN
     #if MD_SERVER_EN
-    {SIG_MD_BRIDGE_CFG_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.bridge_cfg.srv, 0)},
+    {SIG_MD_BRIDGE_CFG_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
     #endif
     #if MD_CLIENT_EN
-    {SIG_MD_BRIDGE_CFG_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_g_df_sbr_cfg.bridge_cfg.clnt, 0)},
+    {SIG_MD_BRIDGE_CFG_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
     #endif
 #endif
 
@@ -1610,19 +1611,19 @@ const mesh_model_resource_t MeshSigModelResource[] = {
 
 #if MD_REMOTE_PROV
     #if MD_SERVER_EN
-    {SIG_MD_REMOTE_PROV_SERVER, GET_ARRAR_MODEL_AND_COUNT(model_remote_prov.srv, &mesh_remote_prov_st_publish)},
+    {SIG_MD_REMOTE_PROV_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
     #endif
     #if MD_CLIENT_EN
-    {SIG_MD_REMOTE_PROV_CLIENT, GET_ARRAR_MODEL_AND_COUNT(model_remote_prov.client, 0)},
+    {SIG_MD_REMOTE_PROV_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
     #endif
 #endif
 
 #if MD_PRIVACY_BEA
     #if MD_SERVER_EN
-    {SIG_MD_PRIVATE_BEACON_SERVER, GET_ARRAR_MODEL_AND_COUNT(model_private_beacon.srv, 0)},
+    {SIG_MD_PRIVATE_BEACON_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
     #endif
     #if MD_CLIENT_EN
-    {SIG_MD_PRIVATE_BEACON_CLIENT, GET_ARRAR_MODEL_AND_COUNT(model_private_beacon.client, 0)},
+    {SIG_MD_PRIVATE_BEACON_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
     #endif
 #endif
 
@@ -1985,7 +1986,7 @@ void mesh_model_cb_pub_st_register()
             // member of 'com' always at the first place of p_source->p_model.
             model_common_t *p_com = (model_common_t *)((u8 *)p_source->p_model + p_source->size * i);
             p_com->cb_pub_st = p_source->cb_pub_st;
-            p_com->cb_tick_ms = clock_time_ms();
+            p_com->cb_tick_ms = p_com->cb_pub_st ? clock_time_ms() : 0;
             p_com->pub_trans_flag = 0;
             p_com->pub_2nd_state = 0;
         }
@@ -2002,7 +2003,7 @@ void mesh_model_cb_pub_st_register()
     	#if LPN_VENDOR_SENSOR_EN
 	MODEL_PUB_ST_CB_INIT(model_vd_light.srv, &cb_vd_lpn_sensor_st_publish);
     	#else
-			#if VENDOR_MD_NORMAL_EN
+			#if (VENDOR_MD_NORMAL_EN && (!LLSYNC_ENABLE))
     MODEL_PUB_ST_CB_INIT(model_vd_light.srv, &vd_light_onoff_st_publish);
 			#endif
 		#endif

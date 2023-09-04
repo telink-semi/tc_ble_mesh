@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     SigSegmentedAccessMessage.m
-*
-* @brief    for TLSR chips
-*
-* @author       Telink, 梁家誌
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigSegmentedAccessMessage.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     SigSegmentedAccessMessage.m
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/9/16
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import "SigSegmentedAccessMessage.h"
 #import "SigUpperTransportPdu.h"
@@ -57,7 +51,7 @@
         } else {
             _aid = 0;
         }
-        UInt8 tem1 = 0,tem2=0,tem3=0;
+        UInt16 tem1 = 0,tem2=0,tem3=0;
         memcpy(&tem1, dataByte+1, 1);
         memcpy(&tem2, dataByte+2, 1);
         memcpy(&tem3, dataByte+3, 1);
@@ -98,14 +92,10 @@
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
         
-        UInt16 unsegmentedMessageLowerTransportPDUMaxLength = SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
-        if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && pdu.destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-            unsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
-        }
-        int lowerBound = (int)(offset * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
+        int lowerBound = (int)(offset * pdu.segmentedMessageLowerTransportPDUMaxLength);
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * pdu.segmentedMessageLowerTransportPDUMaxLength);
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((unsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (unsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + (pdu.segmentedMessageLowerTransportPDUMaxLength - 1)) / pdu.segmentedMessageLowerTransportPDUMaxLength) - 1;
         self.upperTransportPdu = segment;
         self.userInitiated = pdu.userInitiated;
     }
@@ -132,14 +122,10 @@
         self.sequenceZero = (UInt16)(pdu.sequence & 0x1FFF);
         self.segmentOffset = offset;
         
-        UInt16 unsegmentedMessageLowerTransportPDUMaxLength = SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength;
-        if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && pdu.destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-            unsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
-        }
-        int lowerBound = (int)(offset * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
-        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * (unsegmentedMessageLowerTransportPDUMaxLength - 3));
+        int lowerBound = (int)(offset * pdu.segmentedMessageLowerTransportPDUMaxLength);
+        int upperBound = (int)MIN(pdu.transportPdu.length, (int)(offset + 1) * pdu.segmentedMessageLowerTransportPDUMaxLength);
         NSData *segment = [pdu.transportPdu subdataWithRange:NSMakeRange(lowerBound, upperBound-lowerBound)];
-        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + ((unsegmentedMessageLowerTransportPDUMaxLength - 3) - 1)) / (unsegmentedMessageLowerTransportPDUMaxLength - 3)) - 1;
+        self.lastSegmentNumber = (UInt8)((pdu.transportPdu.length + (pdu.segmentedMessageLowerTransportPDUMaxLength - 1)) / pdu.segmentedMessageLowerTransportPDUMaxLength) - 1;
         self.upperTransportPdu = segment;
     }
     return self;
@@ -165,7 +151,7 @@
 }
 
 - (NSString *)description {
-    return[NSString stringWithFormat:@"<%p> - SigSegmentedAccessMessage, aid:(0x%X) transportMicSize:(0x%X) sequence:(0x%X),sequenceZero:(0x%X), opCode:(0x%X)", self, _aid,_transportMicSize,(unsigned int)_sequence,self.sequenceZero,_opCode];
+    return[NSString stringWithFormat:@"<%p> - SigSegmentedAccessMessage, aid:(0x%X) szmic:(0x%X), seqZero:(0x%X), segO:(0x%X), segN:(0x%X), data:(0x%@)", self, _aid, _transportMicSize, self.sequenceZero, self.segmentOffset, self.lastSegmentNumber, [LibTools convertDataToHexStr:self.upperTransportPdu]];
 }
 
 @end

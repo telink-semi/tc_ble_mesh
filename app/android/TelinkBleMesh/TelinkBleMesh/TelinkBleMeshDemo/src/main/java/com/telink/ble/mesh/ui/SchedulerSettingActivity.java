@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -33,6 +34,10 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
@@ -41,7 +46,6 @@ import com.telink.ble.mesh.core.message.scheduler.SchedulerActionStatusMessage;
 import com.telink.ble.mesh.core.message.time.TimeSetMessage;
 import com.telink.ble.mesh.core.message.time.TimeStatusMessage;
 import com.telink.ble.mesh.demo.R;
-import com.telink.ble.mesh.entity.Scheduler;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
@@ -49,14 +53,12 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.UnitConvert;
+import com.telink.ble.mesh.model.db.Scheduler;
+import com.telink.ble.mesh.model.db.SchedulerRegister;
 import com.telink.ble.mesh.ui.adapter.BaseSelectableListAdapter;
 import com.telink.ble.mesh.ui.adapter.SelectableListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
-
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * set scheduler
@@ -73,6 +75,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
     private NodeInfo mDevice;
     private Scheduler scheduler;
     private byte index;
+    private boolean timeSetting = false;
 
     // January/February/March/April/May/June/July/August/September/October/November/December
     private SelectableListAdapter.SelectableBean[] monthList = {
@@ -141,7 +144,6 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         initView();
         fillSchedulerInfo();
 
-
         TelinkMeshApplication.getInstance().addEventListener(SchedulerActionStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(TimeStatusMessage.class.getName(), this);
     }
@@ -176,9 +178,10 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         TimeSetMessage timeSetMessage = TimeSetMessage.getSimple(eleAdr, meshInfo.getDefaultAppKeyIndex(),
                 time, offset, 1);
-
+        timeSetMessage.setAck(true);
         boolean re = MeshService.getInstance().sendMeshMessage(timeSetMessage);
         if (re) {
+            timeSetting = true;
             MeshLogger.d("setTime time: " + time + " zone " + offset);
         } else {
             MeshLogger.d("setTime fail");
@@ -399,11 +402,9 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
 
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         SchedulerActionSetMessage setMessage = SchedulerActionSetMessage.getSimple(eleAdr,
-                meshInfo.getDefaultAppKeyIndex(), scheduler, true, 1);
+                meshInfo.getDefaultAppKeyIndex(), scheduler.toBytes(), true, 1);
         MeshService.getInstance().sendMeshMessage(setMessage);
         toastMsg("scheduler setting sent");
-
-
     }
 
 
@@ -463,7 +464,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
             return;
         }
         byte index = scheduler.getIndex();
-        Scheduler.Register register = scheduler.getRegister();
+        SchedulerRegister register = scheduler.register.getTarget();
 
         long year = register.getYear();
         if (year == Scheduler.YEAR_ANY) {
@@ -576,23 +577,24 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         String eventType = event.getType();
         if (eventType.equals(TimeStatusMessage.class.getName())) {
             TimeStatusMessage timeStatusMessage = (TimeStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
-
             MeshLogger.d("time status: " + timeStatusMessage.getTaiSeconds());
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    MeshLogger.log("set time success");
+            int src = ((StatusNotificationEvent) event).getNotificationMessage().getSrc();
+            if (src == mDevice.meshAddress && timeSetting) {
+                timeSetting = false;
+                MeshLogger.log("set time success");
+                runOnUiThread(() -> {
                     toastMsg("set time success");
-                }
-            });
+                });
+            }
         } else if (eventType.equals(SchedulerActionStatusMessage.class.getName())) {
             StatusNotificationEvent notificationEvent = (StatusNotificationEvent) event;
             SchedulerActionStatusMessage schedulerActionStatusMessage = (SchedulerActionStatusMessage) notificationEvent.getNotificationMessage().getStatusMessage();
-            Scheduler remoteScheduler = schedulerActionStatusMessage.getScheduler();
-            if (this.scheduler.getIndex() == remoteScheduler.getIndex()) {
+            byte[] schedulerParams = schedulerActionStatusMessage.getSchedulerParams();
+            Scheduler remoteScheduler = Scheduler.fromBytes(schedulerParams);
+            if (remoteScheduler != null && this.scheduler.getIndex() == remoteScheduler.getIndex()) {
                 toastMsg("scheduler saved");
                 mDevice.saveScheduler(scheduler);
-                TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(this);
+                mDevice.save();
                 finish();
             }
 

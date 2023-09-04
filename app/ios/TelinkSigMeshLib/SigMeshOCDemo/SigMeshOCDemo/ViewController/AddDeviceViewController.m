@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/10/17
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  AddDeviceViewController.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/10/17.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "AddDeviceViewController.h"
 #import "AddDeviceItemCell.h"
@@ -78,15 +72,52 @@
             TeLogInfo(@"stop mesh success.");
             __block UInt16 currentProvisionAddress = provisionAddress;
             __block NSString *currentAddUUID = nil;
-            [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel unicastAddress:0 uuid:nil keyBindType:type.integerValue productID:0 cpsData:nil isAutoAddNextDevice:YES provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+            //旧接口，没有startConnect和startProvision。
+//            [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel unicastAddress:0 uuid:nil keyBindType:type.integerValue productID:0 cpsData:nil isAutoAddNextDevice:YES provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+//                if (identify && address != 0) {
+//                    currentAddUUID = identify;
+//                    currentProvisionAddress = address;
+//                    [weakSelf refreshUIOfProvisionSuccessWithUUID:identify address:address];
+//                    TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
+//                }
+//            } provisionFail:^(NSError * _Nonnull error) {
+//                [weakSelf refreshUIOfProvisionFailWithUUID:SigBearer.share.getCurrentPeripheral.identifier.UUIDString];
+//                TeLogInfo(@"addDevice provision fail error:%@",error);
+//            } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
+//                if (identify && address != 0) {
+//                    currentProvisionAddress = address;
+//                    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
+//                    if (node && node.isRemote) {
+//                        [node addDefaultPublicAddressToRemote];
+//                        [SigDataSource.share saveLocationData];
+//                    }
+//                    [weakSelf refreshUIOfKeyBindSuccessWithUUID:identify address:address];
+//                    TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
+//                }
+//            } keyBindFail:^(NSError * _Nonnull error) {
+//                [weakSelf refreshUIOfKeyBindFailWithUUID:currentAddUUID address:currentProvisionAddress];
+//                TeLogInfo(@"addDevice keybind fail error:%@",error);
+//            } finish:^{
+//                TeLogInfo(@"addDevice finish.");
+//                [SDKLibCommand startMeshConnectWithComplete:nil];
+//                dispatch_async(dispatch_get_main_queue(), ^{
+//                    [weakSelf addDeviceFinish];
+//                });
+//            }];
+            //v3.3.3.6及之后版本，新增startConnect和startProvision。
+            [SDKLibCommand startAddDeviceWithNextAddress:provisionAddress networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel unicastAddress:0 uuid:nil keyBindType:type.integerValue productID:0 cpsData:nil isAutoAddNextDevice:YES startConnect:^(NSString * _Nonnull identify, UInt16 address) {
+                [weakSelf refreshUIOfStartConnectWithUUID:identify address:address];
+            } startProvision:^(NSString * _Nonnull identify, UInt16 address) {
+                [weakSelf refreshUIOfStartProvisionWithUUID:identify address:address];
+            } provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                 if (identify && address != 0) {
                     currentAddUUID = identify;
                     currentProvisionAddress = address;
-                    [weakSelf updateDeviceProvisionSuccess:identify address:address];
+                    [weakSelf refreshUIOfProvisionSuccessWithUUID:identify address:address];
                     TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
                 }
-            } provisionFail:^(NSError * _Nonnull error) {
-                [weakSelf updateDeviceProvisionFail:SigBearer.share.getCurrentPeripheral.identifier.UUIDString];
+            } provisionFail:^(NSError * _Nullable error) {
+                [weakSelf refreshUIOfProvisionFailWithUUID:SigBearer.share.getCurrentPeripheral.identifier.UUIDString];
                 TeLogInfo(@"addDevice provision fail error:%@",error);
             } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
                 if (identify && address != 0) {
@@ -96,11 +127,11 @@
                         [node addDefaultPublicAddressToRemote];
                         [SigDataSource.share saveLocationData];
                     }
-                    [weakSelf updateDeviceKeyBind:currentAddUUID address:currentProvisionAddress isSuccess:YES];
+                    [weakSelf refreshUIOfKeyBindSuccessWithUUID:identify address:address];
                     TeLogInfo(@"addDevice_provision success : %@->0X%X",identify,address);
                 }
-            } keyBindFail:^(NSError * _Nonnull error) {
-                [weakSelf updateDeviceKeyBind:currentAddUUID address:currentProvisionAddress isSuccess:NO];
+            } keyBindFail:^(NSError * _Nullable error) {
+                [weakSelf refreshUIOfKeyBindFailWithUUID:currentAddUUID address:currentProvisionAddress];
                 TeLogInfo(@"addDevice keybind fail error:%@",error);
             } finish:^{
                 TeLogInfo(@"addDevice finish.");
@@ -115,67 +146,137 @@
     }];    
 }
 
-- (void)scrollowToBottom{
+- (void)scrollToBottom{
     NSInteger item = [self.collectionView numberOfItemsInSection:0] - 1;
     NSIndexPath *lastItemIndex = [NSIndexPath indexPathForItem:item inSection:0];
     [self.collectionView scrollToItemAtIndexPath:lastItemIndex atScrollPosition:UICollectionViewScrollPositionTop animated:NO];
 }
 
-- (void)updateDeviceProvisionSuccess:(NSString *)uuid address:(UInt16)address{
-    SigScanRspModel *scanModel = [SigDataSource.share getScanRspModelWithUUID:uuid];
-    AddDeviceModel *model = [[AddDeviceModel alloc] init];
-    if (scanModel == nil) {
-        scanModel = [[SigScanRspModel alloc] init];
-        scanModel.uuid = uuid;
-    }
-    model.scanRspModel = scanModel;
-    model.scanRspModel.address = address;
-    model.state = AddDeviceModelStateBinding;
-    if (![self.source containsObject:model]) {
-        [self.source addObject:model];
-    }
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.collectionView reloadData];
-        [self scrollowToBottom];
-    });
-}
-
-- (void)updateDeviceProvisionFail:(NSString *)uuid {
-    SigScanRspModel *scanModel = [SigDataSource.share getScanRspModelWithUUID:uuid];
-    AddDeviceModel *model = [[AddDeviceModel alloc] init];
-    if (scanModel == nil) {
-        scanModel = [[SigScanRspModel alloc] init];
-        scanModel.uuid = uuid;
-    }
-    scanModel.address = 0;
-    model.scanRspModel = scanModel;
-//    model.scanRspModel.address = address;
-    model.state = AddDeviceModelStateProvisionFail;
-    if (![self.source containsObject:model]) {
-        [self.source addObject:model];
-    }
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.collectionView reloadData];
-        [self scrollowToBottom];
-    });
-}
-
-- (void)updateDeviceKeyBind:(NSString *)uuid address:(UInt16)address isSuccess:(BOOL)isSuccess{
+- (AddDeviceModel *)getAddDeviceModelWithUUID:(NSString *)uuid {
+    AddDeviceModel *tem = nil;
     NSArray *source = [NSArray arrayWithArray:self.source];
     for (AddDeviceModel *model in source) {
-        if ([model.scanRspModel.uuid isEqualToString:uuid] || model.scanRspModel.address == address) {
-            if (isSuccess) {
-                model.state = AddDeviceModelStateBindSuccess;
-            } else {
-                model.state = AddDeviceModelStateBindFail;
-            }
+        if ([model.scanRspModel.uuid isEqualToString:uuid]) {
+            tem = model;
             break;
         }
     }
+    if (tem == nil) {
+        tem = [[AddDeviceModel alloc] init];
+        [self.source addObject:tem];
+    }
+    SigScanRspModel *scanModel = [SigDataSource.share getScanRspModelWithUUID:uuid];
+    if (scanModel == nil) {
+        scanModel = [[SigScanRspModel alloc] init];
+        scanModel.uuid = uuid;
+    }
+    tem.scanRspModel = scanModel;
+    return tem;
+}
+
+- (void)refreshUIOfStartConnectWithUUID:(NSString *)uuid address:(UInt16)address {
+    AddDeviceModel *model = [self getAddDeviceModelWithUUID:uuid];
+    model.scanRspModel.address = address;
+    model.state = AddDeviceModelStateConnecting;
+    [self refreshCollectionView];
+}
+
+- (void)refreshUIOfStartProvisionWithUUID:(NSString *)uuid address:(UInt16)address {
+    AddDeviceModel *model = [self getAddDeviceModelWithUUID:uuid];
+    model.scanRspModel.address = address;
+    model.state = AddDeviceModelStateProvisioning;
+    [self refreshCollectionView];
+}
+
+- (void)refreshUIOfProvisionSuccessWithUUID:(NSString *)uuid address:(UInt16)address {
+    AddDeviceModel *model = [self getAddDeviceModelWithUUID:uuid];
+    model.scanRspModel.address = address;
+    model.state = AddDeviceModelStateBinding;
+    [self refreshCollectionView];
+}
+
+- (void)refreshUIOfProvisionFailWithUUID:(NSString *)uuid {
+    AddDeviceModel *model = [self getAddDeviceModelWithUUID:uuid];
+    model.state = AddDeviceModelStateProvisionFail;
+    [self refreshCollectionView];
+}
+
+- (void)refreshUIOfKeyBindSuccessWithUUID:(NSString *)uuid address:(UInt16)address {
+    AddDeviceModel *model = [self getAddDeviceModelWithUUID:uuid];
+    model.scanRspModel.address = address;
+    model.state = AddDeviceModelStateBindSuccess;
+    [self refreshCollectionView];
+}
+
+- (void)refreshUIOfKeyBindFailWithUUID:(NSString *)uuid address:(UInt16)address {
+    AddDeviceModel *model = [self getAddDeviceModelWithUUID:uuid];
+    model.scanRspModel.address = address;
+    model.state = AddDeviceModelStateBindFail;
+    [self refreshCollectionView];
+}
+
+- (void)refreshCollectionView {
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];
+        [self scrollToBottom];
     });
 }
+
+//- (void)updateDeviceProvisionSuccess:(NSString *)uuid address:(UInt16)address{
+//    SigScanRspModel *scanModel = [SigDataSource.share getScanRspModelWithUUID:uuid];
+//    AddDeviceModel *model = [[AddDeviceModel alloc] init];
+//    if (scanModel == nil) {
+//        scanModel = [[SigScanRspModel alloc] init];
+//        scanModel.uuid = uuid;
+//    }
+//    model.scanRspModel = scanModel;
+//    model.scanRspModel.address = address;
+//    model.state = AddDeviceModelStateBinding;
+//    if (![self.source containsObject:model]) {
+//        [self.source addObject:model];
+//    }
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//        [self.collectionView reloadData];
+//        [self scrollToBottom];
+//    });
+//}
+//
+//- (void)updateDeviceProvisionFail:(NSString *)uuid {
+//    SigScanRspModel *scanModel = [SigDataSource.share getScanRspModelWithUUID:uuid];
+//    AddDeviceModel *model = [[AddDeviceModel alloc] init];
+//    if (scanModel == nil) {
+//        scanModel = [[SigScanRspModel alloc] init];
+//        scanModel.uuid = uuid;
+//    }
+//    scanModel.address = 0;
+//    model.scanRspModel = scanModel;
+////    model.scanRspModel.address = address;
+//    model.state = AddDeviceModelStateProvisionFail;
+//    if (![self.source containsObject:model]) {
+//        [self.source addObject:model];
+//    }
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//        [self.collectionView reloadData];
+//        [self scrollToBottom];
+//    });
+//}
+//
+//- (void)updateDeviceKeyBind:(NSString *)uuid address:(UInt16)address isSuccess:(BOOL)isSuccess{
+//    NSArray *source = [NSArray arrayWithArray:self.source];
+//    for (AddDeviceModel *model in source) {
+//        if ([model.scanRspModel.uuid isEqualToString:uuid] || model.scanRspModel.address == address) {
+//            if (isSuccess) {
+//                model.state = AddDeviceModelStateBindSuccess;
+//            } else {
+//                model.state = AddDeviceModelStateBindFail;
+//            }
+//            break;
+//        }
+//    }
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//        [self.collectionView reloadData];
+//    });
+//}
 
 - (void)addDeviceFinish{
     self.refreshItem.enabled = YES;

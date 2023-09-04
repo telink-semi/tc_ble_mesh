@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/19
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigProvisioningManager.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/19.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import "SigProvisioningManager.h"
 #import "SigBluetooth.h"
@@ -64,7 +58,7 @@ typedef enum : UInt16 {
 @property (nonatomic, assign) UInt16 unicastAddress;
 @property (nonatomic, strong) NSData *staticOobData;
 @property (nonatomic, strong) SigScanRspModel *unprovisionedDevice;
-@property (nonatomic,copy) addDevice_prvisionSuccessCallBack provisionSuccessBlock;
+@property (nonatomic,copy) addDevice_provisionSuccessCallBack provisionSuccessBlock;
 @property (nonatomic,copy) ErrorBlock failBlock;
 @property (nonatomic, assign) BOOL isProvisionning;
 @property (nonatomic, assign) UInt16 totalLength;
@@ -75,13 +69,16 @@ typedef enum : UInt16 {
 
 @property (nonatomic,strong) NSData *devicePublicKey;//certificate-base获取到的devicePublicKey
 
+//缓存旧的block，防止添加设备后不断开的情况下，SigBearer下的断开block不运行。
+@property (nonatomic,copy) bleDisconnectCallback oldBluetoothDisconnectCallback;
+
 @end
 
 @implementation SigProvisioningManager
 
 - (instancetype)init{
     if (self = [super init]) {
-        _state = ProvisionigState_ready;
+        _state = ProvisioningState_ready;
         _isProvisionning = NO;
         _attentionDuration = 0;
     }
@@ -93,12 +90,12 @@ typedef enum : UInt16 {
 - (void)identifyWithAttentionDuration:(UInt8)attentionDuration {
     
     // Has the provisioning been restarted?
-    if (self.state == ProvisionigState_fail) {
+    if (self.state == ProvisioningState_fail) {
         [self reset];
     }
     
     // Is the Provisioner Manager in the right state?
-    if (self.state != ProvisionigState_ready) {
+    if (self.state != ProvisioningState_ready) {
         TeLogError(@"current node isn't in ready.");
         return;
     }
@@ -106,16 +103,17 @@ typedef enum : UInt16 {
     // Initialize provisioning data.
     self.provisioningData = [[SigProvisioningData alloc] init];
 
-    self.state = ProvisionigState_requestingCapabilities;
+    self.state = ProvisioningState_requestingCapabilities;
     
     SigProvisioningInvitePdu *pdu = [[SigProvisioningInvitePdu alloc] initWithAttentionDuration:attentionDuration];
     self.provisioningData.provisioningInvitePDUValue = [pdu.pduData subdataWithRange:NSMakeRange(1, pdu.pduData.length-1)];
     [self sendPdu:pdu];
 }
 
-- (void)setState:(ProvisionigState)state{
+- (void)setState:(ProvisioningState)state{
     _state = state;
-    if (state == ProvisionigState_fail) {
+    if (state == ProvisioningState_fail) {
+        SigBluetooth.share.bluetoothDisconnectCallback = self.oldBluetoothDisconnectCallback;
         [self reset];
         __weak typeof(self) weakSelf = self;
         [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
@@ -132,7 +130,7 @@ typedef enum : UInt16 {
         TeLogError(@"Capabilities is error.");
         return NO;
     }
-    return self.provisioningCapabilities.algorithms.fipsP256EllipticCurve == 1;
+    return self.provisioningCapabilities.algorithms.fipsP256EllipticCurve == 1 || self.provisioningCapabilities.algorithms.fipsP256EllipticCurve_HMAC_SHA256 == 1;
 }
 
 - (void)provisionSuccess{
@@ -172,10 +170,11 @@ typedef enum : UInt16 {
     model.compositionData = compositionData;
     
     [SigMeshLib.share.dataSource addAndSaveNodeToMeshNetworkWithDeviceModel:model];
+    SigBluetooth.share.bluetoothDisconnectCallback = self.oldBluetoothDisconnectCallback;
 }
 
 /// This method should be called when the OOB value has been received and Auth Value has been calculated. It computes and sends the Provisioner Confirmation to the device.
-/// @param data The 16 byte long Auth Value.
+/// @param data The 16/32 byte long Auth Value.
 - (void)authValueReceivedData:(NSData *)data {
     SigAuthenticationModel *auth = nil;
     self.authenticationModel = auth;
@@ -199,7 +198,7 @@ typedef enum : UInt16 {
     memset(&_provisioningCapabilities, 0, sizeof(_provisioningCapabilities));
     SigProvisioningData *tem = nil;
     self.provisioningData = tem;
-    self.state = ProvisionigState_ready;
+    self.state = ProvisioningState_ready;
     [SigBearer.share setBearerProvisioned:YES];
 }
 
@@ -212,7 +211,7 @@ typedef enum : UInt16 {
     return shareManager;
 }
 
-- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
     [SigECCEncryptHelper.share eccInit];
     
@@ -239,6 +238,7 @@ typedef enum : UInt16 {
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
     TeLogInfo(@"start provision.");
+    self.oldBluetoothDisconnectCallback = SigBluetooth.share.bluetoothDisconnectCallback;
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
         [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
@@ -257,7 +257,7 @@ typedef enum : UInt16 {
     }];
 }
 
-- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOobData:(NSData *)oobData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOobData:(NSData *)oobData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
     [SigECCEncryptHelper.share eccInit];
 
@@ -284,6 +284,7 @@ typedef enum : UInt16 {
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
     TeLogInfo(@"start provision.");
+    self.oldBluetoothDisconnectCallback = SigBluetooth.share.bluetoothDisconnectCallback;
     [SigBluetooth.share setBluetoothDisconnectCallback:^(CBPeripheral * _Nonnull peripheral, NSError * _Nonnull error) {
         [SigMeshLib.share cleanAllCommandsAndRetry];
         if ([peripheral.identifier.UUIDString isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
@@ -308,20 +309,20 @@ typedef enum : UInt16 {
 /// @param unicastAddress address of new device.
 /// @param networkKey networkKey
 /// @param netkeyIndex netkeyIndex
-/// @param provisionType ProvisionTpye_NoOOB means oob data is 16 bytes zero data, ProvisionTpye_StaticOOB means oob data is get from HTTP API.
-/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionTpye_StaticOOB.
+/// @param provisionType ProvisionType_NoOOB means oob data is 16 bytes zero data, ProvisionType_StaticOOB means oob data is get from HTTP API.
+/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(NSData * _Nullable)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+- (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(NSData * _Nullable)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
     [SigECCEncryptHelper.share eccInit];
 
-    if (provisionType == ProvisionTpye_NoOOB || provisionType == ProvisionTpye_StaticOOB) {
+    if (provisionType == ProvisionType_NoOOB || provisionType == ProvisionType_StaticOOB) {
         if (peripheral.state == CBPeripheralStateConnected) {
-            if (provisionType == ProvisionTpye_NoOOB) {
+            if (provisionType == ProvisionType_NoOOB) {
                 TeLogVerbose(@"start noOob provision.");
                 [self provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex provisionSuccess:provisionSuccess fail:fail];
-            } else if (provisionType == ProvisionTpye_StaticOOB) {
+            } else if (provisionType == ProvisionType_StaticOOB) {
                 TeLogVerbose(@"start staticOob provision.");
                 [self provisionWithUnicastAddress:unicastAddress networkKey:networkKey netkeyIndex:netkeyIndex staticOobData:staticOOBData provisionSuccess:provisionSuccess fail:fail];
             }
@@ -350,11 +351,11 @@ typedef enum : UInt16 {
 /// @param unicastAddress address of new device.
 /// @param networkKey networkKey
 /// @param netkeyIndex netkeyIndex
-/// @param provisionType ProvisionTpye_NoOOB means oob data is 16 bytes zero data, ProvisionTpye_StaticOOB means oob data is get from HTTP API.
-/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionTpye_StaticOOB.
+/// @param provisionType ProvisionType_NoOOB means oob data is 16 bytes zero data, ProvisionType_StaticOOB means oob data is get from HTTP API.
+/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
+- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
     //since v3.3.3 每次provision前都初始化一次ECC算法的公私钥。
     [SigECCEncryptHelper.share eccInit];
 
@@ -385,7 +386,7 @@ typedef enum : UInt16 {
     self.isProvisionning = YES;
     TeLogInfo(@"start certificateBasedProvision.");
     
-    if (provisionType == ProvisionTpye_NoOOB || provisionType == ProvisionTpye_StaticOOB) {
+    if (provisionType == ProvisionType_NoOOB || provisionType == ProvisionType_StaticOOB) {
         if (peripheral.state == CBPeripheralStateConnected) {
             TeLogVerbose(@"start RecordsGet.");
             [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
@@ -425,7 +426,7 @@ typedef enum : UInt16 {
 - (void)sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
     TeLogInfo(@"\n\n==========provision:step2(noOob)\n\n");
     // Is the Provisioner Manager in the right state?
-    if (self.state != ProvisionigState_capabilitiesReceived) {
+    if (self.state != ProvisioningState_capabilitiesReceived) {
         TeLogError(@"current state is wrong.");
         return;
     }
@@ -444,15 +445,16 @@ typedef enum : UInt16 {
         
     self.provisionResponseBlock = block;
 
+    self.provisioningData.algorithm = [self getCurrentProvisionAlgorithm];
     [self.provisioningData generateProvisionerRandomAndProvisionerPublicKey];
     
     // Send Provisioning Start request.
-    self.state = ProvisionigState_provisioning;
+    self.state = ProvisioningState_provisioning;
     [self.provisioningData prepareWithNetwork:SigMeshLib.share.dataSource networkKey:self.networkKey unicastAddress:self.unicastAddress];
     PublicKey *publicKey = [[PublicKey alloc] initWithPublicKeyType:self.provisioningCapabilities.publicKeyType];
     AuthenticationMethod authenticationMethod = AuthenticationMethod_noOob;
 
-    SigProvisioningStartPdu *startPdu = [[SigProvisioningStartPdu alloc] initWithAlgorithm:Algorithm_fipsP256EllipticCurve publicKeyType:publicKey.publicKeyType authenticationMethod:authenticationMethod authenticationAction:0 authenticationSize:0];
+    SigProvisioningStartPdu *startPdu = [[SigProvisioningStartPdu alloc] initWithAlgorithm:[self getCurrentProvisionAlgorithm] publicKeyType:publicKey.publicKeyType authenticationMethod:authenticationMethod authenticationAction:0 authenticationSize:0];
     self.provisioningData.provisioningStartPDUValue = [startPdu.pduData subdataWithRange:NSMakeRange(1, startPdu.pduData.length-1)];
     [self sendPdu:startPdu];
     self.authenticationMethod = authenticationMethod;
@@ -474,7 +476,7 @@ typedef enum : UInt16 {
 - (void)sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:(NSData *)oobData timeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
     TeLogInfo(@"\n\n==========provision:step2(staticOob)\n\n");
     // Is the Provisioner Manager in the right state?
-    if (self.state != ProvisionigState_capabilitiesReceived) {
+    if (self.state != ProvisioningState_capabilitiesReceived) {
         TeLogError(@"current state is wrong.");
         return;
     }
@@ -493,16 +495,17 @@ typedef enum : UInt16 {
     
     self.provisionResponseBlock = block;
 
+    self.provisioningData.algorithm = [self getCurrentProvisionAlgorithm];
     [self.provisioningData generateProvisionerRandomAndProvisionerPublicKey];
     [self.provisioningData provisionerDidObtainAuthValue:oobData];
     
     // Send Provisioning Start request.
-    self.state = ProvisionigState_provisioning;
+    self.state = ProvisioningState_provisioning;
     [self.provisioningData prepareWithNetwork:SigMeshLib.share.dataSource networkKey:self.networkKey unicastAddress:self.unicastAddress];
     PublicKey *publicKey = [[PublicKey alloc] initWithPublicKeyType:self.provisioningCapabilities.publicKeyType];
     AuthenticationMethod authenticationMethod = AuthenticationMethod_staticOob;
 
-    SigProvisioningStartPdu *startPdu = [[SigProvisioningStartPdu alloc] initWithAlgorithm:Algorithm_fipsP256EllipticCurve publicKeyType:publicKey.publicKeyType authenticationMethod:authenticationMethod authenticationAction:0 authenticationSize:0];
+    SigProvisioningStartPdu *startPdu = [[SigProvisioningStartPdu alloc] initWithAlgorithm:[self getCurrentProvisionAlgorithm] publicKeyType:publicKey.publicKeyType authenticationMethod:authenticationMethod authenticationAction:0 authenticationSize:0];
     self.provisioningData.provisioningStartPDUValue = [startPdu.pduData subdataWithRange:NSMakeRange(1, startPdu.pduData.length-1)];
     [self sendPdu:startPdu];
     self.authenticationMethod = authenticationMethod;
@@ -531,9 +534,13 @@ typedef enum : UInt16 {
         authValue = self.staticOobData;
     } else {
         //当前设置为no oob provision
-        UInt8 value[16] = {};
-        memset(&value, 0, 16);
-        authValue = [NSData dataWithBytes:&value length:16];
+        UInt8 value[32] = {};
+        memset(&value, 0, 32);
+        if ([self getCurrentProvisionAlgorithm] == Algorithm_fipsP256EllipticCurve) {
+            authValue = [NSData dataWithBytes:&value length:16];
+        } else if ([self getCurrentProvisionAlgorithm] == Algorithm_fipsP256EllipticCurve_HMAC_SHA256) {
+            authValue = [NSData dataWithBytes:&value length:32];
+        }
     }
     [self authValueReceivedData:authValue];
     
@@ -583,9 +590,9 @@ typedef enum : UInt16 {
         TeLogInfo(@"%@",capabilitiesPdu.getCapabilitiesString);
         self.provisioningCapabilities = capabilitiesPdu;
         self.provisioningData.provisioningCapabilitiesPDUValue = [capabilitiesPdu.pduData subdataWithRange:NSMakeRange(1, capabilitiesPdu.pduData.length-1)];
-        self.state = ProvisionigState_capabilitiesReceived;
+        self.state = ProvisioningState_capabilitiesReceived;
         if (self.unicastAddress == 0) {
-            self.state = ProvisionigState_fail;
+            self.state = ProvisioningState_fail;
         }else{
             __weak typeof(self) weakSelf = self;
             if (self.provisioningCapabilities.staticOobType.staticOobInformationAvailable == 1) {
@@ -596,7 +603,7 @@ typedef enum : UInt16 {
                         [weakSelf sentStartProvisionPduAndPublicKeyPduWithResponse:response];
                     }];
                 } else {
-                    if (SigMeshLib.share.dataSource.addStaticOOBDevcieByNoOOBEnable) {
+                    if (SigMeshLib.share.dataSource.addStaticOOBDeviceByNoOOBEnable) {
                         //SDK当前设置了兼容模式（即staticOOB设备可以通过noOOB provision的方式进行添加）
                         TeLogVerbose(@"static OOB device,do no OOB provision");
                         [self sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:kStartProvisionAndPublicKeyTimeout callback:^(SigProvisioningPdu * _Nullable response) {
@@ -606,7 +613,7 @@ typedef enum : UInt16 {
                         //SDK当前未设置兼容模式（即staticOOB设备必须通过staticOOB provision的方式进行添加）
                         //设备不支持则直接provision fail
                         TeLogError(@"SDK not find static OOB data, not support static OOB.");
-                        self.state = ProvisionigState_fail;
+                        self.state = ProvisioningState_fail;
                     }
                 }
             } else {
@@ -618,7 +625,7 @@ typedef enum : UInt16 {
             }
         }
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
-        self.state = ProvisionigState_fail;
+        self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TeLogDebug(@"getCapabilities error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
@@ -653,10 +660,10 @@ typedef enum : UInt16 {
             }];
         } else {
             TeLogDebug(@"calculate SharedSecret fail.");
-            self.state = ProvisionigState_fail;
+            self.state = ProvisioningState_fail;
         }
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
-        self.state = ProvisionigState_fail;
+        self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TeLogDebug(@"sentStartProvisionPduAndPublicKeyPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
@@ -684,7 +691,7 @@ typedef enum : UInt16 {
         [self.provisioningData provisionerDidObtainWithDeviceConfirmation:confirmationPdu.confirmation];
         if ([[self.provisioningData provisionerConfirmation] isEqualToData:confirmationPdu.confirmation]) {
             TeLogDebug(@"Confirmation of device is equal to confirmation of provisioner!");
-            self.state = ProvisionigState_fail;
+            self.state = ProvisioningState_fail;
             return;
         }
         __weak typeof(self) weakSelf = self;
@@ -695,7 +702,7 @@ typedef enum : UInt16 {
         dispatch_async(dispatch_get_main_queue(), ^{
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentProvisionConfirmationPduTimeout) object:nil];
         });
-        self.state = ProvisionigState_fail;
+        self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TeLogDebug(@"sentProvisionConfirmationPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
@@ -723,12 +730,12 @@ typedef enum : UInt16 {
         [self.provisioningData provisionerDidObtainWithDeviceRandom:randomPdu.random];
         if ([self.provisioningData.provisionerRandom isEqualToData:randomPdu.random]) {
             TeLogDebug(@"Random of device is equal to random of provisioner!");
-            self.state = ProvisionigState_fail;
+            self.state = ProvisioningState_fail;
             return;
         }
         if (![self.provisioningData validateConfirmation]) {
             TeLogDebug(@"validate Confirmation fail");
-            self.state = ProvisionigState_fail;
+            self.state = ProvisioningState_fail;
             return;
         }
         __weak typeof(self) weakSelf = self;
@@ -736,7 +743,7 @@ typedef enum : UInt16 {
             [weakSelf sentProvisionEncryptedDataWithMicPduWithResponse:response];
         }];
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
-        self.state = ProvisionigState_fail;
+        self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TeLogDebug(@"sentProvisionRandomPdu error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
@@ -767,7 +774,7 @@ typedef enum : UInt16 {
             self.provisionSuccessBlock(self.unprovisionedDevice.uuid,self.unicastAddress);
         }
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
-        self.state = ProvisionigState_fail;
+        self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TeLogDebug(@"sentProvisionEncryptedDataWithMic error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
@@ -802,7 +809,7 @@ typedef enum : UInt16 {
     });
     
     SigProvisioningRecordRequestPdu *pdu = [[SigProvisioningRecordRequestPdu alloc] initWithRecordID:recordID fragmentOffset:fragmentOffset fragmentMaximumSize:fragmentMaximumSize];
-    self.state = ProvisionigState_recordRequest;
+    self.state = ProvisioningState_recordRequest;
     [self sendPdu:pdu];
 }
 
@@ -812,13 +819,13 @@ typedef enum : UInt16 {
     });
     if (response.provisionType == SigProvisioningPduType_recordResponse) {
         SigProvisioningRecordResponsePdu *recordResponsePdu = (SigProvisioningRecordResponsePdu *)response;
-        self.state = ProvisionigState_recordResponse;
+        self.state = ProvisioningState_recordResponse;
         self.totalLength = recordResponsePdu.totalLength;
         NSMutableData *mData = [NSMutableData dataWithData:self.certificateDict[@(self.currentRecordID)]];
         [mData appendData:recordResponsePdu.data];
         self.certificateDict[@(self.currentRecordID)] = mData;
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
-        self.state = ProvisionigState_fail;
+        self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TeLogDebug(@"sentProvisioningRecordRequest error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
@@ -848,7 +855,7 @@ typedef enum : UInt16 {
     });
     
     SigProvisioningRecordsGetPdu *pdu = [[SigProvisioningRecordsGetPdu alloc] init];
-    self.state = ProvisionigState_recordsGet;
+    self.state = ProvisioningState_recordsGet;
     [self sendPdu:pdu];
 }
 
@@ -858,18 +865,18 @@ typedef enum : UInt16 {
     });
     if (response.provisionType == SigProvisioningPduType_recordsList) {
         SigProvisioningRecordsListPdu *recordsListPdu = (SigProvisioningRecordsListPdu *)response;
-        self.state = ProvisionigState_recordsLsit;
+        self.state = ProvisioningState_recordsList;
         TeLogInfo(@"response=%@,data=%@,recordsList=%@",response,recordsListPdu.pduData,recordsListPdu.recordsList);
         if ([recordsListPdu.recordsList containsObject:@(SigProvisioningRecordID_DeviceCertificate)]) {
             //5.4.2.6.3 Provisioning records,recordID=1是Device Certificate的数据。
             self.recordsListPdu = recordsListPdu;
             [self getCertificate];
         } else {
-            self.state = ProvisionigState_fail;
+            self.state = ProvisioningState_fail;
             TeLogDebug(@"sentProvisioningRecordsGet error = %@",@"Certificate-based device hasn`t recordID=1.");
         }
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
-        self.state = ProvisionigState_fail;
+        self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
         TeLogDebug(@"sentProvisioningRecordsGet error = %lu",(unsigned long)failedPdu.errorCode);
     }else{
@@ -891,10 +898,10 @@ typedef enum : UInt16 {
     self.certificateDict = [NSMutableDictionary dictionary];
     
     __weak typeof(self) weakSelf = self;
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
-        NSLog(@"oprationQueue");
+        NSLog(@"operationQueue");
         NSArray *list = [NSArray arrayWithArray:weakSelf.recordsListPdu.recordsList];
         for (NSNumber *recordNumber in list) {
             UInt16 recordID = (UInt16)[recordNumber intValue];
@@ -923,7 +930,7 @@ typedef enum : UInt16 {
             BOOL result = [OpenSSLHelper.share checkUserCertificates:weakSelf.certificateDict.allValues withRootCertificate:root];
             if (result == NO) {
                 TeLogDebug(@"=====>根证书验证失败,check certificate fail.");
-                weakSelf.state = ProvisionigState_fail;
+                weakSelf.state = ProvisioningState_fail;
                 return;
             }
         }
@@ -936,13 +943,13 @@ typedef enum : UInt16 {
             }
             TeLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@,staticOOB=%@",[LibTools convertDataToHexStr:weakSelf.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)]],[LibTools convertDataToHexStr:publicKey],[LibTools convertDataToHexStr:weakSelf.staticOobData])
             weakSelf.devicePublicKey = publicKey;
-            weakSelf.state = ProvisionigState_ready;
+            weakSelf.state = ProvisioningState_ready;
             [weakSelf getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                 [weakSelf getCapabilitiesResultWithResponse:response];
             }];
         } else {
             TeLogDebug(@"=====>证书验证失败,check certificate fail.");
-            weakSelf.state = ProvisionigState_fail;
+            weakSelf.state = ProvisioningState_fail;
         }
     }];
 }
@@ -961,6 +968,25 @@ typedef enum : UInt16 {
     //Most provide 2 seconds to getDeviceCertificate
     dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 2.0));
     return getSuccess;
+}
+
+/// 当SDK不支持EPA功能时，默认都使用SigFipsP256EllipticCurve_CMAC_AES128。
+- (Algorithm)getCurrentProvisionAlgorithm {
+    Algorithm algorithm = Algorithm_fipsP256EllipticCurve;
+#if SUPPORTEPA
+    if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_CMAC_AES128) {
+        algorithm = Algorithm_fipsP256EllipticCurve;
+    } else if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_HMAC_SHA256) {
+        algorithm = Algorithm_fipsP256EllipticCurve_HMAC_SHA256;
+    } else if (SigDataSource.share.fipsP256EllipticCurve == SigFipsP256EllipticCurve_auto) {
+        if (self.provisioningCapabilities.algorithms.fipsP256EllipticCurve_HMAC_SHA256 == 1) {
+            algorithm = Algorithm_fipsP256EllipticCurve_HMAC_SHA256;
+        } else if (self.provisioningCapabilities.algorithms.fipsP256EllipticCurve == 1) {
+            algorithm = Algorithm_fipsP256EllipticCurve;
+        }
+    }
+#endif
+    return algorithm;
 }
 
 @end

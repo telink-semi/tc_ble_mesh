@@ -1,19 +1,35 @@
+/********************************************************************************************************
+ * @file CertCacheService.java
+ *
+ * @brief for TLSR chips
+ *
+ * @author telink
+ * @date Sep. 30, 2017
+ *
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 package com.telink.ble.mesh.model;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
-import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.util.FileSystem;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +48,10 @@ public class CertCacheService {
 
     private static final CertCacheService service = new CertCacheService();
 
-    List<byte[]> certs = new ArrayList<>();
+    private List<byte[]> certs = new ArrayList<>();
 
     // selected root cert index
-    int rootIndex = -1;
+    private int rootIndex = -1;
 
     private CertCacheService() {
     }
@@ -50,12 +66,9 @@ public class CertCacheService {
     public void load(Context context) {
         File dir = getCertDir(context);
         if (!dir.exists()) return;
-        String[] targets = dir.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                MeshLogger.d("file in cert cache dir: " + name);
-                return name.startsWith(CERT_CACHE_PREFIX);
-            }
+        String[] targets = dir.list((dir1, name) -> {
+            MeshLogger.d("file in cert cache dir: " + name);
+            return name.startsWith(CERT_CACHE_PREFIX);
         });
         if (targets == null || targets.length == 0) {
             return;

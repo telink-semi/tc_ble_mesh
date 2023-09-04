@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2018/7/31
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  HomeViewController.m
-//  SigMeshOCDemo
-//
-//  Created by 梁家誌 on 2018/7/31.
-//  Copyright © 2018年 Telink. All rights reserved.
-//
 
 #import "HomeViewController.h"
 #import "LogViewController.h"
@@ -64,12 +58,52 @@
     [DemoCommand switchOnOffWithIsOn:sender.tag == 100 address:kMeshAddress_allNodes responseMaxCount:tem ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         [weakSelf delayReloadCollectionView];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        
+
     }];
 }
 
 #pragma mark add node entrance
 - (IBAction)addNewDevice:(UIBarButtonItem *)sender {
+    //v3.3.3.6及之后版本，初次分享过来，没有ivIndex时，需要连接mesh成功或者用户手动输入ivIndex。
+    if (!SigDataSource.share.existLocationIvIndexAndLocationSequenceNumber) {
+        __weak typeof(self) weakSelf = self;
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"connect to the current network to get IV index before add nodes or input IV index in input box？" preferredStyle:UIAlertControllerStyleAlert];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Input IV index" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            TeLogDebug(@"点击输入ivIndex");
+            UIAlertController *inputAlertController = [UIAlertController alertControllerWithTitle:@"Hits" message:@"Please input IV index in input box" preferredStyle:UIAlertControllerStyleAlert];
+            [inputAlertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+                textField.placeholder = @"Please input IV index in input box";
+                textField.text = @"0";
+            }];
+            [inputAlertController addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                TeLogDebug(@"输入ivIndex完成");
+                UITextField *ivIndex = inputAlertController.textFields.firstObject;
+                UInt32 ivIndexUInt32 = [LibTools uint32From16String:ivIndex.text];
+                [SigDataSource.share setIvIndexUInt32:ivIndexUInt32];
+                [SigDataSource.share setSequenceNumberUInt32:0];
+                [SigDataSource.share saveCurrentIvIndex:ivIndexUInt32 sequenceNumber:0];
+                TeLogDebug(@"输入ivIndex=%d",ivIndexUInt32);
+                UIAlertController *pushAlertController = [UIAlertController alertControllerWithTitle:@"Hits" message:[NSString stringWithFormat:@"IV index = 0x%08X, start add devices.", ivIndexUInt32] preferredStyle:UIAlertControllerStyleAlert];
+                [pushAlertController addAction:[UIAlertAction actionWithTitle:@"Add Devices" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                    [weakSelf pushToAddDeviceVC];
+                }]];
+                [weakSelf presentViewController:pushAlertController animated:YES completion:nil];
+            }]];
+            [inputAlertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+                TeLogDebug(@"点击取消");
+            }]];
+            [weakSelf presentViewController:inputAlertController animated:YES completion:nil];
+        }]];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            TeLogDebug(@"点击取消");
+        }]];
+        [self presentViewController:alertController animated:YES completion:nil];
+    } else {
+        [self pushToAddDeviceVC];
+    }
+}
+
+- (void)pushToAddDeviceVC {
     BOOL isRemoteAdd = [[[NSUserDefaults standardUserDefaults] valueForKey:kRemoteAddType] boolValue];
     [SDKLibCommand setBluetoothCentralUpdateStateCallback:nil];
     if (isRemoteAdd) {
@@ -127,10 +161,12 @@
     }
     self.shouldSetAllOffline = YES;
 
-    [self getOnlineState];
+    [self getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        TeLogDebug(@"getOnlineStatus finish.");
+    }];
 }
 
-- (void)getOnlineState{
+- (void)getOnlineStateWithResultCallback:(resultBlock)resultCallback {
 //    TeLogDebug(@"");
     
     int tem = 0;
@@ -142,9 +178,7 @@
     }
     BOOL result = [DemoCommand getOnlineStatusWithResponseMaxCount:tem successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         //界面刷新统一在SDK回调函数didReceiveMessage:中进行
-    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-        TeLogDebug(@"getOnlineStatus finish.");
-    }];
+    } resultCallback:resultCallback];
     if (result && self.shouldSetAllOffline) {
         self.shouldSetAllOffline = NO;
         [SigDataSource.share setAllDevicesOutline];
@@ -210,7 +244,7 @@
     }];
 }
 
-- (void)scrollowToBottom {
+- (void)scrollToBottom {
     NSInteger item = [self.collectionView numberOfItemsInSection:0] - 1;
     NSIndexPath *lastItemIndex = [NSIndexPath indexPathForItem:item inSection:0];
     [self.collectionView scrollToItemAtIndexPath:lastItemIndex atScrollPosition:UICollectionViewScrollPositionTop animated:NO];
@@ -263,8 +297,12 @@
                         //无限扫描连接distributor，直到连接成功。（可能会修改）
                         [ConnectTools.share startConnectToolsWithNodeList:@[node] timeout:0xFFFFFFFF Complete:^(BOOL successful) {
                             if (successful) {
-                                //meshOTA逻辑里面的查询进度，无需在此添加查询进度代码。
-                                [weakSelf continueMeshOTA];
+                                //查询完状态再弹框，防止MeshOTA界面firmwareUpdateInformationGet按钮计算responseMax异常。
+                                [weakSelf getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                                    TeLogDebug(@"getOnlineStatus finish.");
+                                    //meshOTA逻辑里面的查询进度，无需在此添加查询进度代码。
+                                    [weakSelf continueMeshOTA];
+                                }];
                             } else {
                                 //连接失败
                                 NSString *t = [NSString stringWithFormat:@"mesh ota... connect distributor fail!"];
@@ -356,7 +394,9 @@
             } else {
                 [self delayReloadCollectionView];
                 [self blockState];
-                [self getOnlineState];
+                [self getOnlineStateWithResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                    TeLogDebug(@"getOnlineStatus finish.");
+                }];
             }
         } else {
             [SigDataSource.share setAllDevicesOutline];
@@ -464,9 +504,10 @@
         }
         #endif
     } else {
+        //非主页，重连mesh成功，是否需要获取设备的状态（v3.3.3.5版本发现meshOTA界面是需要获取状态的）(v3.3.3.6版本发现弹UIAlertController框提示@"cancel Mesh ota finish!"没有点击确定的情况下不会获取设备状态，此次再次修改)
         dispatch_async(dispatch_get_main_queue(), ^{
             UIViewController *vc = self.currentViewController;
-            if ([vc isMemberOfClass:[self class]]) {
+            if ([vc isMemberOfClass:[self class]] || [vc isMemberOfClass:[MeshOTAVC class]] || [vc isMemberOfClass:[UIAlertController class]]) {
                 [self freshOnline:nil];
             } else {
                 TeLogInfo(@"needn`t get status.%@",vc);
@@ -502,7 +543,7 @@
         if (indexPath != nil) {
             SigNodeModel *model = self.source[indexPath.item];
             if (model.isKeyBindSuccess) {
-                SingleDeviceViewController *vc = (SingleDeviceViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SingleDeviceViewControllerID storybroad:@"DeviceSetting"];
+                SingleDeviceViewController *vc = (SingleDeviceViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SingleDeviceViewControllerID storyboard:@"DeviceSetting"];
                 vc.model = model;
                 [self.navigationController pushViewController:vc animated:YES];
             } else {
@@ -530,6 +571,10 @@
 }
 
 - (void)didReceiveSigSecureNetworkBeaconMessage:(SigSecureNetworkBeacon *)message {
+    TeLogInfo(@"%@",message);
+}
+
+- (void)didReceiveSigMeshPrivateBeaconMessage:(SigMeshPrivateBeacon *)message {
     TeLogInfo(@"%@",message);
 }
 

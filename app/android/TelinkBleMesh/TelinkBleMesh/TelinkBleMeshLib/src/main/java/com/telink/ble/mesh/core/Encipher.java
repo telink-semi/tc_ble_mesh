@@ -4,29 +4,27 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core;
 
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
-import org.spongycastle.asn1.ASN1OctetString;
-import org.spongycastle.asn1.ASN1Primitive;
-import org.spongycastle.asn1.DEROctetString;
 import org.spongycastle.crypto.BlockCipher;
 import org.spongycastle.crypto.CipherParameters;
 import org.spongycastle.crypto.InvalidCipherTextException;
@@ -54,19 +52,17 @@ import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.cert.CertificateFactory;
-import java.security.cert.PKIXParameters;
 import java.security.cert.X509Certificate;
-import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Set;
 
 import javax.crypto.KeyAgreement;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Created by kee on 2019/7/19.
@@ -89,12 +85,17 @@ public final class Encipher {
 
     private static final byte[] SALT_NKIK = "nkik".getBytes();
 
-    private static final byte[] SALT_BKIK = "nkbk".getBytes();
+    private static final byte[] SALT_NKBK = "nkbk".getBytes();
+
+    private static final byte[] SALT_NKPK = "nkpk".getBytes();
 
     private static final byte[] SALT_ID128 = "id128".getBytes();
 
     // 48 bit
     private static final byte[] NODE_IDENTITY_HASH_PADDING = new byte[]{0, 0, 0, 0, 0, 0};
+
+    // 40 bit
+    private static final byte[] NODE_PRIVATE_IDENTITY_HASH_PADDING = new byte[]{0, 0, 0, 0, 0};
 
     public static final byte[] PRCK = "prck".getBytes();
 
@@ -103,6 +104,8 @@ public final class Encipher {
     public static final byte[] PRSN = "prsn".getBytes();
 
     public static final byte[] PRDK = "prdk".getBytes();
+
+    public static final byte[] PRCK256 = "prck256".getBytes();
 
 
     public static KeyPair generateKeyPair() {
@@ -167,6 +170,14 @@ public final class Encipher {
                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
             };
 
+    private static final byte[] SALT_KEY_ZERO_32 =
+            {
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+            };
+
     /**
      * S1
      * s1(M) = AES-CMAC ZERO (M)
@@ -176,6 +187,10 @@ public final class Encipher {
      */
     public static byte[] generateSalt(byte[] m) {
         return aesCmac(m, SALT_KEY_ZERO);
+    }
+
+    public static byte[] s2(byte[] m) {
+        return hMacSha256(m, SALT_KEY_ZERO_32);
     }
 
     /*
@@ -278,6 +293,30 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         return (byte) ((result[15]) & 0x3F);
     }
 
+
+    /**
+     * N is 32 or more octets
+     * SALT is 256 bits
+     * P is 1 or more octets
+     * The key (T) is computed as follows:
+     * T = HMAC-SHA-256 SALT (N)
+     * The output of the derivation function k5 is as follows:
+     * k5(N, SALT, P) = HMAC-SHA-256T (P)
+     */
+    public static byte[] k5(byte[] n, byte[] salt, byte[] p) {
+        byte[] t = hMacSha256(n, salt);
+        return hMacSha256(p, t);
+    }
+
+    /**
+     * The Hash field is calculated as shown below:
+     * Hash = e(IdentityKey, Padding || Random || Address) mod 264
+     * Where:
+     * Padding – 48 bits of padding, all bits set to 0.
+     * Random – 64-bit random value.
+     * Address – The unicast address of the node.
+     * The Random field is the 64-bit random value used in the Hash field calculation
+     */
     public static byte[] generateNodeIdentityHash(byte[] identityKey, byte[] random, int src) {
         int length = NODE_IDENTITY_HASH_PADDING.length + random.length + 2;
         ByteBuffer bufferHashInput = ByteBuffer.allocate(length).order(ByteOrder.BIG_ENDIAN);
@@ -293,6 +332,32 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         return buffer.array();
     }
 
+    /**
+     * The Hash field is calculated as shown below:
+     * Hash = e(IdentityKey, Padding || 0x03 || Random || Address) mod 264
+     * Where:
+     * Padding – 40 bits of padding, all bits set to 0
+     * Random – 64-bit random value
+     * Address – The unicast address of the node
+     * The Random field is the 64-bit random value used in the Hash field calculation
+     */
+    public static byte[] generatePrivateNodeIdentityHash(byte[] identityKey, byte[] random, int src) {
+        int length = NODE_PRIVATE_IDENTITY_HASH_PADDING.length + random.length + 3;
+        ByteBuffer bufferHashInput = ByteBuffer.allocate(length).order(ByteOrder.BIG_ENDIAN);
+        bufferHashInput.put(NODE_PRIVATE_IDENTITY_HASH_PADDING)
+                .put((byte) 0x03);
+        bufferHashInput.put(random);
+        bufferHashInput.putShort((short) src);
+        byte[] hashInput = bufferHashInput.array();
+        byte[] hash = aes(hashInput, identityKey);
+
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.put(hash, 8, 8);
+
+        return buffer.array();
+    }
+
+
     public static byte[] generateIdentityKey(byte[] networkKey) {
         byte[] salt = generateSalt(SALT_NKIK);
         ByteBuffer buffer = ByteBuffer.allocate(SALT_ID128.length + 1);
@@ -303,7 +368,16 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
     }
 
     public static byte[] generateBeaconKey(byte[] networkKey) {
-        byte[] salt = generateSalt(SALT_BKIK);
+        byte[] salt = generateSalt(SALT_NKBK);
+        ByteBuffer buffer = ByteBuffer.allocate(SALT_ID128.length + 1);
+        buffer.put(SALT_ID128);
+        buffer.put((byte) 0x01);
+        byte[] p = buffer.array();
+        return k1(networkKey, salt, p);
+    }
+
+    public static byte[] generatePrivateBeaconKey(byte[] networkKey) {
+        byte[] salt = generateSalt(SALT_NKPK);
         ByteBuffer buffer = ByteBuffer.allocate(SALT_ID128.length + 1);
         buffer.put(SALT_ID128);
         buffer.put((byte) 0x01);
@@ -375,6 +449,25 @@ The output of the key generation function k1 is as follows: k1(N, SALT, P) = AES
         SHA256.Digest Digest = new SHA256.Digest();
         return Digest.digest(text);
     }
+
+
+    /**
+     * @param text
+     * @return
+     */
+    public static byte[] hMacSha256(byte[] text, byte[] key) {
+        Mac sha256_HMAC = null;
+        try {
+            sha256_HMAC = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secret_key = new SecretKeySpec(key, "HmacSHA256");
+            sha256_HMAC.init(secret_key);
+            return sha256_HMAC.doFinal(text);
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
     /**
      * "ecdsa-with-SHA256"

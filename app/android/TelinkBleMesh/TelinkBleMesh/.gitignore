@@ -1,0 +1,7 @@
+/.gradle/
+/.idea/
+/local.properties
+/readme_extend.txt
+/TelinkBleMesh.iml
+/TelinkBleMeshDemo/build/
+/TelinkBleMeshLib/build/

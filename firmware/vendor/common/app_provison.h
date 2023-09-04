@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app_provison.h 
+ * @file	app_provison.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #ifndef __APP_PROVISON_H_CLIPSE
 #define __APP_PROVISON_H_CLIPSE
@@ -29,8 +32,18 @@
 
 extern u8 blt_state;
 #define PROVISION_ELE_ADR 	0x7F00
-#define PROVISION_NORMAL_TIMEOUT_MS	30*1000*1000
-#define PROVISION_CERT_TIMEOUT_MS	120*1000*1000
+#if PTS_TEST_EN
+#define PROVISION_NORMAL_TIMEOUT_MS		(60*1000)
+#define PROVISION_ADV_RETRY_MS			(500)
+#else
+#define PROVISION_NORMAL_TIMEOUT_MS		(30*1000)
+	#if EXTENDED_ADV_ENABLE
+#define PROVISION_ADV_RETRY_MS			(300)
+	#else
+#define PROVISION_ADV_RETRY_MS			(150)
+	#endif	
+#endif
+#define PROVISION_CERT_TIMEOUT_MS		(120*1000)
 #if CERTIFY_BASE_ENABLE
 #define PROV_ADV_TIMEOUT_MS	PROVISION_CERT_TIMEOUT_MS
 #else
@@ -157,22 +170,6 @@ typedef struct {
 	u16 pid;
 	u8 mac[4]; // lower 4 bytes
 }private_mesh_manu_t;
-
-typedef struct {
-	u8 flag_len;
-	u8 flag_type;
-	u8 flag_content;
-	u8 len;
-	u8 type;
-	u16 uuid;
-	struct{
-		u8 service_len;
-		u8 service_type;
-		u16 service_uuid;
-		u8 id_type;
-		u8 id_para[15];
-	};
-}soli_pdu_pkt_t;
 
 // provison pdu part 
 typedef enum{
@@ -546,7 +543,7 @@ typedef struct{
 		mesh_ctl_fri_update_flag_t prov_flags;
 		u8  flags;
 	};
-	u8  iv_index[4];
+	u8  iv_index[4]; // big endian
 	u16  unicast_address;
 }provison_net_info_str;
 
@@ -555,6 +552,11 @@ typedef struct{
 	u8 app_key[16];
 }provision_appkey_t;
 
+typedef struct{
+	provison_net_info_str provision_data;
+	provision_appkey_t appkey;
+	u16 alloc_adr;
+}provision_primary_mesh_info_t;
 
 typedef struct{
     u32 link_id;
@@ -573,7 +575,7 @@ typedef struct{
     u8 pro_bearerCode;
 	u8 pro_fail_code;
 	u8 attention_value;
-	u8 rfu;
+	u8 prov_err;
 	u32 cmd_send_tick;
 	u32 cmd_send_start_tick;
 	u32 rand_gen_s;
@@ -590,7 +592,8 @@ typedef struct{
 	u8 priv_non_reslov[6];
 	u8 cert_base_en;
 	u8 direct_invite;
-	u8 rfu1[2];
+	u8 err_op_code;
+	u8 rfu1[1];
 	u8 ele_cnt;
 	u8 key_bind_lock;
 	u8 dkri;
@@ -846,7 +849,7 @@ extern _align_4_ mesh_pro_data_structer		pro_data_str;
 extern _align_4_ pro_para_mag  provision_mag;
 extern u8 prov_net_key[16];
 
-
+u8 mesh_provision_and_bind_self(provison_net_info_str *p_prov_data, u8 *p_dev_key, u16 appkey_idx, u8 *p_app_key);
 u8 set_provision_networkkey_self(u8 *p_key,u8 len );
 void set_provisionee_para(u8 *p_net_key,u16 key_index,u8 flags,u8 *p_ivi,u16 unicast);
 u8 get_ele_offset_by_model_VC_node_info(u16 obj_adr, u32 model_id, bool4 sig_model);
@@ -920,7 +923,7 @@ extern u8 dispatch_start_cmd_reliable(mesh_pro_data_structer *p_rcv_str);
 
 extern void provision_timeout_cb();
 extern u8 set_pro_dat_part(u16 ele_adr);
-extern void provision_set_ivi_para(u8 *para);
+extern void provision_set_ivi_para(provison_net_info_str *p_prov_net_info);
 
 extern int mesh_prov_sec_msg_enc(unsigned char key[16], unsigned char nonce[13], unsigned char* dat, int n, int mic_length);
 extern int	mesh_prov_sec_msg_dec (unsigned char key[16], unsigned char nonce[13], unsigned char* dat, int n, int mic_length);
@@ -965,9 +968,11 @@ void check_mesh_node_out_oob_pub_key_send_time();
 u8  mesh_loop_provision_end_process();
 void mesh_prov_link_close_terminate();
 void prov_set_link_close_code(u8 code);
+void mesh_terminate_provision_link_reset(u8 code,u8 ack);
 
 extern int App_key_bind_end_callback(u8 event);
 u8 mesh_cfg_keybind_end_event(u8 eve,u16 unicast);
+void mesh_kr_cfgcl_retry_init();
 
 void mesh_set_oob_type(u8 type, u8 *p_oob ,u8 len );
 void mesh_set_pro_auth(u8 *p_auth, u8 len);
@@ -1040,6 +1045,8 @@ u8 get_prov_comfirm_len();
 u8 get_prov_comfirm_value_len();
 u8 get_prov_random_value_len();
 
-
+void mesh_provision_par_handle(provison_net_info_str *p_prov_data);
+int mesh_provision_par_set(provison_net_info_str *p_prov_data);
+int mesh_provision_par_set_dir(provison_net_info_str *p_prov_data);
 #endif 
 

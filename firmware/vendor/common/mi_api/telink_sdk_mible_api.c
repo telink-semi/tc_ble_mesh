@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     telink_sdk_mible_api.c 
+ * @file	telink_sdk_mible_api.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "telink_sdk_mible_api.h"
 #include "proj_lib/ble/ll/ll_whitelist.h"
 #include "proj/common/mempool.h"
@@ -1276,7 +1278,7 @@ void mpn_mul (unsigned int * r, unsigned int * a, int na, unsigned int * b, int 
 	for(int k = 0; k < na + nb; k++){
 		r[k] = 0;
 	}
-	unsigned char val = irq_disable();
+	u32 val = irq_disable();
 	while(nb --){
 		#if MODULE_WATCHDOG_ENABLE
 		wd_clear();
@@ -1287,41 +1289,50 @@ void mpn_mul (unsigned int * r, unsigned int * a, int na, unsigned int * b, int 
 }
 
 #if (MI_SWITCH_LPN_EN||DU_LPN_EN)
-#if DU_LPN_EN
-#define MI_RUN_INTERVAL		 3
-#define MI_SLEEP_INTERVAL 	 (DU_ADV_INTER_MS-MI_RUN_INTERVAL)
-#define SOFT_TIMER_INTER_LPN 10
-#else
-#define MI_SLEEP_INTERVAL 	1140
-#define MI_RUN_INTERVAL		60
-#define SOFT_TIMER_INTER_LPN 50
-#endif
-#define MI_MESH_RUN_MODE 	0
-#define MI_MESH_SLEEP_MODE 	1
 typedef struct{
     u32 last_tick;
 	u32 run_ms;
 	u32 sleep_ms;
 	u32 mode;
 }mi_mesh_sleep_pre_t;
-extern void blt_adv_expect_time_refresh(u8 en);
+#define MI_MESH_RUN_MODE 	0
+#define MI_MESH_SLEEP_MODE 	1
+#if DU_LPN_EN
+	#if LPN_CONTROL_EN
+#define MI_RUN_INTERVAL		 3
+#define MI_RUN_LISTEN		 25
+#define MI_SLEEP_INTERVAL 	 (DU_ADV_INTER_MS-MI_RUN_INTERVAL)
+#define MI_SLEEP_LITSEN_INTERVAL (DU_ADV_INTER_MS-MI_RUN_LISTEN)	
+#define SOFT_TIMER_INTER_LPN 10
+mi_mesh_sleep_pre_t	mi_mesh_sleep_time={0, MI_RUN_LISTEN,MI_SLEEP_LITSEN_INTERVAL,MI_MESH_RUN_MODE};
+u8 save_power_mode =0;
+u32 listen_cnt =0;
+
+void set_du_lpn_mode(u8 en)
+{
+	save_power_mode = en;
+}
+
+	#else
+#define MI_RUN_INTERVAL		 3
+#define MI_SLEEP_INTERVAL 	 (DU_ADV_INTER_MS-MI_RUN_INTERVAL)
+#define SOFT_TIMER_INTER_LPN 10
+mi_mesh_sleep_pre_t	mi_mesh_sleep_time={0, MI_RUN_INTERVAL,MI_SLEEP_INTERVAL,MI_MESH_RUN_MODE};
+	#endif
+#else
+#define MI_SLEEP_INTERVAL 	1140
+#define MI_RUN_INTERVAL		60
+#define SOFT_TIMER_INTER_LPN 50
+mi_mesh_sleep_pre_t	mi_mesh_sleep_time={0, MI_RUN_INTERVAL,MI_SLEEP_INTERVAL,MI_MESH_RUN_MODE};
+#endif
+
+
 void mi_mesh_blt_send_adv2_scan_mode()
 {
 	#if MI_SWITCH_LPN_EN||DU_LPN_EN
-	if(BLS_LINK_STATE_ADV == blt_state){
-		blt_adv_expect_time_refresh(0);
-		blt_send_adv2scan_mode(1);
-		blt_adv_expect_time_refresh(1);
-	}else if((BLS_LINK_STATE_CONN == blt_state) && (BLE_STATE_BRX_E == ble_state) && rf_link_time_allow(3000))
-	{
-		blt_adv_expect_time_refresh(0);
-		blt_send_adv2scan_mode(1);
-		blt_adv_expect_time_refresh(1);
-	}
+	mesh_send_adv2scan_mode(1);
 	#endif
 }
-
-mi_mesh_sleep_pre_t	mi_mesh_sleep_time={0, MI_RUN_INTERVAL,MI_SLEEP_INTERVAL,MI_MESH_RUN_MODE};
 
 int soft_timer_proc_mi_beacon(void)
 {
@@ -1340,9 +1351,17 @@ int soft_timer_proc_mi_beacon(void)
 
 void mi_mesh_sleep_init()
 {
+	#if LPN_CONTROL_EN
+	// only in the adv mode will update the tick part .
+	if(blt_state != BLS_LINK_STATE_CONN){
+		mi_mesh_sleep_time.last_tick = clock_time()|1;
+		mi_mesh_sleep_time.mode = MI_MESH_RUN_MODE;
+	}
+	#else
 	mi_mesh_sleep_time.last_tick = clock_time()|1;
 	mi_mesh_sleep_time.mode = MI_MESH_RUN_MODE;
-	//blt_soft_timer_update(&soft_timer_proc_mi_beacon, SOFT_TIMER_INTER_LPN*1000);
+	#endif
+	
 }
 
 u8 mi_mesh_sleep_time_exceed_adv_iner()
@@ -1386,11 +1405,88 @@ u8 mi_mesh_get_state()
 	return mi_busy_state;
 }
 
+	#if LPN_CONTROL_EN
+void mesh_inter_cmd_proc(u8 en)
+{
+	if(en){
+	// go to the interval of provision proc part 
+		if(soft_timer_allow_mesh){
+			if(blt_soft_timer_add((blt_timer_callback_t)&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000)){
+				soft_timer_allow_mesh = 0;
+			}
+		}
+	}else{
+		blt_soft_timer_delete((blt_timer_callback_t)&soft_timer_proc_mesh_cmd);
+		soft_timer_allow_mesh = 1;
+	}
+}
+
+void mi_mesh_lowpower_loop()
+{
+	if(du_ota_get_flag()){
+		#if LPN_FAST_OTA_EN
+		bls_pm_setSuspendMask (SUSPEND_DISABLE);
+		#else
+		// only for the mode of the single bus switch project, to save power.
+		bls_pm_setSuspendMask (SUSPEND_ADV | SUSPEND_CONN);
+		#endif
+	}else if(mi_mesh_get_state()|| du_ota_reboot_flag){
+		bls_pm_setSuspendMask (SUSPEND_DISABLE);
+		mesh_inter_cmd_proc(mi_mesh_get_state()||du_ota_reboot_flag);
+	}else if (blt_state == BLS_LINK_STATE_CONN){// in the connect mode , not the ota mode .
+		// only receive the gatt-proxy mesh cmd .
+		// mesh_inter_cmd_proc(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0);
+		bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
+	}else if (blt_state != BLS_LINK_STATE_CONN){
+		if(save_power_mode){			
+			if( clock_time_exceed(mi_mesh_sleep_time.last_tick,MI_RUN_INTERVAL *1000) &&
+				mi_mesh_sleep_time.mode == MI_MESH_RUN_MODE){
+				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"go to adv mode %x",clock_time()/16000);
+				// send adv only for connect proc .
+				mi_mesh_sleep_time.mode = MI_MESH_SLEEP_MODE;
+				// in the power save ,still need to send packet.
+				if(is_provision_success() && my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0){
+					if(soft_timer_allow_mesh){
+						if(blt_soft_timer_update(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
+						{
+							soft_timer_allow_mesh = 0;
+						}
+					}
+				}
+				bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
+			}
+		}else{
+			// need to listen the adv packet from the gateway part 
+			u32 run_time =0;
+			if(listen_cnt%2==0){
+				run_time = MI_RUN_LISTEN *1000;
+			}else{
+				run_time = MI_RUN_INTERVAL *1000;
+			}
+			if( clock_time_exceed(mi_mesh_sleep_time.last_tick,run_time) &&
+				mi_mesh_sleep_time.mode == MI_MESH_RUN_MODE){
+				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"go to listen mode %x",clock_time()/16000);
+				mi_mesh_sleep_time.mode = MI_MESH_SLEEP_MODE;
+				if(is_provision_success() && my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) > 0){
+					if(soft_timer_allow_mesh){
+						if(blt_soft_timer_update(&soft_timer_proc_mesh_cmd, SOFT_TIMER_INTER_LPN*1000))
+						{
+							soft_timer_allow_mesh = 0;
+						}
+					}
+				}
+				listen_cnt++;
+				bls_pm_setSuspendMask (SUSPEND_ADV | DEEPSLEEP_RETENTION_ADV | SUSPEND_CONN | DEEPSLEEP_RETENTION_CONN);
+			}
+		}
+	}
+}
+
+	#else
 void mi_mesh_lowpower_loop()
 {
 	if(blt_state == BLS_LINK_STATE_CONN || mi_mesh_get_state()||du_ota_reboot_flag){ // in the ble connection mode ,it will not trigger the deep mode ,and stop the mesh adv sending part
 		bls_pm_setSuspendMask (SUSPEND_DISABLE);
-			
 		if(mi_mesh_get_state()||du_ota_reboot_flag){
 			//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"run mode proc1",0);
 			if(soft_timer_allow_mesh){
@@ -1422,6 +1518,7 @@ void mi_mesh_lowpower_loop()
 		}
 	}
 }
+	#endif
 #endif
 
 

@@ -1,29 +1,28 @@
 /********************************************************************************************************
- * @file     gpio_8278.c 
+ * @file	gpio_8278.c
  *
- * @brief    This is the source file for TLSR8278
+ * @brief	This is the source file for TLSR8278
  *
- * @author	 Driver Group
- * @date     May 8, 2018
+ * @author	Driver Group
+ * @date	May 8, 2018
  *
- * @par      Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- *           The information contained herein is confidential property of Telink
- *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *           Co., Ltd. and the licensee or the terms described here-in. This heading
- *           MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *           Licensees are granted free, non-transferable use of the information in this
- *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
- * @par      History:
- * 			 1.initial release(DEC. 26 2018)
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
- * @version  A001
- *         
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
+#include "tl_common.h"
 #include "bsp.h"
 #include "proj/common/compatibility.h" // add by weixiong in mesh
 #include "proj/common/static_assert.h" // add by weixiong in mesh
@@ -110,7 +109,7 @@ static void gpio_analog_resistance_init(void)
  * do not use pull-up or pull-down resistance on the board in the process of practical
  * application because it may have the risk of electric leakage .
  */
-#if (BLC_PM_DEEP_RETENTION_MODE_EN) // add by weixiong in mesh
+#if (PM_DEEPSLEEP_RETENTION_ENABLE) // add by weixiong in mesh
 _attribute_ram_code_
 #endif
 void gpio_init(int anaRes_init_en)
@@ -690,7 +689,7 @@ static void gpio_set_mux(GPIO_PinTypeDef pin, GPIO_FuncTypeDef func)
 			//0x5ae[7:6]
 			//0. PWM1_N
 			//1. I2S_SDI
-			//2. UART_TX£¨7816£©
+			//2. UART_TX (7816)
 			mask = (unsigned char)~(BIT(7)|BIT(6));
 			if(func == AS_PWM){ // modify by weixiong in mesh
 

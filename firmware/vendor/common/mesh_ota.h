@@ -1,28 +1,30 @@
 /********************************************************************************************************
- * @file     mesh_ota.h 
+ * @file	mesh_ota.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
 // ------
@@ -44,60 +46,61 @@
 #define MESH_OTA_V_SEL                  (MESH_OTA_R06)
 
 #if(PTS_TEST_OTA_EN)
-#define SIG_MD_FW_UPDATE_S              0xBF44
-#define SIG_MD_FW_UPDATE_C              0xBF45
-#define SIG_MD_FW_DISTRIBUT_S           0xBF46
-#define SIG_MD_FW_DISTRIBUT_C           0xBF47
-#define SIG_MD_BLOB_TRANSFER_S        	0xBF42
-#define SIG_MD_BLOB_TRANSFER_C         	0xBF43
+#define SIG_MD_FW_UPDATE_S              0x1402
+#define SIG_MD_FW_UPDATE_C              0x1403
+#define SIG_MD_FW_DISTRIBUT_S           0x1404
+#define SIG_MD_FW_DISTRIBUT_C           0x1405
+#define SIG_MD_BLOB_TRANSFER_S        	0x1400
+#define SIG_MD_BLOB_TRANSFER_C         	0x1401
 
 //----------------------------------- op code
 // op cmd 0xxxxxxx (SIG)
 // op cmd 10xxxxxx xxxxxxxx (SIG)
 
-#define FW_UPDATE_INFO_GET		        0x1BB7
-#define FW_UPDATE_INFO_STATUS		    0x37B7
-#define FW_UPDATE_METADATA_CHECK	    0x38B7
-#define FW_UPDATE_METADATA_CHECK_STATUS 0x39B7
-#define FW_UPDATE_GET		        	0x1CB7
-#define FW_UPDATE_START		        	0x1DB7
-#define FW_UPDATE_CANCEL		        0x1EB7
-#define FW_UPDATE_APPLY		        	0x1FB7
-#define FW_UPDATE_STATUS		        0x2BB7
-#define FW_DISTRIBUT_GET		        0x24B7
-#define FW_DISTRIBUT_START		        0x2FB7
-#define FW_DISTRIBUT_CANCEL		        0x25B7
-#define FW_DISTRIBUT_APPLY		        0x26B7
-#define FW_DISTRIBUT_STATUS		        0x30B7
-#define FW_DISTRIBUT_RECEIVERS_GET		0x22B7
-#define FW_DISTRIBUT_RECEIVERS_LIST		0x2DB7
-#define FW_DISTRIBUT_RECEIVERS_ADD		0x2CB7
-#define FW_DISTRIBUT_RECEIVERS_DELETE_ALL   0x20B7
-#define FW_DISTRIBUT_RECEIVERS_STATUS	0x21B7
-#define FW_DISTRIBUT_CAPABILITIES_GET	0x23B7
-#define FW_DISTRIBUT_CAPABILITIES_STATUS	0x2EB7
-#define FW_DISTRIBUT_UPLOAD_GET		    0x27B7
-#define FW_DISTRIBUT_UPLOAD_START		0x31B7
-#define FW_DISTRIBUT_UPLOAD_OOB_START	0x32B7
-#define FW_DISTRIBUT_UPLOAD_CANCEL		0x28B7
-#define FW_DISTRIBUT_UPLOAD_STATUS		0x33B7
-#define FW_DISTRIBUT_FW_GET		        0x34B7
-#define FW_DISTRIBUT_FW_STATUS		    0x36B7
-#define FW_DISTRIBUT_FW_GET_BY_INDEX    0x29B7
-#define FW_DISTRIBUT_FW_DELETE		    0x35B7
-#define FW_DISTRIBUT_FW_DELETE_ALL		0x2AB7
+#define FW_UPDATE_INFO_GET		        0x0883
+#define FW_UPDATE_INFO_STATUS		    0x2483
+#define FW_UPDATE_METADATA_CHECK	    0x2583
+#define FW_UPDATE_METADATA_CHECK_STATUS 0x2683
+#define FW_UPDATE_GET		        	0x0983
+#define FW_UPDATE_START		        	0x0A83
+#define FW_UPDATE_CANCEL		        0x0B83
+#define FW_UPDATE_APPLY		        	0x0C83
+#define FW_UPDATE_STATUS		        0x1883
+#define FW_DISTRIBUT_GET		        0x1183
+#define FW_DISTRIBUT_START		        0x1C83
+#define FW_DISTRIBUT_SUSPEND		    0x2783
+#define FW_DISTRIBUT_CANCEL		        0x1283
+#define FW_DISTRIBUT_APPLY		        0x1383
+#define FW_DISTRIBUT_STATUS		        0x1D83
+#define FW_DISTRIBUT_RECEIVERS_GET		0x0F83
+#define FW_DISTRIBUT_RECEIVERS_LIST		0x1A83
+#define FW_DISTRIBUT_RECEIVERS_ADD		0x1983
+#define FW_DISTRIBUT_RECEIVERS_DELETE_ALL   0x0D83
+#define FW_DISTRIBUT_RECEIVERS_STATUS	0x0E83
+#define FW_DISTRIBUT_CAPABILITIES_GET	0x1083
+#define FW_DISTRIBUT_CAPABILITIES_STATUS	0x1B83
+#define FW_DISTRIBUT_UPLOAD_GET		    0x1483
+#define FW_DISTRIBUT_UPLOAD_START		0x1E83
+#define FW_DISTRIBUT_UPLOAD_OOB_START	0x1F83
+#define FW_DISTRIBUT_UPLOAD_CANCEL		0x1583
+#define FW_DISTRIBUT_UPLOAD_STATUS		0x2083
+#define FW_DISTRIBUT_FW_GET		        0x2183
+#define FW_DISTRIBUT_FW_STATUS		    0x2383
+#define FW_DISTRIBUT_FW_GET_BY_INDEX    0x1683
+#define FW_DISTRIBUT_FW_DELETE		    0x2283
+#define FW_DISTRIBUT_FW_DELETE_ALL		0x1783
 
-#define BLOB_TRANSFER_GET		        0x01B7
-#define BLOB_TRANSFER_START		        0x02B7
-#define BLOB_TRANSFER_CANCEL		    0x03B7
-#define BLOB_TRANSFER_STATUS		    0x04B7
-#define BLOB_BLOCK_GET		            0x07B7
-#define BLOB_BLOCK_START		        0x05B7
-#define BLOB_BLOCK_STATUS		        0x7E
-#define BLOB_PARTIAL_BLOCK_REPORT	    0x7F    // used for pull mode(LPN)
-#define BLOB_CHUNK_TRANSFER		        0x7D
-#define BLOB_INFO_GET		            0x0AB7
-#define BLOB_INFO_STATUS		        0x0BB7
+#define BLOB_TRANSFER_GET		        0x0083
+#define BLOB_TRANSFER_START		        0x0183
+#define BLOB_TRANSFER_CANCEL		    0x0283
+#define BLOB_TRANSFER_STATUS		    0x0383
+#define BLOB_BLOCK_GET		            0x0583
+#define BLOB_BLOCK_START		        0x0483
+#define BLOB_BLOCK_STATUS		        0x67
+#define BLOB_PARTIAL_BLOCK_REPORT	    0x65    // used for pull mode(LPN)
+#define BLOB_CHUNK_TRANSFER		        0x66
+#define BLOB_INFO_GET		            0x0683
+#define BLOB_INFO_STATUS		        0x0783
 #elif DRAFT_FEAT_VD_MD_EN
 #include "draft_feature_vendor.h"
 #else
@@ -123,6 +126,7 @@
 #define FW_UPDATE_STATUS		        0x09B6
 #define FW_DISTRIBUT_GET		        0x0AB6
 #define FW_DISTRIBUT_START		        0x0BB6
+#define FW_DISTRIBUT_SUSPEND		    0x3AB7
 #define FW_DISTRIBUT_CANCEL		        0x0CB6
 #define FW_DISTRIBUT_APPLY		        0x0DB6
 #define FW_DISTRIBUT_STATUS		        0x0EB6
@@ -232,9 +236,9 @@
 #define MESH_OTA_BLOCK_SIZE_LOG_MIN     (10)    // due to chunk max is less than 0x80(utf8 1byte), and sizeof(fw_update_srv_proc_t.miss_mask) is less than that of push mode.
 #define MESH_OTA_BLOCK_SIZE_LOG_MAX     (10)    // due to chunk max is less than 0x80(utf8 1byte), and sizeof(fw_update_srv_proc_t.miss_mask) is less than that of push mode.
 	#else
-#define MESH_OTA_CHUNK_SIZE             (256)   //
-#define MESH_OTA_BLOCK_SIZE_LOG_MIN     (10)    // 
-#define MESH_OTA_BLOCK_SIZE_LOG_MAX     (10)    // PTS SR/FU/BV-03V: must <= 15. TBD.
+#define MESH_OTA_CHUNK_SIZE             (32)   	//
+#define MESH_OTA_BLOCK_SIZE_LOG_MIN     (6)    	// FD-BV-05: must >= 6.
+#define MESH_OTA_BLOCK_SIZE_LOG_MAX     (6)    	// PTS SR/FU/BV-03V: must <= 15. TBD.
 	#endif
 #elif (MESH_OTA_PULL_MODE_EN && !EXTENDED_ADV_ENABLE)
 #define MESH_OTA_CHUNK_SIZE             (8)     // unsegment packet
@@ -316,6 +320,7 @@ enum{
 	DISTRIBUT_PHASE_COMPLETED           = 4,
 	DISTRIBUT_PHASE_FAILED              = 5,
 	DISTRIBUT_PHASE_CANCELING_UPDATE    = 6,
+	DISTRIBUT_PHASE_TRANSFER_SUSPEND    = 7,
 	DISTRIBUT_PHASE_MAX,
 };
 
@@ -334,6 +339,7 @@ enum{
 	DISTRIBUT_ST_URI_MALFORMED          = 0x0A,
 	DISTRIBUT_ST_URI_UNREACHABLE        = 0x0B,
 	DISTRIBUT_ST_NEW_FW_NOT_AVAILABLE   = 0x0C,
+	DISTRIBUT_ST_SUSPEND_FAILED   		= 0x0D,
 	DISTRIBUT_ST_MAX,
 	DISTRIBUT_ST_KEEP_CURRENT,			// just for internal flag
 };
@@ -846,15 +852,16 @@ typedef struct{
 #endif
     u8 distribut_update_phase;
 #if PTS_TEST_OTA_EN
-    u8 distribut_update_phase_keep_flag; // not use now, to be removed.  //can not clear phase, even receive distribut cancel many times.
+    u8 distribut_update_phase_keep_flag; // not use now, to be removed.  //can not clear phase, even receive distribute cancel many times.
     u32 tick_dist_canceling;
+    u16 update_cancle_addr;
     #if PTS_TEST_BLOB_TRANSFER_FLOW_EN
     u8 blob_flow_flag;
     #endif
 #endif
 	u8 retry_intv_for_lpn_100ms;	// unit:100ms, reliable retry interval, usually used for LPN.
 	u8 percent_last;    // distribute progress
-	u8 pause_flag;  	// not use now, use pair ok instead. pause mesh ota tx flow when GATT disconnect, untill APP resume. 
+	u8 suspend_flag;  	// should not set phase to suspend, because need to restore. also pause mesh ota tx flow when GATT disconnect, untill APP resume. 
 	u8 st_wait_flag;
 	u8 st_distr;
 	u8 ota_rcv_flag;    // step 1: private method of receiving update address list,
@@ -882,6 +889,7 @@ typedef struct{
 	u8 blob_trans_busy;
 	u8 blob_trans_rx_start_error;
 	u8 blob_trans_phase;
+	u8 blob_trans_phase_backup;	// backup phase before suspend
 	u8 blob_block_get_retry_flag;
 	#if PTS_TEST_OTA_EN
 	u8 blob_info_get_flag;
@@ -950,7 +958,7 @@ static inline int is_apply_phase_success(u8 update_phase)
 static inline int is_mesh_ota_tx_client_model(u32 id, bool4 sig_model)
 {
     return (sig_model && ((SIG_MD_FW_UPDATE_C == id) || (SIG_MD_BLOB_TRANSFER_C == id)
-                        || (SIG_MD_BLOB_TRANSFER_C == id)));
+                        || (SIG_MD_FW_DISTRIBUT_C == id)));
 }
 
 static inline int is_mesh_ota_master_wait_ack()
@@ -988,6 +996,7 @@ int mesh_cmd_sig_fw_update_metadata_check_status(u8 *par, int par_len, mesh_cb_f
 #if (DISTRIBUTOR_UPDATE_SERVER_EN)
 int mesh_cmd_sig_fw_distribut_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_fw_distribut_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_fw_distribut_suspend(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_fw_distribut_cancel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_fw_distribut_apply(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_fw_distribut_receiver_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -1005,6 +1014,7 @@ int mesh_cmd_sig_fw_distribut_fw_del_all(u8 *par, int par_len, mesh_cb_fun_par_t
 #else
 #define mesh_cmd_sig_fw_distribut_get               0
 #define mesh_cmd_sig_fw_distribut_start             0
+#define mesh_cmd_sig_fw_distribut_suspend           0
 #define mesh_cmd_sig_fw_distribut_cancel            0
 #define mesh_cmd_sig_fw_distribut_apply             0
 #define mesh_cmd_sig_fw_distribut_receiver_get      0

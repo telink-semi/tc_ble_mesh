@@ -68,15 +68,169 @@
         android:padding="4dp"
         android:progress="10" />
 
-    <TextView
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp">
+
+        <TextView
+            android:id="@+id/tv_lum_level"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Lum level"
+            android:textSize="12sp" />
+
+        <ImageView
+            android:id="@+id/iv_lum_minus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginRight="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:src="@drawable/ic_minus"
+            android:tint="@color/grey" />
+
+        <ImageView
+            android:id="@+id/iv_lum_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:src="@drawable/ic_plus"
+            android:tint="@color/grey" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp">
+
+        <TextView
+            android:id="@+id/tv_temp_level"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Temp Level"
+            android:textSize="12sp" />
+
+        <ImageView
+            android:id="@+id/iv_temp_minus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginRight="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:src="@drawable/ic_minus"
+            android:tint="@color/grey" />
+
+        <ImageView
+            android:id="@+id/iv_temp_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:src="@drawable/ic_plus"
+            android:tint="@color/grey" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp">
+
+        <TextView
+            android:id="@+id/tv_hue_level"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Hue Level"
+            android:textSize="12sp" />
+
+        <ImageView
+            android:id="@+id/iv_hue_minus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginRight="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:src="@drawable/ic_minus"
+            android:tint="@color/grey" />
+
+        <ImageView
+            android:id="@+id/iv_hue_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:src="@drawable/ic_plus"
+            android:tint="@color/grey" />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp">
+
+        <TextView
+            android:id="@+id/tv_sat_level"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Sat Level"
+            android:textSize="12sp" />
+
+        <ImageView
+            android:id="@+id/iv_sat_minus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginRight="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:src="@drawable/ic_minus"
+            android:tint="@color/grey" />
+
+        <ImageView
+            android:id="@+id/iv_sat_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:src="@drawable/ic_plus"
+            android:tint="@color/grey" />
+
+    </LinearLayout>
+
+
+    <Button
         android:id="@+id/tv_color"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:background="@drawable/main_bg_click"
         android:gravity="center"
-        android:padding="8dp"
         android:singleLine="true"
         android:text="HSL"
         android:textColor="#fff" />
+
+
 </LinearLayout>

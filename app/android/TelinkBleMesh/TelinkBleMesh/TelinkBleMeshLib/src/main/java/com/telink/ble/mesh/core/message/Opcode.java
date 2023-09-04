@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message;
 
@@ -372,7 +373,94 @@ public enum Opcode {
     VD_MESH_PROV_DATA_SET(0x0211CA),
     VD_MESH_PROV_CONFIRM(0x0211CB),
     VD_MESH_PROV_CONFIRM_STS(0x0211CC),
-    VD_MESH_PROV_COMPLETE(0x0211CD);
+    VD_MESH_PROV_COMPLETE(0x0211CD),
+
+    // opcode aggregator
+    OP_AGGREGATOR_SEQUENCE(0x09B8),
+    OP_AGGREGATOR_STATUS(0x10B8),
+
+
+    // direct control
+    DIRECTED_CONTROL_GET(0x30bf),
+    DIRECTED_CONTROL_SET(0x31bf),
+    //    DIRECTED_CONTROL_SET(0xbf31),
+    DIRECTED_CONTROL_STATUS(0x32bf),
+    PATH_METRIC_GET(0x33bf),
+    PATH_METRIC_SET(0x34bf),
+    PATH_METRIC_STATUS(0x35bf),
+    DISCOVERY_TABLE_CAPABILITIES_GET(0x36bf),
+    DISCOVERY_TABLE_CAPABILITIES_SET(0x37bf),
+    DISCOVERY_TABLE_CAPABILITIES_STATUS(0x38bf),
+    FORWARDING_TABLE_ADD(0x39bf),
+    FORWARDING_TABLE_DELETE(0x3abf),
+    FORWARDING_TABLE_STATUS(0x3bbf),
+    FORWARDING_TABLE_DEPENDENTS_ADD(0x3cbf),
+    FORWARDING_TABLE_DEPENDENTS_DELETE(0x3dbf),
+    FORWARDING_TABLE_DEPENDENTS_STATUS(0x3ebf),
+    FORWARDING_TABLE_DEPENDENTS_GET(0x3fbf),
+    FORWARDING_TABLE_DEPENDENTS_GET_STATUS(0x40bf),
+    FORWARDING_TABLE_ENTRIES_COUNT_GET(0x41bf),
+    FORWARDING_TABLE_ENTRIES_COUNT_STATUS(0x42bf),
+    FORWARDING_TABLE_ENTRIES_GET(0x43bf),
+    FORWARDING_TABLE_ENTRIES_STATUS(0x44bf),
+    WANTED_LANES_GET(0x45bf),
+    WANTED_LANES_SET(0x46bf),
+    WANTED_LANES_STATUS(0x47bf),
+    TWO_WAY_PATH_GET(0x48bf),
+    TWO_WAY_PATH_SET(0x49bf),
+    TWO_WAY_PATH_STATUS(0x4abf),
+    PATH_ECHO_INTERVAL_GET(0x4bbf),
+    PATH_ECHO_INTERVAL_SET(0x4cbf),
+    PATH_ECHO_INTERVAL_STATUS(0x4dbf),
+    DIRECTED_NETWORK_TRANSMIT_GET(0x4ebf),
+    DIRECTED_NETWORK_TRANSMIT_SET(0x4fbf),
+    DIRECTED_NETWORK_TRANSMIT_STATUS(0x50bf),
+    DIRECTED_RELAY_RETRANSMIT_GET(0x51bf),
+    DIRECTED_RELAY_RETRANSMIT_SET(0x52bf),
+    DIRECTED_RELAY_RETRANSMIT_STATUS(0x53bf),
+    RSSI_THRESHOLD_GET(0x54bf),
+    RSSI_THRESHOLD_SET(0x55bf),
+    RSSI_THRESHOLD_STATUS(0x56bf),
+    DIRECTED_PATHS_GET(0x57bf),
+    DIRECTED_PATHS_STATUS(0x58bf),
+    DIRECTED_PUBLISH_POLICY_GET(0x59bf),
+    DIRECTED_PUBLISH_POLICY_SET(0x5abf),
+    DIRECTED_PUBLISH_POLICY_STATUS(0x5bbf),
+    PATH_DISCOVERY_TIMING_CONTROL_GET(0x5cbf),
+    PATH_DISCOVERY_TIMING_CONTROL_SET(0x5dbf),
+    PATH_DISCOVERY_TIMING_CONTROL_STATUS(0x5ebf),
+    DIRECTED_CONTROL_NETWORK_TRANSMIT_GET(0x5fbf),
+    DIRECTED_CONTROL_NETWORK_TRANSMIT_SET(0x60bf),
+    DIRECTED_CONTROL_NETWORK_TRANSMIT_STATUS(0x61bf),
+    DIRECTED_CONTROL_RELAY_RETRANSMIT_GET(0x62bf),
+    DIRECTED_CONTROL_RELAY_RETRANSMIT_SET(0x63bf),
+    DIRECTED_CONTROL_RELAY_RETRANSMIT_STATUS(0x64bf),
+
+    // large composition data message
+
+    CFG_SAR_TRANSMITTER_GET(0x03b8),
+    CFG_SAR_TRANSMITTER_SET(0x04b8),
+    CFG_SAR_TRANSMITTER_STATUS(0x05b8),
+    CFG_SAR_RECEIVER_GET(0x06b8),
+    CFG_SAR_RECEIVER_SET(0x07b8),
+    CFG_SAR_RECEIVER_STATUS(0x08b8),
+
+    CFG_ON_DEMAND_PROXY_GET(0x00b8),
+    CFG_ON_DEMAND_PROXY_SET(0x01b8),
+    CFG_ON_DEMAND_PROXY_STATUS(0x02b8),
+
+    CFG_OP_AGG_SEQ(0x09b8),
+    CFG_OP_AGG_STATUS(0x10b8),
+
+    LARGE_CPS_GET(0x11b8),
+    LARGE_CPS_STATUS(0x12b8),
+    MODELS_METADATA_GET(0x13b8),
+    MODELS_METADATA_STATUS(0x14b8),
+
+    SOLI_PDU_RPL_ITEM_CLEAR(0x15b8),
+    SOLI_PDU_RPL_ITEM_CLEAR_NACK(0x16b8),
+    SOLI_PDU_RPL_ITEM_STATUS(0x17b8),
+    ;
 
     public final int value;
     public final String info;

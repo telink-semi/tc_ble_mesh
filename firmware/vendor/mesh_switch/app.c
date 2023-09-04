@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     app.c 
+ * @file	app.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/rf_drv.h"
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/ll/ll.h"
@@ -58,13 +61,14 @@
 MYFIFO_INIT(blt_rxfifo, 64, BLT_RX_BUF_NUM);
 MYFIFO_INIT(blt_txfifo, 40, 16);
 
+#define SLEEP_MAX_S						(32*60*60)	// max 37 hours,but use 32 to be multipled of SWITCH_IV_SEARCHING_INVL_S
 #if IV_UPDATE_TEST_EN
-#define SWITCH_LONG_SLEEP_TIME_S		(IV_UPDATE_KEEP_TMIE_MIN_RX_S)
-#define SWITCH_IV_SEARCHING_INVL_S		(IV_UPDATE_KEEP_TMIE_MIN_RX_S-1) //
+#define SWITCH_IV_SEARCHING_INTERVLAL_S	(IV_UPDATE_KEEP_TMIE_MIN_RX_S)
 #else
-#define SWITCH_LONG_SLEEP_TIME_S		(32*60*60)// 32h
-#define SWITCH_IV_SEARCHING_INVL_S		(96*60*60-1)
+#define SWITCH_IV_SEARCHING_INTERVLAL_S	(96*60*60)	// keep searching for SWITCH_IV_RCV_WINDOW_S(10s default)
 #endif
+#define SWITCH_IV_SEARCHING_INVL_S		(SWITCH_IV_SEARCHING_INTERVLAL_S - 1)	// -1 to make sure "clock time exceed" is ture when time is just expired.
+#define SWITCH_LONG_SLEEP_TIME_S		(min(SLEEP_MAX_S, SWITCH_IV_SEARCHING_INTERVLAL_S))
 #define SWITCH_IV_RCV_WINDOW_S			(10)
 
 u8 switch_mode = SWITCH_MODE_NORMAL;
@@ -72,6 +76,7 @@ u32 switch_mode_tick = 0;
 u8 switch_provision_ok = 0;
 u32 switch_iv_updata_s = 0;
 
+STATIC_ASSERT(SWITCH_IV_SEARCHING_INTERVLAL_S % SWITCH_LONG_SLEEP_TIME_S == 0); // must be multipled.
 
 //----------------------- UI ---------------------------------------------
 #if (BLT_SOFTWARE_TIMER_ENABLE)
@@ -92,7 +97,7 @@ int soft_timer_test0(void)
 void switch_iv_update_time_refresh()
 {
 	switch_iv_updata_s = clock_time_s();
-	LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch_iv_update_time_refresh time_s:%d", switch_iv_updata_s);
+//	LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch_iv_update_time_refresh time_s:%d", switch_iv_updata_s);
 }
 
 int soft_timer_rcv_beacon_timeout()
@@ -104,17 +109,15 @@ int soft_timer_rcv_beacon_timeout()
 	return -1;
 }
 
-void switch_triger_iv_search_mode()
-{
-	if(clock_time_exceed_s(switch_iv_updata_s, SWITCH_IV_SEARCHING_INVL_S)){	
-		LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch enter iv update search mode",0);
+void switch_triger_iv_search_mode(int force)
+{	
+	if(force || clock_time_exceed_s(switch_iv_updata_s, SWITCH_IV_SEARCHING_INVL_S)){
+		LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch enter iv update search mode time_s:%d", clock_time_s());
 		switch_iv_update_time_refresh();		
 		app_enable_scan_all_device (); // support pb adv
 		bls_pm_setSuspendMask (SUSPEND_DISABLE);
 		blt_soft_timer_update(&soft_timer_rcv_beacon_timeout, SWITCH_IV_RCV_WINDOW_S*1000*1000);
-		blt_adv_expect_time_refresh(0);
-		blt_send_adv2scan_mode(0);
-		blt_adv_expect_time_refresh(1);
+		mesh_send_adv2scan_mode(0);
 	}
 }
 
@@ -198,7 +201,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		if(switch_provision_ok){
 			switch_mode_set(SWITCH_MODE_NORMAL);
 		}
-		mesh_ble_disconnect_cb();
+		mesh_ble_disconnect_cb(pd->reason);
 	}
 
 	if (send_to_hci)
@@ -221,13 +224,116 @@ void proc_ui()
 	mesh_proc_keyboard();
 }
 
+#define		ADV_TIMEOUT					(30*1000) //30s
+
+#if UI_BUTTON_MODE_ENABLE
+#define KEY_PRESS_DEBOUNCE_FILTER_CNT		(2)
+u8 key_pressing_cnt = KEY_PRESS_DEBOUNCE_FILTER_CNT;
+#define scan_pin_need	key_pressing_cnt
+
+void mesh_proc_keyboard ()
+{
+#if 0 // have set interval by sleep 40000us in switch_check_and_enter_sleep_().
+	static u32 tick, scan_io_interval_us = 40000;
+	if (!clock_time_exceed (tick, scan_io_interval_us))
+	{
+		return;
+	}
+	tick = clock_time();
+#endif
+
+	int key_pressing_flag = 0;
+#if 1
+	{
+		static u8 st_sw1_step;	
+	    static u32 long_tick1;
+		u8 st_sw1 = !gpio_read(SW1_GPIO);
+		key_pressing_flag = st_sw1;
+		if(st_sw1){
+			if(0 == st_sw1_step){
+				st_sw1_step = 1;
+				long_tick1 = clock_time();
+			}else if(1 == st_sw1_step){
+				if(clock_time_exceed(long_tick1, 3000*1000)){
+					// long pressed
+					st_sw1_step = 2;
+					// LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "key1 long", 0);
+					switch_mode_set(SWITCH_MODE_GATT);
+				}
+			}else{
+				// nothing to do
+			}
+		}else{
+			if(1 == st_sw1_step){
+				// short press
+				// LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "key1 short", 0);
+				if(SWITCH_MODE_GATT == switch_mode){
+					switch_mode_set(SWITCH_MODE_NORMAL); // press any key can exit adv mode
+				}
+				
+				static u8 sw_onoff_cnt;
+				u8 sw_onoff_flag = (sw_onoff_cnt++) & 1;	// light OFF first
+				access_cmd_onoff(ADR_ALL_NODES, 0, sw_onoff_flag, CMD_NO_ACK, 0);
+			}else if(2 == st_sw1_step){
+				// nothing to do
+			}
+			st_sw1_step = 0;
+		}
+	}
+#endif
+#if 1
+	{
+		static u8 st_sw2_step;	
+	    static u32 long_tick2;
+		u8 st_sw2 = !gpio_read(SW2_GPIO);
+		key_pressing_flag |= st_sw2;
+		if(st_sw2){
+			if(0 == st_sw2_step){
+				st_sw2_step = 1;
+				long_tick2 = clock_time();
+			}else if(1 == st_sw2_step){
+				if(clock_time_exceed(long_tick2, 3000*1000)){
+					// long pressed
+					st_sw2_step = 2;
+					// LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "key2 long", 0);
+				}
+			}else{
+				// nothing to do
+			}
+		}else{
+			if(1 == st_sw2_step){
+				// short press
+				// LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "key2 short", 0);
+			}else if(2 == st_sw2_step){
+				// nothing to do
+			}
+			st_sw2_step = 0;
+		}
+	}
+#endif
+
+	if(key_pressing_flag){
+		key_pressing_cnt = KEY_PRESS_DEBOUNCE_FILTER_CNT;
+		if(SWITCH_MODE_NORMAL == switch_mode){ // !is_led_busy()
+			rf_link_light_event_callback(LGT_CMD_SWITCH_CMD);
+		}
+	}else if(key_pressing_cnt){
+		key_pressing_cnt--;
+	}
+}
+
+
+void deep_wakeup_proc(void)
+{
+	// NULL
+}
+#else
 static int	rc_repeat_key = 0;
 static int	rc_key_pressed;
 static int	rc_long_pressed;
 static u32  mesh_active_time;
 static u8   key_released =1;
 #define		ACTIVE_INTERVAL				32000
-#define		ADV_TIMEOUT					(30*1000) //30s
 
 void deep_wakeup_proc(void)
 {
@@ -519,6 +625,7 @@ void mesh_proc_keyboard ()
 	rc_key_pressed = kb_last[0];
 	/////////////////////////////////////////////////////////////////////////////////
 }
+#endif
 
 int soft_timer_key_scan()
 {
@@ -599,31 +706,26 @@ void mesh_switch_init()
 {
 	mesh_tid.tx[0] = analog_read(REGA_TID);
     ////////// set up wakeup source: driver pin of keyboard  //////////
+    #if UI_BUTTON_MODE_ENABLE
+	cpu_set_gpio_wakeup (SW1_GPIO, 0, 1); 	// level : 1 (high); 0 (low)
+	cpu_set_gpio_wakeup (SW2_GPIO, 0, 1); 	// level : 1 (high); 0 (low)
+    #else
     u32 pin[] = KB_DRIVE_PINS;
     for (int i=0; i<sizeof (pin)/sizeof(u32); i++)
     {
         cpu_set_gpio_wakeup (pin[i], 1, 1);     // level : 1 (high); 0 (low)
     }
+    #endif
 }
 
 
-
-extern void blt_adv_expect_time_refresh(u8 en);
-void switch_quick_tx()
-{
-	blt_adv_expect_time_refresh(0);
-	blt_send_adv2scan_mode(1);	
-	blt_adv_expect_time_refresh(1);
-}
 
 int mesh_switch_send_mesh_adv()
 {
 	int ret = -1;	
-	if(BLS_LINK_STATE_ADV == blt_state){// can't send adv in pm connect mode because it cost too much time and may clear sys_tick irq
-		switch_quick_tx();
-		if(my_fifo_get(&mesh_adv_cmd_fifo)){		
-			ret = get_mesh_adv_interval();
-		}
+	mesh_send_adv2scan_mode(1);
+	if(my_fifo_get(&mesh_adv_cmd_fifo)){		
+		ret = get_mesh_adv_interval();
 	}
 	return ret;
 }
@@ -633,6 +735,7 @@ int mesh_switch_send_mesh_adv()
 void main_loop ()
 {
 	static u32 tick_loop;
+	// LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "m %d", tick_loop);
 
 	tick_loop ++;
 #if (BLT_SOFTWARE_TIMER_ENABLE)
@@ -786,6 +889,7 @@ void user_init()
 	{bls_ota_clearNewFwDataArea(0);	 //must
 	}
 	mesh_switch_init();
+	switch_triger_iv_search_mode(1);
 	//blc_ll_initScanning_module(tbl_mac);
 	#if((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 	blc_gap_peripheral_init();    //gap initialization
@@ -798,6 +902,7 @@ void user_init()
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 1*1000*1000);
 #endif
+	/// LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "init", 0);
 }
 
 #if (PM_DEEPSLEEP_RETENTION_ENABLE)
@@ -829,8 +934,10 @@ _attribute_ram_code_ void user_init_deepRetn(void)
 #endif
 
     mesh_switch_init();    
+	// LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "init ret", 0);
 }
 
+#if (0 == UI_BUTTON_MODE_ENABLE)
 void global_reset_new_key_wakeup()
 {
     rc_key_pressed = 0;
@@ -838,6 +945,7 @@ void global_reset_new_key_wakeup()
     memset(&kb_event, 0, sizeof(kb_event));
     global_var_no_ret_init_kb();
 }
+#endif
 
 #endif
 

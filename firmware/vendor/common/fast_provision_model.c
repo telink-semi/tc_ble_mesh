@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     vendor_model.c 
+ * @file	fast_provision_model.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -49,16 +52,14 @@ int mesh_reset_network(u8 provision_enable)
 	if(!is_provision_success()){
 		return 1;
 	}
-	u8 r = irq_disable ();
+	u32 r = irq_disable ();
 	factory_test_mode_en = 1;
 	provision_mag.gatt_mode = GATT_PROVISION_MODE;
 	cache_init(ADR_ALL_NODES);
 	mesh_provision_para_reset();
 
 //init iv idx
-	u8 iv_idx_cur[4] = IV_IDX_CUR;
-	memcpy(iv_idx_st.cur, iv_idx_cur, 4);
-	mesh_iv_idx_init(iv_idx_st.cur, 0);
+	mesh_iv_idx_init(IV_IDX_CUR, 0, 0);
 //init model info
 	mesh_common_reset_all();
 	provision_mag.gatt_mode = GATT_PROVISION_MODE;// because retrive in mesh_common_reset_all	
@@ -140,6 +141,7 @@ void mesh_revert_network()
 u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid)
 {
 	u8 node_ele_cnt = 1;
+	pid &= 0x0fff;// should discard MCU chip type of MESH_PID_SEL
 	switch(pid){
 	case LIGHT_TYPE_CT:
 		node_ele_cnt = 2;
@@ -165,6 +167,9 @@ u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid)
 void mesh_fast_prov_start(u16 pid, u16 start_addr)
 {
 #if (FAST_PROVISION_ENABLE)
+	if(FAST_PROV_IDLE != fast_prov.cur_sts){
+		return;
+	}
 	fast_prov.pid = pid;
 	fast_prov.prov_addr = start_addr;
 	fast_prov.cur_sts = fast_prov.last_sts = FAST_PROV_START;
@@ -490,8 +495,11 @@ void mesh_fast_prov_proc()
 		case VD_MESH_RESET_NETWORK:
 			if(fast_prov.cur_sts == FAST_PROV_IDLE){
 				mesh_adv_txrx_to_self_en(1);
-				mesh_fast_prov_sts_set(FAST_PROV_RESET_NETWORK);
-				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_RESET_NETWORK",0);
+				mesh_fast_prov_val_init(); // the proxy node maybe just provision by pb_gatt
+				if(is_provision_success()){
+					mesh_fast_prov_sts_set(FAST_PROV_RESET_NETWORK);
+					LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_RESET_NETWORK",0);
+				}
 			}
 			break;
 		case VD_MESH_ADDR_GET:
@@ -535,9 +543,6 @@ void mesh_fast_prov_proc()
 
 int cb_vd_mesh_reset_network(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	if(!fast_prov.not_need_prov){
-		return -1;
-	}
 	mesh_fast_prov_rcv_op(cb_par->op);
 	fast_prov.delay = par[0] + (par[1]<<8);
 

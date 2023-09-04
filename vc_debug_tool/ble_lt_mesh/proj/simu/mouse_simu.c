@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     mouse_simu.c 
+ * @file	mouse_simu.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "../tl_common.h"
 #include "../os/ev.h"
 #include "../drivers/mouse.h"
@@ -178,7 +180,7 @@ int mouse_simu_dev_timer(void *data){
     mouse_simu_circle();
 #endif
 
-#if 0        //  Ä£Äâ´«¸ÐÆ÷²úÉúÒ»¸ö·½²¨
+#if 0        //  æ¨¡æ‹Ÿä¼ æ„Ÿå™¨äº§ç”Ÿä¸€ä¸ªæ–¹æ³¢
     static int cnt = 0;
     if(0 == cnt){
         mouse_simu_circle();

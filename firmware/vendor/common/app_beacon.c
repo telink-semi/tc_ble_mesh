@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app_beacon.c 
+ * @file	app_beacon.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #if WIN32 
 #include "../../../reference/tl_bulk/lib_file/app_config.h"
@@ -30,6 +33,7 @@
 #include "proj/common/types.h"
 #include "app_privacy_beacon.h"
 #include "blt_soft_timer.h"
+#include "vendor/common/mi_api/telink_sdk_mible_api.h"
 
 
 int mesh_bear_tx_beacon_adv_channel_only(u8 *bear, u8 trans_par_val)
@@ -94,8 +98,18 @@ int check_pkt_is_unprovision_beacon(u8 *dat)
 	}
 }
 
-u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info){
+u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info)
+{
+	#if LPN_CONTROL_EN
+	if(mi_mesh_get_state()){
+		p_str->trans_par_val = TRANSMIT_DEF_PAR_BEACON;		
+	}else{
+		// only send once 
+		p_str->trans_par_val = 0;
+	}
+	#else
 	p_str->trans_par_val = TRANSMIT_DEF_PAR_BEACON;
+	#endif
 	p_str->bea_data.header.len = 20;
 	p_str->bea_data.header.type = MESH_ADV_TYPE_BEACON ;
 	p_str->bea_data.beacon_type = UNPROVISION_BEACON;
@@ -106,8 +120,18 @@ u8  beacon_data_init_without_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info){
 	return 1;
 }
 
-u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash){
+u8  beacon_data_init_uri(beacon_str *p_str ,u8 *p_uuid,u8 *p_info,u8 *p_hash)
+{
+	#if LPN_CONTROL_EN
+	if(mi_mesh_get_state()){
+		p_str->trans_par_val = TRANSMIT_DEF_PAR_BEACON;		
+	}else{
+		// only send once 
+		p_str->trans_par_val = 0;
+	}
+	#else
 	p_str->trans_par_val = TRANSMIT_DEF_PAR_BEACON;
+	#endif
 	p_str->bea_data.header.len = 24;
 	p_str->bea_data.header.type = MESH_ADV_TYPE_BEACON ;
 	p_str->bea_data.beacon_type = UNPROVISION_BEACON;
@@ -192,7 +216,7 @@ int mesh_tx_sec_nw_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
     memset(&bc_bear, 0, sizeof(bc_bear));
 	#if (0) // keep sending 2.5s if need
 	bc_bear.tx_head.par_type = BEAR_TX_PAR_TYPE_REMAINING_TIMES;
-	bc_bear.tx_head.val = 255;
+	bc_bear.tx_head.val[0] = 255;
 	#endif
    	bc_bear.type = MESH_ADV_TYPE_BEACON;
     bc_bear.len = 23; // 1+1+sizeof(mesh_beacon_sec_nw_t)+8;
@@ -264,9 +288,10 @@ int mesh_tx_sec_private_beacon_proc(u8 blt_sts)
 	return err;
 }
 
-int iv_update_key_refresh_rx_handle_cb(mesh_ctl_fri_update_flag_t *p_ivi_flag, u8 *p_iv_idx)
+int iv_update_key_refresh_rx_handle_cb(mesh_ctl_fri_update_flag_t *p_ivi_flag, u32 iv_idx)
 {
 	#if __PROJECT_MESH_SWITCH__
+	LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch receive security network beacon time_s:%d", clock_time_s());
 	extern int soft_timer_rcv_beacon_timeout();
 	soft_timer_rcv_beacon_timeout();
 	blt_soft_timer_delete(&soft_timer_rcv_beacon_timeout);

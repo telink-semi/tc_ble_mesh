@@ -1,31 +1,25 @@
 /********************************************************************************************************
-* @file     SigConst.h
-*
-* @brief    for TLSR chips
-*
-* @author       Telink, 梁家誌
-* @date     Sep. 30, 2010
-*
-* @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
-*           All rights reserved.
-*
-*             The information contained herein is confidential and proprietary property of Telink
-*              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
-*             of Commercial License Agreement between Telink Semiconductor (Shanghai)
-*             Co., Ltd. and the licensee in separate contract or the terms described here-in.
-*           This heading MUST NOT be removed from this file.
-*
-*              Licensees are granted free, non-transferable use of the information in this
-*             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
-*
-*******************************************************************************************************/
-//
-//  SigConst.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/11/27.
-//  Copyright © 2019 Telink. All rights reserved.
-//
+ * @file     SigConst.h
+ *
+ * @brief    for TLSR chips
+ *
+ * @author   Telink, 梁家誌
+ * @date     2019/11/27
+ *
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *******************************************************************************************************/
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -43,7 +37,7 @@ UIKIT_EXTERN NSString * const kCommandIsBusyKey;
 UIKIT_EXTERN NSString * const AccessError_invalidSource;
 /// Thrown when trying to send a message using an Element that does not belong to the local Provisioner's Node.
 UIKIT_EXTERN NSString * const AccessError_invalidElement;
-/// Throwm when the given TTL is not valid. Valid TTL must be 0 or in range 2...127.
+/// Thrown when the given TTL is not valid. Valid TTL must be 0 or in range 2...127.
 UIKIT_EXTERN NSString * const AccessError_invalidTtl;
 /// Thrown when the destination Address is not known and the library cannot determine the Network Key to use.
 UIKIT_EXTERN NSString * const AccessError_invalidDestination;
@@ -73,19 +67,19 @@ UIKIT_EXTERN NSString * const kFirmwareRevisionCharacteristicsID;
 //存储数据的key
 //mesh
 UIKIT_EXTERN NSString * const kScanList_key;
-UIKIT_EXTERN NSString * const kMatchsList_key;
-UIKIT_EXTERN NSString * const kNoMatchsList_key;
 UIKIT_EXTERN NSString * const kJsonMeshUUID_key;
 UIKIT_EXTERN NSString * const kCurrenProvisionerUUID_key;
 UIKIT_EXTERN NSString * const kCurrenProvisionerSno_key;
+UIKIT_EXTERN NSString * const kLocationIvIndexAndSequenceNumberDictionary_key;//缓存当前首页的所有mesh的provisioner与ivIndex+sequenceNumber的映射字典。
 //homes
 UIKIT_EXTERN NSString * const kCurrentMeshProvisionAddress_key;
 //SigScanRspModel
 UIKIT_EXTERN NSString * const kSigScanRspModel_uuid_key;
 UIKIT_EXTERN NSString * const kSigScanRspModel_address_key;
 UIKIT_EXTERN NSString * const kSigScanRspModel_mac_key;
-UIKIT_EXTERN NSString * const kSigScanRspModel_nodeIdentityData_key;
-UIKIT_EXTERN NSString * const kSigScanRspModel_networkIDData_key;
+//UIKIT_EXTERN NSString * const kSigScanRspModel_nodeIdentityData_key;
+//UIKIT_EXTERN NSString * const kSigScanRspModel_networkIDData_key;
+UIKIT_EXTERN NSString * const kSigScanRspModel_advertisementDataServiceData_key;
 //meshOTA
 UIKIT_EXTERN NSString * const kSaveMeshOTADictKey;
 /*存储在本地的数据的key，不再存储在cache中，因为苹果设备的存储快满的时候，系统会删除cache文件夹的数据*/
@@ -116,7 +110,14 @@ UIKIT_EXTERN NSString * const kSigModelGroup_RemoteProvision_Describe;
 UIKIT_EXTERN NSString * const kSigModelGroup_FirmwareUpdate_Describe;
 UIKIT_EXTERN NSString * const kSigModelGroup_FirmwareDistribution_Describe;
 UIKIT_EXTERN NSString * const kSigModelGroup_ObjectTransfer_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_DF_CFG_Describe;
 UIKIT_EXTERN NSString * const kSigModelGroup_SubnetBridge_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_PrivateBeacon_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_ON_DEMAND_PROXY_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_SAR_CFG_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_OP_AGG_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_LARGE_CPS_Describe;
+UIKIT_EXTERN NSString * const kSigModelGroup_SOLI_PDU_RPL_CFG_Describe;
 
 UIKIT_EXTERN NSString * const kSigModel_ConfigurationServer_Describe;
 UIKIT_EXTERN NSString * const kSigModel_ConfigurationClient_Describe;
@@ -187,8 +188,22 @@ UIKIT_EXTERN NSString * const kSigModel_FirmwareDistributionServer_Describe;
 UIKIT_EXTERN NSString * const kSigModel_FirmwareDistributionClient_Describe;
 UIKIT_EXTERN NSString * const kSigModel_ObjectTransferServer_Describe;
 UIKIT_EXTERN NSString * const kSigModel_ObjectTransferClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_DF_CFG_S_Describe;
+UIKIT_EXTERN NSString * const kSigModel_DF_CFG_C_Describe;
 UIKIT_EXTERN NSString * const kSigModel_SubnetBridgeServer_Describe;
-
+UIKIT_EXTERN NSString * const kSigModel_SubnetBridgeClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_PrivateBeaconServer_Describe;
+UIKIT_EXTERN NSString * const kSigModel_PrivateBeaconClient_Describe;
+UIKIT_EXTERN NSString * const kSigModel_ON_DEMAND_PROXY_S_Describe;
+UIKIT_EXTERN NSString * const kSigModel_ON_DEMAND_PROXY_C_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SAR_CFG_S_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SAR_CFG_C_Describe;
+UIKIT_EXTERN NSString * const kSigModel_OP_AGG_S_Describe;
+UIKIT_EXTERN NSString * const kSigModel_OP_AGG_C_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LARGE_CPS_S_Describe;
+UIKIT_EXTERN NSString * const kSigModel_LARGE_CPS_C_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SOLI_PDU_RPL_CFG_S_Describe;
+UIKIT_EXTERN NSString * const kSigModel_SOLI_PDU_RPL_CFG_C_Describe;
 
 #pragma mark - Const bool
 
@@ -337,8 +352,6 @@ UIKIT_EXTERN UInt8 const kTimePublishInterval;// 20
 /// 离线检测的时长
 UIKIT_EXTERN UInt8 const kOfflineInterval;// = (kPublishInterval * 3 + 1)
 
-/// SIGParameters
-UIKIT_EXTERN UInt8 const kSigmodel_SIGParameters;// 1
 /// kCmdReliable_SIGParameters: 1 means send reliable cmd ,and the node will send rsp ,0 means unreliable ,will not send
 UIKIT_EXTERN UInt8 const kCmdReliable_SIGParameters;// 1
 UIKIT_EXTERN UInt8 const kCmdUnReliable_SIGParameters;// 0
@@ -366,8 +379,8 @@ UIKIT_EXTERN UInt32 const kSigMeshLibIsBusyErrorCode;// 0x02110100
 UIKIT_EXTERN NSString * const kSigMeshLibIsBusyErrorMessage;// busy
 
 /*当前连接的设备不存在私有特征OnlineStatusCharacteristic*/
-UIKIT_EXTERN UInt32 const kSigMeshLibNofoundOnlineStatusCharacteristicErrorCode;// 0x02110101
-UIKIT_EXTERN NSString * const kSigMeshLibNofoundOnlineStatusCharacteristicErrorMessage;// nofound onlineStatus characteristic
+UIKIT_EXTERN UInt32 const kSigMeshLibNoFoundOnlineStatusCharacteristicErrorCode;// 0x02110101
+UIKIT_EXTERN NSString * const kSigMeshLibNoFoundOnlineStatusCharacteristicErrorMessage;// no found onlineStatus characteristic
 
 /*当前的mesh数据源未创建*/
 UIKIT_EXTERN UInt32 const kSigMeshLibNoCreateMeshNetworkErrorCode;// 0x02110102
@@ -393,12 +406,9 @@ UIKIT_EXTERN NSString * const kSigMeshLibCommandInvalidNetKeyIndexErrorMessage;/
 UIKIT_EXTERN UInt32 const kSigMeshLibCommandInvalidAppKeyIndexErrorCode;// 0x02110107
 UIKIT_EXTERN NSString * const kSigMeshLibCommandInvalidAppKeyIndexErrorMessage;// Invalid AppKey Index
 
-/*模拟外设的固定服务和特征(分享中使用)*/
-UIKIT_EXTERN NSString * const kServiceUUID;// 33333333-0000-1000-8000-111111111111
-UIKIT_EXTERN NSString * const kWriteNotiyCharacteristicUUID;// 22222222-0000-1000-8000-111111111111
-/*一个蓝牙json数据包的有效数据长度，测试结果长度为100时，使用时间较短*/
-UIKIT_EXTERN UInt16 const kPacketJsonLength;// 100
-UIKIT_EXTERN UInt16 const kPacketAllLength;// (kPacketJsonLength+4)
+/*Mesh未连接*/
+UIKIT_EXTERN UInt32 const kSigMeshLibCommandMeshDisconnectedErrorCode;// 0x02110108
+UIKIT_EXTERN NSString * const kSigMeshLibCommandMeshDisconnectedErrorMessage;// Mesh Disconnected
 
 /*telink当前定义的三个设备类型*/
 UIKIT_EXTERN UInt16 const SigNodePID_CT;// 1
@@ -411,7 +421,7 @@ UIKIT_EXTERN float const kCMDInterval;// 0.32
 UIKIT_EXTERN float const kSDKLibCommandTimeout;// 1.28
 
 /*读取json里面的mesh数据后，默认新增一个增量128*/
-UIKIT_EXTERN UInt32 const kSnoIncrement;//128
+UIKIT_EXTERN UInt32 const kSequenceNumberIncrement;//128
 
 /*初始化json数据时的ivIndex的值*/
 UIKIT_EXTERN UInt32 const kDefaultIvIndex;//0x0

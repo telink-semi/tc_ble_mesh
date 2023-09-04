@@ -3,26 +3,22 @@
  *
  * @brief    A concise description.
  *
- * @author       梁家誌
- * @date         2021/4/19
+ * @author   Telink, 梁家誌
+ * @date     2021/4/19
  *
- * @par      Copyright © 2021 Telink Semiconductor (Shanghai) Co., Ltd. All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *           The information contained herein is confidential property of Telink
- *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *           Co., Ltd. and the licensee or the terms described here-in. This heading
- *           MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or  
- *           alter) any information contained herein in whole or in part except as expressly authorized  
- *           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible  
- *           for any claim to the extent arising out of or relating to such deletion(s), modification(s)  
- *           or alteration(s).
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
- *           Licensees are granted free, non-transferable use of the information in this
- *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
- *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 
 #import "ConnectTools.h"
@@ -128,7 +124,7 @@ typedef enum : NSUInteger {
                 });
             }
             SigScanRspModel *rspModel = [SigMeshLib.share.dataSource getScanRspModelWithUUID:peripheral.identifier.UUIDString];
-            if (rspModel.nodeIdentityData && rspModel.nodeIdentityData.length == 16) {
+            if (rspModel.getIdentificationType == SigIdentificationType_nodeIdentity || rspModel.getIdentificationType == SigIdentificationType_privateNodeIdentity) {
                 SigEncryptedModel *encryptedModel = nil;
                 NSArray *temArray = [NSMutableArray arrayWithArray:weakSelf.connectNodeList];
                 for (SigNodeModel *node in temArray) {
@@ -137,7 +133,7 @@ typedef enum : NSUInteger {
                         break;
                     }
                 }
-                if (encryptedModel && encryptedModel.identityData && encryptedModel.identityData.length == 16 && [encryptedModel.identityData isEqualToData:rspModel.nodeIdentityData]) {
+                if (encryptedModel && encryptedModel.advertisementDataServiceData && encryptedModel.advertisementDataServiceData.length == 17 && [encryptedModel.advertisementDataServiceData isEqualToData:rspModel.advertisementDataServiceData]) {
                     TeLogInfo(@"start connect address:0x%X macAddress:%@",rspModel.address,rspModel.macAddress);
                     weakSelf.peripheral = peripheral;
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -227,9 +223,9 @@ typedef enum : NSUInteger {
     }
     if (self.connectNodeList.count > 0) {
         NSMutableArray *array = [[NSMutableArray alloc] initWithArray:self.connectNodeList];
-        NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
+        NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
         __weak typeof(self) weakSelf = self;
-        [oprationQueue addOperationWithBlock:^{
+        [operationQueue addOperationWithBlock:^{
             while (array.count > 0) {
                 if (weakSelf.isEnd) {
                     return;

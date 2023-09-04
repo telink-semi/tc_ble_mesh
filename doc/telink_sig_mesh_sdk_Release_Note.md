@@ -1,3 +1,239 @@
+## V3.3.3.6
+
+### Dependency Updates
+
+* telink_b85m_ble_single_connection_sdk_v3.4.1
+* mesh library commit log: 5d1b6666d7a518b3c93681cf1b896c63e2d931e6
+* ble  library commit log: the same as mesh library.
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* N/A
+
+### Performance Improvements
+
+* delete some unused APIs which name has typo.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+### CodeSize
+
+* Flash and RAM (default target):
+
+  - 8258_mesh:_________Flash 118 KB, RAM (28 KB + 3K stack),
+  - 8258_mesh_LPN:____Flash 111 KB, RAM (23 KB + 3K stack),
+  - 8258_mesh_gw:_____Flash 128 KB, RAM (36 KB + 3K stack),
+  - 8258_mesh_switch:__Flash 106 KB, RAM (25 KB + 3K stack),
+
+
+### Dependency Updates
+
+* telink_b85m_ble_single_connection_sdk_v3.4.1
+* mesh library commit log: 5d1b6666d7a518b3c93681cf1b896c63e2d931e6
+* ble  library commit log: the same as mesh library.
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* N/A
+
+### Performance Improvements
+
+* 删除一些未正确拼写名称且未使用的接口。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
+## V3.3.3.5.1
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) update the "firmware" and "release_bin" folders only. The others remain the same as V3.3.3.5.
+* (Firmware) add support Tencent connectivity. set MESH_ USER_ DEFINE_ MODE to MESH_ LLSYNC_ ENABLE. for more details, refer to "doc/AN_2211xxxx_C1_Tencent Lianliant_elink Development Document_20221125. docx".
+
+### Performance Improvements
+
+* N/A
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+* Flash and RAM (default target):
+
+  - 8258_mesh.bin:        Flash 118 KB, RAM (27.8 KB + 3K stack),
+  - 8258_mesh_llsync.bin: Flash 124 KB, RAM (28.6 KB + 3K stack),
+
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) 仅更新 “firmware” 和 "release_bin" 文件夹，其它保持和 V3.3.3.5 一样。
+* (Firmware) 增加支持接入腾讯连连功能。MESH_USER_DEFINE_MODE 设置为 MESH_LLSYNC_ENABLE 即可。详情请参阅 “doc/AN_2211xxxx_C1_腾讯连连_telink开发文档_20221125.docx”。
+
+### Performance Improvements
+
+* N/A
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
+## V3.3.3.5
+
+### Bug Fixes
+
+* (Firmware) fix bug of V3.3.4: if TIMER 0-TIMER 2 was set to be enabled (disable by default), TIMER 0-TIMER 2 will be disabled by mistake after the node is provisioned.
+
+### Features
+
+* (Firmware) add accepting OTA rules: upgrade is allowed only when the PID is the same, see OTA_ADOPT_RULE_CHECK_PID_EN, enabled by default; upgrade is allowed when the VID (Version ID) is increased, see OTA_ADOPT_RULE_CHECK_VID_EN, disabled by default. (This OTA rule has been added in V3.3.4)
+* (Firmware) replace Telink BSD license with Apache 2.0 License.
+* (Firmware) add customized low-power mesh products that can send and receive messages, see LPN_CONTROL_EN for details.
+* (Firmware) add customized protocol of Provision.
+* (Firmware) add support extend ADV mode for gateway.
+
+### Performance Improvements
+
+* (Firmware/Android/iOS) modify Version ID format, from two-digit ASCII code to four-digit BCD code, such as 3 3 3 5, which still be two bytes, see FW_VERSION_TELINK_RELEASE for details.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+* Flash and RAM (default target):
+
+  - 8258_mesh:_________Flash 118 KB, RAM (28 KB + 3K stack),
+  - 8258_mesh_LPN:____Flash 111 KB, RAM (23 KB + 3K stack),
+  - 8258_mesh_gw:_____Flash 128 KB, RAM (36 KB + 3K stack),
+  - 8258_mesh_switch:__Flash 106 KB, RAM (25 KB + 3K stack),
+
+
+### Bug Fixes
+
+* (Firmware) 修复V3.3.4版本问题：如果客户使能了TIMER0-TIMER2(默认不使能)，节点被组网后，TIMER0-TIMER2会被错误关闭的问题。
+
+### Features
+
+* (Firmware) 增加是否接受升级的OTA规则：PID相同时才允许升级，详见OTA_ADOPT_RULE_CHECK_PID_EN，默认使能；VID(Version ID)增加时才允许升级，详见OTA_ADOPT_RULE_CHECK_VID_EN，默认不使能。(该OTA规则在V3.3.4中已添加)
+* (Firmware) 替换 Telink BSD license为 Apache 2.0 license。
+* (Firmware) 增加客户定制的能收发命令的低功耗mesh产品，详见 LPN_CONTROL_EN。
+* (Firmware) 增加客户定制的配网协议。
+* (Firmware) 增加gateway支持收发extend ADV的模式。
+
+### Performance Improvements
+
+* (Firmware/Android/iOS) 修改两个byte的版本号格式，由原来的两个数字的ASCII码值改为4个数字的BCD码，如 3 3 3 5，仍然是占用两个byte，详见FW_VERSION_TELINK_RELEASE的定义。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
+## V3.3.4
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) add customers's customization functions: low-power and non-low-power version of mesh, OTA function.
+* (Firmware) add the functions of retention sleep, soft timer function and iv update process for mesh_switch project. Set destination address of "group control" by configuring the publish address of client model.
+* (Firmware) add the function of private fast provision for gateway. set FAST_PROVISION_ENABLE to 1.
+* (Firmware) add sdk codes of sig_mesh_tool.exe for debugging or secondary development.
+* (Android/iOS) add the identification and configuration for mesh_switch device.
+* (Android/iOS) add the function of private fast provision for LPN nodes.
+* (Android/iOS) add configuration UI to configure device's TTL, etc.
+* (iOS) add FIFO for commands, allow the application layer to push several commands at the same time.
+
+### Performance Improvements
+
+* (Firmware) modify the maximum number of device's elements from 8 to 16.
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+
+### Bug Fixes
+
+* N/A
+
+### Features
+
+* (Firmware) 增加客户定制的低功耗和非低功耗版本的mesh，以及定制的OTA功能。
+* (Firmware) 增加支持mesh_switch 工程的 retention sleep模式，soft timer功能，iv update流程。可以通过配置client model的publish address 设置"组控按键"对应的目标地址。
+* (Firmware) 增加gateway支持私有的fast provision功能，设置FAST_PROVISION_ENABLE为1即可。
+* (Firmware) 增加sig_mesh_tool.exe工具对应的sdk代码，可用于debug或者二次开发的。
+* (Android/iOS) 增加mesh_switch设备的识别和配置。
+* (Android/iOS) 增加LPN节点支持私有的 fast provision入网。
+* (Android/iOS) 增加节点配置界面，用于配置节点的TTL等。
+* (iOS) 增加串行指令队列，允许应用层同时压入多条指令。
+
+### Performance Improvements
+
+* (Firmware) 更改一个节点最大支持的element 个数，由8个改为16个。
+
+### BREAKING CHANGES
+
+* N/A
+
+### Notes
+
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+
+
+
 ## V3.3.3
 ### Features
 * Support ZBit flash.

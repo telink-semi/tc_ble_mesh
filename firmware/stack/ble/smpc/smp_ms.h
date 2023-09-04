@@ -1,26 +1,27 @@
-
 /********************************************************************************************************
- * @file     smp_ms.h
+ * @file	smp_ms.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 BLE Group
- * @date     Sep. 18, 2019
+ * @author	BLE Group
+ * @date	Sep. 18, 2019
  *
- * @par      Copyright (c) Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- *			 The information contained herein is confidential and proprietary property of Telink
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *
  *******************************************************************************************************/
-
 #ifndef SMP_MS_H_
 #define SMP_MS_H_
 
@@ -98,9 +99,9 @@ typedef struct{
 }smp_ms_param_own_t;
 
 typedef struct {
-	u32 smp_timeout_start_tick;//SMP ø™∆Ù ±º‰±Íº«
+	u32 smp_timeout_start_tick;//SMP ÂºÄÂêØÊó∂Èó¥Ê†áËÆ∞
 
-	u16 smpDistirbuteKeyOrder; //√‹‘ø∑÷≈‰∆Ù∂Ø±Í÷æ
+	u16 smpDistirbuteKeyOrder; //ÂØÜÈí•ÂàÜÈÖçÂêØÂä®Ê†áÂøó
 	smp_keyDistribution_t smp_DistributeKeyInit; //master distribute key transmit
 	smp_keyDistribution_t smp_DistributeKeyResp; //slave distribute key transmit
 

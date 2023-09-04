@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     mesh_node.h 
+ * @file	mesh_node.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 #include "proj/tl_common.h"
 #if NL_API_ENABLE
@@ -103,7 +105,11 @@ static inline void set_array_mask_en(u8 *mask, u32 mask_num)
 //----------------------------------- key
 #define NET_KEY_PRIMARY     (0)
 
+#if 0 // (GATEWAY_ENABLE || (__LIB_EN__ && __PROJECT_MESH_PRO__))
+#define NET_KEY_MAX         (3)		// count in node
+#else
 #define NET_KEY_MAX         (2)		// count in node
+#endif
 #define APP_KEY_MAX         (2)		// count in node
 
 #define NET_KEY_LIST_MAX_PROV	(1)		// count in provisioner
@@ -456,6 +462,15 @@ typedef struct{
 }sar_receiver_t;
 
 typedef struct{
+	u8 par_type;
+	struct{
+		u8 step:1;  // unit: 0:10ms 1:100ms
+		u8 count:7;
+	};
+	u16 start_tick;
+}bear_delay_t;
+
+typedef struct{
 	u8 relay;
 	mesh_transmit_t transmit;
 }mesh_cfg_model_relay_set_t;
@@ -699,9 +714,13 @@ typedef struct{
 #ifndef LIGHT_CNT
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL)
 	#if __PROJECT_MESH_SWITCH__
-	#define LIGHT_CNT                       (4)     // means instance count
+		#if UI_BUTTON_MODE_ENABLE
+#define LIGHT_CNT                       (1)     // means instance count
+		#else
+#define LIGHT_CNT						(4) 	// means instance count
+		#endif
 	#else
-	#define LIGHT_CNT                       (3)     // means instance count
+#define LIGHT_CNT                       (3)     // means instance count
 	#endif
 #else
 #define LIGHT_CNT                       (1)     // means instance count
@@ -796,7 +815,7 @@ typedef struct{
     u8 tx[ELE_CNT];
 }mesh_tid_t;
 
-#if (WIN32 || (TLV_ENABLE))
+#if (WIN32 || (TLV_ENABLE) || (NET_KEY_MAX > 2 || APP_KEY_MAX > 2))
 #define BIND_KEY_MAX		(APP_KEY_MAX * NET_KEY_MAX)
 #else
 #define BIND_KEY_MAX		(APP_KEY_MAX)   // confirm later, because of compatibility of flash save
@@ -1455,7 +1474,7 @@ typedef struct{
 }misc_save_t;
 
 enum{
-    KEY_UNVALID     = 0,        // must 0
+    KEY_INVALID     = 0,        // must 0
     KEY_VALID       = 1,
 };
 
@@ -1487,6 +1506,28 @@ typedef struct{
 	u8 nk[16];
 	u16 node_adr;
 }mesh_prov_par_t;
+
+// common save
+#define FLASH_CHECK_SIZE_MAX	(64)
+#define SIZE_SAVE_FLAG		(4)
+
+typedef struct{
+    u32 adr_base;
+    u8 *p_save_par;
+    u32 *p_adr;
+    u32 size_save_par;		// exclude save flag
+}mesh_save_map_t;
+
+#define MODEL_MAX_ONE_SECTOR	(6)
+
+typedef struct{
+    bool4 sig_model;
+    u32 md_id[MODEL_MAX_ONE_SECTOR];
+    u32 adr_base;
+}mesh_md_adr_map_t;
+
+extern const u32 mesh_save_map_array;
+extern const mesh_save_map_t mesh_save_map[];
 
 // ---------------
 static inline u32 GET_LEVEL_PAR_LEN(int trans_flag){
@@ -1580,7 +1621,8 @@ void mesh_provision_par_handle(u8 *prov_mag);
 int mesh_provision_par_set_dir(u8 *prov_par);
 u32 get_all_appkey_cnt();
 int get_mesh_adv_interval();
-
+int get_mesh_tx_delay_ms(bear_delay_t *p_bear);
+void set_mesh_bear_tx_delay(u8 *p, int delay_ms);
 
 void VC_node_info_retrieve();
 u8 * VC_master_get_other_node_dev_key(u16 adr);
@@ -1622,6 +1664,7 @@ void mesh_service_change_report();
 int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u32 size,u8 flag);
 void mesh_seg_rx_init();
 void mesh_seg_ack_poll_rx();
+int is_retrans_segment_done();
 void mesh_seg_ack_poll_tx();
 void blc_pm_select_none();
 
@@ -1659,7 +1702,12 @@ void mesh_blc_ll_setExtAdvData(u8 adv_pdu_len, u8 *data);
 void mesh_ivi_event_cb(u8 search_flag);
 void mesh_netkey_cb(u8 idx,u16 op);
 void send_and_wait_completed_reset_node_status();
-
+void mesh_node_identity_refresh();
+int is_rx_seg_reject_before(u16 src_addr, u32 seqAuth);
+void add2rx_seg_reject_cache(u16 src_addr, u32 seqAuth);
+#if (!WIN32 && (MCU_CORE_TYPE >= MCU_CORE_8258))
+void sys_clock_init(SYS_CLK_TypeDef SYS_CLK);
+#endif
 
 
 extern u16 ele_adr_primary;
@@ -1711,9 +1759,16 @@ extern s8 rssi_pkt; // have been -110
 extern u8 pts_test_en;
 extern const u16 my_fwRevisionUUID;
 extern u8 my_fwRevisionCharacter;
-#define FW_REVISION_VALUE_LEN       (9)
+#define FW_REVISION_VALUE_LEN       (16)
 extern const u8  my_fwRevision_value [FW_REVISION_VALUE_LEN];
 extern u8 g_gw_extend_adv_option;
+
+typedef struct{
+	u16 major 			:4;
+	u16 spec 			:4;
+	u16 second_minor	:4;
+	u16 minor 			:4;
+}sw_version_big_endian_t;
 
 #define TEST_CNT 100
 typedef struct{
@@ -1727,9 +1782,11 @@ typedef struct{
 	u32 send_tick;
 } mesh_rcv_t;
 
+#define EXTEND_PROVISION_FLAG_OP		(0xFFFF)	// use a special op to represent provision data, no valid op is equal to this.
+
 enum{
     EXTEND_ADV_OPTION_NONE      = 0,    // not support extend adv
-    EXTEND_ADV_OPTION_ADV_ONLY  = 1,    // only mesh OTA command use extend adv
+    EXTEND_ADV_OPTION_OTA_ONLY  = 1,    // only mesh OTA command use extend adv
     EXTEND_ADV_OPTION_ALL       = 2,    // all command use extend adv
     EXTEND_ADV_OPTION_MAX,
 };

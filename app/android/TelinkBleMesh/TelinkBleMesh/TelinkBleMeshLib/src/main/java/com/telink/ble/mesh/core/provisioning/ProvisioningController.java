@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.provisioning;
 
@@ -25,6 +26,8 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.SparseArray;
+
+import androidx.annotation.NonNull;
 
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.core.MeshUtils;
@@ -52,11 +55,8 @@ import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 
-import androidx.annotation.NonNull;
-
 /**
  * provisioning
- * OOB public key is not supported
  * Auth Method inputOOB outputOOB is not supported
  * Created by kee on 2019/7/31.
  */
@@ -172,6 +172,13 @@ public class ProvisioningController {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
 
+    private static final byte[] AUTH_NO_OOB_EPA = {
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
     private static final long TIMEOUT_PROVISIONING = 60 * 1000;
 
 
@@ -251,7 +258,8 @@ public class ProvisioningController {
      */
     private ProvisioningDevice mProvisioningDevice;
 
-    private boolean encAuth;
+    // deprecated
+//    private boolean encAuth;
 
     //    private byte[] deviceCertData;
 
@@ -273,10 +281,9 @@ public class ProvisioningController {
         return mProvisioningDevice;
     }
 
-    public void begin(@NonNull ProvisioningDevice device, boolean encAuth) {
-        log("begin -- " + Arrays.bytesToHexString(device.getDeviceUUID()) + " -- encAuth -" + encAuth);
+    public void begin(@NonNull ProvisioningDevice device) {
+        log("begin -- " + Arrays.bytesToHexString(device.getDeviceUUID()));
         this.mProvisioningDevice = device;
-        this.encAuth = encAuth;
         if (device.getRootCert() != null) {
             this.rootCert = device.getRootCert();
         } else {
@@ -286,7 +293,15 @@ public class ProvisioningController {
         delayHandler.postDelayed(provisioningTimeoutTask, TIMEOUT_PROVISIONING);
 
         // draft feature
-        provisionInvite();
+        final int oobInfo = device.getOobInfo();
+        if (MeshUtils.isCertSupported(oobInfo) && MeshUtils.isPvRecordSupported(oobInfo)) {
+            provisionRecordsGet();
+        } else {
+            provisionInvite();
+        }
+
+        // draft feature
+//        provisionInvite();
     }
 
     public void clear() {
@@ -350,40 +365,15 @@ public class ProvisioningController {
     }
 
     private byte[] getAuthValue() {
-        if (pvCapability.staticOOBSupported() && mProvisioningDevice.getAuthValue() != null) {
-            if (encAuth) {
-                log("get encode auth");
-                return getEncodedAuth(mProvisioningDevice.getAuthValue());
-            } else {
-                log("get origin auth");
-                return mProvisioningDevice.getAuthValue();
-            }
+        if (pvCapability.isStaticOOBSupported() && mProvisioningDevice.getAuthValue() != null) {
+            return mProvisioningDevice.getAuthValue();
         } else {
+            if (pvCapability.isHMacAlgorithmSupported()) {
+                return AUTH_NO_OOB_EPA;
+            }
             return AUTH_NO_OOB;
         }
     }
-
-
-    /**
-     * encode auth value in static-oob
-     */
-    private byte[] getEncodedAuth(byte[] originAuth) {
-        byte[] authResult = originAuth.clone();
-        byte[] input = confirmAssembly();
-        byte[] tmpAuth = Encipher.sha256(input);
-        for (int i = 0; i < authResult.length; i++) {
-            authResult[i] = (byte) (authResult[i] ^ tmpAuth[i]);
-        }
-        return authResult;
-    }
-
-    private byte[] getEncodedConfirm(byte[] confirm) {
-        byte[] tmpConfirm = Encipher.sha256(confirm);
-        byte[] result = new byte[16];
-        System.arraycopy(tmpConfirm, 0, result, 0, 16);
-        return result;
-    }
-
 
     private void updateProvisioningState(int state, String desc) {
         log("provisioning state update: state -- " + state + " desc -- " + desc);
@@ -425,7 +415,9 @@ public class ProvisioningController {
         final boolean useOOBPublicKey = recordPubKey != null;
         startPDU = ProvisioningStartPDU.getSimple(useOOBPublicKey, isStaticOOB);
         startPDU.setPublicKey(pvCapability.publicKeyType == 1 && recordPubKey != null);
-        updateProvisioningState(STATE_START, "Start - use static oob?" + isStaticOOB);
+        byte algo = (byte) (pvCapability.isHMacAlgorithmSupported() ? 1 : 0);
+        startPDU.setAlgorithm(algo);
+        updateProvisioningState(STATE_START, "Start - use static oob?" + isStaticOOB + " - algo:" + algo);
         sendProvisionPDU(startPDU);
     }
 
@@ -444,7 +436,7 @@ public class ProvisioningController {
         pvCapability = ProvisioningCapabilityPDU.fromBytes(capData);
         updateProvisioningState(STATE_CAPABILITY, "Capability Received: " + pvCapability.toString());
         mProvisioningDevice.setDeviceCapability(pvCapability);
-        boolean useStaticOOB = pvCapability.staticOOBSupported();
+        boolean useStaticOOB = pvCapability.isStaticOOBSupported();
         if (useStaticOOB && mProvisioningDevice.getAuthValue() == null) {
             if (mProvisioningDevice.isAutoUseNoOOB()) {
                 // use no oob
@@ -482,32 +474,53 @@ public class ProvisioningController {
 
     private void sendConfirm() {
         final byte[] confirm = getConfirm();
-        log("origin confirm - " + Arrays.bytesToHexString(confirm));
-        if (encAuth) {
-            provisionerConfirm = getEncodedConfirm(confirm);
-        } else {
-            provisionerConfirm = confirm;
-        }
-
+        log("provisioner confirm - " + Arrays.bytesToHexString(confirm));
+        provisionerConfirm = confirm;
         ProvisioningConfirmPDU confirmPDU = new ProvisioningConfirmPDU(provisionerConfirm);
         updateProvisioningState(STATE_CONFIRM_SENT, "Send confirm");
         sendProvisionPDU(confirmPDU);
     }
 
+    /*
+    If the Algorithm field is BTM_ECDH_P256_HMAC_SHA256_AES_CCM, the confirmation value of the Provisioner is a 256-bit value, the confirmation value of the device is a 256-bit value, and they are computed using:
+ConfirmationProvisioner = HMAC-SHA-256ConfirmationKey (RandomProvisioner)
+ConfirmationDevice = HMAC-SHA-256ConfirmationKey (RandomDevice)
+Where:
+ConfirmationKey = k5(ECDHSecret || AuthValue, ConfirmationSalt, “prck256”)
+ConfirmationSalt = s2(ConfirmationInputs)
+ConfirmationInputs = ProvisioningInvitePDUValue || ProvisioningCapabilitiesPDUValue || ProvisioningStartPDUValue || PublicKeyProvisioner || PublicKeyDevice
+
+     */
 
     private byte[] getConfirm() {
         byte[] confirmInput = confirmAssembly();
-        byte[] salt = Encipher.generateSalt(confirmInput);
-        byte[] confirmationKey = Encipher.k1(deviceECDHSecret, salt, Encipher.PRCK);
-
-        provisionerRandom = Arrays.generateRandom(16);
+        byte[] salt;
+        byte[] confirmationKey;
         byte[] authValue = getAuthValue();
 
-        byte[] confirmData = new byte[provisionerRandom.length + authValue.length];
-        System.arraycopy(provisionerRandom, 0, confirmData, 0, provisionerRandom.length);
-        System.arraycopy(authValue, 0, confirmData, provisionerRandom.length, authValue.length);
+        // check alg
+        if (isHmac()) {
+            salt = Encipher.s2(confirmInput);
+            // ConfirmationKey = k5(ECDHSecret || AuthValue, ConfirmationSalt, “prck256”)
+            byte[] secAuth = ByteBuffer.allocate(deviceECDHSecret.length + authValue.length).put(deviceECDHSecret)
+                    .put(authValue).array();
+//            confirmationKey = Encipher.k5(deviceECDHSecret, salt, Encipher.PRCK256);
+            confirmationKey = Encipher.k5(secAuth, salt, Encipher.PRCK256);
+            provisionerRandom = Arrays.generateRandom(32);
+            return Encipher.hMacSha256(provisionerRandom, confirmationKey);
+        } else {
+            salt = Encipher.generateSalt(confirmInput);
+            confirmationKey = Encipher.k1(deviceECDHSecret, salt, Encipher.PRCK);
+            provisionerRandom = Arrays.generateRandom(16);
+            byte[] confirmData = new byte[provisionerRandom.length + authValue.length];
+            System.arraycopy(provisionerRandom, 0, confirmData, 0, provisionerRandom.length);
+            System.arraycopy(authValue, 0, confirmData, provisionerRandom.length, authValue.length);
+            return Encipher.aesCmac(confirmData, confirmationKey);
+        }
+    }
 
-        return Encipher.aesCmac(confirmData, confirmationKey);
+    private boolean isHmac() {
+        return pvCapability != null && pvCapability.isHMacAlgorithmSupported();
     }
 
     private void onConfirmReceived(byte[] confirm) {
@@ -769,21 +782,29 @@ public class ProvisioningController {
 
     private boolean checkDeviceConfirm(byte[] random) {
 
-        byte[] confirmationInputs = confirmAssembly();
-        byte[] confirmationSalt = Encipher.generateSalt(confirmationInputs);
+        byte[] confirmInput = confirmAssembly();
+        byte[] salt;
+        byte[] confirmationKey;
+        byte[] authValue = getAuthValue();
 
-        byte[] confirmationKey = Encipher.k1(deviceECDHSecret, confirmationSalt, Encipher.PRCK);
-        byte[] authenticationValue = getAuthValue();
+        byte[] confirmationValue;
+        if (isHmac()) {
+            salt = Encipher.s2(confirmInput);
+            byte[] secAuth = ByteBuffer.allocate(deviceECDHSecret.length + authValue.length).put(deviceECDHSecret)
+                    .put(authValue).array();
+            confirmationKey = Encipher.k5(secAuth, salt, Encipher.PRCK256);
+            confirmationValue = Encipher.hMacSha256(deviceRandom, confirmationKey);
+        } else {
+            salt = Encipher.generateSalt(confirmInput);
+            confirmationKey = Encipher.k1(deviceECDHSecret, salt, Encipher.PRCK);
 
-        ByteBuffer buffer = ByteBuffer.allocate(random.length + authenticationValue.length);
-        buffer.put(random);
-        buffer.put(authenticationValue);
-        final byte[] confirmationData = buffer.array();
-
-        byte[] confirmationValue = Encipher.aesCmac(confirmationData, confirmationKey);
-        if (encAuth) {
-            confirmationValue = getEncodedConfirm(confirmationValue);
+            ByteBuffer buffer = ByteBuffer.allocate(random.length + authValue.length);
+            buffer.put(random);
+            buffer.put(authValue);
+            byte[] confirmationData = buffer.array();
+            confirmationValue = Encipher.aesCmac(confirmationData, confirmationKey);
         }
+
         if (java.util.Arrays.equals(confirmationValue, deviceConfirm)) {
             log("Confirmation values check pass");
             return true;
@@ -794,35 +815,43 @@ public class ProvisioningController {
         return false;
     }
 
-
     private byte[] createProvisioningData() {
 
         byte[] confirmationInputs = confirmAssembly();
 
-        byte[] confirmationSalt = Encipher.generateSalt(confirmationInputs);
+        byte[] confirmationSalt;
+        if (isHmac()) {
+            confirmationSalt = Encipher.s2(confirmationInputs);
+        } else {
+            confirmationSalt = Encipher.generateSalt(confirmationInputs);
+        }
 
+        // 96 bytes in epa
         ByteBuffer saltBuffer = ByteBuffer.allocate(confirmationSalt.length + provisionerRandom.length + deviceRandom.length);
         saltBuffer.put(confirmationSalt);
         saltBuffer.put(provisionerRandom);
         saltBuffer.put(deviceRandom);
-        byte[] provisioningSalt = Encipher.generateSalt(saltBuffer.array());
+        byte[] provisioningSaltInput = saltBuffer.array();
+        byte[] provisioningSalt = Encipher.generateSalt(provisioningSaltInput);
 
-        byte[] t = Encipher.aesCmac(deviceECDHSecret, provisioningSalt);
-        byte[] sessionKey = Encipher.aesCmac(Encipher.PRSK, t);
+
+        byte[] sessionKey = Encipher.k1(deviceECDHSecret, provisioningSalt, Encipher.PRSK);
 
         byte[] nonce = Encipher.k1(deviceECDHSecret, provisioningSalt, Encipher.PRSN);
         ByteBuffer nonceBuffer = ByteBuffer.allocate(nonce.length - 3);
         nonceBuffer.put(nonce, 3, nonceBuffer.limit());
         byte[] sessionNonce = nonceBuffer.array();
 
-        mProvisioningDevice.setDeviceKey(Encipher.aesCmac(Encipher.PRDK, t));
-        log("device key: " + Arrays.bytesToHexString(mProvisioningDevice.getDeviceKey(), ":"));
+        byte[] deviceKey = Encipher.k1(deviceECDHSecret, provisioningSalt, Encipher.PRDK);
+        mProvisioningDevice.setDeviceKey(deviceKey);
+
+        log("device key: " + Arrays.bytesToHexString(deviceKey, ""));
         log("provisioning data prepare: " + mProvisioningDevice.toString());
         byte[] provisioningData = mProvisioningDevice.generateProvisioningData();
 
-        log("unencrypted provision data: " + Arrays.bytesToHexString(provisioningData, ":"));
+        log("unencrypted provision data: " + Arrays.bytesToHexString(provisioningData, ""));
         byte[] enData = Encipher.ccm(provisioningData, sessionKey, sessionNonce, 8, true);
-        log("encrypted provision data: " + Arrays.bytesToHexString(enData, ":"));
+        log("encrypted provision data: " + Arrays.bytesToHexString(enData, ""));
         return enData;
     }
 

@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file MeshOTAActivity.java
+ * @file FUActivity.java
  *
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -30,7 +31,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -79,26 +79,6 @@ import java.io.InputStream;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
-
-
-/**
- * 通过直连节点升级:
- * 开始升级时, 保存policy 和 distributorAddress
- * <p>
- * 如果是 自动 apply:
- * 如果直连节点不升级
- * 如果直连节点升级, 连接断开后
- * 如果不自动apply:
- * 在查询到 进度信息为 100 后, 发送apply 指令, 根据回复
- * 不管是什么情况下重连成功, 只要 升级动作未完成 (判断 distributorAddress 是否为0: 0为已完成),提示跳转到meshOTA页面,
- * 进度页面时, 发送receiversGet指令
- * <p>
- * 获取到的进度信息中,如果进度信息为 100, idle或applying(6)状态, 则过几秒再查询firmwareID, 根据firmwareID来确定设备是否升级成功.
- * 则发送 distribute stop给distribute, 再把 distributorAddress 设置为0
- * 如果正在 transfer, 且进度信息不为 100, 则提示跳转到 MeshOta 页面.
- * <p>
- * 在进入到meshOTA页面后, 发送
- */
 
 /**
  * firmware update by mesh
@@ -283,24 +263,9 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             exitWarningAlert.setCancelable(true);
             exitWarningAlert.setTitle("Warning");
             exitWarningAlert.setMessage("Mesh OTA is still running, stop it ? \n click STOP to stop updating; \n click FORCE CLOSE to exit; click CANCEL to dismiss dialog");
-            exitWarningAlert.setNegativeButton("Stop", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    MeshService.getInstance().stopMeshOta();
-                }
-            });
-            exitWarningAlert.setNeutralButton("FORCE CLOSE", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    finish();
-                }
-            });
-            exitWarningAlert.setPositiveButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();
-                }
-            });
+            exitWarningAlert.setNegativeButton("Stop", (dialog, which) -> MeshService.getInstance().stopMeshOta());
+            exitWarningAlert.setNeutralButton("FORCE CLOSE", (dialog, which) -> finish());
+            exitWarningAlert.setPositiveButton("Cancel", (dialog, which) -> dialog.dismiss());
         }
         exitWarningAlert.show();
     }
@@ -450,26 +415,17 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         rb_plc_ver_apl = findViewById(R.id.rb_plc_ver_apl);
         rb_plc_ver = findViewById(R.id.rb_plc_ver);
 //        rg_policy = findViewById(R.id.rg_policy);
-        rg_dist.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                ll_policy.setVisibility(checkedId == R.id.rb_device ? View.VISIBLE : View.INVISIBLE);
-                distributorType = checkedId == R.id.rb_device ? DistributorType.DEVICE : DistributorType.PHONE;
-            }
+        rg_dist.setOnCheckedChangeListener((group, checkedId) -> {
+            ll_policy.setVisibility(checkedId == R.id.rb_device ? View.VISIBLE : View.INVISIBLE);
+            distributorType = checkedId == R.id.rb_device ? DistributorType.DEVICE : DistributorType.PHONE;
         });
-        rb_plc_ver_apl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked)
-                    updatePolicy = UpdatePolicy.VerifyAndApply;
-            }
+        rb_plc_ver_apl.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked)
+                updatePolicy = UpdatePolicy.VerifyAndApply;
         });
-        rb_plc_ver.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked)
-                    updatePolicy = UpdatePolicy.VerifyOnly;
-            }
+        rb_plc_ver.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked)
+                updatePolicy = UpdatePolicy.VerifyOnly;
         });
 
 
@@ -621,18 +577,15 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     }
 
     private void enableUI(final boolean enable) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                btn_start.setEnabled(enable);
-                btn_get_version.setEnabled(enable);
-                rb_device.setEnabled(enable);
-                rb_phone.setEnabled(enable);
-                rb_plc_ver_apl.setEnabled(enable);
-                rb_plc_ver.setEnabled(enable);
-                tv_file_path.setEnabled(enable);
-                tv_select_device.setEnabled(enable);
-            }
+        runOnUiThread(() -> {
+            btn_start.setEnabled(enable);
+            btn_get_version.setEnabled(enable);
+            rb_device.setEnabled(enable);
+            rb_phone.setEnabled(enable);
+            rb_plc_ver_apl.setEnabled(enable);
+            rb_plc_ver.setEnabled(enable);
+            tv_file_path.setEnabled(enable);
+            tv_select_device.setEnabled(enable);
         });
     }
 
@@ -651,19 +604,11 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
     }
 
-    private final Runnable RECONNECT_TASK = new Runnable() {
-        @Override
-        public void run() {
-            showConfirmDialog("Device reconnect fail, quit mesh OTA ? ", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    MeshService.getInstance().idle(true);
-                    isComplete = true;
-                    infoHandler.obtainMessage(MSG_INFO, "Quit !!!").sendToTarget();
-                }
-            });
-        }
-    };
+    private final Runnable RECONNECT_TASK = () -> showConfirmDialog("Device reconnect fail, quit mesh OTA ? ", (dialog, which) -> {
+        MeshService.getInstance().idle(true);
+        isComplete = true;
+        infoHandler.obtainMessage(MSG_INFO, "Quit !!!").sendToTarget();
+    });
 
     /****************************************************************
      * events - start
@@ -769,13 +714,8 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             String vidInfo = Arrays.bytesToHexString(vid, ":");
             String firmVersion = "pid-" + pidInfo + " vid-" + vidInfo;
 
-
             tv_version_info.setText(getString(R.string.version, firmVersion));
-
-
             tv_file_path.setText(fileName);
-
-
         } catch (IOException e) {
             e.printStackTrace();
             firmwareData = null;
@@ -837,18 +777,13 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
                 break;
             }
         }
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                deviceAdapter.notifyDataSetChanged();
-            }
-        });
+        runOnUiThread(() -> deviceAdapter.notifyDataSetChanged());
         if (device.state == MeshUpdatingDevice.STATE_SUCCESS) {
             final AdditionalInformation addInfo = device.additionalInformation;
             if (addInfo == AdditionalInformation.NODE_UNPROVISIONED) {
                 appendLog("device will be removed : " + device.meshAddress);
-                mesh.removeDeviceByMeshAddress(device.meshAddress);
-                mesh.saveOrUpdate(this);
+                mesh.removeNode(mesh.getDeviceByMeshAddress(device.meshAddress));
+                mesh.saveOrUpdate();
             } else if (addInfo == AdditionalInformation.CPS_CHANGED_1 || addInfo == AdditionalInformation.CPS_CHANGED_2) {
                 //
 

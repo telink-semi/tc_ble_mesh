@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     app.c 
+ * @file	app.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/rf_drv.h"
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/ll/ll.h"
@@ -40,6 +43,7 @@
 #include "../common/app_beacon.h"
 #include "../common/app_proxy.h"
 #include "../common/app_health.h"
+#include "../common/subnet_bridge.h"
 #include "proj/drivers/keyboard.h"
 #include "app.h"
 #include "proj_lib/ble/gap.h"
@@ -60,6 +64,9 @@ MYFIFO_INIT(blt_txfifo, 40, 8);
 
 //u8		peer_type;
 //u8		peer_mac[12];
+#if MD_DF_EN
+static u8 lpn_df_backup[NET_KEY_MAX];
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 //	Initialization: MAC address, Adv Packet, Response Packet
@@ -68,15 +75,10 @@ MYFIFO_INIT(blt_txfifo, 40, 8);
 //----------------------- UI ---------------------------------------------
 void test_cmd_wakeup_lpn()
 {
-	static u8 test_onoff;
-	#if 0
-	u32 len = OFFSETOF(mesh_cmd_g_onoff_set_t,transit_t);	// no delay 
-	u16 adr_dst = 0xffff; // 0x0016; //0x61e1; // 0x2fe3; //
-	mesh_cmd_g_onoff_set_t cmd = {0};
-	cmd.onoff = (test_onoff++) & 1;
-	//len += 10;	// test segment;
-	mesh_tx_cmd_primary(G_ONOFF_SET_NOACK, (u8 *)&cmd, len, adr_dst, 0);
+	#if PTS_TEST_EN
+	friend_cmd_send_fn(0, CMD_CTL_CLEAR);
 	#else
+	static u8 test_onoff;
 	access_cmd_onoff(0xffff, 0, (test_onoff++) & 1, CMD_NO_ACK, 0);
 	#endif
 }
@@ -89,6 +91,15 @@ void friend_ship_establish_ok_cb_lpn()
     #if LPN_VENDOR_SENSOR_EN
         mesh_vd_lpn_pub_set();
     #endif    
+
+	#if MD_DF_EN
+	foreach(i, NET_KEY_MAX){
+		lpn_df_backup[i] = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_forwarding;
+		if(DIRECTED_FORWARDING_ENABLE == model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_forwarding){
+			model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_forwarding = DIRECTED_FORWARDING_DISABLE;
+		}
+	}
+	#endif
 }
 
 void friend_ship_disconnect_cb_lpn()
@@ -99,6 +110,12 @@ void friend_ship_disconnect_cb_lpn()
 	if(gatt_adv_send_flag){
 		blt_soft_timer_update(&mesh_lpn_send_gatt_adv, ADV_INTERVAL_MS*1000);
 	}
+
+	#if MD_DF_EN
+	foreach(i, NET_KEY_MAX){
+		model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[i].directed_control.directed_forwarding = lpn_df_backup[i];
+	}
+	#endif
 }
 
 #if (BLT_SOFTWARE_TIMER_ENABLE)
@@ -194,7 +211,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		debug_mesh_report_BLE_st2usb(0);
 		#endif
 
-		mesh_ble_disconnect_cb();
+		mesh_ble_disconnect_cb(pd->reason);
 		if(LPN_MODE_GATT_OTA == lpn_mode){
 		    lpn_mode_tick = clock_time();
 		    lpn_mode_set(LPN_MODE_NORMAL);
@@ -231,20 +248,25 @@ void proc_ui()
 /////////////////////////////////////////////////////////////////////
 // main loop flow
 /////////////////////////////////////////////////////////////////////
+#if (BLT_SOFTWARE_TIMER_ENABLE)
+void soft_timer_mesh_adv_proc()
+{
+	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
+		if(!is_soft_timer_exist(&mesh_lpn_poll_md_wakeup)){
+			mesh_lpn_sleep_prepare(CMD_ST_NORMAL_TX);
+		}
+	}
+}
+#endif
+
 void main_loop ()
 {
 	static u32 tick_loop;
 
 	tick_loop ++;
 #if (BLT_SOFTWARE_TIMER_ENABLE)
+	soft_timer_mesh_adv_proc();
 	blt_soft_timer_process(MAINLOOP_ENTRY);
-	if(BLS_LINK_STATE_ADV == blt_state){
-		if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
-			if(!is_soft_timer_exist(&mesh_lpn_poll_md_wakeup)){
-				mesh_lpn_sleep_prepare(CMD_ST_NORMAL_TX); 	
-			}
-		}
-	}
 #endif
 	#if DUAL_MODE_ADAPT_EN
 	if(RF_MODE_BLE != dual_mode_proc()){    // should be before is mesh latency window()

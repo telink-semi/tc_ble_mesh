@@ -17,48 +17,9 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!--      manage network      -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/view_model_setting"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:visibility="gone"
-                app:cardCornerRadius="4dp"
-                app:cardPreventCornerOverlap="false"
-                app:cardUseCompatPadding="true">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="8dp">
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:padding="8dp"
-                        android:src="@drawable/ic_model"
-                        android:tint="@color/gray" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Model Setting" />
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_arrow_right"
-                        android:tint="@color/gray" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:id="@+id/view_scene_setting"
+                android:id="@+id/view_manage_network"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
@@ -77,14 +38,31 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:padding="8dp"
-                        android:src="@drawable/ic_scene"
+                        android:src="@drawable/ic_list"
                         android:tint="@color/gray" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Scenes" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Manage Network"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Switch, Create/Delete, Import/Export..."
+                            android:textSize="11sp"
+                            android:textStyle="italic" />
+
+                    </LinearLayout>
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -96,8 +74,9 @@
 
             </androidx.cardview.widget.CardView>
 
+            <!--      oob      -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/view_share"
+                android:id="@+id/view_oob"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
@@ -116,14 +95,31 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:padding="8dp"
-                        android:src="@drawable/ic_share"
+                        android:src="@drawable/ic_oob"
                         android:tint="@color/gray" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Share" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="OOB Database"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="used in static-oob provisioning"
+                            android:textSize="11sp"
+                            android:textStyle="italic" />
+
+                    </LinearLayout>
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -135,8 +131,10 @@
 
             </androidx.cardview.widget.CardView>
 
+
+            <!--      oob      -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/view_mesh_ota"
+                android:id="@+id/view_cert"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
@@ -155,14 +153,31 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:padding="8dp"
-                        android:src="@drawable/ic_mesh_ota"
+                        android:src="@drawable/ic_cert"
                         android:tint="@color/gray" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Mesh OTA" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Root Cert"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="used in certificate-based provisioning"
+                            android:textSize="11sp"
+                            android:textStyle="italic" />
+
+                    </LinearLayout>
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -174,44 +189,6 @@
 
             </androidx.cardview.widget.CardView>
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/view_mesh_info"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                app:cardCornerRadius="4dp"
-                app:cardPreventCornerOverlap="false"
-                app:cardUseCompatPadding="true">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="8dp">
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:padding="8dp"
-                        android:src="@drawable/ic_network"
-                        android:tint="@color/gray" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Mesh Info" />
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_arrow_right"
-                        android:tint="@color/gray" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/view_settings"
@@ -236,11 +213,28 @@
                         android:src="@drawable/ic_setting"
                         android:tint="@color/gray" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Settings" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Settings"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="other settings..."
+                            android:textSize="11sp"
+                            android:textStyle="italic" />
+
+                    </LinearLayout>
 
                     <ImageView
                         android:layout_width="wrap_content"

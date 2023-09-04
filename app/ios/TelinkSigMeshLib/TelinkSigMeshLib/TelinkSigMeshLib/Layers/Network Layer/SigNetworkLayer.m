@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/9/9
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigNetworkLayer.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/9.
-//  Copyright © 2019 Telink. All rights reserved.
-//
 
 #import "SigNetworkLayer.h"
 #import "SigNetworkManager.h"
@@ -95,21 +89,34 @@
                     return;
                 }
                 [_networkManager.lowerTransportLayer handleNetworkPdu:networkPdu];
-                [SigMeshLib.share receiveNetworkPdu:networkPdu];
+//                [SigMeshLib.share receiveNetworkPdu:networkPdu];
             }
             break;
         case SigPduType_meshBeacon:
             {
 //                TeLogVerbose(@"receive meshBeacon");
-                SigSecureNetworkBeacon *beaconPdu = [SigSecureNetworkBeacon decodePdu:pdu forMeshNetwork:_meshNetwork];
-                if (beaconPdu != nil) {
-                    [self handleSecureNetworkBeacon:beaconPdu];
-                    return;
-                }
-                SigUnprovisionedDeviceBeacon *unprovisionedBeacon = [SigUnprovisionedDeviceBeacon decodeWithPdu:pdu forMeshNetwork:_meshNetwork];
-                if (unprovisionedBeacon != nil) {
-                    [self handleUnprovisionedDeviceBeacon:unprovisionedBeacon];
-                    return;
+                UInt8 tem = 0;
+                Byte *pduByte = (Byte *)pdu.bytes;
+                memcpy(&tem, pduByte, 1);
+                SigBeaconType beaconType = tem;
+                if (beaconType == SigBeaconType_secureNetwork) {
+                    SigSecureNetworkBeacon *beaconPdu = [SigSecureNetworkBeacon decodePdu:pdu forMeshNetwork:_meshNetwork];
+                    if (beaconPdu != nil) {
+                        [self handleSecureNetworkBeacon:beaconPdu];
+                        return;
+                    }
+                } else if (beaconType == SigBeaconType_unprovisionedDevice) {
+                    SigUnprovisionedDeviceBeacon *unprovisionedBeacon = [SigUnprovisionedDeviceBeacon decodeWithPdu:pdu forMeshNetwork:_meshNetwork];
+                    if (unprovisionedBeacon != nil) {
+                        [self handleUnprovisionedDeviceBeacon:unprovisionedBeacon];
+                        return;
+                    }
+                } else if (beaconType == SigBeaconType_meshPrivateBeacon) {
+                    SigMeshPrivateBeacon *privateBeacon = [SigMeshPrivateBeacon decodePdu:pdu forMeshNetwork:_meshNetwork];
+                    if (privateBeacon != nil) {
+                        [self handleMeshPrivateBeacon:privateBeacon];
+                        return;
+                    }
                 }
                 TeLogError(@"Invalid or unsupported beacon type.");
             }
@@ -137,11 +144,11 @@
     _networkKey = pdu.networkKey;
     
     // Get the current sequence number for local Provisioner's source address.
-    UInt32 sequence = (UInt32)[SigMeshLib.share.dataSource getCurrentProvisionerIntSequenceNumber];
-    // As the sequnce number was just used, it has to be incremented.
-    [SigMeshLib.share.dataSource updateCurrentProvisionerIntSequenceNumber:sequence+1];
+    UInt32 sequence = (UInt32)[SigMeshLib.share.dataSource getSequenceNumberUInt32];
+    // As the sequence number was just used, it has to be incremented.
+    [SigMeshLib.share.dataSource updateSequenceNumberUInt32WhenSendMessage:sequence+1];
 
-//    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
+//    TeLogDebug(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
     SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl ivIndex:ivIndex];
     pdu.networkPdu = networkPdu;
     
@@ -197,9 +204,9 @@
     }
     
     // Get the current sequence number for local Provisioner's source address.
-    UInt32 sequence = (UInt32)[SigMeshLib.share.dataSource getCurrentProvisionerIntSequenceNumber];
+    UInt32 sequence = (UInt32)[SigMeshLib.share.dataSource getSequenceNumberUInt32];
     // As the sequnce number was just used, it has to be incremented.
-    [SigMeshLib.share.dataSource updateCurrentProvisionerIntSequenceNumber:sequence+1];
+    [SigMeshLib.share.dataSource updateSequenceNumberUInt32WhenSendMessage:sequence+1];
 
 //    TeLogVerbose(@"pdu,sequence=0x%x,ttl=%d",sequence,ttl);
 //    SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeLowerTransportPdu:pdu pduType:type withSequence:sequence andTtl:ttl];
@@ -275,23 +282,84 @@
 
 #pragma mark - private
 
-/// This method handles the Unprovisioned Device Beacon.
-///
-/// The curernt implementation does nothing, as remote provisioning is
-/// currently not supported.
-///
-/// - parameter unprovisionedDeviceBeacon: The Unprovisioned Device Beacon received.
 - (void)handleUnprovisionedDeviceBeacon:(SigUnprovisionedDeviceBeacon *)unprovisionedDeviceBeacon {
     // TODO: Handle Unprovisioned Device Beacon.
+}
+
+- (void)handleMeshPrivateBeacon:(SigMeshPrivateBeacon *)meshPrivateBeacon {
+    if (!SigMeshLib.share.dataSource.existLocationIvIndexAndLocationSequenceNumber) {
+        [SigMeshLib.share.dataSource setIvIndexUInt32:meshPrivateBeacon.ivIndex];
+        [SigMeshLib.share.dataSource setSequenceNumberUInt32:0];
+        [SigMeshLib.share.dataSource saveCurrentIvIndex:meshPrivateBeacon.ivIndex sequenceNumber:0];
+    }
+    SigNetkeyModel *networkKey = meshPrivateBeacon.networkKey;
+    if (meshPrivateBeacon.ivIndex < networkKey.ivIndex.index || ABS(meshPrivateBeacon.ivIndex-networkKey.ivIndex.index) > 42) {
+        TeLogError(@"Discarding mesh private beacon (ivIndex: 0x%x, expected >= 0x%x)",(unsigned int)meshPrivateBeacon.ivIndex,(unsigned int)networkKey.ivIndex.index);
+        if (SigMeshLib.share.dataSource.getSequenceNumberUInt32 >= 0xc00000) {
+            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES ivIndex:networkKey.ivIndex.index+1 randomData:[LibTools createRandomDataWithLength:13] usingNetworkKey:networkKey];
+            SigMeshLib.share.meshPrivateBeacon = beacon;
+        } else {
+            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:NO ivIndex:networkKey.ivIndex.index randomData:[LibTools createRandomDataWithLength:13] usingNetworkKey:networkKey];
+            SigMeshLib.share.meshPrivateBeacon = beacon;
+        }
+        if ([_networkManager.manager.delegateForDeveloper respondsToSelector:@selector(didReceiveSigMeshPrivateBeaconMessage:)]) {
+            [_networkManager.manager.delegateForDeveloper didReceiveSigMeshPrivateBeaconMessage:meshPrivateBeacon];
+        }
+        return;
+    }
+    SigMeshLib.share.meshPrivateBeacon = meshPrivateBeacon;
+    SigIvIndex *ivIndex = [[SigIvIndex alloc] initWithIndex:meshPrivateBeacon.ivIndex updateActive:meshPrivateBeacon.ivUpdateActive];
+    networkKey.ivIndex = ivIndex;
+    TeLogVerbose(@"receive mesh private Beacon, ivIndex=0x%x,updateActive=%d",ivIndex.index,ivIndex.updateActive);
+
+    // If the Key Refresh Procedure is in progress, and the new Network Key
+    // has already been set, the key erfresh flag indicates switching to phase 2.
+    if (networkKey.phase == distributingKeys && meshPrivateBeacon.keyRefreshFlag) {
+        networkKey.phase = finalizing;
+    }
+    // If the Key Refresh Procedure is in phase 2, and the key refresh flag is
+    // set to false.
+    if (networkKey.phase == finalizing && !meshPrivateBeacon.keyRefreshFlag) {
+        networkKey.oldKey = nil;//This will set the phase to .normalOperation.
+    }
+
+    if (meshPrivateBeacon.ivIndex > SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index) {
+        if (meshPrivateBeacon.ivUpdateActive) {
+            if (SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index != meshPrivateBeacon.ivIndex - 1) {
+                SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.updateActive = NO;
+                SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index = meshPrivateBeacon.ivIndex - 1;
+                [SigMeshLib.share.dataSource updateIvIndexUInt32FromBeacon:meshPrivateBeacon.ivIndex - 1];
+            }
+        } else {
+            SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.updateActive = meshPrivateBeacon.ivUpdateActive;
+            SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index = meshPrivateBeacon.ivIndex;
+            [SigMeshLib.share.dataSource updateIvIndexUInt32FromBeacon:meshPrivateBeacon.ivIndex];
+        }
+    }
+
+    if (meshPrivateBeacon.keyRefreshFlag) {
+        SigMeshLib.share.dataSource.curNetkeyModel.key = meshPrivateBeacon.networkKey.key;
+    }
+    if ([_networkManager.manager.delegate respondsToSelector:@selector(didReceiveSigMeshPrivateBeaconMessage:)]) {
+        [_networkManager.manager.delegate didReceiveSigMeshPrivateBeaconMessage:meshPrivateBeacon];
+    }
+    if ([_networkManager.manager.delegateForDeveloper respondsToSelector:@selector(didReceiveSigMeshPrivateBeaconMessage:)]) {
+        [_networkManager.manager.delegateForDeveloper didReceiveSigMeshPrivateBeaconMessage:meshPrivateBeacon];
+    }
 }
 
 /// This method handles the Secure Network Beacon. It will set the proper IV Index and IV Update Active flag for the Network Key that matches Network ID and change the Key Refresh Phase based on the key refresh flag specified in the beacon.
 /// @param secureNetworkBeacon The Secure Network Beacon received.
 - (void)handleSecureNetworkBeacon:(SigSecureNetworkBeacon *)secureNetworkBeacon {
+    if (!SigMeshLib.share.dataSource.existLocationIvIndexAndLocationSequenceNumber) {
+        [SigMeshLib.share.dataSource setIvIndexUInt32:secureNetworkBeacon.ivIndex];
+        [SigMeshLib.share.dataSource setSequenceNumberUInt32:0];
+        [SigMeshLib.share.dataSource saveCurrentIvIndex:secureNetworkBeacon.ivIndex sequenceNumber:0];
+    }
     SigNetkeyModel *networkKey = secureNetworkBeacon.networkKey;
     if (secureNetworkBeacon.ivIndex < networkKey.ivIndex.index || ABS(secureNetworkBeacon.ivIndex-networkKey.ivIndex.index) > 42) {
-        TeLogError(@"Discarding beacon (ivIndex: 0x%x, expected >= 0x%x)",(unsigned int)secureNetworkBeacon.ivIndex,(unsigned int)networkKey.ivIndex.index);
-        if (SigMeshLib.share.dataSource.getCurrentProvisionerIntSequenceNumber >= 0xc00000) {
+        TeLogError(@"Discarding secure network beacon (ivIndex: 0x%x, expected >= 0x%x)",(unsigned int)secureNetworkBeacon.ivIndex,(unsigned int)networkKey.ivIndex.index);
+        if (SigMeshLib.share.dataSource.getSequenceNumberUInt32 >= 0xc00000) {
             SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES networkId:networkKey.networkId ivIndex:networkKey.ivIndex.index+1 usingNetworkKey:networkKey];
             SigMeshLib.share.secureNetworkBeacon = beacon;
         } else {
@@ -319,21 +387,19 @@
         networkKey.oldKey = nil;//This will set the phase to .normalOperation.
     }
     
-    //===========telink==========//
     if (secureNetworkBeacon.ivIndex > SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index) {
         if (secureNetworkBeacon.ivUpdateActive) {
             if (SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index != secureNetworkBeacon.ivIndex - 1) {
                 SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.updateActive = NO;
                 SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex - 1;
-                [SigMeshLib.share.dataSource updateIvIndexString:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex - 1]];
+                [SigMeshLib.share.dataSource updateIvIndexUInt32FromBeacon:secureNetworkBeacon.ivIndex - 1];
             }
         } else {
             SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.updateActive = secureNetworkBeacon.ivUpdateActive;
             SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index = secureNetworkBeacon.ivIndex;
-            [SigMeshLib.share.dataSource updateIvIndexString:[NSString stringWithFormat:@"%08X",(unsigned int)secureNetworkBeacon.ivIndex]];
+            [SigMeshLib.share.dataSource updateIvIndexUInt32FromBeacon:secureNetworkBeacon.ivIndex];
         }
     }
-    //===========telink==========//
     if (secureNetworkBeacon.keyRefreshFlag) {
         SigMeshLib.share.dataSource.curNetkeyModel.key = secureNetworkBeacon.networkKey.key;
     }

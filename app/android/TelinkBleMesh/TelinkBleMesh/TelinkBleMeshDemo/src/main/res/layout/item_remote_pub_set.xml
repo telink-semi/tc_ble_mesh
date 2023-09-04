@@ -69,10 +69,20 @@
 
             <EditText
                 android:id="@+id/et_pub_adr"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:digits="@string/hex_input"
                 android:textSize="@dimen/msg_input_size" />
+
+            <Button
+                android:id="@+id/btn_address"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAllCaps="false"
+                android:text="AddressList"
+                android:textColor="@color/colorPrimary" />
         </LinearLayout>
 
         <LinearLayout

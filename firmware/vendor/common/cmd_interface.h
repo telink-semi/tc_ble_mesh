@@ -1,29 +1,31 @@
 /********************************************************************************************************
- * @file     cmd_interface.h 
+ * @file	cmd_interface.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #if WIN32
-#include "../../proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 #endif
 
 
@@ -791,6 +793,20 @@ ret: 0  means OK
 ****************************************************************************/
 int cfg_cmd_op_agg_sequence(u16 dst_addr, u8 *para, int len);
 
+/**************************cfg_cmd_op_agg_sequence**************************
+function : set the current heartbeat publication state
+para:
+	dst_addr: address of the destination
+	count_log:number of heartbeat messages to be sent
+	period_log:period for sending heartbeat messages
+	ttl:TTL to be used when sending heartbeat messages
+	features:bit field indicating features that trigger heartbeat messages when changed
+	netkey_index:netKey index
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_heartbeat_pub_set(u16 dst_addr, u16 pub_addr, u8 count_log, u8 period_log, u8 ttl, u16 features, u16 netkey_index);
+
 /**************************mesh_proxy_filter_remove_adr**************************
 function :remove the adr into the filter 
 para:
@@ -805,7 +821,6 @@ int mesh_proxy_filter_remove_adr(u16 adr);
 int cfg_cmd_nk_set(u16 op, u16 node_adr, u16 nk_idx, u8 *key);
 int mesh_proxy_set_filter_cmd(u8 opcode,u8 filter_type, u8 * dat,u8 len );
 int mesh_proxy_set_filter_init(u16 self_adr);
-#if WIN32
 /**************************mesh_directed_proxy_control_set**************************
 function :set whether or not the Directed Proxy Server uses directed forwarding for Directed Proxy Client messages for a specified
 			range of unicast addresses 
@@ -818,6 +833,26 @@ ret: 0  means OK
 ****************************************************************************/
 int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_len);
 
+/**************************mesh_send_proxy_solicitation_pdu**************************
+function :set the solicitation pdu message, it will be send in function set_adv_solicitation() called by gatt_adv_prepare_handler()
+para:
+	adr_dst: destination address  
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int mesh_send_proxy_solicitation_pdu(u16 adr_dst);
+
+/**************************cfg_cmd_send_path_solicitation**************************
+function :solicit the discovery of paths from other directed forwarding nodes
+para:
+	addr_list:list of destination addresses
+	num:number of destination addresses
+ret: 0  means OK 
+	-1 or other value means err
+****************************************************************************/
+int cfg_cmd_send_path_solicitation(u16 netkey_offset, u16 *addr_list, int num);
+
+#if WIN32
 /*******************json_get_net_info****************************
 use to get the provision information form the stack ,it can call in the provision end callback fun
 p_netkey_val:network key 16 bytes 

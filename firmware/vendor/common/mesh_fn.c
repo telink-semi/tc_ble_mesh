@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     mesh_fn.c 
+ * @file	mesh_fn.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -36,6 +39,7 @@
 #include "mesh_common.h"
 #include "vendor/common/app_health.h"
 #include "vendor/common/app_heartbeat.h"
+#include "directed_forwarding.h"
 
 // ------- friend node && LPN common
 u8 mesh_subsc_adr_cnt_get (mesh_cmd_bear_t *p_br)
@@ -61,10 +65,7 @@ void friend_cmd_send_fn(u8 lpn_idx, u8 op)  // always need.
 	friend_cmd_send_sample_message(op);
 #else
     if(CMD_CTL_HEARTBEAT == op){
-		u16 feature =0;
-		memcpy((u8 *)(&feature),(u8 *)&(gp_page0->head.feature),2);
-		heartbeat_cmd_send_conf(model_sig_cfg_s.hb_pub.ttl,
-			feature,model_sig_cfg_s.hb_pub.dst_adr);
+		heartbeat_cmd_send_conf();
 	}else if(CMD_CTL_CLEAR == op){
 	#if (FEATURE_FRIEND_EN || FEATURE_LOWPOWER_EN)
 		mesh_ctl_fri_clear_t fri_clear;
@@ -136,7 +137,10 @@ void friend_subsc_list_add_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr
             foreach(k,SUB_LIST_MAX_LPN){
                 if(0 == adr_list_src->adr[k]){
                     adr_list_src->adr[k] = adr_list_add->adr[i];
-                    break;
+					#if (MD_DF_EN && !FEATURE_LOWPOWER_EN && !WIN32)					
+					directed_forwarding_solication_start(mesh_key.netkey_sel_dec, (mesh_ctl_path_request_solication_t *)&adr_list_src->adr[k], 1);
+					#endif
+					break;
                 }
             }
         }
@@ -173,26 +177,11 @@ void friend_add_special_grp_addr()
 }
 #endif
 
-
-u8 blt_state_ready2_send_adv()
-{
-#ifndef WIN32
-	return (blt_state == BLS_LINK_STATE_ADV || ((blt_state == BLS_LINK_STATE_CONN)&&(ble_state == BLE_STATE_BRX_E)));	
-#else
-	return 1;
-#endif
-}
-
-
 void fn_quick_send_adv()
 {
 #ifndef WIN32
-	u8 r = irq_disable(); // should be disable, otherwise cause too much delay.(bltParam.adv_scanReq_connReq will be true and return from irq_blt_sdk_handler directedly if interrupt trigger)
-    if(blt_state_ready2_send_adv()){
-		blt_adv_expect_time_refresh(0);
-		blt_send_adv2scan_mode(1);
-		blt_adv_expect_time_refresh(1);
-    }
+	u32 r = irq_disable(); // should be disable, otherwise cause too much delay.(bltParam.adv_scanReq_connReq will be true and return from irq_blt_sdk_handler directedly if interrupt trigger)
+    mesh_send_adv2scan_mode(1);
     irq_restore(r);
 #endif
 }
@@ -289,7 +278,7 @@ int is_cmd2lpn(u16 adr_dst)
 int friend_cache_check_replace(u8 lpn_idx, mesh_cmd_bear_t *bear_big)
 {
     int replace = FN_CACHE_REPLACE_NONE; //0;
-	u8 r = irq_disable();
+	u32 r = irq_disable();
     mesh_cmd_bear_t *p_buf_bear;
     my_fifo_t *p_cache_fifo = fn_other_par[lpn_idx].p_cache;
     u8 cnt = my_fifo_data_cnt_get(p_cache_fifo);
@@ -729,7 +718,7 @@ void mesh_friend_response_delay_proc_fn(u8 lpn_idx)
         p_delay->delay_type = 0;
     }
 	
-	if(my_fifo_data_cnt_get(&mesh_adv_fifo_fn2lpn) && blt_state_ready2_send_adv()){
+	if(my_fifo_data_cnt_get(&mesh_adv_fifo_fn2lpn)){
 		fn_quick_send_adv();	// "poll rsp" may be delay when in BLE_S window, so quickly send here again. and also "send_subsc_conf /send_clear_conf" need quick send.
 	}
 }
@@ -959,7 +948,7 @@ void mesh_feature_set_fn(){
 	    fn_other_par[i].FriAdr = ele_adr_primary;
 
 	    mesh_ctl_fri_update_t *p_update = fn_update+i;
-	    memcpy(p_update->IVIndex, iv_idx_st.tx, sizeof(p_update->IVIndex));
+	    get_iv_big_endian(p_update->IVIndex, (u8 *)&iv_idx_st.iv_tx);
 
 	    mesh_ctl_fri_offer_t *p_offer = (fn_offer+i);
 	    #if 0

@@ -1,26 +1,28 @@
 /********************************************************************************************************
- * @file DeviceSettingActivity.java
+ * @file RemoteControlSettingActivity.java
  *
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -45,8 +47,6 @@ import com.telink.ble.mesh.foundation.event.GattConnectionEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.parameter.GattConnectionParameters;
 import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.model.NodeStatusChangedEvent;
-import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.ui.fragment.DeviceSettingFragment;
 import com.telink.ble.mesh.ui.fragment.RemoteControlFragment;
 
@@ -110,8 +110,27 @@ public class RemoteControlSettingActivity extends BaseActivity implements EventL
         TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
 
         initTab();
+
+//        connectRemoteDevice();
+        checkConnSt();
         refreshUI();
-        connectRemoteDevice();
+    }
+
+    /**
+     * check remote device connection
+     */
+    private void checkConnSt() {
+        if (MeshService.getInstance().getDirectConnectedNodeAddress() == deviceInfo.meshAddress) {
+            connSt = STATE_CONNECTED;
+            showTipDialog("Switch connected, pls keep connection");
+        } else {
+            showConfirmDialog("Switch not connected, pls set device to adv mode", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    connectRemoteDevice();
+                }
+            });
+        }
     }
 
     @Override
@@ -121,6 +140,9 @@ public class RemoteControlSettingActivity extends BaseActivity implements EventL
     }
 
     private void connectRemoteDevice() {
+//        if (MeshService.getInstance().getDirectConnectedNodeAddress() == deviceInfo.meshAddress) {
+//            return;
+//        }
         MeshService.getInstance().idle(true);
         connSt = STATE_CONNECTING;
         refreshUI();
@@ -196,13 +218,9 @@ public class RemoteControlSettingActivity extends BaseActivity implements EventL
     }
 
     private void refreshUI() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                tv_ol_st.setTextColor(getStateColor());
-                tv_ol_st.setText(getStateText());
-//                tv_ol_st.setVisibility(deviceInfo.isOffline() ? View.VISIBLE : View.GONE);
-            }
+        runOnUiThread(() -> {
+            tv_ol_st.setTextColor(getStateColor());
+            tv_ol_st.setText(getStateText());
         });
     }
 

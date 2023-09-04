@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     app.c 
+ * @file	app.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "proj/tl_common.h"
 #include "proj_lib/rf_drv.h"
@@ -196,6 +199,10 @@ int app_event_handler (u32 h, u8 *p, int n)
 			mesh_cmd_extend_loop_cb(pa);
 			#endif
 			if(LL_TYPE_ADV_NONCONN_IND != (pa->event_type & 0x0F)){
+				#if DU_ULTRA_PROV_EN
+				app_event_handler_ultra_prov(pa->data);
+				#endif
+				
 				return 0;
 			}
 			#if TEST_FORWARD_ADDR_FILTER_EN
@@ -250,9 +257,11 @@ int app_event_handler (u32 h, u8 *p, int n)
 				//memcpy (peer_mac, pc->mac, 6);
 			}
 			#if DU_LPN_EN
-	        LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"connect suc",0);			
+	        LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"connect suc",0);	
+				#if !LPN_CONTROL_EN
 			blc_ll_setScanEnable (0, 0);
 			mi_mesh_state_set(0);
+				#endif
 			#endif
 			#if DEBUG_BLE_EVENT_ENABLE
 			rf_link_light_event_callback(LGT_CMD_BLE_CONN);
@@ -268,6 +277,10 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#if !DU_ENABLE
 			mesh_service_change_report();
 			#endif
+			#if LPN_CONTROL_EN
+			bls_l2cap_requestConnParamUpdate (48, 56, 10, 500);
+			#endif
+			
 		}
 
 	//------------ connection update complete -------------------------------
@@ -319,7 +332,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		debug_mesh_report_BLE_st2usb(0);
 		#endif
 
-		mesh_ble_disconnect_cb();
+		mesh_ble_disconnect_cb(pd->reason);
 		#if 0 // FEATURE_FRIEND_EN
         fn_update_RecWin(FRI_REC_WIN_MS);   // restore
         #endif
@@ -484,7 +497,12 @@ void main_loop ()
 	factory_reset_cnt_check();
 	#endif
 	#if DU_LPN_EN
+		#if LPN_CONTROL_EN
+		extern u8 save_power_mode ;
+	if(is_provision_success()||save_power_mode == 0){
+		#else
 	if(is_provision_success()||mi_mesh_get_state()){
+		#endif
 		mesh_loop_process();
 	}else{
 		#if RTC_USE_32K_RC_ENABLE
@@ -656,7 +674,9 @@ void user_init()
 	u8 status = bls_ll_setAdvParam( ADV_INTERVAL_MIN, ADV_INTERVAL_MAX, \
 			 	 	 	 	 	     ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, \
 			 	 	 	 	 	     0,  NULL,  BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
-
+#if ACTIVE_SCAN_ENABLE
+	memcpy(pkt_scan_req.scanA,tbl_mac,6);
+#endif
 #if (DUAL_VENDOR_EN)
     status = status;    // it will be optimized
 #else
@@ -772,7 +792,7 @@ void user_init()
 #endif
 
 #if DU_ENABLE
-	du_ui_proc_init()
+	du_ui_proc_init();
 #endif
 
 #if DEBUG_CFG_CMD_GROUP_AK_EN
@@ -800,12 +820,17 @@ _attribute_ram_code_ void user_init_deepRetn(void)
     // should enable IRQ here, because it may use irq here, for example BLE connect which need start IRQ quickly.
     irq_enable();
 	#if (MI_SWITCH_LPN_EN||DU_LPN_EN)
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"deep init %x",clock_time()/16000);
 		if(bltPm.appWakeup_flg){ // it may have the rate not response by the event tick part ,so we should use the distance
 			if(mi_mesh_sleep_time_exceed_adv_iner()){
 				mi_mesh_sleep_init();
 				bls_pm_setSuspendMask (SUSPEND_DISABLE);
 			}
 		}else{// if it is wakeup by the adv event tick part ,we need to refresh the adv tick part
+			#if DU_LPN_EN //because the mesh disable the random part ,so it should set every time 
+			u32 adv_inter =ADV_INTERVAL_MIN +(rand())%(ADV_INTERVAL_MAX-ADV_INTERVAL_MIN); 	
+			bls_ll_setAdvInterval(adv_inter,adv_inter);
+			#endif
 			mi_mesh_sleep_init();
 			bls_pm_setSuspendMask (SUSPEND_DISABLE);
 		}

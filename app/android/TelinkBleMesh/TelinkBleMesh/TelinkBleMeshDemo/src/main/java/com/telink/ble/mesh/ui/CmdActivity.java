@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -33,12 +34,23 @@ import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
+
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
 import com.telink.ble.mesh.core.message.NotificationMessage;
+import com.telink.ble.mesh.core.message.aggregator.AggregatorItem;
+import com.telink.ble.mesh.core.message.aggregator.OpcodeAggregatorSequenceMessage;
+import com.telink.ble.mesh.core.message.aggregator.OpcodeAggregatorStatusMessage;
+import com.telink.ble.mesh.core.message.config.DefaultTTLGetMessage;
+import com.telink.ble.mesh.core.message.config.FriendGetMessage;
+import com.telink.ble.mesh.core.message.config.RelayGetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
+import com.telink.ble.mesh.core.message.lighting.LightnessDefaultGetMessage;
+import com.telink.ble.mesh.core.message.lighting.LightnessRangeGetMessage;
 import com.telink.ble.mesh.core.networking.AccessType;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
@@ -49,12 +61,10 @@ import com.telink.ble.mesh.ui.widget.HexFormatTextWatcher;
 import com.telink.ble.mesh.util.Arrays;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
-
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.RecyclerView;
 
 
 /**
@@ -108,6 +118,8 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             "Vendor Off NO-ACK",
             "Generic On",
             "Generic Off",
+            "Opcode Aggregator(Lightness Default Get， + Lightness Range Get)",
+            "Opcode Aggregator(TTL Get + Friend Get + Relay Get)",
             "[Custom]" // custom message
     };
 
@@ -185,6 +197,7 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         onAccessTypeSelect(0);
         TelinkMeshApplication.getInstance().addEventListener(OnOffStatusMessage.class.getName(), this);
         TelinkMeshApplication.getInstance().addEventListener(StatusNotificationEvent.EVENT_TYPE_NOTIFICATION_MESSAGE_UNKNOWN, this);
+        TelinkMeshApplication.getInstance().addEventListener(OpcodeAggregatorStatusMessage.class.getName(), this);
     }
 
 
@@ -340,14 +353,15 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
         final int tidPosition = meshMessage.getTidPosition();
 
         et_ac_type.setText(accessType == AccessType.APPLICATION ? ACCESS_TYPES[0] : ACCESS_TYPES[1]);
+        selectedType = accessType;
         et_dst_adr.setText(String.format("%04X", dstAdr));
 
-        et_opcode.setText(MeshUtils.formatIntegerByHex(opcode));
+        et_opcode.setText(MeshUtils.intToHex(opcode));
         et_params.setText(Arrays.bytesToHexString(params));
         et_rsp_opcode.setText(
                 rspOpcode == MeshMessage.OPCODE_INVALID
                         ?
-                        "" : MeshUtils.formatIntegerByHex(rspOpcode));
+                        "" : MeshUtils.intToHex(rspOpcode));
 
         et_rsp_max.setText(String.valueOf(rspMax));
         et_retry_cnt.setText(String.valueOf(retryCnt));
@@ -408,7 +422,33 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             case 6: // Generic Off
                 meshMessage = OnOffSetMessage.getSimple(MSG_DST_ADR, appKeyIndex, OnOffSetMessage.OFF, true, 0);
                 break;
-            case 7:
+
+
+            case 7: // OpcodeAggregatorSequenceMessage - app key
+            {
+
+                int elementAddress = 0x0002;
+                List<MeshMessage> aggMsgs = new ArrayList<>();
+                aggMsgs.add(new LightnessDefaultGetMessage());
+                aggMsgs.add(new LightnessRangeGetMessage());
+                byte[] params = MeshUtils.aggregateMessages(elementAddress, aggMsgs);
+                meshMessage = new OpcodeAggregatorSequenceMessage(0x0002, AccessType.APPLICATION, appKeyIndex, params);
+                break;
+            }
+
+            case 8: // OpcodeAggregatorSequenceMessage - device key
+            {
+                int elementAddress = 0x0002;
+                List<MeshMessage> aggMsgs = new ArrayList<>();
+                aggMsgs.add(new DefaultTTLGetMessage());
+                aggMsgs.add(new RelayGetMessage());
+                aggMsgs.add(new FriendGetMessage());
+                byte[] params = MeshUtils.aggregateMessages(elementAddress, aggMsgs);
+                meshMessage = new OpcodeAggregatorSequenceMessage(0x0002, AccessType.DEVICE, appKeyIndex, params);
+                break;
+            }
+
+            case 9:
                 createNewMessage();
                 return;
 
@@ -460,12 +500,9 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
     private void showActionDialog() {
         if (mShowPresetDialog == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setItems(PRESET_ACCESS_MESSAGES, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    onActionSelect(which);
-                    mShowPresetDialog.dismiss();
-                }
+            builder.setItems(PRESET_ACCESS_MESSAGES, (dialog, which) -> {
+                onActionSelect(which);
+                mShowPresetDialog.dismiss();
             });
             builder.setTitle("Actions");
             mShowPresetDialog = builder.create();
@@ -482,6 +519,19 @@ public class CmdActivity extends BaseActivity implements View.OnClickListener, E
             NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
             int opcode = notificationMessage.getOpcode();
             logHandler.obtainMessage(MSG_APPEND_LOG, String.format("Unknown status notify opcode:%04X", opcode) + " -- params:" + Arrays.bytesToHexString(notificationMessage.getParams())).sendToTarget();
+        } else if (event.getType().equals(OpcodeAggregatorStatusMessage.class.getName())) {
+            NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
+            OpcodeAggregatorStatusMessage aggStatusMsg = (OpcodeAggregatorStatusMessage) notificationMessage.getStatusMessage();
+            List<AggregatorItem> items = aggStatusMsg.statusItems;
+            StringBuilder desc = new StringBuilder("Opcode Aggregator Status: \n");
+            desc.append("raw:").append(Arrays.bytesToHexString(notificationMessage.getParams())).append("\n");
+            desc.append("parsed:\n");
+            desc.append("\tstatus=").append(aggStatusMsg.status).append("\n")
+                    .append(String.format("\telementAdr=%04X", aggStatusMsg.elementAddress)).append("\n");
+            for (AggregatorItem item : items) {
+                desc.append("\t").append(item.toString()).append("\n");
+            }
+            logHandler.obtainMessage(MSG_APPEND_LOG, desc.toString()).sendToTarget();
         }
     }
 

@@ -3,26 +3,22 @@
  *
  * @brief    A concise description.
  *
- * @author       梁家誌
- * @date         2021/9/15
+ * @author   Telink, 梁家誌
+ * @date     2021/9/15
  *
- * @par      Copyright © 2021 Telink Semiconductor (Shanghai) Co., Ltd. All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *           The information contained herein is confidential property of Telink
- *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *           Co., Ltd. and the licensee or the terms described here-in. This heading
- *           MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or  
- *           alter) any information contained herein in whole or in part except as expressly authorized  
- *           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible  
- *           for any claim to the extent arising out of or relating to such deletion(s), modification(s)  
- *           or alteration(s).
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
- *           Licensees are granted free, non-transferable use of the information in this
- *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
- *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 
 #import "DeviceConfigVC.h"
@@ -30,6 +26,7 @@
 #import "DeviceConfigCell.h"
 #import "UIButton+extension.h"
 #import "CustomAlertView.h"
+#import "NSString+extension.h"
 
 @interface ShowModel : NSObject
 /** 是否展开 */
@@ -53,6 +50,10 @@
 @interface DeviceConfigVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (nonatomic, strong) NSMutableArray <ShowModel *>*dataArray;
+/// json暂时不存储下面3个message，cache在这VC，返回上一界面即清除掉了。
+@property (nonatomic,strong) SigPrivateBeaconStatus *privateBeaconStatus;
+@property (nonatomic,strong) SigPrivateGattProxyStatus *privateGattProxyStatus;
+@property (nonatomic,strong) SigPrivateNodeIdentityStatus *privateNodeIdentityStatus;
 
 @end
 
@@ -64,19 +65,24 @@
     self.title = @"Device Config";
     _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     [_tableView registerNib:[UINib nibWithNibName:NSStringFromClass([DeviceConfigCell class]) bundle:nil] forCellReuseIdentifier:@"DeviceConfigCell"];
+    //iOS 15中 UITableView 新增了一个属性：sectionHeaderTopPadding。此属性会给每一个 section header 增加一个默认高度，当我们使用 UITableViewStylePlain 初始化UITableView 的时候，系统默认给 section header 增高了22像素。
+    if(@available(iOS 15.0,*)) {
+        self.tableView.sectionHeaderTopPadding = 0;
+    }
+
     self.dataArray = [NSMutableArray array];
     [self refreshAllDeviceConfigValue];
 }
 
 - (void)refreshAllDeviceConfigValue {
     ShowModel *m1 = [[ShowModel alloc] initWithTitle:@"Default TTL" detail:@"The Default TTL state determines the TTL value used when sending messages." value:[NSString stringWithFormat:@"value:0x%X",self.model.defaultTTL]];
-    ShowModel *m2 = [[ShowModel alloc] initWithTitle:@"Relay & RelayRetransmit" detail:@"The Relay state indicates support for the Relay feature; The Relay Retransmit state is a composite state that controls parameters of retransmission of the Network PDU relayed by the node." value:[NSString stringWithFormat:@"value:%@\nretransmit count: %ld\nretransmit interval steps: %ld",[SigHelper.share getDetailOfSigNodeFeaturesState:self.model.features.relayFeature],(long)self.model.relayRetransmit.relayRetransmitCount,(long)self.model.relayRetransmit.relayRetransmitIntervalSteps]];
+    ShowModel *m2 = [[ShowModel alloc] initWithTitle:@"Relay & RelayRetransmit" detail:@"The Relay state indicates support for the Relay feature; The Relay Retransmit state is a composite state that controls parameters of retransmission of the Network PDU relayed by the node." value:[NSString stringWithFormat:@"value:%@\nretransmit count: 0x%lX\nretransmit interval steps: 0x%lX",[SigHelper.share getDetailOfSigNodeFeaturesState:self.model.features.relayFeature],(long)self.model.relayRetransmit.relayRetransmitCount,(long)self.model.relayRetransmit.relayRetransmitIntervalSteps]];
     ShowModel *m3 = [[ShowModel alloc] initWithTitle:@"Secure Network Beacon" detail:@"The Secure Network Beacon state determines if a node is periodically broadcasting Secure Network beacon messages." value:[NSString stringWithFormat:@"value:%@",self.model.secureNetworkBeacon?@"opened":@"closed"]];
     ShowModel *m4 = [[ShowModel alloc] initWithTitle:@"GATT Proxy" detail:@"The GATT Proxy state indicates if the Mesh Proxy Service is supported, and if supported, it indicates and controls the status of the Mesh Proxy Service." value:[NSString stringWithFormat:@"value:%@",[SigHelper.share getDetailOfSigNodeFeaturesState:self.model.features.proxyFeature]]];
     ShowModel *m5 = [[ShowModel alloc] initWithTitle:@"Node Identity" detail:@"The Node Identity state determines if a node that supports the Mesh Proxy Service is advertising on a subnet using Node Identity messages." value:@"value:stopped"];
     ShowModel *m6 = [[ShowModel alloc] initWithTitle:@"Friend" detail:@"The Friend state indicates support for the Friend feature. If Friend feature is supported, then this also indicates and controls whether Friend feature is enabled or disabled." value:[NSString stringWithFormat:@"value:%@",[SigHelper.share getDetailOfSigNodeFeaturesState:self.model.features.friendFeature]]];
     ShowModel *m7 = [[ShowModel alloc] initWithTitle:@"Key Refresh Phase" detail:@"The Key Refresh Phase state indicates and controls the Key Refresh procedure for each NetKey in the NetKey List." value:[NSString stringWithFormat:@"value: phase: %@",[SigHelper.share getDetailOfKeyRefreshPhase:3]]];
-    ShowModel *m8 = [[ShowModel alloc] initWithTitle:@"Network Transmit" detail:@"The Network Transmit state is a composite state that controls the number and timing of the transmissions of Network PDU originating from a node." value:[NSString stringWithFormat:@"value:%@\nretransmit count: %ld\nretransmit interval steps: %ld",@"",(long)self.model.networkTransmit.networkTransmitCount,(long)self.model.networkTransmit.networkTransmitIntervalSteps]];
+    ShowModel *m8 = [[ShowModel alloc] initWithTitle:@"Network Transmit" detail:@"The Network Transmit state is a composite state that controls the number and timing of the transmissions of Network PDU originating from a node." value:[NSString stringWithFormat:@"value:%@\ntransmit count: 0x%lX\ntransmit interval steps: 0x%lX",@"",(long)self.model.networkTransmit.networkTransmitCount,(long)self.model.networkTransmit.networkTransmitIntervalSteps]];
 
     [self.dataArray addObject:m1];
     [self.dataArray addObject:m2];
@@ -86,6 +92,16 @@
     [self.dataArray addObject:m6];
     [self.dataArray addObject:m7];
     [self.dataArray addObject:m8];
+    
+    //新增draft-feature的配置项，基础库不显示。
+#ifdef kExist
+    ShowModel *m9 = [[ShowModel alloc] initWithTitle:@"Mesh Private Beacon" detail:@"The Mesh Private Beacon state determines if a node is periodically broadcasting Mesh Private beacon messages." value:[NSString stringWithFormat:@"value:%@\nrandomUpdateIntervalSteps:0x%X",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateBeaconStatus.privateBeacon], self.privateBeaconStatus.randomUpdateIntervalSteps]];
+    ShowModel *m10 = [[ShowModel alloc] initWithTitle:@"Private GATT Proxy" detail:@"The Private GATT Proxy state indicates if the Mesh Private Beacon Service is supported, and if supported, it indicates and controls the status of the Mesh Private Proxy Service." value:[NSString stringWithFormat:@"value:%@",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateGattProxyStatus.privateGattProxy]]];
+    ShowModel *m11 = [[ShowModel alloc] initWithTitle:@"Private Node Identity" detail:@"The Private Node Identity state determines if a node that supports the Mesh Private Beacon Service is advertising on a subnet using Private Node Identity messages." value:@"value:stopped"];
+    [self.dataArray addObject:m9];
+    [self.dataArray addObject:m10];
+    [self.dataArray addObject:m11];
+#endif
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -184,7 +200,7 @@
     if (indexPath.section == 0) {
         [ShowTipsHandle.share show:@"Get Default TTL..."];
         //Get Default TTL
-        [SDKLibCommand configDefaultTtlGetWithDestination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigDefaultTtlStatus * _Nonnull responseMessage) {
+        [SDKLibCommand configDefaultTtlGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigDefaultTtlStatus * _Nonnull responseMessage) {
             TeLogInfo(@"configDefaultTtlGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigDefaultTtlStatus:responseMessage andIndexPath:indexPath];
@@ -203,7 +219,7 @@
     } else if (indexPath.section == 1) {
         [ShowTipsHandle.share show:@"Get Relay & RelayRetransmit..."];
         //Get Relay & RelayRetransmit
-        [SDKLibCommand configRelayGetWithDestination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigRelayStatus * _Nonnull responseMessage) {
+        [SDKLibCommand configRelayGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigRelayStatus * _Nonnull responseMessage) {
             TeLogInfo(@"configRelayGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigRelayStatus:responseMessage andIndexPath:indexPath];
@@ -222,7 +238,7 @@
     } else if (indexPath.section == 2) {
         [ShowTipsHandle.share show:@"Get Secure Network Beacon..."];
         //Get Secure Network Beacon
-        [SDKLibCommand configBeaconGetWithDestination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigBeaconStatus * _Nonnull responseMessage) {
+        [SDKLibCommand configBeaconGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigBeaconStatus * _Nonnull responseMessage) {
             TeLogInfo(@"configBeaconGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigBeaconStatus:responseMessage andIndexPath:indexPath];
@@ -241,7 +257,7 @@
     } else if (indexPath.section == 3) {
         [ShowTipsHandle.share show:@"Get GATT Proxy..."];
         //Get GATT Proxy
-        [SDKLibCommand configGATTProxyGetWithDestination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigGATTProxyStatus * _Nonnull responseMessage) {
+        [SDKLibCommand configGATTProxyGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigGATTProxyStatus * _Nonnull responseMessage) {
             TeLogInfo(@"configGATTProxyGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigGATTProxyStatus:responseMessage andIndexPath:indexPath];
@@ -260,7 +276,7 @@
     } else if (indexPath.section == 4) {
         [ShowTipsHandle.share show:@"Get Node Identity..."];
         //Get Node Identity
-        [SDKLibCommand configNodeIdentityGetWithDestination:weakSelf.model.address netKeyIndex:SigDataSource.share.curNetkeyModel.index retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
+        [SDKLibCommand configNodeIdentityGetWithDestination:self.model.address netKeyIndex:SigDataSource.share.curNetkeyModel.index retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
             TeLogInfo(@"configNodeIdentityGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigNodeIdentityStatus:responseMessage andIndexPath:indexPath];
@@ -279,7 +295,7 @@
     } else if (indexPath.section == 5) {
         [ShowTipsHandle.share show:@"Get Friend..."];
         //Get Friend
-        [SDKLibCommand configFriendGetWithDestination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigFriendStatus * _Nonnull responseMessage) {
+        [SDKLibCommand configFriendGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigFriendStatus * _Nonnull responseMessage) {
             TeLogInfo(@"configFriendGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigFriendStatus:responseMessage andIndexPath:indexPath];
@@ -298,7 +314,7 @@
     } else if (indexPath.section == 6) {
         [ShowTipsHandle.share show:@"Get Key Refresh Phase..."];
        //Get Key Refresh Phase
-        [SDKLibCommand configKeyRefreshPhaseGetWithDestination:weakSelf.model.address netKeyIndex:SigDataSource.share.curNetkeyModel.index retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigKeyRefreshPhaseStatus * _Nonnull responseMessage) {
+        [SDKLibCommand configKeyRefreshPhaseGetWithDestination:self.model.address netKeyIndex:SigDataSource.share.curNetkeyModel.index retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigKeyRefreshPhaseStatus * _Nonnull responseMessage) {
             TeLogInfo(@"configKeyRefreshPhaseGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 m.value = [NSString stringWithFormat:@"value: phase: %@",[SigHelper.share getDetailOfKeyRefreshPhase:responseMessage.phase]];
@@ -320,7 +336,7 @@
     } else if (indexPath.section == 7) {
         [ShowTipsHandle.share show:@"Get Network Transmit..."];
         //Get Network Transmit
-        [SDKLibCommand configNetworkTransmitGetWithDestination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetworkTransmitStatus * _Nonnull responseMessage) {
+        [SDKLibCommand configNetworkTransmitGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetworkTransmitStatus * _Nonnull responseMessage) {
             TeLogInfo(@"configNetworkTransmitGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             if (weakSelf.model.address == source) {
                 [weakSelf refreshUIWithSigConfigNetworkTransmitStatus:responseMessage andIndexPath:indexPath];
@@ -337,6 +353,66 @@
             });
         }];
     }
+#ifdef kExist
+    else if (indexPath.section == 8) {
+        [ShowTipsHandle.share show:@"Get Mesh Private Beacon..."];
+        //Get Mesh Private Beacon
+        [SDKLibCommand privateBeaconGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateBeaconStatus * _Nonnull responseMessage) {
+            TeLogInfo(@"Mesh Private Beacon Get=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            if (weakSelf.model.address == source) {
+                [weakSelf refreshUIWithSigPrivateBeaconStatus:responseMessage andIndexPath:indexPath];
+            }
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Mesh Private Beacon failed! error=%@",error]];
+            } else {
+                [ShowTipsHandle.share show:@"Get Mesh Private Beacon successed!"];
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [ShowTipsHandle.share delayHidden:1.0];
+            });
+        }];
+    } else if (indexPath.section == 9) {
+        [ShowTipsHandle.share show:@"Get Private GATT Proxy..."];
+        //Get Private GATT Proxy
+        [SDKLibCommand privateGattProxyGetWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateGattProxyStatus * _Nonnull responseMessage) {
+            TeLogInfo(@"Private GATT Proxy Get=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            if (weakSelf.model.address == source) {
+                [weakSelf refreshUIWithSigPrivateGattProxyStatus:responseMessage andIndexPath:indexPath];
+            }
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get GATT Proxy failed! error=%@",error]];
+            } else {
+                [ShowTipsHandle.share show:@"Get GATT Proxy successed!"];
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [ShowTipsHandle.share delayHidden:1.0];
+            });
+        }];
+    } else if (indexPath.section == 10) {
+        [ShowTipsHandle.share show:@"Get Private Node Identity..."];
+        //Get Private Node Identity
+        [SDKLibCommand privateNodeIdentityGetWithDestination:self.model.address netKeyIndex:SigDataSource.share.curNetkeyModel.index retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateNodeIdentityStatus * _Nonnull responseMessage) {
+            TeLogInfo(@"Private Node Identity Get=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            if (weakSelf.model.address == source) {
+                [weakSelf refreshUIWithSigPrivateNodeIdentityStatus:responseMessage andIndexPath:indexPath];
+            }
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                [ShowTipsHandle.share show:[NSString stringWithFormat:@"Get Private Node Identity failed! error=%@",error]];
+            } else {
+                [ShowTipsHandle.share show:@"Get Private Node Identity successed!"];
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [ShowTipsHandle.share delayHidden:1.0];
+            });
+        }];
+    }
+#endif
 }
 
 - (void)clickSetWithIndexPath:(NSIndexPath *)indexPath {
@@ -352,14 +428,29 @@
         //Set Default TTL
         AlertItemModel *item = [[AlertItemModel alloc] init];
         item.itemType = ItemType_Input;
-        item.headerString = @"TTL:";
-        item.defaultString = [NSString stringWithFormat:@"%d",weakSelf.model.defaultTTL];
+        item.headerString = @"TTL(7 bits):0x";
+        item.defaultString = @"";
         CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Default TTL" detail:@"input new value" itemArray:@[item] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
+                NSString *ttlString = [alertView getTextFieldOfRow:0].text.removeAllSapce;
+                BOOL result = [LibTools validateHex:ttlString];
+                if (result == NO || ttlString.length == 0) {
+                    [weakSelf showTips:@"Please enter hexadecimal string!"];
+                    return;
+                }
+                if (ttlString.length > 2) {
+                    [weakSelf showTips:@"The length of TTL is 7 bits!"];
+                    return;
+                }
+                int ttl = [LibTools uint8From16String:ttlString];
+                if (ttl < 0 || ttl > 0x7F) {
+                    [weakSelf showTips:@"The range of TTL is 0x00~0x7F!"];
+                    return;
+                }
+                
                 [ShowTipsHandle.share show:@"Set Default TTL..."];
-                NSString *ttlString = [alertView getTextFieldOfRow:0].text;
-                [SDKLibCommand configDefaultTtlSetWithDestination:weakSelf.model.address ttl:ttlString.intValue retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigDefaultTtlStatus * _Nonnull responseMessage) {
+                [SDKLibCommand configDefaultTtlSetWithDestination:weakSelf.model.address ttl:ttl retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigDefaultTtlStatus * _Nonnull responseMessage) {
                     TeLogInfo(@"configDefaultTtlSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigConfigDefaultTtlStatus:responseMessage andIndexPath:indexPath];
@@ -392,20 +483,49 @@
         item1.chooseItemsArray = mArray;
         AlertItemModel *item2 = [[AlertItemModel alloc] init];
         item2.itemType = ItemType_Input;
-        item2.headerString = @"RelayRetransmit Count(3 bits):";
-        item2.defaultString = [NSString stringWithFormat:@"%ld",(long)weakSelf.model.relayRetransmit.relayRetransmitCount];
+        item2.headerString = @"RelayRetransmit Count(3 bits):0x";
+        item2.defaultString = @"";
         AlertItemModel *item3 = [[AlertItemModel alloc] init];
         item3.itemType = ItemType_Input;
-        item3.headerString = @"RelayRetransmit Interval Steps(5 bits):";
-        item3.defaultString = [NSString stringWithFormat:@"%ld",(long)weakSelf.model.relayRetransmit.relayRetransmitIntervalSteps];
+        item3.headerString = @"RelayRetransmit Interval Steps(5 bits):0x";
+        item3.defaultString = @"";
         CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Relay & RelayRetransmit" detail:@"input new value" itemArray:@[item1,item2,item3] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
+                NSString *networkTransmitCountString = [alertView getTextFieldOfRow:1].text.removeAllSapce;
+                NSString *networkTransmitIntervalStepsString = [alertView getTextFieldOfRow:2].text.removeAllSapce;
+                BOOL result = [LibTools validateHex:networkTransmitCountString];
+                if (result == NO || networkTransmitCountString.length == 0) {
+                    [weakSelf showTips:@"Please enter hexadecimal string to retransmit count!"];
+                    return;
+                }
+                result = [LibTools validateHex:networkTransmitIntervalStepsString];
+                if (result == NO || networkTransmitIntervalStepsString.length == 0) {
+                    [weakSelf showTips:@"Please enter hexadecimal string to retransmit interval steps!"];
+                    return;
+                }
+                if (networkTransmitCountString.length > 2) {
+                    [weakSelf showTips:@"The length of retransmit count is 5 bits!"];
+                    return;
+                }
+                if (networkTransmitIntervalStepsString.length > 1) {
+                    [weakSelf showTips:@"The length of retransmit interval steps is 3 bits!"];
+                    return;
+                }
+                int count = [LibTools uint8From16String:networkTransmitCountString];
+                if (count < 0 || count > 0x1F) {
+                    [weakSelf showTips:@"The range of retransmit count is 0x00~0x1F!"];
+                    return;
+                }
+                int steps = [LibTools uint8From16String:networkTransmitIntervalStepsString];
+                if (steps < 0 || steps > 0x7) {
+                    [weakSelf showTips:@"The range of retransmit interval steps is 0x0~0x7!"];
+                    return;
+                }
+
                 [ShowTipsHandle.share show:@"Set Relay & RelayRetransmit..."];
                 SigNodeRelayState relayState = [alertView getSelectLeftOfRow:0]?SigNodeRelayState_notEnabled:SigNodeRelayState_enabled;
-                NSString *networkTransmitCountString = [alertView getTextFieldOfRow:1].text;
-                NSString *networkTransmitIntervalStepsString = [alertView getTextFieldOfRow:2].text;
-                [SDKLibCommand configRelaySetWithDestination:weakSelf.model.address relay:relayState networkTransmitCount:networkTransmitCountString.intValue networkTransmitIntervalSteps:networkTransmitIntervalStepsString.intValue retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigRelayStatus * _Nonnull responseMessage) {
+                [SDKLibCommand configRelaySetWithDestination:weakSelf.model.address relay:relayState networkTransmitCount:count networkTransmitIntervalSteps:steps retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigRelayStatus * _Nonnull responseMessage) {
                     TeLogInfo(@"configRelaySet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigConfigRelayStatus:responseMessage andIndexPath:indexPath];
@@ -574,19 +694,48 @@
         //Set Network Transmit
         AlertItemModel *item1 = [[AlertItemModel alloc] init];
         item1.itemType = ItemType_Input;
-        item1.headerString = @"Transmit Count(3 bits):";
-        item1.defaultString = [NSString stringWithFormat:@"%ld",(long)weakSelf.model.networkTransmit.networkTransmitCount];
+        item1.headerString = @"Transmit Count(3 bits):0x";
+        item1.defaultString = @"";
         AlertItemModel *item2 = [[AlertItemModel alloc] init];
         item2.itemType = ItemType_Input;
-        item2.headerString = @"Transmit Interval Steps(5 bits):";
-        item2.defaultString = [NSString stringWithFormat:@"%ld",(long)weakSelf.model.networkTransmit.networkTransmitIntervalSteps];
+        item2.headerString = @"Transmit Interval Steps(5 bits):0x";
+        item2.defaultString = @"";
         CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Network Transmit" detail:@"input new value" itemArray:@[item1,item2] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
+                NSString *networkTransmitCountString = [alertView getTextFieldOfRow:0].text.removeAllSapce;
+                NSString *networkTransmitIntervalStepsString = [alertView getTextFieldOfRow:1].text.removeAllSapce;
+                BOOL result = [LibTools validateHex:networkTransmitCountString];
+                if (result == NO || networkTransmitCountString.length == 0) {
+                    [weakSelf showTips:@"Please enter hexadecimal string to network transmit count!"];
+                    return;
+                }
+                result = [LibTools validateHex:networkTransmitIntervalStepsString];
+                if (result == NO || networkTransmitIntervalStepsString.length == 0) {
+                    [weakSelf showTips:@"Please enter hexadecimal string to network transmit interval steps!"];
+                    return;
+                }
+                if (networkTransmitCountString.length > 2) {
+                    [weakSelf showTips:@"The length of network transmit count is 5 bits!"];
+                    return;
+                }
+                if (networkTransmitIntervalStepsString.length > 1) {
+                    [weakSelf showTips:@"The length of network transmit interval steps is 3 bits!"];
+                    return;
+                }
+                int count = [LibTools uint8From16String:networkTransmitCountString];
+                if (count < 0 || count > 0x1F) {
+                    [weakSelf showTips:@"The range of network transmit count is 0x00~0x1F!"];
+                    return;
+                }
+                int steps = [LibTools uint8From16String:networkTransmitIntervalStepsString];
+                if (steps < 0 || steps > 0x7) {
+                    [weakSelf showTips:@"The range of network transmit interval steps is 0x0~0x7!"];
+                    return;
+                }
+
                 [ShowTipsHandle.share show:@"Set Network Transmit..."];
-                NSString *networkTransmitCountString = [alertView getTextFieldOfRow:0].text;
-                NSString *networkTransmitIntervalStepsString = [alertView getTextFieldOfRow:1].text;
-                [SDKLibCommand configNetworkTransmitSetWithDestination:weakSelf.model.address networkTransmitCount:networkTransmitCountString.intValue networkTransmitIntervalSteps:networkTransmitIntervalStepsString.intValue retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetworkTransmitStatus * _Nonnull responseMessage) {
+                [SDKLibCommand configNetworkTransmitSetWithDestination:weakSelf.model.address networkTransmitCount:count networkTransmitIntervalSteps:steps retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetworkTransmitStatus * _Nonnull responseMessage) {
                     TeLogInfo(@"configDefaultTtlSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.model.address == source) {
                         [weakSelf refreshUIWithSigConfigNetworkTransmitStatus:responseMessage andIndexPath:indexPath];
@@ -608,8 +757,144 @@
         }];
         [customAlertView showCustomAlertView];
     }
+#ifdef kExist
+    else if (indexPath.section == 8) {
+        //Set Mesh Private Beacon
+        AlertItemModel *item1 = [[AlertItemModel alloc] init];
+        item1.itemType = ItemType_Choose;
+        item1.headerString = @"Proxy:";
+        item1.defaultString = [SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateBeaconStatus.privateBeacon];
+        NSMutableArray *mArray = [NSMutableArray array];
+        [mArray addObject:[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)SigPrivateBeaconState_disable]];
+        [mArray addObject:[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)SigPrivateBeaconState_enable]];
+        item1.chooseItemsArray = mArray;
+        AlertItemModel *item2 = [[AlertItemModel alloc] init];
+        item2.itemType = ItemType_Input;
+        item2.headerString = @"RelayRetransmit Count(3 bits):0x";
+        item2.defaultString = @"";
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Mesh Private Beacon" detail:@"input new value" itemArray:@[item1, item2] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+            if (isConfirm) {
+                //CONFIRM
+                NSString *randomUpdateIntervalStepsString = [alertView getTextFieldOfRow:1].text.removeAllSapce;
+                BOOL result = [LibTools validateHex:randomUpdateIntervalStepsString];
+                if (result == NO || randomUpdateIntervalStepsString.length == 0) {
+                    [weakSelf showTips:@"Please enter hexadecimal string to random Update Interval Steps!"];
+                    return;
+                }
+                if (randomUpdateIntervalStepsString.length > 2) {
+                    [weakSelf showTips:@"The length of random Update Interval Steps is 1 byte!"];
+                    return;
+                }
+                int randomUpdateIntervalSteps = [LibTools uint8From16String:randomUpdateIntervalStepsString];
+                if (randomUpdateIntervalSteps < 0 || randomUpdateIntervalSteps > 0xFF) {
+                    [weakSelf showTips:@"The range of retransmit count is 0x00~0xFF!"];
+                    return;
+                }
+                
+                [ShowTipsHandle.share show:@"Set Mesh Private Beacon..."];
+                SigPrivateBeaconState privateBeaconState = [alertView getSelectLeftOfRow:0]?SigPrivateBeaconState_enable:SigPrivateBeaconState_disable;
+                [SDKLibCommand privateBeaconSetWithPrivateBeacon:privateBeaconState randomUpdateIntervalSteps:randomUpdateIntervalSteps destination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateBeaconStatus * _Nonnull responseMessage) {
+                    TeLogInfo(@"Mesh Private Beacon Set=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    if (weakSelf.model.address == source) {
+                        [weakSelf refreshUIWithSigPrivateBeaconStatus:responseMessage andIndexPath:indexPath];
+                    }
+                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    if (error) {
+                        [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Mesh Private Beacon failed! error=%@",error]];
+                    } else {
+                        [ShowTipsHandle.share show:@"Set Mesh Private Beacon successed!"];
+                    }
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [ShowTipsHandle.share delayHidden:1.0];
+                    });
+                }];
+            } else {
+                //cancel
+            }
+        }];
+        [customAlertView showCustomAlertView];
+    } else if (indexPath.section == 9) {
+        //Set Private GATT Proxy
+        AlertItemModel *item1 = [[AlertItemModel alloc] init];
+        item1.itemType = ItemType_Choose;
+        item1.headerString = @"Proxy:";
+        item1.defaultString = [SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)weakSelf.privateGattProxyStatus.privateGattProxy];
+        NSMutableArray *mArray = [NSMutableArray array];
+        [mArray addObject:[SigHelper.share getDetailOfSigNodeFeaturesState:SigNodeFeaturesState_notEnabled]];
+        [mArray addObject:[SigHelper.share getDetailOfSigNodeFeaturesState:SigNodeFeaturesState_enabled]];
+        item1.chooseItemsArray = mArray;
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Private GATT Proxy" detail:@"input new value" itemArray:@[item1] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+            if (isConfirm) {
+                //CONFIRM
+                [ShowTipsHandle.share show:@"Set Private GATT Proxy..."];
+                SigPrivateGattProxyState nodeGATTProxyState = [alertView getSelectLeftOfRow:0]?SigPrivateGattProxyState_disable:SigPrivateGattProxyState_enable;
+                [SDKLibCommand privateGattProxySetWithPrivateGattProxy:nodeGATTProxyState destination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateGattProxyStatus * _Nonnull responseMessage) {
+                    TeLogInfo(@"Private GATT Proxy Set=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    if (weakSelf.model.address == source) {
+                        [weakSelf refreshUIWithSigPrivateGattProxyStatus:responseMessage andIndexPath:indexPath];
+                    }
+                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    if (error) {
+                        [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Private GATT Proxy failed! error=%@",error]];
+                    } else {
+                        [ShowTipsHandle.share show:@"Set Private GATT Proxy successed!"];
+                    }
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [ShowTipsHandle.share delayHidden:1.0];
+                    });
+                }];
+            } else {
+                //cancel
+            }
+        }];
+        [customAlertView showCustomAlertView];
+    } else if (indexPath.section == 10) {
+        //Set Private Node Identity
+        AlertItemModel *item1 = [[AlertItemModel alloc] init];
+        item1.itemType = ItemType_Choose;
+        item1.headerString = @"Proxy:";
+        item1.defaultString = [SigHelper.share getDetailOfSigNodeIdentityState:SigNodeIdentityState_notEnabled];
+        NSMutableArray *mArray = [NSMutableArray array];
+        [mArray addObject:[SigHelper.share getDetailOfSigNodeIdentityState:SigNodeIdentityState_notEnabled]];
+        [mArray addObject:[SigHelper.share getDetailOfSigNodeIdentityState:SigNodeIdentityState_enabled]];
+        item1.chooseItemsArray = mArray;
+        CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:@"Set Private Node Identity" detail:@"input new value" itemArray:@[item1] leftBtnTitle:@"CANCEL" rightBtnTitle:@"CONFIRM" alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
+            if (isConfirm) {
+                //CONFIRM
+                [ShowTipsHandle.share show:@"Set Private Node Identity..."];
+                SigPrivateNodeIdentityState identity = [alertView getSelectLeftOfRow:0]?SigPrivateNodeIdentityState_notEnabled:SigPrivateNodeIdentityState_enabled;
+                [SDKLibCommand privateNodeIdentitySetWithNetKeyIndex:weakSelf.model.address privateIdentity:identity destination:weakSelf.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateNodeIdentityStatus * _Nonnull responseMessage) {
+                    TeLogInfo(@"Private NodeIdentity Set=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    if (weakSelf.model.address == source) {
+                        [weakSelf refreshUIWithSigPrivateNodeIdentityStatus:responseMessage andIndexPath:indexPath];
+                    }
+                } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                    TeLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    if (error) {
+                        [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set Private Node Identity failed! error=%@",error]];
+                    } else {
+                        [ShowTipsHandle.share show:@"Set Private Node Identity successed!"];
+                    }
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [ShowTipsHandle.share delayHidden:1.0];
+                    });
+                }];
+            } else {
+                //cancel
+            }
+        }];
+        [customAlertView showCustomAlertView];
+    }
+#endif
 }
 
+- (void)showTips:(NSString *)message{
+    [self showAlertSureWithTitle:@"Hits" message:message sure:^(UIAlertAction *action) {
+        
+    }];
+}
 
 - (void)refreshUIWithSigConfigDefaultTtlStatus:(SigConfigDefaultTtlStatus *)responseMessage andIndexPath:(NSIndexPath *)indexPath {
     ShowModel *m = self.dataArray[indexPath.section];
@@ -627,7 +912,7 @@
     self.model.relayRetransmit.relayRetransmitCount = responseMessage.count;
     self.model.relayRetransmit.relayRetransmitIntervalSteps = responseMessage.steps;
     [SigDataSource.share saveLocationData];
-    m.value = [NSString stringWithFormat:@"value:%@\nretransmit count: %ld\nretransmit interval steps: %ld",[SigHelper.share getDetailOfSigNodeFeaturesState:self.model.features.relayFeature],(long)self.model.relayRetransmit.relayRetransmitCount,(long)self.model.relayRetransmit.relayRetransmitIntervalSteps];
+    m.value = [NSString stringWithFormat:@"value:%@\nretransmit count: 0x%lX\nretransmit interval steps: 0x%lX",[SigHelper.share getDetailOfSigNodeFeaturesState:self.model.features.relayFeature],(long)self.model.relayRetransmit.relayRetransmitCount,(long)self.model.relayRetransmit.relayRetransmitIntervalSteps];
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:indexPath.section] withRowAnimation:UITableViewRowAnimationAutomatic];
     });
@@ -676,11 +961,39 @@
     self.model.networkTransmit.networkTransmitCount = responseMessage.count;
     self.model.networkTransmit.networkTransmitIntervalSteps = responseMessage.steps;
     [SigDataSource.share saveLocationData];
-    m.value = [NSString stringWithFormat:@"value:%@\nretransmit count: %ld\nretransmit interval steps: %ld",@"",(long)self.model.networkTransmit.networkTransmitCount,(long)self.model.networkTransmit.networkTransmitIntervalSteps];
+    m.value = [NSString stringWithFormat:@"value:%@\ntransmit count: 0x%lX\ntransmit interval steps: 0x%lX",@"",(long)self.model.networkTransmit.networkTransmitCount,(long)self.model.networkTransmit.networkTransmitIntervalSteps];
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:indexPath.section] withRowAnimation:UITableViewRowAnimationAutomatic];
     });
 }
+
+- (void)refreshUIWithSigPrivateBeaconStatus:(SigPrivateBeaconStatus *)responseMessage andIndexPath:(NSIndexPath *)indexPath {
+    ShowModel *m = self.dataArray[indexPath.section];
+    self.privateBeaconStatus = responseMessage;
+    m.value = [NSString stringWithFormat:@"value:%@\nrandomUpdateIntervalSteps:0x%X",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateBeaconStatus.privateBeacon], self.privateBeaconStatus.randomUpdateIntervalSteps];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:indexPath.section] withRowAnimation:UITableViewRowAnimationAutomatic];
+    });
+}
+
+- (void)refreshUIWithSigPrivateGattProxyStatus:(SigPrivateGattProxyStatus *)responseMessage andIndexPath:(NSIndexPath *)indexPath {
+    ShowModel *m = self.dataArray[indexPath.section];
+    self.privateGattProxyStatus = responseMessage;
+    m.value = [NSString stringWithFormat:@"value:%@",[SigHelper.share getDetailOfSigNodeFeaturesState:(SigNodeFeaturesState)self.privateGattProxyStatus.privateGattProxy]];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:indexPath.section] withRowAnimation:UITableViewRowAnimationAutomatic];
+    });
+}
+
+- (void)refreshUIWithSigPrivateNodeIdentityStatus:(SigPrivateNodeIdentityStatus *)responseMessage andIndexPath:(NSIndexPath *)indexPath {
+    ShowModel *m = self.dataArray[indexPath.section];
+    self.privateNodeIdentityStatus = responseMessage;
+    m.value = [NSString stringWithFormat:@"value:%@",[SigHelper.share getDetailOfSigNodeIdentityState:(SigNodeIdentityState)self.privateNodeIdentityStatus.privateIdentity]];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:indexPath.section] withRowAnimation:UITableViewRowAnimationAutomatic];
+    });
+}
+
 
 /** 设置分区圆角 */
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {

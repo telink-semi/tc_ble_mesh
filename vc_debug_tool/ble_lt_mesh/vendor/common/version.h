@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     version.h 
+ * @file	version.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #pragma once
 
@@ -29,11 +32,19 @@
 #include "../../proj/mcu/config.h"
 #include "mesh_config.h"
 
-#define VERSION_GET(ver_big, ver_small)      ((ver_big)|(ver_small << 8))      // big endian
+#define SW_VERSION_SPEC			(3)		// "3" means SIG MESH 1.0.x
+#define SW_VERSION_MAJOR		(3)		// 
+#define SW_VERSION_MINOR		(3)		// 
+#define SW_VERSION_2ND_MINOR	(6)		// second minor
 
-#define FW_VERSION_TELINK_RELEASE_3 (VERSION_GET(0x33, 0x33)|((0x34)<<16))  // user can't modify    // big endian
+// big endian
+#define FW_VERSION_TELINK_RELEASE   ((SW_VERSION_SPEC << 4) + (SW_VERSION_MAJOR << 0) + \
+									 (SW_VERSION_MINOR << 12) + (SW_VERSION_2ND_MINOR << 8))    // user can't modify, big endian.
 
-#define FW_VERSION_TELINK_RELEASE   (FW_VERSION_TELINK_RELEASE_3 & 0xffff)    // user can't modify
+#define VER_NUM2CHAR(num)		((((num) >= 0)&&((num) <= 9)) ? ((num) + '0') : ((((num) >= 0x0a)&&((num) <= 0x0f)) ? ((num)-0x0a + 'a') : (num)))
+#define U8_HIGH2CHAR(v_u8)		(VER_NUM2CHAR(((v_u8) >> 4) & 0x0f))
+#define U8_LOW2CHAR(v_u8)		(VER_NUM2CHAR((v_u8) & 0x0f))
+#define U8_2CHAR(v_u8)			((U8_HIGH2CHAR((v_u8)) << 8) + U8_LOW2CHAR((v_u8)))
 
 #define PID_UNKNOW              (0x0000)
 // ------ light ------

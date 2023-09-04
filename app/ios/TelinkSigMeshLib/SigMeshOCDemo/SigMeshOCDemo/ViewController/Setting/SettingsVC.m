@@ -3,26 +3,22 @@
  *
  * @brief    A concise description.
  *
- * @author       梁家誌
- * @date         2021/3/8
+ * @author   Telink, 梁家誌
+ * @date     2021/3/8
  *
- * @par      Copyright © 2021 Telink Semiconductor (Shanghai) Co., Ltd. All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *           The information contained herein is confidential property of Telink
- *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *           Co., Ltd. and the licensee or the terms described here-in. This heading
- *           MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or  
- *           alter) any information contained herein in whole or in part except as expressly authorized  
- *           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible  
- *           for any claim to the extent arising out of or relating to such deletion(s), modification(s)  
- *           or alteration(s).
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
- *           Licensees are granted free, non-transferable use of the information in this
- *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
- *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 
 #import "SettingsVC.h"
@@ -70,6 +66,7 @@
     [array addObject:@"OOB Database"];
     [array addObject:@"Enable DLE Mode Extend Bearer"];
     [array addObject:@"Root Certificate"];
+    [array addObject:@"Directed Security"];
     _source = array;
     [self.tableView reloadData];
 }
@@ -87,7 +84,7 @@
 }
 
 - (void)clickSwitch:(UISwitch *)sender {
-    NSNumber *type = [NSNumber numberWithInteger:sender.on == YES ? KeyBindTpye_Fast : KeyBindTpye_Normal];
+    NSNumber *type = [NSNumber numberWithInteger:sender.on == YES ? KeyBindType_Fast : KeyBindType_Normal];
     [[NSUserDefaults standardUserDefaults] setValue:type forKey:kKeyBindType];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
@@ -110,16 +107,23 @@
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
-- (void)clickAddStaticOOBDevcieByNoOOBEnableSwitch:(UISwitch *)sender {
-    SigDataSource.share.addStaticOOBDevcieByNoOOBEnable = sender.on;
+- (void)clickAddStaticOOBDeviceByNoOOBEnableSwitch:(UISwitch *)sender {
+    SigDataSource.share.addStaticOOBDeviceByNoOOBEnable = sender.on;
     NSNumber *type = [NSNumber numberWithBool:sender.on];
-    [[NSUserDefaults standardUserDefaults] setValue:type forKey:kAddStaticOOBDevcieByNoOOBEnable];
+    [[NSUserDefaults standardUserDefaults] setValue:type forKey:kAddStaticOOBDeviceByNoOOBEnable];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 - (void)clickOOBButton {
     OOBListVC *vc = [[OOBListVC alloc] init];
     [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)clickDirectedSecuritySwitch:(UISwitch *)sender {
+    SigDataSource.share.sendByDirectedSecurity = sender.on;
+    NSNumber *type = [NSNumber numberWithBool:sender.on];
+    [[NSUserDefaults standardUserDefaults] setValue:type forKey:kDirectedSecurityEnable];
+    [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
 - (IBAction)clickResetMesh:(UIButton *)sender {
@@ -153,7 +157,7 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    if (indexPath.row <= 4) {
+    if (indexPath.row <= 4 || indexPath.row == 8) {
         InfoSwitchCell *cell = (InfoSwitchCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifiers_InfoSwitchCellID forIndexPath:indexPath];
         cell.accessoryType = UITableViewCellAccessoryNone;
         cell.showLabel.text = _source[indexPath.row];
@@ -177,9 +181,16 @@
             cell.showSwitch.on = online.boolValue;
             [cell.showSwitch addTarget:self action:@selector(clickOnlineStatusSwitch:) forControlEvents:UIControlEventValueChanged];
         } else if (indexPath.row == 4) {
-            NSNumber *addStaticOOBDevcieByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDevcieByNoOOBEnable];
-            cell.showSwitch.on = addStaticOOBDevcieByNoOOBEnable.boolValue;
-            [cell.showSwitch addTarget:self action:@selector(clickAddStaticOOBDevcieByNoOOBEnableSwitch:) forControlEvents:UIControlEventValueChanged];
+            NSNumber *addStaticOOBDeviceByNoOOBEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kAddStaticOOBDeviceByNoOOBEnable];
+            cell.showSwitch.on = addStaticOOBDeviceByNoOOBEnable.boolValue;
+            [cell.showSwitch addTarget:self action:@selector(clickAddStaticOOBDeviceByNoOOBEnableSwitch:) forControlEvents:UIControlEventValueChanged];
+        } else if (indexPath.row == 8) {
+            NSNumber *directedSecurityEnable = [[NSUserDefaults standardUserDefaults] valueForKey:kDirectedSecurityEnable];
+            cell.showSwitch.on = directedSecurityEnable.boolValue;
+            [cell.showSwitch addTarget:self action:@selector(clickDirectedSecuritySwitch:) forControlEvents:UIControlEventValueChanged];
+#ifndef kExist
+            cell.contentView.hidden = YES;
+#endif
         }
         return cell;
     } else if (indexPath.row == 5) {
@@ -212,7 +223,7 @@
 #endif
         return cell;
     }
-    return nil;
+    return [[UITableViewCell alloc] init];
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
@@ -232,7 +243,7 @@
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
 #ifndef kExist
-    if (indexPath.row == 0 || indexPath.row == 7) {
+    if (indexPath.row == 0 || indexPath.row == 7 || indexPath.row == 8) {
         return 0.1;
     }
 #endif

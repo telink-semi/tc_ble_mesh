@@ -1,27 +1,29 @@
 /********************************************************************************************************
- * @file     mesh_node.h 
+ * @file	mesh_node.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #if NL_API_ENABLE
 #include "nl_api/nl_model_schedules.h"
 #endif
@@ -103,7 +105,11 @@ static inline void set_array_mask_en(u8 *mask, u32 mask_num)
 //----------------------------------- key
 #define NET_KEY_PRIMARY     (0)
 
+#if 0 // (GATEWAY_ENABLE || (__LIB_EN__ && __PROJECT_MESH_PRO__))
+#define NET_KEY_MAX         (3)		// count in node
+#else
 #define NET_KEY_MAX         (2)		// count in node
+#endif
 #define APP_KEY_MAX         (2)		// count in node
 
 #define NET_KEY_LIST_MAX_PROV	(1)		// count in provisioner
@@ -132,7 +138,7 @@ enum{
 #define IV_UPDATE_KEEP_TMIE_MIN_RX_S    (96*3600)//(96*3600)       // 96 hour
 #endif
 
-#define	IV_IDX_CUR		{0x12,0x34,0x56,0x78}	// don't change, because of compatibility in factory mode.
+#define	IV_IDX_CUR		0x12345678	// don't change, because of compatibility in factory mode.
 
 #define DEVKEY_DEF 		{0x9d,0x6d,0xd0,0xe9,0x6e,0xb2,0x5d,0xc1, 0x9a,0x40,0xed,0x99,0x14,0xf8,0xf0,0x3f}
 
@@ -188,23 +194,23 @@ enum{
 #define SIG_MD_REMOTE_PROV_SERVER       0x0004
 #define SIG_MD_REMOTE_PROV_CLIENT       0x0005
 #endif
-#define SIG_MD_DF_CFG_S					0xBF30
-#define SIG_MD_DF_CFG_C					0xBF31
-#define SIG_MD_BRIDGE_CFG_SERVER		0xBF32
-#define SIG_MD_BRIDGE_CFG_CLIENT		0xBF33
-#define SIG_MD_PRIVATE_BEACON_SERVER 	0xBF40
-#define SIG_MD_PRIVATE_BEACON_CLIENT	0xBF41
+#define SIG_MD_DF_CFG_S					0x0006
+#define SIG_MD_DF_CFG_C					0x0007
+#define SIG_MD_BRIDGE_CFG_SERVER		0x0008
+#define SIG_MD_BRIDGE_CFG_CLIENT		0x0009
+#define SIG_MD_PRIVATE_BEACON_SERVER 	0x000a
+#define SIG_MD_PRIVATE_BEACON_CLIENT	0x000b
 
-#define SIG_MD_ON_DEMAND_PROXY_S		0xBF50
-#define SIG_MD_ON_DEMAND_PROXY_C		0xBF51
-#define SIG_MD_SAR_CFG_S				0xBF52
-#define SIG_MD_SAR_CFG_C				0xBF53
-#define SIG_MD_OP_AGG_S					0xBF54
-#define SIG_MD_OP_AGG_C					0xBF55
-#define SIG_MD_LARGE_CPS_S				0xBF56
-#define SIG_MD_LARGE_CPS_C				0xBF57
-#define SIG_MD_SOLI_PDU_RPL_CFG_S		0xBF58
-#define SIG_MD_SOLI_PDU_RPL_CFG_C		0xBF59
+#define SIG_MD_ON_DEMAND_PROXY_S		0x000C
+#define SIG_MD_ON_DEMAND_PROXY_C		0x000D
+#define SIG_MD_SAR_CFG_S				0x000E
+#define SIG_MD_SAR_CFG_C				0x000F
+#define SIG_MD_OP_AGG_S					0x0010
+#define SIG_MD_OP_AGG_C					0x0011
+#define SIG_MD_LARGE_CPS_S				0x0012
+#define SIG_MD_LARGE_CPS_C				0x0013
+#define SIG_MD_SOLI_PDU_RPL_CFG_S		0x0014
+#define SIG_MD_SOLI_PDU_RPL_CFG_C		0x0015
 
 
 #define SIG_MD_G_ONOFF_S                0x1000
@@ -456,6 +462,15 @@ typedef struct{
 }sar_receiver_t;
 
 typedef struct{
+	u8 par_type;
+	struct{
+		u8 step:1;  // unit: 0:10ms 1:100ms
+		u8 count:7;
+	};
+	u16 start_tick;
+}bear_delay_t;
+
+typedef struct{
 	u8 relay;
 	mesh_transmit_t transmit;
 }mesh_cfg_model_relay_set_t;
@@ -699,9 +714,13 @@ typedef struct{
 #ifndef LIGHT_CNT
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL)
 	#if __PROJECT_MESH_SWITCH__
-	#define LIGHT_CNT                       (4)     // means instance count
+		#if UI_BUTTON_MODE_ENABLE
+#define LIGHT_CNT                       (1)     // means instance count
+		#else
+#define LIGHT_CNT						(4) 	// means instance count
+		#endif
 	#else
-	#define LIGHT_CNT                       (3)     // means instance count
+#define LIGHT_CNT                       (3)     // means instance count
 	#endif
 #else
 #define LIGHT_CNT                       (1)     // means instance count
@@ -796,7 +815,7 @@ typedef struct{
     u8 tx[ELE_CNT];
 }mesh_tid_t;
 
-#if (WIN32 || (TLV_ENABLE))
+#if (WIN32 || (NET_KEY_MAX > 2 || APP_KEY_MAX > 2)) // (TLV_ENABLE) // can not change BIND_KEY_MAX, due to "model_common_t *" in library.
 #define BIND_KEY_MAX		(APP_KEY_MAX * NET_KEY_MAX)
 #else
 #define BIND_KEY_MAX		(APP_KEY_MAX)   // confirm later, because of compatibility of flash save
@@ -837,10 +856,6 @@ typedef struct{
 
 
 #define HEALTH_TEST_LEN		0x08
-typedef struct {
-	u8 test_id;
-	u8 fault_array[HEALTH_TEST_LEN];
-}mesh_crruent_fault_t;
 
 typedef struct{
 	u8 test_id;
@@ -902,13 +917,6 @@ typedef struct{
 //--------------------SIG SERVER MODEL
 typedef struct{
     model_common_t com;             // must first
-#if MD_SAR_EN
-	sar_transmitter_t sar_transmitter;
-	sar_receiver_t sar_receiver;
-#endif
-#if MD_ON_DEMAND_PROXY_EN
-	u8 on_demand_proxy;
-#endif
     u8 rfu1[8];
 	u8 sec_nw_beacon;
 	u8 ttl_def;
@@ -1444,7 +1452,7 @@ typedef struct{
     u8 ct_flag;
     u8 rfu1[2];
     u8 iv_update_trigger_flag;     // trigger by self or other
-    u8 iv_index[4];
+    u8 iv_index[4];	// big endianness
 	#if VC_APP_ENABLE
 	u16 unicast;
 	u8 rfu2[6];
@@ -1455,7 +1463,7 @@ typedef struct{
 }misc_save_t;
 
 enum{
-    KEY_UNVALID     = 0,        // must 0
+    KEY_INVALID     = 0,        // must 0
     KEY_VALID       = 1,
 };
 
@@ -1466,9 +1474,10 @@ enum{
 };
 
 typedef struct{
-    u8 cur[4];   // current iv index,  store in big endianness
-    u8 tx[4];
-    u8 rx[4];   // debug Note: it will be fresh by the beacon from other network.
+	// iv index: if use "u32" means little endianness; "u8 [4]" means big endianness;
+    u32 iv_cur;	// current iv index,  // little endianness in RAM. but big endianness when save to flash to keep compatibility.
+    u32 iv_tx;	// little endianness
+    u32 iv_rx;	// little endianness  // debug Note: it will be fresh by the beacon from other network.
     u32 keep_time_s;
     u8 searching_flag;
     u8 rx_update;   // receive iv index update flag
@@ -1487,6 +1496,73 @@ typedef struct{
 	u8 nk[16];
 	u16 node_adr;
 }mesh_prov_par_t;
+
+
+#define MESH_MODEL_MISC_SAVE_EN		(MD_PRIVACY_BEA||MD_SAR_EN||MD_ON_DEMAND_PROXY_EN)
+#if MESH_MODEL_MISC_SAVE_EN
+// model with device key
+// privacy_beacon
+typedef struct{
+	u8 beacon_sts;
+	u8 random_inv_step;
+	u8 proxy_sts;
+	u8 identity_sts;
+}mesh_privacy_beacon_save_t;
+
+typedef struct{
+	mesh_privacy_beacon_save_t privacy_bc;
+#if 1//MD_SAR_EN
+	sar_transmitter_t sar_transmitter;
+	sar_receiver_t sar_receiver;
+#endif
+#if 1//MD_ON_DEMAND_PROXY_EN
+	u8 on_demand_proxy;
+#endif
+
+	//reserve;
+	u8 rfu[32];
+}mesh_model_misc_save_t;
+
+extern mesh_model_misc_save_t g_mesh_model_misc_save;
+void mesh_model_misc_save();
+
+static inline void mesh_privacy_beacon_save()
+{
+	mesh_model_misc_save();
+}
+
+static inline void mesh_model_sar_save()
+{
+	mesh_model_misc_save();
+}
+
+static inline void mesh_model_on_demand_save()
+{
+	mesh_model_misc_save();
+}
+#endif
+
+// common save
+#define FLASH_CHECK_SIZE_MAX	(64)
+#define SIZE_SAVE_FLAG		(4)
+
+typedef struct{
+    u32 adr_base;
+    u8 *p_save_par;
+    u32 *p_adr;
+    u32 size_save_par;		// exclude save flag
+}mesh_save_map_t;
+
+#define MODEL_MAX_ONE_SECTOR	(6)
+
+typedef struct{
+    bool4 sig_model;
+    u32 md_id[MODEL_MAX_ONE_SECTOR];
+    u32 adr_base;
+}mesh_md_adr_map_t;
+
+extern const u32 mesh_save_map_array;
+extern const mesh_save_map_t mesh_save_map[];
 
 // ---------------
 static inline u32 GET_LEVEL_PAR_LEN(int trans_flag){
@@ -1511,11 +1587,6 @@ int mesh_nid_check(u8 nid);
 void mesh_friend_key_refresh(mesh_net_key_t *new_key);
 void mesh_friend_key_RevokingOld(mesh_net_key_t *new_key);
 void mesh_friend_key_update_all_nk(u8 lpn_idx, u8 nk_arr_idx);
-int  mesh_get_ivi_cur_val_little();
-void mesh_increase_ivi(u8 *p_ivi);
-void mesh_decrease_ivi(u8 *p_ivi);
-int mesh_ivi_greater_or_equal(const u8 *p_ivi1, const u8 *p_ivi2, u32 val);
-int mesh_ivi_equal(const u8 *p_ivi1, const u8 *p_ivi2, u32 delta);
 void mesh_set_iv_idx_rx(u8 ivi);
 void mesh_iv_idx_init_cb(int rst_sno);
 void mesh_set_ele_adr(u16 adr);
@@ -1523,8 +1594,7 @@ void mesh_set_ele_adr_ll(u16 adr, int save);
 int is_own_ele(u16 adr);
 int is_ele_in_node(u16 ele_adr, u16 node_adr, u32 cnt);
 int is_retransaction(u16 adr, u8 tid);
-int mesh_provision_par_set(u8 *prov_pars);
-u8 mesh_provision_and_bind_self(u8 *p_prov_data, u8 *p_dev_key, u16 appkey_idx, u8 *p_app_key);
+
 mesh_net_key_t * mesh_get_netkey_by_idx(u16 key_idx);
 mesh_net_key_t * is_mesh_net_key_exist(u16 key_idx);
 int is_netkey_index_prohibited(u16 key_idx);
@@ -1576,11 +1646,10 @@ int is_exist_valid_network_key();
 void mesh_key_save();
 void appkey_bind_all(int bind_flag, u16 ak_idx, int fac_filter_en);
 void mesh_key_flash_sector_init();
-void mesh_provision_par_handle(u8 *prov_mag);
-int mesh_provision_par_set_dir(u8 *prov_par);
 u32 get_all_appkey_cnt();
 int get_mesh_adv_interval();
-
+int get_mesh_tx_delay_ms(bear_delay_t *p_bear);
+void set_mesh_bear_tx_delay(u8 *p, int delay_ms);
 
 void VC_node_info_retrieve();
 u8 * VC_master_get_other_node_dev_key(u16 adr);
@@ -1622,6 +1691,7 @@ void mesh_service_change_report();
 int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u32 size,u8 flag);
 void mesh_seg_rx_init();
 void mesh_seg_ack_poll_rx();
+int is_retrans_segment_done();
 void mesh_seg_ack_poll_tx();
 void blc_pm_select_none();
 
@@ -1659,7 +1729,12 @@ void mesh_blc_ll_setExtAdvData(u8 adv_pdu_len, u8 *data);
 void mesh_ivi_event_cb(u8 search_flag);
 void mesh_netkey_cb(u8 idx,u16 op);
 void send_and_wait_completed_reset_node_status();
-
+void mesh_node_identity_refresh();
+int is_rx_seg_reject_before(u16 src_addr, u32 seqAuth);
+void add2rx_seg_reject_cache(u16 src_addr, u32 seqAuth);
+#if (!WIN32 && (MCU_CORE_TYPE >= MCU_CORE_8258))
+void sys_clock_init(SYS_CLK_TypeDef SYS_CLK);
+#endif
 
 
 extern u16 ele_adr_primary;
@@ -1711,14 +1786,21 @@ extern s8 rssi_pkt; // have been -110
 extern u8 pts_test_en;
 extern const u16 my_fwRevisionUUID;
 extern u8 my_fwRevisionCharacter;
-#define FW_REVISION_VALUE_LEN       (9)
+#define FW_REVISION_VALUE_LEN       (16)
 extern const u8  my_fwRevision_value [FW_REVISION_VALUE_LEN];
 extern u8 g_gw_extend_adv_option;
+
+typedef struct{
+	u16 major 			:4;
+	u16 spec 			:4;
+	u16 second_minor	:4;
+	u16 minor 			:4;
+}sw_version_big_endian_t;
 
 #define TEST_CNT 100
 typedef struct{
 	u8 rcv_cnt;
-	u8 ack_pkt_num;
+	u8 ack_par_len;
 	u8 send_index;
 	u16 max_time;
 	u16 min_time;
@@ -1727,9 +1809,11 @@ typedef struct{
 	u32 send_tick;
 } mesh_rcv_t;
 
+#define EXTEND_PROVISION_FLAG_OP		(0xFFFF)	// use a special op to represent provision data, no valid op is equal to this.
+
 enum{
     EXTEND_ADV_OPTION_NONE      = 0,    // not support extend adv
-    EXTEND_ADV_OPTION_ADV_ONLY  = 1,    // only mesh OTA command use extend adv
+    EXTEND_ADV_OPTION_OTA_ONLY  = 1,    // only mesh OTA command use extend adv
     EXTEND_ADV_OPTION_ALL       = 2,    // all command use extend adv
     EXTEND_ADV_OPTION_MAX,
 };

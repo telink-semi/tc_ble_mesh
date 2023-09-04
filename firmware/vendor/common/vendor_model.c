@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     vendor_model.c 
+ * @file	vendor_model.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
@@ -255,7 +258,7 @@ int mesh_tx_cmd_indica_retry(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_
     mesh_indication_retry.mat.par = mesh_indication_retry.ac_par;
 
 	ret = mesh_tx_cmd(&mat);
-	retry_interval = (par_len+7)/8 * CMD_INTERVAL_MS;
+	retry_interval = (par_len+7)/8 * 200 + 200;
 	vd_msg_attr_indica_retry_start(retry_interval);
 	u8 tid_pos=0;
 	if(is_cmd_with_tid_vendor(&tid_pos, op, par, 0)){
@@ -639,9 +642,9 @@ hx300t_sensor_t hx300t_sensor;
 
 #if ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
 #if(MCU_CORE_TYPE == MCU_CORE_8258)
-#include "../../drivers/8258/i2c.h"
+#include "drivers/8258/i2c.h"
 #elif(MCU_CORE_TYPE == MCU_CORE_8278)
-#include "../../drivers/8278/i2c.h"
+#include "drivers/8278/i2c.h"
 #endif
 void i2c_io_init()
 {
@@ -649,7 +652,7 @@ void i2c_io_init()
     i2c_gpio_set(I2C_GPIO_GROUP_C0C1);
 }
 #elif (MCU_CORE_TYPE == MCU_CORE_8269)
-#include "../../proj/drivers/i2c.h"
+#include "proj/drivers/i2c.h"
 void i2c_io_init()
 {
       // i2c init
@@ -665,7 +668,7 @@ void i2c_io_init()
 
 void sensor_read_start()
 {
-    u8 r = irq_disable();
+    u32 r = irq_disable();
     #if (MCU_CORE_TYPE == MCU_CORE_8269)
     i2c_write_start(HX300_SENSOR_ID);
     #else
@@ -677,7 +680,7 @@ void sensor_read_start()
 void sensor_read_fun(u16 *p_humi,u16 *p_temp)
 {
     u8 val_buffer[4];
-    u8 r = irq_disable();
+    u32 r = irq_disable();
     #if (MCU_CORE_TYPE == MCU_CORE_8269)
     i2c_read_start_buf(HX300_SENSOR_ID,val_buffer,4);
     #else
@@ -793,7 +796,7 @@ STATIC_ASSERT(sizeof(vd_rc_key_report_t) <= 8);
 int cb_vd_trans_time_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     // send back the current tick part .
-    u32 tick_sts =0;
+    u32 tick_sts = 0;
 	tick_sts = clock_time();
     return mesh_tx_cmd_rsp(VD_MESH_TRANS_TIME_STS,(u8*)&tick_sts,4,ele_adr_primary,cb_par->adr_src,0,0);
     
@@ -803,14 +806,14 @@ u8 max_time_10ms = 0x20;
 int cb_vd_trans_time_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	max_time_10ms = par[0];
-	u32 tick_sts =0;
+	u32 tick_sts = 0;
 	tick_sts = max_time_10ms;
 	return mesh_tx_cmd_rsp(VD_MESH_TRANS_TIME_STS,(u8*)&tick_sts,4,ele_adr_primary,cb_par->adr_src,0,0);
 }
 
 int cb_vd_trans_time_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	int err =-1;
+	int err = 0;
 	return err;
 }
 #endif
@@ -818,12 +821,12 @@ int cb_vd_trans_time_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 #if DU_ENABLE
 int cb_vd_du_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 int cb_vd_du_time_req(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 int cb_vd_du_time_req_ack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -846,7 +849,7 @@ int cb_vd_du_time_req_ack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		}
 	}
 
-	return 1;
+	return 0;
 }
 
 
@@ -861,21 +864,26 @@ int cb_vd_du_time_cmd(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	time_rsp.tid = time->tid;
 	time_rsp.op = VD_DU_TIME;
 	time_rsp.sts = 1;
-	u8 retry_times =3; // rsp 3 times will enough 
+	u8 retry_times =0;
+	if(blt_state == BLS_LINK_STATE_CONN){
+		retry_times =1; // rsp 3 times will enough
+	}else{
+		retry_times =3; // rsp 3 times will enough
+	}
 	while(retry_times--){
-		mesh_tx_cmd2normal(VD_TIME_RSP,(u8*)&time_rsp,sizeof(time_rsp),ele_adr_primary,du_get_gateway_adr(),0);		
+		mesh_tx_cmd2normal(VD_TIME_RSP,(u8*)&time_rsp,sizeof(time_rsp),ele_adr_primary,cb_par->adr_src,0);		
 	}
 	#if DU_LPN_EN
 	// reserve 3s for the sending part 
 	update_du_busy_s(2); 
 	#endif
-	return 1;
+	return 0;
 }
 
 
 int cb_vd_du_time_cmd_rsp(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 #endif
@@ -912,7 +920,13 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
 	CMD_NO_STR(VD_TIME_CMD, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_du_time_cmd, 0),
 	CMD_NO_STR(VD_TIME_RSP, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_time_cmd_rsp, VD_TIME_RSP),
 	#endif
-    
+#elif LLSYNC_ENABLE
+    CMD_NO_STR(LLSYNC_VND_OP_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, LLSYNC_VND_OP_STATUS),
+	CMD_NO_STR(LLSYNC_VND_OP_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, LLSYNC_VND_OP_STATUS),
+	CMD_NO_STR(LLSYNC_VND_OP_SET_UNACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
+    CMD_NO_STR(LLSYNC_VND_OP_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
+	CMD_NO_STR(LLSYNC_VND_OP_INDICATION, 0, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
+    CMD_NO_STR(LLSYNC_VND_OP_CONFIRM, 1, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
 #elif(VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
     #if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)
 	CMD_NO_STR(VD_EXTEND_CMD0, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, 0, STATUS_NONE),
@@ -995,6 +1009,7 @@ int mesh_search_model_id_by_op_vendor(mesh_op_resource_t *op_res, u16 op, u8 tx_
 	foreach_arr(i,mesh_vd_id_func){
 		if(g_msg_vd_id == mesh_vd_id_func[i].vd_id){
 			p_vd_func = &mesh_vd_id_func[i];
+			break ;
 		}
 	}
 

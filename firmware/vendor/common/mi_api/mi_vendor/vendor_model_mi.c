@@ -1,32 +1,35 @@
 /********************************************************************************************************
- * @file     vendor_model.c 
+ * @file	vendor_model_mi.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #if !WIN32
 #include "proj/mcu/watchdog_i.h"
 #endif 
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
-#include "../../app_health.h"
+#include "vendor/common/app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor_model_mi.h"
 #if (VENDOR_MD_MI_EN)
@@ -193,49 +196,49 @@ int mi_cb_vd_light_onoff_set2(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 int mi_cb_vd_property_change(u16 ele_adr, u16 dst_adr,u8 ssid,u8 piid,model_common_t *p_com_md)
 {
-	return 1;
+	return 0;
 }
 
 int mi_cb_vd_get_property(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 int mi_cb_vd_set_property(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 
 int mi_cb_vd_set_property_noack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 int mi_cb_vd_action(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-    return 1;
+    return 0;
 }
 
 int mi_cb_vd_reply_action(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-    return 1;
+    return 0;
 }
 
 int mi_cb_vd_event_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-    return 1;
+    return 0;
 }
 
 
 int mi_cb_vd_vendor(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 int mi_cb_vd_vendor_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 #else
@@ -276,7 +279,7 @@ int mi_cb_vd_light_onoff_status2(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
 
 int mi_cb_vd_property_change_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-    return 1;
+    return 0;
 }
 #else
 #define mi_cb_vd_light_onoff_status         (0)

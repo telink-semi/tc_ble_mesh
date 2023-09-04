@@ -1,41 +1,44 @@
 /********************************************************************************************************
- * @file     app.c 
+ * @file	app.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "../../proj/tl_common.h"
+#include "tl_common.h"
 
 
 #if (    __PROJECT_8261_MASTER_KMA_DONGLE__ || __PROJECT_8266_MASTER_KMA_DONGLE__ \
 	  || __PROJECT_8267_MASTER_KMA_DONGLE__ || __PROJECT_8269_MASTER_KMA_DONGLE__ )
 
 
-#include "../../proj_lib/rf_drv.h"
-#include "../../proj_lib/pm.h"
-#include "../../proj_lib/ble/ll/ll.h"
-#include "../../proj_lib/ble/ble_smp.h"
-#include "../../proj_lib/ble/trace.h"
-#include "../../proj/mcu/pwm.h"
-#include "../../proj/drivers/audio.h"
-#include "../../proj_lib/ble/blt_config.h"
-#include "../../proj/drivers/uart.h"
-#include "../../proj_lib/ble/hci/hci.h"
+#include "proj_lib/rf_drv.h"
+#include "proj_lib/pm.h"
+#include "proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/ble_smp.h"
+#include "proj_lib/ble/trace.h"
+#include "proj/mcu/pwm.h"
+#include "proj/drivers/audio.h"
+#include "proj_lib/ble/blt_config.h"
+#include "proj/drivers/uart.h"
+#include "proj_lib/ble/hci/hci.h"
 
 #include "app_pair.h"
 
@@ -124,10 +127,13 @@ static  u8 my_proxy_in_uuid[2] = SIG_MESH_PROXY_DATA_IN;
 const 	u8 my_OnlineStC2SUUID[16]		= TELINK_ONLINE_ST_DATA_UUID;
 u8 prov_out_handle =0;
 u8 prov_in_handle =0;
+u8 prov_out_ccc_handle = 0;
 
 u8 proxy_out_handle =0;
 u8 proxy_in_handle =0;
+u8 proxy_out_ccc_handle =0;
 u8 kma_online_st_handle =0;
+u8 fw_version_handle = 0;
 
 #if !WIN32
 _attribute_ram_code_ u8 adv_filter_proc(u8 *raw_pkt ,u8 blt_sts)
@@ -190,6 +196,62 @@ int main_idle_loop (void);
 	extern const u8 my_MicUUID[16];
 	extern const u8 my_SpeakerUUID[16];
 	extern const u8 my_OtaUUID[16];
+int host_att_service_wait_event (u16 handle, u8 *p, u32 timeout);
+int get_ccc_handle(u16 start_handle, u16 end_handle)
+{
+	u16 handle = -1;
+	u8  dat[32];
+	att_req_find_info (dat, start_handle, end_handle);
+	if (host_att_service_wait_event(current_connHandle, dat, 1000000))
+	{
+		return  ATT_ERR_SERVICE_DISCOVERY_TIEMOUT;			//timeout
+	}
+
+	att_findInfoRsp_t *p_rsp = (att_findInfoRsp_t *) dat;
+	if (p_rsp->opcode == ATT_OP_FIND_INFO_RSP && p_rsp->format == 1)
+	{
+		int n = p_rsp->l2capLen - 2;
+		u8 *pd = p_rsp->data;
+		while (n > 0)
+		{
+			if ((pd[2]==U16_LO(GATT_UUID_CLIENT_CHAR_CFG) && pd[3]==U16_HI(GATT_UUID_CLIENT_CHAR_CFG)))
+			{
+				handle = pd[0] + (pd[1]<<8);
+				break;
+			}
+
+			n -= 4;
+			pd += 4;
+		}
+	}
+
+	return handle;
+}
+
+int get_fw_version()
+{
+	if(fw_version_handle == 0){
+		return ATT_ERR_INVALID_HANDLE;
+	}
+
+	u8  dat[32];
+	att_req_read (dat, fw_version_handle);
+	u8 tmp = app_host_smp_sdp_pending;
+	app_host_smp_sdp_pending = SDP_PENDING;
+	if (host_att_service_wait_event(current_connHandle, dat, 1000000))
+	{
+		app_host_smp_sdp_pending = tmp;
+		return	ATT_ERR_SERVICE_DISCOVERY_TIEMOUT;			//timeout
+	}
+	app_host_smp_sdp_pending = tmp;
+
+	att_readRsp_t *pr = (att_readRsp_t *) dat;
+	if (pr->opcode == ATT_OP_READ_RSP)
+	{
+		tc_set_fifo(DONGLE_REPROT_FW_VERSION, pr->value, pr->l2capLen-1);
+	}
+	return BLE_SUCCESS;
+}
 
 
 	void app_service_discovery ()
@@ -239,14 +301,24 @@ int main_idle_loop (void);
 						tc_set_fifo(DONGLE_REPORT_ONLINE_ST_UUID, &handle_val, 1);
                     }
                     conn_char_handler[10] = kma_online_st_handle = handle_val;
-                    
+					
+            fw_version_handle = blm_att_findHandleOfUuid16 (db16, CHARACTERISTIC_UUID_FW_REVISION_STRING, 0); 
+				 
             prov_out_handle = conn_char_handler[6];
 			prov_in_handle = conn_char_handler[7];
             proxy_out_handle = conn_char_handler[8];
 			proxy_in_handle = conn_char_handler[9];
         
+			prov_out_ccc_handle = get_ccc_handle(prov_out_handle+1, prov_out_handle+2);
+			proxy_out_ccc_handle = get_ccc_handle(proxy_out_handle+1, proxy_out_handle+2);
 
+			if(-1 == prov_out_ccc_handle){
+				prov_out_ccc_handle = prov_out_handle + 1;
+			}
 
+			if(-1 == proxy_out_ccc_handle){
+				proxy_out_ccc_handle = proxy_out_handle + 1;
+			}
 			//save current service discovery conn address
 			serviceDiscovery_adr_type = current_conn_adr_type;
 			memcpy(serviceDiscovery_address, current_conn_address, 6);
@@ -407,10 +479,10 @@ int app_l2cap_handler (u16 conn_handle, u8 *raw_pkt)
 		{
 
 		}
-		else if (pAtt->opcode == ATT_OP_EXCHANGE_MTU_RSP)
+		else if (ptrL2cap->opcode == ATT_OP_EXCHANGE_MTU_RSP)
 		{
 			extern u16 mtu_rx_size ;
-			u16 att_mtu = pAtt->dat[0] + (pAtt->dat[1]<<8);
+			u16 att_mtu = ptrL2cap->data[0] + (ptrL2cap->data[1]<<8);
 			att_mtu =	min(att_mtu,mtu_rx_size);
 			tc_set_fifo(DONGLE_REPORT_ATT_MTU, (u8 *)&att_mtu, sizeof(att_mtu));
 		}
@@ -474,14 +546,11 @@ int app_l2cap_handler (u16 conn_handle, u8 *raw_pkt)
 // add the adv report part here 
 void push_adv_to_usb(event_adv_report_t *pa)
 {
-	u8 dat[0x40];
-	u8 dat_len;
-	const u8 header[7]={0x04,0x3e,0x29,0x02,0x01,0x00,0x00};
-	memcpy(dat,header,sizeof(header));
-	dat_len = sizeof(header);
-	memcpy(dat+sizeof(header),pa->mac,pa->len+10);
-	dat_len += pa->len+10;
-	my_fifo_push(&hci_tx_fifo, dat, dat_len,0,0);
+	u8 dat[0x40]={0x04,0x3e};
+	dat[2] = pa->len+10+OFFSETOF(event_adv_report_t, mac);
+	memcpy(dat+3,pa, 4);
+	memcpy(dat+7,pa->mac,pa->len+10);
+	my_fifo_push(&hci_tx_fifo, dat, pa->len+10+7,0,0); // 7:dat[0]~da[2] + OFFSETOF(event_adv_report_t, mac)
 	return ;
 }
 
@@ -845,12 +914,16 @@ void user_init()
 	//bluetooth event
 	blc_hci_setEventMask_cmd (HCI_EVT_MASK_DISCONNECTION_COMPLETE | HCI_EVT_MASK_ENCRYPTION_CHANGE);
 	//bluetooth low energy(LE) event 
+#if GATT_RP_EN
+	blc_hci_le_setEventMask_cmd(		HCI_LE_EVT_MASK_CONNECTION_COMPLETE  \
+									|   HCI_LE_EVT_MASK_CONNECTION_UPDATE_COMPLETE \
+									|   HCI_LE_EVT_MASK_CONNECTION_ESTABLISH);  //connection establish: telink private event
+#else
 	blc_hci_le_setEventMask_cmd(		HCI_LE_EVT_MASK_CONNECTION_COMPLETE  \
 									|	HCI_LE_EVT_MASK_ADVERTISING_REPORT \
 									|   HCI_LE_EVT_MASK_CONNECTION_UPDATE_COMPLETE \
 									|   HCI_LE_EVT_MASK_CONNECTION_ESTABLISH);  //connection establish: telink private event
-	
-
+#endif
 
 	////// Host Initialization  //////////
 	blc_l2cap_register_handler (app_l2cap_handler);  //controller data to host(l2cap data) all processed in this func
@@ -880,8 +953,8 @@ void user_init()
 	
 
 	#if(HCI_ACCESS == HCI_USE_UART)
-		gpio_set_input_en(GPIO_PC2, 1);
-		gpio_set_input_en(GPIO_PC3, 1);
+		gpio_set_input_en(GPIO_PC2, 1);//TX
+		gpio_set_input_en(GPIO_PC3, 1);//RX
 		gpio_setup_up_down_resistor(GPIO_PC2, PM_PIN_PULLUP_1M);
 		gpio_setup_up_down_resistor(GPIO_PC3, PM_PIN_PULLUP_1M);
 		uart_io_init(UART_GPIO_8267_PC2_PC3);
@@ -1105,11 +1178,7 @@ void set_ccc_by_master()
 	    clock_time_exceed(connect_tick, 200*1000)&&
 	    app_host_smp_sdp_pending != SMP_PENDING){
 	    if(prov_out_handle){
-			if(prov_out_handle == 0x13){
-				dat_ccc0[7] = prov_out_handle+2;//telink mode ,have descriptor
-			}else{
-				dat_ccc0[7] = prov_out_handle+1;//pts mode,not have the descriptor
-			}
+			dat_ccc0[7] = prov_out_ccc_handle;
 			
 			blm_push_fifo(BLM_CONN_HANDLE,dat_ccc0);
 			sleep_us(blm[0].conn_interval*1250<<2); // wait 4 interval for rsp
@@ -1121,11 +1190,8 @@ void set_ccc_by_master()
 	    }
 
 		if(proxy_out_handle){
-			if(proxy_out_handle == 0x1c){
-				dat_ccc1[7] = proxy_out_handle+2;//telink mode ,have descriptor
-			}else{
-				dat_ccc1[7] = proxy_out_handle+1;//pts mode,not have the descriptor
-			}
+			dat_ccc1[7] = proxy_out_ccc_handle;
+
 			blm_push_fifo(BLM_CONN_HANDLE,dat_ccc1);
 			sleep_us(blm[0].conn_interval*1250<<2);
 
@@ -1136,6 +1202,8 @@ void set_ccc_by_master()
 			u8 tmp_ble_sts =1;
 			tc_set_fifo(MESH_CONNECTION_STS_REPROT, &tmp_ble_sts, 1);
 		}
+
+		get_fw_version();		
 		connect_tick =0;
 		sleep_us(blm[0].conn_interval*1250<<2);
 		blm_att_requestMtuSizeExchange(BLM_CONN_HANDLE, mtu_rx_size);

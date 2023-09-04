@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     keyboard.c 
+ * @file	keyboard.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "../tl_common.h"
 #include "../drivers/usbkeycode.h"
 #include "keyboard.h"
@@ -27,8 +29,8 @@
 //#include "../os/ev.h"
 //#include "../os/sys.h"
 
-//#include "../../vendor/common/keyboard_cfg.h"
-//#include "../../vendor/common/custom.h"
+//#include "vendor/common/keyboard_cfg.h"
+//#include "vendor/common/custom.h"
 
 #if (defined(KB_DRIVE_PINS) && defined(KB_SCAN_PINS))
 
@@ -207,7 +209,7 @@ void kb_rmv_ghost_key(u32 * pressed_matrix){
 	foreach_arr(i, drive_pins){
 		for(int j = (i+1); j < ARRAY_SIZE(drive_pins); ++j){
 			u32 mix = (pressed_matrix[i] & pressed_matrix[j]);
-			// >=2 ∏˘œﬂ÷ÿ∫œ,  ƒ«æÕ « ghost key
+			// >=2 Ê†πÁ∫øÈáçÂêà,  ÈÇ£Â∞±ÊòØ ghost key
 			//four or three key at "#" is pressed at the same time, should remove ghost key
 			if( mix && (!BIT_IS_POW2(mix) || (pressed_matrix[i] ^ pressed_matrix[j])) ){
 				// remove ghost keys
@@ -317,7 +319,7 @@ u32 kb_scan_row(int drv_ind, u8 * gpio){
 	/*
 	 * set as gpio mode if using spi flash pin
 	 * */
-	u8 sr = irq_disable();
+	u32 sr = irq_disable();
 #if	(KB_KEY_FLASH_PIN_MULTI_USE)
 	MSPI_AS_GPIO;
 #endif

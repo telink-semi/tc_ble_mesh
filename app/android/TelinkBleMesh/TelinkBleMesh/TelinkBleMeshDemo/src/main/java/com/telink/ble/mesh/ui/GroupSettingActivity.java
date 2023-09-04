@@ -1,23 +1,24 @@
 /********************************************************************************************************
- * @file     GroupSettingActivity.java 
+ * @file GroupSettingActivity.java
  *
- * @brief    for TLSR chips
+ * @brief for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author telink
+ * @date Sep. 30, 2017
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -27,8 +28,13 @@ import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.generic.DeltaSetMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffSetMessage;
 import com.telink.ble.mesh.core.message.lighting.CtlTemperatureSetMessage;
 import com.telink.ble.mesh.core.message.lighting.LightnessSetMessage;
@@ -43,23 +49,18 @@ import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.UnitConvert;
-import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.OnlineDeviceListAdapter;
 import com.telink.ble.mesh.util.MeshLogger;
 
-
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Group Settings : lum / temp control
  * Created by kee on 2017/8/30.
  */
 
-public class GroupSettingActivity extends BaseActivity implements EventListener<String> {
+public class GroupSettingActivity extends BaseActivity implements EventListener<String>, View.OnClickListener {
 
     private OnlineDeviceListAdapter mAdapter;
 
@@ -67,6 +68,10 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
     private TextView tv_lum, tv_temp;
     private RecyclerView rv_groups;
     private GroupInfo group;
+
+    int delta = 0;
+
+
 
     private SeekBar.OnSeekBarChangeListener onProgressChangeListener = new SeekBar.OnSeekBarChangeListener() {
 
@@ -125,7 +130,9 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
             return;
         }
         setContentView(R.layout.activity_group_setting);
-
+        double max = 0xFFFF;
+        double stepCnt = 10;
+        delta = (int) Math.ceil(max / stepCnt);
         final Intent intent = getIntent();
         if (intent.hasExtra("group")) {
             group = (GroupInfo) intent.getSerializableExtra("group");
@@ -146,39 +153,33 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
         enableBackNav(true);
         final List<NodeInfo> innerDevices = getDevicesInGroup();
         mAdapter = new OnlineDeviceListAdapter(this, innerDevices);
-        mAdapter.setOnItemClickListener(new BaseRecyclerViewAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                if (innerDevices.get(position).isOffline()) return;
+        mAdapter.setOnItemClickListener(position -> {
+            if (innerDevices.get(position).isOffline()) return;
 
-                byte onOff = 0;
-                if (innerDevices.get(position).isOff()) {
-                    onOff = 1;
-                }
-                int address = innerDevices.get(position).meshAddress;
-
-                int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
-                OnOffSetMessage onOffSetMessage = OnOffSetMessage.getSimple(address, appKeyIndex, onOff, !AppSettings.ONLINE_STATUS_ENABLE, !AppSettings.ONLINE_STATUS_ENABLE ? 1 : 0);
-                MeshService.getInstance().sendMeshMessage(onOffSetMessage);
+            byte onOff = 0;
+            if (innerDevices.get(position).isOff()) {
+                onOff = 1;
             }
+            int address = innerDevices.get(position).meshAddress;
+
+            int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
+            OnOffSetMessage onOffSetMessage = OnOffSetMessage.getSimple(address, appKeyIndex, onOff, !AppSettings.ONLINE_STATUS_ENABLE, !AppSettings.ONLINE_STATUS_ENABLE ? 1 : 0);
+            MeshService.getInstance().sendMeshMessage(onOffSetMessage);
         });
 
         rv_groups.setLayoutManager(new GridLayoutManager(this, 3));
         rv_groups.setAdapter(mAdapter);
 
-        findViewById(R.id.tv_color).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent colorIntent = new Intent(GroupSettingActivity.this, ColorPanelActivity.class);
-                colorIntent.putExtra("address", group.address);
-                startActivity(colorIntent);
-            }
+        findViewById(R.id.tv_color).setOnClickListener(v -> {
+            Intent colorIntent = new Intent(GroupSettingActivity.this, ColorPanelActivity.class);
+            colorIntent.putExtra("address", group.address);
+            startActivity(colorIntent);
         });
         lum.setEnabled(innerDevices.size() != 0);
         temp.setEnabled(innerDevices.size() != 0);
 
-        tv_lum = (TextView) findViewById(R.id.tv_lum);
-        tv_temp = (TextView) findViewById(R.id.tv_temp);
+        tv_lum = findViewById(R.id.tv_lum);
+        tv_temp = findViewById(R.id.tv_temp);
         tv_lum.setText(getString(R.string.lum_progress, 10, Integer.toHexString(group.address)));
         tv_temp.setText(getString(R.string.temp_progress, 10, Integer.toHexString(group.address)));
 
@@ -188,17 +189,38 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
 
         TelinkMeshApplication.getInstance().addEventListener(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
+        initLevelView();
+    }
+
+    private void initLevelView() {
+        TextView tv_lum_level = findViewById(R.id.tv_lum_level);
+        tv_lum_level.setText(String.format("Lum Level(at ele adr: 0x%04X): ", group.getExtendAddress(0)));
+        TextView tv_temp_level = findViewById(R.id.tv_temp_level);
+        tv_temp_level.setText(String.format("Temp Level(at ele adr: 0x%04X): ", group.getExtendAddress(1)));
+        TextView tv_hue_level = findViewById(R.id.tv_hue_level);
+        tv_hue_level.setText(String.format("Hue Level(at ele adr: 0x%04X): ", group.getExtendAddress(2)));
+        TextView tv_sat_level = findViewById(R.id.tv_sat_level);
+        tv_sat_level.setText(String.format("Sat Level(at ele adr: 0x%04X): ", group.getExtendAddress(3)));
+
+        findViewById(R.id.iv_lum_minus).setOnClickListener(this);
+        findViewById(R.id.iv_lum_add).setOnClickListener(this);
+        findViewById(R.id.iv_temp_minus).setOnClickListener(this);
+        findViewById(R.id.iv_temp_add).setOnClickListener(this);
+        findViewById(R.id.iv_hue_minus).setOnClickListener(this);
+        findViewById(R.id.iv_hue_add).setOnClickListener(this);
+        findViewById(R.id.iv_sat_minus).setOnClickListener(this);
+        findViewById(R.id.iv_sat_add).setOnClickListener(this);
+
     }
 
     private List<NodeInfo> getDevicesInGroup() {
-
         List<NodeInfo> localDevices = TelinkMeshApplication.getInstance().getMeshInfo().nodes;
         List<NodeInfo> innerDevices = new ArrayList<>();
         outer:
         for (NodeInfo device : localDevices) {
             if (device.subList != null) {
-                for (int groupAdr : device.subList) {
-                    if (groupAdr == group.address) {
+                for (String groupAdr : device.subList) {
+                    if (MeshUtils.hexToIntB(groupAdr) == group.address) {
                         innerDevices.add(device);
                         continue outer;
                     }
@@ -209,12 +231,7 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
     }
 
     private void refreshUI() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mAdapter.notifyDataSetChanged();
-            }
-        });
+        runOnUiThread(() -> mAdapter.notifyDataSetChanged());
     }
 
     @Override
@@ -222,6 +239,54 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
         if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)
                 || event.getType().equals(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED)) {
             refreshUI();
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+        int appKeyIndex = meshInfo.getDefaultAppKeyIndex();
+        switch (v.getId()) {
+            case R.id.iv_lum_minus:
+                DeltaSetMessage deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(0),
+                        appKeyIndex, -delta, false, 0);
+                MeshService.getInstance().sendMeshMessage(deltaSetMessage);
+                break;
+            case R.id.iv_lum_add:
+                deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(0),
+                        appKeyIndex, delta, false, 0);
+                MeshService.getInstance().sendMeshMessage(deltaSetMessage);
+                break;
+            case R.id.iv_temp_minus:
+                deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(1),
+                        appKeyIndex, -delta, false, 0);
+                MeshService.getInstance().sendMeshMessage(deltaSetMessage);
+                break;
+            case R.id.iv_temp_add:
+                deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(1),
+                        appKeyIndex, delta, false, 0);
+                MeshService.getInstance().sendMeshMessage(deltaSetMessage);
+                break;
+            case R.id.iv_hue_minus:
+                deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(2),
+                        appKeyIndex, -delta, false, 0);
+                MeshService.getInstance().sendMeshMessage(deltaSetMessage);
+                break;
+            case R.id.iv_hue_add:
+                deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(2),
+                        appKeyIndex, delta, false, 0);
+                MeshService.getInstance().sendMeshMessage(deltaSetMessage);
+                break;
+            case R.id.iv_sat_minus:
+                deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(3),
+                        appKeyIndex, -delta, false, 0);
+                MeshService.getInstance().sendMeshMessage(deltaSetMessage);
+                break;
+            case R.id.iv_sat_add:
+                deltaSetMessage = DeltaSetMessage.getSimple(group.getExtendAddress(3),
+                        appKeyIndex, delta, false, 0);
+                MeshService.getInstance().sendMeshMessage(deltaSetMessage);
+                break;
         }
     }
 }

@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/9/16
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigUpperTransportLayer.m
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/9/16.
-//  Copyright © 2019 Telink. All rights reserved.
-//
 
 #import "SigUpperTransportLayer.h"
 #import "SigHearbeatMessage.h"
@@ -115,15 +109,30 @@
 }
 
 - (void)sendAccessPdu:(SigAccessPdu *)accessPdu withTtl:(UInt8)initialTtl usingKeySet:(SigKeySet *)keySet command:(SDKLibCommand *)command {
-    UInt32 sequence = [SigMeshLib.share.dataSource getCurrentProvisionerIntSequenceNumber];
+    UInt32 sequence = [SigMeshLib.share.dataSource getSequenceNumberUInt32];
     SigNetkeyModel *networkKey = command.curNetkey;
     SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromAccessPdu:accessPdu usingKeySet:keySet ivIndex:command.curIvIndex sequence:sequence];
     _networkManager.upperTransportLayer.upperTransportPdu = pdu;
 //    TeLogVerbose(@"Sending %@ encrypted using key: %@,pdu.transportPdu=%@",pdu,keySet,pdu.transportPdu);
-    BOOL isSegmented = pdu.transportPdu.length > SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength || accessPdu.isSegmented || SigMeshLib.share.dataSource.security;
+    
+    //1.修正当前进行分包的pdu.unsegmentedMessageLowerTransportPDUMaxLength的值。
+    //2.如果是SigMeshLib.share.dataSource.security==SigMeshMessageSecurityHigh，必得是发送segment。
+    //3.如果客户指定了command.sendBySegmentPDU = YES，也强制发送segment。默认是command.sendBySegmentPDU = NO，优先发送unsegment。
+    //4.如果command.sendBySegmentPDU = NO，根据pdu.unsegmentedMessageLowerTransportPDUMaxLength和类定义的消息类message.isSegmented判断是否进行segment分包。
     if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTOnly && accessPdu.destination.address != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-        isSegmented = pdu.transportPdu.length > kUnsegmentedMessageLowerTransportPDUMaxLength || accessPdu.isSegmented || SigMeshLib.share.dataSource.security;
+        pdu.unsegmentedMessageLowerTransportPDUMaxLength = kUnsegmentedMessageLowerTransportPDUMaxLength;
+    } else {
+        pdu.unsegmentedMessageLowerTransportPDUMaxLength = command.unsegmentedMessageLowerTransportPDUMaxLength;
     }
+    BOOL isSegmented = SigMeshLib.share.dataSource.security == SigMeshMessageSecurityHigh;
+    if (!isSegmented) {
+        if (command.sendBySegmentPDU) {
+            isSegmented = YES;
+        } else {
+            isSegmented = pdu.transportPdu.length > pdu.unsegmentedMessageLowerTransportPDUMaxLength || accessPdu.message.isSegmented;
+        }
+    }
+    
     if (isSegmented) {
         TeLogInfo(@"sending segment pdu.");
         // Enqueue the PDU. If the queue was empty, the PDU will be sent

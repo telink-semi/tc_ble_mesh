@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.ble;
 
@@ -27,12 +28,13 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+
+import androidx.annotation.NonNull;
 
 import com.telink.ble.mesh.core.proxy.ProxyPDU;
 import com.telink.ble.mesh.util.Arrays;
@@ -40,12 +42,11 @@ import com.telink.ble.mesh.util.MeshLogger;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import androidx.annotation.NonNull;
 
 /**
  * used to build gatt connection and send gatt command
@@ -111,13 +112,18 @@ public class GattConnection extends BluetoothGattCallback {
 
     private byte[] proxyNotificationSegBuffer;
 
-    private int mtu = 23;
+    public static int mtu = 23;
 
     private static final int MTU_SIZE_MAX = 517;
 
     public GattConnection(Context context, HandlerThread thread) {
         mContext = context.getApplicationContext();
-        mHandler = new Handler(thread.getLooper());
+        if (thread == null) {
+            mHandler = new Handler();
+        } else {
+            mHandler = new Handler(thread.getLooper());
+        }
+
     }
 
     public void setConnectionCallback(ConnectionCallback connectionCallback) {
@@ -134,6 +140,22 @@ public class GattConnection extends BluetoothGattCallback {
         synchronized (CONNECTION_STATE_LOCK) {
             return mConnectionState == CONN_STATE_CONNECTED;
         }
+    }
+
+    public boolean isDisconnected() {
+        synchronized (CONNECTION_STATE_LOCK) {
+            return mConnectionState == CONN_STATE_IDLE;
+        }
+    }
+
+    public boolean isPsmUuidSupport() {
+        List<BluetoothGattService> services = mServices;
+        if (mGatt == null) {
+            return false;
+        }
+        BluetoothGattService service = mGatt.getService(UUIDInfo.SERVICE_OTS);
+        if (service == null) return false;
+        return service.getCharacteristic(UUIDInfo.CHARACTERISTIC_IOS_PSM) != null;
     }
 
     public boolean isProxyNodeConnected() {
@@ -179,10 +201,10 @@ public class GattConnection extends BluetoothGattCallback {
      */
     public void sendMeshData(byte type, byte[] data) {
         // opcode: 1 byte, handle: 2 bytes
-        final int mtu = this.mtu - 3;
+        final int segMtu = GattConnection.mtu - 3;
         final boolean isProvisioningPdu = type == ProxyPDU.TYPE_PROVISIONING_PDU;
-        if (data.length > mtu - 1) {
-            double ceil = Math.ceil(((double) data.length) / (mtu - 1));
+        if (data.length > segMtu - 1) {
+            double ceil = Math.ceil(((double) data.length) / (segMtu - 1));
             int pktNum = (int) ceil;
             byte oct0;
             byte[] pkt;
@@ -193,15 +215,15 @@ public class GattConnection extends BluetoothGattCallback {
                     } else {
                         oct0 = (byte) (ProxyPDU.SAR_SEG_CONTINUE | type);
                     }
-                    pkt = new byte[mtu];
+                    pkt = new byte[segMtu];
                     pkt[0] = oct0;
-                    System.arraycopy(data, (mtu - 1) * i, pkt, 1, mtu - 1);
+                    System.arraycopy(data, (segMtu - 1) * i, pkt, 1, segMtu - 1);
                 } else {
                     oct0 = (byte) (ProxyPDU.SAR_SEG_LAST | type);
-                    int restSize = data.length - (mtu - 1) * i;
+                    int restSize = data.length - (segMtu - 1) * i;
                     pkt = new byte[restSize + 1];
                     pkt[0] = oct0;
-                    System.arraycopy(data, (mtu - 1) * i, pkt, 1, restSize);
+                    System.arraycopy(data, (segMtu - 1) * i, pkt, 1, restSize);
                 }
                 log("send segment pkt: " + Arrays.bytesToHexString(pkt, ":"));
                 if (isProvisioningPdu) {
@@ -493,14 +515,14 @@ public class GattConnection extends BluetoothGattCallback {
             Method localMethod = localBluetoothGatt.getClass().getMethod("refresh", new Class[0]);
             if (localMethod != null) {
                 boolean bool = (Boolean) localMethod.invoke(localBluetoothGatt, new Object[0]);
-                /*if (bool) {
-                    mDelayHandler.postDelayed(new Runnable() {
+                if (bool) {
+                    mHandler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            gatt.discoverServices();
+                            mGatt.discoverServices();
                         }
                     }, 0);
-                }*/
+                }
                 return bool;
             }
         } catch (Exception localException) {
@@ -561,7 +583,7 @@ public class GattConnection extends BluetoothGattCallback {
     }
 
     public int getMtu() {
-        return this.mtu;
+        return mtu;
     }
 
     /************************************************************************
@@ -679,21 +701,21 @@ public class GattConnection extends BluetoothGattCallback {
     }
 
     private byte[] getCompletePacket(byte[] data) {
-        byte sar = (byte) (data[0] & ProxyPDU.BITS_SAR);
+        byte sar = (byte) (data[0] & ProxyPDU.MASK_SAR);
         switch (sar) {
             case ProxyPDU.SAR_COMPLETE:
                 return data;
 
             case ProxyPDU.SAR_SEG_FIRST:
-                data[0] = (byte) (data[0] & ProxyPDU.BITS_TYPE);
+                data[0] = (byte) (data[0] & ProxyPDU.MASK_TYPE);
                 proxyNotificationSegBuffer = data;
                 return null;
 
             case ProxyPDU.SAR_SEG_CONTINUE:
             case ProxyPDU.SAR_SEG_LAST:
                 if (proxyNotificationSegBuffer != null) {
-                    int segType = proxyNotificationSegBuffer[0] & ProxyPDU.BITS_TYPE;
-                    int dataType = data[0] & ProxyPDU.BITS_TYPE;
+                    int segType = proxyNotificationSegBuffer[0] & ProxyPDU.MASK_TYPE;
+                    int dataType = data[0] & ProxyPDU.MASK_TYPE;
 
                     // check if pkt typeValue equals
                     if (segType == dataType && data.length > 1) {
@@ -1010,6 +1032,23 @@ public class GattConnection extends BluetoothGattCallback {
     }
 
 
+    private void requestMtu(GattRequest gattRequest) {
+        boolean success = true;
+        String errorMsg = "";
+        final UUID serviceUUID = gattRequest.serviceUUID;
+        final UUID characteristicUUID = gattRequest.characteristicUUID;
+        final byte[] data = gattRequest.data;
+        if (!this.mGatt.requestMtu(gattRequest.mtu)) {
+            success = false;
+            errorMsg = "write characteristic error";
+        }
+        if (!success) {
+            this.onRequestError(errorMsg);
+            this.onRequestComplete();
+        }
+    }
+
+
     private BluetoothGattCharacteristic findWritableCharacteristic(
             BluetoothGattService service, UUID characteristicUUID, int writeType) {
 
@@ -1080,7 +1119,7 @@ public class GattConnection extends BluetoothGattCallback {
     @Override
     public void onPhyUpdate(BluetoothGatt gatt, int txPhy, int rxPhy, int status) {
         super.onPhyUpdate(gatt, txPhy, rxPhy, status);
-
+        log(String.format(Locale.getDefault(), "onPhyUpdate txPhy-%d rxPhy-%d status-%d", txPhy, rxPhy, status));
     }
 
     /**
@@ -1114,8 +1153,9 @@ public class GattConnection extends BluetoothGattCallback {
                 this.onDisconnected();
             }
         }
-
     }
+
+    boolean refreshed = false;
 
     /**
      * gatt#discoverServices callback
@@ -1125,11 +1165,38 @@ public class GattConnection extends BluetoothGattCallback {
         if (status == BluetoothGatt.GATT_SUCCESS) {
             List<BluetoothGattService> services = gatt.getServices();
             this.mServices = services;
+            printServices(services);
+            if (!refreshed) {
+                refreshCache();
+                refreshed = true;
+                return;
+            }
             this.onServicesDiscoveredComplete(services);
+            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                this.mGatt.setPreferredPhy(BluetoothDevice.PHY_LE_1M, BluetoothDevice.PHY_LE_1M, BluetoothDevice.PHY_OPTION_NO_PREFERRED);
+            }*/
+            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (BluetoothAdapter.getDefaultAdapter().isLe2MPhySupported()) {
+                    this.mGatt.setPreferredPhy(BluetoothDevice.PHY_LE_2M, BluetoothDevice.PHY_LE_2M, BluetoothDevice.PHY_OPTION_NO_PREFERRED);
+                }
+            }*/
         } else {
             log("Service discovery failed");
             this.disconnect();
         }
+    }
+
+    private void printServices(List<BluetoothGattService> services) {
+        StringBuilder serviceInfo = new StringBuilder("\n");
+
+        for (BluetoothGattService service : services) {
+            serviceInfo.append(service.getUuid().toString()).append("\n");
+            for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
+                serviceInfo.append("chara: \t");
+                serviceInfo.append(characteristic.getUuid().toString()).append("\n");
+            }
+        }
+        MeshLogger.d("services: " + serviceInfo.toString());
     }
 
     @Override
@@ -1204,6 +1271,14 @@ public class GattConnection extends BluetoothGattCallback {
         if (gattStatusSuccess(status)) {
             this.mtu = mtu;
         }
+        this.cancelCommandTimeoutTask();
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            this.onRequestSuccess(null);
+        } else {
+            this.onRequestError("request mtu callback fail");
+        }
+        MeshLogger.d("mtu changed : " + mtu);
+        this.onRequestComplete();
     }
 
     /************************************************************************

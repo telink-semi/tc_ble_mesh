@@ -1,25 +1,28 @@
 /********************************************************************************************************
- * @file     app.c 
+ * @file	app.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-#include "proj/tl_common.h"
+#include "tl_common.h"
 #include "proj_lib/rf_drv.h"
 #include "proj_lib/pm.h"
 #include "proj_lib/ble/ll/ll.h"
@@ -46,6 +49,9 @@
 #include "vendor/common/blt_soft_timer.h"
 #include "proj/drivers/rf_pa.h"
 #include "../common/remote_prov.h"
+#if SMART_PROVISION_ENABLE
+#include "vendor/common/smart_provision.h"
+#endif
 
 #if (HCI_ACCESS==HCI_USE_UART)
 #include "proj/drivers/uart.h"
@@ -174,7 +180,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 		debug_mesh_report_BLE_st2usb(0);
 		#endif
 
-		mesh_ble_disconnect_cb();
+		mesh_ble_disconnect_cb(pd->reason);
 	}
 
 	if (send_to_hci)
@@ -198,6 +204,22 @@ void proc_ui()
 	mesh_iv_update_test_initiate();
 #endif
 
+#if SMART_PROVISION_ENABLE
+	static u8 st_sw1_last,st_sw2_last;	
+	u8 st_sw1 = !gpio_read(SW1_GPIO);
+	if(!(st_sw1_last)&&st_sw1){
+		static u8 onoff=1;
+		onoff = !onoff;
+		access_cmd_onoff(0xffff, 0, onoff, CMD_NO_ACK, 0);
+	}
+	st_sw1_last = st_sw1;
+	
+	u8 st_sw2 = !gpio_read(SW2_GPIO);
+	if(!(st_sw2_last)&&st_sw2){
+		mesh_smart_provision_start();
+	}
+	st_sw2_last = st_sw2;		
+#endif
 	#if 0
 	static u8 st_sw1_last;	
 	u8 st_sw1 = !gpio_read(SW1_GPIO);
@@ -276,7 +298,7 @@ u8 mesh_get_hci_tx_fifo_cnt()
 {
 #if (HCI_ACCESS == HCI_USE_USB)
 	return hci_tx_fifo.size;
-#elif (HCI_ACCESS == HCI_USE_UART)
+#elif (HCI_ACCESS == HCI_USE_UART)
 	return hci_tx_fifo.size-0x10;
 #else
 	return 0;
@@ -289,6 +311,9 @@ int gateway_common_cmd_rsp(u8 code,u8 *p_par,u16 len )
 	u8 head_len = 2;
 	head[1] = code;
 	u16 valid_fifo_size = mesh_get_hci_tx_fifo_cnt()-2; // 2: length
+#if SMART_PROVISION_ENABLE
+	mesh_smart_provision_rsp_handle(code, p_par, len);
+#endif
 	if(len+head_len > valid_fifo_size){
 		return gateway_sar_pkt_segment(p_par, len, valid_fifo_size, head, 2);
 	}
@@ -319,11 +344,11 @@ u8 gateway_heartbeat_cb(u8 *para,u8 len )
 
 u8 gateway_upload_mac_address(u8 *p_mac,u8 *p_adv)
 {
-	u8 para[40];//0~5 mac,adv ,6,rssi ,7~8 dc
+	u8 para[40];//mac(6 byte),adv data(LTV structure), rssi(1byte),dc(2byte)
 	u8 len;
 	len = p_adv[0];
 	memcpy(para,p_mac,6);
-	memcpy(para+6,p_adv,len+4);
+	memcpy(para+6,p_adv,len+4); // rssi = para[6+1+len];
 	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_UPDATE_MAC,para,len+10);
 }
 
@@ -350,7 +375,12 @@ u8 gateway_upload_node_info(u16 unicast)
 {
 	VC_node_info_t * p_info;
 	p_info = get_VC_node_info(unicast,1);
-	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_NODE_INFO,(u8 *)p_info,sizeof(VC_node_info_t));
+	if(p_info){
+		return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_NODE_INFO,(u8 *)p_info,sizeof(VC_node_info_t));
+	}
+	
+    LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"upload node info failed", 0);
+	return -1;
 }
 
 #if FAST_PROVISION_ENABLE
@@ -358,10 +388,15 @@ int fast_provision_upload_node_info(u16 unicast, u16 pid)
 {
 	fast_prov_node_info_t node_info;
 	VC_node_info_t * p_info = get_VC_node_info(unicast,1);
-	node_info.pid = pid;
-	memcpy(&node_info.node_info, p_info, sizeof(VC_node_info_t));
+	if(p_info){
+		node_info.pid = pid;
+		memcpy(&node_info.node_info, p_info, sizeof(VC_node_info_t));
+		
+		return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_NODE_INFO,(u8 *)&node_info,sizeof(node_info));
+	}
 	
-	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_NODE_INFO,(u8 *)&node_info,sizeof(node_info));
+    LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"upload node info failed", 0);
+	return -1;
 }
 #endif
 
@@ -374,8 +409,43 @@ u8 gateway_upload_provision_self_sts(u8 sts)
 	}
 	provison_net_info_str* p_net = (provison_net_info_str*)(buf+1);
 	p_net->unicast_address = provision_mag.unicast_adr_last;
+	swap32(p_net->iv_index, (u8 *)&iv_idx_st.iv_cur);
 	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_PRO_STS_RSP,buf,sizeof(buf));
 }
+
+int gateway_upload_primary_info_get()
+{
+	provision_primary_mesh_info_t mesh_info;
+	memset(&mesh_info, 0x00, sizeof(mesh_info));
+	mesh_net_key_t *p_netkey = get_nk_first_valid();
+	if(p_netkey){
+		memcpy(mesh_info.provision_data.net_work_key, p_netkey->key, 16);
+		mesh_info.provision_data.key_index = p_netkey->index;
+		swap32(mesh_info.provision_data.iv_index, (u8 *)&iv_idx_st.iv_cur);
+		mesh_info.provision_data.unicast_address = ele_adr_primary;
+		mesh_info.appkey.apk_idx = p_netkey->app_key[0].index;
+		memcpy(mesh_info.appkey.app_key, p_netkey->app_key[0].key, 16);
+		mesh_info.alloc_adr = provision_mag.unicast_adr_last;
+	}
+	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_PRIMARY_INFO_STATUS, (u8 *)&mesh_info,sizeof(mesh_info));
+}
+
+int gateway_upload_primary_info_set(provision_primary_mesh_info_t *p)
+{
+	mesh_provision_and_bind_self(&p->provision_data, p->appkey.app_key, p->appkey.apk_idx, p->appkey.app_key);
+	
+	provision_mag.unicast_adr_last = p->alloc_adr;
+	provision_mag_cfg_s_store();
+
+	mesh_tx_sec_private_beacon_proc(0);	
+	return gateway_upload_primary_info_get();
+}
+
+u8 gateway_upload_ivi(u8 *p_ivi)
+{
+	return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SECURE_IVI,p_ivi,4);
+}
+
 
 u8 gateway_upload_mesh_ota_sts(u8 *p_dat,int len)
 {
@@ -536,7 +606,7 @@ u8 gateway_upload_extend_adv_option(u8 option_val)
 {
     return gateway_common_cmd_rsp(HCI_GATEWAY_CMD_SEND_EXTEND_ADV_OPTION,(u8 *)&option_val,sizeof(option_val));
 }
-
+u8 ivi_beacon_key[16];
 u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 {
 	if(len<=0){
@@ -562,10 +632,16 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 		p_net = (provison_net_info_str *)(p+1);
 		set_provisioner_para(p_net->net_work_key,p_net->key_index,
 								p_net->flags,p_net->iv_index,p_net->unicast_address);
+		provision_mag.unicast_adr_last = p_net->unicast_address + g_ele_cnt;
+		provision_mag_cfg_s_store();
 		// use the para (node_unprovision_flag) ,and the flag will be 0 
 		
 	}else if (op_code == HCI_GATEWAY_CMD_SET_NODE_PARA){
 		// set the provisionee's netinfo para 
+		if(is_provision_working()){
+			LOG_MSG_INFO(TL_LOG_GATT_PROVISION,0,0,"gw provision is in process", 0);
+			return 0;
+		}
 		provison_net_info_str *p_net = (provison_net_info_str *)(p+1);
 		// set the pro_data infomation 
 		set_provisionee_para(p_net->net_work_key,p_net->key_index,
@@ -581,10 +657,14 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 			p_str->unicast_address,p_str->key_index,p_bind->fastbind);
 	}else if (op_code == HCI_GATEWAY_CMD_SET_DEV_KEY){
         mesh_gw_set_devkey_str *p_set_devkey = (mesh_gw_set_devkey_str *)(p+1);
-        set_dev_key(p_set_devkey->dev_key);
-        #if (DONGLE_PROVISION_EN)
+		if(is_own_ele(p_set_devkey->unicast)){
+       	 	set_dev_key(p_set_devkey->dev_key);
+		}
+		else{
+        	#if (DONGLE_PROVISION_EN)
 			VC_node_dev_key_save(p_set_devkey->unicast,p_set_devkey->dev_key,2);
-	    #endif
+	    	#endif
+		}
 	}else if (op_code == HCI_GATEWAY_CMD_GET_SNO){
         gateway_upload_mesh_sno_val();
 	}else if (op_code == HCI_GATEWAY_CMD_SET_SNO){
@@ -630,10 +710,8 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 		par[8] = data[6];// cur count
 		u8 pkt_nums_send = data[7];
 		par[3] = data[8];// pkt_nums_ack	
-		u32 par_len = 37-(31-12)-6-4;
-		if(data[7] > 1){// unseg:11  seg:8
-			par_len = (37-(31-12)-4)*pkt_nums_send-6;
-		}
+		u32 par_len = data[7];
+
 		extern u16 mesh_rsp_rec_addr;
 		mesh_rsp_rec_addr = data[9] + (data[10]<<8);
 		SendOpParaDebug(adr_dst, rsp_max, ack ? G_ONOFF_SET : G_ONOFF_SET_NOACK, 
@@ -689,6 +767,10 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 	}else if (op_code == HCI_GATEWAY_CMD_RP_START){
 		#if GATEWAY_ENABLE&&MD_REMOTE_PROV
 		// set the provisionee's netinfo para 
+		if(is_rp_working()){
+			LOG_MSG_INFO(TL_LOG_REMOTE_PROV,0,0,"remote-prov is in process");
+			return 0;
+		}
 		provison_net_info_str *p_net = (provison_net_info_str *)(p+1);
 		// set the pro_data infomation 
 		set_provisionee_para(p_net->net_work_key,p_net->key_index,
@@ -696,6 +778,18 @@ u8 gateway_cmd_from_host_ctl(u8 *p, u16 len )
 		provision_mag.unicast_adr_last = p_net->unicast_address;
 		// need to send invite first.
 		gw_rp_send_invite();
+		#endif
+	}
+	else if(op_code == HCI_GATEWAY_CMD_PRIMARY_INFO_GET){
+		gateway_upload_primary_info_get();
+	}
+	else if(op_code == HCI_GATEWAY_CMD_PRIMARY_INFO_SET){
+		gateway_upload_primary_info_set((provision_primary_mesh_info_t *)(p+1));
+	}else if (op_code == HCI_GATEWAY_CMD_SEND_NET_KEY){
+		#if GATEWAY_ENABLE
+		// use the netkey to create beaconkey .
+		u8* p_netkey = p+1;
+		mesh_sec_get_beacon_key (ivi_beacon_key, p_netkey);
 		#endif
 	}
 	return 1;
@@ -719,7 +813,7 @@ u8 gateway_cmd_from_host_ota(u8 *p, u16 len )
 	pair_login_ok = 1;
 	u16 ota_adr =  local_ota.dat[0] | (local_ota.dat[1]<<8);
 	if(ota_adr == CMD_OTA_START){
-		u8 irq_en = irq_disable();
+		u32 irq_en = irq_disable();
 		//reserve for about the 70ms*48 = 3.4s
 		for(int i=0;i<0x30;i++) //erase from end to head
 		{  //4K/16 = 256

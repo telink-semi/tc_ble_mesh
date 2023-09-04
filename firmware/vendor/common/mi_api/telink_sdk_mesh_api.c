@@ -1,3 +1,27 @@
+/********************************************************************************************************
+ * @file	telink_sdk_mesh_api.c
+ *
+ * @brief	miot server (038F0000) data callback
+ *
+ * @author	Mesh Group
+ * @date	2021
+ *
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
+ *******************************************************************************************************/
 #include"telink_sdk_mesh_api.h"
 #include"mible_mesh_api.h"
 #include"mible_log.h"
@@ -93,7 +117,7 @@ void process_mesh_node_init_event(void)
     node_info.lpn_node = 0;
 	if(node_info.provisioned){
 		node_info.address = ele_adr_primary;
-		node_info.ivi = mesh_get_ivi_cur_val_little();
+		node_info.ivi = iv_idx_st.iv_cur;
 	}else{
 		node_info.address = 0;
 		node_info.ivi = 0;	
@@ -106,7 +130,7 @@ void process_mesh_ivi_update()
 {
 	mible_mesh_iv_t mesh_iv;
 	mesh_ctl_fri_update_flag_t *p_flag =(mesh_ctl_fri_update_flag_t *)&(mesh_iv.flags);
-	mesh_iv.iv_index = mesh_get_ivi_cur_val_little();
+	mesh_iv.iv_index = iv_idx_st.iv_cur;
 	p_flag->IVUpdate = (IV_UPDATE_STEP1 == iv_idx_st.update_proc_flag);
 	MI_LOG_WARNING("[DEVICE_IVI_UPDATE]\n");
 	mible_mesh_event_callback(MIBLE_MESH_EVENT_IV_UPDATE, &mesh_iv);
@@ -228,7 +252,7 @@ int32_t mijia_server_data(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 int cfg_server_receive_peek(u8 *par, int par_len,mesh_cb_fun_par_t *cb_par)
 {
-    int ret =1;   
+    int err = 0;   
     mible_mesh_event_params_t evt_vendor_param;
 	u16 op = mesh_mi_trans_op_little2big(cb_par->op);
     memset(&evt_vendor_param.config_msg, 0, sizeof(mible_mesh_config_status_t));
@@ -269,7 +293,7 @@ int cfg_server_receive_peek(u8 *par, int par_len,mesh_cb_fun_par_t *cb_par)
     default:
         break;
     }
-    return ret;
+    return err;
 }
 
 /**
@@ -445,7 +469,7 @@ int mible_mesh_device_get_seq(uint16_t element, uint32_t* seq, uint32_t* iv, uin
 		}
         if(NULL != iv){
 			
-            *iv = (uint32_t)mesh_get_ivi_cur_val_little();
+            *iv = iv_idx_st.iv_cur;
         }
         if(NULL != flags){
             *flags = iv_idx_st.rx_update;

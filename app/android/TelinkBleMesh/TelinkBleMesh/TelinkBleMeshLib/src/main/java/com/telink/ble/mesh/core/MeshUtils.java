@@ -4,27 +4,37 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.core;
 
+import android.bluetooth.BluetoothGatt;
 import android.os.ParcelUuid;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
 
 import com.telink.ble.mesh.core.ble.MeshScanRecord;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
+import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.StatusMessage;
+import com.telink.ble.mesh.core.message.aggregator.AggregatorItem;
+import com.telink.ble.mesh.core.message.aggregator.OpcodeAggregatorStatusMessage;
+import com.telink.ble.mesh.core.networking.AccessLayerPDU;
 import com.telink.ble.mesh.util.Arrays;
 
 import java.nio.ByteBuffer;
@@ -34,8 +44,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
-
-import androidx.annotation.NonNull;
+import java.util.zip.CRC32;
 
 public final class MeshUtils {
 
@@ -59,6 +68,9 @@ public final class MeshUtils {
      */
     public static final int LOCAL_MESSAGE_ADDRESS = 0;
 
+    public static final long IV_MISSING = 0xFFFFFFFFL;
+
+    public static final ParcelUuid OTS_UUID = new ParcelUuid(UUIDInfo.SERVICE_OTS);
 
     private static SecureRandom rng;
 
@@ -195,11 +207,52 @@ public final class MeshUtils {
     /**
      * @param hex input
      * @return int value
+     * little endian
      */
-    public static int hexString2Int(String hex, ByteOrder order) {
+    public static int hexToIntL(String hex) {
         byte[] buf = Arrays.hexToBytes(hex);
-        return bytes2Integer(buf, order);
+        return bytes2Integer(buf, ByteOrder.LITTLE_ENDIAN);
     }
+
+    /**
+     * @param hex input
+     * @return int value
+     * big endian
+     */
+    public static int hexToIntB(String hex) {
+        return Integer.valueOf(hex, 16);
+    }
+
+    /**
+     * big endian
+     */
+    public static String intToHex1(int hex) {
+        return String.format("%02X", hex);
+    }
+
+    /**
+     * big endian
+     */
+    public static String intToHex2(int hex) {
+        return String.format(FORMAT_2_BYTES, hex);
+    }
+
+
+    /**
+     * big endian
+     */
+    public static String intToHex3(int hex) {
+        return String.format(FORMAT_3_BYTES, hex);
+    }
+
+
+    /**
+     * big endian
+     */
+    public static String intToHex4(int hex) {
+        return String.format(FORMAT_4_BYTES, hex);
+    }
+
 
     public static byte[] sequenceNumber2Buffer(int sequenceNumber) {
         return integer2Bytes(sequenceNumber, 3, ByteOrder.BIG_ENDIAN);
@@ -234,7 +287,7 @@ public final class MeshUtils {
     private static final String FORMAT_3_BYTES = "%06X";
     private static final String FORMAT_4_BYTES = "%08X";
 
-    public static String formatIntegerByHex(int value) {
+    public static String intToHex(int value) {
         if (value <= -1) {
             return String.format(FORMAT_4_BYTES, value);
         } else if (value <= 0xFF) {
@@ -244,6 +297,39 @@ public final class MeshUtils {
         } else {
             return String.format(FORMAT_3_BYTES, value);
         }
+    }
+
+    public static String intToHex(int value, int length) {
+        if (length == 1) {
+            return String.format(FORMAT_1_BYTES, value);
+        } else if (length == 2) {
+            return String.format(FORMAT_2_BYTES, value);
+        } else if (length == 3) {
+            return String.format(FORMAT_3_BYTES, value);
+        } else {
+            return String.format(FORMAT_4_BYTES, value);
+        }
+    }
+
+
+    public static boolean hexListContains(List<String> list, String target) {
+        for (String s : list) {
+            if (s.equalsIgnoreCase(target)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean hexListContains(List<String> list, int target) {
+        int i;
+        for (String s : list) {
+            i = hexToIntB(s);
+            if (i == target) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -290,7 +376,7 @@ public final class MeshUtils {
 
 
     public static byte[] uuidToByteArray(String uuid) {
-        return  uuidToByteArray(UUID.fromString(uuid));
+        return uuidToByteArray(UUID.fromString(uuid));
     }
 
 
@@ -309,5 +395,90 @@ public final class MeshUtils {
         return uuid.toString();
     }
 
+    public static byte[] aggregateMessages(int elementAddress, List<MeshMessage> meshMessages) {
 
+        byte[] result = MeshUtils.integer2Bytes(elementAddress, 2, ByteOrder.LITTLE_ENDIAN);
+        int len;
+        boolean isLong;
+        int bufLen;
+        byte[] accessPdu;
+        for (MeshMessage msg : meshMessages) {
+            accessPdu = new AccessLayerPDU(msg.getOpcode(), msg.getParams()).toByteArray();
+            len = accessPdu.length;
+            isLong = len > 127;
+            bufLen = (isLong ? 2 : 1) + len + result.length;
+
+            ByteBuffer buffer = ByteBuffer.allocate(bufLen).order(ByteOrder.LITTLE_ENDIAN)
+                    .put(result);
+
+            len <<= 1 | (isLong ? 1 : 0);
+            if (isLong) {
+                buffer.putShort((short) len);
+            } else {
+                buffer.put((byte) len);
+            }
+            buffer.put(accessPdu);
+            result = buffer.array();
+        }
+        return result;
+    }
+
+    public static List<StatusMessage> parseOpcodeAggregatorStatus(OpcodeAggregatorStatusMessage opAggStsMsg) {
+        List<AggregatorItem> items = opAggStsMsg.statusItems;
+        if (items == null || items.size() == 0) return null;
+        List<StatusMessage> msgList = new ArrayList<>();
+        StatusMessage msg;
+        for (AggregatorItem item : items) {
+            msg = StatusMessage.createByAccessMessage(item.opcode, item.parameters);
+            msgList.add(msg);
+        }
+        return msgList;
+    }
+
+    /**
+     * @param start
+     * @param len
+     * @return ByteOrder.LITTLE_ENDIAN
+     */
+    public static byte[] getUnicastRange(int start, @IntRange(from = 1, to = 0xFF) int len) {
+        if (len == 1) {
+            return integer2Bytes(start << 1, 2, ByteOrder.LITTLE_ENDIAN);
+        } else {
+            short sVal = (short) ((start << 1) | 0x01);
+            return ByteBuffer.allocate(3).order(ByteOrder.LITTLE_ENDIAN)
+                    .putShort(sVal)
+                    .put((byte) len).array();
+        }
+    }
+
+    public static String getGattConnectionDesc(int connectionState) {
+        switch (connectionState) {
+            case BluetoothGatt.STATE_DISCONNECTED:
+                return "disconnected";
+
+            case BluetoothGatt.STATE_CONNECTING:
+                return "connecting...";
+
+            case BluetoothGatt.STATE_CONNECTED:
+                return "connected";
+
+            case BluetoothGatt.STATE_DISCONNECTING:
+                return "disconnecting...";
+
+            default:
+                return "unknown";
+        }
+    }
+
+    public static int crc32(byte[] data) {
+        CRC32 crc32 = new CRC32();
+        crc32.update(data);
+        return (int) crc32.getValue();
+    }
+
+    public static int crc32(byte[] data, int offset, int len) {
+        CRC32 crc32 = new CRC32();
+        crc32.update(data, offset, len);
+        return (int) crc32.getValue();
+    }
 }

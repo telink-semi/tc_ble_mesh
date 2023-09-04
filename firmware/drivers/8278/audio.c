@@ -1,29 +1,27 @@
 /********************************************************************************************************
- * @file     audio.c
+ * @file	audio.c
  *
- * @brief    This is the Audio driver file for TLSR8278
+ * @brief	This is the Audio driver file for TLSR8278
  *
- * @author	 Driver Group
- * @date     May 8, 2018
+ * @author	Driver Group
+ * @date	May 8, 2018
  *
- * @par      Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- *           The information contained herein is confidential property of Telink
- *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *           Co., Ltd. and the licensee or the terms described here-in. This heading
- *           MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *           Licensees are granted free, non-transferable use of the information in this
- *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
- * @par      History:
- * 			 1.initial release(DEC. 26 2018)
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
- * @version  A001
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *
  *******************************************************************************************************/
-
 #include "audio.h"
 #include "pga.h"
 #include "adc.h"
@@ -449,7 +447,7 @@ void audio_i2s_init(void)
 	/*******1.I2S setting for audio input**************************/
 	reg_audio_ctrl = AUDIO_OUTPUT_OFF;
 
-	//if system clock=24M_Crystal. PWM0 2 frequency division output£¬for 12Mhz to offer the MCLK of CORDEC. select pd5 as PWM0 output.
+	//if system clock=24M_Crystal. PWM0 2 frequency division output, for 12Mhz to offer the MCLK of CORDEC. select pd5 as PWM0 output.
 	sub_wr(0x5af, 0x0, 3, 2); //PD5=0
 	sub_wr(0x59e, 0x0, 5, 5); //PD5=0
 	write_reg16(0x796,0x02);//TMAX0 continue mode

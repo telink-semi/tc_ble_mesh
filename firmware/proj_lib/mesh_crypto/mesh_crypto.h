@@ -1,29 +1,31 @@
 /********************************************************************************************************
- * @file     mesh_crypto.h 
+ * @file	mesh_crypto.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	Mesh Group
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef BLE_MESH_CRYPTO_H
 #define BLE_MESH_CRYPTO_H
 
-#include "../../proj_lib/ble/ll/ll.h"
+#include "proj_lib/ble/ll/ll.h"
 //#include <memory.h>
 
 int test_mesh_sec_func ();
@@ -59,8 +61,8 @@ int	mesh_sec_msg_enc_ll (unsigned char key[16], unsigned char nonce[13], unsigne
 int	mesh_sec_msg_dec_ll (unsigned char key[16], unsigned char nonce[13], unsigned char* dat, int n, u8 *aStr, u8 aStrLen, int mic_length);
 
 int	mesh_sec_msg_obfuscation (unsigned char key[16], unsigned char iv[4], unsigned char* p_ctl);
-int  mesh_sec_msg_enc_nw(u8 *nw, u8 len_lt, u8 swap_type_lt, u8 sec_type, int fri_key_idx, u8 len_nw, u8 adv_type,u8 cfg_filter, u8 nk_array_idx, bool4 retransmit_rx);
-int  mesh_sec_msg_enc_nw_rf_buf(u8 *nw, u8 len_lt, u8 sec_type, int fri_key_idx, u8 cfg_filter, u8 nk_array_idx, bool4 retransmit_rx);
+int  mesh_sec_msg_enc_nw(u8 *nw, u8 len_lt, u8 swap_type_lt, u8 sec_type, int fri_key_idx, u8 len_nw, u8 adv_type,int nonce_type, u8 nk_array_idx, bool4 retransmit_rx);
+int  mesh_sec_msg_enc_nw_rf_buf(u8 *nw, u8 len_lt, u8 sec_type, int fri_key_idx, int nonce_type, u8 nk_array_idx, bool4 retransmit_rx);
 int  mesh_sec_msg_enc_apl(u8 *mat, u8 *bear, int mic_length);
 int  mesh_sec_msg_dec_nw(u8 *nw, int len_dec_nw_int, u8 nid, u8 nonce_type, int src_type);
 int  mesh_sec_msg_dec_apl(u8 *ac, u16 len_ut, const u8 *nw_little, const u8 *ac_backup);
@@ -86,6 +88,7 @@ void endianness_swap_u16(u8 *data);
 void endianness_swap_u24(u8 *data);
 void endianness_swap_u48(u8 *data);
 void endianness_swap_u64(u8 *data);
+void endianness_swap_u128(u8 *data);
 void endianness_swap(u8 *nw, u8 swap_type);
 void endianness_swap_ut(u8 *nw, u8 *par, u32 len);
 void endianness_swap_fri_sec_par(u8 *fri_sec_par);

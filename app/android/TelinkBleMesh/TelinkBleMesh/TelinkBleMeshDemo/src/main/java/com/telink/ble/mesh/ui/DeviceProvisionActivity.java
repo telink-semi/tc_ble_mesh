@@ -4,20 +4,21 @@
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
@@ -29,6 +30,10 @@ import android.os.Handler;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
@@ -61,6 +66,7 @@ import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.DeviceProvisionListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -68,10 +74,6 @@ import com.telink.ble.mesh.util.MeshLogger;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * scan for unprovision device and provision selected device
@@ -123,10 +125,17 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         if (!validateNormalStart(savedInstanceState)) {
             return;
         }
+        initView();
+        addEventListeners();
+        mesh = TelinkMeshApplication.getInstance().getMeshInfo();
+        startScan();
+//        addTestData();
+    }
+
+    private void initView() {
         setContentView(R.layout.activity_device_provision);
         findViewById(R.id.btn_add_all).setVisibility(View.VISIBLE);
         initTitle();
@@ -137,9 +146,12 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         rv_devices.setLayoutManager(new LinearLayoutManager(this));
 
         rv_devices.setAdapter(mListAdapter);
-        btn_add_all = (Button) findViewById(R.id.btn_add_all);
+        btn_add_all = findViewById(R.id.btn_add_all);
         btn_add_all.setOnClickListener(this);
         findViewById(R.id.tv_log).setOnClickListener(this);
+    }
+
+    private void addEventListeners() {
         TelinkMeshApplication.getInstance().addEventListener(ProvisioningEvent.EVENT_TYPE_PROVISION_BEGIN, this);
         TelinkMeshApplication.getInstance().addEventListener(ProvisioningEvent.EVENT_TYPE_PROVISION_SUCCESS, this);
         TelinkMeshApplication.getInstance().addEventListener(ProvisioningEvent.EVENT_TYPE_PROVISION_FAIL, this);
@@ -148,11 +160,6 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         TelinkMeshApplication.getInstance().addEventListener(ScanEvent.EVENT_TYPE_SCAN_TIMEOUT, this);
         TelinkMeshApplication.getInstance().addEventListener(ScanEvent.EVENT_TYPE_DEVICE_FOUND, this);
         TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
-        mesh = TelinkMeshApplication.getInstance().getMeshInfo();
-        startScan();
-//        addTestData();
-//        addTestData();
-//        addTestData();
     }
 
     private void addTestData() {
@@ -179,34 +186,48 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     private void initTitle() {
         Toolbar toolbar = findViewById(R.id.title_bar);
         toolbar.inflateMenu(R.menu.device_scan);
-        setTitle("Device Scan");
-//        toolbar.setSubtitle("provision -> bind");
+        setTitle("Device Scan", "Selectable");
         refreshItem = toolbar.getMenu().findItem(R.id.item_refresh);
         refreshItem.setVisible(false);
 
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                if (item.getItemId() == R.id.item_refresh) {
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.item_refresh) {
+                if (isScanning) {
+                    stopScan();
+                } else {
                     startScan();
                 }
-                return false;
             }
+            return false;
         });
     }
 
 
+    /**
+     * scan for unprovisioned devices
+     */
     private void startScan() {
+        isScanning = true;
         enableUI(false);
         ScanParameters parameters = ScanParameters.getDefault(false, false);
         parameters.setScanTimeout(10 * 1000);
         MeshService.getInstance().startScan(parameters);
     }
 
+    private void stopScan() {
+        isScanning = false;
+        enableUI(true);
+    }
+
+    private void updateRefreshItem(boolean enable) {
+        refreshItem.setIcon(isScanning ? R.drawable.ic_stop : R.drawable.ic_refresh);
+        refreshItem.setVisible(isScanning || enable);
+    }
+
+    /**
+     * unprovisioned device found
+     */
     private void onDeviceFound(AdvertisingDevice advertisingDevice) {
-
-//        if (!advertisingDevice.device.getAddress().toUpperCase().contains("00:1B:DC:08:E2:DA"))return; /// for pts test
-
         // provision service data: 15:16:28:18:[16-uuid]:[2-oobInfo]
         byte[] serviceData = MeshUtils.getMeshServiceData(advertisingDevice.scanRecord, true);
         if (serviceData == null || serviceData.length < 17) {
@@ -216,12 +237,9 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
 
         final int uuidLen = 16;
         byte[] deviceUUID = new byte[uuidLen];
-
-
         System.arraycopy(serviceData, 0, deviceUUID, 0, uuidLen);
 
         final int oobInfo = MeshUtils.bytes2Integer(serviceData, 16, 2, ByteOrder.LITTLE_ENDIAN);
-
 
         if (deviceExists(deviceUUID)) {
             MeshLogger.d("device exists");
@@ -231,6 +249,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.meshAddress = -1;
         nodeInfo.deviceUUID = deviceUUID;
+        MeshLogger.d("device mac - " + advertisingDevice.device.getAddress());
         MeshLogger.d("device found -> device uuid : " + Arrays.bytesToHexString(deviceUUID) + " -- oobInfo: " + oobInfo + " -- certSupported?" + MeshUtils.isCertSupported(oobInfo));
         nodeInfo.macAddress = advertisingDevice.device.getAddress();
 
@@ -268,7 +287,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         mListAdapter.notifyDataSetChanged();
 
         // check if oob exists
-        byte[] oob = TelinkMeshApplication.getInstance().getMeshInfo().getOOBByDeviceUUID(deviceUUID);
+        byte[] oob = MeshInfoService.getInstance().getOobByDeviceUUID(deviceUUID);
 //        oob = new byte[]{(byte) 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         if (oob != null) {
             provisioningDevice.setAuthValue(oob);
@@ -345,15 +364,13 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
     }
 
     private void enableUI(final boolean enable) {
+        MeshLogger.d(String.format("enableUI scanning-%B enable-%B", isScanning, enable));
         MeshService.getInstance().idle(false);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                enableBackNav(enable);
-                btn_add_all.setEnabled(enable);
-                refreshItem.setVisible(enable);
-                mListAdapter.setProcessing(!enable);
-            }
+        runOnUiThread(() -> {
+            enableBackNav(enable);
+            btn_add_all.setEnabled(enable);
+            updateRefreshItem(enable);
+            mListAdapter.setProcessing(!enable);
         });
 
     }
@@ -369,6 +386,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
                 } else if (event.getType().equals(ProvisioningEvent.EVENT_TYPE_PROVISION_SUCCESS)) {
                     onProvisionSuccess((ProvisioningEvent) event);
                 } else if (event.getType().equals(ScanEvent.EVENT_TYPE_SCAN_TIMEOUT)) {
+                    isScanning = false;
                     enableUI(true);
                 } else if (event.getType().equals(ProvisioningEvent.EVENT_TYPE_PROVISION_FAIL)) {
                     onProvisionFail((ProvisioningEvent) event);
@@ -439,14 +457,10 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         pvDevice.state = NetworkingState.BINDING;
         pvDevice.addLog(NetworkingDevice.TAG_PROVISION, "success");
         NodeInfo nodeInfo = pvDevice.nodeInfo;
-        int elementCnt = remote.getDeviceCapability().eleNum;
-        nodeInfo.elementCnt = elementCnt;
+        nodeInfo.elementCnt = remote.getDeviceCapability().eleNum;
         nodeInfo.deviceKey = remote.getDeviceKey();
-        nodeInfo.netKeyIndexes.add(mesh.getDefaultNetKey().index);
-        mesh.insertDevice(nodeInfo);
-        mesh.increaseProvisionIndex(elementCnt);
-        mesh.saveOrUpdate(DeviceProvisionActivity.this);
-
+        nodeInfo.netKeyIndexes.add(MeshUtils.intToHex2(mesh.getDefaultNetKey().index));
+        mesh.insertDevice(nodeInfo, true);
 
         // check if private mode opened
         final boolean privateMode = SharedPreferenceHelper.isPrivateMode(this);
@@ -483,7 +497,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         deviceInList.state = NetworkingState.BIND_FAIL;
         deviceInList.addLog(NetworkingDevice.TAG_BIND, "failed - " + event.getDesc());
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceProvisionActivity.this);
+//        mesh.saveOrUpdate(DeviceProvisionActivity.this);
     }
 
     private void onKeyBindSuccess(BindingEvent event) {
@@ -500,6 +514,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         if (!remote.isDefaultBound()) {
             pvDevice.nodeInfo.compositionData = remote.getCompositionData();
         }
+        pvDevice.nodeInfo.save();
 
         if (setTimePublish(pvDevice)) {
             pvDevice.state = NetworkingState.TIME_PUB_SETTING;
@@ -512,7 +527,7 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
             provisionNext();
         }
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceProvisionActivity.this);
+//        mesh.saveOrUpdate(DeviceProvisionActivity.this);
     }
 
 
@@ -564,8 +579,10 @@ public class DeviceProvisionActivity extends BaseActivity implements View.OnClic
         pvDevice.addLog(NetworkingDevice.TAG_PUB_SET, success ? "success" : ("failed : " + desc));
         pvDevice.state = success ? NetworkingState.TIME_PUB_SET_SUCCESS : NetworkingState.TIME_PUB_SET_FAIL;
         pvDevice.addLog(NetworkingDevice.TAG_PUB_SET, desc);
+        pvDevice.nodeInfo.timePublishConfigured = true;
+        pvDevice.nodeInfo.save();
         mListAdapter.notifyDataSetChanged();
-        mesh.saveOrUpdate(DeviceProvisionActivity.this);
+//        mesh.saveOrUpdate(DeviceProvisionActivity.this);
         provisionNext();
     }
 

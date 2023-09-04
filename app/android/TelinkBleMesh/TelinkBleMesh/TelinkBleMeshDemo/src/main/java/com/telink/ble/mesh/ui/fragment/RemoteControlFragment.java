@@ -1,69 +1,47 @@
 /********************************************************************************************************
- * @file DeviceControlFragment.java
+ * @file RemoteControlFragment.java
  *
  * @brief for TLSR chips
  *
  * @author telink
- * @date Sep. 30, 2010
+ * @date Sep. 30, 2017
  *
- * @par Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.fragment;
 
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
-import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.config.ModelPublicationSetMessage;
-import com.telink.ble.mesh.core.message.generic.DeltaSetMessage;
-import com.telink.ble.mesh.core.message.generic.OnOffGetMessage;
-import com.telink.ble.mesh.core.message.lighting.CtlGetMessage;
-import com.telink.ble.mesh.core.message.lighting.CtlTemperatureSetMessage;
-import com.telink.ble.mesh.core.message.lighting.HslGetMessage;
-import com.telink.ble.mesh.core.message.lighting.HslSetMessage;
-import com.telink.ble.mesh.core.message.lighting.LightnessGetMessage;
-import com.telink.ble.mesh.core.message.lighting.LightnessSetMessage;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.CompositionData;
+import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.entity.ModelPublication;
-import com.telink.ble.mesh.foundation.Event;
-import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
-import com.telink.ble.mesh.foundation.event.MeshEvent;
-import com.telink.ble.mesh.model.AppSettings;
-import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
-import com.telink.ble.mesh.model.NodeStatusChangedEvent;
-import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.ui.adapter.RemotePublishListAdapter;
-import com.telink.ble.mesh.ui.adapter.SwitchListAdapter;
-import com.telink.ble.mesh.ui.widget.CompositionColorView;
 import com.telink.ble.mesh.util.MeshLogger;
-
-import java.util.List;
 
 /**
  * remote control fragment
@@ -71,8 +49,8 @@ import java.util.List;
 
 public class RemoteControlFragment extends BaseFragment {
 
-    NodeInfo deviceInfo;
-    RecyclerView rv_rmt_ele;
+    private NodeInfo deviceInfo;
+    private RecyclerView rv_rmt_ele;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -132,7 +110,7 @@ public class RemoteControlFragment extends BaseFragment {
     }
 
     private boolean checkModelId(int modelId, int position) {
-        CompositionData.Element element = deviceInfo.compositionData.elements.get(position);
+        Element element = deviceInfo.compositionData.elements.get(position);
         for (int mid : element.sigModels) {
             if (mid == modelId) return true;
         }

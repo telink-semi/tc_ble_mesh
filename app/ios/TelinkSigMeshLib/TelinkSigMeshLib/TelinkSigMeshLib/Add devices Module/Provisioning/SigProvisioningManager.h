@@ -3,29 +3,23 @@
  *
  * @brief    for TLSR chips
  *
- * @author       Telink, 梁家誌
- * @date     Sep. 30, 2010
+ * @author   Telink, 梁家誌
+ * @date     2019/8/19
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) [2021], Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *             The information contained herein is confidential and proprietary property of Telink
- *              Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *             of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *             Co., Ltd. and the licensee in separate contract or the terms described here-in.
- *           This heading MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *              Licensees are granted free, non-transferable use of the information in this
- *             file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *******************************************************************************************************/
-//
-//  SigProvisioningManager.h
-//  TelinkSigMeshLib
-//
-//  Created by 梁家誌 on 2019/8/19.
-//  Copyright © 2019年 Telink. All rights reserved.
-//
 
 #import <Foundation/Foundation.h>
 
@@ -37,8 +31,8 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningPdu * _Nullable response)
 
 @interface SigProvisioningManager : NSObject
 @property (nonatomic,assign) AuthenticationMethod authenticationMethod;
-@property (nonatomic,strong) SigAuthenticationModel *authenticationModel;
-@property (nonatomic,strong) SigProvisioningData *provisioningData;
+@property (nonatomic,strong,nullable) SigAuthenticationModel *authenticationModel;
+@property (nonatomic,strong,nullable) SigProvisioningData *provisioningData;
 @property (nonatomic,copy,nullable) prvisionResponseCallBack provisionResponseBlock;
 
 /// - seeAlso: MshPRFv1.0.1.pdf  (page.240)
@@ -54,7 +48,7 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningPdu * _Nullable response)
 @property (nonatomic, strong) SigNetkeyModel *networkKey;
 
 /// The current state of the provisioning process.
-@property (nonatomic, assign) ProvisionigState state;//init with ready
+@property (nonatomic, assign) ProvisioningState state;//init with ready
 
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
@@ -64,32 +58,32 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningPdu * _Nullable response)
 + (SigProvisioningManager *)share;
 
 /// founcation1: no oob provision (CBPeripheral's state mush be CBPeripheralStateConnected.)
-- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 /// founcation2: static oob provision (CBPeripheral's state mush be CBPeripheralStateConnected.)
-- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOobData:(NSData *)oobData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+- (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOobData:(NSData *)oobData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 /// founcation3: provision (If CBPeripheral's state isn't CBPeripheralStateConnected, SDK will connect CBPeripheral in this api. )
 /// @param peripheral CBPeripheral of CoreBluetooth will be provision.
 /// @param unicastAddress address of new device.
 /// @param networkKey networkKey
 /// @param netkeyIndex netkeyIndex
-/// @param provisionType ProvisionTpye_NoOOB means oob data is 16 bytes zero data, ProvisionTpye_StaticOOB means oob data is get from HTTP API.
-/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionTpye_StaticOOB.
+/// @param provisionType ProvisionType_NoOOB means oob data is 16 bytes zero data, ProvisionType_StaticOOB means oob data is get from HTTP API.
+/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+- (void)provisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 /// founcation4: provision (If CBPeripheral's state isn't CBPeripheralStateConnected, SDK will connect CBPeripheral in this api. )
 /// @param peripheral CBPeripheral of CoreBluetooth will be provision.
 /// @param unicastAddress address of new device.
 /// @param networkKey networkKey
 /// @param netkeyIndex netkeyIndex
-/// @param provisionType ProvisionTpye_NoOOB means oob data is 16 bytes zero data, ProvisionTpye_StaticOOB means oob data is get from HTTP API.
-/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionTpye_StaticOOB.
+/// @param provisionType ProvisionType_NoOOB means oob data is 16 bytes zero data, ProvisionType_StaticOOB means oob data is get from HTTP API.
+/// @param staticOOBData oob data get from HTTP API when provisionType is ProvisionType_StaticOOB.
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
-- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionTpye)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_prvisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
+- (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionType:(ProvisionType)provisionType staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail;
 
 @end
 

@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     register_8267.h 
+ * @file	register_8267.h
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #pragma once
 
@@ -539,7 +542,7 @@ enum{
 #define reg_ana_data			REG_ADDR8(0xb9)
 #define reg_ana_ctrl			REG_ADDR8(0xba)
 
-// 文档不正确，请使用以下定义
+// document about this is not corect, please use the following definition
 enum{
 	FLD_ANA_BUSY  = 			BIT(0),
 	FLD_ANA_RSV	=				BIT(4),
@@ -946,8 +949,8 @@ enum{
 	FLD_PLL_POL_RX_SOF =		BIT(12),
 };
 
-#define reg_rf_rx_cap			REG_ADDR16(0x4f0)		//  电容
-#define reg_rf_tx_cap			REG_ADDR16(0x4f0)		//  电容
+#define reg_rf_rx_cap			REG_ADDR16(0x4f0)		//  capacitance
+#define reg_rf_tx_cap			REG_ADDR16(0x4f0)		//  capacitance
 
 /****************************************************
  dma mac regs struct: begin  addr : 0x500
@@ -1223,7 +1226,7 @@ enum{
  timer regs struct: begin  0x620
  *****************************************************/
 #define reg_tmr_ctrl			REG_ADDR32(0x620)
-#define reg_tmr_ctrl16			REG_ADDR16(0x620)		// 因为0x622 不要写
+#define reg_tmr_ctrl16			REG_ADDR16(0x620)		// due to can not set 0x622,
 #define reg_tmr_ctrl8			REG_ADDR8(0x620)
 enum{
 	FLD_TMR0_EN =				BIT(0),

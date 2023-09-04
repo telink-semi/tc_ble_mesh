@@ -1,25 +1,27 @@
 /********************************************************************************************************
- * @file     div_mod.S
+ * @file	div_mod.S
  *
- * @brief    This is the assembly file for TLSR8258
+ * @brief	This is the assembly file for TLSR8258
  *
- * @author	 author@telink-semi.com;
- * @date     May 8, 2018
+ * @author	author@telink-semi.com;
+ * @date	May 8, 2018
  *
- * @par      Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2018, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- *           The information contained herein is confidential property of Telink
- *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *           Co., Ltd. and the licensee or the terms described here-in. This heading
- *           MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *           Licensees are granted free, non-transferable use of the information in this
- *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *
  *******************************************************************************************************/
-
 #define 	UDIV		#0
 #define 	SDIV		#1
 #define 	UMOD		#2
@@ -116,10 +118,10 @@ div:
 
 #if 1
 	.align	4
-	.global	mul32x32_64
+	.global	mul32x32_64_org	// should call irq disable before use.
 	.thumb_func
-	.type	mul32x32_64, %function
-mul32x32_64:
+	.type	mul32x32_64_org, %function
+mul32x32_64_org:
     tmul	r0, r1
     tloadr	r1, [pc, #4]
     tloadr	r1, [r1, #0]
@@ -127,12 +129,12 @@ mul32x32_64:
     .word(0x008006fc)
 #endif
 
-#if 1
+#if 0 // disable to decrease code size.
 	.align	4
-	.global	mz_mul1
+	.global	mz_mul1_org	// should call irq disable before use.
 	.thumb_func
-	.type	mz_mul1, %function
-mz_mul1:
+	.type	mz_mul1_org, %function
+mz_mul1_org:
 	tpush 	{r4, r5, r6, r7}
 	tmov	r4, r8
 	tpush	{r4}
@@ -166,10 +168,10 @@ MZ_MUL1_END:
 #endif
 
 	.align	4
-	.global	mz_mul2
+	.global	mz_mul2_org	// should call irq disable before use.
 	.thumb_func
-	.type	mz_mul2, %function
-mz_mul2:
+	.type	mz_mul2_org, %function
+mz_mul2_org:
 	tpush 	{r4, r5, r6, r7}
 	tmov	r4, r8
 	tmov	r5, r9

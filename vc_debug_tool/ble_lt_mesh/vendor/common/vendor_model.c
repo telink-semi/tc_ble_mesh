@@ -1,23 +1,26 @@
 /********************************************************************************************************
- * @file     vendor_model.c 
+ * @file	vendor_model.c
  *
- * @brief    for TLSR chips
+ * @brief	for TLSR chips
  *
- * @author	 telink
- * @date     Sep. 30, 2010
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par      Copyright (c) 2010, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
- *           
- *			 The information contained herein is confidential and proprietary property of Telink 
- * 		     Semiconductor (Shanghai) Co., Ltd. and is available under the terms 
- *			 of Commercial License Agreement between Telink Semiconductor (Shanghai) 
- *			 Co., Ltd. and the licensee in separate contract or the terms described here-in. 
- *           This heading MUST NOT be removed from this file.
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
- * 			 Licensees are granted free, non-transferable use of the information in this 
- *			 file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided. 
- *           
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
  *******************************************************************************************************/
 #include "proj/tl_common.h"
 #if !WIN32
@@ -255,7 +258,7 @@ int mesh_tx_cmd_indica_retry(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_
     mesh_indication_retry.mat.par = mesh_indication_retry.ac_par;
 
 	ret = mesh_tx_cmd(&mat);
-	retry_interval = (par_len+7)/8 * CMD_INTERVAL_MS;
+	retry_interval = (par_len+7)/8 * 200 + 200;
 	vd_msg_attr_indica_retry_start(retry_interval);
 	u8 tid_pos=0;
 	if(is_cmd_with_tid_vendor(&tid_pos, op, par, 0)){
@@ -793,7 +796,7 @@ STATIC_ASSERT(sizeof(vd_rc_key_report_t) <= 8);
 int cb_vd_trans_time_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     // send back the current tick part .
-    u32 tick_sts =0;
+    u32 tick_sts = 0;
 	tick_sts = clock_time();
     return mesh_tx_cmd_rsp(VD_MESH_TRANS_TIME_STS,(u8*)&tick_sts,4,ele_adr_primary,cb_par->adr_src,0,0);
     
@@ -803,14 +806,14 @@ u8 max_time_10ms = 0x20;
 int cb_vd_trans_time_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	max_time_10ms = par[0];
-	u32 tick_sts =0;
+	u32 tick_sts = 0;
 	tick_sts = max_time_10ms;
 	return mesh_tx_cmd_rsp(VD_MESH_TRANS_TIME_STS,(u8*)&tick_sts,4,ele_adr_primary,cb_par->adr_src,0,0);
 }
 
 int cb_vd_trans_time_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	int err =-1;
+	int err = 0;
 	return err;
 }
 #endif
@@ -818,12 +821,12 @@ int cb_vd_trans_time_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 #if DU_ENABLE
 int cb_vd_du_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 int cb_vd_du_time_req(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 int cb_vd_du_time_req_ack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -846,7 +849,7 @@ int cb_vd_du_time_req_ack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		}
 	}
 
-	return 1;
+	return 0;
 }
 
 
@@ -861,21 +864,26 @@ int cb_vd_du_time_cmd(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	time_rsp.tid = time->tid;
 	time_rsp.op = VD_DU_TIME;
 	time_rsp.sts = 1;
-	u8 retry_times =3; // rsp 3 times will enough 
+	u8 retry_times =0;
+	if(blt_state == BLS_LINK_STATE_CONN){
+		retry_times =1; // rsp 3 times will enough
+	}else{
+		retry_times =3; // rsp 3 times will enough
+	}
 	while(retry_times--){
-		mesh_tx_cmd2normal(VD_TIME_RSP,(u8*)&time_rsp,sizeof(time_rsp),ele_adr_primary,du_get_gateway_adr(),0);		
+		mesh_tx_cmd2normal(VD_TIME_RSP,(u8*)&time_rsp,sizeof(time_rsp),ele_adr_primary,cb_par->adr_src,0);		
 	}
 	#if DU_LPN_EN
 	// reserve 3s for the sending part 
 	update_du_busy_s(2); 
 	#endif
-	return 1;
+	return 0;
 }
 
 
 int cb_vd_du_time_cmd_rsp(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	return 1;
+	return 0;
 }
 
 #endif
@@ -995,6 +1003,7 @@ int mesh_search_model_id_by_op_vendor(mesh_op_resource_t *op_res, u16 op, u8 tx_
 	foreach_arr(i,mesh_vd_id_func){
 		if(g_msg_vd_id == mesh_vd_id_func[i].vd_id){
 			p_vd_func = &mesh_vd_id_func[i];
+			break ;
 		}
 	}
 
