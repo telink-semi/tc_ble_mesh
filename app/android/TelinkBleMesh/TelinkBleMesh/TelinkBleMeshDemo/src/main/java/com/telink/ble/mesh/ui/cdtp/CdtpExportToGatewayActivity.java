@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.ble.GattConnection;
@@ -130,7 +131,8 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
         btn_start = findViewById(R.id.btn_start);
         btn_start.setOnClickListener(v -> {
             if (device.isConnected()) {
-                start();
+//                start();
+                checkDeviceBondState();
             } else {
                 toastMsg("please connect to the server");
             }
@@ -161,7 +163,21 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
         MeshLogger.d("json raw length - " + jsonRaw.length);
         jsonData = CdtpEncoder.compress(jsonRaw, false);
         MeshLogger.d("json data length compressed - " + jsonData.length);
+
+        addTestData();
+
+        appendLog("json data length: " + jsonData.length);
     }
+
+    private void addTestData() {
+        ByteBuffer bf = ByteBuffer.allocate(jsonData.length * 100 + 33);
+        for (int i = 0; i < 100; i++) {
+            bf.put(jsonData);
+        }
+        jsonData = bf.array();
+        MeshLogger.d("json data length compressed - (*100) - " + jsonData.length);
+    }
+
 
     private void initDevice() {
         device = new GattConnection(this, null);
@@ -209,8 +225,29 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
                 socket.connect();
                 appendLog("socket establish success");
                 OutputStream outputStream = socket.getOutputStream();
-                outputStream.write(jsonData);
-                outputStream.flush();
+
+
+                int offset = 0;
+                byte[] data;
+                int round = (jsonData.length + 99) / 100;
+                MeshLogger.d("length : " + jsonData.length);
+                MeshLogger.d("round : " + round);
+                for (int i = 0; i < round; i++) {
+                    if (i == round - 1) {
+                        data = ByteBuffer.allocate(jsonData.length - offset).put(jsonData, offset, jsonData.length - offset).array();
+                    } else {
+                        data = ByteBuffer.allocate(100).put(jsonData, offset, 100).array();
+                    }
+                    MeshLogger.d("write data: " + Arrays.bytesToHexString(data) + " -- len: " + data.length);
+                    outputStream.write(data);
+//                    outputStream.flush();
+                    offset += data.length;
+                    MeshLogger.d("offset: " + offset);
+                    Thread.sleep(30);
+                }
+
+//                outputStream.write(jsonData);
+//                outputStream.flush();
                 onJsonDataSendComplete();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -222,16 +259,32 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
     }
 
 
+    private void checkDeviceBondState() {
+        boolean bond = bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED;
+        if (!bond) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Warning");
+            builder.setMessage("Device Not Bond, please check device state; click [start] to start transfer, click [bond] to cancel action");
+            builder.setPositiveButton("start", (dialog, which) -> start());
+            builder.setNegativeButton("bond", (dialog, which) -> bluetoothDevice.createBond());
+            builder.show();
+        } else {
+            start();
+        }
+    }
+
     private void start() {
 //        1. enable notify
 //        2. read object size
 //        3. open socket
-        msgHandler.postDelayed(flowTimeout, 60 * 1000);
+        btn_start.setEnabled(false);
+        msgHandler.postDelayed(flowTimeout, 5 * 60 * 1000);
         enableOacpCcc();
         msgHandler.postDelayed(this::readObjectSize, 2 * 1000);
     }
 
     private void enableOacpCcc() {
+        MeshLogger.d("enabel oacp ccc");
         UUID serviceUUID = UUIDInfo.SERVICE_OTS;
         UUID characteristicUUID = UUIDInfo.CHARACTERISTIC_OACP;
         GattRequest cmd = GattRequest.newInstance();
@@ -299,10 +352,10 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
 
     private Runnable flowTimeout = () -> onError("flow timeout");
 
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        transferComplete = true;
         if (device != null) {
             device.disconnect();
         }
@@ -380,12 +433,11 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
     }
 
     private void onError(String info) {
+        if (transferComplete) return;
         appendLog("ERROR: " + info);
         msgHandler.removeCallbacks(flowTimeout);
-        if (!transferComplete) {
-            transferComplete = true;
-            showTipDialog("ERROR", "transfer error: " + info, (dialog, which) -> finish());
-        }
+        transferComplete = true;
+        runOnUiThread(() -> showTipDialog("ERROR", "transfer error: " + info, (dialog, which) -> finish()));
     }
 
     private final GattRequest.Callback GATT_REQUEST_CB = new GattRequest.Callback() {
@@ -410,12 +462,12 @@ public class CdtpExportToGatewayActivity extends BaseActivity {
 
         @Override
         public void error(GattRequest request, String errorMsg) {
-            onError("read object size error");
+            onError("request error: " + request.tag);
         }
 
         @Override
         public boolean timeout(GattRequest request) {
-            onError("read object size timeout");
+            onError("request timeout: " + request.tag);
             return false;
         }
     };

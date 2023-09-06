@@ -35,6 +35,8 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.cdtp.CdtpImportActivity;
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
@@ -49,6 +51,9 @@ import java.io.File;
  */
 
 public class ShareImportActivity extends BaseActivity implements View.OnClickListener {
+
+    public static final String EXTRA_NETWORK_ID = "SHARE_IMPORT_EXTRA_NETWORK_ID";
+
     private TextView tv_file_select;
     private RadioButton rb_file, rb_cdtp, rb_qrcode;
     private TextView tv_log;
@@ -57,6 +62,7 @@ public class ShareImportActivity extends BaseActivity implements View.OnClickLis
     private static final int REQUEST_CODE_GET_FILE = 1;
     private static final int REQUEST_IMPORT = 2;
     private String mPath;
+    private long importedNetworkId = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +72,7 @@ public class ShareImportActivity extends BaseActivity implements View.OnClickLis
         }
         setContentView(R.layout.activity_share_import);
         findViewById(R.id.btn_import).setOnClickListener(this);
+        MeshService.getInstance().idle(false);
         initView();
     }
 
@@ -162,11 +169,23 @@ public class ShareImportActivity extends BaseActivity implements View.OnClickLis
             return;
         }
         String jsonData = FileSystem.readString(file);
-        if (MeshStorageService.getInstance().importExternal(jsonData, this)) {
+        MeshInfo meshInfo = MeshStorageService.getInstance().importExternal(jsonData, this);
+        if (meshInfo != null) {
             tv_log.append("Mesh storage import success\n");
+            importedNetworkId = meshInfo.id;
         } else {
             tv_log.append("Mesh storage import fail\n");
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (importedNetworkId != 0) {
+            Intent intent = new Intent();
+            intent.putExtra(EXTRA_NETWORK_ID, importedNetworkId);
+            setResult(RESULT_OK, intent);
+        }
+        super.onBackPressed();
     }
 
     @Override
@@ -176,8 +195,6 @@ public class ShareImportActivity extends BaseActivity implements View.OnClickLis
         if (resultCode != Activity.RESULT_OK)
             return;
         if (requestCode == REQUEST_CODE_GET_FILE) {
-
-
             mPath = data.getStringExtra(FileSelectActivity.KEY_RESULT);
             btn_open.setVisibility(View.VISIBLE);
             tv_file_select.setText(mPath);
@@ -185,6 +202,10 @@ public class ShareImportActivity extends BaseActivity implements View.OnClickLis
             tv_log.append("File selected: " + mPath + "\n");
             MeshLogger.log("select: " + mPath);
         } else if (requestCode == REQUEST_IMPORT) {
+            importedNetworkId = data.getLongExtra(EXTRA_NETWORK_ID, 0);
+            Intent intent = new Intent();
+            intent.putExtra(EXTRA_NETWORK_ID, importedNetworkId);
+            setResult(RESULT_OK, intent);
             this.finish();
         }
 

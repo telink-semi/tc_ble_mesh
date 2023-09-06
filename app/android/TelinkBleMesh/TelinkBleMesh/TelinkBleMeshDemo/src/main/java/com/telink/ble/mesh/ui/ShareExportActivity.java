@@ -39,6 +39,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.db.MeshInfoService;
@@ -86,6 +87,7 @@ public class ShareExportActivity extends BaseActivity implements View.OnClickLis
         tv_log = findViewById(R.id.tv_log);
         exportDir = FileSystem.getSettingPath();
         initView();
+        MeshService.getInstance().idle(false);
     }
 
     @SuppressLint("ClickableViewAccessibility")

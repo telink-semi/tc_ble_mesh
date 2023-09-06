@@ -176,6 +176,16 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
         MeshLogger.d("json raw length - " + jsonRaw.length);
         jsonData = CdtpEncoder.compress(jsonRaw, false);
         MeshLogger.d("json data length compressed - " + jsonData.length);
+//        addTestData();
+    }
+
+    private void addTestData() {
+        ByteBuffer bf = ByteBuffer.allocate(jsonData.length * 100 + 33);
+        for (int i = 0; i < 100; i++) {
+            bf.put(jsonData);
+        }
+        jsonData = bf.array();
+        MeshLogger.d("json data length compressed - (*500) - " + jsonData.length);
     }
 
     private void initService() {
@@ -208,31 +218,31 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
     }
 
 
-    // 在 GATT 服务器中创建 Service 和 Characteristic
+    // create bluetooth Service & Characteristic in gatt server
     private void createGattService() {
         BluetoothGattService service = new BluetoothGattService(UUIDInfo.SERVICE_OTS, BluetoothGattService.SERVICE_TYPE_PRIMARY);
 
         // ots feature
         BluetoothGattCharacteristic ftChar = new BluetoothGattCharacteristic(UUIDInfo.CHARACTERISTIC_OTS_FEATURE,
                 BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE,
-                BluetoothGattCharacteristic.PERMISSION_READ | BluetoothGattCharacteristic.PERMISSION_WRITE);
+                BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM | BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED_MITM);
         service.addCharacteristic(ftChar);
 
 
         BluetoothGattCharacteristic oacpChar = new BluetoothGattCharacteristic(UUIDInfo.CHARACTERISTIC_OACP,
                 BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE
                         | BluetoothGattCharacteristic.PROPERTY_NOTIFY,
-                BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED | BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED);
+                BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM | BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED_MITM);
 
         BluetoothGattDescriptor cccDesc = new BluetoothGattDescriptor(UUIDInfo.DESCRIPTOR_CFG_UUID,
-                BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED | BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED);
+                BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM | BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM);
         oacpChar.addDescriptor(cccDesc);
         service.addCharacteristic(oacpChar);
 
 
         BluetoothGattCharacteristic objectSizeChar = new BluetoothGattCharacteristic(UUIDInfo.CHARACTERISTIC_OBJECT_SIZE,
                 BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE,
-                BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED | BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED);
+                BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM | BluetoothGattCharacteristic.PERMISSION_WRITE_ENCRYPTED_MITM);
         service.addCharacteristic(objectSizeChar);
 
         BluetoothGattCharacteristic psmChar = new BluetoothGattCharacteristic(UUIDInfo.CHARACTERISTIC_IOS_PSM,
@@ -342,11 +352,30 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
         if (bleSocket != null) {
             try {
                 OutputStream outputStream = bleSocket.getOutputStream();
-                outputStream.write(jsonData);
-                outputStream.flush();
+
+                int offset = 0;
+                byte[] data;
+                int round = (jsonData.length + 99) / 100;
+                MeshLogger.d("length : " + jsonData.length);
+                MeshLogger.d("round : " + round);
+                for (int i = 0; i < round; i++) {
+                    if (i == round - 1) {
+                        data = ByteBuffer.allocate(jsonData.length - offset).put(jsonData, offset, jsonData.length - offset).array();
+                    } else {
+                        data = ByteBuffer.allocate(100).put(jsonData, offset, 100).array();
+                    }
+                    MeshLogger.d("write data: " + Arrays.bytesToHexString(data) + " -- len: " + data.length);
+                    outputStream.write(data);
+//                    outputStream.flush();
+                    offset += data.length;
+                    MeshLogger.d("offset: " + offset);
+                    Thread.sleep(30);
+                }
+
+//                outputStream.write(jsonData);
                 appendLog("data write over socket complete");
                 msgHandler.obtainMessage(MSG_COMPLETE).sendToTarget();
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -414,7 +443,9 @@ public class CdtpExportToPhoneActivity extends BaseActivity {
                     byte result = OacpResultCode.SUCCESS.code;
                     characteristic.setValue(generateOacpResult(op, result, null));
                     bluetoothGattServer.notifyCharacteristicChanged(device, characteristic, false);
-                    writeData();
+                    MeshLogger.d("start write data");
+                    msgHandler.postDelayed(() -> writeData(), 2 * 1000);
+
                 }
             }
         }

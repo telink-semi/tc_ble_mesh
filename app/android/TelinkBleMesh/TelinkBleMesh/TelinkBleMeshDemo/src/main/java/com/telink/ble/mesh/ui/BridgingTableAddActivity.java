@@ -237,12 +237,12 @@ public class BridgingTableAddActivity extends BaseActivity implements EventListe
     public void performed(Event<String> event) {
         if (event.getType().equals(BridgingTableStatusMessage.class.getName())) {
             BridgingTableStatusMessage statusMessage = (BridgingTableStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
-            if (table != null) {
-                nodeInfo.bridgingTableList.add(table);
-                nodeInfo.save();
-            }
             handler.removeCallbacksAndMessages(null);
             if (statusMessage.getStatus() == 0) {
+                if (table != null) {
+                    nodeInfo.bridgingTableList.add(table);
+                    nodeInfo.save();
+                }
                 runOnUiThread(() -> {
                     dismissWaitingDialog();
                     setResult(RESULT_OK);

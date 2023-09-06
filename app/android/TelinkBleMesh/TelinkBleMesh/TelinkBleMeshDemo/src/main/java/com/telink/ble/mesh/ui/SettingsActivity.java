@@ -46,7 +46,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
     private Switch switch_log, switch_private, switch_no_oob, switch_level;
     private EditText et_extend, et_net_key, et_app_key;
-    private RadioGroup rg_pv_mode, rg_extend_bearer;
+    private RadioGroup rg_pv_mode, rg_extend_bearer, rg_share_action;
     private MeshInfo mesh;
     private TextView tv_online_status;
     private final String[] EXTEND_TYPES = new String[]{
@@ -97,6 +97,10 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         rg_extend_bearer = findViewById(R.id.rg_extend_bearer);
         rg_extend_bearer.setOnCheckedChangeListener((group, checkedId) -> updateExBrMode(checkedId));
 
+        rg_share_action = findViewById(R.id.rg_share_action);
+        rg_share_action.setOnCheckedChangeListener((group, checkedId) -> updateShareAction(checkedId));
+
+
         findViewById(R.id.btn_reset_settings).setOnClickListener(this);
 
         findViewById(R.id.iv_tip_log).setOnClickListener(this);
@@ -124,6 +128,7 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         switch_no_oob.setChecked(SharedPreferenceHelper.isNoOOBEnable(this));
         switch_level.setChecked(SharedPreferenceHelper.isLevelServiceEnable(this));
         rg_extend_bearer.check(getExBrModeResId());
+        rg_share_action.check(getShareActionResId());
     }
 
     private int getPvRbId() {
@@ -191,6 +196,32 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
         SharedPreferenceHelper.setExtendBearerMode(this, bearerMode);
         MeshService.getInstance().resetExtendBearerMode(bearerMode);
     }
+
+    private void updateShareAction(int resId) {
+        int action = SharedPreferenceHelper.IMPORT_COMPLETE_ACTION_DEFAULT;
+        switch (resId) {
+            case R.id.rb_share_action_default:
+                action = SharedPreferenceHelper.IMPORT_COMPLETE_ACTION_DEFAULT;
+                break;
+            case R.id.rb_share_action_auto_switch:
+                action = SharedPreferenceHelper.IMPORT_COMPLETE_ACTION_AUTO_SWITCH;
+                break;
+        }
+        SharedPreferenceHelper.updateShareImportCompleteAction(this, action);
+    }
+
+    private int getShareActionResId() {
+        int action = SharedPreferenceHelper.getShareImportCompleteAction(this);
+        switch (action) {
+            case SharedPreferenceHelper.IMPORT_COMPLETE_ACTION_DEFAULT:
+                return R.id.rb_share_action_default;
+
+            case SharedPreferenceHelper.IMPORT_COMPLETE_ACTION_AUTO_SWITCH:
+                return R.id.rb_share_action_auto_switch;
+        }
+        return R.id.rb_share_action_default;
+    }
+
 
     @Override
     protected void onDestroy() {

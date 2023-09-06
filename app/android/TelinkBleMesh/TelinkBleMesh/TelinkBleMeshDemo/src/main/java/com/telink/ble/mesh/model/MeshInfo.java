@@ -515,8 +515,12 @@ public class MeshInfo implements Serializable, Cloneable {
             return false;
         }
 
-
-        final int high = low + 0x03FF;
+        int high;
+        if (low == 1) {
+            high = 0x03FF;
+        } else {
+            high = low + 0x03FF;
+        }
 
         this.unicastRange.clear();
         this.unicastRange.add(new AddressRange(low, high));

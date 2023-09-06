@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -29,6 +30,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -36,6 +38,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.textfield.TextInputEditText;
+import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
@@ -48,6 +51,7 @@ import com.telink.ble.mesh.ui.adapter.NetworkListAdapter;
  */
 public class NetworkListActivity extends BaseActivity implements View.OnClickListener {
 
+    private static final int REQUEST_CODE_IMPORT = 1;
     private Handler handler = new Handler();
     private NetworkListAdapter listAdapter;
     private int selectedPosition = -1;
@@ -171,7 +175,7 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.fab_import:
-                startActivity(new Intent(this, ShareImportActivity.class));
+                startActivityForResult(new Intent(this, ShareImportActivity.class), REQUEST_CODE_IMPORT);
                 break;
             case R.id.iv_close:
                 networkActionDialog.dismiss();
@@ -210,7 +214,6 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
         TelinkMeshApplication.getInstance().setupMesh(meshInfo);
         listAdapter.resetData(MeshInfoService.getInstance().getAll());
         listAdapter.resetCurMeshId();
-
     }
 
     private void showNetworkDetail() {
@@ -248,6 +251,37 @@ public class NetworkListActivity extends BaseActivity implements View.OnClickLis
     @Override
     public void finish() {
         super.finish();
-        MeshService.getInstance().idle(lastMeshId != listAdapter.getCurMeshId());
+        if (listAdapter != null) {
+            MeshService.getInstance().idle(lastMeshId != listAdapter.getCurMeshId());
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (data == null) return;
+        if (requestCode == REQUEST_CODE_IMPORT && resultCode == RESULT_OK) {
+            long importedNetworkId = data.getLongExtra(ShareImportActivity.EXTRA_NETWORK_ID, 0);
+            long curMeshId = TelinkMeshApplication.getInstance().getMeshInfo().id;
+            if (importedNetworkId != curMeshId) {
+                if (SharedPreferenceHelper.getShareImportCompleteAction(this) == SharedPreferenceHelper.IMPORT_COMPLETE_ACTION_DEFAULT) {
+                    showConfirmDialog("share import success, switch to the new mesh?", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switchToNetworkById(importedNetworkId);
+                        }
+                    });
+                } else {
+                    switchToNetworkById(importedNetworkId);
+                }
+            }
+        }
+    }
+
+    private void switchToNetworkById(long networkId) {
+        MeshInfo meshNetwork = MeshInfoService.getInstance().getById(networkId);
+        TelinkMeshApplication.getInstance().setupMesh(meshNetwork);
+        listAdapter.resetCurMeshId();
+        toastMsg("switch to network success: " + meshNetwork.meshName);
     }
 }

@@ -68,6 +68,8 @@ public class SharedPreferenceHelper {
 
     private static final String KEY_LEVEL_SERVICE = "com.telink.bluetooth.light.KEY_LEVEL_SERVICE";
 
+    private static final String KEY_SHARE_IMPORT_COMPLETE_ACTION = "com.telink.bluetooth.light.KEY_SHARE_IMPORT_COMPLETE_ACTION";
+
 
     public static final boolean DEFAULT_LOG_ENABLE = true;
 
@@ -89,6 +91,10 @@ public class SharedPreferenceHelper {
 
     public static final int DEFAULT_PROVISION_MODE = PROVISION_MODE_NORMAL_SELECTABLE;
 
+    public static final int IMPORT_COMPLETE_ACTION_DEFAULT = 0;
+
+    public static final int IMPORT_COMPLETE_ACTION_AUTO_SWITCH = 1;
+
 
     public static boolean isLocationIgnore(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
@@ -109,6 +115,7 @@ public class SharedPreferenceHelper {
                 .putBoolean(KEY_LEVEL_SERVICE, DEFAULT_LEVEL_SERVICE_ENABLE)
                 .putString(KEY_EXTEND_BEARER_MODE, ExtendBearerMode.NONE.name())
                 .putBoolean(KEY_NO_OOB, DEFAULT_AUTO_USE_NO_OOB_ENABLE)
+                .putInt(KEY_SHARE_IMPORT_COMPLETE_ACTION, IMPORT_COMPLETE_ACTION_DEFAULT)
                 .apply();
     }
 
@@ -210,5 +217,21 @@ public class SharedPreferenceHelper {
     public static void setSelectedMeshId(Context context, long meshId) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
         sharedPreferences.edit().putLong(KEY_SELECTED_MESH_ID, meshId).apply();
+    }
+
+    /**
+     * action after share import
+     *
+     * @see #IMPORT_COMPLETE_ACTION_DEFAULT
+     * @see #IMPORT_COMPLETE_ACTION_AUTO_SWITCH
+     */
+    public static int getShareImportCompleteAction(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getInt(KEY_SHARE_IMPORT_COMPLETE_ACTION, IMPORT_COMPLETE_ACTION_DEFAULT);
+    }
+
+    public static void updateShareImportCompleteAction(Context context, int action) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        sharedPreferences.edit().putInt(KEY_SHARE_IMPORT_COMPLETE_ACTION, action).apply();
     }
 }

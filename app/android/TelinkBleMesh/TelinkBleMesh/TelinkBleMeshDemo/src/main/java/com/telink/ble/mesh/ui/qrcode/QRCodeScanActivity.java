@@ -24,6 +24,7 @@ package com.telink.ble.mesh.ui.qrcode;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,6 +42,7 @@ import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.BaseActivity;
+import com.telink.ble.mesh.ui.ShareImportActivity;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.IOException;
@@ -176,47 +178,38 @@ public class QRCodeScanActivity extends BaseActivity implements ZXingScannerView
         }
     }
 
+
+    private void showCompleteDialog(String jsonData) {
+
+    }
+
+
     private void onDownloadSuccess(final String meshJson) {
         MeshLogger.d("device import json string: " + meshJson);
-        MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(false);
+        builder.setTitle("Warning");
+        builder.setMessage("Mesh JSON receive complete, import data?");
+        builder.setPositiveButton("Confirm", (dialog, which) -> {
+
+            MeshInfo meshInfo = MeshStorageService.getInstance().importExternal(meshJson, this);
+            if (meshInfo != null) {
+                dialog.dismiss();
+                Intent intent = new Intent();
+                intent.putExtra(ShareImportActivity.EXTRA_NETWORK_ID, meshInfo.id);
+                setResult(RESULT_OK, intent);
+                finish();
+            }
+
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+        /* MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         if (MeshStorageService.getInstance().importExternal(meshJson, this)) {
             MeshLogger.d("Mesh storage import success");
         } else {
             MeshLogger.d("Mesh storage import fail");
-        }
-        /*final MeshInfo result;
-        try {
-            result = MeshStorageService.getInstance().importExternal(meshJson);
-        } catch (Exception e) {
-            e.printStackTrace();
-            runOnUiThread(() -> toastMsg("import failed"));
-            return;
-        }
-        runOnUiThread(() -> {
-            dismissWaitingDialog();
-            if (result == null) {
-                showErrorDialog("mesh data error");
-            } else {
-                if (syncDialogBuilder == null) {
-                    syncDialogBuilder = new AlertDialog.Builder(QRCodeScanActivity.this);
-                    syncDialogBuilder.setTitle("Tip").setCancelable(false);
-                    syncDialogBuilder.setMessage("Get mesh data success, click CONFIRM to cover local data")
-                            .setPositiveButton("confirm", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    syncData(result);
-                                }
-                            })
-                            .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    finish();
-                                }
-                            });
-                }
-                syncDialogBuilder.show();
-            }
-        });*/
+        }*/
 
     }
 

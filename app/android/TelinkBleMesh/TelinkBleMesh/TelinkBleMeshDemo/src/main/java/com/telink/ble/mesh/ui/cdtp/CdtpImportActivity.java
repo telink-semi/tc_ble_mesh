@@ -24,8 +24,10 @@ import com.telink.ble.mesh.core.ble.GattConnection;
 import com.telink.ble.mesh.core.ble.GattRequest;
 import com.telink.ble.mesh.core.ble.UUIDInfo;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.BaseActivity;
+import com.telink.ble.mesh.ui.ShareImportActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.ContextUtil;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -128,7 +130,7 @@ public class CdtpImportActivity extends BaseActivity {
         btn_start = findViewById(R.id.btn_start);
         btn_start.setOnClickListener(v -> {
             if (device.isConnected()) {
-                start();
+                checkDeviceBondState();
             } else {
                 toastMsg("please connect to the server");
             }
@@ -170,9 +172,12 @@ public class CdtpImportActivity extends BaseActivity {
         builder.setMessage("Mesh JSON receive complete, import data?");
         builder.setPositiveButton("Confirm", (dialog, which) -> {
 
-            if (MeshStorageService.getInstance().importExternal(jsonData, this)) {
+            MeshInfo meshInfo = MeshStorageService.getInstance().importExternal(jsonData, this);
+            if (meshInfo != null) {
                 dialog.dismiss();
-                setResult(RESULT_OK);
+                Intent intent = new Intent();
+                intent.putExtra(ShareImportActivity.EXTRA_NETWORK_ID, meshInfo.id);
+                setResult(RESULT_OK, intent);
                 finish();
             }
 
@@ -216,17 +221,18 @@ public class CdtpImportActivity extends BaseActivity {
                 socket = construct.newInstance(4, -1, true, true, bluetoothDevice, psm, null);
                 socket.connect();
                 appendLog("socket establish success");
+                InputStream inputStream = socket.getInputStream();
                 while (true) {
-                    InputStream inputStream = socket.getInputStream();
                     int a = inputStream.available();
                     if (a != 0) {
                         MeshLogger.d("input stream available: " + a);
                         byte[] buffer = new byte[a];
                         inputStream.read(buffer);
-                        MeshLogger.d("input stream buffer: " + Arrays.bytesToHexString(buffer, ":"));
-                        appendLog("data received: " + Arrays.bytesToHexString(buffer, ""));
+//                        appendLog("data received: " + Arrays.bytesToHexString(buffer, ""));
                         appendData(buffer);
-                        appendLog("json data - " + jsonData.length + " -- " + objSize);
+                        MeshLogger.d("json data - " + jsonData.length + " -- " + objSize +
+                                "input stream buffer: " + Arrays.bytesToHexString(buffer, ""));
+//                        appendLog("json data - " + jsonData.length + " -- " + objSize);
                         if (jsonData.length == objSize) {
                             onJsonDataReceiveComplete();
                             transferComplete = true;
@@ -274,11 +280,27 @@ public class CdtpImportActivity extends BaseActivity {
         device.sendRequest(command);
     }
 
+
+    private void checkDeviceBondState() {
+        boolean bond = bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED;
+        if (!bond) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Warning");
+            builder.setMessage("Device Not Bond, please check device state; click [start] to start transfer, click [bond] to cancel action");
+            builder.setPositiveButton("start", (dialog, which) -> start());
+            builder.setNegativeButton("bond", (dialog, which) -> bluetoothDevice.createBond());
+            builder.show();
+        } else {
+            start();
+        }
+    }
+
     private void start() {
 //        1. enable notify
 //        2. read object size
 //        3. open socket
-        msgHandler.postDelayed(flowTimeout, 60 * 1000);
+        btn_start.setEnabled(false);
+        msgHandler.postDelayed(flowTimeout, 5 * 60 * 1000);
         enableOACP();
 //        msgHandler.postDelayed(this::createSocket, 500);
         msgHandler.postDelayed(this::readPsm, 2 * 1000);
@@ -353,6 +375,7 @@ public class CdtpImportActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        transferComplete = true;
         if (device != null) {
             device.disconnect();
         }
@@ -431,12 +454,11 @@ public class CdtpImportActivity extends BaseActivity {
     }
 
     private void onError(String info) {
+        if (transferComplete) return;
         appendLog("ERROR: " + info);
         msgHandler.removeCallbacks(flowTimeout);
-        if (!transferComplete) {
-            transferComplete = true;
-            runOnUiThread(() -> showTipDialog("ERROR", "transfer error: " + info, (dialog, which) -> finish()));
-        }
+        transferComplete = true;
+        runOnUiThread(() -> showTipDialog("ERROR", "transfer error: " + info, (dialog, which) -> finish()));
     }
 
     private final GattRequest.Callback GATT_REQUEST_CB = new GattRequest.Callback() {

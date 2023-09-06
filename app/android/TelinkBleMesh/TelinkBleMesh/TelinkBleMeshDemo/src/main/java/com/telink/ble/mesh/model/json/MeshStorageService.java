@@ -99,7 +99,7 @@ public class MeshStorageService {
      *
      * @return new mesh info
      */
-    public boolean importExternal(String jsonStr, BaseActivity activity) {
+    public MeshInfo importExternal(String jsonStr, BaseActivity activity) {
 
         MeshInfo newMesh;
         try {
@@ -107,14 +107,16 @@ public class MeshStorageService {
         } catch (Exception e) {
             e.printStackTrace();
             activity.toastMsg("import failed : " + e.toString());
-            return false;
+            return null;
         }
         if (newMesh == null) {
             activity.toastMsg("import failed");
-            return false;
+            return null;
         }
 
-        MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
+        return newMesh;
+
+        /*MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
 
         if (localMesh.meshUUID.equalsIgnoreCase(newMesh.meshUUID)) {
             MeshService.getInstance().idle(true);
@@ -133,7 +135,7 @@ public class MeshStorageService {
                 activity.finish();
             });
         }
-        return true;
+        return true;*/
     }
 
 
